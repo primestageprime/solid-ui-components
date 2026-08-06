@@ -24,6 +24,15 @@ export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
   gap?: "none" | "xs" | "sm" | "md" | "lg";
   minWidth?: string;
   maxWidth?: string;
+  /** Plays a one-shot slide-and-fade exit toward the given side, then holds
+   *  at that end state (opacity 0, translated off) — for a "this option
+   *  lost" affordance (e.g. a rejected item in a pairwise comparison).
+   *  Purely presentational: the surface stays mounted and in the layout
+   *  (still occupies its flex/grid slot) so the consumer controls removal
+   *  — set `exit` when the choice is made, then swap content once the
+   *  350ms transition (`--sui-surface-exit-duration`) is done. Respects
+   *  `prefers-reduced-motion` (fades in place, no slide). */
+  exit?: "left" | "right";
 }
 
 export const Surface: Component<SurfaceProps> = (rawProps) => {
@@ -49,6 +58,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     "class",
     "children",
     "style",
+    "exit",
   ]);
 
   const classes = () => {
@@ -61,6 +71,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     if (local.interactive) classList.push("surface--interactive");
     if (local.active) classList.push("surface--active");
     if (local.shadow) classList.push("surface--shadow");
+    if (local.exit) classList.push(`surface--exit-${local.exit}`);
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };

@@ -53,3 +53,30 @@
 .surface--shadow {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
+
+/* One-shot "this lost" exit — slides toward its own side while fading,
+   then holds at the end state (the consumer owns removal/content swap,
+   this only plays the transition). Kept as a transition, not a @keyframes
+   loop: it fires once on the class appearing and simply doesn't reverse. */
+.surface--exit-left,
+.surface--exit-right {
+  --sui-surface-exit-duration: 350ms;
+  transition:
+    transform var(--sui-surface-exit-duration) ease-in,
+    opacity var(--sui-surface-exit-duration) ease-in;
+  opacity: 0;
+  pointer-events: none;
+}
+.surface--exit-left {
+  transform: translateX(-60px);
+}
+.surface--exit-right {
+  transform: translateX(60px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface--exit-left,
+  .surface--exit-right {
+    transform: none;
+  }
+}
