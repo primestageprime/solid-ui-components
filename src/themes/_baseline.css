@@ -424,6 +424,17 @@ body {
 .sui-btn--text.sui-btn--tone-danger:hover:not(:disabled) {
   color: var(--sui-danger);
 }
+/* Same tone system, icon-only variant — a danger action icon (e.g. delete)
+   needs the same color signal a text button gets. */
+.sui-btn--icon-only.sui-btn--tone-muted {
+  color: var(--sui-text-muted);
+}
+.sui-btn--icon-only.sui-btn--tone-danger {
+  color: var(--sui-danger);
+}
+.sui-btn--icon-only.sui-btn--tone-danger:hover:not(:disabled) {
+  color: var(--sui-danger);
+}
 
 /* Square, but sized by the SAME padding+line-height math as a text button
    (`.sui-btn`'s base 8px vertical padding) instead of a fixed px height —
