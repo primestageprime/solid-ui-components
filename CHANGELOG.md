@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+## 0.142.0
+
+### Fixed
+- **`DailyDateAxis`, `dayCellContent` and `dayCellContext` are importable from
+  the package root.** They were exported from
+  `src/components/DateAxis/index.ts`, shipped in the tarball, and documented in
+  `COMPONENTS.md` with a copyable example — but no consumer could import them.
+
+  `src/index.ts` re-exports the DateAxis family by an **explicit list** rather
+  than `export *`, because the family's `Cell` type collides with the `Cell`
+  table component at the root surface. The explicit list never grew when these
+  three were added to the family barrel. Every existing `DailyDateAxis` test
+  imported from `./DailyDateAxis`, so the suite was green throughout; the new
+  test imports from the root instead.
+
+  Also exported: the `DailyDateAxisProps` and `DayCellContext` types.
+
+### Changed
+- **`COMPONENTS.md`'s `ConnectionStatus` example no longer teaches a broken
+  import.** It imported the base `Row` — unexported under the curried-only
+  policy stated at the top of the same file — and passed `gap="xl"`, which is
+  not in the `xs|sm|md|lg` scale. Now uses `LooseWrapRow`, a zero-prop curried
+  variant whose documented purpose is exactly this (tile-to-tile spacing on a
+  dashboard of widgets).
+
+### Added
+- **`brokenDocImports` health metric**, ratcheted at **0**. Counts import
+  specifiers in `COMPONENTS.md`'s fenced examples that name something the
+  library does not export. Unlike `undocumentedExports` it carries no judgment
+  — an example a reader copies either compiles or it does not — so it is
+  ratcheted at zero rather than burned down.
+
+  It found the three bugs above on its first run, and it matches on the import
+  statement alone: naming a base component in prose is what the manifest is
+  *for*, while writing `import { Row }` is a different claim.
+
 ### Added
 - **`scripts/export-surface.mjs`** — type-level extraction of the public API
   (dside `sui` 16389). Tooling only; nothing about the shipped library changes.

@@ -193,8 +193,7 @@ State derivation:
 - **ConnectionStatus** — Composed (Depth 3). Stacked indicator: name label on top, sparkline (or `StatusLight` dot in compact mode) beneath. No time-since text — just the trace, so a healthy service is reassuring rather than distracting. Composes `LiveHeartbeatTrace` + `StatusLight` + `TextLabel` + `Stack`. Key props: `name` (string), `lastHeartbeatAt`, `timeoutMs`, `errorAt`, `showSparkline` (default true; false → `StatusLight` dot), `sparklineWidth` (default 96), `sparklineHeight` (default 14), `tickMs` (default 1000). Use for: dispatcher / worker / service liveness rows in dashboards and HUDs.
   - Example:
     ```tsx
-    import { ConnectionStatus } from "solid-ui-components";
-    import { Row } from "solid-ui-components";
+    import { ConnectionStatus, LooseWrapRow } from "solid-ui-components";
     import { createSignal, onMount, onCleanup } from "solid-js";
 
     const [healthy, setHealthy] = createSignal(Date.now());
@@ -216,12 +215,12 @@ State derivation:
       onCleanup(() => { clearInterval(a); clearInterval(b); clearInterval(c); });
     });
 
-    <Row gap="xl" align="start" wrap>
+    <LooseWrapRow>
       <ConnectionStatus name="worker-bee" lastHeartbeatAt={healthy()} timeoutMs={5000} />
       <ConnectionStatus name="idle"       lastHeartbeatAt={idle()}    timeoutMs={4000} />
       <ConnectionStatus name="problem"    lastHeartbeatAt={problemBeat()} errorAt={problemErr()} timeoutMs={5000} />
       <ConnectionStatus name="off"        lastHeartbeatAt={null}      timeoutMs={5000} />
-    </Row>
+    </LooseWrapRow>
     ```
 
 ## ServiceHealthDot

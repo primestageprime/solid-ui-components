@@ -6,6 +6,7 @@ import {
   run,
   undocumented,
   mentionedNames,
+  brokenImports,
   // @ts-expect-error — plain .mjs module without type declarations
 } from "./doc-coverage.mjs";
 
@@ -97,12 +98,49 @@ describe("doc coverage — the rule", () => {
   });
 });
 
+describe("doc coverage — broken import examples", () => {
+  const surface = [exp("PrimaryButton"), exp("LooseWrapRow")];
+
+  it("flags an import specifier the library does not export", () => {
+    const doc = '```tsx\nimport { Row } from "solid-ui-components";\n```\n';
+    expect(brokenImports(surface, doc)).toEqual(["Row (COMPONENTS.md:2)"]);
+  });
+
+  it("accepts an example that imports only real exports", () => {
+    const doc =
+      '```tsx\nimport { PrimaryButton, LooseWrapRow } from "solid-ui-components";\n```\n';
+    expect(brokenImports(surface, doc)).toEqual([]);
+  });
+
+  // Explaining that a base component exists and is deliberately unexported is
+  // the manifest's job. Only the import statement is a claim about the API.
+  it("does not flag a base component merely NAMED in prose", () => {
+    const doc =
+      "The base `Row` is deliberately not exported — use a variant.\n";
+    expect(brokenImports(surface, doc)).toEqual([]);
+  });
+
+  it("handles type specifiers, renames, and subpath imports", () => {
+    const doc =
+      'import { type Ghost, PrimaryButton as Btn } from "solid-ui-components/Duration";\n';
+    expect(brokenImports(surface, doc)).toEqual(["Ghost (COMPONENTS.md:1)"]);
+  });
+
+  it("reports every bad specifier in one statement, not just the first", () => {
+    const doc =
+      'import { Row, Stack, PrimaryButton } from "solid-ui-components";\n';
+    expect(
+      brokenImports(surface, doc).map((b: string) => b.split(" ")[0]),
+    ).toEqual(["Row", "Stack"]);
+  });
+});
+
 describe("doc coverage — against the real manifest", () => {
-  let result: { total: number; missing: string[] };
+  let result: { total: number; missing: string[]; broken: string[] };
   let doc: string;
 
   beforeAll(() => {
-    result = run() as { total: number; missing: string[] };
+    result = run() as { total: number; missing: string[]; broken: string[] };
     doc = readFileSync(path.join(REPO_ROOT, "COMPONENTS.md"), "utf8");
   }, 60_000);
 
@@ -120,6 +158,19 @@ describe("doc coverage — against the real manifest", () => {
       new RegExp(`\\b${m.split(" ")[0]}\\b`).test(doc),
     );
     expect(stillPresent).toEqual([]);
+  });
+
+  // Ratcheted at 0, so unlike the backlog this one is safe to pin outright.
+  it("has no import example naming a non-export", () => {
+    expect(result.broken).toEqual([]);
+  });
+
+  // The founding cases. Both were exported from src/components/DateAxis/
+  // index.ts but missing from src/index.ts's explicit re-export list, so they
+  // shipped in the tarball while no consumer could import them.
+  it("reaches the DateAxis names the root barrel used to strand", () => {
+    const names = result.missing.map((m) => m.split(" ")[0]);
+    expect(names).not.toContain("DailyDateAxis");
   });
 
   it("does not report a name the manifest documents", () => {
