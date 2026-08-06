@@ -40,6 +40,7 @@ export const ICON_GROUPS = {
     "trash",
     "rotate-left",
     "rotate-right",
+    "crop",
   ] as const,
   ui: ["spinner", "menu", "settings", "external-link", "bell"] as const,
   auth: ["log-out", "log-in", "user", "agent"] as const,
@@ -88,6 +89,7 @@ export type IconName =
   | "trash"
   | "rotate-left"
   | "rotate-right"
+  | "crop"
   // UI
   | "spinner"
   | "menu"
@@ -323,6 +325,15 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M5.5 2.5v3h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M4 8a4.5 4.5 0 1 0 1.5-3.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
             <path d="M5.5 2.5v3h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+
+    // Two overlapping crop-handle brackets — the standard viewfinder/crop
+    // glyph (bottom-left bracket + top-right bracket).
+    crop: {
+      outline: `<path d="M5 1V11H15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M1 5H11V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M5 1V11H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M1 5H11V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
 
     // === UI ICONS ===

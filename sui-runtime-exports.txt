@@ -734,3 +734,4 @@ FramedImage
 SmallSquareThumbnail
 MediumSquareThumbnail
 ContainedPhoto
+crop
