@@ -163,7 +163,32 @@ export {
 export type { AnimatedSwimlaneChartDataProps } from "./components/AnimatedSwimlaneChart";
 // Consumer-facing types for building SwimlaneChart data + custom node cards.
 export type { RenderNodeContext } from "./components/AnimatedSwimlaneChart";
-export type { StatusFlowNode } from "./components/StatusFlowChart";
+// StatusFlowChart. This was `export type { StatusFlowNode }` alone until
+// 0.143.0, which meant COMPONENTS.md documented a full component API — props,
+// parent effective-status rules, and three "exposed for testing" layout
+// helpers — that no consumer could import a single value from. Same class of
+// bug as the DateAxis one fixed in 0.142.0 (a named re-export narrower than
+// the family barrel), but type-only, so nothing of the value surface arrived.
+// The base component stays unexported per the curried-only policy; the
+// factory is the entry point.
+export { createStatusFlowChart } from "./components/StatusFlowChart";
+export type {
+  StatusFlowChartDataProps,
+  StatusFlowChartOverrides,
+  StatusFlowRenderContext,
+  StatusFlowNode,
+  StatusFlowColumn,
+  StatusFlowBreakpoint,
+  ColAssignment,
+} from "./components/StatusFlowChart";
+// Pure layout logic, exported so a consumer can unit-test its own column
+// configuration without mounting a chart. COMPONENTS.md has always claimed
+// these were available.
+export {
+  pickVisibleCols,
+  assignColumns,
+  resolveParentStatuses,
+} from "./components/StatusFlowChart";
 export * from "./components/DragDrop";
 export * from "./components/Duration";
 export * from "./components/Dropdown";

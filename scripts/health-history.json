@@ -4121,5 +4121,40 @@
       "missingDepthHeaders": 0,
       "componentsWithoutShowcase": 0
     }
+  },
+  {
+    "at": "2026-08-06T21:40:03.311Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 65,
+      "inlineStyleShowcases": 20,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 35,
+      "undocumentedExports": 160,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 65,
+      "inlineStyleShowcases": 20,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 35,
+      "undocumentedExports": 172,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0
+    }
   }
 ]
