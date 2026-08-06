@@ -151,6 +151,11 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
       )}
       {!local.iconOnly && (
         <>
+          {/* Hint (hotkey char not found in the label, e.g. a digit hotkey
+              on a word label) leads — a big, prominent key glyph read
+              before the label it applies to, like a numbered list marker,
+              rather than a small trailing annotation. */}
+          {segments().hint && <span class="sui-hotkey-btn__hint">{segments().hint}</span>}
           {/* Rendered tight on one line so the JSX compiler can't insert
               whitespace text nodes between the segments (which would show as
               a gap around the emphasized key, e.g. "D one" instead of
@@ -162,9 +167,6 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
             )}
             {segments().after}
           </span>
-          {segments().hint && (
-            <span class="sui-hotkey-btn__hint">[{segments().hint}]</span>
-          )}
         </>
       )}
     </Button>

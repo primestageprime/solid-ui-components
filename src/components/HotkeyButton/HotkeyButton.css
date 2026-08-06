@@ -12,12 +12,15 @@
   vertical-align: -0.1em;
 }
 
-/* Trailing hint shown when the hotkey char isn't present in the label. */
+/* Leading hint shown when the hotkey char isn't present in the label (e.g.
+   a digit hotkey on a word label) — sized up rather than down, so the key
+   reads as the primary affordance, like a numbered list marker ahead of
+   its item. */
 .sui-hotkey-btn__hint {
-  margin-left: 0.4em;
+  margin-right: 0.5em;
   font-weight: 700;
-  opacity: 0.85;
-  font-size: 0.85em;
+  font-size: 1.25em;
+  line-height: 1;
 }
 
 /* iconOnly mode — no label follows the icon, so the leading-icon spacing
