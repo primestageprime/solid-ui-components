@@ -25,7 +25,11 @@ export interface ResultDisplayProps extends JSX.HTMLAttributes<HTMLDivElement> {
    *  Use when the ResultDisplay is part of a hover-coordinated set (e.g.
    *  a formula-variable-linked result). */
   highlightable?: boolean;
-  /** When true (and `highlightable`), paints the active highlight tint. */
+  /** Paints the active highlight tint. Independent of `highlightable`: the
+   *  CSS rule is standalone, so this paints on its own. The pair is normally
+   *  used together — `highlightable` supplies the hover chrome, this one the
+   *  active state — but nothing enforces that, and the tint is NOT suppressed
+   *  without it. Pinned in ResultDisplay.test.tsx. */
   highlighted?: boolean;
 }
 
