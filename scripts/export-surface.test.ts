@@ -85,10 +85,12 @@ describe("export surface — classification", () => {
   // while no consumer could import them — and COMPONENTS.md documented
   // DailyDateAxis with a copyable example the whole time.
   //
-  // Every test in DailyDateAxis.test.tsx imports from "./DailyDateAxis", which
-  // is exactly why the suite stayed green. This asserts REACHABILITY FROM THE
-  // BARREL, which is a static property — checking it by importing the root at
-  // runtime pulls ~890 modules and times out under full-suite contention.
+  // The runtime half of this lives in DateAxis.export.test.tsx, which imports
+  // the root barrel and asserts each name is callable. This is the static
+  // half: that the barrel's export GRAPH resolves the name at all, without
+  // executing anything. They fail for different reasons — a name deleted from
+  // the family barrel breaks this one, a name that resolves but throws on
+  // module init breaks that one — so both are worth having.
   it("reaches names behind an explicit re-export list, not just `export *`", () => {
     expect(byName("DailyDateAxis").file).toBe(
       "src/components/DateAxis/DailyDateAxis.tsx",
