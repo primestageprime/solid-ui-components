@@ -102,6 +102,50 @@ export const undocumented = (exports, doc) => {
     .sort();
 };
 
+// An `import { A, B, type C } from "solid-ui-components"` line in a fenced
+// example, including the subpath forms (`solid-ui-components/Duration`).
+const IMPORT_RE =
+  /import\s*(?:type\s*)?\{([^}]*)\}\s*from\s*["'](solid-ui-components[^"']*)["']/gs;
+
+/**
+ * Pure: import specifiers in the manifest's examples that name something the
+ * library does not export, as `Name (COMPONENTS.md:line)`.
+ *
+ * Zero judgment, unlike `undocumented` — an example a reader copies either
+ * compiles or it does not, so this one is ratcheted at 0. It is the check that
+ * would have caught all three of its founding cases, each a different bug:
+ *
+ *   • `DailyDateAxis` / `dayCellContext` — real components, exported from
+ *     `src/components/DateAxis/index.ts`, unreachable from the root barrel.
+ *     src/index.ts re-exports that family by an EXPLICIT list (a `Cell` name
+ *     collision forces it) and the list never kept up, so both shipped in the
+ *     tarball while no consumer could import them.
+ *   • `Row` — a base component, deliberately unexported under the curried-only
+ *     policy stated at the top of the very same file. The example also passed
+ *     `gap="xl"`, which is not in the `xs|sm|md|lg` scale.
+ *
+ * Matching is on the import specifier alone. Prose may name a base component
+ * freely — explaining that `Row` exists and is not exported is exactly what
+ * COMPONENTS.md is for. Writing `import { Row }` is a different claim.
+ */
+export const brokenImports = (exports, doc) => {
+  const exported = new Set(exports.map((e) => e.name));
+  const lineOf = (index) => doc.slice(0, index).split("\n").length;
+  return [...doc.matchAll(IMPORT_RE)].flatMap((match) =>
+    match[1]
+      .split(",")
+      .map((s) =>
+        s
+          .trim()
+          .replace(/^type\s+/, "")
+          .split(/\s+as\s+/)[0]
+          .trim(),
+      )
+      .filter((name) => name && !exported.has(name))
+      .map((name) => `${name} (COMPONENTS.md:${lineOf(match.index)})`),
+  );
+};
+
 export function run({ root = REPO_ROOT, ...surfaceOpts } = {}) {
   const surface = buildExportSurface({ root, ...surfaceOpts });
   const doc = readFileSync(join(root, "COMPONENTS.md"), "utf8");
@@ -109,13 +153,14 @@ export function run({ root = REPO_ROOT, ...surfaceOpts } = {}) {
   return {
     total: documentable.length,
     missing: undocumented(surface.exports, doc),
+    broken: brokenImports(surface.exports, doc),
   };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const { total, missing } = run();
+  const { total, missing, broken } = run();
   if (process.argv.includes("--json")) {
-    console.log(JSON.stringify({ total, missing }, null, 2));
+    console.log(JSON.stringify({ total, missing, broken }, null, 2));
   } else if (process.argv.includes("--list")) {
     for (const m of missing) console.log(m.split(" ")[0]);
   } else {
@@ -123,6 +168,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       `undocumentedExports: ${missing.length}   (of ${total} exported components and factories)`,
     );
     for (const m of missing) console.log(`  ${m}`);
+    console.log(
+      `\nbrokenDocImports: ${broken.length}   (import examples naming a non-export)`,
+    );
+    for (const b of broken) console.log(`  ${b}`);
   }
-  process.exit(missing.length ? 1 : 0);
+  process.exit(missing.length || broken.length ? 1 : 0);
 }

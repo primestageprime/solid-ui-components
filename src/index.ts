@@ -184,12 +184,27 @@ export * from "./components/DateRangePicker";
 // explicitly and alias the type to `DateAxisCell` for root-level consumers.
 // Consumers who prefer the bare `Cell` name can still import it from
 // `solid-ui-components/dist/components/DateAxis`.
-export { DateAxis, createDateAxis } from "./components/DateAxis";
+// NOTE: this explicit list is why `DailyDateAxis`, `dayCellContent`,
+// `dayCellContext` and `DayCellContext` were unreachable from the root for as
+// long as they existed. They were added to
+// `src/components/DateAxis/index.ts` and the list here never kept up — an
+// `export *` would have carried them automatically. Anything added to the
+// DateAxis family barrel must ALSO be added here, or it ships in the tarball
+// and cannot be imported.
+export {
+  DateAxis,
+  createDateAxis,
+  DailyDateAxis,
+  dayCellContent,
+  dayCellContext,
+} from "./components/DateAxis";
 export type {
   DateAxisProps,
   DateAxisOverrides,
   DateAxisDataProps,
   DateAxisCellContext,
+  DailyDateAxisProps,
+  DayCellContext,
 } from "./components/DateAxis";
 export type { Cell as DateAxisCell } from "./components/DateAxis";
 export {

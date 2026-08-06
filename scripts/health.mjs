@@ -196,7 +196,16 @@ const { missing: componentsNeverRendered } = runRenderCoverage();
 // never checked at all. Its replacement asks the same question of each of the
 // 619 exported NAMES; see that script's header for what it deliberately does
 // not ask, and why it counts factories where showcase coverage does not.
-const { missing: undocumentedExports } = runDocCoverage();
+//
+// `brokenDocImports` rides along from the same script and is a different kind
+// of check: an `import { X } from "solid-ui-components"` in a fenced example
+// either compiles or it does not, so it carries no judgment and is ratcheted
+// at 0 rather than burned down. It found three on its first run, each a real
+// bug — DailyDateAxis and dayCellContext were shipping in the tarball while
+// unreachable from the root barrel, and a Row example taught an import the
+// curried-only policy forbids.
+const { missing: undocumentedExports, broken: brokenDocImports } =
+  runDocCoverage();
 
 const missingDepth = [];
 for (const f of walk(
@@ -252,6 +261,7 @@ const detail = {
   cssTypedProps: propRubricHits,
   componentsNeverRendered,
   undocumentedExports,
+  brokenDocImports,
   missingDepthHeaders: missingDepth,
   componentsWithoutShowcase,
 };

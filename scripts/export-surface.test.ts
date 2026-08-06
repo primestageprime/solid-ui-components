@@ -77,6 +77,27 @@ describe("export surface — classification", () => {
     expect(combobox.dir).toBe("Combobox");
   });
 
+  // REGRESSION. src/index.ts re-exports the DateAxis family by an EXPLICIT
+  // list rather than `export *`, because that family's `Cell` type collides
+  // with the `Cell` table component at the root surface. The list never grew
+  // when DailyDateAxis / dayCellContent / dayCellContext were added to
+  // src/components/DateAxis/index.ts, so all three shipped in the tarball
+  // while no consumer could import them — and COMPONENTS.md documented
+  // DailyDateAxis with a copyable example the whole time.
+  //
+  // Every test in DailyDateAxis.test.tsx imports from "./DailyDateAxis", which
+  // is exactly why the suite stayed green. This asserts REACHABILITY FROM THE
+  // BARREL, which is a static property — checking it by importing the root at
+  // runtime pulls ~890 modules and times out under full-suite contention.
+  it("reaches names behind an explicit re-export list, not just `export *`", () => {
+    expect(byName("DailyDateAxis").file).toBe(
+      "src/components/DateAxis/DailyDateAxis.tsx",
+    );
+    expect(byName("dayCellContent").kind).toBe("function");
+    expect(byName("dayCellContext").kind).toBe("function");
+    expect(byName("DailyDateAxisProps").kind).toBe("type");
+  });
+
   it("classifies a namespace re-export and enumerates its members", () => {
     // `export * as fields from "./components/Table/fields"`. Consumers reach
     // these as `fields.text`, never as bare top-level names.
