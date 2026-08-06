@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+## 0.147.0
+
+### Added
+- **Render coverage for the whole `Alarm` cluster** — `AlarmBands`,
+  `AlarmHotZones`, `AlarmOverlay` and `AlarmStripeDefs`. Only the pure
+  `alarm.ts` pipeline had tests; none of the four renderers was ever mounted.
+  `componentsNeverRendered` tightens 25 → 21. 17 mutations, all caught.
+
+  Mounted in a **real `<Chart>`**, matching the eleven existing slot tests in
+  `src/components/Chart/`. `<Chart>` takes `width`/`height` as plain number
+  props and measures nothing, so jsdom is not an obstacle; an explicit zero
+  margin makes inner == outer, so a domain value and its pixel are the same
+  number and the geometry assertions read directly.
+
+  What is now pinned for the Alarm cluster:
+  - The `Math.max(1, …)` **width floor** on both bands and zones — without it a
+    range whose ends land on one pixel renders zero-width, i.e. an alarm that
+    happened but is invisible. That is the exact case `AlarmHotZones` exists
+    for.
+  - **Lane math**: stair-stepping by `idx * laneH`, the `Math.max(1, laneCount)`
+    guard (a zero lane count makes `laneH` Infinity), and the `clamp` that
+    keeps an out-of-range `laneIndex` inside the plot instead of below it.
+  - `AlarmStripeDefs` keeps **geometry numeric and paint tokenised** — SVG
+    geometry attributes do not resolve `var()`, so a "consistency" refactor
+    that tokenised `width`/`height` would collapse the tile to 0/NaN. Also that
+    one `spacing` drives both the tile box and the line length, or the motif
+    stops tiling seamlessly.
+  - The `patternId` round-trip between `AlarmStripeDefs` and `AlarmHotZones`.
+    `fill="url(#id)"` resolves document-wide, so a fixed id would silently make
+    a second overlay adopt the first one's stripe.
+  - `AlarmOverlay`'s **paint order** — bands before zones, per its own comment,
+    invisible until a band and a zone overlap — and that hot-zone detection is
+    per series rather than across the merged set.
+
 ## 0.146.0
 
 ### Added
