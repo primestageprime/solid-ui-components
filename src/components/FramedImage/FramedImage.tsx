@@ -38,11 +38,23 @@ export interface FramedImageProps {
   /** Compile-time shape — locked square size in px (thumbnail use). Omit
    *  for a frame that fills its container instead (detail-view use). */
   squareSize?: number;
+  /** Per-instance preview rotation in degrees — for showing an accumulated,
+   *  not-yet-applied rotate edit before it's committed to real pixels.
+   *  Threaded the same way as squareSize: a CSS custom property the
+   *  component's own stylesheet consumes, never a call-site style prop. */
+  rotationDegrees?: number;
   class?: string;
 }
 
 export const FramedImage: Component<FramedImageProps> = (props) => {
-  const [local] = splitProps(props, ["src", "alt", "fit", "squareSize", "class"]);
+  const [local] = splitProps(props, [
+    "src",
+    "alt",
+    "fit",
+    "squareSize",
+    "rotationDegrees",
+    "class",
+  ]);
 
   const classes = () => {
     const c = ["sui-framed-image", `sui-framed-image--${local.fit}`];
@@ -51,14 +63,17 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
     return c.join(" ");
   };
 
-  // The only per-instance geometry: which fixed px size, when squared. This
-  // is a single custom property, not a style override of anything the
-  // component itself owns — the component's own CSS still owns every other
-  // rule (overflow, border-radius, background, object-fit).
-  const cssVars = (): JSX.CSSProperties =>
-    local.squareSize != null
-      ? ({ "--sui-framed-image-size": `${local.squareSize}px` } as JSX.CSSProperties)
-      : {};
+  // The only per-instance geometry: which fixed px size, when squared, and
+  // which preview rotation, when set. Single custom properties, not a style
+  // override of anything the component itself owns — the component's own
+  // CSS still owns every other rule (overflow, border-radius, background,
+  // object-fit).
+  const cssVars = (): JSX.CSSProperties => {
+    const vars: Record<string, string> = {};
+    if (local.squareSize != null) vars["--sui-framed-image-size"] = `${local.squareSize}px`;
+    if (local.rotationDegrees) vars["--sui-framed-image-rotation"] = `${local.rotationDegrees}deg`;
+    return vars as JSX.CSSProperties;
+  };
 
   return (
     <div class={classes()} style={cssVars()}>

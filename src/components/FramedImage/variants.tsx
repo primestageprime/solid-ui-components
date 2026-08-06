@@ -3,7 +3,10 @@
 import type { Component } from "solid-js";
 import { FramedImage, type FramedImageProps } from "./FramedImage";
 
-export type FramedImageDataProps = Pick<FramedImageProps, "src" | "alt" | "class">;
+export type FramedImageDataProps = Pick<
+  FramedImageProps,
+  "src" | "alt" | "class" | "rotationDegrees"
+>;
 
 function createFramedImage(
   defaults: Pick<FramedImageProps, "fit" | "squareSize">,
