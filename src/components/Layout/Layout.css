@@ -148,6 +148,13 @@
   flex-direction: row;
   height: auto;
 }
+/* Opt-in override of the row default above — see `fillHeight`'s doc
+   comment in ProportionalStack.tsx for when to reach for this instead. */
+.proportional-stack--fill-height {
+  flex: 1 1 0px;
+  height: auto;
+  min-height: 0;
+}
 .proportional-stack--wrap {
   flex-wrap: wrap;
 }
