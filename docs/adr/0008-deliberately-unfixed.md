@@ -94,3 +94,24 @@ The 2026-07-31 sweep compared all 51 string-union prop scales in
 bugs. The audit is scriptable, but wiring it into `health.mjs` gates every
 future PR — a policy call, deliberately left open rather than decided by an
 agent. Tracked as dside `sui` #12295; do not implement it as a routine cleanup.
+
+## `undocumentedExports` asks for a mention, not a section
+
+The metric (`scripts/doc-coverage.mjs`, baselined at **172 of 619** on
+2026-08-06) passes an export as documented when its name appears **anywhere**
+in `COMPONENTS.md` — prose, a bullet, or a code fence. That looks like a bar
+left half-raised. It is where it is on purpose.
+
+Measured at `049bb92`, the stricter bars read: 172 named nowhere at all, 384
+without a bolded bullet of their own. The gap is almost entirely curried
+variants documented as a family — "a Panel variant (`InfoPanel`,
+`AccentPanel`, `DangerPanel`, …)" is a good manifest entry, and demanding a
+separate entry per variant would push a 1753-line file to grow. dside `sui`
+#16389 is about *splitting* that file, so a metric that rewards padding it
+works against the thing it was built to serve.
+
+The change that mattered was the subject, not the threshold: the metric this
+replaced asked the same "does it appear anywhere" question of the 145
+*directory* names, which short generic names like `Chart` and `Badge` satisfied
+out of other components' prose. Do not tighten this to require a heading or a
+bullet without deciding the family-documentation question first.
