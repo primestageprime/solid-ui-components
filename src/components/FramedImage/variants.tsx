@@ -5,7 +5,7 @@ import { FramedImage, type FramedImageProps } from "./FramedImage";
 
 export type FramedImageDataProps = Pick<
   FramedImageProps,
-  "src" | "alt" | "class" | "rotationDegrees"
+  "src" | "alt" | "class" | "rotationDegrees" | "overlay"
 >;
 
 function createFramedImage(

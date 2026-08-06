@@ -43,6 +43,11 @@ export interface FramedImageProps {
    *  Threaded the same way as squareSize: a CSS custom property the
    *  component's own stylesheet consumes, never a call-site style prop. */
   rotationDegrees?: number;
+  /** Arbitrary content stacked over the image, filling the frame — e.g. a
+   *  CropRectOverlay. The frame is `position: relative` for exactly this;
+   *  an overlay component positions itself `absolute; inset: 0` in its own
+   *  CSS to fill it. */
+  overlay?: JSX.Element;
   class?: string;
 }
 
@@ -53,6 +58,7 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
     "fit",
     "squareSize",
     "rotationDegrees",
+    "overlay",
     "class",
   ]);
 
@@ -78,6 +84,7 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
   return (
     <div class={classes()} style={cssVars()}>
       <img src={local.src} alt={local.alt} />
+      {local.overlay}
     </div>
   );
 };
