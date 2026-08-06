@@ -38,6 +38,8 @@ export const ICON_GROUPS = {
     "pause",
     "edit",
     "trash",
+    "rotate-left",
+    "rotate-right",
   ] as const,
   ui: ["spinner", "menu", "settings", "external-link", "bell"] as const,
   auth: ["log-out", "log-in", "user", "agent"] as const,
@@ -84,6 +86,8 @@ export type IconName =
   | "pause"
   | "edit"
   | "trash"
+  | "rotate-left"
+  | "rotate-right"
   // UI
   | "spinner"
   | "menu"
@@ -303,6 +307,22 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
             <path d="M6 4V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.5" fill="none"/>
             <path d="M4 5h8l-.6 8.6a1 1 0 01-1 .9H5.6a1 1 0 01-1-.9L4 5Z" fill="currentColor"/>
             <path d="M6.5 7v4M9.5 7v4" stroke="var(--sui-bg-primary)" stroke-width="1.2" stroke-linecap="round"/>`,
+    },
+
+    // Circular arc (open at bottom-right) + arrowhead at the open end,
+    // sweeping counter-clockwise — "rotate this 90° left."
+    "rotate-left": {
+      outline: `<path d="M12 8a4.5 4.5 0 1 1-1.5-3.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M10.5 2.5v3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M12 8a4.5 4.5 0 1 1-1.5-3.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M10.5 2.5v3h-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+    // Mirror of rotate-left — sweeping clockwise, "rotate this 90° right."
+    "rotate-right": {
+      outline: `<path d="M4 8a4.5 4.5 0 1 0 1.5-3.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M5.5 2.5v3h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M4 8a4.5 4.5 0 1 0 1.5-3.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M5.5 2.5v3h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
 
     // === UI ICONS ===

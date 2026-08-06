@@ -18,7 +18,8 @@
 // callback (`title` / `onChange`), nothing presentational to freeze. Same
 // data-only exemption as SortableList.
 // ============================================
-import { type Component, Show, createSignal } from "solid-js";
+import { type Component, Show, createSignal, onCleanup, onMount } from "solid-js";
+import { isEditableTarget } from "../HotkeyButton/HotkeyButton";
 import "./EditableTitle.css";
 
 /** What gesture opens the inline editor.
@@ -46,6 +47,14 @@ export interface EditableTitleProps {
   /** Selection state of the enclosing row — consulted only in `"clickSelected"`
    *  mode, where a title click edits iff the row is already selected. */
   rowSelected?: boolean;
+  /**
+   * Single character that opens the editor via keyboard, e.g. "r" — the same
+   * hotkey idiom `HotkeyButton` uses (window-level listener, no modifier
+   * held, guarded against firing while a text field is already focused via
+   * `isEditableTarget`). Independent of `editTrigger`: the click gesture and
+   * the hotkey both open the same editor. Omit for no keyboard trigger.
+   */
+  hotkey?: string;
 }
 
 export const EditableTitle: Component<EditableTitleProps> = (props) => {
@@ -85,6 +94,19 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
   const onTextDblClick = () => {
     if (props.editTrigger === "doubleClick") startEdit();
   };
+  // Hotkey trigger — same guard shape as HotkeyButton: no modifier held, not
+  // already typing somewhere else. Doesn't fire while already editing (the
+  // input's own onKeyDown owns Enter/Escape there).
+  const onWindowKeyDown = (e: KeyboardEvent) => {
+    if (!props.hotkey || editing()) return;
+    if (isEditableTarget(e.target)) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key.toLowerCase() !== props.hotkey.toLowerCase()) return;
+    e.preventDefault();
+    startEdit();
+  };
+  onMount(() => document.addEventListener("keydown", onWindowKeyDown));
+  onCleanup(() => document.removeEventListener("keydown", onWindowKeyDown));
   return (
     <span class="sui-editable-title">
       <Show
