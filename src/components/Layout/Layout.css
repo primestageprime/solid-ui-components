@@ -148,6 +148,9 @@
   flex-direction: row;
   height: auto;
 }
+.proportional-stack--wrap {
+  flex-wrap: wrap;
+}
 
 .proportional-stack--gap-xs {
   gap: 4px;

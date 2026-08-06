@@ -24,18 +24,32 @@ export interface ProportionalStackProps
   direction?: "column" | "row";
   /** Gap between items. Default `sm` (8px). */
   gap?: "xs" | "sm";
+  /**
+   * When the row's fixed-weight (weight={0}) items alone already exceed the
+   * container — e.g. a toolbar of icon buttons growing over time, sitting
+   * beside a weight>0 item whose own content has an unavoidable floor (a
+   * single long unbreakable chip/word) — weight>0 items shrinking toward 0
+   * still isn't enough, and the fixed items (which never shrink; that's
+   * their contract) get clipped past the container edge instead of clamped.
+   * `wrap` is the escape valve: once the row can't fit at min-content, it
+   * wraps onto additional lines instead of clipping. Default false (a
+   * direction="column" stack has no meaningful row-wrap equivalent, so this
+   * only affects direction="row").
+   */
+  wrap?: boolean;
 }
 
 export const ProportionalStack: Component<ProportionalStackProps> = (
   rawProps,
 ) => {
   const props = mergeProps(
-    { direction: "column" as const, gap: "sm" as const },
+    { direction: "column" as const, gap: "sm" as const, wrap: false },
     rawProps,
   );
   const [local, others] = splitProps(props, [
     "direction",
     "gap",
+    "wrap",
     "class",
     "children",
   ]);
@@ -45,6 +59,7 @@ export const ProportionalStack: Component<ProportionalStackProps> = (
       `proportional-stack--${local.direction}`,
       `proportional-stack--gap-${local.gap}`,
     ];
+    if (local.wrap && local.direction === "row") cls.push("proportional-stack--wrap");
     if (local.class) cls.push(local.class);
     return cls.join(" ");
   };
