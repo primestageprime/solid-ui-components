@@ -24,6 +24,12 @@ export interface SurfaceProps extends JSX.HTMLAttributes<HTMLDivElement> {
   gap?: "none" | "xs" | "sm" | "md" | "lg";
   minWidth?: string;
   maxWidth?: string;
+  /** Stretches to fill the height of a definite-height flex/grid ancestor
+   *  — the same recipe Stack's own `fill` uses. For a Surface standing in
+   *  as a whole panel's background (e.g. a themed backdrop behind a tab's
+   *  content) rather than a content-sized card. Default false: a bare
+   *  Surface, like every idle card, stays shrink-wrapped to its content. */
+  fill?: boolean;
   /** Plays a one-shot slide-and-fade exit toward the given side, then holds
    *  at that end state (opacity 0, translated off) — for a "this option
    *  lost" affordance (e.g. a rejected item in a pairwise comparison).
@@ -58,6 +64,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     "class",
     "children",
     "style",
+    "fill",
     "exit",
   ]);
 
@@ -71,6 +78,7 @@ export const Surface: Component<SurfaceProps> = (rawProps) => {
     if (local.interactive) classList.push("surface--interactive");
     if (local.active) classList.push("surface--active");
     if (local.shadow) classList.push("surface--shadow");
+    if (local.fill) classList.push("surface--fill");
     if (local.exit) classList.push(`surface--exit-${local.exit}`);
     if (local.class) classList.push(local.class);
     return classList.join(" ");
@@ -141,6 +149,7 @@ export type SurfaceOverrides = Pick<
   | "gap"
   | "minWidth"
   | "maxWidth"
+  | "fill"
 >;
 
 /** Props that remain available to consumers of a curried Surface variant. */

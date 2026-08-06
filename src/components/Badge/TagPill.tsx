@@ -50,6 +50,11 @@ export type TagPillData = TagPillLabel | TagPillKeyValue;
 
 export interface TagPillProps {
   tag: TagPillData;
+  /** Makes the pill itself a click target (e.g. "filter the list by this
+   *  tag") — distinct from any adjacent remove/× control a consumer might
+   *  render beside it. Omit and the pill stays a plain, inert label,
+   *  exactly as before. Keyboard-activatable (Enter/Space) whenever set. */
+  onClick?: () => void;
 }
 
 const isKeyValue = (tag: TagPillData): tag is TagPillKeyValue =>
@@ -76,13 +81,40 @@ export const TagPill: Component<TagPillProps> = (props) => {
     return { ns: "", val: tag.label, active: tag.active, split: false, label: tag.label };
   };
 
+  // Conditionally interactive: role/tabIndex/keydown ship together with
+  // the click handler, or not at all — same pattern as EntityCard's own
+  // onClick-gated interactivity. stopPropagation on both so a pill nested
+  // inside a larger clickable row (a BucketQueue item, a card) can be its
+  // OWN click target without also firing the row's click — the consumer
+  // doesn't need to remember to wrap this in a button and do it themselves
+  // (MediaCard's tag pills used to; this makes that boilerplate obsolete).
+  const onClick = (e: MouseEvent) => {
+    if (!props.onClick) return;
+    e.stopPropagation();
+    props.onClick();
+  };
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (!props.onClick) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      props.onClick();
+    }
+  };
+
   return (
     <Show
       when={parts().split}
       fallback={
+        // biome-ignore lint/a11y/noStaticElementInteractions: role/tabIndex/keydown are only ever present together with onClick, see onKeyDown above.
+        // biome-ignore lint/a11y/useAriaPropsSupportedByRole: role is only ever "button" when onClick is set, where it's a supported role.
         <span
           class="sui-tag-pill"
-          classList={{ "sui-tag-pill--active": parts().active }}
+          classList={{ "sui-tag-pill--active": parts().active, "sui-tag-pill--clickable": !!props.onClick }}
+          role={props.onClick ? "button" : undefined}
+          tabIndex={props.onClick ? 0 : undefined}
+          onClick={onClick}
+          onKeyDown={onKeyDown}
         >
           <Show when={isNumericLabel(parts().label)} fallback={parts().label}>
             <DigitRoller value={parts().label} />
@@ -90,9 +122,15 @@ export const TagPill: Component<TagPillProps> = (props) => {
         </span>
       }
     >
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: see above. */}
+      {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: see above. */}
       <span
         class="sui-tag-pill sui-tag-pill--split"
-        classList={{ "sui-tag-pill--active": parts().active }}
+        classList={{ "sui-tag-pill--active": parts().active, "sui-tag-pill--clickable": !!props.onClick }}
+        role={props.onClick ? "button" : undefined}
+        tabIndex={props.onClick ? 0 : undefined}
+        onClick={props.onClick}
+        onKeyDown={onKeyDown}
       >
         <span class="sui-tag-pill__ns">{parts().ns}</span>
         <span class="sui-tag-pill__val">{parts().val}</span>

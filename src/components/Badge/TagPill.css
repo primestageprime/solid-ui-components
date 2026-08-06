@@ -17,6 +17,12 @@
 .sui-tag-pill--active {
   background: rgba(var(--sui-accent-rgb), 0.12);
 }
+.sui-tag-pill--clickable {
+  cursor: pointer;
+}
+.sui-tag-pill--clickable:hover {
+  background: rgba(var(--sui-accent-rgb), 0.18);
+}
 .sui-tag-pill--split {
   display: inline-flex;
   align-items: stretch;

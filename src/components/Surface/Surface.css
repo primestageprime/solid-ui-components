@@ -48,6 +48,13 @@
   box-shadow: 0 0 15px rgba(var(--sui-accent-rgb), 0.3);
 }
 
+/* Stretches to a definite-height ancestor — same recipe as Stack's own
+   `fill` (height:100%; the containing block just needs to itself resolve
+   to a real height, which is the caller's responsibility same as always). */
+.surface--fill {
+  height: 100%;
+}
+
 /* Drop shadow for elevated/floating surfaces (popover/menu panels).
    Decoration only — box-shadow, never geometry (layout-purity). */
 .surface--shadow {
