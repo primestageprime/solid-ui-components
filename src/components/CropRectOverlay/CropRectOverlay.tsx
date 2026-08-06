@@ -216,24 +216,29 @@ export const CropRectOverlay: Component<CropRectOverlayProps> = (props) => {
         }}
       </For>
       <Show when={drawingRect()}>
-        {(rect) => {
-          const b = contentBox();
-          if (!b) return null;
-          const screen = toScreen(rect(), b);
-          return (
-            <div
-              class="sui-crop-overlay__rect sui-crop-overlay__rect--drawing"
-              style={
-                {
-                  left: `${screen.left}px`,
-                  top: `${screen.top}px`,
-                  width: `${screen.width}px`,
-                  height: `${screen.height}px`,
-                } as JSX.CSSProperties
-              }
-            />
-          );
-        }}
+        {/* `rect()` calls stay INLINE in the style expression, not hoisted
+            into a `const` in this callback's body. Show's children-as-
+            function runs ONCE per falsy<->truthy transition, not on every
+            value change — a `const screen = toScreen(rect(), ...)` computed
+            here would freeze at the drag's first pointermove and never
+            update again (confirmed live: the box didn't appear to move at
+            all until release, when the committed <For> item took over).
+            Reading rect() directly inside the JSX attribute expression is
+            what lets Solid's compiler re-run just that binding on each
+            drawingRect() change. */}
+        {(rect) => (
+          <div
+            class="sui-crop-overlay__rect sui-crop-overlay__rect--drawing"
+            style={
+              {
+                left: `${toScreen(rect(), contentBox()!).left}px`,
+                top: `${toScreen(rect(), contentBox()!).top}px`,
+                width: `${toScreen(rect(), contentBox()!).width}px`,
+                height: `${toScreen(rect(), contentBox()!).height}px`,
+              } as JSX.CSSProperties
+            }
+          />
+        )}
       </Show>
     </div>
   );
