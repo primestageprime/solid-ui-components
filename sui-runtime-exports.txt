@@ -730,3 +730,7 @@ YAxis
 SmallSquarePlaceholder
 MediumSquarePlaceholder
 LargeSquarePlaceholder
+FramedImage
+SmallSquareThumbnail
+MediumSquareThumbnail
+ContainedPhoto

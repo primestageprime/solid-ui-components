@@ -1,0 +1,36 @@
+.sui-framed-image {
+  overflow: hidden;
+  border-radius: var(--sui-radius-sm, 4px);
+  background: var(--sui-bg-tertiary);
+}
+
+/* Square: fixed width/height from the per-instance custom property. */
+.sui-framed-image--square {
+  flex: 0 0 auto;
+  width: var(--sui-framed-image-size);
+  height: var(--sui-framed-image-size);
+}
+
+/* Non-square: fills whatever flex/grid space its parent gives it — the
+   detail-view case, where the frame IS the available container. */
+.sui-framed-image:not(.sui-framed-image--square) {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sui-framed-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.sui-framed-image--cover img {
+  object-fit: cover;
+}
+
+.sui-framed-image--contain img {
+  object-fit: contain;
+}
