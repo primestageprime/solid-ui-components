@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Added
+- **`scripts/export-surface.mjs`** — type-level extraction of the public API
+  (dside `sui` 16389). Tooling only; nothing about the shipped library changes.
+
+  `collectExportSurface` in `export-usage-report.mjs` resolves the barrel chain
+  with regexes and answers *which names* are exported. This answers *what they
+  are and what props they take*, via `ts.createProgram` + `getTypeChecker` —
+  the semantic half nothing in `scripts/` had. It is an addition, not a
+  replacement: the two were cross-checked and agree exactly on the name set
+  (1260 names, zero symmetric difference), and that agreement is now pinned by
+  test, so the cheap extractor stays trustworthy for name-level work.
+
+  Of the 1260 exports: 533 types, 524 components, 95 factories, 95 functions,
+  11 consts, 2 namespaces — nothing unclassified. 2405 component props are
+  extracted with their real declared types, literal unions intact.
+
+  Two decisions worth knowing about:
+
+  - **Own props are separated from the inherited DOM surface** by declaration
+    site. Unfiltered, `PrimaryButton` reports 474 properties, because Solid
+    folds in every HTML button attribute; only 3 are the component's own. This
+    also makes currying visible in the types — `variant` and `size` are absent
+    from `PrimaryButton` because `createButton` bakes them, so the extracted
+    table shows what a caller may actually pass. That is the curried-only
+    policy COMPONENTS.md states in prose and cannot enforce.
+  - **Components are identified by shape, not arity.** `getCellValue(row,
+    column): JSX.Element` and `formatCompactDuration(ms)` both defeat the
+    obvious heuristics and would be filed as components with zero props —
+    indistinguishable downstream from a real component that has none.
+
+  Downstream of this and landing separately: generated prop tables for
+  COMPONENTS.md, an honest `undocumentedComponents` metric (the current one
+  passes 145/145 by testing whether a directory name appears anywhere in a
+  259KB file), and piece 2 of #12565's export-breakage gate.
+
 ## 0.141.0
 
 ### Changed
