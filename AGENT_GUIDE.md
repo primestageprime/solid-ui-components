@@ -583,11 +583,15 @@ is zero). Before 2026-08-04 each test file worked around that privately:
 spied on `getBoundingClientRect`, 5 copied the same three DnD helpers, 3 wrote
 their own `firePointer`. A fix to one never reached the others.
 
+The migration finished 2026-08-06. Two files keep a private double, both for
+the reason at the bottom of this section, and nothing else should: if you are
+about to write `class FakeResizeObserver`, you want `installFakeSizer()`.
+
 Import from `../../test-utils` instead:
 
 | Need | Use |
 |---|---|
-| A component that measures itself | `installFakeSizer()` → `await sizer.resize(el, size)`, `sizer.observations`, `sizer.autoFire` |
+| A component that measures itself | `installFakeSizer()` → `await sizer.resize(el, size)`, `sizer.autoFire`; `sizer.observations` for how observe was *called* (assert `options.box` here), `sizer.observed()` for what is watched *right now* (a leaked observation shows up here, never as a wrong measurement) |
 | Geometry (drag hit-tests, overflow) | `installRects(provider)` + `verticalRows(ids)` or `liveFlow(root, opts)`; `rectOf(box)` for a bespoke provider |
 | Pointer gestures | `pointer(el).down/move/up({ clientX, clientY })`, plus `installPointerCapture(el)` |
 | HTML5 drag and drop | `makeDataTransfer()`, `fireDrag()`, `flush()` |
@@ -615,9 +619,26 @@ Three things worth knowing before you extend it:
   (`restoreMocks` is unset) and would put `vitest` into the published
   `dist/test-utils/*.d.ts`.
 
-`src/internal/dom/observeSize.test.ts` deliberately keeps its own lower-level
-double: its subject *is* the scheduling, so it must observe the deferral the
-shared sizer hides. Don't migrate it.
+Two files deliberately keep their own lower-level double, and the rule is the
+same for both: **the subject is the scheduling**, so they must see the deferral
+the shared sizer hides. `installFakeSizer`'s `resize` awaits the rAF frame
+before resolving — that is the whole point of it — so any assertion of the form
+"nothing has happened *yet*" becomes unfalsifiable under it.
+
+- `src/internal/dom/observeSize.test.ts` — the deferral and change-guard are
+  what it tests.
+- `src/components/CashflowChart/CashflowChart.test.tsx` — asserts the viewBox
+  does not move until the frame is flushed, and that a second resize cancels
+  the first one's pending frame. It holds the rAF queue and flushes by hand.
+
+Don't migrate either. Anything else with a private double is a leftover.
+
+One thing the migration turned up that is worth repeating: a stubbed observer
+is often not what makes a measuring test pass. `createTruncationObserver`
+measures **synchronously** inside its `createEffect` before it observes
+anything, so tests that fired the observer and asserted immediately were
+reading that first measure — the fire was decorative. Before assuming a
+`resize()` call is load-bearing, delete it and watch what fails.
 
 ## Summary
 
