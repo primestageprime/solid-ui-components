@@ -2,89 +2,49 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { DnDHierarchySortBar } from "./DnDHierarchySortBar";
+import {
+  makeDataTransfer,
+  fireDrag,
+  flush,
+  installRects,
+  rectOf,
+} from "../../test-utils";
+
+let restoreRects: (() => void) | undefined;
 
 afterEach(() => {
   cleanup();
+  restoreRects?.();
+  restoreRects = undefined;
   vi.restoreAllMocks();
 });
 
-// ── Fake DnD plumbing ───────────────────────────────────────────────────────
-// jsdom has no DataTransfer/DragEvent; build a minimal stand-in.
-function makeDataTransfer() {
-  const store: Record<string, string> = {};
-  return {
-    effectAllowed: "",
-    dropEffect: "",
-    setData: (k: string, v: string) => {
-      store[k] = v;
-    },
-    getData: (k: string) => store[k] ?? "",
-    setDragImage: () => {},
-  };
-}
-
-function fireDrag(
-  el: Element,
-  type: string,
-  opts: {
-    clientX?: number;
-    clientY?: number;
-    dataTransfer: ReturnType<typeof makeDataTransfer>;
-  },
-) {
-  const ev = Object.assign(
-    new Event(type, { bubbles: true, cancelable: true }),
-    {
-      clientX: opts.clientX ?? 0,
-      clientY: opts.clientY ?? 0,
-      dataTransfer: opts.dataTransfer,
-    },
-  );
-  el.dispatchEvent(ev);
-  return ev;
-}
-
-const flush = () => new Promise((r) => setTimeout(r, 0));
+// Strip the ⋮ drag-handle glyph and whitespace to recover the pill's label.
+const labelOf = (el: Element): string =>
+  (el.textContent ?? "").replace(/[⋮\s]/g, "");
 
 // Layout: single row, each pill 40px wide, 8px gap → pitch 48. Height 24.
-// We key geometry by the pill's text label so it follows the node through reflow.
+// Keyed by the pill's text label, so — unlike `liveFlow` in the sweep test —
+// the geometry follows a node through the preview reflow and stays put. These
+// cases fire one dragover at a coordinate computed before the reflow, so a
+// reflow-aware model would move the target out from under them.
 function installLayout(labels: string[]) {
   const PITCH = 48;
   const W = 40;
-  const xByLabel = new Map<string, number>();
-  labels.forEach((l, i) => {
-    xByLabel.set(l, i * PITCH);
+  const xByLabel = new Map(labels.map((l, i) => [l, i * PITCH]));
+  restoreRects = installRects((el) => {
+    const left = xByLabel.get(labelOf(el));
+    return left === undefined
+      ? null
+      : rectOf({ left, top: 0, width: W, height: 24 });
   });
-  const orig = Element.prototype.getBoundingClientRect;
-  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
-    function (this: Element) {
-      const txt = (this.textContent ?? "").replace(/[⋮\s]/g, "");
-      if (xByLabel.has(txt)) {
-        const left = xByLabel.get(txt)!;
-        return {
-          left,
-          top: 0,
-          width: W,
-          height: 24,
-          right: left + W,
-          bottom: 24,
-          x: left,
-          y: 0,
-          toJSON() {},
-        } as DOMRect;
-      }
-      return orig.call(this);
-    },
-  );
 }
 
 function findPill(container: HTMLElement, label: string): HTMLElement {
   const pills = Array.from(
     container.querySelectorAll(".sui-dnd-hierarchy-sort-bar__pill"),
   ) as HTMLElement[];
-  const hit = pills.find(
-    (p) => (p.textContent ?? "").replace(/[⋮\s]/g, "") === label,
-  );
+  const hit = pills.find((p) => labelOf(p) === label);
   if (!hit) throw new Error(`pill ${label} not found`);
   return hit;
 }

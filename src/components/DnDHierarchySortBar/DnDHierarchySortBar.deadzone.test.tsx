@@ -2,6 +2,13 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { DnDHierarchySortBar } from "./DnDHierarchySortBar";
+import {
+  makeDataTransfer,
+  fireDrag,
+  flush,
+  installRects,
+  rectOf,
+} from "../../test-utils";
 
 // ── Dead-zone regression ─────────────────────────────────────────────────────
 // The original bug: `onDragOver` lived on each PILL, so it only fired when the
@@ -16,43 +23,26 @@ import { DnDHierarchySortBar } from "./DnDHierarchySortBar";
 // committed order tracks the cursor. They would FAIL with per-pill-only handling
 // (nothing fires in a dead zone → stale insertPos → wrong commit).
 
+let restoreRects: (() => void) | undefined;
+
 afterEach(() => {
   cleanup();
+  restoreRects?.();
+  restoreRects = undefined;
   vi.restoreAllMocks();
 });
 
-function makeDataTransfer() {
-  const store: Record<string, string> = {};
-  return {
-    effectAllowed: "",
-    dropEffect: "",
-    setData: (k: string, v: string) => {
-      store[k] = v;
-    },
-    getData: (k: string) => store[k] ?? "",
-    setDragImage: () => {},
-  };
-}
-
-function fireDrag(
-  el: Element,
-  type: string,
-  clientX: number,
-  dt: ReturnType<typeof makeDataTransfer>,
-) {
-  const ev = Object.assign(
-    new Event(type, { bubbles: true, cancelable: true }),
-    { clientX, clientY: 12, dataTransfer: dt },
-  );
-  el.dispatchEvent(ev);
-}
-
-const flush = () => new Promise((r) => setTimeout(r, 0));
+// Strip the ⋮ drag-handle glyph and whitespace to recover the pill's label.
+const labelOf = (el: Element): string =>
+  (el.textContent ?? "").replace(/[⋮\s]/g, "");
 
 // Fixed (non-reflowing) geometry keyed by pill label, with deliberate GAPS and
 // trailing empty space so the dead zones are real:
 //   A: 0..40 (mid 20)   B: 100..140 (mid 120)   C: 200..240 (mid 220)   D: 300..340 (mid 320)
 // Gaps: 40..100, 140..200, 240..300; trailing dead zone: > 340.
+// The gaps are the whole point, so neither shared model fits: `verticalRows` is
+// vertical and contiguous, `liveFlow` packs elements with a uniform gap and
+// would leave no dead zone to aim at.
 const RANGE: Record<string, [number, number]> = {
   A: [0, 40],
   B: [100, 140],
@@ -61,28 +51,12 @@ const RANGE: Record<string, [number, number]> = {
 };
 
 function installFixedLayout() {
-  const orig = Element.prototype.getBoundingClientRect;
-  vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
-    function (this: Element) {
-      const txt = (this.textContent ?? "").replace(/[⋮\s]/g, "");
-      const r = RANGE[txt];
-      if (r) {
-        const [left, right] = r;
-        return {
-          left,
-          right,
-          top: 0,
-          bottom: 24,
-          width: right - left,
-          height: 24,
-          x: left,
-          y: 0,
-          toJSON() {},
-        } as DOMRect;
-      }
-      return orig.call(this);
-    },
-  );
+  restoreRects = installRects((el) => {
+    const range = RANGE[labelOf(el)];
+    if (!range) return null;
+    const [left, right] = range;
+    return rectOf({ left, top: 0, width: right - left, height: 24 });
+  });
 }
 
 function containerEl(root: HTMLElement): HTMLElement {
@@ -93,9 +67,7 @@ function srcPill(root: HTMLElement, label: string): HTMLElement {
   const pills = Array.from(
     root.querySelectorAll(".sui-dnd-hierarchy-sort-bar__pill"),
   ) as HTMLElement[];
-  return pills.find(
-    (p) => (p.textContent ?? "").replace(/[⋮\s]/g, "") === label,
-  )!;
+  return pills.find((p) => labelOf(p) === label)!;
 }
 
 async function dragToDeadZone(opts: {
@@ -117,14 +89,19 @@ async function dragToDeadZone(opts: {
   const dt = makeDataTransfer();
 
   // dragstart on the dragged pill, then let the deferred placeholder take over.
-  fireDrag(srcPill(root, opts.drag), "dragstart", 120, dt);
+  fireDrag(srcPill(root, opts.drag), "dragstart", {
+    clientX: 120,
+    clientY: 12,
+    dataTransfer: dt,
+  });
   await flush();
 
   // dragover + drop fired on the CONTAINER ROW at a dead-zone coordinate (NOT
   // over any pill). With per-pill handling this would do nothing.
   const row = containerEl(root);
-  fireDrag(row, "dragover", opts.dropX, dt);
-  fireDrag(row, "drop", opts.dropX, dt);
+  const at = { clientX: opts.dropX, clientY: 12, dataTransfer: dt };
+  fireDrag(row, "dragover", at);
+  fireDrag(row, "drop", at);
 
   return onReorder.mock.calls.at(-1)?.[0] as string[] | undefined;
 }
