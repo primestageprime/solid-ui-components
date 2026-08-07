@@ -2,6 +2,51 @@
 
 ## [Unreleased]
 
+## 0.145.0
+
+### Added
+- **Render coverage for the whole `DataDisplay` cluster** — `DateTimeRange`,
+  `MetricCard`, `NumberWithUnits`, `ResultDisplay`, `ResultPanel` and
+  `StatsTable` had no test that mounted them. `componentsNeverRendered`
+  tightens 35 → 29.
+
+  Per #12541's own rule these are not smoke tests: each asserts the
+  component's actual decisions. Every branch claimed is **mutation-tested** —
+  the guarded line was broken, the suite confirmed red, and the line restored.
+  That caught one hollow test of my own (see below).
+
+  What is now pinned, in rough order of how quietly it would break:
+  - `NumberWithUnits` uses `v == null`, not a falsy check, so a reading of
+    **zero renders "0" and not "—"**. `precision` is inert on a value that is
+    already a string.
+  - `MetricCard`'s `"default"` colour deliberately emits **no** modifier class;
+    a refactor to `if (local.color)` would emit `sui-metric-card--default`,
+    which no CSS rule matches.
+  - `ResultPanel`'s `formulaProvider` default is `!== false`, not a truthiness
+    check — flipping it would silently disable formula highlighting everywhere
+    the prop is not passed.
+  - `StatsTable`'s `?? ""` on `getRowClass`, without which a row whose callback
+    returns `undefined` gets the literal class `"undefined"`. Also that
+    `align` defaults to left on **both** header and cell, and `width` is
+    header-only.
+  - `DateTimeRange` delegates to `formatDateTimeRange` and passes `mode`
+    through; asserted against the formatter's own output, so changing the
+    formatting rule does not require editing these.
+
+### Changed
+- `componentsNeverExecuted` tightens 16 → 12. `MetricCard`, `NumberWithUnits`,
+  `ResultPanel` and `StatsTable` were **dark** — not merely unmounted, but never
+  executing a line under the whole suite. That is a separate ratchet from
+  `health.mjs`, with its own baseline (`scripts/execution-baseline.json`),
+  enforced by the `test` CI job.
+
+### Fixed
+- **`ResultDisplay.highlighted`'s doc comment overstated its coupling.** It
+  read "when true (and `highlightable`)", but `.sui-result-display--highlighted`
+  is a standalone CSS rule, so `highlighted` paints on its own. The comment is
+  corrected; the **behaviour is unchanged deliberately**, since coupling them
+  would silently stop painting for anyone already relying on it.
+
 ## 0.144.0
 
 ### Removed
