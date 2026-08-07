@@ -1,20 +1,20 @@
 import { render, fireEvent } from "@solidjs/testing-library";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { MultiSelectFilter, type MultiSelectOption } from "./MultiSelectFilter";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
 // In jsdom clientWidth is 0, so the control always resolves to "bar" mode
 // (containerWidth === 0 short-circuits to bar). These tests exercise bar mode
 // plus the mode-independent click semantics.
 
-// jsdom has no ResizeObserver; onMount installs one. A no-op stub is enough —
-// clientWidth stays 0, so the control keeps rendering the button bar.
-class NoopResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-beforeAll(() => vi.stubGlobal("ResizeObserver", NoopResizeObserver));
-afterAll(() => vi.unstubAllGlobals());
+// jsdom has no ResizeObserver; onMount installs one. A silent double is enough
+// — `resize` is never called, so clientWidth stays 0 and the control keeps
+// rendering the button bar.
+let sizer: FakeSizer;
+beforeAll(() => {
+  sizer = installFakeSizer();
+});
+afterAll(() => sizer.restore());
 
 const OPTS: MultiSelectOption[] = [
   { value: "a", label: "Apple" },
@@ -22,10 +22,10 @@ const OPTS: MultiSelectOption[] = [
   { value: "c" }, // label falls back to value
 ];
 
-const chips = () =>
-  [...document.querySelectorAll<HTMLButtonElement>(".sui-msf__chip")];
-const chipByText = (t: string) =>
-  chips().find((c) => c.textContent === t)!;
+const chips = () => [
+  ...document.querySelectorAll<HTMLButtonElement>(".sui-msf__chip"),
+];
+const chipByText = (t: string) => chips().find((c) => c.textContent === t)!;
 
 describe("MultiSelectFilter (bar mode)", () => {
   it("renders one chip per option, labelled by label ?? value", () => {
@@ -44,19 +44,21 @@ describe("MultiSelectFilter (bar mode)", () => {
         onChange={() => {}}
       />
     ));
-    expect(document.querySelector(".sui-msf__label")?.textContent).toBe("Fruit");
+    expect(document.querySelector(".sui-msf__label")?.textContent).toBe(
+      "Fruit",
+    );
   });
 
   it("treats empty selection as all-inactive", () => {
     render(() => (
       <MultiSelectFilter options={OPTS} selected={[]} onChange={() => {}} />
     ));
-    expect(chips().some((c) => c.classList.contains("sui-msf__chip--active"))).toBe(
-      false,
-    );
-    expect(chips().every((c) => c.getAttribute("aria-pressed") === "false")).toBe(
-      true,
-    );
+    expect(
+      chips().some((c) => c.classList.contains("sui-msf__chip--active")),
+    ).toBe(false);
+    expect(
+      chips().every((c) => c.getAttribute("aria-pressed") === "false"),
+    ).toBe(true);
   });
 
   it("focuses to just one option when clicking a chip from the empty state", () => {
@@ -88,11 +90,7 @@ describe("MultiSelectFilter (bar mode)", () => {
 
   it("marks selected chips active with aria-pressed", () => {
     render(() => (
-      <MultiSelectFilter
-        options={OPTS}
-        selected={["b"]}
-        onChange={() => {}}
-      />
+      <MultiSelectFilter options={OPTS} selected={["b"]} onChange={() => {}} />
     ));
     const banana = chipByText("Banana");
     expect(banana.classList.contains("sui-msf__chip--active")).toBe(true);

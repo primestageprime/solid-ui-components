@@ -1,5 +1,5 @@
 // src/components/AnimatedSwimlaneChart/AnimatedSwimlaneChart.test.tsx
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { render } from "@solidjs/testing-library";
 // White-box test of the internal base (full override surface). The public
 // package only exposes the curried `AnimatedSwimlaneChart` + factory.
@@ -8,17 +8,15 @@ import {
   createAnimatedSwimlaneChart,
 } from "./AnimatedSwimlaneChart";
 import type { StatusFlowNode } from "../StatusFlowChart";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
+// jsdom ships no ResizeObserver and onMount installs one. Never calling
+// `resize` keeps the double silent, which is the behaviour these tests want.
+let sizer: FakeSizer;
 beforeAll(() => {
-  // jsdom doesn't ship ResizeObserver. Provide a no-op so onMount doesn't throw.
-  if (typeof globalThis.ResizeObserver === "undefined") {
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver;
-  }
+  sizer = installFakeSizer();
 });
+afterAll(() => sizer.restore());
 
 const FIXTURE: StatusFlowNode[] = [
   { id: "a", title: "Alpha", status: "DOING" },

@@ -18,38 +18,14 @@ import { createSignal } from "solid-js";
 import { cleanup, render } from "@solidjs/testing-library";
 import { BucketQueue, type Bucket } from "./BucketQueue";
 import type { Item } from "./testHelpers";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
-class FakeResizeObserver {
-  static instances: FakeResizeObserver[] = [];
-  observed: Element[] = [];
-  boxes: (string | undefined)[] = [];
-  constructor(public cb: () => void) {
-    FakeResizeObserver.instances.push(this);
-  }
-  observe(el: Element, opts?: { box?: string }) {
-    this.observed.push(el);
-    this.boxes.push(opts?.box);
-  }
-  unobserve(el: Element) {
-    const i = this.observed.indexOf(el);
-    if (i >= 0) {
-      this.observed.splice(i, 1);
-      this.boxes.splice(i, 1);
-    }
-  }
-  disconnect() {
-    this.observed = [];
-    this.boxes = [];
-  }
-}
-
-const original = (globalThis as { ResizeObserver?: unknown }).ResizeObserver;
+let sizer: FakeSizer;
 beforeEach(() => {
-  FakeResizeObserver.instances = [];
-  (globalThis as { ResizeObserver?: unknown }).ResizeObserver = FakeResizeObserver;
+  sizer = installFakeSizer();
 });
 afterEach(() => {
-  (globalThis as { ResizeObserver?: unknown }).ResizeObserver = original;
+  sizer.restore();
   cleanup();
 });
 
@@ -77,10 +53,12 @@ const renderQ = (items: Item[]) => {
   return { ...r, setRows };
 };
 
-// Everything currently observed, across every live observer.
+// `observed()` is the LIVE set — it shrinks when a disposed observation
+// disconnects — which is what the churn assertions below need. `observations`
+// is the append-only log of how observe was called, which is where `box` lives.
 const observer = () => ({
-  observed: FakeResizeObserver.instances.flatMap((o) => o.observed),
-  boxes: FakeResizeObserver.instances.flatMap((o) => o.boxes),
+  observed: sizer.observed(),
+  boxes: sizer.observations.map((o) => o.options?.box),
 });
 const bucketOfEl = (el: Element) =>
   (el.closest("[data-bq-bucket]") as HTMLElement | null)?.dataset.bqBucket;

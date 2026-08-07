@@ -41,6 +41,15 @@ function yTickLabels(container: HTMLElement): string[] {
 // Minimal mock ResizeObserver: jsdom has none, so we install one that captures
 // the callback and lets the test drive entries by hand. This lets us assert the
 // loop-safe behaviour (rAF-defer + no-op skip) without real layout.
+//
+// DELIBERATELY NOT migrated to src/test-utils' installFakeSizer, for the same
+// reason internal/dom/observeSize.test.ts is not: the subject here IS the
+// scheduling. These tests assert that the viewBox does NOT change until the
+// frame is flushed, and that a second resize cancels the first one's pending
+// frame — so they must hold the rAF queue and flush it by hand. installFakeSizer
+// hides exactly that (its `resize` awaits the frame before resolving, so a
+// caller can never observe the un-flushed state). Migrating this file would
+// silently delete the assertions it exists for.
 class MockResizeObserver {
   static lastCallback: ResizeObserverCallback | null = null;
   static observed: Element[] = [];

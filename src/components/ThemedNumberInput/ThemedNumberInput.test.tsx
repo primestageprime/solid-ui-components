@@ -1,18 +1,15 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { ThemedNumberInput } from "./ThemedNumberInput";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
 // Kobalte's NumberField touches ResizeObserver on some builds; jsdom lacks it.
+let sizer: FakeSizer;
 beforeAll(() => {
-  if (typeof globalThis.ResizeObserver === "undefined") {
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver;
-  }
+  sizer = installFakeSizer();
 });
+afterAll(() => sizer.restore());
 
 describe("ThemedNumberInput", () => {
   it("renders a named field with increment/decrement triggers", () => {

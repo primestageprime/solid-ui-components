@@ -1,21 +1,18 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { ScrollRegion, ScrollRegionMd, createScrollRegion } from "./index";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
 // jsdom does not implement ResizeObserver/MutationObserver layout, and reports 0
-// for scrollHeight/clientHeight. We stub ResizeObserver and drive the geometry
-// by defining the scroll metrics on the viewport, then firing a scroll event to
-// trigger the same recompute path the component uses at runtime.
+// for scrollHeight/clientHeight. The sizer stays silent — `resize` is never
+// called — and the geometry is driven instead by defining the scroll metrics on
+// the viewport and firing a scroll event, which is the same recompute path the
+// component uses at runtime.
+let sizer: FakeSizer;
 beforeAll(() => {
-  if (!("ResizeObserver" in globalThis)) {
-    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver =
-      class {
-        observe() {}
-        unobserve() {}
-        disconnect() {}
-      };
-  }
+  sizer = installFakeSizer();
 });
+afterAll(() => sizer.restore());
 
 const viewportOf = (container: HTMLElement) =>
   container.querySelector(".sui-scroll-region__viewport") as HTMLDivElement;
