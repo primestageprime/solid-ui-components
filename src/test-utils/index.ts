@@ -41,3 +41,12 @@ export {
   type FakeDataTransfer,
   type DragEventOptions,
 } from "./drag";
+export {
+  parsePath,
+  pathVertices,
+  controlPoints,
+  pathShape,
+  samplePolyline,
+  type PathPoint,
+  type PathCommand,
+} from "./svgPath";

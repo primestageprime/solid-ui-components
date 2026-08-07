@@ -62,11 +62,20 @@ export default defineConfig({
     // Only produced under `npm run test:coverage`; `npm test` is unaffected.
     // `all` is what makes a module nobody imports appear in the report at 0
     // instead of being omitted — the whole point of the componentsNeverExecuted
-    // metric is the files nothing touches. Scoped to component modules so the
-    // report stays about the library surface.
+    // metric is the files nothing touches.
+    //
+    // `src/internal/**` was added 2026-08-06. It had been outside every walk:
+    // this glob, `render-coverage.mjs` (which filters on `/src/components/`)
+    // and `execution-coverage.mjs` downstream of it. The 537 lines of edge
+    // routing in `src/internal/dag-svg` — shipped through DagChart,
+    // SwimlaneChart and AnimatedSwimlaneChart — therefore had no tests and no
+    // number saying so. Adding it here does NOT move `componentsNeverExecuted`:
+    // that metric iterates the component entry list and looks each entry up in
+    // this report, so extra files in the report are invisible to it. What it
+    // buys is the report telling the truth about the directory.
     coverage: {
       provider: "v8",
-      include: ["src/components/**/*.{ts,tsx}"],
+      include: ["src/components/**/*.{ts,tsx}", "src/internal/**/*.{ts,tsx}"],
       exclude: ["**/*.{test,spec}.{ts,tsx}"],
       all: true,
       reporter: ["text-summary", "json-summary"],
