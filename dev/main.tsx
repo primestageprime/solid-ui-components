@@ -128,6 +128,7 @@ import { DateRangePickerShowcase } from "./showcases/date-range-picker";
 import { DateTimeRangeShowcase } from "./showcases/date-time-range";
 import { EmptyStateShowcase } from "./showcases/empty-state";
 import { FileDropZoneShowcase } from "./showcases/file-drop-zone";
+import { BusyOverlayShowcase } from "./showcases/busy-overlay";
 import { FramedImageShowcase } from "./showcases/framed-image";
 import { MediaCardShowcase } from "./showcases/media-card";
 import { PickNumberLabelShowcase } from "./showcases/pick-number-label";
@@ -850,6 +851,12 @@ const items: Item[] = [
     label: "FileDropZone",
     component: FileDropZoneShowcase,
     tags: ["depth:2", "form", "container"],
+  },
+  {
+    id: "busy-overlay",
+    label: "BusyOverlay",
+    component: BusyOverlayShowcase,
+    tags: ["depth:2", "feedback"],
   },
   {
     id: "framed-image",

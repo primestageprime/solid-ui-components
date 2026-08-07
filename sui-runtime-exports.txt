@@ -407,6 +407,7 @@ InfoSurface
 InfoTitle
 InlineAppHeader
 InlineChartErrorOverlay
+BusyOverlay
 InlineMetaIcon
 InlineSubtleDropdown
 InlineText

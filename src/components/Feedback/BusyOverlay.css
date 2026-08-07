@@ -1,0 +1,20 @@
+/* Overlay-partial (layout-purity), same split as InlineChartErrorOverlay:
+   the flex centering is composed via CenteredStack; only the absolute
+   anchoring, the scrim and its text treatment live here. */
+.sui-busy-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--sui-text-primary);
+  gap: 8px;
+  /* The region underneath is mid-change — clicking it would act on state
+     that's already being replaced. */
+  pointer-events: all;
+  cursor: progress;
+}
+
+.sui-busy-overlay__label {
+  font-size: 0.875rem;
+  color: var(--sui-text-secondary);
+  text-align: center;
+}

@@ -7,3 +7,7 @@ export * from "./variants";
 // InlineChartErrorOverlay has no design-config props — re-exported as-is.
 export { InlineChartErrorOverlay } from "./InlineChartErrorOverlay";
 export type { InlineChartErrorOverlayProps } from "./InlineChartErrorOverlay";
+// BusyOverlay likewise carries no design-config props (the label is data) —
+// re-exported as-is.
+export { BusyOverlay } from "./BusyOverlay";
+export type { BusyOverlayProps } from "./BusyOverlay";

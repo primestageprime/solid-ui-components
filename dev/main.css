@@ -2666,3 +2666,15 @@ th:has(.tf-th-center) .hud-table__header-content {
 .framed-image-demo > * {
   width: 220px;
 }
+
+/* BusyOverlay anchors to its nearest positioned ancestor — the showcase has
+   to supply one, the same way a real consumer's image frame or chart canvas
+   does. */
+.busy-overlay-demo__frame {
+  position: relative;
+  flex: 1;
+  min-height: 140px;
+  padding: 12px;
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-sm, 4px);
+}
