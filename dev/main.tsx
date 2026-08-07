@@ -27,6 +27,7 @@ import { ButtonShowcase } from "./showcases/button";
 import { DnDHierarchySortBarShowcase } from "./showcases/dnd-hierarchy-sort-bar";
 import { FabShowcase } from "./showcases/fab";
 import { CandlestickRendererShowcase } from "./showcases/candlestick-renderer";
+import { CandlestickScrubChartShowcase } from "./showcases/candlestick-scrub-chart";
 import { CellRendererShowcase } from "./showcases/cell-renderers";
 import { GapCellShowcase } from "./showcases/gap-cell";
 import { ComboboxShowcase } from "./showcases/combobox";
@@ -244,6 +245,12 @@ const items: Item[] = [
     label: "CandlestickRenderer",
     component: CandlestickRendererShowcase,
     tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "candlestick-scrub-chart",
+    label: "CandlestickScrubChart",
+    component: CandlestickScrubChartShowcase,
+    tags: ["depth:3", "chart", "data"],
   },
   {
     id: "cell-renderers",

@@ -1,0 +1,140 @@
+/* ============================================
+   CandlestickScrubChart — Domain Composite (Depth 3).
+
+   Owns CSS for the plotted candle glyph and the per-period ribbon cell.
+   The visual language deliberately echoes CandlestickRenderer (bullish
+   --sui-success / bearish --sui-danger, a mean rule inside the body) so the
+   plotted series and the atomic box readout read as the same family — but the
+   glyph itself is new: positioned on the time axis and scaled with zoom.
+   ============================================ */
+
+/* ── Ribbon cell — period label + close + low–high range ───────────── */
+
+.sui-candle-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: var(--sui-date-axis-cell-width, 60px);
+  height: 72px;
+  box-sizing: border-box;
+  padding: 4px;
+  gap: 2px;
+  border-right: 1px solid var(--sui-border, rgba(255, 255, 255, 0.08));
+  font-family: var(--sui-font-family, inherit);
+}
+
+.sui-candle-cell--up {
+  background: var(--sui-candle-cell-up-bg, rgba(0, 200, 120, 0.06));
+}
+
+.sui-candle-cell--down {
+  background: var(--sui-candle-cell-down-bg, rgba(230, 70, 70, 0.06));
+}
+
+/* Flat (open === close) and empty periods stay neutral — no polarity to show. */
+.sui-candle-cell--flat,
+.sui-candle-cell--empty {
+  background: transparent;
+}
+
+.sui-candle-cell--selected {
+  outline: 1px solid var(--sui-accent, rgba(255, 255, 255, 0.5));
+  outline-offset: -1px;
+}
+
+.sui-candle-cell__date {
+  font-size: 9px;
+  line-height: 1.1;
+  color: var(--sui-text-muted, rgba(255, 255, 255, 0.45));
+  white-space: nowrap;
+}
+
+.sui-candle-cell__value {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--sui-text-primary, rgba(255, 255, 255, 0.9));
+  white-space: nowrap;
+}
+
+.sui-candle-cell__meta {
+  font-size: 9px;
+  line-height: 1.1;
+  color: var(--sui-text-secondary, rgba(255, 255, 255, 0.6));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sui-candle-cell__empty {
+  font-size: 12px;
+  color: var(--sui-text-muted, rgba(255, 255, 255, 0.35));
+}
+
+/* ── Plotted candle series ─────────────────────────────────────────── */
+
+.sui-candlestick-scrub-chart__chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sui-candlestick-scrub-chart__wick {
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+.sui-candlestick-scrub-chart__body {
+  fill: color-mix(in srgb, currentColor 30%, transparent);
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+/* The mean (μ) rule — dashed so it never reads as the body's edge. */
+.sui-candlestick-scrub-chart__mean {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  opacity: 0.85;
+}
+
+.sui-candlestick-scrub-chart__candle--up {
+  color: var(--sui-success, rgb(0, 200, 120));
+}
+
+.sui-candlestick-scrub-chart__candle--down {
+  color: var(--sui-danger, rgb(230, 70, 70));
+}
+
+/* A wickless candle (one sub-bucket, or a genuinely constant period) is drawn
+   muted rather than dressed up — the flatness is the information. */
+.sui-candlestick-scrub-chart__candle--flat {
+  opacity: 0.75;
+}
+
+.sui-candlestick-scrub-chart__candle--selected .sui-candlestick-scrub-chart__body {
+  fill: color-mix(in srgb, currentColor 55%, transparent);
+  stroke-width: 1.5;
+}
+
+.sui-candlestick-scrub-chart__selected-rule {
+  stroke: var(--sui-accent, rgba(255, 255, 255, 0.45));
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+/* ── Hover readout ─────────────────────────────────────────────────── */
+
+.sui-candlestick-scrub-chart__hover-rule {
+  stroke: var(--sui-text-muted, rgba(255, 255, 255, 0.35));
+  stroke-width: 1;
+}
+
+.sui-candlestick-scrub-chart__hover-tooltip {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  font-family: var(--sui-font-family, inherit);
+}

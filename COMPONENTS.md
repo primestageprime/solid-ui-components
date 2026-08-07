@@ -467,6 +467,34 @@ State derivation:
     <CashflowScrubChart cells={cells} selected={selectedIdx()} onScrub={setSelectedIdx} today={today} />
     ```
 
+## CandlestickScrubChart
+- **CandlestickScrubChart** — Domain Composite (Depth 3). Composes `ScrubChart` (Depth 2) with a baked-in candlestick `renderChart` and a compact per-period ribbon `renderCell`. Sibling of `CashflowScrubChart` over the same primitive: where that plots ONE value per period as a running-balance line, this plots the DISTRIBUTION of each period's finer-grained values as a candle. The caller passes RAW samples — `samples: CandlestickSample[]` where `CandlestickSample = { at: Date; value: number }`, in any order, at the finest grain the caller has — plus a `granularity` (`"day" | "month"`, default `"day"`, switchable at runtime); the component does the bucketing, the OHLC reduction and the plotting. **Construction:** a candle for period P is reduced from the values at the NEXT FINER grain inside P — `"month"` candles reduce that month's populated DAY totals, `"day"` candles reduce that day's individual samples — with `open` = first sub-value in time order, `close` = last, `high`/`low` = max/min, `mean` = average. **This is a DISPERSION chart, not a price chart:** consecutive candles do NOT connect (January's close is not February's open), so nothing is drawn between them. **Never reduces over gap-filled buckets** — sub-buckets are built by grouping the samples themselves, so an empty bucket is never constructed and cannot pin a low to 0; an empty PERIOD still gets a cell (the axis keeps its calendar shape) with `candle: null`, contributing nothing. A day candle needs SUB-DAY samples: date-only data has no intra-day distribution, so every day candle renders honestly FLAT (open = close = high = low) rather than with a synthesized wick — use `"month"` granularity for date-only data. Per-cell payload `CandlestickCell = Cell & { candle: Candlestick | null; subBucketCount: number; sampleCount: number }`, reusing `Candlestick` from `CandlestickRenderer` (type-only import — no CSS is dragged into a consumer bundle). Key props: `samples`, `granularity?`, `aggregate?` (`(values) => number`, how several samples in the SAME sub-bucket combine; default sum — pass `fn.mean` for a rate), `selected?` (clamped internally, so a granularity flip cannot index off the end), `onScrub?`, `scrub?`, `centerOn?`, `today?`, `chartHeight?` (default `220`), `cellWidth?` (default `60` day / `74` month), `xTickCadence?` (defaults `"auto"` for day, `"year"` for month — month cells can only anchor month/quarter/year), `formatValue?`, `bodyFraction?` (default `0.6`), `showMean?` (default `true`), `hover?`, `renderHoverTooltip?`. Y-domain spans lows..highs with 8% padding and is deliberately NOT zero-floored (unlike `CashflowScrubChart`) — dragging a dispersion axis to zero flattens every candle. Owns `CandlestickScrubChart.css`; echoes `CandlestickRenderer`'s visual language (bullish `--sui-success` / bearish `--sui-danger`, a dashed μ rule inside the body) but the glyph is new: positioned on the time axis and scaled with zoom. Theme tokens: `--sui-success`, `--sui-danger`, `--sui-accent`, `--sui-border`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-text-muted`, `--sui-font-family`, `--sui-radius-sm`, plus `--sui-candle-cell-up-bg` / `--sui-candle-cell-down-bg` for the ribbon tint. Also exports the pure reduction helpers `buildCandleCells(samples, granularity, aggregate?)`, `candleDomain(cells, padFraction?)` and the `GRAIN_PLAN` table (adding a `"week"`/`"quarter"` grain is one entry there plus its union member, not a rewrite). Exported types: `CandlestickCell`, `CandlestickGranularity`, `CandlestickSample`, `CandlestickScrubChartProps`. Use for: per-period spread/volatility of an underlying finer-grained series — daily order sizes rolled to a month candle, intra-day transaction values rolled to a day candle. No factory: every prop is data or sizing.
+  - Example:
+    ```tsx
+    import {
+      CandlestickScrubChart,
+      type CandlestickSample,
+    } from "solid-ui-components";
+
+    // One entry per ORDER — the finest grain available. No pre-bucketing.
+    const samples: CandlestickSample[] = orders.map((o) => ({
+      at: new Date(o.placed_at),
+      value: o.total_cents / 100,
+    }));
+
+    const [grain, setGrain] = createSignal<"day" | "month">("day");
+    const [selected, setSelected] = createSignal(0);
+
+    <CandlestickScrubChart
+      samples={samples}
+      granularity={grain()}
+      selected={selected()}
+      onScrub={(i) => setSelected(i)}
+      formatValue={(v) => `$${Math.round(v).toLocaleString()}`}
+      hover
+    />
+    ```
+
 ## CashflowChart
 - **CashflowChart** — Composite (Depth 2). Weekly revenue/expense cashflow chart: for each week, up to four stacked SVG bars (recurring + project revenue rising from the $0 baseline, recurring + one-time expenses dropping below it) plus a running-balance ("coffers") line — solid for past weeks, dashed for projected — with a "now" marker, optional bankruptcy annotation, and an interactive hover popover breaking down each segment's line items. Container-driven sizing: a ResizeObserver measures the wrapping `div` and the SVG fills that box on both axes (no width-locked aspect ratio, no horizontal scroll); auto-scales the y-domain to the data extent with 10% headroom, degenerate/empty data rests on the $0 baseline. Exported as `WeeklyCashflowChart`. Key prop: `data` (`WeeklyCashflowChartData` — `bars: WeeklyChartBar[]` plus optional `todayWeek`, `bankruptcyWeek`, `bankruptcyDate`); `height` (number, optional — pins an explicit viewBox height, otherwise measured; floor 160px); `yMax` (number | null — pins the top of the y-domain and enables the fixed -$100k floor). Each `WeeklyChartBar` carries per-segment cents (revenue/expense/balance) plus `revenue_items`/`expense_items`/`recurring_expense_items`/`onetime_expense_items` (`BarLineItem[]` of `{ name, amount_cents }`) and `isProjected`. Exported types: `WeeklyCashflowChartProps`, `WeeklyCashflowChartData`, `WeeklyChartBar`, `BarLineItem`. Uses d3-scale (`scaleBand`/`scaleLinear`); CSS tokens `--sui-accent`, `--sui-success`, `--sui-danger`, `--sui-warning`, `--sui-text`, `--sui-text-muted`, `--sui-border`, `--sui-border-bright`, `--sui-bg`, `--sui-bg-elevated`. Use for: financial runway/coffers dashboards, weekly burn-vs-revenue forecasting.
   - Example:

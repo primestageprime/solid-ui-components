@@ -2629,3 +2629,30 @@ th:has(.tf-th-center) .hud-table__header-content {
   height: calc(100vh - 220px);
   display: flex;
 }
+
+/* candlestick-scrub-chart demo container + hover tooltip card. The scrub
+   layer's ribbon needs room below the 220px chart; the plain variant has no
+   ribbon so it sizes to the chart alone. */
+.candlestick-scrub-chart-demo {
+  position: relative;
+  max-width: 900px;
+  margin-top: 8px;
+}
+.candlestick-scrub-chart-demo--plain {
+  max-width: 900px;
+}
+.candlestick-scrub-chart-demo__tip {
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 6px 8px;
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-sm, 3px);
+  background: var(--sui-surface, rgba(0, 0, 0, 0.85));
+  color: var(--sui-text-secondary);
+  white-space: nowrap;
+}
+.candlestick-scrub-chart-demo__tip-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--sui-text-primary);
+}
