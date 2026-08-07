@@ -7,6 +7,7 @@ import { PinMarkers, type Pin } from "./PinMarkers";
 import { useChart } from "./context";
 import { slotId } from "./slot-types";
 import type { Component } from "solid-js";
+import { pointer, installPointerCapture } from "../../test-utils";
 
 describe("Chart", () => {
   it("renders with a numeric xDomain (back-compat)", () => {
@@ -89,33 +90,19 @@ describe("Chart", () => {
 });
 
 describe("Chart — drag off the plot edge (pointer capture + clamp)", () => {
-  // jsdom has no real PointerEvent constructor, so @solidjs/testing-library's
-  // fireEvent.pointer* drops clientX/pointerId. Dispatch a MouseEvent with a
-  // pointer* type instead — it carries clientX and still triggers the
-  // onPointer* listeners. (pointerId is absent → reads as undefined, which is
-  // fine: the capture methods below are mocked.)
-  const firePointer = (
-    svg: SVGSVGElement,
-    type: "pointerdown" | "pointermove" | "pointerup" | "pointerleave",
-    clientX: number,
-  ) => {
-    svg.dispatchEvent(
-      new MouseEvent(type, { clientX, clientY: 50, bubbles: true }),
-    );
-  };
-
-  // jsdom implements none of the pointer-capture methods, so install spies.
-  // Returning true from hasPointerCapture models "the drag owns the pointer",
-  // which is what routes a release outside the svg back to this element.
-  const installCaptureSpies = (svg: SVGSVGElement) => {
-    const setPointerCapture = vi.fn();
-    const releasePointerCapture = vi.fn();
-    Object.assign(svg, {
-      setPointerCapture,
-      releasePointerCapture,
-      hasPointerCapture: () => true,
-    });
-    return { setPointerCapture, releasePointerCapture };
+  // clientY 50 is inside this Chart's plot rect (height 100); the shared driver
+  // requires the coordinate rather than defaulting it, because "inside the plot"
+  // is a property of the component under test. No restore is needed for the
+  // capture install: it patches the per-test svg, which `cleanup` discards.
+  const PLOT_Y = 50;
+  const drag = (svg: SVGSVGElement) => {
+    const p = pointer(svg);
+    return {
+      down: (clientX: number) => p.down({ clientX, clientY: PLOT_Y }),
+      move: (clientX: number) => p.move({ clientX, clientY: PLOT_Y }),
+      up: (clientX: number) => p.up({ clientX, clientY: PLOT_Y }),
+      leave: (clientX: number) => p.leave({ clientX, clientY: PLOT_Y }),
+    };
   };
 
   it("engages pointer capture on pointerdown so a release outside the svg still ends the drag", () => {
@@ -123,14 +110,14 @@ describe("Chart — drag off the plot edge (pointer capture + clamp)", () => {
       <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]} />
     ));
     const svg = container.querySelector("svg")! as unknown as SVGSVGElement;
-    const { setPointerCapture, releasePointerCapture } =
-      installCaptureSpies(svg);
+    const capture = installPointerCapture(svg);
+    const p = drag(svg);
 
-    firePointer(svg, "pointerdown", 40);
-    expect(setPointerCapture).toHaveBeenCalled();
+    p.down(40);
+    expect(capture.setPointerCapture.calls.length).toBeGreaterThan(0);
 
-    firePointer(svg, "pointerup", 40);
-    expect(releasePointerCapture).toHaveBeenCalled();
+    p.up(40);
+    expect(capture.releasePointerCapture.calls.length).toBeGreaterThan(0);
   });
 
   it("clamps the drag range to the plot edge when the pointer moves past it", () => {
@@ -145,12 +132,13 @@ describe("Chart — drag off the plot edge (pointer capture + clamp)", () => {
       </Chart>
     ));
     const svg = container.querySelector("svg")! as unknown as SVGSVGElement;
-    installCaptureSpies(svg);
+    installPointerCapture(svg);
+    const p = drag(svg);
 
     // Anchor at the left edge (clientX=36 → px=0 → x=0), then drag far past
     // the right edge. innerWidth=156 → clamped px=156 → invert → domain max=10.
-    firePointer(svg, "pointerdown", 36);
-    firePointer(svg, "pointermove", 1000);
+    p.down(36);
+    p.move(1000);
     const range = captured!.drag.range();
     expect(range).not.toBeNull();
     expect(range!.start).toBeCloseTo(0, 6);
@@ -169,14 +157,15 @@ describe("Chart — drag off the plot edge (pointer capture + clamp)", () => {
       </Chart>
     ));
     const svg = container.querySelector("svg")! as unknown as SVGSVGElement;
-    installCaptureSpies(svg);
+    installPointerCapture(svg);
+    const p = drag(svg);
 
     // Anchor at the left edge, drag past the right edge, then let the pointer
     // leave the element and release — the drag must still commit at the edge.
-    firePointer(svg, "pointerdown", 36);
-    firePointer(svg, "pointermove", 1000);
-    firePointer(svg, "pointerleave", 1000);
-    firePointer(svg, "pointerup", 1000);
+    p.down(36);
+    p.move(1000);
+    p.leave(1000);
+    p.up(1000);
     const committed = captured!.drag.committed();
     expect(committed).not.toBeNull();
     expect(committed!.end).toBeCloseTo(10, 6);

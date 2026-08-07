@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { CashflowScrubChart, type CashflowCell } from "./CashflowScrubChart";
 import { dailyCells } from "../DateAxis";
+import { pointer } from "../../test-utils";
 
 const d = (iso: string): Date => new Date(`${iso}T00:00:00.000Z`);
 
@@ -478,14 +479,14 @@ describe("CashflowScrubChart", () => {
 });
 
 describe("CashflowScrubChart hover", () => {
+  // clientY 30 is inside this chart's plot rect; the shared driver requires the
+  // coordinate rather than inferring one, since under jsdom the frame's rect is
+  // all zeros and an inferred point would land outside the plot.
   const hoverMove = (container: HTMLElement, clientX: number) => {
-    const ev = new MouseEvent("pointermove", {
-      bubbles: true,
-      cancelable: true,
+    pointer(container.querySelector(".sui-scrub-chart__frame")!).move({
       clientX,
       clientY: 30,
     });
-    container.querySelector(".sui-scrub-chart__frame")!.dispatchEvent(ev);
   };
 
   it("draws a hover rule and a hollow dot per line, plus the tooltip body", () => {
