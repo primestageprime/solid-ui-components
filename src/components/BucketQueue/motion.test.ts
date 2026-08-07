@@ -4,6 +4,7 @@
 import { describe, it, expect } from "vitest";
 import { createSlotMotion } from "./motion";
 import type { Transfer } from "./transfer";
+import { rectOf } from "../../test-utils";
 
 interface Recorded {
   el: HTMLElement;
@@ -22,7 +23,9 @@ const buildRoot = (recorded: Recorded[]) => {
   row.dataset.bqKey = "t1";
   row.style.boxSizing = "border-box";
   row.style.padding = "6px 12px";
-  (row as unknown as { animate: unknown }).animate = (keyframes: Keyframe[]) => {
+  (row as unknown as { animate: unknown }).animate = (
+    keyframes: Keyframe[],
+  ) => {
     recorded.push({ el: row, keyframes });
     return { finished: Promise.resolve(), cancel: () => {} };
   };
@@ -31,7 +34,12 @@ const buildRoot = (recorded: Recorded[]) => {
   return { root, row };
 };
 
-const TRANSFER: Transfer = { key: "t1", from: "todo", to: "done", direction: -1 };
+const TRANSFER: Transfer = {
+  key: "t1",
+  from: "todo",
+  to: "done",
+  direction: -1,
+};
 const TRANSFER_TO_DISCARD: Transfer = {
   key: "t1",
   from: "todo",
@@ -119,7 +127,8 @@ const buildCollapsedDestination = (recorded: Recorded[]) => {
   // top that CHANGES between the snapshot and the play — which is exactly what
   // the closing gap does to it.
   let stayerTop = 100;
-  stayer.getBoundingClientRect = () => ({ top: stayerTop, height: 54 }) as DOMRect;
+  stayer.getBoundingClientRect = () =>
+    rectOf({ left: 0, top: stayerTop, width: 0, height: 54 });
   const closeTheGap = () => {
     moved.remove();
     stayerTop = 46;
@@ -129,7 +138,8 @@ const buildCollapsedDestination = (recorded: Recorded[]) => {
     root,
     rowEl: () => undefined, // the destination row does not exist
     bucketEl: (key: string) =>
-      (root.querySelector(`[data-bq-bucket="${key}"]`) as HTMLElement) ?? undefined,
+      (root.querySelector(`[data-bq-bucket="${key}"]`) as HTMLElement) ??
+      undefined,
     reducedMotion: false,
   };
 
@@ -139,7 +149,8 @@ const buildCollapsedDestination = (recorded: Recorded[]) => {
 describe("createSlotMotion — a destination that cannot render the arriving row", () => {
   it("still FLIPs the rows the departure displaced", async () => {
     const recorded: Recorded[] = [];
-    const { root, ctx, stayer, closeTheGap } = buildCollapsedDestination(recorded);
+    const { root, ctx, stayer, closeTheGap } =
+      buildCollapsedDestination(recorded);
     const motion = createSlotMotion();
 
     motion.capture(root);
@@ -153,7 +164,8 @@ describe("createSlotMotion — a destination that cannot render the arriving row
 
   it("cues the collapsed bucket's count so the row is seen being received", async () => {
     const recorded: Recorded[] = [];
-    const { root, ctx, count, closeTheGap } = buildCollapsedDestination(recorded);
+    const { root, ctx, count, closeTheGap } =
+      buildCollapsedDestination(recorded);
     const motion = createSlotMotion();
 
     motion.capture(root);
