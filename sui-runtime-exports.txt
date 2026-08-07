@@ -51,12 +51,15 @@ BottomSheet
 BoxedTabs
 bucketOf
 BucketQueue
+buildCandleCells
 BulkActionBar
 BurndownChart
 ButtonGroup
 ButtonGroup2
 CacheProgressCard
+candleDomain
 CandlestickRenderer
+CandlestickScrubChart
 CaptionLabel
 CARD_BAR_COLOR
 CARD_SIGN_COLOR
@@ -361,6 +364,7 @@ GhostButton
 GhostPin
 GhostRow
 glowIn
+GRAIN_PLAN
 Grid
 GroupBracket
 GroupedTable

@@ -15,6 +15,7 @@
 | bar + line combo chart | `Chart` + `BarSeries` + `LineSeries` | composable primitives, not one chart-type component |
 | chart hover tooltip | `ChartTooltip` | distinct from the generic `Tooltip` used on non-chart elements |
 | pace / target line on a chart | `ReferenceLine` | |
+| candlestick / OHLC chart, "spread or volatility per period" | `CandlestickScrubChart` | Pass RAW `samples: {at, value}[]` at your finest grain + `granularity` (`"day"｜"month"`); it buckets and reduces the OHLC itself — do NOT pre-aggregate. **False friend: `CandlestickRenderer` is NOT this.** That one is an atomic single-candle TEXT/box readout for one OHLC value, not a glyph plotted on a time axis; a name search lands on it first and it will not plot a series. Also note this is a DISPERSION chart (each candle = the distribution of that period's finer-grained values), so consecutive candles don't connect — a candle over a CUMULATIVE line is degenerate (2 sample points ⇒ zero wicks ⇒ a waterfall bar), which is why "candlestick instead of the cumulative nav line" is never a like-for-like swap. |
 | scrolling content area | `ScrollFillBox` | fills remaining space and scrolls internally |
 | vertical form/report stack | `NarrowStack` | narrow max-width; use `Stack` only if a wide variant is ever needed — check it's not phantom first |
 | header row with trailing badge | `TightSpreadRow` | space-between, tight gap |
