@@ -401,6 +401,19 @@ merges. `lint` runs but does not gate. `enforce_admins` is `false`, so a direct
 admin push to `main` bypasses everything — the gate binds PR merges.
 `strict: true`, so a PR must also be up to date with `main` before it can merge.
 
+**There are THREE ratchets, not one, and `npm run health` runs only the first.**
+`bundle-budget` is its own CI job (below). The third is `componentsNeverExecuted`,
+which has no job of its own — it hides inside **`test`**, because the `test` job
+runs `npm run test:coverage` *and* `npm run execution-coverage`. Its baseline is
+`scripts/execution-baseline.json`, not `health-baseline.json`, so a green
+`npm run health` says nothing about it. See *A component that never RUNS is a
+separate gate* below for what it measures and how to run it locally.
+
+Any change that adds tests is liable to trip it, since executing a previously
+dark module is an *improvement*, and an unrecorded improvement fails exactly
+like a regression. Five PRs in a row were verified locally against the gates
+named in this paragraph and the first one still failed CI on this.
+
 `scripts/health.mjs` enforces four rules (see `scripts/health-ratchet.mjs`):
 
 | Situation | Result |
