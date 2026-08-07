@@ -24,7 +24,7 @@
 // ============================================
 import { type Component, type JSX, For, Show, createSignal, onCleanup } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
-import { pipe, filter, join } from "../../fn";
+import { pipe, filter, join, map } from "../../fn";
 import "./CropRectOverlay.css";
 
 export interface CropRect {
@@ -95,7 +95,7 @@ export const CropRectOverlay: Component<CropRectOverlayProps> = (props) => {
   });
 
   const updateRectAt = (index: number, rect: CropRect) => {
-    props.onRectsChange(props.rects.map((r, i) => (i === index ? rect : r)));
+    props.onRectsChange(map((r, i) => (i === index ? rect : r), props.rects));
   };
 
   const onPointerMove = (e: PointerEvent) => {

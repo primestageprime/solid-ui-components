@@ -12,6 +12,7 @@ import {
   StretchRow,
   TopSpreadRow,
   BaselineClusterRow,
+  FillBaselineSpreadRow,
   BaselineWrapRow,
   LooseWrapRow,
   IconClusterRow,
@@ -62,6 +63,9 @@ import {
   SmallPlaceholder,
   MediumPlaceholder,
   LargePlaceholder,
+  SmallSquarePlaceholder,
+  MediumSquarePlaceholder,
+  LargeSquarePlaceholder,
   Placeholder,
 } from "../../src/components/Placeholder";
 import { ContentStack, ClusterRow } from "../../src/components/Layout";
@@ -96,6 +100,7 @@ const ROWS: VariantSpec[] = [
   { name: "TightNoShrinkClusterRow", note: "the same at an xs gap — a dense meta cell", Variant: TightNoShrinkClusterRow },
   { name: "ChipCluster", note: "a wrapping chip group that refuses to shrink", Variant: ChipCluster },
   { name: "PaneRow", note: "the top-level split: a sidebar beside a filling pane", Variant: PaneRow, kind: "blocks" },
+  { name: "FillBaselineSpreadRow", note: "BaselineSpreadRow that spans its container — justify:between has nothing to push apart until it does; a page header with a title left and an action pinned right", Variant: FillBaselineSpreadRow },
 ];
 
 const COLUMNS: VariantSpec[] = [
@@ -199,6 +204,31 @@ export const LayoutVariantsShowcase: Component = () => (
     <Group title="Columns" specs={COLUMNS} />
     <Group title="Boxes — clipping and scrolling" specs={BOXES} />
     <Group title="Grids" specs={GRIDS} />
+
+    <ContentStack>
+      <SubsectionTitle>Placeholder tiles</SubsectionTitle>
+      <TextSublabel>
+        The neutral children used throughout this gallery are Placeholder
+        variants in their own right. The size presets grow to fill their
+        column; the SQUARE presets fix both axes, for a slot whose aspect
+        ratio is part of the layout (an avatar, a thumbnail, a preview pane)
+        rather than something the content decides.
+      </TextSublabel>
+      <div class="layout-demo-frame">
+        <LooseWrapRow>
+          <SmallPlaceholder label="Small (60px min-height)" />
+          <MediumPlaceholder label="Medium (120px)" />
+          <LargePlaceholder label="Large (200px)" />
+        </LooseWrapRow>
+      </div>
+      <div class="layout-demo-frame">
+        <LooseWrapRow>
+          <SmallSquarePlaceholder label="60²" />
+          <MediumSquarePlaceholder label="120²" />
+          <LargeSquarePlaceholder label="200²" />
+        </LooseWrapRow>
+      </div>
+    </ContentStack>
 
     <ContentStack>
       <SubsectionTitle>App chrome</SubsectionTitle>

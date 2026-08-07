@@ -129,6 +129,8 @@ import { DateTimeRangeShowcase } from "./showcases/date-time-range";
 import { EmptyStateShowcase } from "./showcases/empty-state";
 import { FileDropZoneShowcase } from "./showcases/file-drop-zone";
 import { FramedImageShowcase } from "./showcases/framed-image";
+import { MediaCardShowcase } from "./showcases/media-card";
+import { PickNumberLabelShowcase } from "./showcases/pick-number-label";
 import { SlotCardShowcase } from "./showcases/slot-card";
 import { SectionTableShowcase } from "./showcases/section-table";
 import { LayoutVariantsShowcase } from "./showcases/layout-variants";
@@ -854,6 +856,18 @@ const items: Item[] = [
     label: "FramedImage",
     component: FramedImageShowcase,
     tags: ["depth:1", "display"],
+  },
+  {
+    id: "media-card",
+    label: "MediaCard",
+    component: MediaCardShowcase,
+    tags: ["depth:2", "card"],
+  },
+  {
+    id: "pick-number-label",
+    label: "PickNumberLabel",
+    component: PickNumberLabelShowcase,
+    tags: ["depth:1", "indicator"],
   },
   {
     id: "slot-card",

@@ -26,14 +26,18 @@ describe("HotkeyButton", () => {
     );
   });
 
-  it("falls back to a trailing hint when the char is absent from the label", () => {
+  // The hint used to render as a small trailing "[Z]"; 8180f96 moved it ahead
+  // of the label and sized it up (a numbered-list-style marker, for digit
+  // hotkeys on word labels), which drops the brackets. The test wasn't updated
+  // with the component.
+  it("falls back to a leading hint when the char is absent from the label", () => {
     const { container } = render(() => (
       <HotkeyButton hotkey="z" onTrigger={() => {}}>
         Save
       </HotkeyButton>
     ));
     expect(container.querySelector(".sui-hotkey-btn__key")).toBeNull();
-    expect(container.querySelector(".sui-hotkey-btn__hint")!.textContent).toBe("[Z]");
+    expect(container.querySelector(".sui-hotkey-btn__hint")!.textContent).toBe("Z");
   });
 
   it("fires onTrigger on click", () => {
