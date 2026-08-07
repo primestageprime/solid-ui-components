@@ -43,6 +43,7 @@ import { NestedListShowcase } from "./showcases/nested-list";
 import { DotchartShowcase } from "./showcases/dotchart";
 import { HeatmapShowcase } from "./showcases/heatmap";
 import { HeatStreamShowcase } from "./showcases/heatstream";
+import { HeatStackShowcase } from "./showcases/heatstack";
 import { ButtonGroupShowcase } from "./showcases/hud-button-group";
 import { ListShowcase } from "./showcases/hud-list";
 import { ModalShowcase } from "./showcases/hud-modal";
@@ -353,6 +354,12 @@ const items: Item[] = [
     label: "HeatStream",
     component: HeatStreamShowcase,
     tags: ["depth:0", "chart", "time", "data"],
+  },
+  {
+    id: "heatstack",
+    label: "HeatStack",
+    component: HeatStackShowcase,
+    tags: ["depth:0", "chart", "data"],
   },
   {
     id: "icon",
