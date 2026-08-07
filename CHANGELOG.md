@@ -2,6 +2,74 @@
 
 ## [Unreleased]
 
+## 0.150.2
+
+### Fixed
+- **Orthogonal edge router no longer draws through the obstacle it detoured
+  around** (sui#16435). `orthogonalAvoidingObstacles` lifts to a corridor over
+  an obstacle and comes back down the other side, but each vertical leg's x is
+  bounded by its own node's outer edge — so when an obstacle's near edge
+  reaches past that bound, the clamp yields to the node and the leg runs
+  straight through the obstacle. The corridor passes *over* an obstacle, never
+  *past* it.
+
+  Both ends now check whether their own vertical leg actually intersects an
+  obstacle, and if it does, anchor to the node's near **horizontal** edge and
+  run up or down its centre line instead. This is the anchoring the
+  x-overlap branch in the same function already used, for the same reason, and
+  the arrowhead stays cardinal either way.
+
+  Keyed on "does this leg hit something", **not** on the clamp giving up — the
+  clamp also gives up when an obstacle merely comes close to a node while the
+  leg stays clear, and those paths were already correct. A grid sweep over
+  11,850 layouts (both directions, obstacles before/between/past the nodes)
+  now reports zero crossings and zero diagonal segments; it reported 16
+  crossings before.
+
+  Affects rendered geometry in **SwimlaneChart** (`geometry/edge-views.ts`,
+  two call sites, both passing explicit ports) and **AnimatedSwimlaneChart**
+  (`SwimlaneAnimatedLane.tsx`, one site, no ports) — and only for edges that
+  were being drawn through a node. Every path that was already correct is
+  byte-identical, which the tests pin from both directions.
+
+  **Not DagChart.** An earlier draft of this entry, PR #116 and the report on
+  sui#16435 all listed it as a third consumer. It is not one: DagChart imports
+  `DagSvgNode`/`DagSvgEdge`/`DagArrowMarker` from `internal/dag-svg`, but builds
+  its edge geometry in its own `DagChart/edge-path.ts` and never calls this
+  router. The 0.150.1 entry below is about the dag-svg DIRECTORY, where DagChart
+  genuinely is a consumer — that one stands.
+
+  A pre-assigned `fromPortY`/`toPortY` is dropped at whichever end reroutes: a
+  port exists to stop several edges stacking on one side anchor, and a side
+  anchor is precisely what is unreachable in that case.
+
+### Changed
+- `collectionMethodCalls` 31 → 30 (sui#12291). The three `obstacles.some(...)`
+  calls in `orthogonal-routing.ts` are now `fn/some`; one of them predates this
+  work.
+- **`dev/showcases/router-demo.tsx` is now in the gallery**, at
+  `#/router-demo` ("Edge routers (dag-svg)"). The file and its `.router-demo__*`
+  styles in `dev/main.css` were written when the router was, and never
+  registered in `dev/main.tsx` — so the one page built to answer "what does this
+  router actually draw" rendered nowhere, and the question kept getting answered
+  by reading path strings instead. Needed a `Component` wrapper (it exported
+  only a grid taking a `style` prop), the registration, and three new cases that
+  bracket the fix above: `CLR` (obstacle stops 6px short — ordinary side
+  arrival), `ABT` (obstacle abuts the target — enters its top edge) and `ABS`
+  (obstacle abuts the source — exits its top edge). Six pixels of obstacle is
+  the entire difference between the first two.
+
+### Notes
+- **A correction to 0.150.1's note.** That entry said the defect was confined
+  to the target side, on the reasoning that the lift runs before the corridor
+  and so leaves the obstacle behind. That was wrong, and the fix here is
+  symmetric. The lift starts at `fromPortY`, which is *inside* the source's
+  y-band, so an obstacle merely **abutting** the source is crossed on the way
+  up — no overlap with the source node required, which is what that note
+  claimed would be necessary. All 16 crossings the first grid sweep found were
+  this source-side case, not the target one the original report was written
+  from.
+
 ## 0.150.1
 
 ### Added

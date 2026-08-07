@@ -7,7 +7,7 @@
  * we can verify the routing logic per-case without all the layout,
  * port-assignment, and badge plumbing in between.
  */
-import { type Component, For, JSX } from "solid-js";
+import { type Component, For } from "solid-js";
 import {
   orthogonalAvoidingObstacles,
   bezierAvoidingObstacles,
@@ -91,6 +91,43 @@ const CASES: Case[] = [
     label: "target down-right",
     from: { x: cx, y: cy },
     to: { x: cx + dx, y: cy + dy },
+  },
+  // ── the three cases that bracket the sui#16435 reroute ──────────────────
+  //
+  // Read these as a set. Each vertical leg of the detour is clamped by its own
+  // node's outer edge, so once an obstacle's near edge reaches past that clamp
+  // there is no side-anchored leg left that clears it — the router anchors to
+  // the node's top edge instead. These three sit either side of that boundary,
+  // so the difference is visible rather than described.
+  {
+    id: "CLR",
+    label: "obstacle NEAR the target — ordinary side arrival",
+    from: { x: cx - dx, y: cy },
+    to: { x: cx + dx, y: cy },
+    // Right edge 262, target's left edge 268: 6px short, so the descent still
+    // fits between them and nothing reroutes.
+    obstacles: [{ x: cx + 50, y: cy }],
+  },
+  {
+    id: "ABT",
+    label: "obstacle ABUTS the target — enters its top edge",
+    from: { x: cx - dx, y: cy },
+    to: { x: cx + dx, y: cy },
+    // Right edge 268 == the target's left edge. Every horizontal approach at
+    // the target's y now crosses the obstacle, so there is no side arrival to
+    // choose. Compare with CLR: 6px of obstacle is the whole difference.
+    obstacles: [{ x: cx + 56, y: cy }],
+  },
+  {
+    id: "ABS",
+    label: "obstacle ABUTS the source — exits its top edge",
+    from: { x: cx - dx, y: cy },
+    to: { x: cx + dx, y: cy },
+    // Left edge 92 == the source's right edge. The mirror of ABT, and the half
+    // I first argued could not happen: the lift starts at the source's port y,
+    // inside its y-band, so an obstacle that merely touches the source is
+    // crossed on the way up.
+    obstacles: [{ x: cx - dx + NODE_W, y: cy }],
   },
 ];
 
@@ -217,5 +254,46 @@ export const RouterDemoGrid: Component<{ style: "orthogonal" | "bezier" }> = (
     style={{ "--router-cell-w": `${CELL_W + 18}px` }}
   >
     <For each={CASES}>{(c) => <Cell c={c} style={p.style} />}</For>
+  </div>
+);
+
+/**
+ * Gallery entry. This file and its CSS were written when the router was, but
+ * never registered in `dev/main.tsx` — so the one page built to answer "what
+ * does this router actually draw" rendered nowhere, and the question got
+ * answered by reading path strings instead. Wired up 2026-08-06 while fixing
+ * sui#16435, which is exactly the question it exists for.
+ */
+export const RouterDemoShowcase: Component = () => (
+  <div class="component-section">
+    <h2>Edge routers — internal/dag-svg</h2>
+    <p class="text-meta">
+      Not a component. These are the two path builders behind SwimlaneChart and
+      AnimatedSwimlaneChart, driven directly with hand-placed rects so a routing
+      decision can be seen on its own, without layout, port assignment or badge
+      plumbing in between. Dashed boxes are obstacles.
+    </p>
+
+    <div class="example-group">
+      <h3>orthogonalAvoidingObstacles</h3>
+      <p class="text-meta">
+        Right angles only, so arrowheads stay cardinal. The last three cells
+        bracket the sui#16435 boundary: an edge whose detour would otherwise be
+        drawn through the node it was avoiding now anchors to that node's top
+        edge. CLR and ABT differ by 6px of obstacle.
+      </p>
+      <RouterDemoGrid style="orthogonal" />
+    </div>
+
+    <div class="example-group">
+      <h3>bezierAvoidingObstacles</h3>
+      <p class="text-meta">
+        The curved counterpart, which lands on a target CORNER so the cubic's
+        tangent points the arrowhead into it. It has no equivalent of the
+        reroute above — it detours around the nearest blocker only, and its own
+        header records that a second obstacle may still be grazed.
+      </p>
+      <RouterDemoGrid style="bezier" />
+    </div>
   </div>
 );

@@ -8,7 +8,7 @@
  */
 
 import type { EdgeRect, ObstacleRect } from "./edge-routing";
-import { map, filter } from "../../fn";
+import { map, filter, some } from "../../fn";
 
 /** Vertical clearance the router leaves above/below an obstacle's edge.
  *  2rem at the default 16px base font size. */
@@ -130,8 +130,10 @@ export function orthogonalAvoidingObstacles(
 
   // Same y, straight horizontal line if no obstacle blocks it.
   if (Math.abs(fromPortY - toPortY) < 0.5) {
-    const blocked = obstacles.some((o) =>
-      axisSegmentHitsRect(fromOuterX, fromPortY, toOuterX, toPortY, o, 2),
+    const blocked = some(
+      (o: ObstacleRect) =>
+        axisSegmentHitsRect(fromOuterX, fromPortY, toOuterX, toPortY, o, 2),
+      obstacles,
     );
     if (!blocked) {
       return `M ${fromOuterX} ${fromPortY} L ${toOuterX} ${toPortY}`;
@@ -171,7 +173,8 @@ export function orthogonalAvoidingObstacles(
   if (obsInBand.length > 0) {
     corridorY = above
       ? Math.min(...map((o) => o.y - o.height / 2, obsInBand)) - OBSTACLE_MARGIN
-      : Math.max(...map((o) => o.y + o.height / 2, obsInBand)) + OBSTACLE_MARGIN;
+      : Math.max(...map((o) => o.y + o.height / 2, obsInBand)) +
+        OBSTACLE_MARGIN;
   } else {
     corridorY = above ? toPortY - OBSTACLE_MARGIN : toPortY + OBSTACLE_MARGIN;
   }
@@ -186,7 +189,14 @@ export function orthogonalAvoidingObstacles(
   // (Mirror the lower/upper roles when going right-to-left.)
   // When lower > upper, the obstacle is jammed against the node — fall
   // back to the source-/target-adjacent edge (lift right at fromOuterX
-  // or drop right at toOuterX) and trust the corridor to lift above it.
+  // or drop right at toOuterX).
+  //
+  // "Trust the corridor to lift above it" used to justify BOTH fallbacks here.
+  // It is only true of the lift. The lift happens BEFORE the corridor, so
+  // rising from fromOuterX + 2 leaves the obstacle behind; the drop happens
+  // AFTER it, and has to come back down through the obstacle's y-band to reach
+  // the port. The target-side case is handled below, after `dropX` is known —
+  // see the descent check (dside sui#16435).
   const obsXLefts = map((o) => o.x - o.width / 2, obsInBand);
   const obsXRights = map((o) => o.x + o.width / 2, obsInBand);
   let liftX: number;
@@ -237,15 +247,81 @@ export function orthogonalAvoidingObstacles(
         : Math.max(dropLow, Math.min(dropIdeal, dropHigh));
   }
 
-  // 5-segment U.
-  const uSegments: Segment[] = [
-    { ax: fromOuterX, ay: fromPortY, bx: liftX, by: fromPortY },
-    { ax: liftX, ay: fromPortY, bx: liftX, by: corridorY },
-    { ax: liftX, ay: corridorY, bx: dropX, by: corridorY },
-    { ax: dropX, ay: corridorY, bx: dropX, by: toPortY },
-    { ax: dropX, ay: toPortY, bx: toOuterX, by: toPortY },
-  ];
-  return segmentsToPath(uSegments);
+  // The two VERTICAL legs are what the clamps above cannot always place safely,
+  // and the failure is symmetric (dside sui#16435).
+  //
+  // Each of `liftX` and `dropX` is bounded by its own node's outer edge —
+  // "don't punch back through the bbox" — so when an obstacle's near edge
+  // reaches past that bound, there is no x left that is both clear of the
+  // obstacle and on the right side of the node. The clamp yields to the node,
+  // and the leg then runs straight through the obstacle the corridor just
+  // detoured around: the corridor goes OVER an obstacle, never PAST it.
+  //
+  // An earlier version of this comment claimed only the target side could fail,
+  // on the reasoning that the lift happens BEFORE the corridor and therefore
+  // leaves the obstacle behind. That is wrong. The lift starts at `fromPortY`,
+  // which is inside the source's y-band, so an obstacle merely ABUTTING the
+  // source — near edge at or inside `fromOuterX + 2`, no overlap with the node
+  // required — is crossed on the way up. A grid sweep over 1808 layouts found
+  // 16 crossings, and every one of them was this source-side case.
+  //
+  // Both are asked as "does this specific leg hit something" rather than "did
+  // the clamp give up", because the two are not the same set. A clamp also
+  // gives up when the obstacle merely comes CLOSE to a node — near enough that
+  // OBSTACLE_MARGIN doesn't fit, but still clear of the leg — and those paths
+  // are correct as they stand. Rerouting on the clamp would redraw working
+  // edges for no reason.
+  const liftBlocked = some(
+    (o: ObstacleRect) =>
+      axisSegmentHitsRect(liftX, fromPortY, liftX, corridorY, o, 2),
+    obstacles,
+  );
+  const descentBlocked = some(
+    (o: ObstacleRect) =>
+      axisSegmentHitsRect(dropX, corridorY, dropX, toPortY, o, 2),
+    obstacles,
+  );
+
+  // Leave (or enter) through the node's near HORIZONTAL edge instead, running
+  // up or down its centre line. When an obstacle abuts a node on the corridor
+  // side, no side-anchored leg exists at all — every one at the port's y
+  // crosses it. The arrowhead stays cardinal, and this is the same anchoring
+  // the x-overlap branch at the top of this function already uses, for the
+  // same reason.
+  //
+  // NOTE: this drops the affected port. A pre-assigned port exists to stop
+  // several edges stacking on one side anchor, and a side anchor is exactly
+  // what is unreachable here — so the port has nothing left to express. Edges
+  // landing in this branch converge on their node's centre line.
+  const fromEdgeY = above ? from.y - from.height / 2 : from.y + from.height / 2;
+  const toEdgeY = above ? to.y - to.height / 2 : to.y + to.height / 2;
+
+  // Single-sourced so the corridor cannot disagree with the legs it joins.
+  // `segmentsToPath` emits only the FIRST segment's `ax`/`ay` and then each
+  // segment's `bx`/`by`, so a wrong `ax` on an interior segment is invisible in
+  // the output and would surface only through `segmentsHitAny` — silently, and
+  // much later.
+  const exitX = liftBlocked ? from.x : liftX;
+  const entryX = descentBlocked ? to.x : dropX;
+
+  const exit: Segment[] = liftBlocked
+    ? [{ ax: exitX, ay: fromEdgeY, bx: exitX, by: corridorY }]
+    : [
+        { ax: fromOuterX, ay: fromPortY, bx: exitX, by: fromPortY },
+        { ax: exitX, ay: fromPortY, bx: exitX, by: corridorY },
+      ];
+  const approach: Segment[] = descentBlocked
+    ? [{ ax: entryX, ay: corridorY, bx: entryX, by: toEdgeY }]
+    : [
+        { ax: entryX, ay: corridorY, bx: entryX, by: toPortY },
+        { ax: entryX, ay: toPortY, bx: toOuterX, by: toPortY },
+      ];
+
+  return segmentsToPath([
+    ...exit,
+    { ax: exitX, ay: corridorY, bx: entryX, by: corridorY },
+    ...approach,
+  ]);
 }
 
 // ---------------------------------------------------------------------------
