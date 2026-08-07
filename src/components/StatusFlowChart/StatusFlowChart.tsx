@@ -4,6 +4,7 @@
 import {
   createMemo,
   createSignal,
+  mergeProps,
   onCleanup,
   onMount,
   type Component,
@@ -84,6 +85,34 @@ export type StatusFlowChartProps = {
   /** Pass through to SwimlaneChart. Default `"bezier"`. */
   routingStyle?: "bezier" | "orthogonal";
 };
+
+/** Props locked at variant-definition time by `createStatusFlowChart`.
+ *
+ *  Two groups, both genuinely definition-time. The geometry/visual half
+ *  (`nodeWidth` … `routingStyle`) is the usual ADR-0001 reason to curry. The
+ *  TAXONOMY half (`columns`, `centerStatus`, `terminalStatus`, `colFor`) is
+ *  the stronger one: a status flow is only coherent if every instance in an
+ *  app agrees on what the statuses ARE and which one is the center. Letting
+ *  a call site pass its own `columns` is how two views of the same board end
+ *  up disagreeing about where "blocked" belongs. */
+export type StatusFlowChartOverrides =
+  | "columns"
+  | "centerStatus"
+  | "terminalStatus"
+  | "colFor"
+  | "nodeWidth"
+  | "nodeHeight"
+  | "minArrowWidth"
+  | "rowGap"
+  | "breakpoints"
+  | "renderNode"
+  | "routingStyle";
+
+/** Props that remain available to consumers of a curried StatusFlowChart. */
+export type StatusFlowChartDataProps = Omit<
+  StatusFlowChartProps,
+  StatusFlowChartOverrides
+>;
 
 type EnrichedNode = StatusFlowNode & {
   effectiveStatus: string;
@@ -186,7 +215,10 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
   // provides `colFor`, that overrides the status-based result per node
   // (an `undefined` from colFor falls back to status-based).
   const cols = createMemo(() => {
-    const ns = map((n) => ({ ...n, status: n.effectiveStatus }), visibleNodes());
+    const ns = map(
+      (n) => ({ ...n, status: n.effectiveStatus }),
+      visibleNodes(),
+    );
     const base = assignColumns(
       ns,
       props.columns,
@@ -344,3 +376,33 @@ export const StatusFlowChart: Component<StatusFlowChartProps> = (props) => {
     </div>
   );
 };
+
+/**
+ * Curried-variant factory for StatusFlowChart (per ADR-0001). Bakes the
+ * status taxonomy and layout config into a named component; the returned
+ * component takes data only.
+ *
+ *   const ProjectFlow = createStatusFlowChart({
+ *     columns: [{ label: "Done", statuses: ["done"] }, …],
+ *     centerStatus: "doing",
+ *     terminalStatus: "done",
+ *     nodeWidth: 220, nodeHeight: 88, minArrowWidth: 48,
+ *     breakpoints: [{ minWidth: 0, visibleCols: 1 }, { minWidth: 900, visibleCols: 3 }],
+ *   });
+ *   <ProjectFlow nodes={tasks} onNodeClick={select} />
+ *
+ * NOTE the config parameter is NOT `Partial<…>`, unlike `createSwimlaneChart`.
+ * Seven of these props are required on `StatusFlowChartProps` and have no
+ * sensible library-wide default — there is no universal status taxonomy, and
+ * guessing one would render an empty chart. `Pick` keeps the required ones
+ * required and the optional ones optional, so a variant that cannot lay
+ * anything out is a compile error rather than a blank box at runtime. This is
+ * also why the family ships no pre-baked variants: SUI has nothing to bake.
+ */
+export function createStatusFlowChart(
+  config: Pick<StatusFlowChartProps, StatusFlowChartOverrides>,
+): Component<StatusFlowChartDataProps> {
+  return (props) => (
+    <StatusFlowChart {...(mergeProps(config, props) as StatusFlowChartProps)} />
+  );
+}

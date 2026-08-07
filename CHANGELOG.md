@@ -2,6 +2,61 @@
 
 ## [Unreleased]
 
+## 0.143.0
+
+### Added
+- **`createStatusFlowChart` — the StatusFlowChart family is reachable from the
+  package root for the first time.** `src/index.ts` re-exported exactly one
+  thing from that folder: the `StatusFlowNode` **type**. The component, its
+  factory and the three layout helpers `COMPONENTS.md` describes as "exposed
+  for testing" were all unreachable, so the documented API could not be
+  imported one value at a time.
+
+  Same class of bug as the `DailyDateAxis` one fixed in 0.142.0 — a named
+  re-export narrower than the family barrel — but type-only, so nothing of the
+  value surface arrived at all. Nothing here is breaking; it is a surface that
+  was documented but never shipped.
+
+  Now exported: `createStatusFlowChart`, `pickVisibleCols`, `assignColumns`,
+  `resolveParentStatuses`, and the types `StatusFlowChartDataProps`,
+  `StatusFlowChartOverrides`, `StatusFlowRenderContext`, `StatusFlowColumn`,
+  `StatusFlowBreakpoint`, `ColAssignment`.
+
+  The **base component stays unexported**, per the curried-only policy. Its
+  config parameter is `Pick<…>` rather than `createSwimlaneChart`'s
+  `Partial<Pick<…>>`: seven of these props are required and have no sensible
+  library-wide default, because there is no universal status taxonomy. Keeping
+  them required makes a variant that cannot lay anything out a compile error
+  instead of a blank box at runtime. For the same reason the family ships **no
+  pre-baked curried variants** — SUI has nothing to bake.
+
+### Fixed
+- **`COMPONENTS.md` no longer advertises `variant`/`size` props on three
+  components whose bases are deliberately unexported.** `StatusBadge` (`:138`),
+  `AlertBox` (`:824`) and `EmptyState` each had an entry of the form "Key
+  props: `variant` …, `size` …" with no mention of a factory or a curried
+  variant, sitting in a section whose other entries *are* directly importable.
+  A reader had no signal these were different — and #16394 is the evidence that
+  consumers acted on it, importing `StatusBadge` and `AlertBox` straight out of
+  the manifest.
+
+  Each entry now names the base as unexported, splits data props from the
+  overrides baked at definition time, and lists the factory and every curried
+  variant. `EmptyState` was the subtlest: the *name* is exported, so no import
+  breaks — but it is itself a curried variant, and passing the documented
+  `variant` or `size` is a type error.
+
+  Every claim in the rewritten entries is pinned against the compiler, positive
+  and negative.
+
+- **The `CashflowChart` bullet named a component that does not exist.** Only
+  `WeeklyCashflowChart` is exported; the entry's own example already imported
+  that name. Renamed the bullet to match.
+
+### Changed
+- `undocumentedExports` tightened 172 → 160. The twelve are the curried
+  variants and factories named in the rewritten Badge/Feedback entries.
+
 ## 0.142.0
 
 ### Fixed
