@@ -1,4 +1,4 @@
-import type { Component } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import {
   FramedImage,
   SmallSquareThumbnail,
@@ -19,6 +19,36 @@ const wide = `data:image/svg+xml;utf8,${encodeURIComponent(
 const tall = `data:image/svg+xml;utf8,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="320"><rect width="120" height="320" fill="#b5734a"/><text x="60" y="166" font-family="sans-serif" font-size="16" fill="white" text-anchor="middle">120 x 320</text></svg>`,
 )}`;
+
+// The rotate-preview lifecycle, end to end: press rotate (preview only, and
+// it animates), then commit (new bytes + rotation back to 0 together, and it
+// must NOT animate). Kept as its own component so the demo owns its state.
+const RotationCommitDemo: Component = () => {
+  const [rotation, setRotation] = createSignal(0);
+  const [src, setSrc] = createSignal(tall);
+  const commit = () => {
+    // Stands in for "the backend returned rotated bytes": a different image,
+    // arriving at the same moment the preview rotation is dropped.
+    setSrc(rotation() % 180 === 0 ? tall : wide);
+    setRotation(0);
+  };
+  return (
+    <Stack gap="sm">
+      <Row gap="md" align="stretch" class="framed-image-demo">
+        <ContainedPhoto src={src()} alt="Rotation preview" rotationDegrees={rotation()} />
+      </Row>
+      <Row gap="sm" align="center">
+        <button type="button" id="demo-rotate" onClick={() => setRotation((r: number) => r + 90)}>
+          Rotate 90°
+        </button>
+        <button type="button" id="demo-commit" onClick={commit}>
+          Commit
+        </button>
+        <span class="text-meta">rotationDegrees = {rotation()}</span>
+      </Row>
+    </Stack>
+  );
+};
 
 /**
  * FramedImage showcase — the frame around real photographic content: which
@@ -75,6 +105,18 @@ export const FramedImageShowcase: Component = () => (
         <SmallSquareThumbnail src={wide} alt="Unrotated" />
         <SmallSquareThumbnail src={wide} alt="Rotated 90 degrees" rotationDegrees={90} />
       </Row>
+    </div>
+
+    <div class="example-group">
+      <h3>Committing a rotation</h3>
+      <p class="text-meta">
+        The case rotationDegrees exists to serve: a preview being written to
+        disk. "Commit" swaps in new bytes (already rotated) and drops the
+        preview rotation to 0 in one go — the frame holds the old orientation
+        until the new bytes load, then applies the change with no transition,
+        so the photo never rotates a second time.
+      </p>
+      <RotationCommitDemo />
     </div>
 
     <div class="example-group">

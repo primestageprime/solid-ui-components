@@ -110,6 +110,7 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
   // incoming image has loaded, then set the new one with the transition
   // suppressed for that frame. A rotation change on its own (pressing rotate)
   // still animates exactly as before.
+  let frameRef: HTMLDivElement | undefined;
   const [appliedRotation, setAppliedRotation] = createSignal(local.rotationDegrees ?? 0);
   const [instant, setInstant] = createSignal(false);
   // Set the moment `src` changes, cleared when that image reports back.
@@ -149,9 +150,20 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
     if (deg === appliedRotation()) return;
     setInstant(true);
     setAppliedRotation(deg);
-    // One frame with the transition off is all it takes; re-arming it after
-    // means the NEXT plain rotate press animates normally again.
-    requestAnimationFrame(() => setInstant(false));
+    // Forced reflow between disabling the transition and re-enabling it, and
+    // NOT a requestAnimationFrame. rAF callbacks run before the frame's style
+    // recalc, so re-enabling there means the browser never recalculates
+    // anything while the transition is off — it just sees transform go 90deg
+    // -> 0deg with the transition back on, and animates exactly what this is
+    // here to prevent (observed live in bestie: the rotate-and-write flow
+    // still played the backwards spin). Reading offsetWidth forces that
+    // recalc synchronously, which commits the new transform as the baseline;
+    // re-enabling afterwards then has nothing left to animate, and the next
+    // plain rotate press still animates normally. Solid applies both signal
+    // writes above to the DOM synchronously, so by this line the element
+    // really is carrying the class and the new value.
+    void frameRef?.offsetWidth;
+    setInstant(false);
   };
 
   // The only per-instance geometry: which fixed px size, when squared, and
@@ -204,7 +216,7 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
   });
 
   return (
-    <div class={classes()} style={cssVars()}>
+    <div ref={frameRef} class={classes()} style={cssVars()}>
       <Show
         when={local.crossfade}
         fallback={

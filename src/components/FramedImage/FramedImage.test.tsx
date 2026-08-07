@@ -61,7 +61,11 @@ describe("FramedImage rotation", () => {
 
     fireEvent.load(container.querySelector("img")!);
     expect(rotationOf(container)).toBe("");
-    expect(isInstant(container)).toBe(true);
+    // The suppression is released in the SAME tick, after a forced reflow —
+    // deferring it to a rAF would re-enable the transition before the browser
+    // ever recalculated style with it off, which animates the very change
+    // this suppresses.
+    expect(isInstant(container)).toBe(false);
   });
 
   it("settles on error too, rather than freezing at a stale orientation", () => {
