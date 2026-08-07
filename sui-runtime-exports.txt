@@ -738,4 +738,5 @@ FramedImage
 SmallSquareThumbnail
 MediumSquareThumbnail
 ContainedPhoto
+ContainedPhotoOnDark
 crop
