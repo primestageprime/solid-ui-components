@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## 0.148.0
+
+### Added
+- **`PivotTreemap` is exported again.** `src/index.ts` had it commented out
+  since 2026-05-12 with the reason "local-link build workaround: dir not
+  committed"; the directory landed eight days later and the export was never
+  restored, so a fully built, tested, showcased and documented component was
+  unreachable by every consumer for ~11 weeks. Adds `PivotTreemap`,
+  `PivotPills`, `bucketByDims`, `EMPTY_INNER_KEY` and 6 types — export surface
+  1274 → 1284.
+
+  Every health gate was green throughout, because none of them measures the
+  export surface. `scripts/doc-coverage.mjs`'s header, which named this
+  component as unexported, is corrected in the same change.
+
 ## 0.147.0
 
 ### Added
