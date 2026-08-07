@@ -2,6 +2,58 @@
 
 ## [Unreleased]
 
+## 0.149.0
+
+### Added
+- **Render coverage for the whole `Table/` cluster** — `DataTableContainer`,
+  `FilterableTable`, `SectionTable` and `TableSectionHeader`, the last
+  four-module cluster on the burn-down list. `componentsNeverRendered` tightens
+  21 → 17 and `componentsNeverExecuted` 7 → 3: all four were dark as well as
+  unmounted, so this moves both ratchets. 23 mutations, 22 caught (the 23rd is
+  a redundant source clause, below).
+
+  Three of the four own no DOM — they are `splitProps` wiring, where every
+  decision is about WHERE a prop lands. Markup assertions would mostly have
+  re-tested `BaseTable`, so these suites assert the plumbing instead.
+
+  What is now pinned:
+  - `TableSectionHeader`'s **count line**, whose three rules interact: the
+    plural agrees with `total ?? count`, so a filtered view reads "1 of 5
+    recordS" — plural on a count of one; `isFiltered` uses `>` not `!=`, so an
+    unfiltered `total === count` reads "5 records" and not "5 of 5"; and `meta`
+    REPLACES the count rather than joining it. Any fixture where count and
+    total agree cannot tell the first rule from "plural agrees with count".
+  - The `props.count != null` guard, so a table filtered to nothing says
+    "0 records" instead of going silent.
+  - `DataTableContainer`'s two **mutually exclusive scroll strategies** —
+    capped mode gets `ScrollBox` + an inline `max-height` (default `500px`,
+    which lives in the component and not in CSS); fill mode gets
+    `ScrollFillBox` + `min-height:0` and **no** `max-height`. A cap leaking
+    into fill mode would bound a container whose whole job is to grow, and
+    `maxHeight` passed alongside `fill` is dropped rather than merged.
+  - `FilterableTable`'s deliberate asymmetry: `filterPlaceholder` is split out
+    and must not reach `BaseTable`, while `fill` is deliberately NOT split out
+    and must reach BOTH the wrapper and the table. Wire only one and the table
+    either never scrolls or has no bounded height to scroll within — neither is
+    visible under jsdom.
+  - That the table stays **mounted** across a filter change. `TableQuickFilter`
+    calls its children once with an accessor; passing `filtered()` instead of
+    `filtered` would remount on every keystroke, dropping scroll position and
+    internal state without changing a single rendered byte.
+  - `SectionTable` deriving its count from `data.length` while `total` comes
+    from the prop, and that `title` does not leak onto the table — leaked onto
+    a DOM element it becomes a native tooltip attribute, which renders fine and
+    silently adds a hover tooltip nobody asked for.
+
+### Notes
+- One mutation **survived by design**: dropping `props.total != null &&` from
+  `TableSectionHeader`'s `isFiltered` changes nothing. `undefined > n` is
+  `false` (NaN comparison), so the guard is only reachable when `total` is
+  `null` AND `count` is negative — `null` coerces to 0 in a relational
+  comparison where `undefined` does not. Both are outside the declared types.
+  The clause is redundant rather than untested; it is left in place as
+  defensive intent, and no test was contrived to kill it.
+
 ## 0.148.0
 
 ### Added
