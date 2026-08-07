@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed
+- **The last two orphan showcases resolved** — differently, because they were
+  different problems. `HeatStack` is now in the gallery at `#/heatstack` (362
+  lines of working showcase that had never been registered in `dev/main.tsx`).
+  `dev/showcases/toggle.tsx` is **deleted**: it exported a `ToggleShowcase` that
+  `dev/main.tsx` already imports from `hud-toggle.tsx`, whose sections are a
+  superset of it (Variants / Sizes / Colors / States / Label Position against
+  Basic / With Label / Sizes / Disabled). Both files date to the initial commit;
+  wiring the smaller one up would have put a second, worse Toggle page in the
+  gallery.
+
+  `dev/showcases/` now has **zero** files that nothing imports. Note the earlier
+  count of four orphans (from the 2026-08-04 architecture review, and repeated
+  by me) was wrong: `cashflow-day-cell.tsx` is a helper module imported by
+  sibling showcases, not a page. The detection that produced "four" looked only
+  for imports from `dev/main.tsx`, which sibling imports don't match.
+
 ## 0.150.2
 
 ### Fixed
