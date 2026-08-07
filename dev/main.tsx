@@ -168,6 +168,7 @@ import { DagTraversalSandboxShowcase } from "./showcases/dag-traversal-sandbox";
 import { DagTraversalBulkSandboxShowcase } from "./showcases/dag-traversal-bulk-sandbox";
 import { WorkshopShowcase } from "./showcases/workshop";
 import { AnimatedSwimlaneChartShowcase } from "./showcases/animated-swimlane-chart";
+import { RouterDemoShowcase } from "./showcases/router-demo";
 import { SwimlaneNodeCardShowcase } from "./showcases/swimlane-node-card";
 import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 
@@ -298,6 +299,12 @@ const items: Item[] = [
     label: "AnimatedSwimlaneChart",
     component: AnimatedSwimlaneChartShowcase,
     tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "router-demo",
+    label: "Edge routers (dag-svg)",
+    component: RouterDemoShowcase,
+    tags: ["depth:0", "chart"],
   },
   {
     id: "swimlane-node-card",
