@@ -66,13 +66,14 @@
 // Types are excluded. `ComboboxProps` is discovered from the component's entry,
 // not on its own, and 533 of them would swamp the signal.
 //
-// Components in a directory with no exported component — today `PivotTreemap`
-// (unexported since 2026-05-12, dside sui#16400) and `StatusFlowChart` — are
-// not counted, because they are not public API. This is the distinction the
-// directory-name metric could not draw: it demanded documentation for internal
-// components (`CandlestickRenderer`, `GhostRow`) on the same terms as shipped
-// ones. Restoring an export to the barrel makes its names due here, which is
-// the correct coupling.
+// Components in a directory with no exported component — today
+// `StatusFlowChart` — are not counted, because they are not public API.
+// (`PivotTreemap` was the other one until its barrel export was restored in
+// 0.148.0; its ten names are documented and it now counts.) This is the
+// distinction the directory-name metric could not draw: it demanded
+// documentation for internal components (`CandlestickRenderer`, `GhostRow`) on
+// the same terms as shipped ones. Restoring an export to the barrel makes its
+// names due here, which is the correct coupling.
 // ============================================
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
