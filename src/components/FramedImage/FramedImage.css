@@ -5,6 +5,14 @@
   background: var(--sui-bg-tertiary);
 }
 
+/* Photo-viewer backdrop: a fixed near-black stage instead of the themed
+   surface, so letterbox bars around a "contain" image read as neutral
+   staging rather than as UI. Deliberately theme-independent — overridable
+   per app via --sui-photo-backdrop if a product wants a different stage. */
+.sui-framed-image--backdrop-dark {
+  background: var(--sui-photo-backdrop, #1a1a1a);
+}
+
 /* Square: fixed width/height from the per-instance custom property. */
 .sui-framed-image--square {
   flex: 0 0 auto;

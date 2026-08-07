@@ -8,6 +8,7 @@
 import {
   type Component,
   type JSX,
+  createEffect,
   splitProps,
   Show,
   mergeProps,
@@ -45,6 +46,14 @@ export interface ConfirmationModalProps {
   loading?: boolean;
   /** Confirm button variant (default: "primary") */
   confirmVariant?: "primary" | "danger";
+  /** Focuses the confirm button as soon as the modal opens, so [Enter]
+   *  confirms without reaching for the mouse. Off by default, and worth
+   *  leaving off for a genuinely destructive confirm reached by accident —
+   *  a focused confirm turns a stray [Enter] into the action itself. Opt in
+   *  where the dialog is a deliberate step in a keyboard-driven flow (the
+   *  user already pressed a key to get here) rather than an interruption.
+   *  [Escape] still cancels either way (see Modal). */
+  autoFocusConfirm?: boolean;
   /** Body content (e.g. a table of records to review) */
   children?: JSX.Element;
 }
@@ -65,8 +74,20 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
     "cancelLabel",
     "loading",
     "confirmVariant",
+    "autoFocusConfirm",
     "children",
   ]);
+
+  // Focus lands on the confirm button one microtask AFTER the modal renders:
+  // Modal only mounts its Portal once `open` is true, so at the moment this
+  // effect first runs on the opening transition the button element doesn't
+  // exist yet. Re-focuses on every open, not just the first — the same
+  // element instance is reused across close/open cycles.
+  let confirmRef: HTMLButtonElement | undefined;
+  createEffect(() => {
+    if (!local.open || !local.autoFocusConfirm) return;
+    queueMicrotask(() => confirmRef?.focus());
+  });
 
   const confirmText = () => {
     if (local.loading && local.loadingLabel) return local.loadingLabel;
@@ -90,6 +111,7 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
             {local.cancelLabel ?? "Cancel"}
           </Button>
           <Button
+            ref={confirmRef}
             variant={local.confirmVariant ?? "primary"}
             size="sm"
             onClick={local.onConfirm}

@@ -57,6 +57,17 @@ export interface FramedImageProps {
   crossfade?: boolean;
   /** Crossfade duration in ms. Default 600. Ignored without `crossfade`. */
   crossfadeDurationMs?: number;
+  /** What shows THROUGH a "contain" fit — the letterbox bars either side of
+   *  an image whose aspect ratio doesn't match its frame.
+   *    • "surface" (default) — `--sui-bg-tertiary`, i.e. the frame reads as
+   *      part of the themed UI. Right for a thumbnail or an inline figure.
+   *    • "dark" — a fixed near-black stage, deliberately theme-INDEPENDENT,
+   *      for a photo-viewer/lightbox context where the point is that nothing
+   *      but the photo has colour. Same reasoning every lightbox on the web
+   *      goes near-black rather than following page chrome.
+   *  Compile-time shape, like `fit` — pick it in a curried variant (see
+   *  variants.tsx's ContainedPhotoOnDark), not per call site. */
+  backdrop?: "surface" | "dark";
   class?: string;
 }
 
@@ -70,12 +81,14 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
     "overlay",
     "crossfade",
     "crossfadeDurationMs",
+    "backdrop",
     "class",
   ]);
 
   const classes = () => {
     const c = ["sui-framed-image", `sui-framed-image--${local.fit}`];
     if (local.squareSize != null) c.push("sui-framed-image--square");
+    if (local.backdrop === "dark") c.push("sui-framed-image--backdrop-dark");
     if (local.crossfade) c.push("sui-framed-image--crossfade");
     if (local.class) c.push(local.class);
     return c.join(" ");

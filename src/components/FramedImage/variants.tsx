@@ -9,7 +9,7 @@ export type FramedImageDataProps = Pick<
 >;
 
 function createFramedImage(
-  defaults: Pick<FramedImageProps, "fit" | "squareSize">,
+  defaults: Pick<FramedImageProps, "fit" | "squareSize" | "backdrop">,
 ): Component<FramedImageDataProps> {
   return (props) => <FramedImage {...defaults} {...props} />;
 }
@@ -25,3 +25,10 @@ export const MediumSquareThumbnail = createFramedImage({ fit: "cover", squareSiz
  *  ratio doesn't match) — a primary/detail photo view where nothing should
  *  be cropped away. */
 export const ContainedPhoto = createFramedImage({ fit: "contain" });
+
+/** ContainedPhoto on a fixed near-black stage — the letterbox bars either
+ *  side of a photo whose aspect ratio doesn't match the frame stay neutral
+ *  instead of taking the theme's surface colour. For a photo viewer /
+ *  lightbox / detail pane, where the photo should be the only thing on
+ *  screen with colour in it. */
+export const ContainedPhotoOnDark = createFramedImage({ fit: "contain", backdrop: "dark" });

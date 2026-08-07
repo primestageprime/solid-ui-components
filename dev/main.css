@@ -2656,3 +2656,13 @@ th:has(.tf-th-center) .hud-table__header-content {
   margin-bottom: 4px;
   color: var(--sui-text-primary);
 }
+
+/* FramedImage: the "contain" examples fill their container by design, so the
+   showcase has to give them a definite box to fill — otherwise there is no
+   letterboxing to look at, which is the whole point of the backdrop demo. */
+.framed-image-demo {
+  height: 220px;
+}
+.framed-image-demo > * {
+  width: 220px;
+}
