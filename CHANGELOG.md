@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+## 0.146.0
+
+### Added
+- **Render coverage for the `DateRangePicker` sub-components** — `CalendarGrid`,
+  `CalendarHeader`, `PresetButtons` and `TimeInputs` are private to the folder
+  and had no test that mounted them; only the composed `DateRangePicker` and
+  the pure `calendarUtils` did. `componentsNeverRendered` tightens 29 → 25.
+
+  Mutation-tested like 0.145.0: 13 mutations, all caught. The fixture month is
+  **March 2026 on purpose** — the 1st is a Sunday, the worst case for the
+  Monday-first offset `(getDay() + 6) % 7`. A month starting on Monday lets an
+  off-by-one through.
+
+  What is now pinned:
+  - `CalendarGrid` renders a fixed 42-cell six-week grid, Monday-first, with a
+    Sunday-starting month pushed to the 7th slot and the first six filled from
+    the previous month.
+  - The **hover preview only applies while `rangeEnd` is unset** — once a range
+    is committed, moving the mouse must not repaint it — and the previewed end
+    is **clamped to `maxRangeDays`** rather than following the cursor.
+  - `maxRangeDays` disables **symmetrically** around the pending start, and
+    disables nothing when either the anchor or the cap is absent.
+  - The today marker via fake timers, so it asserts rather than depending on
+    the day the suite runs.
+  - `PresetButtons` guards on `presets?.length`, so an **empty array renders no
+    row at all** — not an empty one that still costs its gap and border.
+  - `TimeInputs` keeps `type="time"` on both inputs (the whole design decision
+    — a downgrade to `type="text"` is invisible in a DOM snapshot but drops the
+    browser's hh:mm UI and validation), and reports a cleared input as `""`.
+  - Every `<button>` in the folder carries `type="button"` so a picker mounted
+    inside a form cannot submit it.
+
+### Changed
+- `componentsNeverExecuted` tightens 12 → 11, and the one that left is
+  **`TimeInputs`** — the module `scripts/execution-coverage.mjs`'s own header
+  cites as the motivating example of dark code: "no owning suite AND never
+  executes, because it sits behind a condition inside a Popover that the tests
+  open but never satisfy". It now executes.
+
 ## 0.145.0
 
 ### Added
