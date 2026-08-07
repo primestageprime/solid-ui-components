@@ -515,6 +515,20 @@ bundle is ruined anyway. That is what this script is for.
   And do not "improve" it into a percentage threshold: the floor is zero for the
   same reason `componentsNeverRendered`'s is, and any other number re-opens an
   argument this ratchet refuses to have.
+- **Both ratchets stop at `src/components/`, and nothing guards
+  `src/internal/`.** `render-coverage.mjs:62` filters on
+  `p.includes("/src/components/")`, and `execution-coverage` iterates that same
+  entry list — so a helper module under `src/internal/` can ship with no test
+  and no metric will say a word. That is how `src/internal/dag-svg`'s 537 lines
+  of edge routing, consumed by DagChart, SwimlaneChart and
+  AnimatedSwimlaneChart, reached 2026-08-06 untested (dside sui#16434). The
+  coverage *report* now includes `src/internal/**` (`vitest.config.ts`), so the
+  directory is at least **visible** — `npm run test:coverage` then read
+  `coverage/coverage-summary.json`. It is not **gated**. Extending the entry
+  selector is a real design question, not an oversight to fix casually: "does a
+  test mount this" is the wrong question for a module that exports pure
+  functions, so a `src/internal/` ratchet needs its own definition of covered
+  before it needs a baseline.
 - **`missingDepthHeaders` matches the literal regex `/Depth [0-9]/`** anywhere
   in the file, and it applies to **internal** component files too, not just
   exported ones. A new `.tsx` under `src/components/` without a depth line in
@@ -596,6 +610,7 @@ Import from `../../test-utils` instead:
 | Pointer gestures | `pointer(el).down/move/up({ clientX, clientY })`, plus `installPointerCapture(el)` |
 | HTML5 drag and drop | `makeDataTransfer()`, `fireDrag()`, `flush()` |
 | DOM-structure regression | `domStructure(root)` |
+| An SVG `d` string from a router | `pathVertices(d)` for the on-curve points, `controlPoints(d)` for a bezier's control net, `pathShape(d)` for the operator sequence alone, `samplePolyline(pts, n)` to test containment |
 
 Three things worth knowing before you extend it:
 

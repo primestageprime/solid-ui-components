@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+## 0.150.1
+
+### Added
+- **First tests for `src/internal/dag-svg`'s edge routers** (sui#16434). 537
+  lines of path routing — `orthogonalAvoidingObstacles`, `bezierAvoidingObstacles`,
+  `bezierThroughChannelPath`, `orthogonalStepPath` — shipped through DagChart,
+  SwimlaneChart and AnimatedSwimlaneChart with no test at all. 37 tests; 23
+  mutations run against the two modules, all caught. Function coverage went
+  0/8 and 0/10 to 8/8 and 10/10. No production code changed.
+- **`src/test-utils/svgPath.ts`** — `parsePath`, `pathVertices`,
+  `controlPoints`, `pathShape`, `samplePolyline`. A router returns a `d` string
+  and nothing else, so a test either parses it or asserts on a string literal
+  that pins six coordinates at once and says nothing about whether the path
+  clears the obstacle. `pathVertices` deliberately excludes a cubic's control
+  points — they are not on the stroke, so counting them would let a bezier
+  "prove" it clears an obstacle it cuts straight through.
+
+### Changed
+- **Coverage now reports `src/internal/**`** (`vitest.config.ts`). It had been
+  outside every walk: the coverage glob, `render-coverage.mjs` (which filters
+  on `/src/components/`) and `execution-coverage.mjs` downstream of it. This
+  makes the directory visible; it does **not** gate it, and
+  `componentsNeverExecuted` is unmoved at 3 — that metric iterates the
+  component entry list and looks each entry up in the report, so extra files in
+  the report are invisible to it.
+
+### Notes
+- **Known defect found and left unfixed** (sui#16435). The orthogonal router's
+  jammed-obstacle fallback is sound on the source side and wrong on the target
+  side, where it inherits the same comment but not its reasoning: `dropX`
+  clamps to `toOuterX - 2` and then descends from the corridor to the target
+  port straight through the obstacle, because the corridor is only *above* the
+  obstacle, never *past* it. Fires when an in-band obstacle's x-range covers
+  `toOuterX - 2`. Pinned by a `KNOWN DEFECT` test rather than fixed: three
+  shipped charts render this geometry, and the plausible fixes differ in what
+  they do to every other edge, so it wants eyes on real charts.
+- `orthogonal-routing.ts:25` declares `_EXIT_RUN` as a "legacy alias" with no
+  remaining consumers. Left in place to keep this diff free of production
+  changes.
+
 ## 0.150.0
 
 ### Changed
