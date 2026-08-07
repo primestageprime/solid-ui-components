@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { collapseGraph } from "./collapse";
 import {
@@ -10,18 +10,15 @@ import {
 } from "./edge-path";
 import { DagChart } from "./DagChart";
 import type { DAGNode, DAGEdge } from "./types";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
 // DagChart auto-detects flow direction via a ResizeObserver, which jsdom does
 // not provide. Stub a no-op so the component mounts.
+let sizer: FakeSizer;
 beforeAll(() => {
-  if (typeof globalThis.ResizeObserver === "undefined") {
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver;
-  }
+  sizer = installFakeSizer();
 });
+afterAll(() => sizer.restore());
 
 const nodes: DAGNode[] = [
   { id: "a", data: {} },

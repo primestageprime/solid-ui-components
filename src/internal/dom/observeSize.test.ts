@@ -2,6 +2,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { observeSize, type ObservedSize } from "./observeSize";
 
 // Minimal ResizeObserver stand-in: lets a test drive the dispatch directly.
+//
+// DELIBERATELY NOT migrated to src/test-utils' installFakeSizer, and it must
+// not be. The subject of this file is observeSize's own scheduling — the rAF
+// deferral out of the dispatch phase and the change-guard in front of it — so
+// it needs a double that leaves the scheduling visible. installFakeSizer is
+// built to hide it: its `resize` awaits the deferral frame before resolving,
+// precisely so its callers never have to know the deferral exists. Swapping it
+// in here would make every assertion about WHEN the callback runs unfalsifiable.
+// The other file exempt for this reason is CashflowChart.test.tsx.
 type Cb = (entries: ResizeObserverEntry[]) => void;
 let dispatch: Cb | null = null;
 let disconnected = 0;

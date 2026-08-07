@@ -14,7 +14,8 @@
 //
 //   no-op            → install and never call `resize`
 //   fire-on-observe  → set `autoFire`
-//   recorder         → read `observations`
+//   recorder         → read `observations` (how observe was called) or
+//                      `observed()` (what is watched right now)
 //   triggerable      → `await sizer.resize(el, size)`
 //
 // `resize` is async because `observeSize` defers the callback out of the
@@ -32,6 +33,7 @@
 // ============================================
 
 import type { ObservedSize } from "../internal/dom/observeSize";
+import { flatMap } from "../fn";
 
 /** One `observe()` call, in the order it happened. */
 export interface SizeObservation {
@@ -44,6 +46,15 @@ export interface FakeSizer {
    *  `options.box` here — a callback that measures the border box but observes
    *  the content box silently stops updating (see observeSize's header). */
   readonly observations: SizeObservation[];
+  /** Elements observed RIGHT NOW, across every live observer, in observe order.
+   *
+   *  Distinct from `observations`, and both are needed. That is an append-only
+   *  log: it answers "how was observe called", which is the right question for
+   *  `options.box`. This is a live set that shrinks on `unobserve` and
+   *  `disconnect`, which is the only thing that can answer "is the stale row
+   *  still being watched, or was it swapped out cleanly" — a leak there shows
+   *  up as a growing observed set, never as a wrong measurement. */
+  observed(): Element[];
   /** When true, `observe()` immediately delivers `initialSize`. Models the
    *  browser's first synchronous delivery; off by default so a test that only
    *  wants silence gets silence. */
@@ -117,6 +128,10 @@ export function installFakeSizer(): FakeSizer {
     observations,
     autoFire: false,
     initialSize: { width: 0, height: 0 },
+
+    observed(): Element[] {
+      return flatMap((observer: LiveObserver) => observer.targets, observers);
+    },
 
     async resize(el: Element, size: ObservedSize): Promise<void> {
       for (const observer of observers) {

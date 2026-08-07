@@ -1,24 +1,23 @@
 import { render } from "@solidjs/testing-library";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { EllipsisText } from "./EllipsisText";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
 // jsdom has no layout (scrollWidth ≡ 0). Install a ResizeObserver that measures
 // synchronously on observe, and override element metrics on the prototype so
 // every measured span reports the same, stable clip state.
-class SyncResizeObserver {
-  callback: ResizeObserverCallback;
-  constructor(cb: ResizeObserverCallback) {
-    this.callback = cb;
-  }
-  observe(el: Element) {
-    this.callback(
-      [{ target: el } as ResizeObserverEntry],
-      this as unknown as ResizeObserver,
-    );
-  }
-  unobserve() {}
-  disconnect() {}
-}
+// The sizer stays SILENT — `resize` is never called. It only has to exist:
+// createTruncationObserver bails early when `typeof ResizeObserver ===
+// "undefined"` (createTruncationObserver.ts:44), and once past that guard its
+// createEffect calls `measure()` synchronously (line 59) before installing the
+// observer at all. That first synchronous measure is what these assertions
+// read. The previous double fired its callback on observe; replacing that with
+// a no-op left every test here green, so the firing was never load-bearing.
+let sizer: FakeSizer;
+beforeAll(() => {
+  sizer = installFakeSizer();
+});
+afterAll(() => sizer.restore());
 
 const overrideMetrics = (metrics: Record<string, number>) => {
   for (const [key, value] of Object.entries(metrics)) {
@@ -32,7 +31,6 @@ const overrideMetrics = (metrics: Record<string, number>) => {
 };
 
 afterEach(() => {
-  vi.unstubAllGlobals();
   for (const key of ["scrollWidth", "clientWidth", "scrollHeight", "clientHeight"]) {
     Object.defineProperty(HTMLElement.prototype, key, {
       configurable: true,
@@ -48,7 +46,6 @@ const hasTooltip = (container: HTMLElement) =>
 
 describe("EllipsisText — tooltip iff ellipsis", () => {
   it("wraps in a tooltip when the text is clipped", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
     const { container } = render(() => (
       <EllipsisText class="sui-value-string" tooltip="1200 Really Long Street Name" />
@@ -58,7 +55,6 @@ describe("EllipsisText — tooltip iff ellipsis", () => {
   });
 
   it("renders a bare span (no tooltip) when the text fits", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 100, clientWidth: 100 });
     const { container } = render(() => (
       <EllipsisText class="sui-value-string" tooltip="Reno" />
@@ -68,7 +64,6 @@ describe("EllipsisText — tooltip iff ellipsis", () => {
   });
 
   it("forces the tooltip via alsoWhen even when the text is not clipped", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 100, clientWidth: 100 });
     const { container } = render(() => (
       <EllipsisText class="sui-value-string" tooltip="A, B, C, D" alsoWhen={() => true}>
@@ -79,7 +74,6 @@ describe("EllipsisText — tooltip iff ellipsis", () => {
   });
 
   it("renders custom children as the visible text", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 100, clientWidth: 100 });
     const { container } = render(() => (
       <EllipsisText class="sui-value-string" tooltip="full value">

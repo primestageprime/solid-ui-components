@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
 import {
   InfoAlert,
@@ -8,18 +8,15 @@ import {
 } from "./variants";
 import { createAlertBox } from "./AlertBox";
 import { createEmptyState } from "./EmptyState";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
 // Some composed Surface/Layout primitives observe size with ResizeObserver,
 // which jsdom does not provide. Stub a no-op so components mount.
+let sizer: FakeSizer;
 beforeAll(() => {
-  if (typeof globalThis.ResizeObserver === "undefined") {
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver;
-  }
+  sizer = installFakeSizer();
 });
+afterAll(() => sizer.restore());
 
 describe("AlertBox variants", () => {
   it("renders title, description and slotted children", () => {

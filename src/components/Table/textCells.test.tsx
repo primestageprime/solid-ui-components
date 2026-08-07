@@ -1,26 +1,25 @@
 import { render } from "@solidjs/testing-library";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { IdCell, LongTextCell, StringCell } from "./textCells";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
 // jsdom has no layout: scrollWidth/clientWidth are 0. To exercise the
 // clamp-mode "tooltip iff ellipsis" logic we (1) install a ResizeObserver that
 // measures synchronously on observe, and (2) override the element metrics on
 // HTMLElement.prototype so every clamp element reports the same clip state —
 // stable across the re-render that flips into/out of the tooltip branch.
-class SyncResizeObserver {
-  callback: ResizeObserverCallback;
-  constructor(cb: ResizeObserverCallback) {
-    this.callback = cb;
-  }
-  observe(el: Element) {
-    this.callback(
-      [{ target: el } as ResizeObserverEntry],
-      this as unknown as ResizeObserver,
-    );
-  }
-  unobserve() {}
-  disconnect() {}
-}
+// The sizer stays SILENT — `resize` is never called. It only has to exist:
+// createTruncationObserver bails early when `typeof ResizeObserver ===
+// "undefined"` (createTruncationObserver.ts:44), and once past that guard its
+// createEffect calls `measure()` synchronously (line 59) before installing the
+// observer at all. That first synchronous measure is what these assertions
+// read. The previous double fired its callback on observe; replacing that with
+// a no-op left every test here green, so the firing was never load-bearing.
+let sizer: FakeSizer;
+beforeAll(() => {
+  sizer = installFakeSizer();
+});
+afterAll(() => sizer.restore());
 
 const overrideMetrics = (metrics: Record<string, number>) => {
   for (const [key, value] of Object.entries(metrics)) {
@@ -34,7 +33,6 @@ const overrideMetrics = (metrics: Record<string, number>) => {
 };
 
 afterEach(() => {
-  vi.unstubAllGlobals();
   for (const key of ["scrollWidth", "clientWidth", "scrollHeight", "clientHeight"]) {
     // Restore jsdom's default (0) so tests don't leak metrics into each other.
     Object.defineProperty(HTMLElement.prototype, key, {
@@ -53,7 +51,6 @@ const hasTooltip = (container: HTMLElement) =>
 
 describe("LongTextCell — clamp + tooltip reveal (ellipsis iff tooltip)", () => {
   it("shows the tooltip when the value is actually clipped", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 300, clientWidth: 100, scrollHeight: 20, clientHeight: 20 });
     const { container } = render(() => (
       <LongTextCell value="1200 Really Long Street Name" clampLines={1} reveal="tooltip" />
@@ -62,7 +59,6 @@ describe("LongTextCell — clamp + tooltip reveal (ellipsis iff tooltip)", () =>
   });
 
   it("does NOT show the tooltip when the value fits (no ellipsis)", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 100, clientWidth: 100, scrollHeight: 20, clientHeight: 20 });
     const { container } = render(() => (
       <LongTextCell value="Reno" clampLines={1} reveal="tooltip" />
@@ -72,7 +68,6 @@ describe("LongTextCell — clamp + tooltip reveal (ellipsis iff tooltip)", () =>
   });
 
   it("renders the empty fallback for a blank value (never a tooltip)", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
     const { container } = render(() => (
       <LongTextCell value="" clampLines={1} reveal="tooltip" />
@@ -87,7 +82,6 @@ describe("StringCell / IdCell — tooltip iff the value is clipped", () => {
     container.querySelector(".sui-ellipsis-text__trigger") !== null;
 
   it("StringCell tooltips a clipped value, not a fitting one", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
     const clipped = render(() => <StringCell value="a very long string value" />);
     expect(hasTooltip(clipped.container)).toBe(true);
@@ -99,7 +93,6 @@ describe("StringCell / IdCell — tooltip iff the value is clipped", () => {
   });
 
   it("IdCell tooltips a clipped id and keeps the .sui-value-id pill", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
     const { container } = render(() => <IdCell value="veryLongIdentifier-0001" />);
     expect(hasTooltip(container)).toBe(true);
@@ -107,7 +100,6 @@ describe("StringCell / IdCell — tooltip iff the value is clipped", () => {
   });
 
   it("renders the empty fallback (never a tooltip) for null", () => {
-    vi.stubGlobal("ResizeObserver", SyncResizeObserver);
     overrideMetrics({ scrollWidth: 300, clientWidth: 100 });
     const { container } = render(() => <StringCell value={null} />);
     expect(hasTooltip(container)).toBe(false);

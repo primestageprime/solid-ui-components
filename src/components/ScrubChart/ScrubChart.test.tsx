@@ -2,7 +2,20 @@ import { describe, it, expect, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { ScrubChart, type ScrubChartContext } from "./ScrubChart";
 import { dailyCells, type Cell } from "../DateAxis";
-import { pointer } from "../../test-utils";
+import { pointer, rectOf } from "../../test-utils";
+
+// `cellAtClientX` reads exactly one field of this box — `left`, to convert a
+// client coordinate into a plot-relative one. The 1200 that sets dayPitch does
+// NOT come from here: chartWidth is seeded with DEFAULT_CHART_WIDTH (1200) and
+// only moves when observeSize fires, and this file installs no ResizeObserver,
+// so it never does. The width below is set to match only so the box is not a
+// lie; changing it changes nothing, while changing `left` fails three tests.
+//
+// Assigned per-element rather than through installRects because each test stubs
+// exactly one node and wants every other rect to stay jsdom-zero — a
+// prototype-wide stub would hand the same box to the overlay and the frame
+// alike, hiding which one the production code measures from.
+const PLOT_RECT = rectOf({ left: 0, top: 0, width: 1200, height: 200 });
 
 const d = (iso: string): Date => new Date(`${iso}T00:00:00.000Z`);
 
@@ -154,18 +167,7 @@ describe("ScrubChart chart-frame drag", () => {
       ".sui-scrub-chart__overlay",
     )! as HTMLDivElement;
     const axisEl = container.querySelector(".sui-date-axis")! as HTMLDivElement;
-    overlay.getBoundingClientRect = () =>
-      ({
-        left: 0,
-        top: 0,
-        width: 1200,
-        height: 200,
-        right: 1200,
-        bottom: 200,
-        x: 0,
-        y: 0,
-        toJSON: () => "",
-      }) as DOMRect;
+    overlay.getBoundingClientRect = () => PLOT_RECT;
     axisEl.scrollLeft = 0;
 
     // 31 cells across 1200 px → dayPitch ≈ 38.71. cellWidth = 60. So a 100-px
@@ -202,18 +204,7 @@ describe("ScrubChart chart-frame click", () => {
     )! as HTMLDivElement;
     // Stub the chart frame's bounding box (cellAtClientX measures from it,
     // not from the overlay).
-    frame.getBoundingClientRect = () =>
-      ({
-        left: 0,
-        top: 0,
-        width: 1200,
-        height: 200,
-        right: 1200,
-        bottom: 200,
-        x: 0,
-        y: 0,
-        toJSON: () => "",
-      }) as DOMRect;
+    frame.getBoundingClientRect = () => PLOT_RECT;
 
     // 31 cells across 1200 px → dayPitch ≈ 38.71. Cell 15's centre sits at
     // x ≈ 600; the pointer barely moves so the gesture stays under the 4-px
@@ -244,18 +235,7 @@ describe("ScrubChart chart-frame click", () => {
     const overlay = container.querySelector(
       ".sui-scrub-chart__overlay",
     )! as HTMLDivElement;
-    frame.getBoundingClientRect = () =>
-      ({
-        left: 0,
-        top: 0,
-        width: 1200,
-        height: 200,
-        right: 1200,
-        bottom: 200,
-        x: 0,
-        y: 0,
-        toJSON: () => "",
-      }) as DOMRect;
+    frame.getBoundingClientRect = () => PLOT_RECT;
 
     // Drag well past threshold, then release. Even if the release x lands
     // back near the start (zero net displacement), the pan flag is sticky.

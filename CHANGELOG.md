@@ -2,6 +2,58 @@
 
 ## [Unreleased]
 
+## 0.150.0
+
+### Changed
+- **Test harness migration finished** (sui#12529). Sixteen test files carried a
+  private `ResizeObserver` in four incompatible shapes, eight spied on
+  `getBoundingClientRect`, five copied the same three DnD helpers and three
+  wrote their own pointer driver. All of it now comes from `src/test-utils`.
+  Eighteen files migrated, 487 lines of duplicated doubles deleted against 352
+  added (net -135 under `src/`; much of what went back in is the reasoning
+  below, written down where the next reader will hit it). No public API change
+  and no behaviour change in any shipped component.
+
+  Two files keep a private double **on purpose**, and both now say so in their
+  own headers: `internal/dom/observeSize.test.ts` and
+  `CashflowChart.test.tsx`. The rule is the same for each — their subject IS
+  the rAF scheduling, and `installFakeSizer`'s `resize` awaits that frame
+  before resolving, so migrating would make every "nothing has happened yet"
+  assertion unfalsifiable.
+
+### Added
+- **`FakeSizer.observed()`** — the elements watched right now, across every
+  live observer. Distinct from `observations`, which is an append-only log of
+  how `observe()` was *called* and never shrinks; only a live set can answer
+  "was the stale row unobserved, or is it still stacked up", and a leaked
+  observation shows up there rather than as a wrong measurement.
+  `BucketQueue/measurement` needed it; the log alone could not carry that file.
+
+### Notes
+- **Two of the four ResizeObserver "shapes" did not exist.** The fire-on-observe
+  doubles in `Table/EllipsisText` and `Table/textCells` were decorative:
+  `createTruncationObserver` measures synchronously inside its `createEffect`
+  before it observes anything, and that first measure is what the assertions
+  read. Replacing `observe()` with a no-op left all twelve tests green — the
+  observer only has to *exist*, so the hook does not return a
+  permanently-false accessor. Both now install a silent sizer.
+
+  The same held inside `createTruncationObserver`'s own suite: four of six
+  tests fired the observer and passed without it. Those calls are gone so each
+  test claims only what it covers, which leaves the post-mount re-measure path
+  resting on a single case. Recorded on the task rather than padded out.
+- **A decorative drag fixture in `MutableList`** dropped in the bottom half of
+  a row and asserted an order that jsdom's all-zero rects produce anyway (every
+  midpoint is 0, so any positive `clientY` reads as "past everything"). Now
+  drops in the top half, which zero rects cannot produce. The hit test itself
+  was never at risk — `SortableList` covers both halves — but the fixture
+  looked like more than it was.
+- **`ScrubChart`'s rect stub documented a derivation it does not perform.** The
+  comment read "31 cells across 1200 px → dayPitch ≈ 38.71" above a stub whose
+  width is 1200, which reads as cause and effect. `cellAtClientX` touches only
+  `rect.left`; the 1200 comes from `DEFAULT_CHART_WIDTH`. Halving the stub
+  changes nothing, changing `left` fails three tests. Comment corrected.
+
 ## 0.149.0
 
 ### Added

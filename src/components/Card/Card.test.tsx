@@ -1,19 +1,16 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
 import { RemovableItemCard } from "./RemovableItemCard";
 import { StatusCard, createStatusCard } from "./StatusCard";
+import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
 // StatusCard measures its description with a ResizeObserver, which jsdom does
 // not provide. Stub a no-op so the component mounts under the test environment.
+let sizer: FakeSizer;
 beforeAll(() => {
-  if (typeof globalThis.ResizeObserver === "undefined") {
-    globalThis.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver;
-  }
+  sizer = installFakeSizer();
 });
+afterAll(() => sizer.restore());
 
 describe("RemovableItemCard", () => {
   it("renders the title and no remove button without onRemove", () => {
