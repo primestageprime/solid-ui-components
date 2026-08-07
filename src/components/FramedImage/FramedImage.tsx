@@ -24,7 +24,7 @@
 // for the two shapes that answer that: SquareThumbnail (fixed, cover) and
 // ContainedPhoto (fills container, contain).
 // ============================================
-import { type Component, type JSX, For, Show, createEffect, createSignal, onCleanup, splitProps } from "solid-js";
+import { type Component, type JSX, For, Show, createEffect, createSignal, on, onCleanup, splitProps } from "solid-js";
 import "./FramedImage.css";
 
 export type ImageFit = "cover" | "contain";
@@ -89,9 +89,69 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
     const c = ["sui-framed-image", `sui-framed-image--${local.fit}`];
     if (local.squareSize != null) c.push("sui-framed-image--square");
     if (local.backdrop === "dark") c.push("sui-framed-image--backdrop-dark");
+    if (instant()) c.push("sui-framed-image--rotate-instant");
     if (local.crossfade) c.push("sui-framed-image--crossfade");
     if (local.class) c.push(local.class);
     return c.join(" ");
+  };
+
+  // ── Rotation: what's ON SCREEN vs what's been asked for ────────────────────
+  // These diverge in exactly one situation, and it's the important one: a
+  // rotate preview being COMMITTED. The consumer applies the edit, gets back
+  // image bytes that are already rotated, and swaps `src` while dropping
+  // `rotationDegrees` back to 0 — correct, but the browser goes on showing
+  // the OLD (unrotated) bytes until the new ones decode, so the 0.15s
+  // transform transition plays a second, backwards rotation over them.
+  // Confirmed live in bestie: apply a 90° rotate and the photo visibly
+  // rotates back before landing right way up.
+  //
+  // So: a rotation change that arrives WITH new bytes isn't an interaction to
+  // animate, it's a replacement. Hold the current orientation until the
+  // incoming image has loaded, then set the new one with the transition
+  // suppressed for that frame. A rotation change on its own (pressing rotate)
+  // still animates exactly as before.
+  const [appliedRotation, setAppliedRotation] = createSignal(local.rotationDegrees ?? 0);
+  const [instant, setInstant] = createSignal(false);
+  // Set the moment `src` changes, cleared when that image reports back.
+  let awaitingBytes = false;
+
+  // Declared BEFORE the rotation effect below so it runs first when both
+  // change together — Solid runs effects in creation order, and this one has
+  // to have raised the flag before the other decides whether to animate.
+  createEffect(
+    on(
+      () => local.src,
+      () => {
+        awaitingBytes = true;
+      },
+      { defer: true },
+    ),
+  );
+
+  createEffect(
+    on(
+      () => local.rotationDegrees ?? 0,
+      (deg) => {
+        if (awaitingBytes) return; // held until the new bytes land
+        setInstant(false);
+        setAppliedRotation(deg);
+      },
+      { defer: true },
+    ),
+  );
+
+  // Both load and error settle it: an image that never arrives must not
+  // freeze the frame at an orientation its consumer has already moved on from.
+  const onBytesSettled = () => {
+    if (!awaitingBytes) return;
+    awaitingBytes = false;
+    const deg = local.rotationDegrees ?? 0;
+    if (deg === appliedRotation()) return;
+    setInstant(true);
+    setAppliedRotation(deg);
+    // One frame with the transition off is all it takes; re-arming it after
+    // means the NEXT plain rotate press animates normally again.
+    requestAnimationFrame(() => setInstant(false));
   };
 
   // The only per-instance geometry: which fixed px size, when squared, and
@@ -102,7 +162,7 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
   const cssVars = (): JSX.CSSProperties => {
     const vars: Record<string, string> = {};
     if (local.squareSize != null) vars["--sui-framed-image-size"] = `${local.squareSize}px`;
-    if (local.rotationDegrees) vars["--sui-framed-image-rotation"] = `${local.rotationDegrees}deg`;
+    if (appliedRotation()) vars["--sui-framed-image-rotation"] = `${appliedRotation()}deg`;
     if (local.crossfadeDurationMs != null) {
       vars["--sui-framed-image-crossfade-duration"] = `${local.crossfadeDurationMs}ms`;
     }
@@ -145,7 +205,17 @@ export const FramedImage: Component<FramedImageProps> = (props) => {
 
   return (
     <div class={classes()} style={cssVars()}>
-      <Show when={local.crossfade} fallback={<img src={local.src} alt={local.alt} />}>
+      <Show
+        when={local.crossfade}
+        fallback={
+          <img
+            src={local.src}
+            alt={local.alt}
+            onLoad={onBytesSettled}
+            onError={onBytesSettled}
+          />
+        }
+      >
         <For each={layers()}>
           {(layer, i) => (
             <img

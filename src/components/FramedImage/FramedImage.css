@@ -38,6 +38,15 @@
   transition: transform 0.15s ease-out;
 }
 
+/* Rotation applied as a REPLACEMENT (new image bytes that already carry the
+   rotation), not as an interaction — the transform must land in the same
+   frame as the new pixels rather than animating over the old ones. Held for
+   one frame by the component, then removed so the next rotate press animates
+   normally. */
+.sui-framed-image--rotate-instant img {
+  transition: none;
+}
+
 .sui-framed-image--cover img {
   object-fit: cover;
 }
