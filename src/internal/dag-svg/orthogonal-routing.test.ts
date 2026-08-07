@@ -250,7 +250,13 @@ describe("orthogonalAvoidingObstacles — obstacle detours", () => {
   it("falls back to a source-adjacent lift when the obstacle is jammed against the source", () => {
     // Obstacle's left edge is 40; the ideal lift bound is 40 − 32 = 8, which is
     // inside the source. `liftLow > liftHigh`, so the router lifts right at the
-    // source edge and trusts the corridor to carry it over.
+    // source edge — and here that is CORRECT, because the lift at x=22 misses
+    // the obstacle's 40..80 span entirely.
+    //
+    // This is the clamp giving up while the leg is still fine, which is exactly
+    // why the sui#16435 fix keys on "does the leg hit something" and not on the
+    // clamp. Pushing this obstacle 20px left (see the beside-source case below)
+    // is what actually blocks the lift.
     const jammed = obstacle("jammed", 60, 0);
     const d = orthogonalAvoidingObstacles(source, rect(300, 100), [jammed]);
     const [, lift] = pathVertices(d);
@@ -261,31 +267,94 @@ describe("orthogonalAvoidingObstacles — obstacle detours", () => {
     }
   });
 
-  it("KNOWN DEFECT: the mirrored fallback at the TARGET routes through the obstacle", () => {
-    // Records current behaviour, and is NOT an endorsement of it — dside
-    // sui#16435.
+  it("approaches the target's TOP edge when an obstacle abuts its near side", () => {
+    // Regression for sui#16435, fixed 2026-08-06. The descent from the corridor
+    // to the target port used to cut straight down through this obstacle: the
+    // corridor clears it overhead, but `dropX` is bounded above by the target's
+    // own inner edge, so once the obstacle's far edge reaches past that bound
+    // there is no horizontal arrival left at all.
     //
-    // The source-side fallback above is sound: it lifts at fromOuterX + 2 and
-    // the corridor carries it over, exactly as the comment at
-    // orthogonal-routing.ts:187-189 claims. The target-side mirror inherits
-    // that comment but not its reasoning. `dropX` clamps to toOuterX − 2, and
-    // the drop must then descend from the corridor back to toPortY — straight
-    // down through the obstacle's y-band, because the corridor is only above
-    // the obstacle, not past it.
-    //
-    // It fires when an in-band obstacle's x-range covers toOuterX − 2, i.e.
-    // when the obstacle overlaps the target horizontally. Below is the first
-    // position where it does: an obstacle at x=250 (right edge 270) still
-    // clears; x=260 (right edge 280) does not.
-    const overlapping = obstacle("beside-target", 260, 100);
-    const d = orthogonalAvoidingObstacles(source, rect(300, 100), [
-      overlapping,
-    ]);
-    expect(d).toBe("M 20 0 L 28 0 L 28 58 L 278 58 L 278 100 L 280 100");
-    const through = routeSamples(d).filter((p) => insideRect(p, overlapping));
-    expect(through.length).toBeGreaterThan(0);
-    // Everything else still holds — the path is well-formed, just wrong.
+    // Here the obstacle spans x 240..280 and the target's left edge IS 280, so
+    // every horizontal approach at y=100 crosses it. The router now comes down
+    // the target's centre line into its top edge instead.
+    const abutting = obstacle("beside-target", 260, 100);
+    const d = orthogonalAvoidingObstacles(source, rect(300, 100), [abutting]);
+    expect(d).toBe("M 20 0 L 28 0 L 28 58 L 300 58 L 300 90");
     expectAllSegmentsAxisAligned(d);
+    for (const p of routeSamples(d)) {
+      expect(insideRect(p, abutting), `sample (${p.x},${p.y}) is inside`).toBe(
+        false,
+      );
+    }
+    // Lands ON the target's top edge, not short of it and not inside it.
+    expect(pathVertices(d).at(-1)).toEqual({ x: 300, y: 90 });
+  });
+
+  it("enters the BOTTOM edge instead when the corridor runs underneath", () => {
+    const d = orthogonalAvoidingObstacles(rect(0, 100), rect(300, 0), [
+      obstacle("beside-target", 260, 0),
+    ]);
+    expect(pathVertices(d).at(-1)).toEqual({ x: 300, y: 10 });
+    for (const p of routeSamples(d)) {
+      expect(insideRect(p, obstacle("beside-target", 260, 0))).toBe(false);
+    }
+  });
+
+  it("leaves the ordinary horizontal arrival alone when the descent is clear", () => {
+    // This obstacle ALSO trips the `dropLow > dropHigh` clamp — right edge 270,
+    // and 270 + OBSTACLE_MARGIN overshoots the target — but the descent at
+    // x=278 misses it, so this path was always correct and must not be
+    // rerouted. Keying the fix on the CLAMP rather than on the descent would
+    // have redrawn this edge for no reason.
+    const near = obstacle("near-target", 250, 100);
+    const d = orthogonalAvoidingObstacles(source, rect(300, 100), [near]);
+    expect(d).toBe("M 20 0 L 28 0 L 28 58 L 278 58 L 278 100 L 280 100");
+    for (const p of routeSamples(d)) {
+      expect(insideRect(p, near)).toBe(false);
+    }
+  });
+
+  it("leaves the source's TOP edge when an obstacle abuts ITS side", () => {
+    // The symmetric half of sui#16435, and the one I first argued could not
+    // happen — on the reasoning that the lift runs before the corridor and so
+    // leaves the obstacle behind. Wrong: the lift starts at `fromPortY`, inside
+    // the source's y-band, so an obstacle that merely ABUTS the source is
+    // crossed on the way up. No overlap with the node is needed. This obstacle
+    // spans x 20..60 and the source's right edge is 20.
+    const abutting = obstacle("beside-source", 40, 0);
+    const d = orthogonalAvoidingObstacles(source, rect(150, 0), [abutting]);
+    expect(d).toBe("M 0 -10 L 0 -42 L 115 -42 L 115 0 L 130 0");
+    expectAllSegmentsAxisAligned(d);
+    for (const p of routeSamples(d)) {
+      expect(insideRect(p, abutting)).toBe(false);
+    }
+    // Still arrives horizontally — only the blocked END is rerouted.
+    expect(pathVertices(d).at(-1)).toEqual({ x: 130, y: 0 });
+  });
+
+  it("reroutes BOTH ends when obstacles abut the source and the target", () => {
+    const atSource = obstacle("beside-source", 40, 0);
+    const atTarget = obstacle("beside-target", 260, 0);
+    const d = orthogonalAvoidingObstacles(source, rect(300, 0), [
+      atSource,
+      atTarget,
+    ]);
+    // Edge-to-edge over the top: no side anchor is reachable at either end.
+    expect(d).toBe("M 0 -10 L 0 -42 L 300 -42 L 300 -10");
+    for (const p of routeSamples(d)) {
+      expect(insideRect(p, atSource)).toBe(false);
+      expect(insideRect(p, atTarget)).toBe(false);
+    }
+  });
+
+  it("still ends on the target's SIDE edge in the ordinary detour", () => {
+    // The fix's blast radius from the other side: a plain mid-band obstacle
+    // must keep its horizontal arrival and its 5-segment U.
+    const d = orthogonalAvoidingObstacles(source, target, [
+      obstacle("mid", 100, 0),
+    ]);
+    expect(pathShape(d)).toBe("MLLLLL");
+    expect(pathVertices(d).at(-1)).toEqual({ x: 180, y: 0 });
   });
 });
 
