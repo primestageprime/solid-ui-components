@@ -2,6 +2,7 @@ import type { Component } from "solid-js";
 import {
   HeatStream,
   type HeatStreamItem,
+  type HeatStreamStatus,
 } from "../../src/components/HeatStream";
 
 const KEYS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -314,6 +315,68 @@ const partialUnknownItems: HeatStreamItem[] = [
   },
 ];
 
+// A long key list — the production shape. jtf-ui's explanation heatstream sets
+// `keys` to every distinct explanation title in the dataset, which is 45 today.
+// The compact hover preview shows one row per key, so this is the case that
+// used to crush the label column to 4px a row inside a fixed-height panel.
+const LONG_KEYS = [
+  "Calibration",
+  "Instrument Fault",
+  "Operator Error",
+  "Operator Inexperience",
+  "Data Acquisition",
+  "Hose Repair",
+  "Hose Leak",
+  "Safety Stand-down",
+  "Shore Power Fault",
+  "Generator Fault",
+  "Blower Fault",
+  "Scrubber Bypass",
+  "Analyser Drift",
+  "Analyser Purge",
+  "Sample Line Blockage",
+  "Pump Failure",
+  "Valve Failure",
+  "Filter Change",
+  "Flow Meter Fault",
+  "Pressure Excursion",
+  "Temperature Excursion",
+  "Ammonia Slip",
+  "Urea Supply",
+  "Catalyst Fouling",
+  "Manual Override",
+  "Scheduled Maintenance",
+  "Unscheduled Maintenance",
+  "Vendor On Site",
+  "Software Update",
+  "Network Outage",
+  "Power Outage",
+  "Sensor Replaced",
+  "Sensor Recalibrated",
+  "Vessel Shifted Berth",
+  "Vessel Departed Early",
+  "Vessel Arrived Late",
+  "Weather Hold",
+  "Tug Unavailable",
+  "Crew Change",
+  "Bunkering",
+  "Cargo Delay",
+  "Port Directive",
+  "Regulatory Test",
+  "Research Test",
+  "No Issue",
+];
+
+// One item per call, each flagging the single key it was filed under and
+// leaving the rest informational — the same shape jtf-ui builds.
+const longKeyItems: HeatStreamItem[] = Array.from({ length: 25 }, (_, i) => {
+  const statuses: Record<string, HeatStreamStatus> = {};
+  for (const [j, key] of LONG_KEYS.entries()) {
+    statuses[key] = j === (i * 5) % LONG_KEYS.length ? "missing" : "info";
+  }
+  return { name: `${i + 1}`, statuses };
+});
+
 export const HeatStreamShowcase: Component = () => {
   return (
     <div class="component-section">
@@ -328,22 +391,41 @@ export const HeatStreamShowcase: Component = () => {
           <h3>Default — C Never Worked, F Gap at 6–8, G Missing at 2</h3>
           <HeatStream items={sampleItems} keys={KEYS} showLegend />
 
-          <h3 class="showcase-heading-gap">
-            Top 5 Unknown (Not Yet Reported)
-          </h3>
+          <h3 class="showcase-heading-gap">Top 5 Unknown (Not Yet Reported)</h3>
           <HeatStream items={partialUnknownItems} keys={KEYS} showLegend />
 
           <h3 class="showcase-heading-gap">Compact — Default (10 items)</h3>
-          <HeatStream items={sampleItems} keys={KEYS} variant="compact" />
+          <div class="heatstream-compact-demo">
+            <HeatStream items={sampleItems} keys={KEYS} variant="compact" />
+          </div>
 
           <h3 class="showcase-heading-gap">
             Compact — Top 5 Unknown (10 items)
           </h3>
-          <HeatStream
-            items={partialUnknownItems}
-            keys={KEYS}
-            variant="compact"
-          />
+          <div class="heatstream-compact-demo">
+            <HeatStream
+              items={partialUnknownItems}
+              keys={KEYS}
+              variant="compact"
+            />
+          </div>
+
+          <h3 class="showcase-heading-gap">
+            Compact — 45 Keys (hover a mark for ~700ms)
+          </h3>
+          <p class="text-meta">
+            The hover preview sizes itself to its key list — one legible row
+            each, floored at 200px and capped to the viewport. Hover a mark
+            above with only 8 keys to compare: same panel, bigger rows.
+          </p>
+          <div class="heatstream-compact-demo">
+            <HeatStream
+              items={longKeyItems}
+              keys={LONG_KEYS}
+              variant="compact"
+              previewLabel="Berth 3"
+            />
+          </div>
         </div>
         <div class="depth2-atoms">
           <h3>Props</h3>
