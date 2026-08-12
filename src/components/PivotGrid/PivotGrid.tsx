@@ -43,6 +43,15 @@ export interface PivotGridProps<
   onCellClick?: (row: RowKey, col: ColKey, cell: Cell | null) => void;
   /** Optional: continuous heat 0..1 → translucent background. Return `null` to skip. */
   getCellHeat?: (cell: Cell, row: RowKey, col: ColKey) => number | null;
+  /**
+   * Optional: mark a single cell as the current selection (e.g. the cell a
+   * drill-down panel below the grid is showing detail for). Independent of
+   * `getCellHeat` — heat encodes magnitude across every cell, selection
+   * marks exactly one. Adds `sui-pivot-grid__cell--selected` to the `<td>`
+   * and `aria-current="true"` to the cell's interactive wrapper (button or
+   * link), so the marker survives whichever `renderCell` output is inside.
+   */
+  isCellSelected?: (row: RowKey, col: ColKey) => boolean;
   /** Optional: shape the 0..1 heat value before alpha mapping. Default `Math.sqrt`. */
   heatRamp?: (v: number) => number;
   /** Optional: hue for heat ramp. Default `var(--sui-pivot-heat-rgb, 248, 113, 113)`. */
@@ -142,8 +151,16 @@ export function PivotGrid<RowKey extends string, ColKey extends string, Cell>(
                       return props.renderCell(v, row, col);
                     };
 
+                    const selected = (): boolean =>
+                      props.isCellSelected?.(row, col) ?? false;
+
+                    const tdClass = (): string =>
+                      selected()
+                        ? "sui-pivot-grid__cell sui-pivot-grid__cell--selected"
+                        : "sui-pivot-grid__cell";
+
                     return (
-                      <td class="sui-pivot-grid__cell" style={cellStyle()}>
+                      <td class={tdClass()} style={cellStyle()}>
                         <Show
                           when={href() !== undefined}
                           fallback={
@@ -155,6 +172,7 @@ export function PivotGrid<RowKey extends string, ColKey extends string, Cell>(
                                 type="button"
                                 class="sui-pivot-grid__cell-button"
                                 title={title()}
+                                aria-current={selected() ? "true" : undefined}
                                 onClick={() =>
                                   props.onCellClick?.(row, col, cellValue())
                                 }
@@ -168,6 +186,7 @@ export function PivotGrid<RowKey extends string, ColKey extends string, Cell>(
                             class="sui-pivot-grid__cell-link"
                             href={href()}
                             title={title()}
+                            aria-current={selected() ? "true" : undefined}
                           >
                             {renderInner()}
                           </a>

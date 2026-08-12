@@ -80,6 +80,14 @@
   outline-offset: -2px;
 }
 
+/* Selection is an inset ring on the <td>, independent of getCellHeat's
+   background-color — so a selected cell stays visually marked whichever
+   heat value (or none) it also carries. box-shadow, not border, so it
+   doesn't shift cell width/alignment against its neighbors. */
+.sui-pivot-grid__cell--selected {
+  box-shadow: inset 0 0 0 2px var(--sui-accent);
+}
+
 /* When the cell has no interactive wrapper, plain text gets the same
    padding. INVARIANT: any new interactive wrapper class introduced for
    cells (e.g. `.sui-pivot-grid__cell-checkbox`) must be added to the
