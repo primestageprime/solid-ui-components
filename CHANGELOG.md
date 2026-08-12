@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## 0.151.0
+
+### Added
+- **`PivotGrid` — `isCellSelected`**, marking one cell as the current
+  selection independent of `getCellHeat`'s magnitude coloring. Adds
+  `sui-pivot-grid__cell--selected` (an inset accent-color ring) to the `<td>`
+  and `aria-current="true"` to its interactive wrapper (`aria-selected` was
+  tried first and rejected by the a11y lint — not a valid attribute on a
+  plain `<button>`/`<a>`, no supporting role). Surfaced by jtf-rth's SR-05
+  report: clicking a matrix cell opened a drill-down table below the grid
+  with no visible trace of which cell it came from once that table scrolled
+  out of view. Purely additive — optional prop, no existing behavior changes.
+
 ### Changed
 - **The last two orphan showcases resolved** — differently, because they were
   different problems. `HeatStack` is now in the gallery at `#/heatstack` (362

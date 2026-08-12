@@ -158,6 +158,44 @@ describe("PivotGrid interactivity", () => {
     expect(onCellClick).not.toHaveBeenCalled();
   });
 
+  it("marks exactly the selected cell with the --selected class and aria-current, independent of onCellClick", () => {
+    const { container } = render(() => (
+      <PivotGrid
+        {...baseProps}
+        onCellClick={() => {}}
+        isCellSelected={(r, c) => r === "rA" && c === "cB"}
+      />
+    ));
+    const selected = container.querySelectorAll(
+      "tbody td.sui-pivot-grid__cell--selected",
+    );
+    expect(selected.length).toBe(1);
+    expect(
+      selected[0]!.querySelector("button")?.getAttribute("aria-current"),
+    ).toBe("true");
+    // The other three cells get neither the class nor the attribute.
+    const unselectedButtons = container.querySelectorAll(
+      "tbody td:not(.sui-pivot-grid__cell--selected) button",
+    );
+    expect(unselectedButtons.length).toBe(3);
+    for (const b of unselectedButtons) {
+      expect(b.getAttribute("aria-current")).toBeNull();
+    }
+  });
+
+  it("omits the --selected class and aria-current entirely when isCellSelected is not passed", () => {
+    const { container } = render(() => (
+      <PivotGrid {...baseProps} onCellClick={() => {}} />
+    ));
+    expect(
+      container.querySelectorAll("tbody td.sui-pivot-grid__cell--selected")
+        .length,
+    ).toBe(0);
+    expect(
+      container.querySelector("tbody td button")?.getAttribute("aria-current"),
+    ).toBeNull();
+  });
+
   it("renders the cellTitle as the native title attribute on interactive cells", () => {
     const { container } = render(() => (
       <PivotGrid
