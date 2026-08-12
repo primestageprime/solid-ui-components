@@ -1443,6 +1443,13 @@
 .heatstack-demo__compact {
   width: 80px;
 }
+/* Compact HeatStream fills the height its parent gives it (.jtf-heatstream--
+   compact is height:100% with flex:1 rows), so in the gallery's auto-height
+   flow it collapsed to nothing and every compact section rendered blank. Give
+   the demos a frame to fill. */
+.heatstream-compact-demo {
+  height: 120px;
+}
 .quickfilter-atom-demo {
   max-width: 480px;
 }

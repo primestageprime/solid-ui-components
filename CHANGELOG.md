@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### Fixed
+- **HeatStream's hover preview sizes itself to its key list** (sui#28687). The
+  panel was a fixed `25vh` box whose rows are `flex: 1; min-height: 0`, so the
+  height each row got was `(panel − chrome) / N` with no floor. jtf-ui's
+  `/tools/explanations` passes every distinct explanation title as `keys` — 45
+  today — which left **4.11px of row for an 11px label**: the glyph boxes
+  overlapped and `overflow: hidden` sheared them, and the whole label column
+  read as noise.
+
+  The height is now driven by the content: one legible row per key (16px — a
+  14px row plus the 2px gap), floored at the old 200px so a short list still
+  renders large marks, and capped at the viewport less both margins so the panel
+  can never grow off-screen. Past that cap the rows shrink together instead of
+  the tail of the list clipping — the panel is `pointer-events: none`, so an
+  overflow scrollbar would not be scrollable by anyone. Same 45 keys now get
+  a 766px panel at 13.97px a row.
+
+  The arithmetic lives in `internal/geometry/hoverPanelHeight` and is applied
+  inline by `updatePosition()`; `.jtf-heatstream__preview` **declares no height
+  at all** now. Splitting it between the stylesheet and the positioning code is
+  what let the two drift, and the old rule's "keep the 0.25 factors in sync"
+  comment was the warning rather than the fix.
+
+### Changed
+- **Compact HeatStream showcases actually render.** `.jtf-heatstream--compact`
+  is `height: 100%` with `flex: 1` rows, so in the gallery's auto-height flow
+  all three compact sections collapsed to zero and had been showing blank space.
+  They now sit in a `.heatstream-compact-demo` frame (`dev/main.css`, per the
+  showcase style rubric), and a new **Compact — 45 Keys** section carries the
+  production shape the preview fix is about — the 8-key demos land on the 200px
+  floor and could never have shown it.
+
 ## 0.151.0
 
 ### Added

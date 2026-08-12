@@ -209,17 +209,20 @@
 }
 
 /* Hover preview — hidden by default, shown on parent :hover.
-   Sized to ~1/4 of the viewport so the marks scale up for detail; the 7 status
-   rows split the height evenly and cells fill the width. Keep the 0.25 factors
-   in sync with updatePosition() in HeatStream.tsx (used for edge-flipping). */
+   Width is ~1/4 of the viewport so the marks scale up for detail; keep the 0.25
+   factor in sync with updatePosition() in HeatStream.tsx (used for edge-flipping).
+
+   NO height here, deliberately. The panel shows one row per key and the key
+   count is only known at runtime, so a fixed height silently divided itself
+   among however many rows it was given — 45 explanation titles in a 25vh panel
+   left 4px per row for 11px text. updatePosition() sets the height inline from
+   hoverPanelHeight(); this rule must not compete with it. */
 .jtf-heatstream__preview {
   display: none;
   flex-direction: column;
   box-sizing: border-box;
   width: 25vw;
   min-width: 280px;
-  height: 25vh;
-  min-height: 200px;
   padding: 12px;
   background: var(--sui-bg-elevated);
   border: 1px solid var(--sui-border);
@@ -253,7 +256,11 @@
   min-height: 0;
 }
 
-/* Preview inner elements — avoid compact overrides entirely */
+/* Preview inner elements — avoid compact overrides entirely.
+   Rows stay evenly-split rather than fixed-height: the panel is already sized
+   to give each one ~14px (PREVIEW_ROW_PX in HeatStream.tsx, this 2px gap
+   included), and on a viewport too short for the full list they shrink
+   together instead of overflowing a panel that cannot be scrolled. */
 .jtf-heatstream__preview-row {
   display: flex;
   align-items: stretch;

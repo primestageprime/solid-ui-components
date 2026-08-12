@@ -8,13 +8,14 @@
 // ============================================
 import {
   type Component,
-  type JSX,
-  splitProps,
-  For,
-  Show,
   createSignal,
+  For,
+  type JSX,
   onCleanup,
+  Show,
+  splitProps,
 } from "solid-js";
+import { hoverPanelHeight } from "../../internal/geometry/hoverPanelHeight";
 import { clickableCursor } from "../../internal/style/clickable";
 import "./HeatStream.css";
 
@@ -93,13 +94,31 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
   const [previewStyle, setPreviewStyle] = createSignal<JSX.CSSProperties>({});
   let rootRef: HTMLDivElement | undefined;
 
+  // Preview row metrics. The label is 11px/1 (see .jtf-heatstream__preview-
+  // label), so 14px of row plus the 2px inter-row gap is the least a row can
+  // take and stay readable; chrome is the 12px padding either side plus the
+  // heading and its 8px margin.
+  const PREVIEW_ROW_PX = 16;
+  const PREVIEW_CHROME_PX = 46;
+  const PREVIEW_MIN_PX = 200;
+
   const updatePosition = () => {
     if (!rootRef) return;
     const rect = rootRef.getBoundingClientRect();
-    // Preview is ~1/4 of the viewport (see .jtf-heatstream__preview in the CSS).
+    // Preview width is ~1/4 of the viewport (see .jtf-heatstream__preview).
     const margin = 8;
     const pw = Math.max(280, window.innerWidth * 0.25);
-    const ph = Math.max(200, window.innerHeight * 0.25);
+    // Height is content-driven — one legible row per key — so a long key list
+    // gets a taller panel rather than thinner rows. Set inline below; the
+    // stylesheet deliberately declares no height for this element.
+    const ph = hoverPanelHeight({
+      rowCount: keys().length,
+      rowPx: PREVIEW_ROW_PX,
+      chromePx: PREVIEW_CHROME_PX,
+      minPx: PREVIEW_MIN_PX,
+      viewportPx: window.innerHeight,
+      marginPx: margin,
+    });
     // Prefer above the cell; flip below when there isn't room, then clamp.
     let top = rect.top - ph - 4;
     if (top < margin) top = rect.bottom + 4;
@@ -112,6 +131,7 @@ export const HeatStream: Component<HeatStreamProps> = (props) => {
       position: "fixed",
       top: `${top}px`,
       left: `${left}px`,
+      height: `${ph}px`,
     });
   };
 
