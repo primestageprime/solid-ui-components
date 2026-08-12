@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.151.1
+
 ### Fixed
 - **HeatStream's hover preview sizes itself to its key list** (sui#28687). The
   panel was a fixed `25vh` box whose rows are `flex: 1; min-height: 0`, so the
