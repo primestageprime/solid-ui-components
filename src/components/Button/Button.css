@@ -34,19 +34,27 @@
 }
 
 /* Tone matrix — orthogonal to variant. Mirrors the accent/outline/muted
-   trio used by the inline button factories in dside-ui. */
-.sui-btn--tone-accent {
+   trio used by the inline button factories in dside-ui.
+   Double-class selectors (`.sui-btn.sui-btn--tone-*`), same reason as
+   `.sui-btn.sui-btn--pill` above: a consumer that loads a theme CSS file
+   (e.g. `solid-ui-components/themes/default.css`) alongside this file gets
+   `_baseline.css`'s plain `.sui-btn { color: ... }` at equal (0,1,0)
+   specificity, and load order — not intent — decided the winner. Lifting
+   these to (0,2,0) makes tone win regardless of import order. Verified: with
+   single-class selectors, `tone="muted"` rendered as full-opacity default
+   text color whenever `themes/default.css` loaded after this file. */
+.sui-btn.sui-btn--tone-accent {
   border: 1px solid var(--sui-accent);
   background: var(--sui-accent);
   color: var(--sui-bg-deep, #001018);
   font-weight: 500;
 }
-.sui-btn--tone-outline {
+.sui-btn.sui-btn--tone-outline {
   border: 1px solid var(--sui-accent);
   background: transparent;
   color: var(--sui-accent);
 }
-.sui-btn--tone-muted {
+.sui-btn.sui-btn--tone-muted {
   border: 1px solid var(--sui-border);
   background: transparent;
   color: var(--sui-text-muted);
@@ -55,7 +63,7 @@
 /* Filled danger — the destructive peer of --tone-accent. Kept in the matrix so
    `tone="danger"` is not dead on non-text variants; text buttons get their
    colour from the baseline override instead (see themes/_baseline.css). */
-.sui-btn--tone-danger {
+.sui-btn.sui-btn--tone-danger {
   border: 1px solid var(--sui-danger);
   background: var(--sui-danger);
   color: var(--sui-bg-deep, #001018);
