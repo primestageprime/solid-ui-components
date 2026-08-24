@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.151.2
+
 ### Added
 - **`CashflowScrubChart.lineClass` restyles the PRIMARY balance line**
   (sui#32933). An overlay series has carried a consumer-owned `class` since it
