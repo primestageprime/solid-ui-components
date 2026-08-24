@@ -631,3 +631,66 @@ describe("CashflowScrubChart hover", () => {
     expect(ribbonEl(container as HTMLElement).style.border).toBe("");
   });
 });
+
+describe("CashflowScrubChart lineClass", () => {
+  // The primary line is the polyline that carries the base class WITHOUT the
+  // overlay-series modifier.
+  const primaryLineEl = (container: HTMLElement): Element | undefined =>
+    Array.from(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__line"),
+    ).find(
+      (el) =>
+        !el.classList.contains("sui-cashflow-scrub-chart__line--series"),
+    );
+
+  it("adds lineClass to the primary balance polyline", () => {
+    const cells = makeCells(6);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        lineClass="demo-draft-line"
+      />
+    ));
+    const primary = primaryLineEl(container as HTMLElement);
+    expect(primary?.getAttribute("class")).toBe(
+      "sui-cashflow-scrub-chart__line demo-draft-line",
+    );
+  });
+
+  it("leaves overlay series untouched when lineClass is set", () => {
+    const cells = makeCells(6);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        lineClass="demo-draft-line"
+        balanceSeries={[
+          {
+            id: "s",
+            class: "demo-series-line",
+            balanceCents: (c: CashflowCell) => c.balanceCents,
+          },
+        ]}
+      />
+    ));
+    const series = container.querySelector(
+      ".sui-cashflow-scrub-chart__line--series",
+    );
+    expect(series?.getAttribute("class")).toBe(
+      "sui-cashflow-scrub-chart__line sui-cashflow-scrub-chart__line--series demo-series-line",
+    );
+    expect(series?.classList.contains("demo-draft-line")).toBe(false);
+  });
+
+  it("keeps the default class exactly when lineClass is omitted", () => {
+    const cells = makeCells(6);
+    const { container } = render(() => (
+      <CashflowScrubChart cells={cells} scrub={false} />
+    ));
+    const primary = primaryLineEl(container as HTMLElement);
+    expect(primary?.getAttribute("class")).toBe(
+      "sui-cashflow-scrub-chart__line",
+    );
+  });
+});
