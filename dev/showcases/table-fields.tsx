@@ -5,7 +5,7 @@
 // No width, no align, no style — field types own ALL geometry; data-driven
 // color is a configure-time tone function; selection ships select-all +
 // shift-click range for free.
-import { type Component, For } from "solid-js";
+import { type Component, For, Show, createSignal } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import {
   type FieldCol,
@@ -31,10 +31,18 @@ import {
   ClusterRow,
   ContentStack,
   EndWrapRow,
+  GrowStack,
+  StretchRow,
+  TightStack,
 } from "../../src/components/Layout";
 import { Sparkline } from "../../src/components/Sparkline";
 import { SmallStatusLight } from "../../src/components/StatusLight";
-import { TextSublabel } from "../../src/components/Text";
+import {
+  AccentBody,
+  MonoMeta,
+  MutedBody,
+  TextSublabel,
+} from "../../src/components/Text";
 import { GhostButton } from "../../src/components/Button";
 
 interface Worker {
@@ -87,6 +95,47 @@ const SPECIMENS: Specimen[] = [
   { name: "A deliberately very long identifier that runs past the fifty character cap to demonstrate the ellipsis", note: "A secondary note long enough to pass the forty character cap", createdAt: "2026-06-19T16:55:00Z", hours: 9_999_999, ratio: 1_234_567.89, amountCents: 1_000_000_000_000, secs: 31_626_000 },
   { name: "Chandra Voss", note: "Escalations only", createdAt: "2026-07-16T11:05:00Z", hours: 12, ratio: 0.25, amountCents: 157_500, secs: 59 },
 ];
+
+// ── onRowHover cross-highlight ──────────────────────────────────────────────
+// The consumer case: a vessel call's HELM timestamps sit in a FieldTable beside
+// a chart, and the hovered row must light that timestamp's annotation line.
+// The companion here is a ladder of annotation marks rather than a chart — the
+// wiring is the lesson, and a chart would add a dependency to teach nothing.
+interface HelmEvent {
+  name: string;
+  occurredAt: string;
+  elapsedSecs: number;
+}
+
+const HELM_EVENTS: HelmEvent[] = [
+  { name: "First Line Ashore", occurredAt: "2026-07-16T04:12:00Z", elapsedSecs: 0 },
+  { name: "All Fast", occurredAt: "2026-07-16T04:31:00Z", elapsedSecs: 1_140 },
+  { name: "Gangway Down", occurredAt: "2026-07-16T04:48:00Z", elapsedSecs: 2_160 },
+  { name: "Cargo Ops Start", occurredAt: "2026-07-16T05:20:00Z", elapsedSecs: 4_080 },
+  { name: "Cargo Ops Complete", occurredAt: "2026-07-16T13:05:00Z", elapsedSecs: 31_980 },
+  { name: "Last Line Off", occurredAt: "2026-07-16T13:52:00Z", elapsedSecs: 34_800 },
+];
+
+/** The last payload onRowHover delivered. `{ row: null, index: -1 }` is the
+ *  leave payload, and also the start state before any hover. */
+interface HoverEcho {
+  row: HelmEvent | null;
+  index: number;
+}
+
+const NO_HOVER: HoverEcho = { row: null, index: -1 };
+
+/** Writes an echo back as the literal call the table made, so the demo shows
+ *  the mechanism and not only its effect. */
+const hoverEcho = (echo: HoverEcho): string =>
+  `onRowHover(${echo.row === null ? "null" : `{ name: "${echo.row.name}", … }`}, ${echo.index})`;
+
+/** UTC wall clock of an ISO timestamp. Pure — no locale, no zone drift. */
+const utcClock = (iso: string): string => iso.slice(11, 16);
+
+/** Annotation mark tone: lit while its row is hovered, dark otherwise. */
+const annotationVariant = (lit: boolean): "info" | "idle" =>
+  lit ? "info" : "idle";
 
 export const TableFieldsShowcase: Component = () => {
   // Selection: createFieldSelection gives the select-all header and
@@ -148,6 +197,16 @@ export const TableFieldsShowcase: Component = () => {
         }
       }),
     );
+
+  // Cross-highlight state: ONE signal holding the last onRowHover payload.
+  // The table drives it; the annotation ladder and the readout both read it.
+  const [hover, setHover] = createSignal<HoverEcho>(NO_HOVER);
+  const isLit = (index: number): boolean => hover().index === index;
+  const helmFields: Record<string, FieldCol<HelmEvent>> = {
+    name: nameCol(),
+    occurredAt: dateTimeCol("occurredAt"),
+    elapsed: durationCol("elapsedSecs", "s", { header: "Elapsed" }),
+  };
 
   const isoSelection = createFieldSelection<Specimen>({
     rows: () => SPECIMENS,
@@ -213,6 +272,52 @@ export const TableFieldsShowcase: Component = () => {
             {`width budget Σmin ${batchBudget.minCh}ch → Σmax ${batchBudget.maxCh}ch — the table caps at Σmax and reads as a dashboard tile`}
           </TextSublabel>
         </ClusterRow>
+      </div>
+
+      <div class="example-group">
+        <h3>Cross-highlighting a companion view with onRowHover</h3>
+        <p class="text-meta">
+          <code>onRowHover</code> fires <code>(row, index)</code> when the
+          pointer enters a row, and <code>(null, -1)</code> when it leaves the
+          table body. One signal holds that payload; the ladder on the right
+          lights the mark whose index matches. Hover a timestamp to light its
+          annotation, then leave the table to watch every mark go dark. The
+          readout below prints the call the table just made.
+        </p>
+        <StretchRow>
+          <ContentStack>
+            <FieldTable
+              data={HELM_EVENTS}
+              fields={["name", "occurredAt", "elapsed"]}
+              registry={helmFields}
+              maxRows={6}
+              onRowHover={(row, index) => setHover({ row, index })}
+            />
+          </ContentStack>
+          <GrowStack>
+            <TextSublabel>Berth annotations (UTC)</TextSublabel>
+            <TightStack>
+              <For each={HELM_EVENTS}>
+                {(event, index) => (
+                  <ClusterRow>
+                    <SmallStatusLight
+                      variant={annotationVariant(isLit(index()))}
+                      pulse={isLit(index())}
+                    />
+                    <MonoMeta>{utcClock(event.occurredAt)}</MonoMeta>
+                    <Show
+                      when={isLit(index())}
+                      fallback={<MutedBody>{event.name}</MutedBody>}
+                    >
+                      <AccentBody>{event.name}</AccentBody>
+                    </Show>
+                  </ClusterRow>
+                )}
+              </For>
+            </TightStack>
+          </GrowStack>
+        </StretchRow>
+        <MonoMeta>{hoverEcho(hover())}</MonoMeta>
       </div>
 
       <div class="example-group">
