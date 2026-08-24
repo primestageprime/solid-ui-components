@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added
+- **`CashflowScrubChart.lineClass` restyles the PRIMARY balance line**
+  (sui#32933). An overlay series has carried a consumer-owned `class` since it
+  shipped, but the line the chart draws itself hardcoded
+  `sui-cashflow-scrub-chart__line` — so a caller could dash a comparison line
+  and never the baseline. thorcasting-ui needs exactly that: a dotted "draft"
+  treatment on the baseline column's own projection.
+
+  `lineClass` appends to the base class with the same concatenation the series
+  lines use, so an absent prop leaves the class string byte-identical and no
+  current caller changes appearance. Colour, dash and opacity stay the
+  consumer's to define. The showcase adds a dotted draft section, styled from an
+  inline `<style>` block beside it.
+
 ## 0.151.1
 
 ### Fixed

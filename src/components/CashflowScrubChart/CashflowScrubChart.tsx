@@ -363,7 +363,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             y2={zeroY}
           />
           {seriesLines(seriesUnder)}
-          <polyline class="sui-cashflow-scrub-chart__line" points={points} />
+          <polyline
+            class={`sui-cashflow-scrub-chart__line${
+              props.lineClass ? ` ${props.lineClass}` : ""
+            }`}
+            points={points}
+          />
           {/* `layer: "over"` series paint last so a dashed line laid exactly
               over the solid primary stays visible instead of being buried. */}
           {seriesLines(seriesOver)}

@@ -104,6 +104,9 @@ export const CashflowScrubChartShowcase: Component = () => {
   const [coincidentSelectedIdx, setCoincidentSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
+  const [draftSelectedIdx, setDraftSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
   const [scenarioOver, setScenarioOver] = createSignal(true);
 
   return (
@@ -386,6 +389,53 @@ export const CashflowScrubChartShowcase: Component = () => {
             ? 'layer: "over" — the dashed scenario paints over the solid actual, so both lines read.'
             : 'layer: "under" (default) — the solid actual buries the dashed scenario.'}
         </MutedBody>
+      </div>
+
+      <div class="example-group">
+        <h3>Restyled primary line (draft projection)</h3>
+        <p class="text-meta">
+          <code>lineClass</code> is the primary line's counterpart of a series{" "}
+          <code>class</code>: the class lands on the polyline the chart draws
+          itself, next to the base <code>sui-cashflow-scrub-chart__line</code>.
+          Here it makes the running balance read as an uncommitted{" "}
+          <strong>draft</strong> — dotted and amber — while the ribbon, the
+          dots and the axes stay exactly as they are. The class is defined
+          below in a scoped <code>&lt;style&gt;</code>; the component keeps no
+          opinion on colour or dash.
+        </p>
+
+        <style>{`
+          /* Consumer-owned styling for the PRIMARY line, via lineClass — a
+             dotted "draft" treatment for a projection that is not committed
+             yet. */
+          .cashflow-scrub-chart-demo__draft-line {
+            stroke: var(--sui-warning, rgba(245, 158, 11, 0.95));
+            stroke-width: 1.6;
+            stroke-dasharray: 2 4;
+          }
+          .cashflow-scrub-chart-demo__legend-line--draft {
+            border-top: 2px dotted var(--sui-warning, rgba(245, 158, 11, 0.95));
+          }
+        `}</style>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={draftSelectedIdx()}
+          onScrub={(i) => setDraftSelectedIdx(i)}
+          today={PINNED_TODAY}
+          lineClass="cashflow-scrub-chart-demo__draft-line"
+        />
+
+        <ClusterRow>
+          <span>
+            <span class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--draft" />
+            Draft balance (lineClass)
+          </span>
+          <span>
+            <span class="cashflow-scrub-chart-demo__legend-line cashflow-scrub-chart-demo__legend-line--actual" />
+            Default primary line
+          </span>
+        </ClusterRow>
       </div>
 
       <div class="example-group">
