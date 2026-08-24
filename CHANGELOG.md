@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.151.3
+
 ### Added
 - **`FieldTable.onRowHover` reaches `BaseTable`**. `BaseTable` has fired
   `(row, index)` on row enter and `(null, -1)` on body leave since the prop
