@@ -1,7 +1,7 @@
 // FieldTable — the consumer surface owns the frame and its width-budget vars,
 // so clients render a complete field table without touching CSS.
 import { describe, expect, it } from "vitest";
-import { render } from "@solidjs/testing-library";
+import { fireEvent, render } from "@solidjs/testing-library";
 import { FieldTable } from "./FieldTable";
 import { intCol } from "./int";
 import { textCol } from "./text";
@@ -66,6 +66,25 @@ describe("FieldTable", () => {
     expect(container.textContent).toContain("Nothing yet");
   });
 
+  it("forwards onRowHover to BaseTable: (row, index) on enter, (null, -1) on leave", () => {
+    const hovers: [Row | null, number][] = [];
+    const { container } = render(() => (
+      <FieldTable
+        data={ROWS}
+        fields={["note", "hours"]}
+        registry={{ note: textCol<Row>("note"), hours: intCol<Row>("hours") }}
+        onRowHover={(row, index) => hovers.push([row, index])}
+      />
+    ));
+    const rows = container.querySelectorAll("tbody tr");
+    fireEvent.mouseEnter(rows[1]);
+    fireEvent.mouseLeave(container.querySelector("tbody") as HTMLElement);
+    expect(hovers).toEqual([
+      [ROWS[1], 1],
+      [null, -1],
+    ]);
+  });
+
   it("tone functions wrap cells in their semantic class", () => {
     const { container } = render(() => (
       <FieldTable
@@ -88,7 +107,6 @@ describe("FieldTable", () => {
 // sortable variant flips every column that carries a sortValue; columns
 // without one (no valid sort order) stay inert. Field accessors return JSX,
 // so ordering MUST come from sortValue, never the rendered cell.
-import { fireEvent } from "@solidjs/testing-library";
 import { SortableFieldTable } from "./FieldTable";
 import { col } from "./resolve";
 

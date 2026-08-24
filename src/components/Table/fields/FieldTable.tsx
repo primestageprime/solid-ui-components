@@ -32,6 +32,10 @@ export interface FieldTableProps<T> {
    *  actions, lists, charts), which simply lack a `sortValue`. There is no
    *  per-column opt-out; prefer the curried `SortableFieldTable`. */
   sortable?: boolean;
+  /** Row hover callback for cross-highlighting (e.g. a table row ↔ a chart
+   *  point). Forwarded to BaseTable, which fires it with `(row, index)` on row
+   *  enter and `(null, -1)` when the pointer leaves the table body. */
+  onRowHover?: (row: T | null, index: number) => void;
 }
 
 // Row ≈ 10px pad ×2 + 1.4 line at the frame's 12px basis ⇒ ~3.1em; the header
@@ -75,6 +79,11 @@ export function FieldTable<T>(props: FieldTableProps<T>): JSX.Element {
         fill={fill}
         maxHeight={props.maxRows ? rowCapEm(props.maxRows) : undefined}
         emptyMessage={props.emptyMessage}
+        onRowHover={
+          props.onRowHover as
+            | ((row: object | null, index: number) => void)
+            | undefined
+        }
       />
     </div>
   );

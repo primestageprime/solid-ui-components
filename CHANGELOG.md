@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added
+- **`FieldTable.onRowHover` reaches `BaseTable`**. `BaseTable` has fired
+  `(row, index)` on row enter and `(null, -1)` on body leave since the prop
+  shipped, but `FieldTable` forwards five named props to `DataTable` and
+  spreads no rest — so the callback stopped one layer above the table and a
+  consumer had no escape hatch. jtf-ui lists a vessel call's HELM timestamps in
+  a `FieldTable` above a chart, and a row hover must highlight that timestamp's
+  annotation line.
+
+  The prop is optional and adds no wiring of its own: omit it and every existing
+  table behaves exactly as before. `SelectableTable` still omits `onRowHover` on
+  purpose — it has no hover wiring on its body.
+
 ## 0.151.2
 
 ### Added
