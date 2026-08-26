@@ -182,6 +182,11 @@ export interface CashflowScrubChartProps {
    * different scenario's balance line. Should be the same length as `cells`.
    */
   balanceLineCells?: CashflowCell[];
+  /** CSS class added to the PRIMARY balance polyline alongside the base line
+   *  class — the counterpart of `CashflowBalanceSeries.class` for the line the
+   *  chart draws itself. Color / dash / opacity are the consumer's to define on
+   *  this class. */
+  lineClass?: string;
   /**
    * Accent color for the day-strip ribbon — draws a 1px border around the
    * ENTIRE ribbon element so the filmstrip reads as belonging to a specific

@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+## 0.151.3
+
+### Added
+- **`FieldTable.onRowHover` reaches `BaseTable`**. `BaseTable` has fired
+  `(row, index)` on row enter and `(null, -1)` on body leave since the prop
+  shipped, but `FieldTable` forwards five named props to `DataTable` and
+  spreads no rest — so the callback stopped one layer above the table and a
+  consumer had no escape hatch. jtf-ui lists a vessel call's HELM timestamps in
+  a `FieldTable` above a chart, and a row hover must highlight that timestamp's
+  annotation line.
+
+  The prop is optional and adds no wiring of its own: omit it and every existing
+  table behaves exactly as before. `SelectableTable` still omits `onRowHover` on
+  purpose — it has no hover wiring on its body.
+
+## 0.151.2
+
+### Added
+- **`CashflowScrubChart.lineClass` restyles the PRIMARY balance line**
+  (sui#32933). An overlay series has carried a consumer-owned `class` since it
+  shipped, but the line the chart draws itself hardcoded
+  `sui-cashflow-scrub-chart__line` — so a caller could dash a comparison line
+  and never the baseline. thorcasting-ui needs exactly that: a dotted "draft"
+  treatment on the baseline column's own projection.
+
+  `lineClass` appends to the base class with the same concatenation the series
+  lines use, so an absent prop leaves the class string byte-identical and no
+  current caller changes appearance. Colour, dash and opacity stay the
+  consumer's to define. The showcase adds a dotted draft section, styled from an
+  inline `<style>` block beside it.
+
 ## 0.151.1
 
 ### Fixed
