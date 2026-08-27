@@ -4,5 +4,12 @@
   "mathKb": 266,
   "dagKb": 120,
   "ssrOneButtonKb": 1,
-  "ssrTypicalKb": 5
+  "ssrTypicalKb": 6,
+  "_raises": {
+    "ssrTypicalKb": {
+      "from": 5,
+      "to": 6,
+      "reason": "InlineText/Text tone=\"highlight\" resolution (TONE_COLOR map + new Tone CSS rules) — deliberate new capability, not bloat"
+    }
+  }
 }
