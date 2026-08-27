@@ -607,6 +607,31 @@ State derivation:
 ## ThroughputChart
 - **ThroughputChart** — Composed (Depth 2). TWO modes, one component. **RATE mode (default)** — instantaneous rows/min over a time window: area + line + average reference + crosshair tooltip. Props: `dataPoints` (`{ timestamp, rowsPerMinute }[]`), `windowHours?` (default 8). This is the original behaviour and is fully preserved whenever the completion props are absent. **COMPLETION mode (opt-in — pass `completions`)** — plots PROGRESS instead of rate: per-hour completed-item bars + a cumulative-% line on one shared 0–100 axis (bars scaled by the busiest bucket so the two series coexist without a second axis). The chart buckets the raw events itself and SELF-SIZES (measures its own container width via `ResizeObserver`, SSR/jsdom-safe fallback), so the consumer hosts no bucketing and no measurement code. Completion props: `completions` (`{ completedAt: number }[]` — presence selects COMPLETION mode; filtered to the window), `now?` (epoch ms right edge; default now), `windowHours?` (default 48 in this mode; one bar per hour), `totalCount?` (cumulative-% denominator), `baselineCompleted?` (items done before the window opened, so the line starts at the right baseline; default 0), `barsLabel?` / `cumulativeLabel?` (legend labels), `height?` (default 200 completion / 260 rate), `initialWidth?` (fallback before the observer reports; default 1000). Composes the `Chart` family + `Legend`. Use RATE for live ingestion rate; COMPLETION for an ETL "tables done per hour + cumulative % complete" header (item-agnostic).
 
+## ThresholdRail
+- **ThresholdRail** — Primitive (Depth 1). A one-dimensional value axis whose thumb rides its own consequences. One horizontal rail, a draggable thumb, and named ticks standing off the rail at the values where the answer changes. The ticks are model OUTPUTS plotted on the axis of the model INPUT, so the control and the readout are one object — which is what separates it from a slider with a caption beside it. **It is not a chart**: no second axis, no fill, no gridlines. **It does no arithmetic and never snaps**: the consumer computes the thresholds, and the value reported back is never rounded to one. Key props: `domain` (`[number, number]`, the consumer's own units), `value`, `onChange`, `thresholds` (`Threshold[]`), `label` (accessible name — required), `format?` (renders a threshold's second text line; default `String`), `disabled?`. Each `Threshold` carries `value`, `label` (required, so meaning is never colour-only), `tone?` (the shared `Tone` union — the theme owns the colour) and `side?` (`"above"` | `"below"`). Factory: `createThresholdRail({ format })` — curry the formatter when the currency or unit is a static decision. Exported types: `ThresholdRailProps`, `ThresholdRailDataProps`, `ThresholdRailOverrides`, `Threshold`, `ThresholdSide`, `PlacedThreshold`, `LabelAnchor`, `LaneGeometry`. Uses `--sui-border`, `--sui-border-focus`, `--sui-accent`, `--sui-success`, `--sui-warning`, `--sui-danger`, `--sui-highlight`, `--sui-chart-tick-color`, `--sui-text-secondary`, `--sui-font-mono`. Use for: a draw dial, a price dial, any "at what point does this stop working" control.
+  - **Three things the rail absorbs, and the reason a consumer cannot compose it from a slider plus an axis.** *Lanes* — colliding labels stack outward from the rail, capped at four lanes so a label can never leave the box; the two sides stack independently, because `side` is the consumer's declaration. *Anchor fitting* — a label near either end anchors `start` or `end` instead of spilling out. *Self-sizing* — the viewBox grows only for the lanes actually used. Text is measured by estimate (~6.0px per monospace character), not `getBBox`, so the lane rules stay testable under jsdom.
+  - **The thumb has two forms.** Between thresholds it is an arrow on a stem. Landed on one, it becomes a ring holding a dot, and the ring takes that threshold's tone — so the nesting reads as "you are on THIS one", not merely "you are on one". `aria-valuetext` names the threshold too, so the state is not colour-only.
+  - **Keyboard.** The library's first true slider (`role="slider"`, `aria-valuenow`). Arrow keys move one hundredth of the domain, Shift multiplies by ten, Home and End go to the domain ends, and PageUp/PageDown jump between thresholds.
+  - Example:
+    ```tsx
+    import { ThresholdRail, type Threshold } from "solid-ui-components";
+
+    const crossings: Threshold[] = [
+      { value: 200, label: "safe in 6 mo", tone: "success" },
+      { value: 3800, label: "safe in 12 mo", tone: "success" },
+      { value: 11000, label: "max draw · breaks even", tone: "muted", side: "below" },
+    ];
+
+    <ThresholdRail
+      domain={[0, 11550]}
+      value={draw()}
+      onChange={setDraw}
+      thresholds={crossings}
+      format={(v) => (v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`)}
+      label="Monthly owner draw"
+    />
+    ```
+
 ## Cell
 - **Cell** — Table cell primitive (`<td>` or `<th>`) with alignment, color, and weight. Key props: `align`, `color`, `weight`, `as` (`td`|`th`). Use for: building custom table layouts.
 - **CellTable** — `<table>` wrapper with optional `<thead>`. Key props: `header`. Use for: wrapping Cell-based rows.
