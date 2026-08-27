@@ -7,6 +7,7 @@
 // ============================================
 import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
+import type { Tone } from "../../types";
 import "./Text.css";
 
 export type TextVariant =
@@ -20,6 +21,12 @@ export type TextVariant =
 export interface TextProps extends JSX.HTMLAttributes<HTMLElement> {
   variant?: TextVariant;
   color?: string;
+  /** Semantic treatment for a DATA-DRIVEN value (ruled 2026-07-17 Tone
+   *  vocabulary — see src/types.ts) — e.g. flag a value as notable
+   *  ("highlight") or a severity ("warning"/"danger"). This is data, not
+   *  presentation, so it stays live on every curried Text variant (it is
+   *  never locked into TextOverrides): `<TextBody tone="highlight">`. */
+  tone?: Tone;
   as?: "span" | "p" | "pre" | "h1" | "h2" | "h3" | "h4" | "div";
 }
 
@@ -27,6 +34,7 @@ export const Text: Component<TextProps> = (props) => {
   const [local, others] = splitProps(props, [
     "variant",
     "color",
+    "tone",
     "as",
     "class",
     "children",
@@ -36,6 +44,8 @@ export const Text: Component<TextProps> = (props) => {
   const classes = () => {
     const classList = ["text"];
     if (local.variant) classList.push(`text--${local.variant}`);
+    if (local.tone && local.tone !== "default")
+      classList.push(`sui-text-tone--${local.tone}`);
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };

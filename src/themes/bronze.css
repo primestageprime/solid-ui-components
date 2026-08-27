@@ -75,6 +75,11 @@ body {
   --sui-warning-rgb: 146, 102, 33;
   --sui-success: #577657;
   --sui-success-rgb: 87, 118, 87;
+  /* "Notable" flag tone (added 2026-08-26) — a verdigris teal that keeps the
+     warm bronze/kraft palette but reads distinct from the sage-green
+     success token. */
+  --sui-highlight: #2f6b66;
+  --sui-highlight-rgb: 47, 107, 102;
 
   /* ---- Backgrounds — bone family ---- */
   --sui-bg-deep: #efeae0;

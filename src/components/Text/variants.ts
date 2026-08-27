@@ -155,6 +155,14 @@ export const SuccessBody = createText({
   color: "var(--sui-success)",
 });
 
+// Highlight-tinted body text — flag a notable in-cell/inline VALUE (e.g. a
+// non-zero remaining-gap count) without implying an error/caution/success
+// severity. Uses `tone` (not `color`) so it stays in the shared Tone system.
+export const HighlightBody = createText({
+  variant: "body",
+  tone: "highlight",
+});
+
 // Emphasized body — inline bold (600) accentuation inside table cells and
 // labels where a word/value must stand out without changing typographic role.
 export const EmphasisBody = createText({
@@ -249,6 +257,18 @@ export const TextValueSuccessSm = createText({
 export const TextValueDangerSm = createText({
   variant: "value",
   color: "var(--sui-danger)",
+  style: { "font-size": "0.85rem" },
+});
+
+// Flag a compact in-cell value as notable (Tone vocabulary — see Text's
+// `tone` prop / src/types.ts). Same size class as the Success/Danger Sm
+// siblings above; uses `tone` rather than a literal `color` so the value
+// stays in the shared Tone system (ruled 2026-07-17) instead of a one-off
+// color string. E.g. a table's remaining-gap cell going non-zero:
+// `<TextValueHighlightSm>{`${remaining} (${pct}%)`}</TextValueHighlightSm>`.
+export const TextValueHighlightSm = createText({
+  variant: "value",
+  tone: "highlight",
   style: { "font-size": "0.85rem" },
 });
 

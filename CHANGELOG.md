@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+## 0.152.0
+
+### Added
+- **`Tone` gains `"highlight"`**, and `Text`/`InlineText` both gain a `tone?: Tone`
+  prop. Previously the only way to apply a semantic tone (success/warning/danger/
+  accent/muted) was inside a composite (`Table` fields, `ValueMatrix`) — a plain
+  standalone value in a dense table cell had no way to flag itself as notable
+  without a caller reaching for a literal `color`. goose's Census page needed
+  exactly this: a nonzero "Gap" count/percent value that should draw the eye,
+  in a plain-text table cell (`InlineText`'s documented shape).
+
+  `tone` is data, not a curried/frozen prop — it's live on every existing `Text`
+  variant for free, same as `GapCell`'s severity. `InlineText.tone` wins over the
+  existing `color` escape hatch when both are given; `color` still works
+  unchanged for existing callers.
+
+  New CSS variable `--sui-highlight` (+ `--sui-highlight-rgb`), themed per theme
+  (not a shared literal) — teal in `default`, off-accent hues in `hud`/`bronze`/
+  `bronze-dark`/`stax`/`colorblind`, all ≥4.5:1 contrast on that theme's
+  `--sui-bg-primary`, enforced by a new `contrast.test.ts` entry.
+
+  New curried variants `HighlightBody` and `TextValueHighlightSm`, siblings of
+  the existing Danger/Warning/Success `Text` variant families.
+
 ## 0.151.3
 
 ### Added

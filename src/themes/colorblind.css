@@ -93,6 +93,12 @@ body {
   --sui-success: #3b82f6;
   --sui-success-rgb: 59, 130, 246;
 
+  /* "Notable" flag tone (added 2026-08-26) — Okabe-Ito reddish purple, kept
+     off this palette's blue/orange/amber confusion-axis pair entirely so it
+     reads as its own signal under every common CVD type. */
+  --sui-highlight: #cc79a7;
+  --sui-highlight-rgb: 204, 121, 167;
+
   /* ---- Backgrounds (dark, HUD-like) ---- */
   --sui-bg-deep: #0a0f16;
   --sui-bg-primary: #11161f;

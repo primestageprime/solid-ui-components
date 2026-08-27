@@ -18,6 +18,8 @@ import { contrastRatio, over, parseColor, parseTokens } from "./_contrastMath";
 //    must clear 4.5:1 on the surfaces they appear on.
 //  - --sui-danger / --sui-warning / --sui-success are rendered as text
 //    (status words, values) and must clear 4.5:1 on bg-primary.
+//  - --sui-highlight (the "notable value" tone) is rendered as text and must
+//    clear 4.5:1 on bg-primary, same as the other Tone-vocabulary colors.
 //  - --status-full/partial/sparse/missing are heatmap-cell text and must
 //    clear 4.5:1 on bg-secondary.
 //  - --sui-chart-tick-color (axis ticks/labels) must clear 4.5:1 on
@@ -48,6 +50,7 @@ const PAIRS: Pair[] = [
   { fg: "--sui-danger", bg: "--sui-bg-primary", min: 4.5, role: "danger text" },
   { fg: "--sui-warning", bg: "--sui-bg-primary", min: 4.5, role: "warning text" },
   { fg: "--sui-success", bg: "--sui-bg-primary", min: 4.5, role: "success text" },
+  { fg: "--sui-highlight", bg: "--sui-bg-primary", min: 4.5, role: "highlight text" },
   { fg: "--status-full", bg: "--sui-bg-secondary", min: 4.5, role: "status FULL text" },
   { fg: "--status-partial", bg: "--sui-bg-secondary", min: 4.5, role: "status partial text" },
   { fg: "--status-sparse", bg: "--sui-bg-secondary", min: 4.5, role: "status sparse text" },

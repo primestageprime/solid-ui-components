@@ -38,3 +38,27 @@
   font-weight: normal;
   color: var(--sui-text-muted);
 }
+
+/* Semantic tones — the configure-time treatment vocabulary (src/types.ts
+   Tone). The theme owns every color. "default" adds no class (see Text.tsx).
+   Mirrors GapCell/ValueMatrix/Table-fields' own tone→color mapping: each
+   consumer scopes its own class so no component reaches into another's CSS,
+   but all of them point at the same --sui-* tokens. */
+.sui-text-tone--success {
+  color: var(--sui-success);
+}
+.sui-text-tone--warning {
+  color: var(--sui-warning);
+}
+.sui-text-tone--danger {
+  color: var(--sui-danger);
+}
+.sui-text-tone--accent {
+  color: var(--sui-accent);
+}
+.sui-text-tone--muted {
+  color: var(--sui-text-muted);
+}
+.sui-text-tone--highlight {
+  color: var(--sui-highlight);
+}

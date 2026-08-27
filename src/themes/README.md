@@ -71,6 +71,7 @@ Each color comes paired with an `-rgb` triplet for `rgba()` use.
 | `--sui-danger`, `--sui-danger-rgb` | Errors, destructive actions |
 | `--sui-warning`, `--sui-warning-rgb` | Caution states |
 | `--sui-success`, `--sui-success-rgb` | Confirmations |
+| `--sui-highlight`, `--sui-highlight-rgb` | Flag a value as notable (Tone `"highlight"`) — distinct from accent (brand/interactive), not part of the danger/warning/success severity ramp. Not part of the required contract test yet (added 2026-08-26); every shipped theme declares it. |
 
 ### Radii, clip sizes, spacing
 | Token | Notes |

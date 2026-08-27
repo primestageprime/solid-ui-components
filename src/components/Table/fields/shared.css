@@ -98,11 +98,12 @@ th:has(.sui-field-th-center) .hud-table__header-content {
    A tone names a meaning; the theme owns the color. Cell renderers that pin
    their own color (.sui-value-longtext) are re-pointed at the tone via `inherit` —
    the attribute selector outranks their double-class specificity. */
-.sui-field-tone--success { color: var(--sui-success); }
-.sui-field-tone--warning { color: var(--sui-warning); }
-.sui-field-tone--danger  { color: var(--sui-danger); }
-.sui-field-tone--accent  { color: var(--sui-accent); }
-.sui-field-tone--muted   { color: var(--sui-text-muted); }
+.sui-field-tone--success   { color: var(--sui-success); }
+.sui-field-tone--warning   { color: var(--sui-warning); }
+.sui-field-tone--danger    { color: var(--sui-danger); }
+.sui-field-tone--accent    { color: var(--sui-accent); }
+.sui-field-tone--muted     { color: var(--sui-text-muted); }
+.sui-field-tone--highlight { color: var(--sui-highlight); }
 span[class*="sui-field-tone--"] :is(.sui-value-longtext, .sui-value-longtext.sui-value-longtext--tooltip, .sui-value-string) {
   color: inherit;
 }

@@ -38,6 +38,12 @@
   --sui-warning-rgb: 245, 158, 11;
   --sui-success: #22c55e;
   --sui-success-rgb: 34, 197, 94;
+  /* "Notable" flag tone (added 2026-08-26) — distinct from --sui-accent
+     (already the interactive/brand blue) so a flagged VALUE reads as
+     different from a link or focus ring. Not part of the danger/warning/
+     success severity ramp. */
+  --sui-highlight: #2dd4bf;
+  --sui-highlight-rgb: 45, 212, 191;
 
   /* ---- Backgrounds ---- */
   --sui-bg-deep: #0d0d1a;

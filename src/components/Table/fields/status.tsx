@@ -27,7 +27,12 @@ export const geo: FieldGeo = { minCh: 9, maxCh: 9, padPx: 18, css: "calc(9ch + 1
  *  the flat 9ch geometry never budgeted, so the badge clipped in its cell. */
 const BADGE_CHROME_PX = 18;
 
-/** Tone → theme badge variant. The client names a meaning, never a color. */
+/** Tone → theme badge variant. The client names a meaning, never a color.
+ *  StatusBadge's variant set is a fixed compliance vocabulary (5 variants,
+ *  ruled 2026-05) that predates the broader Tone vocabulary (ruled
+ *  2026-07-17) — every Tone must still map to SOME badge, so "accent" and
+ *  "highlight" both land on "info" (the neutral/informational badge; neither
+ *  is a compliance state a status badge otherwise expresses). */
 const TONE_VARIANT: Record<Tone, StatusBadgeVariant> = {
   default: "pending",
   success: "compliant",
@@ -35,6 +40,7 @@ const TONE_VARIANT: Record<Tone, StatusBadgeVariant> = {
   danger: "violation",
   accent: "info",
   muted: "pending",
+  highlight: "info",
 };
 
 const BADGES: Record<StatusBadgeVariant, Component<StatusBadgeDataProps>> = {

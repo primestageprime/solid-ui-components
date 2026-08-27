@@ -74,6 +74,11 @@ body {
   --sui-warning-rgb: 224, 160, 64;
   --sui-success: #7ba67b;
   --sui-success-rgb: 123, 166, 123;
+  /* "Notable" flag tone (added 2026-08-26) — lighter verdigris teal, paired
+     with bronze.css's --sui-highlight (same hue family, lifted for the dark
+     walnut surfaces). */
+  --sui-highlight: #4dc4b8;
+  --sui-highlight-rgb: 77, 196, 184;
 
   /* ---- Backgrounds — warm walnut family ---- */
   --sui-bg-deep: #0f0a06;

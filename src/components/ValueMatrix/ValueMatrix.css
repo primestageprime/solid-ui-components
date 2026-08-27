@@ -32,6 +32,9 @@
 .sui-value-matrix__cell--muted {
   color: var(--sui-text-muted);
 }
+.sui-value-matrix__cell--highlight {
+  color: var(--sui-highlight);
+}
 
 /* The chosen cell: weight plus a soft single halo (the double full-strength
    currentColor glow smeared into a blob on light surfaces — ruled in jtf). */

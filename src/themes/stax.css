@@ -73,6 +73,10 @@ body {
   --sui-warning-rgb: 150, 104, 23;
   --sui-success: #2f7d4f;
   --sui-success-rgb: 47, 125, 79;
+  /* "Notable" flag tone (added 2026-08-26) — blue-leaning teal, kept off the
+     olive accent / green success so a flagged value doesn't read as either. */
+  --sui-highlight: #0e7490;
+  --sui-highlight-rgb: 14, 116, 144;
 
   /* ---- Backgrounds — cool off-white family ---- */
   --sui-bg-deep: #e6ecea;
