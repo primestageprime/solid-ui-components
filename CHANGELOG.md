@@ -2,6 +2,50 @@
 
 ## [Unreleased]
 
+## 0.153.0
+
+### Added
+- **`ThresholdRail`** — a one-dimensional value axis whose thumb rides its own
+  consequences. One horizontal rail, a draggable thumb, and named ticks standing
+  off the rail at the values where the answer changes. Built for the thorcasting
+  trades module's draw dial (dside `sui` #36899).
+
+  The ticks are model *outputs* plotted on the axis of the model *input*, so the
+  control and the readout are one object. That is what separates it from a
+  slider with a caption beside it, and it is why the rail absorbs three jobs a
+  consumer would otherwise do by hand: **lanes** (colliding labels stack outward
+  from the rail, capped at four, each side stacking independently), **anchor
+  fitting** (a label near either end anchors `start`/`end` rather than spilling
+  out of the box), and **self-sizing** (the viewBox grows only for the lanes
+  actually used). The rail does no arithmetic on the thresholds it is given.
+
+  **It never snaps.** The thumb *nests* — landing on a threshold it becomes a
+  ring holding a dot, and the ring takes that threshold's tone — but the value
+  passed to `onChange` is never rounded to a threshold. A dial that quietly
+  edits its own output cannot be trusted to report what the user chose.
+  `aria-valuetext` names the threshold too, so the nesting is not colour-only.
+
+  Named for the shape, not the domain: thorcasting's glossary calls this a
+  *crossing rail*, and maps `crossing` → `threshold` at the call site.
+
+  Props: `domain`, `value`, `onChange`, `thresholds`, `label` (required
+  accessible name), `format?`, `disabled?`. A `Threshold` is
+  `{ value, label, tone?, side? }`, where `label` is **required** so meaning is
+  never carried by colour alone. `tone` is the existing seven-value `Tone`
+  union, so the theme owns every colour and the rail adds no colour vocabulary.
+  Factory: `createThresholdRail({ format })`.
+
+  **This is the library's first true slider** — no other component carried
+  `role="slider"` or `aria-valuenow`. It therefore brings the keyboard contract
+  with it: arrows move 1/100 of the domain, Shift multiplies by ten, Home and
+  End reach the domain ends, and PageUp/PageDown jump between thresholds. The
+  role sits on a host element rather than the `<svg>`, which is `aria-hidden`:
+  an `<svg>` may not take an interactive role, and the tick labels are real text
+  nodes that would otherwise compete with `aria-valuetext`.
+
+  No `variants.ts` — one caller, and nothing static to curry beyond the
+  formatter the factory already takes.
+
 ## 0.152.0
 
 ### Added
