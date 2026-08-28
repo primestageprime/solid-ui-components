@@ -13,6 +13,7 @@ import {
   type Accessor,
   type Component,
   type JSX,
+  type ValidComponent,
   mergeProps,
   splitProps,
 } from "solid-js";
@@ -29,6 +30,23 @@ export interface TooltipProps extends Omit<TooltipRootProps, "children"> {
   children: JSX.Element;
   /** Additional class applied to the trigger element. */
   class?: string;
+  /**
+   * What the trigger renders as. Default: a `<button>`.
+   *
+   * Pass `"span"` when the children are ALREADY interactive — a link, a
+   * button. A button nested in a button, or a link nested in a button, is
+   * invalid HTML, and the inner control stops answering clicks and stops
+   * being one tab stop. A span trigger still opens on hover.
+   *
+   * A span trigger is NOT focusable, so the tooltip is unreachable by
+   * keyboard through the trigger itself. Give such content its own
+   * `aria-label` — the inner control is the thing a keyboard reaches, and it
+   * has to carry the sentence.
+   *
+   * A dense table is the other reason to reach for `"span"`: a button trigger
+   * per row turns a hundred readouts into a hundred tab stops.
+   */
+  triggerAs?: ValidComponent;
 }
 
 const DEFAULT_OPEN_DELAY = 100;
@@ -50,6 +68,7 @@ export const Tooltip: Component<TooltipProps> = (props) => {
     "content",
     "children",
     "class",
+    "triggerAs",
   ]);
 
   const triggerClass = () =>
@@ -57,7 +76,7 @@ export const Tooltip: Component<TooltipProps> = (props) => {
 
   return (
     <KobalteTooltip {...rest}>
-      <KobalteTooltip.Trigger class={triggerClass()}>
+      <KobalteTooltip.Trigger as={local.triggerAs ?? "button"} class={triggerClass()}>
         {local.children}
       </KobalteTooltip.Trigger>
       <KobalteTooltip.Portal>
