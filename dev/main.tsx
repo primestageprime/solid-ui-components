@@ -106,6 +106,7 @@ import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { ThresholdRailShowcase } from "./showcases/threshold-rail";
+import { SliderShowcase } from "./showcases/slider";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
 import { BurndownChartShowcase } from "./showcases/burndown-chart";
 import { CompletionTimelineShowcase } from "./showcases/completion-timeline";
@@ -649,6 +650,12 @@ const items: Item[] = [
     label: "ThresholdRail",
     component: ThresholdRailShowcase,
     tags: ["depth:1", "chart", "form", "data"],
+  },
+  {
+    id: "slider",
+    label: "Slider",
+    component: SliderShowcase,
+    tags: ["depth:1", "form", "data"],
   },
   {
     id: "extraction-board",

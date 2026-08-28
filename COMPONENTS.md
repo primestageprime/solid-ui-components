@@ -611,7 +611,7 @@ State derivation:
 - **ThresholdRail** — Primitive (Depth 1). A one-dimensional value axis whose thumb rides its own consequences. One horizontal rail, a draggable thumb, and named ticks standing off the rail at the values where the answer changes. The ticks are model OUTPUTS plotted on the axis of the model INPUT, so the control and the readout are one object — which is what separates it from a slider with a caption beside it. **It is not a chart**: no second axis, no fill, no gridlines. **It does no arithmetic and never snaps**: the consumer computes the thresholds, and the value reported back is never rounded to one. Key props: `domain` (`[number, number]`, the consumer's own units), `value`, `onChange`, `thresholds` (`Threshold[]`), `label` (accessible name — required), `format?` (renders a threshold's second text line; default `String`), `disabled?`. Each `Threshold` carries `value`, `label` (required, so meaning is never colour-only), `tone?` (the shared `Tone` union — the theme owns the colour) and `side?` (`"above"` | `"below"`). Factory: `createThresholdRail({ format })` — curry the formatter when the currency or unit is a static decision. Exported types: `ThresholdRailProps`, `ThresholdRailDataProps`, `ThresholdRailOverrides`, `Threshold`, `ThresholdSide`, `PlacedThreshold`, `LabelAnchor`, `LaneGeometry`. Uses `--sui-border`, `--sui-border-focus`, `--sui-accent`, `--sui-success`, `--sui-warning`, `--sui-danger`, `--sui-highlight`, `--sui-chart-tick-color`, `--sui-text-secondary`, `--sui-font-mono`. Use for: a draw dial, a price dial, any "at what point does this stop working" control.
   - **Three things the rail absorbs, and the reason a consumer cannot compose it from a slider plus an axis.** *Lanes* — colliding labels stack outward from the rail, capped at four lanes so a label can never leave the box; the two sides stack independently, because `side` is the consumer's declaration. *Anchor fitting* — a label near either end anchors `start` or `end` instead of spilling out. *Self-sizing* — the viewBox grows only for the lanes actually used. Text is measured by estimate (~6.0px per monospace character), not `getBBox`, so the lane rules stay testable under jsdom.
   - **The thumb has two forms.** Between thresholds it is an arrow on a stem. Landed on one, it becomes a ring holding a dot, and the ring takes that threshold's tone — so the nesting reads as "you are on THIS one", not merely "you are on one". `aria-valuetext` names the threshold too, so the state is not colour-only.
-  - **Keyboard.** The library's first true slider (`role="slider"`, `aria-valuenow`). Arrow keys move one hundredth of the domain, Shift multiplies by ten, Home and End go to the domain ends, and PageUp/PageDown jump between thresholds.
+  - **Keyboard.** Arrow keys move one hundredth of the domain, Shift multiplies by ten, Home and End go to the domain ends, and PageUp/PageDown jump between thresholds.
   - Example:
     ```tsx
     import { ThresholdRail, type Threshold } from "solid-ui-components";
@@ -630,6 +630,36 @@ State derivation:
       format={(v) => (v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`)}
       label="Monthly owner draw"
     />
+    ```
+
+## Slider
+- **Slider** — Atomic (Depth 1). A labelled range control that prints its own live value. Owns `Slider.css`; wraps `@kobalte/core/slider` (matches the Combobox/Select/Tooltip/Toast/ThemedNumberInput/DateRangePicker Kobalte-wrapping pattern — see CONTEXT.md). The label line carries the caption on the left and `format(value)` right-aligned on the right, so a control reads `Safety buffer` / `6 months` on one line and needs no separate readout beside it. **The value stays in the CONSUMER'S OWN UNITS** — the component runs no arithmetic beyond Kobalte's step snapping and formats nothing itself, so a dial that keeps integer cents passes cents and supplies a `format` that renders dollars. Assuming dollars would put a unit in the widget that only the consumer knows. Key props: `value` (`number`, controlled), `onChange` (`(value: number) => void`), `min`, `max`, `step` (default `1`), `label` (accessible name and visible caption — required), `format?` (`(value: number) => string`, default `String`), `disabled?`. Any other `SliderRootProps` (e.g. `name`, `onChangeEnd`, `inverted`, `orientation`) is forwarded via spread. Exported types: `SliderProps`, `SliderDataProps`, `SliderOverrides`. Factory: `createSlider({ format })` — curry the formatter when the unit is a static decision. Uses `--sui-accent`, `--sui-accent-rgb`, `--sui-bg-primary`, `--sui-border`, `--sui-border-focus`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-font-family`, `--sui-font-mono`, `--sui-space-2` theme tokens. Use for: a bounded numeric input where the reader wants the value and the position at once — a runway dial, a buffer, a draw amount. For a value axis that also carries named threshold ticks, use `ThresholdRail`.
+  - **It does NOT emit `onChange` at mount, and that is why it exists.** `ThemedNumberInput` fires one `onChange(undefined)` at mount; a form that persists on every change writes that mount value over the stored one, which cost thorcasting a guard in `MoneyField`. This control emits only on a drag or a key that moves the thumb. Two tests pin it: none at mount, and none when the `value` prop changes.
+  - **The track insets by half a thumb; the label line does not.** Kobalte places the thumb at `left: calc(pct%)` of the track with `translateX(-50%)`, so a flush track lets the thumb hang half its width outside the component — 8px past the right edge of a 290px column at max, where it overlaps the next control or is clipped by any parent that clips. The track carries a horizontal margin of half a thumb, the way a native range input insets it, and it must NOT also carry `width: 100%` or that beats the margin and pushes the thumb out instead. The inset is horizontal only, so a slider still lines up with the number input beside it.
+  - **`aria-valuetext` is overridden on purpose.** Kobalte's own `aria-valuetext` comes from its internal number formatter, **not** from `getValueLabel` — that only feeds `ValueLabel`. Left alone a screen reader reads `6` where the sighted user sees `6 months`. The thumb carries `aria-valuetext={format(value)}`; Kobalte spreads `others` last on the thumb, so it wins.
+  - **Keyboard.** Arrow keys move by `step`, PageUp and PageDown by a page, and Home and End go to the domain ends. **Home and End act on the FOCUSED thumb**, so they are no-ops until the thumb takes focus; arrow keys carry the thumb index and need no focus. The thumb takes a visible focus ring.
+  - **No `variants.ts`, deliberately.** `format` is the only override, and a real caller's formatter carries its own units and currency — the same reason `ThresholdRail` ships the base alongside its factory rather than a set of curried variants. Curry one at the call site with `createSlider`.
+  - Example:
+    ```tsx
+    import { Slider, createSlider } from "solid-ui-components";
+
+    // Minimal
+    <Slider label="Safety buffer" value={months()} onChange={setMonths} min={3} max={18} />
+
+    // Money kept as integer cents, rendered as dollars
+    <Slider
+      label="Monthly draw"
+      value={cents()}
+      onChange={setCents}
+      min={0}
+      max={1_155_000}
+      step={10_000}
+      format={(c) => `$${(c / 100).toLocaleString()}/mo`}
+    />
+
+    // Curry the formatter when the unit is static
+    const MonthsSlider = createSlider({ format: (n) => `${n} months` });
+    <MonthsSlider label="Runway" value={months()} onChange={setMonths} min={3} max={18} />
     ```
 
 ## Cell
