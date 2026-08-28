@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+## 0.154.0
+
+### Added
+- **`Tooltip`** — `triggerAs` chooses what the trigger renders as. The trigger
+  was always a `<button>`, which put every already-interactive child out of
+  reach: a link or a button nested inside a button is invalid HTML, and the
+  inner control stops answering clicks and stops being its own tab stop. Such
+  content had to keep a native `title` instead, whose delay belongs to the
+  browser and which no page can shorten.
+
+  ```tsx
+  // Content that is already a control: the trigger steps aside.
+  <Tooltip content="Open the vessel call" triggerAs="span">
+    <A href={`/detail/${id}`}>…</A>
+  </Tooltip>
+  ```
+
+  Kobalte's trigger was already `Polymorphic` with `as: "button"` as a default
+  merged *before* the caller's props, so this forwards a knob that existed and
+  was not reachable. Omitting `triggerAs` renders the same `<button>` as
+  before, so no existing call site changes.
+
+  A span trigger is **not focusable**, so the tooltip is unreachable by
+  keyboard through the trigger itself — give such content its own `aria-label`,
+  since the inner control is what a keyboard reaches. A dense table is the
+  other reason to reach for `"span"`: a button trigger per row turns a hundred
+  readouts into a hundred tab stops.
+
 ## 0.153.0
 
 ### Added
