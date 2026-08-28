@@ -20,6 +20,7 @@ import {
   type Component,
   Show,
   createSignal,
+  onCleanup,
   splitProps,
 } from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
@@ -140,6 +141,33 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       ? ""
       : kobalteText();
 
+  // Kobalte merges a default `maxValue` of `Number.MAX_SAFE_INTEGER`, and its
+  // spin-button sends `End` straight to that bound, `Home` to the negative
+  // twin. Passing `maxValue={undefined}` does not remove the merged default,
+  // so an unbounded field answered `End` with 9007199254740991 where the user
+  // asked only for the caret (dside `sui`#36926).
+  const isUnboundedCaretKey = (key: string): boolean =>
+    (key === "End" && local.max === undefined) ||
+    (key === "Home" && local.min === undefined);
+
+  // The guard cannot be an `onKeyDown` prop: kobalte reads that prop *instead
+  // of* its own spin-button handler, which would also kill the jump on a field
+  // that does declare bounds. Solid delegates `keydown` to the document, so a
+  // capture listener on the input runs first and can keep the key from ever
+  // reaching kobalte. `preventDefault` is never called — the browser still has
+  // to move the caret.
+  const suppressUnboundedJump = (event: KeyboardEvent): void => {
+    if (isUnboundedCaretKey(event.key)) event.stopPropagation();
+  };
+
+  /** Ref callback — attaches the caret guard for the life of the input. */
+  const guardCaretKeys = (input: HTMLInputElement): void => {
+    input.addEventListener("keydown", suppressUnboundedJump, true);
+    onCleanup(() =>
+      input.removeEventListener("keydown", suppressUnboundedJump, true),
+    );
+  };
+
   const isInvalid = () => Boolean(local.errorMessage);
   const step = () => local.step ?? DEFAULT_STEP;
   // The size modifier is always emitted (including `--md`), matching Button and
@@ -169,7 +197,10 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       </Show>
       <KobalteNumberField.HiddenInput />
       <div class="sui-number-input__group">
-        <KobalteNumberField.Input class="sui-number-input__input" />
+        <KobalteNumberField.Input
+          class="sui-number-input__input"
+          ref={guardCaretKeys}
+        />
         <div class="sui-number-input__triggers">
           <KobalteNumberField.IncrementTrigger
             aria-label="Increment"
