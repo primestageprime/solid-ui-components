@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Fixed
+- **`ThemedNumberInput` clears the visible input** (sui#36924). A caller that
+  set its value accessor to `undefined` emptied only the hidden form input.
+  Kobalte's `rawValue` effect returns early on `NaN`, so the box the user reads
+  kept the old number while the form carried nothing. The display string is now
+  controlled: an accessor that returns `undefined` hands kobalte an empty
+  string, which reaches the DOM through a signal that has no such guard.
+  Kobalte still owns the formatting — this component keeps a mirror of the text
+  kobalte last emitted and never re-implements `Intl`. An absent `value` prop
+  leaves kobalte uncontrolled, so the first paint and any default value are
+  unchanged.
+
+- **`End` and `Home` only move the caret** (sui#36926). On a field with no
+  `max`, `End` set the value to `9007199254740991`; `Home` set the
+  `MIN_SAFE_INTEGER` twin. Kobalte merges a default `maxValue` of
+  `Number.MAX_SAFE_INTEGER` into every number field and its spin-button sends
+  `End` straight to that bound, and passing `maxValue={undefined}` does not
+  remove the merged default. A capture listener on the input now stops each key
+  before Solid delegates it to kobalte, and only when the matching bound is
+  absent — so a field that declares `min` or `max` keeps kobalte's documented
+  jump. The listener never calls `preventDefault`, so the caret still moves to
+  the end or the start of the text.
+
+  An `onKeyDown` prop cannot do this. Kobalte reads that prop *instead of* its
+  own spin-button handler, so the guard would take the jump away from bounded
+  fields too.
+
 ## 0.155.0
 
 ### Added
