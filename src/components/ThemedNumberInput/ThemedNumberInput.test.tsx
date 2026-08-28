@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { render } from "@solidjs/testing-library";
+import { fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { ThemedNumberInput } from "./ThemedNumberInput";
 import { installFakeSizer, type FakeSizer } from "../../test-utils";
@@ -59,6 +59,44 @@ describe("ThemedNumberInput", () => {
     // until the display string became controlled (dside `sui`#36924).
     expect(input.value).toBe("");
     expect(hidden.value).toBe("");
+  });
+
+  it("keeps the value when End or Home is pressed on an unbounded field", () => {
+    // Kobalte merges a default `maxValue` of `Number.MAX_SAFE_INTEGER`, so its
+    // spin-button sent `End` to 9007199254740991 and `Home` to the negative
+    // twin on a field that declares no bounds (dside `sui`#36926). Both keys
+    // must only move the caret.
+    const [value, setValue] = createSignal<number | undefined>(42);
+    const { container } = render(() => (
+      <ThemedNumberInput name="v" value={value} onChange={setValue} />
+    ));
+    const input = container.querySelector(
+      ".sui-number-input__input",
+    ) as HTMLInputElement;
+
+    fireEvent.keyDown(input, { key: "End" });
+    expect(value()).toBe(42);
+
+    fireEvent.keyDown(input, { key: "Home" });
+    expect(value()).toBe(42);
+  });
+
+  it("jumps to max and min when End or Home is pressed on a bounded field", () => {
+    // The suppression is bound to the absence of the prop, so a caller that
+    // declares bounds keeps kobalte's documented shortcut.
+    const [value, setValue] = createSignal<number | undefined>(42);
+    const { container } = render(() => (
+      <ThemedNumberInput name="v" value={value} onChange={setValue} min={0} max={100} />
+    ));
+    const input = container.querySelector(
+      ".sui-number-input__input",
+    ) as HTMLInputElement;
+
+    fireEvent.keyDown(input, { key: "End" });
+    expect(value()).toBe(100);
+
+    fireEvent.keyDown(input, { key: "Home" });
+    expect(value()).toBe(0);
   });
 
   it("renders the error message and hides the description in invalid state", () => {
