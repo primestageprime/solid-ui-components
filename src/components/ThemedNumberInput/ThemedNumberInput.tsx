@@ -15,7 +15,13 @@ import {
   NumberField as KobalteNumberField,
   type NumberFieldRootProps as KobalteNumberFieldRootProps,
 } from "@kobalte/core/number-field";
-import { type Accessor, type Component, Show, splitProps } from "solid-js";
+import {
+  type Accessor,
+  type Component,
+  Show,
+  createSignal,
+  splitProps,
+} from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
 import "./ThemedNumberInput.css";
 
@@ -116,6 +122,24 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     local.onChange?.(Number.isNaN(next) ? undefined : next);
   };
 
+  // Mirror of the display string kobalte last emitted. Kobalte owns the
+  // formatting, so this component never re-implements Intl — it only keeps a
+  // copy of the result and hands it straight back as the controlled `value`.
+  const [kobalteText, setKobalteText] = createSignal<string | undefined>(
+    undefined,
+  );
+
+  // The clear is the one transition kobalte cannot make on its own: its
+  // `rawValue` effect returns early on `NaN`, so the visible input keeps the
+  // old text while the hidden form input empties (dside `sui`#36924). An empty
+  // string here reaches the DOM through the controllable signal, which has no
+  // such guard. `undefined` keeps kobalte uncontrolled until it emits, so the
+  // first paint and the default value stay exactly as before.
+  const displayText = (): string | undefined =>
+    local.value !== undefined && local.value() === undefined
+      ? ""
+      : kobalteText();
+
   const isInvalid = () => Boolean(local.errorMessage);
   const step = () => local.step ?? DEFAULT_STEP;
   // The size modifier is always emitted (including `--md`), matching Button and
@@ -129,6 +153,8 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       {...(rest as KobalteNumberFieldRootProps)}
       class={rootClass()}
       name={local.name}
+      value={displayText()}
+      onChange={(next: string) => setKobalteText(next)}
       rawValue={rawValue()}
       onRawValueChange={handleRawValueChange}
       minValue={local.min}
