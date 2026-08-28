@@ -2,6 +2,52 @@
 
 ## [Unreleased]
 
+## 0.155.0
+
+### Added
+- **`Slider`** — a labelled range control that prints its own live value. The
+  label line carries the caption on the left and `format(value)` right-aligned
+  on the right, so a control reads `Safety buffer` / `6 months` on one line and
+  needs no separate readout beside it. Built for the thorcasting trades
+  module's draw dial (dside `sui` #36920), which pairs a slider with a typed
+  field on five inputs.
+
+  ```tsx
+  <Slider label="Safety buffer" value={months()} onChange={setMonths} min={3} max={18}
+          format={(n) => `${n} months`} />
+  ```
+
+  **The value stays in the caller's own units.** The component runs no
+  arithmetic beyond kobalte's step snapping and formats nothing itself, so a
+  dial that keeps integer cents passes cents and supplies a `format` that
+  renders dollars. Assuming dollars would put a unit in the widget that only
+  the consumer knows.
+
+  **It does not emit `onChange` at mount, and that is why it exists.**
+  `ThemedNumberInput` fires one `onChange(undefined)` at mount; a form that
+  persists on every change writes that mount value over the stored one. This
+  control emits only on a drag or a key that moves the thumb.
+
+  Wraps `@kobalte/core/slider`, so it is Atomic (Depth 1) and owns its CSS.
+  `createSlider({ format })` curries the formatter when the unit is static.
+  It ships no `variants.ts`: `format` is the only override and a real caller's
+  formatter carries its own units, the same reason `ThresholdRail` ships its
+  base alongside its factory.
+
+  Two things it had to correct in kobalte's defaults. Its `aria-valuetext`
+  comes from an internal number formatter, **not** from `getValueLabel` — that
+  only feeds `ValueLabel` — so a screen reader read `6` where the sighted user
+  saw `6 months`; the thumb now carries `aria-valuetext={format(value)}`. And
+  kobalte places the thumb at `left: calc(pct%)` of the track, so a flush track
+  let the thumb hang 8px outside a 290px column at max; the track now insets by
+  half a thumb on each side, the way a native range input does, while the label
+  line stays flush so a slider still lines up with the number input beside it.
+
+### Changed
+- **`ThresholdRail`** — the docs no longer call it "the library's first true
+  slider". `Slider` now also carries `role="slider"`, and ThresholdRail remains
+  the choice when the axis carries named threshold ticks.
+
 ## 0.154.0
 
 ### Added
