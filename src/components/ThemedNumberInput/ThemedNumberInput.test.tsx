@@ -40,6 +40,27 @@ describe("ThemedNumberInput", () => {
     expect(input.value).toBe("42");
   });
 
+  it("clears the visible input when the value accessor goes undefined", () => {
+    const [value, setValue] = createSignal<number | undefined>(42);
+    const { container } = render(() => (
+      <ThemedNumberInput name="v" value={value} />
+    ));
+    const input = container.querySelector(
+      ".sui-number-input__input",
+    ) as HTMLInputElement;
+    const hidden = container.querySelector(
+      'input[name="v"]',
+    ) as HTMLInputElement;
+    expect(input.value).toBe("42");
+
+    setValue(undefined);
+
+    // The hidden form input always cleared; the VISIBLE one held stale text
+    // until the display string became controlled (dside `sui`#36924).
+    expect(input.value).toBe("");
+    expect(hidden.value).toBe("");
+  });
+
   it("renders the error message and hides the description in invalid state", () => {
     const { container, getByText, queryByText } = render(() => (
       <ThemedNumberInput
