@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## 0.155.1
 
 ### Fixed
 - **`ThemedNumberInput` clears the visible input** (sui#36924). A caller that
