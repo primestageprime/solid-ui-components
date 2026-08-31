@@ -15,10 +15,13 @@ import {
   estimateTextWidth,
   fitAnchor,
   laneGeometry,
+  LINE_PITCH,
   nestedThreshold,
   placeThresholds,
   RAIL_INSET,
   railExtents,
+  TEXT_PAD,
+  THUMB_REACH_ABOVE,
   VIEW_WIDTH,
 } from "./helpers";
 import type { PlacedThreshold, Threshold } from "./types";
@@ -95,27 +98,60 @@ describe("laneGeometry", () => {
   // Offsets read off both snapshots, whose rail sits at y=72.
   const RAIL_Y = 72;
 
-  it("reproduces the design's first lane above the rail", () => {
+  it("holds the first lane's label clear of the thumb, without shortening its tick", () => {
+    // sui#36929: the name baseline used to sit 14 above the rail, inside the
+    // thumb's arrow, which reaches 15. The band now starts at the thumb's
+    // reach. The tick stroke keeps its length of 10.
     expect(laneGeometry(1, "above", RAIL_Y)).toEqual({
       tickEnd: 62,
-      nameY: 58,
-      valueY: 47,
+      nameY: 53,
+      valueY: 42,
     });
   });
 
-  it("reproduces the design's second lane above the rail", () => {
+  it("clears the thumb with both text lines of the first lane above", () => {
+    const lane1 = laneGeometry(1, "above", RAIL_Y);
+    expect(lane1.nameY).toBeLessThan(RAIL_Y - THUMB_REACH_ABOVE);
+    expect(lane1.valueY).toBeLessThan(RAIL_Y - THUMB_REACH_ABOVE);
+  });
+
+  it("reproduces the design's second lane above the rail, lifted with the first", () => {
+    // The thumb's floor applies to the base of the stack, so lane 2 rises by
+    // the same 5 as lane 1. Its tick is untouched.
     expect(laneGeometry(2, "above", RAIL_Y)).toEqual({
       tickEnd: 40,
-      nameY: 36,
-      valueY: 25,
+      nameY: 31,
+      valueY: 20,
     });
+  });
+
+  it("keeps one line pitch between the value line of an above lane and the name line of the next", () => {
+    // sui#36929 regression: flooring the reach per lane lifted lane 1 alone
+    // and shrank this gap to 6, which ran lane 2's name through lane 1's
+    // value line. The floor belongs on the base of the stack.
+    const gaps = [1, 2, 3].map(
+      (lane) =>
+        laneGeometry(lane, "above", RAIL_Y).valueY -
+        laneGeometry(lane + 1, "above", RAIL_Y).nameY,
+    );
+    expect(gaps).toEqual([LINE_PITCH, LINE_PITCH, LINE_PITCH]);
   });
 
   it("reproduces the design's first lane below the rail", () => {
+    // The thumb reaches 9 below the rail, less than a lane-1 tick, so the
+    // floor that lifted the labels above is a no-op on this side.
     expect(laneGeometry(1, "below", RAIL_Y)).toEqual({
       tickEnd: 82,
       nameY: 93,
       valueY: 104,
+    });
+  });
+
+  it("reproduces the design's second lane below the rail", () => {
+    expect(laneGeometry(2, "below", RAIL_Y)).toEqual({
+      tickEnd: 104,
+      nameY: 115,
+      valueY: 126,
     });
   });
 
@@ -128,11 +164,29 @@ describe("laneGeometry", () => {
 });
 
 describe("railExtents", () => {
+  it("grows the box by one lane pitch per lane further out", () => {
+    const two = railExtents(2, 1);
+    const three = railExtents(3, 1);
+    expect(three.railY).toBe(two.railY + 22);
+    expect(three.height).toBe(two.height + 22);
+  });
+
   it("grows the box when a second lane is used, rather than padding every rail to the worst case", () => {
+    // A full lane pitch, because the thumb's floor moves the whole stack and
+    // not lane 1 alone.
     const one = railExtents(1, 1);
     const two = railExtents(2, 1);
     expect(two.railY).toBe(one.railY + 22);
     expect(two.height).toBe(one.height + 22);
+  });
+
+  it("keeps the top pad above the lifted first lane, so the value line is not clipped", () => {
+    // sui#36929: the box is sized from the same floored reach the labels use.
+    // A rail with one lane above puts its value line at y=14, the pad exactly.
+    const { railY } = railExtents(1, 0);
+    const { valueY } = laneGeometry(1, "above", railY);
+    expect(railY).toBe(44);
+    expect(valueY).toBe(TEXT_PAD);
   });
 
   it("still leaves room for the thumb when there are no thresholds at all", () => {

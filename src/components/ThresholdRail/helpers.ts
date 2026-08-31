@@ -88,21 +88,53 @@ export const anchoredSpan = (
   return [x - width / 2, x + width / 2];
 };
 
+/** How far the tick stroke of `lane` reaches out from the rail. */
+const tickReach = (lane: number): number =>
+  TICK_LENGTH + LANE_PITCH * (lane - 1);
+
+/**
+ * How far the label band of lane 1 starts from the rail, on `side`.
+ *
+ * A lane-1 name baseline above the rail would otherwise land inside the
+ * thumb's arrow, which reaches 15 out, so the base is floored at the thumb's
+ * reach. Below the rail the thumb reaches less far than a lane-1 tick, so the
+ * floor changes nothing there.
+ */
+const labelBase = (side: ThresholdSide): number =>
+  Math.max(
+    TICK_LENGTH,
+    side === "above" ? THUMB_REACH_ABOVE : THUMB_REACH_BELOW,
+  );
+
+/**
+ * How far the label band of `lane` starts from the rail, on `side`.
+ *
+ * The floor applies to the base of the stack, not to each lane, so every lane
+ * on a side shifts by the same amount and consecutive lanes stay one
+ * `LANE_PITCH` apart. Flooring per lane would lift lane 1 alone and close the
+ * gap between its value line and the name line of lane 2. The tick stroke is
+ * measured separately by `tickReach` and keeps its length.
+ *
+ * `laneGeometry` and `sideExtent` both read this, so a lifted label and the
+ * box sized to hold it can never disagree.
+ */
+const labelReach = (lane: number, side: ThresholdSide): number =>
+  labelBase(side) + LANE_PITCH * (lane - 1);
+
 /** Vertical positions of one lane on one side, given where the rail sits. */
 export const laneGeometry = (
   lane: number,
   side: ThresholdSide,
   railY: number,
 ): LaneGeometry => {
-  const reach = TICK_LENGTH + LANE_PITCH * (lane - 1);
+  const reach = tickReach(lane);
+  const band = labelReach(lane, side);
   if (side === "above") {
-    const tickEnd = railY - reach;
-    const nameY = tickEnd - NAME_GAP_ABOVE;
-    return { tickEnd, nameY, valueY: nameY - LINE_PITCH };
+    const nameY = railY - band - NAME_GAP_ABOVE;
+    return { tickEnd: railY - reach, nameY, valueY: nameY - LINE_PITCH };
   }
-  const tickEnd = railY + reach;
-  const nameY = tickEnd + NAME_GAP_BELOW;
-  return { tickEnd, nameY, valueY: nameY + LINE_PITCH };
+  const nameY = railY + band + NAME_GAP_BELOW;
+  return { tickEnd: railY + reach, nameY, valueY: nameY + LINE_PITCH };
 };
 
 /** How far one side of the rail must extend to hold `laneCount` lanes. */
@@ -110,8 +142,7 @@ const sideExtent = (laneCount: number, side: ThresholdSide): number => {
   const thumb = side === "above" ? THUMB_REACH_ABOVE : THUMB_REACH_BELOW;
   if (laneCount === 0) return thumb + TEXT_PAD;
   const gap = side === "above" ? NAME_GAP_ABOVE : NAME_GAP_BELOW;
-  const reach = TICK_LENGTH + LANE_PITCH * (laneCount - 1);
-  const text = reach + gap + LINE_PITCH + TEXT_PAD;
+  const text = labelReach(laneCount, side) + gap + LINE_PITCH + TEXT_PAD;
   return Math.max(text, thumb + TEXT_PAD);
 };
 
