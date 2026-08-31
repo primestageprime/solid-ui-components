@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.155.2
+
+### Fixed
+- **`ThresholdRail` keeps a threshold label out of the thumb** (sui#36929). A
+  threshold in the first lane above the rail put its name baseline 14 units
+  above the rail, and its value line 25. The draggable thumb's arrow spans 15
+  units to 6 above the rail, so the name ran straight through the arrow. The
+  label band now starts at the larger of the tick reach and the thumb reach, so
+  the first lane's text begins 19 above the rail and clears the arrow. The tick
+  stroke does not move and keeps its length of 10.
+
+  One helper supplies the floored reach to both the lane geometry and the
+  height of the viewBox. Sizing the box from the same number keeps the top
+  value line inside it — lifting the labels alone would have clipped that line.
+  The floor sets the base of the lane stack, so every lane above the rail
+  rises by the same 5 and consecutive lanes stay one lane pitch apart. A floor
+  applied to each lane on its own would have lifted the first lane alone and
+  run the second lane's name through the first lane's value line. The side
+  below the rail is unchanged: the thumb reaches only 9 there, less than a
+  first-lane tick.
+
 ## 0.155.1
 
 ### Fixed
