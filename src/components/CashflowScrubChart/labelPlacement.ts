@@ -21,8 +21,9 @@
 //   body  — beside its own line, inside the plot. It fits only when its box
 //           touches no placed box AND no drawn series. A caption that crosses
 //           a polyline is unreadable even though no text collides.
-//   right — past plotRight, at the series' final y. Colliding labels stack
-//           into lanes, one text row apart.
+//   right — past plotRight, at the series' final y, clamped into the plot's
+//           vertical band. Colliding labels stack into lanes, one text row
+//           apart.
 //   below — under the x-axis tick labels, centred on its x and clamped into
 //           the plot. Colliding labels take a second row.
 //
@@ -314,10 +315,41 @@ const splitLaneOverflow = (
 };
 
 /**
+ * The y a gutter label parks at: the y it asks for, pulled far enough inside
+ * the plot band for the whole text row to stay in frame.
+ *
+ * It CLAMPS, it never refuses. `reserveLabelSpace` buys the gutter before any
+ * scale exists, so it cannot know where a line ends. A line that ends at the
+ * domain's maximum ends at `plot.top` EXACTLY, and half a text row then hangs
+ * above the frame. Refusing that label spent the gutter and drew nothing in
+ * it. A band too short for one row parks the text at the band's centre,
+ * because a clamp with no room left is still a number the caller can draw.
+ */
+const parkedY = (y: number, height: number, plot: PlotRect): number => {
+  const half = height / 2;
+  const lo = plot.top + half;
+  const hi = plot.bottom - half;
+  return hi < lo ? (plot.top + plot.bottom) / 2 : Math.min(Math.max(y, lo), hi);
+};
+
+/** The box a gutter label covers once its row y is known. */
+const gutterBox = (label: LabelCandidate, y: number, plot: PlotRect): Box => {
+  const x0 = plot.right + LABEL_GUTTER_GAP;
+  const half = label.height / 2;
+  return { x0, x1: x0 + label.width, y0: y - half, y1: y + half };
+};
+
+/**
  * Rung 2 — past `plotRight`, at the series' final y. The lane axis here is Y,
  * not X: two labels at the same y collide, and lane 2 sits one text row below.
  * Stacking sideways instead would need a gutter twice as wide as the one
  * `reserveLabelSpace` bought.
+ *
+ * Every y is clamped into the plot band, so no label leaves this rung for a
+ * VERTICAL reason. Two clamped rows can now land on each other, which the
+ * lanes alone no longer prevent, so the last test is a box test against the
+ * rows already placed. The first row meets an empty list and is therefore
+ * always placed: a bought gutter always carries text.
  */
 const runRightRung = (
   labels: readonly LabelCandidate[],
@@ -332,34 +364,35 @@ const runRightRung = (
       label.width + LABEL_GUTTER_GAP <= space.rightGutter;
     (fits ? eligible : deferred).push(label);
   }
-  const rows: LaneInput[] = map(
-    (label: LabelCandidate) => ({
+  const rows: LaneInput[] = map((label: LabelCandidate) => {
+    const park = parkedY(label.endY, label.height, plot);
+    return {
       label,
-      x: label.endY,
-      span: [
-        label.endY - label.height / 2,
-        label.endY + label.height / 2,
-      ] as const,
-      lane: 1,
-    }),
-    eligible,
-  );
+      x: park,
+      span: [park - label.height / 2, park + label.height / 2] as const,
+    };
+  }, eligible);
   const laned = laneOf(rows, {
     maxLanes: RIGHT_MAX_LANES,
     gutter: LABEL_ROW_GAP,
   });
   const { kept, spilled } = splitLaneOverflow(laned, LABEL_ROW_GAP);
   const placed: PlacedLabel[] = [];
+  const taken: Box[] = [];
   for (const row of kept) {
-    const y =
-      row.label.endY + (row.lane - 1) * (LABEL_ROW_HEIGHT + LABEL_ROW_GAP);
-    if (
-      y - row.label.height / 2 < plot.top ||
-      y + row.label.height / 2 > plot.bottom
-    ) {
+    // `row.x` is the clamped lane-1 y. Lane n hangs one text row lower, and
+    // the second clamp keeps that offset in frame as well.
+    const y = parkedY(
+      row.x + (row.lane - 1) * (LABEL_ROW_HEIGHT + LABEL_ROW_GAP),
+      row.label.height,
+      plot,
+    );
+    const box = gutterBox(row.label, y, plot);
+    if (some((other: Box) => boxesTouch(box, other, LABEL_ROW_GAP), taken)) {
       deferred.push(row.label);
       continue;
     }
+    taken.push(box);
     placed.push({
       kind: "placed",
       id: row.label.id,
