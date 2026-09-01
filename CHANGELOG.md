@@ -23,23 +23,31 @@
   `thresholds` is unchanged and `bands` defaults to `[]`, so existing call
   sites render exactly as before.
 
-### Changed
-- **`ThresholdRail` is renamed `BandRail`** (sui#36955). It named one of two
-  marks, and after the change above the bands carry the answer while the
-  thresholds carry only where it changes. `ThresholdRail`,
-  `createThresholdRail` and the three prop types stay as deprecated aliases for
-  one minor version. The `sui-threshold-rail__*` CSS prefix does **not** — it
-  is now `sui-band-rail__*`, and duplicating every rule costs more than the one
-  consumer edit. `Threshold`, `ThresholdSide` and `PlacedThreshold` keep their
-  names, because a threshold is still what they describe.
-- **`BandRail`'s drag target reads as one.** The gesture was never the weak
-  part — the host takes the pointer and a click anywhere moves the thumb — but
-  against `Slider` the rail had no hover state, no active state, no track fill,
-  a `pointer` cursor and a thumb 10 viewBox units wide. It gains a neutral
-  value fill, `grab`/`grabbing` cursors, hover and active states, and a thumb
-  scaled by 1.5. The thumb stays sized in viewBox units rather than a CSS pixel
-  token: `valueFromClientX` needs the viewBox to keep its aspect ratio. The box
-  grows 12 units for a bare rail and 11 once a side carries a lane.
+- **`CashflowBalanceSeries.label` now renders.** The field has been on the
+  public API for a long time and nothing drew it. A series that carries a
+  `label` draws it beside its own line. A `CashflowChartMarker` label joins the
+  same layer once the marker names a zone; without one, a `"rule"` marker keeps
+  the top-of-rule caption it always had, so no current chart moves.
+- **New `labelPlacement?: CashflowLabelZone` on both.** `CashflowLabelZone` is
+  `"auto" | "body" | "right" | "below"` and defaults to `"auto"`. The zone is a
+  PREFERENCE, not a lock: the chart walks body → right → below and takes the
+  first zone the measured text fits. A label that fits nowhere is dropped in
+  silence — nothing is written to the console.
+- **The zone rides on the DATA, not on a curried variant.** `AGENT_GUIDE.md` §1
+  says visual and layout props are locked at variant-definition time, and a
+  zone looks like a layout prop. It is not one here. The chart family already
+  draws this line twice: `ScrubChartOverrides` holds the frame SIZING knobs
+  only, while `PinMarkers.lane` — a vertical stacking slot, the closest
+  structural analog to a zone — stays a render-time prop. `Table` takes `align`
+  per column, `BucketQueue` takes `fill` per bucket, `Dropdown` takes `shape`
+  per item. Currying the zone would force every label on one chart into one
+  zone, which defeats the feature.
+- **A chart with no labels does not move by one pixel.** Only an EXPLICIT zone
+  buys frame space: `"right"` widens a gutter past the plot, `"below"` adds a
+  row under the x-axis ticks. An `"auto"` label uses whatever another label
+  bought and never creates space itself. The space is reserved BEFORE the
+  scales are built, because the gutter feeds the x scale and the rows feed the
+  y scale — a gutter can never be sized from where a label landed.
 - **`ScrubChart` and `CashflowScrubChart` draw horizontal gridlines**
   (sui#36952). `showGridlines` puts one rule across the plot at every y-axis
   tick — the same shape `Chart`'s `Grid` slot already draws for the low-level
@@ -62,6 +70,24 @@
   the paint order differs: the axes SVG draws AFTER the series so the labels
   stay legible, while a gridline must draw BEFORE it so the data paints over
   the chrome.
+
+### Changed
+- **`ThresholdRail` is renamed `BandRail`** (sui#36955). It named one of two
+  marks, and after the change above the bands carry the answer while the
+  thresholds carry only where it changes. `ThresholdRail`,
+  `createThresholdRail` and the three prop types stay as deprecated aliases for
+  one minor version. The `sui-threshold-rail__*` CSS prefix does **not** — it
+  is now `sui-band-rail__*`, and duplicating every rule costs more than the one
+  consumer edit. `Threshold`, `ThresholdSide` and `PlacedThreshold` keep their
+  names, because a threshold is still what they describe.
+- **`BandRail`'s drag target reads as one.** The gesture was never the weak
+  part — the host takes the pointer and a click anywhere moves the thumb — but
+  against `Slider` the rail had no hover state, no active state, no track fill,
+  a `pointer` cursor and a thumb 10 viewBox units wide. It gains a neutral
+  value fill, `grab`/`grabbing` cursors, hover and active states, and a thumb
+  scaled by 1.5. The thumb stays sized in viewBox units rather than a CSS pixel
+  token: `valueFromClientX` needs the viewBox to keep its aspect ratio. The box
+  grows 12 units for a bare rail and 11 once a side carries a lane.
 
 ## 0.155.2
 

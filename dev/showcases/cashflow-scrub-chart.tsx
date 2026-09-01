@@ -98,6 +98,9 @@ export const CashflowScrubChartShowcase: Component = () => {
   const [multiSelectedIdx, setMultiSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
+  const [labelSelectedIdx, setLabelSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
   const [bandSelectedIdx, setBandSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
@@ -307,6 +310,52 @@ export const CashflowScrubChartShowcase: Component = () => {
       </div>
 
       <div class="example-group">
+        <h3>Labelled lines</h3>
+        <p class="text-meta">
+          A series with a <code>label</code> now draws that label on the chart.{" "}
+          <code>labelPlacement</code> states a PREFERENCE, not a lock: the chart
+          walks <code>body</code> &rarr; <code>right</code> &rarr;{" "}
+          <code>below</code> and takes the first zone the text fits. Only an
+          explicit zone buys frame space &mdash; <code>"right"</code> widens the
+          gutter past the plot, <code>"below"</code> adds a row under the x-axis
+          ticks. An <code>"auto"</code> label uses whatever another label bought
+          and never creates space itself, so a chart of <code>"auto"</code>
+          labels is pixel-identical to one with none. A label that fits nowhere
+          is dropped in silence.
+        </p>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={labelSelectedIdx()}
+          onScrub={(i) => setLabelSelectedIdx(i)}
+          today={PINNED_TODAY}
+          balanceSeries={[
+            {
+              id: "optimistic",
+              label: "Optimistic",
+              labelPlacement: "right",
+              class: "demo-forecast--optimistic",
+              balanceCents: forecast(Math.max(0, todayIndex), 40_000),
+            },
+            {
+              id: "pessimistic",
+              label: "Pessimistic",
+              labelPlacement: "below",
+              class: "demo-forecast--pessimistic",
+              balanceCents: forecast(Math.max(0, todayIndex), -20_000),
+            },
+          ]}
+          markers={[
+            {
+              index: Math.max(0, todayIndex),
+              variant: "rule",
+              label: "Today",
+            },
+          ]}
+        />
+      </div>
+
+      <div class="example-group">
         <h3>Deviation band (target vs actual)</h3>
         <p class="text-meta">
           A <code>Target</code> series with a <code>fill</code> set shades the
@@ -420,10 +469,10 @@ export const CashflowScrubChartShowcase: Component = () => {
           <code>class</code>: the class lands on the polyline the chart draws
           itself, next to the base <code>sui-cashflow-scrub-chart__line</code>.
           Here it makes the running balance read as an uncommitted{" "}
-          <strong>draft</strong> — dotted and amber — while the ribbon, the
-          dots and the axes stay exactly as they are. The class is defined
-          below in a scoped <code>&lt;style&gt;</code>; the component keeps no
-          opinion on colour or dash.
+          <strong>draft</strong> — dotted and amber — while the ribbon, the dots
+          and the axes stay exactly as they are. The class is defined below in a
+          scoped <code>&lt;style&gt;</code>; the component keeps no opinion on
+          colour or dash.
         </p>
 
         <style>{`

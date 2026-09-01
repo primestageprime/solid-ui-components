@@ -36,6 +36,18 @@ import {
 import { ScrubChart } from "../ScrubChart";
 import { buildDeviationBand } from "./deviationBand";
 import {
+  ChartLabelLayer,
+  drawnPolylines,
+  labelCandidates,
+  labelReservations,
+  markerJoinsLadder,
+} from "./labelLayer";
+import {
+  belowExtraHeight,
+  placeLabels,
+  reserveLabelSpace,
+} from "./labelPlacement";
+import {
   barFraction,
   buildLineSegments,
   fmtAxisDollars,
@@ -46,6 +58,7 @@ import type {
   CashflowBalanceSeries,
   CashflowCell,
   CashflowChartMarker,
+  CashflowLabelZone,
   CashflowScrubChartProps,
   CashflowSeriesFill,
 } from "./types";
@@ -58,6 +71,7 @@ export type {
   CashflowBalanceSeries,
   CashflowCell,
   CashflowChartMarker,
+  CashflowLabelZone,
   CashflowScrubChartProps,
   CashflowSeriesFill,
 };
@@ -130,6 +144,22 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const hi = hasManualMax ? manualMax : autoHi;
     return [lo, hi];
   });
+
+  // ── Label space, reserved BEFORE the geometry exists ─────────────────
+  // The right gutter feeds the x scale and the below rows feed the y scale, so
+  // the space a label needs can never be sized from where the label landed —
+  // the placement pass needs the very scales the gutter would change. This
+  // memo reads the label TEXT and the stated zone only, which is all
+  // `reserveLabelSpace` is allowed to see, and its answer builds the frame
+  // that `placeLabels` then works inside.
+  //
+  // Only an EXPLICIT zone buys space. A chart with no labels, or with "auto"
+  // labels alone, reserves nothing and keeps every pixel it had.
+  const reservedSpace = createMemo(() =>
+    reserveLabelSpace(
+      labelReservations(props.balanceSeries ?? [], props.markers ?? []),
+    ),
+  );
 
   // Largest |cashflow| across the strip — the 100%-height reference bar.
   const maxAbsCashflow = createMemo(() => {
@@ -323,6 +353,31 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             ctx.plotRight - 28,
           );
 
+    // ── Label placement, AFTER the geometry the reservation bought ──────
+    const labelGeometry = {
+      cellToX: ctx.cellToX,
+      yToPlot,
+      primaryCents: (i: number) => line[i]?.balanceCents,
+      cellCount: ctx.cells.length,
+    };
+    const labels = labelCandidates(
+      props.balanceSeries ?? [],
+      props.markers ?? [],
+      ctx.cells,
+      labelGeometry,
+    );
+    const placements = placeLabels(
+      labels,
+      {
+        left: ctx.plotLeft,
+        right: ctx.plotRight,
+        top: ctx.plotTop,
+        bottom: ctx.plotBottom,
+      },
+      drawnPolylines(ctx.cells, props.balanceSeries ?? [], labelGeometry),
+      reservedSpace(),
+    );
+
     return (
       <svg
         class="sui-cashflow-scrub-chart__chart"
@@ -373,6 +428,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
               over the solid primary stays visible instead of being buried. */}
           {seriesLines(seriesOver)}
         </g>
+        {/* Line + marker labels. Emitted AFTER the primary line, so document
+            order paints them on top and reorders nothing. Outside the clip
+            because the right and below zones sit outside the plot rect. */}
+        <ChartLabelLayer labels={labels} results={placements} />
         {/* Over-top indicator — drawn OUTSIDE the clip so it sits at the top
             edge and the label stays fully visible. */}
         {overtopPeak && (
@@ -446,13 +505,17 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             // horizontal span (same policy as the over-top label) and the rule
             // starts below it so the two don't overlap.
             if (m.variant === "rule") {
+              // The caption keeps its top-of-rule seat unless the caller names
+              // an explicit zone, in which case the label layer owns it and
+              // the rule takes its full height back.
+              const topCaption = Boolean(m.label) && !markerJoinsLadder(m);
               const labelX = Math.min(
                 Math.max(x, ctx.plotLeft + 18),
                 ctx.plotRight - 18,
               );
               return (
                 <g class="sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--rule">
-                  {m.label && (
+                  {topCaption && (
                     <text
                       class="sui-cashflow-scrub-chart__rule-label"
                       x={labelX}
@@ -468,7 +531,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                     }`}
                     x1={x}
                     x2={x}
-                    y1={ctx.plotTop + (m.label ? 15 : 0)}
+                    y1={ctx.plotTop + (topCaption ? 15 : 0)}
                     y2={ctx.plotBottom}
                   />
                 </g>
@@ -628,6 +691,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       today={props.today}
       chartHeight={chartHeight()}
       cellWidth={cellWidth()}
+      rightGutter={reservedSpace().rightGutter}
+      xAxisExtraHeight={belowExtraHeight(reservedSpace().belowRows)}
       yDomain={yDomain()}
       showGridlines={props.showGridlines}
       formatYLabel={fmtAxisDollars}

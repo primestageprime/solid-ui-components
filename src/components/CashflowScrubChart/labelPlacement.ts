@@ -45,6 +45,7 @@ import {
   type PlotRect,
   type Polyline,
 } from "./labelBoxes";
+import type { CashflowLabelZone } from "./types";
 import {
   anchoredSpan,
   fitAnchor,
@@ -53,16 +54,10 @@ import {
   type LaneBox,
 } from "../../internal/geometry/labelLayout";
 
-/**
- * Where a label prefers to sit. A caller cannot see the data, the container
- * width or the theme's font, so a caller cannot know what fits — this is a
- * preference, not a lock. The component walks body → right → below and takes
- * the first zone the label fits. Defaults to "auto", which starts at the top.
- *
- * Per-datum and not a curried variant: one chart's labels routinely need
- * different zones, and a variant would force them all into one.
- */
-export type CashflowLabelZone = "auto" | "body" | "right" | "below";
+// `CashflowLabelZone` is PUBLIC API, so it is declared in `types.ts` with the
+// rest of the prop vocabulary and re-exported here for the callers that only
+// import the ladder.
+export type { CashflowLabelZone } from "./types";
 
 /** The zone a label actually got. "auto" is a preference and never an answer. */
 export type ResolvedLabelZone = "body" | "right" | "below";

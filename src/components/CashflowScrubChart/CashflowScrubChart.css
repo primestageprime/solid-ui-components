@@ -175,6 +175,21 @@
   dominant-baseline: middle;
 }
 
+/* ── Line + marker labels (the label ladder) ──────────────────────── */
+/* Drawn after the primary line, so document order paints them on top.
+   The layer never takes a pointer event — the scrub gestures own the
+   chart surface. */
+.sui-cashflow-scrub-chart__labels {
+  pointer-events: none;
+}
+
+.sui-cashflow-scrub-chart__label {
+  fill: var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
+  font-size: 9px;
+  font-weight: 600;
+  dominant-baseline: middle;
+}
+
 /* ── Plotline markers (the `markers` prop) ────────────────────────── */
 /* Overlay svg sits above the gesture layer; the svg ignores pointer
    events, each marker group re-enables them so the rule/dot is clickable

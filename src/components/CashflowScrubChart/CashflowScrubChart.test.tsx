@@ -851,4 +851,118 @@ describe("CashflowScrubChart gridlines", () => {
     expect(grid).toBeGreaterThanOrEqual(0);
     expect(series).toBeGreaterThan(grid);
   });
+
+  // ── Line + marker labels ───────────────────────────────────────────
+  // `measureLabelWidth` reads `text.length * 7` here: src/test-setup.ts
+  // installs a stub 2D context on purpose, so the real canvas path runs and
+  // the per-character fallback never fires.
+
+  /** The plot's right edge, which the zero line is drawn to. */
+  const plotRightOf = (container: HTMLElement): string =>
+    container
+      .querySelector(".sui-cashflow-scrub-chart__zero-line")!
+      .getAttribute("x2")!;
+
+  /** The chart frame's full width, from the chart svg's viewBox. */
+  const chartWidthOf = (container: HTMLElement): string =>
+    container
+      .querySelector("svg.sui-cashflow-scrub-chart__chart")!
+      .getAttribute("viewBox")!
+      .split(" ")[2];
+
+  it("keeps plotRight at the chart width when no label prefers the right", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+      />
+    ));
+    expect(plotRightOf(container)).toBe(chartWidthOf(container));
+  });
+
+  it("draws a series label when one is given", () => {
+    const cells = makeCells(10);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={[
+          {
+            id: "forecast",
+            // No `labelPlacement`: "auto" starts at the body rung, and 4
+            // characters at 7px each clear the last point with room to spare.
+            label: "Cash",
+            balanceCents: (c) => c.balanceCents + 20_000,
+          },
+        ]}
+      />
+    ));
+    const label = container.querySelector(".sui-cashflow-scrub-chart__label");
+    expect(label).toBeTruthy();
+    expect(label!.textContent).toBe("Cash");
+  });
+
+  it("buys a right gutter for an explicit right label only", () => {
+    const series = (placement: "auto" | "right") => [
+      {
+        id: "forecast",
+        label: "Forecast",
+        labelPlacement: placement,
+        balanceCents: (c: CashflowCell) => c.balanceCents + 20_000,
+      },
+    ];
+    const auto = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={series("auto")}
+      />
+    ));
+    expect(plotRightOf(auto.container)).toBe(chartWidthOf(auto.container));
+
+    const right = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={series("right")}
+      />
+    ));
+    // "Forecast" measures 8 * 7 = 56, plus the 6px gutter gap.
+    expect(Number(plotRightOf(right.container))).toBe(
+      Number(chartWidthOf(right.container)) - 62,
+    );
+  });
+
+  it("drops a label that fits nowhere, in silence", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={[
+          {
+            id: "wide",
+            // Wider than the whole chart, so no rung can hold it, and "body"
+            // buys no gutter and no row to fall back on.
+            label: "x".repeat(400),
+            labelPlacement: "body",
+            balanceCents: (c) => c.balanceCents,
+          },
+        ]}
+      />
+    ));
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__label"),
+    ).toBeNull();
+    expect(warn).not.toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+    warn.mockRestore();
+    error.mockRestore();
+  });
 });
