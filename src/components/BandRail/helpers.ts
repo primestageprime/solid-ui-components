@@ -1,5 +1,5 @@
 // ============================================
-// ThresholdRail helpers — Depth 0, pure. No SolidJS, no DOM.
+// BandRail helpers — Depth 0, pure. No SolidJS, no DOM.
 //
 // Three jobs, all of them the reason a consumer cannot compose this rail from
 // a slider plus a separate axis:

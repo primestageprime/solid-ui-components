@@ -1,6 +1,6 @@
 import { type Component, createSignal } from "solid-js";
-import { ThresholdRail } from "../../src/components/ThresholdRail";
-import type { Threshold } from "../../src/components/ThresholdRail";
+import { BandRail } from "../../src/components/BandRail";
+import type { Threshold } from "../../src/components/BandRail";
 import { Stack } from "../../src/components/Layout/Stack";
 
 /** Money, written the way the design snapshots write it: $200, $3.8k, $11k. */
@@ -37,7 +37,7 @@ const DrawDial: Component = () => {
   const [draw, setDraw] = createSignal(6000);
   return (
     <Stack gap="sm">
-      <ThresholdRail
+      <BandRail
         domain={DRAW_DOMAIN}
         value={draw()}
         onChange={setDraw}
@@ -54,7 +54,7 @@ const PriceDial: Component = () => {
   const [price, setPrice] = createSignal(120);
   return (
     <Stack gap="sm">
-      <ThresholdRail
+      <BandRail
         domain={PRICE_DOMAIN}
         value={price()}
         onChange={setPrice}
@@ -69,9 +69,9 @@ const PriceDial: Component = () => {
   );
 };
 
-export const ThresholdRailShowcase: Component = () => (
+export const BandRailShowcase: Component = () => (
   <div class="component-section component-section--full">
-    <h2>ThresholdRail — Primitive (Depth 1)</h2>
+    <h2>BandRail — Primitive (Depth 1)</h2>
     <p class="text-meta">
       A one-dimensional value axis whose thumb rides its own consequences. The
       ticks are model <em>outputs</em> plotted on the axis of the model{" "}
@@ -107,7 +107,7 @@ export const ThresholdRailShowcase: Component = () => (
         A label at either end anchors inward rather than spilling out of the
         box. Both of these sit exactly on the rail's ends.
       </p>
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={50}
         thresholds={[
@@ -126,13 +126,13 @@ export const ThresholdRailShowcase: Component = () => (
         focus order and takes no input.
       </p>
       <Stack gap="md">
-        <ThresholdRail
+        <BandRail
           domain={[0, 100]}
           value={35}
           format={(v) => `${v}%`}
           label="Plain dial"
         />
-        <ThresholdRail
+        <BandRail
           domain={DRAW_DOMAIN}
           value={3800}
           thresholds={DRAW_THRESHOLDS}
@@ -147,7 +147,7 @@ export const ThresholdRailShowcase: Component = () => (
       <h3>Atoms / Variants</h3>
       <p class="text-meta">
         Owns its CSS and composes no other component. Factory:{" "}
-        <code>createThresholdRail({"{ format }"})</code> — curry the formatter
+        <code>createBandRail({"{ format }"})</code> — curry the formatter
         when it is a static decision. Tone comes from the shared{" "}
         <code>Tone</code> union, so the theme owns every colour.
       </p>

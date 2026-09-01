@@ -1,5 +1,5 @@
 // ============================================
-// ThresholdRail types — Depth 0 (pure types; type-only imports).
+// BandRail types — Depth 0 (pure types; type-only imports).
 // Kept apart from the component so the pure layout helpers can import the
 // shapes without pulling SolidJS in.
 // ============================================

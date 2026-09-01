@@ -1,7 +1,7 @@
 // ============================================
-// ThresholdRail — Atomic (Depth 1)
-// Owns CSS (ThresholdRail.css), imports no other component.
-// Factory: createThresholdRail().
+// BandRail — Atomic (Depth 1)
+// Owns CSS (BandRail.css), imports no other component.
+// Factory: createBandRail().
 //
 // One horizontal axis that is a control and a readout at the same time. A
 // thumb rides the axis and reports the current value. Named ticks stand off
@@ -31,7 +31,7 @@ import { linearScale } from "../Chart/scales";
 import { clamp } from "../../internal/math/clamp";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import type { Tone } from "../../types";
-import "./ThresholdRail.css";
+import "./BandRail.css";
 import {
   laneGeometry,
   nestedThreshold,
@@ -54,7 +54,7 @@ const STEM_HALF_WIDTH = 1.2;
 const RING_RADIUS = 8.5;
 const DOT_RADIUS = 3.5;
 
-export interface ThresholdRailProps
+export interface BandRailProps
   extends Omit<
     JSX.SvgSVGAttributes<SVGSVGElement>,
     "children" | "onChange" | "role" | "class"
@@ -80,16 +80,16 @@ export interface ThresholdRailProps
   class?: string;
 }
 
-type ThresholdRailOverrides = Pick<ThresholdRailProps, "format">;
-type ThresholdRailDataProps = Omit<
-  ThresholdRailProps,
-  keyof ThresholdRailOverrides
+type BandRailOverrides = Pick<BandRailProps, "format">;
+type BandRailDataProps = Omit<
+  BandRailProps,
+  keyof BandRailOverrides
 >;
 
 const toneClass = (tone: Tone | undefined): string =>
-  tone && tone !== "default" ? ` sui-threshold-rail__threshold--${tone}` : "";
+  tone && tone !== "default" ? ` sui-band-rail__threshold--${tone}` : "";
 
-export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
+export const BandRail: Component<BandRailProps> = (rawProps) => {
   const merged = mergeProps(
     { format: String, thresholds: [] as readonly Threshold[], disabled: false },
     rawProps,
@@ -223,7 +223,7 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
   };
 
   const classes = () =>
-    `sui-threshold-rail${local.disabled ? " sui-threshold-rail--disabled" : ""}${
+    `sui-band-rail${local.disabled ? " sui-band-rail--disabled" : ""}${
       local.class ? ` ${local.class}` : ""
     }`;
 
@@ -256,12 +256,12 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
         ref={(el) => {
           svgEl = el;
         }}
-        class="sui-threshold-rail__canvas"
+        class="sui-band-rail__canvas"
         viewBox={`0 0 ${VIEW_WIDTH} ${extents().height}`}
         aria-hidden="true"
       >
         <line
-          class="sui-threshold-rail__line"
+          class="sui-band-rail__line"
           x1={RAIL_INSET}
           x2={VIEW_WIDTH - RAIL_INSET}
           y1={railY()}
@@ -274,19 +274,19 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
               laneGeometry(placed().lane, placed().side, railY());
             return (
               <g
-                class={`sui-threshold-rail__threshold${toneClass(
+                class={`sui-band-rail__threshold${toneClass(
                   placed().threshold.tone,
                 )}`}
               >
                 <line
-                  class="sui-threshold-rail__tick"
+                  class="sui-band-rail__tick"
                   x1={placed().x}
                   x2={placed().x}
                   y1={railY()}
                   y2={geometry().tickEnd}
                 />
                 <text
-                  class="sui-threshold-rail__name"
+                  class="sui-band-rail__name"
                   x={placed().x}
                   y={geometry().nameY}
                   text-anchor={placed().anchor}
@@ -294,7 +294,7 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
                   {placed().threshold.label}
                 </text>
                 <text
-                  class="sui-threshold-rail__value"
+                  class="sui-band-rail__value"
                   x={placed().x}
                   y={geometry().valueY}
                   text-anchor={placed().anchor}
@@ -308,25 +308,25 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
 
         {nested() ? (
           <g
-            class={`sui-threshold-rail__threshold${toneClass(
+            class={`sui-band-rail__threshold${toneClass(
               nested()?.threshold.tone,
             )}`}
           >
             <circle
-              class="sui-threshold-rail__ring"
+              class="sui-band-rail__ring"
               cx={thumbX()}
               cy={railY()}
               r={RING_RADIUS}
             />
             <circle
-              class="sui-threshold-rail__thumb"
+              class="sui-band-rail__thumb"
               cx={thumbX()}
               cy={railY()}
               r={DOT_RADIUS}
             />
           </g>
         ) : (
-          <g class="sui-threshold-rail__thumb">
+          <g class="sui-band-rail__thumb">
             <polygon
               points={`${thumbX()},${railY() - ARROW_TIP_GAP} ${
                 thumbX() - ARROW_HALF_WIDTH
@@ -351,10 +351,10 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
  * Curry the presentational config — in practice the formatter, which is a
  * static decision (a currency, a duration) rather than reactive data.
  */
-export const createThresholdRail = (
-  overrides: ThresholdRailOverrides,
-): Component<ThresholdRailDataProps> => {
-  return (props) => <ThresholdRail {...overrides} {...props} />;
+export const createBandRail = (
+  overrides: BandRailOverrides,
+): Component<BandRailDataProps> => {
+  return (props) => <BandRail {...overrides} {...props} />;
 };
 
-export type { ThresholdRailDataProps, ThresholdRailOverrides };
+export type { BandRailDataProps, BandRailOverrides };

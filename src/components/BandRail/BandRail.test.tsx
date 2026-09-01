@@ -15,7 +15,7 @@ import {
   pointer,
   rectOf,
 } from "../../test-utils";
-import { createThresholdRail, ThresholdRail } from "./ThresholdRail";
+import { createBandRail, BandRail } from "./BandRail";
 import type { Threshold } from "./types";
 
 const RECT_WIDTH = 700;
@@ -53,16 +53,16 @@ const key = (el: Element, k: string, shiftKey = false): void => {
 
 /** The host — it carries the slider role, the ARIA state and every handler. */
 const railOf = (container: HTMLElement): HTMLElement =>
-  container.querySelector(".sui-threshold-rail") as HTMLElement;
+  container.querySelector(".sui-band-rail") as HTMLElement;
 
 /** The canvas — aria-hidden, and the element whose rect the rail measures. */
 const canvasOf = (container: HTMLElement): SVGSVGElement =>
   container.querySelector("svg")!;
 
-describe("ThresholdRail — the slider contract", () => {
+describe("BandRail — the slider contract", () => {
   it("announces itself as a slider carrying the whole domain", () => {
     const { container } = render(() => (
-      <ThresholdRail domain={[0, 100]} value={40} label="Monthly draw" />
+      <BandRail domain={[0, 100]} value={40} label="Monthly draw" />
     ));
     const rail = railOf(container);
     expect(rail.getAttribute("role")).toBe("slider");
@@ -75,7 +75,7 @@ describe("ThresholdRail — the slider contract", () => {
 
   it("hides the canvas from assistive tech, so the tick text does not compete with aria-valuetext", () => {
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         thresholds={THRESHOLDS}
@@ -88,7 +88,7 @@ describe("ThresholdRail — the slider contract", () => {
 
   it("names the threshold it is sitting on in aria-valuetext, so the ring is not colour-only", () => {
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={25}
         thresholds={THRESHOLDS}
@@ -103,7 +103,7 @@ describe("ThresholdRail — the slider contract", () => {
 
   it("reports the plain value when the thumb is between thresholds", () => {
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         thresholds={THRESHOLDS}
@@ -116,16 +116,16 @@ describe("ThresholdRail — the slider contract", () => {
 
   it("clamps a value handed in from outside the domain instead of drawing off the rail", () => {
     const { container } = render(() => (
-      <ThresholdRail domain={[0, 100]} value={250} label="Monthly draw" />
+      <BandRail domain={[0, 100]} value={250} label="Monthly draw" />
     ));
     expect(railOf(container).getAttribute("aria-valuenow")).toBe("100");
   });
 });
 
-describe("ThresholdRail — drawing", () => {
+describe("BandRail — drawing", () => {
   it("draws one tick and two text lines per threshold", () => {
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         thresholds={THRESHOLDS}
@@ -133,42 +133,42 @@ describe("ThresholdRail — drawing", () => {
         format={(v) => `$${v}`}
       />
     ));
-    expect(container.querySelectorAll(".sui-threshold-rail__tick").length).toBe(
+    expect(container.querySelectorAll(".sui-band-rail__tick").length).toBe(
       3,
     );
-    expect(container.querySelectorAll(".sui-threshold-rail__name").length).toBe(
+    expect(container.querySelectorAll(".sui-band-rail__name").length).toBe(
       3,
     );
     expect(
-      container.querySelectorAll(".sui-threshold-rail__value").length,
+      container.querySelectorAll(".sui-band-rail__value").length,
     ).toBe(3);
   });
 
   it("puts the tone on the group, so a tick and its labels can never disagree", () => {
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         thresholds={THRESHOLDS}
         label="Monthly draw"
       />
     ));
-    const groups = container.querySelectorAll(".sui-threshold-rail__threshold");
+    const groups = container.querySelectorAll(".sui-band-rail__threshold");
     const classes = Array.from(groups).map((g) => g.getAttribute("class"));
     expect(classes).toContain(
-      "sui-threshold-rail__threshold sui-threshold-rail__threshold--success",
+      "sui-band-rail__threshold sui-band-rail__threshold--success",
     );
     expect(classes).toContain(
-      "sui-threshold-rail__threshold sui-threshold-rail__threshold--warning",
+      "sui-band-rail__threshold sui-band-rail__threshold--warning",
     );
     expect(classes).toContain(
-      "sui-threshold-rail__threshold sui-threshold-rail__threshold--muted",
+      "sui-band-rail__threshold sui-band-rail__threshold--muted",
     );
   });
 
   it("gives a default-toned threshold no modifier class", () => {
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         thresholds={[{ value: 50, label: "plain" }]}
@@ -177,15 +177,15 @@ describe("ThresholdRail — drawing", () => {
     ));
     expect(
       container
-        .querySelector(".sui-threshold-rail__threshold")
+        .querySelector(".sui-band-rail__threshold")
         ?.getAttribute("class"),
-    ).toBe("sui-threshold-rail__threshold");
+    ).toBe("sui-band-rail__threshold");
   });
 
   it("draws the arrow thumb between thresholds and the nesting ring on one", () => {
     const [value, setValue] = createSignal(40);
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={value()}
         thresholds={THRESHOLDS}
@@ -193,31 +193,31 @@ describe("ThresholdRail — drawing", () => {
       />
     ));
     expect(container.querySelector("polygon")).not.toBeNull();
-    expect(container.querySelector(".sui-threshold-rail__ring")).toBeNull();
+    expect(container.querySelector(".sui-band-rail__ring")).toBeNull();
 
     setValue(25);
     expect(container.querySelector("polygon")).toBeNull();
-    expect(container.querySelector(".sui-threshold-rail__ring")).not.toBeNull();
+    expect(container.querySelector(".sui-band-rail__ring")).not.toBeNull();
   });
 
   it("gives the nesting ring the colour of the threshold it landed on", () => {
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={60}
         thresholds={THRESHOLDS}
         label="Monthly draw"
       />
     ));
-    const ring = container.querySelector(".sui-threshold-rail__ring")!;
+    const ring = container.querySelector(".sui-band-rail__ring")!;
     expect(ring.parentElement?.getAttribute("class")).toBe(
-      "sui-threshold-rail__threshold sui-threshold-rail__threshold--warning",
+      "sui-band-rail__threshold sui-band-rail__threshold--warning",
     );
   });
 
   it("grows the viewBox when a collision forces a second lane", () => {
     const single = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={0}
         thresholds={[{ value: 50, label: "alone" }]}
@@ -225,7 +225,7 @@ describe("ThresholdRail — drawing", () => {
       />
     ));
     const stacked = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={0}
         thresholds={[
@@ -241,11 +241,11 @@ describe("ThresholdRail — drawing", () => {
   });
 });
 
-describe("ThresholdRail — keyboard", () => {
+describe("BandRail — keyboard", () => {
   it("moves by one hundredth of the domain on an arrow key", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         label="Draw"
@@ -261,7 +261,7 @@ describe("ThresholdRail — keyboard", () => {
   it("treats up and down the same as right and left", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         label="Draw"
@@ -277,7 +277,7 @@ describe("ThresholdRail — keyboard", () => {
   it("multiplies the step by ten while shift is held", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         label="Draw"
@@ -291,7 +291,7 @@ describe("ThresholdRail — keyboard", () => {
   it("jumps to the ends of the domain on Home and End", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         label="Draw"
@@ -307,7 +307,7 @@ describe("ThresholdRail — keyboard", () => {
   it("steps between thresholds on PageUp and PageDown, because they are what the user is aiming at", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         thresholds={THRESHOLDS}
@@ -324,7 +324,7 @@ describe("ThresholdRail — keyboard", () => {
   it("falls back to the domain end when there is no further threshold", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={95}
         thresholds={THRESHOLDS}
@@ -339,7 +339,7 @@ describe("ThresholdRail — keyboard", () => {
   it("never reports a value outside the domain", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={0}
         label="Draw"
@@ -353,7 +353,7 @@ describe("ThresholdRail — keyboard", () => {
   it("ignores keys it does not own", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         label="Draw"
@@ -366,12 +366,12 @@ describe("ThresholdRail — keyboard", () => {
   });
 });
 
-describe("ThresholdRail — pointer", () => {
+describe("BandRail — pointer", () => {
   it("reads a press on the rail as the value under the pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={0}
         label="Draw"
@@ -388,7 +388,7 @@ describe("ThresholdRail — pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={0}
         label="Draw"
@@ -410,7 +410,7 @@ describe("ThresholdRail — pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={0}
         label="Draw"
@@ -425,7 +425,7 @@ describe("ThresholdRail — pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={50}
         label="Draw"
@@ -444,7 +444,7 @@ describe("ThresholdRail — pointer", () => {
   it("stays silent when the rail has no layout to read a position from", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={0}
         label="Draw"
@@ -459,7 +459,7 @@ describe("ThresholdRail — pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={50}
         label="Draw"
@@ -473,12 +473,12 @@ describe("ThresholdRail — pointer", () => {
   });
 });
 
-describe("ThresholdRail — disabled", () => {
+describe("BandRail — disabled", () => {
   it("takes neither pointer nor keyboard input and leaves the focus order", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <ThresholdRail
+      <BandRail
         domain={[0, 100]}
         value={40}
         label="Draw"
@@ -489,16 +489,16 @@ describe("ThresholdRail — disabled", () => {
     const rail = railOf(container);
     expect(rail.getAttribute("tabindex")).toBe("-1");
     expect(rail.getAttribute("aria-disabled")).toBe("true");
-    expect(rail.classList.contains("sui-threshold-rail--disabled")).toBe(true);
+    expect(rail.classList.contains("sui-band-rail--disabled")).toBe(true);
     pointer(rail).down({ clientX: 350, clientY: 75 });
     key(rail, "ArrowRight");
     expect(onChange).not.toHaveBeenCalled();
   });
 });
 
-describe("createThresholdRail", () => {
+describe("createBandRail", () => {
   it("curries the formatter so callers pass only data", () => {
-    const MoneyRail = createThresholdRail({ format: (v) => `$${v}k` });
+    const MoneyRail = createBandRail({ format: (v) => `$${v}k` });
     const { container } = render(() => (
       <MoneyRail
         domain={[0, 100]}
@@ -508,7 +508,7 @@ describe("createThresholdRail", () => {
       />
     ));
     const values = Array.from(
-      container.querySelectorAll(".sui-threshold-rail__value"),
+      container.querySelectorAll(".sui-band-rail__value"),
     ).map((n) => n.textContent);
     expect(values).toContain("$25k");
     expect(railOf(container).getAttribute("aria-valuetext")).toBe(

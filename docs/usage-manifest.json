@@ -5221,6 +5221,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/helmDefects/ReportHeader.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/qaqcTriage/CallFilterList.tsx",
             "line": 2,
             "kind": "named"
@@ -5351,6 +5356,11 @@
         ],
         "Checkbox": [
           {
+            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/metric-analyzer.tsx",
             "line": 2,
             "kind": "named"
@@ -5425,6 +5435,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/helmDefects/ReportHeader.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/qaqcTriage/CallFilterList.tsx",
             "line": 2,
             "kind": "named"
@@ -5470,6 +5485,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/emissions-visibility.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
             "kind": "named"
@@ -5507,7 +5527,32 @@
             "kind": "named"
           },
           {
+            "file": "src/components/emissionsVisibility/CountsBar.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/ViolationCardList.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/DefectSections.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/ExcludedFootnote.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/ReportHeader.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -5528,6 +5573,11 @@
           },
           {
             "file": "src/routes/reports/qaqc-checks.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/helm-data-integrity.tsx",
             "line": 2,
             "kind": "named"
           }
@@ -5662,6 +5712,11 @@
         ],
         "DangerBody": [
           {
+            "file": "src/components/emissionsVisibility/VisibilityCells.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/AutomationModal.tsx",
             "line": 2,
             "kind": "named"
@@ -5687,6 +5742,16 @@
             "kind": "named"
           },
           {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/qaqcTriage/CannedExplanations.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/index.tsx",
             "line": 7,
             "kind": "named"
@@ -5707,12 +5772,22 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/emissions-visibility.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/explanations/index.tsx",
             "line": 2,
             "kind": "named"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/helm-data-integrity.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -5811,12 +5886,22 @@
         ],
         "DateRange": [
           {
+            "file": "src/routes/tools/emissions-visibility.tsx",
+            "line": 2,
+            "kind": "type"
+          },
+          {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
             "kind": "type"
           }
         ],
         "DateRangePicker": [
+          {
+            "file": "src/routes/tools/emissions-visibility.tsx",
+            "line": 2,
+            "kind": "named"
+          },
           {
             "file": "src/routes/tools/timesleuth.tsx",
             "line": 18,
@@ -5888,6 +5973,11 @@
             "file": "src/components/NoxWidgets.tsx",
             "line": 2,
             "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/ReportHeader.tsx",
+            "line": 2,
+            "kind": "named"
           }
         ],
         "EmptyState": [
@@ -5953,6 +6043,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/emissionsVisibility/VisibilityTable.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 4,
             "kind": "named"
@@ -5970,6 +6065,11 @@
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallRogDetail.tsx",
             "line": 6,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 2,
             "kind": "named"
           },
           {
@@ -6282,6 +6382,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/emissionsVisibility/VisibilityCells.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/vessel-detail/VesselCallOverview.tsx",
             "line": 2,
             "kind": "named"
@@ -6580,6 +6685,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/emissionsVisibility/VisibilityCells.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/FortnightDetailPane.tsx",
             "line": 3,
             "kind": "named"
@@ -6605,8 +6715,23 @@
             "kind": "named"
           },
           {
+            "file": "src/components/helmDefects/DefectSections.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/qaqcTriage/ChartDashboard.tsx",
             "line": 12,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/vesselCall/fields.tsx",
+            "line": 2,
             "kind": "named"
           },
           {
@@ -6660,12 +6785,22 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/emissions-visibility.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/explanations/index.tsx",
             "line": 2,
             "kind": "named"
           },
           {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/helm-data-integrity.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -6781,6 +6916,11 @@
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallRogDetail.tsx",
             "line": 6,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/DefectSections.tsx",
+            "line": 2,
             "kind": "named"
           },
           {
@@ -7230,6 +7370,11 @@
             "kind": "named"
           },
           {
+            "file": "src/routes/tools/emissions-visibility.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
             "kind": "named"
@@ -7262,7 +7407,17 @@
         ],
         "SmallOutlinedButton": [
           {
+            "file": "src/components/helmDefects/ReportHeader.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/reports/qaqc-checks.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/emissions-visibility.tsx",
             "line": 2,
             "kind": "named"
           }
@@ -7284,6 +7439,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/helmDefects/ReportHeader.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/metric-analyzer.tsx",
             "line": 2,
             "kind": "named"
@@ -7300,6 +7460,11 @@
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/emissions-visibility.tsx",
             "line": 2,
             "kind": "named"
           },
@@ -7365,6 +7530,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/helmDefects/ReportHeader.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/violations/CallLane.tsx",
             "line": 2,
             "kind": "named"
@@ -7409,6 +7579,13 @@
           {
             "file": "src/components/fortnight/automationParts.tsx",
             "line": 6,
+            "kind": "named"
+          }
+        ],
+        "StatTile": [
+          {
+            "file": "src/components/emissionsVisibility/CountsBar.tsx",
+            "line": 1,
             "kind": "named"
           }
         ],
@@ -7501,6 +7678,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/helmDefects/ReportHeader.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/tools/ftir-gap-fill.tsx",
             "line": 2,
             "kind": "named"
@@ -7571,6 +7753,13 @@
           },
           {
             "file": "src/components/fortnight/ViolationsPreview.tsx",
+            "line": 2,
+            "kind": "named"
+          }
+        ],
+        "TableSectionHeader": [
+          {
+            "file": "src/components/helmDefects/DefectSections.tsx",
             "line": 2,
             "kind": "named"
           }
@@ -7701,6 +7890,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/emissionsVisibility/CountsBar.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/AutomationModal.tsx",
             "line": 2,
             "kind": "named"
@@ -7728,6 +7922,21 @@
           {
             "file": "src/components/fortnight/vessel-detail/VesselCallRogDetail.tsx",
             "line": 6,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/ExcludedFootnote.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/ReportHeader.tsx",
+            "line": 2,
             "kind": "named"
           },
           {
@@ -8297,6 +8506,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/reports/ViolationHeatGrid.tsx",
             "line": 2,
             "kind": "named"
@@ -8475,6 +8689,11 @@
             "kind": "named"
           },
           {
+            "file": "src/components/emissionsVisibility/CountsBar.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/FortnightDetailPane.tsx",
             "line": 3,
             "kind": "named"
@@ -8588,12 +8807,12 @@
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 53,
+            "line": 52,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 67,
+            "line": 66,
             "kind": "factory-call"
           }
         ],
@@ -8698,7 +8917,7 @@
           },
           {
             "file": "src/components/qaqcTriage/CannedExplanations.tsx",
-            "line": 21,
+            "line": 32,
             "kind": "factory-call"
           },
           {
@@ -8788,37 +9007,37 @@
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 37,
+            "line": 36,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 39,
+            "line": 38,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 45,
+            "line": 44,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 48,
+            "line": 47,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 51,
+            "line": 50,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 57,
+            "line": 56,
             "kind": "factory-call"
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 70,
+            "line": 69,
             "kind": "factory-call"
           },
           {
@@ -8958,6 +9177,26 @@
             "kind": "factory-call"
           },
           {
+            "file": "src/components/emissionsVisibility/CountsBar.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/emissionsVisibility/CountsBar.tsx",
+            "line": 29,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/emissionsVisibility/ResultsColumn.ts",
+            "line": 1,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/emissionsVisibility/ResultsColumn.ts",
+            "line": 29,
+            "kind": "factory-call"
+          },
+          {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 4,
             "kind": "named"
@@ -9044,7 +9283,7 @@
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 90,
+            "line": 89,
             "kind": "factory-call"
           },
           {
@@ -9065,6 +9304,16 @@
           {
             "file": "src/routes/tools/asset-triage/detail.tsx",
             "line": 45,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/tools/emissions-visibility.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/emissions-visibility.tsx",
+            "line": 30,
             "kind": "factory-call"
           },
           {
@@ -9232,6 +9481,16 @@
             "kind": "factory-call"
           },
           {
+            "file": "src/components/emissionsVisibility/CountsBar.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/emissionsVisibility/CountsBar.tsx",
+            "line": 13,
+            "kind": "factory-call"
+          },
+          {
             "file": "src/components/qaqcTriage/CallFilterList.tsx",
             "line": 2,
             "kind": "named"
@@ -9273,7 +9532,7 @@
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 105,
+            "line": 104,
             "kind": "factory-call"
           },
           {
@@ -9362,6 +9621,21 @@
             "kind": "factory-call"
           },
           {
+            "file": "src/routes/tools/helm-data-integrity.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/tools/helm-data-integrity.tsx",
+            "line": 15,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/routes/tools/helm-data-integrity.tsx",
+            "line": 24,
+            "kind": "factory-call"
+          },
+          {
             "file": "src/routes/violations/explore.tsx",
             "line": 3,
             "kind": "named"
@@ -9401,6 +9675,16 @@
           {
             "file": "src/components/NoxWidgets.tsx",
             "line": 254,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/emissionsVisibility/VisibilityCells.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/emissionsVisibility/VisibilityCells.tsx",
+            "line": 49,
             "kind": "factory-call"
           },
           {
@@ -9509,6 +9793,36 @@
             "kind": "factory-call"
           },
           {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 24,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 25,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 42,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 50,
+            "kind": "factory-call"
+          },
+          {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 58,
+            "kind": "factory-call"
+          },
+          {
             "file": "src/components/ui/PageHeader.tsx",
             "line": 15,
             "kind": "named"
@@ -9560,7 +9874,7 @@
           },
           {
             "file": "src/routes/reports/nox-report.tsx",
-            "line": 60,
+            "line": 59,
             "kind": "factory-call"
           },
           {
@@ -9686,6 +10000,21 @@
             "kind": "named"
           },
           {
+            "file": "src/components/emissionsVisibility/ResultsColumn.test.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/emissionsVisibility/VisibilityTable.test.tsx",
+            "line": 4,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/emissionsVisibility/VisibilityTable.tsx",
+            "line": 1,
+            "kind": "named"
+          },
+          {
             "file": "src/components/fortnight/FortnightReportBody.tsx",
             "line": 4,
             "kind": "named"
@@ -9711,7 +10040,22 @@
             "kind": "named"
           },
           {
+            "file": "src/components/helmDefects/DefectTable.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/vesselCall/fields.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
             "file": "src/components/violations/QaqcAssetTriage.tsx",
+            "line": 2,
+            "kind": "named"
+          },
+          {
+            "file": "src/lib/emissionsVisibility/reasons.test.ts",
             "line": 2,
             "kind": "named"
           },
@@ -10526,12 +10870,17 @@
         "AppMain": [
           {
             "file": "src/components/ChartScreen.tsx",
-            "line": 21,
+            "line": 24,
             "kind": "named"
           },
           {
             "file": "src/routes/config-forms.tsx",
             "line": 14,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/draw-dial.tsx",
+            "line": 42,
             "kind": "named"
           },
           {
@@ -10548,12 +10897,17 @@
         "AppShell": [
           {
             "file": "src/components/ChartScreen.tsx",
-            "line": 21,
+            "line": 24,
             "kind": "named"
           },
           {
             "file": "src/routes/config-forms.tsx",
             "line": 14,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/draw-dial.tsx",
+            "line": 42,
             "kind": "named"
           },
           {
@@ -10666,7 +11020,12 @@
         "CashflowCell": [
           {
             "file": "src/components/AppChart.tsx",
-            "line": 37,
+            "line": 43,
+            "kind": "type"
+          },
+          {
+            "file": "src/lib/__tests__/chartFitExtent.test.ts",
+            "line": 3,
             "kind": "type"
           },
           {
@@ -10676,14 +11035,26 @@
           },
           {
             "file": "src/lib/appChartModel.ts",
-            "line": 17,
+            "line": 19,
             "kind": "type"
           }
         ],
         "CashflowScrubChart": [
           {
             "file": "src/components/AppChart.tsx",
-            "line": 37,
+            "line": 43,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/__tests__/emptyChartWindow.test.tsx",
+            "line": 17,
+            "kind": "named"
+          }
+        ],
+        "Chart": [
+          {
+            "file": "src/components/drawDial/Cone.tsx",
+            "line": 3,
             "kind": "named"
           }
         ],
@@ -10742,6 +11113,11 @@
         ],
         "CurrencyInput": [
           {
+            "file": "src/components/drawDial/Fields.tsx",
+            "line": 13,
+            "kind": "named"
+          },
+          {
             "file": "src/components/screens/curriedFormFields.tsx",
             "line": 11,
             "kind": "named"
@@ -10750,7 +11126,7 @@
         "DangerAlert": [
           {
             "file": "src/components/QuickBooksImport.tsx",
-            "line": 10,
+            "line": 11,
             "kind": "named"
           }
         ],
@@ -10768,13 +11144,18 @@
         ],
         "DatePicker": [
           {
-            "file": "src/components/screens/calibrateOptionEditor.tsx",
-            "line": 15,
+            "file": "src/components/screens/curriedFormFields.tsx",
+            "line": 11,
             "kind": "named"
           },
           {
-            "file": "src/components/screens/curriedFormFields.tsx",
-            "line": 11,
+            "file": "src/components/screens/optionEditor/generic.tsx",
+            "line": 21,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/optionEditor/roster.tsx",
+            "line": 17,
             "kind": "named"
           },
           {
@@ -10792,25 +11173,25 @@
         ],
         "DayOfMonthPicker": [
           {
-            "file": "src/components/screens/calibrateOptionEditor.tsx",
-            "line": 15,
+            "file": "src/components/screens/curriedFormFields.tsx",
+            "line": 11,
             "kind": "named"
           },
           {
-            "file": "src/components/screens/curriedFormFields.tsx",
-            "line": 11,
+            "file": "src/components/screens/optionEditor/generic.tsx",
+            "line": 21,
             "kind": "named"
           }
         ],
         "DayOfWeekPicker": [
           {
-            "file": "src/components/screens/calibrateOptionEditor.tsx",
-            "line": 15,
+            "file": "src/components/screens/curriedFormFields.tsx",
+            "line": 11,
             "kind": "named"
           },
           {
-            "file": "src/components/screens/curriedFormFields.tsx",
-            "line": 11,
+            "file": "src/components/screens/optionEditor/generic.tsx",
+            "line": 21,
             "kind": "named"
           }
         ],
@@ -10829,17 +11210,27 @@
           },
           {
             "file": "src/components/ScenarioChips.tsx",
-            "line": 36,
+            "line": 46,
             "kind": "named"
           },
           {
-            "file": "src/components/screens/calibrateOptionEditor.tsx",
-            "line": 15,
+            "file": "src/components/ViewSwitcher.tsx",
+            "line": 16,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/builder/fromAccountPicker.tsx",
+            "line": 19,
             "kind": "named"
           },
           {
             "file": "src/components/screens/explorePane.tsx",
             "line": 14,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/optionEditor/shared.tsx",
+            "line": 9,
             "kind": "named"
           }
         ],
@@ -10864,7 +11255,19 @@
             "kind": "named"
           }
         ],
+        "Grid": [
+          {
+            "file": "src/components/drawDial/Cone.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
         "Icon": [
+          {
+            "file": "src/components/AppBodyGate.tsx",
+            "line": 19,
+            "kind": "named"
+          },
           {
             "file": "src/components/screens/accountsSection.tsx",
             "line": 11,
@@ -10935,6 +11338,13 @@
             "kind": "named"
           }
         ],
+        "LineSeries": [
+          {
+            "file": "src/components/drawDial/Cone.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
         "ManagedListSection": [
           {
             "file": "src/routes/settings.tsx",
@@ -10970,30 +11380,35 @@
         ],
         "MonthOfYearPicker": [
           {
-            "file": "src/components/screens/calibrateOptionEditor.tsx",
-            "line": 15,
+            "file": "src/components/screens/curriedFormFields.tsx",
+            "line": 11,
             "kind": "named"
           },
           {
-            "file": "src/components/screens/curriedFormFields.tsx",
-            "line": 11,
+            "file": "src/components/screens/optionEditor/generic.tsx",
+            "line": 21,
             "kind": "named"
           }
         ],
         "NameInput": [
           {
             "file": "src/components/screens/calibrateCloneOption.tsx",
-            "line": 14,
+            "line": 27,
             "kind": "named"
           },
           {
-            "file": "src/components/screens/calibrateOptionEditor.tsx",
-            "line": 15,
+            "file": "src/components/screens/optionEditor/generic.tsx",
+            "line": 21,
             "kind": "named"
           },
           {
-            "file": "src/routes/calibrate.tsx",
-            "line": 16,
+            "file": "src/components/screens/optionEditor/roster.tsx",
+            "line": 17,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/scenarioDetail.tsx",
+            "line": 9,
             "kind": "named"
           }
         ],
@@ -11071,6 +11486,13 @@
             "kind": "named"
           }
         ],
+        "ReferenceLine": [
+          {
+            "file": "src/components/drawDial/Cone.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
         "ResponsiveMoney": [
           {
             "file": "src/routes/calibrate.tsx",
@@ -11081,7 +11503,7 @@
         "ScenarioGlyph": [
           {
             "file": "src/components/ScenarioChips.tsx",
-            "line": 36,
+            "line": 46,
             "kind": "named"
           },
           {
@@ -11123,7 +11545,7 @@
           },
           {
             "file": "src/components/screens/calibrateCloneOption.tsx",
-            "line": 14,
+            "line": 27,
             "kind": "named"
           },
           {
@@ -11147,6 +11569,18 @@
             "file": "src/lib/scenarioColors.ts",
             "line": 40,
             "kind": "type"
+          }
+        ],
+        "Slider": [
+          {
+            "file": "src/components/builder/railVerdicts.tsx",
+            "line": 23,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/drawDial/Fields.tsx",
+            "line": 13,
+            "kind": "named"
           }
         ],
         "SmallGhostButton": [
@@ -11201,7 +11635,7 @@
           },
           {
             "file": "src/components/QuickBooksImport.tsx",
-            "line": 10,
+            "line": 11,
             "kind": "named"
           },
           {
@@ -11252,7 +11686,7 @@
         "SuccessAlert": [
           {
             "file": "src/components/QuickBooksImport.tsx",
-            "line": 10,
+            "line": 11,
             "kind": "named"
           }
         ],
@@ -11314,8 +11748,13 @@
         ],
         "TextSublabel": [
           {
+            "file": "src/components/ChartFitControl.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
             "file": "src/components/QuickBooksImport.tsx",
-            "line": 10,
+            "line": 11,
             "kind": "named"
           },
           {
@@ -11444,8 +11883,8 @@
             "kind": "named"
           },
           {
-            "file": "src/components/screens/calibrateOptionEditor.tsx",
-            "line": 15,
+            "file": "src/components/drawDial/Fields.tsx",
+            "line": 13,
             "kind": "named"
           },
           {
@@ -11459,12 +11898,65 @@
             "kind": "named"
           },
           {
+            "file": "src/components/screens/optionEditor/generic.tsx",
+            "line": 21,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/optionEditor/roster.tsx",
+            "line": 17,
+            "kind": "named"
+          },
+          {
             "file": "src/routes/config-forms.tsx",
             "line": 14,
             "kind": "named"
           }
         ],
+        "Threshold": [
+          {
+            "file": "src/components/drawDial/rail.ts",
+            "line": 3,
+            "kind": "type"
+          },
+          {
+            "file": "src/lib/payRailThresholds.ts",
+            "line": 3,
+            "kind": "type"
+          }
+        ],
+        "ThresholdRail": [
+          {
+            "file": "src/components/builder/payRail.tsx",
+            "line": 13,
+            "kind": "named"
+          },
+          {
+            "file": "src/routes/draw-dial.tsx",
+            "line": 42,
+            "kind": "named"
+          }
+        ],
+        "ToastList": [
+          {
+            "file": "src/components/ReducerErrorToasts.tsx",
+            "line": 18,
+            "kind": "named"
+          }
+        ],
+        "ToastRegion": [
+          {
+            "file": "src/components/ReducerErrorToasts.tsx",
+            "line": 18,
+            "kind": "named"
+          }
+        ],
         "Toggle": [
+          {
+            "file": "src/components/ChartFitControl.tsx",
+            "line": 18,
+            "kind": "named"
+          },
           {
             "file": "src/components/YAxisControl.tsx",
             "line": 16,
@@ -11508,7 +12000,12 @@
         "WarningAlert": [
           {
             "file": "src/components/PickErrorBanner.tsx",
-            "line": 17,
+            "line": 24,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/RecomputeErrorBanner.tsx",
+            "line": 20,
             "kind": "named"
           },
           {
@@ -11525,7 +12022,7 @@
           },
           {
             "file": "src/stores/projectionResultsStore.ts",
-            "line": 11,
+            "line": 12,
             "kind": "type"
           }
         ],
@@ -11534,6 +12031,20 @@
             "file": "src/lib/materializedWeekly.ts",
             "line": 11,
             "kind": "type"
+          }
+        ],
+        "XAxis": [
+          {
+            "file": "src/components/drawDial/Cone.tsx",
+            "line": 3,
+            "kind": "named"
+          }
+        ],
+        "YAxis": [
+          {
+            "file": "src/components/drawDial/Cone.tsx",
+            "line": 3,
+            "kind": "named"
           }
         ],
         "advanceSelection": [
@@ -11750,20 +12261,47 @@
             "kind": "css"
           }
         ],
+        "showToast": [
+          {
+            "file": "src/components/ReducerErrorToasts.tsx",
+            "line": 18,
+            "kind": "named"
+          },
+          {
+            "file": "src/components/screens/configureConfigsPane.tsx",
+            "line": 49,
+            "kind": "named"
+          }
+        ],
         "styles.css": [
           {
             "file": "src/components/AppTopBar.tsx",
-            "line": 44,
+            "line": 45,
             "kind": "css"
           },
           {
             "file": "src/components/ChartScreen.tsx",
-            "line": 26,
+            "line": 32,
+            "kind": "css"
+          },
+          {
+            "file": "src/components/ViewSwitcher.tsx",
+            "line": 19,
+            "kind": "css"
+          },
+          {
+            "file": "src/components/screens/builderScreen.tsx",
+            "line": 149,
+            "kind": "css"
+          },
+          {
+            "file": "src/routes/__tests__/suiStylesheetResolves.test.ts",
+            "line": 60,
             "kind": "css"
           },
           {
             "file": "src/routes/calibrate.tsx",
-            "line": 102,
+            "line": 100,
             "kind": "css"
           },
           {
@@ -11773,22 +12311,27 @@
           },
           {
             "file": "src/routes/console.tsx",
-            "line": 46,
+            "line": 49,
             "kind": "css"
           },
           {
             "file": "src/routes/deal.tsx",
-            "line": 44,
+            "line": 47,
+            "kind": "css"
+          },
+          {
+            "file": "src/routes/draw-dial.tsx",
+            "line": 45,
             "kind": "css"
           },
           {
             "file": "src/routes/ledger.tsx",
-            "line": 51,
+            "line": 54,
             "kind": "css"
           },
           {
             "file": "src/routes/settings.tsx",
-            "line": 60,
+            "line": 61,
             "kind": "css"
           },
           {
@@ -11990,7 +12533,8 @@
     "Chart": [
       "amygdala-ui",
       "goose-ui",
-      "rth-repair-portal-frontend"
+      "rth-repair-portal-frontend",
+      "thorcasting-ui"
     ],
     "ChartCanvasLg": [
       "jtf-ui"
@@ -12297,7 +12841,8 @@
     "Grid": [
       "amygdala-ui",
       "goose-ui",
-      "rth-repair-portal-frontend"
+      "rth-repair-portal-frontend",
+      "thorcasting-ui"
     ],
     "GroupBracket": [
       "amygdala-ui"
@@ -12420,7 +12965,8 @@
     "LineSeries": [
       "amygdala-ui",
       "goose-ui",
-      "rth-repair-portal-frontend"
+      "rth-repair-portal-frontend",
+      "thorcasting-ui"
     ],
     "LinkPivotGrid": [
       "amygdala-ui",
@@ -12635,7 +13181,8 @@
     "ReferenceLine": [
       "amygdala-ui",
       "goose-ui",
-      "rth-repair-portal-frontend"
+      "rth-repair-portal-frontend",
+      "thorcasting-ui"
     ],
     "RenderValueFn": [
       "amygdala-ui"
@@ -12742,6 +13289,9 @@
     "SidebarSelectorItem": [
       "jtf-ui"
     ],
+    "Slider": [
+      "thorcasting-ui"
+    ],
     "SmallButton": [
       "dside-ui"
     ],
@@ -12806,6 +13356,9 @@
     ],
     "StarToggle": [
       "rth-repair-portal-frontend"
+    ],
+    "StatTile": [
+      "jtf-ui"
     ],
     "StatusBadge": [
       "migration-dashboard"
@@ -12891,7 +13444,8 @@
       "jtf-ui"
     ],
     "TableSectionHeader": [
-      "goose-ui"
+      "goose-ui",
+      "jtf-ui"
     ],
     "TableStatus": [
       "goose-ui"
@@ -12973,6 +13527,12 @@
       "amygdala-ui",
       "jtf-ui"
     ],
+    "Threshold": [
+      "thorcasting-ui"
+    ],
+    "ThresholdRail": [
+      "thorcasting-ui"
+    ],
     "ThroughputChart": [
       "goose-ui",
       "migration-dashboard"
@@ -13021,12 +13581,14 @@
     "ToastList": [
       "amygdala-ui",
       "dside-ui",
-      "jtf-ui"
+      "jtf-ui",
+      "thorcasting-ui"
     ],
     "ToastRegion": [
       "amygdala-ui",
       "dside-ui",
-      "jtf-ui"
+      "jtf-ui",
+      "thorcasting-ui"
     ],
     "ToastVariant": [
       "amygdala-ui",
@@ -13126,12 +13688,14 @@
     "XAxis": [
       "amygdala-ui",
       "goose-ui",
-      "rth-repair-portal-frontend"
+      "rth-repair-portal-frontend",
+      "thorcasting-ui"
     ],
     "YAxis": [
       "amygdala-ui",
       "goose-ui",
-      "rth-repair-portal-frontend"
+      "rth-repair-portal-frontend",
+      "thorcasting-ui"
     ],
     "advanceSelection": [
       "thorcasting-ui"
@@ -13317,7 +13881,8 @@
     "showToast": [
       "amygdala-ui",
       "dside-ui",
-      "jtf-ui"
+      "jtf-ui",
+      "thorcasting-ui"
     ],
     "slideDown": [
       "dside-ui"

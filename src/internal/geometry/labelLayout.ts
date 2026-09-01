@@ -9,7 +9,7 @@
 //   anchoredSpan  — the horizontal span the box then occupies.
 //   laneOf        — stack boxes that still collide into outward lanes.
 //
-// Lifted out of ThresholdRail, which packed threshold labels along a rail with
+// Lifted out of BandRail, which packed threshold labels along a rail with
 // exactly this ladder. Nothing here knows about thresholds, series or ticks: a
 // "label" is an x, a width and, after anchoring, a span.
 // ============================================

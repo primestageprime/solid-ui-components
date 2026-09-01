@@ -86,9 +86,9 @@ data. Further precedent: `Table/types.ts:23` (`align` per column),
 Locking the zone at variant-definition time would force every label on one
 chart into one zone, which defeats the feature.
 
-### Copy `ThresholdRail.side` for the shape
+### Copy `BandRail.side` for the shape
 
-`ThresholdRail/types.ts:8-9` and `:28-29`:
+`BandRail/types.ts:8-9` and `:28-29`:
 
 ```ts
 /** Which way a threshold's tick points off the rail. */
@@ -99,7 +99,7 @@ side?: ThresholdSide;
 ```
 
 An optional field, a named type, a documented default, resolved by the
-component at `ThresholdRail/helpers.ts:227-245` with `threshold.side ?? "above"`.
+component at `BandRail/helpers.ts:227-245` with `threshold.side ?? "above"`.
 
 Every strong per-item field in this repo carries a doc comment arguing **why**
 the knob is per-item. `labelPlacement` carries one too.
@@ -267,7 +267,7 @@ The scratchpad handoff sends the reader to a mockup HTML file for prior art.
 ("fix(ThresholdRail): keep tick labels clear of the thumb and of each other")
 solved the same problem last release.
 
-`ThresholdRail/helpers.ts` holds all three. `placeThresholds` at `:227-245`
+`BandRail/helpers.ts` holds all three. `placeThresholds` at `:227-245`
 shows them working together — read that first, then the definitions:
 
 ```ts
@@ -285,8 +285,8 @@ anchored. `laneOf` assigns non-overlapping lanes; `placeThresholds` runs it once
 per side.
 
 Lift all three into a shared internal module rather than copying them a third
-time. `laneOf` needs exporting, and `Candidate` is `ThresholdRail`-shaped today
-— generalise it over "a box with an x and a width" as you lift. `ThresholdRail`
+time. `laneOf` needs exporting, and `Candidate` is `BandRail`-shaped today
+— generalise it over "a box with an x and a width" as you lift. `BandRail`
 keeps working through the shared version, and its tests must stay green.
 
 **Do not copy `lanes()` from the mockup.** It tries four lanes and then forces
@@ -481,8 +481,8 @@ version bump publishes itself. **Never tag a release on an unmerged branch** —
 1. Get Peter's confirmation on the four props (§2). Do not start without it.
 2. `CashflowChartMarker.class`. One field, one test.
 3. `CashflowChartMarker.valueCents`. Keep the old path when it is absent.
-4. Lift `fitAnchor` / `anchoredSpan` / `laneOf` out of `ThresholdRail/helpers.ts`
-   into a shared internal module. `ThresholdRail`'s tests stay green.
+4. Lift `fitAnchor` / `anchoredSpan` / `laneOf` out of `BandRail/helpers.ts`
+   into a shared internal module. `BandRail`'s tests stay green.
 5. Write `labelPlacement.ts` + its test. Pure, no DOM, identity scales.
 6. Add `rightGutter` / `xAxisExtraHeight` to `ScrubChartOverrides`. Assert the
    zero-reservation case first (§7.1).
