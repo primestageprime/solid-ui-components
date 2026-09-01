@@ -1,8 +1,10 @@
 # Spec — optional labels on chart lines and markers
 
-Status: **in progress on `feat/chart-line-labels`.** Steps 2, 3, 4 and 6 of §11
-are done and merged. Step 5, the placement module, is next. Peter's prop
-confirmation (§2) is still open and gates the MERGE, not the work.
+Status: **code complete on `feat/chart-line-labels` at `a85fefe`.** Every
+implementation step in §11 is done and merged, and all five gates pass. Two
+things remain, both in §11 step 9: verify against `thorcasting-ui`, and get
+Peter's prop confirmation (§2), which gates the merge to `main`. No version
+bump — the release is one bump covering this and the `BandRail` work.
 Written 2026-08-31. Supersedes the scratchpad handoff of the same date.
 Target: `CashflowScrubChart` and `ScrubChart` in this repo.
 
@@ -565,14 +567,39 @@ Branch `feat/chart-line-labels`. Steps 2, 3, 4 and 6 are DONE and merged.
    `labelBoxes.ts`. 46 tests across the two files.
 6. ~~`rightGutter` / `xAxisExtraHeight` on `ScrubChartOverrides`.~~ DONE —
    `676f0c4`, `a898217`. The zero-reservation regression test is in place.
-7. **NEXT** — add the label layer to `CashflowScrubChart`. Paint it after the
-   primary line; do not borrow an overlay slot (§6). Call `reserveLabelSpace`
-   BEFORE the geometry and feed its output to `rightGutter` and
-   `xAxisExtraHeight`; call `placeLabels` after. Move `CashflowLabelZone` from
-   `labelPlacement.ts` to `types.ts`, or re-export it there — it is public API
-   and it currently sits in the wrong file.
-8. Showcase, `COMPONENTS.md`, CHANGELOG, baselines.
-9. Run all five gates. Verify in `thorcasting-ui`.
+7. ~~Add the label layer to `CashflowScrubChart`.~~ DONE — merged at `a85fefe`.
+   `labelLayer.tsx` holds it. `reserveLabelSpace` runs in a memo over props
+   alone and feeds `rightGutter` and `xAxisExtraHeight`; `placeLabels` runs
+   inside `renderBalanceChart`. The layer paints outside the clip group,
+   because the right and below zones sit outside the plot rectangle.
+   `CashflowLabelZone` now lives in `types.ts` and is re-exported from
+   `labelPlacement.ts`.
+8. ~~Showcase, `COMPONENTS.md`, CHANGELOG.~~ DONE in the same merge. No
+   baseline moved, so `scripts/health-baseline.json` is untouched.
+9. **NEXT AND LAST** — verify in `thorcasting-ui`, which is npm-linked in
+   SOURCE mode and sees these edits without a publish. Then the branch waits on
+   Peter's confirmation (§2) before it merges to `main`.
+
+All five gates pass at `a85fefe`: 321 test files, 3552 tests, typecheck clean,
+build exit 0, health at baseline on every metric, bundle-budget with every
+ceiling tight and `typicalAppKb` unchanged at 31974 B.
+
+### One behaviour worth knowing
+
+A marker joins the ladder only when it names an EXPLICIT zone. An `"auto"`
+`"rule"` marker keeps the top-of-plot caption and the shortened line it always
+had, so no existing chart moves. Give a rule marker an explicit zone and the
+caption joins the ladder and the rule gets its full height back. This departs
+from "`auto` starts at the top of the ladder" for that one marker kind, and it
+is deliberate: the alternative moves every existing rule caption.
+
+### `npm run build` FAILS IN A WORKTREE — not your code
+
+The worktree `node_modules` is empty, and `vite.config.ts` copies
+`katex.min.css` by an absolute path built from the project root. The bundle and
+the declaration files build; only the post-bundle copy fails with
+`ENOENT ... copyfile`. Run `build` and `bundle-budget` in the main checkout, or
+fix the copy to resolve against the package.
 
 Commit at each step. One commit at the end leaves nothing to inspect.
 
