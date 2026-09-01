@@ -336,6 +336,12 @@ export const CashflowScrubChartShowcase: Component = () => {
           label buys none. Its plot is exactly as wide as the first example on
           this page, which carries no labels at all.
         </p>
+        <p class="text-meta">
+          Point at a label in any chart below. The label names one line, and the
+          chart ships no legend, so the hover answers which line. That line
+          keeps its full strength and every other line steps back. Move the
+          pointer off the label to restore all of them.
+        </p>
 
         <CashflowScrubChart
           cells={cells}
