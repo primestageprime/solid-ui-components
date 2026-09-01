@@ -407,3 +407,211 @@ describe("placeLabels — the contract", () => {
     );
   });
 });
+
+// ── The two functions must agree ────────────────────────────────────────────
+// A reservation is a PURCHASE, and the tests below are its receipt. Each one
+// runs `reserveLabelSpace`, builds the frame that answer buys, and then demands
+// that `placeLabels` puts the label in the zone it paid for.
+//
+// Every test above checks ONE function against fixed numbers. That is how the
+// chart came to buy a 59px gutter and then refuse to draw in it: both sides
+// were self-consistent and jointly wrong. These tests fail when the two
+// disagree, whatever the numbers are.
+
+/** The frame's width, before any gutter comes off it. */
+const CHART_WIDTH = 300;
+/** The x-axis height a chart with no below rows already spends. */
+const AXIS_BASE = 22;
+/** The frame's height, ticks included. */
+const CHART_HEIGHT = 200;
+
+/** The plot rect the chart builds from a reservation — the frame it bought. */
+const plotFor = (space: ReservedSpace): PlotRect => ({
+  left: 0,
+  top: 0,
+  right: CHART_WIDTH - space.rightGutter,
+  bottom: CHART_HEIGHT - AXIS_BASE - belowExtraHeight(space.belowRows),
+});
+
+/** Short, ordinary and long — one width per kind of label a caller writes. */
+const AGREEMENT_TEXTS = ["AB", "Runway", "Optimistic", "Pessimistic forecast"];
+
+/** The placed result, or a failure that names the label the ladder threw away. */
+const placedOnly = (result: LabelPlacementResult) => {
+  if (result.kind !== "placed")
+    throw new Error(`${result.id} was dropped, not placed`);
+  return result;
+};
+
+describe("reserveLabelSpace and placeLabels agree — right", () => {
+  for (const text of AGREEMENT_TEXTS) {
+    const width = w(text);
+    const space = reserveLabelSpace([{ width, placement: "right" }]);
+    const plot = plotFor(space);
+    const at = (endY: number) =>
+      placedOnly(
+        byId(
+          placeLabels(
+            [label(text, { placement: "right", width, x: plot.right, endY })],
+            plot,
+            NO_SERIES,
+            space,
+          ),
+          text,
+        ),
+      );
+
+    it(`places "${text}" in the gutter it bought, wherever its line ends`, () => {
+      // `plot.top` is the case the browser found: a series that ends at the
+      // y-domain's maximum ends at the plot's top edge EXACTLY.
+      for (const endY of [plot.top, plot.bottom, (plot.top + plot.bottom) / 2])
+        expect(at(endY).zone).toBe("right");
+    });
+
+    it(`draws "${text}" inside the bought gutter and no wider`, () => {
+      const placed = at(plot.top);
+      expect(placed.x).toBeGreaterThanOrEqual(plot.right);
+      expect(placed.x + width).toBeLessThanOrEqual(
+        plot.right + space.rightGutter,
+      );
+      expect(plot.right + space.rightGutter).toBe(CHART_WIDTH);
+    });
+
+    it(`keeps "${text}" in the plot band whatever y its line ends at`, () => {
+      for (const endY of [plot.top, plot.bottom]) {
+        const placed = at(endY);
+        expect(placed.y - LABEL_ROW_HEIGHT / 2).toBeGreaterThanOrEqual(
+          plot.top,
+        );
+        expect(placed.y + LABEL_ROW_HEIGHT / 2).toBeLessThanOrEqual(
+          plot.bottom,
+        );
+      }
+    });
+  }
+
+  it("spends the gutter exactly — the text ends at the frame's edge", () => {
+    // The equality case. `rightGutter` IS this width plus the gap, so the fit
+    // test compares two numbers that are equal, and an off-by-one there buys a
+    // gutter the ladder then refuses.
+    const width = w("Optimistic");
+    const space = reserveLabelSpace([{ width, placement: "right" }]);
+    expect(space.rightGutter).toBe(width + LABEL_GUTTER_GAP);
+    const plot = plotFor(space);
+    const placed = placedOnly(
+      byId(
+        placeLabels(
+          [label("a", { placement: "right", width, endY: plot.top })],
+          plot,
+          NO_SERIES,
+          space,
+        ),
+        "a",
+      ),
+    );
+    expect(placed.x + width).toBe(CHART_WIDTH);
+  });
+
+  it("stacks a second line that ends at the same edge into lane 2", () => {
+    const width = w("Optimistic");
+    const space = reserveLabelSpace([{ width, placement: "right" }]);
+    const plot = plotFor(space);
+    const results = placeLabels(
+      [
+        label("a", { placement: "right", width, endY: plot.top }),
+        label("b", { placement: "right", width, endY: plot.top }),
+      ],
+      plot,
+      NO_SERIES,
+      space,
+    );
+    const a = placedOnly(byId(results, "a"));
+    const b = placedOnly(byId(results, "b"));
+    expect([a.lane, b.lane]).toEqual([1, 2]);
+    expect(b.y - a.y).toBe(LABEL_ROW_HEIGHT + LABEL_ROW_GAP);
+  });
+});
+
+describe("reserveLabelSpace and placeLabels agree — below", () => {
+  for (const text of AGREEMENT_TEXTS) {
+    it(`places "${text}" in the row it bought`, () => {
+      const width = w(text);
+      const space = reserveLabelSpace([{ width, placement: "below" }]);
+      expect(space.belowRows).toBe(1);
+      const plot = plotFor(space);
+      const placed = placedOnly(
+        byId(
+          placeLabels(
+            [label("a", { placement: "below", width, x: plot.right })],
+            plot,
+            NO_SERIES,
+            space,
+          ),
+          "a",
+        ),
+      );
+      expect(placed.zone).toBe("below");
+      // The row sits under the plot, inside the height the reservation added
+      // to the x-axis.
+      expect(placed.y).toBeGreaterThan(plot.bottom);
+      expect(placed.y).toBeLessThanOrEqual(
+        plot.bottom + AXIS_BASE + belowExtraHeight(space.belowRows),
+      );
+    });
+  }
+
+  it("gives both labels a bought row when two ask for one", () => {
+    const space = reserveLabelSpace([
+      { width: w("Optimistic"), placement: "below" },
+      { width: w("Pessimistic"), placement: "below" },
+    ]);
+    expect(space.belowRows).toBe(2);
+    const plot = plotFor(space);
+    const results = placeLabels(
+      [
+        label("a", { placement: "below", x: 100 }),
+        label("b", { placement: "below", x: 102 }),
+      ],
+      plot,
+      NO_SERIES,
+      space,
+    );
+    expect(zoneOf(results, "a")).toBe("below");
+    expect(zoneOf(results, "b")).toBe("below");
+  });
+});
+
+describe("the showcase's Labelled lines example", () => {
+  it("draws BOTH labels — one in the gutter, one in the row", () => {
+    const space = reserveLabelSpace([
+      { width: w("Optimistic"), placement: "right" },
+      { width: w("Pessimistic"), placement: "below" },
+    ]);
+    const plot = plotFor(space);
+    const results = placeLabels(
+      [
+        // The optimistic line is the y-domain's maximum, so it ends at
+        // `plot.top` EXACTLY. The pessimistic line is the minimum.
+        label("optimistic", {
+          placement: "right",
+          width: w("Optimistic"),
+          x: plot.right,
+          y: plot.top,
+          endY: plot.top,
+        }),
+        label("pessimistic", {
+          placement: "below",
+          width: w("Pessimistic"),
+          x: plot.right,
+          y: plot.bottom,
+          endY: plot.bottom,
+        }),
+      ],
+      plot,
+      NO_SERIES,
+      space,
+    );
+    expect(zoneOf(results, "optimistic")).toBe("right");
+    expect(zoneOf(results, "pessimistic")).toBe("below");
+  });
+});
