@@ -4,8 +4,12 @@
 // Three jobs, all of them the reason a consumer cannot compose this rail from
 // a slider plus a separate axis:
 //   fitAnchor  — pick start/middle/end so a label stays inside the box.
-//   assignLanes — stack colliding labels outward from the rail.
+//   laneOf     — stack colliding labels outward from the rail.
 //   railExtents — size the viewBox around however many lanes got used.
+//
+// The first two are not written here. They are generic label geometry, so they
+// live in `internal/geometry/labelLayout` and a chart label layer uses the same
+// code. This file supplies the rail's own constants to them.
 //
 // Text is MEASURED BY ESTIMATE, not by getBBox. The design spec asks for
 // getBBox in a real implementation, but jsdom implements no SVG layout, so
@@ -13,7 +17,12 @@
 // generous estimate is used instead: ~6.0px per monospace character at 10px.
 // An earlier 5.0px estimate let through collisions that were plainly visible.
 // ============================================
-import { map, sortBy } from "../../fn";
+import { map } from "../../fn";
+import {
+  anchoredSpan,
+  fitAnchor,
+  laneOf,
+} from "../../internal/geometry/labelLayout";
 import type {
   LabelAnchor,
   LaneGeometry,
@@ -61,32 +70,10 @@ export const estimateTextWidth = (text: string): number =>
   text.length * CHAR_WIDTH;
 
 /**
- * Pick the anchor that keeps a label of `width` centred at `x` inside
- * `[lo, hi]`. Middle wherever it fits; start when it would spill left; end
- * when it would spill right.
+ * Re-exported from `internal/geometry/labelLayout`, where the rail's anchor
+ * rule now lives. The rail's tests and its component read them from here.
  */
-export const fitAnchor = (
-  x: number,
-  width: number,
-  lo: number,
-  hi: number,
-): LabelAnchor => {
-  const half = width / 2;
-  if (x - half < lo) return "start";
-  if (x + half > hi) return "end";
-  return "middle";
-};
-
-/** The horizontal span a label occupies once its anchor is known. */
-export const anchoredSpan = (
-  x: number,
-  width: number,
-  anchor: LabelAnchor,
-): readonly [number, number] => {
-  if (anchor === "start") return [x, x + width];
-  if (anchor === "end") return [x - width, x];
-  return [x - width / 2, x + width / 2];
-};
+export { anchoredSpan, fitAnchor };
 
 /** How far the tick stroke of `lane` reaches out from the rail. */
 const tickReach = (lane: number): number =>
@@ -168,36 +155,6 @@ interface Candidate {
 }
 
 /**
- * Give each candidate the lane nearest the rail that its label fits in
- * without touching one already placed there.
- *
- * Candidates are walked left to right, so a lane's occupied span is only ever
- * its rightmost label — no interval tree needed. Past `MAX_LANES` the label
- * shares the outermost lane and is allowed to collide, which the spec prefers
- * to a label leaving the box.
- */
-const laneOf = (
-  candidates: readonly Candidate[],
-): readonly (Candidate & { lane: number })[] => {
-  const lastEnd: number[] = [];
-  const out: (Candidate & { lane: number })[] = [];
-  for (const candidate of sortBy((c: Candidate) => c.x, candidates)) {
-    let lane = 1;
-    while (
-      lane <= MAX_LANES &&
-      lastEnd[lane] !== undefined &&
-      candidate.span[0] < lastEnd[lane] + LABEL_GUTTER
-    ) {
-      lane += 1;
-    }
-    const placed = Math.min(lane, MAX_LANES);
-    lastEnd[placed] = candidate.span[1];
-    out.push({ ...candidate, lane: placed });
-  }
-  return out;
-};
-
-/**
  * Place every threshold: project it onto the rail, fit its anchor, then stack
  * the two sides into lanes independently.
  *
@@ -242,8 +199,9 @@ export const placeThresholds = (
     return out;
   };
 
-  const above = laneOf(onSide("above"));
-  const below = laneOf(onSide("below"));
+  const packing = { maxLanes: MAX_LANES, gutter: LABEL_GUTTER };
+  const above = laneOf(onSide("above"), packing);
+  const below = laneOf(onSide("below"), packing);
 
   const maxLane = (rows: readonly { lane: number }[]): number => {
     let max = 0;
