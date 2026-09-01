@@ -858,6 +858,13 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   const renderHover = (
     ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
   ) => {
+    // A pointer resting on a label reads the LABEL, not a day, so the readout
+    // stays away. This check and ScrubChart's plot-span check cover different
+    // zones. ScrubChart drops the hover index for a pointer past `plotRight`,
+    // which covers a "right" zone label in the gutter. A "below" zone label
+    // sits under the x-axis and INSIDE the plot's horizontal span, so only
+    // this check covers it.
+    if (hoveredLabel() !== null) return null;
     const idx = ctx.hoverIndex;
     if (idx == null || ctx.cells.length === 0 || !ctx.yToPlot) return null;
     const yToPlot = ctx.yToPlot;

@@ -1451,4 +1451,42 @@ describe("CashflowScrubChart gridlines", () => {
       true,
     );
   });
+
+  it("suppresses the hover readout while the pointer rests on a label", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        scrub={false}
+        hover
+        renderHoverTooltip={(_cell, index) => (
+          <div data-testid="label-tt">idx {index}</div>
+        )}
+        balanceSeries={[
+          {
+            id: "upside",
+            label: "Up",
+            class: "up-line",
+            balanceCents: stoppingAt(6, 60_000),
+          },
+        ]}
+      />
+    ));
+    // A pointer over the plot draws the readout.
+    pointer(container.querySelector(".sui-scrub-chart__frame") as Element).move(
+      {
+        clientX: 200,
+        clientY: 30,
+      },
+    );
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__hover-rule"),
+    ).toBeTruthy();
+    expect(container.querySelector("[data-testid=label-tt]")).toBeTruthy();
+    // A pointer on a label reads the label, not the day. The readout goes.
+    hover(labelGroup(container, "Up"), "pointerenter");
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__hover-rule"),
+    ).toBeNull();
+    expect(container.querySelector("[data-testid=label-tt]")).toBeNull();
+  });
 });
