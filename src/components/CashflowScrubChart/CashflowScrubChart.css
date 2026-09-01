@@ -177,8 +177,8 @@
 
 /* ── Line + marker labels (the label ladder) ──────────────────────── */
 /* Drawn after the primary line, so document order paints them on top.
-   The layer never takes a pointer event — the scrub gestures own the
-   chart surface. */
+   The group takes no pointer event — the scrub gestures own the chart
+   surface. Each label re-enables itself; see the label-hover section. */
 .sui-cashflow-scrub-chart__labels {
   pointer-events: none;
 }
@@ -301,4 +301,62 @@
   font-family: var(--sui-font-family, inherit);
   pointer-events: none;
   z-index: 2;
+}
+
+/* ── Label hover → line emphasis ──────────────────────────────────── */
+/* A label names one line, and the chart ships no legend, so pointing at a
+   label is the only way to read the pairing. The named line keeps full
+   strength; every other drawn line steps back. Muting is opacity ALONE, so a
+   consumer's own series colour still reads through it. */
+
+.sui-cashflow-scrub-chart__label-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The `__labels` group is pointer-transparent; each label re-enables itself,
+   so the scrub gestures keep the rest of the chart surface. */
+.sui-cashflow-scrub-chart__label-group {
+  pointer-events: all;
+  cursor: default;
+}
+
+.sui-cashflow-scrub-chart__label-hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.sui-cashflow-scrub-chart__line,
+.sui-cashflow-scrub-chart__band,
+.sui-cashflow-scrub-chart__marker,
+.sui-cashflow-scrub-chart__label {
+  transition:
+    opacity 120ms ease,
+    stroke-width 120ms ease;
+}
+
+/* Doubled class: a consumer's own series class sets stroke and width at the
+   same specificity, and source order alone would not settle it. */
+.sui-cashflow-scrub-chart__line.sui-cashflow-scrub-chart__line--muted,
+.sui-cashflow-scrub-chart__band.sui-cashflow-scrub-chart__band--muted,
+.sui-cashflow-scrub-chart__label.sui-cashflow-scrub-chart__label--muted,
+.sui-cashflow-scrub-chart__marker--muted {
+  opacity: 0.18;
+}
+
+.sui-cashflow-scrub-chart__line.sui-cashflow-scrub-chart__line--highlighted {
+  stroke-width: 3;
+}
+
+.sui-cashflow-scrub-chart__label.sui-cashflow-scrub-chart__label--highlighted {
+  fill: var(--sui-text, #fff);
+}
+
+.sui-cashflow-scrub-chart__marker--highlighted
+  .sui-cashflow-scrub-chart__marker-line,
+.sui-cashflow-scrub-chart__marker--highlighted
+  .sui-cashflow-scrub-chart__rule-line {
+  opacity: 1;
+  stroke-width: 2;
 }
