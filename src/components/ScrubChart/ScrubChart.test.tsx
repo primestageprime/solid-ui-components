@@ -298,3 +298,71 @@ describe("ScrubChart hover plumbing", () => {
     expect(container.querySelector(".sui-scrub-chart__hover-layer")).toBeNull();
   });
 });
+
+describe("ScrubChart gridlines", () => {
+  const cells10 = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-10"));
+
+  const gridChart = (extra: { showGridlines?: boolean }) =>
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        yDomain={[0, 100]}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+        {...extra}
+      />
+    ));
+
+  it("draws no grid layer by default", () => {
+    const { container } = gridChart({});
+    expect(container.querySelector(".sui-scrub-chart__grid")).toBeNull();
+    expect(container.querySelector(".sui-scrub-chart__grid-line")).toBeNull();
+    // The 4px axis stubs are untouched — an opt-out consumer sees no change.
+    expect(
+      container.querySelectorAll(".sui-scrub-chart__tick").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("draws one rule per y-axis tick when opted in", () => {
+    const { container } = gridChart({ showGridlines: true });
+    const lines = container.querySelectorAll(".sui-scrub-chart__grid-line");
+    const labels = container.querySelectorAll(".sui-scrub-chart__label--y");
+    expect(lines.length).toBeGreaterThan(0);
+    // Same tick source as the axis labels, so a rule never sits label-less.
+    expect(lines.length).toBe(labels.length);
+  });
+
+  it("spans the plot region and shares each label's y", () => {
+    const { container } = gridChart({ showGridlines: true });
+    const stubs = Array.from(
+      container.querySelectorAll(".sui-scrub-chart__tick"),
+    );
+    const lines = Array.from(
+      container.querySelectorAll(".sui-scrub-chart__grid-line"),
+    );
+    lines.forEach((line, i) => {
+      // A stub ends AT plotLeft; the rule starts there and runs to plotRight
+      // (chartWidth is the seeded 1200 — see PLOT_RECT's note).
+      const plotLeft = Number(stubs[i].getAttribute("x2"));
+      expect(Number(line.getAttribute("x1"))).toBeCloseTo(plotLeft, 3);
+      expect(Number(line.getAttribute("x2"))).toBeCloseTo(1200, 3);
+      // Horizontal, and level with the label it belongs to.
+      expect(line.getAttribute("y1")).toBe(line.getAttribute("y2"));
+      expect(line.getAttribute("y1")).toBe(stubs[i].getAttribute("y1"));
+    });
+  });
+
+  it("draws nothing without a y-domain, even when opted in", () => {
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        showGridlines
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(container.querySelector(".sui-scrub-chart__grid")).toBeNull();
+  });
+});

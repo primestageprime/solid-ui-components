@@ -694,3 +694,56 @@ describe("CashflowScrubChart lineClass", () => {
     );
   });
 });
+
+describe("CashflowScrubChart gridlines", () => {
+  it("draws no gridlines by default", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+      />
+    ));
+    expect(container.querySelector(".sui-scrub-chart__grid-line")).toBeNull();
+  });
+
+  it("forwards showGridlines to the inner ScrubChart", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        showGridlines
+      />
+    ));
+    const lines = container.querySelectorAll(".sui-scrub-chart__grid-line");
+    const labels = container.querySelectorAll(".sui-scrub-chart__label--y");
+    expect(lines.length).toBeGreaterThan(0);
+    expect(lines.length).toBe(labels.length);
+    // Undashed — every short dash pattern here already means another line.
+    for (const line of lines) {
+      expect(line.getAttribute("stroke-dasharray")).toBeNull();
+    }
+  });
+
+  it("paints the gridlines beneath the balance line", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        showGridlines
+      />
+    ));
+    const frame = container.querySelector(".sui-scrub-chart__frame")!;
+    const nodes = Array.from(frame.children);
+    const grid = nodes.findIndex((n) =>
+      n.classList.contains("sui-scrub-chart__grid"),
+    );
+    const series = nodes.findIndex((n) =>
+      n.querySelector(".sui-cashflow-scrub-chart__line"),
+    );
+    expect(grid).toBeGreaterThanOrEqual(0);
+    expect(series).toBeGreaterThan(grid);
+  });
+});

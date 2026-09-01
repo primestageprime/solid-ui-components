@@ -138,6 +138,16 @@ export interface ScrubChartProps<C extends Cell> {
   /** Approximate number of y-axis ticks. Default 5. d3-scale picks the
    *  nearest "nice" count. */
   yTickCount?: number;
+  /**
+   * Draw a horizontal gridline across the plot at every y-axis tick — the
+   * same rules `Chart`'s `Grid` slot draws for the low-level chart kit
+   * (solid `--sui-border`, 1px, never dashed). OPT-IN: default `false`, so
+   * no existing chart gains chrome it did not ask for. The rules use the
+   * SAME tick set as the y-axis labels, so a line never sits where no label
+   * is, and they render BENEATH the `renderChart` series. Horizontal only —
+   * there is no x-tick counterpart yet. No effect unless `yDomain` is set.
+   */
+  showGridlines?: boolean;
   /** Distance in px from the container's left edge to the y-axis line.
    *  Defaults to the narrowest width that fits the longest formatted label
    *  (computed via canvas text measurement, with an 8px gap to the axis

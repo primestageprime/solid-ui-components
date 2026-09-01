@@ -621,6 +621,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       chartHeight={chartHeight()}
       cellWidth={cellWidth()}
       yDomain={yDomain()}
+      showGridlines={props.showGridlines}
       formatYLabel={fmtAxisDollars}
       xTickCadence="auto"
       renderCell={renderCashflowCell}

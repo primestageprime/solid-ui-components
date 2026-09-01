@@ -200,6 +200,22 @@ export interface CashflowScrubChartProps {
    */
   stripAccentDashed?: boolean;
   /**
+   * Draw a dim horizontal gridline across the plot at every y-axis tick — the
+   * same rules the low-level `Chart` kit draws through its `Grid` slot (solid
+   * `--sui-border`, 1px, never dashed). Forwarded to the inner ScrubChart.
+   * OPT-IN, default `false`: no existing chart gains chrome it did not ask
+   * for. The rules use the SAME tick set as the y-axis labels, so a line
+   * never sits where no label is, and they paint BENEATH the balance line,
+   * the overlay series and the deviation bands.
+   *
+   * Undashed on purpose. Every short dash pattern on this chart is already
+   * claimed by another line type — the zero line, the runway floor, a
+   * comparison scenario, a ghost preview, a marker rule, the selected day,
+   * the Today rule, the current-balance rule — so a dashed gridline would
+   * read as one of them.
+   */
+  showGridlines?: boolean;
+  /**
    * Enable the passive hover readout — a transient vertical crosshair at the
    * hovered day, a hollow dot on every line, and (with `renderHoverTooltip`)
    * a positioned tooltip card. Coexists with the persistent scrub selection.

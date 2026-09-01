@@ -44,6 +44,28 @@
   cursor: grabbing;
 }
 
+/* Horizontal gridlines — opt-in (`showGridlines`) rules at each y-axis tick.
+   Own layer, positioned BENEATH the consumer's renderChart content so the
+   data paints over the chrome. Mirrors Chart/Grid.tsx's
+   `.sui-chart__grid-line`. UNDASHED on purpose: every short dash pattern on
+   a cashflow chart is already claimed by another line type (zero line,
+   runway floor, comparison, ghost preview, marker, selected day, Today rule,
+   current balance, option draft), so a dashed rule would read as one of them. */
+.sui-scrub-chart__grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sui-scrub-chart__grid-line {
+  stroke: var(--sui-border, rgba(255, 255, 255, 0.18));
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+  pointer-events: none;
+}
+
 /* Axis chrome — y-axis labels on the left + x-axis ticks at the bottom. */
 .sui-scrub-chart__axes {
   position: absolute;

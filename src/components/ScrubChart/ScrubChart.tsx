@@ -40,7 +40,7 @@ import { insetSpan } from "../../internal/geometry/insetSpan";
 import { clamp } from "../../internal/math/clamp";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import { DateAxis, type Cell } from "../DateAxis";
-import { ScrubChartAxes } from "./ScrubChartAxes";
+import { ScrubChartAxes, ScrubChartGrid } from "./ScrubChartAxes";
 import {
   CADENCE_LADDER,
   DEFAULT_CELL_WIDTH,
@@ -430,6 +430,20 @@ export const ScrubChart = <C extends Cell>(
         onPointerMove={handleHoverMove}
         onPointerLeave={handleHoverLeave}
       >
+        {/* Gridlines — opt-in horizontal rules at the y-axis ticks. Drawn
+            BEFORE the series so the data paints over the chrome, unlike the
+            axes below (drawn after so the labels stay legible). */}
+        <Show
+          when={props.showGridlines && chartWidth() > 0 && yScale() != null}
+        >
+          <ScrubChartGrid
+            chartWidth={chartWidth}
+            chartHeight={chartHeight}
+            plotLeft={plotLeft}
+            plotRight={plotRight}
+            yTicks={yTicks}
+          />
+        </Show>
         <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
         {/* Axis chrome — drawn after the chart so labels sit on top of any
             line bleed but the lines themselves can still be clipped to the
