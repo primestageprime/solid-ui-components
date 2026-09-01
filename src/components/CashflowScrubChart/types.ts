@@ -215,6 +215,19 @@ export interface CashflowScrubChartProps {
    */
   yMax?: number | null;
   /**
+   * Optional fixed lower y-bound, in **cents**, mirroring `yMax`. When
+   * provided (non-null), the lower bound is pinned to it instead of being
+   * auto-derived from the data (the default: `min(0, …balance values)`, so
+   * the zero-line stays visible but its PIXEL position drifts between
+   * renders as the data's most-negative value changes — two scenarios with
+   * different depths of "how bankrupt" render the zero-line at different
+   * heights, which makes them uncomparable at a glance). Set this when the
+   * caller wants zero pinned at a fixed position across renders instead.
+   * Ignored when `yPadFraction` is set (tight-domain mode wins, same as
+   * `yMax`'s own interaction with it).
+   */
+  yMin?: number | null;
+  /**
    * Opt into a TIGHT y-domain that frames the visible line(s) instead of being
    * anchored to zero. When set (e.g. `0.1`), the domain becomes
    * `[min − pad, max + pad]` where `pad = fraction × (max − min)` over the drawn

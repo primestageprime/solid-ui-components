@@ -113,7 +113,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   const yDomain = createMemo<[number, number]>(() => {
     const manualMax = props.yMax;
     const hasManualMax = manualMax != null;
-    if (props.cells.length === 0) return [0, hasManualMax ? manualMax : 1];
+    const manualMin = props.yMin;
+    const hasManualMin = manualMin != null;
+    if (props.cells.length === 0) return [hasManualMin ? manualMin : 0, hasManualMax ? manualMax : 1];
     const series = props.balanceSeries ?? [];
     // Domain keys off the LINE (balanceLineCells when decoupled) plus the
     // overlay series — NOT the ribbon `cells` — so the y-scale fits the drawn
@@ -140,7 +142,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     }
     // Zero-floored min/max in one pass via extentOf (not Math.min/max(...spread),
     // which would blow the argument limit on a long range).
-    const [lo, autoHi] = extentOf([0, ...values]);
+    const [autoLo, autoHi] = extentOf([0, ...values]);
+    const lo = hasManualMin ? manualMin : autoLo;
     const hi = hasManualMax ? manualMax : autoHi;
     return [lo, hi];
   });

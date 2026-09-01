@@ -25,6 +25,7 @@ import {
   // columns
   CenteredColumn,
   SmallTightStack,
+  SpacedStack,
   ConversationStack,
   PaddedStack,
   GrowColumn,
@@ -101,6 +102,7 @@ const ROWS: VariantSpec[] = [
 const COLUMNS: VariantSpec[] = [
   { name: "CenteredColumn", note: "children centred on the cross axis — a stat cell", Variant: CenteredColumn },
   { name: "SmallTightStack", note: "dense start-aligned column for indicator rows", Variant: SmallTightStack },
+  { name: "SpacedStack", note: "a plain column at the md (12px) gap step, one rung up from NarrowStack", Variant: SpacedStack },
   { name: "ConversationStack", note: "capped reading width for a message tree", Variant: ConversationStack },
   { name: "PaddedStack", note: "a stack with its own inset", Variant: PaddedStack },
   { name: "GrowColumn", note: "takes its share of a row and may shrink past its content", Variant: GrowColumn },
