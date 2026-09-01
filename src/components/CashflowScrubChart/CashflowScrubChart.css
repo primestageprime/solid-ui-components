@@ -367,14 +367,14 @@
   opacity: 1;
 }
 
-/* A highlighted band comes back to full strength the same way. A band is a
-   FILL, so the dimming property is `fill-opacity` — a range cone states
-   `fill-opacity: 0.12` — and `opacity` again defeats a class that fades the
-   whole polygon. */
-.sui-cashflow-scrub-chart__band.sui-cashflow-scrub-chart__band--highlighted {
-  fill-opacity: 1;
-  opacity: 1;
-}
+/* A highlighted BAND takes no rule at all, and that is the difference between
+   a band and a line. The line is the SUBJECT of the highlight: the reader
+   points at a label to ask which line it names, so the line must come forward
+   and the rule above restores its full strength. The band is CONTEXT around
+   that line. It only has to escape the muting rule, which the modifier already
+   does by not matching. A rule here that forced `fill-opacity: 1` painted a
+   range cone — which states `fill-opacity: 0.12` — as a solid slab across the
+   whole plot. The modifier stays on the element so a consumer can hook it. */
 
 /* The highlighted label sets NO fill. A label already carries the colour of
    the line it names, written as a `fill` attribute, and a rule here would

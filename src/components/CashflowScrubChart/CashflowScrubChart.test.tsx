@@ -1356,7 +1356,11 @@ describe("CashflowScrubChart gridlines", () => {
 
   it("draws NO primary label, and no emphasis, without `lineLabel`", () => {
     const { container } = render(() => (
-      <CashflowScrubChart cells={makeCells(16)} selected={3} onScrub={() => {}} />
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+      />
     ));
     // No label reaches the ladder, so the layer never draws.
     expect(
@@ -1388,7 +1392,7 @@ describe("CashflowScrubChart gridlines", () => {
   // pass whatever the CSS says. Reading the rule is the honest gate — the same
   // method `BucketQueue/styling.test.ts` uses.
 
-  it("restores full strength on the highlighted line and band", () => {
+  it("restores full strength on the highlighted line", () => {
     const css = readFileSync(
       join(dirname(fileURLToPath(import.meta.url)), "./CashflowScrubChart.css"),
       "utf8",
@@ -1403,11 +1407,48 @@ describe("CashflowScrubChart gridlines", () => {
     expect(line).toContain("stroke-width: 3");
     expect(line).toContain("stroke-opacity: 1");
     expect(line).toContain("opacity: 1");
-    const band = body(
-      ".sui-cashflow-scrub-chart__band.sui-cashflow-scrub-chart__band--highlighted {",
+  });
+
+  it("gives a highlighted band no rule, so it looks exactly as it does at rest", () => {
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "./CashflowScrubChart.css"),
+      "utf8",
     );
-    // A band is a fill, so the consumer dims it with `fill-opacity`.
-    expect(band).toContain("fill-opacity: 1");
-    expect(band).toContain("opacity: 1");
+    // The band is context around the highlighted line, not the subject of the
+    // highlight. It only has to escape the muting rule. A rule that forced
+    // `fill-opacity: 1` painted a range cone as a solid slab over the plot.
+    expect(/__band--highlighted\s*\{/.test(css)).toBe(false);
+    // The muting rule still names the band, so the modifier keeps its job.
+    expect(css).toContain("sui-cashflow-scrub-chart__band--muted");
+  });
+
+  it("marks the hovered series' band highlighted without restyling it", () => {
+    paint(PAINT_LINES);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        scrub={false}
+        balanceSeries={[
+          {
+            id: "upside",
+            label: "Up",
+            class: "up-line",
+            balanceCents: (c: CashflowCell) => c.balanceCents + 60_000,
+            fill: {},
+          },
+        ]}
+      />
+    ));
+    hover(labelGroup(container, "Up"), "pointerenter");
+    const band = container.querySelector(
+      ".sui-cashflow-scrub-chart__band",
+    ) as Element;
+    expect(
+      band.classList.contains("sui-cashflow-scrub-chart__band--highlighted"),
+    ).toBe(true);
+    // The band keeps its resting classes, so the resting rule still paints it.
+    expect(band.classList.contains("sui-cashflow-scrub-chart__band")).toBe(
+      true,
+    );
   });
 });
