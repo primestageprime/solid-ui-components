@@ -353,9 +353,18 @@ Every thumb constant scales by 1.5:
 
 **Height cost.** `labelBase("above")` rises from 15 to 22, pushing every
 above-side label out by 7. `labelBase("below")` rises from `max(10, 9) = 10` to
-`max(10, 14) = 14`, pushing below-side labels out by 4. The box grows by 11
-units against a 700-unit width. Cheap, and it applies whether or not any band
-is passed.
+`max(10, 14) = 14`, pushing below-side labels out by 4.
+
+The total is **not** a flat number, because `sideExtent` reads the raw thumb
+reach when a side has no lanes and the floored `labelBase` when it has one:
+
+| case | above | below | total |
+|---|---|---|---|
+| no lanes either side | +7 | +5 | +12 |
+| one or more lanes below | +7 | +4 | +11 |
+
+Against a 700-unit width, either way. Cheap, and it applies whether or not any
+band is passed.
 
 ## Keyboard
 
@@ -509,8 +518,8 @@ Behaviour tests, written first, red then green:
     `value`.
 19. The host takes `--dragging` on pointer down and drops it on pointer up and
     on pointer cancel.
-20. `railExtents` grows by 11 units against today's output for the same input,
-    from the enlarged thumb alone, with no bands passed.
+20. From the enlarged thumb alone, with no bands passed, `railExtents` grows by
+    12 units for a bare rail and by 11 once a side carries a lane.
 
 ## Out of scope
 

@@ -22,6 +22,7 @@
 import {
   type Component,
   createMemo,
+  createSignal,
   Index,
   type JSX,
   mergeProps,
@@ -33,11 +34,17 @@ import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapt
 import type { Tone } from "../../types";
 import "./BandRail.css";
 import {
+  ARROW_HALF_WIDTH,
+  ARROW_TIP_GAP,
+  ARROW_TOP,
+  DOT_RADIUS,
   laneGeometry,
   nestedThreshold,
   placeThresholds,
   RAIL_INSET,
   railExtents,
+  RING_RADIUS,
+  STEM_HALF_WIDTH,
   VIEW_WIDTH,
 } from "./helpers";
 import type { PlacedThreshold, Threshold } from "./types";
@@ -45,14 +52,6 @@ import type { PlacedThreshold, Threshold } from "./types";
 /** Fraction of the domain one arrow key covers. Shift multiplies it by 10. */
 const KEY_STEPS = 100;
 const SHIFT_MULTIPLIER = 10;
-
-/** Thumb arrow geometry, in viewBox units, measured from the rail. */
-const ARROW_HALF_WIDTH = 5;
-const ARROW_TIP_GAP = 6;
-const ARROW_TOP = 15;
-const STEM_HALF_WIDTH = 1.2;
-const RING_RADIUS = 8.5;
-const DOT_RADIUS = 3.5;
 
 export interface BandRailProps
   extends Omit<
@@ -107,7 +106,9 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
 
   let hostEl: HTMLDivElement | undefined;
   let svgEl: SVGSVGElement | undefined;
-  let dragging = false;
+  // A signal, not a plain `let`: the host reads it to swap `grab` for
+  // `grabbing`, which is the only reactivity the affordance work adds.
+  const [dragging, setDragging] = createSignal(false);
 
   const scale = createMemo(() =>
     linearScale(local.domain, [RAIL_INSET, VIEW_WIDTH - RAIL_INSET]),
@@ -162,18 +163,18 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
 
   const onPointerDown = (e: PointerEvent): void => {
     if (local.disabled || e.button !== 0) return;
-    dragging = true;
+    setDragging(true);
     safeSetPointerCapture(e.currentTarget as Element, e.pointerId);
     hostEl?.focus();
     track(e.clientX);
   };
 
   const onPointerMove = (e: PointerEvent): void => {
-    if (dragging) track(e.clientX);
+    if (dragging()) track(e.clientX);
   };
 
   const endDrag = (): void => {
-    dragging = false;
+    setDragging(false);
   };
 
   /** The next threshold strictly past `from`, walking in `direction`. */
@@ -224,8 +225,8 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
 
   const classes = () =>
     `sui-band-rail${local.disabled ? " sui-band-rail--disabled" : ""}${
-      local.class ? ` ${local.class}` : ""
-    }`;
+      dragging() ? " sui-band-rail--dragging" : ""
+    }${local.class ? ` ${local.class}` : ""}`;
 
   return (
     // The slider lives on the host, not on the <svg>. Two reasons: an <svg> is
@@ -260,6 +261,18 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
         viewBox={`0 0 ${VIEW_WIDTH} ${extents().height}`}
         aria-hidden="true"
       >
+        {/* The fill is drawn first so the rail's own stroke sits on top of it.
+            It encodes the VALUE, not an answer — one neutral tone that cannot
+            be read as a band's tone. Every slider has one, and it is the
+            strongest single cue that this rail is a control. */}
+        <line
+          class="sui-band-rail__fill"
+          x1={RAIL_INSET}
+          x2={thumbX()}
+          y1={railY()}
+          y2={railY()}
+        />
+
         <line
           class="sui-band-rail__line"
           x1={RAIL_INSET}

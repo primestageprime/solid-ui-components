@@ -7,7 +7,14 @@
   width: 100%;
   touch-action: none;
   user-select: none;
-  cursor: pointer;
+  /* `grab`, not `pointer`. The whole host is the drag target — `onPointerDown`
+     sits on it and a click anywhere moves the thumb — so the cursor should say
+     "take hold of this", which `pointer` does not. Borrowed from Slider.css. */
+  cursor: grab;
+}
+
+.sui-band-rail--dragging {
+  cursor: grabbing;
 }
 
 .sui-band-rail__canvas {
@@ -22,7 +29,7 @@
 }
 
 .sui-band-rail--disabled {
-  cursor: default;
+  cursor: not-allowed;
   opacity: 0.55;
 }
 
@@ -31,6 +38,17 @@
 .sui-band-rail__line {
   stroke: var(--sui-border);
   stroke-width: 2;
+}
+
+/* The value fill, from the rail's left end to the thumb.
+   ONE neutral tone, deliberately: this encodes the value, not an answer, so it
+   must never be mistaken for a threshold's or a band's tone. That is also why
+   it is the accent at low alpha rather than a tone variable — no theme colour
+   here carries semantic weight. */
+.sui-band-rail__fill {
+  stroke: rgba(var(--sui-accent-rgb), 0.35);
+  stroke-width: 4;
+  stroke-linecap: round;
 }
 
 /* ---- Ticks and their two text lines ----
@@ -81,6 +99,20 @@
 .sui-band-rail__thumb {
   fill: var(--sui-accent);
   stroke: none;
+  transition: filter 120ms ease;
+}
+
+/* Hover and active live on the HOST, not on the thumb group. The host is what
+   takes the pointer, so a reader whose cursor is anywhere on the rail is about
+   to move the thumb and the thumb should say so. Hanging these off
+   `.sui-band-rail__thumb:hover` would only light up on a direct hit, which is
+   not how this control is grabbed. */
+.sui-band-rail:hover:not(.sui-band-rail--disabled) .sui-band-rail__thumb {
+  filter: drop-shadow(0 0 3px rgba(var(--sui-accent-rgb), 0.55));
+}
+
+.sui-band-rail--dragging:not(.sui-band-rail--disabled) .sui-band-rail__thumb {
+  filter: drop-shadow(0 0 5px rgba(var(--sui-accent-rgb), 0.75));
 }
 
 .sui-band-rail__ring {

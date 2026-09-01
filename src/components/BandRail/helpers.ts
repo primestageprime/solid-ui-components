@@ -47,9 +47,45 @@ export const NAME_GAP_ABOVE = 4;
 export const NAME_GAP_BELOW = 11;
 /** Headroom kept past the outermost text baseline. */
 export const TEXT_PAD = 14;
-/** How far the thumb reaches on each side of the rail. */
-export const THUMB_REACH_ABOVE = 15;
-export const THUMB_REACH_BELOW = 9;
+/* ---- Thumb geometry, in viewBox units ----
+   These live here, not in the component, because `labelBase` is floored at the
+   thumb's reach. Held apart, the arrow's height and the floor that clears it
+   were the same number written twice with nothing tying them together.
+
+   Sized in viewBox units on purpose, NOT from a CSS pixel token.
+   `valueFromClientX` needs the viewBox to keep its aspect ratio, and a
+   pixel-sized thumb would make the reach a function of the rendered width — so
+   the box height would move on resize and that conversion would break. The
+   thumb shrinks at narrow widths because the whole drawing does, labels
+   included; the rail is a fixed-aspect drawing meant to be read near 700 wide. */
+
+/** Thumb arrow, measured from the rail. */
+export const ARROW_HALF_WIDTH = 7.5;
+export const ARROW_TIP_GAP = 9;
+export const ARROW_TOP = 22;
+export const STEM_HALF_WIDTH = 1.8;
+/** The nesting ring, and the dot inside it. */
+export const RING_RADIUS = 12.5;
+export const DOT_RADIUS = 5;
+/** Stroke width of one arc of the ring. */
+export const ARC_STROKE = 2.5;
+
+/**
+ * How far the thumb reaches on each side of the rail.
+ *
+ * DERIVED from the shapes above rather than written down, so the floor that
+ * keeps a lane-1 label clear of the thumb can never disagree with the thumb
+ * actually drawn. Rounded up, because the floor only needs to be at least the
+ * reach and a whole unit reads better in the box height.
+ *
+ * Above, the arrow is the taller of the two forms. Below, the ring is: the
+ * arrow's stem reaches only `ARROW_TIP_GAP`.
+ */
+const ringOuterEdge = RING_RADIUS + ARC_STROKE / 2;
+export const THUMB_REACH_ABOVE = Math.ceil(Math.max(ARROW_TOP, ringOuterEdge));
+export const THUMB_REACH_BELOW = Math.ceil(
+  Math.max(ARROW_TIP_GAP, ringOuterEdge),
+);
 /** Lane cap, per the design spec: stacked labels must not leave the box. */
 export const MAX_LANES = 4;
 /** Estimated width of one character at the rail's 10px monospace size. */
@@ -83,9 +119,9 @@ const tickReach = (lane: number): number =>
  * How far the label band of lane 1 starts from the rail, on `side`.
  *
  * A lane-1 name baseline above the rail would otherwise land inside the
- * thumb's arrow, which reaches 15 out, so the base is floored at the thumb's
- * reach. Below the rail the thumb reaches less far than a lane-1 tick, so the
- * floor changes nothing there.
+ * thumb's arrow, so the base is floored at the thumb's reach. Below the rail
+ * the enlarged ring now reaches past a lane-1 tick, so the floor bites on both
+ * sides — it did not before the thumb grew.
  */
 const labelBase = (side: ThresholdSide): number =>
   Math.max(

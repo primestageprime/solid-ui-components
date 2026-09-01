@@ -366,6 +366,75 @@ describe("BandRail — keyboard", () => {
   });
 });
 
+describe("BandRail — affordance", () => {
+  // The gesture was never the weak part: the host takes the pointer and a
+  // click anywhere moves the thumb. Every one of these covers the SIGNAL that
+  // says so, which is what was missing.
+  const fillOf = (container: HTMLElement): SVGLineElement =>
+    container.querySelector(".sui-band-rail__fill") as SVGLineElement;
+
+  it("fills the track from the rail's left end to the thumb", () => {
+    const { container } = render(() => (
+      <BandRail domain={[0, 100]} value={25} label="Draw" />
+    ));
+    const fill = fillOf(container);
+    // The rail runs x=22 to x=678, so a quarter of the domain lands at 186.
+    expect(Number(fill.getAttribute("x1"))).toBe(22);
+    expect(Number(fill.getAttribute("x2"))).toBe(186);
+  });
+
+  it("moves the fill's far end with the value, and leaves its origin alone", () => {
+    const [value, setValue] = createSignal(25);
+    const { container } = render(() => (
+      <BandRail domain={[0, 100]} value={value()} label="Draw" />
+    ));
+    const fill = fillOf(container);
+    setValue(75);
+    expect(Number(fill.getAttribute("x1"))).toBe(22);
+    expect(Number(fill.getAttribute("x2"))).toBe(514);
+  });
+
+  it("takes the dragging modifier on pointer down and drops it on release", () => {
+    sizeTheRail();
+    const { container } = render(() => (
+      <BandRail domain={[0, 100]} value={0} label="Draw" onChange={() => {}} />
+    ));
+    const rail = railOf(container);
+    installPointerCapture(rail);
+
+    expect(rail.classList.contains("sui-band-rail--dragging")).toBe(false);
+    pointer(rail).down({ clientX: 350, clientY: 75 });
+    expect(rail.classList.contains("sui-band-rail--dragging")).toBe(true);
+    pointer(rail).up({ clientX: 350, clientY: 75 });
+    expect(rail.classList.contains("sui-band-rail--dragging")).toBe(false);
+  });
+
+  it("drops the dragging modifier when the pointer is cancelled, not only released", () => {
+    sizeTheRail();
+    const { container } = render(() => (
+      <BandRail domain={[0, 100]} value={0} label="Draw" onChange={() => {}} />
+    ));
+    const rail = railOf(container);
+    installPointerCapture(rail);
+
+    pointer(rail).down({ clientX: 350, clientY: 75 });
+    expect(rail.classList.contains("sui-band-rail--dragging")).toBe(true);
+    pointer(rail).cancel({ clientX: 350, clientY: 75 });
+    expect(rail.classList.contains("sui-band-rail--dragging")).toBe(false);
+  });
+
+  it("never takes the dragging modifier while disabled", () => {
+    sizeTheRail();
+    const { container } = render(() => (
+      <BandRail domain={[0, 100]} value={0} label="Draw" disabled />
+    ));
+    const rail = railOf(container);
+    installPointerCapture(rail);
+    pointer(rail).down({ clientX: 350, clientY: 75 });
+    expect(rail.classList.contains("sui-band-rail--dragging")).toBe(false);
+  });
+});
+
 describe("BandRail — pointer", () => {
   it("reads a press on the rail as the value under the pointer", () => {
     sizeTheRail();
