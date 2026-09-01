@@ -85,6 +85,35 @@ const renderCashflowChart = (
   );
 };
 
+// Same curve, but scaled through `ctx.yToPlot` so the drawn line agrees with
+// the y-axis labels — and therefore with the gridlines, which sit at the very
+// same ticks.
+const renderScaledChart = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => {
+  const toY = ctx.yToPlot ?? ((cents: number) => cents);
+  const points = ctx.cells
+    .map(
+      (c, i) =>
+        `${ctx.cellToX(i).toFixed(1)},${toY(c.balanceCents).toFixed(1)}`,
+    )
+    .join(" ");
+  return (
+    <svg
+      viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+      preserveAspectRatio="none"
+      class="scrub-chart-demo__svg"
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke="var(--sui-accent)"
+        stroke-width={1.6}
+      />
+    </svg>
+  );
+};
+
 export const ScrubChartShowcase: Component = () => {
   const [selectedIdx, setSelectedIdx] = createSignal(Math.max(0, todayIndex));
   const cell = createMemo(() => cells[selectedIdx()]);
@@ -140,6 +169,31 @@ export const ScrubChartShowcase: Component = () => {
             <span>{fmtDollars(cell().cashflowCents / 100)}</span>
           </div>
         </NarrowStack>
+      </div>
+
+      <div class="example-group">
+        <h3>Gridlines at the y-axis ticks</h3>
+        <p class="text-meta">
+          <code>showGridlines</code> draws one horizontal rule across the plot
+          at every y-axis tick — the same rules the low-level <code>Chart</code>{" "}
+          kit draws through its <code>Grid</code> slot. The rules read the SAME
+          tick set as the labels, so a line never sits where no label is. Solid{" "}
+          <code>--sui-border</code>, never dashed: on a chart whose every short
+          dash pattern already means another line type, a dashed rule would read
+          as one of them. OPT-IN — leave the prop off (every other example on
+          this page) and nothing changes.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          showGridlines
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderScaledChart}
+        />
       </div>
 
       <div class="example-group">

@@ -154,6 +154,28 @@ export const CashflowScrubChartShowcase: Component = () => {
       </div>
 
       <div class="example-group">
+        <h3>Gridlines at the y-axis ticks</h3>
+        <p class="text-meta">
+          <code>showGridlines</code> draws a dim horizontal rule across the plot
+          at every y-axis tick — the same rules the low-level <code>Chart</code>{" "}
+          kit draws through its <code>Grid</code> slot. They read the SAME tick
+          set as the y labels, so a rule never sits where no label is, and they
+          paint BENEATH the balance line, the overlay series and the deviation
+          bands. Solid <code>--sui-border</code>, never dashed: every short dash
+          pattern on this chart already means another line type. OPT-IN — every
+          other example on this page leaves the prop off and is unchanged.
+        </p>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={selectedIdx()}
+          onScrub={(i) => setSelectedIdx(i)}
+          today={PINNED_TODAY}
+          showGridlines
+        />
+      </div>
+
+      <div class="example-group">
         <h3>Hover crosshair readout</h3>
         <p class="text-meta">
           Enable <code>hover</code> for a transient vertical crosshair that

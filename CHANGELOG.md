@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.156.0
+
+### Added
+- **`ScrubChart` and `CashflowScrubChart` draw horizontal gridlines**
+  (sui#36952). `showGridlines` puts one rule across the plot at every y-axis
+  tick — the same shape `Chart`'s `Grid` slot already draws for the low-level
+  chart kit. The rules read the same tick memo the axis labels read, so a line
+  can never sit where no label is. They are solid `--sui-border`, 1px,
+  `crispEdges`, and never dashed: on a cashflow chart every short dash pattern
+  already means another line type (the zero line, the runway floor, a
+  comparison scenario, a ghost preview, a marker rule, the selected day, the
+  Today rule, the current-balance rule), so a dashed rule would read as one of
+  them.
+
+  The prop is OPT-IN and defaults to `false`, so no existing chart gains
+  chrome its consumer did not ask for. It has no effect without `yDomain`.
+
+  `Chart/Grid` itself is not reused. It reads the whole `ChartContextValue`
+  through `useChart()` and emits plot-local coordinates that assume the Chart
+  root's margin translate; `ScrubChart` supplies no such context and works in
+  frame coordinates. `ScrubChartGrid` sits beside `ScrubChartAxes` instead,
+  sharing its tick type. It is a separate fragment in a separate layer because
+  the paint order differs: the axes SVG draws AFTER the series so the labels
+  stay legible, while a gridline must draw BEFORE it so the data paints over
+  the chrome.
+
 ## 0.155.2
 
 ### Fixed
