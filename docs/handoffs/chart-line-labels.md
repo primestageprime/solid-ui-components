@@ -163,9 +163,12 @@ memoised module-locally. It needs no text in the DOM, so **placement runs in
 one pass, before paint.** The left gutter already uses it
 (`ScrubChart.tsx:136-147`).
 
-Under jsdom there is no canvas, and it falls back to `text.length * 6.5`. Tests
-therefore get a deterministic width. Assert against that estimate, not against
-a real font metric.
+**Under test the width is `text.length * 7`, not `text.length * 6.5`.** An
+earlier draft of this spec said jsdom has no canvas and the `* 6.5` fallback
+runs. That is wrong. `src/test-setup.ts` installs a stub 2D context whose
+`measureText` returns `{ width: text.length * 7 }`, on purpose, so the real
+canvas path runs and the fallback never fires. Widths are deterministic. Assert
+against `length * 7`.
 
 Do not add `getComputedTextLength()`. Do not render twice.
 
@@ -311,6 +314,18 @@ you write against these — it is the contract.
 `laneOf` keeps an explicit loop rather than a combinator. That is deliberate:
 `collectionMethodCalls` and `dotChains` are ratcheted metrics and a rewrite
 raises them. Do not "modernise" it.
+
+**`laneOf` PERMITS OVERLAP PAST ITS CAP, and this ladder forbids overlap.** The
+line is `const placed = Math.min(lane, packing.maxLanes)`. A box that finds no
+free lane is forced into the outermost one and may collide. Its doc comment
+records that as a considered trade for the rail, which prefers a crowded label
+to a label leaving its frame. §5 of this spec makes the opposite choice: a
+label that cannot be placed cleanly is dropped, not overlapped.
+
+`labelPlacement.ts` therefore wraps `laneOf` in `splitLaneOverflow`, which sends
+a colliding box down the ladder instead of letting it share the outermost lane.
+Do not remove that wrapper on the belief that `laneOf` already guarantees
+separation. It does not.
 
 `BandRail/helpers.ts` (renamed from `ThresholdRail` in `6e8b8ad`) re-exports
 `fitAnchor` and `anchoredSpan` as bare bindings, and `BandRail/types.ts`
@@ -521,12 +536,19 @@ Branch `feat/chart-line-labels`. Steps 2, 3, 4 and 6 are DONE and merged.
    runs when the field is absent.
 4. ~~Lift `fitAnchor` / `anchoredSpan` / `laneOf`.~~ DONE — `06e653c`,
    `afcd2c9`. They live in `src/internal/geometry/labelLayout.ts`. See §5.1.
-5. **NEXT** — write `labelPlacement.ts` + its test. Pure, no DOM, identity
-   scales. Import the three helpers; do not rewrite them.
+5. ~~Write `labelPlacement.ts` + its test.~~ DONE — merged at `ebc72e2`. It
+   exports `reserveLabelSpace(labels): ReservedSpace`,
+   `placeLabels(labels, plot, polylines, space): readonly LabelPlacementResult[]`
+   and `belowExtraHeight(rows)`. The box maths sits beside it in
+   `labelBoxes.ts`. 46 tests across the two files.
 6. ~~`rightGutter` / `xAxisExtraHeight` on `ScrubChartOverrides`.~~ DONE —
    `676f0c4`, `a898217`. The zero-reservation regression test is in place.
-7. Add the label layer to `CashflowScrubChart`. Paint it after the primary
-   line; do not borrow an overlay slot (§6).
+7. **NEXT** — add the label layer to `CashflowScrubChart`. Paint it after the
+   primary line; do not borrow an overlay slot (§6). Call `reserveLabelSpace`
+   BEFORE the geometry and feed its output to `rightGutter` and
+   `xAxisExtraHeight`; call `placeLabels` after. Move `CashflowLabelZone` from
+   `labelPlacement.ts` to `types.ts`, or re-export it there — it is public API
+   and it currently sits in the wrong file.
 8. Showcase, `COMPONENTS.md`, CHANGELOG, baselines.
 9. Run all five gates. Verify in `thorcasting-ui`.
 
