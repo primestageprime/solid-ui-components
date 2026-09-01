@@ -19,6 +19,7 @@ import {
   type Accessor,
   type Component,
   Show,
+  createEffect,
   createSignal,
   onCleanup,
   splitProps,
@@ -123,23 +124,34 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     local.onChange?.(Number.isNaN(next) ? undefined : next);
   };
 
-  // Mirror of the display string kobalte last emitted. Kobalte owns the
-  // formatting, so this component never re-implements Intl — it only keeps a
-  // copy of the result and hands it straight back as the controlled `value`.
-  const [kobalteText, setKobalteText] = createSignal<string | undefined>(
-    undefined,
-  );
-
   // The clear is the one transition kobalte cannot make on its own: its
   // `rawValue` effect returns early on `NaN`, so the visible input keeps the
   // old text while the hidden form input empties (dside `sui`#36924). An empty
   // string here reaches the DOM through the controllable signal, which has no
-  // such guard. `undefined` keeps kobalte uncontrolled until it emits, so the
-  // first paint and the default value stay exactly as before.
-  const displayText = (): string | undefined =>
-    local.value !== undefined && local.value() === undefined
-      ? ""
-      : kobalteText();
+  // such guard.
+  //
+  // `isCleared` is a signal this component owns, and an effect is the only
+  // writer. That indirection is the fix for dside `sui`#36961. Kobalte reads
+  // its `value` prop from `createControllableSignal`'s `isControlled` and
+  // `value` memos, and its hidden input reads those memos again inside a
+  // render effect. 0.156.0 answered `value` by calling `local.value()`
+  // directly, so kobalte re-entered the CALLER's accessor from inside its own
+  // render effects. A caller that builds its fields in lazy JSX getters — the
+  // curried form-field shape — rebuilt the field on that re-entry, and each
+  // rebuild emitted again, until the stack was exhausted with
+  // `RangeError: Maximum call stack size exceeded`.
+  //
+  // Reading a plain signal pulls on nothing, so kobalte can read `value` as
+  // often as it likes and never reach the caller. The effect, not kobalte,
+  // decides when the field is clear.
+  const [isCleared, setIsCleared] = createSignal(false);
+  createEffect(() => {
+    setIsCleared(local.value !== undefined && local.value() === undefined);
+  });
+
+  // `undefined` keeps kobalte uncontrolled, which is what 0.155.0 did: it then
+  // owns its own formatted text and this component never re-implements Intl.
+  const displayText = (): string | undefined => (isCleared() ? "" : undefined);
 
   // Kobalte merges a default `maxValue` of `Number.MAX_SAFE_INTEGER`, and its
   // spin-button sends `End` straight to that bound, `Home` to the negative
@@ -182,7 +194,6 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       class={rootClass()}
       name={local.name}
       value={displayText()}
-      onChange={(next: string) => setKobalteText(next)}
       rawValue={rawValue()}
       onRawValueChange={handleRawValueChange}
       minValue={local.min}
