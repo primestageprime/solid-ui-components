@@ -46,6 +46,7 @@ import type {
   CashflowBalanceSeries,
   CashflowCell,
   CashflowChartMarker,
+  CashflowLabelZone,
   CashflowScrubChartProps,
   CashflowSeriesFill,
 } from "./types";
@@ -58,6 +59,7 @@ export type {
   CashflowBalanceSeries,
   CashflowCell,
   CashflowChartMarker,
+  CashflowLabelZone,
   CashflowScrubChartProps,
   CashflowSeriesFill,
 };

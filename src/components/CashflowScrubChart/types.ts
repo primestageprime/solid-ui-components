@@ -10,6 +10,7 @@
 // The vocabulary layers from the atom outward:
 //
 //   • CashflowCell — one day's payload (net flow + running balance, in cents).
+//   • CashflowLabelZone — where a line's or a marker's label prefers to sit.
 //   • CashflowSeriesFill — how to shade the variance between an overlay series
 //     and a reference line (surplus green / shortfall red, split at crossings).
 //   • CashflowBalanceSeries — an extra balance line overlaid on the chart, with
@@ -33,6 +34,17 @@ export type CashflowCell = Cell & {
   cashflowCents: number;
   balanceCents: number;
 };
+
+/**
+ * Where a label prefers to sit. A caller cannot see the data, the container
+ * width or the theme's font, so a caller cannot know what fits — this is a
+ * preference, not a lock. The component walks body → right → below and takes
+ * the first zone the label fits. Defaults to "auto", which starts at the top.
+ *
+ * Per-datum and not a curried variant: one chart's labels routinely need
+ * different zones, and a variant would force them all into one.
+ */
+export type CashflowLabelZone = "auto" | "body" | "right" | "below";
 
 /**
  * Draws a deviation band between this series and a reference line (the primary
@@ -63,8 +75,22 @@ export interface CashflowSeriesFill {
 export interface CashflowBalanceSeries {
   /** Stable identity — used to key the rendered line. */
   id: string;
-  /** Human-readable label (legend / a11y). Optional. */
+  /** Human-readable label (legend / a11y). Optional. When set, it is also
+   *  DRAWN on the chart beside the series, at the zone `labelPlacement` asks
+   *  for. */
   label?: string;
+  /**
+   * Where this series' `label` prefers to sit. Defaults to `"auto"`, which
+   * walks body → right → below and takes the first zone the text fits.
+   *
+   * Per-series because one chart routinely needs different zones for
+   * different lines: a forecast that ends at the right edge reads best in the
+   * gutter, while a flat floor line has room for its caption in the plot
+   * body. A curried variant would lock every line on the chart into one zone
+   * and lose that. Only an EXPLICIT zone buys frame space; `"auto"` uses
+   * whatever another label bought, or the label is dropped in silence.
+   */
+  labelPlacement?: CashflowLabelZone;
   /** CSS class added to the polyline alongside the base line class.
    *  Color / dash / opacity are the consumer's to define on this class. */
   class?: string;
@@ -105,8 +131,21 @@ export interface CashflowChartMarker {
    * a selectable instance.
    */
   variant?: "flag" | "rule";
-  /** Small caption rendered at the top of a `"rule"` marker. */
+  /** Small caption rendered at the top of a `"rule"` marker, or placed by the
+   *  label ladder when `labelPlacement` names an explicit zone. */
   label?: string;
+  /**
+   * Where this marker's `label` prefers to sit. Defaults to `"auto"`, which
+   * keeps the caption at the top of the marker's own rule — the position
+   * every `"rule"` marker had before this field existed.
+   *
+   * Per-marker because two markers on one chart routinely need different
+   * zones: a "Today" rule wants its caption at the top of the plot, while a
+   * runway-floor marker sharing that top row would collide with it and belongs
+   * in the gutter. A curried variant would force both into one zone. Only an
+   * EXPLICIT zone buys frame space.
+   */
+  labelPlacement?: CashflowLabelZone;
   /**
    * The marker's y value, in cents. Without it the dot lands on the primary
    * balance line (`lineCells()[index].balanceCents`), which is where every
