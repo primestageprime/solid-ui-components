@@ -1204,6 +1204,74 @@ describe("CashflowScrubChart gridlines", () => {
     ).toBe(true);
   });
 
+  // ── Label colour, read back from the drawn line ─────────────────────
+  // The chart reads each line's RESOLVED stroke from the DOM and writes it on
+  // the label as a `fill` attribute. jsdom loads no CSS file, so
+  // `getComputedStyle(...).stroke` is empty here and no colour ever resolves.
+  // These tests lock the two halves that DO run under jsdom: the lines carry
+  // the attributes the effect queries, and a label with no colour keeps the
+  // exact render it had before this feature.
+
+  it("tags every series line with its own series id", () => {
+    const { container } = render(twoLabelledLines);
+    const ids = Array.from(container.querySelectorAll("[data-series-id]")).map(
+      (el) => el.getAttribute("data-series-id"),
+    );
+    expect(ids).toEqual(["upside", "downside"]);
+    // The primary line answers to no label, so it carries no id.
+    expect(
+      container.querySelector(PRIMARY)!.hasAttribute("data-series-id"),
+    ).toBe(false);
+  });
+
+  it("tags every marker line with its own marker index", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        scrub={false}
+        markers={[{ index: 3 }, { index: 8, variant: "rule", label: "Today" }]}
+      />
+    ));
+    expect(
+      container
+        .querySelector(".sui-cashflow-scrub-chart__marker-line")!
+        .getAttribute("data-marker-index"),
+    ).toBe("3");
+    expect(
+      container
+        .querySelector(".sui-cashflow-scrub-chart__rule-line")!
+        .getAttribute("data-marker-index"),
+    ).toBe("8");
+  });
+
+  it("gives a label NO fill attribute when its line resolves no colour", () => {
+    const { container } = render(twoLabelledLines);
+    const labels = Array.from(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__label"),
+    );
+    expect(labels.length).toBe(2);
+    for (const label of labels) {
+      expect(label.hasAttribute("fill")).toBe(false);
+    }
+  });
+
+  it("paints a label in the resolved colour of the line it names", () => {
+    // jsdom resolves `stroke` from a real style sheet, so one <style> gives
+    // the series a colour the effect can read. No harness, no fake DOM.
+    const style = document.createElement("style");
+    style.textContent = ".up-line { stroke: rgb(1, 2, 3); }";
+    document.head.appendChild(style);
+    const { container } = render(twoLabelledLines);
+    const fillOf = (text: string): string | null =>
+      labelGroup(container, text)
+        .querySelector(".sui-cashflow-scrub-chart__label")!
+        .getAttribute("fill");
+    expect(fillOf("Up")).toBe("rgb(1, 2, 3)");
+    // The other line resolves no colour, so its label keeps the CSS default.
+    expect(fillOf("Down")).toBeNull();
+    style.remove();
+  });
+
   it("gives every drawn label a hit box to point at", () => {
     const { container } = render(twoLabelledLines);
     // The component always passes `onHoverLabel`, so the layer always draws

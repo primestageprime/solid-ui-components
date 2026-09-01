@@ -342,6 +342,9 @@ export const CashflowScrubChartShowcase: Component = () => {
           keeps its full strength and every other line steps back. Move the
           pointer off the label to restore all of them.
         </p>
+        <p class="text-meta">
+          At rest, a label already takes the colour of the line it names.
+        </p>
 
         <CashflowScrubChart
           cells={cells}

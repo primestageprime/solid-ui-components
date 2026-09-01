@@ -31,7 +31,7 @@
 // before this feature existed and no current chart moves. An explicit zone
 // moves the caption into the ladder and hands the rule its full height back.
 // ============================================
-import { type Component, For } from "solid-js";
+import { type Component, For, Show } from "solid-js";
 import { filter, flatMap, map } from "../../fn";
 import { measureLabelWidth } from "../ScrubChart/helpers";
 import {
@@ -271,10 +271,14 @@ export const drawnPolylines = (
   ];
 };
 
-/** A label the ladder placed, paired back with the text to draw. */
+/** A label the ladder placed, paired back with the text and box to draw. */
 interface DrawnLabel {
   readonly placed: PlacedLabel;
   readonly text: string;
+  /** Measured text width in px — the hit box spans it. */
+  readonly width: number;
+  /** Text row height in px — the hit box spans it. */
+  readonly height: number;
 }
 
 /**
@@ -293,11 +297,34 @@ export const drawnLabels = (
     map(
       (result: LabelPlacementResult, i: number) =>
         result.kind === "placed"
-          ? { placed: result, text: labels[i].text }
+          ? {
+              placed: result,
+              text: labels[i].text,
+              width: labels[i].width,
+              height: labels[i].height,
+            }
           : null,
       results,
     ),
   );
+
+/** Clear space added around a label's text box to make it easy to point at. */
+const LABEL_HIT_PAD = 3;
+
+/**
+ * The left edge of a label's text box.
+ *
+ * `placed.x` is an anchor point, not a left edge: the ladder pairs it with a
+ * `text-anchor`, and the three anchors put the text on three different sides
+ * of that number. The hit box has to cover the glyphs, so it reads the anchor
+ * back.
+ */
+const hitLeft = (label: DrawnLabel): number =>
+  label.placed.anchor === "start"
+    ? label.placed.x
+    : label.placed.anchor === "end"
+      ? label.placed.x - label.width
+      : label.placed.x - label.width / 2;
 
 /**
  * The label layer: one `<text>` per placed label, in one `<g>`.
@@ -306,23 +333,66 @@ export const drawnLabels = (
  * document order is paint order — appending the layer reorders nothing that
  * was already there. It sits outside the plot's clip path because the right
  * and below zones are, by construction, outside the plot rectangle.
+ *
+ * A label NAMES a line, so pointing at it asks which line. `onHoverLabel`
+ * turns that question on: each label gets a padded transparent hit box and
+ * reports its id on enter and `null` on leave, and `highlightedId` comes back
+ * as the emphasis class. Without the callback the layer takes no pointer
+ * event at all — it must not eat the scrub gestures it sits over.
+ *
+ * `colorOf` answers the same question at rest: the caller reads the drawn
+ * line's colour and the label takes it. The layer writes that colour as the
+ * `fill` PRESENTATION attribute, not an inline style, so the muting rule's
+ * `opacity` still applies and a consumer's own CSS `fill` rule still wins.
  */
 export const ChartLabelLayer: Component<{
   labels: readonly ChartLabel[];
   results: readonly LabelPlacementResult[];
-}> = (props) => (
-  <g class="sui-cashflow-scrub-chart__labels">
-    <For each={drawnLabels(props.labels, props.results)}>
-      {(label) => (
-        <text
-          class={`sui-cashflow-scrub-chart__label sui-cashflow-scrub-chart__label--${label.placed.zone}`}
-          x={label.placed.x}
-          y={label.placed.y}
-          text-anchor={label.placed.anchor}
-        >
-          {label.text}
-        </text>
-      )}
-    </For>
-  </g>
-);
+  /** Id of the label the pointer rests on, or `null` when it rests on none. */
+  highlightedId?: string | null;
+  /** Called with a label id on pointer enter, and with `null` on leave. */
+  onHoverLabel?: (id: string | null) => void;
+  /** Colour of the line a label names, or `undefined` when none resolves. */
+  colorOf?: (id: string) => string | undefined;
+}> = (props) => {
+  /** The emphasis modifier one label takes while any label is hovered. */
+  const emphasis = (id: string): string => {
+    const active = props.highlightedId ?? null;
+    if (active === null) return "";
+    return active === id
+      ? " sui-cashflow-scrub-chart__label--highlighted"
+      : " sui-cashflow-scrub-chart__label--muted";
+  };
+  return (
+    <g class="sui-cashflow-scrub-chart__labels">
+      <For each={drawnLabels(props.labels, props.results)}>
+        {(label) => (
+          <g
+            class="sui-cashflow-scrub-chart__label-group"
+            onPointerEnter={() => props.onHoverLabel?.(label.placed.id)}
+            onPointerLeave={() => props.onHoverLabel?.(null)}
+          >
+            <Show when={props.onHoverLabel}>
+              <rect
+                class="sui-cashflow-scrub-chart__label-hit"
+                x={hitLeft(label) - LABEL_HIT_PAD}
+                y={label.placed.y - label.height / 2 - LABEL_HIT_PAD}
+                width={label.width + LABEL_HIT_PAD * 2}
+                height={label.height + LABEL_HIT_PAD * 2}
+              />
+            </Show>
+            <text
+              class={`sui-cashflow-scrub-chart__label sui-cashflow-scrub-chart__label--${label.placed.zone}${emphasis(label.placed.id)}`}
+              x={label.placed.x}
+              y={label.placed.y}
+              text-anchor={label.placed.anchor}
+              fill={props.colorOf?.(label.placed.id)}
+            >
+              {label.text}
+            </text>
+          </g>
+        )}
+      </For>
+    </g>
+  );
+};

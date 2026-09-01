@@ -184,10 +184,16 @@
 }
 
 .sui-cashflow-scrub-chart__label {
-  fill: var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
   font-size: 9px;
   font-weight: 600;
   dominant-baseline: middle;
+}
+
+/* The default label colour, for a label whose line resolves no colour. A
+   presentation attribute loses to EVERY CSS rule, so the component writes the
+   line's own colour as `fill="…"` and this rule steps aside for it. */
+.sui-cashflow-scrub-chart__label:not([fill]) {
+  fill: var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
 }
 
 /* ── Plotline markers (the `markers` prop) ────────────────────────── */
@@ -349,8 +355,12 @@
   stroke-width: 3;
 }
 
+/* The highlighted label sets NO fill. A label already carries the colour of
+   the line it names, written as a `fill` attribute, and a rule here would
+   paint over it. Every OTHER label mutes, which is what shows the emphasis.
+   The class stays so a consumer can hook it. */
 .sui-cashflow-scrub-chart__label.sui-cashflow-scrub-chart__label--highlighted {
-  fill: var(--sui-text, #fff);
+  opacity: 1;
 }
 
 .sui-cashflow-scrub-chart__marker--highlighted

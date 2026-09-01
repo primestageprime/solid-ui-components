@@ -30,7 +30,9 @@ import {
   type Component,
   For,
   Show,
+  createEffect,
   createMemo,
+  createSignal,
   createUniqueId,
 } from "solid-js";
 import { ScrubChart } from "../ScrubChart";
@@ -63,7 +65,7 @@ import type {
   CashflowSeriesFill,
 } from "./types";
 import "./CashflowScrubChart.css";
-import { filter, flatMap, join, map, pipe } from "../../fn";
+import { every, filter, flatMap, join, map, pipe, some } from "../../fn";
 
 // Re-export the public type surface so the folder barrel (and existing
 // consumers importing from this module) keep resolving the same names.
@@ -104,6 +106,116 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // server/client renders, unlike the Math.random id it replaces.
   const clipId = `sui-cashflow-clip-${createUniqueId()}`;
 
+  // ── Label hover → line emphasis ──────────────────────────────────────
+  // A drawn label NAMES one line, and the chart ships no legend, so the only
+  // way to read the pairing is to point at the label. While the pointer rests
+  // on one, that line keeps full strength and every other drawn line steps
+  // back. The id vocabulary is the label ladder's own — `series:<id>` for a
+  // balance series, `marker:<index>` for a marker — so the label layer reports
+  // the same string the candidate builders minted.
+  const [hoveredLabel, setHoveredLabel] = createSignal<string | null>(null);
+
+  /**
+   * The emphasis modifier an element takes while a label is hovered.
+   *
+   * @param block CSS block the modifier hangs off, e.g. `"…__line"`.
+   * @param id    Label id this element answers to, or `null` for an element no
+   *              label names — the primary line and unlabelled markers, which
+   *              can only ever step back.
+   * @returns A leading-space class string, or `""` when no label is hovered.
+   */
+  const emphasisClass = (block: string, id: string | null): string => {
+    const active = hoveredLabel();
+    if (active === null) return "";
+    return active === id ? ` ${block}--highlighted` : ` ${block}--muted`;
+  };
+
+  // ── Label colour, read back from the drawn line ──────────────────────
+  // A label names one line, so it reads best in that line's own colour. The
+  // colour comes from the consumer's own CSS class, and every consumer states
+  // it as a `stroke`. An SVG `<text>` takes its colour from `fill`, so no CSS
+  // rule and no new prop can carry the stroke across. The chart therefore
+  // reads the RESOLVED stroke back from the DOM after each render, and hands
+  // it to the label layer as a `fill`.
+  //
+  // ONE known limit: a theme swap alone does not recolour a label. The map is
+  // read again when the chart re-renders for another reason.
+  let chartSvgEl: SVGSVGElement | undefined;
+  let markersSvgEl: SVGSVGElement | undefined;
+  const [labelColors, setLabelColors] = createSignal<Record<string, string>>(
+    {},
+  );
+
+  /** Whether a resolved stroke names a colour a label can take. */
+  const isPaintedStroke = (stroke: string): boolean =>
+    stroke !== "" && stroke !== "none" && stroke !== "rgba(0, 0, 0, 0)";
+
+  /** Read one root's tagged elements into the map, keyed by the label id. */
+  const collectStrokes = (
+    root: SVGSVGElement | undefined,
+    attribute: string,
+    idOf: (value: string) => string,
+    into: Record<string, string>,
+  ): void => {
+    if (!root) return;
+    for (const el of Array.from(root.querySelectorAll(`[${attribute}]`))) {
+      const value = el.getAttribute(attribute);
+      if (value === null) continue;
+      const id = idOf(value);
+      if (into[id] !== undefined) continue;
+      const stroke = window.getComputedStyle(el).stroke;
+      if (isPaintedStroke(stroke)) into[id] = stroke;
+    }
+  };
+
+  /** Whether two colour maps hold the same keys and the same colours. */
+  const sameColors = (
+    a: Record<string, string>,
+    b: Record<string, string>,
+  ): boolean => {
+    const keys = Object.keys(a);
+    return (
+      keys.length === Object.keys(b).length &&
+      every((k: string) => a[k] === b[k], keys)
+    );
+  };
+
+  createEffect(() => {
+    // Track every prop that changes which lines the chart draws, so the
+    // colours are read again after the new lines land.
+    void props.balanceSeries;
+    void props.markers;
+    void props.cells;
+    // The server renders no DOM, so there is no computed style to read.
+    if (typeof window === "undefined") return;
+    if (!chartSvgEl && !markersSvgEl) return;
+    const next: Record<string, string> = {};
+    collectStrokes(
+      chartSvgEl,
+      "data-series-id",
+      (value) => `series:${value}`,
+      next,
+    );
+    collectStrokes(
+      markersSvgEl,
+      "data-marker-index",
+      (value) => `marker:${value}`,
+      next,
+    );
+    // Keep the previous map when nothing changed. Solid compares by identity,
+    // so returning it notifies no reader and the effect never churns.
+    setLabelColors((prev) => (sameColors(next, prev) ? prev : next));
+  });
+
+  /** Whether any label reaches the ladder, and so whether the layer draws. */
+  const hasChartLabels = createMemo(
+    () =>
+      some(
+        (s: CashflowBalanceSeries) => Boolean(s.label),
+        props.balanceSeries ?? [],
+      ) || some(markerJoinsLadder, props.markers ?? []),
+  );
+
   // Y-domain is forced to include zero so the zero-line + diverging axis
   // labels read consistently regardless of whether the running balance
   // dips negative. The domain spans the primary balance plus every extra
@@ -115,7 +227,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const hasManualMax = manualMax != null;
     const manualMin = props.yMin;
     const hasManualMin = manualMin != null;
-    if (props.cells.length === 0) return [hasManualMin ? manualMin : 0, hasManualMax ? manualMax : 1];
+    if (props.cells.length === 0)
+      return [hasManualMin ? manualMin : 0, hasManualMax ? manualMax : 1];
     const series = props.balanceSeries ?? [];
     // Domain keys off the LINE (balanceLineCells when decoupled) plus the
     // overlay series — NOT the ribbon `cells` — so the y-scale fits the drawn
@@ -262,7 +375,13 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
               <polyline
                 class={`sui-cashflow-scrub-chart__line sui-cashflow-scrub-chart__line--series${
                   series.class ? ` ${series.class}` : ""
-                }`}
+                }${emphasisClass(
+                  "sui-cashflow-scrub-chart__line",
+                  `series:${series.id}`,
+                )}`}
+                // The colour effect reads this line's stroke back through
+                // this attribute, and gives it to the series label.
+                data-series-id={series.id}
                 points={seg}
               />
             )}
@@ -288,6 +407,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         return map(
           (run, i) => ({
             key: `${s.id}-${i}`,
+            seriesId: s.id,
             sign: run.sign,
             points: run.points,
             overrideClass: overrideClass(run.sign),
@@ -356,33 +476,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             ctx.plotRight - 28,
           );
 
-    // ── Label placement, AFTER the geometry the reservation bought ──────
-    const labelGeometry = {
-      cellToX: ctx.cellToX,
-      yToPlot,
-      primaryCents: (i: number) => line[i]?.balanceCents,
-      cellCount: ctx.cells.length,
-    };
-    const labels = labelCandidates(
-      props.balanceSeries ?? [],
-      props.markers ?? [],
-      ctx.cells,
-      labelGeometry,
-    );
-    const placements = placeLabels(
-      labels,
-      {
-        left: ctx.plotLeft,
-        right: ctx.plotRight,
-        top: ctx.plotTop,
-        bottom: ctx.plotBottom,
-      },
-      drawnPolylines(ctx.cells, props.balanceSeries ?? [], labelGeometry),
-      reservedSpace(),
-    );
-
     return (
       <svg
+        // The colour effect queries the drawn series lines from this root.
+        ref={(el) => {
+          chartSvgEl = el;
+        }}
         class="sui-cashflow-scrub-chart__chart"
         role="img"
         aria-label="Cashflow chart"
@@ -408,7 +507,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
               <polygon
                 class={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--${
                   band.sign
-                }${band.overrideClass ? ` ${band.overrideClass}` : ""}`}
+                }${
+                  band.overrideClass ? ` ${band.overrideClass}` : ""
+                }${emphasisClass(
+                  "sui-cashflow-scrub-chart__band",
+                  `series:${band.seriesId}`,
+                )}`}
                 points={band.points}
               />
             )}
@@ -424,17 +528,13 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           <polyline
             class={`sui-cashflow-scrub-chart__line${
               props.lineClass ? ` ${props.lineClass}` : ""
-            }`}
+            }${emphasisClass("sui-cashflow-scrub-chart__line", null)}`}
             points={points}
           />
           {/* `layer: "over"` series paint last so a dashed line laid exactly
               over the solid primary stays visible instead of being buried. */}
           {seriesLines(seriesOver)}
         </g>
-        {/* Line + marker labels. Emitted AFTER the primary line, so document
-            order paints them on top and reorders nothing. Outside the clip
-            because the right and below zones sit outside the plot rect. */}
-        <ChartLabelLayer labels={labels} results={placements} />
         {/* Over-top indicator — drawn OUTSIDE the clip so it sits at the top
             edge and the label stays fully visible. */}
         {overtopPeak && (
@@ -491,6 +591,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const yToPlot = ctx.yToPlot;
     return (
       <svg
+        // The colour effect queries the drawn marker lines from this root.
+        ref={(el) => {
+          markersSvgEl = el;
+        }}
         class="sui-cashflow-scrub-chart__chart sui-cashflow-scrub-chart__markers"
         role="img"
         aria-label="Cashflow chart markers"
@@ -517,7 +621,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                 ctx.plotRight - 18,
               );
               return (
-                <g class="sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--rule">
+                <g
+                  class={`sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--rule${emphasisClass(
+                    "sui-cashflow-scrub-chart__marker",
+                    markerJoinsLadder(m) ? `marker:${m.index}` : null,
+                  )}`}
+                >
                   {topCaption && (
                     <text
                       class="sui-cashflow-scrub-chart__rule-label"
@@ -532,6 +641,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                     class={`sui-cashflow-scrub-chart__rule-line${
                       m.class ? ` ${m.class}` : ""
                     }`}
+                    // The colour effect reads this rule's stroke back through
+                    // this attribute, and gives it to the marker label.
+                    data-marker-index={m.index}
                     x1={x}
                     x2={x}
                     y1={ctx.plotTop + (topCaption ? 15 : 0)}
@@ -555,7 +667,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                   m.selected
                     ? " sui-cashflow-scrub-chart__marker--selected"
                     : ""
-                }`}
+                }${emphasisClass(
+                  "sui-cashflow-scrub-chart__marker",
+                  markerJoinsLadder(m) ? `marker:${m.index}` : null,
+                )}`}
                 role="button"
                 tabIndex={0}
                 onClick={activate}
@@ -578,6 +693,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                   class={`sui-cashflow-scrub-chart__marker-line${
                     m.class ? ` ${m.class}` : ""
                   }`}
+                  // The colour effect reads this line's stroke back through
+                  // this attribute, and gives it to the marker label.
+                  data-marker-index={m.index}
                   x1={x}
                   x2={x}
                   y1={ctx.plotTop}
@@ -610,6 +728,78 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       </svg>
     );
   };
+
+  // ── Label overlay ────────────────────────────────────────────────────
+  // The labels used to live in the chart svg, beneath the gesture overlay,
+  // where nothing could point at them. They moved to the overlay slot so a
+  // label can be HOVERED — that is the whole feature. Two consequences the
+  // reader should not have to rediscover:
+  //
+  //   • The layer now paints above the markers svg, not below it. A marker's
+  //     hit rect spans the full plot height, so a label under it would be
+  //     unreachable near every marker.
+  //   • The layer no longer sits under the window band, so a label in the
+  //     scrub window is no longer tinted by it.
+  //
+  // The placement pass runs here, in the same frame the reservation bought —
+  // `ctx` carries the identical geometry the chart svg reads.
+  const renderLabels = (
+    ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
+  ) => {
+    if (ctx.cells.length === 0 || !ctx.yToPlot) return null;
+    const yToPlot = ctx.yToPlot;
+    const line = lineCells();
+    const labelGeometry = {
+      cellToX: ctx.cellToX,
+      yToPlot,
+      primaryCents: (i: number) => line[i]?.balanceCents,
+      cellCount: ctx.cells.length,
+    };
+    const labels = labelCandidates(
+      props.balanceSeries ?? [],
+      props.markers ?? [],
+      ctx.cells,
+      labelGeometry,
+    );
+    const placements = placeLabels(
+      labels,
+      {
+        left: ctx.plotLeft,
+        right: ctx.plotRight,
+        top: ctx.plotTop,
+        bottom: ctx.plotBottom,
+      },
+      drawnPolylines(ctx.cells, props.balanceSeries ?? [], labelGeometry),
+      reservedSpace(),
+    );
+    return (
+      <svg
+        class="sui-cashflow-scrub-chart__chart sui-cashflow-scrub-chart__label-overlay"
+        role="img"
+        aria-label="Cashflow chart labels"
+        viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+        preserveAspectRatio="none"
+      >
+        <ChartLabelLayer
+          labels={labels}
+          results={placements}
+          highlightedId={hoveredLabel()}
+          onHoverLabel={setHoveredLabel}
+          colorOf={(id) => labelColors()[id]}
+        />
+      </svg>
+    );
+  };
+
+  /** Markers first, then labels — see renderLabels for why that order. */
+  const renderOverlay = (
+    ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
+  ) => (
+    <>
+      {renderMarkers(ctx)}
+      <Show when={hasChartLabels()}>{renderLabels(ctx)}</Show>
+    </>
+  );
 
   // ── Hover readout overlay ────────────────────────────────────────────
   // A transient vertical crosshair + a hollow dot on every line at the
@@ -685,7 +875,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       scrub={props.scrub}
       centerOn={props.centerOn}
       renderChartOverlay={
-        (props.markers?.length ?? 0) > 0 ? renderMarkers : undefined
+        (props.markers?.length ?? 0) > 0 || hasChartLabels()
+          ? renderOverlay
+          : undefined
       }
       hover={props.hover}
       renderHoverOverlay={props.hover ? renderHover : undefined}
