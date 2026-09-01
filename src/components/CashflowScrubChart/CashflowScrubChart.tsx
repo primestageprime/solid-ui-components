@@ -39,6 +39,8 @@ import { ScrubChart } from "../ScrubChart";
 import { buildDeviationBand } from "./deviationBand";
 import {
   ChartLabelLayer,
+  PRIMARY_LABEL_ID,
+  type PrimaryLineLabel,
   drawnPolylines,
   labelCandidates,
   labelReservations,
@@ -106,13 +108,24 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // server/client renders, unlike the Math.random id it replaces.
   const clipId = `sui-cashflow-clip-${createUniqueId()}`;
 
+  // The primary line's own label, which the ladder places first. `undefined`
+  // says the caller named none, and the primary line then joins no label list.
+  const primaryLabel = (): PrimaryLineLabel | undefined =>
+    props.lineLabel
+      ? {
+          text: props.lineLabel,
+          placement: props.lineLabelPlacement ?? "auto",
+        }
+      : undefined;
+
   // ── Label hover → line emphasis ──────────────────────────────────────
   // A drawn label NAMES one line, and the chart ships no legend, so the only
   // way to read the pairing is to point at the label. While the pointer rests
   // on one, that line keeps full strength and every other drawn line steps
-  // back. The id vocabulary is the label ladder's own — `series:<id>` for a
-  // balance series, `marker:<index>` for a marker — so the label layer reports
-  // the same string the candidate builders minted.
+  // back. The id vocabulary is the label ladder's own — `primary` for the
+  // running-balance line, `series:<id>` for a balance series, `marker:<index>`
+  // for a marker — so the label layer reports the same string the candidate
+  // builders minted.
   const [hoveredLabel, setHoveredLabel] = createSignal<string | null>(null);
 
   /**
@@ -120,8 +133,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
    *
    * @param block CSS block the modifier hangs off, e.g. `"…__line"`.
    * @param id    Label id this element answers to, or `null` for an element no
-   *              label names — the primary line and unlabelled markers, which
-   *              can only ever step back.
+   *              label names — an unlabelled marker, which can only ever step
+   *              back.
    * @returns A leading-space class string, or `""` when no label is hovered.
    */
   const emphasisClass = (block: string, id: string | null): string => {
@@ -190,6 +203,14 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     if (typeof window === "undefined") return;
     if (!chartSvgEl && !markersSvgEl) return;
     const next: Record<string, string> = {};
+    // The primary line carries its own attribute, not a `data-series-id`: it
+    // is not a series, and its label id takes no `series:` prefix.
+    collectStrokes(
+      chartSvgEl,
+      "data-primary-line",
+      () => PRIMARY_LABEL_ID,
+      next,
+    );
     collectStrokes(
       chartSvgEl,
       "data-series-id",
@@ -210,10 +231,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   /** Whether any label reaches the ladder, and so whether the layer draws. */
   const hasChartLabels = createMemo(
     () =>
+      Boolean(props.lineLabel) ||
       some(
         (s: CashflowBalanceSeries) => Boolean(s.label),
         props.balanceSeries ?? [],
-      ) || some(markerJoinsLadder, props.markers ?? []),
+      ) ||
+      some(markerJoinsLadder, props.markers ?? []),
   );
 
   // Y-domain is forced to include zero so the zero-line + diverging axis
@@ -273,7 +296,11 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // labels alone, reserves nothing and keeps every pixel it had.
   const reservedSpace = createMemo(() =>
     reserveLabelSpace(
-      labelReservations(props.balanceSeries ?? [], props.markers ?? []),
+      labelReservations(
+        primaryLabel(),
+        props.balanceSeries ?? [],
+        props.markers ?? [],
+      ),
     ),
   );
 
@@ -528,7 +555,13 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           <polyline
             class={`sui-cashflow-scrub-chart__line${
               props.lineClass ? ` ${props.lineClass}` : ""
-            }${emphasisClass("sui-cashflow-scrub-chart__line", null)}`}
+            }${emphasisClass(
+              "sui-cashflow-scrub-chart__line",
+              PRIMARY_LABEL_ID,
+            )}`}
+            // The colour effect reads this line's stroke back through this
+            // attribute, and gives it to the `lineLabel` caption.
+            data-primary-line={PRIMARY_LABEL_ID}
             points={points}
           />
           {/* `layer: "over"` series paint last so a dashed line laid exactly
@@ -756,6 +789,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       cellCount: ctx.cells.length,
     };
     const labels = labelCandidates(
+      primaryLabel(),
       props.balanceSeries ?? [],
       props.markers ?? [],
       ctx.cells,

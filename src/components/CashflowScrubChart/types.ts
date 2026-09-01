@@ -255,6 +255,31 @@ export interface CashflowScrubChartProps {
    *  this class. */
   lineClass?: string;
   /**
+   * Label DRAWN on the chart for the PRIMARY running-balance line — the
+   * counterpart of `CashflowBalanceSeries.label` for the line the chart draws
+   * itself. The same ladder places it, so it sits beside the line's last
+   * point, takes the line's own colour, and answers to the pointer like every
+   * other label.
+   *
+   * Without it the primary line carries NO label. The chart then names every
+   * overlay line and leaves the one line it draws itself anonymous, and a
+   * pointer on any label mutes the primary line with nothing able to bring it
+   * back. A caller used to buy the label by adding an invisible
+   * `balanceSeries` entry that traced the same values — a carrier line drawn
+   * only to hang a caption on. This prop replaces that workaround.
+   */
+  lineLabel?: string;
+  /**
+   * Where `lineLabel` prefers to sit. Defaults to `"auto"`, which walks
+   * body → right → below and takes the first zone the text fits.
+   *
+   * Separate from the series field for the same reason it is per-series: one
+   * chart's labels routinely need different zones, and the primary line's
+   * caption competes with them for the same rungs. Only an EXPLICIT zone buys
+   * frame space.
+   */
+  lineLabelPlacement?: CashflowLabelZone;
+  /**
    * Accent color for the day-strip ribbon — draws a 1px border around the
    * ENTIRE ribbon element so the filmstrip reads as belonging to a specific
    * identity. When omitted, the ribbon keeps its default appearance (no

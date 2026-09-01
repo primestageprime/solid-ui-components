@@ -13,13 +13,19 @@
 //   labelCandidates(...)    AFTER the scales exist, inside the frame the
 //                           reservation bought.
 //
-// Both walk the same list in the same order — every series, then every marker.
+// Both walk the same list in the same order — the primary line first, then
+// every series, then every marker.
 // The reservation pass is an AGGREGATE (a widest and a count), so it keeps a
 // label whose anchor point has no value; the candidate pass drops that label,
 // because there is no point to hang it on. `placeLabels` indexes its results
 // against the CANDIDATES, so the two lists never have to line up.
 //
 // WHICH LABELS EXIST
+//
+// The primary running-balance line joins as soon as the caller sets
+// `lineLabel`. It takes the id `primary` — the ladder's own vocabulary holds
+// `series:<id>` for a balance series and `marker:<index>` for a marker, and
+// the chart draws exactly one primary line, so that line needs no suffix.
 //
 // A series joins as soon as it carries a `label`. Rendering that field is the
 // point of the feature; it has been on the public API for a long time and
@@ -47,7 +53,25 @@ import type {
   CashflowBalanceSeries,
   CashflowCell,
   CashflowChartMarker,
+  CashflowLabelZone,
 } from "./types";
+
+/** The label id the ladder mints for the primary running-balance line. */
+export const PRIMARY_LABEL_ID = "primary";
+
+/**
+ * The primary running-balance line's own label, when the caller sets one.
+ *
+ * The chart draws this line itself, so the label has no series entry to hang
+ * on. Both builders take this record, and `undefined` says the caller named
+ * no label and the primary line joins neither list.
+ */
+export interface PrimaryLineLabel {
+  /** Text the ladder draws. */
+  readonly text: string;
+  /** Zone the caller prefers. */
+  readonly placement: CashflowLabelZone;
+}
 
 /** Pixel geometry the candidate builder needs, taken from the chart context. */
 export interface LabelGeometry {
@@ -90,14 +114,25 @@ const ladderMarkers = (
  * `xAxisExtraHeight` — the two knobs that build the scales the placement pass
  * then reads back.
  *
+ * @param primary The primary line's own label, or `undefined` for none.
  * @param series  The chart's overlay balance series.
  * @param markers The chart's plotline markers.
- * @returns One reservation per label, series first and markers second.
+ * @returns One reservation per label — the primary line first, then the
+ *          series, then the markers.
  */
 export const labelReservations = (
+  primary: PrimaryLineLabel | undefined,
   series: readonly CashflowBalanceSeries[],
   markers: readonly CashflowChartMarker[],
 ): readonly LabelReservation[] => [
+  ...(primary === undefined
+    ? []
+    : [
+        {
+          width: measureLabelWidth(primary.text),
+          placement: primary.placement,
+        },
+      ]),
   ...map(
     (s: CashflowBalanceSeries) => ({
       width: measureLabelWidth(s.label ?? ""),
@@ -129,6 +164,37 @@ const lastDefinedIndex = (
     if (valueAt(i) != null) found = i;
   }
   return found;
+};
+
+/**
+ * The primary line's candidate, anchored at that line's LAST drawn point —
+ * the same anchor `seriesCandidates` uses, so the primary caption and a
+ * series caption sit on the same rung when both lines end together.
+ *
+ * Returns an empty list when the caller names no label, and when the primary
+ * line draws no point to hang the label on.
+ */
+const primaryCandidates = (
+  primary: PrimaryLineLabel | undefined,
+  geometry: LabelGeometry,
+): readonly ChartLabel[] => {
+  if (primary === undefined) return [];
+  const last = lastDefinedIndex(geometry.cellCount, geometry.primaryCents);
+  const value = last === null ? undefined : geometry.primaryCents(last);
+  if (last === null || value == null) return [];
+  const y = geometry.yToPlot(value);
+  return [
+    {
+      id: PRIMARY_LABEL_ID,
+      text: primary.text,
+      width: measureLabelWidth(primary.text),
+      height: LABEL_ROW_HEIGHT,
+      placement: primary.placement,
+      x: geometry.cellToX(last),
+      y,
+      endY: y,
+    },
+  ];
 };
 
 /**
@@ -191,18 +257,22 @@ const markerCandidates = (
  *
  * This runs AFTER the scales exist, inside the frame the reservation bought.
  *
+ * @param primary  The primary line's own label, or `undefined` for none.
  * @param series   The chart's overlay balance series.
  * @param markers  The chart's plotline markers.
  * @param cells    The cells the series accessors read.
  * @param geometry Scales and counts from the chart context.
- * @returns One candidate per label whose anchor point has a value.
+ * @returns One candidate per label whose anchor point has a value, in the
+ *          order `labelReservations` walks.
  */
 export const labelCandidates = (
+  primary: PrimaryLineLabel | undefined,
   series: readonly CashflowBalanceSeries[],
   markers: readonly CashflowChartMarker[],
   cells: readonly CashflowCell[],
   geometry: LabelGeometry,
 ): readonly ChartLabel[] => [
+  ...primaryCandidates(primary, geometry),
   ...seriesCandidates(series, cells, geometry),
   ...markerCandidates(
     filter(
