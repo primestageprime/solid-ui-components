@@ -129,6 +129,22 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   const [hoveredLabel, setHoveredLabel] = createSignal<string | null>(null);
 
   /**
+   * The label id the chart emphasises, or `null` while it emphasises none.
+   *
+   * A caller may hang a label on a line that paints NOTHING — a carrier series
+   * the consumer's CSS draws with `stroke: none`. The colour map holds one
+   * entry per line that paints a stroke, so a missing key says this line is
+   * invisible. The chart then emphasises nothing: it would otherwise mute
+   * every visible line to point at a line the reader cannot see, which tells
+   * the reader the opposite of the truth.
+   */
+  const emphasisId = (): string | null => {
+    const active = hoveredLabel();
+    if (active === null) return null;
+    return labelColors()[active] === undefined ? null : active;
+  };
+
+  /**
    * The emphasis modifier an element takes while a label is hovered.
    *
    * @param block CSS block the modifier hangs off, e.g. `"…__line"`.
@@ -138,15 +154,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
    * @returns A leading-space class string, or `""` when no label is hovered.
    */
   const emphasisClass = (block: string, id: string | null): string => {
-    const active = hoveredLabel();
+    const active = emphasisId();
     if (active === null) return "";
-    // A caller may hang a label on a line that paints NOTHING — a carrier
-    // series the consumer's CSS draws with `stroke: none`. The colour map
-    // holds one entry per line that paints a stroke, so a missing key says
-    // this line is invisible. The chart then emphasises nothing: it would
-    // otherwise mute every visible line to point at a line the reader cannot
-    // see, which tells the reader the opposite of the truth.
-    if (labelColors()[active] === undefined) return "";
     return active === id ? ` ${block}--highlighted` : ` ${block}--muted`;
   };
 
@@ -824,7 +833,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         <ChartLabelLayer
           labels={labels}
           results={placements}
-          highlightedId={hoveredLabel()}
+          highlightedId={emphasisId()}
           onHoverLabel={setHoveredLabel}
           colorOf={(id) => labelColors()[id]}
         />

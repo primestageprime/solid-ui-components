@@ -1,5 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render } from "@solidjs/testing-library";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { CashflowScrubChart, type CashflowCell } from "./CashflowScrubChart";
 import { dailyCells } from "../DateAxis";
 import { pointer } from "../../test-utils";
@@ -1112,6 +1115,33 @@ describe("CashflowScrubChart gridlines", () => {
     el.dispatchEvent(new MouseEvent(type));
   };
 
+  /**
+   * Give the chart's lines a real stroke for one test.
+   *
+   * jsdom loads no stylesheet of its own, so every line resolves an empty
+   * stroke and the chart reads that as a line which paints nothing. The
+   * emphasis machinery then mutes nothing, by design. A hover test therefore
+   * has to state the colours the browser would have supplied.
+   */
+  const paint = (css: string): void => {
+    const style = document.createElement("style");
+    style.setAttribute("data-test-paint", "");
+    style.textContent = css;
+    document.head.appendChild(style);
+  };
+
+  /** Take every painted rule away, so one test's colours never reach another. */
+  afterEach(() => {
+    for (const el of Array.from(
+      document.head.querySelectorAll("style[data-test-paint]"),
+    )) {
+      el.remove();
+    }
+  });
+
+  /** Every drawn line, in one colour — what the shipped stylesheet does. */
+  const PAINT_LINES = ".sui-cashflow-scrub-chart__line { stroke: rgb(9,9,9); }";
+
   /** Whether `selector` matches an element carrying `modifier`. */
   const hasClass = (
     container: HTMLElement,
@@ -1152,11 +1182,13 @@ describe("CashflowScrubChart gridlines", () => {
   );
 
   it("highlights the hovered label's line and mutes every other line", () => {
+    paint(PAINT_LINES);
     const { container } = render(twoLabelledLines);
     hover(labelGroup(container, "Up"), "pointerenter");
     expect(hasClass(container, ".up-line", HIGHLIGHTED)).toBe(true);
     expect(hasClass(container, ".down-line", MUTED)).toBe(true);
-    // The primary line answers to no label, so it can only step back.
+    // No `lineLabel` here, so no label names the primary line and it can only
+    // step back.
     expect(hasClass(container, PRIMARY, MUTED)).toBe(true);
     // The hovered label's own text takes the highlight too.
     expect(
@@ -1167,6 +1199,7 @@ describe("CashflowScrubChart gridlines", () => {
   });
 
   it("clears every emphasis class when the pointer leaves the label", () => {
+    paint(PAINT_LINES);
     const { container } = render(twoLabelledLines);
     hover(labelGroup(container, "Up"), "pointerenter");
     hover(labelGroup(container, "Up"), "pointerleave");
@@ -1184,6 +1217,7 @@ describe("CashflowScrubChart gridlines", () => {
   });
 
   it("highlights the marker a hovered marker label names", () => {
+    paint(".sui-cashflow-scrub-chart__marker-line { stroke: rgb(9,9,9); }");
     const { container } = render(() => (
       <CashflowScrubChart
         cells={makeCells(16)}
@@ -1218,10 +1252,10 @@ describe("CashflowScrubChart gridlines", () => {
       (el) => el.getAttribute("data-series-id"),
     );
     expect(ids).toEqual(["upside", "downside"]);
-    // The primary line answers to no label, so it carries no id.
-    expect(
-      container.querySelector(PRIMARY)!.hasAttribute("data-series-id"),
-    ).toBe(false);
+    // The primary line is no series, so it carries its own attribute instead.
+    const primary = container.querySelector(PRIMARY)!;
+    expect(primary.hasAttribute("data-series-id")).toBe(false);
+    expect(primary.getAttribute("data-primary-line")).toBe("primary");
   });
 
   it("tags every marker line with its own marker index", () => {
@@ -1282,5 +1316,98 @@ describe("CashflowScrubChart gridlines", () => {
     expect(
       container.querySelectorAll(".sui-cashflow-scrub-chart__label").length,
     ).toBe(2);
+  });
+  // ── The primary line's own label (the `lineLabel` prop) ─────────────
+
+  /** A chart that names the primary line and one overlay series. */
+  const labelledPrimary = () => (
+    <CashflowScrubChart
+      cells={makeCells(16)}
+      selected={3}
+      onScrub={() => {}}
+      lineLabel="Balance"
+      lineLabelPlacement="right"
+      balanceSeries={[
+        {
+          id: "upside",
+          label: "Up",
+          class: "up-line",
+          balanceCents: stoppingAt(6, 60_000),
+        },
+      ]}
+    />
+  );
+
+  it("draws a label for the primary line when `lineLabel` names one", () => {
+    const { container } = render(labelledPrimary);
+    const texts = Array.from(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__label"),
+    ).map((el) => el.textContent);
+    expect(texts).toContain("Balance");
+  });
+
+  it("highlights the primary line and mutes the series lines on its label", () => {
+    paint(PAINT_LINES);
+    const { container } = render(labelledPrimary);
+    hover(labelGroup(container, "Balance"), "pointerenter");
+    expect(hasClass(container, PRIMARY, HIGHLIGHTED)).toBe(true);
+    expect(hasClass(container, ".up-line", MUTED)).toBe(true);
+  });
+
+  it("draws NO primary label, and no emphasis, without `lineLabel`", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart cells={makeCells(16)} selected={3} onScrub={() => {}} />
+    ));
+    // No label reaches the ladder, so the layer never draws.
+    expect(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__label").length,
+    ).toBe(0);
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__label-overlay"),
+    ).toBeNull();
+    // The primary line keeps the class list it had before this prop existed.
+    expect(container.querySelector(PRIMARY)!.getAttribute("class")).toBe(
+      "sui-cashflow-scrub-chart__line",
+    );
+  });
+
+  it("mutes NOTHING when the hovered label names a line that paints nothing", () => {
+    // The consumer's own class draws no stroke — the carrier series pattern.
+    // The other line paints, so the chart could mute it, and must not.
+    paint(".up-line { stroke: none; } .down-line { stroke: rgb(9,9,9); }");
+    const { container } = render(twoLabelledLines);
+    hover(labelGroup(container, "Up"), "pointerenter");
+    expect(hasClass(container, ".up-line", HIGHLIGHTED)).toBe(false);
+    expect(hasClass(container, ".down-line", MUTED)).toBe(false);
+    expect(hasClass(container, PRIMARY, MUTED)).toBe(false);
+    expect(container.querySelectorAll('[class*="--muted"]').length).toBe(0);
+  });
+
+  // ── The highlight rule, read from the stylesheet ────────────────────
+  // jsdom applies no imported stylesheet, so a computed-style assertion would
+  // pass whatever the CSS says. Reading the rule is the honest gate — the same
+  // method `BucketQueue/styling.test.ts` uses.
+
+  it("restores full strength on the highlighted line and band", () => {
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "./CashflowScrubChart.css"),
+      "utf8",
+    );
+    const body = (selector: string): string =>
+      css.slice(css.indexOf(selector) + selector.length).split("}")[0];
+    const line = body(
+      ".sui-cashflow-scrub-chart__line.sui-cashflow-scrub-chart__line--highlighted {",
+    );
+    // A consumer's series class dims its line with `stroke-opacity`, so width
+    // alone leaves the highlighted line faded.
+    expect(line).toContain("stroke-width: 3");
+    expect(line).toContain("stroke-opacity: 1");
+    expect(line).toContain("opacity: 1");
+    const band = body(
+      ".sui-cashflow-scrub-chart__band.sui-cashflow-scrub-chart__band--highlighted {",
+    );
+    // A band is a fill, so the consumer dims it with `fill-opacity`.
+    expect(band).toContain("fill-opacity: 1");
+    expect(band).toContain("opacity: 1");
   });
 });
