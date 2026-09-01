@@ -965,4 +965,128 @@ describe("CashflowScrubChart gridlines", () => {
     warn.mockRestore();
     error.mockRestore();
   });
+
+  // ── The three behaviours the showcase demonstrates ──────────────────
+  // dev/showcases/cashflow-scrub-chart.tsx draws one chart per rung of the
+  // ladder. These lock what each of those charts claims to show, so a change
+  // that silently moves a label makes the showcase wrong AND fails here.
+
+  /** The zone class suffix of the label with this text, or null when dropped. */
+  const zoneOfLabel = (container: HTMLElement, text: string): string | null => {
+    const found = Array.from(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__label"),
+    ).find((el) => el.textContent === text);
+    const zone = ["body", "right", "below"].find((z) =>
+      found?.classList.contains(`sui-cashflow-scrub-chart__label--${z}`),
+    );
+    return zone ?? null;
+  };
+
+  /** A line that stops at `lastIndex`, so its last point sits inside the plot. */
+  const stoppingAt =
+    (lastIndex: number, offsetCents: number) =>
+    (c: CashflowCell, i: number): number | null =>
+      i > lastIndex ? null : c.balanceCents + offsetCents;
+
+  it('keeps every "auto" label in the body and buys no gutter for them', () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={[
+          // No `labelPlacement` anywhere: every label is "auto". Both lines
+          // stop early, so each last point has clear space beside it.
+          {
+            id: "upside",
+            label: "Up",
+            balanceCents: stoppingAt(6, 60_000),
+          },
+          {
+            id: "downside",
+            label: "Down",
+            balanceCents: stoppingAt(11, -60_000),
+          },
+        ]}
+      />
+    ));
+    expect(zoneOfLabel(container, "Up")).toBe("body");
+    expect(zoneOfLabel(container, "Down")).toBe("body");
+    // The body rung costs nothing, so the plot keeps the full chart width —
+    // pixel-identical to the same chart with no labels at all.
+    expect(plotRightOf(container)).toBe(chartWidthOf(container));
+  });
+
+  it('lets an "auto" label use the gutter an explicit label bought', () => {
+    const flat = (): number => 0;
+    const series = (placement: "auto" | "right") => [
+      {
+        id: "optimistic",
+        label: "Optimistic",
+        labelPlacement: placement,
+        balanceCents: (c: CashflowCell) => c.balanceCents + 200_000,
+      },
+      {
+        // Runs to the right edge, so the body box leaves the plot on one side
+        // and this line's own flat run fills it on the other. The body rung
+        // therefore refuses it and it falls to the gutter.
+        id: "flat",
+        label: "Flat",
+        balanceCents: flat,
+      },
+    ];
+    const bought = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={series("right")}
+      />
+    ));
+    expect(zoneOfLabel(bought.container, "Optimistic")).toBe("right");
+    expect(zoneOfLabel(bought.container, "Flat")).toBe("right");
+
+    // Same two labels, nothing explicit: no gutter exists to fall into, so
+    // both are dropped. An "auto" label never reaches a rung it did not buy.
+    const unbought = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={series("auto")}
+      />
+    ));
+    expect(zoneOfLabel(unbought.container, "Optimistic")).toBeNull();
+    expect(zoneOfLabel(unbought.container, "Flat")).toBeNull();
+    expect(plotRightOf(unbought.container)).toBe(
+      chartWidthOf(unbought.container),
+    );
+  });
+
+  it("honours a commanded zone on both the right and the below rung", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={[
+          {
+            id: "optimistic",
+            label: "Optimistic",
+            labelPlacement: "right",
+            balanceCents: (c) => c.balanceCents + 200_000,
+          },
+          {
+            id: "pessimistic",
+            label: "Pessimistic",
+            labelPlacement: "below",
+            balanceCents: (c) => c.balanceCents - 200_000,
+          },
+        ]}
+      />
+    ));
+    expect(zoneOfLabel(container, "Optimistic")).toBe("right");
+    // "below" skips the body rung it could otherwise have taken.
+    expect(zoneOfLabel(container, "Pessimistic")).toBe("below");
+  });
 });
