@@ -1,8 +1,13 @@
 # Spec — optional labels on chart lines and markers
 
-Status: **ready to implement, one precondition open** (see §2).
+Status: **in progress on `feat/chart-line-labels`.** Steps 2, 3, 4 and 6 of §11
+are done and merged. Step 5, the placement module, is next. Peter's prop
+confirmation (§2) is still open and gates the MERGE, not the work.
 Written 2026-08-31. Supersedes the scratchpad handoff of the same date.
 Target: `CashflowScrubChart` and `ScrubChart` in this repo.
+
+`ThresholdRail` became `BandRail` in `6e8b8ad`, from a separate work stream
+sharing this branch. Read §11's closing note before you edit or run gates.
 
 ---
 
@@ -260,34 +265,57 @@ drop.
 
 A label that fits in no zone is dropped. Nothing is logged.
 
-### 5.1 Reuse what exists — three helpers, all in this repo
+### 5.1 The three helpers are already lifted — DONE, use them
+
+**This step is complete and merged.** It was future work when this spec was
+written. Do not lift anything; import what is here.
 
 The scratchpad handoff sends the reader to a mockup HTML file for prior art.
-**SUI already implements this**, and commit `0039068`
+SUI already implements this. Commit `0039068`
 ("fix(ThresholdRail): keep tick labels clear of the thumb and of each other")
-solved the same problem last release.
+solved the same problem last release, and commits `06e653c` and `afcd2c9`
+moved the result out of the rail into a shared module.
 
-`BandRail/helpers.ts` holds all three. `placeThresholds` at `:227-245`
-shows them working together — read that first, then the definitions:
+`src/internal/geometry/labelLayout.ts` holds all three, exported:
 
 ```ts
-// :68
+// :19
+export type LabelAnchor = "start" | "middle" | "end";
+// :26
 fitAnchor(x: number, width: number, lo: number, hi: number): LabelAnchor
-// :81
+// :39
 anchoredSpan(x: number, width: number, anchor: LabelAnchor): readonly [number, number]
-// :179 — NOT exported today
-laneOf(candidates: readonly Candidate[]): readonly (Candidate & { lane: number })[]
+// :56
+interface LaneBox { readonly x: number; readonly span: readonly [number, number] }
+// :62
+interface LanePacking { readonly maxLanes: number; readonly gutter: number }
+// :81
+laneOf<Box extends LaneBox>(boxes: readonly Box[], packing: LanePacking):
+  readonly (Box & { lane: number })[]
 ```
 
 `fitAnchor` clamps a label into a range and returns the `text-anchor` that suits
 the clamped position. `anchoredSpan` returns the box a label occupies once
-anchored. `laneOf` assigns non-overlapping lanes; `placeThresholds` runs it once
-per side.
+anchored. `laneOf` assigns non-overlapping lanes.
 
-Lift all three into a shared internal module rather than copying them a third
-time. `laneOf` needs exporting, and `Candidate` is `BandRail`-shaped today
-— generalise it over "a box with an x and a width" as you lift. `BandRail`
-keeps working through the shared version, and its tests must stay green.
+`laneOf` is generic over `LaneBox`, so a caller keeps its own richer type in the
+return. `LanePacking` is the seam that makes one function serve different
+callers: pass a different `maxLanes` per call rather than forking the function.
+The right zone and the below zone are two calls with different packings, not two
+algorithms.
+
+`labelLayout.test.ts` covers all three in 24 cases, including the lane cap, a
+one-lane packing, a zero gutter, unsorted input and empty input. Read it before
+you write against these — it is the contract.
+
+`laneOf` keeps an explicit loop rather than a combinator. That is deliberate:
+`collectionMethodCalls` and `dotChains` are ratcheted metrics and a rewrite
+raises them. Do not "modernise" it.
+
+`BandRail/helpers.ts` (renamed from `ThresholdRail` in `6e8b8ad`) re-exports
+`fitAnchor` and `anchoredSpan` as bare bindings, and `BandRail/types.ts`
+re-exports `LabelAnchor`. Import from `src/internal/geometry/labelLayout.ts`
+directly, not through the rail.
 
 **Do not copy `lanes()` from the mockup.** It tries four lanes and then forces
 the mark into lane 3 without re-checking, so it permits the overlap this spec
@@ -463,34 +491,57 @@ Repo `/Users/aarnold/gits/primestage/solid-ui-components`, branch `main`.
 `## 0.156.0`**, written by the gridlines work but never published. There is no
 `[Unreleased]` heading; that convention is not active here.
 
-**Fold this work into `0.156.0`.** Add your entry under the existing heading and
-bump `package.json` to `0.156.0` in the PR. Both features are additive and
-neither has shipped.
+**DO NOT BUMP THE VERSION. DO NOT CUT A RELEASE.** The user ruled on
+2026-08-31 that this work and the `BandRail` work both finish first, and
+everything then releases under one bump. Leave `package.json` at `0.155.2`.
+
+Add a CHANGELOG entry describing the change. Do not create or claim a version
+heading — whoever cuts the release owns that. Name no version in a deprecation
+comment either, so nothing goes stale when the bump lands.
 
 State your reading of the §1 / data-prop fork in the CHANGELOG entry, as §3
 above sets it out.
 
-`publish.yml` runs on `workflow_run` after CI passes on `main`, so the merged
-version bump publishes itself. **Never tag a release on an unmerged branch** —
-`AGENT_GUIDE.md` calls tagging the one step with no cheap undo.
+`publish.yml` runs on `workflow_run` after CI passes on `main`, so a version
+bump merged to `main` publishes itself. That is exactly why the bump waits.
+**Never tag a release on an unmerged branch** — `AGENT_GUIDE.md` calls tagging
+the one step with no cheap undo.
 
 ---
 
 ## 11. Order of work
 
-1. Get Peter's confirmation on the four props (§2). Do not start without it.
-2. `CashflowChartMarker.class`. One field, one test.
-3. `CashflowChartMarker.valueCents`. Keep the old path when it is absent.
-4. Lift `fitAnchor` / `anchoredSpan` / `laneOf` out of `BandRail/helpers.ts`
-   into a shared internal module. `BandRail`'s tests stay green.
-5. Write `labelPlacement.ts` + its test. Pure, no DOM, identity scales.
-6. Add `rightGutter` / `xAxisExtraHeight` to `ScrubChartOverrides`. Assert the
-   zero-reservation case first (§7.1).
-7. Add the label layer to `CashflowScrubChart`, after line 414.
+Branch `feat/chart-line-labels`. Steps 2, 3, 4 and 6 are DONE and merged.
+
+1. **OPEN** — Peter's confirmation on the four props (§2). The user ruled that
+   the code proceeds and the MERGE waits on this, not the start. Do not merge
+   to `main` without it.
+2. ~~`CashflowChartMarker.class`.~~ DONE — `d58c155`.
+3. ~~`CashflowChartMarker.valueCents`.~~ DONE — `6927835`. The old path still
+   runs when the field is absent.
+4. ~~Lift `fitAnchor` / `anchoredSpan` / `laneOf`.~~ DONE — `06e653c`,
+   `afcd2c9`. They live in `src/internal/geometry/labelLayout.ts`. See §5.1.
+5. **NEXT** — write `labelPlacement.ts` + its test. Pure, no DOM, identity
+   scales. Import the three helpers; do not rewrite them.
+6. ~~`rightGutter` / `xAxisExtraHeight` on `ScrubChartOverrides`.~~ DONE —
+   `676f0c4`, `a898217`. The zero-reservation regression test is in place.
+7. Add the label layer to `CashflowScrubChart`. Paint it after the primary
+   line; do not borrow an overlay slot (§6).
 8. Showcase, `COMPONENTS.md`, CHANGELOG, baselines.
-9. Run all five gates. Verify in `thorcasting-ui`. Then bump.
+9. Run all five gates. Verify in `thorcasting-ui`.
 
 Commit at each step. One commit at the end leaves nothing to inspect.
+
+**`ThresholdRail` is now `BandRail`.** Another work stream renamed the whole
+directory in `6e8b8ad` and shares this branch. Before you edit anything under
+`src/components/BandRail/`, check whether that session is mid-change. Run your
+gates in a worktree, not in the main checkout — a `git mv` landing under a test
+run voids it.
+
+**Line numbers in this spec predate the merges above.** Paths are current.
+Offsets in `CashflowScrubChart.tsx`, `ScrubChart.tsx` and their `types.ts` have
+moved, because steps 2, 3 and 6 edited all of them. Grep for the symbol; do not
+trust an offset.
 
 ---
 
