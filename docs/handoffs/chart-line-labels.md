@@ -212,6 +212,20 @@ This keeps the handoff's rule intact. An explicit `"right"` label can still
 fall to `below` when the gutter cannot hold it. An `"auto"` label can still
 reach `right` on gutter that another label bought.
 
+**A consequence worth knowing before you design a chart's labels.** The gutter
+is sized from the widest label that ASKED for it. So an `"auto"` label can only
+use that gutter if it is **no wider** than the explicit label that bought it. A
+longer `"auto"` label does not widen the gutter — it is dropped.
+
+Measured while building the showcase: `"Pessimistic"` at 77px against
+`"Optimistic"` at 70px is dropped; `"Target"` fits with room to spare. If a
+caller wants a long caption in the gutter, that caption is the one that must
+name `"right"`.
+
+This follows from §4.2 rather than contradicting it, but it is not obvious from
+the rule, and it decides which of a chart's labels should carry the explicit
+zone.
+
 ### 4.3 Numbers, verified 2026-08-31
 
 `ScrubChart/helpers.ts:30-37`:
