@@ -1089,4 +1089,130 @@ describe("CashflowScrubChart gridlines", () => {
     // "below" skips the body rung it could otherwise have taken.
     expect(zoneOfLabel(container, "Pessimistic")).toBe("below");
   });
+
+  // ── Label hover → line emphasis ─────────────────────────────────────
+  // A label names one line and the chart ships no legend, so pointing at a
+  // label is the only way to read the pairing. `pointerenter` and
+  // `pointerleave` do not bubble, so each test sends them straight to the
+  // label group. jsdom ships no `PointerEvent`, so a `MouseEvent` carries
+  // them — the same convention the shared `pointer` driver uses.
+
+  /** The label group whose text reads `text`. */
+  const labelGroup = (container: HTMLElement, text: string): Element =>
+    Array.from(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__label-group"),
+    ).find(
+      (g) =>
+        g.querySelector(".sui-cashflow-scrub-chart__label")?.textContent ===
+        text,
+    )!;
+
+  /** Send one non-bubbling pointer event to `el`. */
+  const hover = (el: Element, type: "pointerenter" | "pointerleave"): void => {
+    el.dispatchEvent(new MouseEvent(type));
+  };
+
+  /** Whether `selector` matches an element carrying `modifier`. */
+  const hasClass = (
+    container: HTMLElement,
+    selector: string,
+    modifier: string,
+  ): boolean => container.querySelector(selector)!.classList.contains(modifier);
+
+  const HIGHLIGHTED = "sui-cashflow-scrub-chart__line--highlighted";
+  const MUTED = "sui-cashflow-scrub-chart__line--muted";
+  /** The running-balance line, which no label names. */
+  const PRIMARY =
+    ".sui-cashflow-scrub-chart__line:not(.sui-cashflow-scrub-chart__line--series)";
+
+  /**
+   * Two labelled lines beside the primary line. Both stop early, so each last
+   * point has clear space and both labels take the body rung.
+   */
+  const twoLabelledLines = () => (
+    <CashflowScrubChart
+      cells={makeCells(16)}
+      selected={3}
+      onScrub={() => {}}
+      balanceSeries={[
+        {
+          id: "upside",
+          label: "Up",
+          class: "up-line",
+          balanceCents: stoppingAt(6, 60_000),
+        },
+        {
+          id: "downside",
+          label: "Down",
+          class: "down-line",
+          balanceCents: stoppingAt(11, -60_000),
+        },
+      ]}
+    />
+  );
+
+  it("highlights the hovered label's line and mutes every other line", () => {
+    const { container } = render(twoLabelledLines);
+    hover(labelGroup(container, "Up"), "pointerenter");
+    expect(hasClass(container, ".up-line", HIGHLIGHTED)).toBe(true);
+    expect(hasClass(container, ".down-line", MUTED)).toBe(true);
+    // The primary line answers to no label, so it can only step back.
+    expect(hasClass(container, PRIMARY, MUTED)).toBe(true);
+    // The hovered label's own text takes the highlight too.
+    expect(
+      labelGroup(container, "Up")
+        .querySelector(".sui-cashflow-scrub-chart__label")!
+        .classList.contains("sui-cashflow-scrub-chart__label--highlighted"),
+    ).toBe(true);
+  });
+
+  it("clears every emphasis class when the pointer leaves the label", () => {
+    const { container } = render(twoLabelledLines);
+    hover(labelGroup(container, "Up"), "pointerenter");
+    hover(labelGroup(container, "Up"), "pointerleave");
+    expect(hasClass(container, ".up-line", HIGHLIGHTED)).toBe(false);
+    expect(hasClass(container, ".down-line", MUTED)).toBe(false);
+    expect(hasClass(container, PRIMARY, MUTED)).toBe(false);
+  });
+
+  it("leaves the resting chart free of every emphasis class", () => {
+    const { container } = render(twoLabelledLines);
+    expect(container.querySelectorAll('[class*="--highlighted"]').length).toBe(
+      0,
+    );
+    expect(container.querySelectorAll('[class*="--muted"]').length).toBe(0);
+  });
+
+  it("highlights the marker a hovered marker label names", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+        // An explicit zone hands the caption to the ladder, which is what
+        // makes the marker answer to a label id at all.
+        markers={[{ index: 8, label: "Raise", labelPlacement: "right" }]}
+      />
+    ));
+    hover(labelGroup(container, "Raise"), "pointerenter");
+    expect(
+      hasClass(
+        container,
+        ".sui-cashflow-scrub-chart__marker",
+        "sui-cashflow-scrub-chart__marker--highlighted",
+      ),
+    ).toBe(true);
+  });
+
+  it("gives every drawn label a hit box to point at", () => {
+    const { container } = render(twoLabelledLines);
+    // The component always passes `onHoverLabel`, so the layer always draws
+    // the box. One box per drawn label, and no box without a label.
+    expect(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__label-hit").length,
+    ).toBe(2);
+    expect(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__label").length,
+    ).toBe(2);
+  });
 });
