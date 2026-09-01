@@ -563,14 +563,27 @@ Behaviour tests, written first, red then green:
   end, which reads oddly on a domain like `[-100, 100]`. Revisit if such a
   domain appears.
 
-## Open questions
+## Open questions — resolved in the build
 
-1. **Do the band end values render?** A threshold shows `format(value)` as a
-   second text line. A band has two ends. Proposal: render `format(start)` and
-   `format(end)` at the caps in the muted `__value` style, always. Check for
-   crowding in the showcase and drop them if it is bad.
-2. **What does a bar do when its visible span is narrower than its label?**
-   The label overflows the bar. Proposal: let it overflow and keep the existing
-   box clamp, since the lane already guarantees clearance from its neighbour.
-3. **Should `MAX_ARCS` degradation be neutral or the first six tones?** Proposal
-   above is neutral. Six-band overlap may never occur in practice.
+1. **Do the band end values render at the caps?** **No.** A band already
+   carries its label, and the crossing it claims is drawn as a tick down to the
+   rail where a `Threshold` can name the number if the consumer wants it there.
+   Rendering `format(start)` and `format(end)` on every bar put four extra
+   numbers on the four-band showcase for no question anyone was asking. Easy to
+   add later; hard to un-clutter.
+
+2. **What does a bar do when its label is wider than its span?** The label
+   overflows the bar, and the LANE BOX is the wider of the two. A short bar
+   under a long label still clears its neighbour by the label's width, so the
+   overflow can never collide with anything. Pinned by a test.
+
+3. **Is the past-`MAX_ARCS` fallback neutral or tonal?** **Neutral.** One
+   plain ring says "several hold here" without pretending to be countable.
+   Eight tinted arcs that a reader cannot separate would claim a precision the
+   mark does not have.
+
+## Still open
+
+- **Whether the value fill should start somewhere other than the domain's left
+  end.** It reads oddly on a domain like `[-100, 100]`. No such domain exists
+  in a consumer yet, so no `fillFrom` prop.
