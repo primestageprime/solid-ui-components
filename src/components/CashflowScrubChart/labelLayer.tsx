@@ -411,9 +411,16 @@ const hitLeft = (label: DrawnLabel): number =>
  * event at all — it must not eat the scrub gestures it sits over.
  *
  * `colorOf` answers the same question at rest: the caller reads the drawn
- * line's colour and the label takes it. The layer writes that colour as the
- * `fill` PRESENTATION attribute, not an inline style, so the muting rule's
- * `opacity` still applies and a consumer's own CSS `fill` rule still wins.
+ * line's colour and the label takes it. The layer writes that colour as an
+ * INLINE STYLE. A `fill` presentation attribute sits below every CSS
+ * declaration in the cascade, so any plain `.sui-cashflow-scrub-chart__label
+ * { fill: … }` rule on the page paints over the attribute. A consumer loads
+ * exactly such a rule: `package.json` maps `index.css` to `dist/index.css`
+ * even while the `source` condition is active, so a stale second copy of this
+ * stylesheet reaches the page beside the fresh one. An inline style beats
+ * every class rule that carries no `!important`, so the colour survives.
+ * The layer sets no style at all when no colour resolves, so the CSS default
+ * applies. Muting stays on `opacity`, which the inline `fill` does not touch.
  */
 export const ChartLabelLayer: Component<{
   labels: readonly ChartLabel[];
@@ -432,6 +439,11 @@ export const ChartLabelLayer: Component<{
     return active === id
       ? " sui-cashflow-scrub-chart__label--highlighted"
       : " sui-cashflow-scrub-chart__label--muted";
+  };
+  /** The inline style one label takes, or `undefined` when no colour resolves. */
+  const colorStyle = (id: string) => {
+    const color = props.colorOf?.(id);
+    return color === undefined ? undefined : { fill: color };
   };
   return (
     <g class="sui-cashflow-scrub-chart__labels">
@@ -456,7 +468,7 @@ export const ChartLabelLayer: Component<{
               x={label.placed.x}
               y={label.placed.y}
               text-anchor={label.placed.anchor}
-              fill={props.colorOf?.(label.placed.id)}
+              style={colorStyle(label.placed.id)}
             >
               {label.text}
             </text>

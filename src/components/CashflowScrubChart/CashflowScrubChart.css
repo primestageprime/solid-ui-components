@@ -183,16 +183,19 @@
   pointer-events: none;
 }
 
+/* The default label colour, for a label whose line resolves no colour.
+   A label that DOES resolve a colour carries that colour as an INLINE STYLE,
+   which beats this rule. Do not move that colour back into a class or a `fill`
+   presentation attribute. A presentation attribute loses to every CSS rule,
+   including a stale duplicate of THIS stylesheet: a consumer imports
+   `@primestageprime/solid-ui-components/index.css`, `package.json` maps that
+   to `dist/index.css` even while the `source` condition is active, and the
+   page then loads a second copy of this rule that paints over the attribute.
+   The measured result was six labels drawn in the default grey. */
 .sui-cashflow-scrub-chart__label {
   font-size: 9px;
   font-weight: 600;
   dominant-baseline: middle;
-}
-
-/* The default label colour, for a label whose line resolves no colour. A
-   presentation attribute loses to EVERY CSS rule, so the component writes the
-   line's own colour as `fill="…"` and this rule steps aside for it. */
-.sui-cashflow-scrub-chart__label:not([fill]) {
   fill: var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
 }
 
@@ -377,9 +380,9 @@
    whole plot. The modifier stays on the element so a consumer can hook it. */
 
 /* The highlighted label sets NO fill. A label already carries the colour of
-   the line it names, written as a `fill` attribute, and a rule here would
-   paint over it. Every OTHER label mutes, which is what shows the emphasis.
-   The class stays so a consumer can hook it. */
+   the line it names, written as an inline style. Every OTHER label mutes,
+   which is what shows the emphasis. The class stays so a consumer can hook
+   it. */
 .sui-cashflow-scrub-chart__label.sui-cashflow-scrub-chart__label--highlighted {
   opacity: 1;
 }

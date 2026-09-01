@@ -1240,7 +1240,7 @@ describe("CashflowScrubChart gridlines", () => {
 
   // ── Label colour, read back from the drawn line ─────────────────────
   // The chart reads each line's RESOLVED stroke from the DOM and writes it on
-  // the label as a `fill` attribute. jsdom loads no CSS file, so
+  // the label as an INLINE STYLE. jsdom loads no CSS file, so
   // `getComputedStyle(...).stroke` is empty here and no colour ever resolves.
   // These tests lock the two halves that DO run under jsdom: the lines carry
   // the attributes the effect queries, and a label with no colour keeps the
@@ -1278,32 +1278,53 @@ describe("CashflowScrubChart gridlines", () => {
     ).toBe("8");
   });
 
-  it("gives a label NO fill attribute when its line resolves no colour", () => {
+  /** The `<text>` of the label whose text reads `text`. */
+  const labelText = (container: HTMLElement, text: string): SVGTextElement =>
+    labelGroup(container, text).querySelector(
+      ".sui-cashflow-scrub-chart__label",
+    ) as SVGTextElement;
+
+  it("gives a label NO colour of its own when its line resolves none", () => {
     const { container } = render(twoLabelledLines);
     const labels = Array.from(
       container.querySelectorAll(".sui-cashflow-scrub-chart__label"),
     );
     expect(labels.length).toBe(2);
     for (const label of labels) {
+      // Neither carrier: the stylesheet's own default paints the label.
       expect(label.hasAttribute("fill")).toBe(false);
+      expect((label as SVGTextElement).style.fill).toBe("");
     }
   });
 
   it("paints a label in the resolved colour of the line it names", () => {
     // jsdom resolves `stroke` from a real style sheet, so one <style> gives
     // the series a colour the effect can read. No harness, no fake DOM.
-    const style = document.createElement("style");
-    style.textContent = ".up-line { stroke: rgb(1, 2, 3); }";
-    document.head.appendChild(style);
+    paint(".up-line { stroke: rgb(1, 2, 3); }");
     const { container } = render(twoLabelledLines);
-    const fillOf = (text: string): string | null =>
-      labelGroup(container, text)
-        .querySelector(".sui-cashflow-scrub-chart__label")!
-        .getAttribute("fill");
-    expect(fillOf("Up")).toBe("rgb(1, 2, 3)");
+    // The colour rides on the INLINE STYLE, never on a `fill` attribute.
+    expect(labelText(container, "Up").style.fill).toBe("rgb(1, 2, 3)");
+    expect(labelText(container, "Up").hasAttribute("fill")).toBe(false);
     // The other line resolves no colour, so its label keeps the CSS default.
-    expect(fillOf("Down")).toBeNull();
-    style.remove();
+    expect(labelText(container, "Down").style.fill).toBe("");
+  });
+
+  it("keeps the label colour under a plain label rule from a stale stylesheet", () => {
+    // The defect this guards: a consumer imports the package's `index.css`,
+    // `package.json` maps that to `dist/index.css` even while the `source`
+    // condition is active, and a SECOND copy of the label rule reaches the
+    // page. A `fill` presentation attribute loses to that rule, so every
+    // label drew in the default grey. An inline style wins instead.
+    paint(
+      ".up-line { stroke: rgb(1, 2, 3); }" +
+        " .sui-cashflow-scrub-chart__label { fill: rgb(9, 9, 9); }",
+    );
+    const { container } = render(twoLabelledLines);
+    const computed = (text: string): string =>
+      getComputedStyle(labelText(container, text)).getPropertyValue("fill");
+    expect(computed("Up")).toBe("rgb(1, 2, 3)");
+    // The label with no colour of its own takes the stale rule, as it must.
+    expect(computed("Down")).toBe("rgb(9, 9, 9)");
   });
 
   it("gives every drawn label a hit box to point at", () => {
