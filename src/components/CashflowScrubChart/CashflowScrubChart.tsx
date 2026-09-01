@@ -58,6 +58,7 @@ import type {
   CashflowBalanceSeries,
   CashflowCell,
   CashflowChartMarker,
+  CashflowHorizontalMarker,
   CashflowLabelZone,
   CashflowScrubChartProps,
   CashflowSeriesFill,
@@ -71,6 +72,7 @@ export type {
   CashflowBalanceSeries,
   CashflowCell,
   CashflowChartMarker,
+  CashflowHorizontalMarker,
   CashflowLabelZone,
   CashflowScrubChartProps,
   CashflowSeriesFill,
@@ -486,7 +488,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
   ) => {
     const list = props.markers ?? [];
-    if (list.length === 0 || ctx.cells.length === 0 || !ctx.yToPlot)
+    const hLines = props.horizontalMarkers ?? [];
+    if (
+      (list.length === 0 && hLines.length === 0) ||
+      ctx.cells.length === 0 ||
+      !ctx.yToPlot
+    )
       return null;
     const yToPlot = ctx.yToPlot;
     return (
@@ -497,6 +504,38 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         viewBox={`0 0 ${ctx.width} ${ctx.height}`}
         preserveAspectRatio="none"
       >
+        {/* Horizontal reference lines (threshold AMOUNTS) — drawn first,
+            underneath the vertical/date markers, same "reference chrome
+            paints first" ordering the gridlines use. Non-interactive: no
+            hit area, no click. */}
+        <For each={hLines}>
+          {(m) => {
+            const y = yToPlot(m.valueCents);
+            return (
+              <g class="sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--hrule">
+                <line
+                  class={`sui-cashflow-scrub-chart__hrule-line${
+                    m.class ? ` ${m.class}` : ""
+                  }`}
+                  x1={ctx.plotLeft}
+                  x2={ctx.plotRight}
+                  y1={y}
+                  y2={y}
+                />
+                {m.label && (
+                  <text
+                    class="sui-cashflow-scrub-chart__hrule-label"
+                    x={ctx.plotRight - 4}
+                    y={y - 4}
+                    text-anchor="end"
+                  >
+                    {m.label}
+                  </text>
+                )}
+              </g>
+            );
+          }}
+        </For>
         <For
           each={filter((m) => m.index >= 0 && m.index < ctx.cells.length, list)}
         >
@@ -685,7 +724,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       scrub={props.scrub}
       centerOn={props.centerOn}
       renderChartOverlay={
-        (props.markers?.length ?? 0) > 0 ? renderMarkers : undefined
+        (props.markers?.length ?? 0) > 0 ||
+        (props.horizontalMarkers?.length ?? 0) > 0
+          ? renderMarkers
+          : undefined
       }
       hover={props.hover}
       renderHoverOverlay={props.hover ? renderHover : undefined}
