@@ -192,7 +192,9 @@ describe("railExtents", () => {
     // A rail with one lane above puts its value line at y=14, the pad exactly.
     const { railY } = railExtents(1, 0);
     const { valueY } = laneGeometry(1, "above", railY);
-    expect(railY).toBe(THUMB_REACH_ABOVE + NAME_GAP_ABOVE + LINE_PITCH + TEXT_PAD);
+    expect(railY).toBe(
+      THUMB_REACH_ABOVE + NAME_GAP_ABOVE + LINE_PITCH + TEXT_PAD,
+    );
     expect(valueY).toBe(TEXT_PAD);
   });
 

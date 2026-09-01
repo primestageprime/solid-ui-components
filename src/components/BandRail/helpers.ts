@@ -116,7 +116,8 @@ export const BAND_LANE_GAP = 4;
  * sits above its baseline, so an "above" label's baseline is nearer the bar by
  * one line and its far edge is not.
  */
-export const BAND_LABEL_REACH = BAND_THICKNESS / 2 + BAND_LABEL_GAP + LINE_PITCH;
+export const BAND_LABEL_REACH =
+  BAND_THICKNESS / 2 + BAND_LABEL_GAP + LINE_PITCH;
 
 /**
  * Distance between one band lane and the next.
@@ -125,7 +126,8 @@ export const BAND_LABEL_REACH = BAND_THICKNESS / 2 + BAND_LABEL_GAP + LINE_PITCH
  * consecutive lanes draw their bars through each other's text — which is what
  * a hand-set 15 did against a label that needs 18.
  */
-export const BAND_LANE_PITCH = BAND_LABEL_REACH + BAND_THICKNESS / 2 + BAND_LANE_GAP;
+export const BAND_LANE_PITCH =
+  BAND_LABEL_REACH + BAND_THICKNESS / 2 + BAND_LANE_GAP;
 /** Half-height of the cap stroke drawn at a band's bounded end. */
 export const BAND_CAP_HALF = 3.5;
 
@@ -234,11 +236,8 @@ const labelBase = (side: ThresholdSide, bandLanes = 0): number =>
  * `laneGeometry` and `sideExtent` both read this, so a lifted label and the
  * box sized to hold it can never disagree.
  */
-const labelReach = (
-  lane: number,
-  side: ThresholdSide,
-  bandLanes = 0,
-): number => labelBase(side, bandLanes) + LANE_PITCH * (lane - 1);
+const labelReach = (lane: number, side: ThresholdSide, bandLanes = 0): number =>
+  labelBase(side, bandLanes) + LANE_PITCH * (lane - 1);
 
 /**
  * Vertical positions of one BAND lane, given where the rail sits.

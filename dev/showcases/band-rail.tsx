@@ -229,9 +229,9 @@ export const BandRailShowcase: Component = () => (
       <h3>Atoms / Variants</h3>
       <p class="text-meta">
         Owns its CSS and composes no other component. Factory:{" "}
-        <code>createBandRail({"{ format }"})</code> — curry the formatter
-        when it is a static decision. Tone comes from the shared{" "}
-        <code>Tone</code> union, so the theme owns every colour.
+        <code>createBandRail({"{ format }"})</code> — curry the formatter when
+        it is a static decision. Tone comes from the shared <code>Tone</code>{" "}
+        union, so the theme owns every colour.
       </p>
     </div>
   </div>

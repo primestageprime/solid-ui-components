@@ -133,15 +133,9 @@ describe("BandRail — drawing", () => {
         format={(v) => `$${v}`}
       />
     ));
-    expect(container.querySelectorAll(".sui-band-rail__tick").length).toBe(
-      3,
-    );
-    expect(container.querySelectorAll(".sui-band-rail__name").length).toBe(
-      3,
-    );
-    expect(
-      container.querySelectorAll(".sui-band-rail__value").length,
-    ).toBe(3);
+    expect(container.querySelectorAll(".sui-band-rail__tick").length).toBe(3);
+    expect(container.querySelectorAll(".sui-band-rail__name").length).toBe(3);
+    expect(container.querySelectorAll(".sui-band-rail__value").length).toBe(3);
   });
 
   it("puts the tone on the group, so a tick and its labels can never disagree", () => {
@@ -296,12 +290,7 @@ describe("BandRail — keyboard", () => {
   it("moves by one hundredth of the domain on an arrow key", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={40}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={40} label="Draw" onChange={onChange} />
     ));
     key(railOf(container), "ArrowRight");
     expect(onChange).toHaveBeenCalledWith(41);
@@ -312,12 +301,7 @@ describe("BandRail — keyboard", () => {
   it("treats up and down the same as right and left", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={40}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={40} label="Draw" onChange={onChange} />
     ));
     key(railOf(container), "ArrowUp");
     expect(onChange).toHaveBeenCalledWith(41);
@@ -328,12 +312,7 @@ describe("BandRail — keyboard", () => {
   it("multiplies the step by ten while shift is held", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={40}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={40} label="Draw" onChange={onChange} />
     ));
     key(railOf(container), "ArrowRight", true);
     expect(onChange).toHaveBeenCalledWith(50);
@@ -342,12 +321,7 @@ describe("BandRail — keyboard", () => {
   it("jumps to the ends of the domain on Home and End", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={40}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={40} label="Draw" onChange={onChange} />
     ));
     key(railOf(container), "Home");
     expect(onChange).toHaveBeenCalledWith(0);
@@ -390,12 +364,7 @@ describe("BandRail — keyboard", () => {
   it("never reports a value outside the domain", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={0}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={0} label="Draw" onChange={onChange} />
     ));
     key(railOf(container), "ArrowLeft");
     expect(onChange).not.toHaveBeenCalled();
@@ -404,12 +373,7 @@ describe("BandRail — keyboard", () => {
   it("ignores keys it does not own", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={40}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={40} label="Draw" onChange={onChange} />
     ));
     key(railOf(container), "a");
     key(railOf(container), "Enter");
@@ -634,12 +598,7 @@ describe("BandRail — pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={0}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={0} label="Draw" onChange={onChange} />
     ));
     const rail = railOf(container);
     installPointerCapture(rail);
@@ -651,12 +610,7 @@ describe("BandRail — pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={0}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={0} label="Draw" onChange={onChange} />
     ));
     const rail = railOf(container);
     installPointerCapture(rail);
@@ -673,12 +627,7 @@ describe("BandRail — pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={0}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={0} label="Draw" onChange={onChange} />
     ));
     pointer(railOf(container)).move({ clientX: 350, clientY: 75 });
     expect(onChange).not.toHaveBeenCalled();
@@ -688,12 +637,7 @@ describe("BandRail — pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={50}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={50} label="Draw" onChange={onChange} />
     ));
     const rail = railOf(container);
     installPointerCapture(rail);
@@ -707,12 +651,7 @@ describe("BandRail — pointer", () => {
   it("stays silent when the rail has no layout to read a position from", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={0}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={0} label="Draw" onChange={onChange} />
     ));
     pointer(railOf(container)).down({ clientX: 350, clientY: 75 });
     expect(onChange).not.toHaveBeenCalled();
@@ -722,12 +661,7 @@ describe("BandRail — pointer", () => {
     sizeTheRail();
     const onChange = vi.fn();
     const { container } = render(() => (
-      <BandRail
-        domain={[0, 100]}
-        value={50}
-        label="Draw"
-        onChange={onChange}
-      />
+      <BandRail domain={[0, 100]} value={50} label="Draw" onChange={onChange} />
     ));
     const rail = railOf(container);
     installPointerCapture(rail);

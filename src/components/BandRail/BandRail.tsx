@@ -91,10 +91,7 @@ export interface BandRailProps
 }
 
 type BandRailOverrides = Pick<BandRailProps, "format">;
-type BandRailDataProps = Omit<
-  BandRailProps,
-  keyof BandRailOverrides
->;
+type BandRailDataProps = Omit<BandRailProps, keyof BandRailOverrides>;
 
 const toneClass = (tone: Tone | undefined): string =>
   tone && tone !== "default" ? ` sui-band-rail__threshold--${tone}` : "";

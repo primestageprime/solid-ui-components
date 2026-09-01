@@ -153,9 +153,7 @@ export const ScrubChartShowcase: Component = () => {
             renderChart={renderCashflowChart}
           />
 
-          <div
-            class="scrub-chart-demo__readout"
-          >
+          <div class="scrub-chart-demo__readout">
             Selected:{" "}
             <strong class="scrub-chart-demo__strong">
               {fmtDate(cell().start)}

@@ -261,9 +261,7 @@ describe("band lanes and threshold lanes agree about where the bands end", () =>
     const one = bandGeometry(1, "below", RAIL_Y);
     const two = bandGeometry(2, "below", RAIL_Y);
     expect(two.barY - BAND_THICKNESS / 2).toBeGreaterThan(one.labelY);
-    expect(BAND_LANE_PITCH).toBeGreaterThanOrEqual(
-      BAND_THICKNESS + LINE_PITCH,
-    );
+    expect(BAND_LANE_PITCH).toBeGreaterThanOrEqual(BAND_THICKNESS + LINE_PITCH);
   });
 
   it("reports a reach that matches where the outermost label was actually drawn", () => {
