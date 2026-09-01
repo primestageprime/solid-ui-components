@@ -107,6 +107,13 @@ export interface CashflowChartMarker {
   variant?: "flag" | "rule";
   /** Small caption rendered at the top of a `"rule"` marker. */
   label?: string;
+  /**
+   * Extra CSS class on this marker's own line and dot ONLY, alongside the
+   * shared base class. Per-marker because two markers can share one base
+   * class (`.sui-cashflow-scrub-chart__rule-line` for `"rule"` markers) —
+   * styling one through that shared class recolours every other marker too.
+   */
+  class?: string;
 }
 
 export interface CashflowScrubChartProps {

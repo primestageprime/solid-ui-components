@@ -404,6 +404,44 @@ describe("CashflowScrubChart", () => {
     });
   });
 
+  describe("marker class", () => {
+    it("puts a marker's class on that marker's own line and dot only, not on a sibling marker", () => {
+      const cells = makeCells(8);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 2, class: "marker-a" }, { index: 6 }]}
+        />
+      ));
+      const groups = container.querySelectorAll(
+        ".sui-cashflow-scrub-chart__marker",
+      );
+      expect(groups.length).toBe(2);
+      const [classed, plain] = Array.from(groups);
+      expect(
+        classed
+          .querySelector(".sui-cashflow-scrub-chart__marker-line")
+          ?.classList.contains("marker-a"),
+      ).toBe(true);
+      expect(
+        classed
+          .querySelector(".sui-cashflow-scrub-chart__marker-dot")
+          ?.classList.contains("marker-a"),
+      ).toBe(true);
+      expect(
+        plain
+          .querySelector(".sui-cashflow-scrub-chart__marker-line")
+          ?.classList.contains("marker-a"),
+      ).toBe(false);
+      expect(
+        plain
+          .querySelector(".sui-cashflow-scrub-chart__marker-dot")
+          ?.classList.contains("marker-a"),
+      ).toBe(false);
+    });
+  });
+
   describe("over-top indicator (cone overflowing a line-based yMax)", () => {
     it("pins the domain to yMax and marks the cone's off-screen peak", () => {
       const cells = makeCells(8); // balances stay well under 100_000
@@ -639,8 +677,7 @@ describe("CashflowScrubChart lineClass", () => {
     Array.from(
       container.querySelectorAll(".sui-cashflow-scrub-chart__line"),
     ).find(
-      (el) =>
-        !el.classList.contains("sui-cashflow-scrub-chart__line--series"),
+      (el) => !el.classList.contains("sui-cashflow-scrub-chart__line--series"),
     );
 
   it("adds lineClass to the primary balance polyline", () => {

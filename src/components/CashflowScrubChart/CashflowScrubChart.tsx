@@ -463,7 +463,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                     </text>
                   )}
                   <line
-                    class="sui-cashflow-scrub-chart__rule-line"
+                    class={`sui-cashflow-scrub-chart__rule-line${
+                      m.class ? ` ${m.class}` : ""
+                    }`}
                     x1={x}
                     x2={x}
                     y1={ctx.plotTop + (m.label ? 15 : 0)}
@@ -505,7 +507,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                   height={Math.max(0, ctx.plotBottom - ctx.plotTop)}
                 />
                 <line
-                  class="sui-cashflow-scrub-chart__marker-line"
+                  class={`sui-cashflow-scrub-chart__marker-line${
+                    m.class ? ` ${m.class}` : ""
+                  }`}
                   x1={x}
                   x2={x}
                   y1={ctx.plotTop}
@@ -524,7 +528,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                   />
                 )}
                 <circle
-                  class="sui-cashflow-scrub-chart__marker-dot"
+                  class={`sui-cashflow-scrub-chart__marker-dot${
+                    m.class ? ` ${m.class}` : ""
+                  }`}
                   cx={x}
                   cy={y}
                   r={3.5}
