@@ -8,8 +8,10 @@ export type {
   BandRailOverrides,
 } from "./BandRail";
 export type {
+  Band,
   LabelAnchor,
   LaneGeometry,
+  PlacedBand,
   PlacedThreshold,
   Threshold,
   ThresholdSide,
