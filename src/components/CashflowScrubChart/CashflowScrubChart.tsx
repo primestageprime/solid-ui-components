@@ -140,6 +140,13 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   const emphasisClass = (block: string, id: string | null): string => {
     const active = hoveredLabel();
     if (active === null) return "";
+    // A caller may hang a label on a line that paints NOTHING — a carrier
+    // series the consumer's CSS draws with `stroke: none`. The colour map
+    // holds one entry per line that paints a stroke, so a missing key says
+    // this line is invisible. The chart then emphasises nothing: it would
+    // otherwise mute every visible line to point at a line the reader cannot
+    // see, which tells the reader the opposite of the truth.
+    if (labelColors()[active] === undefined) return "";
     return active === id ? ` ${block}--highlighted` : ` ${block}--muted`;
   };
 
