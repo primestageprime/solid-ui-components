@@ -491,7 +491,29 @@ git status --short     # only the files you meant to change
 ```
 
 CI gates on all five. `lint` runs but does not gate. `strict: true`, so the PR
-must be up to date with `main` before it merges.
+must be up to date with `main` before it merges. `npm run check` runs lint and
+`tsc` together over the whole tree.
+
+**Two traps when you run these.**
+
+`npm run bundle-budget` builds the library ITSELF. Its first output line is
+"Building the library (use --skip-build to reuse dist/)…", so `--skip-build` is
+the opt-OUT that reuses an existing `dist/`. A cold run is correct and
+self-sufficient. Do not tell anyone it needs `npm run build` first.
+
+**Never pipe a gate through `tail` or `grep`.** `cmd | tail` reports the PIPE's
+exit code, not the gate's, so `&&` chains and `$?` both read `tail`. A red gate
+reads as green. Redirect to a file and echo `$?`:
+
+```
+npm run test > /tmp/t.log 2>&1; echo "exit=$?"; tail -20 /tmp/t.log
+```
+
+**A ratchet trap.** `dotChains` and `collectionMethodCalls` count NATIVE method
+chains — `x().filter(...)`, `x().map(...)`, `[...set].sort(...)`. They do not
+count the repo's own combinators. Import `filter`, `map` and `sortBy` from
+`src/fn` instead of raising a baseline. A loop is not a chain and does not
+count, which is why `laneOf` keeps one.
 
 Verify against the consumer before you bump the version. `thorcasting-ui` is
 npm-linked in SOURCE mode, so it sees your edits without a publish.
