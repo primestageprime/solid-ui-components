@@ -3,6 +3,31 @@
 ## 0.156.0
 
 ### Added
+- **`CashflowBalanceSeries.label` now renders.** The field has been on the
+  public API for a long time and nothing drew it. A series that carries a
+  `label` draws it beside its own line. A `CashflowChartMarker` label joins the
+  same layer once the marker names a zone; without one, a `"rule"` marker keeps
+  the top-of-rule caption it always had, so no current chart moves.
+- **New `labelPlacement?: CashflowLabelZone` on both.** `CashflowLabelZone` is
+  `"auto" | "body" | "right" | "below"` and defaults to `"auto"`. The zone is a
+  PREFERENCE, not a lock: the chart walks body → right → below and takes the
+  first zone the measured text fits. A label that fits nowhere is dropped in
+  silence — nothing is written to the console.
+- **The zone rides on the DATA, not on a curried variant.** `AGENT_GUIDE.md` §1
+  says visual and layout props are locked at variant-definition time, and a
+  zone looks like a layout prop. It is not one here. The chart family already
+  draws this line twice: `ScrubChartOverrides` holds the frame SIZING knobs
+  only, while `PinMarkers.lane` — a vertical stacking slot, the closest
+  structural analog to a zone — stays a render-time prop. `Table` takes `align`
+  per column, `BucketQueue` takes `fill` per bucket, `Dropdown` takes `shape`
+  per item. Currying the zone would force every label on one chart into one
+  zone, which defeats the feature.
+- **A chart with no labels does not move by one pixel.** Only an EXPLICIT zone
+  buys frame space: `"right"` widens a gutter past the plot, `"below"` adds a
+  row under the x-axis ticks. An `"auto"` label uses whatever another label
+  bought and never creates space itself. The space is reserved BEFORE the
+  scales are built, because the gutter feeds the x scale and the rows feed the
+  y scale — a gutter can never be sized from where a label landed.
 - **`ScrubChart` and `CashflowScrubChart` draw horizontal gridlines**
   (sui#36952). `showGridlines` puts one rule across the plot at every y-axis
   tick — the same shape `Chart`'s `Grid` slot already draws for the low-level
