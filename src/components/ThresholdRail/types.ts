@@ -1,15 +1,19 @@
 // ============================================
-// ThresholdRail types — Depth 0 (pure types, no imports beyond Tone).
+// ThresholdRail types — Depth 0 (pure types; type-only imports).
 // Kept apart from the component so the pure layout helpers can import the
 // shapes without pulling SolidJS in.
 // ============================================
+import type { LabelAnchor } from "../../internal/geometry/labelLayout";
 import type { Tone } from "../../types";
 
 /** Which way a threshold's tick points off the rail. */
 export type ThresholdSide = "above" | "below";
 
-/** Text anchor chosen by `fitAnchor` so a label stays inside the rail's box. */
-export type LabelAnchor = "start" | "middle" | "end";
+/**
+ * Text anchor chosen by `fitAnchor` so a label stays inside the rail's box.
+ * One definition, shared with every other label layer.
+ */
+export type { LabelAnchor };
 
 /**
  * One named point on the rail where the answer changes.
