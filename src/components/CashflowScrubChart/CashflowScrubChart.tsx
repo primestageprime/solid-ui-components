@@ -474,10 +474,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                 </g>
               );
             }
-            // Marker dots drop onto the primary line → read from lineCells.
-            const markerLineCell = lineCells()[m.index];
-            if (!markerLineCell) return null;
-            const y = yToPlot(markerLineCell.balanceCents);
+            // Marker dots drop onto the primary line by default. An explicit
+            // `valueCents` overrides that and places the dot anywhere else.
+            const balanceValue =
+              m.valueCents ?? lineCells()[m.index]?.balanceCents;
+            if (balanceValue == null) return null;
+            const y = yToPlot(balanceValue);
             const activate = () =>
               props.onMarkerClick?.(m.index, ctx.cells[m.index]);
             return (

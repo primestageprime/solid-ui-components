@@ -108,6 +108,14 @@ export interface CashflowChartMarker {
   /** Small caption rendered at the top of a `"rule"` marker. */
   label?: string;
   /**
+   * The marker's y value, in cents. Without it the dot lands on the primary
+   * balance line (`lineCells()[index].balanceCents`), which is where every
+   * marker sat before this field existed. Per-marker because one chart's
+   * markers routinely point at values off the primary line — a scenario
+   * balance, a threshold, a value with no cell of its own.
+   */
+  valueCents?: number;
+  /**
    * Extra CSS class on this marker's own line and dot ONLY, alongside the
    * shared base class. Per-marker because two markers can share one base
    * class (`.sui-cashflow-scrub-chart__rule-line` for `"rule"` markers) —
