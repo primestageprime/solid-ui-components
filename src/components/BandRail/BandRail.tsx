@@ -1,7 +1,7 @@
 // ============================================
-// ThresholdRail — Atomic (Depth 1)
-// Owns CSS (ThresholdRail.css), imports no other component.
-// Factory: createThresholdRail().
+// BandRail — Atomic (Depth 1)
+// Owns CSS (BandRail.css), imports no other component.
+// Factory: createBandRail().
 //
 // One horizontal axis that is a control and a readout at the same time. A
 // thumb rides the axis and reports the current value. Named ticks stand off
@@ -22,6 +22,7 @@
 import {
   type Component,
   createMemo,
+  createSignal,
   Index,
   type JSX,
   mergeProps,
@@ -31,30 +32,32 @@ import { linearScale } from "../Chart/scales";
 import { clamp } from "../../internal/math/clamp";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import type { Tone } from "../../types";
-import "./ThresholdRail.css";
+import "./BandRail.css";
+import { filter, map } from "../../fn";
+import { ArcRing, BandLayer } from "./bands";
 import {
+  ARROW_HALF_WIDTH,
+  ARROW_TIP_GAP,
+  ARROW_TOP,
+  bandHolds,
+  DOT_RADIUS,
+  jumpTargets,
   laneGeometry,
+  placeBands,
   nestedThreshold,
   placeThresholds,
   RAIL_INSET,
   railExtents,
+  STEM_HALF_WIDTH,
   VIEW_WIDTH,
 } from "./helpers";
-import type { PlacedThreshold, Threshold } from "./types";
+import type { Band, PlacedBand, PlacedThreshold, Threshold } from "./types";
 
 /** Fraction of the domain one arrow key covers. Shift multiplies it by 10. */
 const KEY_STEPS = 100;
 const SHIFT_MULTIPLIER = 10;
 
-/** Thumb arrow geometry, in viewBox units, measured from the rail. */
-const ARROW_HALF_WIDTH = 5;
-const ARROW_TIP_GAP = 6;
-const ARROW_TOP = 15;
-const STEM_HALF_WIDTH = 1.2;
-const RING_RADIUS = 8.5;
-const DOT_RADIUS = 3.5;
-
-export interface ThresholdRailProps
+export interface BandRailProps
   extends Omit<
     JSX.SvgSVGAttributes<SVGSVGElement>,
     "children" | "onChange" | "role" | "class"
@@ -72,6 +75,13 @@ export interface ThresholdRailProps
   onChange?: (value: number) => void;
   /** The values where the answer changes. Computed by the consumer. */
   thresholds?: readonly Threshold[];
+  /**
+   * Spans of the domain where a given answer holds. Computed by the consumer.
+   *
+   * A threshold says WHERE the answer changes; a band says WHAT it becomes and
+   * over what span, so the label lives inside the thing it describes.
+   */
+  bands?: readonly Band[];
   /** Accessible name for the slider — what the axis measures. */
   label: string;
   /** Stops pointer and keyboard input and dims the rail. */
@@ -80,18 +90,23 @@ export interface ThresholdRailProps
   class?: string;
 }
 
-type ThresholdRailOverrides = Pick<ThresholdRailProps, "format">;
-type ThresholdRailDataProps = Omit<
-  ThresholdRailProps,
-  keyof ThresholdRailOverrides
+type BandRailOverrides = Pick<BandRailProps, "format">;
+type BandRailDataProps = Omit<
+  BandRailProps,
+  keyof BandRailOverrides
 >;
 
 const toneClass = (tone: Tone | undefined): string =>
-  tone && tone !== "default" ? ` sui-threshold-rail__threshold--${tone}` : "";
+  tone && tone !== "default" ? ` sui-band-rail__threshold--${tone}` : "";
 
-export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
+export const BandRail: Component<BandRailProps> = (rawProps) => {
   const merged = mergeProps(
-    { format: String, thresholds: [] as readonly Threshold[], disabled: false },
+    {
+      format: String,
+      thresholds: [] as readonly Threshold[],
+      bands: [] as readonly Band[],
+      disabled: false,
+    },
     rawProps,
   );
   const [local, rest] = splitProps(merged, [
@@ -100,6 +115,7 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
     "value",
     "onChange",
     "thresholds",
+    "bands",
     "label",
     "disabled",
     "class",
@@ -107,7 +123,9 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
 
   let hostEl: HTMLDivElement | undefined;
   let svgEl: SVGSVGElement | undefined;
-  let dragging = false;
+  // A signal, not a plain `let`: the host reads it to swap `grab` for
+  // `grabbing`, which is the only reactivity the affordance work adds.
+  const [dragging, setDragging] = createSignal(false);
 
   const scale = createMemo(() =>
     linearScale(local.domain, [RAIL_INSET, VIEW_WIDTH - RAIL_INSET]),
@@ -117,9 +135,19 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
     placeThresholds(local.thresholds, scale(), local.format),
   );
 
+  const bandLayout = createMemo(() =>
+    placeBands(local.bands, scale(), local.domain),
+  );
+
   const extents = createMemo(() => {
     const { aboveLanes, belowLanes } = layout();
-    return railExtents(aboveLanes, belowLanes);
+    const bands = bandLayout();
+    return railExtents(
+      aboveLanes,
+      belowLanes,
+      bands.aboveLanes,
+      bands.belowLanes,
+    );
   });
 
   const railY = () => extents().railY;
@@ -131,10 +159,28 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
   const nested = (): PlacedThreshold | undefined =>
     nestedThreshold(layout().placed, thumbX());
 
+  /** The bands holding at the current value, in the consumer's own order. */
+  const active = createMemo((): readonly PlacedBand[] =>
+    filter(
+      (p: PlacedBand) => bandHolds(p.band, shown(), local.domain),
+      bandLayout().placed,
+    ),
+  );
+
+  const isActive = (placed: PlacedBand): boolean => active().includes(placed);
+
+  /**
+   * What a screen reader hears. The dimming answers "what holds here" for a
+   * sighted reader and says nothing at all to anyone else, so the active band
+   * labels belong here too — otherwise the two readers get different answers.
+   */
   const valueText = () => {
-    const on = nested();
     const written = local.format(shown());
-    return on ? `${written}, ${on.threshold.label}` : written;
+    const holding = map((p: PlacedBand) => p.band.label, active());
+    const on = nested();
+    return [written, ...holding, ...(on ? [on.threshold.label] : [])].join(
+      ", ",
+    );
   };
 
   const emit = (next: number): void => {
@@ -162,28 +208,33 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
 
   const onPointerDown = (e: PointerEvent): void => {
     if (local.disabled || e.button !== 0) return;
-    dragging = true;
+    setDragging(true);
     safeSetPointerCapture(e.currentTarget as Element, e.pointerId);
     hostEl?.focus();
     track(e.clientX);
   };
 
   const onPointerMove = (e: PointerEvent): void => {
-    if (dragging) track(e.clientX);
+    if (dragging()) track(e.clientX);
   };
 
   const endDrag = (): void => {
-    dragging = false;
+    setDragging(false);
   };
 
-  /** The next threshold strictly past `from`, walking in `direction`. */
+  /**
+   * The next value where the answer changes, strictly past `from`.
+   *
+   * Band ends count, not just thresholds: a band end is a value where the
+   * answer changes too. `jumpTargets` deduplicates, so a band end sitting on a
+   * threshold is one stop and not two.
+   */
   const neighbourThreshold = (
     from: number,
     direction: 1 | -1,
   ): number | null => {
     let best: number | null = null;
-    for (const p of layout().placed) {
-      const v = p.threshold.value;
+    for (const v of jumpTargets(local.thresholds, local.bands)) {
       if (direction === 1 ? v <= from : v >= from) continue;
       if (best === null || (direction === 1 ? v < best : v > best)) best = v;
     }
@@ -223,9 +274,9 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
   };
 
   const classes = () =>
-    `sui-threshold-rail${local.disabled ? " sui-threshold-rail--disabled" : ""}${
-      local.class ? ` ${local.class}` : ""
-    }`;
+    `sui-band-rail${local.disabled ? " sui-band-rail--disabled" : ""}${
+      dragging() ? " sui-band-rail--dragging" : ""
+    }${local.class ? ` ${local.class}` : ""}`;
 
   return (
     // The slider lives on the host, not on the <svg>. Two reasons: an <svg> is
@@ -256,37 +307,67 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
         ref={(el) => {
           svgEl = el;
         }}
-        class="sui-threshold-rail__canvas"
+        class="sui-band-rail__canvas"
         viewBox={`0 0 ${VIEW_WIDTH} ${extents().height}`}
         aria-hidden="true"
       >
+        {/* The fill is drawn first so the rail's own stroke sits on top of it.
+            It encodes the VALUE, not an answer — one neutral tone that cannot
+            be read as a band's tone. Every slider has one, and it is the
+            strongest single cue that this rail is a control. */}
         <line
-          class="sui-threshold-rail__line"
+          class="sui-band-rail__fill"
+          x1={RAIL_INSET}
+          x2={thumbX()}
+          y1={railY()}
+          y2={railY()}
+        />
+
+        <line
+          class="sui-band-rail__line"
           x1={RAIL_INSET}
           x2={VIEW_WIDTH - RAIL_INSET}
           y1={railY()}
           y2={railY()}
         />
 
+        <BandLayer
+          placed={bandLayout().placed}
+          railY={railY()}
+          isActive={isActive}
+        />
+
         <Index each={layout().placed}>
           {(placed) => {
             const geometry = () =>
-              laneGeometry(placed().lane, placed().side, railY());
+              laneGeometry(
+                placed().lane,
+                placed().side,
+                railY(),
+                placed().side === "above"
+                  ? bandLayout().aboveLanes
+                  : bandLayout().belowLanes,
+              );
+            // "You are on this crossing" used to be said by the thumb, which
+            // borrowed the threshold's tone. The bands take that colour now,
+            // and the borrow only ever said "you are on ONE of them" anyway.
+            // Saying it on the crossing points at the thing you are on.
+            const onThis = () => nested()?.threshold === placed().threshold;
             return (
               <g
-                class={`sui-threshold-rail__threshold${toneClass(
+                class={`sui-band-rail__threshold${toneClass(
                   placed().threshold.tone,
-                )}`}
+                )}${onThis() ? " sui-band-rail__threshold--nested" : ""}`}
               >
                 <line
-                  class="sui-threshold-rail__tick"
+                  class="sui-band-rail__tick"
                   x1={placed().x}
                   x2={placed().x}
                   y1={railY()}
                   y2={geometry().tickEnd}
                 />
                 <text
-                  class="sui-threshold-rail__name"
+                  class="sui-band-rail__name"
                   x={placed().x}
                   y={geometry().nameY}
                   text-anchor={placed().anchor}
@@ -294,7 +375,7 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
                   {placed().threshold.label}
                 </text>
                 <text
-                  class="sui-threshold-rail__value"
+                  class="sui-band-rail__value"
                   x={placed().x}
                   y={geometry().valueY}
                   text-anchor={placed().anchor}
@@ -306,27 +387,22 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
           }}
         </Index>
 
-        {nested() ? (
-          <g
-            class={`sui-threshold-rail__threshold${toneClass(
-              nested()?.threshold.tone,
-            )}`}
-          >
-            <circle
-              class="sui-threshold-rail__ring"
+        {active().length > 0 ? (
+          <g>
+            <ArcRing
               cx={thumbX()}
               cy={railY()}
-              r={RING_RADIUS}
+              tones={map((p: PlacedBand) => p.band.tone, active())}
             />
             <circle
-              class="sui-threshold-rail__thumb"
+              class="sui-band-rail__thumb"
               cx={thumbX()}
               cy={railY()}
               r={DOT_RADIUS}
             />
           </g>
         ) : (
-          <g class="sui-threshold-rail__thumb">
+          <g class="sui-band-rail__thumb">
             <polygon
               points={`${thumbX()},${railY() - ARROW_TIP_GAP} ${
                 thumbX() - ARROW_HALF_WIDTH
@@ -351,10 +427,10 @@ export const ThresholdRail: Component<ThresholdRailProps> = (rawProps) => {
  * Curry the presentational config — in practice the formatter, which is a
  * static decision (a currency, a duration) rather than reactive data.
  */
-export const createThresholdRail = (
-  overrides: ThresholdRailOverrides,
-): Component<ThresholdRailDataProps> => {
-  return (props) => <ThresholdRail {...overrides} {...props} />;
+export const createBandRail = (
+  overrides: BandRailOverrides,
+): Component<BandRailDataProps> => {
+  return (props) => <BandRail {...overrides} {...props} />;
 };
 
-export type { ThresholdRailDataProps, ThresholdRailOverrides };
+export type { BandRailDataProps, BandRailOverrides };

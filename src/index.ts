@@ -294,7 +294,7 @@ export { createPanel as createHUDPanel } from "./components/Panel";
 export * from "./components/WorkerCard";
 export * from "./components/CompletionTimeline";
 export * from "./components/ThroughputChart";
-export * from "./components/ThresholdRail";
+export * from "./components/BandRail";
 export * from "./components/RingChart";
 export * from "./components/PivotTreemap";
 export * from "./components/AreaFocusGrid";

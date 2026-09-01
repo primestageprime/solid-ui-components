@@ -79,7 +79,7 @@ export const SliderShowcase: Component = () => {
         the left of the label line, <code>format(value)</code> right-aligned on
         the right. The value stays in the caller's own units — a dial that keeps
         integer cents passes cents and formats dollars. For a value axis that
-        also carries named thresholds, use <code> ThresholdRail </code> instead.
+        also carries named thresholds, use <code> BandRail </code> instead.
       </p>
 
       <div class="example-group">

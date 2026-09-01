@@ -12,16 +12,20 @@
 import { describe, expect, it } from "vitest";
 import {
   anchoredSpan,
+  ARC_STROKE,
   estimateTextWidth,
   fitAnchor,
   laneGeometry,
   LINE_PITCH,
+  NAME_GAP_ABOVE,
   nestedThreshold,
   placeThresholds,
   RAIL_INSET,
   railExtents,
+  RING_RADIUS,
   TEXT_PAD,
   THUMB_REACH_ABOVE,
+  THUMB_REACH_BELOW,
   VIEW_WIDTH,
 } from "./helpers";
 import type { PlacedThreshold, Threshold } from "./types";
@@ -100,12 +104,12 @@ describe("laneGeometry", () => {
 
   it("holds the first lane's label clear of the thumb, without shortening its tick", () => {
     // sui#36929: the name baseline used to sit 14 above the rail, inside the
-    // thumb's arrow, which reaches 15. The band now starts at the thumb's
-    // reach. The tick stroke keeps its length of 10.
+    // thumb's arrow. The band now starts at the thumb's reach, which the
+    // enlarged thumb raised from 15 to 22. The tick keeps its length of 10.
     expect(laneGeometry(1, "above", RAIL_Y)).toEqual({
       tickEnd: 62,
-      nameY: 53,
-      valueY: 42,
+      nameY: 46,
+      valueY: 35,
     });
   });
 
@@ -117,11 +121,12 @@ describe("laneGeometry", () => {
 
   it("reproduces the design's second lane above the rail, lifted with the first", () => {
     // The thumb's floor applies to the base of the stack, so lane 2 rises by
-    // the same 5 as lane 1. Its tick is untouched.
+    // the same 12 as lane 1 — the reach of 22 less a lane-1 tick of 10. Its
+    // tick is untouched.
     expect(laneGeometry(2, "above", RAIL_Y)).toEqual({
       tickEnd: 40,
-      nameY: 31,
-      valueY: 20,
+      nameY: 24,
+      valueY: 13,
     });
   });
 
@@ -138,20 +143,22 @@ describe("laneGeometry", () => {
   });
 
   it("reproduces the design's first lane below the rail", () => {
-    // The thumb reaches 9 below the rail, less than a lane-1 tick, so the
-    // floor that lifted the labels above is a no-op on this side.
+    // The floor bites on this side now. It did not before: the thumb used to
+    // reach 9 below the rail, less than a lane-1 tick of 10, so the lift that
+    // cleared the labels above was a no-op here. The enlarged ring reaches 14,
+    // so below-side labels move out by 4 and the tick still keeps its length.
     expect(laneGeometry(1, "below", RAIL_Y)).toEqual({
       tickEnd: 82,
-      nameY: 93,
-      valueY: 104,
+      nameY: 97,
+      valueY: 108,
     });
   });
 
   it("reproduces the design's second lane below the rail", () => {
     expect(laneGeometry(2, "below", RAIL_Y)).toEqual({
       tickEnd: 104,
-      nameY: 115,
-      valueY: 126,
+      nameY: 119,
+      valueY: 130,
     });
   });
 
@@ -185,14 +192,41 @@ describe("railExtents", () => {
     // A rail with one lane above puts its value line at y=14, the pad exactly.
     const { railY } = railExtents(1, 0);
     const { valueY } = laneGeometry(1, "above", railY);
-    expect(railY).toBe(44);
+    expect(railY).toBe(THUMB_REACH_ABOVE + NAME_GAP_ABOVE + LINE_PITCH + TEXT_PAD);
     expect(valueY).toBe(TEXT_PAD);
   });
 
   it("still leaves room for the thumb when there are no thresholds at all", () => {
     const bare = railExtents(0, 0);
-    expect(bare.railY).toBeGreaterThanOrEqual(15);
+    expect(bare.railY).toBeGreaterThanOrEqual(THUMB_REACH_ABOVE);
     expect(bare.height).toBeGreaterThan(bare.railY);
+  });
+
+  // The thumb was enlarged so the drag target reads as a handle. It is sized in
+  // viewBox units, not CSS pixels, because `valueFromClientX` needs the viewBox
+  // to keep its aspect ratio. So growing it moves the label stack, once and
+  // statically — never with `value`.
+  it("holds the enlarged thumb clear of a lane-1 label on both sides", () => {
+    // The ring's outer edge is the widest the thumb ever gets.
+    const ringOuterEdge = RING_RADIUS + ARC_STROKE / 2;
+    expect(THUMB_REACH_ABOVE).toBeGreaterThanOrEqual(ringOuterEdge);
+    expect(THUMB_REACH_BELOW).toBeGreaterThanOrEqual(ringOuterEdge);
+  });
+
+  it("grows the box by 12 units for a bare rail and 11 once a side carries a lane", () => {
+    // Regression pins for the enlarged thumb. `sideExtent` reads the raw thumb
+    // reach when a side has no lanes and the floored `labelBase` when it has
+    // one, so the two cases differ by a unit and neither is a flat number.
+    const BEFORE_BARE = { railY: 29, height: 52 };
+    const BEFORE_ONE_BELOW = { railY: 29, height: 29 + 46 };
+
+    const bare = railExtents(0, 0);
+    expect(bare.railY - BEFORE_BARE.railY).toBe(7);
+    expect(bare.height - BEFORE_BARE.height).toBe(12);
+
+    const oneBelow = railExtents(0, 1);
+    expect(oneBelow.railY - BEFORE_ONE_BELOW.railY).toBe(7);
+    expect(oneBelow.height - BEFORE_ONE_BELOW.height).toBe(11);
   });
 });
 

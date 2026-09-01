@@ -366,3 +366,95 @@ describe("ScrubChart gridlines", () => {
     expect(container.querySelector(".sui-scrub-chart__grid")).toBeNull();
   });
 });
+
+describe("ScrubChart frame-sizing overrides", () => {
+  const cells10 = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-10"));
+
+  it("regression: absent overrides leave plotRight at chartWidth and xAxisHeight at 22", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        xTickCadence="week"
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    // chartWidth is the seeded DEFAULT_CHART_WIDTH (1200) — no ResizeObserver
+    // fires under jsdom, so width() never moves off it.
+    expect(seen!.width).toBe(1200);
+    expect(seen!.plotRight).toBe(seen!.width);
+    // height (200 default) minus plotBottom is the x-axis row's height.
+    expect(seen!.height - seen!.plotBottom).toBe(22);
+  });
+
+  it("rightGutter narrows the plot by exactly its value and moves cellToX", () => {
+    let plain: ScrubChartContext<Cell> | null = null;
+    let gutter40: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        renderChart={(ctx) => {
+          plain = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        rightGutter={40}
+        renderChart={(ctx) => {
+          gutter40 = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(gutter40!.plotRight).toBeCloseTo(plain!.plotRight - 40, 3);
+    expect(gutter40!.plotLeft).toBeCloseTo(plain!.plotLeft, 3);
+    // A narrower plot moves every cell's centre left of where it sat without
+    // the gutter.
+    expect(gutter40!.cellToX(0)).toBeLessThan(plain!.cellToX(0));
+  });
+
+  it("xAxisExtraHeight raises plotBottom by exactly its value", () => {
+    let plain: ScrubChartContext<Cell> | null = null;
+    let extra14: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        renderChart={(ctx) => {
+          plain = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        xAxisExtraHeight={14}
+        renderChart={(ctx) => {
+          extra14 = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    // No xTickCadence, so the base x-axis height is 0 in both cases —
+    // xAxisExtraHeight still reserves its row (see the prop doc).
+    expect(extra14!.plotBottom).toBeCloseTo(plain!.plotBottom - 14, 3);
+    // Frame height is unaffected — plotBottom moves, height doesn't.
+    expect(extra14!.height).toBe(plain!.height);
+  });
+});
