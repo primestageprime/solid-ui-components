@@ -1,5 +1,26 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- **`ThemedNumberInput` no longer crashes the form that holds it**
+  (sui#36961). 0.156.0 gave kobalte a `value` prop that called the caller's
+  `value` accessor, and fed the mirror signal behind it from kobalte's own
+  `onChange`. Kobalte reads that prop from `createControllableSignal`'s
+  `isControlled` and `value` memos, and its hidden input reads those memos
+  again inside a render effect, so kobalte re-entered the caller's accessor
+  while it rendered. A caller that builds its form fields in lazy JSX getters —
+  the curried form-field shape — rebuilt the field on that re-entry. Each
+  rebuild emitted again, and the form died with `RangeError: Maximum call
+  stack size exceeded`. The component now reads the caller's accessor in an
+  effect it owns, and hands kobalte a plain signal. Kobalte can read `value`
+  as often as it likes and never reaches the caller.
+
+  The clear that 0.156.0 bought stays closed (sui#36924): an uncontrolled
+  number-to-blank still empties the visible input, and a value that comes back
+  still shows. The component still emits one `onChange` at mount, so a
+  consumer's mount-time guard is unchanged.
+
 ## 0.156.0
 
 ### Added
