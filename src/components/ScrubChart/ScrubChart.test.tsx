@@ -424,4 +424,37 @@ describe("ScrubChart frame-sizing overrides", () => {
     // the gutter.
     expect(gutter40!.cellToX(0)).toBeLessThan(plain!.cellToX(0));
   });
+
+  it("xAxisExtraHeight raises plotBottom by exactly its value", () => {
+    let plain: ScrubChartContext<Cell> | null = null;
+    let extra14: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        renderChart={(ctx) => {
+          plain = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        xAxisExtraHeight={14}
+        renderChart={(ctx) => {
+          extra14 = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    // No xTickCadence, so the base x-axis height is 0 in both cases —
+    // xAxisExtraHeight still reserves its row (see the prop doc).
+    expect(extra14!.plotBottom).toBeCloseTo(plain!.plotBottom - 14, 3);
+    // Frame height is unaffected — plotBottom moves, height doesn't.
+    expect(extra14!.height).toBe(plain!.height);
+  });
 });

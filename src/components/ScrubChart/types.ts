@@ -179,8 +179,24 @@ export interface ScrubChartProps<C extends Cell> {
    *  output by unit). Default: per-cadence sensible label. */
   formatXLabel?: (cell: C, cadence: ResolvedXTickCadence) => string;
   /** Pixel height reserved at the bottom for x-axis labels. Default 22
-   *  when `xTickCadence !== "none"`; otherwise 0. */
+   *  when `xTickCadence !== "none"`; otherwise 0. This SETS the axis row's
+   *  height — see `xAxisExtraHeight` below, which ADDS to it instead. */
   xAxisHeight?: number;
+  /**
+   * Extra height in px ADDED under the x-axis row, on top of whatever
+   * `xAxisHeight` computes (the 22px default, an explicit override, or the
+   * 0 that applies when `xTickCadence` is `"none"`). Where `xAxisHeight`
+   * SETS the row's height, this ADDS to it: pass both and they stack —
+   * `(xAxisHeight ?? default-or-zero) + xAxisExtraHeight`.
+   *
+   * Applies even when `xTickCadence` is `"none"` and the base height is 0.
+   * The reservation is for a caller-owned row below the axis (e.g.
+   * `CashflowScrubChart`'s below-zone labels), which is unrelated to
+   * whether tick labels are drawn — a chart with no ticks can still need
+   * room for a label row. Default 0, so no existing chart's x-axis height
+   * changes.
+   */
+  xAxisExtraHeight?: number;
 }
 
 /**
@@ -189,7 +205,12 @@ export interface ScrubChartProps<C extends Cell> {
  */
 export type ScrubChartOverrides<C extends Cell> = Pick<
   ScrubChartProps<C>,
-  "chartHeight" | "cellWidth" | "yAxisWidth" | "xAxisHeight" | "rightGutter"
+  | "chartHeight"
+  | "cellWidth"
+  | "yAxisWidth"
+  | "xAxisHeight"
+  | "rightGutter"
+  | "xAxisExtraHeight"
 >;
 
 /** Props that remain available to consumers of a curried ScrubChart variant. */

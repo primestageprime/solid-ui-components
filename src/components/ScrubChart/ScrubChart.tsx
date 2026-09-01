@@ -86,10 +86,14 @@ export const ScrubChart = <C extends Cell>(
   const emitScrub = (index: number, cell: C) => props.onScrub?.(index, cell);
 
   // ── Axis-chrome geometry ──────────────────────────────────────────────
+  // xAxisHeight prop SETS the base row height (tick-cadence-gated);
+  // xAxisExtraHeight ADDS to it unconditionally — the extra row is for a
+  // caller-owned layer below the axis (e.g. CashflowScrubChart's below-zone
+  // labels), which needs its space whether or not ticks are drawn.
   const xAxisHeight = () =>
-    (props.xTickCadence ?? "none") !== "none"
+    ((props.xTickCadence ?? "none") !== "none"
       ? (props.xAxisHeight ?? DEFAULT_X_AXIS_HEIGHT)
-      : 0;
+      : 0) + (props.xAxisExtraHeight ?? 0);
 
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
