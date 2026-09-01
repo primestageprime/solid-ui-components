@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## 0.156.1
 
 ### Fixed
 - **`ThemedNumberInput` no longer crashes the form that holds it**
