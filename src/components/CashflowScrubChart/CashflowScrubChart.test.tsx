@@ -404,6 +404,112 @@ describe("CashflowScrubChart", () => {
     });
   });
 
+  describe("marker class", () => {
+    it("puts a marker's class on that marker's own line and dot only, not on a sibling marker", () => {
+      const cells = makeCells(8);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 2, class: "marker-a" }, { index: 6 }]}
+        />
+      ));
+      const groups = container.querySelectorAll(
+        ".sui-cashflow-scrub-chart__marker",
+      );
+      expect(groups.length).toBe(2);
+      const [classed, plain] = Array.from(groups);
+      expect(
+        classed
+          .querySelector(".sui-cashflow-scrub-chart__marker-line")
+          ?.classList.contains("marker-a"),
+      ).toBe(true);
+      expect(
+        classed
+          .querySelector(".sui-cashflow-scrub-chart__marker-dot")
+          ?.classList.contains("marker-a"),
+      ).toBe(true);
+      expect(
+        plain
+          .querySelector(".sui-cashflow-scrub-chart__marker-line")
+          ?.classList.contains("marker-a"),
+      ).toBe(false);
+      expect(
+        plain
+          .querySelector(".sui-cashflow-scrub-chart__marker-dot")
+          ?.classList.contains("marker-a"),
+      ).toBe(false);
+    });
+  });
+
+  describe("marker valueCents", () => {
+    // The primary line's plotted y at an index — the source of truth for
+    // "old behaviour" (CashflowScrubChart.tsx reads the same lineCells()
+    // value for both the line and an unadorned marker dot).
+    const primaryLineYAt = (container: HTMLElement, index: number): number =>
+      Number(
+        (
+          container
+            .querySelector(".sui-cashflow-scrub-chart__line")!
+            .getAttribute("points") ?? ""
+        )
+          .trim()
+          .split(" ")
+          [index].split(",")[1],
+      );
+
+    it("uses valueCents to place the marker dot off the primary balance line", () => {
+      const cells = makeCells(8);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 3, valueCents: cells[3].balanceCents + 50_000 }]}
+        />
+      ));
+      const dot = container.querySelector(
+        ".sui-cashflow-scrub-chart__marker-dot",
+      )!;
+      expect(Number(dot.getAttribute("cy"))).not.toBe(
+        primaryLineYAt(container as HTMLElement, 3),
+      );
+    });
+
+    it("omits valueCents and keeps the dot at the exact old lineCells().balanceCents position", () => {
+      const cells = makeCells(8);
+      // The old position, restated as an explicit valueCents equal to the
+      // same balance — both paths run through the same yToPlot, so an exact
+      // match here proves omitting the field changes nothing.
+      const withValueCents = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 3, valueCents: cells[3].balanceCents }]}
+        />
+      ));
+      const withoutValueCents = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 3 }]}
+        />
+      ));
+      const cyOf = (container: HTMLElement) =>
+        container
+          .querySelector(".sui-cashflow-scrub-chart__marker-dot")!
+          .getAttribute("cy");
+      expect(cyOf(withoutValueCents.container as HTMLElement)).toBe(
+        cyOf(withValueCents.container as HTMLElement),
+      );
+      expect(
+        Number(cyOf(withoutValueCents.container as HTMLElement)),
+      ).toBeCloseTo(
+        primaryLineYAt(withoutValueCents.container as HTMLElement, 3),
+        1,
+      );
+    });
+  });
+
   describe("over-top indicator (cone overflowing a line-based yMax)", () => {
     it("pins the domain to yMax and marks the cone's off-screen peak", () => {
       const cells = makeCells(8); // balances stay well under 100_000
@@ -639,8 +745,7 @@ describe("CashflowScrubChart lineClass", () => {
     Array.from(
       container.querySelectorAll(".sui-cashflow-scrub-chart__line"),
     ).find(
-      (el) =>
-        !el.classList.contains("sui-cashflow-scrub-chart__line--series"),
+      (el) => !el.classList.contains("sui-cashflow-scrub-chart__line--series"),
     );
 
   it("adds lineClass to the primary balance polyline", () => {
