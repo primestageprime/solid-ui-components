@@ -33,11 +33,19 @@ const PRICE_THRESHOLDS: Threshold[] = [
   { value: 230, label: "best take-home", tone: "warning" },
 ];
 
-/** The answers, as spans. Each one says WHAT holds, and over what. */
+/**
+ * The answers, as spans.
+ *
+ * Deliberately NOT the threshold wording. A tick says where the answer
+ * changes, so "safe in 12 mo" belongs AT $3.8k; a band says what holds across
+ * a span, so the same fact reads "12+ months of runway" over everything below
+ * it. Repeating the tick's words on a bar makes the two marks look redundant
+ * when they are answering different questions.
+ */
 const DRAW_BANDS: Band[] = [
-  { end: 3800, label: "safe in 12 mo", tone: "success" },
-  { start: 3800, end: 9300, label: "safe in 6 mo", tone: "success" },
-  { start: 9300, label: "hire a bookkeeper first", tone: "warning" },
+  { end: 3800, label: "12+ months of runway", tone: "success" },
+  { start: 3800, end: 9300, label: "6 to 12 months", tone: "success" },
+  { start: 9300, end: 11000, label: "under 6 months", tone: "warning" },
   { start: 11000, label: "past break-even", tone: "danger" },
 ];
 

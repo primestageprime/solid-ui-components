@@ -10,8 +10,14 @@ import { describe, expect, it } from "vitest";
 import {
   ARC_GAP,
   arcLengths,
+  bandGeometry,
   bandHolds,
+  bandStackReach,
+  BAND_LANE_PITCH,
+  BAND_THICKNESS,
+  laneGeometry,
   jumpTargets,
+  LINE_PITCH,
   MAX_ARCS,
   placeBands,
   RAIL_INSET,
@@ -224,5 +230,54 @@ describe("jumpTargets", () => {
         [{ start: 20, end: 5, label: "b" }],
       ),
     ).toEqual([5, 20, 90]);
+  });
+});
+
+describe("band lanes and threshold lanes agree about where the bands end", () => {
+  // THIS IS THE TEST THAT WAS MISSING. Every assertion above passed while the
+  // box was sized from one formula and drawn from another: bandStackReach
+  // computed BAND_LANE_PITCH * lanes while bandGeometry put the outermost
+  // label 15.5 units further out. Nothing caught it, because nothing compared
+  // the two. Only looking at the rendered rail did — the threshold labels ran
+  // straight through the band labels they were supposed to stack outside of.
+  const RAIL_Y = 200;
+
+  for (const side of ["above", "below"] as const) {
+    for (const lanes of [1, 2, 3, 5]) {
+      it(`puts a lane-1 threshold label outside ${lanes} band lane(s) ${side}`, () => {
+        const band = bandGeometry(lanes, side, RAIL_Y);
+        const label = laneGeometry(1, side, RAIL_Y, lanes);
+        // Distance from the rail, whichever way the side runs.
+        const outward = (y: number): number => Math.abs(y - RAIL_Y);
+        expect(outward(label.nameY)).toBeGreaterThan(outward(band.labelY));
+      });
+    }
+  }
+
+  it("keeps a lane's label clear of the next lane's bar", () => {
+    // A hand-set BAND_LANE_PITCH of 15 was smaller than a bar plus its own
+    // label line, so consecutive bars were drawn through each other's text.
+    // The pitch is derived from that height now rather than chosen.
+    const one = bandGeometry(1, "below", RAIL_Y);
+    const two = bandGeometry(2, "below", RAIL_Y);
+    expect(two.barY - BAND_THICKNESS / 2).toBeGreaterThan(one.labelY);
+    expect(BAND_LANE_PITCH).toBeGreaterThanOrEqual(
+      BAND_THICKNESS + LINE_PITCH,
+    );
+  });
+
+  it("reports a reach that matches where the outermost label was actually drawn", () => {
+    for (const side of ["above", "below"] as const) {
+      const drawnFarEdge =
+        side === "below"
+          ? bandGeometry(3, side, RAIL_Y).labelY - RAIL_Y
+          : RAIL_Y - bandGeometry(3, side, RAIL_Y).labelY + LINE_PITCH;
+      expect(bandStackReach(3, side)).toBeCloseTo(drawnFarEdge, 6);
+    }
+  });
+
+  it("reaches nothing at all when no band was passed", () => {
+    expect(bandStackReach(0, "above")).toBe(0);
+    expect(bandStackReach(0, "below")).toBe(0);
   });
 });

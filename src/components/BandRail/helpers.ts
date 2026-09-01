@@ -99,10 +99,33 @@ export const LABEL_GUTTER = 4;
 /* ---- Bands ---- */
 /** Stroke width of a band's bar. */
 export const BAND_THICKNESS = 3;
-/** Distance between one band lane and the next, measured outward. */
-export const BAND_LANE_PITCH = 15;
-/** Baseline offset of a band's label from its bar. */
+/** Gap between a band's bar and its own label. */
 export const BAND_LABEL_GAP = 4;
+/** Clear space between the label of one band lane and the bar of the next. */
+export const BAND_LANE_GAP = 4;
+
+/**
+ * How far a band's label reaches past its bar.
+ *
+ * ONE definition, read by `bandGeometry` when it draws and by `bandStackReach`
+ * when the box is sized. Held apart, the two computed the same distance from
+ * different numbers and disagreed by 15.5 units, which put every threshold
+ * label inside the band labels it was supposed to stack outside of.
+ *
+ * The far edge is the same on both sides even though the BASELINE is not: text
+ * sits above its baseline, so an "above" label's baseline is nearer the bar by
+ * one line and its far edge is not.
+ */
+export const BAND_LABEL_REACH = BAND_THICKNESS / 2 + BAND_LABEL_GAP + LINE_PITCH;
+
+/**
+ * Distance between one band lane and the next.
+ *
+ * DERIVED, not chosen. A lane has to hold a bar and the label under it, or
+ * consecutive lanes draw their bars through each other's text — which is what
+ * a hand-set 15 did against a label that needs 18.
+ */
+export const BAND_LANE_PITCH = BAND_LABEL_REACH + BAND_THICKNESS / 2 + BAND_LANE_GAP;
 /** Half-height of the cap stroke drawn at a band's bounded end. */
 export const BAND_CAP_HALF = 3.5;
 
@@ -173,8 +196,11 @@ const thumbReach = (side: ThresholdSide): number =>
  * Zero bands reach nothing, so a rail with no bands is sized exactly as it was
  * before bands existed.
  */
-export const bandReach = (bandLanes: number): number =>
-  bandLanes === 0 ? 0 : BAND_LANE_PITCH * bandLanes;
+export const bandStackReach = (
+  bandLanes: number,
+  side: ThresholdSide,
+): number =>
+  bandLanes === 0 ? 0 : bandLaneReach(bandLanes, side) + BAND_LABEL_REACH;
 
 /**
  * How far the band stack's `lane` sits from the rail, on `side`.
@@ -194,7 +220,7 @@ export const bandLaneReach = (lane: number, side: ThresholdSide): number =>
  * `BAND_LANE_PITCH`.
  */
 const labelBase = (side: ThresholdSide, bandLanes = 0): number =>
-  Math.max(TICK_LENGTH, thumbReach(side), bandReach(bandLanes));
+  Math.max(TICK_LENGTH, thumbReach(side), bandStackReach(bandLanes, side));
 
 /**
  * How far the label band of `lane` starts from the rail, on `side`.
@@ -228,15 +254,13 @@ export const bandGeometry = (
   const reach = bandLaneReach(lane, side);
   if (side === "above") {
     const barY = railY - reach;
-    // Above the rail the label sits FARTHER out than its bar, so the bar never
-    // runs through its own text.
-    return { barY, labelY: barY - BAND_THICKNESS / 2 - BAND_LABEL_GAP };
+    // Text sits ABOVE its baseline, so an above label's baseline is one line
+    // nearer the bar than a below label's. Both far edges land on
+    // BAND_LABEL_REACH, which is what the box is sized from.
+    return { barY, labelY: barY - BAND_LABEL_REACH + LINE_PITCH };
   }
   const barY = railY + reach;
-  return {
-    barY,
-    labelY: barY + BAND_THICKNESS / 2 + BAND_LABEL_GAP + LINE_PITCH,
-  };
+  return { barY, labelY: barY + BAND_LABEL_REACH };
 };
 
 /** Vertical positions of one lane on one side, given where the rail sits. */
@@ -268,13 +292,7 @@ const sideExtent = (
   // The outermost band's own label still needs room when no threshold label
   // stacks outside it to provide that room.
   const bands =
-    bandLanes === 0
-      ? 0
-      : bandLaneReach(bandLanes, side) +
-        BAND_THICKNESS +
-        BAND_LABEL_GAP +
-        LINE_PITCH +
-        TEXT_PAD;
+    bandLanes === 0 ? 0 : bandStackReach(bandLanes, side) + TEXT_PAD;
   if (laneCount === 0) return Math.max(thumb + TEXT_PAD, bands);
   const gap = side === "above" ? NAME_GAP_ABOVE : NAME_GAP_BELOW;
   const text =
