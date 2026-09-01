@@ -2,8 +2,10 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ScrubChartAxes — Structural (Depth 1). SVG axis-chrome render fragment; composes no library components.
-// ScrubChart — axis-chrome render fragment (y-axis line + ticks + labels,
-// x-axis line + ticks + labels).
+// ScrubChart — axis-chrome render fragments: <ScrubChartAxes> (y-axis line +
+// ticks + labels, x-axis line + ticks + labels) and <ScrubChartGrid> (opt-in
+// horizontal rules at the same y-ticks). Both live here because they share the
+// tick geometry; they render in DIFFERENT layers (see ScrubChartGrid's doc).
 //
 // Split out of ScrubChart.tsx verbatim so the parent's render body stays
 // readable. This is pure presentation: it owns NO state and reads NO signals
@@ -50,6 +52,51 @@ export interface ScrubChartAxesProps {
   xTicks: () => ScrubChartXTick[];
   formatY: () => (value: number) => string;
 }
+
+/**
+ * Props for the gridline fragment. It takes the SAME `yTicks` accessor the
+ * axes take, so a rule can never sit where no label is.
+ */
+export interface ScrubChartGridProps {
+  chartWidth: () => number;
+  chartHeight: () => number;
+  plotLeft: () => number;
+  plotRight: () => number;
+  yTicks: () => ScrubChartYTick[];
+}
+
+/**
+ * Horizontal gridlines — one rule per y-axis tick, spanning the plot region
+ * from `plotLeft` to `plotRight`. The same shape `Chart/Grid.tsx` draws for
+ * the low-level chart kit, and styled to match it: solid `--sui-border`, 1px,
+ * `crispEdges`, transparent to the pointer.
+ *
+ * A SEPARATE fragment from <ScrubChartAxes>, rendered in its own layer BENEATH
+ * `renderChart`, because a gridline crosses the plot where the 4px axis stub
+ * does not. The axes SVG paints AFTER the series on purpose (so labels stay
+ * legible over any line bleed); a rule drawn there would sit on top of the
+ * balance line instead of behind it.
+ */
+export const ScrubChartGrid = (props: ScrubChartGridProps): JSX.Element => (
+  <svg
+    class="sui-scrub-chart__grid"
+    aria-hidden="true"
+    viewBox={`0 0 ${props.chartWidth()} ${props.chartHeight()}`}
+    preserveAspectRatio="none"
+  >
+    <For each={props.yTicks()}>
+      {(tick) => (
+        <line
+          class="sui-scrub-chart__grid-line"
+          x1={props.plotLeft()}
+          x2={props.plotRight()}
+          y1={tick.y}
+          y2={tick.y}
+        />
+      )}
+    </For>
+  </svg>
+);
 
 export const ScrubChartAxes = (props: ScrubChartAxesProps): JSX.Element => (
   <svg

@@ -2636,3 +2636,10 @@ th:has(.tf-th-center) .hud-table__header-content {
   height: calc(100vh - 220px);
   display: flex;
 }
+
+/* Slider — the draw dial's input column is a fixed 290px, so the showcase
+   renders every slider inside that exact width. A control that only reads
+   well at full page width would pass a demo and fail the consumer. */
+.slider-rail-demo {
+  width: 290px;
+}

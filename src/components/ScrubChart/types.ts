@@ -138,12 +138,33 @@ export interface ScrubChartProps<C extends Cell> {
   /** Approximate number of y-axis ticks. Default 5. d3-scale picks the
    *  nearest "nice" count. */
   yTickCount?: number;
+  /**
+   * Draw a horizontal gridline across the plot at every y-axis tick — the
+   * same rules `Chart`'s `Grid` slot draws for the low-level chart kit
+   * (solid `--sui-border`, 1px, never dashed). OPT-IN: default `false`, so
+   * no existing chart gains chrome it did not ask for. The rules use the
+   * SAME tick set as the y-axis labels, so a line never sits where no label
+   * is, and they render BENEATH the `renderChart` series. Horizontal only —
+   * there is no x-tick counterpart yet. No effect unless `yDomain` is set.
+   */
+  showGridlines?: boolean;
   /** Distance in px from the container's left edge to the y-axis line.
    *  Defaults to the narrowest width that fits the longest formatted label
    *  (computed via canvas text measurement, with an 8px gap to the axis
    *  line). Set explicitly only when you need two charts' y-axes to align
    *  to the same column. No effect unless `yDomain` is set. */
   yAxisWidth?: number;
+
+  // ── Right gutter (optional) ─────────────────────────────────────────
+
+  /** Width in px reserved past the plot's right edge — feeds the `after`
+   *  argument of the horizontal inset span. `yAxisWidth` above is the
+   *  precedent: same role, opposite side. The one difference is that this
+   *  side is never auto-measured, because nothing here knows how wide a
+   *  caller's right-side content is (e.g. `CashflowScrubChart`'s
+   *  right-zone labels) — the caller states the width it needs. Default 0,
+   *  so no existing chart's plot narrows until a caller asks for the room. */
+  rightGutter?: number;
 
   // ── X-axis (optional) ────────────────────────────────────────────────
 
@@ -158,8 +179,24 @@ export interface ScrubChartProps<C extends Cell> {
    *  output by unit). Default: per-cadence sensible label. */
   formatXLabel?: (cell: C, cadence: ResolvedXTickCadence) => string;
   /** Pixel height reserved at the bottom for x-axis labels. Default 22
-   *  when `xTickCadence !== "none"`; otherwise 0. */
+   *  when `xTickCadence !== "none"`; otherwise 0. This SETS the axis row's
+   *  height — see `xAxisExtraHeight` below, which ADDS to it instead. */
   xAxisHeight?: number;
+  /**
+   * Extra height in px ADDED under the x-axis row, on top of whatever
+   * `xAxisHeight` computes (the 22px default, an explicit override, or the
+   * 0 that applies when `xTickCadence` is `"none"`). Where `xAxisHeight`
+   * SETS the row's height, this ADDS to it: pass both and they stack —
+   * `(xAxisHeight ?? default-or-zero) + xAxisExtraHeight`.
+   *
+   * Applies even when `xTickCadence` is `"none"` and the base height is 0.
+   * The reservation is for a caller-owned row below the axis (e.g.
+   * `CashflowScrubChart`'s below-zone labels), which is unrelated to
+   * whether tick labels are drawn — a chart with no ticks can still need
+   * room for a label row. Default 0, so no existing chart's x-axis height
+   * changes.
+   */
+  xAxisExtraHeight?: number;
 }
 
 /**
@@ -168,7 +205,12 @@ export interface ScrubChartProps<C extends Cell> {
  */
 export type ScrubChartOverrides<C extends Cell> = Pick<
   ScrubChartProps<C>,
-  "chartHeight" | "cellWidth" | "yAxisWidth" | "xAxisHeight"
+  | "chartHeight"
+  | "cellWidth"
+  | "yAxisWidth"
+  | "xAxisHeight"
+  | "rightGutter"
+  | "xAxisExtraHeight"
 >;
 
 /** Props that remain available to consumers of a curried ScrubChart variant. */

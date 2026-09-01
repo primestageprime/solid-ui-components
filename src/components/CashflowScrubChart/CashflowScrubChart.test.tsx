@@ -404,6 +404,112 @@ describe("CashflowScrubChart", () => {
     });
   });
 
+  describe("marker class", () => {
+    it("puts a marker's class on that marker's own line and dot only, not on a sibling marker", () => {
+      const cells = makeCells(8);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 2, class: "marker-a" }, { index: 6 }]}
+        />
+      ));
+      const groups = container.querySelectorAll(
+        ".sui-cashflow-scrub-chart__marker",
+      );
+      expect(groups.length).toBe(2);
+      const [classed, plain] = Array.from(groups);
+      expect(
+        classed
+          .querySelector(".sui-cashflow-scrub-chart__marker-line")
+          ?.classList.contains("marker-a"),
+      ).toBe(true);
+      expect(
+        classed
+          .querySelector(".sui-cashflow-scrub-chart__marker-dot")
+          ?.classList.contains("marker-a"),
+      ).toBe(true);
+      expect(
+        plain
+          .querySelector(".sui-cashflow-scrub-chart__marker-line")
+          ?.classList.contains("marker-a"),
+      ).toBe(false);
+      expect(
+        plain
+          .querySelector(".sui-cashflow-scrub-chart__marker-dot")
+          ?.classList.contains("marker-a"),
+      ).toBe(false);
+    });
+  });
+
+  describe("marker valueCents", () => {
+    // The primary line's plotted y at an index — the source of truth for
+    // "old behaviour" (CashflowScrubChart.tsx reads the same lineCells()
+    // value for both the line and an unadorned marker dot).
+    const primaryLineYAt = (container: HTMLElement, index: number): number =>
+      Number(
+        (
+          container
+            .querySelector(".sui-cashflow-scrub-chart__line")!
+            .getAttribute("points") ?? ""
+        )
+          .trim()
+          .split(" ")
+          [index].split(",")[1],
+      );
+
+    it("uses valueCents to place the marker dot off the primary balance line", () => {
+      const cells = makeCells(8);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 3, valueCents: cells[3].balanceCents + 50_000 }]}
+        />
+      ));
+      const dot = container.querySelector(
+        ".sui-cashflow-scrub-chart__marker-dot",
+      )!;
+      expect(Number(dot.getAttribute("cy"))).not.toBe(
+        primaryLineYAt(container as HTMLElement, 3),
+      );
+    });
+
+    it("omits valueCents and keeps the dot at the exact old lineCells().balanceCents position", () => {
+      const cells = makeCells(8);
+      // The old position, restated as an explicit valueCents equal to the
+      // same balance — both paths run through the same yToPlot, so an exact
+      // match here proves omitting the field changes nothing.
+      const withValueCents = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 3, valueCents: cells[3].balanceCents }]}
+        />
+      ));
+      const withoutValueCents = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 3 }]}
+        />
+      ));
+      const cyOf = (container: HTMLElement) =>
+        container
+          .querySelector(".sui-cashflow-scrub-chart__marker-dot")!
+          .getAttribute("cy");
+      expect(cyOf(withoutValueCents.container as HTMLElement)).toBe(
+        cyOf(withValueCents.container as HTMLElement),
+      );
+      expect(
+        Number(cyOf(withoutValueCents.container as HTMLElement)),
+      ).toBeCloseTo(
+        primaryLineYAt(withoutValueCents.container as HTMLElement, 3),
+        1,
+      );
+    });
+  });
+
   describe("over-top indicator (cone overflowing a line-based yMax)", () => {
     it("pins the domain to yMax and marks the cone's off-screen peak", () => {
       const cells = makeCells(8); // balances stay well under 100_000
@@ -639,8 +745,7 @@ describe("CashflowScrubChart lineClass", () => {
     Array.from(
       container.querySelectorAll(".sui-cashflow-scrub-chart__line"),
     ).find(
-      (el) =>
-        !el.classList.contains("sui-cashflow-scrub-chart__line--series"),
+      (el) => !el.classList.contains("sui-cashflow-scrub-chart__line--series"),
     );
 
   it("adds lineClass to the primary balance polyline", () => {
@@ -692,5 +797,296 @@ describe("CashflowScrubChart lineClass", () => {
     expect(primary?.getAttribute("class")).toBe(
       "sui-cashflow-scrub-chart__line",
     );
+  });
+});
+
+describe("CashflowScrubChart gridlines", () => {
+  it("draws no gridlines by default", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+      />
+    ));
+    expect(container.querySelector(".sui-scrub-chart__grid-line")).toBeNull();
+  });
+
+  it("forwards showGridlines to the inner ScrubChart", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        showGridlines
+      />
+    ));
+    const lines = container.querySelectorAll(".sui-scrub-chart__grid-line");
+    const labels = container.querySelectorAll(".sui-scrub-chart__label--y");
+    expect(lines.length).toBeGreaterThan(0);
+    expect(lines.length).toBe(labels.length);
+    // Undashed — every short dash pattern here already means another line.
+    for (const line of lines) {
+      expect(line.getAttribute("stroke-dasharray")).toBeNull();
+    }
+  });
+
+  it("paints the gridlines beneath the balance line", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        showGridlines
+      />
+    ));
+    const frame = container.querySelector(".sui-scrub-chart__frame")!;
+    const nodes = Array.from(frame.children);
+    const grid = nodes.findIndex((n) =>
+      n.classList.contains("sui-scrub-chart__grid"),
+    );
+    const series = nodes.findIndex((n) =>
+      n.querySelector(".sui-cashflow-scrub-chart__line"),
+    );
+    expect(grid).toBeGreaterThanOrEqual(0);
+    expect(series).toBeGreaterThan(grid);
+  });
+
+  // ── Line + marker labels ───────────────────────────────────────────
+  // `measureLabelWidth` reads `text.length * 7` here: src/test-setup.ts
+  // installs a stub 2D context on purpose, so the real canvas path runs and
+  // the per-character fallback never fires.
+
+  /** The plot's right edge, which the zero line is drawn to. */
+  const plotRightOf = (container: HTMLElement): string =>
+    container
+      .querySelector(".sui-cashflow-scrub-chart__zero-line")!
+      .getAttribute("x2")!;
+
+  /** The chart frame's full width, from the chart svg's viewBox. */
+  const chartWidthOf = (container: HTMLElement): string =>
+    container
+      .querySelector("svg.sui-cashflow-scrub-chart__chart")!
+      .getAttribute("viewBox")!
+      .split(" ")[2];
+
+  it("keeps plotRight at the chart width when no label prefers the right", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+      />
+    ));
+    expect(plotRightOf(container)).toBe(chartWidthOf(container));
+  });
+
+  it("draws a series label when one is given", () => {
+    const cells = makeCells(10);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={[
+          {
+            id: "forecast",
+            // No `labelPlacement`: "auto" starts at the body rung, and 4
+            // characters at 7px each clear the last point with room to spare.
+            label: "Cash",
+            balanceCents: (c) => c.balanceCents + 20_000,
+          },
+        ]}
+      />
+    ));
+    const label = container.querySelector(".sui-cashflow-scrub-chart__label");
+    expect(label).toBeTruthy();
+    expect(label!.textContent).toBe("Cash");
+  });
+
+  it("buys a right gutter for an explicit right label only", () => {
+    const series = (placement: "auto" | "right") => [
+      {
+        id: "forecast",
+        label: "Forecast",
+        labelPlacement: placement,
+        balanceCents: (c: CashflowCell) => c.balanceCents + 20_000,
+      },
+    ];
+    const auto = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={series("auto")}
+      />
+    ));
+    expect(plotRightOf(auto.container)).toBe(chartWidthOf(auto.container));
+
+    const right = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={series("right")}
+      />
+    ));
+    // "Forecast" measures 8 * 7 = 56, plus the 6px gutter gap.
+    expect(Number(plotRightOf(right.container))).toBe(
+      Number(chartWidthOf(right.container)) - 62,
+    );
+  });
+
+  it("drops a label that fits nowhere, in silence", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={[
+          {
+            id: "wide",
+            // Wider than the whole chart, so no rung can hold it, and "body"
+            // buys no gutter and no row to fall back on.
+            label: "x".repeat(400),
+            labelPlacement: "body",
+            balanceCents: (c) => c.balanceCents,
+          },
+        ]}
+      />
+    ));
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__label"),
+    ).toBeNull();
+    expect(warn).not.toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+    warn.mockRestore();
+    error.mockRestore();
+  });
+
+  // ── The three behaviours the showcase demonstrates ──────────────────
+  // dev/showcases/cashflow-scrub-chart.tsx draws one chart per rung of the
+  // ladder. These lock what each of those charts claims to show, so a change
+  // that silently moves a label makes the showcase wrong AND fails here.
+
+  /** The zone class suffix of the label with this text, or null when dropped. */
+  const zoneOfLabel = (container: HTMLElement, text: string): string | null => {
+    const found = Array.from(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__label"),
+    ).find((el) => el.textContent === text);
+    const zone = ["body", "right", "below"].find((z) =>
+      found?.classList.contains(`sui-cashflow-scrub-chart__label--${z}`),
+    );
+    return zone ?? null;
+  };
+
+  /** A line that stops at `lastIndex`, so its last point sits inside the plot. */
+  const stoppingAt =
+    (lastIndex: number, offsetCents: number) =>
+    (c: CashflowCell, i: number): number | null =>
+      i > lastIndex ? null : c.balanceCents + offsetCents;
+
+  it('keeps every "auto" label in the body and buys no gutter for them', () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={[
+          // No `labelPlacement` anywhere: every label is "auto". Both lines
+          // stop early, so each last point has clear space beside it.
+          {
+            id: "upside",
+            label: "Up",
+            balanceCents: stoppingAt(6, 60_000),
+          },
+          {
+            id: "downside",
+            label: "Down",
+            balanceCents: stoppingAt(11, -60_000),
+          },
+        ]}
+      />
+    ));
+    expect(zoneOfLabel(container, "Up")).toBe("body");
+    expect(zoneOfLabel(container, "Down")).toBe("body");
+    // The body rung costs nothing, so the plot keeps the full chart width —
+    // pixel-identical to the same chart with no labels at all.
+    expect(plotRightOf(container)).toBe(chartWidthOf(container));
+  });
+
+  it('lets an "auto" label use the gutter an explicit label bought', () => {
+    const flat = (): number => 0;
+    const series = (placement: "auto" | "right") => [
+      {
+        id: "optimistic",
+        label: "Optimistic",
+        labelPlacement: placement,
+        balanceCents: (c: CashflowCell) => c.balanceCents + 200_000,
+      },
+      {
+        // Runs to the right edge, so the body box leaves the plot on one side
+        // and this line's own flat run fills it on the other. The body rung
+        // therefore refuses it and it falls to the gutter.
+        id: "flat",
+        label: "Flat",
+        balanceCents: flat,
+      },
+    ];
+    const bought = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={series("right")}
+      />
+    ));
+    expect(zoneOfLabel(bought.container, "Optimistic")).toBe("right");
+    expect(zoneOfLabel(bought.container, "Flat")).toBe("right");
+
+    // Same two labels, nothing explicit: no gutter exists to fall into, so
+    // both are dropped. An "auto" label never reaches a rung it did not buy.
+    const unbought = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={series("auto")}
+      />
+    ));
+    expect(zoneOfLabel(unbought.container, "Optimistic")).toBeNull();
+    expect(zoneOfLabel(unbought.container, "Flat")).toBeNull();
+    expect(plotRightOf(unbought.container)).toBe(
+      chartWidthOf(unbought.container),
+    );
+  });
+
+  it("honours a commanded zone on both the right and the below rung", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        selected={3}
+        onScrub={() => {}}
+        balanceSeries={[
+          {
+            id: "optimistic",
+            label: "Optimistic",
+            labelPlacement: "right",
+            balanceCents: (c) => c.balanceCents + 200_000,
+          },
+          {
+            id: "pessimistic",
+            label: "Pessimistic",
+            labelPlacement: "below",
+            balanceCents: (c) => c.balanceCents - 200_000,
+          },
+        ]}
+      />
+    ));
+    expect(zoneOfLabel(container, "Optimistic")).toBe("right");
+    // "below" skips the body rung it could otherwise have taken.
+    expect(zoneOfLabel(container, "Pessimistic")).toBe("below");
   });
 });

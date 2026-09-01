@@ -1,6 +1,282 @@
 # Changelog
 
-## [Unreleased]
+## 0.156.1
+
+### Fixed
+- **`ThemedNumberInput` no longer crashes the form that holds it**
+  (sui#36961). 0.156.0 gave kobalte a `value` prop that called the caller's
+  `value` accessor, and fed the mirror signal behind it from kobalte's own
+  `onChange`. Kobalte reads that prop from `createControllableSignal`'s
+  `isControlled` and `value` memos, and its hidden input reads those memos
+  again inside a render effect, so kobalte re-entered the caller's accessor
+  while it rendered. A caller that builds its form fields in lazy JSX getters —
+  the curried form-field shape — rebuilt the field on that re-entry. Each
+  rebuild emitted again, and the form died with `RangeError: Maximum call
+  stack size exceeded`. The component now reads the caller's accessor in an
+  effect it owns, and hands kobalte a plain signal. Kobalte can read `value`
+  as often as it likes and never reaches the caller.
+
+  The clear that 0.156.0 bought stays closed (sui#36924): an uncontrolled
+  number-to-blank still empties the visible input, and a value that comes back
+  still shows. The component still emits one `onChange` at mount, so a
+  consumer's mount-time guard is unchanged.
+
+## 0.156.0
+
+### Added
+- **`BandRail` labels the region, not just the crossing** (sui#36955). A
+  `Threshold` is a point, but its label describes a *region*, and nothing in
+  the type said which one — a reader seeing "insolvent in 6 mo" at a tick could
+  not tell which side of it was the insolvent side. The new `bands` prop takes
+  spans with both ends stated, drawn as labelled bars that **dim when the value
+  leaves them**, so dragging teaches the direction. `start` and `end` are both
+  optional and default to the domain ends, so a band may be bounded ("safe
+  between $200 and $3.8k") or half-open ("insolvent above $9.3k"); an omitted
+  end is a default, not arithmetic on the consumer's values. A capped end draws
+  a tick to the rail because that is a crossing; an open end runs to the rail's
+  edge with neither cap nor tick, because there is none there to mark.
+  **Bands never share a lane** — two bars at one height read as a single bar
+  spanning both, a span that neither band claims, so the box grows instead. The
+  thumb's nesting ring becomes one arc per holding band, and "you are on this
+  crossing" moves onto the crossing itself, since the bands take the colour the
+  ring used to borrow. `aria-valuetext` now names every holding band, so a
+  screen reader gets the answer the dimming gives a sighted reader.
+  `thresholds` is unchanged and `bands` defaults to `[]`, so existing call
+  sites render exactly as before.
+
+- **`CashflowBalanceSeries.label` now renders.** The field has been on the
+  public API for a long time and nothing drew it. A series that carries a
+  `label` draws it beside its own line. A `CashflowChartMarker` label joins the
+  same layer once the marker names a zone; without one, a `"rule"` marker keeps
+  the top-of-rule caption it always had, so no current chart moves.
+- **New `labelPlacement?: CashflowLabelZone` on both.** `CashflowLabelZone` is
+  `"auto" | "body" | "right" | "below"` and defaults to `"auto"`. The zone is a
+  PREFERENCE, not a lock: the chart walks body → right → below and takes the
+  first zone the measured text fits. A label that fits nowhere is dropped in
+  silence — nothing is written to the console.
+- **The zone rides on the DATA, not on a curried variant.** `AGENT_GUIDE.md` §1
+  says visual and layout props are locked at variant-definition time, and a
+  zone looks like a layout prop. It is not one here. The chart family already
+  draws this line twice: `ScrubChartOverrides` holds the frame SIZING knobs
+  only, while `PinMarkers.lane` — a vertical stacking slot, the closest
+  structural analog to a zone — stays a render-time prop. `Table` takes `align`
+  per column, `BucketQueue` takes `fill` per bucket, `Dropdown` takes `shape`
+  per item. Currying the zone would force every label on one chart into one
+  zone, which defeats the feature.
+- **A chart with no labels does not move by one pixel.** Only an EXPLICIT zone
+  buys frame space: `"right"` widens a gutter past the plot, `"below"` adds a
+  row under the x-axis ticks. An `"auto"` label uses whatever another label
+  bought and never creates space itself. The space is reserved BEFORE the
+  scales are built, because the gutter feeds the x scale and the rows feed the
+  y scale — a gutter can never be sized from where a label landed.
+- **`ScrubChart` and `CashflowScrubChart` draw horizontal gridlines**
+  (sui#36952). `showGridlines` puts one rule across the plot at every y-axis
+  tick — the same shape `Chart`'s `Grid` slot already draws for the low-level
+  chart kit. The rules read the same tick memo the axis labels read, so a line
+  can never sit where no label is. They are solid `--sui-border`, 1px,
+  `crispEdges`, and never dashed: on a cashflow chart every short dash pattern
+  already means another line type (the zero line, the runway floor, a
+  comparison scenario, a ghost preview, a marker rule, the selected day, the
+  Today rule, the current-balance rule), so a dashed rule would read as one of
+  them.
+
+  The prop is OPT-IN and defaults to `false`, so no existing chart gains
+  chrome its consumer did not ask for. It has no effect without `yDomain`.
+
+  `Chart/Grid` itself is not reused. It reads the whole `ChartContextValue`
+  through `useChart()` and emits plot-local coordinates that assume the Chart
+  root's margin translate; `ScrubChart` supplies no such context and works in
+  frame coordinates. `ScrubChartGrid` sits beside `ScrubChartAxes` instead,
+  sharing its tick type. It is a separate fragment in a separate layer because
+  the paint order differs: the axes SVG draws AFTER the series so the labels
+  stay legible, while a gridline must draw BEFORE it so the data paints over
+  the chrome.
+
+### Changed
+- **`ThresholdRail` is renamed `BandRail`** (sui#36955). It named one of two
+  marks, and after the change above the bands carry the answer while the
+  thresholds carry only where it changes. `ThresholdRail`,
+  `createThresholdRail` and the three prop types stay as deprecated aliases for
+  one minor version. The `sui-threshold-rail__*` CSS prefix does **not** — it
+  is now `sui-band-rail__*`, and duplicating every rule costs more than the one
+  consumer edit. `Threshold`, `ThresholdSide` and `PlacedThreshold` keep their
+  names, because a threshold is still what they describe.
+- **`BandRail`'s drag target reads as one.** The gesture was never the weak
+  part — the host takes the pointer and a click anywhere moves the thumb — but
+  against `Slider` the rail had no hover state, no active state, no track fill,
+  a `pointer` cursor and a thumb 10 viewBox units wide. It gains a neutral
+  value fill, `grab`/`grabbing` cursors, hover and active states, and a thumb
+  scaled by 1.5. The thumb stays sized in viewBox units rather than a CSS pixel
+  token: `valueFromClientX` needs the viewBox to keep its aspect ratio. The box
+  grows 12 units for a bare rail and 11 once a side carries a lane.
+
+## 0.155.2
+
+### Fixed
+- **`ThresholdRail` keeps a threshold label out of the thumb** (sui#36929). A
+  threshold in the first lane above the rail put its name baseline 14 units
+  above the rail, and its value line 25. The draggable thumb's arrow spans 15
+  units to 6 above the rail, so the name ran straight through the arrow. The
+  label band now starts at the larger of the tick reach and the thumb reach, so
+  the first lane's text begins 19 above the rail and clears the arrow. The tick
+  stroke does not move and keeps its length of 10.
+
+  One helper supplies the floored reach to both the lane geometry and the
+  height of the viewBox. Sizing the box from the same number keeps the top
+  value line inside it — lifting the labels alone would have clipped that line.
+  The floor sets the base of the lane stack, so every lane above the rail
+  rises by the same 5 and consecutive lanes stay one lane pitch apart. A floor
+  applied to each lane on its own would have lifted the first lane alone and
+  run the second lane's name through the first lane's value line. The side
+  below the rail is unchanged: the thumb reaches only 9 there, less than a
+  first-lane tick.
+
+## 0.155.1
+
+### Fixed
+- **`ThemedNumberInput` clears the visible input** (sui#36924). A caller that
+  set its value accessor to `undefined` emptied only the hidden form input.
+  Kobalte's `rawValue` effect returns early on `NaN`, so the box the user reads
+  kept the old number while the form carried nothing. The display string is now
+  controlled: an accessor that returns `undefined` hands kobalte an empty
+  string, which reaches the DOM through a signal that has no such guard.
+  Kobalte still owns the formatting — this component keeps a mirror of the text
+  kobalte last emitted and never re-implements `Intl`. An absent `value` prop
+  leaves kobalte uncontrolled, so the first paint and any default value are
+  unchanged.
+
+- **`End` and `Home` only move the caret** (sui#36926). On a field with no
+  `max`, `End` set the value to `9007199254740991`; `Home` set the
+  `MIN_SAFE_INTEGER` twin. Kobalte merges a default `maxValue` of
+  `Number.MAX_SAFE_INTEGER` into every number field and its spin-button sends
+  `End` straight to that bound, and passing `maxValue={undefined}` does not
+  remove the merged default. A capture listener on the input now stops each key
+  before Solid delegates it to kobalte, and only when the matching bound is
+  absent — so a field that declares `min` or `max` keeps kobalte's documented
+  jump. The listener never calls `preventDefault`, so the caret still moves to
+  the end or the start of the text.
+
+  An `onKeyDown` prop cannot do this. Kobalte reads that prop *instead of* its
+  own spin-button handler, so the guard would take the jump away from bounded
+  fields too.
+
+## 0.155.0
+
+### Added
+- **`Slider`** — a labelled range control that prints its own live value. The
+  label line carries the caption on the left and `format(value)` right-aligned
+  on the right, so a control reads `Safety buffer` / `6 months` on one line and
+  needs no separate readout beside it. Built for the thorcasting trades
+  module's draw dial (dside `sui` #36920), which pairs a slider with a typed
+  field on five inputs.
+
+  ```tsx
+  <Slider label="Safety buffer" value={months()} onChange={setMonths} min={3} max={18}
+          format={(n) => `${n} months`} />
+  ```
+
+  **The value stays in the caller's own units.** The component runs no
+  arithmetic beyond kobalte's step snapping and formats nothing itself, so a
+  dial that keeps integer cents passes cents and supplies a `format` that
+  renders dollars. Assuming dollars would put a unit in the widget that only
+  the consumer knows.
+
+  **It does not emit `onChange` at mount, and that is why it exists.**
+  `ThemedNumberInput` fires one `onChange(undefined)` at mount; a form that
+  persists on every change writes that mount value over the stored one. This
+  control emits only on a drag or a key that moves the thumb.
+
+  Wraps `@kobalte/core/slider`, so it is Atomic (Depth 1) and owns its CSS.
+  `createSlider({ format })` curries the formatter when the unit is static.
+  It ships no `variants.ts`: `format` is the only override and a real caller's
+  formatter carries its own units, the same reason `ThresholdRail` ships its
+  base alongside its factory.
+
+  Two things it had to correct in kobalte's defaults. Its `aria-valuetext`
+  comes from an internal number formatter, **not** from `getValueLabel` — that
+  only feeds `ValueLabel` — so a screen reader read `6` where the sighted user
+  saw `6 months`; the thumb now carries `aria-valuetext={format(value)}`. And
+  kobalte places the thumb at `left: calc(pct%)` of the track, so a flush track
+  let the thumb hang 8px outside a 290px column at max; the track now insets by
+  half a thumb on each side, the way a native range input does, while the label
+  line stays flush so a slider still lines up with the number input beside it.
+
+### Changed
+- **`ThresholdRail`** — the docs no longer call it "the library's first true
+  slider". `Slider` now also carries `role="slider"`, and ThresholdRail remains
+  the choice when the axis carries named threshold ticks.
+
+## 0.154.0
+
+### Added
+- **`Tooltip`** — `triggerAs` chooses what the trigger renders as. The trigger
+  was always a `<button>`, which put every already-interactive child out of
+  reach: a link or a button nested inside a button is invalid HTML, and the
+  inner control stops answering clicks and stops being its own tab stop. Such
+  content had to keep a native `title` instead, whose delay belongs to the
+  browser and which no page can shorten.
+
+  ```tsx
+  // Content that is already a control: the trigger steps aside.
+  <Tooltip content="Open the vessel call" triggerAs="span">
+    <A href={`/detail/${id}`}>…</A>
+  </Tooltip>
+  ```
+
+  Kobalte's trigger was already `Polymorphic` with `as: "button"` as a default
+  merged *before* the caller's props, so this forwards a knob that existed and
+  was not reachable. Omitting `triggerAs` renders the same `<button>` as
+  before, so no existing call site changes.
+
+  A span trigger is **not focusable**, so the tooltip is unreachable by
+  keyboard through the trigger itself — give such content its own `aria-label`,
+  since the inner control is what a keyboard reaches. A dense table is the
+  other reason to reach for `"span"`: a button trigger per row turns a hundred
+  readouts into a hundred tab stops.
+
+## 0.153.0
+
+### Added
+- **`ThresholdRail`** — a one-dimensional value axis whose thumb rides its own
+  consequences. One horizontal rail, a draggable thumb, and named ticks standing
+  off the rail at the values where the answer changes. Built for the thorcasting
+  trades module's draw dial (dside `sui` #36899).
+
+  The ticks are model *outputs* plotted on the axis of the model *input*, so the
+  control and the readout are one object. That is what separates it from a
+  slider with a caption beside it, and it is why the rail absorbs three jobs a
+  consumer would otherwise do by hand: **lanes** (colliding labels stack outward
+  from the rail, capped at four, each side stacking independently), **anchor
+  fitting** (a label near either end anchors `start`/`end` rather than spilling
+  out of the box), and **self-sizing** (the viewBox grows only for the lanes
+  actually used). The rail does no arithmetic on the thresholds it is given.
+
+  **It never snaps.** The thumb *nests* — landing on a threshold it becomes a
+  ring holding a dot, and the ring takes that threshold's tone — but the value
+  passed to `onChange` is never rounded to a threshold. A dial that quietly
+  edits its own output cannot be trusted to report what the user chose.
+  `aria-valuetext` names the threshold too, so the nesting is not colour-only.
+
+  Named for the shape, not the domain: thorcasting's glossary calls this a
+  *crossing rail*, and maps `crossing` → `threshold` at the call site.
+
+  Props: `domain`, `value`, `onChange`, `thresholds`, `label` (required
+  accessible name), `format?`, `disabled?`. A `Threshold` is
+  `{ value, label, tone?, side? }`, where `label` is **required** so meaning is
+  never carried by colour alone. `tone` is the existing seven-value `Tone`
+  union, so the theme owns every colour and the rail adds no colour vocabulary.
+  Factory: `createThresholdRail({ format })`.
+
+  **This is the library's first true slider** — no other component carried
+  `role="slider"` or `aria-valuenow`. It therefore brings the keyboard contract
+  with it: arrows move 1/100 of the domain, Shift multiplies by ten, Home and
+  End reach the domain ends, and PageUp/PageDown jump between thresholds. The
+  role sits on a host element rather than the `<svg>`, which is `aria-hidden`:
+  an `<svg>` may not take an interactive role, and the tick labels are real text
+  nodes that would otherwise compete with `aria-valuetext`.
+
+  No `variants.ts` — one caller, and nothing static to curry beyond the
+  formatter the factory already takes.
 
 ## 0.152.0
 

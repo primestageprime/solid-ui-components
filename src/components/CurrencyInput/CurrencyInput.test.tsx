@@ -47,6 +47,23 @@ describe("CurrencyInput", () => {
     expect(rootOf(container).style.maxWidth).toBe("12.06rem");
   });
 
+  // -- clearing -------------------------------------------------------
+
+  it("clears the masked input when the value accessor goes undefined", () => {
+    const [v, setV] = createSignal<number | undefined>(1234.56);
+    const { container } = render(() => (
+      <CurrencyInput name="amount" value={v} onChange={() => {}} />
+    ));
+    const input = container.querySelector(
+      ".sui-number-input__input",
+    ) as HTMLInputElement;
+    expect(input.value).not.toBe("");
+
+    setV(undefined);
+
+    expect(input.value).toBe("");
+  });
+
   // -- styling --------------------------------------------------------
 
   it("renders the masked digits with tabular figures", () => {

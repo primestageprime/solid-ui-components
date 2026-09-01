@@ -44,6 +44,32 @@ describe("Tooltip", () => {
     expect(content!.textContent).toContain("visible now");
   });
 
+  it("renders the trigger as a button by default", () => {
+    const { container } = render(() => (
+      <Tooltip content="c">
+        <span>t</span>
+      </Tooltip>
+    ));
+    expect(container.querySelector("button.sui-tooltip__trigger")).toBeTruthy();
+  });
+
+  /**
+   * A link or a button nested inside a button is invalid HTML, and the inner
+   * control stops answering clicks. `triggerAs` is how such content keeps its
+   * own element and still gets hover text.
+   */
+  it("renders the trigger as the element the caller names", () => {
+    const { container } = render(() => (
+      <Tooltip content="c" triggerAs="span">
+        <a href="/somewhere">t</a>
+      </Tooltip>
+    ));
+    expect(container.querySelector("button")).toBeNull();
+    const trigger = container.querySelector("span.sui-tooltip__trigger");
+    expect(trigger).toBeTruthy();
+    expect(trigger!.querySelector("a")).toBeTruthy();
+  });
+
   it("resolves an accessor content function", () => {
     render(() => (
       <Tooltip content={() => "lazy"} open>

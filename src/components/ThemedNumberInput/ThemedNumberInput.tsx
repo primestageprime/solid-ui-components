@@ -15,7 +15,15 @@ import {
   NumberField as KobalteNumberField,
   type NumberFieldRootProps as KobalteNumberFieldRootProps,
 } from "@kobalte/core/number-field";
-import { type Accessor, type Component, Show, splitProps } from "solid-js";
+import {
+  type Accessor,
+  type Component,
+  Show,
+  createEffect,
+  createSignal,
+  onCleanup,
+  splitProps,
+} from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
 import "./ThemedNumberInput.css";
 
@@ -116,6 +124,62 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     local.onChange?.(Number.isNaN(next) ? undefined : next);
   };
 
+  // The clear is the one transition kobalte cannot make on its own: its
+  // `rawValue` effect returns early on `NaN`, so the visible input keeps the
+  // old text while the hidden form input empties (dside `sui`#36924). An empty
+  // string here reaches the DOM through the controllable signal, which has no
+  // such guard.
+  //
+  // `isCleared` is a signal this component owns, and an effect is the only
+  // writer. That indirection is the fix for dside `sui`#36961. Kobalte reads
+  // its `value` prop from `createControllableSignal`'s `isControlled` and
+  // `value` memos, and its hidden input reads those memos again inside a
+  // render effect. 0.156.0 answered `value` by calling `local.value()`
+  // directly, so kobalte re-entered the CALLER's accessor from inside its own
+  // render effects. A caller that builds its fields in lazy JSX getters — the
+  // curried form-field shape — rebuilt the field on that re-entry, and each
+  // rebuild emitted again, until the stack was exhausted with
+  // `RangeError: Maximum call stack size exceeded`.
+  //
+  // Reading a plain signal pulls on nothing, so kobalte can read `value` as
+  // often as it likes and never reach the caller. The effect, not kobalte,
+  // decides when the field is clear.
+  const [isCleared, setIsCleared] = createSignal(false);
+  createEffect(() => {
+    setIsCleared(local.value !== undefined && local.value() === undefined);
+  });
+
+  // `undefined` keeps kobalte uncontrolled, which is what 0.155.0 did: it then
+  // owns its own formatted text and this component never re-implements Intl.
+  const displayText = (): string | undefined => (isCleared() ? "" : undefined);
+
+  // Kobalte merges a default `maxValue` of `Number.MAX_SAFE_INTEGER`, and its
+  // spin-button sends `End` straight to that bound, `Home` to the negative
+  // twin. Passing `maxValue={undefined}` does not remove the merged default,
+  // so an unbounded field answered `End` with 9007199254740991 where the user
+  // asked only for the caret (dside `sui`#36926).
+  const isUnboundedCaretKey = (key: string): boolean =>
+    (key === "End" && local.max === undefined) ||
+    (key === "Home" && local.min === undefined);
+
+  // The guard cannot be an `onKeyDown` prop: kobalte reads that prop *instead
+  // of* its own spin-button handler, which would also kill the jump on a field
+  // that does declare bounds. Solid delegates `keydown` to the document, so a
+  // capture listener on the input runs first and can keep the key from ever
+  // reaching kobalte. `preventDefault` is never called — the browser still has
+  // to move the caret.
+  const suppressUnboundedJump = (event: KeyboardEvent): void => {
+    if (isUnboundedCaretKey(event.key)) event.stopPropagation();
+  };
+
+  /** Ref callback — attaches the caret guard for the life of the input. */
+  const guardCaretKeys = (input: HTMLInputElement): void => {
+    input.addEventListener("keydown", suppressUnboundedJump, true);
+    onCleanup(() =>
+      input.removeEventListener("keydown", suppressUnboundedJump, true),
+    );
+  };
+
   const isInvalid = () => Boolean(local.errorMessage);
   const step = () => local.step ?? DEFAULT_STEP;
   // The size modifier is always emitted (including `--md`), matching Button and
@@ -129,6 +193,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       {...(rest as KobalteNumberFieldRootProps)}
       class={rootClass()}
       name={local.name}
+      value={displayText()}
       rawValue={rawValue()}
       onRawValueChange={handleRawValueChange}
       minValue={local.min}
@@ -143,7 +208,10 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       </Show>
       <KobalteNumberField.HiddenInput />
       <div class="sui-number-input__group">
-        <KobalteNumberField.Input class="sui-number-input__input" />
+        <KobalteNumberField.Input
+          class="sui-number-input__input"
+          ref={guardCaretKeys}
+        />
         <div class="sui-number-input__triggers">
           <KobalteNumberField.IncrementTrigger
             aria-label="Increment"

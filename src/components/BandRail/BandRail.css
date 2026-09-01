@@ -1,0 +1,225 @@
+/* BandRail — Atomic (Depth 1). Owns this file, imports no component. */
+
+/* The host carries the slider role, the focus ring and every gesture. The
+   <svg> inside it is the canvas and is aria-hidden. */
+.sui-band-rail {
+  display: block;
+  width: 100%;
+  touch-action: none;
+  user-select: none;
+  /* `grab`, not `pointer`. The whole host is the drag target — `onPointerDown`
+     sits on it and a click anywhere moves the thumb — so the cursor should say
+     "take hold of this", which `pointer` does not. Borrowed from Slider.css. */
+  cursor: grab;
+}
+
+.sui-band-rail--dragging {
+  cursor: grabbing;
+}
+
+.sui-band-rail__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sui-band-rail:focus-visible {
+  outline: 2px solid var(--sui-border-focus);
+  outline-offset: 2px;
+}
+
+.sui-band-rail--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ---- The rail itself ---- */
+
+.sui-band-rail__line {
+  stroke: var(--sui-border);
+  stroke-width: 2;
+}
+
+/* The value fill, from the rail's left end to the thumb.
+   ONE neutral tone, deliberately: this encodes the value, not an answer, so it
+   must never be mistaken for a threshold's or a band's tone. That is also why
+   it is the accent at low alpha rather than a tone variable — no theme colour
+   here carries semantic weight. */
+.sui-band-rail__fill {
+  stroke: rgba(var(--sui-accent-rgb), 0.35);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* ---- Ticks and their two text lines ----
+   Tone drives colour on the group, so the tick stroke and both text fills
+   move together and can never disagree. */
+
+.sui-band-rail__tick {
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.sui-band-rail__name,
+.sui-band-rail__value {
+  font-family: var(--sui-font-mono);
+  font-size: 10px;
+  fill: currentColor;
+  stroke: none;
+}
+
+.sui-band-rail__threshold {
+  color: var(--sui-text-secondary);
+}
+
+.sui-band-rail__threshold--success {
+  color: var(--sui-success);
+}
+.sui-band-rail__threshold--warning {
+  color: var(--sui-warning);
+}
+.sui-band-rail__threshold--danger {
+  color: var(--sui-danger);
+}
+.sui-band-rail__threshold--accent {
+  color: var(--sui-accent);
+}
+.sui-band-rail__threshold--muted {
+  color: var(--sui-chart-tick-color);
+}
+.sui-band-rail__threshold--highlight {
+  color: var(--sui-highlight);
+}
+
+/* ---- The thumb ----
+   Two forms. The arrow rides the rail between thresholds; the ring takes over
+   when the value lands on one, and borrows that threshold's colour so the
+   nesting reads as "you are on THIS crossing", not merely "you are on one". */
+
+.sui-band-rail__thumb {
+  fill: var(--sui-accent);
+  stroke: none;
+  transition: filter 120ms ease;
+}
+
+/* Hover and active live on the HOST, not on the thumb group. The host is what
+   takes the pointer, so a reader whose cursor is anywhere on the rail is about
+   to move the thumb and the thumb should say so. Hanging these off
+   `.sui-band-rail__thumb:hover` would only light up on a direct hit, which is
+   not how this control is grabbed. */
+.sui-band-rail:hover:not(.sui-band-rail--disabled) .sui-band-rail__thumb {
+  filter: drop-shadow(0 0 3px rgba(var(--sui-accent-rgb), 0.55));
+}
+
+.sui-band-rail--dragging:not(.sui-band-rail--disabled) .sui-band-rail__thumb {
+  filter: drop-shadow(0 0 5px rgba(var(--sui-accent-rgb), 0.75));
+}
+
+.sui-band-rail__ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+/* ---- Bands ----
+   A band's bar, its caps, the ticks it drops to the rail and its label all
+   take `color` from the group, exactly as a threshold's parts do, so they can
+   never disagree about tone. */
+
+.sui-band-rail__band {
+  color: var(--sui-text-secondary);
+}
+
+.sui-band-rail__bar {
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: butt;
+}
+
+/* A cap says the band STOPS here. Without it a bar clipped at the rail's end
+   and a bar that genuinely ends there are the same mark. */
+.sui-band-rail__cap {
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+/* The tick joining a claimed end back to the rail — the crossing itself. */
+.sui-band-rail__band-tick {
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.5;
+}
+
+.sui-band-rail__band-label {
+  font-family: var(--sui-font-mono);
+  font-size: 10px;
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Dimmed, never hidden. A band the value has left still has to be readable —
+   it is how the reader learns which direction the label refers to. */
+.sui-band-rail__band--inactive {
+  opacity: 0.32;
+}
+
+.sui-band-rail__band--success {
+  color: var(--sui-success);
+}
+.sui-band-rail__band--warning {
+  color: var(--sui-warning);
+}
+.sui-band-rail__band--danger {
+  color: var(--sui-danger);
+}
+.sui-band-rail__band--accent {
+  color: var(--sui-accent);
+}
+.sui-band-rail__band--muted {
+  color: var(--sui-chart-tick-color);
+}
+.sui-band-rail__band--highlight {
+  color: var(--sui-highlight);
+}
+
+/* ---- The arc ring ----
+   One arc per active band. The stroke width arrives as an attribute so the
+   arithmetic in helpers.ts and the drawing cannot disagree about it. */
+
+.sui-band-rail__arc {
+  fill: none;
+  stroke: var(--sui-text-secondary);
+}
+
+.sui-band-rail__arc--success {
+  stroke: var(--sui-success);
+}
+.sui-band-rail__arc--warning {
+  stroke: var(--sui-warning);
+}
+.sui-band-rail__arc--danger {
+  stroke: var(--sui-danger);
+}
+.sui-band-rail__arc--accent {
+  stroke: var(--sui-accent);
+}
+.sui-band-rail__arc--muted {
+  stroke: var(--sui-chart-tick-color);
+}
+.sui-band-rail__arc--highlight {
+  stroke: var(--sui-highlight);
+}
+
+/* ---- The crossing the value sits on ----
+   This moved off the thumb. The thumb's ring now belongs to the bands, and
+   the borrow only ever said "you are on ONE of them" — thickening the tick
+   and brightening its label points at the crossing you are actually on. */
+
+.sui-band-rail__threshold--nested .sui-band-rail__tick {
+  stroke-width: 3;
+}
+
+.sui-band-rail__threshold--nested .sui-band-rail__name,
+.sui-band-rail__threshold--nested .sui-band-rail__value {
+  font-weight: 700;
+}
