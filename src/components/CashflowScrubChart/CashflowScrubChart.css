@@ -351,8 +351,29 @@
   opacity: 0.18;
 }
 
+/* The highlighted line must come back to FULL strength, not only widen. A
+   consumer's own series class routinely dims its line at rest — a comparison
+   line states `stroke-opacity: 0.35`, a range edge the same — and a 3px line
+   at 35% next to muted lines at 18% reads as no highlight at all. The three
+   properties defeat three separate ways to dim a line:
+     • `stroke-width` beats the width the series class sets.
+     • `stroke-opacity` beats a series class that fades its own stroke.
+     • `opacity` beats a series class that fades the whole element.
+   The doubled class matches the muting rule's specificity, so the consumer's
+   class cannot win on source order. */
 .sui-cashflow-scrub-chart__line.sui-cashflow-scrub-chart__line--highlighted {
   stroke-width: 3;
+  stroke-opacity: 1;
+  opacity: 1;
+}
+
+/* A highlighted band comes back to full strength the same way. A band is a
+   FILL, so the dimming property is `fill-opacity` — a range cone states
+   `fill-opacity: 0.12` — and `opacity` again defeats a class that fades the
+   whole polygon. */
+.sui-cashflow-scrub-chart__band.sui-cashflow-scrub-chart__band--highlighted {
+  fill-opacity: 1;
+  opacity: 1;
 }
 
 /* The highlighted label sets NO fill. A label already carries the colour of
