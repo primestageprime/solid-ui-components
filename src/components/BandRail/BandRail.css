@@ -120,3 +120,106 @@
   stroke: currentColor;
   stroke-width: 2;
 }
+
+/* ---- Bands ----
+   A band's bar, its caps, the ticks it drops to the rail and its label all
+   take `color` from the group, exactly as a threshold's parts do, so they can
+   never disagree about tone. */
+
+.sui-band-rail__band {
+  color: var(--sui-text-secondary);
+}
+
+.sui-band-rail__bar {
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: butt;
+}
+
+/* A cap says the band STOPS here. Without it a bar clipped at the rail's end
+   and a bar that genuinely ends there are the same mark. */
+.sui-band-rail__cap {
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+/* The tick joining a claimed end back to the rail — the crossing itself. */
+.sui-band-rail__band-tick {
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.5;
+}
+
+.sui-band-rail__band-label {
+  font-family: var(--sui-font-mono);
+  font-size: 10px;
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Dimmed, never hidden. A band the value has left still has to be readable —
+   it is how the reader learns which direction the label refers to. */
+.sui-band-rail__band--inactive {
+  opacity: 0.32;
+}
+
+.sui-band-rail__band--success {
+  color: var(--sui-success);
+}
+.sui-band-rail__band--warning {
+  color: var(--sui-warning);
+}
+.sui-band-rail__band--danger {
+  color: var(--sui-danger);
+}
+.sui-band-rail__band--accent {
+  color: var(--sui-accent);
+}
+.sui-band-rail__band--muted {
+  color: var(--sui-chart-tick-color);
+}
+.sui-band-rail__band--highlight {
+  color: var(--sui-highlight);
+}
+
+/* ---- The arc ring ----
+   One arc per active band. The stroke width arrives as an attribute so the
+   arithmetic in helpers.ts and the drawing cannot disagree about it. */
+
+.sui-band-rail__arc {
+  fill: none;
+  stroke: var(--sui-text-secondary);
+}
+
+.sui-band-rail__arc--success {
+  stroke: var(--sui-success);
+}
+.sui-band-rail__arc--warning {
+  stroke: var(--sui-warning);
+}
+.sui-band-rail__arc--danger {
+  stroke: var(--sui-danger);
+}
+.sui-band-rail__arc--accent {
+  stroke: var(--sui-accent);
+}
+.sui-band-rail__arc--muted {
+  stroke: var(--sui-chart-tick-color);
+}
+.sui-band-rail__arc--highlight {
+  stroke: var(--sui-highlight);
+}
+
+/* ---- The crossing the value sits on ----
+   This moved off the thumb. The thumb's ring now belongs to the bands, and
+   the borrow only ever said "you are on ONE of them" — thickening the tick
+   and brightening its label points at the crossing you are actually on. */
+
+.sui-band-rail__threshold--nested .sui-band-rail__tick {
+  stroke-width: 3;
+}
+
+.sui-band-rail__threshold--nested .sui-band-rail__name,
+.sui-band-rail__threshold--nested .sui-band-rail__value {
+  font-weight: 700;
+}

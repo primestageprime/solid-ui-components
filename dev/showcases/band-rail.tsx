@@ -1,6 +1,6 @@
 import { type Component, createSignal } from "solid-js";
 import { BandRail } from "../../src/components/BandRail";
-import type { Threshold } from "../../src/components/BandRail";
+import type { Band, Threshold } from "../../src/components/BandRail";
 import { Stack } from "../../src/components/Layout/Stack";
 
 /** Money, written the way the design snapshots write it: $200, $3.8k, $11k. */
@@ -33,6 +33,14 @@ const PRICE_THRESHOLDS: Threshold[] = [
   { value: 230, label: "best take-home", tone: "warning" },
 ];
 
+/** The answers, as spans. Each one says WHAT holds, and over what. */
+const DRAW_BANDS: Band[] = [
+  { end: 3800, label: "safe in 12 mo", tone: "success" },
+  { start: 3800, end: 9300, label: "safe in 6 mo", tone: "success" },
+  { start: 9300, label: "hire a bookkeeper first", tone: "warning" },
+  { start: 11000, label: "past break-even", tone: "danger" },
+];
+
 const DrawDial: Component = () => {
   const [draw, setDraw] = createSignal(6000);
   return (
@@ -42,10 +50,39 @@ const DrawDial: Component = () => {
         value={draw()}
         onChange={setDraw}
         thresholds={DRAW_THRESHOLDS}
+        bands={DRAW_BANDS}
         format={money}
         label="Monthly owner draw"
       />
       <span class="text-meta">Drawing {money(draw())} a month.</span>
+    </Stack>
+  );
+};
+
+/** Four bands that all overlap, so every one takes its own lane. */
+const OVERLAP_BANDS: Band[] = [
+  { start: 0, end: 8000, label: "cash-flow positive", tone: "success" },
+  { start: 2000, end: 9500, label: "covers payroll", tone: "accent" },
+  { start: 4000, end: 11000, label: "covers rent", tone: "highlight" },
+  { start: 6000, label: "eats the buffer", tone: "warning" },
+];
+
+const OverlapDial: Component = () => {
+  const [draw, setDraw] = createSignal(5000);
+  return (
+    <Stack gap="sm">
+      <BandRail
+        domain={DRAW_DOMAIN}
+        value={draw()}
+        onChange={setDraw}
+        bands={OVERLAP_BANDS}
+        format={money}
+        label="Monthly owner draw, overlapping answers"
+      />
+      <span class="text-meta">
+        Drag and watch the arcs. At {money(draw())} the ring carries one arc per
+        band that still holds.
+      </span>
     </Stack>
   );
 };
@@ -74,10 +111,17 @@ export const BandRailShowcase: Component = () => (
     <h2>BandRail — Primitive (Depth 1)</h2>
     <p class="text-meta">
       A one-dimensional value axis whose thumb rides its own consequences. The
-      ticks are model <em>outputs</em> plotted on the axis of the model{" "}
+      marks are model <em>outputs</em> plotted on the axis of the model{" "}
       <em>input</em>, so the control and the readout are one object. The
-      consumer supplies thresholds it has already computed; the rail does no
+      consumer supplies what it has already computed; the rail does no
       arithmetic and never snaps the value it reports.
+    </p>
+    <p class="text-meta">
+      Two marks. A <strong>threshold</strong> says <em>where</em> the answer
+      changes. A <strong>band</strong> says <em>what</em> it becomes and over
+      what span — the ambiguity thresholds alone could not fix, because a tick
+      reading "insolvent in 6 mo" never said which side was the insolvent side.
+      A band dims when the value leaves it, so dragging teaches the direction.
     </p>
 
     <div class="example-group">
@@ -88,6 +132,36 @@ export const BandRailShowcase: Component = () => (
         between thresholds.
       </p>
       <DrawDial />
+    </div>
+
+    <div class="example-group">
+      <h3>Composed — overlapping answers</h3>
+      <p class="text-meta">
+        Four bands overlap, so each takes its own lane — bands never share one.
+        Two bars at the same height would read as a single bar spanning both,
+        which is a span neither band claims. Height is the honest cost.
+      </p>
+      <OverlapDial />
+    </div>
+
+    <div class="example-group">
+      <h3>Bounded, half-open, and neither</h3>
+      <p class="text-meta">
+        A capped end draws a tick down to the rail: that is a crossing. An open
+        end runs to the rail's edge with no cap, because there is no crossing
+        there to mark.
+      </p>
+      <BandRail
+        domain={[0, 100]}
+        value={50}
+        bands={[
+          { start: 20, end: 60, label: "bounded both ends", tone: "success" },
+          { start: 70, label: "open to the right", tone: "warning" },
+          { end: 15, label: "open to the left", tone: "accent", side: "above" },
+        ]}
+        format={(v) => `${v}%`}
+        label="Share of capacity"
+      />
     </div>
 
     <div class="example-group">

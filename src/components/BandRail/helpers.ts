@@ -17,15 +17,18 @@
 // generous estimate is used instead: ~6.0px per monospace character at 10px.
 // An earlier 5.0px estimate let through collisions that were plainly visible.
 // ============================================
-import { map } from "../../fn";
+import { map, sortBy } from "../../fn";
+import { clamp } from "../../internal/math/clamp";
 import {
   anchoredSpan,
   fitAnchor,
   laneOf,
 } from "../../internal/geometry/labelLayout";
 import type {
+  Band,
   LabelAnchor,
   LaneGeometry,
+  PlacedBand,
   PlacedThreshold,
   Threshold,
   ThresholdSide,
@@ -92,6 +95,26 @@ export const MAX_LANES = 4;
 export const CHAR_WIDTH = 6.0;
 /** Clear space demanded between two labels sharing a lane. */
 export const LABEL_GUTTER = 4;
+
+/* ---- Bands ---- */
+/** Stroke width of a band's bar. */
+export const BAND_THICKNESS = 3;
+/** Distance between one band lane and the next, measured outward. */
+export const BAND_LANE_PITCH = 15;
+/** Baseline offset of a band's label from its bar. */
+export const BAND_LABEL_GAP = 4;
+/** Half-height of the cap stroke drawn at a band's bounded end. */
+export const BAND_CAP_HALF = 3.5;
+
+/* ---- The arc ring ---- */
+/** Viewbox units of clear space between two arcs of the thumb ring. */
+export const ARC_GAP = 3;
+/**
+ * Past this many active bands the ring gives up on arcs and draws one neutral
+ * circle. At ten arcs each is twice the stroke width and reads as a dash; the
+ * dimmed bars carry the message from there.
+ */
+export const MAX_ARCS = 8;
 /**
  * How near the rail's value must come to a threshold before the thumb nests.
  * In viewBox units — a little over half the nesting ring's radius. The rail
@@ -104,6 +127,24 @@ export const NEST_TOLERANCE = 4;
 /** Estimated rendered width of a text line, in viewBox units. */
 export const estimateTextWidth = (text: string): number =>
   text.length * CHAR_WIDTH;
+
+/** The outermost lane a placement used. Zero when nothing was placed. */
+const maxLane = (rows: readonly { lane: number }[]): number => {
+  let max = 0;
+  for (const row of rows) if (row.lane > max) max = row.lane;
+  return max;
+};
+
+/**
+ * Hold an x inside the rail's ends.
+ *
+ * A band may start before the domain or end after it — a consumer computing
+ * "insolvent above $9.3k" against a domain that stops at $11.5k is not wrong,
+ * and neither is one whose span runs off both ends. The bar is clamped to what
+ * the rail can draw; `capStart` and `capEnd` remember which ends were real.
+ */
+const clampToRail = (x: number): number =>
+  clamp(x, RAIL_INSET, VIEW_WIDTH - RAIL_INSET);
 
 /**
  * Re-exported from `internal/geometry/labelLayout`, where the rail's anchor
@@ -123,11 +164,37 @@ const tickReach = (lane: number): number =>
  * the enlarged ring now reaches past a lane-1 tick, so the floor bites on both
  * sides — it did not before the thumb grew.
  */
-const labelBase = (side: ThresholdSide): number =>
-  Math.max(
-    TICK_LENGTH,
-    side === "above" ? THUMB_REACH_ABOVE : THUMB_REACH_BELOW,
-  );
+const thumbReach = (side: ThresholdSide): number =>
+  side === "above" ? THUMB_REACH_ABOVE : THUMB_REACH_BELOW;
+
+/**
+ * How far the band stack on `side` reaches out from the rail.
+ *
+ * Zero bands reach nothing, so a rail with no bands is sized exactly as it was
+ * before bands existed.
+ */
+export const bandReach = (bandLanes: number): number =>
+  bandLanes === 0 ? 0 : BAND_LANE_PITCH * bandLanes;
+
+/**
+ * How far the band stack's `lane` sits from the rail, on `side`.
+ *
+ * Floored at the thumb's reach for the same reason the labels are: lane 1 would
+ * otherwise be drawn through the thumb.
+ */
+export const bandLaneReach = (lane: number, side: ThresholdSide): number =>
+  Math.max(TICK_LENGTH, thumbReach(side)) + BAND_LANE_PITCH * (lane - 1);
+
+/**
+ * How far the label band of lane 1 starts from the rail, on `side`.
+ *
+ * Three floors, and the largest wins: a lane-1 tick, the thumb, and whatever
+ * the band stack occupies. Bands sit NEAREST the rail and the threshold labels
+ * stack outside them, so every band lane pushes the labels out by one
+ * `BAND_LANE_PITCH`.
+ */
+const labelBase = (side: ThresholdSide, bandLanes = 0): number =>
+  Math.max(TICK_LENGTH, thumbReach(side), bandReach(bandLanes));
 
 /**
  * How far the label band of `lane` starts from the rail, on `side`.
@@ -141,32 +208,78 @@ const labelBase = (side: ThresholdSide): number =>
  * `laneGeometry` and `sideExtent` both read this, so a lifted label and the
  * box sized to hold it can never disagree.
  */
-const labelReach = (lane: number, side: ThresholdSide): number =>
-  labelBase(side) + LANE_PITCH * (lane - 1);
+const labelReach = (
+  lane: number,
+  side: ThresholdSide,
+  bandLanes = 0,
+): number => labelBase(side, bandLanes) + LANE_PITCH * (lane - 1);
+
+/**
+ * Vertical positions of one BAND lane, given where the rail sits.
+ *
+ * Read by the drawing and by `sideExtent`, the same way `laneGeometry` is, so
+ * a bar and the box sized to hold it can never disagree.
+ */
+export const bandGeometry = (
+  lane: number,
+  side: ThresholdSide,
+  railY: number,
+): { barY: number; labelY: number } => {
+  const reach = bandLaneReach(lane, side);
+  if (side === "above") {
+    const barY = railY - reach;
+    // Above the rail the label sits FARTHER out than its bar, so the bar never
+    // runs through its own text.
+    return { barY, labelY: barY - BAND_THICKNESS / 2 - BAND_LABEL_GAP };
+  }
+  const barY = railY + reach;
+  return {
+    barY,
+    labelY: barY + BAND_THICKNESS / 2 + BAND_LABEL_GAP + LINE_PITCH,
+  };
+};
 
 /** Vertical positions of one lane on one side, given where the rail sits. */
 export const laneGeometry = (
   lane: number,
   side: ThresholdSide,
   railY: number,
+  bandLanes = 0,
 ): LaneGeometry => {
   const reach = tickReach(lane);
-  const band = labelReach(lane, side);
+  // `toLabel`, not `band` — a band is now a thing on this rail, and reusing the
+  // word for "how far out the label sits" would read as one.
+  const toLabel = labelReach(lane, side, bandLanes);
   if (side === "above") {
-    const nameY = railY - band - NAME_GAP_ABOVE;
+    const nameY = railY - toLabel - NAME_GAP_ABOVE;
     return { tickEnd: railY - reach, nameY, valueY: nameY - LINE_PITCH };
   }
-  const nameY = railY + band + NAME_GAP_BELOW;
+  const nameY = railY + toLabel + NAME_GAP_BELOW;
   return { tickEnd: railY + reach, nameY, valueY: nameY + LINE_PITCH };
 };
 
 /** How far one side of the rail must extend to hold `laneCount` lanes. */
-const sideExtent = (laneCount: number, side: ThresholdSide): number => {
-  const thumb = side === "above" ? THUMB_REACH_ABOVE : THUMB_REACH_BELOW;
-  if (laneCount === 0) return thumb + TEXT_PAD;
+const sideExtent = (
+  laneCount: number,
+  side: ThresholdSide,
+  bandLanes = 0,
+): number => {
+  const thumb = thumbReach(side);
+  // The outermost band's own label still needs room when no threshold label
+  // stacks outside it to provide that room.
+  const bands =
+    bandLanes === 0
+      ? 0
+      : bandLaneReach(bandLanes, side) +
+        BAND_THICKNESS +
+        BAND_LABEL_GAP +
+        LINE_PITCH +
+        TEXT_PAD;
+  if (laneCount === 0) return Math.max(thumb + TEXT_PAD, bands);
   const gap = side === "above" ? NAME_GAP_ABOVE : NAME_GAP_BELOW;
-  const text = labelReach(laneCount, side) + gap + LINE_PITCH + TEXT_PAD;
-  return Math.max(text, thumb + TEXT_PAD);
+  const text =
+    labelReach(laneCount, side, bandLanes) + gap + LINE_PITCH + TEXT_PAD;
+  return Math.max(text, thumb + TEXT_PAD, bands);
 };
 
 /**
@@ -176,9 +289,14 @@ const sideExtent = (laneCount: number, side: ThresholdSide): number => {
 export const railExtents = (
   aboveLanes: number,
   belowLanes: number,
+  aboveBandLanes = 0,
+  belowBandLanes = 0,
 ): { railY: number; height: number } => {
-  const railY = sideExtent(aboveLanes, "above");
-  return { railY, height: railY + sideExtent(belowLanes, "below") };
+  const railY = sideExtent(aboveLanes, "above", aboveBandLanes);
+  return {
+    railY,
+    height: railY + sideExtent(belowLanes, "below", belowBandLanes),
+  };
 };
 
 interface Candidate {
@@ -239,12 +357,6 @@ export const placeThresholds = (
   const above = laneOf(onSide("above"), packing);
   const below = laneOf(onSide("below"), packing);
 
-  const maxLane = (rows: readonly { lane: number }[]): number => {
-    let max = 0;
-    for (const row of rows) if (row.lane > max) max = row.lane;
-    return max;
-  };
-
   const strip = (c: Candidate & { lane: number }): PlacedThreshold => ({
     threshold: c.threshold,
     x: c.x,
@@ -279,4 +391,153 @@ export const nestedThreshold = (
     }
   }
   return best;
+};
+
+/**
+ * Place every band: clamp its span to the rail, note which ends are its own,
+ * then stack the two sides into lanes independently.
+ *
+ * BANDS NEVER SHARE A LANE. `laneOf` forces a box into the outermost lane past
+ * its cap and lets it collide, which is right for a label — a crowded label
+ * still reads as two labels, while one that leaves the frame is gone. It is
+ * wrong for a bar: two bars superimposed at one lane's y read as a SINGLE bar
+ * spanning the union of both extents, a span that neither band claims. That is
+ * not a crowded picture, it is a false one. So the cap is `Infinity` and the
+ * box grows instead. Height is visible and the consumer's own doing; a bar
+ * drawn across a range nobody asked for is neither.
+ *
+ * `toX` is the caller's domain-to-viewBox projection. `domain` supplies the
+ * default for an omitted end — a default, not arithmetic on the band's values.
+ */
+export const placeBands = (
+  bands: readonly Band[],
+  toX: (value: number) => number,
+  domain: readonly [number, number],
+): {
+  placed: readonly PlacedBand[];
+  aboveLanes: number;
+  belowLanes: number;
+} => {
+  const lo = RAIL_INSET;
+  const hi = VIEW_WIDTH - RAIL_INSET;
+
+  interface BandBox {
+    band: Band;
+    x: number;
+    x1: number;
+    x2: number;
+    capStart: boolean;
+    capEnd: boolean;
+    side: ThresholdSide;
+    anchor: LabelAnchor;
+    span: readonly [number, number];
+  }
+
+  const toBox = (band: Band): BandBox => {
+    const startValue = band.start ?? domain[0];
+    const endValue = band.end ?? domain[1];
+    const x1 = clampToRail(toX(startValue));
+    const x2 = clampToRail(toX(endValue));
+    // An end is CAPPED when the band's own value falls inside the rail. A band
+    // running off the end has no crossing to draw there.
+    const capStart = band.start !== undefined && toX(startValue) > lo;
+    const capEnd = band.end !== undefined && toX(endValue) < hi;
+
+    const width = estimateTextWidth(band.label);
+    const middle = (x1 + x2) / 2;
+    const anchor = fitAnchor(middle, width, lo, hi);
+    // The lane box is the wider of the bar and its label: a short bar under a
+    // long label still has to clear its neighbour by the label's width.
+    const labelSpan = anchoredSpan(middle, width, anchor);
+    return {
+      band,
+      x: x1,
+      x1,
+      x2,
+      capStart,
+      capEnd,
+      side: band.side ?? "below",
+      anchor,
+      span: [Math.min(x1, labelSpan[0]), Math.max(x2, labelSpan[1])],
+    };
+  };
+
+  const boxes = map(toBox, bands);
+  const onSide = (side: ThresholdSide): BandBox[] => {
+    const out: BandBox[] = [];
+    for (const b of boxes) if (b.side === side) out.push(b);
+    return out;
+  };
+
+  const packing = {
+    maxLanes: Number.POSITIVE_INFINITY,
+    gutter: LABEL_GUTTER,
+  };
+  const above = laneOf(onSide("above"), packing);
+  const below = laneOf(onSide("below"), packing);
+
+  const strip = (b: BandBox & { lane: number }): PlacedBand => ({
+    band: b.band,
+    x1: b.x1,
+    x2: b.x2,
+    capStart: b.capStart,
+    capEnd: b.capEnd,
+    side: b.side,
+    lane: b.lane,
+    anchor: b.anchor,
+  });
+
+  return {
+    placed: [...map(strip, above), ...map(strip, below)],
+    aboveLanes: maxLane(above),
+    belowLanes: maxLane(below),
+  };
+};
+
+/** Whether `value` falls inside `band`, reading an omitted end as the domain end. */
+export const bandHolds = (
+  band: Band,
+  value: number,
+  domain: readonly [number, number],
+): boolean =>
+  value >= (band.start ?? domain[0]) && value <= (band.end ?? domain[1]);
+
+/**
+ * Arc lengths for `count` active bands around a ring of `radius`.
+ *
+ * One band returns a single full circle, which is exactly the ring the rail
+ * drew before bands existed. Past `MAX_ARCS` the caller draws one neutral ring
+ * instead; this returns an empty list to say so, rather than arcs too short to
+ * read.
+ */
+export const arcLengths = (
+  count: number,
+  radius: number,
+): { circumference: number; arc: number; gap: number }[] => {
+  const circumference = 2 * Math.PI * radius;
+  if (count <= 0 || count > MAX_ARCS) return [];
+  if (count === 1) return [{ circumference, arc: circumference, gap: 0 }];
+  const arc = (circumference - ARC_GAP * count) / count;
+  const out: { circumference: number; arc: number; gap: number }[] = [];
+  for (let i = 0; i < count; i += 1)
+    out.push({ circumference, arc, gap: ARC_GAP });
+  return out;
+};
+
+/**
+ * Every value where the answer changes: the thresholds, plus the ends a band
+ * actually claims. Sorted, and deduplicated so a band end that coincides with
+ * a threshold is not a double stop for PageUp and PageDown.
+ */
+export const jumpTargets = (
+  thresholds: readonly Threshold[],
+  bands: readonly Band[],
+): readonly number[] => {
+  const seen = new Set<number>();
+  for (const t of thresholds) seen.add(t.value);
+  for (const b of bands) {
+    if (b.start !== undefined) seen.add(b.start);
+    if (b.end !== undefined) seen.add(b.end);
+  }
+  return sortBy((n: number) => n, [...seen]);
 };

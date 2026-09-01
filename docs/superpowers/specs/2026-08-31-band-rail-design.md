@@ -191,12 +191,31 @@ Bands take the lanes nearest the rail; thresholds stack outside them.
 not a fork of the function:
 
 ```ts
-laneOf(bandBoxes,      { maxLanes: MAX_BAND_LANES, gutter: LABEL_GUTTER })
-laneOf(thresholdBoxes, { maxLanes: MAX_LANES,      gutter: LABEL_GUTTER })
+laneOf(bandBoxes,      { maxLanes: Infinity,  gutter: LABEL_GUTTER })
+laneOf(thresholdBoxes, { maxLanes: MAX_LANES, gutter: LABEL_GUTTER })
 ```
 
 The algorithm is unchanged in both — walk left to right, take the nearest lane
-whose last occupant clears the gutter, share the outermost lane past the cap.
+whose last occupant clears the gutter. **The overflow rule is not the same,
+because the two marks fail differently.**
+
+Past its cap, `laneOf` forces a box into the outermost lane and lets it
+collide: `Math.min(lane, packing.maxLanes)`. For a LABEL that is the right
+trade, and the module says so — a crowded label still reads as two labels,
+while a label that leaves the frame is gone.
+
+For a BAR it is the wrong trade. Two bars superimposed at one lane's y do not
+read as two crowded bars; they read as one bar spanning the union of both
+extents — **a span that neither band claims**. That is not a crowded picture,
+it is a false one.
+
+So bands take no cap. `maxLanes: Infinity` makes `Math.min` a no-op and the
+overlap can never happen. The cost is height, which is visible and honest, and
+it is the consumer's own doing: a rail handed twelve overlapping bands gets
+tall. The alternative is a rail that draws a range nobody asked for.
+
+This needs no change to `labelLayout.ts`. `LanePacking` as an argument already
+carries it.
 
 `bands` default to `side: "below"` and `thresholds` default to `side: "above"`,
 so the two stacks separate without the consumer doing anything.
@@ -416,7 +435,7 @@ New in `helpers.ts`. **Starting values — tune against the showcase.**
 ```ts
 export const BAND_THICKNESS = 3;      // bar stroke width
 export const BAND_LANE_PITCH = 15;    // bar + its label line + gap
-export const MAX_BAND_LANES = 3;      // cap, per the lane-budget argument
+// No MAX_BAND_LANES. Bands pass `maxLanes: Infinity` — see *Lanes*.
 export const ARC_GAP = 3;             // viewBox units between two arcs
 export const ARC_STROKE = 2.5;        // arc stroke width at r = 12.5
 export const MAX_ARCS = 8;            // past this, one neutral ring
@@ -443,8 +462,11 @@ labelBase(side, bandLanes) =
 `sideExtent` reads the same function, so a pushed-out label and the box sized to
 hold it can never disagree — the invariant `labelReach` already documents.
 
-Three band lanes push threshold labels out by 45 units on that side. That cost
-is the reason `MAX_BAND_LANES` is 3 and not 4.
+Each band lane pushes the threshold labels on that side out by
+`BAND_LANE_PITCH`. Bands are uncapped, so that cost is unbounded in principle.
+It is bounded in practice by how many bands a consumer overlaps at one x, and a
+tall rail is a visible, correctable result — unlike a bar drawn across a span
+no band claims.
 
 ## Files
 
@@ -500,8 +522,10 @@ Behaviour tests, written first, red then green:
    band-lane 1 does not push a threshold into threshold-lane 2.
 8. Threshold labels shift outward by `BAND_LANE_PITCH` per band lane, and
    `railExtents` grows to match.
-9. Overlapping bands stack outward; past `MAX_BAND_LANES` they share the
-   outermost lane.
+9. Overlapping bands stack outward and NEVER share a lane. Twelve bands that
+   all overlap take twelve lanes, and the box grows to hold them — a bar must
+   never be superimposed on another, because the pair would draw a span
+   neither band claims.
 10. One active band draws a full circle at `r = 8.5`.
 11. Three active bands draw three arcs whose lengths and gaps sum to the
     circumference, in input order.

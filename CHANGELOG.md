@@ -3,6 +3,43 @@
 ## 0.156.0
 
 ### Added
+- **`BandRail` labels the region, not just the crossing** (sui#36955). A
+  `Threshold` is a point, but its label describes a *region*, and nothing in
+  the type said which one — a reader seeing "insolvent in 6 mo" at a tick could
+  not tell which side of it was the insolvent side. The new `bands` prop takes
+  spans with both ends stated, drawn as labelled bars that **dim when the value
+  leaves them**, so dragging teaches the direction. `start` and `end` are both
+  optional and default to the domain ends, so a band may be bounded ("safe
+  between $200 and $3.8k") or half-open ("insolvent above $9.3k"); an omitted
+  end is a default, not arithmetic on the consumer's values. A capped end draws
+  a tick to the rail because that is a crossing; an open end runs to the rail's
+  edge with neither cap nor tick, because there is none there to mark.
+  **Bands never share a lane** — two bars at one height read as a single bar
+  spanning both, a span that neither band claims, so the box grows instead. The
+  thumb's nesting ring becomes one arc per holding band, and "you are on this
+  crossing" moves onto the crossing itself, since the bands take the colour the
+  ring used to borrow. `aria-valuetext` now names every holding band, so a
+  screen reader gets the answer the dimming gives a sighted reader.
+  `thresholds` is unchanged and `bands` defaults to `[]`, so existing call
+  sites render exactly as before.
+
+### Changed
+- **`ThresholdRail` is renamed `BandRail`** (sui#36955). It named one of two
+  marks, and after the change above the bands carry the answer while the
+  thresholds carry only where it changes. `ThresholdRail`,
+  `createThresholdRail` and the three prop types stay as deprecated aliases for
+  one minor version. The `sui-threshold-rail__*` CSS prefix does **not** — it
+  is now `sui-band-rail__*`, and duplicating every rule costs more than the one
+  consumer edit. `Threshold`, `ThresholdSide` and `PlacedThreshold` keep their
+  names, because a threshold is still what they describe.
+- **`BandRail`'s drag target reads as one.** The gesture was never the weak
+  part — the host takes the pointer and a click anywhere moves the thumb — but
+  against `Slider` the rail had no hover state, no active state, no track fill,
+  a `pointer` cursor and a thumb 10 viewBox units wide. It gains a neutral
+  value fill, `grab`/`grabbing` cursors, hover and active states, and a thumb
+  scaled by 1.5. The thumb stays sized in viewBox units rather than a CSS pixel
+  token: `valueFromClientX` needs the viewBox to keep its aspect ratio. The box
+  grows 12 units for a bare rail and 11 once a side carries a lane.
 - **`ScrubChart` and `CashflowScrubChart` draw horizontal gridlines**
   (sui#36952). `showGridlines` puts one rule across the plot at every y-axis
   tick — the same shape `Chart`'s `Grid` slot already draws for the low-level

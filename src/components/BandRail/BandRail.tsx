@@ -33,21 +33,25 @@ import { clamp } from "../../internal/math/clamp";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import type { Tone } from "../../types";
 import "./BandRail.css";
+import { filter, map } from "../../fn";
+import { ArcRing, BandLayer } from "./bands";
 import {
   ARROW_HALF_WIDTH,
   ARROW_TIP_GAP,
   ARROW_TOP,
+  bandHolds,
   DOT_RADIUS,
+  jumpTargets,
   laneGeometry,
+  placeBands,
   nestedThreshold,
   placeThresholds,
   RAIL_INSET,
   railExtents,
-  RING_RADIUS,
   STEM_HALF_WIDTH,
   VIEW_WIDTH,
 } from "./helpers";
-import type { PlacedThreshold, Threshold } from "./types";
+import type { Band, PlacedBand, PlacedThreshold, Threshold } from "./types";
 
 /** Fraction of the domain one arrow key covers. Shift multiplies it by 10. */
 const KEY_STEPS = 100;
@@ -71,6 +75,13 @@ export interface BandRailProps
   onChange?: (value: number) => void;
   /** The values where the answer changes. Computed by the consumer. */
   thresholds?: readonly Threshold[];
+  /**
+   * Spans of the domain where a given answer holds. Computed by the consumer.
+   *
+   * A threshold says WHERE the answer changes; a band says WHAT it becomes and
+   * over what span, so the label lives inside the thing it describes.
+   */
+  bands?: readonly Band[];
   /** Accessible name for the slider — what the axis measures. */
   label: string;
   /** Stops pointer and keyboard input and dims the rail. */
@@ -90,7 +101,12 @@ const toneClass = (tone: Tone | undefined): string =>
 
 export const BandRail: Component<BandRailProps> = (rawProps) => {
   const merged = mergeProps(
-    { format: String, thresholds: [] as readonly Threshold[], disabled: false },
+    {
+      format: String,
+      thresholds: [] as readonly Threshold[],
+      bands: [] as readonly Band[],
+      disabled: false,
+    },
     rawProps,
   );
   const [local, rest] = splitProps(merged, [
@@ -99,6 +115,7 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
     "value",
     "onChange",
     "thresholds",
+    "bands",
     "label",
     "disabled",
     "class",
@@ -118,9 +135,19 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
     placeThresholds(local.thresholds, scale(), local.format),
   );
 
+  const bandLayout = createMemo(() =>
+    placeBands(local.bands, scale(), local.domain),
+  );
+
   const extents = createMemo(() => {
     const { aboveLanes, belowLanes } = layout();
-    return railExtents(aboveLanes, belowLanes);
+    const bands = bandLayout();
+    return railExtents(
+      aboveLanes,
+      belowLanes,
+      bands.aboveLanes,
+      bands.belowLanes,
+    );
   });
 
   const railY = () => extents().railY;
@@ -132,10 +159,28 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
   const nested = (): PlacedThreshold | undefined =>
     nestedThreshold(layout().placed, thumbX());
 
+  /** The bands holding at the current value, in the consumer's own order. */
+  const active = createMemo((): readonly PlacedBand[] =>
+    filter(
+      (p: PlacedBand) => bandHolds(p.band, shown(), local.domain),
+      bandLayout().placed,
+    ),
+  );
+
+  const isActive = (placed: PlacedBand): boolean => active().includes(placed);
+
+  /**
+   * What a screen reader hears. The dimming answers "what holds here" for a
+   * sighted reader and says nothing at all to anyone else, so the active band
+   * labels belong here too — otherwise the two readers get different answers.
+   */
   const valueText = () => {
-    const on = nested();
     const written = local.format(shown());
-    return on ? `${written}, ${on.threshold.label}` : written;
+    const holding = map((p: PlacedBand) => p.band.label, active());
+    const on = nested();
+    return [written, ...holding, ...(on ? [on.threshold.label] : [])].join(
+      ", ",
+    );
   };
 
   const emit = (next: number): void => {
@@ -177,14 +222,19 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
     setDragging(false);
   };
 
-  /** The next threshold strictly past `from`, walking in `direction`. */
+  /**
+   * The next value where the answer changes, strictly past `from`.
+   *
+   * Band ends count, not just thresholds: a band end is a value where the
+   * answer changes too. `jumpTargets` deduplicates, so a band end sitting on a
+   * threshold is one stop and not two.
+   */
   const neighbourThreshold = (
     from: number,
     direction: 1 | -1,
   ): number | null => {
     let best: number | null = null;
-    for (const p of layout().placed) {
-      const v = p.threshold.value;
+    for (const v of jumpTargets(local.thresholds, local.bands)) {
       if (direction === 1 ? v <= from : v >= from) continue;
       if (best === null || (direction === 1 ? v < best : v > best)) best = v;
     }
@@ -281,15 +331,33 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
           y2={railY()}
         />
 
+        <BandLayer
+          placed={bandLayout().placed}
+          railY={railY()}
+          isActive={isActive}
+        />
+
         <Index each={layout().placed}>
           {(placed) => {
             const geometry = () =>
-              laneGeometry(placed().lane, placed().side, railY());
+              laneGeometry(
+                placed().lane,
+                placed().side,
+                railY(),
+                placed().side === "above"
+                  ? bandLayout().aboveLanes
+                  : bandLayout().belowLanes,
+              );
+            // "You are on this crossing" used to be said by the thumb, which
+            // borrowed the threshold's tone. The bands take that colour now,
+            // and the borrow only ever said "you are on ONE of them" anyway.
+            // Saying it on the crossing points at the thing you are on.
+            const onThis = () => nested()?.threshold === placed().threshold;
             return (
               <g
                 class={`sui-band-rail__threshold${toneClass(
                   placed().threshold.tone,
-                )}`}
+                )}${onThis() ? " sui-band-rail__threshold--nested" : ""}`}
               >
                 <line
                   class="sui-band-rail__tick"
@@ -319,17 +387,12 @@ export const BandRail: Component<BandRailProps> = (rawProps) => {
           }}
         </Index>
 
-        {nested() ? (
-          <g
-            class={`sui-band-rail__threshold${toneClass(
-              nested()?.threshold.tone,
-            )}`}
-          >
-            <circle
-              class="sui-band-rail__ring"
+        {active().length > 0 ? (
+          <g>
+            <ArcRing
               cx={thumbX()}
               cy={railY()}
-              r={RING_RADIUS}
+              tones={map((p: PlacedBand) => p.band.tone, active())}
             />
             <circle
               class="sui-band-rail__thumb"

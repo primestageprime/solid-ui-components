@@ -182,7 +182,10 @@ describe("BandRail — drawing", () => {
     ).toBe("sui-band-rail__threshold");
   });
 
-  it("draws the arrow thumb between thresholds and the nesting ring on one", () => {
+  it("keeps the arrow thumb while no band holds, whatever the thresholds say", () => {
+    // The arrow used to mean "between thresholds". It now means "no band holds
+    // here", which is a clearer job — landing on a crossing is said by the
+    // crossing, not by the thumb.
     const [value, setValue] = createSignal(40);
     const { container } = render(() => (
       <BandRail
@@ -193,14 +196,59 @@ describe("BandRail — drawing", () => {
       />
     ));
     expect(container.querySelector("polygon")).not.toBeNull();
-    expect(container.querySelector(".sui-band-rail__ring")).toBeNull();
 
     setValue(25);
-    expect(container.querySelector("polygon")).toBeNull();
-    expect(container.querySelector(".sui-band-rail__ring")).not.toBeNull();
+    expect(container.querySelector("polygon")).not.toBeNull();
+    expect(container.querySelector(".sui-band-rail__arc")).toBeNull();
   });
 
-  it("gives the nesting ring the colour of the threshold it landed on", () => {
+  it("swaps the arrow for one arc per holding band", () => {
+    const [value, setValue] = createSignal(90);
+    const { container } = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={value()}
+        bands={[
+          { start: 0, end: 50, label: "safe", tone: "success" },
+          { start: 20, end: 60, label: "also safe", tone: "accent" },
+        ]}
+        label="Monthly draw"
+      />
+    ));
+    // Outside every band: the arrow, and no arcs.
+    expect(container.querySelector("polygon")).not.toBeNull();
+    expect(container.querySelectorAll(".sui-band-rail__arc")).toHaveLength(0);
+
+    setValue(10);
+    expect(container.querySelector("polygon")).toBeNull();
+    expect(container.querySelectorAll(".sui-band-rail__arc")).toHaveLength(1);
+
+    setValue(30);
+    expect(container.querySelectorAll(".sui-band-rail__arc")).toHaveLength(2);
+  });
+
+  it("gives each arc the tone of its own band, in the consumer's order", () => {
+    // The ring used to borrow the nested THRESHOLD's colour, which only ever
+    // said "you are on one of them". The bands own that colour now.
+    const { container } = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={30}
+        bands={[
+          { start: 0, end: 50, label: "safe", tone: "success" },
+          { start: 20, end: 60, label: "watch", tone: "warning" },
+        ]}
+        label="Monthly draw"
+      />
+    ));
+    const arcs = [...container.querySelectorAll(".sui-band-rail__arc")];
+    expect(arcs.map((a) => a.getAttribute("class"))).toEqual([
+      "sui-band-rail__arc sui-band-rail__arc--success",
+      "sui-band-rail__arc sui-band-rail__arc--warning",
+    ]);
+  });
+
+  it("marks the crossing the value sits on, rather than colouring the thumb", () => {
     const { container } = render(() => (
       <BandRail
         domain={[0, 100]}
@@ -209,9 +257,12 @@ describe("BandRail — drawing", () => {
         label="Monthly draw"
       />
     ));
-    const ring = container.querySelector(".sui-band-rail__ring")!;
-    expect(ring.parentElement?.getAttribute("class")).toBe(
-      "sui-band-rail__threshold sui-band-rail__threshold--warning",
+    const nested = container.querySelectorAll(
+      ".sui-band-rail__threshold--nested",
+    );
+    expect(nested).toHaveLength(1);
+    expect(nested[0].getAttribute("class")).toContain(
+      "sui-band-rail__threshold--warning",
     );
   });
 
@@ -363,6 +414,149 @@ describe("BandRail — keyboard", () => {
     key(railOf(container), "a");
     key(railOf(container), "Enter");
     expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("BandRail — bands", () => {
+  const bandsOf = (c: HTMLElement) => [
+    ...c.querySelectorAll(".sui-band-rail__band"),
+  ];
+
+  it("draws a bar with a cap and a tick at each end it claims", () => {
+    const { container } = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={50}
+        bands={[{ start: 25, end: 75, label: "safe" }]}
+        label="Draw"
+      />
+    ));
+    expect(container.querySelectorAll(".sui-band-rail__bar")).toHaveLength(1);
+    expect(container.querySelectorAll(".sui-band-rail__cap")).toHaveLength(2);
+    expect(
+      container.querySelectorAll(".sui-band-rail__band-tick"),
+    ).toHaveLength(2);
+  });
+
+  it("draws neither cap nor tick at an end that ran off the domain", () => {
+    // "insolvent above $9.3k" has no crossing at the right end to mark.
+    const { container } = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={50}
+        bands={[{ start: 25, label: "insolvent" }]}
+        label="Draw"
+      />
+    ));
+    expect(container.querySelectorAll(".sui-band-rail__cap")).toHaveLength(1);
+    expect(
+      container.querySelectorAll(".sui-band-rail__band-tick"),
+    ).toHaveLength(1);
+  });
+
+  it("carries the band's label on the bar, so meaning is never colour-only", () => {
+    const { getByText } = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={50}
+        bands={[{ start: 25, end: 75, label: "safe in 12 mo" }]}
+        label="Draw"
+      />
+    ));
+    expect(getByText("safe in 12 mo")).toBeTruthy();
+  });
+
+  it("dims a band the value has left, and never hides it", () => {
+    // Dimming IS the direction answer: the reader drags and watches which
+    // bars light up. A hidden band teaches nothing.
+    const [value, setValue] = createSignal(30);
+    const { container } = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={value()}
+        bands={[{ start: 25, end: 75, label: "safe" }]}
+        label="Draw"
+      />
+    ));
+    const band = () => bandsOf(container)[0];
+    expect(band().classList.contains("sui-band-rail__band--inactive")).toBe(
+      false,
+    );
+
+    setValue(90);
+    expect(bandsOf(container)).toHaveLength(1);
+    expect(band().classList.contains("sui-band-rail__band--inactive")).toBe(
+      true,
+    );
+  });
+
+  it("grows the box for band lanes and pushes the threshold labels outside them", () => {
+    const heightOf = (c: HTMLElement): number =>
+      Number(canvasOf(c).getAttribute("viewBox")!.split(" ")[3]);
+    const bare = render(() => (
+      <BandRail domain={[0, 100]} value={50} label="Draw" />
+    ));
+    const banded = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={50}
+        bands={[{ start: 0, end: 100, label: "a" }]}
+        label="Draw"
+      />
+    ));
+    expect(heightOf(banded.container)).toBeGreaterThan(
+      heightOf(bare.container),
+    );
+  });
+
+  it("tells a screen reader what holds here, not just where the thumb is", () => {
+    // The dimming answers this for a sighted reader and says nothing to
+    // anyone else. Without the labels here the two readers get different
+    // answers to the same question.
+    const { container } = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={30}
+        bands={[
+          { start: 0, end: 50, label: "safe in 12 mo" },
+          { start: 20, end: 60, label: "or hire a bookkeeper" },
+          { start: 80, end: 100, label: "insolvent" },
+        ]}
+        format={(v) => `$${v}`}
+        label="Draw"
+      />
+    ));
+    expect(railOf(container).getAttribute("aria-valuetext")).toBe(
+      "$30, safe in 12 mo, or hire a bookkeeper",
+    );
+  });
+
+  it("stops PageUp at a band end as well as a threshold", () => {
+    const onChange = vi.fn();
+    const { container } = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={10}
+        bands={[{ start: 40, end: 70, label: "safe" }]}
+        label="Draw"
+        onChange={onChange}
+      />
+    ));
+    key(railOf(container), "PageUp");
+    expect(onChange).toHaveBeenCalledWith(40);
+  });
+
+  it("renders exactly as before when no bands are passed", () => {
+    const { container } = render(() => (
+      <BandRail
+        domain={[0, 100]}
+        value={50}
+        thresholds={THRESHOLDS}
+        label="Draw"
+      />
+    ));
+    expect(bandsOf(container)).toHaveLength(0);
+    expect(container.querySelector("polygon")).not.toBeNull();
   });
 });
 
