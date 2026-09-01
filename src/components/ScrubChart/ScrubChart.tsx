@@ -146,8 +146,10 @@ export const ScrubChart = <C extends Cell>(
     return Math.ceil(widest + Y_LABEL_GAP);
   });
 
-  // Horizontal plot region — depends on the auto-sized y-axis column.
-  const hSpan = () => insetSpan(chartWidth(), yAxisWidth(), 0);
+  // Horizontal plot region — depends on the auto-sized y-axis column and
+  // the caller-reserved right gutter (0 unless `rightGutter` is set).
+  const hSpan = () =>
+    insetSpan(chartWidth(), yAxisWidth(), props.rightGutter ?? 0);
   const plotLeft = () => hSpan().start;
   const plotRight = () => hSpan().end;
   const plotWidth = () => hSpan().size;
@@ -200,10 +202,13 @@ export const ScrubChart = <C extends Cell>(
       const stride = Math.ceil(indices.length / maxTicks);
       indices = filter((_, i) => i % stride === 0, indices);
     }
-    return map((i) => ({
-      x: indexToX(i),
-      label: fmt(props.cells[i], chosen),
-    }), indices);
+    return map(
+      (i) => ({
+        x: indexToX(i),
+        label: fmt(props.cells[i], chosen),
+      }),
+      indices,
+    );
   });
 
   // ── Track the inner DateAxis's scroll position + viewport width so we
@@ -257,7 +262,10 @@ export const ScrubChart = <C extends Cell>(
         maxScroll,
         Math.max(0, (req.index + 0.5) * w - el.clientWidth / 2),
       );
-      el.scrollTo({ left: target, behavior: attempt === 0 ? "smooth" : "auto" });
+      el.scrollTo({
+        left: target,
+        behavior: attempt === 0 ? "smooth" : "auto",
+      });
     };
     applyScroll(0);
   });

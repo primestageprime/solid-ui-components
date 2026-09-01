@@ -155,6 +155,17 @@ export interface ScrubChartProps<C extends Cell> {
    *  to the same column. No effect unless `yDomain` is set. */
   yAxisWidth?: number;
 
+  // ── Right gutter (optional) ─────────────────────────────────────────
+
+  /** Width in px reserved past the plot's right edge — feeds the `after`
+   *  argument of the horizontal inset span. `yAxisWidth` above is the
+   *  precedent: same role, opposite side. The one difference is that this
+   *  side is never auto-measured, because nothing here knows how wide a
+   *  caller's right-side content is (e.g. `CashflowScrubChart`'s
+   *  right-zone labels) — the caller states the width it needs. Default 0,
+   *  so no existing chart's plot narrows until a caller asks for the room. */
+  rightGutter?: number;
+
   // ── X-axis (optional) ────────────────────────────────────────────────
 
   /** Cadence at which to emit labelled x-axis ticks. Default "none". */
@@ -178,7 +189,7 @@ export interface ScrubChartProps<C extends Cell> {
  */
 export type ScrubChartOverrides<C extends Cell> = Pick<
   ScrubChartProps<C>,
-  "chartHeight" | "cellWidth" | "yAxisWidth" | "xAxisHeight"
+  "chartHeight" | "cellWidth" | "yAxisWidth" | "xAxisHeight" | "rightGutter"
 >;
 
 /** Props that remain available to consumers of a curried ScrubChart variant. */
