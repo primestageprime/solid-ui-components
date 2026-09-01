@@ -1,10 +1,16 @@
 # Spec — optional labels on chart lines and markers
 
-Status: **code complete on `feat/chart-line-labels` at `a85fefe`.** Every
-implementation step in §11 is done and merged, and all five gates pass. Two
-things remain, both in §11 step 9: verify against `thorcasting-ui`, and get
-Peter's prop confirmation (§2), which gates the merge to `main`. No version
-bump — the release is one bump covering this and the `BandRail` work.
+Status: **SHIPPED in 0.156.0 on 2026-09-01.** Peter confirmed the prop
+expansion, `feat/chart-line-labels` merged to `main`, and the package published.
+This file is kept as the record of how the feature is built and what it cost,
+not as a task list.
+
+**One item is still open:** verify against `thorcasting-ui`, which is npm-linked
+in SOURCE mode and now also has 0.156.0 available from the registry.
+
+**Read §9 before you run any gate on this repo.** It was wrong during this work
+and the corrections cost a red `main` and a broken feature that a green suite
+did not catch.
 Written 2026-08-31. Supersedes the scratchpad handoff of the same date.
 Target: `CashflowScrubChart` and `ScrubChart` in this repo.
 
@@ -38,7 +44,11 @@ placement algorithm. Do them first — they are the cheap half.
 
 ---
 
-## 2. The one open precondition
+## 2. The prop gate — CLEARED, and how
+
+**Peter confirmed the expansion on 2026-09-01, and 0.156.0 shipped with it.**
+The rule below still binds the next person who adds a prop here, which is why
+it stays.
 
 `AGENT_GUIDE.md:156-172`, § *Enforcement — expansion requires confirmation*:
 
@@ -51,9 +61,10 @@ placement algorithm. Do them first — they are the cheap half.
 > consumer. Only a real consumer app that actually renders the new variant in
 > product justifies the expansion. No real consumer → no expansion.
 
-This work adds four props. `thorcasting-ui` renders all four in product, so the
-consumer half of the gate is met. **Peter's confirmation is not. Get it before
-you write code.** The case to put to him:
+This work adds four props, and `thorcasting-ui` renders all four in product, so
+the consumer half of the gate was met from the start. Peter confirmed the other
+half. The case that was put to him, kept because it is the shape a future
+request should take:
 
 | Prop | Consumer need |
 |---|---|
@@ -480,23 +491,34 @@ module and the label layer go in new files.
 
 ## 9. Verification gates
 
-Run all of these. The tree is clean and the suite is green at the start; hold
-both.
+**CI RUNS SEVEN COMMANDS, NOT FIVE.** An earlier version of this section listed
+five and omitted `typecheck:dev`. On 2026-09-01 that gap pushed a red `main`:
+`dev/showcases/band-rail.tsx` imported a type the barrel never exported, and no
+gate on the short list could see it. Run every line below.
 
 ```
-npm run test           # 317 files, 3433 tests — also runs componentsNeverExecuted
-npm run typecheck      # tsc --noEmit
-npm run build          # build:client && build:server
+npm run lint:ci        # lint-ci.mjs lint src --error-on-warnings
+npm run typecheck      # tsc --noEmit          — src ONLY
+npm run typecheck:dev  # tsc -p tsconfig.dev.json — dev/, the showcases
+npm run test           # vitest run
 npm run health         # scripts/health.mjs
+npm run build          # build:client && build:server
 npm run bundle-budget  # scripts/bundle-budget.mjs
+npx biome format       # NOT in CI. See the format trap below.
 git status --short     # only the files you meant to change
 ```
 
-CI gates on all five. `lint` runs but does not gate. `strict: true`, so the PR
-must be up to date with `main` before it merges. `npm run check` runs lint and
-`tsc` together over the whole tree.
+CI's `test` job runs `test:coverage` and `execution-coverage` rather than plain
+`test`; `execution-coverage` is the hidden third ratchet, `componentsNeverExecuted`.
+`strict: true`, so a PR must be up to date with `main` before it merges.
 
-**Two traps when you run these.**
+**Four traps when you run these.**
+
+**`npm run typecheck` DOES NOT COMPILE `dev/`.** `tsconfig.json` has
+`"include": ["src/**/*"]`. Only `typecheck:dev` compiles the showcases, through
+`tsconfig.dev.json`. A showcase that imports a missing type passes `typecheck`
+and fails CI. If you touch anything under `dev/`, `typecheck:dev` is the gate
+that matters.
 
 `npm run bundle-budget` builds the library ITSELF. Its first output line is
 "Building the library (use --skip-build to reuse dist/)…", so `--skip-build` is
@@ -517,6 +539,19 @@ count the repo's own combinators. Import `filter`, `map` and `sortBy` from
 `src/fn` instead of raising a baseline. A loop is not a chain and does not
 count, which is why `laneOf` keeps one.
 
+**A format trap. CI DOES NOT RUN THE FORMATTER, so nothing catches drift.**
+Biome is the formatter — there is no Prettier in this repo, and a report that
+"Prettier is clean" is a report about a tool that is not installed. `biome.json`
+sets `lineWidth: 80` over `src/**`, `dev/**` and `scripts/**`. Release 0.156.0
+left seven files unformatted, six of which were clean before it. Run
+`npx biome format <your files>` before you commit, and `--write` to fix.
+
+Note that `npm run lint` and `lint:ci` cover `src` ONLY. `npx biome lint` with
+no path covers the whole repo and reports 27 errors and 61 warnings in `dev/`
+and `scripts/` that predate this work. Do not try to drive that to zero — the
+repo enforces `src`, and `docs/adr/0008-deliberately-unfixed.md` is the place
+that question belongs.
+
 Verify against the consumer before you bump the version. `thorcasting-ui` is
 npm-linked in SOURCE mode, so it sees your edits without a publish.
 
@@ -524,22 +559,35 @@ npm-linked in SOURCE mode, so it sees your edits without a publish.
 
 ## 10. Release path
 
-Repo `/Users/aarnold/gits/primestage/solid-ui-components`, branch `main`.
+**SHIPPED. `0.156.0` published on 2026-09-01** from `14e3d3d`, carrying this
+work, the `BandRail` rename with bands, and the `ScrubChart` gridlines. The
+instruction below to hold the version is spent; it is kept only so the record
+reads straight.
 
-**`package.json` reads `0.155.2`. `CHANGELOG.md` already opens with
-`## 0.156.0`**, written by the gridlines work but never published. There is no
-`[Unreleased]` heading; that convention is not active here.
+> DO NOT BUMP THE VERSION. The user ruled on 2026-08-31 that this work and the
+> `BandRail` work both finish first, and everything then releases under one
+> bump.
 
-**DO NOT BUMP THE VERSION. DO NOT CUT A RELEASE.** The user ruled on
-2026-08-31 that this work and the `BandRail` work both finish first, and
-everything then releases under one bump. Leave `package.json` at `0.155.2`.
+That is what happened. `## 0.156.0` in `CHANGELOG.md` was written by the work
+as it landed; there is no `[Unreleased]` heading and that convention is not
+active here. State your reading of the §1 / data-prop fork in a CHANGELOG entry,
+as §3 above sets it out.
 
-Add a CHANGELOG entry describing the change. Do not create or claim a version
-heading — whoever cuts the release owns that. Name no version in a deprecation
-comment either, so nothing goes stale when the bump lands.
+### How the release actually went, for the next person
 
-State your reading of the §1 / data-prop fork in the CHANGELOG entry, as §3
-above sets it out.
+`publish.yml` runs on `workflow_run` after CI passes on `main`, and publishes
+only when `package.json` carries a version the registry lacks. So a merged bump
+publishes itself, and a re-run on an already-published version prints
+"already published — skipping" rather than failing.
+
+`enforce_admins` is `false`, so a direct push to `main` bypasses branch
+protection and reports "Bypassed rule violations — 5 of 5 required status checks
+are expected". CI still runs afterwards and still gates the publish, so a red
+`main` does not reach the registry — but it does mean a bad push lands on the
+default branch. Prefer a PR.
+
+**Never tag a release on an unmerged branch** — `AGENT_GUIDE.md` calls tagging
+the one step with no cheap undo.
 
 `publish.yml` runs on `workflow_run` after CI passes on `main`, so a version
 bump merged to `main` publishes itself. That is exactly why the bump waits.
@@ -576,13 +624,42 @@ Branch `feat/chart-line-labels`. Steps 2, 3, 4 and 6 are DONE and merged.
    `labelPlacement.ts`.
 8. ~~Showcase, `COMPONENTS.md`, CHANGELOG.~~ DONE in the same merge. No
    baseline moved, so `scripts/health-baseline.json` is untouched.
-9. **NEXT AND LAST** — verify in `thorcasting-ui`, which is npm-linked in
-   SOURCE mode and sees these edits without a publish. Then the branch waits on
-   Peter's confirmation (§2) before it merges to `main`.
+9. ~~Run the gates.~~ DONE. ~~Peter's confirmation.~~ GIVEN.
+   ~~Merge and release.~~ SHIPPED as 0.156.0.
+10. **STILL OPEN** — verify in `thorcasting-ui`.
 
-All five gates pass at `a85fefe`: 321 test files, 3552 tests, typecheck clean,
-build exit 0, health at baseline on every metric, bundle-budget with every
-ceiling tight and `typicalAppKb` unchanged at 31974 B.
+Final state at release: 321 test files, 3583 tests, every CI gate exit 0, health
+at baseline on every metric, `typicalAppKb` 31974 B — byte-identical to before
+this work, so labels cost a consumer nothing.
+
+### THE BUG A GREEN SUITE DID NOT CATCH — read this before trusting a gate
+
+The feature shipped to a browser BROKEN once, with 3552 tests passing.
+
+`runRightRung` refused any label whose row crossed `plot.top` or `plot.bottom`.
+A series that ends at the y-domain maximum ends at `plot.top` EXACTLY, so the
+top line's label — the very one whose width bought the gutter — was refused
+every time. The chart reserved 59px of frame width and drew nothing in it. That
+is worse than the feature not working: it is a silent layout tax.
+
+**Why every test passed.** `reserveLabelSpace` reads WIDTHS and cannot see where
+a line ends. `placeLabels` then applied a VERTICAL condition the reservation
+never charged for. Every test checked ONE function against fixed numbers, so
+both sides were internally consistent and jointly wrong.
+
+`BandRail` hit the identical shape the same day — `bandStackReach` and
+`bandGeometry` computed the same quantity from different bases and disagreed by
+15.5 units, with all 110 of its tests green.
+
+**The rule this earns.** When one function computes a quantity a second function
+consumes, a test that checks each against fixed numbers proves nothing. Feed the
+first function's output into the second and assert they AGREE, including at the
+exact-equality boundary where an off-by-one hides. `labelPlacement.test.ts` now
+does this in 15 cases, all of which fail against the pre-fix code.
+
+**And open the browser.** The defect took ninety seconds to see and no test to
+find. A gate that measures everything except whether the thing appears on screen
+is not measuring the feature.
 
 ### One behaviour worth knowing
 
