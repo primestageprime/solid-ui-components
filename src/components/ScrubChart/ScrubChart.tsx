@@ -86,10 +86,14 @@ export const ScrubChart = <C extends Cell>(
   const emitScrub = (index: number, cell: C) => props.onScrub?.(index, cell);
 
   // ── Axis-chrome geometry ──────────────────────────────────────────────
+  // xAxisHeight prop SETS the base row height (tick-cadence-gated);
+  // xAxisExtraHeight ADDS to it unconditionally — the extra row is for a
+  // caller-owned layer below the axis (e.g. CashflowScrubChart's below-zone
+  // labels), which needs its space whether or not ticks are drawn.
   const xAxisHeight = () =>
-    (props.xTickCadence ?? "none") !== "none"
+    ((props.xTickCadence ?? "none") !== "none"
       ? (props.xAxisHeight ?? DEFAULT_X_AXIS_HEIGHT)
-      : 0;
+      : 0) + (props.xAxisExtraHeight ?? 0);
 
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
@@ -146,8 +150,10 @@ export const ScrubChart = <C extends Cell>(
     return Math.ceil(widest + Y_LABEL_GAP);
   });
 
-  // Horizontal plot region — depends on the auto-sized y-axis column.
-  const hSpan = () => insetSpan(chartWidth(), yAxisWidth(), 0);
+  // Horizontal plot region — depends on the auto-sized y-axis column and
+  // the caller-reserved right gutter (0 unless `rightGutter` is set).
+  const hSpan = () =>
+    insetSpan(chartWidth(), yAxisWidth(), props.rightGutter ?? 0);
   const plotLeft = () => hSpan().start;
   const plotRight = () => hSpan().end;
   const plotWidth = () => hSpan().size;
@@ -200,10 +206,13 @@ export const ScrubChart = <C extends Cell>(
       const stride = Math.ceil(indices.length / maxTicks);
       indices = filter((_, i) => i % stride === 0, indices);
     }
-    return map((i) => ({
-      x: indexToX(i),
-      label: fmt(props.cells[i], chosen),
-    }), indices);
+    return map(
+      (i) => ({
+        x: indexToX(i),
+        label: fmt(props.cells[i], chosen),
+      }),
+      indices,
+    );
   });
 
   // ── Track the inner DateAxis's scroll position + viewport width so we
@@ -257,7 +266,10 @@ export const ScrubChart = <C extends Cell>(
         maxScroll,
         Math.max(0, (req.index + 0.5) * w - el.clientWidth / 2),
       );
-      el.scrollTo({ left: target, behavior: attempt === 0 ? "smooth" : "auto" });
+      el.scrollTo({
+        left: target,
+        behavior: attempt === 0 ? "smooth" : "auto",
+      });
     };
     applyScroll(0);
   });
