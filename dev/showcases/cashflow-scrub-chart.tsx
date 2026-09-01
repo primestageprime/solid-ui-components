@@ -52,10 +52,15 @@ const todayIndex = cells.findIndex(
 // actual balance and drifts by a fixed amount per day. Returns null before
 // the anchor so the line only renders over the forecast (future) region —
 // which also exercises CashflowScrubChart's null-gap line breaking.
+//
+// `horizonDays` stops the line early. A line that stops inside the plot has
+// clear space beside its last point, which is what lets an "auto" label stay
+// on the ladder's first rung — see the label examples below.
 const forecast =
-  (anchorIdx: number, dailyDriftCents: number) =>
+  (anchorIdx: number, dailyDriftCents: number, horizonDays?: number) =>
   (_cell: CashflowCell, i: number): number | null => {
     if (i < anchorIdx) return null;
+    if (horizonDays !== undefined && i > anchorIdx + horizonDays) return null;
     const base = cells[anchorIdx]?.balanceCents ?? 0;
     return base + (i - anchorIdx) * dailyDriftCents;
   };
@@ -98,7 +103,13 @@ export const CashflowScrubChartShowcase: Component = () => {
   const [multiSelectedIdx, setMultiSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
-  const [labelSelectedIdx, setLabelSelectedIdx] = createSignal(
+  const [autoLabelSelectedIdx, setAutoLabelSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
+  const [ladderSelectedIdx, setLadderSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
+  const [commandedSelectedIdx, setCommandedSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
   const [bandSelectedIdx, setBandSelectedIdx] = createSignal(
@@ -310,24 +321,113 @@ export const CashflowScrubChartShowcase: Component = () => {
       </div>
 
       <div class="example-group">
-        <h3>Labelled lines</h3>
+        <h3>Labelled lines &mdash; "auto" settles in the body</h3>
         <p class="text-meta">
           A series with a <code>label</code> now draws that label on the chart.{" "}
           <code>labelPlacement</code> states a PREFERENCE, not a lock: the chart
           walks <code>body</code> &rarr; <code>right</code> &rarr;{" "}
-          <code>below</code> and takes the first zone the text fits. Only an
-          explicit zone buys frame space &mdash; <code>"right"</code> widens the
-          gutter past the plot, <code>"below"</code> adds a row under the x-axis
-          ticks. An <code>"auto"</code> label uses whatever another label bought
-          and never creates space itself, so a chart of <code>"auto"</code>
-          labels is pixel-identical to one with none. A label that fits nowhere
-          is dropped in silence.
+          <code>below</code> and takes the first zone the text fits. Every
+          series below LEAVES THE PROP OFF, so every label is{" "}
+          <code>"auto"</code> &mdash; what a caller gets by default. Each
+          scenario also stops at its own horizon (30, 60 and 90 days), so the
+          last point of each line has clear space beside it and all three
+          captions stay on the first rung, in the plot body, next to the line
+          they name. This chart reserves NO frame space: an <code>"auto"</code>{" "}
+          label buys none. Its plot is exactly as wide as the first example on
+          this page, which carries no labels at all.
         </p>
 
         <CashflowScrubChart
           cells={cells}
-          selected={labelSelectedIdx()}
-          onScrub={(i) => setLabelSelectedIdx(i)}
+          selected={autoLabelSelectedIdx()}
+          onScrub={(i) => setAutoLabelSelectedIdx(i)}
+          today={PINNED_TODAY}
+          balanceSeries={[
+            {
+              id: "upside",
+              label: "Upside",
+              class: "demo-forecast--optimistic",
+              balanceCents: forecast(Math.max(0, todayIndex), 40_000, 90),
+            },
+            {
+              id: "downside",
+              label: "Downside",
+              class: "demo-forecast--pessimistic",
+              balanceCents: forecast(Math.max(0, todayIndex), -20_000, 60),
+            },
+            {
+              id: "base",
+              label: "Base",
+              class: "demo-target-line",
+              balanceCents: forecast(Math.max(0, todayIndex), 12_000, 30),
+            },
+          ]}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>Labelled lines &mdash; "auto" falls down the ladder</h3>
+        <p class="text-meta">
+          Only an EXPLICIT zone buys frame space. Here <code>Optimistic</code>{" "}
+          asks for <code>"right"</code>, which widens the gutter past the plot
+          by that one label's width. The other two labels stay{" "}
+          <code>"auto"</code>. <code>Pessimistic</code> stops at its 60-day
+          horizon and keeps the body rung, as in the chart above.{" "}
+          <code>Target</code> runs to the right edge, where its own flat line
+          fills the body box on both sides, so it falls one rung and parks in
+          the gutter <code>Optimistic</code> paid for. That is the ladder doing
+          its work: the <code>"auto"</code> label reached the gutter only
+          because another label bought the gutter. Take the <code>"right"</code>{" "}
+          off <code>Optimistic</code> and BOTH gutter labels vanish &mdash; a
+          chart of <code>"auto"</code> labels alone never reaches a rung under
+          the body.
+        </p>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={ladderSelectedIdx()}
+          onScrub={(i) => setLadderSelectedIdx(i)}
+          today={PINNED_TODAY}
+          balanceSeries={[
+            {
+              id: "optimistic",
+              label: "Optimistic",
+              labelPlacement: "right",
+              class: "demo-forecast--optimistic",
+              balanceCents: forecast(Math.max(0, todayIndex), 40_000),
+            },
+            {
+              id: "target",
+              label: "Target",
+              class: "demo-target-line",
+              balanceCents: targetBalance,
+            },
+            {
+              id: "pessimistic",
+              label: "Pessimistic",
+              class: "demo-forecast--pessimistic",
+              balanceCents: forecast(Math.max(0, todayIndex), -20_000, 60),
+            },
+          ]}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>Labelled lines &mdash; a zone commanded</h3>
+        <p class="text-meta">
+          Both series name their zone, so neither label chooses.{" "}
+          <code>"right"</code> widens the gutter past the plot,{" "}
+          <code>"below"</code> adds a row under the x-axis tick labels, and each
+          caption goes where it was told. A marker joins the ladder the same
+          way, but only with an explicit zone: the <code>Today</code> rule below
+          names none, so it keeps the caption at the top of its own rule. A
+          label that fits nowhere is dropped in silence.
+        </p>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={commandedSelectedIdx()}
+          onScrub={(i) => setCommandedSelectedIdx(i)}
           today={PINNED_TODAY}
           balanceSeries={[
             {
