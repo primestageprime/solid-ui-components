@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Added
+- **`Slider` takes a `ticks` prop and draws notches on the track.** `true`
+  marks every `step` from `min` to `max` inclusive; an array marks exactly
+  those values and ignores `step`; omitted or `false` renders exactly the
+  markup the component rendered before.
+
+  ```tsx
+  <Slider label="Months to sample" value={months()} onChange={setMonths}
+          min={3} max={24} ticks={[3, 6, 12, 18, 24]} />
+  ```
+
+  A notch the fill has passed flips to the page colour, so it reads as a cut
+  in the fill rather than a mark beside it. A value outside `[min, max]` is
+  dropped rather than pulled to the edge, because a notch at an unreachable
+  value lies about the domain. A notch at either end sits half its own width
+  inside the track, so the rounded cap does not clip it. Every notch is
+  `aria-hidden` and takes no pointer events — a notch is decoration, and the
+  track under it stays the drag surface.
+
+  `ticks` joins `format` in `SliderOverrides`, so `createSlider({ format,
+  ticks })` curries a scale as well as a unit. Kobalte has no tick primitive:
+  each notch is an absolutely positioned span inside `KobalteSlider.Track`,
+  sized by the new `--sui-slider-tick-width` and `--sui-slider-tick-height`
+  variables.
+
 ## 0.160.0
 
 ### Fixed
