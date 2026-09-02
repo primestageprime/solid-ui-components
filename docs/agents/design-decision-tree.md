@@ -13,8 +13,8 @@ How to use (the /design-options skill drives this):
    design doc usually answers most discriminators without asking.
 3. Ask ONLY the discriminators you cannot answer from context, batched into
    one question set.
-4. Record the outcome as a precedent (bottom of this file) AND in mempalace,
-   with the answers that drove it — that's what makes the next ask smaller.
+4. Record the outcome as a precedent (bottom of this file) with the answers
+   that drove it — that's what makes the next ask smaller.
 
 Maintenance: when a decision doesn't fit any branch, that's a missing
 discriminator — extend the tree in the same change that records the precedent.

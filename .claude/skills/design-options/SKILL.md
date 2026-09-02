@@ -1,6 +1,6 @@
 ---
 name: design-options
-description: Use when designing a page, flow, or component on a workshop bench and a structural decision comes up (which layout, which list, which panel/container, which chart) — for "/design-options", "offer me options", "what existing component should we use here". Drives the decision through docs/agents/design-decision-tree.md (UX/data-centric discriminators + recorded precedents) so as FEW questions as possible are asked; records every choice and its why back into the tree and mempalace.
+description: Use when designing a page, flow, or component on a workshop bench and a structural decision comes up (which layout, which list, which panel/container, which chart) — for "/design-options", "offer me options", "what existing component should we use here". Drives the decision through docs/agents/design-decision-tree.md (UX/data-centric discriminators + recorded precedents) so as FEW questions as possible are asked; records every choice and its why back into the tree.
 ---
 
 # Design options (a decision tree with memory)
@@ -8,13 +8,11 @@ description: Use when designing a page, flow, or component on a workshop bench a
 Structural design decisions (which layout, which list, which container, which
 chart) are made from **existing** SUI components, chosen by UX/data-centric
 reasoning — and every decision feeds institutional memory so the NEXT decision
-needs fewer questions. The memory lives in two places:
+needs fewer questions. The memory is one file:
 
 - `docs/agents/design-decision-tree.md` — the tree of discriminating
-  questions per decision category, plus an append-only precedent log.
-- mempalace — a knowledge-graph fact per decision, so other sessions/repos
-  can recall it (`mempalace_search` before asking; `mempalace_kg_add` after
-  deciding).
+  questions per decision category, plus an append-only precedent log. Read
+  the branch for your category, and the log, before you ask anything.
 
 ## Flow
 
@@ -22,7 +20,7 @@ needs fewer questions. The memory lives in two places:
    container, counts, flow viz, …) and read that section of
    `docs/agents/design-decision-tree.md`.
 2. **Answer discriminators from context first.** The design doc, the bench,
-   and prior precedents (tree log + `mempalace_search`) usually answer most
+   and prior precedents (the tree's log) usually answer most
    discriminators — e.g. "how many statuses do the items represent?" is
    readable from the data model. Never ask a question the context already
    answers.
@@ -41,8 +39,6 @@ needs fewer questions. The memory lives in two places:
 6. **Record the decision** in the same change:
    - Append a precedent line to the tree doc: date · surface · decision ·
      discriminator answers · choice · why.
-   - `mempalace_kg_add` an equivalent fact (subject: the surface; relation:
-     uses; object: the component; context: the discriminator answers).
    - Note it in the bench header comment
      (`// QUEUE: ActionList — multi-status triage, via /design-options`).
 7. **If no branch fits, the tree is missing a discriminator** — extend the
@@ -53,7 +49,7 @@ needs fewer questions. The memory lives in two places:
 
 - Recommendations must be REAL components: verify exported names and key
   props against `src/components/` before proposing.
-- Consistency > variety: a same-role precedent (tree log, mempalace, or a
+- Consistency > variety: a same-role precedent (the tree's log or a
   consumer app) beats a fresh derivation — surface it as the recommendation.
 - The reasons are UX/data-centric ("3+ statuses = the list is a workflow
   surface"), never aesthetic ("looks nicer").

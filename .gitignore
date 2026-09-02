@@ -9,9 +9,6 @@ worktrees/
 # Superpowers brainstorm artifacts
 .superpowers/
 
-# MemPalace per-project runtime artifacts
-mempalace.yaml
-entities.json
 .claude/scheduled_tasks.lock
 
 # usage-manifest incremental cache (regenerated per machine)
