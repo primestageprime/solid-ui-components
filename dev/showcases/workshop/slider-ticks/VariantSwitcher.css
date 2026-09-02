@@ -1,0 +1,51 @@
+/* ============================================
+   PROTOTYPE — variant switcher.
+   Loud on purpose. Nobody must mistake this bar for part of the design.
+   ============================================ */
+.slider-ticks-switcher {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border: 3px dashed #000;
+  border-radius: 8px;
+  background: #ff00a0;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  color: #000;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.slider-ticks-switcher__arrow {
+  cursor: pointer;
+  padding: 2px 10px;
+  border: 2px solid #000;
+  border-radius: 4px;
+  background: #ffe600;
+  color: #000;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.slider-ticks-switcher__arrow:hover {
+  background: #fff;
+}
+
+.slider-ticks-switcher__label {
+  min-width: 210px;
+  text-align: center;
+}
+
+.slider-ticks-switcher__hint {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
