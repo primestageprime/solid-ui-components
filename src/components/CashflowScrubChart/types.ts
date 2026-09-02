@@ -163,6 +163,24 @@ export interface CashflowChartMarker {
   class?: string;
 }
 
+/**
+ * One horizontal reference line, drawn at a fixed Y value rather than pinned
+ * to a cell index — a THRESHOLD AMOUNT ("you need this much in the bank"),
+ * where `CashflowChartMarker` marks a threshold DATE. Spans the full plot
+ * width, non-interactive (no click, no dot) — the plotline-marker counterpart
+ * for "the line that matters is the value, not when it's crossed."
+ */
+export interface CashflowHorizontalMarker {
+  /** Y value, in cents, where the line is drawn. */
+  valueCents: number;
+  /** Caption drawn at the line's right end, inside the plot. Optional. */
+  label?: string;
+  /** Extra CSS class on this line only, alongside the shared base class
+   *  (`.sui-cashflow-scrub-chart__hrule-line`) — color / dash are the
+   *  consumer's to define on this class. */
+  class?: string;
+}
+
 export interface CashflowScrubChartProps {
   cells: CashflowCell[];
   /** Selected day index. Optional in plain (scrub=false) mode. */
@@ -190,6 +208,13 @@ export interface CashflowScrubChartProps {
    */
   markers?: CashflowChartMarker[];
   onMarkerClick?: (index: number, cell: CashflowCell) => void;
+  /**
+   * HORIZONTAL REFERENCE LINES — fixed-value threshold lines spanning the
+   * full plot width, e.g. "you need $X in the bank." Off by default. See
+   * `CashflowHorizontalMarker` for the shape; unlike `markers`, these are
+   * never interactive and never move with the data.
+   */
+  horizontalMarkers?: CashflowHorizontalMarker[];
   /** Recenter the detail ribbon on a cell (fresh object per request) —
    *  forwarded to ScrubChart. */
   centerOn?: { index: number } | null;
@@ -214,6 +239,19 @@ export interface CashflowScrubChartProps {
    * than the actual peak balance simply clips the top of the line.
    */
   yMax?: number | null;
+  /**
+   * Optional fixed lower y-bound, in **cents**, mirroring `yMax`. When
+   * provided (non-null), the lower bound is pinned to it instead of being
+   * auto-derived from the data (the default: `min(0, …balance values)`, so
+   * the zero-line stays visible but its PIXEL position drifts between
+   * renders as the data's most-negative value changes — two scenarios with
+   * different depths of "how bankrupt" render the zero-line at different
+   * heights, which makes them uncomparable at a glance). Set this when the
+   * caller wants zero pinned at a fixed position across renders instead.
+   * Ignored when `yPadFraction` is set (tight-domain mode wins, same as
+   * `yMax`'s own interaction with it).
+   */
+  yMin?: number | null;
   /**
    * Opt into a TIGHT y-domain that frames the visible line(s) instead of being
    * anchored to zero. When set (e.g. `0.1`), the domain becomes
@@ -241,6 +279,31 @@ export interface CashflowScrubChartProps {
    *  chart draws itself. Color / dash / opacity are the consumer's to define on
    *  this class. */
   lineClass?: string;
+  /**
+   * Label DRAWN on the chart for the PRIMARY running-balance line — the
+   * counterpart of `CashflowBalanceSeries.label` for the line the chart draws
+   * itself. The same ladder places it, so it sits beside the line's last
+   * point, takes the line's own colour, and answers to the pointer like every
+   * other label.
+   *
+   * Without it the primary line carries NO label. The chart then names every
+   * overlay line and leaves the one line it draws itself anonymous, and a
+   * pointer on any label mutes the primary line with nothing able to bring it
+   * back. A caller used to buy the label by adding an invisible
+   * `balanceSeries` entry that traced the same values — a carrier line drawn
+   * only to hang a caption on. This prop replaces that workaround.
+   */
+  lineLabel?: string;
+  /**
+   * Where `lineLabel` prefers to sit. Defaults to `"auto"`, which walks
+   * body → right → below and takes the first zone the text fits.
+   *
+   * Separate from the series field for the same reason it is per-series: one
+   * chart's labels routinely need different zones, and the primary line's
+   * caption competes with them for the same rungs. Only an EXPLICIT zone buys
+   * frame space.
+   */
+  lineLabelPlacement?: CashflowLabelZone;
   /**
    * Accent color for the day-strip ribbon — draws a 1px border around the
    * ENTIRE ribbon element so the filmstrip reads as belonging to a specific

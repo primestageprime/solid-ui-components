@@ -13,13 +13,19 @@
 //   labelCandidates(...)    AFTER the scales exist, inside the frame the
 //                           reservation bought.
 //
-// Both walk the same list in the same order — every series, then every marker.
+// Both walk the same list in the same order — the primary line first, then
+// every series, then every marker.
 // The reservation pass is an AGGREGATE (a widest and a count), so it keeps a
 // label whose anchor point has no value; the candidate pass drops that label,
 // because there is no point to hang it on. `placeLabels` indexes its results
 // against the CANDIDATES, so the two lists never have to line up.
 //
 // WHICH LABELS EXIST
+//
+// The primary running-balance line joins as soon as the caller sets
+// `lineLabel`. It takes the id `primary` — the ladder's own vocabulary holds
+// `series:<id>` for a balance series and `marker:<index>` for a marker, and
+// the chart draws exactly one primary line, so that line needs no suffix.
 //
 // A series joins as soon as it carries a `label`. Rendering that field is the
 // point of the feature; it has been on the public API for a long time and
@@ -31,7 +37,7 @@
 // before this feature existed and no current chart moves. An explicit zone
 // moves the caption into the ladder and hands the rule its full height back.
 // ============================================
-import { type Component, For } from "solid-js";
+import { type Component, For, Show } from "solid-js";
 import { filter, flatMap, map } from "../../fn";
 import { measureLabelWidth } from "../ScrubChart/helpers";
 import {
@@ -47,7 +53,25 @@ import type {
   CashflowBalanceSeries,
   CashflowCell,
   CashflowChartMarker,
+  CashflowLabelZone,
 } from "./types";
+
+/** The label id the ladder mints for the primary running-balance line. */
+export const PRIMARY_LABEL_ID = "primary";
+
+/**
+ * The primary running-balance line's own label, when the caller sets one.
+ *
+ * The chart draws this line itself, so the label has no series entry to hang
+ * on. Both builders take this record, and `undefined` says the caller named
+ * no label and the primary line joins neither list.
+ */
+export interface PrimaryLineLabel {
+  /** Text the ladder draws. */
+  readonly text: string;
+  /** Zone the caller prefers. */
+  readonly placement: CashflowLabelZone;
+}
 
 /** Pixel geometry the candidate builder needs, taken from the chart context. */
 export interface LabelGeometry {
@@ -90,14 +114,25 @@ const ladderMarkers = (
  * `xAxisExtraHeight` — the two knobs that build the scales the placement pass
  * then reads back.
  *
+ * @param primary The primary line's own label, or `undefined` for none.
  * @param series  The chart's overlay balance series.
  * @param markers The chart's plotline markers.
- * @returns One reservation per label, series first and markers second.
+ * @returns One reservation per label — the primary line first, then the
+ *          series, then the markers.
  */
 export const labelReservations = (
+  primary: PrimaryLineLabel | undefined,
   series: readonly CashflowBalanceSeries[],
   markers: readonly CashflowChartMarker[],
 ): readonly LabelReservation[] => [
+  ...(primary === undefined
+    ? []
+    : [
+        {
+          width: measureLabelWidth(primary.text),
+          placement: primary.placement,
+        },
+      ]),
   ...map(
     (s: CashflowBalanceSeries) => ({
       width: measureLabelWidth(s.label ?? ""),
@@ -129,6 +164,37 @@ const lastDefinedIndex = (
     if (valueAt(i) != null) found = i;
   }
   return found;
+};
+
+/**
+ * The primary line's candidate, anchored at that line's LAST drawn point —
+ * the same anchor `seriesCandidates` uses, so the primary caption and a
+ * series caption sit on the same rung when both lines end together.
+ *
+ * Returns an empty list when the caller names no label, and when the primary
+ * line draws no point to hang the label on.
+ */
+const primaryCandidates = (
+  primary: PrimaryLineLabel | undefined,
+  geometry: LabelGeometry,
+): readonly ChartLabel[] => {
+  if (primary === undefined) return [];
+  const last = lastDefinedIndex(geometry.cellCount, geometry.primaryCents);
+  const value = last === null ? undefined : geometry.primaryCents(last);
+  if (last === null || value == null) return [];
+  const y = geometry.yToPlot(value);
+  return [
+    {
+      id: PRIMARY_LABEL_ID,
+      text: primary.text,
+      width: measureLabelWidth(primary.text),
+      height: LABEL_ROW_HEIGHT,
+      placement: primary.placement,
+      x: geometry.cellToX(last),
+      y,
+      endY: y,
+    },
+  ];
 };
 
 /**
@@ -191,18 +257,22 @@ const markerCandidates = (
  *
  * This runs AFTER the scales exist, inside the frame the reservation bought.
  *
+ * @param primary  The primary line's own label, or `undefined` for none.
  * @param series   The chart's overlay balance series.
  * @param markers  The chart's plotline markers.
  * @param cells    The cells the series accessors read.
  * @param geometry Scales and counts from the chart context.
- * @returns One candidate per label whose anchor point has a value.
+ * @returns One candidate per label whose anchor point has a value, in the
+ *          order `labelReservations` walks.
  */
 export const labelCandidates = (
+  primary: PrimaryLineLabel | undefined,
   series: readonly CashflowBalanceSeries[],
   markers: readonly CashflowChartMarker[],
   cells: readonly CashflowCell[],
   geometry: LabelGeometry,
 ): readonly ChartLabel[] => [
+  ...primaryCandidates(primary, geometry),
   ...seriesCandidates(series, cells, geometry),
   ...markerCandidates(
     filter(
@@ -271,10 +341,14 @@ export const drawnPolylines = (
   ];
 };
 
-/** A label the ladder placed, paired back with the text to draw. */
+/** A label the ladder placed, paired back with the text and box to draw. */
 interface DrawnLabel {
   readonly placed: PlacedLabel;
   readonly text: string;
+  /** Measured text width in px — the hit box spans it. */
+  readonly width: number;
+  /** Text row height in px — the hit box spans it. */
+  readonly height: number;
 }
 
 /**
@@ -293,11 +367,34 @@ export const drawnLabels = (
     map(
       (result: LabelPlacementResult, i: number) =>
         result.kind === "placed"
-          ? { placed: result, text: labels[i].text }
+          ? {
+              placed: result,
+              text: labels[i].text,
+              width: labels[i].width,
+              height: labels[i].height,
+            }
           : null,
       results,
     ),
   );
+
+/** Clear space added around a label's text box to make it easy to point at. */
+const LABEL_HIT_PAD = 3;
+
+/**
+ * The left edge of a label's text box.
+ *
+ * `placed.x` is an anchor point, not a left edge: the ladder pairs it with a
+ * `text-anchor`, and the three anchors put the text on three different sides
+ * of that number. The hit box has to cover the glyphs, so it reads the anchor
+ * back.
+ */
+const hitLeft = (label: DrawnLabel): number =>
+  label.placed.anchor === "start"
+    ? label.placed.x
+    : label.placed.anchor === "end"
+      ? label.placed.x - label.width
+      : label.placed.x - label.width / 2;
 
 /**
  * The label layer: one `<text>` per placed label, in one `<g>`.
@@ -306,23 +403,78 @@ export const drawnLabels = (
  * document order is paint order — appending the layer reorders nothing that
  * was already there. It sits outside the plot's clip path because the right
  * and below zones are, by construction, outside the plot rectangle.
+ *
+ * A label NAMES a line, so pointing at it asks which line. `onHoverLabel`
+ * turns that question on: each label gets a padded transparent hit box and
+ * reports its id on enter and `null` on leave, and `highlightedId` comes back
+ * as the emphasis class. Without the callback the layer takes no pointer
+ * event at all — it must not eat the scrub gestures it sits over.
+ *
+ * `colorOf` answers the same question at rest: the caller reads the drawn
+ * line's colour and the label takes it. The layer writes that colour as an
+ * INLINE STYLE. A `fill` presentation attribute sits below every CSS
+ * declaration in the cascade, so any plain `.sui-cashflow-scrub-chart__label
+ * { fill: … }` rule on the page paints over the attribute. A consumer loads
+ * exactly such a rule: `package.json` maps `index.css` to `dist/index.css`
+ * even while the `source` condition is active, so a stale second copy of this
+ * stylesheet reaches the page beside the fresh one. An inline style beats
+ * every class rule that carries no `!important`, so the colour survives.
+ * The layer sets no style at all when no colour resolves, so the CSS default
+ * applies. Muting stays on `opacity`, which the inline `fill` does not touch.
  */
 export const ChartLabelLayer: Component<{
   labels: readonly ChartLabel[];
   results: readonly LabelPlacementResult[];
-}> = (props) => (
-  <g class="sui-cashflow-scrub-chart__labels">
-    <For each={drawnLabels(props.labels, props.results)}>
-      {(label) => (
-        <text
-          class={`sui-cashflow-scrub-chart__label sui-cashflow-scrub-chart__label--${label.placed.zone}`}
-          x={label.placed.x}
-          y={label.placed.y}
-          text-anchor={label.placed.anchor}
-        >
-          {label.text}
-        </text>
-      )}
-    </For>
-  </g>
-);
+  /** Id of the label the pointer rests on, or `null` when it rests on none. */
+  highlightedId?: string | null;
+  /** Called with a label id on pointer enter, and with `null` on leave. */
+  onHoverLabel?: (id: string | null) => void;
+  /** Colour of the line a label names, or `undefined` when none resolves. */
+  colorOf?: (id: string) => string | undefined;
+}> = (props) => {
+  /** The emphasis modifier one label takes while any label is hovered. */
+  const emphasis = (id: string): string => {
+    const active = props.highlightedId ?? null;
+    if (active === null) return "";
+    return active === id
+      ? " sui-cashflow-scrub-chart__label--highlighted"
+      : " sui-cashflow-scrub-chart__label--muted";
+  };
+  /** The inline style one label takes, or `undefined` when no colour resolves. */
+  const colorStyle = (id: string) => {
+    const color = props.colorOf?.(id);
+    return color === undefined ? undefined : { fill: color };
+  };
+  return (
+    <g class="sui-cashflow-scrub-chart__labels">
+      <For each={drawnLabels(props.labels, props.results)}>
+        {(label) => (
+          <g
+            class="sui-cashflow-scrub-chart__label-group"
+            onPointerEnter={() => props.onHoverLabel?.(label.placed.id)}
+            onPointerLeave={() => props.onHoverLabel?.(null)}
+          >
+            <Show when={props.onHoverLabel}>
+              <rect
+                class="sui-cashflow-scrub-chart__label-hit"
+                x={hitLeft(label) - LABEL_HIT_PAD}
+                y={label.placed.y - label.height / 2 - LABEL_HIT_PAD}
+                width={label.width + LABEL_HIT_PAD * 2}
+                height={label.height + LABEL_HIT_PAD * 2}
+              />
+            </Show>
+            <text
+              class={`sui-cashflow-scrub-chart__label sui-cashflow-scrub-chart__label--${label.placed.zone}${emphasis(label.placed.id)}`}
+              x={label.placed.x}
+              y={label.placed.y}
+              text-anchor={label.placed.anchor}
+              style={colorStyle(label.placed.id)}
+            >
+              {label.text}
+            </text>
+          </g>
+        )}
+      </For>
+    </g>
+  );
+};

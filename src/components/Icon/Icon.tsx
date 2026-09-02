@@ -39,7 +39,7 @@ export const ICON_GROUPS = {
     "edit",
     "trash",
   ] as const,
-  ui: ["spinner", "menu", "settings", "external-link", "bell"] as const,
+  ui: ["spinner", "menu", "settings", "gear", "external-link", "bell"] as const,
   auth: ["log-out", "log-in", "user", "agent"] as const,
   cache: [
     "cache-minutes",
@@ -88,6 +88,7 @@ export type IconName =
   | "spinner"
   | "menu"
   | "settings"
+  | "gear"
   | "external-link"
   | "bell"
   // Auth
@@ -321,6 +322,24 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5l1.5 1.5M3 13l1.5-1.5M11.5 4.5l1.5-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
       solid: `<circle cx="8" cy="8" r="3" fill="currentColor"/>
             <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5l1.5 1.5M3 13l1.5-1.5M11.5 4.5l1.5-1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
+    },
+    // Machine gear: six teeth on the rim plus a hub hole. `settings` draws
+    // eight rays from a hub, which reads as a sun. A reader finds a gear by
+    // the teeth, so this glyph puts the teeth on the rim.
+    //
+    // The rim path repeats one tooth six times, at 60° steps around the
+    // centre (8,8). Each repeat draws a straight flank out to the tip
+    // radius, an arc across the tip, a straight flank back to the root
+    // radius, then an arc along the root to the next tooth. The outline
+    // variant uses tip radius 6.5 and root radius 4.6, which keeps the
+    // 1.3-unit stroke inside the 16-unit viewBox. The solid variant grows
+    // the same shape to tip radius 7 and root radius 4.9, because a filled
+    // shape needs no room for a stroke.
+    gear: {
+      outline: `<path d="M12.27 6.28L14.31 6.43A6.5 6.5 0 0 1 14.31 9.57L12.27 9.72A4.6 4.6 0 0 1 11.62 10.83L12.52 12.68A6.5 6.5 0 0 1 9.79 14.25L8.64 12.56A4.6 4.6 0 0 1 7.36 12.56L6.21 14.25A6.5 6.5 0 0 1 3.48 12.68L4.38 10.83A4.6 4.6 0 0 1 3.73 9.72L1.69 9.57A6.5 6.5 0 0 1 1.69 6.43L3.73 6.28A4.6 4.6 0 0 1 4.38 5.17L3.48 3.32A6.5 6.5 0 0 1 6.21 1.75L7.36 3.44A4.6 4.6 0 0 1 8.64 3.44L9.79 1.75A6.5 6.5 0 0 1 12.52 3.32L11.62 5.17A4.6 4.6 0 0 1 12.27 6.28Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="none"/>
+              <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.3" fill="none"/>`,
+      solid: `<path d="M12.54 6.16L14.79 6.31A7 7 0 0 1 14.79 9.69L12.54 9.84A4.9 4.9 0 0 1 11.86 11.02L12.86 13.04A7 7 0 0 1 9.93 14.73L8.68 12.85A4.9 4.9 0 0 1 7.32 12.85L6.07 14.73A7 7 0 0 1 3.14 13.04L4.14 11.02A4.9 4.9 0 0 1 3.46 9.84L1.21 9.69A7 7 0 0 1 1.21 6.31L3.46 6.16A4.9 4.9 0 0 1 4.14 4.98L3.14 2.96A7 7 0 0 1 6.07 1.27L7.32 3.15A4.9 4.9 0 0 1 8.68 3.15L9.93 1.27A7 7 0 0 1 12.86 2.96L11.86 4.98A4.9 4.9 0 0 1 12.54 6.16Z" fill="currentColor"/>
+            <circle cx="8" cy="8" r="2.4" fill="var(--sui-bg-primary)"/>`,
     },
     "external-link": {
       outline: `<path d="M10 2h4v4M14 2L7 9M6 3H3v10h10v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,

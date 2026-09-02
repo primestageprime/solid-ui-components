@@ -177,17 +177,26 @@
 
 /* ── Line + marker labels (the label ladder) ──────────────────────── */
 /* Drawn after the primary line, so document order paints them on top.
-   The layer never takes a pointer event — the scrub gestures own the
-   chart surface. */
+   The group takes no pointer event — the scrub gestures own the chart
+   surface. Each label re-enables itself; see the label-hover section. */
 .sui-cashflow-scrub-chart__labels {
   pointer-events: none;
 }
 
+/* The default label colour, for a label whose line resolves no colour.
+   A label that DOES resolve a colour carries that colour as an INLINE STYLE,
+   which beats this rule. Do not move that colour back into a class or a `fill`
+   presentation attribute. A presentation attribute loses to every CSS rule,
+   including a stale duplicate of THIS stylesheet: a consumer imports
+   `@primestageprime/solid-ui-components/index.css`, `package.json` maps that
+   to `dist/index.css` even while the `source` condition is active, and the
+   page then loads a second copy of this rule that paints over the attribute.
+   The measured result was six labels drawn in the default grey. */
 .sui-cashflow-scrub-chart__label {
-  fill: var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
   font-size: 9px;
   font-weight: 600;
   dominant-baseline: middle;
+  fill: var(--sui-text-secondary, rgba(255, 255, 255, 0.7));
 }
 
 /* ── Plotline markers (the `markers` prop) ────────────────────────── */
@@ -265,6 +274,31 @@
   dominant-baseline: middle;
 }
 
+/* ── Horizontal reference lines (the `horizontalMarkers` prop) ────── */
+/* A threshold AMOUNT rather than a date — spans the full plot width at a
+   fixed Y, non-interactive like the "rule" variant above (no hit area, no
+   click), but never pinned to a cell index. */
+
+.sui-cashflow-scrub-chart__marker--hrule {
+  pointer-events: none;
+  cursor: default;
+}
+
+.sui-cashflow-scrub-chart__hrule-line {
+  stroke: var(--sui-cashflow-marker, #e0b24d);
+  stroke-width: 1;
+  stroke-dasharray: 5 4;
+  opacity: 0.7;
+}
+
+.sui-cashflow-scrub-chart__hrule-label {
+  fill: var(--sui-text-muted, rgba(255, 255, 255, 0.65));
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* ── Hover readout (the `hover` prop) ─────────────────────────────── */
 /* A transient crosshair + hollow per-line dots + a tooltip card, distinct
    from the persistent selected-rule/dot and the dotted Today rule. */
@@ -301,4 +335,87 @@
   font-family: var(--sui-font-family, inherit);
   pointer-events: none;
   z-index: 2;
+}
+
+/* ── Label hover → line emphasis ──────────────────────────────────── */
+/* A label names one line, and the chart ships no legend, so pointing at a
+   label is the only way to read the pairing. The named line keeps full
+   strength; every other drawn line steps back. Muting is opacity ALONE, so a
+   consumer's own series colour still reads through it. */
+
+.sui-cashflow-scrub-chart__label-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The `__labels` group is pointer-transparent; each label re-enables itself,
+   so the scrub gestures keep the rest of the chart surface. */
+.sui-cashflow-scrub-chart__label-group {
+  pointer-events: all;
+  cursor: default;
+}
+
+.sui-cashflow-scrub-chart__label-hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.sui-cashflow-scrub-chart__line,
+.sui-cashflow-scrub-chart__band,
+.sui-cashflow-scrub-chart__marker,
+.sui-cashflow-scrub-chart__label {
+  transition:
+    opacity 120ms ease,
+    stroke-width 120ms ease;
+}
+
+/* Doubled class: a consumer's own series class sets stroke and width at the
+   same specificity, and source order alone would not settle it. */
+.sui-cashflow-scrub-chart__line.sui-cashflow-scrub-chart__line--muted,
+.sui-cashflow-scrub-chart__band.sui-cashflow-scrub-chart__band--muted,
+.sui-cashflow-scrub-chart__label.sui-cashflow-scrub-chart__label--muted,
+.sui-cashflow-scrub-chart__marker--muted {
+  opacity: 0.18;
+}
+
+/* The highlighted line must come back to FULL strength, not only widen. A
+   consumer's own series class routinely dims its line at rest — a comparison
+   line states `stroke-opacity: 0.35`, a range edge the same — and a 3px line
+   at 35% next to muted lines at 18% reads as no highlight at all. The three
+   properties defeat three separate ways to dim a line:
+     • `stroke-width` beats the width the series class sets.
+     • `stroke-opacity` beats a series class that fades its own stroke.
+     • `opacity` beats a series class that fades the whole element.
+   The doubled class matches the muting rule's specificity, so the consumer's
+   class cannot win on source order. */
+.sui-cashflow-scrub-chart__line.sui-cashflow-scrub-chart__line--highlighted {
+  stroke-width: 3;
+  stroke-opacity: 1;
+  opacity: 1;
+}
+
+/* A highlighted BAND takes no rule at all, and that is the difference between
+   a band and a line. The line is the SUBJECT of the highlight: the reader
+   points at a label to ask which line it names, so the line must come forward
+   and the rule above restores its full strength. The band is CONTEXT around
+   that line. It only has to escape the muting rule, which the modifier already
+   does by not matching. A rule here that forced `fill-opacity: 1` painted a
+   range cone — which states `fill-opacity: 0.12` — as a solid slab across the
+   whole plot. The modifier stays on the element so a consumer can hook it. */
+
+/* The highlighted label sets NO fill. A label already carries the colour of
+   the line it names, written as an inline style. Every OTHER label mutes,
+   which is what shows the emphasis. The class stays so a consumer can hook
+   it. */
+.sui-cashflow-scrub-chart__label.sui-cashflow-scrub-chart__label--highlighted {
+  opacity: 1;
+}
+
+.sui-cashflow-scrub-chart__marker--highlighted
+  .sui-cashflow-scrub-chart__marker-line,
+.sui-cashflow-scrub-chart__marker--highlighted
+  .sui-cashflow-scrub-chart__rule-line {
+  opacity: 1;
+  stroke-width: 2;
 }

@@ -31,6 +31,13 @@ export const TightStack: Component<StackDataProps> = createStack({ gap: "xs" });
 export const NarrowStack: Component<StackDataProps> = createStack({
   gap: "sm",
 });
+// SpacedStack — a plain vertical column at the `md` (12px) gap step, the
+// sibling of TightStack (xs) / NarrowStack (sm) one rung up the scale. For
+// content that wants more air than NarrowStack without reaching for a
+// padded/region variant (e.g. a card body's own field stack).
+export const SpacedStack: Component<StackDataProps> = createStack({
+  gap: "md",
+});
 
 // Conversation root — capped reading width and conversation-typography for a
 // multi-participant chat tree. Width math: bubble max = 80ch, body width = 80%

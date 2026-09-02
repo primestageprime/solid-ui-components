@@ -5,5 +5,6 @@ export type {
   CashflowBalanceSeries,
   CashflowSeriesFill,
   CashflowChartMarker,
+  CashflowHorizontalMarker,
   CashflowLabelZone,
 } from "./CashflowScrubChart";

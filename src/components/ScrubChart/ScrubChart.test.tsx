@@ -297,6 +297,64 @@ describe("ScrubChart hover plumbing", () => {
     });
     expect(container.querySelector(".sui-scrub-chart__hover-layer")).toBeNull();
   });
+
+  it("reports no hover for a pointer outside the plot's horizontal span", () => {
+    // The frame keeps the jsdom zero rect, so a clientX IS a frame-relative x.
+    // A yDomain buys the y-axis column left of plotLeft, and rightGutter buys
+    // the label gutter right of plotRight. Neither column holds a cell.
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        hover
+        yDomain={[0, 100]}
+        rightGutter={40}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+        renderHoverOverlay={(ctx) => (
+          <div data-testid="hover" data-idx={String(ctx.hoverIndex)} />
+        )}
+      />
+    ));
+    const frame = container.querySelector(".sui-scrub-chart__frame")!;
+    const layer = () =>
+      container.querySelector(".sui-scrub-chart__hover-layer");
+    // Inside the plot the readout appears.
+    pointer(frame).move({ clientX: 600, clientY: 30 });
+    expect(layer()).toBeTruthy();
+    // Past plotRight: chartWidth is 1200 and the gutter is 40, so 1190 sits in
+    // the gutter. The readout goes away instead of clamping to the last cell.
+    pointer(frame).move({ clientX: 1190, clientY: 30 });
+    expect(layer()).toBeNull();
+    // Back inside — the readout returns, so the null is not sticky.
+    pointer(frame).move({ clientX: 600, clientY: 30 });
+    expect(layer()).toBeTruthy();
+    // Left of plotLeft: x = 1 lands in the y-axis label column.
+    pointer(frame).move({ clientX: 1, clientY: 30 });
+    expect(layer()).toBeNull();
+  });
+
+  it("still clamps a click past the right edge to the last cell", () => {
+    // The hover fix must not reach the click-to-scrub gesture, which keeps the
+    // clamp: a click past the last cell still means the last cell.
+    const onScrub = vi.fn();
+    const cells = cells10();
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells}
+        selected={0}
+        onScrub={onScrub}
+        rightGutter={40}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    const overlay = container.querySelector(".sui-scrub-chart__overlay")!;
+    const click = pointer(overlay);
+    click.down({ clientX: 1190, clientY: 100 });
+    click.up({ clientX: 1190, clientY: 100 });
+    expect(onScrub).toHaveBeenCalledWith(9, cells[9]);
+  });
 });
 
 describe("ScrubChart gridlines", () => {

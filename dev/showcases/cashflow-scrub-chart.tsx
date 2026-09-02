@@ -112,6 +112,9 @@ export const CashflowScrubChartShowcase: Component = () => {
   const [commandedSelectedIdx, setCommandedSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
+  const [hoverEmphasisSelectedIdx, setHoverEmphasisSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
   const [bandSelectedIdx, setBandSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
@@ -336,6 +339,15 @@ export const CashflowScrubChartShowcase: Component = () => {
           label buys none. Its plot is exactly as wide as the first example on
           this page, which carries no labels at all.
         </p>
+        <p class="text-meta">
+          Point at a label in any chart below. The label names one line, and the
+          chart ships no legend, so the hover answers which line. That line
+          keeps its full strength and every other line steps back. Move the
+          pointer off the label to restore all of them.
+        </p>
+        <p class="text-meta">
+          At rest, a label already takes the colour of the line it names.
+        </p>
 
         <CashflowScrubChart
           cells={cells}
@@ -450,6 +462,77 @@ export const CashflowScrubChartShowcase: Component = () => {
               index: Math.max(0, todayIndex),
               variant: "rule",
               label: "Today",
+            },
+          ]}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>Label hover &mdash; which line is this?</h3>
+        <p class="text-meta">
+          Point at a label. The chart ships no legend, so the hover answers
+          which line the label names: that line keeps its FULL strength, and
+          every other line, band and marker steps back. Move the pointer off
+          the label to restore all of them. At rest, each label already carries
+          the colour of the line it names &mdash; the chart reads the resolved
+          stroke back from the drawn line, so the four colours below come from
+          the consumer&apos;s own classes and nothing else.
+        </p>
+        <p class="text-meta">
+          The primary running-balance line takes its caption from the{" "}
+          <code>lineLabel</code> prop &mdash; the counterpart of a series&apos;{" "}
+          <code>label</code> for the line the chart draws itself. Without it
+          that line carries no label, and no hover can bring it back to full
+          strength. <code>Payroll</code> also sets a <code>fill</code>, so its
+          deviation band follows its own line&apos;s emphasis.
+        </p>
+
+        {/* Four distinct colours: the highlight is easier to read, and each
+            label demonstrably takes its own line's colour. */}
+        <style>{`
+          .demo-hover--payroll {
+            stroke: #c084fc;
+            stroke-width: 1.6;
+          }
+          .demo-hover--hiring {
+            stroke: #38bdf8;
+            stroke-width: 1.6;
+            stroke-dasharray: 5 4;
+          }
+          .demo-hover--runway {
+            stroke: #fbbf24;
+            stroke-width: 1.6;
+          }
+        `}</style>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={hoverEmphasisSelectedIdx()}
+          onScrub={(i) => setHoverEmphasisSelectedIdx(i)}
+          today={PINNED_TODAY}
+          lineLabel="Actual"
+          lineLabelPlacement="right"
+          balanceSeries={[
+            {
+              id: "payroll",
+              label: "Payroll",
+              class: "demo-hover--payroll",
+              balanceCents: forecast(Math.max(0, todayIndex), 40_000, 90),
+              fill: {
+                // baseline defaults to the primary (actual) running balance
+              },
+            },
+            {
+              id: "hiring",
+              label: "Hiring",
+              class: "demo-hover--hiring",
+              balanceCents: forecast(Math.max(0, todayIndex), 12_000, 60),
+            },
+            {
+              id: "runway",
+              label: "Runway",
+              class: "demo-hover--runway",
+              balanceCents: forecast(Math.max(0, todayIndex), -20_000, 30),
             },
           ]}
         />

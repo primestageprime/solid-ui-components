@@ -1,4 +1,6 @@
 export * from "./types";
+export { DateCell, DateTimeCell, MinuteDateTimeCell } from "./dateCells";
+export type { DateCellProps, DateTimeCellProps, MinuteDateTimeCellProps } from "./dateCells";
 export * from "./BaseTable";
 export { FilterableTable } from "./FilterableTable";
 export type { FilterableTableProps } from "./FilterableTable";

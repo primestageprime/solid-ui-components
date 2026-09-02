@@ -350,6 +350,10 @@ export const ScrubChart = <C extends Cell>(
   // panning — only single clicks (here) and axis cell taps (handled by
   // DateAxis) move the selected day.
   const CHART_PAN_THRESHOLD_PX = 4;
+  // `cellAtClientX` CLAMPS a coordinate outside the plot to the nearest cell.
+  // The pan gesture and the click-to-scrub gesture both want that: a drag or a
+  // click that ends past an edge still means the edge cell. The hover readout
+  // wants the opposite, so it calls `cellUnderClientX` below.
   const cellAtClientX = (clientX: number): number | null => {
     if (!frameEl || props.cells.length === 0) return null;
     const pitch = dayPitch();
@@ -360,6 +364,23 @@ export const ScrubChart = <C extends Cell>(
       0,
       Math.min(props.cells.length - 1, Math.floor(xInPlot / pitch)),
     );
+  };
+  /**
+   * The cell under a client x, or `null` when the pointer is outside the plot.
+   *
+   * The hover readout calls this one. A readout NAMES the cell under the
+   * pointer, and two columns of the frame hold no cell: the y-axis label column
+   * left of `plotLeft`, and the caller-reserved gutter right of `plotRight`
+   * (where CashflowScrubChart parks its right-zone labels). The clamping
+   * `cellAtClientX` answered the last cell there, so a full-height crosshair
+   * and a tooltip for the last day appeared at the right edge while the reader
+   * only pointed at a label.
+   */
+  const cellUnderClientX = (clientX: number): number | null => {
+    if (!frameEl) return null;
+    const xInFrame = clientX - frameEl.getBoundingClientRect().left;
+    if (xInFrame < plotLeft() || xInFrame > plotRight()) return null;
+    return cellAtClientX(clientX);
   };
   let chartGesture: {
     startClientX: number;
@@ -424,7 +445,8 @@ export const ScrubChart = <C extends Cell>(
       setHoverIndex(null);
       return;
     }
-    setHoverIndex(cellAtClientX(e.clientX));
+    // Outside the plot there is no cell to read out — see cellUnderClientX.
+    setHoverIndex(cellUnderClientX(e.clientX));
   };
   const handleHoverLeave = () => {
     if (props.hover) setHoverIndex(null);
