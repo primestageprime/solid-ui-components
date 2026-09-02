@@ -51,6 +51,59 @@
   white-space: nowrap;
 }
 
+/* The editable readout (`editable`). Quiet at rest so the label line still
+   reads as a caption and a value, not as a form; it grows a border on hover
+   and a focus ring while being typed into.
+
+   It is `type="text"`, so no spinner exists to hide. The appearance rules
+   below are a guard for a UA that draws one anyway. */
+.sui-slider__value--editable {
+  appearance: textfield;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  /* The `size` attribute sizes the CONTENT box in characters. The baseline
+     reset sets `box-sizing: border-box` on every element, which takes the 4px
+     of padding and the 1px border OUT of that width and clips the last
+     character — the "%" of "65%". `content-box` puts them back outside it. */
+  box-sizing: content-box;
+  color: inherit;
+  /* Do not write `font: inherit` here. The shorthand also resets
+     `font-family` and `font-variant-numeric`, and thus throws away the
+     monospace and the tabular figures that `.sui-slider__value` sets above.
+     A proportional font also breaks the `size` width, because the UA
+     multiplies `size` by the AVERAGE character width, and "%" is wider than
+     that average. These longhands take the metrics that the shorthand was
+     there for, and keep the monospace. */
+  font-style: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  padding: 0 4px;
+  text-align: right;
+  width: auto;
+}
+
+.sui-slider__value--editable:hover:not(:disabled) {
+  border-color: var(--sui-border);
+}
+
+.sui-slider__value--editable:focus {
+  background: var(--sui-bg-secondary);
+  border-color: var(--sui-border-focus);
+  outline: none;
+}
+
+.sui-slider__value--editable:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.sui-slider__value--editable::-webkit-inner-spin-button,
+.sui-slider__value--editable::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
 /* ── Track ───────────────────────────────────────────────────────────────
    Kobalte positions the fill and the thumb against this box, so the track
    owns `position: relative` and the thumb-height padding that keeps the
@@ -74,7 +127,8 @@
      The inset is horizontal only. The label line above stays flush with the
      column, so a slider still lines up with the number input beside it. */
   margin: calc(
-      (var(--sui-slider-thumb-size) - var(--sui-slider-track-height)) / 2
+      (var(--sui-slider-thumb-size) - var(--sui-slider-track-height)) /
+      2
     )
     calc(var(--sui-slider-thumb-size) / 2);
 }

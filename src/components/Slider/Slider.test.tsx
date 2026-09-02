@@ -14,7 +14,13 @@ afterAll(() => sizer.restore());
 describe("Slider", () => {
   it("renders a labelled slider carrying the current value", () => {
     const { container, getByText } = render(() => (
-      <Slider label="Safety buffer" value={6} onChange={() => {}} min={3} max={18} />
+      <Slider
+        label="Safety buffer"
+        value={6}
+        onChange={() => {}}
+        min={3}
+        max={18}
+      />
     ));
     const thumb = container.querySelector('[role="slider"]');
     expect(thumb).toBeTruthy();
@@ -39,7 +45,13 @@ describe("Slider", () => {
     const onChange = vi.fn();
     const [value, setValue] = createSignal(6);
     render(() => (
-      <Slider label="Buffer" value={value()} onChange={onChange} min={3} max={18} />
+      <Slider
+        label="Buffer"
+        value={value()}
+        onChange={onChange}
+        min={3}
+        max={18}
+      />
     ));
     setValue(9);
     expect(onChange).not.toHaveBeenCalled();
@@ -92,7 +104,9 @@ describe("Slider", () => {
     ));
     expect(getByText("6 months")).toBeTruthy();
     expect(
-      container.querySelector('[role="slider"]')?.getAttribute("aria-valuetext"),
+      container
+        .querySelector('[role="slider"]')
+        ?.getAttribute("aria-valuetext"),
     ).toBe("6 months");
   });
 
@@ -119,7 +133,14 @@ describe("Slider", () => {
   it("marks the root disabled and stops the keyboard when disabled", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
-      <Slider label="Buffer" value={6} onChange={onChange} min={3} max={18} disabled />
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={onChange}
+        min={3}
+        max={18}
+        disabled
+      />
     ));
     expect(container.querySelector(".sui-slider[data-disabled]")).toBeTruthy();
     const thumb = container.querySelector('[role="slider"]') as HTMLElement;
@@ -131,8 +152,9 @@ describe("Slider", () => {
   // The notches are decoration over kobalte's track, so every assertion here
   // reads the DOM the consumer's stylesheet sees.
   const ticksOf = (container: HTMLElement): readonly string[] =>
-    Array.from(container.querySelectorAll(".sui-slider__tick"), (tick) =>
-      tick.getAttribute("data-value") ?? "",
+    Array.from(
+      container.querySelectorAll(".sui-slider__tick"),
+      (tick) => tick.getAttribute("data-value") ?? "",
     );
 
   it("renders no ticks when the prop is absent", () => {
@@ -250,13 +272,204 @@ describe("Slider", () => {
     expect(hidden).toHaveLength(21);
   });
 
+  // ── editable readout ──────────────────────────────────────────────────
+
+  const editableField = (container: HTMLElement): HTMLInputElement =>
+    container.querySelector(".sui-slider__value--editable") as HTMLInputElement;
+
+  it("renders a plain label, not a field, without `editable`", () => {
+    const { container } = render(() => (
+      <Slider label="Buffer" value={6} onChange={() => {}} min={3} max={18} />
+    ));
+    expect(editableField(container)).toBeNull();
+  });
+
+  it("editable shows format(value) at rest and the raw number on focus", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={() => {}}
+        min={3}
+        max={18}
+        editable
+        format={(n) => `${n} months`}
+      />
+    ));
+    const field = editableField(container);
+    expect(field.value).toBe("6 months");
+    fireEvent.focus(field);
+    expect(field.value).toBe("6");
+  });
+
+  // type="text", never type="number" — a number input draws spinner arrows.
+  it("editable uses a text input so no browser spinner exists", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={() => {}}
+        min={3}
+        max={18}
+        editable
+      />
+    ));
+    expect(editableField(container).getAttribute("type")).toBe("text");
+  });
+
+  it("commits a typed value on Enter", () => {
+    const onChange = vi.fn();
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={onChange}
+        min={3}
+        max={18}
+        editable
+      />
+    ));
+    const field = editableField(container);
+    fireEvent.focus(field);
+    fireEvent.input(field, { target: { value: "11" } });
+    fireEvent.keyDown(field, { key: "Enter" });
+    fireEvent.blur(field);
+    expect(onChange).toHaveBeenCalledWith(11);
+  });
+
+  it("clamps a typed value to the domain rather than rejecting it", () => {
+    const onChange = vi.fn();
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={onChange}
+        min={3}
+        max={18}
+        editable
+      />
+    ));
+    const field = editableField(container);
+    fireEvent.focus(field);
+    fireEvent.input(field, { target: { value: "400" } });
+    fireEvent.blur(field);
+    expect(onChange).toHaveBeenCalledWith(18);
+
+    onChange.mockClear();
+    fireEvent.focus(field);
+    fireEvent.input(field, { target: { value: "-9" } });
+    fireEvent.blur(field);
+    expect(onChange).toHaveBeenCalledWith(3);
+  });
+
+  // A typed value lands on the same grid the thumb moves on, counted from min.
+  it("snaps a typed value to the step, counted from min", () => {
+    const onChange = vi.fn();
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={0}
+        onChange={onChange}
+        min={0}
+        max={100}
+        step={25}
+        editable
+      />
+    ));
+    const field = editableField(container);
+    fireEvent.focus(field);
+    fireEvent.input(field, { target: { value: "63" } });
+    fireEvent.blur(field);
+    expect(onChange).toHaveBeenCalledWith(75);
+  });
+
+  it("reverts and emits nothing for text that is not a number", () => {
+    const onChange = vi.fn();
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={onChange}
+        min={3}
+        max={18}
+        editable
+      />
+    ));
+    const field = editableField(container);
+    fireEvent.focus(field);
+    fireEvent.input(field, { target: { value: "soon" } });
+    fireEvent.blur(field);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(field.value).toBe("6");
+  });
+
+  it("Escape abandons the edit", () => {
+    const onChange = vi.fn();
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={onChange}
+        min={3}
+        max={18}
+        editable
+      />
+    ));
+    const field = editableField(container);
+    fireEvent.focus(field);
+    fireEvent.input(field, { target: { value: "12" } });
+    fireEvent.keyDown(field, { key: "Escape" });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(field.value).toBe("6");
+  });
+
+  it("emits nothing when the typed value is the one already held", () => {
+    const onChange = vi.fn();
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={onChange}
+        min={3}
+        max={18}
+        editable
+      />
+    ));
+    const field = editableField(container);
+    fireEvent.focus(field);
+    fireEvent.input(field, { target: { value: "6" } });
+    fireEvent.blur(field);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("editable emits nothing at mount", () => {
+    const onChange = vi.fn();
+    render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={onChange}
+        min={3}
+        max={18}
+        editable
+      />
+    ));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it("createSlider curries a tick set alongside the formatter", () => {
     const QuarterSlider = createSlider({
       format: (n) => `${n}%`,
       ticks: [0, 25, 50, 75, 100],
     });
     const { container, getByText } = render(() => (
-      <QuarterSlider label="Share" value={40} onChange={() => {}} min={0} max={100} />
+      <QuarterSlider
+        label="Share"
+        value={40}
+        onChange={() => {}}
+        min={0}
+        max={100}
+      />
     ));
     expect(getByText("40%")).toBeTruthy();
     expect(ticksOf(container)).toEqual(["0", "25", "50", "75", "100"]);
@@ -265,7 +478,13 @@ describe("Slider", () => {
   it("createSlider curries the formatter", () => {
     const MonthsSlider = createSlider({ format: (n) => `${n} months` });
     const { getByText } = render(() => (
-      <MonthsSlider label="Runway" value={12} onChange={() => {}} min={3} max={18} />
+      <MonthsSlider
+        label="Runway"
+        value={12}
+        onChange={() => {}}
+        min={3}
+        max={18}
+      />
     ));
     expect(getByText("12 months")).toBeTruthy();
   });

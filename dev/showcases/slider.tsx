@@ -75,6 +75,7 @@ export const SliderShowcase: Component = () => {
   const [plain, setPlain] = createSignal(40);
   const [sampled, setSampled] = createSignal(6);
   const [raise, setRaise] = createSignal(3.5);
+  const [typed, setTyped] = createSignal(60);
 
   return (
     <div class="component-section">
@@ -175,6 +176,34 @@ export const SliderShowcase: Component = () => {
       </div>
 
       <div class="example-group">
+        <h3>editable — type the value instead of dragging to it</h3>
+        <div class="slider-rail-demo">
+          <Stack gap="lg">
+            <Slider
+              label="Target"
+              value={typed()}
+              onChange={setTyped}
+              min={0}
+              max={100}
+              step={5}
+              editable
+              format={(n) => `${n}%`}
+            />
+          </Stack>
+        </div>
+        <span class="text-meta">
+          The readout becomes a field. It shows <code>format(value)</code> at
+          rest and the raw number while focused, because <code>format</code>{" "}
+          runs one way. Enter or blur commits: the text is clamped to{" "}
+          <code>[min, max]</code> and snapped to <code>step</code>, so a typed
+          63 with a step of 5 lands on 65 — the same grid the thumb moves on.
+          Escape, and anything that is not a number, revert. The field is a text
+          input, never <code>type="number"</code>, so the browser draws no
+          spinner arrows beside a control that already has a thumb.
+        </span>
+      </div>
+
+      <div class="example-group">
         <h3>createSlider — curry the formatter and the ticks</h3>
         <div class="slider-rail-demo">
           <MonthsSlider
@@ -186,10 +215,10 @@ export const SliderShowcase: Component = () => {
           />
         </div>
         <span class="text-meta">
-          <code>createSlider(&#123; format, ticks &#125;)</code> leaves the
-          call site data and callbacks only. A tick set is a property of the
-          scale, so it curries away with the unit. Both this and the base
-          slider above drive one signal, so moving either moves the other.
+          <code>createSlider(&#123; format, ticks &#125;)</code> leaves the call
+          site data and callbacks only. A tick set is a property of the scale,
+          so it curries away with the unit. Both this and the base slider above
+          drive one signal, so moving either moves the other.
         </span>
       </div>
 

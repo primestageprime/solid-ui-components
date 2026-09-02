@@ -40,8 +40,9 @@ import {
   Slider as KobalteSlider,
   type SliderRootProps as KobalteSliderRootProps,
 } from "@kobalte/core/slider";
-import { type Component, For, splitProps } from "solid-js";
+import { type Component, For, Show, createSignal, splitProps } from "solid-js";
 import { filter } from "../../fn";
+import { clamp } from "../../internal/math/clamp";
 import "./Slider.css";
 
 /** Props owned by `Slider`; everything else is kobalte passthrough. */
@@ -68,6 +69,21 @@ interface SliderOwnProps {
   format?: (value: number) => string;
   /** Whether the control is disabled. */
   disabled?: boolean;
+  /**
+   * Turn the value readout into an editable field. Off by default.
+   *
+   * The field shows `format(value)` at rest and the RAW number while focused,
+   * because `format` runs ONE WAY — a caller that renders "6 months" or
+   * "cell 0–27" hands over no parser to run it backwards. Enter or blur
+   * commits: the text is read as a number, clamped to `[min, max]`, snapped
+   * to `step` from `min`, and emitted through `onChange`. Escape, and text
+   * that is not a number, revert to the current value and emit nothing.
+   *
+   * It is an `input type="text"` with `inputmode="decimal"`, NOT
+   * `type="number"` — a number input draws the browser's spinner arrows, and
+   * a spinner next to a thumb is a second stepper saying the same thing.
+   */
+  editable?: boolean;
   /**
    * Notches drawn on the track. `true` marks every `step` from `min` to `max`
    * inclusive; an array marks exactly those values and ignores `step`. Omitted
@@ -144,6 +160,24 @@ const resolveTicks = (
         typeof ticks === "object" ? ticks : NO_TICKS,
       );
 
+/**
+ * Pull a typed number onto the domain: clamped to `[min, max]`, then to the
+ * nearest step counted FROM `min` — the same grid the thumb moves on, so a
+ * typed value can never land where a drag cannot.
+ *
+ * `toFixed(10)` drops the float noise that `min + n * step` leaves behind on a
+ * fractional step (0.1 + 3 * 0.1 is 0.4000000000000001).
+ */
+const snapToDomain = (
+  value: number,
+  min: number,
+  max: number,
+  step: number,
+): number => {
+  const onGrid = min + Math.round((clamp(value, min, max) - min) / step) * step;
+  return clamp(Number.parseFloat(onGrid.toFixed(10)), min, max);
+};
+
 /** Position of a value on the track, as a percentage of the domain. */
 const tickPercent = (value: number, min: number, max: number): number =>
   ((value - min) / (max - min)) * 100;
@@ -188,6 +222,7 @@ export const Slider: Component<SliderProps> = (props) => {
     "format",
     "disabled",
     "ticks",
+    "editable",
   ]);
 
   const format = (value: number): string => (local.format ?? String)(value);
@@ -201,6 +236,27 @@ export const Slider: Component<SliderProps> = (props) => {
   const handleChange = (values: number[]): void => {
     local.onChange(values[0]);
   };
+
+  // The in-progress edit, or null when the field is at rest showing
+  // `format(value)`. Held as TEXT, not a number, so a half-typed "-" or "1."
+  // survives the keystroke that produced it.
+  const [draft, setDraft] = createSignal<string | null>(null);
+
+  const commitDraft = (raw: string): void => {
+    const typed = Number.parseFloat(raw);
+    if (Number.isFinite(typed)) {
+      const next = snapToDomain(
+        typed,
+        local.min,
+        local.max,
+        local.step ?? DEFAULT_STEP,
+      );
+      if (next !== local.value) local.onChange(next);
+    }
+    setDraft(null);
+  };
+
+  const readout = (): string => draft() ?? format(local.value);
 
   return (
     <KobalteSlider
@@ -218,7 +274,41 @@ export const Slider: Component<SliderProps> = (props) => {
         <KobalteSlider.Label class="sui-slider__label">
           {local.label}
         </KobalteSlider.Label>
-        <KobalteSlider.ValueLabel class="sui-slider__value" />
+        <Show
+          when={local.editable}
+          fallback={<KobalteSlider.ValueLabel class="sui-slider__value" />}
+        >
+          <input
+            class="sui-slider__value sui-slider__value--editable"
+            type="text"
+            inputmode="decimal"
+            aria-label={`${local.label} value`}
+            disabled={local.disabled}
+            value={readout()}
+            // `size` tracks the text so the field is exactly as wide as what
+            // it shows. An input has no intrinsic content sizing, and a fixed
+            // width would either clip "cell 0–27" or leave a gap after "6".
+            size={readout().length || 1}
+            onFocus={(event) => {
+              setDraft(String(local.value));
+              event.currentTarget.select();
+            }}
+            onInput={(event) => setDraft(event.currentTarget.value)}
+            onBlur={(event) => commitDraft(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                event.currentTarget.blur();
+              } else if (event.key === "Escape") {
+                setDraft(null);
+                event.currentTarget.blur();
+              }
+              // Kobalte's root moves the thumb on arrow keys. Inside the
+              // field those keys belong to the caret.
+              event.stopPropagation();
+            }}
+          />
+        </Show>
       </div>
       <KobalteSlider.Track class="sui-slider__track">
         <KobalteSlider.Fill class="sui-slider__fill" />
