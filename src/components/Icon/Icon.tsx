@@ -32,6 +32,8 @@ export const ICON_GROUPS = {
     "minus",
     "close",
     "search",
+    "zoom-in",
+    "zoom-out",
     "filter",
     "refresh",
     "download",
@@ -78,6 +80,8 @@ export type IconName =
   | "minus"
   | "close"
   | "search"
+  | "zoom-in"
+  | "zoom-out"
   | "filter"
   | "refresh"
   | "download"
@@ -259,6 +263,24 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
       solid: `<circle cx="7" cy="7" r="5" fill="currentColor"/>
             <circle cx="7" cy="7" r="3" fill="var(--sui-bg-primary)"/>
+            <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
+    },
+    // The lens and the handle repeat `search`. Only the mark inside the lens
+    // changes, so the three glyphs read as one family.
+    "zoom-in": {
+      outline: `<circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M7 4.75V9.25M4.75 7H9.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+      solid: `<circle cx="7" cy="7" r="5" fill="currentColor"/>
+            <path d="M7 4.75V9.25M4.75 7H9.25" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
+    },
+    "zoom-out": {
+      outline: `<circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M4.75 7H9.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+      solid: `<circle cx="7" cy="7" r="5" fill="currentColor"/>
+            <path d="M4.75 7H9.25" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
             <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
     },
     filter: {

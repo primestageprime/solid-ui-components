@@ -113,3 +113,56 @@ describe("Icon edit glyph", () => {
     expect(el?.querySelector("svg path")?.getAttribute("d")).toBeTruthy();
   });
 });
+
+// `zoom-in` and `zoom-out` extend the `search` family: the same lens and the
+// same handle, plus a mark inside the lens. The solid variant fills the lens
+// and punches the mark out in the page background colour, which is how `search`
+// draws its own hole.
+describe("Icon zoom glyphs", () => {
+  const names = ["zoom-in", "zoom-out"] as const;
+
+  it("registers both names in the actions group", () => {
+    const missing = names.filter(
+      (name) => !(ICON_GROUPS.actions as readonly string[]).includes(name),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  it("renders an svg in both variants", () => {
+    const cases = names.flatMap((name) =>
+      (["outline", "solid"] as const).map((variant) => ({ name, variant })),
+    );
+    cases.forEach(({ name, variant }) => {
+      const { container } = render(() => (
+        <Icon name={name} variant={variant} />
+      ));
+      const el = container.querySelector('[role="img"]');
+      expect(el?.getAttribute("aria-label")).toBe(name);
+      expect(el?.querySelector("svg path")?.getAttribute("d")).toBeTruthy();
+    });
+  });
+
+  it("repeats the search lens and handle in the outline variant", () => {
+    names.forEach((name) => {
+      expect(ICON_PATHS[name].outline).toContain(
+        `<circle cx="7" cy="7" r="4.5"`,
+      );
+      expect(ICON_PATHS[name].outline).toContain(`d="M10.5 10.5L14 14"`);
+    });
+  });
+
+  it("knocks the mark out of a filled lens in the solid variant", () => {
+    names.forEach((name) => {
+      expect(ICON_PATHS[name].solid).toContain(
+        `<circle cx="7" cy="7" r="5" fill="currentColor"/>`,
+      );
+      expect(ICON_PATHS[name].solid).toContain(`var(--sui-bg-primary)`);
+    });
+  });
+
+  it("draws a cross for zoom-in and one bar for zoom-out", () => {
+    expect(ICON_PATHS["zoom-in"].outline).toContain("M7 4.75V9.25M4.75 7H9.25");
+    expect(ICON_PATHS["zoom-out"].outline).toContain(`d="M4.75 7H9.25"`);
+    expect(ICON_PATHS["zoom-out"].outline).not.toContain("V9.25");
+  });
+});
