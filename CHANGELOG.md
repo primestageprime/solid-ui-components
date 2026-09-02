@@ -1,5 +1,100 @@
 # Changelog
 
+## [Unreleased]
+
+## 0.157.0
+
+### Added
+- **`CashflowScrubChart` names the line it draws itself** — new `lineLabel`
+  and `lineLabelPlacement` props. `CashflowBalanceSeries.label` named every
+  overlay line, but the primary running-balance line answered to no label id,
+  so it muted on every hover and never highlighted. A caller bought the label
+  by adding an invisible `balanceSeries` entry that traced the same values — a
+  carrier line drawn only to hang a caption on. `lineLabel` replaces that
+  workaround. The same placement ladder places it, so the caption sits beside
+  the line's last point and walks body → right → below.
+
+- **Each chart label now takes the colour of the line it names.** A series
+  takes its colour from the consumer's own CSS class, and every consumer
+  states that colour as a `stroke`. An SVG `<text>` reads `fill`, not
+  `stroke`, so no CSS rule and no new prop could carry the colour across. The
+  chart tags each drawn line with its label id, reads the resolved stroke back
+  after each render, and writes the answer as an inline `fill` style.
+
+- **A pointer on a label emphasises the line that label names.** The named
+  line comes forward and every other line and label mutes, so a reader learns
+  which caption belongs to which line.
+
+- **`CashflowScrubChart.horizontalMarkers`** — fixed-value reference lines
+  that span the full plot width, e.g. "you need $X in the bank". The existing
+  `markers` pin to a cell index and mark a threshold DATE; a
+  `CashflowHorizontalMarker` marks a threshold AMOUNT. Each line takes a
+  `valueCents`, an optional `label` drawn at its right end, and an optional
+  `class`. The lines are never interactive and never move with the data. They
+  draw beneath the vertical markers in the same overlay `<svg>`.
+  `CashflowHorizontalMarker` is exported from the barrel.
+
+- **`CashflowScrubChart.yMin`** — an optional fixed lower y-bound in cents,
+  mirroring `yMax`. The lower bound was always derived from the data
+  (`min(0, …balance values)`), so the zero-line stayed visible but its PIXEL
+  position drifted between renders: two scenarios with different depths of
+  "how bankrupt" drew the zero-line at different heights, which makes them
+  uncomparable at a glance. Set `yMin` to pin it. `yPadFraction` still wins,
+  the same as it does over `yMax`.
+
+- **A `gear` glyph in the `Icon` set.** `settings` draws eight rays from a
+  hub, which reads as a sun. A reader finds a gear by the teeth, so the new
+  glyph puts six teeth on the rim. `settings` is unchanged and its drawing is
+  now locked by a test, so existing call sites do not move.
+
+- **`SpacedStack`** — a plain vertical column at the `md` (12px) gap step, the
+  sibling of `TightStack` (xs) and `NarrowStack` (sm) one rung up the scale.
+  `COMPONENTS.md` documented it, but `variants.ts` never implemented it.
+
+- **`DateCell`, `DateTimeCell` and `MinuteDateTimeCell` are exported.** They
+  are the project's own sanctioned date renderers, and they lived in
+  `Table/dateCells.tsx` without reaching any barrel.
+
+### Fixed
+- **A highlighted line keeps full strength.** The highlighted rule set only
+  `stroke-width`. A consumer's series class dims its own line with
+  `stroke-opacity`, so the highlighted line stayed faded. The rule now sets
+  `opacity` and `stroke-opacity` on the line.
+
+- **A highlighted band no longer floods the plot.** The highlighted-band rule
+  set `fill-opacity: 1` and `opacity: 1`, which painted a consumer's range
+  cone (`fill-opacity: 0.12`) as a solid slab. A band is context around the
+  highlighted line, not the subject of the highlight, so it only has to escape
+  the muting rule. A highlighted band now looks exactly as it does at rest.
+  The modifier class stays on the element as a consumer hook.
+
+- **A label on an invisible line mutes nothing.** A consumer hangs a label on
+  a carrier series its CSS draws with `stroke: none`. Hovering that label
+  highlighted an element that paints nothing, and muted every visible line.
+  The chart now reads the label's line from the colour map; a missing key says
+  the line paints no stroke, and no element mutes.
+
+- **The label colour survives a duplicate stylesheet.** The layer wrote the
+  colour as a `fill` presentation attribute, which sits below every CSS
+  declaration in the cascade, so any plain `.sui-cashflow-scrub-chart__label
+  { fill: … }` rule painted over it. `package.json` maps `index.css` to
+  `dist/index.css` even while the `source` condition is active, so a stale
+  second copy of this stylesheet can reach the page beside the fresh one. The
+  colour is now an inline style, which beats every class rule that carries no
+  `!important`.
+
+- **`ScrubChart` keeps the hover readout off the label gutter.** Two columns
+  of the frame hold no cell: the y-axis label column, and the caller-reserved
+  right gutter where `CashflowScrubChart` parks its right-zone labels. The
+  hover path used the clamping `cellAtClientX`, so a pointer in the gutter
+  drew a full-height crosshair and a tooltip for the last day. The hover path
+  now calls the new `cellUnderClientX`, which answers `null` outside the
+  plot. `CashflowScrubChart` also draws no hover readout while a label is
+  hovered, which covers the `"below"` zone labels that sit under the x-axis
+  and inside the plot's span. The pan gesture and the click-to-scrub gesture
+  keep the clamping reader, because both mean the edge cell when they end past
+  an edge.
+
 ## 0.156.1
 
 ### Fixed
