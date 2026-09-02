@@ -88,3 +88,80 @@ export const buildLineSegments = (
   if (current.length > 0) segments.push(current.join(" "));
   return segments;
 };
+
+// ── Y-domain resolution ──────────────────────────────────────────────────
+//
+// Three props state the y-domain and they do not compose: `yMax`, `yMin` and
+// `yPadFraction`. The order they resolve in lived only inside one `createMemo`
+// branch and in three prop docs, and the docs drifted — `yMin`'s said tight
+// mode beat `yMax` when the code says the reverse, and a consumer blocked real
+// work on the constraint that doc invented. So the rule is a named function
+// with a test per row, and every doc points here instead of restating it.
+
+/** Which rule decided the y-domain. `"fixed"` = an explicit `yMax` pinned the
+ *  top, `"tight"` = padded data extent, `"auto"` = data extent floored at 0. */
+export type YDomainMode = "fixed" | "tight" | "auto";
+
+/** The three y-domain props, as the resolver reads them. */
+export interface YDomainBounds {
+  yMax?: number | null;
+  yMin?: number | null;
+  yPadFraction?: number;
+}
+
+/**
+ * Which row of the table applies. `yMax` alone picks the mode:
+ *
+ *   1. `yMax` set                        → "fixed" (`yPadFraction` ignored,
+ *                                          `yMin` applies)
+ *   2. `yMax` unset + `yPadFraction` set → "tight" (`yMin` IGNORED)
+ *   3. neither                           → "auto"
+ *
+ * `hasValues` is the fourth input rather than a caller's precondition: tight
+ * mode has nothing to pad when no line drew a value, so it falls back to auto
+ * rather than returning an infinite extent.
+ */
+export const chartYDomainMode = (
+  bounds: YDomainBounds,
+  hasValues: boolean,
+): YDomainMode => {
+  if (bounds.yMax != null) return "fixed";
+  if (bounds.yPadFraction != null && hasValues) return "tight";
+  return "auto";
+};
+
+/** Lowest and highest of a non-empty series in ONE pass. A named step rather
+ *  than a pair of `.reduce`s (function-first convention), and a loop rather
+ *  than `Math.min(...values)` — a long range would blow the argument limit. */
+export const extentOf = (values: readonly number[]): [number, number] => {
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const v of values) {
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  return [lo, hi];
+};
+
+/**
+ * The y-domain for the drawn balance `values`, in cents.
+ *
+ * "auto" and "fixed" both floor the data extent at 0 so the zero-line stays
+ * visible, and "fixed" then overrides whichever bound was stated. "tight" is
+ * the zero-INDEPENDENT row: it frames the values with symmetric padding so a
+ * line living in a narrow band uses the full height, and a flat series pads
+ * around its own value (or ±1 at zero) rather than collapsing to no height.
+ */
+export const chartYDomain = (
+  values: readonly number[],
+  bounds: YDomainBounds,
+): [number, number] => {
+  if (chartYDomainMode(bounds, values.length > 0) === "tight") {
+    const [dataLo, dataHi] = extentOf(values);
+    const spread = dataHi - dataLo || Math.abs(dataHi) || 1;
+    const pad = spread * (bounds.yPadFraction as number);
+    return [dataLo - pad, dataHi + pad];
+  }
+  const [autoLo, autoHi] = extentOf([0, ...values]);
+  return [bounds.yMin ?? autoLo, bounds.yMax ?? autoHi];
+};

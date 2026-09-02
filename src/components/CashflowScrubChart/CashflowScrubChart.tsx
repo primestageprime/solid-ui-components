@@ -54,6 +54,8 @@ import {
 import {
   barFraction,
   buildLineSegments,
+  chartYDomain,
+  extentOf,
   fmtAxisDollars,
   fmtDollars,
   formatCornerLabel,
@@ -81,19 +83,6 @@ export type {
   CashflowScrubChartProps,
   CashflowSeriesFill,
 };
-
-// Lowest and highest of a non-empty series in ONE pass. A named step rather
-// than a pair of `.reduce`s (function-first convention), and a loop rather
-// than `Math.min(...values)` — a long range would blow the argument limit.
-function extentOf(values: readonly number[]): [number, number] {
-  let lo = Infinity;
-  let hi = -Infinity;
-  for (const v of values) {
-    if (v < lo) lo = v;
-    if (v > hi) hi = v;
-  }
-  return [lo, hi];
-}
 
 export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   props,
@@ -257,23 +246,21 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       some(markerJoinsLadder, props.markers ?? []),
   );
 
-  // Y-domain is forced to include zero so the zero-line + diverging axis
-  // labels read consistently regardless of whether the running balance
-  // dips negative. The domain spans the primary balance plus every extra
-  // series so no overlaid line clips. When `yMax` is provided (non-null) the
-  // upper bound is instead pinned to it (fixed-range mode); the lower bound is
-  // always auto-derived and pulled to ≤ 0 so the zero-line stays visible.
+  // Y-domain. The three-prop precedence lives in `chartYDomain` (helpers.ts),
+  // which is where the prop docs point and where the per-row tests are — it
+  // drifted from those docs while it was a branch inside this memo.
+  //
+  // This memo owns the two things that resolver cannot see: WHICH values feed
+  // it, and the no-cells case. The domain keys off the LINE (balanceLineCells
+  // when decoupled) plus every overlay series — NOT the ribbon `cells` — so
+  // the y-scale fits the drawn lines even when the ribbon shows a different
+  // scenario and no overlaid line clips.
   const yDomain = createMemo<[number, number]>(() => {
-    const manualMax = props.yMax;
-    const hasManualMax = manualMax != null;
-    const manualMin = props.yMin;
-    const hasManualMin = manualMin != null;
+    // Empty chart: a [0, 0] domain has no height, so the auto row's floor and
+    // one unit above it stand in until data arrives.
     if (props.cells.length === 0)
-      return [hasManualMin ? manualMin : 0, hasManualMax ? manualMax : 1];
+      return [props.yMin ?? 0, props.yMax ?? 1];
     const series = props.balanceSeries ?? [];
-    // Domain keys off the LINE (balanceLineCells when decoupled) plus the
-    // overlay series — NOT the ribbon `cells` — so the y-scale fits the drawn
-    // lines even when the ribbon shows a different scenario.
     const line = lineCells();
     const values = flatMap(
       (c, i) => [
@@ -285,21 +272,11 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       ],
       props.cells,
     );
-    // Tight, zero-independent domain: frame the visible line(s) with symmetric
-    // padding so a narrow-band line uses the full height. `yMax` still wins.
-    if (!hasManualMax && props.yPadFraction != null && values.length) {
-      const [dataLo, dataHi] = extentOf(values);
-      // Flat series → pad around the value itself (or ±1 when it's zero).
-      const spread = dataHi - dataLo || Math.abs(dataHi) || 1;
-      const pad = spread * props.yPadFraction;
-      return [dataLo - pad, dataHi + pad];
-    }
-    // Zero-floored min/max in one pass via extentOf (not Math.min/max(...spread),
-    // which would blow the argument limit on a long range).
-    const [autoLo, autoHi] = extentOf([0, ...values]);
-    const lo = hasManualMin ? manualMin : autoLo;
-    const hi = hasManualMax ? manualMax : autoHi;
-    return [lo, hi];
+    return chartYDomain(values, {
+      yMax: props.yMax,
+      yMin: props.yMin,
+      yPadFraction: props.yPadFraction,
+    });
   });
 
   // ── Label space, reserved BEFORE the geometry exists ─────────────────

@@ -252,9 +252,23 @@ export interface CashflowScrubChartProps {
    * y-domain is pinned to this value instead of auto-deriving from the running
    * balance — "fixed-range" mode. When `null`/`undefined` (the default), the
    * upper bound is auto-derived as before (no behavior change for current
-   * callers). The lower bound is left auto-derived either way, but is always
-   * pulled to `≤ 0` so the zero-line stays visible; an explicit `yMax` smaller
-   * than the actual peak balance simply clips the top of the line.
+   * callers). An explicit `yMax` smaller than the actual peak balance simply
+   * clips the top of the line.
+   *
+   * THIS PROP ALONE PICKS THE MODE. The three y-domain props resolve in one
+   * order, and it is stated here so the other two can point at it rather than
+   * restate it:
+   *
+   *   1. `yMax` set              → fixed-range. `yPadFraction` is ignored, and
+   *                                `yMin` applies if it is set.
+   *   2. `yMax` unset, `yPadFraction` set
+   *                              → tight-domain. `yMin` is IGNORED; both
+   *                                bounds come from the padded data extent.
+   *   3. neither                 → auto, floored at 0 so the zero-line stays
+   *                                visible.
+   *
+   * `chartYDomainMode` in helpers.ts is this table in code, and a test pins
+   * every row of it.
    */
   yMax?: number | null;
   /**
@@ -266,8 +280,13 @@ export interface CashflowScrubChartProps {
    * different depths of "how bankrupt" render the zero-line at different
    * heights, which makes them uncomparable at a glance). Set this when the
    * caller wants zero pinned at a fixed position across renders instead.
-   * Ignored when `yPadFraction` is set (tight-domain mode wins, same as
-   * `yMax`'s own interaction with it).
+   * Ignored when `yPadFraction` is set AND `yMax` is not — that is row 2 of
+   * the table on `yMax`, where both bounds come from the padded extent. It is
+   * NOT ignored merely because `yPadFraction` is set: a `yMax` alongside it
+   * selects fixed-range mode, and `yMin` applies there. This doc claimed the
+   * opposite until 2026-09-02 ("tight-domain mode wins, same as `yMax`'s own
+   * interaction with it") and a consumer blocked real work on the constraint
+   * it invented — `yMax`'s interaction is the reverse.
    */
   yMin?: number | null;
   /**
@@ -277,8 +296,9 @@ export interface CashflowScrubChartProps {
    * balance values — so a line that lives in a narrow band (e.g. a zoomed-in
    * window of an always-positive cumulative total) fills the vertical space
    * instead of hugging the top. The zero-line is no longer forced into view.
-   * Ignored when `yMax` is provided (fixed-range mode wins). Default
-   * `undefined` = the zero-anchored behavior (no change for current callers).
+   * Ignored when `yMax` is provided — fixed-range mode wins; see the table on
+   * `yMax`. Default `undefined` = the zero-anchored behavior (no change for
+   * current callers).
    */
   yPadFraction?: number;
   /**
