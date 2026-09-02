@@ -2,6 +2,16 @@
    SegmentedControl Component — visual states (selected colors, hover, divider, disabled)
    ============================================ */
 .sui-segmented {
+  /* Corner radii for the segment fills. The container draws a 1px border and no
+     padding, so a segment starts one pixel inside the container edge. An end
+     segment therefore follows a curve one pixel tighter than the container's
+     own radius. Both values come from --sui-radius-md, so a theme change moves
+     the container and the fills together. */
+  --sui-segmented-radius-outer: calc(var(--sui-radius-md) - 1px);
+  /* A corner that does not touch a container corner takes this small radius.
+     Keep it small. A large value cuts a visible notch out of the groove seam
+     between two segments. */
+  --sui-segmented-radius-inner: calc(var(--sui-radius-md) / 4);
   display: inline-flex;
   align-items: stretch;
   /* Always content-width: don't get stretched by an align-items:stretch flex parent. */
@@ -17,6 +27,9 @@
 .sui-segmented__seg {
   appearance: none;
   border: none;
+  /* Round every fill the segment paints: the selected background, the hover
+     wash, and the focus-visible outline, which follows border-radius. */
+  border-radius: var(--sui-segmented-radius-inner);
   background: transparent;
   color: var(--sui-text-muted);
   font: inherit;
@@ -27,6 +40,19 @@
   transition:
     background 0.15s ease,
     color 0.15s ease;
+}
+
+/* The first and the last segment each touch two container corners, so those
+   outer corners follow the container's curve. A divider only renders between
+   two segments, so it never takes the first or the last child position and
+   :first-child / :last-child still select a segment. */
+.sui-segmented__seg:first-child {
+  border-top-left-radius: var(--sui-segmented-radius-outer);
+  border-bottom-left-radius: var(--sui-segmented-radius-outer);
+}
+.sui-segmented__seg:last-child {
+  border-top-right-radius: var(--sui-segmented-radius-outer);
+  border-bottom-right-radius: var(--sui-segmented-radius-outer);
 }
 
 /* Ridged groove seam: a recessed dark line plus a bright inset ridge, so the
