@@ -1,0 +1,41 @@
+/* ============================================
+   PROTOTYPE — Variant C, segmented track.
+   The ticks ARE the track. A gap in the page colour cuts the bar at every
+   tick, and a cap marks the stop. The fill runs under both, so a passed
+   segment stays accent-coloured.
+   ============================================ */
+
+/* The cap is taller than the 4px track, so the track must not clip it. */
+.slider-ticks-c .sui-slider__track {
+  overflow: visible;
+}
+
+/* The gap is painted in the page colour rather than cut out, because a real
+   cut needs a mask and a mask fights the fill's border radius. */
+.slider-ticks-c__gap {
+  position: absolute;
+  top: -1px;
+  height: calc(100% + 2px);
+  width: 5px;
+  transform: translateX(-50%);
+  background: var(--sui-bg-primary);
+  pointer-events: none;
+}
+
+.slider-ticks-c__cap {
+  position: absolute;
+  top: 50%;
+  box-sizing: border-box;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--sui-border);
+  border-radius: 50%;
+  background: var(--sui-bg-primary);
+  pointer-events: none;
+}
+
+.slider-ticks-c__cap--passed {
+  border-color: var(--sui-accent);
+  background: var(--sui-accent);
+}
