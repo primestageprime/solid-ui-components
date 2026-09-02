@@ -163,6 +163,24 @@ export interface CashflowChartMarker {
   class?: string;
 }
 
+/**
+ * One horizontal reference line, drawn at a fixed Y value rather than pinned
+ * to a cell index — a THRESHOLD AMOUNT ("you need this much in the bank"),
+ * where `CashflowChartMarker` marks a threshold DATE. Spans the full plot
+ * width, non-interactive (no click, no dot) — the plotline-marker counterpart
+ * for "the line that matters is the value, not when it's crossed."
+ */
+export interface CashflowHorizontalMarker {
+  /** Y value, in cents, where the line is drawn. */
+  valueCents: number;
+  /** Caption drawn at the line's right end, inside the plot. Optional. */
+  label?: string;
+  /** Extra CSS class on this line only, alongside the shared base class
+   *  (`.sui-cashflow-scrub-chart__hrule-line`) — color / dash are the
+   *  consumer's to define on this class. */
+  class?: string;
+}
+
 export interface CashflowScrubChartProps {
   cells: CashflowCell[];
   /** Selected day index. Optional in plain (scrub=false) mode. */
@@ -190,6 +208,13 @@ export interface CashflowScrubChartProps {
    */
   markers?: CashflowChartMarker[];
   onMarkerClick?: (index: number, cell: CashflowCell) => void;
+  /**
+   * HORIZONTAL REFERENCE LINES — fixed-value threshold lines spanning the
+   * full plot width, e.g. "you need $X in the bank." Off by default. See
+   * `CashflowHorizontalMarker` for the shape; unlike `markers`, these are
+   * never interactive and never move with the data.
+   */
+  horizontalMarkers?: CashflowHorizontalMarker[];
   /** Recenter the detail ribbon on a cell (fresh object per request) —
    *  forwarded to ScrubChart. */
   centerOn?: { index: number } | null;
