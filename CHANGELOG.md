@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.161.0
+
 ### Added
 - **`Slider` takes a `ticks` prop and draws notches on the track.** `true`
   marks every `step` from `min` to `max` inclusive; an array marks exactly
