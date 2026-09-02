@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+## 0.160.0
+
+### Fixed
+- **Every per-mark `class` prop now wins on a plain single class.** 0.159.0
+  fixed the balance lines and 0.158.0 the hover dot; this finishes the family.
+  `CashflowChartMarker.class`, `CashflowHorizontalMarker.class` and
+  `CashflowSeriesFill.positiveClass` / `negativeClass` all landed BESIDE SUI's
+  own class at equal specificity, so the prop did not guarantee a win — the
+  stylesheet that loaded last did. A prop that exists reads as a prop that
+  wins, and this one did not. The defaults for `__band--positive`,
+  `__band--negative`, `__marker-line`, `__marker-dot`, `__rule-line` and
+  `__hrule-line` now ride on each element as presentation attributes:
+
+  ```css
+  /* was: .sui-cashflow-scrub-chart__marker-line.my-marker { … } */
+  .my-marker { stroke: rebeccapurple; }
+  ```
+
+  One `CashflowChartMarker.class` also now reaches BOTH the marker's line and
+  its dot, the way a series class reaches its line and its hover dot.
+
+  Marks with no consumer class prop keep their rules — `__marker-flag`,
+  `__marker-ring`, `__zero-line`, the selected rule and dot. So do the emphasis
+  rules, whose double-class and descendant selectors exist precisely to BEAT a
+  consumer's class: a highlighted marker still takes its 2px weight. A test
+  now asserts no consumer-targetable mark ships a lone paint rule, and it was
+  verified by planting one and watching it fail.
+
+- **The `"rule"` marker variant reads a colour token that exists.** Its stroke
+  was `var(--sui-text, #fff)`, and `--sui-text` is defined by no theme, so it
+  had only ever rendered through the literal. It now reads `--sui-text-primary`
+  with the literal kept underneath. The same dead token made the hover dot
+  invisible mid-development in 0.158.0.
+
+  `--sui-cashflow-marker` and the two band colours are likewise defined by no
+  theme — they are consumer override hooks whose literal fallbacks are what
+  actually paints. They are kept verbatim rather than "tidied" to bare tokens.
+
 ## 0.159.0
 
 ### Fixed

@@ -133,18 +133,14 @@
 
 /* Variance band (the `balanceSeries[].fill` option) — diverging shade between
    a series and its baseline. Green where the series is above the baseline,
-   red where below. Translucent so the lines stay readable on top. */
-.sui-cashflow-scrub-chart__band {
-  stroke: none;
-}
+   red where below. Translucent so the lines stay readable on top.
 
-.sui-cashflow-scrub-chart__band--positive {
-  fill: var(--sui-cashflow-band-positive, rgba(0, 200, 120, 0.18));
-}
-
-.sui-cashflow-scrub-chart__band--negative {
-  fill: var(--sui-cashflow-band-negative, rgba(230, 70, 70, 0.18));
-}
+   NO default rule: the fill rides on each polygon as a presentation attribute
+   so `fill.positiveClass` / `fill.negativeClass` win on a plain single class.
+   The sign classes remain as HOOKS to select on. Themes move the colours
+   through --sui-cashflow-band-positive / --sui-cashflow-band-negative, which
+   no theme defines today — the literal fallbacks in the component are what
+   actually paints, so do not "tidy" them away. */
 
 .sui-cashflow-scrub-chart__selected-rule {
   stroke: var(--sui-warning, #f5a623);
@@ -218,21 +214,16 @@
   stroke: none;
 }
 
-.sui-cashflow-scrub-chart__marker-line {
-  stroke: var(--sui-cashflow-marker, #e0b24d);
-  stroke-width: 1;
-  stroke-dasharray: 4 3;
-  opacity: 0.6;
-}
+/* Marker line + dot carry NO default rule: both ride on presentation
+   attributes so ONE `CashflowChartMarker.class` reaches both marks and wins on
+   a plain single class. The flag and the ring take no consumer class, so they
+   keep their rules below. */
 
 .sui-cashflow-scrub-chart__marker-flag {
   fill: var(--sui-cashflow-marker, #e0b24d);
   opacity: 0.85;
 }
 
-.sui-cashflow-scrub-chart__marker-dot {
-  fill: var(--sui-cashflow-marker, #e0b24d);
-}
 
 /* The CHOSEN instance: a ring circling its dot (the whiteboard's circle). */
 .sui-cashflow-scrub-chart__marker-ring {
@@ -255,13 +246,10 @@
   cursor: default;
 }
 
-.sui-cashflow-scrub-chart__rule-line {
-  stroke: var(--sui-text, #fff);
-  stroke-width: 1;
-  stroke-linecap: round;
-  stroke-dasharray: 1 4;
-  opacity: 0.5;
-}
+/* The "rule" marker variant — presentation attributes, same reason. Its old
+   stroke read var(--sui-text, #fff) and --sui-text is a token no theme
+   defines, so it only ever rendered through the literal; it now reads
+   --sui-text-primary with the literal kept underneath. */
 
 .sui-cashflow-scrub-chart__rule-label {
   fill: var(--sui-text-muted, rgba(255, 255, 255, 0.65));
@@ -282,12 +270,8 @@
   cursor: default;
 }
 
-.sui-cashflow-scrub-chart__hrule-line {
-  stroke: var(--sui-cashflow-marker, #e0b24d);
-  stroke-width: 1;
-  stroke-dasharray: 5 4;
-  opacity: 0.7;
-}
+/* Horizontal reference lines — presentation attributes, so
+   `CashflowHorizontalMarker.class` wins on a plain single class. */
 
 .sui-cashflow-scrub-chart__hrule-label {
   fill: var(--sui-text-muted, rgba(255, 255, 255, 0.65));

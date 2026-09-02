@@ -553,6 +553,16 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                   `series:${band.seriesId}`,
                 )}`}
                 points={band.points}
+                // Defaults as presentation attributes so `fill.positiveClass` /
+                // `fill.negativeClass` win on a plain single class — see the
+                // balance lines above. The sign picks the value here because
+                // the class that used to carry it is now only a hook.
+                stroke="none"
+                fill={
+                  band.sign === "positive"
+                    ? "var(--sui-cashflow-band-positive, rgba(0, 200, 120, 0.18))"
+                    : "var(--sui-cashflow-band-negative, rgba(230, 70, 70, 0.18))"
+                }
               />
             )}
           </For>
@@ -673,6 +683,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                   x2={ctx.plotRight}
                   y1={y}
                   y2={y}
+                  // Presentation attributes so `CashflowHorizontalMarker.class`
+                  // wins on a plain single class.
+                  stroke="var(--sui-cashflow-marker, rgba(224, 178, 77, 1))"
+                  stroke-width="1"
+                  stroke-dasharray="5 4"
+                  opacity="0.7"
                 />
                 {m.label && (
                   <text
@@ -735,6 +751,15 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                     x2={x}
                     y1={ctx.plotTop + (topCaption ? 15 : 0)}
                     y2={ctx.plotBottom}
+                    // Presentation attributes so `CashflowChartMarker.class`
+                    // wins on a plain single class. The stroke was
+                    // `var(--sui-text, …)` and `--sui-text` is not a token in
+                    // any theme, so it only ever rendered through its literal.
+                    stroke="var(--sui-cashflow-rule-stroke, var(--sui-text-primary, rgba(255, 255, 255, 1)))"
+                    stroke-width="1"
+                    stroke-linecap="round"
+                    stroke-dasharray="1 4"
+                    opacity="0.5"
                   />
                 </g>
               );
@@ -787,6 +812,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                   x2={x}
                   y1={ctx.plotTop}
                   y2={y}
+                  // Presentation attributes so `CashflowChartMarker.class` wins
+                  // on a plain single class.
+                  stroke="var(--sui-cashflow-marker, rgba(224, 178, 77, 1))"
+                  stroke-width="1"
+                  stroke-dasharray="4 3"
+                  opacity="0.6"
                 />
                 <path
                   class="sui-cashflow-scrub-chart__marker-flag"
@@ -807,6 +838,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                   cx={x}
                   cy={y}
                   r={3.5}
+                  // Presentation attribute so one `CashflowChartMarker.class`
+                  // reaches BOTH the marker's line and its dot, the way a
+                  // series class reaches its line and its hover dot.
+                  fill="var(--sui-cashflow-marker, rgba(224, 178, 77, 1))"
                 />
               </g>
             );

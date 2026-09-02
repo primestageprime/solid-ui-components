@@ -789,6 +789,126 @@ describe("CashflowScrubChart hover", () => {
     );
   });
 
+  it("ships no single-class paint rule for any mark a consumer can target", () => {
+    // The family guard. Every mark below takes a class from a PROP — a series
+    // class, a marker class, a band fill class — and a consumer's class beats
+    // SUI's default only while SUI states that default as a presentation
+    // attribute. A rule here would tie on specificity and let stylesheet order
+    // pick, which is what forced consumers to compound
+    // `.sui-cashflow-scrub-chart__line.their-class` and friends.
+    //
+    // Marks with NO consumer class prop (`__marker-flag`, `__marker-ring`,
+    // `__zero-line`, the selected rule and dot) keep their rules and are
+    // deliberately absent from this list. So are the emphasis rules, which are
+    // double-class BECAUSE they must beat a consumer's class.
+    const CONSUMER_TARGETABLE = [
+      "line",
+      "line--series",
+      "hover-dot",
+      "band",
+      "band--positive",
+      "band--negative",
+      "marker-line",
+      "marker-dot",
+      "rule-line",
+      "hrule-line",
+    ];
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "CashflowScrubChart.css"),
+      "utf8",
+    );
+    // Read whole SELECTOR LISTS with their blocks, not a substring, and judge
+    // only rules that actually PAINT. Two earlier passes got this wrong and
+    // both failures were instructive:
+    //   • a substring match hit `.…__marker-line {` inside the descendant
+    //     selector `.…__marker--selected .…__marker-line {`, which wraps onto
+    //     a second line and is (0,2,0) emphasis chrome that MUST survive;
+    //   • a selector-only match hit `.…__line` inside the shared `transition`
+    //     list, which is lone but sets no paint and so ties with nothing.
+    const PAINT = /(^|;)\s*(stroke|fill|opacity)(-[a-z]+)?\s*:/;
+    const rules = Array.from(
+      css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g),
+      (m) => ({
+        selectors: m[1].trim().replace(/\s+/g, " ").split(","),
+        paints: PAINT.test(m[2]),
+      }),
+    );
+    const lonely = (mark: string): boolean =>
+      rules.some(
+        (r) =>
+          r.paints &&
+          r.selectors.some(
+            (sel) => sel.trim() === `.sui-cashflow-scrub-chart__${mark}`,
+          ),
+      );
+    for (const mark of CONSUMER_TARGETABLE) {
+      expect(
+        { mark, lone: lonely(mark) },
+        `a lone .sui-cashflow-scrub-chart__${mark} paint rule would tie with a consumer's class`,
+      ).toEqual({ mark, lone: false });
+    }
+    // The check must still SEE paint rules — a regex that matched nothing
+    // would pass the loop above for the wrong reason.
+    expect(rules.filter((r) => r.paints).length).toBeGreaterThan(5);
+    // The emphasis rules DID survive — the opposite requirement.
+    expect(css).toContain(
+      ".sui-cashflow-scrub-chart__line.sui-cashflow-scrub-chart__line--highlighted",
+    );
+  });
+
+  it("paints every consumer-targetable mark from an attribute that resolves", () => {
+    // Companion to the rule above: with no CSS rule left, an attribute whose
+    // var() chain ends in nothing computes to the property's INITIAL value and
+    // the mark disappears. `--sui-cashflow-marker` and the band colours are
+    // defined by NO theme, so their literal fallbacks are the only thing that
+    // paints — a chain must end in a literal or a token that exists.
+    const cells = makeCells(10);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        markers={[{ index: 2 }, { index: 5, variant: "rule", label: "Today" }]}
+        horizontalMarkers={[{ valueCents: 1000 }]}
+        balanceSeries={[
+          {
+            id: "s1",
+            balanceCents: (c: CashflowCell) => c.balanceCents + 5000,
+            fill: {},
+          },
+        ]}
+      />
+    ));
+    const theme = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "..", "..", "themes", "default.css"),
+      "utf8",
+    );
+    const marks = [
+      "__marker-line",
+      "__marker-dot",
+      "__rule-line",
+      "__hrule-line",
+      "__band--positive",
+    ];
+    for (const mark of marks) {
+      const el = container.querySelector(`.sui-cashflow-scrub-chart${mark}`);
+      expect({ mark, found: el != null }).toEqual({ mark, found: true });
+      const paint =
+        el!.getAttribute("stroke") ?? el!.getAttribute("fill") ?? "";
+      // Either a literal at the end of the chain, or a token the theme defines.
+      const endsLiteral = /(rgba?\(|none\s*$)/.test(paint);
+      const tokens = Array.from(
+        paint.matchAll(/var\(\s*(--[a-z0-9-]+)/g),
+        (m) => m[1],
+      );
+      const anyTokenDefined = tokens.some((t) => theme.includes(`${t}:`));
+      expect({ mark, paint, ok: endsLiteral || anyTokenDefined }).toEqual({
+        mark,
+        paint,
+        ok: true,
+      });
+    }
+  });
+
   it("draws nothing on hover when hover is off", () => {
     const cells = makeCells(6);
     const { container } = render(() => (
