@@ -2,6 +2,54 @@
 
 ## [Unreleased]
 
+## 0.159.0
+
+### Fixed
+- **A consumer's class on a balance line wins on a plain single class.**
+  `.sui-cashflow-scrub-chart__line` and `__line--series` set stroke, fill and
+  stroke-width as RULES. A rule and a consumer's own class on the same line are
+  both single-class selectors, so the winner was decided by which stylesheet
+  loaded last — and SUI's can load last, which this repo had already measured
+  once (`CashflowScrubChart.css:186` records six chart labels drawn in the
+  default grey for exactly that reason). Consumers were compounding
+  `.sui-cashflow-scrub-chart__line.their-class` for no reason but to break the
+  tie. Both defaults now ride on the polyline as PRESENTATION ATTRIBUTES, which
+  lose to any author rule, so a plain single class is enough:
+
+  ```css
+  /* was: .sui-cashflow-scrub-chart__line.my-forecast { … } */
+  .my-forecast { stroke: rebeccapurple; }
+  ```
+
+  Measured in a browser on a clean element with the consumer sheet inserted
+  FIRST — the order that used to lose. The emphasis rules keep their rules AND
+  their double-class selectors on purpose: those must BEAT a consumer's class,
+  which is the opposite requirement, so a highlighted line still takes its
+  3px weight while keeping the consumer's colour. Themes move the defaults
+  through `--sui-cashflow-line-stroke` and `--sui-cashflow-series-stroke`.
+  Third instance of one defect, after the hover dot and the highlight band in
+  0.158.0; a class SUI hands a consumer is now a class they can actually use.
+
+- **The y-domain props state one precedence, and it is the one the code
+  follows.** `yMin`'s doc said tight-domain mode beat `yMax`; `yPadFraction`'s
+  said the reverse, and the code agrees with the second — the padded branch is
+  gated on `!hasManualMax`. A consumer read the wrong one and blocked real work
+  on a constraint that does not exist. The rule, now stated once on `yMax`:
+
+  | Set | Mode | `yMin` |
+  |---|---|---|
+  | `yMax` | fixed-range, `yPadFraction` ignored | applies |
+  | `yPadFraction`, no `yMax` | tight-domain | **ignored** |
+  | neither | auto, floored at 0 | applies |
+
+  Only `yMax` escapes tight-domain mode, so a caller who wants BOTH bounds
+  pinned must set both — a `yMax` alone leaves the floor at 0, which is the
+  framing tight mode exists to escape. That was true before and no doc said it.
+  The rule moved out of a `createMemo` branch into `chartYDomain` /
+  `chartYDomainMode` in `helpers.ts`, with one test per row: it drifted from
+  its docs precisely because no test could reach it without rendering a chart.
+  Behaviour is unchanged — this half of the release is docs and structure only.
+
 ## 0.158.0
 
 ### Added
