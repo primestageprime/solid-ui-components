@@ -15,6 +15,8 @@
   /* Kobalte reads the thumb size off the root to place the thumb centre. */
   --sui-slider-thumb-size: 16px;
   --sui-slider-track-height: 4px;
+  --sui-slider-tick-width: 2px;
+  --sui-slider-tick-height: 12px;
 }
 
 .sui-slider[data-disabled] {
@@ -86,6 +88,34 @@
   height: 100%;
   background: var(--sui-accent);
   border-radius: 999px;
+}
+
+/* ── Ticks ────────────────────────────────────────────────────
+   A notch is a short vertical line ON the track, taller than the track itself
+   so it reads through the fill. The component writes the `left` inline, since
+   only it knows where a value falls on the domain.
+
+   The notch takes no pointer events: the track under it is the drag surface,
+   and a notch that swallowed the press would make the track dead at exactly
+   the places a reader aims for. */
+.sui-slider__tick {
+  position: absolute;
+  top: 50%;
+  width: var(--sui-slider-tick-width);
+  height: var(--sui-slider-tick-height);
+  transform: translate(-50%, -50%);
+  border-radius: calc(var(--sui-slider-tick-width) / 2);
+  /* An unpassed notch sits on the grey track, so it must be darker than it. */
+  background: var(--sui-text-secondary);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* A passed notch sits on the accent fill. It flips to the page colour, which
+   reads as a cut in the fill rather than a mark beside it. */
+.sui-slider__tick--passed {
+  background: var(--sui-bg-primary);
+  opacity: 0.75;
 }
 
 /* Kobalte writes `position`, the start edge and `transform: translateX(-50%)`

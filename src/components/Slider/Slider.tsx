@@ -24,16 +24,24 @@
 // here. The value moves on a drag or on a key that moves the thumb, nothing
 // else.
 //
-// LAYOUT PURITY — AUDITED INTRINSIC. The root column, the label line and the
-// track are this widget's OWN parts, not caller children, and an Atomic may
-// not import Layout components. Same disposition as Toggle, Checkbox and
-// ThemedNumberInput.
+// `ticks` draws notches ON the track, over the fill. Kobalte has no tick
+// primitive, so they are absolutely positioned spans inside its Track, beside
+// the Fill and the Thumb. They carry no text and no pointer events — a notch
+// is decoration, so `aria-hidden` keeps it out of the accessibility tree.
+//
+// LAYOUT PURITY — AUDITED INTRINSIC. The root column, the label line, the
+// track and its notches are this widget's OWN parts, not caller children, and
+// an Atomic may not import Layout components. The notches place themselves
+// with `position: absolute` and a `left` percentage, which is data-driven
+// placement rather than an arrangement vocabulary. Same disposition as Toggle,
+// Checkbox and ThemedNumberInput.
 // ============================================
 import {
   Slider as KobalteSlider,
   type SliderRootProps as KobalteSliderRootProps,
 } from "@kobalte/core/slider";
-import { type Component, splitProps } from "solid-js";
+import { type Component, For, splitProps } from "solid-js";
+import { filter } from "../../fn";
 import "./Slider.css";
 
 /** Props owned by `Slider`; everything else is kobalte passthrough. */
@@ -60,6 +68,15 @@ interface SliderOwnProps {
   format?: (value: number) => string;
   /** Whether the control is disabled. */
   disabled?: boolean;
+  /**
+   * Notches drawn on the track. `true` marks every `step` from `min` to `max`
+   * inclusive; an array marks exactly those values and ignores `step`. Omitted
+   * or `false` draws nothing.
+   *
+   * A value outside `[min, max]` is dropped, not pulled to the edge — a notch
+   * at an unreachable value would lie about the domain.
+   */
+  ticks?: boolean | readonly number[];
 }
 
 /** `Slider` combines the owned props with kobalte's forwarded root props. */
@@ -69,13 +86,77 @@ export type SliderProps = SliderOwnProps &
     "value" | "defaultValue" | "onChange" | "minValue" | "maxValue" | "step"
   >;
 
-/** Static visual decisions — curried at definition time by `createSlider`. */
-export type SliderOverrides = Pick<SliderProps, "format">;
+/**
+ * Static visual decisions — curried at definition time by `createSlider`.
+ *
+ * `ticks` joins `format` because a tick set is a property of the SCALE, not of
+ * the reading: a percentage dial marks quarters and a runway dial marks
+ * quarters of a year, whatever value the caller holds today.
+ */
+export type SliderOverrides = Pick<SliderProps, "format" | "ticks">;
 
 /** What a curried variant exposes: everything except the curried overrides. */
 export type SliderDataProps = Omit<SliderProps, keyof SliderOverrides>;
 
 const DEFAULT_STEP = 1;
+
+/** Shared empty tick list, so a slider without ticks allocates nothing. */
+const NO_TICKS: readonly number[] = [];
+
+/** Half a notch, in CSS. Clamps an end notch inside the track's own bounds. */
+const HALF_NOTCH = "calc(var(--sui-slider-tick-width) / 2)";
+
+/**
+ * Every step from `min` to `max`, inclusive, and never one past `max`.
+ *
+ * A `step` that does not divide the domain evenly simply stops short: a domain
+ * of `0..15` by `4` marks 0, 4, 8 and 12, because a notch at 16 would sit off
+ * the track and a notch at 15 is not a step.
+ */
+const ticksFromStep = (
+  min: number,
+  max: number,
+  step: number,
+): readonly number[] =>
+  Array.from(
+    { length: Math.floor((max - min) / step) + 1 },
+    (_, index) => min + index * step,
+  );
+
+/** Whether a tick names a value the thumb can actually reach. */
+const isInDomain =
+  (min: number, max: number) =>
+  (value: number): boolean =>
+    value >= min && value <= max;
+
+/** The notch values `ticks` asks for, in the consumer's own units. */
+const resolveTicks = (
+  ticks: boolean | readonly number[] | undefined,
+  min: number,
+  max: number,
+  step: number,
+): readonly number[] =>
+  ticks === true
+    ? ticksFromStep(min, max, step)
+    : // What is left is an array, `false` or nothing; the last two mark nothing.
+      filter(
+        isInDomain(min, max),
+        typeof ticks === "object" ? ticks : NO_TICKS,
+      );
+
+/** Position of a value on the track, as a percentage of the domain. */
+const tickPercent = (value: number, min: number, max: number): number =>
+  ((value - min) / (max - min)) * 100;
+
+/**
+ * Inline `left` for one notch.
+ *
+ * `clamp` keeps a notch at `min` or `max` half its own width inside the track,
+ * so an end notch reads as a mark on the track rather than a cut-off sliver
+ * beyond the rounded cap.
+ */
+const notchLeft = (percent: number): string =>
+  `left: clamp(${HALF_NOTCH}, ${percent}%, calc(100% - ${HALF_NOTCH}))`;
 
 /**
  * Labelled range control with a live value readout.
@@ -106,9 +187,13 @@ export const Slider: Component<SliderProps> = (props) => {
     "label",
     "format",
     "disabled",
+    "ticks",
   ]);
 
   const format = (value: number): string => (local.format ?? String)(value);
+
+  const notches = (): readonly number[] =>
+    resolveTicks(local.ticks, local.min, local.max, local.step ?? DEFAULT_STEP);
 
   // Kobalte models every slider as multi-thumb. This wrapper is single-thumb
   // by contract, so the array is an implementation detail the consumer never
@@ -137,6 +222,19 @@ export const Slider: Component<SliderProps> = (props) => {
       </div>
       <KobalteSlider.Track class="sui-slider__track">
         <KobalteSlider.Fill class="sui-slider__fill" />
+        {/* Notches sit between the fill and the thumb, so the thumb covers
+            the notch it stands on rather than the other way round. */}
+        <For each={notches()}>
+          {(tick) => (
+            <span
+              class="sui-slider__tick"
+              classList={{ "sui-slider__tick--passed": tick <= local.value }}
+              style={notchLeft(tickPercent(tick, local.min, local.max))}
+              data-value={tick}
+              aria-hidden="true"
+            />
+          )}
+        </For>
         <KobalteSlider.Thumb
           class="sui-slider__thumb"
           // Kobalte's own `aria-valuetext` comes from its internal number
