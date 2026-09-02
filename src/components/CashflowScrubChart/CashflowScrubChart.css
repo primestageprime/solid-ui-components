@@ -317,12 +317,11 @@
 
 /* Hollow ring — "exact spot on this line", lighter than the filled
    selected-dot. */
-.sui-cashflow-scrub-chart__hover-dot {
-  fill: var(--sui-bg-elevated, #1b1f27);
-  stroke: var(--sui-text, #fff);
-  stroke-width: 1.5;
-  opacity: 0.9;
-}
+/* Hover dot — NO rule here on purpose. Its fill, stroke and opacity ride on
+   the circle as presentation attributes so a consumer's class on the line the
+   dot belongs to always wins, whatever order the stylesheets load in. A rule
+   here would tie with that class on specificity. Themes move
+   --sui-cashflow-hover-dot-fill / --sui-cashflow-hover-dot-stroke. */
 
 .sui-cashflow-scrub-chart__hover-tooltip {
   position: absolute;

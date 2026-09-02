@@ -2253,6 +2253,40 @@
   color: var(--sui-text-primary);
 }
 
+/* Highlight-band demo — a consumer's own class on one band's rect. Fill and
+   opacity are the consumer's to set here; the SUI base class supplies only a
+   faint neutral, which every band would otherwise share. */
+.scrub-chart-demo__band--gap {
+  fill: var(--sui-danger);
+  opacity: 0.15;
+}
+/* Bounded-highlight demo — the band and its two edge rules share one accent,
+   so the shaded area and the lines that bound it read as ONE marked window
+   rather than as three unrelated marks. */
+.scrub-chart-demo__band--window {
+  fill: var(--sui-accent);
+  opacity: 0.1;
+}
+.scrub-chart-demo__edge {
+  stroke: var(--sui-accent);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.8;
+}
+.scrub-chart-demo__edge-label {
+  fill: var(--sui-accent);
+  font-size: 10px;
+  font-family: var(--sui-font-family, inherit);
+}
+.scrub-chart-demo__edge-label--end {
+  text-anchor: end;
+}
+
+.scrub-chart-demo__band--forecast {
+  fill: var(--sui-accent);
+  opacity: 0.1;
+}
+
 /* dotchart composition smoke — hand-built chip row + debug readout/table.
    Only the per-row accent colour is data-driven (bridged via
    --dotchart-row-color); everything else is static chrome. */

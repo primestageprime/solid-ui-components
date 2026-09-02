@@ -2,6 +2,56 @@
 
 ## [Unreleased]
 
+## 0.158.0
+
+### Added
+- **`ScrubChart.highlights`** — shaded bands over a range of cells, for
+  "this stretch of the x-axis means something": a funding gap, a forecast
+  horizon, a quarter. Each band is a `ScrubChartHighlight`,
+  `{ from, to, class? }`, stated in CELL INDICES with both ends inclusive and
+  covering the whole cell, so a one-cell band is `{ from: i, to: i }`.
+  ScrubChart clamps both ends to the cell range and swaps them when
+  `from > to`, so a band computed from live data cannot draw outside the plot.
+  Bands paint in the BOTTOM layer of the frame — beneath the gridlines and
+  beneath the `renderChart` series — because a band BACKS the data. The
+  window band is the opposite case and still paints above the series, since it
+  dims the slice it covers. `CashflowScrubChart` forwards the prop and the
+  same type unchanged: a band carries no cashflow vocabulary, so a caller
+  writes one object for either chart. OPT-IN; no chart draws a band until a
+  caller asks. `ScrubChartHighlight` is exported from the barrel.
+
+  ```tsx
+  <ScrubChart
+    cells={cells}
+    highlights={[{ from: 20, to: 34, class: "funding-gap" }]}
+    ...
+  />
+  ```
+
+### Fixed
+- **A series class now reaches every mark that series draws.** The hover
+  crosshair drew one circle per line and gave every circle a single fixed
+  class, so a consumer could style a line and could not touch its dot. A
+  series hidden through its own class (`stroke: none; fill: none`) kept an
+  unexplained circle on the crosshair that matched nothing in the tooltip. Each
+  dot now carries the class of the line it sits on —
+  `CashflowBalanceSeries.class` for an overlay series, `lineClass` for the
+  primary line, which reaches the same set of marks its doc already claimed.
+  A deviation band is the deliberate exception: it keeps the polarity classes
+  of `fill`, because its two halves mean different things.
+
+- **A consumer class can no longer lose to SUI's own stylesheet on the hover
+  dot or a highlight band.** A base rule and a caller's class are both
+  single-class selectors, so the winner was decided by stylesheet ORDER — and
+  this repo has already measured that order going the wrong way, when a
+  consumer loaded a second copy of SUI's CSS after its own and six chart
+  labels drew in the default grey. The default fill, stroke and opacity of
+  both marks now ride on the element as PRESENTATION ATTRIBUTES, which lose to
+  any author rule, so the caller's class always wins. Themes move the defaults
+  through `--sui-cashflow-hover-dot-fill`,
+  `--sui-cashflow-hover-dot-stroke`, `--sui-scrub-chart-highlight-fill` and
+  `--sui-scrub-chart-highlight-opacity`.
+
 ## 0.157.0
 
 ### Added

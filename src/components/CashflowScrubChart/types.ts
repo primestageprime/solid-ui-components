@@ -19,11 +19,13 @@
 //   • CashflowScrubChartProps — the component's full call-site contract.
 //
 // Kept as a leaf module: it imports only the `Cell` base type from DateAxis and
-// has no runtime side effects, so importing it is cheap and cycle-free.
+// the `ScrubChartHighlight` band shape it forwards, and has no runtime side
+// effects, so importing it is cheap and cycle-free.
 // ============================================
 
 import type { JSX } from "solid-js";
 import type { Cell } from "../DateAxis";
+import type { ScrubChartHighlight } from "../ScrubChart";
 
 /**
  * Payload shape for each day-cell. `cashflowCents` is the day's net flow
@@ -91,8 +93,13 @@ export interface CashflowBalanceSeries {
    * whatever another label bought, or the label is dropped in silence.
    */
   labelPlacement?: CashflowLabelZone;
-  /** CSS class added to the polyline alongside the base line class.
-   *  Color / dash / opacity are the consumer's to define on this class. */
+  /** CSS class added to EVERY mark this series draws, alongside that mark's
+   *  base class: the polyline, and the series' own dot on the hover crosshair.
+   *  Color / dash / opacity are the consumer's to define on this class. One
+   *  class for every mark is what lets a consumer hide a whole series — a
+   *  series hidden on its line alone kept an unexplained dot on the crosshair.
+   *  A deviation band is the exception: it carries the polarity classes of
+   *  `fill` instead, because its two halves mean different things. */
   class?: string;
   /** Balance in cents for the cell at `index`, or `null` to break the line
    *  (e.g. to draw a forecast only for cells after `today`). */
@@ -198,6 +205,17 @@ export interface CashflowScrubChartProps {
    */
   scrub?: boolean;
   /**
+   * Shaded bands over day ranges, forwarded to the inner ScrubChart. Drawn
+   * beneath the balance line and every overlay series — "this stretch of the
+   * timeline means something" (a funding gap, a hiring window, a quarter).
+   * Default: none.
+   *
+   * Forwarded rather than re-declared: a band is chart chrome with no cashflow
+   * vocabulary in it, so the shape stays `ScrubChartHighlight` and a caller
+   * writing one for either chart writes the same object.
+   */
+  highlights?: ScrubChartHighlight[];
+  /**
    * PLOTLINE MARKERS — vertical dashed rules dropping from a flag at the top
    * of the plot to a dot ON the running-balance line, marking the dates a
    * chosen config fires. `selected` circles that instance. Rendered in the
@@ -274,10 +292,11 @@ export interface CashflowScrubChartProps {
    * different scenario's balance line. Should be the same length as `cells`.
    */
   balanceLineCells?: CashflowCell[];
-  /** CSS class added to the PRIMARY balance polyline alongside the base line
-   *  class — the counterpart of `CashflowBalanceSeries.class` for the line the
-   *  chart draws itself. Color / dash / opacity are the consumer's to define on
-   *  this class. */
+  /** CSS class added to the PRIMARY balance line's marks alongside each mark's
+   *  base class — the polyline, and the primary dot on the hover crosshair.
+   *  The counterpart of `CashflowBalanceSeries.class` for the line the chart
+   *  draws itself, and it reaches the same set of marks that one does. Color /
+   *  dash / opacity are the consumer's to define on this class. */
   lineClass?: string;
   /**
    * Label DRAWN on the chart for the PRIMARY running-balance line — the

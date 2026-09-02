@@ -125,6 +125,7 @@ export const CashflowScrubChartShowcase: Component = () => {
     Math.max(0, todayIndex),
   );
   const [scenarioOver, setScenarioOver] = createSignal(true);
+  const [hideDomainPins, setHideDomainPins] = createSignal(true);
 
   return (
     <div class="component-section component-section--full">
@@ -235,6 +236,80 @@ export const CashflowScrubChartShowcase: Component = () => {
             );
           }}
         />
+      </div>
+
+      <div class="example-group">
+        <h3>A series class reaches every mark it draws</h3>
+        <p class="text-meta">
+          A series <code>class</code> lands on the polyline AND on that series'
+          own dot on the hover crosshair, and <code>lineClass</code> does the
+          same for the primary line. Hover the chart to see it. The scenario
+          line is green and so is ITS dot — one class, both marks.
+        </p>
+        <p class="text-meta">
+          The two <strong>domain pins</strong> below prove why that matters.
+          They are real series whose only job is to hold the y-domain open to a
+          fixed extent, and a consumer hides them with{" "}
+          <code>stroke: none; fill: none</code> on their own class. Turn the
+          toggle off and hover: the lines stay invisible, and two circles appear
+          on the crosshair that match nothing in the chart and nothing in the
+          tooltip. That was the reported defect — the class stopped at the
+          polyline, so an invisible series was still visible on hover. Turn it
+          back on and the pins disappear completely.
+        </p>
+        <style>{`
+          .demo-classreach--scenario {
+            stroke: var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85));
+            stroke-width: 1.6;
+          }
+          .demo-classreach--pin {
+            stroke: none;
+            fill: none;
+          }
+        `}</style>
+
+        <Toggle
+          label="Hide the domain pins (their class on every mark)"
+          checked={hideDomainPins()}
+          onChange={() => setHideDomainPins(!hideDomainPins())}
+        />
+
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          hover
+          balanceSeries={[
+            {
+              id: "scenario",
+              class: "demo-classreach--scenario",
+              balanceCents: forecast(Math.max(0, todayIndex), 40_000),
+            },
+            {
+              id: "pin-high",
+              class: hideDomainPins() ? "demo-classreach--pin" : undefined,
+              balanceCents: (c: CashflowCell) => c.balanceCents + 900_000,
+            },
+            {
+              id: "pin-low",
+              class: hideDomainPins() ? "demo-classreach--pin" : undefined,
+              balanceCents: (c: CashflowCell) => c.balanceCents - 900_000,
+            },
+          ]}
+          renderHoverTooltip={(c) => (
+            <div class="cashflow-scrub-chart-demo__tip">
+              <div class="cashflow-scrub-chart-demo__tip-title">
+                {fmtDate(c.start)}
+              </div>
+              <div>Baseline: {fmtDollars(c.balanceCents)}</div>
+            </div>
+          )}
+        />
+
+        <MutedBody>
+          {hideDomainPins()
+            ? "Class on every mark — two lines drawn, two dots on the crosshair, and the pins are gone from both."
+            : "Pins unstyled — four lines and four dots. The two outer dots are the marks a hidden series used to leave behind."}
+        </MutedBody>
       </div>
 
       <div class="example-group">
@@ -472,9 +547,9 @@ export const CashflowScrubChartShowcase: Component = () => {
         <p class="text-meta">
           Point at a label. The chart ships no legend, so the hover answers
           which line the label names: that line keeps its FULL strength, and
-          every other line, band and marker steps back. Move the pointer off
-          the label to restore all of them. At rest, each label already carries
-          the colour of the line it names &mdash; the chart reads the resolved
+          every other line, band and marker steps back. Move the pointer off the
+          label to restore all of them. At rest, each label already carries the
+          colour of the line it names &mdash; the chart reads the resolved
           stroke back from the drawn line, so the four colours below come from
           the consumer&apos;s own classes and nothing else.
         </p>

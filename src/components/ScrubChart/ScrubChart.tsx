@@ -40,7 +40,11 @@ import { insetSpan } from "../../internal/geometry/insetSpan";
 import { clamp } from "../../internal/math/clamp";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import { DateAxis, type Cell } from "../DateAxis";
-import { ScrubChartAxes, ScrubChartGrid } from "./ScrubChartAxes";
+import {
+  ScrubChartAxes,
+  ScrubChartGrid,
+  ScrubChartHighlights,
+} from "./ScrubChartAxes";
 import {
   CADENCE_LADDER,
   DEFAULT_CELL_WIDTH,
@@ -67,6 +71,7 @@ import { map, filter } from "../../fn";
 
 export type {
   ScrubChartContext,
+  ScrubChartHighlight,
   ScrubChartProps,
   ScrubChartOverrides,
   ScrubChartDataProps,
@@ -311,6 +316,31 @@ export const ScrubChart = <C extends Cell>(
     ];
   });
 
+  // Highlight bands → pixels. Both ends are inclusive and cover the whole
+  // cell, so the right edge is `(to + 1) * dayPitch` — the same arithmetic
+  // windowBounds uses. Ends are clamped to the cell range and swapped when a
+  // caller passes them the other way round, so a band computed from live data
+  // can never draw outside the plot. A band is kept even at zero width; the
+  // rect simply paints nothing, and dropping it would make the layer's list
+  // disagree with the caller's array for no gain.
+  const highlightBands = createMemo<
+    { x: number; width: number; class?: string }[]
+  >(() => {
+    const bands = props.highlights;
+    const n = props.cells.length;
+    if (!bands || bands.length === 0 || n === 0) return [];
+    const pitch = dayPitch();
+    return map((band) => {
+      const lo = clamp(Math.min(band.from, band.to), 0, n - 1);
+      const hi = clamp(Math.max(band.from, band.to), 0, n - 1);
+      return {
+        x: plotLeft() + lo * pitch,
+        width: (hi - lo + 1) * pitch,
+        class: band.class,
+      };
+    }, bands);
+  });
+
   const yToPlot = (v: number): number => {
     const s = yScale();
     return s ? s(v) : v;
@@ -464,6 +494,18 @@ export const ScrubChart = <C extends Cell>(
         onPointerMove={handleHoverMove}
         onPointerLeave={handleHoverLeave}
       >
+        {/* Highlight bands — opt-in shaded rects over cell ranges. The
+            BOTTOM layer of the frame: the gridlines and the series both
+            paint over them, because a band is background. */}
+        <Show when={chartWidth() > 0 && highlightBands().length > 0}>
+          <ScrubChartHighlights
+            chartWidth={chartWidth}
+            chartHeight={chartHeight}
+            plotTop={plotTop}
+            plotHeight={plotHeight}
+            bands={highlightBands}
+          />
+        </Show>
         {/* Gridlines — opt-in horizontal rules at the y-axis ticks. Drawn
             BEFORE the series so the data paints over the chrome, unlike the
             axes below (drawn after so the labels stay legible). */}

@@ -911,13 +911,21 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     const x = ctx.cellToX(idx);
     // A hollow dot for the primary line (from lineCells) + each overlay series
     // with a value.
+    //
+    // Each dot carries the class of the LINE it sits on — `lineClass` for the
+    // primary, the series' own `class` for an overlay — alongside the shared
+    // hover-dot class. A class on a series must reach EVERY mark that series
+    // draws: with a single fixed class here, a consumer could style its line
+    // and could not touch its dot, so a series hidden through its own class
+    // (stroke: none, fill: none) kept an unexplained circle on the crosshair
+    // that matched nothing in the tooltip.
     const primaryLineCell = lineCells()[idx];
-    const dotYs = primaryLineCell
-      ? [yToPlot(primaryLineCell.balanceCents)]
+    const dots: { y: number; class?: string }[] = primaryLineCell
+      ? [{ y: yToPlot(primaryLineCell.balanceCents), class: props.lineClass }]
       : [];
     for (const s of props.balanceSeries ?? []) {
       const v = s.balanceCents(cell, idx);
-      if (v != null) dotYs.push(yToPlot(v));
+      if (v != null) dots.push({ y: yToPlot(v), class: s.class });
     }
     // Flip the card to the pointer's left in the right half so it never
     // clips off the right edge; anchor its top at the plot top.
@@ -940,13 +948,27 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             y1={ctx.plotTop}
             y2={ctx.plotBottom}
           />
-          <For each={dotYs}>
-            {(y) => (
+          <For each={dots}>
+            {(dot) => (
               <circle
-                class="sui-cashflow-scrub-chart__hover-dot"
+                class={`sui-cashflow-scrub-chart__hover-dot${
+                  dot.class ? ` ${dot.class}` : ""
+                }`}
                 cx={x}
-                cy={y}
+                cy={dot.y}
                 r={3.5}
+                // Defaults as PRESENTATION ATTRIBUTES, not as a rule in the
+                // stylesheet. The line's class and a base rule are both single
+                // -class selectors, so a rule here would tie with the caller's
+                // class and let stylesheet ORDER decide — and a consumer whose
+                // CSS loads before SUI's would find the dot unreachable again,
+                // which is the whole defect this class was added to fix. A
+                // presentation attribute loses to any author rule, so the
+                // caller's class always wins. Themes move these two variables.
+                fill="var(--sui-cashflow-hover-dot-fill, var(--sui-bg-elevated))"
+                stroke="var(--sui-cashflow-hover-dot-stroke, var(--sui-text-primary))"
+                stroke-width="1.5"
+                opacity="0.9"
               />
             )}
           </For>
@@ -969,6 +991,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       selected={props.selected}
       onScrub={props.onScrub}
       scrub={props.scrub}
+      highlights={props.highlights}
       centerOn={props.centerOn}
       renderChartOverlay={
         (props.markers?.length ?? 0) > 0 ||

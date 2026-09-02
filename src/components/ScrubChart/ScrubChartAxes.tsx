@@ -1,11 +1,14 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // ============================================
-// ScrubChartAxes — Structural (Depth 1). SVG axis-chrome render fragment; composes no library components.
-// ScrubChart — axis-chrome render fragments: <ScrubChartAxes> (y-axis line +
-// ticks + labels, x-axis line + ticks + labels) and <ScrubChartGrid> (opt-in
-// horizontal rules at the same y-ticks). Both live here because they share the
-// tick geometry; they render in DIFFERENT layers (see ScrubChartGrid's doc).
+// ScrubChartAxes — Structural (Depth 1). SVG chart-chrome render fragments; composes no library components.
+// ScrubChart — chart-chrome render fragments: <ScrubChartAxes> (y-axis line +
+// ticks + labels, x-axis line + ticks + labels), <ScrubChartGrid> (opt-in
+// horizontal rules at the same y-ticks) and <ScrubChartHighlights> (opt-in
+// shaded bands over cell ranges). The first two share the tick geometry; the
+// third takes band geometry instead, and lives here because it is the same
+// KIND of thing — presentation the parent hands finished numbers to. All three
+// render in DIFFERENT layers (see each fragment's doc).
 //
 // Split out of ScrubChart.tsx verbatim so the parent's render body stays
 // readable. This is pure presentation: it owns NO state and reads NO signals
@@ -92,6 +95,62 @@ export const ScrubChartGrid = (props: ScrubChartGridProps): JSX.Element => (
           x2={props.plotRight()}
           y1={tick.y}
           y2={tick.y}
+        />
+      )}
+    </For>
+  </svg>
+);
+
+/**
+ * Props for the highlight-band fragment. `bands` arrive already clamped and
+ * already converted to pixels by the parent — this fragment does no geometry
+ * of its own, so the index → pixel map stays in one place.
+ */
+export interface ScrubChartHighlightsProps {
+  chartWidth: () => number;
+  chartHeight: () => number;
+  plotTop: () => number;
+  plotHeight: () => number;
+  bands: () => { x: number; width: number; class?: string }[];
+}
+
+/**
+ * Highlight bands — one translucent rect per caller-supplied cell range,
+ * spanning the full plot height.
+ *
+ * Rendered in the BOTTOM layer of the frame: beneath <ScrubChartGrid> and
+ * beneath `renderChart`. A band is background, so both the gridlines and the
+ * series must read over it. The window band is the opposite case — it is drawn
+ * ABOVE the series because it dims the slice it covers rather than backing it.
+ *
+ * The default fill and opacity are PRESENTATION ATTRIBUTES, not a rule in
+ * ScrubChart.css, because a band's whole point is that a caller recolours one.
+ * A base rule and a caller's class are both single-class selectors, so the
+ * winner would be whichever stylesheet the bundler happened to emit last — and
+ * with the library's CSS imported after the app's, every band would render the
+ * same neutral no matter what class it carried. A presentation attribute
+ * carries lower priority than ANY author rule, so the caller's class always
+ * wins. Themes reach the same defaults through the two CSS variables.
+ */
+export const ScrubChartHighlights = (
+  props: ScrubChartHighlightsProps,
+): JSX.Element => (
+  <svg
+    class="sui-scrub-chart__highlights"
+    aria-hidden="true"
+    viewBox={`0 0 ${props.chartWidth()} ${props.chartHeight()}`}
+    preserveAspectRatio="none"
+  >
+    <For each={props.bands()}>
+      {(band) => (
+        <rect
+          class={`sui-scrub-chart__highlight${band.class ? ` ${band.class}` : ""}`}
+          x={band.x}
+          y={props.plotTop()}
+          width={band.width}
+          height={props.plotHeight()}
+          fill="var(--sui-scrub-chart-highlight-fill, var(--sui-text-muted))"
+          opacity="var(--sui-scrub-chart-highlight-opacity, 0.1)"
         />
       )}
     </For>

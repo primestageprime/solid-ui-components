@@ -291,6 +291,40 @@ describe("CashflowScrubChart", () => {
     });
   });
 
+  describe("highlight bands (the highlights prop)", () => {
+    it("forwards each band to the inner ScrubChart, with its own class", () => {
+      const cells = makeCells(10);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          selected={3}
+          onScrub={() => {}}
+          highlights={[
+            { from: 1, to: 3, class: "funding-gap" },
+            { from: 8, to: 9 },
+          ]}
+        />
+      ));
+      const rects = container.querySelectorAll(".sui-scrub-chart__highlight");
+      expect(rects.length).toBe(2);
+      expect(rects[0].getAttribute("class")).toContain("funding-gap");
+      // Band 0 starts left of band 1 — the ranges keep their order.
+      expect(Number(rects[0].getAttribute("x"))).toBeLessThan(
+        Number(rects[1].getAttribute("x")),
+      );
+    });
+
+    it("draws no highlight layer when the prop is absent", () => {
+      const cells = makeCells(10);
+      const { container } = render(() => (
+        <CashflowScrubChart cells={cells} selected={3} onScrub={() => {}} />
+      ));
+      expect(
+        container.querySelector(".sui-scrub-chart__highlights"),
+      ).toBeNull();
+    });
+  });
+
   describe("plotline markers (the markers prop)", () => {
     it("renders a rule + flag + dot per marker, ring on the selected one", () => {
       const cells = makeCells(10);
@@ -627,6 +661,84 @@ describe("CashflowScrubChart hover", () => {
       container.querySelectorAll(".sui-cashflow-scrub-chart__hover-dot").length,
     ).toBe(2);
     expect(container.querySelector("[data-testid=tt]")).toBeTruthy();
+  });
+
+  it("puts each line's own class on its own hover dot", () => {
+    // Regression for "an invisible series keeps a visible dot": the dot used
+    // to carry one fixed class, so a consumer that hid a series through its
+    // own class still saw that series' circle on the crosshair.
+    const cells = makeCells(10);
+    const series = [
+      {
+        id: "ghost",
+        class: "my-ghost",
+        balanceCents: (c: CashflowCell) => c.balanceCents + 5000,
+      },
+      {
+        id: "plain",
+        balanceCents: (c: CashflowCell) => c.balanceCents - 5000,
+      },
+    ];
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        hover
+        lineClass="my-primary"
+        balanceSeries={series}
+      />
+    ));
+    hoverMove(container, 200);
+    const dots = Array.from(
+      container.querySelectorAll(".sui-cashflow-scrub-chart__hover-dot"),
+    ).map((el) => el.getAttribute("class"));
+    // Primary first, then the series in array order — each dot reachable
+    // through the same class that styles its line.
+    expect(dots).toEqual([
+      "sui-cashflow-scrub-chart__hover-dot my-primary",
+      "sui-cashflow-scrub-chart__hover-dot my-ghost",
+      // A series without a class keeps the base class alone.
+      "sui-cashflow-scrub-chart__hover-dot",
+    ]);
+  });
+
+  it("defaults the hover dot to tokens the theme actually defines", () => {
+    // The dot's fill and stroke are presentation attributes, so every token
+    // they name must exist: a var() chain that resolves to nothing falls back
+    // to the property's INITIAL value — `stroke: none`, `fill: black` — and the
+    // dot disappears against a dark plot rather than degrading to something
+    // readable. `--sui-text` looked like a token and never was one; the CSS
+    // rule this replaced only ever rendered through its hex fallback.
+    const cells = makeCells(10);
+    const { container } = render(() => (
+      <CashflowScrubChart cells={cells} scrub={false} hover />
+    ));
+    hoverMove(container, 200);
+    const dot = container.querySelector(
+      ".sui-cashflow-scrub-chart__hover-dot",
+    )!;
+    const theme = readFileSync(
+      join(
+        dirname(fileURLToPath(import.meta.url)),
+        "..",
+        "..",
+        "themes",
+        "default.css",
+      ),
+      "utf8",
+    );
+    const named = [dot.getAttribute("fill"), dot.getAttribute("stroke")]
+      .join(" ")
+      .matchAll(/var\(\s*(--[a-z0-9-]+)/g);
+    const tokens = Array.from(named, (m) => m[1]);
+    // Two attributes, each naming an override var and a theme token under it.
+    expect(tokens.length).toBe(4);
+    for (const token of tokens) {
+      // The override vars are consumer-supplied and undefined by design; every
+      // token they fall back to must be a real one.
+      if (token.startsWith("--sui-cashflow-hover-dot-")) continue;
+      expect(theme).toContain(`${token}:`);
+    }
   });
 
   it("draws nothing on hover when hover is off", () => {

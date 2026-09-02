@@ -1,6 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { ScrubChart, type ScrubChartContext } from "./ScrubChart";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import {
+  ScrubChart,
+  type ScrubChartContext,
+  type ScrubChartHighlight,
+} from "./ScrubChart";
 import { dailyCells, type Cell } from "../DateAxis";
 import { pointer, rectOf } from "../../test-utils";
 
@@ -514,5 +521,140 @@ describe("ScrubChart frame-sizing overrides", () => {
     expect(extra14!.plotBottom).toBeCloseTo(plain!.plotBottom - 14, 3);
     // Frame height is unaffected — plotBottom moves, height doesn't.
     expect(extra14!.height).toBe(plain!.height);
+  });
+});
+
+describe("ScrubChart highlight bands", () => {
+  // 10 cells across the seeded 1200px frame with no y-axis column → the plot
+  // starts at 0 and a cell is exactly 120px wide. Every x/width below is read
+  // against that pitch.
+  const PITCH = 120;
+  const cells10 = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-10"));
+
+  const bandChart = (extra: {
+    highlights?: ScrubChartHighlight[];
+    showGridlines?: boolean;
+    yDomain?: [number, number];
+  }) =>
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        renderChart={() => <svg data-testid="series" />}
+        renderCell={() => <div />}
+        {...extra}
+      />
+    ));
+
+  const bands = (container: HTMLElement): Element[] =>
+    Array.from(container.querySelectorAll(".sui-scrub-chart__highlight"));
+
+  it("draws no highlight layer by default", () => {
+    const { container } = bandChart({});
+    expect(container.querySelector(".sui-scrub-chart__highlights")).toBeNull();
+  });
+
+  it("draws one rect per band, spanning the full cells of an inclusive range", () => {
+    const { container } = bandChart({
+      highlights: [
+        { from: 2, to: 4 },
+        { from: 7, to: 7 },
+      ],
+    });
+    const rects = bands(container);
+    expect(rects.length).toBe(2);
+    // from 2 → to 4 covers cells 2, 3 and 4 entirely: three pitches wide.
+    expect(Number(rects[0].getAttribute("x"))).toBeCloseTo(2 * PITCH, 3);
+    expect(Number(rects[0].getAttribute("width"))).toBeCloseTo(3 * PITCH, 3);
+    // A one-cell band still spans that cell's whole width.
+    expect(Number(rects[1].getAttribute("x"))).toBeCloseTo(7 * PITCH, 3);
+    expect(Number(rects[1].getAttribute("width"))).toBeCloseTo(PITCH, 3);
+  });
+
+  it("spans the plot height, not the x-axis row", () => {
+    const { container } = bandChart({
+      highlights: [{ from: 0, to: 1 }],
+      yDomain: [0, 100],
+    });
+    const rect = bands(container)[0];
+    const axisLine = container.querySelector(".sui-scrub-chart__axis-line")!;
+    // The y-axis line runs plotTop → plotBottom; the band shares both ends.
+    expect(Number(rect.getAttribute("y"))).toBeCloseTo(
+      Number(axisLine.getAttribute("y1")),
+      3,
+    );
+    expect(
+      Number(rect.getAttribute("y")) + Number(rect.getAttribute("height")),
+    ).toBeCloseTo(Number(axisLine.getAttribute("y2")), 3);
+  });
+
+  it("clamps a range that runs past the cells and swaps a reversed one", () => {
+    const { container } = bandChart({
+      highlights: [
+        { from: -5, to: 99 },
+        { from: 6, to: 3 },
+      ],
+    });
+    const rects = bands(container);
+    // Clamped to the whole cell range — never outside the plot.
+    expect(Number(rects[0].getAttribute("x"))).toBeCloseTo(0, 3);
+    expect(Number(rects[0].getAttribute("width"))).toBeCloseTo(10 * PITCH, 3);
+    // Reversed ends describe the same band as the ordered pair.
+    expect(Number(rects[1].getAttribute("x"))).toBeCloseTo(3 * PITCH, 3);
+    expect(Number(rects[1].getAttribute("width"))).toBeCloseTo(4 * PITCH, 3);
+  });
+
+  it("adds a per-band class alongside the shared base class", () => {
+    const { container } = bandChart({
+      highlights: [
+        { from: 1, to: 2, class: "my-gap" },
+        { from: 5, to: 6 },
+      ],
+    });
+    const rects = bands(container);
+    expect(rects[0].getAttribute("class")).toBe(
+      "sui-scrub-chart__highlight my-gap",
+    );
+    // A band without a class carries the base class alone — no trailing space.
+    expect(rects[1].getAttribute("class")).toBe("sui-scrub-chart__highlight");
+  });
+
+  it("carries its default fill as a presentation attribute, not a CSS rule", () => {
+    // A base RULE and a caller's class are both single-class selectors, so the
+    // winner would be settled by stylesheet order — and the library's CSS
+    // loading last would flatten every band to the same neutral. A presentation
+    // attribute loses to any author rule, so the caller's class always wins.
+    const { container } = bandChart({ highlights: [{ from: 1, to: 2 }] });
+    const rect = bands(container)[0];
+    expect(rect.getAttribute("fill")).toContain(
+      "--sui-scrub-chart-highlight-fill",
+    );
+    expect(rect.getAttribute("opacity")).toContain(
+      "--sui-scrub-chart-highlight-opacity",
+    );
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "ScrubChart.css"),
+      "utf8",
+    );
+    expect(css).not.toMatch(/\.sui-scrub-chart__highlight\s*\{/);
+  });
+
+  it("paints beneath the gridlines and the series", () => {
+    const { container } = bandChart({
+      highlights: [{ from: 1, to: 2 }],
+      showGridlines: true,
+      yDomain: [0, 100],
+    });
+    const frame = container.querySelector(".sui-scrub-chart__frame")!;
+    const order = Array.from(frame.children);
+    const at = (selector: string) =>
+      order.findIndex((el) => el.matches(selector));
+    expect(at(".sui-scrub-chart__highlights")).toBe(0);
+    expect(at(".sui-scrub-chart__highlights")).toBeLessThan(
+      at(".sui-scrub-chart__grid"),
+    );
+    expect(at(".sui-scrub-chart__grid")).toBeLessThan(
+      at('[data-testid="series"]'),
+    );
   });
 });

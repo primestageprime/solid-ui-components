@@ -8,6 +8,7 @@
 // (index.ts) re-exports, so they MUST keep their exact identifiers and shapes:
 //
 //   • ScrubChartXTickCadence  — the cadence enum a consumer asks for.
+//   • ScrubChartHighlight     — one shaded band spanning a cell range.
 //   • ResolvedXTickCadence    — the cadence actually chosen (never auto/none).
 //   • ScrubChartContext<C>    — the render-slot context handed to renderChart.
 //   • ScrubChartProps<C>      — the full prop surface of <ScrubChart>.
@@ -36,6 +37,35 @@ export type ScrubChartXTickCadence =
 
 /** Resolved cadence — never `"auto"` or `"none"`, just the unit actually used. */
 export type ResolvedXTickCadence = "week" | "month" | "quarter" | "year";
+
+/**
+ * One HIGHLIGHT BAND: a shaded rect spanning the cells from `from` to `to`,
+ * drawn beneath the series so the data still reads over it — "this stretch of
+ * the x-axis means something" (a funding gap, a forecast horizon, a quarter).
+ *
+ * The range is stated in CELL INDICES, not pixels or dates, because a caller
+ * already picks its cells and the chart already owns the index → pixel map.
+ * Both ends are INCLUSIVE and cover the FULL cell, so a one-cell band is
+ * `{ from: i, to: i }` and it spans that cell's whole width — the same
+ * convention the window band follows. ScrubChart clamps both ends to the cell
+ * range and swaps them when `from > to`, so a band computed from live data
+ * cannot draw outside the plot.
+ *
+ * Vertical extent is the whole plot; there is no y range. A band bounded in y
+ * is a different shape — see `CashflowBalanceSeries.fill` for that one.
+ */
+export interface ScrubChartHighlight {
+  /** First cell index inside the band (inclusive). */
+  from: number;
+  /** Last cell index inside the band (inclusive). */
+  to: number;
+  /** Extra CSS class on this band's rect ONLY, alongside the shared base class
+   *  (`.sui-scrub-chart__highlight`) — fill and opacity are the consumer's to
+   *  define on this class. Per-band because two bands on one chart routinely
+   *  carry different meanings, and styling one through the shared base class
+   *  recolours every other band too. */
+  class?: string;
+}
 
 /** Context passed to the consumer's `renderChart`. */
 export interface ScrubChartContext<C extends Cell> {
@@ -127,6 +157,14 @@ export interface ScrubChartProps<C extends Cell> {
   ribbonAccentDashed?: boolean;
   /** `today` Date forwarded to the inner DateAxis. */
   today?: Date;
+
+  // ── Highlight bands (optional) ───────────────────────────────────────
+
+  /** Shaded bands over cell ranges, drawn BENEATH the gridlines and the
+   *  `renderChart` series so the data paints over them. Default: none. Bands
+   *  render in array order, so a later band paints over an earlier one where
+   *  they overlap. See `ScrubChartHighlight`. */
+  highlights?: ScrubChartHighlight[];
 
   // ── Y-axis (optional) ────────────────────────────────────────────────
 

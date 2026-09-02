@@ -42,6 +42,17 @@ const fmtDate = (d: Date): string =>
     timeZone: "UTC",
   });
 
+// The window the "bounded highlight" example marks out: ONE pair of indices
+// feeding both the `highlights` band and the two edge rules the consumer draws
+// itself. Stated once on purpose — a band and its boundary lines that read
+// different numbers drift apart the first time either is edited.
+const RUNWAY_WINDOW = {
+  from: 55,
+  to: 110,
+  fromLabel: "Raise closes",
+  toLabel: "Runway ends",
+};
+
 const renderCashflowChart = (
   ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
 ) => {
@@ -104,6 +115,70 @@ const renderScaledChart = (
       preserveAspectRatio="none"
       class="scrub-chart-demo__svg"
     >
+      <polyline
+        points={points}
+        fill="none"
+        stroke="var(--sui-accent)"
+        stroke-width={1.6}
+      />
+    </svg>
+  );
+};
+
+// The same scaled curve, plus the two EDGE RULES that bound the highlight
+// band. ScrubChart draws the shaded area; the vertical lines and their
+// captions are the consumer's, drawn here in the `renderChart` slot.
+//
+// Both rules land on the band's own edges because they read the SAME geometry
+// ScrubChart reads: a band from `from` to `to` covers those cells entirely, so
+// its left edge is `cellBounds(from)[0]` and its right edge is
+// `cellBounds(to)[1]`. Nothing here needs to know the pixel pitch.
+const renderBoundedChart = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => {
+  const toY = ctx.yToPlot ?? ((cents: number) => cents);
+  const points = ctx.cells
+    .map(
+      (c, i) =>
+        `${ctx.cellToX(i).toFixed(1)},${toY(c.balanceCents).toFixed(1)}`,
+    )
+    .join(" ");
+  const leftX = ctx.cellBounds(RUNWAY_WINDOW.from)[0];
+  const rightX = ctx.cellBounds(RUNWAY_WINDOW.to)[1];
+  // Captions sit just inside their own edge, at the top of the plot: the left
+  // one runs rightwards into the band, the right one runs leftwards, so
+  // neither can clip off the chart when the window sits against an edge.
+  const captionY = ctx.plotTop + 12;
+  return (
+    <svg
+      viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+      preserveAspectRatio="none"
+      class="scrub-chart-demo__svg"
+    >
+      <line
+        class="scrub-chart-demo__edge"
+        x1={leftX}
+        x2={leftX}
+        y1={ctx.plotTop}
+        y2={ctx.plotBottom}
+      />
+      <line
+        class="scrub-chart-demo__edge"
+        x1={rightX}
+        x2={rightX}
+        y1={ctx.plotTop}
+        y2={ctx.plotBottom}
+      />
+      <text class="scrub-chart-demo__edge-label" x={leftX + 6} y={captionY}>
+        {RUNWAY_WINDOW.fromLabel}
+      </text>
+      <text
+        class="scrub-chart-demo__edge-label scrub-chart-demo__edge-label--end"
+        x={rightX - 6}
+        y={captionY}
+      >
+        {RUNWAY_WINDOW.toLabel}
+      </text>
       <polyline
         points={points}
         fill="none"
@@ -191,6 +266,76 @@ export const ScrubChartShowcase: Component = () => {
           xTickCadence="auto"
           renderCell={cashflowDayCell}
           renderChart={renderScaledChart}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>Highlight bands over a range of days</h3>
+        <p class="text-meta">
+          <code>highlights</code> shades a range of cells beneath the gridlines
+          and beneath the series, so the data still reads over the band. A band
+          names a stretch of the x-axis — a funding gap, a forecast horizon, a
+          quarter. The range is stated in <strong>cell indices</strong>, both
+          ends inclusive, and ScrubChart clamps them to the cell range, so a
+          band computed from live data cannot draw outside the plot. Each band
+          takes its own <code>class</code>; the shared base class supplies only
+          a faint neutral, so recolouring one band never touches another. OPT-IN
+          — leave the prop off and no band is drawn.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          showGridlines
+          highlights={[
+            { from: 20, to: 34, class: "scrub-chart-demo__band--gap" },
+            {
+              from: 95,
+              to: cells.length - 1,
+              class: "scrub-chart-demo__band--forecast",
+            },
+          ]}
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderScaledChart}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>A highlight bounded by two labelled rules</h3>
+        <p class="text-meta">
+          The band alone shades a stretch; the two rules say what its edges
+          MEAN. ScrubChart owns the shaded area, and the vertical lines and
+          their captions are the consumer's, drawn in the{" "}
+          <code>renderChart</code> slot. The two agree because they read the
+          same geometry: a band from <code>from</code> to <code>to</code> covers
+          those cells entirely, so its edges are{" "}
+          <code>cellBounds(from)[0]</code> and <code>cellBounds(to)[1]</code>.
+          Both the band and the rules here read one <code>RUNWAY_WINDOW</code>{" "}
+          constant, so editing the range moves all three marks together. Base
+          ScrubChart draws no rule of its own — <code>CashflowScrubChart</code>{" "}
+          ships a labelled one as <code>markers</code> with{" "}
+          <code>variant: "rule"</code>.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          showGridlines
+          highlights={[
+            {
+              from: RUNWAY_WINDOW.from,
+              to: RUNWAY_WINDOW.to,
+              class: "scrub-chart-demo__band--window",
+            },
+          ]}
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderBoundedChart}
         />
       </div>
 

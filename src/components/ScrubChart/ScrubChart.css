@@ -21,6 +21,25 @@
   overflow: hidden;
 }
 
+/* Highlight bands — opt-in (`highlights`) shaded rects over cell ranges.
+   The BOTTOM layer of the frame: it sits under the gridline layer and under
+   the consumer's renderChart content, so a band backs the data instead of
+   dimming it. Deliberately faint — a band names a stretch of the x-axis, it
+   does not compete with the series.
+
+   There is NO `.sui-scrub-chart__highlight` rule here on purpose. The fill and
+   the opacity ride on the rect as presentation attributes instead, so a
+   caller's own class on one band always wins — a base rule here would tie with
+   that class on specificity and be settled by stylesheet order. Themes set
+   --sui-scrub-chart-highlight-fill / --sui-scrub-chart-highlight-opacity. */
+.sui-scrub-chart__highlights {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 /* Window-band overlay — translucent rect spanning the slice of cells
    currently visible in the DateAxis viewport. Positioned absolutely on
    top of the user's renderChart content; pointer-events disabled so the
