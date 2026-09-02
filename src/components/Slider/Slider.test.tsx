@@ -127,6 +127,141 @@ describe("Slider", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  // ── ticks ──────────────────────────────────────────────────────────────
+  // The notches are decoration over kobalte's track, so every assertion here
+  // reads the DOM the consumer's stylesheet sees.
+  const ticksOf = (container: HTMLElement): readonly string[] =>
+    Array.from(container.querySelectorAll(".sui-slider__tick"), (tick) =>
+      tick.getAttribute("data-value") ?? "",
+    );
+
+  it("renders no ticks when the prop is absent", () => {
+    const { container } = render(() => (
+      <Slider label="Buffer" value={6} onChange={() => {}} min={3} max={18} />
+    ));
+    expect(container.querySelectorAll(".sui-slider__tick")).toHaveLength(0);
+  });
+
+  it("renders no ticks for ticks={false}", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={() => {}}
+        min={3}
+        max={18}
+        ticks={false}
+      />
+    ));
+    expect(container.querySelectorAll(".sui-slider__tick")).toHaveLength(0);
+  });
+
+  it("ticks={true} marks every step from min to max inclusive", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Annual raise"
+        value={3.5}
+        onChange={() => {}}
+        min={0}
+        max={15}
+        step={0.5}
+        ticks
+      />
+    ));
+    // 0, 0.5, … 15 — both ends carry a notch, so the count is steps + 1.
+    expect(ticksOf(container)).toHaveLength(31);
+  });
+
+  it("ticks={true} stops short rather than marking past max", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Churn"
+        value={4}
+        onChange={() => {}}
+        min={0}
+        max={15}
+        step={4}
+        ticks
+      />
+    ));
+    expect(ticksOf(container)).toEqual(["0", "4", "8", "12"]);
+  });
+
+  it("an explicit list marks exactly those values and ignores step", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Months to sample"
+        value={6}
+        onChange={() => {}}
+        min={3}
+        max={24}
+        step={1}
+        ticks={[3, 6, 12, 18, 24]}
+      />
+    ));
+    expect(ticksOf(container)).toEqual(["3", "6", "12", "18", "24"]);
+  });
+
+  it("drops a tick outside the domain instead of pulling it to the edge", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={() => {}}
+        min={3}
+        max={18}
+        ticks={[0, 3, 12, 18, 24]}
+      />
+    ));
+    expect(ticksOf(container)).toEqual(["3", "12", "18"]);
+  });
+
+  it("marks a passed tick apart from one the thumb has not reached", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={10}
+        onChange={() => {}}
+        min={0}
+        max={20}
+        ticks={[0, 10, 20]}
+      />
+    ));
+    const passed = container.querySelectorAll(".sui-slider__tick--passed");
+    // The tick under the thumb counts as passed: the fill reaches it.
+    expect(passed).toHaveLength(2);
+  });
+
+  it("hides every tick from the accessibility tree", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Buffer"
+        value={6}
+        onChange={() => {}}
+        min={0}
+        max={20}
+        step={1}
+        ticks
+      />
+    ));
+    const hidden = container.querySelectorAll(
+      '.sui-slider__tick[aria-hidden="true"]',
+    );
+    expect(hidden).toHaveLength(21);
+  });
+
+  it("createSlider curries a tick set alongside the formatter", () => {
+    const QuarterSlider = createSlider({
+      format: (n) => `${n}%`,
+      ticks: [0, 25, 50, 75, 100],
+    });
+    const { container, getByText } = render(() => (
+      <QuarterSlider label="Share" value={40} onChange={() => {}} min={0} max={100} />
+    ));
+    expect(getByText("40%")).toBeTruthy();
+    expect(ticksOf(container)).toEqual(["0", "25", "50", "75", "100"]);
+  });
+
   it("createSlider curries the formatter", () => {
     const MonthsSlider = createSlider({ format: (n) => `${n} months` });
     const { getByText } = render(() => (
