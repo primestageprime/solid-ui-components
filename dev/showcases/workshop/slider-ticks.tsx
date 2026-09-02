@@ -1,37 +1,30 @@
 // ============================================
-// PROTOTYPE — Slider tick marks. THROWAWAY. Delete after the decision.
+// PROTOTYPE — Slider tick marks. THROWAWAY. Delete once `Slider` ships ticks.
 //
 // THE QUESTION: what should tick marks on SUI's `Slider` track look like?
+// THE ANSWER: notches. Short lines ON the track, over the fill, with no text.
 //
-// Three structurally different answers, switchable at the bottom of the page
-// or with ArrowLeft / ArrowRight:
-//   A — Notches.         Short lines ON the track, over the fill. No text.
-//   B — Labelled rail.   A rail UNDER the track. Every tick prints its value.
-//   C — Segmented track. A gap and a cap at every tick. The ticks ARE the bar.
+// A labelled rail under the track and a segmented track both lost. The rail
+// prints a value at every tick, which is unreadable once a slider names more
+// than about eight stops. The segmented track reads well but says less than
+// the notch does. Both live on the `prototype/slider-ticks` branch.
 //
-// Every variant renders the same six cases: the five real sliders from the
-// ticket, then `annual pay` with ticks derived from `step` alone. That last
-// case is the evidence that a boolean `ticks` prop cannot work.
+// The bench renders the five real sliders from the ticket, then `annual pay`
+// with ticks derived from `step` alone. That last case draws 101 notches and
+// shows how the treatment degrades at the top of its range.
 //
-// Nothing here imports `src/components/Slider/Slider.tsx`. Each variant owns a
-// copy of the Kobalte wiring, so a variant can change the track markup.
+// Nothing here imports `src/components/Slider/Slider.tsx`. The variant owns a
+// copy of the Kobalte wiring, so it can change the track markup.
 // ============================================
-import { type Component, createSignal, Match, Switch } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { SectionTitle, TextBody } from "../../../src/components/Text";
 import type { CaseEntry } from "./slider-ticks/cases";
 import { TICK_CASES } from "./slider-ticks/cases";
 import { VariantAPanel } from "./slider-ticks/VariantANotches";
-import { VariantBPanel } from "./slider-ticks/VariantBRail";
-import { VariantCPanel } from "./slider-ticks/VariantCSegments";
-import {
-  readVariant,
-  type VariantId,
-  VariantSwitcher,
-} from "./slider-ticks/VariantSwitcher";
 
 export const meta = { label: "Slider Ticks" };
 
-/** One signal per case, built once. The values survive a variant switch. */
+/** One signal per case, built once. */
 const buildEntries = (): readonly CaseEntry[] =>
   TICK_CASES.map((tickCase) => {
     const [value, setValue] = createSignal(tickCase.initial);
@@ -40,28 +33,15 @@ const buildEntries = (): readonly CaseEntry[] =>
 
 const SliderTicksBench: Component = () => {
   const entries = buildEntries();
-  const [variant, setVariant] = createSignal<VariantId>(readVariant());
 
   return (
     <div class="component-section component-section--full">
       <SectionTitle>Slider Ticks</SectionTitle>
       <TextBody>
-        Prototype. Compare three tick treatments on the five real sliders and on
-        one stress case. Use the arrows at the bottom, or ArrowLeft and
-        ArrowRight.
+        Prototype. Notches on the track, drawn on the five real sliders and on
+        one stress case that derives its ticks from `step` alone.
       </TextBody>
-      <Switch>
-        <Match when={variant() === "A"}>
-          <VariantAPanel entries={entries} />
-        </Match>
-        <Match when={variant() === "B"}>
-          <VariantBPanel entries={entries} />
-        </Match>
-        <Match when={variant() === "C"}>
-          <VariantCPanel entries={entries} />
-        </Match>
-      </Switch>
-      <VariantSwitcher variant={variant()} onSelect={setVariant} />
+      <VariantAPanel entries={entries} />
     </div>
   );
 };
