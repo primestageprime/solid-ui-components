@@ -1,0 +1,56 @@
+/* ============================================
+   PROTOTYPE — Variant B, labelled rail.
+   A rail UNDER the track. Each tick draws a line and its formatted text.
+   The rail carries the same horizontal inset as the track (half a thumb), so
+   a tick at min lines up with the thumb at min.
+   ============================================ */
+.slider-ticks-b__rail {
+  position: relative;
+  height: 28px;
+  margin: 0 calc(var(--sui-slider-thumb-size) / 2);
+}
+
+.slider-ticks-b__tick {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* Edge clamping. The group shifts so its text stays inside the rail, and the
+   cross-axis alignment moves the LINE back onto the true tick position. */
+.slider-ticks-b__tick--first {
+  align-items: flex-start;
+  transform: none;
+}
+
+.slider-ticks-b__tick--last {
+  align-items: flex-end;
+  transform: translateX(-100%);
+}
+
+.slider-ticks-b__line {
+  width: 1px;
+  height: 6px;
+  background: var(--sui-border);
+}
+
+.slider-ticks-b__tick--passed .slider-ticks-b__line {
+  background: var(--sui-accent);
+}
+
+.slider-ticks-b__text {
+  color: var(--sui-text-secondary);
+  font-family: var(--sui-font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.slider-ticks-b__tick--passed .slider-ticks-b__text {
+  color: var(--sui-text-primary);
+}
