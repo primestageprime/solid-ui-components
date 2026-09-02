@@ -120,18 +120,16 @@
   stroke-dasharray: 4 4;
 }
 
-.sui-cashflow-scrub-chart__line {
-  fill: none;
-  stroke: var(--sui-accent, #00a8cc);
-  stroke-width: 1.6;
-}
-
-/* Extra balance lines (the `balanceSeries` prop). Muted default so they read
-   as secondary; consumers override colour / dash via their own series class. */
-.sui-cashflow-scrub-chart__line--series {
-  stroke: var(--sui-text-muted, rgba(255, 255, 255, 0.45));
-  stroke-width: 1.4;
-}
+/* Balance lines — NO default rule here, for the primary line or for the
+   `balanceSeries` ones. Their fill, stroke and stroke-width ride on each
+   polyline as presentation attributes so a consumer's own class on a line wins
+   whatever order the stylesheets load in; a rule here would tie with that
+   class on specificity and be settled by sheet order. Consumers were writing
+   `.sui-cashflow-scrub-chart__line.their-class` purely to break that tie.
+   Themes move the defaults through --sui-cashflow-line-stroke (primary) and
+   --sui-cashflow-series-stroke (overlay series). The emphasis rules further
+   down keep their rules AND their double-class selectors on purpose — those
+   must beat a consumer's class, which is the opposite requirement. */
 
 /* Variance band (the `balanceSeries[].fill` option) — diverging shade between
    a series and its baseline. Green where the series is above the baseline,

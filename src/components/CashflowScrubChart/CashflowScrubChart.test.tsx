@@ -741,6 +741,54 @@ describe("CashflowScrubChart hover", () => {
     }
   });
 
+  it("keeps SUI's line defaults off the stylesheet, on tokens that exist", () => {
+    // Companion to the hover-dot guard above, for the two BALANCE LINES.
+    // Both halves matter and neither is visible from the other: the defaults
+    // must not be a CSS rule (a rule ties with a consumer's own class and lets
+    // stylesheet order pick the winner, which is what forced consumers into
+    // `.sui-cashflow-scrub-chart__line.their-class`), and every token they
+    // name must exist (an unresolvable var() falls back to `stroke: none` and
+    // the line vanishes — the way `--sui-text` did on the dot).
+    const cells = makeCells(10);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        balanceSeries={[
+          { id: "s1", balanceCents: (c: CashflowCell) => c.balanceCents + 5000 },
+        ]}
+      />
+    ));
+    const here = dirname(fileURLToPath(import.meta.url));
+    const css = readFileSync(join(here, "CashflowScrubChart.css"), "utf8");
+    const theme = readFileSync(
+      join(here, "..", "..", "themes", "default.css"),
+      "utf8",
+    );
+    // No default rule for either line class. The emphasis selectors are
+    // double-class and must survive — match only a lone class + brace.
+    expect(css).not.toMatch(/\.sui-cashflow-scrub-chart__line\s*\{/);
+    expect(css).not.toMatch(/\.sui-cashflow-scrub-chart__line--series\s*\{/);
+
+    const primary = container.querySelector("[data-primary-line]")!;
+    const series = container.querySelector("[data-series-id]")!;
+    for (const line of [primary, series]) {
+      expect(line.getAttribute("fill")).toBe("none");
+      expect(Number(line.getAttribute("stroke-width"))).toBeGreaterThan(0);
+      const tokens = Array.from(
+        (line.getAttribute("stroke") ?? "").matchAll(/var\(\s*(--[a-z0-9-]+)/g),
+        (m) => m[1],
+      );
+      // An override var, then the theme token it falls back to.
+      expect(tokens.length).toBe(2);
+      expect(theme).toContain(`${tokens[1]}:`);
+    }
+    // The two lines take DIFFERENT defaults — a series reads as secondary.
+    expect(primary.getAttribute("stroke")).not.toBe(
+      series.getAttribute("stroke"),
+    );
+  });
+
   it("draws nothing on hover when hover is off", () => {
     const cells = makeCells(6);
     const { container } = render(() => (

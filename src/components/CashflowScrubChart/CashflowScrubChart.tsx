@@ -402,9 +402,26 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
                   `series:${series.id}`,
                 )}`}
                 // The colour effect reads this line's stroke back through
-                // this attribute, and gives it to the series label.
+                // this attribute, and gives it to the series label. It reads
+                // `getComputedStyle(el).stroke`, which a presentation
+                // attribute feeds like any rule, so the defaults below stay
+                // visible to it.
                 data-series-id={series.id}
                 points={seg}
+                // Defaults as PRESENTATION ATTRIBUTES rather than a rule in
+                // CashflowScrubChart.css — the same move already made for the
+                // hover dot and the highlight band, for the same reason: a
+                // base rule and a consumer's series class are both
+                // single-class selectors, so the winner was decided by which
+                // stylesheet loaded last. Consumers were writing
+                // `.sui-cashflow-scrub-chart__line.their-class` purely to
+                // break that tie. A presentation attribute loses to any author
+                // rule, so a plain single class is enough now. The emphasis
+                // rules keep their double-class selectors and still win, which
+                // is what keeps a highlighted line at full strength.
+                fill="none"
+                stroke="var(--sui-cashflow-series-stroke, var(--sui-text-muted, rgba(255, 255, 255, 0.45)))"
+                stroke-width="1.4"
               />
             )}
           </For>
@@ -558,6 +575,11 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             // attribute, and gives it to the `lineLabel` caption.
             data-primary-line={PRIMARY_LABEL_ID}
             points={points}
+            // Presentation attributes, so `lineClass` wins on a plain single
+            // class whatever the stylesheet order — see the series line above.
+            fill="none"
+            stroke="var(--sui-cashflow-line-stroke, var(--sui-accent, rgba(0, 168, 204, 1)))"
+            stroke-width="1.6"
           />
           {/* `layer: "over"` series paint last so a dashed line laid exactly
               over the solid primary stays visible instead of being buried. */}
