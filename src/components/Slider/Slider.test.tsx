@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
-import { createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { Slider, createSlider } from "./Slider";
 import { installFakeSizer, type FakeSizer } from "../../test-utils";
 
@@ -487,5 +487,142 @@ describe("Slider", () => {
       />
     ));
     expect(getByText("12 months")).toBeTruthy();
+  });
+});
+
+describe("Slider — valueLabel", () => {
+  /** The caller's node: three readings of one discount, each one typeable. */
+  const ThreeFigures: Component<{
+    percent: number;
+    onPercent: (percent: number) => void;
+  }> = (props) => (
+    <span class="discount-readout">
+      <input
+        aria-label="Discount percent"
+        value={`${props.percent}%`}
+        onChange={(event) =>
+          props.onPercent(Number.parseFloat(event.currentTarget.value))
+        }
+      />
+      <input
+        aria-label="Discount per year"
+        value={`$${(props.percent * 20).toFixed(2)}/yr`}
+        onChange={(event) =>
+          props.onPercent(Number.parseFloat(event.currentTarget.value) / 20)
+        }
+      />
+    </span>
+  );
+
+  it("draws the caller's node in place of the value label", () => {
+    const { container, getByLabelText } = render(() => (
+      <Slider
+        label="Annual discount"
+        value={9}
+        onChange={() => {}}
+        min={0}
+        max={20}
+        format={(n) => `${n}%`}
+        valueLabel={<ThreeFigures percent={9} onPercent={() => {}} />}
+      />
+    ));
+    expect(container.querySelector(".sui-slider__value")).toBeNull();
+    expect(container.querySelector(".discount-readout")).toBeTruthy();
+    expect(
+      (getByLabelText("Discount per year") as HTMLInputElement).value,
+    ).toBe("$180.00/yr");
+  });
+
+  it("keeps the caller's own fields typeable", () => {
+    const onChange = vi.fn();
+    const [percent, setPercent] = createSignal(9);
+    const { getByLabelText } = render(() => (
+      <Slider
+        label="Annual discount"
+        value={percent()}
+        onChange={onChange}
+        min={0}
+        max={20}
+        valueLabel={<ThreeFigures percent={percent()} onPercent={setPercent} />}
+      />
+    ));
+    const perYear = getByLabelText("Discount per year") as HTMLInputElement;
+    fireEvent.change(perYear, { target: { value: "240" } });
+    expect(percent()).toBe(12);
+    // The caller owns the parse, so the slider itself emits nothing.
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  // A node changes what a reader SEES, not what the thumb is worth.
+  it("still announces format(value) on the thumb", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Annual discount"
+        value={9}
+        onChange={() => {}}
+        min={0}
+        max={20}
+        format={(n) => `${n}% a year`}
+        valueLabel={<span class="discount-readout">9% | $136/mo</span>}
+      />
+    ));
+    const thumb = container.querySelector('[role="slider"]');
+    expect(thumb?.getAttribute("aria-valuetext")).toBe("9% a year");
+  });
+
+  it("still draws the label and the track", () => {
+    const { container, getByText } = render(() => (
+      <Slider
+        label="Annual discount"
+        value={9}
+        onChange={() => {}}
+        min={0}
+        max={20}
+        valueLabel={<span class="discount-readout">9%</span>}
+      />
+    ));
+    expect(getByText("Annual discount")).toBeTruthy();
+    expect(container.querySelector(".sui-slider__track")).toBeTruthy();
+  });
+});
+
+describe("Slider — type-level enforcement", () => {
+  it("forbids `editable` beside `valueLabel` at compile time", () => {
+    const shared = {
+      label: "Annual discount",
+      value: 9,
+      onChange: () => {},
+      min: 0,
+      max: 20,
+    } as const;
+    // SUI's own readout, formatted:
+    const _plain = <Slider {...shared} />;
+    // SUI's own readout, as a field:
+    const _editable = <Slider {...shared} editable />;
+    // The caller's node:
+    const _drawn = <Slider {...shared} valueLabel={<span>9%</span>} />;
+    const _both = (
+      // @ts-expect-error — SUI cannot draw a field in a place it gave away
+      <Slider {...shared} editable valueLabel={<span>9%</span>} />
+    );
+    void _plain;
+    void _editable;
+    void _drawn;
+    void _both;
+    expect(true).toBe(true);
+  });
+
+  it("forbids the pair on a curried variant too", () => {
+    const PercentSlider = createSlider({ format: (n) => `${n}%` });
+    const _drawn: Parameters<typeof PercentSlider>[0] = {
+      label: "Annual discount",
+      value: 9,
+      onChange: () => {},
+      min: 0,
+      max: 20,
+      valueLabel: <span>9%</span>,
+    };
+    void _drawn;
+    expect(true).toBe(true);
   });
 });
