@@ -12,6 +12,14 @@
 // right, so a caption reads "Months of runway" / "6 months" on one line and
 // the control needs no separate readout beside it.
 //
+// `valueLabel` hands that readout to the caller. The caption, the label line
+// and the track stay SUI's, and the caller draws its own node where the figure
+// went — one value with several honest readings then shows all of them where a
+// person looks for the value. `format` still governs the thumb's
+// `aria-valuetext`, because a node changes what a reader SEES, not what the
+// thumb is worth. `editable` and `valueLabel` are a compile error together:
+// SUI cannot draw a field in a place it gave away.
+//
 // The value is in the CONSUMER'S OWN UNITS. The component runs no arithmetic
 // on it beyond Kobalte's step snapping, and it formats nothing itself — a
 // dial that keeps integer cents passes cents and a `format` that renders
@@ -40,13 +48,21 @@ import {
   Slider as KobalteSlider,
   type SliderRootProps as KobalteSliderRootProps,
 } from "@kobalte/core/slider";
-import { type Component, For, Show, createSignal, splitProps } from "solid-js";
+import {
+  type Component,
+  For,
+  type JSX,
+  Match,
+  Switch,
+  createSignal,
+  splitProps,
+} from "solid-js";
 import { filter } from "../../fn";
 import { clamp } from "../../internal/math/clamp";
 import "./Slider.css";
 
-/** Props owned by `Slider`; everything else is kobalte passthrough. */
-interface SliderOwnProps {
+/** Props owned by `Slider`, whichever node draws the value. */
+interface SliderBaseProps {
   /** Current value, controlled, in the consumer's own units. */
   value: number;
   /** Called when a drag or a thumb-moving key changes the value. Never at mount. */
@@ -65,10 +81,27 @@ interface SliderOwnProps {
    *
    * Without it kobalte reads the value as a percentage of `max`, which is
    * wrong for any domain that does not start at zero.
+   *
+   * It still governs the thumb's announcement when `valueLabel` draws the
+   * visible readout. A caller's node changes what a reader SEES, not what the
+   * thumb is worth.
    */
   format?: (value: number) => string;
   /** Whether the control is disabled. */
   disabled?: boolean;
+  /**
+   * Notches drawn on the track. `true` marks every `step` from `min` to `max`
+   * inclusive; an array marks exactly those values and ignores `step`. Omitted
+   * or `false` draws nothing.
+   *
+   * A value outside `[min, max]` is dropped, not pulled to the edge — a notch
+   * at an unreachable value would lie about the domain.
+   */
+  ticks?: boolean | readonly number[];
+}
+
+/** SUI draws the readout: one figure, `format(value)`. */
+interface FormattedReadoutProps {
   /**
    * Turn the value readout into an editable field. Off by default.
    *
@@ -84,23 +117,46 @@ interface SliderOwnProps {
    * a spinner next to a thumb is a second stepper saying the same thing.
    */
   editable?: boolean;
-  /**
-   * Notches drawn on the track. `true` marks every `step` from `min` to `max`
-   * inclusive; an array marks exactly those values and ignores `step`. Omitted
-   * or `false` draws nothing.
-   *
-   * A value outside `[min, max]` is dropped, not pulled to the edge — a notch
-   * at an unreachable value would lie about the domain.
-   */
-  ticks?: boolean | readonly number[];
+  /** Not used beside SUI's own readout; kept here so the union narrows cleanly. */
+  valueLabel?: never;
 }
 
-/** `Slider` combines the owned props with kobalte's forwarded root props. */
-export type SliderProps = SliderOwnProps &
-  Omit<
-    KobalteSliderRootProps,
-    "value" | "defaultValue" | "onChange" | "minValue" | "maxValue" | "step"
-  >;
+/** The caller draws the readout. */
+interface DrawnReadoutProps {
+  /**
+   * A node drawn in place of the value readout — the value label, or the
+   * `editable` field. The caption, the label line and the track stay SUI's.
+   *
+   * Pass it when one value has more than one honest reading. An annual
+   * discount reads as a percent, as a price per month and as a price per
+   * year, and a person types whichever figure they hold. The caller draws
+   * each figure inside the node and parses each one itself.
+   *
+   * The label line stays ONE row. Lay out and wrap the figures inside the
+   * node.
+   */
+  valueLabel: JSX.Element;
+  /** Not used beside a caller's node; kept here so the union narrows cleanly. */
+  editable?: never;
+}
+
+/** Kobalte root props this component forwards untouched. */
+type SliderPassthroughProps = Omit<
+  KobalteSliderRootProps,
+  "value" | "defaultValue" | "onChange" | "minValue" | "maxValue" | "step"
+>;
+
+/**
+ * `Slider` combines the owned props with kobalte's forwarded root props.
+ *
+ * The two readout shapes are a union, not one shape with two optional fields,
+ * so `editable` beside `valueLabel` is a COMPILE error. SUI cannot draw a
+ * field and hand the same place to the caller, and a runtime warning would
+ * hide the mistake until the page ran.
+ */
+export type SliderProps =
+  | (SliderBaseProps & FormattedReadoutProps & SliderPassthroughProps)
+  | (SliderBaseProps & DrawnReadoutProps & SliderPassthroughProps);
 
 /**
  * Static visual decisions — curried at definition time by `createSlider`.
@@ -108,11 +164,26 @@ export type SliderProps = SliderOwnProps &
  * `ticks` joins `format` because a tick set is a property of the SCALE, not of
  * the reading: a percentage dial marks quarters and a runway dial marks
  * quarters of a year, whatever value the caller holds today.
+ *
+ * `valueLabel` stays OUT of it. A curried override is a static style decision;
+ * a readout node is per-instance content that holds the caller's own fields
+ * and its own signals, the way `label` and `value` do.
  */
 export type SliderOverrides = Pick<SliderProps, "format" | "ticks">;
 
+/**
+ * Distribute `Omit` across a union, so each member keeps its own shape.
+ *
+ * A plain `Omit` over a union collapses it into ONE object that carries every
+ * key, which would let a curried variant take `editable` and `valueLabel`
+ * together — the pair the union exists to forbid.
+ */
+type OmitFromEach<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
 /** What a curried variant exposes: everything except the curried overrides. */
-export type SliderDataProps = Omit<SliderProps, keyof SliderOverrides>;
+export type SliderDataProps = OmitFromEach<SliderProps, keyof SliderOverrides>;
 
 const DEFAULT_STEP = 1;
 
@@ -223,6 +294,7 @@ export const Slider: Component<SliderProps> = (props) => {
     "disabled",
     "ticks",
     "editable",
+    "valueLabel",
   ]);
 
   const format = (value: number): string => (local.format ?? String)(value);
@@ -274,41 +346,48 @@ export const Slider: Component<SliderProps> = (props) => {
         <KobalteSlider.Label class="sui-slider__label">
           {local.label}
         </KobalteSlider.Label>
-        <Show
-          when={local.editable}
+        {/* Three readouts, one place: the caller's node, SUI's field, or
+            SUI's value label. `valueLabel` wins because a caller who draws
+            the value owns it. */}
+        <Switch
           fallback={<KobalteSlider.ValueLabel class="sui-slider__value" />}
         >
-          <input
-            class="sui-slider__value sui-slider__value--editable"
-            type="text"
-            inputmode="decimal"
-            aria-label={`${local.label} value`}
-            disabled={local.disabled}
-            value={readout()}
-            // `size` tracks the text so the field is exactly as wide as what
-            // it shows. An input has no intrinsic content sizing, and a fixed
-            // width would either clip "cell 0–27" or leave a gap after "6".
-            size={readout().length || 1}
-            onFocus={(event) => {
-              setDraft(String(local.value));
-              event.currentTarget.select();
-            }}
-            onInput={(event) => setDraft(event.currentTarget.value)}
-            onBlur={(event) => commitDraft(event.currentTarget.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                event.currentTarget.blur();
-              } else if (event.key === "Escape") {
-                setDraft(null);
-                event.currentTarget.blur();
-              }
-              // Kobalte's root moves the thumb on arrow keys. Inside the
-              // field those keys belong to the caret.
-              event.stopPropagation();
-            }}
-          />
-        </Show>
+          <Match when={local.valueLabel !== undefined}>
+            {local.valueLabel}
+          </Match>
+          <Match when={local.editable}>
+            <input
+              class="sui-slider__value sui-slider__value--editable"
+              type="text"
+              inputmode="decimal"
+              aria-label={`${local.label} value`}
+              disabled={local.disabled}
+              value={readout()}
+              // `size` tracks the text so the field is exactly as wide as what
+              // it shows. An input has no intrinsic content sizing, and a fixed
+              // width would either clip "cell 0–27" or leave a gap after "6".
+              size={readout().length || 1}
+              onFocus={(event) => {
+                setDraft(String(local.value));
+                event.currentTarget.select();
+              }}
+              onInput={(event) => setDraft(event.currentTarget.value)}
+              onBlur={(event) => commitDraft(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  event.currentTarget.blur();
+                } else if (event.key === "Escape") {
+                  setDraft(null);
+                  event.currentTarget.blur();
+                }
+                // Kobalte's root moves the thumb on arrow keys. Inside the
+                // field those keys belong to the caret.
+                event.stopPropagation();
+              }}
+            />
+          </Match>
+        </Switch>
       </div>
       <KobalteSlider.Track class="sui-slider__track">
         <KobalteSlider.Fill class="sui-slider__fill" />

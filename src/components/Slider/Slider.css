@@ -32,6 +32,10 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--sui-space-2);
+  /* A `valueLabel` node carries the caller's own fields, which can be wider
+     than the column. Without this the line refuses to shrink below their
+     content and pushes past the control. */
+  min-width: 0;
 }
 
 .sui-slider__label {
