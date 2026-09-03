@@ -2677,3 +2677,52 @@ th:has(.tf-th-center) .hud-table__header-content {
 .slider-rail-demo {
   width: 290px;
 }
+
+/* Slider `valueLabel`: the caller's own readout, three readings of one
+   discount. A suite card is wider than the draw rail, so this demo takes the
+   width that card gives it. */
+.slider-discount-demo {
+  width: 420px;
+}
+
+/* The caller's node lays out and wraps its OWN figures. The label line above
+   stays one flex row. */
+.slider-discount-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 0;
+}
+
+.slider-discount-field {
+  appearance: textfield;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  /* `size` sizes the CONTENT box in characters, and the reset sets
+     `box-sizing: border-box`, which would take the padding out of that width
+     and clip the last character. */
+  box-sizing: content-box;
+  color: var(--sui-text-primary);
+  font-family: var(--sui-font-mono, ui-monospace, monospace);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0 3px;
+  text-align: right;
+}
+
+.slider-discount-field:hover {
+  border-color: var(--sui-border);
+}
+
+.slider-discount-field:focus {
+  border-color: var(--sui-border-focus);
+  outline: none;
+}
+
+.slider-discount-sep {
+  color: var(--sui-text-muted);
+  font-size: 0.875rem;
+}

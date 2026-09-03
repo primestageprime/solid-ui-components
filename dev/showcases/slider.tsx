@@ -70,6 +70,134 @@ const MountCounter: Component = () => {
   );
 };
 
+/* ── valueLabel: one discount, three readings ────────────────────────────
+   The suite card that asked for this. A coach reads the percent against the
+   track, the monthly figure against the monthly plan, and the yearly figure
+   against the invoice. Each one is a field, because a coach who knows they
+   want $1,627.08 types it rather than hunting for the percent. */
+
+/** The monthly plan the annual price discounts, in whole dollars. */
+const LIST_PER_MONTH = 149;
+const MONTHS_PER_YEAR = 12;
+const LIST_PER_YEAR = LIST_PER_MONTH * MONTHS_PER_YEAR;
+
+/** The yearly charge at a given discount. */
+const yearlyAt = (percent: number): number =>
+  (LIST_PER_YEAR * (100 - percent)) / 100;
+
+/** The same charge read per month. */
+const monthlyAt = (percent: number): number =>
+  yearlyAt(percent) / MONTHS_PER_YEAR;
+
+/** The discount a typed yearly charge asks for. */
+const percentFromYearly = (dollars: number): number =>
+  (1 - dollars / LIST_PER_YEAR) * 100;
+
+/** The discount a typed monthly charge asks for. */
+const percentFromMonthly = (dollars: number): number =>
+  (1 - dollars / LIST_PER_MONTH) * 100;
+
+/** Whole percents, inside the domain the slider offers. */
+const snapPercent = (percent: number): number =>
+  Math.min(20, Math.max(0, Math.round(percent)));
+
+const money = (dollars: number): string =>
+  `$${dollars.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+/** A typed figure, or null when the text carries no number. */
+const parseAmount = (text: string): number | null => {
+  const typed = Number.parseFloat(text.replace(/[$,%\s]/g, ""));
+  return Number.isFinite(typed) ? typed : null;
+};
+
+/**
+ * One figure of the readout. The caller owns the parse, so each field reads
+ * its own text back to a discount.
+ */
+const DiscountField: Component<{
+  label: string;
+  text: string;
+  width: number;
+  onCommit: (typed: number) => void;
+}> = (props) => {
+  const [draft, setDraft] = createSignal<string | null>(null);
+  const commit = (raw: string): void => {
+    const typed = parseAmount(raw);
+    if (typed !== null) props.onCommit(typed);
+    setDraft(null);
+  };
+  return (
+    <input
+      class="slider-discount-field"
+      type="text"
+      inputmode="decimal"
+      aria-label={props.label}
+      size={props.width}
+      value={draft() ?? props.text}
+      onFocus={(event) => event.currentTarget.select()}
+      onInput={(event) => setDraft(event.currentTarget.value)}
+      onBlur={(event) => commit(event.currentTarget.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.currentTarget.blur();
+        } else if (event.key === "Escape") {
+          setDraft(null);
+          event.currentTarget.blur();
+        }
+        // The slider's root moves the thumb on arrow keys. Inside a field
+        // those keys belong to the caret.
+        event.stopPropagation();
+      }}
+    />
+  );
+};
+
+const AnnualDiscount: Component = () => {
+  const [percent, setPercent] = createSignal(9);
+  return (
+    <Slider
+      label="Annual discount"
+      value={percent()}
+      onChange={setPercent}
+      min={0}
+      max={20}
+      format={(n) => `${n}% a year`}
+      valueLabel={
+        <span class="slider-discount-readout">
+          <DiscountField
+            label="Discount percent"
+            width={3}
+            text={`${percent()}%`}
+            onCommit={(typed) => setPercent(snapPercent(typed))}
+          />
+          <span class="slider-discount-sep">|</span>
+          <DiscountField
+            label="Price per month"
+            width={9}
+            text={`${money(monthlyAt(percent()))}/mo`}
+            onCommit={(typed) =>
+              setPercent(snapPercent(percentFromMonthly(typed)))
+            }
+          />
+          <span class="slider-discount-sep">|</span>
+          <DiscountField
+            label="Price per year"
+            width={11}
+            text={`${money(yearlyAt(percent()))}/yr`}
+            onCommit={(typed) =>
+              setPercent(snapPercent(percentFromYearly(typed)))
+            }
+          />
+        </span>
+      }
+    />
+  );
+};
+
 export const SliderShowcase: Component = () => {
   const [months, setMonths] = createSignal(6);
   const [plain, setPlain] = createSignal(40);
@@ -200,6 +328,31 @@ export const SliderShowcase: Component = () => {
           Escape, and anything that is not a number, revert. The field is a text
           input, never <code>type="number"</code>, so the browser draws no
           spinner arrows beside a control that already has a thumb.
+        </span>
+      </div>
+
+      <div class="example-group">
+        <h3>valueLabel — the caller draws the readout</h3>
+        <div class="slider-discount-demo">
+          <AnnualDiscount />
+        </div>
+        <span class="text-meta">
+          One discount, three honest readings. <code>valueLabel</code> replaces
+          the value node — the value label, or the <code>editable</code> field —
+          and the caption, the label line and the track stay SUI's. Every figure
+          here is a real input, so a coach who knows they want{" "}
+          <code>$1,627.08</code> types it instead of hunting for the percent
+          that produces it. The caller owns each parse: the yearly and the
+          monthly fields read their text back to a percent and snap it to the
+          domain the slider offers. A composite <code>format</code> string
+          cannot do this, because only one figure would stay typeable.
+        </span>
+        <span class="text-meta">
+          <code>editable</code> beside <code>valueLabel</code> is a compile
+          error: SUI cannot draw a field in a place it gave away. The label line
+          stays one flex row, so the node wraps its own figures.{" "}
+          <code>format</code> still governs the thumb, which announces{" "}
+          <code>9% a year</code> whatever the node shows.
         </span>
       </div>
 
