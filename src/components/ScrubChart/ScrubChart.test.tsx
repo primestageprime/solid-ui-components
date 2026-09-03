@@ -940,6 +940,70 @@ describe("ScrubChart y-fit toggle", () => {
     expect(domainOf(seen!)[0]).toBeCloseTo(-100, 6);
   });
 
+  it("drops the floor to a yFitBounds min the fit never reached", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yScaleMode="series"
+        yFitBounds={{ series: { min: 0 } }}
+        yFitDomain={() => [300, 900]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    const [low, high] = domainOf(seen!);
+    // The bound runs after the margin and the snap, so the floor is exact.
+    expect(low).toBeCloseTo(0, 6);
+    // The free end keeps the snap it had.
+    expect(high).toBeCloseTo(1000, 6);
+  });
+
+  it("keeps a fitted floor that already sits below the yFitBounds min", () => {
+    // The bound INCLUDES, it never overrides. A pin would clip the -50 cell
+    // off the plot; the bound leaves it visible.
+    let seen: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yScaleMode="series"
+        yFitBounds={{ series: { min: 0 } }}
+        yFitDomain={() => [-50, 900]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(domainOf(seen!)[0]).toBeLessThanOrEqual(-50);
+  });
+
+  it("gives each y-scale mode its own bound", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    const chart = (mode: "visible" | "series") => (
+      <ScrubChart
+        cells={cells10()}
+        yScaleMode={mode}
+        yFitBounds={{ series: { min: 0 } }}
+        yFitDomain={() => [300, 900]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    );
+    render(() => chart("series"));
+    expect(domainOf(seen!)[0]).toBeCloseTo(0, 6);
+    // "visible" names no bound, so that mode keeps the domain it fitted.
+    render(() => chart("visible"));
+    expect(domainOf(seen!)[0]).toBeGreaterThan(0);
+  });
+
   it("hosts the toggle in the x-axis row, reserving no row of its own", () => {
     let withToggle: ScrubChartContext<Cell> | null = null;
     let without: ScrubChartContext<Cell> | null = null;

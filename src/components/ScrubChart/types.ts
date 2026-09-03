@@ -22,9 +22,17 @@
 
 import type { JSX } from "solid-js";
 import type { Cell, DateAxisCellContext } from "../DateAxis";
-import type { ScrubChartYFitPin, ScrubChartYScaleMode } from "./yScaleMode";
+import type {
+  ScrubChartYFitBound,
+  ScrubChartYFitPin,
+  ScrubChartYScaleMode,
+} from "./yScaleMode";
 
-export type { ScrubChartYFitPin, ScrubChartYScaleMode } from "./yScaleMode";
+export type {
+  ScrubChartYFitBound,
+  ScrubChartYFitPin,
+  ScrubChartYScaleMode,
+} from "./yScaleMode";
 
 /** Cadence at which to emit x-axis ticks. Cells whose `start` matches the
  *  cadence's anchor get a labelled tick. `"auto"` picks the finest cadence
@@ -184,7 +192,8 @@ export interface ScrubChartProps<C extends Cell> {
    *
    * The callback exists because `renderChart` is a slot: ScrubChart never
    * sees the values, so the caller states the extent. Return the RAW extent
-   * of the range — ScrubChart pads it, snaps it, and applies `yFitPin`.
+   * of the range — ScrubChart pads it, snaps it, and applies `yFitPin` and
+   * `yFitBounds`.
    *
    * Setting this prop also renders the fit toggle at the bottom-left of the
    * chart frame.
@@ -203,6 +212,20 @@ export interface ScrubChartProps<C extends Cell> {
    * only. No effect without `yFitDomain`.
    */
   yFitPin?: ScrubChartYFitPin;
+  /**
+   * Edges the fitted domain always includes, per mode.
+   *
+   * A bound only WIDENS the domain: the low end takes the lesser of the
+   * fitted min and `min`, and the high end takes the greater of the fitted
+   * max and `max`. Data outside the bound therefore stays on the plot, which
+   * is what separates this prop from `yFitPin` — a pin OVERRIDES an edge and
+   * clips that data away.
+   *
+   * The bound applies LAST, after `yFitMargin` and after the nice() snap, so
+   * a bound of 0 puts the floor on exactly zero. A mode with no bound keeps
+   * the domain it fitted. No effect without `yFitDomain`.
+   */
+  yFitBounds?: Partial<Record<ScrubChartYScaleMode, ScrubChartYFitBound>>;
   /**
    * Milliseconds the fitted y-domain takes to reach a new target. `false`
    * disables the tween and the domain snaps. Default 240.

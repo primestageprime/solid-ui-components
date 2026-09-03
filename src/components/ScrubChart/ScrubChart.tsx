@@ -73,6 +73,7 @@ import {
   type ScrubChartYScaleMode,
   fitCellRange,
   fitYDomain,
+  widenToYFitBounds,
 } from "./yScaleMode";
 import "./ScrubChart.css";
 import { map, filter } from "../../fn";
@@ -85,6 +86,7 @@ export type {
   ScrubChartDataProps,
   ScrubChartXTickCadence,
   ResolvedXTickCadence,
+  ScrubChartYFitBound,
   ScrubChartYFitPin,
   ScrubChartYScaleMode,
 } from "./types";
@@ -224,12 +226,18 @@ export const ScrubChart = <C extends Cell>(
     // A null return means the caller has no extent for that range; fall back
     // to `yDomain` (see the prop docs for the precedence).
     if (!extent) return null;
-    return fitYDomain(
-      extent,
+    // The bound widens the fitted domain, so it runs after the margin and the
+    // snap — see widenToYFitBounds for why that order states the edge exactly.
+    return widenToYFitBounds(
+      fitYDomain(
+        extent,
+        mode,
+        props.yFitPin,
+        props.yFitMargin ?? DEFAULT_Y_FIT_MARGIN,
+        props.yTickCount ?? DEFAULT_Y_TICK_COUNT,
+      ),
       mode,
-      props.yFitPin,
-      props.yFitMargin ?? DEFAULT_Y_FIT_MARGIN,
-      props.yTickCount ?? DEFAULT_Y_TICK_COUNT,
+      props.yFitBounds,
     );
   });
 
