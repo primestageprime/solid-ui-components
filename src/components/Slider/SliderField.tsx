@@ -27,6 +27,12 @@
 // With no prefix and no suffix the input holds the whole formatted string, the
 // way `Slider`'s built-in field always has.
 //
+// TWO SHARP EDGES THE TYPES DO NOT CATCH. First, `value` carries the number
+// PART once an affix is set, and a caller whose formatter already prints the
+// sign draws `$$1,627.08`. Second, the caller owns the parse, the clamp, the
+// snap AND the empty case, because `Number("")` is `0` and an emptied field
+// otherwise commits a real zero. Both warnings sit on the props below.
+//
 // WIDTH COMES FROM A MIRROR, NOT FROM `size`. The `size` attribute sizes the
 // content box in CHARACTERS, and the browser multiplies it by the AVERAGE
 // character width. Any string whose glyphs run wider than that average
@@ -53,6 +59,12 @@ export interface SliderFieldProps {
   /**
    * The text the field shows at rest. With `prefix` or `suffix` it is the
    * NUMBER PART only, because the input holds nothing else.
+   *
+   * WARNING — THE DOUBLED AFFIX. Nothing type-checks the split. A caller whose
+   * own formatter already prints the sign passes `"$1,627.08"`, sets
+   * `prefix="$"`, and the field draws `$$1,627.08`. The caller strips every
+   * affix out of `value` first. A test that asserts each readout string
+   * carries no `"$"` and no `"/"` at all catches whichever affix doubles.
    */
   value: string;
   /**
@@ -63,13 +75,35 @@ export interface SliderFieldProps {
    * the figure a parser accepts.
    */
   editValue?: string;
-  /** Static text before the input, such as `"$"`. Never typeable. */
+  /**
+   * Static text before the input, such as `"$"`. Never typeable.
+   *
+   * The field prints it BESIDE `value`, never instead of it. Keep the same
+   * text out of `value` — see the warning there.
+   */
   prefix?: string;
-  /** Static text after the input, such as `"%"` or `"/mo"`. Never typeable. */
+  /**
+   * Static text after the input, such as `"%"` or `"/mo"`. Never typeable.
+   *
+   * The field prints it BESIDE `value`, never instead of it. Keep the same
+   * text out of `value` — see the warning there.
+   */
   suffix?: string;
   /**
    * Called with the typed text on Enter and on blur. Escape reverts and calls
-   * nothing. The caller parses the text, clamps it and maps it to the value.
+   * nothing.
+   *
+   * THE CALLER OWNS PARSE, CLAMP, SNAP AND THE EMPTY CASE. The field clamps
+   * nothing and snaps nothing on purpose, because a `$/mo` figure has a
+   * different domain from the `%` the track moves. The consequence is the
+   * caller's to handle: on a `$50–$250 step $5` slider, a coach who types
+   * `137` gets `137` — a value the control could never produce, and one that
+   * looks entirely plausible on screen and in a forecast.
+   *
+   * The empty field is worse, because it fails SILENTLY. `Number("")` is `0`,
+   * so an emptied field commits a real zero rather than doing nothing. Commit
+   * only a FINITE parse. `Slider`'s own `editable` path holds that guard; a
+   * caller that wires its own `onCommit` inherits none of it.
    */
   onCommit: (text: string) => void;
   /** Whether the field is disabled. */
