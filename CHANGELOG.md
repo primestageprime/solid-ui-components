@@ -166,6 +166,53 @@
   cannot correct a clipped button. `yFitBounds` forwards too, per the entry
   above. `yFitPin` is not forwarded yet.
 
+- **`SliderField` — the editable readout, exported, with the unit split away
+  from the number.** `Slider`'s `editable` path drew a field that held the whole
+  formatted string. A caller drawing a `valueLabel` node needs one field per
+  figure and had to hand-roll the focus swap, the width and the commit. The
+  field now ships.
+
+  ```tsx
+  import { SliderField } from "@primestageprime/solid-ui-components";
+
+  // Only "132.61" is typeable. The "$" and the "/mo" stand beside it.
+  <SliderField label="Price per month" prefix="$" suffix="/mo"
+               value={amount(monthly())} onCommit={(text) => setPercent(fromMonthly(text))} />
+  ```
+
+  **It owns the interaction, never the meaning.** The focus swap, the width, the
+  commit on Enter and on blur, and the revert on Escape are the field's. The
+  parse, the clamp and the map back to the value are the caller's. The field
+  never reads the slider's own `min`, `max` or `step`: a `$132.61/mo` figure and
+  the `11%` the track moves have different domains, so one parse would be right
+  for one figure and wrong for the other.
+
+  **The input holds only the number.** `prefix` and `suffix` render as static
+  text either side of it, and the three parts read as ONE unbroken string — one
+  font, one size, one baseline, no gap. The border, the padding, the hover and
+  the focus sit on the GROUP, because the input's own horizontal padding would
+  open a hole between the number and its suffix. The group is a `<label>`, so a
+  press on the `$` or the `/mo` focuses the number.
+
+  With no prefix and no suffix the field is what it always was, and `Slider
+  editable` passes neither. A test renders the built-in path beside a bare
+  `SliderField` and compares the markup of the two.
+
+### Fixed
+- **The editable readout no longer clips its last character.** `$132.61/mo`
+  rendered with the `o` cut in half and `$1,591.32/yr` lost the `r`. The field
+  sized itself with the `size` attribute, which counts CHARACTERS: the UA
+  multiplies `size` by the AVERAGE character width, so any string whose glyphs
+  run wider than that average overflowed the box.
+
+  Width now comes from a MIRROR. The group holds a hidden span carrying the same
+  text in the same font, and the input lies over it in the same `inline-grid`
+  cell, so the cell measures the real glyphs. It is exact in a proportional font
+  as well as a monospace one, because nothing counts characters. `size="1"`
+  stays as a floor, otherwise a text input's intrinsic default of 20 characters
+  would win the cell. The mirror carries the text the input SHOWS, so the field
+  grows and shrinks on every keystroke and does not jump on focus.
+
 ## 0.162.0
 
 ### Added
