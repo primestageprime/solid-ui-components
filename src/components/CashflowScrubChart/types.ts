@@ -335,6 +335,16 @@ export interface CashflowScrubChartProps {
   /** Fraction of the fitted extent added above and below each end. Default
    *  0.08. No effect without `yFitDomain`. */
   yFitMargin?: ScrubChartProps<CashflowCell>["yFitMargin"];
+  /**
+   * Edges the fitted domain always includes, per y-scale mode.
+   *
+   * A bound only WIDENS the domain, in cents: the floor takes the lesser of
+   * the fitted min and `min`, and the ceiling takes the greater of the fitted
+   * max and `max`. A bound of `{ series: { min: 0 } }` therefore holds the
+   * zero line on the axis while every day that dips below it stays on the
+   * plot. No effect without `yFitDomain`.
+   */
+  yFitBounds?: ScrubChartProps<CashflowCell>["yFitBounds"];
   /** Milliseconds the fitted domain takes to reach a new target. `false`
    *  snaps to it. Default 240. No effect on the `yMin`/`yMax` domain — only
    *  the fitted domain animates. */

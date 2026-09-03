@@ -1048,6 +1048,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       yDomain={yDomain()}
       yFitDomain={props.yFitDomain}
       yFitMargin={props.yFitMargin}
+      yFitBounds={props.yFitBounds}
       yFitTransition={props.yFitTransition}
       yScaleMode={props.yScaleMode}
       onYScaleModeChange={props.onYScaleModeChange}

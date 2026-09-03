@@ -1946,6 +1946,42 @@ describe("CashflowScrubChart y-fit forwarding", () => {
     expect(high).toBeLessThan(1_000_000);
   });
 
+  it("widens the fitted domain to a yFitBounds edge", () => {
+    // The extent stops at 100_000 and the margin is off, so a ceiling of
+    // 500_000 can only come from the bound reaching ScrubChart.
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        selected={9}
+        yScaleMode="series"
+        yFitDomain={() => [0, 100_000]}
+        yFitBounds={{ series: { max: 500_000 } }}
+        yFitMargin={0}
+        yFitTransition={false}
+      />
+    ));
+    const [low, high] = resolvedDomain(container, 100_000);
+    expect(low).toBeCloseTo(0, 3);
+    expect(high).toBeCloseTo(500_000, 3);
+  });
+
+  it("never narrows the fitted domain to a yFitBounds edge", () => {
+    // The bound INCLUDES, so the day at 100_000 stays on the plot even
+    // though the ceiling asks for half of it.
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        selected={9}
+        yScaleMode="series"
+        yFitDomain={() => [0, 100_000]}
+        yFitBounds={{ series: { max: 50_000 } }}
+        yFitMargin={0}
+        yFitTransition={false}
+      />
+    ));
+    expect(resolvedDomain(container, 100_000)[1]).toBeCloseTo(100_000, 3);
+  });
+
   it("falls back to the computed domain when yFitDomain returns null", () => {
     const { container } = render(() => (
       <CashflowScrubChart
