@@ -1,5 +1,5 @@
 import { type Component, createSignal } from "solid-js";
-import { Slider, createSlider } from "../../src/components/Slider";
+import { Slider, SliderField, createSlider } from "../../src/components/Slider";
 import { ThemedNumberInput } from "../../src/components/ThemedNumberInput";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -89,10 +89,6 @@ const yearlyAt = (percent: number): number =>
 const monthlyAt = (percent: number): number =>
   yearlyAt(percent) / MONTHS_PER_YEAR;
 
-/** The discount a typed yearly charge asks for. */
-const percentFromYearly = (dollars: number): number =>
-  (1 - dollars / LIST_PER_YEAR) * 100;
-
 /** The discount a typed monthly charge asks for. */
 const percentFromMonthly = (dollars: number): number =>
   (1 - dollars / LIST_PER_MONTH) * 100;
@@ -101,60 +97,31 @@ const percentFromMonthly = (dollars: number): number =>
 const snapPercent = (percent: number): number =>
   Math.min(20, Math.max(0, Math.round(percent)));
 
-const money = (dollars: number): string =>
-  `$${dollars.toLocaleString("en-US", {
+/** A figure with a thousands separator and two decimals, and no currency. */
+const amount = (dollars: number): string =>
+  dollars.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })}`;
+  });
 
-/** A typed figure, or null when the text carries no number. */
+/**
+ * A typed figure, or null when the text carries no number.
+ *
+ * The caller owns the parse, so the caller strips the thousands separator: a
+ * person types over "1,591.32" and leaves the comma where it was.
+ */
 const parseAmount = (text: string): number | null => {
   const typed = Number.parseFloat(text.replace(/[$,%\s]/g, ""));
   return Number.isFinite(typed) ? typed : null;
 };
 
-/**
- * One figure of the readout. The caller owns the parse, so each field reads
- * its own text back to a discount.
- */
-const DiscountField: Component<{
-  label: string;
-  text: string;
-  width: number;
-  onCommit: (typed: number) => void;
-}> = (props) => {
-  const [draft, setDraft] = createSignal<string | null>(null);
-  const commit = (raw: string): void => {
-    const typed = parseAmount(raw);
-    if (typed !== null) props.onCommit(typed);
-    setDraft(null);
+/** Read one figure back to a discount, and move the slider to it. */
+const commitAs =
+  (toPercent: (dollars: number) => number, set: (percent: number) => void) =>
+  (text: string): void => {
+    const typed = parseAmount(text);
+    if (typed !== null) set(snapPercent(toPercent(typed)));
   };
-  return (
-    <input
-      class="slider-discount-field"
-      type="text"
-      inputmode="decimal"
-      aria-label={props.label}
-      size={props.width}
-      value={draft() ?? props.text}
-      onFocus={(event) => event.currentTarget.select()}
-      onInput={(event) => setDraft(event.currentTarget.value)}
-      onBlur={(event) => commit(event.currentTarget.value)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          event.currentTarget.blur();
-        } else if (event.key === "Escape") {
-          setDraft(null);
-          event.currentTarget.blur();
-        }
-        // The slider's root moves the thumb on arrow keys. Inside a field
-        // those keys belong to the caret.
-        event.stopPropagation();
-      }}
-    />
-  );
-};
 
 const AnnualDiscount: Component = () => {
   const [percent, setPercent] = createSignal(9);
@@ -168,30 +135,29 @@ const AnnualDiscount: Component = () => {
       format={(n) => `${n}% a year`}
       valueLabel={
         <span class="slider-discount-readout">
-          <DiscountField
+          {/* Only the number is typeable. The "%" stands beside it as static
+              text, and the two read as one string. */}
+          <SliderField
             label="Discount percent"
-            width={3}
-            text={`${percent()}%`}
-            onCommit={(typed) => setPercent(snapPercent(typed))}
+            suffix="%"
+            value={String(percent())}
+            onCommit={commitAs((n) => n, setPercent)}
           />
           <span class="slider-discount-sep">|</span>
-          <DiscountField
+          {/* A prefix as well: the "$" is not part of the number either. */}
+          <SliderField
             label="Price per month"
-            width={9}
-            text={`${money(monthlyAt(percent()))}/mo`}
-            onCommit={(typed) =>
-              setPercent(snapPercent(percentFromMonthly(typed)))
-            }
+            prefix="$"
+            suffix="/mo"
+            value={amount(monthlyAt(percent()))}
+            onCommit={commitAs(percentFromMonthly, setPercent)}
           />
           <span class="slider-discount-sep">|</span>
-          <DiscountField
-            label="Price per year"
-            width={11}
-            text={`${money(yearlyAt(percent()))}/yr`}
-            onCommit={(typed) =>
-              setPercent(snapPercent(percentFromYearly(typed)))
-            }
-          />
+          {/* Read-only: each figure is the caller's own decision, and this one
+              is a total to read rather than a figure to type. */}
+          <span class="slider-discount-static">
+            ${amount(yearlyAt(percent()))}/yr
+          </span>
         </span>
       }
     />
@@ -339,13 +305,22 @@ export const SliderShowcase: Component = () => {
         <span class="text-meta">
           One discount, three honest readings. <code>valueLabel</code> replaces
           the value node — the value label, or the <code>editable</code> field —
-          and the caption, the label line and the track stay SUI's. Every figure
-          here is a real input, so a coach who knows they want{" "}
-          <code>$1,627.08</code> types it instead of hunting for the percent
-          that produces it. The caller owns each parse: the yearly and the
-          monthly fields read their text back to a percent and snap it to the
-          domain the slider offers. A composite <code>format</code> string
-          cannot do this, because only one figure would stay typeable.
+          and the caption, the label line and the track stay SUI's. Two figures
+          are <code>SliderField</code>s, so a coach who knows they want{" "}
+          <code>$132.61/mo</code> types it instead of hunting for the percent
+          that produces it. The third is plain text, because each figure is the
+          caller's own decision to make typeable or not. A composite{" "}
+          <code>format</code> string cannot do this, because only one figure
+          would stay typeable.
+        </span>
+        <span class="text-meta">
+          Only the NUMBER is an input. The <code>$</code> and the{" "}
+          <code>/mo</code> are static text either side of it, and the three
+          parts read as one unbroken string: one font, one baseline, and the
+          border and the padding on the group rather than on the input. A press
+          on the <code>$</code> lands on the number, because the group is the
+          input's own label. The caller owns each parse, including the thousands
+          separator in <code>1,591.32</code>.
         </span>
         <span class="text-meta">
           <code>editable</code> beside <code>valueLabel</code> is a compile
