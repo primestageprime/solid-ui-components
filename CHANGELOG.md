@@ -3,6 +3,32 @@
 ## [Unreleased]
 
 ### Added
+- **`ScrubChart` takes a `yFitBounds` prop, and `CashflowScrubChart` forwards
+  it.** The prop names the edges the fitted y-domain always includes, one entry
+  per y-scale mode.
+
+  ```tsx
+  <ScrubChart cells={cells} renderChart={draw}
+              yFitDomain={positionExtent}
+              yFitBounds={{ visible: { min: 0 }, series: { min: 0 } }} />
+  ```
+
+  The rule is INCLUDE AT LEAST, never override: the low end takes the lesser of
+  the fitted min and `min`, and the high end takes the greater of the fitted max
+  and `max`. A series of 300..900 bounded at `{ min: 0 }` draws 0..900, and the
+  same bound on a series of -50..900 draws -50..900 — the day in the red keeps
+  its place on the plot.
+
+  That is the whole difference from `yFitPin`, which stays the prop for an edge
+  that must hold at an exact value. A pin OVERRIDES the edge, so a pinned floor
+  of 0 clips a deficit away; a bound gives ground to the data instead. Use the
+  pin for an axis that may not move, and the bound for a zero line that must
+  stay in view.
+
+  The bound applies LAST, after `yFitMargin` and after the `nice()` snap, so a
+  bound of 0 puts the floor on exactly zero while the opposite end keeps its
+  round ticks. A mode with no entry keeps the domain it fitted.
+
 - **`CashflowScrubChart` forwards the `ScrubChart` y-fit props.** The wrapper
   declares its own props and renders `ScrubChart` with an explicit list, so a
   host that draws every chart through it could not reach the y-axis fit
@@ -29,7 +55,8 @@
   `yAxisWidth` is in the set for one reason. ScrubChart measures the y-axis
   column from the formatted labels and, with `yFitDomain` set, widens that
   default until the toggle button fits — so a host that cannot state the width
-  cannot correct a clipped button. `yFitPin` is not forwarded yet.
+  cannot correct a clipped button. `yFitBounds` forwards too, per the entry
+  above. `yFitPin` is not forwarded yet.
 
 ## 0.162.0
 
