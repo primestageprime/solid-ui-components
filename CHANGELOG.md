@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Changed
+- **`ScrubChart`'s corner buttons float above the chart and carry a resting
+  scrim.** Both controls — the y-fit toggle on the left, the expand chevron on
+  the right — now paint at `z-index: 2` on the shared
+  `.sui-scrub-chart__corner` rule, above every layer of the frame: the
+  highlight bands, the gridlines, the `renderChart` series, the axis tick
+  labels, the window band and the pan overlay. Each of those layers paints at
+  the auto level, so DOM order alone decided the winner and a consumer's own
+  positioned layer could cover a button.
+
+  The button also draws a scrim at REST, not on hover alone. Below roughly a
+  160px frame width a corner button lands on the last x tick label. That
+  overlap is ACCEPTED — neither control reserves space, moves or hides — so the
+  button has to win it and stay readable. The same `::after` that carries the
+  hover border now paints `var(--sui-bg-base, var(--sui-bg-elevated))` beneath
+  the glyph, which matches the chart surface around it. Hover keeps the accent
+  border as the stronger state, and `:focus-visible` keeps its ring.
+
+  One shared rule serves both buttons, so the chevron and the toggle still read
+  as one pair. `.sui-scrub-chart__y-fit-btn` and `.sui-scrub-chart__expand-btn`
+  stay in the markup as the hook a consumer overrides one button with, and
+  still style nothing themselves.
+
 ### Added
 - **`ScrubChart` owns the expand chevron, and `CashflowScrubChart` forwards
   it.** `chartHeightExpanded` is the master switch: set it and the chart draws
