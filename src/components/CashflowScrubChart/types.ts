@@ -238,8 +238,28 @@ export interface CashflowScrubChartProps {
   centerOn?: { index: number } | null;
   /** Date used by the inner DateAxis for the today highlight. */
   today?: Date;
-  /** Chart drawing-area height in px. Default 200. */
+  /** Chart drawing-area height in px. Default 200. With
+   *  `chartHeightExpanded` set this is the COLLAPSED height. */
   chartHeight?: number;
+  /**
+   * Height the chart grows to when the reader expands it, in px.
+   *
+   * THE MASTER SWITCH for the expand control. Setting it renders an expand
+   * chevron in the bottom-right corner of the chart frame, opposite the y-fit
+   * button, and a click moves the frame between this height and
+   * `chartHeight`. Leave it unset and the chart keeps `chartHeight` and shows
+   * no chevron.
+   */
+  chartHeightExpanded?: ScrubChartProps<CashflowCell>["chartHeightExpanded"];
+  /** Does the chart show `chartHeightExpanded` right now? Controlled: omit it
+   *  and ScrubChart owns the signal, starting collapsed. No effect without
+   *  `chartHeightExpanded`. */
+  expanded?: ScrubChartProps<CashflowCell>["expanded"];
+  /** Fires when the reader clicks the expand chevron. */
+  onExpandedChange?: ScrubChartProps<CashflowCell>["onExpandedChange"];
+  /** Milliseconds the frame takes to reach the other height. `false` jumps to
+   *  it. Default 240. No effect without `chartHeightExpanded`. */
+  expandTransition?: ScrubChartProps<CashflowCell>["expandTransition"];
   /** Width of one axis cell in px. Default 60 — matches the cashflow cell content. */
   cellWidth?: number;
   /** Extra balance lines overlaid on the chart. The y-domain widens to span

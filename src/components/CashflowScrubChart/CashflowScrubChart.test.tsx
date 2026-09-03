@@ -2062,3 +2062,120 @@ describe("CashflowScrubChart y-fit forwarding", () => {
     );
   });
 });
+
+describe("CashflowScrubChart expand forwarding", () => {
+  /** The one expand chevron ScrubChart draws in the bottom-right corner. */
+  const expandButton = (container: HTMLElement): HTMLElement | null =>
+    container.querySelector<HTMLElement>(".sui-scrub-chart__expand-btn");
+
+  /** Click the chevron, the way the y-fit block above clicks its button. */
+  const clickExpand = (container: HTMLElement): void => {
+    expandButton(container)!.dispatchEvent(
+      new MouseEvent("click", { bubbles: true }),
+    );
+  };
+
+  /** The frame's height, in px, as the inline style states it. */
+  const frameHeight = (container: HTMLElement): string =>
+    container.querySelector<HTMLElement>(".sui-scrub-chart__frame")!.style
+      .height;
+
+  /** Cells whose balance climbs by $100 a day. */
+  const climbing = (count: number): CashflowCell[] =>
+    dailyCells(
+      d("2026-05-01"),
+      d(`2026-05-${String(count).padStart(2, "0")}`),
+    ).map((cell, i) => ({
+      ...cell,
+      cashflowCents: 10_000,
+      balanceCents: 10_000 * (i + 1),
+    }));
+
+  it("renders no chevron for a caller that sets no expanded height", () => {
+    // The pin for every existing caller: the height it asked for, and no
+    // control it did not ask for.
+    const { container } = render(() => (
+      <CashflowScrubChart cells={climbing(10)} chartHeight={200} />
+    ));
+    expect(expandButton(container)).toBeNull();
+    expect(frameHeight(container)).toBe("200px");
+  });
+
+  it("renders the chevron when the caller sets chartHeightExpanded", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        chartHeight={200}
+        chartHeightExpanded={480}
+      />
+    ));
+    expect(expandButton(container)!.getAttribute("aria-label")).toBe(
+      "Expand chart",
+    );
+  });
+
+  it("grows the frame on a click, and shrinks it on the next", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        chartHeight={200}
+        chartHeightExpanded={480}
+        expandTransition={false}
+      />
+    ));
+    expect(frameHeight(container)).toBe("200px");
+    clickExpand(container);
+    expect(frameHeight(container)).toBe("480px");
+    clickExpand(container);
+    expect(frameHeight(container)).toBe("200px");
+  });
+
+  it("reports a chevron click through onExpandedChange", () => {
+    const onExpandedChange = vi.fn();
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        chartHeight={200}
+        chartHeightExpanded={480}
+        onExpandedChange={onExpandedChange}
+      />
+    ));
+    clickExpand(container);
+    expect(onExpandedChange).toHaveBeenCalledTimes(1);
+    expect(onExpandedChange.mock.calls[0][0]).toBe(true);
+  });
+
+  it("shows the height the caller controls through expanded", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        chartHeight={200}
+        chartHeightExpanded={480}
+        expanded={true}
+        expandTransition={false}
+      />
+    ));
+    expect(frameHeight(container)).toBe("480px");
+    expect(expandButton(container)!.getAttribute("aria-label")).toBe(
+      "Collapse chart",
+    );
+  });
+
+  it("shows the y-fit button and the chevron together", () => {
+    // thorcasting-ui draws both on one chart, so the two corners must both
+    // render and stay on opposite edges.
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        chartHeight={200}
+        chartHeightExpanded={480}
+        yFitDomain={() => [0, 100_000]}
+      />
+    ));
+    expect(container.querySelector(".sui-scrub-chart__y-fit-btn")).toBeTruthy();
+    expect(expandButton(container)).toBeTruthy();
+    expect(container.querySelectorAll(".sui-scrub-chart__corner")).toHaveLength(
+      2,
+    );
+  });
+});
