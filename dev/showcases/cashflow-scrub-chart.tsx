@@ -4,6 +4,7 @@ import {
   type CashflowCell,
 } from "../../src/components/CashflowScrubChart";
 import { dailyCells } from "../../src/components/DateAxis";
+import type { ScrubChartYScaleMode } from "../../src/components/ScrubChart";
 import { ClusterRow } from "../../src/components/Layout";
 import { MutedBody } from "../../src/components/Text";
 import { Toggle } from "../../src/components/Toggle";
@@ -73,6 +74,16 @@ const meanBalanceCents =
 const targetBalance = (_cell: CashflowCell, _i: number): number =>
   meanBalanceCents;
 
+// Balance extent of a cell range, in cents — what `yFitDomain` asks for. The
+// chart never sees the values (its own line is drawn from `cells`), so the
+// caller states the extent. Both ends are INCLUSIVE cell indices. Returns the
+// RAW extent: CashflowScrubChart forwards it to ScrubChart, which pads it and
+// snaps it.
+const balanceExtent = (from: number, to: number): [number, number] => {
+  const slice = cells.slice(from, to + 1).map((c) => c.balanceCents);
+  return [Math.min(...slice), Math.max(...slice)];
+};
+
 // A scenario that tracks the actual balance EXACTLY — the case `layer` exists
 // for. Drawn underneath, the solid primary line covers it completely and the
 // chart looks like it only has one line.
@@ -124,6 +135,11 @@ export const CashflowScrubChartShowcase: Component = () => {
   const [draftSelectedIdx, setDraftSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
+  const [yFitSelectedIdx, setYFitSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
+  const [yScaleMode, setYScaleMode] =
+    createSignal<ScrubChartYScaleMode>("visible");
   const [scenarioOver, setScenarioOver] = createSignal(true);
   const [hideDomainPins, setHideDomainPins] = createSignal(true);
 
@@ -765,6 +781,49 @@ export const CashflowScrubChartShowcase: Component = () => {
             Default primary line
           </span>
         </ClusterRow>
+      </div>
+
+      <div class="example-group">
+        <h3>Y-fit toggle</h3>
+        <p class="text-meta">
+          <code>yFitDomain</code> reaches <code>ScrubChart</code> unchanged, and
+          setting it draws the small button in the chart&apos;s origin corner —
+          in the y-axis label column, level with the month labels. The button
+          picks WHICH cell range sets the y extent: the visible window, or the
+          whole series. Drag the chart to pan, then press the button to see the
+          trade-off. The callback returns the balance extent of the range in
+          cents, because the chart draws the line from{" "}
+          <code>cell.balanceCents</code> and never reports what it drew.
+        </p>
+        <p class="text-meta">
+          The fitted domain OUTRANKS <code>yMin</code>, <code>yMax</code> and{" "}
+          <code>yPadFraction</code>. This chart pins <code>yMin={"{0}"}</code>,
+          and the pin still applies whenever the callback returns{" "}
+          <code>null</code> — the computed domain stays the fallback.{" "}
+          <code>yScaleMode</code> and <code>onYScaleModeChange</code> make the
+          toggle controlled, which is how the caption below reads the mode; omit
+          both and the chart owns the state. <code>yAxisWidth</code> states the
+          column width, so a host can widen a column that clips the button.
+        </p>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={yFitSelectedIdx()}
+          onScrub={(i) => setYFitSelectedIdx(i)}
+          today={PINNED_TODAY}
+          showGridlines
+          yMin={0}
+          yFitDomain={balanceExtent}
+          yScaleMode={yScaleMode()}
+          onYScaleModeChange={setYScaleMode}
+          yAxisWidth={72}
+        />
+
+        <MutedBody>
+          {yScaleMode() === "visible"
+            ? "visible — the y-axis fits the days the ribbon shows, so a pan rescales the line."
+            : "series — the y-axis fits every day, so the heights stay comparable across a pan."}
+        </MutedBody>
       </div>
 
       <div class="example-group">

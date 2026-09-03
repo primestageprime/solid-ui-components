@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added
+- **`CashflowScrubChart` forwards the `ScrubChart` y-fit props.** The wrapper
+  declares its own props and renders `ScrubChart` with an explicit list, so a
+  host that draws every chart through it could not reach the y-axis fit
+  toggle at all.
+
+  ```tsx
+  <CashflowScrubChart cells={cells} selected={idx()} onScrub={setIdx}
+                      yMin={0}
+                      yFitDomain={(from, to) => balanceExtent(from, to)} />
+  ```
+
+  `yFitDomain`, `yFitMargin`, `yFitTransition`, `yScaleMode`,
+  `onYScaleModeChange` and `yAxisWidth` now reach the inner chart unchanged.
+  Each takes its type from `ScrubChartProps` through an indexed access, so the
+  wrapper cannot drift from the chart it wraps. The callback states the
+  balance extent of an INCLUSIVE cell range, in cents, because the chart draws
+  the line itself and never reports what it drew.
+
+  The fitted domain OUTRANKS `yMin`, `yMax` and `yPadFraction`. Those three
+  still compute a domain, and that domain stays the FALLBACK: it applies
+  whenever the callback is absent, or returns `null` for the range it is asked
+  about. A caller that sets none of the six props keeps the chart it had.
+
+  `yAxisWidth` is in the set for one reason. ScrubChart measures the y-axis
+  column from the formatted labels and, with `yFitDomain` set, widens that
+  default until the toggle button fits — so a host that cannot state the width
+  cannot correct a clipped button. `yFitPin` is not forwarded yet.
+
 ## 0.162.0
 
 ### Added
