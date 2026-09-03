@@ -25,6 +25,7 @@
 // ============================================
 
 import { For, type JSX, Show } from "solid-js";
+import { clampLabelBaseline } from "./helpers";
 
 /** One y-axis tick: its data value + the pixel y it maps to. */
 export interface ScrubChartYTick {
@@ -183,10 +184,15 @@ export const ScrubChartAxes = (props: ScrubChartAxesProps): JSX.Element => (
               y1={tick.y}
               y2={tick.y}
             />
+            {/* The label's y is CLAMPED to the frame; the tick and the
+                gridline above keep `tick.y`. A tick on the domain end sits
+                on `plotTop` (or on `plotBottom`), and a label centred there
+                loses its outer half to the frame edge. See
+                `clampLabelBaseline` in helpers.ts. */}
             <text
               class="sui-scrub-chart__label sui-scrub-chart__label--y"
               x={props.plotLeft() - 6}
-              y={tick.y}
+              y={clampLabelBaseline(tick.y, props.chartHeight())}
               text-anchor="end"
               dominant-baseline="central"
             >

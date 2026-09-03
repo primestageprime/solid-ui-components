@@ -1,4 +1,4 @@
-import { type Component, createMemo, createSignal, For } from "solid-js";
+import { type Component, createMemo, createSignal } from "solid-js";
 import { ScrubChart } from "../../src/components/ScrubChart";
 import { dailyCells, type Cell } from "../../src/components/DateAxis";
 import { cashflowAt, cashflowDayCell, fmtDollars } from "./cashflow-day-cell";
@@ -32,6 +32,41 @@ const balances = cells.map((c) => c.balanceCents);
 const yMin = Math.min(0, ...balances);
 const yMax = Math.max(0, ...balances);
 const yRange = yMax - yMin || 1;
+
+// A series whose early days are tiny next to its later ones — the case the
+// y-fit toggle answers. Fitted to the whole series, the first fortnight is a
+// flat line on the floor; fitted to the visible window, it reads.
+const signups: number[] = cells.map((_, i) => Math.round(2 * 1.055 ** i));
+
+/** Extent of `signups` over an inclusive cell range, in data units. */
+const signupsExtent = (from: number, to: number): [number, number] => {
+  const slice = signups.slice(from, to + 1);
+  return [Math.min(...slice), Math.max(...slice)];
+};
+
+const renderSignupsChart = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => {
+  const toY = ctx.yToPlot;
+  if (!toY) return null;
+  const points = ctx.cells
+    .map((_, i) => `${ctx.cellToX(i).toFixed(1)},${toY(signups[i]).toFixed(1)}`)
+    .join(" ");
+  return (
+    <svg
+      viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+      preserveAspectRatio="none"
+      class="scrub-chart-demo__svg"
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke="var(--sui-accent)"
+        stroke-width={1.6}
+      />
+    </svg>
+  );
+};
 
 const fmtDate = (d: Date): string =>
   d.toLocaleDateString("en-US", {
@@ -336,6 +371,43 @@ export const ScrubChartShowcase: Component = () => {
           xTickCadence="auto"
           renderCell={cashflowDayCell}
           renderChart={renderBoundedChart}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>Y-fit toggle, with the floor pinned at zero</h3>
+        <p class="text-meta">
+          <code>yFitDomain</code> hands ScrubChart the extent of a cell range,
+          and the control in the bottom-left corner picks WHICH range: the
+          visible window (<code>zoom-in</code>) or the whole series (
+          <code>zoom-out</code>). Both states are fits. Drag the chart to pan,
+          then switch the control to see the trade-off: "visible" makes the
+          early detail legible, and "series" keeps the heights comparable across
+          a pan. Daily signups grow 5.5% a day here, so under "series" the first
+          fortnight lies flat on the floor.
+        </p>
+        <p class="text-meta">
+          <code>yFitPin</code> holds one end at a fixed value in both modes.
+          This chart pins the floor at zero, so the baseline never drifts as the
+          window moves. The pin is a prop rather than the caller's job, because
+          the callback returns a RAW extent and ScrubChart pads it afterwards —
+          a caller who returned 0 would watch the margin push it below zero. A
+          pinned end takes no margin and no snap; the free end still gets both,
+          so the ticks stay round.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          selected={selectedIdx()}
+          onScrub={(i) => setSelectedIdx(i)}
+          today={PINNED_TODAY}
+          showGridlines
+          yFitDomain={signupsExtent}
+          yFitPin={{ min: 0 }}
+          formatYLabel={(v) => v.toLocaleString("en-US")}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderSignupsChart}
         />
       </div>
 

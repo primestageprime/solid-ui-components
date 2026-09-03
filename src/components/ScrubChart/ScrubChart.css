@@ -128,3 +128,18 @@
 .sui-scrub-chart__ribbon .sui-date-axis {
   padding-bottom: 0;
 }
+
+/* Y-fit toggle — opt-in (`yFitDomain`) segmented control that picks which cell
+   range sets the y extent. It sits at the bottom-left of the frame, in the row
+   ScrubChart reserves for it: `yFitRowHeight` adds Y_FIT_ROW_HEIGHT to the
+   bottom inset, so the plot and the x-axis labels both end above this control.
+   Keep the 2px inset in step with Y_FIT_ROW_HEIGHT in
+   ScrubChartYFitControl.tsx — that number counts this inset twice, plus the
+   rendered height of the control. Do NOT drop the reservation and park the
+   control over the plot: it then covers the lowest gridline and its label. */
+.sui-scrub-chart__y-fit {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  display: flex;
+}

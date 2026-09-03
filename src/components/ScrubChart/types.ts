@@ -22,6 +22,9 @@
 
 import type { JSX } from "solid-js";
 import type { Cell, DateAxisCellContext } from "../DateAxis";
+import type { ScrubChartYFitPin, ScrubChartYScaleMode } from "./yScaleMode";
+
+export type { ScrubChartYFitPin, ScrubChartYScaleMode } from "./yScaleMode";
 
 /** Cadence at which to emit x-axis ticks. Cells whose `start` matches the
  *  cadence's anchor get a labelled tick. `"auto"` picks the finest cadence
@@ -169,8 +172,55 @@ export interface ScrubChartProps<C extends Cell> {
   // ── Y-axis (optional) ────────────────────────────────────────────────
 
   /** Domain (data-units) of the y-axis. When set, ScrubChart reserves a
-   *  left margin, draws ticks + labels, and exposes `yToPlot` in the ctx. */
+   *  left margin, draws ticks + labels, and exposes `yToPlot` in the ctx.
+   *  `yFitDomain` wins when it is set and returns a domain; this prop is the
+   *  fallback. With neither prop there is no y-axis. */
   yDomain?: [number, number];
+  /**
+   * Y-domain for a cell range, in data units. ScrubChart calls it with the
+   * VISIBLE window in "visible" mode and with the WHOLE cell range in
+   * "series" mode. Both ends are INCLUSIVE cell indices, matching
+   * `ScrubChartHighlight`. Return `null` to fall back to `yDomain`.
+   *
+   * The callback exists because `renderChart` is a slot: ScrubChart never
+   * sees the values, so the caller states the extent. Return the RAW extent
+   * of the range — ScrubChart pads it, snaps it, and applies `yFitPin`.
+   *
+   * Setting this prop also renders the fit toggle at the bottom-left of the
+   * chart frame.
+   */
+  yFitDomain?: (from: number, to: number) => [number, number] | null;
+  /** Fraction of the fitted extent added above and below a FREE end.
+   *  Default 0.08. A pinned end takes no margin. No effect without
+   *  `yFitDomain`. */
+  yFitMargin?: number;
+  /**
+   * Hold one or both ends of the fitted domain at a fixed value.
+   *
+   * A pinned end ignores the fitted extent, the margin and the nice() snap,
+   * and renders exactly as given; the free end still gets all three. `min`
+   * and `max` apply to BOTH modes. A mode key overrides them for that mode
+   * only. No effect without `yFitDomain`.
+   */
+  yFitPin?: ScrubChartYFitPin;
+  /**
+   * Milliseconds the fitted y-domain takes to reach a new target. `false`
+   * disables the tween and the domain snaps. Default 240.
+   *
+   * No effect on a static `yDomain` — only the fitted domain animates, so no
+   * existing chart gains motion it did not ask for. The tween RETARGETS: a
+   * new domain arriving mid-flight is followed from wherever the axis has
+   * reached, which is what a pan needs (the domain changes on every frame).
+   * A reader who sets `prefers-reduced-motion: reduce` gets the target at
+   * once, whatever this prop says.
+   */
+  yFitTransition?: number | false;
+  /** Which cell range sets the y extent. Controlled: omit it and ScrubChart
+   *  owns the signal, starting at "visible". No effect without
+   *  `yFitDomain`. */
+  yScaleMode?: ScrubChartYScaleMode;
+  /** Fires when the user picks a segment of the fit toggle. */
+  onYScaleModeChange?: (mode: ScrubChartYScaleMode) => void;
   /** Format y-axis tick values for display. Default: locale number. */
   formatYLabel?: (value: number) => string;
   /** Approximate number of y-axis ticks. Default 5. d3-scale picks the

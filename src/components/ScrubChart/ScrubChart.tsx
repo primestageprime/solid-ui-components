@@ -34,12 +34,15 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import { scaleLinear } from "d3-scale";
 import { observeSize } from "../../internal/dom/observeSize";
 import { insetSpan } from "../../internal/geometry/insetSpan";
 import { clamp } from "../../internal/math/clamp";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import { DateAxis, type Cell } from "../DateAxis";
+import {
+  ScrubChartYFitControl,
+  Y_FIT_ROW_HEIGHT,
+} from "./ScrubChartYFitControl";
 import {
   ScrubChartAxes,
   ScrubChartGrid,
@@ -53,12 +56,12 @@ import {
   DEFAULT_X_AXIS_HEIGHT,
   DEFAULT_X_MAX_TICKS,
   DEFAULT_Y_TICK_COUNT,
-  Y_LABEL_GAP,
   defaultFormatX,
   defaultFormatY,
   matchesCadence,
-  measureLabelWidth,
 } from "./helpers";
+import { createYAxisScales } from "./yAxis";
+import { DEFAULT_Y_FIT_TRANSITION_MS } from "./yDomainTween";
 import type {
   ResolvedXTickCadence,
   ScrubChartContext,
@@ -66,6 +69,12 @@ import type {
   ScrubChartOverrides,
   ScrubChartProps,
 } from "./types";
+import {
+  DEFAULT_Y_FIT_MARGIN,
+  type ScrubChartYScaleMode,
+  fitCellRange,
+  fitYDomain,
+} from "./yScaleMode";
 import "./ScrubChart.css";
 import { map, filter } from "../../fn";
 
@@ -77,6 +86,8 @@ export type {
   ScrubChartDataProps,
   ScrubChartXTickCadence,
   ResolvedXTickCadence,
+  ScrubChartYFitPin,
+  ScrubChartYScaleMode,
 } from "./types";
 
 export const ScrubChart = <C extends Cell>(
@@ -98,7 +109,16 @@ export const ScrubChart = <C extends Cell>(
   const xAxisHeight = () =>
     ((props.xTickCadence ?? "none") !== "none"
       ? (props.xAxisHeight ?? DEFAULT_X_AXIS_HEIGHT)
-      : 0) + (props.xAxisExtraHeight ?? 0);
+      : 0) +
+    (props.xAxisExtraHeight ?? 0) +
+    yFitRowHeight();
+
+  // The y-fit toggle gets a row of its own at the bottom of the frame, the
+  // way `xAxisExtraHeight` reserves a caller-owned row. The row raises
+  // `plotBottom`, so the lowest gridline and its label stay above the
+  // control. Without the row the control covers them — and a pinned floor
+  // makes that lowest label the one the reader needs.
+  const yFitRowHeight = () => (props.yFitDomain ? Y_FIT_ROW_HEIGHT : 0);
 
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
@@ -122,38 +142,114 @@ export const ScrubChart = <C extends Cell>(
   const plotBottom = () => vSpan().end;
   const plotHeight = () => vSpan().size;
 
-  // ── Y-scale + ticks (defined before plotLeft because the y-axis column
+  // ── Track the inner DateAxis's scroll position + viewport width so we
+  //    can render the window-band overlay over the slice of overview data
+  //    currently visible in the axis.
+  const [axisScrollLeft, setAxisScrollLeft] = createSignal(0);
+  const [axisViewportWidth, setAxisViewportWidth] = createSignal(0);
+  let axisScrollEl: HTMLDivElement | undefined;
+  const handleAxisRef = (el: HTMLDivElement) => {
+    axisScrollEl = el;
+    setAxisViewportWidth(el.clientWidth);
+    setAxisScrollLeft(el.scrollLeft);
+    el.addEventListener("scroll", () => setAxisScrollLeft(el.scrollLeft), {
+      passive: true,
+    });
+    // Re-measure clientWidth (NOT the observed content box) so the scrollbar
+    // accounting is unchanged; observeSize only governs when this runs.
+    onCleanup(observeSize(el, () => setAxisViewportWidth(el.clientWidth)));
+  };
+
+  // Map the axis's scroll window onto cell indices using the axis's ACTUAL
+  // rendered geometry (scrollWidth), not the `cellWidth` prop. Custom cells
+  // render content-sized, so the real per-cell width can differ from
+  // `cellWidth`; trusting the prop let `first` overrun the last index and the
+  // window band slid past the right edge. Both ends are clamped to the valid
+  // index range, so the band is always within [plotLeft, plotRight] and the
+  // last cell pins the band's right edge to plotRight.
+  const windowCells = createMemo<[number, number]>(() => {
+    const n = props.cells.length;
+    if (n === 0) return [0, 0];
+    // Plain mode has no axis viewport — the whole range counts as visible.
+    if (!scrubOn()) return [0, n - 1];
+    // Read the tracked scroll/viewport signals so this re-runs on scroll and
+    // resize; measure the live scroll content width off the same element.
+    const scrollLeft = axisScrollLeft();
+    const viewport = axisViewportWidth();
+    const scrollWidth = axisScrollEl ? axisScrollEl.scrollWidth : 0;
+    // Real per-cell width from measured geometry; fall back to the prop hint
+    // before first layout (scrollWidth === 0).
+    const w = scrollWidth > 0 ? scrollWidth / n : cellWidth();
+    if (w <= 0) return [0, n - 1];
+    const first = clamp(Math.floor(scrollLeft / w), 0, n - 1);
+    const last = clamp(
+      Math.ceil((scrollLeft + viewport) / w) - 1,
+      first,
+      n - 1,
+    );
+    return [first, last];
+  });
+
+  // ── Y-fit mode + the fitted domain ───────────────────────────────────
+  // The toggle picks WHICH CELL RANGE sets the y extent: the visible window,
+  // or the whole series. Both states are fits. `yFitDomain` supplies the
+  // extent, because `renderChart` is a slot and ScrubChart never sees the
+  // values. See yScaleMode.ts for the pipeline and for why the pin is a prop.
+  const [ownedMode, setOwnedMode] =
+    createSignal<ScrubChartYScaleMode>("visible");
+  // Controlled when the caller passes `yScaleMode`; owned otherwise.
+  const yScaleMode = (): ScrubChartYScaleMode =>
+    props.yScaleMode ?? ownedMode();
+  const selectYScaleMode = (mode: ScrubChartYScaleMode) => {
+    if (props.yScaleMode === undefined) setOwnedMode(mode);
+    props.onYScaleModeChange?.(mode);
+  };
+
+  // Memoized, so the domain recomputes when the window moves — not on every
+  // pointer event. A pan writes axisScrollLeft, windowCells narrows to new
+  // indices, and only then does the callback run again.
+  const fittedDomain = createMemo<[number, number] | null>(() => {
+    const fit = props.yFitDomain;
+    if (!fit) return null;
+    const mode = yScaleMode();
+    const [from, to] = fitCellRange(mode, windowCells(), props.cells.length);
+    const extent = fit(from, to);
+    // A null return means the caller has no extent for that range; fall back
+    // to `yDomain` (see the prop docs for the precedence).
+    if (!extent) return null;
+    return fitYDomain(
+      extent,
+      mode,
+      props.yFitPin,
+      props.yFitMargin ?? DEFAULT_Y_FIT_MARGIN,
+      props.yTickCount ?? DEFAULT_Y_TICK_COUNT,
+    );
+  });
+
+  // Declared here because the axis column measures the formatted labels.
+  const fmtY = (): ((v: number) => string) =>
+    props.formatYLabel ?? defaultFormatY;
+
+  // ── Y-scale + ticks (built before plotLeft because the y-axis column
   //    width is derived from the formatted tick label widths). ────────────
-  const yScale = createMemo(() => {
-    const dom = props.yDomain;
-    if (!dom) return null;
-    return scaleLinear().domain(dom).range([plotBottom(), plotTop()]).nice();
+  // ONE effective domain drives the ticks, the labels, `yToPlot`, the axis
+  // width and the gridlines: the fitted domain when `yFitDomain` returns one,
+  // else `yDomain`, else no y-axis at all. The FITTED domain also tweens
+  // toward each new target — see yAxis.ts for the two scales that takes, and
+  // yDomainTween.ts for the loop.
+  const yAxis = createYAxisScales({
+    fittedDomain,
+    staticDomain: () => props.yDomain,
+    plotTop,
+    plotBottom,
+    tickCount: () => props.yTickCount ?? DEFAULT_Y_TICK_COUNT,
+    formatLabel: fmtY,
+    axisWidth: () => props.yAxisWidth,
+    transitionMs: () => props.yFitTransition ?? DEFAULT_Y_FIT_TRANSITION_MS,
   });
-
-  const yTicks = createMemo<{ value: number; y: number }[]>(() => {
-    const s = yScale();
-    if (!s) return [];
-    return map(
-      (v) => ({ value: v, y: s(v) }),
-      s.ticks(props.yTickCount ?? DEFAULT_Y_TICK_COUNT),
-    );
-  });
-
-  // Auto-sized y-axis column: just wide enough to fit the longest formatted
-  // tick label plus the gap to the axis line. Manual override accepted for
-  // alignment use cases (e.g. two charts in the same panel).
-  const yAxisWidth = createMemo<number>(() => {
-    if (!props.yDomain) return 0;
-    if (props.yAxisWidth != null) return Math.max(0, props.yAxisWidth);
-    const ticks = yTicks();
-    if (ticks.length === 0) return 0;
-    const fmt = props.formatYLabel ?? defaultFormatY;
-    const widest = ticks.reduce(
-      (max, t) => Math.max(max, measureLabelWidth(fmt(t.value))),
-      0,
-    );
-    return Math.ceil(widest + Y_LABEL_GAP);
-  });
+  const yScale = yAxis.scale;
+  const yTicks = yAxis.ticks;
+  const yAxisWidth = yAxis.width;
 
   // Horizontal plot region — depends on the auto-sized y-axis column and
   // the caller-reserved right gutter (0 unless `rightGutter` is set).
@@ -220,24 +316,6 @@ export const ScrubChart = <C extends Cell>(
     );
   });
 
-  // ── Track the inner DateAxis's scroll position + viewport width so we
-  //    can render the window-band overlay over the slice of overview data
-  //    currently visible in the axis.
-  const [axisScrollLeft, setAxisScrollLeft] = createSignal(0);
-  const [axisViewportWidth, setAxisViewportWidth] = createSignal(0);
-  let axisScrollEl: HTMLDivElement | undefined;
-  const handleAxisRef = (el: HTMLDivElement) => {
-    axisScrollEl = el;
-    setAxisViewportWidth(el.clientWidth);
-    setAxisScrollLeft(el.scrollLeft);
-    el.addEventListener("scroll", () => setAxisScrollLeft(el.scrollLeft), {
-      passive: true,
-    });
-    // Re-measure clientWidth (NOT the observed content box) so the scrollbar
-    // accounting is unchanged; observeSize only governs when this runs.
-    onCleanup(observeSize(el, () => setAxisViewportWidth(el.clientWidth)));
-  };
-
   // Recenter request — scroll the axis so the requested cell is centered.
   // Runs whenever the centerOn OBJECT changes (fresh object per request).
   createEffect(() => {
@@ -279,35 +357,6 @@ export const ScrubChart = <C extends Cell>(
     applyScroll(0);
   });
 
-  // Map the axis's scroll window onto cell indices using the axis's ACTUAL
-  // rendered geometry (scrollWidth), not the `cellWidth` prop. Custom cells
-  // render content-sized, so the real per-cell width can differ from
-  // `cellWidth`; trusting the prop let `first` overrun the last index and the
-  // window band slid past the right edge. Both ends are clamped to the valid
-  // index range, so the band is always within [plotLeft, plotRight] and the
-  // last cell pins the band's right edge to plotRight.
-  const windowCells = createMemo<[number, number]>(() => {
-    const n = props.cells.length;
-    if (n === 0) return [0, 0];
-    // Plain mode has no axis viewport — the whole range counts as visible.
-    if (!scrubOn()) return [0, n - 1];
-    // Read the tracked scroll/viewport signals so this re-runs on scroll and
-    // resize; measure the live scroll content width off the same element.
-    const scrollLeft = axisScrollLeft();
-    const viewport = axisViewportWidth();
-    const scrollWidth = axisScrollEl ? axisScrollEl.scrollWidth : 0;
-    // Real per-cell width from measured geometry; fall back to the prop hint
-    // before first layout (scrollWidth === 0).
-    const w = scrollWidth > 0 ? scrollWidth / n : cellWidth();
-    if (w <= 0) return [0, n - 1];
-    const first = clamp(Math.floor(scrollLeft / w), 0, n - 1);
-    const last = clamp(
-      Math.ceil((scrollLeft + viewport) / w) - 1,
-      first,
-      n - 1,
-    );
-    return [first, last];
-  });
   const windowBounds = createMemo<[number, number]>(() => {
     const [first, last] = windowCells();
     return [
@@ -482,9 +531,6 @@ export const ScrubChart = <C extends Cell>(
     if (props.hover) setHoverIndex(null);
   };
 
-  const fmtY = (): ((v: number) => string) =>
-    props.formatYLabel ?? defaultFormatY;
-
   return (
     <div class="sui-scrub-chart">
       <div
@@ -576,6 +622,17 @@ export const ScrubChart = <C extends Cell>(
             interactive decorations (plotline markers) receive clicks. */}
         <Show when={props.renderChartOverlay && chartWidth() > 0}>
           {props.renderChartOverlay!(ctx())}
+        </Show>
+        {/* Y-fit toggle — rendered only when `yFitDomain` is set. It sits
+            in the row `yFitRowHeight` reserves at the bottom of the frame, so
+            it covers no gridline, no label and no plot. It comes LAST in the
+            frame so it stacks above the gesture overlay and answers its own
+            clicks. See ScrubChartYFitControl.tsx for the markup. */}
+        <Show when={props.yFitDomain}>
+          <ScrubChartYFitControl
+            mode={yScaleMode}
+            onSelect={selectYScaleMode}
+          />
         </Show>
         {/* Hover readout layer — above all chrome, pointer-events:none so it
             never blocks the gesture overlay beneath. Only this slot gets the

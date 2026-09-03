@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render } from "@solidjs/testing-library";
+import { fireEvent, render } from "@solidjs/testing-library";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -8,6 +8,11 @@ import {
   type ScrubChartContext,
   type ScrubChartHighlight,
 } from "./ScrubChart";
+import { Y_LABEL_HALF_HEIGHT, clampLabelBaseline } from "./helpers";
+import {
+  ScrubChartYFitControl,
+  Y_FIT_ROW_HEIGHT,
+} from "./ScrubChartYFitControl";
 import { dailyCells, type Cell } from "../DateAxis";
 import { pointer, rectOf } from "../../test-utils";
 
@@ -656,5 +661,600 @@ describe("ScrubChart highlight bands", () => {
     expect(at(".sui-scrub-chart__grid")).toBeLessThan(
       at('[data-testid="series"]'),
     );
+  });
+});
+
+describe("ScrubChart y-fit toggle", () => {
+  const cells10 = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-10"));
+
+  // Recover the effective y-domain from the ctx. `yToPlot` is linear and maps
+  // the domain onto [plotBottom, plotTop], so two samples state the whole map.
+  const domainOf = (ctx: ScrubChartContext<Cell>): [number, number] => {
+    const at0 = ctx.yToPlot!(0);
+    const slope = ctx.yToPlot!(1) - at0;
+    return [(ctx.plotBottom - at0) / slope, (ctx.plotTop - at0) / slope];
+  };
+
+  const seg = (container: HTMLElement, index: number): HTMLElement =>
+    container.querySelectorAll<HTMLElement>(".sui-segmented__seg")[index];
+
+  it("renders no fit toggle without yFitDomain", () => {
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yDomain={[0, 100]}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(container.querySelector(".sui-scrub-chart__y-fit")).toBeNull();
+    expect(container.querySelector(".sui-segmented")).toBeNull();
+  });
+
+  it("asks the callback for the visible window in visible mode", () => {
+    const asked: [number, number][] = [];
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitDomain={(from, to) => {
+          asked.push([from, to]);
+          return [10, 90];
+        }}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(container.querySelector(".sui-scrub-chart__y-fit")).toBeTruthy();
+    // jsdom reports a zero-width axis viewport, so the visible window is the
+    // first cell alone — which is exactly what tells the two modes apart.
+    expect(asked[0]).toEqual([0, 0]);
+  });
+
+  it("asks the callback for every cell in series mode", () => {
+    const asked: [number, number][] = [];
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yScaleMode="series"
+        yFitDomain={(from, to) => {
+          asked.push([from, to]);
+          return [10, 90];
+        }}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(asked[0]).toEqual([0, 9]);
+  });
+
+  it("reports a segment click through onYScaleModeChange", () => {
+    const onChange = vi.fn();
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yScaleMode="visible"
+        onYScaleModeChange={onChange}
+        yFitDomain={() => [10, 90]}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    fireEvent.click(seg(container, 1));
+    expect(onChange).toHaveBeenCalledWith("series");
+  });
+
+  it("starts uncontrolled at visible and switches on click", () => {
+    const asked: [number, number][] = [];
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitDomain={(from, to) => {
+          asked.push([from, to]);
+          return [10, 90];
+        }}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(asked[0]).toEqual([0, 0]);
+    fireEvent.click(seg(container, 1));
+    expect(asked[asked.length - 1]).toEqual([0, 9]);
+  });
+
+  it("keeps yDomain working on its own", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yDomain={[0, 100]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(
+      container.querySelectorAll(".sui-scrub-chart__label--y").length,
+    ).toBeGreaterThan(0);
+    const [low, high] = domainOf(seen!);
+    expect(low).toBeCloseTo(0, 6);
+    expect(high).toBeCloseTo(100, 6);
+  });
+
+  it("falls back to yDomain when the callback returns null", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yDomain={[0, 100]}
+        yFitDomain={() => null}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    const [low, high] = domainOf(seen!);
+    expect(low).toBeCloseTo(0, 6);
+    expect(high).toBeCloseTo(100, 6);
+  });
+
+  it("renders a pinned min exactly while the max still snaps", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitPin={{ min: 0 }}
+        yFitDomain={() => [10, 90]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    const [low, high] = domainOf(seen!);
+    // No margin below the pin: the floor is the number the caller stated.
+    expect(low).toBeCloseTo(0, 6);
+    // The free end takes the margin (90 → 96.4) and then the nice() snap.
+    expect(high).toBeCloseTo(100, 6);
+  });
+
+  it("labels the top gridline at the nice bound above a pinned floor", () => {
+    // The unit tests state the domain. This one states what the reader sees:
+    // the free end lands on a round number, and the axis names it. The tween
+    // is off, so the domain on screen is the settled one.
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitPin={{ min: 0 }}
+        yFitTransition={false}
+        yFitDomain={() => [4, 6400]}
+        formatYLabel={(v) => v.toLocaleString("en-US")}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    const labels = [
+      ...container.querySelectorAll(".sui-scrub-chart__label--y"),
+    ].map((n) => n.textContent);
+    expect(labels[0]).toBe("0");
+    expect(labels.at(-1)).toBe("7,000");
+  });
+
+  it("lets a mode pin override the shared pin for that mode only", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    const chart = (mode: "visible" | "series") => (
+      <ScrubChart
+        cells={cells10()}
+        yScaleMode={mode}
+        yFitPin={{ min: 0, series: { min: -100 } }}
+        yFitDomain={() => [10, 90]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    );
+    render(() => chart("visible"));
+    expect(domainOf(seen!)[0]).toBeCloseTo(0, 6);
+    render(() => chart("series"));
+    expect(domainOf(seen!)[0]).toBeCloseTo(-100, 6);
+  });
+
+  it("reserves a row below the plot for the toggle", () => {
+    let withToggle: ScrubChartContext<Cell> | null = null;
+    let without: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitDomain={() => [10, 90]}
+        renderChart={(ctx) => {
+          withToggle = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yDomain={[10, 90]}
+        renderChart={(ctx) => {
+          without = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    // jsdom runs no layout, so the test states the CONTRACT instead of the
+    // pixels: the toggle's row raises plotBottom by exactly its height, and
+    // the frame keeps the height the caller asked for. The lowest gridline
+    // sits at plotBottom, so this is what keeps the control off it.
+    expect(withToggle!.plotBottom).toBeCloseTo(
+      without!.plotBottom - Y_FIT_ROW_HEIGHT,
+      3,
+    );
+    expect(withToggle!.height).toBe(without!.height);
+  });
+
+  it("reports the picked mode from the control on its own", () => {
+    const picked: string[] = [];
+    const { container } = render(() => (
+      <ScrubChartYFitControl
+        mode={() => "visible"}
+        onSelect={(m) => picked.push(m)}
+      />
+    ));
+    // Mounted directly, so the control answers for its own markup: two
+    // segments, and a click reports the mode that segment stands for.
+    expect(container.querySelectorAll(".sui-segmented__seg")).toHaveLength(2);
+    fireEvent.click(seg(container, 1));
+    expect(picked).toEqual(["series"]);
+  });
+
+  it("re-measures the y-axis column when the mode widens the labels", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    // "visible" fits cell 0 alone in jsdom (the axis viewport reports zero
+    // width), so the two modes hand back domains with very different label
+    // widths: "6" against "8,000".
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitPin={{ min: 0 }}
+        // Tween off, so the 8,000 label is on screen the frame the mode
+        // changes. With the tween on, that tick starts above the plot and
+        // slides in — the domain-tween tests below cover that path.
+        yFitTransition={false}
+        yFitDomain={(_from, to) => (to === 0 ? [0, 6] : [0, 8000])}
+        formatYLabel={(v) => v.toLocaleString("en-US")}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    const narrow = seen!.plotLeft;
+    fireEvent.click(seg(container, 1));
+    const wide = seen!.plotLeft;
+    // The reserved column tracks the EFFECTIVE domain, not the `yDomain`
+    // prop, so a mode switch widens it. Left of plotLeft is the only space
+    // the label has; a stale column clips "8,000" at the frame edge.
+    expect(wide).toBeGreaterThan(narrow);
+    const label = [
+      ...container.querySelectorAll(".sui-scrub-chart__label--y"),
+    ].find((n) => n.textContent === "8,000");
+    expect(label).toBeTruthy();
+    expect(Number(label!.getAttribute("x"))).toBeLessThan(wide);
+    expect(Number(label!.getAttribute("x"))).toBeGreaterThan(0);
+  });
+
+  it("keeps an explicit yAxisWidth across a mode switch", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yAxisWidth={44}
+        yFitPin={{ min: 0 }}
+        yFitDomain={(_from, to) => (to === 0 ? [0, 6] : [0, 8000])}
+        formatYLabel={(v) => v.toLocaleString("en-US")}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(seen!.plotLeft).toBe(44);
+    fireEvent.click(seg(container, 1));
+    // The caller's width wins in both modes — measurement never overrides it.
+    expect(seen!.plotLeft).toBe(44);
+  });
+
+  it("renders two pinned ends as exactly that domain", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitPin={{ min: -5, max: 5 }}
+        yFitDomain={() => [10, 90]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    const [low, high] = domainOf(seen!);
+    expect(low).toBeCloseTo(-5, 6);
+    expect(high).toBeCloseTo(5, 6);
+  });
+});
+
+// ── Y-label clipping ─────────────────────────────────────────────────────
+// A y-tick label is centred on its gridline. A tick on the domain end lands
+// on `plotTop` or on `plotBottom`, so the label's outer half falls outside
+// the frame and the frame clips it. See `clampLabelBaseline` in helpers.ts.
+describe("ScrubChart y-label clipping", () => {
+  const cells10 = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-10"));
+
+  it("leaves a label with room on both sides where it is", () => {
+    expect(clampLabelBaseline(100, 200)).toBe(100);
+  });
+
+  it("moves a label on the top edge down by its half height", () => {
+    expect(clampLabelBaseline(0, 200)).toBe(Y_LABEL_HALF_HEIGHT);
+  });
+
+  it("moves a label on the bottom edge up by its half height", () => {
+    expect(clampLabelBaseline(200, 200)).toBe(200 - Y_LABEL_HALF_HEIGHT);
+  });
+
+  it("centres a label in a frame shorter than one label", () => {
+    expect(clampLabelBaseline(0, 8)).toBe(4);
+  });
+
+  it("draws the top and the bottom y label fully inside the frame", () => {
+    // `nice()` puts a tick on each end of [0, 100], and this chart reserves
+    // no x-axis row and no fit row, so both ticks sit on a frame edge.
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        chartHeight={200}
+        yDomain={[0, 100]}
+        showGridlines
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    const labels = [
+      ...container.querySelectorAll(".sui-scrub-chart__label--y"),
+    ];
+    const yOf = (text: string): number =>
+      Number(
+        labels.find((n) => n.textContent === text)?.getAttribute("y") ?? NaN,
+      );
+    // Both edge ticks DRAW. `nice()` puts one on `plotTop` and one on
+    // `plotBottom`, and the axis must withhold neither.
+    expect(labels.map((n) => n.textContent)).toEqual([
+      "0",
+      "20",
+      "40",
+      "60",
+      "80",
+      "100",
+    ]);
+    expect(yOf("100")).toBe(Y_LABEL_HALF_HEIGHT);
+    expect(yOf("0")).toBe(200 - Y_LABEL_HALF_HEIGHT);
+    // Every label keeps its whole line box inside the frame.
+    for (const label of labels) {
+      const y = Number(label.getAttribute("y"));
+      expect(y).toBeGreaterThanOrEqual(Y_LABEL_HALF_HEIGHT);
+      expect(y).toBeLessThanOrEqual(200 - Y_LABEL_HALF_HEIGHT);
+    }
+    // The GRIDLINES stay on the ticks — only the text moves.
+    const rules = [
+      ...container.querySelectorAll(".sui-scrub-chart__grid-line"),
+    ].map((n) => Number(n.getAttribute("y1")));
+    expect(rules).toContain(0);
+    expect(rules).toContain(200);
+  });
+});
+
+// ── Y-domain tween ───────────────────────────────────────────────────────
+// The rAF loop itself is not exercised here: jsdom's frame timing is not
+// worth asserting on. yDomainTween.test.ts drives the loop through an
+// injected clock, and these tests cover what ScrubChart wires around it.
+describe("ScrubChart y-domain tween", () => {
+  const cells10 = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-10"));
+  const seg = (container: HTMLElement, index: number): HTMLElement =>
+    container.querySelectorAll<HTMLElement>(".sui-segmented__seg")[index];
+  const domainOf = (ctx: ScrubChartContext<Cell>): [number, number] => {
+    const at0 = ctx.yToPlot!(0);
+    const slope = ctx.yToPlot!(1) - at0;
+    return [(ctx.plotBottom - at0) / slope, (ctx.plotTop - at0) / slope];
+  };
+  // Two modes, two very different domains — the mode click is the jump.
+  // ScrubChart pads the free end and snaps it, so [0, 100] draws as
+  // [0, 120] and [0, 8000] draws as [0, 10000]. See fitYDomain.
+  const fit = (_from: number, to: number): [number, number] =>
+    to === 0 ? [0, 100] : [0, 8000];
+  const VISIBLE_MAX = 120;
+  const SERIES_MAX = 10000;
+
+  const renderChart = (props: {
+    transition?: number | false;
+  }): { container: HTMLElement; ctx: () => ScrubChartContext<Cell> } => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitPin={{ min: 0 }}
+        yFitTransition={props.transition}
+        yFitDomain={fit}
+        formatYLabel={(v) => v.toLocaleString("en-US")}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    return { container, ctx: () => seen! };
+  };
+
+  it("shows the target domain at once when the tween is off", () => {
+    const chart = renderChart({ transition: false });
+    fireEvent.click(seg(chart.container, 1));
+    expect(domainOf(chart.ctx())[1]).toBeCloseTo(SERIES_MAX, 6);
+  });
+
+  it("skips the tween for a reader who asks for less motion", () => {
+    const real = window.matchMedia;
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query.includes("prefers-reduced-motion"),
+        media: query,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+        addListener: () => {},
+        removeListener: () => {},
+      }) as unknown as MediaQueryList) as typeof window.matchMedia;
+    try {
+      // The default transition applies, and the domain still arrives on the
+      // same frame as the click — the tween is skipped, not shortened.
+      const chart = renderChart({});
+      fireEvent.click(seg(chart.container, 1));
+      expect(domainOf(chart.ctx())[1]).toBeCloseTo(SERIES_MAX, 6);
+    } finally {
+      window.matchMedia = real;
+    }
+  });
+
+  it("holds the old domain for the series while the tween runs", () => {
+    const chart = renderChart({});
+    fireEvent.click(seg(chart.container, 1));
+    // `yToPlot` maps through the domain ON SCREEN, so the caller's series
+    // moves WITH the axis instead of jumping ahead of it.
+    expect(domainOf(chart.ctx())[1]).toBeCloseTo(VISIBLE_MAX, 6);
+  });
+
+  it("measures the label column from the TARGET domain", () => {
+    const chart = renderChart({});
+    const narrow = chart.ctx().plotLeft;
+    fireEvent.click(seg(chart.container, 1));
+    // The column answers "8,000" the same frame, though the axis still shows
+    // the old domain. A column measured per frame would resize all the way.
+    expect(chart.ctx().plotLeft).toBeGreaterThan(narrow);
+  });
+
+  // The regression: a settled domain whose MAX is a tick showed every label
+  // but that one. The axis withholds a target tick the domain on screen does
+  // not hold yet, which is right while the tween runs and wrong once it
+  // lands. The assertions read the RENDERED labels, so they outlive any
+  // rewrite of the withholding rule.
+  it("renders the max tick's label once the tween settles", async () => {
+    const chart = renderChart({});
+    const values = (): (string | null)[] =>
+      [...chart.container.querySelectorAll(".sui-scrub-chart__label--y")].map(
+        (n) => n.textContent,
+      );
+    fireEvent.click(seg(chart.container, 1));
+    await vi.waitFor(() => expect(values()).toContain("10,000"), {
+      timeout: 3000,
+    });
+    // Every tick of the settled domain draws, the max one included.
+    expect(values()).toEqual([
+      "0",
+      "2,000",
+      "4,000",
+      "6,000",
+      "8,000",
+      "10,000",
+    ]);
+    // The max tick sits on `plotTop`, so its label clamps into the frame.
+    const top = [
+      ...chart.container.querySelectorAll(".sui-scrub-chart__label--y"),
+    ].find((n) => n.textContent === "10,000");
+    expect(Number(top?.getAttribute("y"))).toBe(Y_LABEL_HALF_HEIGHT);
+  });
+
+  // The destination, not the journey: the screen scale and the target scale
+  // must hold the SAME domain at rest. A tween that aimed at the padded
+  // domain, or at any other pre-snap value, would settle short of the target
+  // and report arrival at the wrong number.
+  it("settles the screen domain on the axis's target domain", async () => {
+    const chart = renderChart({});
+    fireEvent.click(seg(chart.container, 1));
+    // `domainOf` reads the SCREEN scale through `yToPlot`.
+    await vi.waitFor(
+      () => expect(domainOf(chart.ctx())[1]).toBeCloseTo(SERIES_MAX, 6),
+      { timeout: 3000 },
+    );
+    const [low, high] = domainOf(chart.ctx());
+    expect(low).toBeCloseTo(0, 6);
+    // 8640 is the padded max of [0, 8000]. The snap lifts it to 10000, and
+    // the tween stops on the snapped number.
+    expect(high).toBeCloseTo(SERIES_MAX, 6);
+  });
+
+  // The browser defect a jsdom test missed. A HIDDEN document runs no
+  // animation frame, so the tween stopped where it stood and the axis
+  // withheld every tick the stopped domain missed — the max label among
+  // them — for as long as the tab stayed in the background.
+  it("shows the whole axis at once while the document is hidden", () => {
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "hidden",
+    });
+    try {
+      const chart = renderChart({});
+      fireEvent.click(seg(chart.container, 1));
+      // No frame runs, so the domain and every label must land this frame.
+      expect(domainOf(chart.ctx())[1]).toBeCloseTo(SERIES_MAX, 6);
+      const values = [
+        ...chart.container.querySelectorAll(".sui-scrub-chart__label--y"),
+      ].map((n) => n.textContent);
+      expect(values).toEqual([
+        "0",
+        "2,000",
+        "4,000",
+        "6,000",
+        "8,000",
+        "10,000",
+      ]);
+    } finally {
+      Reflect.deleteProperty(document, "visibilityState");
+    }
+  });
+
+  it("renders the max tick's label at once when the tween is off", () => {
+    const chart = renderChart({ transition: false });
+    fireEvent.click(seg(chart.container, 1));
+    const values = [
+      ...chart.container.querySelectorAll(".sui-scrub-chart__label--y"),
+    ].map((n) => n.textContent);
+    expect(values).toContain("10,000");
+  });
+
+  it("takes its tick VALUES from the target domain", () => {
+    const chart = renderChart({});
+    const values = () =>
+      [...chart.container.querySelectorAll(".sui-scrub-chart__label--y")].map(
+        (n) => n.textContent,
+      );
+    expect(values()).toContain("120");
+    fireEvent.click(seg(chart.container, 1));
+    // The ticks now come from the TARGET domain [0, 10000]. Only its zero
+    // tick is inside the domain on screen, which still reaches 120, so the
+    // rest wait above the plot and slide in as the tween runs. A per-frame
+    // recompute would answer 30, 60, 90, 120 here instead.
+    expect(values()).toEqual(["0"]);
   });
 });

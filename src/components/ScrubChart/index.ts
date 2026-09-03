@@ -7,4 +7,6 @@ export type {
   ScrubChartDataProps,
   ScrubChartXTickCadence,
   ResolvedXTickCadence,
+  ScrubChartYFitPin,
+  ScrubChartYScaleMode,
 } from "./ScrubChart";

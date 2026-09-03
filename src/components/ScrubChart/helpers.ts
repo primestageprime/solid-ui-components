@@ -9,6 +9,9 @@
 //   • DEFAULT_* / DEFAULT_X_MAX_TICKS  — the fallback sizing + tick numbers a
 //     prop defaults to when the consumer leaves it unset.
 //   • Y_LABEL_GAP / Y_LABEL_FONT       — y-axis label-column measurement knobs.
+//   • Y_LABEL_HALF_HEIGHT              — half a tick label's line box.
+//   • clampLabelBaseline(y, height)    — hold a centred tick label inside the
+//     chart frame, so a tick on the domain end is not clipped by the edge.
 //   • measureLabelWidth(text)          — canvas text measurement, memoising a
 //     single offscreen 2D context and degrading to a per-char estimate when
 //     canvas is unavailable (SSR / jsdom). The ONLY impure edge here: it reads
@@ -24,6 +27,7 @@
 // ============================================
 
 import { formatGroupedNumber } from "../../internal/format/number";
+import { clamp } from "../../internal/math/clamp";
 import type { Cell } from "../DateAxis";
 import type { ResolvedXTickCadence } from "./types";
 
@@ -35,6 +39,35 @@ export const DEFAULT_Y_TICK_COUNT = 5;
 export const DEFAULT_X_MAX_TICKS = 12;
 export const Y_LABEL_GAP = 8; // px between the longest label and the axis line
 export const Y_LABEL_FONT = "10px system-ui, -apple-system, sans-serif";
+// Half the height of a tick label's line box, in px. A y-tick label is
+// CENTRED on its gridline (`dominant-baseline: central`), so this number is
+// the distance from the gridline down to the label's bottom edge and up to
+// its top edge. Keep it in step with the `font-size` of
+// `.sui-scrub-chart__label` in ScrubChart.css.
+export const Y_LABEL_HALF_HEIGHT = 6;
+
+/**
+ * The baseline y a tick label draws at, held inside the chart frame.
+ *
+ * A y-tick label is centred on its gridline. `nice()`, and a fitted domain,
+ * both put a tick EXACTLY on the domain end, so the gridline lands on
+ * `plotTop` or on `plotBottom`. The label's outer half then falls outside the
+ * SVG viewport and the frame clips it — the reader sees the lower half of
+ * "8,000" at the top edge. This function moves such a label in by the missing
+ * half, and leaves every other label where it is.
+ *
+ * The GRIDLINE and the tick stub keep `tick.y`; only the text moves. The
+ * bound is the FRAME, not the plot, so a label above the x-axis row uses the
+ * room that row gives it and does not move at all.
+ *
+ * @param y The pixel y of the tick the label names.
+ * @param frameHeight The chart frame's height in px.
+ * @returns The pixel y to draw the label at.
+ */
+export const clampLabelBaseline = (y: number, frameHeight: number): number =>
+  frameHeight <= Y_LABEL_HALF_HEIGHT * 2
+    ? frameHeight / 2
+    : clamp(y, Y_LABEL_HALF_HEIGHT, frameHeight - Y_LABEL_HALF_HEIGHT);
 
 // Reuse a single offscreen 2D context for label-width measurement. Falls
 // back to a per-character estimate when canvas is unavailable (SSR / test
