@@ -717,8 +717,13 @@ describe("ScrubChart y-fit toggle", () => {
     expect(btn.tagName).toBe("BUTTON");
     expect(btn.getAttribute("type")).toBe("button");
 
+    // The shared corner class carries the look; the `__y-fit-btn` name stays
+    // on the same element as the public hook for this one button.
+    expect(btn.classList.contains("sui-scrub-chart__corner-btn")).toBe(true);
+    expect(btn.classList.contains("sui-scrub-chart__y-fit-btn")).toBe(true);
+
     const css = chartCss();
-    const rest = ruleBody(css, ".sui-scrub-chart__y-fit-btn");
+    const rest = ruleBody(css, ".sui-scrub-chart__corner-btn");
     // The button holds the full target at rest, and draws NO border there.
     for (const prop of ["width", "height", "min-width", "min-height"]) {
       expect(rest).toContain(`${prop}: ${Y_FIT_BUTTON_SIZE}px;`);
@@ -728,7 +733,7 @@ describe("ScrubChart y-fit toggle", () => {
 
     // A pseudo-element carries the hover border, inset on every side, so the
     // border is SMALLER than the target it sits in.
-    const ring = ruleBody(css, ".sui-scrub-chart__y-fit-btn::after");
+    const ring = ruleBody(css, ".sui-scrub-chart__corner-btn::after");
     expect(ring).toContain(`inset: ${Y_FIT_HOVER_INSET}px;`);
     expect(ring).toContain("border: 1px solid transparent;");
     const borderSize = Y_FIT_BUTTON_SIZE - 2 * Y_FIT_HOVER_INSET;
@@ -738,17 +743,17 @@ describe("ScrubChart y-fit toggle", () => {
     // Hover paints that border. Focus keeps a ring, so the affordance is not
     // hover-only.
     expect(
-      ruleBody(css, ".sui-scrub-chart__y-fit-btn:hover:not(:disabled)::after"),
+      ruleBody(css, ".sui-scrub-chart__corner-btn:hover:not(:disabled)::after"),
     ).toContain("border-color: var(--sui-accent);");
     expect(
-      ruleBody(css, ".sui-scrub-chart__y-fit-btn:focus-visible"),
+      ruleBody(css, ".sui-scrub-chart__corner-btn:focus-visible"),
     ).toContain("outline: 2px solid var(--sui-accent);");
   });
 
   it("colours the glyph with the series line's token", () => {
     // The showcase strokes its series with `--sui-accent`. The glyph takes the
     // same custom property, so the control names the line it rescales.
-    expect(ruleBody(chartCss(), ".sui-scrub-chart__y-fit-btn")).toContain(
+    expect(ruleBody(chartCss(), ".sui-scrub-chart__corner-btn")).toContain(
       "color: var(--sui-accent);",
     );
   });
@@ -938,6 +943,70 @@ describe("ScrubChart y-fit toggle", () => {
     expect(domainOf(seen!)[0]).toBeCloseTo(0, 6);
     render(() => chart("series"));
     expect(domainOf(seen!)[0]).toBeCloseTo(-100, 6);
+  });
+
+  it("drops the floor to a yFitBounds min the fit never reached", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yScaleMode="series"
+        yFitBounds={{ series: { min: 0 } }}
+        yFitDomain={() => [300, 900]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    const [low, high] = domainOf(seen!);
+    // The bound runs after the margin and the snap, so the floor is exact.
+    expect(low).toBeCloseTo(0, 6);
+    // The free end keeps the snap it had.
+    expect(high).toBeCloseTo(1000, 6);
+  });
+
+  it("keeps a fitted floor that already sits below the yFitBounds min", () => {
+    // The bound INCLUDES, it never overrides. A pin would clip the -50 cell
+    // off the plot; the bound leaves it visible.
+    let seen: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yScaleMode="series"
+        yFitBounds={{ series: { min: 0 } }}
+        yFitDomain={() => [-50, 900]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(domainOf(seen!)[0]).toBeLessThanOrEqual(-50);
+  });
+
+  it("gives each y-scale mode its own bound", () => {
+    let seen: ScrubChartContext<Cell> | null = null;
+    const chart = (mode: "visible" | "series") => (
+      <ScrubChart
+        cells={cells10()}
+        yScaleMode={mode}
+        yFitBounds={{ series: { min: 0 } }}
+        yFitDomain={() => [300, 900]}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    );
+    render(() => chart("series"));
+    expect(domainOf(seen!)[0]).toBeCloseTo(0, 6);
+    // "visible" names no bound, so that mode keeps the domain it fitted.
+    render(() => chart("visible"));
+    expect(domainOf(seen!)[0]).toBeGreaterThan(0);
   });
 
   it("hosts the toggle in the x-axis row, reserving no row of its own", () => {
@@ -1546,5 +1615,167 @@ describe("ScrubChart y-domain tween", () => {
     // rest wait above the plot and slide in as the tween runs. A per-frame
     // recompute would answer 30, 60, 90, 120 here instead.
     expect(values()).toEqual(["0"]);
+  });
+});
+
+// ── Corner control stacking + resting scrim ─────────────────────────────
+//
+// The reader accepts that a corner button covers a tick label on a narrow
+// chart. The button therefore has to WIN that overlap and stay readable: it
+// floats above every layer of the frame, and it carries a scrim at rest so the
+// glyph reads over whatever is beneath. jsdom runs no layout and loads no
+// stylesheet, so these rules live only in the CSS file — the tests read that
+// file the way the y-fit size tests above do.
+describe("ScrubChart corner control stacking", () => {
+  const chartCss = (): string =>
+    readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "ScrubChart.css"),
+      "utf8",
+    );
+
+  /** The body of the FIRST rule whose selector starts with `selector`. */
+  const ruleBody = (css: string, selector: string): string =>
+    css.slice(css.indexOf(`${selector} {`)).split("}")[0];
+
+  /** The stylesheet with every comment removed, so a name in prose does not
+   *  read as a selector. */
+  const rulesOnly = (css: string): string =>
+    css.replace(/\/\*[\s\S]*?\*\//g, "");
+
+  const bothCorners = () =>
+    render(() => (
+      <ScrubChart
+        cells={dailyCells(d("2026-05-01"), d("2026-05-10"))}
+        showGridlines
+        highlights={[{ from: 1, to: 2 }]}
+        yFitDomain={() => [10, 90]}
+        chartHeight={200}
+        chartHeightExpanded={400}
+        renderChart={() => <svg data-testid="series" />}
+        renderCell={() => <div />}
+      />
+    ));
+
+  it("floats both corners above every layer of the frame", () => {
+    const { container } = bothCorners();
+    const frame = container.querySelector(".sui-scrub-chart__frame")!;
+    const order = [...frame.children];
+    const at = (selector: string) =>
+      order.findIndex((el) => el.matches(selector));
+
+    // DOM order alone would leave the buttons under any layer a consumer
+    // states a level on, so the corner states one of its own.
+    expect(ruleBody(chartCss(), ".sui-scrub-chart__corner")).toContain(
+      "z-index: 2;",
+    );
+
+    // Every layer the button may cover paints at the AUTO level. Each rule is
+    // in the file, so the assertion is about what the rule says, not about a
+    // selector that is missing.
+    const css = chartCss();
+    for (const layer of [
+      ".sui-scrub-chart__highlights",
+      ".sui-scrub-chart__grid",
+      ".sui-scrub-chart__axes",
+      ".sui-scrub-chart__window",
+      ".sui-scrub-chart__overlay",
+    ]) {
+      expect(css).toContain(`${layer} {`);
+      expect(ruleBody(css, layer)).not.toContain("z-index");
+    }
+
+    // Those layers, plus the consumer's own plot, all come BEFORE the corners
+    // in the frame, so the DOM order and the level agree.
+    for (const layer of [
+      ".sui-scrub-chart__highlights",
+      ".sui-scrub-chart__grid",
+      '[data-testid="series"]',
+      ".sui-scrub-chart__axes",
+      ".sui-scrub-chart__window",
+      ".sui-scrub-chart__overlay",
+    ]) {
+      expect(at(layer)).toBeGreaterThanOrEqual(0);
+      expect(at(layer)).toBeLessThan(at(".sui-scrub-chart__y-fit"));
+      expect(at(layer)).toBeLessThan(at(".sui-scrub-chart__expand"));
+    }
+  });
+
+  it("keeps the corner level INSIDE the frame's stacking context", () => {
+    const css = chartCss();
+
+    // The frame is the stacking root. Drop this and every level the component
+    // states escapes into the host page, where a consumer's own layer at the
+    // same level ties with it on DOM order — the defect the corner level was
+    // added to remove, one level up.
+    expect(ruleBody(css, ".sui-scrub-chart__frame")).toContain(
+      "isolation: isolate;",
+    );
+
+    // The root above the frame makes NO stacking context, so the frame is the
+    // only one. `overflow: hidden` there does not make one, and neither the
+    // root nor the frame may take a level of its own: a level on either would
+    // enter the component into the host's ordering again.
+    const root = ruleBody(css, ".sui-scrub-chart");
+    expect(root).not.toContain("z-index");
+    expect(root).not.toContain("isolation");
+    expect(ruleBody(css, ".sui-scrub-chart__frame")).not.toContain("z-index");
+
+    // Every element that states a level lives inside the frame, so the frame
+    // contains all of them. The hover layer hosts the readout card, which
+    // states the same 2 as the corner and must keep the top.
+    const { container } = bothCorners();
+    const frame = container.querySelector(".sui-scrub-chart__frame")!;
+    for (const name of [
+      ".sui-scrub-chart__y-fit",
+      ".sui-scrub-chart__expand",
+    ]) {
+      expect(frame.querySelector(name)).not.toBeNull();
+    }
+    // Nothing inside the frame may reach past its edge — the frame clips.
+    expect(ruleBody(css, ".sui-scrub-chart__frame")).toContain(
+      "overflow: hidden;",
+    );
+  });
+
+  it("scrims the glyph at REST, not on hover alone", () => {
+    const css = chartCss();
+    const scrim = ruleBody(css, ".sui-scrub-chart__corner-btn::after");
+    // The resting rule paints the scrim, so a glyph over a tick label reads.
+    expect(scrim).toContain(
+      "background: var(--sui-bg-base, var(--sui-bg-elevated));",
+    );
+    // Tokens only — a hex here would ignore the theme the host loads.
+    expect(scrim).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    // The scrim sits under the glyph, and the button isolates so the scrim
+    // still covers what is beneath the button.
+    expect(scrim).toContain("z-index: -1;");
+    expect(ruleBody(css, ".sui-scrub-chart__corner-btn")).toContain(
+      "isolation: isolate;",
+    );
+    // Hover stays the STRONGER state: it adds the accent border.
+    expect(
+      ruleBody(css, ".sui-scrub-chart__corner-btn:hover:not(:disabled)::after"),
+    ).toContain("border-color: var(--sui-accent);");
+  });
+
+  it("carries the scrim and the level on the SHARED rules", () => {
+    // The chevron and the y-fit toggle must look the same as each other, so
+    // no rule may name one button alone. Both names stay in the markup as the
+    // hook a consumer overrides one button with.
+    const rules = rulesOnly(chartCss());
+    expect(rules).not.toContain(".sui-scrub-chart__y-fit-btn");
+    expect(rules).not.toContain(".sui-scrub-chart__expand-btn");
+
+    const { container } = bothCorners();
+    for (const name of [
+      ".sui-scrub-chart__y-fit-btn",
+      ".sui-scrub-chart__expand-btn",
+    ]) {
+      const btn = container.querySelector<HTMLElement>(name)!;
+      expect(btn.classList.contains("sui-scrub-chart__corner-btn")).toBe(true);
+      expect(
+        btn.closest(".sui-scrub-chart__corner")!.classList.length,
+      ).toBeGreaterThan(1);
+    }
   });
 });

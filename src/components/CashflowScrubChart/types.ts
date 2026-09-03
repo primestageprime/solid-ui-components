@@ -25,7 +25,7 @@
 
 import type { JSX } from "solid-js";
 import type { Cell } from "../DateAxis";
-import type { ScrubChartHighlight } from "../ScrubChart";
+import type { ScrubChartHighlight, ScrubChartProps } from "../ScrubChart";
 
 /**
  * Payload shape for each day-cell. `cashflowCents` is the day's net flow
@@ -238,8 +238,28 @@ export interface CashflowScrubChartProps {
   centerOn?: { index: number } | null;
   /** Date used by the inner DateAxis for the today highlight. */
   today?: Date;
-  /** Chart drawing-area height in px. Default 200. */
+  /** Chart drawing-area height in px. Default 200. With
+   *  `chartHeightExpanded` set this is the COLLAPSED height. */
   chartHeight?: number;
+  /**
+   * Height the chart grows to when the reader expands it, in px.
+   *
+   * THE MASTER SWITCH for the expand control. Setting it renders an expand
+   * chevron in the bottom-right corner of the chart frame, opposite the y-fit
+   * button, and a click moves the frame between this height and
+   * `chartHeight`. Leave it unset and the chart keeps `chartHeight` and shows
+   * no chevron.
+   */
+  chartHeightExpanded?: ScrubChartProps<CashflowCell>["chartHeightExpanded"];
+  /** Does the chart show `chartHeightExpanded` right now? Controlled: omit it
+   *  and ScrubChart owns the signal, starting collapsed. No effect without
+   *  `chartHeightExpanded`. */
+  expanded?: ScrubChartProps<CashflowCell>["expanded"];
+  /** Fires when the reader clicks the expand chevron. */
+  onExpandedChange?: ScrubChartProps<CashflowCell>["onExpandedChange"];
+  /** Milliseconds the frame takes to reach the other height. `false` jumps to
+   *  it. Default 240. No effect without `chartHeightExpanded`. */
+  expandTransition?: ScrubChartProps<CashflowCell>["expandTransition"];
   /** Width of one axis cell in px. Default 60 — matches the cashflow cell content. */
   cellWidth?: number;
   /** Extra balance lines overlaid on the chart. The y-domain widens to span
@@ -269,6 +289,10 @@ export interface CashflowScrubChartProps {
    *
    * `chartYDomainMode` in helpers.ts is this table in code, and a test pins
    * every row of it.
+   *
+   * `yFitDomain` OUTRANKS the whole table. When the caller sets that callback
+   * and it returns a domain, the fitted domain drives the y-axis and this
+   * prop only feeds the fallback. See `yFitDomain`.
    */
   yMax?: number | null;
   /**
@@ -287,6 +311,9 @@ export interface CashflowScrubChartProps {
    * opposite until 2026-09-02 ("tight-domain mode wins, same as `yMax`'s own
    * interaction with it") and a consumer blocked real work on the constraint
    * it invented — `yMax`'s interaction is the reverse.
+   *
+   * `yFitDomain` OUTRANKS this prop as well, on the same terms it outranks
+   * `yMax`. See `yFitDomain`.
    */
   yMin?: number | null;
   /**
@@ -301,6 +328,64 @@ export interface CashflowScrubChartProps {
    * current callers).
    */
   yPadFraction?: number;
+
+  // ── Y-fit control (optional) ─────────────────────────────────────────
+  // The six props below are ScrubChart's own, forwarded unchanged. Each one
+  // takes its type from `ScrubChartProps` through an indexed access, so the
+  // wrapper cannot drift from the chart it wraps. `ScrubChartYFitPin` is not
+  // in the set: it is the only y-fit prop with no cashflow reading yet, so
+  // the wrapper waits for a caller that needs it.
+
+  /**
+   * Y-domain for a cell range, in **cents**. ScrubChart calls it with the
+   * VISIBLE window in "visible" mode and with the WHOLE cell range in
+   * "series" mode. Both ends are INCLUSIVE cell indices. Return the RAW
+   * extent — ScrubChart pads it by `yFitMargin` and snaps it.
+   *
+   * Setting this prop also renders the fit toggle in the chart's origin
+   * corner, which is how a reader switches the two modes.
+   *
+   * THIS PROP WINS over `yMin`, `yMax` and `yPadFraction`. Those three still
+   * compute a domain, and ScrubChart uses that domain as the FALLBACK: it
+   * applies whenever this callback is absent, or returns `null` for the
+   * range it is asked about. A caller that sets none of the fit props keeps
+   * the exact domain it had before this prop existed.
+   */
+  yFitDomain?: ScrubChartProps<CashflowCell>["yFitDomain"];
+  /** Fraction of the fitted extent added above and below each end. Default
+   *  0.08. No effect without `yFitDomain`. */
+  yFitMargin?: ScrubChartProps<CashflowCell>["yFitMargin"];
+  /**
+   * Edges the fitted domain always includes, per y-scale mode.
+   *
+   * A bound only WIDENS the domain, in cents: the floor takes the lesser of
+   * the fitted min and `min`, and the ceiling takes the greater of the fitted
+   * max and `max`. A bound of `{ series: { min: 0 } }` therefore holds the
+   * zero line on the axis while every day that dips below it stays on the
+   * plot. No effect without `yFitDomain`.
+   */
+  yFitBounds?: ScrubChartProps<CashflowCell>["yFitBounds"];
+  /** Milliseconds the fitted domain takes to reach a new target. `false`
+   *  snaps to it. Default 240. No effect on the `yMin`/`yMax` domain — only
+   *  the fitted domain animates. */
+  yFitTransition?: ScrubChartProps<CashflowCell>["yFitTransition"];
+  /** Which cell range sets the y extent. Controlled: omit it and ScrubChart
+   *  owns the signal, starting at "visible". No effect without
+   *  `yFitDomain`. */
+  yScaleMode?: ScrubChartProps<CashflowCell>["yScaleMode"];
+  /** Fires when the reader picks the other segment of the fit toggle. */
+  onYScaleModeChange?: ScrubChartProps<CashflowCell>["onYScaleModeChange"];
+  /**
+   * Distance in px from the container's left edge to the y-axis line.
+   * ScrubChart measures the widest formatted label and, with `yFitDomain`
+   * set, widens that default until the toggle button fits the column.
+   *
+   * Forward it so a host can CORRECT that measurement. An explicit width is
+   * used AS GIVEN — it aligns two charts' y-axes to one column, and a width
+   * narrower than the button clips the button. Without this prop a host with
+   * a clipped button has no way to give the column more room.
+   */
+  yAxisWidth?: ScrubChartProps<CashflowCell>["yAxisWidth"];
   /**
    * Override source for the PRIMARY running-balance LINE (and the plotline
    * markers/dots that sit on it), DECOUPLED from the ribbon. When provided, the

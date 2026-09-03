@@ -22,21 +22,24 @@
 
 import type { JSX } from "solid-js";
 import type { Cell, DateAxisCellContext } from "../DateAxis";
-import type { ScrubChartYFitPin, ScrubChartYScaleMode } from "./yScaleMode";
+import type {
+  ScrubChartYFitBound,
+  ScrubChartYFitPin,
+  ScrubChartYScaleMode,
+} from "./yScaleMode";
 
-export type { ScrubChartYFitPin, ScrubChartYScaleMode } from "./yScaleMode";
+export type {
+  ScrubChartYFitBound,
+  ScrubChartYFitPin,
+  ScrubChartYScaleMode,
+} from "./yScaleMode";
 
 /** Cadence at which to emit x-axis ticks. Cells whose `start` matches the
  *  cadence's anchor get a labelled tick. `"auto"` picks the finest cadence
  *  whose candidate count fits under `xMaxTicks` — week → month → quarter →
  *  year, falling back to a strided coarsest cadence for very long ranges. */
 export type ScrubChartXTickCadence =
-  | "none"
-  | "auto"
-  | "week"
-  | "month"
-  | "quarter"
-  | "year";
+  "none" | "auto" | "week" | "month" | "quarter" | "year";
 
 /** Resolved cadence — never `"auto"` or `"none"`, just the unit actually used. */
 export type ResolvedXTickCadence = "week" | "month" | "quarter" | "year";
@@ -147,8 +150,35 @@ export interface ScrubChartProps<C extends Cell> {
   scrub?: boolean;
 
   /** Chart drawing-area height in px. Default 200. Includes any reserved
-   *  x-axis margin. */
+   *  x-axis margin. With `chartHeightExpanded` set this is the COLLAPSED
+   *  height. */
   chartHeight?: number;
+  /**
+   * Height the chart grows to when the reader expands it, in px.
+   *
+   * THE MASTER SWITCH for the expand control. Setting it renders an expand
+   * chevron in the bottom-RIGHT corner of the chart frame, opposite the y-fit
+   * button, and a click moves the frame between this height and
+   * `chartHeight`. Leave it unset and the chart keeps `chartHeight` and shows
+   * no chevron.
+   */
+  chartHeightExpanded?: number;
+  /** Does the chart show `chartHeightExpanded` right now? Controlled: omit it
+   *  and ScrubChart owns the signal, starting collapsed. No effect without
+   *  `chartHeightExpanded`. */
+  expanded?: boolean;
+  /** Fires when the reader clicks the expand chevron. */
+  onExpandedChange?: (expanded: boolean) => void;
+  /**
+   * Milliseconds the frame takes to reach the other height. `false` disables
+   * the tween and the height jumps. Default 240.
+   *
+   * No effect without `chartHeightExpanded`. A caller that moves `chartHeight`
+   * itself keeps the jump it has always had, so no existing chart gains motion
+   * it did not ask for. A reader who sets `prefers-reduced-motion: reduce`
+   * gets the height at once, whatever this prop says.
+   */
+  expandTransition?: number | false;
   /** Width of one axis cell in px. Default 40. */
   cellWidth?: number;
   /** Accent color for the detail ribbon — draws a 1px border around the ENTIRE
@@ -184,7 +214,8 @@ export interface ScrubChartProps<C extends Cell> {
    *
    * The callback exists because `renderChart` is a slot: ScrubChart never
    * sees the values, so the caller states the extent. Return the RAW extent
-   * of the range — ScrubChart pads it, snaps it, and applies `yFitPin`.
+   * of the range — ScrubChart pads it, snaps it, and applies `yFitPin` and
+   * `yFitBounds`.
    *
    * Setting this prop also renders the fit toggle at the bottom-left of the
    * chart frame.
@@ -203,6 +234,20 @@ export interface ScrubChartProps<C extends Cell> {
    * only. No effect without `yFitDomain`.
    */
   yFitPin?: ScrubChartYFitPin;
+  /**
+   * Edges the fitted domain always includes, per mode.
+   *
+   * A bound only WIDENS the domain: the low end takes the lesser of the
+   * fitted min and `min`, and the high end takes the greater of the fitted
+   * max and `max`. Data outside the bound therefore stays on the plot, which
+   * is what separates this prop from `yFitPin` — a pin OVERRIDES an edge and
+   * clips that data away.
+   *
+   * The bound applies LAST, after `yFitMargin` and after the nice() snap, so
+   * a bound of 0 puts the floor on exactly zero. A mode with no bound keeps
+   * the domain it fitted. No effect without `yFitDomain`.
+   */
+  yFitBounds?: Partial<Record<ScrubChartYScaleMode, ScrubChartYFitBound>>;
   /**
    * Milliseconds the fitted y-domain takes to reach a new target. `false`
    * disables the tween and the domain snaps. Default 240.

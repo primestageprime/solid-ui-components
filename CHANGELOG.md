@@ -2,6 +2,217 @@
 
 ## [Unreleased]
 
+### Changed
+- **`ScrubChart`'s frame is now the component's stacking root.**
+  `.sui-scrub-chart__frame` takes `isolation: isolate`, so every level the
+  component states stays inside the frame. The corner buttons state
+  `z-index: 2`, and that number used to LEAK: neither the root
+  (`overflow: hidden` alone makes no stacking context) nor the frame
+  (`position: relative` at the auto level makes none either) contained it, so
+  the buttons competed in whatever stacking context an ancestor in the host
+  page happened to make. A consumer that drew its own control beside the chart
+  at level 2 found DOM order deciding between the two. It cannot now.
+
+  Nothing inside the frame changes rank. The corners still paint over the
+  highlight bands, the gridlines, the `renderChart` series, the axis tick
+  labels, the window band and the pan overlay, and
+  `.sui-cashflow-scrub-chart__hover-tooltip` still keeps the top over both.
+  `isolation` and not `z-index: 0`, so the frame makes the context without
+  entering the parent's own level ordering.
+
+- **`ScrubChart`'s corner buttons float above the chart and carry a resting
+  scrim.** Both controls — the y-fit toggle on the left, the expand chevron on
+  the right — now paint at `z-index: 2` on the shared
+  `.sui-scrub-chart__corner` rule, above every layer of the frame: the
+  highlight bands, the gridlines, the `renderChart` series, the axis tick
+  labels, the window band and the pan overlay. Each of those layers paints at
+  the auto level, so DOM order alone decided the winner and a consumer's own
+  positioned layer could cover a button.
+
+  The button also draws a scrim at REST, not on hover alone. Below roughly a
+  160px frame width a corner button lands on the last x tick label. That
+  overlap is ACCEPTED — neither control reserves space, moves or hides — so the
+  button has to win it and stay readable. The same `::after` that carries the
+  hover border now paints `var(--sui-bg-base, var(--sui-bg-elevated))` beneath
+  the glyph, which matches the chart surface around it. Hover keeps the accent
+  border as the stronger state, and `:focus-visible` keeps its ring.
+
+  One shared rule serves both buttons, so the chevron and the toggle still read
+  as one pair. `.sui-scrub-chart__y-fit-btn` and `.sui-scrub-chart__expand-btn`
+  stay in the markup as the hook a consumer overrides one button with, and
+  still style nothing themselves.
+
+### Added
+- **`Slider` takes `valueLabel`, so a caller can draw the readout itself.** The
+  node replaces the value node — the value label, or the `editable` field. The
+  caption, the label line and the track stay SUI's.
+
+  ```tsx
+  <Slider label="Annual discount" value={percent()} onChange={setPercent}
+          min={0} max={20} format={(n) => `${n}% a year`}
+          valueLabel={<DiscountFigures percent={percent()} onPercent={setPercent} />} />
+  ```
+
+  One value can have more than one honest reading, and SUI printed exactly one
+  figure. An annual discount reads as `9%`, as `$136/mo` and as `$1,627.08/yr`:
+  the percent moves the track, the monthly figure compares against the monthly
+  plan, and the yearly figure is what the customer is charged. A coach who knows
+  they want `$1,627.08` types that figure rather than hunting for the percent
+  that produces it, so all three have to stay typeable. A `format` that returns
+  the whole composite string cannot do that — on focus the field swaps to the
+  raw number and commits one float, so two of the three readings go read-only.
+  The caller now draws each field inside the node and owns each parse.
+
+  **`editable` beside `valueLabel` is a COMPILE error**, not a runtime warning.
+  `SliderProps` is a union of the two readout shapes, the way `ComboboxProps`
+  narrows on `multiple`. SUI cannot draw a field in a place it gave away, and a
+  warning would hide the mistake until the page ran. `SliderDataProps` omits
+  through each member, so a curried variant keeps the same rule.
+
+  `format` still governs the thumb. A node changes what a reader SEES, not what
+  the thumb is worth, so `aria-valuetext` still announces `format(value)`.
+
+  The label line stays ONE flex row. It takes `min-width: 0`, so the caller's
+  node can shrink inside the column; the node lays out and wraps its own
+  figures. No existing slider changes shape.
+
+- **`ScrubChart` owns the expand chevron, and `CashflowScrubChart` forwards
+  it.** `chartHeightExpanded` is the master switch: set it and the chart draws
+  a chevron in the bottom-RIGHT corner of the frame, and a click moves the
+  frame between `chartHeight` and that height.
+
+  ```tsx
+  <CashflowScrubChart cells={cells} selected={idx()} onScrub={setIdx}
+                      chartHeight={200}
+                      chartHeightExpanded={480} />
+  ```
+
+  A host used to build this control itself, on top of the plain `chartHeight`
+  number: its own button, its own boolean and its own height arithmetic on
+  every page that drew a chart. Two props replace all of it. Leave
+  `chartHeightExpanded` unset and nothing changes for an existing caller — no
+  chevron, and the height it asked for.
+
+  `expanded` and `onExpandedChange` make the control controlled. Omit
+  `expanded` and ScrubChart owns the signal, starting COLLAPSED, the way
+  `yScaleMode` works; `onExpandedChange` reports every click either way.
+
+  `expandTransition` states the time the frame takes to reach the other
+  height, 240 ms by default and `false` to jump. ONE height accessor drives
+  the plot span, the axis rows, the window band and the `viewBox` together, so
+  the whole chart eases with the frame instead of jumping inside it. A reader
+  who sets `prefers-reduced-motion: reduce` gets the new height at once.
+
+  The chevron mirrors the y-fit button across the frame: same size, same
+  inset, same bare glyph, same line on the x-axis row. Only the edge differs,
+  so a chart that draws both keeps the two apart. Both buttons now take the
+  shared classes `.sui-scrub-chart__corner` and `.sui-scrub-chart__corner-btn`,
+  and each keeps a name of its own — `.sui-scrub-chart__y-fit-btn` and
+  `.sui-scrub-chart__expand-btn` — as the hook a consumer overrides one button
+  with.
+
+- **`ScrubChart` takes a `yFitBounds` prop, and `CashflowScrubChart` forwards
+  it.** The prop names the edges the fitted y-domain always includes, one entry
+  per y-scale mode.
+
+  ```tsx
+  <ScrubChart cells={cells} renderChart={draw}
+              yFitDomain={positionExtent}
+              yFitBounds={{ visible: { min: 0 }, series: { min: 0 } }} />
+  ```
+
+  The rule is INCLUDE AT LEAST, never override: the low end takes the lesser of
+  the fitted min and `min`, and the high end takes the greater of the fitted max
+  and `max`. A series of 300..900 bounded at `{ min: 0 }` draws 0..900, and the
+  same bound on a series of -50..900 draws -50..900 — the day in the red keeps
+  its place on the plot.
+
+  That is the whole difference from `yFitPin`, which stays the prop for an edge
+  that must hold at an exact value. A pin OVERRIDES the edge, so a pinned floor
+  of 0 clips a deficit away; a bound gives ground to the data instead. Use the
+  pin for an axis that may not move, and the bound for a zero line that must
+  stay in view.
+
+  The bound applies LAST, after `yFitMargin` and after the `nice()` snap, so a
+  bound of 0 puts the floor on exactly zero while the opposite end keeps its
+  round ticks. A mode with no entry keeps the domain it fitted.
+
+- **`CashflowScrubChart` forwards the `ScrubChart` y-fit props.** The wrapper
+  declares its own props and renders `ScrubChart` with an explicit list, so a
+  host that draws every chart through it could not reach the y-axis fit
+  toggle at all.
+
+  ```tsx
+  <CashflowScrubChart cells={cells} selected={idx()} onScrub={setIdx}
+                      yMin={0}
+                      yFitDomain={(from, to) => balanceExtent(from, to)} />
+  ```
+
+  `yFitDomain`, `yFitMargin`, `yFitTransition`, `yScaleMode`,
+  `onYScaleModeChange` and `yAxisWidth` now reach the inner chart unchanged.
+  Each takes its type from `ScrubChartProps` through an indexed access, so the
+  wrapper cannot drift from the chart it wraps. The callback states the
+  balance extent of an INCLUSIVE cell range, in cents, because the chart draws
+  the line itself and never reports what it drew.
+
+  The fitted domain OUTRANKS `yMin`, `yMax` and `yPadFraction`. Those three
+  still compute a domain, and that domain stays the FALLBACK: it applies
+  whenever the callback is absent, or returns `null` for the range it is asked
+  about. A caller that sets none of the six props keeps the chart it had.
+
+  `yAxisWidth` is in the set for one reason. ScrubChart measures the y-axis
+  column from the formatted labels and, with `yFitDomain` set, widens that
+  default until the toggle button fits — so a host that cannot state the width
+  cannot correct a clipped button. `yFitBounds` forwards too, per the entry
+  above. `yFitPin` is not forwarded yet.
+
+- **`SliderField` — the editable readout, exported, with the unit split away
+  from the number.** `Slider`'s `editable` path drew a field that held the whole
+  formatted string. A caller drawing a `valueLabel` node needs one field per
+  figure and had to hand-roll the focus swap, the width and the commit. The
+  field now ships.
+
+  ```tsx
+  import { SliderField } from "@primestageprime/solid-ui-components";
+
+  // Only "132.61" is typeable. The "$" and the "/mo" stand beside it.
+  <SliderField label="Price per month" prefix="$" suffix="/mo"
+               value={amount(monthly())} onCommit={(text) => setPercent(fromMonthly(text))} />
+  ```
+
+  **It owns the interaction, never the meaning.** The focus swap, the width, the
+  commit on Enter and on blur, and the revert on Escape are the field's. The
+  parse, the clamp and the map back to the value are the caller's. The field
+  never reads the slider's own `min`, `max` or `step`: a `$132.61/mo` figure and
+  the `11%` the track moves have different domains, so one parse would be right
+  for one figure and wrong for the other.
+
+  **The input holds only the number.** `prefix` and `suffix` render as static
+  text either side of it, and the three parts read as ONE unbroken string — one
+  font, one size, one baseline, no gap. The border, the padding, the hover and
+  the focus sit on the GROUP, because the input's own horizontal padding would
+  open a hole between the number and its suffix. The group is a `<label>`, so a
+  press on the `$` or the `/mo` focuses the number.
+
+  With no prefix and no suffix the field is what it always was, and `Slider
+  editable` passes neither. A test renders the built-in path beside a bare
+  `SliderField` and compares the markup of the two.
+
+### Fixed
+- **The editable readout no longer clips its last character.** `$132.61/mo`
+  rendered with the `o` cut in half and `$1,591.32/yr` lost the `r`. The field
+  sized itself with the `size` attribute, which counts CHARACTERS: the UA
+  multiplies `size` by the AVERAGE character width, so any string whose glyphs
+  run wider than that average overflowed the box.
+
+  Width now comes from a MIRROR. The group holds a hidden span carrying the same
+  text in the same font, and the input lies over it in the same `inline-grid`
+  cell, so the cell measures the real glyphs. It is exact in a proportional font
+  as well as a monospace one, because nothing counts characters. `size="1"`
+  stays as a floor, otherwise a text input's intrinsic default of 20 characters
+  would win the cell. The mirror carries the text the input SHOWS, so the field
+  grows and shrinks on every keystroke and does not jump on focus.
+
 ## 0.162.0
 
 ### Added

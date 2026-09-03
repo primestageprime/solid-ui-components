@@ -68,34 +68,52 @@ export const X_LABEL_HANGING_RISE = 2;
 export const X_LABEL_CENTRE_OFFSET =
   X_LABEL_BASELINE_GAP - X_LABEL_HANGING_RISE + Y_LABEL_HALF_HEIGHT;
 
-/** Size of the y-fit button's HIT TARGET, in px. The button is square. Keep
- *  it in step with `.sui-scrub-chart__y-fit-btn` in ScrubChart.css. The
+/** Size of a CORNER button's HIT TARGET, in px. The button is square. Keep
+ *  it in step with `.sui-scrub-chart__corner-btn` in ScrubChart.css. The
  *  border the button draws on hover is smaller than this: a pseudo-element
- *  carries it, so the target stays this size. */
-export const Y_FIT_BUTTON_SIZE = 26;
+ *  carries it, so the target stays this size. Both corner controls — the
+ *  y-fit button and the expand chevron — take this one size, so the pair
+ *  reads as a pair. */
+export const CORNER_BUTTON_SIZE = 26;
 
 /** How far the hover border sits inside the hit target, on each side, in px.
- *  Keep it in step with the `inset` of `.sui-scrub-chart__y-fit-btn::after`
- *  in ScrubChart.css. The border therefore measures `Y_FIT_BUTTON_SIZE - 2 *
- *  Y_FIT_HOVER_INSET` and hugs the glyph. */
-export const Y_FIT_HOVER_INSET = 3;
+ *  Keep it in step with the `inset` of `.sui-scrub-chart__corner-btn::after`
+ *  in ScrubChart.css. The border therefore measures `CORNER_BUTTON_SIZE - 2 *
+ *  CORNER_HOVER_INSET` and hugs the glyph. */
+export const CORNER_HOVER_INSET = 3;
 
-/** Gap between the y-fit button and the frame edge, in px. Keep it in step
- *  with the insets of `.sui-scrub-chart__y-fit` in ScrubChart.css. */
-export const Y_FIT_INSET = 2;
+/** Gap between a corner button and the frame edge, in px. Keep it in step
+ *  with the insets of `.sui-scrub-chart__corner` in ScrubChart.css. */
+export const CORNER_INSET = 2;
+
+/** The y-fit button's hit target, in px. The corner size under the name the
+ *  y-fit code already uses. */
+export const Y_FIT_BUTTON_SIZE = CORNER_BUTTON_SIZE;
+
+/** The y-fit button's hover inset, in px. See `CORNER_HOVER_INSET`. */
+export const Y_FIT_HOVER_INSET = CORNER_HOVER_INSET;
+
+/** The y-fit button's gap from the frame edge, in px. See `CORNER_INSET`. */
+export const Y_FIT_INSET = CORNER_INSET;
 
 /**
- * Pixel drop from `plotBottom` to the y-fit button's TOP edge.
+ * Pixel drop from `plotBottom` to a corner button's TOP edge.
  *
  * The button centres on the x tick labels, so its top edge sits half a
  * diameter above their centre line. The number is NEGATIVE: the button is
- * taller than twice that drop, so it starts ABOVE `plotBottom` and reaches
- * into the y-axis label column. `yLabelFloor` hands it that room.
+ * taller than twice that drop, so it starts ABOVE `plotBottom`. In the origin
+ * corner it then reaches into the y-axis label column, and `yLabelFloor`
+ * hands it that room. Both corner controls take the same shift, so the two
+ * buttons sit on one line across the frame.
  */
-export const Y_FIT_LEVEL_OFFSET = X_LABEL_CENTRE_OFFSET - Y_FIT_BUTTON_SIZE / 2;
+export const CORNER_LEVEL_OFFSET =
+  X_LABEL_CENTRE_OFFSET - CORNER_BUTTON_SIZE / 2;
+
+/** The y-fit button's level shift, in px. See `CORNER_LEVEL_OFFSET`. */
+export const Y_FIT_LEVEL_OFFSET = CORNER_LEVEL_OFFSET;
 
 /**
- * The room the y-fit control asks of the axis chrome, in px.
+ * The room a CORNER control asks of the axis chrome, in px.
  *
  * ScrubChart applies the number twice. The DEFAULT y-axis column grows to it,
  * where it is exact: the button plus the one inset on the frame's left edge.
@@ -105,7 +123,11 @@ export const Y_FIT_LEVEL_OFFSET = X_LABEL_CENTRE_OFFSET - Y_FIT_BUTTON_SIZE / 2;
  * covers both bounds and leaves the row a little room to spare. An explicit
  * `yAxisWidth` still wins as given.
  */
-export const Y_FIT_FOOTPRINT = Y_FIT_BUTTON_SIZE + Y_FIT_INSET;
+export const CORNER_FOOTPRINT = CORNER_BUTTON_SIZE + CORNER_INSET;
+
+/** The room the y-fit control asks of the axis chrome, in px. See
+ *  `CORNER_FOOTPRINT` — both corner controls ask for the same. */
+export const Y_FIT_FOOTPRINT = CORNER_FOOTPRINT;
 
 /** Extra width the y-axis column takes for the y-fit control, in px.
  *
@@ -124,7 +146,7 @@ export const Y_FIT_GUTTER = 10;
  * the row would only cost the plot height. An explicit `yAxisWidth` still
  * wins as given.
  */
-export const Y_FIT_COLUMN = Y_FIT_FOOTPRINT + Y_FIT_GUTTER;
+export const Y_FIT_COLUMN = CORNER_FOOTPRINT + Y_FIT_GUTTER;
 
 /**
  * The lowest pixel y a y-tick label's box may reach.

@@ -15,6 +15,7 @@
 //
 //   • fitCellRange(mode, windowCells, cellCount) — the range to ask about.
 //   • fitYDomain(extent, mode, pin, margin, tickCount) — the domain to draw.
+//   • widenToYFitBounds(domain, mode, bounds) — the edges to always include.
 //
 // ScrubChart.tsx keeps the reactive wiring and the markup.
 // ============================================
@@ -152,4 +153,53 @@ export const fitYDomain = (
     resolved.max ?? snapped[1],
   ];
   return withHeight(pinned, resolved, span);
+};
+
+/**
+ * One mode's INCLUDE-AT-LEAST edges for the fitted domain.
+ *
+ * A bound only WIDENS the domain. It never narrows it, so a cell outside the
+ * bound stays visible. Use `ScrubChartYFitPin` for an edge that must hold at
+ * an exact value whatever the data does.
+ */
+export interface ScrubChartYFitBound {
+  /** Low end the domain always reaches, in data units. */
+  min?: number;
+  /** High end the domain always reaches, in data units. */
+  max?: number;
+}
+
+/**
+ * Widen a fitted domain until it includes one mode's bounds.
+ *
+ * The rule is INCLUDE AT LEAST, never override:
+ *
+ *   low  = Math.min(fitted low, bound.min)
+ *   high = Math.max(fitted high, bound.max)
+ *
+ * A series of 300..900 with `{ series: { min: 0 } }` draws 0..900, and the
+ * same bound on a series of -50..900 keeps the -50 cell on the plot. A mode
+ * with no bound keeps the domain it was given.
+ *
+ * This step runs LAST, after the margin and after the nice() snap, so the
+ * bound lands at exactly the number the caller states — a bound of 0 puts the
+ * floor on zero. The opposite end keeps its snap, so the ticks stay round.
+ *
+ * @param domain The fitted domain, low end first, from `fitYDomain`.
+ * @param mode The mode that produced the domain. It selects the bound.
+ * @param bounds A bound per mode, or undefined when no mode has one.
+ * @returns The domain to draw, low end first.
+ */
+export const widenToYFitBounds = (
+  domain: [number, number],
+  mode: ScrubChartYScaleMode,
+  bounds:
+    | Partial<Record<ScrubChartYScaleMode, ScrubChartYFitBound>>
+    | undefined,
+): [number, number] => {
+  const bound = bounds?.[mode];
+  const [low, high] = domain;
+  return bound
+    ? [Math.min(low, bound.min ?? low), Math.max(high, bound.max ?? high)]
+    : domain;
 };

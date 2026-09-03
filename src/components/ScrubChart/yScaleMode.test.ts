@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { scaleLinear } from "d3-scale";
-import { DEFAULT_Y_FIT_MARGIN, fitCellRange, fitYDomain } from "./yScaleMode";
+import {
+  DEFAULT_Y_FIT_MARGIN,
+  fitCellRange,
+  fitYDomain,
+  widenToYFitBounds,
+} from "./yScaleMode";
 
 describe("fitCellRange", () => {
   it("answers the visible window in visible mode", () => {
@@ -161,5 +166,74 @@ describe("fitYDomain", () => {
         5,
       ),
     ).toEqual([37, 6377]);
+  });
+});
+
+describe("widenToYFitBounds", () => {
+  it("returns the domain unchanged when no mode has a bound", () => {
+    expect(widenToYFitBounds([300, 900], "series", undefined)).toEqual([
+      300, 900,
+    ]);
+  });
+
+  it("returns the domain unchanged when the OTHER mode holds the bound", () => {
+    expect(
+      widenToYFitBounds([300, 900], "visible", { series: { min: 0 } }),
+    ).toEqual([300, 900]);
+  });
+
+  it("drops the low end to a min the fit never reached", () => {
+    expect(
+      widenToYFitBounds([300, 900], "series", { series: { min: 0 } }),
+    ).toEqual([0, 900]);
+  });
+
+  it("keeps a low end that already sits below the min", () => {
+    // The bound includes, it does not override. The -50 cell stays visible.
+    expect(
+      widenToYFitBounds([-50, 900], "series", { series: { min: 0 } }),
+    ).toEqual([-50, 900]);
+  });
+
+  it("lifts the high end to a max the fit never reached", () => {
+    expect(
+      widenToYFitBounds([0, 400], "visible", { visible: { max: 1000 } }),
+    ).toEqual([0, 1000]);
+  });
+
+  it("keeps a high end that already sits above the max", () => {
+    expect(
+      widenToYFitBounds([0, 1200], "visible", { visible: { max: 1000 } }),
+    ).toEqual([0, 1200]);
+  });
+
+  it("applies both edges of one bound", () => {
+    expect(
+      widenToYFitBounds([300, 400], "series", {
+        series: { min: 0, max: 1000 },
+      }),
+    ).toEqual([0, 1000]);
+  });
+
+  it("gives each mode its own bound", () => {
+    const bounds = { visible: { min: 0 }, series: { min: -500 } };
+    expect(widenToYFitBounds([300, 900], "visible", bounds)[0]).toBe(0);
+    expect(widenToYFitBounds([300, 900], "series", bounds)[0]).toBe(-500);
+  });
+
+  it("lands the floor on exactly zero after the margin and the snap", () => {
+    // fitYDomain pads 300..900 and snaps it, which drops the low end below
+    // 300. The bound then states the floor exactly, the way a pin does.
+    const fitted = fitYDomain(
+      [300, 900],
+      "series",
+      undefined,
+      DEFAULT_Y_FIT_MARGIN,
+      5,
+    );
+    expect(fitted[0]).not.toBe(0);
+    expect(widenToYFitBounds(fitted, "series", { series: { min: 0 } })[0]).toBe(
+      0,
+    );
   });
 });

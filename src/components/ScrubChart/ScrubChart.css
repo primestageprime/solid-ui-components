@@ -14,8 +14,19 @@
   overflow: hidden;
 }
 
+/* The frame is the component's STACKING ROOT. Every level ScrubChart states
+   inside it — the corner controls, the hover readout — counts only against
+   its siblings in here, and never against a layer the consumer's own app
+   states. Without this the corner's `z-index: 2` climbs to whatever ancestor
+   in the host page makes a stacking context, and a consumer layer at the same
+   level ties with it on DOM order alone.
+   `isolation: isolate` and not `z-index: 0`: it makes the context without
+   entering the frame into the parent's own level ordering. `overflow: hidden`
+   here does NOT make one, and `position: relative` at the auto level does not
+   either, so the declaration must stay. */
 .sui-scrub-chart__frame {
   position: relative;
+  isolation: isolate;
   width: 100%;
   background: var(--sui-bg-base, transparent);
   overflow: hidden;
@@ -129,32 +140,68 @@
   padding-bottom: 0;
 }
 
-/* Y-fit control — opt-in (`yFitDomain`) icon button that picks which cell
-   range sets the y extent. It sits in the chart's ORIGIN CORNER: in the
-   y-axis label column, left of the plot, and level with the x-axis tick
-   labels. ScrubChart states the row's top edge through `axisTop`, and that
+/* Corner controls — the small icon buttons ScrubChart parks inside its own
+   frame. Two live here, and they share every rule but the edge they pin to:
+   the y-fit control in the ORIGIN corner (bottom left) and the expand
+   chevron in the END corner (bottom right). One family, one set of rules, so
+   a change reaches both and the two read as one pair across the frame.
+
+   ScrubChart states the x-axis row's top edge through `axisTop`, and that
    inline `top` beats the `bottom` inset below; the `bottom` inset serves a
-   control mounted on its own. Keep both 2px insets in step with `Y_FIT_INSET`
-   in helpers.ts. Both insets stay POSITIVE: the frame hides its overflow, so
-   a negative one clips the button. `Y_FIT_GUTTER` widens the COLUMN instead,
-   which moves the y labels right and leaves the button further from them. Do
-   NOT park the button over the plot: it then covers the lowest gridline and
-   its label. */
-.sui-scrub-chart__y-fit {
+   control mounted on its own. Keep the 2px insets in step with
+   `CORNER_INSET` in helpers.ts. Every inset stays POSITIVE: the frame hides
+   its overflow, so a negative one clips the button. `Y_FIT_GUTTER` widens the
+   y-axis COLUMN instead, which moves the y labels right and leaves the y-fit
+   button further from them. The layout keeps a button off the plot at a
+   usual width; below roughly a 160px frame a button does land on a tick
+   label, and that is ACCEPTED — the button floats over the label on its
+   scrim and stays readable. Neither control reserves space, moves or hides
+   for what it covers. */
+.sui-scrub-chart__corner {
   position: absolute;
-  left: 2px;
   bottom: 2px;
   display: flex;
+  /* The corner floats ABOVE every layer of the frame — the highlight bands,
+     the gridlines, the consumer's plot, the axis tick labels, the window band
+     and the gesture overlay. All of those paint at the auto level, so DOM
+     order alone decides between them, and a layer that comes later beats a
+     button. A stated level settles it: at a narrow width a button lands on a
+     tick label, and the button wins. It ties with the hover readout
+     (`.sui-cashflow-scrub-chart__hover-tooltip` states the same 2), which
+     comes later in the frame and so keeps the top — a readout the reader is
+     pointing at outranks a control.
+     This 2 stays INSIDE the component. The frame isolates, so the level is
+     read against the other layers of the frame and never against a layer the
+     consumer's app states. A consumer's own control at level 2 beside the
+     chart cannot compete with this one. */
+  z-index: 2;
 }
 
-/* The button is a bare glyph at rest: no fill, no border, no ring. It reads
-   as axis furniture, not as a form control, so it is a plain `<button>` and
-   not `Button` — every colour and shape rule `.sui-btn` brings would have to
-   be undone here. The glyph takes `--sui-accent`, the colour the default
-   series line strokes with, so the control names the line it rescales. Keep
-   the 26px size in step with `Y_FIT_BUTTON_SIZE` in helpers.ts: it is the hit
-   TARGET, and the border below is smaller. */
-.sui-scrub-chart__y-fit-btn {
+/* The two corners. Each class carries ONE edge inset and nothing else, so the
+   controls cannot overlap even on a narrow chart. Both names are also the
+   public hook a consumer targets — do not rename either. */
+.sui-scrub-chart__y-fit {
+  left: 2px;
+}
+
+.sui-scrub-chart__expand {
+  right: 2px;
+}
+
+/* The button is a glyph on a plain scrim at rest: no border, no ring. It
+   reads as axis furniture, not as a form control, so it is a plain `<button>`
+   and not `Button` — every colour and shape rule `.sui-btn` brings would have
+   to be undone here. The button paints NO background of its own; the scrim
+   rides on the `::after` below, which hugs the glyph. The glyph takes `--sui-accent`, the colour the default
+   series line strokes with, so a corner control names the line it acts on.
+   Keep the 26px size in step with `CORNER_BUTTON_SIZE` in helpers.ts: it is
+   the hit TARGET, and the border below is smaller.
+
+   Each button also carries a name of its own — `.sui-scrub-chart__y-fit-btn`
+   and `.sui-scrub-chart__expand-btn`. Those names style nothing here. They
+   are the hooks a consumer overrides one button with, so keep them in the
+   markup. */
+.sui-scrub-chart__corner-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -171,30 +218,43 @@
   background: none;
   color: var(--sui-accent);
   cursor: pointer;
+  /* The button paints as ONE unit, so the resting scrim below rides with it
+     over the chart instead of sinking behind the tick label it covers. */
+  isolation: isolate;
   appearance: none;
   -webkit-appearance: none;
 }
 
-/* A pseudo-element draws the hover border, so the border hugs the glyph while
-   the button keeps the whole 26px target a pointer and a keyboard need. The
-   `inset` states how far in from that target the border sits — keep it in
-   step with `Y_FIT_HOVER_INSET` in helpers.ts. */
-.sui-scrub-chart__y-fit-btn::after {
+/* A pseudo-element draws the resting scrim and the hover border, so both hug
+   the glyph while the button keeps the whole 26px target a pointer and a
+   keyboard need. The `inset` states how far in from that target they sit —
+   keep it in step with `CORNER_HOVER_INSET` in helpers.ts.
+
+   The scrim is there at REST, not on hover alone. A button floats over the
+   x-axis tick label it covers on a narrow chart, and a bare glyph over a label
+   reads as neither. The scrim takes the frame's own background token and falls
+   back to the card surface the frame shows through, so the patch matches the
+   chart around it. `z-index: -1` puts the scrim under the glyph — the button
+   isolates, so the scrim still covers the label beneath. Hover keeps the
+   border as the stronger state. */
+.sui-scrub-chart__corner-btn::after {
   content: "";
   position: absolute;
   inset: 3px;
+  z-index: -1;
+  background: var(--sui-bg-base, var(--sui-bg-elevated));
   border: 1px solid transparent;
   border-radius: 5px;
   pointer-events: none;
 }
 
-.sui-scrub-chart__y-fit-btn:hover:not(:disabled)::after {
+.sui-scrub-chart__corner-btn:hover:not(:disabled)::after {
   border-color: var(--sui-accent);
 }
 
 /* A control a reader finds by hover alone is out of a keyboard's reach, so
    focus keeps a ring of its own. */
-.sui-scrub-chart__y-fit-btn:focus-visible {
+.sui-scrub-chart__corner-btn:focus-visible {
   outline: 2px solid var(--sui-accent);
   outline-offset: 0;
 }

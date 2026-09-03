@@ -2677,3 +2677,41 @@ th:has(.tf-th-center) .hud-table__header-content {
 .slider-rail-demo {
   width: 290px;
 }
+
+/* Slider `valueLabel`: the caller's own readout, three readings of one
+   discount. A suite card is wider than the draw rail, so this demo takes the
+   width that card gives it. */
+.slider-discount-demo {
+  width: 420px;
+}
+
+/* The caller's node lays out and wraps its OWN figures. The label line above
+   stays one flex row. */
+.slider-discount-readout {
+  /* The field takes the surrounding text colour, so the readout sets it once
+     for the figures and the separators alike. */
+  color: var(--sui-text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* The read-only figure. It carries the field's own metrics and the same
+   horizontal padding, so it sits on the readout line exactly where a
+   `SliderField` would. */
+.slider-discount-static {
+  color: var(--sui-text-primary);
+  font-family: var(--sui-font-mono, ui-monospace, monospace);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.slider-discount-sep {
+  color: var(--sui-text-muted);
+  font-size: 0.875rem;
+}

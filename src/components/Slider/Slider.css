@@ -32,6 +32,10 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--sui-space-2);
+  /* A `valueLabel` node carries the caller's own fields, which can be wider
+     than the column. Without this the line refuses to shrink below their
+     content and pushes past the control. */
+  min-width: 0;
 }
 
 .sui-slider__label {
@@ -51,51 +55,103 @@
   white-space: nowrap;
 }
 
-/* The editable readout (`editable`). Quiet at rest so the label line still
-   reads as a caption and a value, not as a form; it grows a border on hover
-   and a focus ring while being typed into.
+/* ── The editable readout (`SliderField`) ────────────────────────────────
+   The GROUP is the field. It draws the border, the padding, the hover and the
+   focus, so a prefix, the number and a suffix read as one string and light as
+   one control. The input inside draws none of them: its own padding would open
+   a hole between the number and its suffix.
+
+   The group is quiet at rest, so the label line still reads as a caption and a
+   value rather than as a form. */
+.sui-slider__field {
+  display: inline-flex;
+  align-items: baseline;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  /* Match `.sui-slider__value`, so the affixes and the width mirror carry the
+     same metrics as the input and the three parts share one baseline. */
+  font-family: var(--sui-font-mono, ui-monospace, monospace);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.sui-slider__field:hover:not([data-disabled]) {
+  border-color: var(--sui-border);
+}
+
+.sui-slider__field:focus-within {
+  background: var(--sui-bg-secondary);
+  border-color: var(--sui-border-focus);
+}
+
+.sui-slider__field[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* A prefix or a suffix. Static text, no box of its own: no margin, no padding
+   and no border, so nothing opens a seam beside the number. */
+.sui-slider__field-affix {
+  user-select: none;
+}
+
+/* The width mechanism. The sizer is one grid CELL. The mirror and the input
+   both sit in it, so the cell takes the width of the wider one — and the
+   mirror is the same text in the same font, so that width is the width of the
+   glyphs the input actually draws.
+
+   This replaces the `size` attribute, which sized the content box in
+   characters: the browser multiplied `size` by the AVERAGE character width, so
+   any string with wider-than-average glyphs overflowed and clipped the last
+   one. The mirror measures real text, so it holds in a proportional font as
+   well as a monospace one. */
+.sui-slider__field-sizer {
+  display: inline-grid;
+  /* A floor for an empty field, not a fit. `1ch` in a proportional font is
+     merely a different small width, so nothing here depends on the font. */
+  min-width: 1ch;
+}
+
+.sui-slider__field-mirror {
+  grid-area: 1 / 1;
+  /* Spaces count: "6 months" is one string, not two words to collapse. */
+  white-space: pre;
+  visibility: hidden;
+}
+
+/* The typed number. It lies on the mirror and stretches to the cell the mirror
+   sized, and it carries no border, no padding and no background of its own —
+   the group draws all three.
 
    It is `type="text"`, so no spinner exists to hide. The appearance rules
    below are a guard for a UA that draws one anyway. */
 .sui-slider__value--editable {
+  grid-area: 1 / 1;
   appearance: textfield;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  /* The `size` attribute sizes the CONTENT box in characters. The baseline
-     reset sets `box-sizing: border-box` on every element, which takes the 4px
-     of padding and the 1px border OUT of that width and clips the last
-     character — the "%" of "65%". `content-box` puts them back outside it. */
-  box-sizing: content-box;
+  border: none;
+  box-sizing: border-box;
   color: inherit;
   /* Do not write `font: inherit` here. The shorthand also resets
      `font-family` and `font-variant-numeric`, and thus throws away the
-     monospace and the tabular figures that `.sui-slider__value` sets above.
-     A proportional font also breaks the `size` width, because the UA
-     multiplies `size` by the AVERAGE character width, and "%" is wider than
-     that average. These longhands take the metrics that the shorthand was
-     there for, and keep the monospace. */
+     monospace and the tabular figures that `.sui-slider__value` sets above. */
   font-style: inherit;
   font-weight: inherit;
   line-height: inherit;
-  padding: 0 4px;
+  min-width: 0;
+  padding: 0;
   text-align: right;
   width: auto;
 }
 
-.sui-slider__value--editable:hover:not(:disabled) {
-  border-color: var(--sui-border);
-}
-
 .sui-slider__value--editable:focus {
-  background: var(--sui-bg-secondary);
-  border-color: var(--sui-border-focus);
   outline: none;
 }
 
 .sui-slider__value--editable:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
 }
 
 .sui-slider__value--editable::-webkit-inner-spin-button,

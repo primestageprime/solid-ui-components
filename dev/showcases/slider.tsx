@@ -1,5 +1,5 @@
 import { type Component, createSignal } from "solid-js";
-import { Slider, createSlider } from "../../src/components/Slider";
+import { Slider, SliderField, createSlider } from "../../src/components/Slider";
 import { ThemedNumberInput } from "../../src/components/ThemedNumberInput";
 import { Row } from "../../src/components/Layout/Row";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -67,6 +67,100 @@ const MountCounter: Component = () => {
         press a key that moves it — never at mount.
       </span>
     </Stack>
+  );
+};
+
+/* ── valueLabel: one discount, three readings ────────────────────────────
+   The suite card that asked for this. A coach reads the percent against the
+   track, the monthly figure against the monthly plan, and the yearly figure
+   against the invoice. Each one is a field, because a coach who knows they
+   want $1,627.08 types it rather than hunting for the percent. */
+
+/** The monthly plan the annual price discounts, in whole dollars. */
+const LIST_PER_MONTH = 149;
+const MONTHS_PER_YEAR = 12;
+const LIST_PER_YEAR = LIST_PER_MONTH * MONTHS_PER_YEAR;
+
+/** The yearly charge at a given discount. */
+const yearlyAt = (percent: number): number =>
+  (LIST_PER_YEAR * (100 - percent)) / 100;
+
+/** The same charge read per month. */
+const monthlyAt = (percent: number): number =>
+  yearlyAt(percent) / MONTHS_PER_YEAR;
+
+/** The discount a typed monthly charge asks for. */
+const percentFromMonthly = (dollars: number): number =>
+  (1 - dollars / LIST_PER_MONTH) * 100;
+
+/** Whole percents, inside the domain the slider offers. */
+const snapPercent = (percent: number): number =>
+  Math.min(20, Math.max(0, Math.round(percent)));
+
+/** A figure with a thousands separator and two decimals, and no currency. */
+const amount = (dollars: number): string =>
+  dollars.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+/**
+ * A typed figure, or null when the text carries no number.
+ *
+ * The caller owns the parse, so the caller strips the thousands separator: a
+ * person types over "1,591.32" and leaves the comma where it was.
+ */
+const parseAmount = (text: string): number | null => {
+  const typed = Number.parseFloat(text.replace(/[$,%\s]/g, ""));
+  return Number.isFinite(typed) ? typed : null;
+};
+
+/** Read one figure back to a discount, and move the slider to it. */
+const commitAs =
+  (toPercent: (dollars: number) => number, set: (percent: number) => void) =>
+  (text: string): void => {
+    const typed = parseAmount(text);
+    if (typed !== null) set(snapPercent(toPercent(typed)));
+  };
+
+const AnnualDiscount: Component = () => {
+  const [percent, setPercent] = createSignal(9);
+  return (
+    <Slider
+      label="Annual discount"
+      value={percent()}
+      onChange={setPercent}
+      min={0}
+      max={20}
+      format={(n) => `${n}% a year`}
+      valueLabel={
+        <span class="slider-discount-readout">
+          {/* Only the number is typeable. The "%" stands beside it as static
+              text, and the two read as one string. */}
+          <SliderField
+            label="Discount percent"
+            suffix="%"
+            value={String(percent())}
+            onCommit={commitAs((n) => n, setPercent)}
+          />
+          <span class="slider-discount-sep">|</span>
+          {/* A prefix as well: the "$" is not part of the number either. */}
+          <SliderField
+            label="Price per month"
+            prefix="$"
+            suffix="/mo"
+            value={amount(monthlyAt(percent()))}
+            onCommit={commitAs(percentFromMonthly, setPercent)}
+          />
+          <span class="slider-discount-sep">|</span>
+          {/* Read-only: each figure is the caller's own decision, and this one
+              is a total to read rather than a figure to type. */}
+          <span class="slider-discount-static">
+            ${amount(yearlyAt(percent()))}/yr
+          </span>
+        </span>
+      }
+    />
   );
 };
 
@@ -200,6 +294,40 @@ export const SliderShowcase: Component = () => {
           Escape, and anything that is not a number, revert. The field is a text
           input, never <code>type="number"</code>, so the browser draws no
           spinner arrows beside a control that already has a thumb.
+        </span>
+      </div>
+
+      <div class="example-group">
+        <h3>valueLabel — the caller draws the readout</h3>
+        <div class="slider-discount-demo">
+          <AnnualDiscount />
+        </div>
+        <span class="text-meta">
+          One discount, three honest readings. <code>valueLabel</code> replaces
+          the value node — the value label, or the <code>editable</code> field —
+          and the caption, the label line and the track stay SUI's. Two figures
+          are <code>SliderField</code>s, so a coach who knows they want{" "}
+          <code>$132.61/mo</code> types it instead of hunting for the percent
+          that produces it. The third is plain text, because each figure is the
+          caller's own decision to make typeable or not. A composite{" "}
+          <code>format</code> string cannot do this, because only one figure
+          would stay typeable.
+        </span>
+        <span class="text-meta">
+          Only the NUMBER is an input. The <code>$</code> and the{" "}
+          <code>/mo</code> are static text either side of it, and the three
+          parts read as one unbroken string: one font, one baseline, and the
+          border and the padding on the group rather than on the input. A press
+          on the <code>$</code> lands on the number, because the group is the
+          input's own label. The caller owns each parse, including the thousands
+          separator in <code>1,591.32</code>.
+        </span>
+        <span class="text-meta">
+          <code>editable</code> beside <code>valueLabel</code> is a compile
+          error: SUI cannot draw a field in a place it gave away. The label line
+          stays one flex row, so the node wraps its own figures.{" "}
+          <code>format</code> still governs the thumb, which announces{" "}
+          <code>9% a year</code> whatever the node shows.
         </span>
       </div>
 
