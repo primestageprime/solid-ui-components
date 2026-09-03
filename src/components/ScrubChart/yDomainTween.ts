@@ -14,35 +14,28 @@
 // behind the pointer. A fixed-duration ease restarts on each new target, and
 // under a pan that reads worse than no tween at all.
 //
+// The loop itself lives in internal/animation/approachTween.ts, because the
+// chart height eases the same way. This module states what one step of a
+// DOMAIN does and hands that to the loop.
+//
 // The module splits into a PURE part and one reactive wrapper:
 //
 //   • approachFraction / stepYDomain / isSettled / domainHolds — pure
 //     functions of their arguments. The unit tests drive these.
 //     `domainHolds` answers the y-axis: does the domain ON SCREEN hold this
 //     target tick yet? The axis withholds a tick until it does.
-//   • createYDomainTween — one Solid signal plus one rAF loop. The loop stops
-//     the frame the domain settles, and `onCleanup` cancels a pending frame.
-//
-// A HIDDEN document delivers no animation frame at all, so the loop must not
-// run there. See `createDocumentHidden` for what that costs when it does.
+//   • createYDomainTween — the shared loop, wired to `stepYDomain` and
+//     `isSettled`.
 //
 // ScrubChart.tsx never sees the loop; yAxis.ts wires this module to the
 // scales.
 // ============================================
 
-import {
-  type Accessor,
-  createEffect,
-  createSignal,
-  onCleanup,
-  untrack,
-} from "solid-js";
+import { type Accessor } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
+import { createApproachTween } from "../../internal/animation/approachTween";
 import { lerp } from "../../internal/animation/trajectories";
-import {
-  type ProgressClock,
-  realClock,
-} from "../../internal/progress/useProgressEngine";
+import type { ProgressClock } from "../../internal/progress/useProgressEngine";
 
 /** A y-axis domain, low end first. */
 export type YDomain = [number, number];
@@ -154,33 +147,6 @@ export const stepYDomain = (
   return isSettled(next, target) ? target : next;
 };
 
-/**
- * Does the document hide the chart right now?
- *
- * A hidden document — a background tab, a minimised window — runs NO animation
- * frame. A frame the loop asked for before the document hid stays in the queue
- * until the reader comes back, so the tween stops where it stands. The axis
- * then draws the domain of that half-finished frame while the labels state the
- * TARGET domain, and `domainHolds` withholds every tick the stopped domain
- * misses. The reader who returns hours later still sees it, because the queued
- * frame arrives only on the way back and the chart holds the wrong axis until
- * then.
- *
- * The tween therefore SNAPS while the document hides the chart. Nobody watches
- * a hidden document, so no motion is lost.
- *
- * @returns True while the document is hidden. False without a document (SSR).
- */
-const createDocumentHidden = (): Accessor<boolean> => {
-  if (typeof document === "undefined") return () => false;
-  const read = () => document.visibilityState === "hidden";
-  const [hidden, setHidden] = createSignal(read());
-  const answer = () => setHidden(read());
-  document.addEventListener("visibilitychange", answer);
-  onCleanup(() => document.removeEventListener("visibilitychange", answer));
-  return hidden;
-};
-
 /** What `createYDomainTween` reads. Every field is an accessor, so the tween
  *  answers a change in any of them. */
 export interface YDomainTweenOptions {
@@ -207,75 +173,12 @@ export interface YDomainTweenOptions {
  */
 export const createYDomainTween = (
   options: YDomainTweenOptions,
-): Accessor<YDomain | null> => {
-  const clock = options.clock ?? realClock;
-  const documentHidden = createDocumentHidden();
-  const [rendered, setRendered] = createSignal<YDomain | null>(
-    untrack(options.target),
-  );
-
-  let handle: number | null = null;
-  let lastNow = 0;
-
-  const stop = () => {
-    if (handle === null) return;
-    clock.cancel(handle);
-    handle = null;
-  };
-
-  const frame = (now: number) => {
-    handle = null;
-    const target = untrack(options.target);
-    const current = untrack(rendered);
-    const transition = untrack(options.transitionMs);
-    if (target === null || current === null || transition === false) {
-      setRendered(() => target);
-      return;
-    }
-    const dt = now - lastNow;
-    lastNow = now;
-    const next = stepYDomain(current, target, dt, transition);
-    setRendered(() => next);
-    // Stop on arrival. A later target starts the loop again.
-    if (next !== target) handle = clock.raf(frame);
-  };
-
-  // A RUNNING loop keeps its `lastNow`, so a new target retargets the loop
-  // instead of restarting it.
-  const start = () => {
-    if (handle !== null) return;
-    lastNow = clock.now();
-    handle = clock.raf(frame);
-  };
-
-  createEffect(() => {
-    const target = options.target();
-    const transition = options.transitionMs();
-    const reduced = options.reducedMotion();
-    const hidden = documentHidden();
-    const current = untrack(rendered);
-    // Snap, and run no frame at all, when there is nothing to tween: no
-    // target, no domain on screen yet, a caller who turned the tween off, a
-    // reader who asks for less motion, or a document that runs no frame.
-    //
-    // `hidden` reads REACTIVELY, so a document that hides MID-TWEEN lands the
-    // domain on the target at once and cancels the frame it waits for.
-    if (
-      target === null ||
-      current === null ||
-      transition === false ||
-      reduced ||
-      hidden ||
-      isSettled(current, target)
-    ) {
-      stop();
-      setRendered(() => target);
-      return;
-    }
-    start();
+): Accessor<YDomain | null> =>
+  createApproachTween<YDomain>({
+    target: options.target,
+    transitionMs: options.transitionMs,
+    reducedMotion: options.reducedMotion,
+    step: stepYDomain,
+    settled: isSettled,
+    clock: options.clock,
   });
-
-  onCleanup(stop);
-
-  return rendered;
-};

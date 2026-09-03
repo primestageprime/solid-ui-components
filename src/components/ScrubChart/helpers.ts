@@ -113,7 +113,7 @@ export const CORNER_LEVEL_OFFSET =
 export const Y_FIT_LEVEL_OFFSET = CORNER_LEVEL_OFFSET;
 
 /**
- * The room the y-fit control asks of the axis chrome, in px.
+ * The room a CORNER control asks of the axis chrome, in px.
  *
  * ScrubChart applies the number twice. The DEFAULT y-axis column grows to it,
  * where it is exact: the button plus the one inset on the frame's left edge.
@@ -123,7 +123,11 @@ export const Y_FIT_LEVEL_OFFSET = CORNER_LEVEL_OFFSET;
  * covers both bounds and leaves the row a little room to spare. An explicit
  * `yAxisWidth` still wins as given.
  */
-export const Y_FIT_FOOTPRINT = Y_FIT_BUTTON_SIZE + Y_FIT_INSET;
+export const CORNER_FOOTPRINT = CORNER_BUTTON_SIZE + CORNER_INSET;
+
+/** The room the y-fit control asks of the axis chrome, in px. See
+ *  `CORNER_FOOTPRINT` — both corner controls ask for the same. */
+export const Y_FIT_FOOTPRINT = CORNER_FOOTPRINT;
 
 /** Extra width the y-axis column takes for the y-fit control, in px.
  *
@@ -142,7 +146,7 @@ export const Y_FIT_GUTTER = 10;
  * the row would only cost the plot height. An explicit `yAxisWidth` still
  * wins as given.
  */
-export const Y_FIT_COLUMN = Y_FIT_FOOTPRINT + Y_FIT_GUTTER;
+export const Y_FIT_COLUMN = CORNER_FOOTPRINT + Y_FIT_GUTTER;
 
 /**
  * The lowest pixel y a y-tick label's box may reach.

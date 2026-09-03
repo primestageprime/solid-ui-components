@@ -39,6 +39,8 @@ import { insetSpan } from "../../internal/geometry/insetSpan";
 import { clamp } from "../../internal/math/clamp";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import { DateAxis, type Cell } from "../DateAxis";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { ScrubChartExpandControl } from "./ScrubChartExpandControl";
 import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
 import {
   ScrubChartAxes,
@@ -53,13 +55,17 @@ import {
   DEFAULT_X_AXIS_HEIGHT,
   DEFAULT_X_MAX_TICKS,
   DEFAULT_Y_TICK_COUNT,
+  CORNER_FOOTPRINT,
   Y_FIT_COLUMN,
-  Y_FIT_FOOTPRINT,
   defaultFormatX,
   defaultFormatY,
   matchesCadence,
 } from "./helpers";
 import { createYAxisScales } from "./yAxis";
+import {
+  DEFAULT_EXPAND_TRANSITION_MS,
+  createChartHeightTween,
+} from "./chartHeightTween";
 import { DEFAULT_Y_FIT_TRANSITION_MS } from "./yDomainTween";
 import type {
   ResolvedXTickCadence,
@@ -94,7 +100,36 @@ export type {
 export const ScrubChart = <C extends Cell>(
   props: ScrubChartProps<C>,
 ): JSX.Element => {
-  const chartHeight = () => props.chartHeight ?? DEFAULT_CHART_HEIGHT;
+  // ── Frame height + the expand control ────────────────────────────────
+  // `chartHeightExpanded` is the master switch. Without it the frame simply
+  // takes `chartHeight`, the chevron never renders, and the tween never runs.
+  const collapsedHeight = () => props.chartHeight ?? DEFAULT_CHART_HEIGHT;
+  const expandable = () => props.chartHeightExpanded !== undefined;
+  const [ownedExpanded, setOwnedExpanded] = createSignal(false);
+  // Controlled when the caller passes `expanded`; owned otherwise — the same
+  // split `yScaleMode` takes.
+  const expanded = () => props.expanded ?? ownedExpanded();
+  const toggleExpanded = (next: boolean) => {
+    if (props.expanded === undefined) setOwnedExpanded(next);
+    props.onExpandedChange?.(next);
+  };
+  const targetHeight = () =>
+    (expanded() ? props.chartHeightExpanded : undefined) ?? collapsedHeight();
+  // The reader's motion preference reads REACTIVELY, so a change during the
+  // session takes effect at once.
+  const prefersReducedMotion = useMediaQuery(
+    "(prefers-reduced-motion: reduce)",
+  );
+  // ONE height accessor drives the plot span, the axis rows, the window band
+  // and the `viewBox`, so the whole chart follows the frame frame by frame.
+  const chartHeight = createChartHeightTween({
+    target: targetHeight,
+    // A caller who moves `chartHeight` itself keeps the jump it has always
+    // had: the tween is off until the master switch turns it on.
+    transitionMs: () =>
+      expandable() && (props.expandTransition ?? DEFAULT_EXPAND_TRANSITION_MS),
+    reducedMotion: prefersReducedMotion,
+  });
   const cellWidth = () => props.cellWidth ?? DEFAULT_CELL_WIDTH;
   // Scrub layer on/off — gates the DateAxis ribbon, the window band, and the
   // pointer gestures together (see the prop doc).
@@ -123,11 +158,13 @@ export const ScrubChart = <C extends Cell>(
       yFitFootprint(),
     );
 
-  // The height the y-fit control asks of the x-axis row, or 0 without the
-  // control. The DEFAULT y-axis column asks for `Y_FIT_COLUMN` instead: the
-  // column carries a gutter that moves the y labels right of the button, and
-  // the row needs no such gutter.
-  const yFitFootprint = () => (props.yFitDomain ? Y_FIT_FOOTPRINT : 0);
+  // The height the CORNER controls ask of the x-axis row, or 0 without them.
+  // Both corners hang from the same row and take the same footprint, so one
+  // control or two ask for the same number. The DEFAULT y-axis column asks
+  // for `Y_FIT_COLUMN` instead: the column carries a gutter that moves the y
+  // labels right of the y-fit button, and the row needs no such gutter.
+  const yFitFootprint = () =>
+    props.yFitDomain || expandable() ? CORNER_FOOTPRINT : 0;
 
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
@@ -650,6 +687,17 @@ export const ScrubChart = <C extends Cell>(
           <ScrubChartYFitControl
             mode={yScaleMode}
             onSelect={selectYScaleMode}
+            axisTop={plotBottom}
+          />
+        </Show>
+        {/* Expand chevron — rendered only when `chartHeightExpanded` is set.
+            It mirrors the y-fit button across the frame: same size, same
+            inset, same level on the x-axis row, pinned to the RIGHT edge, so
+            a chart that shows both keeps the two apart. */}
+        <Show when={expandable()}>
+          <ScrubChartExpandControl
+            expanded={expanded}
+            onToggle={toggleExpanded}
             axisTop={plotBottom}
           />
         </Show>
