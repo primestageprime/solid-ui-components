@@ -3,6 +3,41 @@
 ## [Unreleased]
 
 ### Added
+- **`ScrubChart` owns the expand chevron, and `CashflowScrubChart` forwards
+  it.** `chartHeightExpanded` is the master switch: set it and the chart draws
+  a chevron in the bottom-RIGHT corner of the frame, and a click moves the
+  frame between `chartHeight` and that height.
+
+  ```tsx
+  <CashflowScrubChart cells={cells} selected={idx()} onScrub={setIdx}
+                      chartHeight={200}
+                      chartHeightExpanded={480} />
+  ```
+
+  A host used to build this control itself, on top of the plain `chartHeight`
+  number: its own button, its own boolean and its own height arithmetic on
+  every page that drew a chart. Two props replace all of it. Leave
+  `chartHeightExpanded` unset and nothing changes for an existing caller — no
+  chevron, and the height it asked for.
+
+  `expanded` and `onExpandedChange` make the control controlled. Omit
+  `expanded` and ScrubChart owns the signal, starting COLLAPSED, the way
+  `yScaleMode` works; `onExpandedChange` reports every click either way.
+
+  `expandTransition` states the time the frame takes to reach the other
+  height, 240 ms by default and `false` to jump. ONE height accessor drives
+  the plot span, the axis rows, the window band and the `viewBox` together, so
+  the whole chart eases with the frame instead of jumping inside it. A reader
+  who sets `prefers-reduced-motion: reduce` gets the new height at once.
+
+  The chevron mirrors the y-fit button across the frame: same size, same
+  inset, same bare glyph, same line on the x-axis row. Only the edge differs,
+  so a chart that draws both keeps the two apart. Both buttons now take the
+  shared classes `.sui-scrub-chart__corner` and `.sui-scrub-chart__corner-btn`,
+  and each keeps a name of its own — `.sui-scrub-chart__y-fit-btn` and
+  `.sui-scrub-chart__expand-btn` — as the hook a consumer overrides one button
+  with.
+
 - **`ScrubChart` takes a `yFitBounds` prop, and `CashflowScrubChart` forwards
   it.** The prop names the edges the fitted y-domain always includes, one entry
   per y-scale mode.

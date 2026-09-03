@@ -31,7 +31,7 @@
 // scales.
 // ============================================
 
-import { type Accessor } from "solid-js";
+import type { Accessor } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
 import { createApproachTween } from "../../internal/animation/approachTween";
 import { lerp } from "../../internal/animation/trajectories";

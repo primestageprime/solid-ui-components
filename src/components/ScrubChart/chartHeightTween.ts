@@ -18,7 +18,7 @@
 // other caller. This module states what one step of a HEIGHT does.
 // ============================================
 
-import { type Accessor } from "solid-js";
+import type { Accessor } from "solid-js";
 import { createApproachTween } from "../../internal/animation/approachTween";
 import { lerp } from "../../internal/animation/trajectories";
 import { approachFraction } from "./yDomainTween";
