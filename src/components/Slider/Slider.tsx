@@ -2,7 +2,8 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Slider — Atomic (Depth 1)
-// Owns CSS (Slider.css), imports no other component.
+// Owns CSS (Slider.css), which it shares with its own SliderField. It imports
+// no component but that one.
 // Kobalte-backed (@kobalte/core/slider), matching the Combobox / Select /
 // Toast / ThemedNumberInput wrapping pattern.
 // Factory: createSlider().
@@ -55,11 +56,11 @@ import {
   Match,
   Switch,
   children,
-  createSignal,
   splitProps,
 } from "solid-js";
 import { filter } from "../../fn";
 import { clamp } from "../../internal/math/clamp";
+import { SliderField } from "./SliderField";
 import "./Slider.css";
 
 /** Props owned by `Slider`, whichever node draws the value. */
@@ -116,6 +117,10 @@ interface FormattedReadoutProps {
    * It is an `input type="text"` with `inputmode="decimal"`, NOT
    * `type="number"` — a number input draws the browser's spinner arrows, and
    * a spinner next to a thumb is a second stepper saying the same thing.
+   *
+   * The field is `SliderField`, drawn with no prefix and no suffix. Export
+   * that component to split a unit away from the number inside a `valueLabel`
+   * node.
    */
   editable?: boolean;
   /** Not used beside SUI's own readout; kept here so the union narrows cleanly. */
@@ -314,11 +319,9 @@ export const Slider: Component<SliderProps> = (props) => {
     local.onChange(values[0]);
   };
 
-  // The in-progress edit, or null when the field is at rest showing
-  // `format(value)`. Held as TEXT, not a number, so a half-typed "-" or "1."
-  // survives the keystroke that produced it.
-  const [draft, setDraft] = createSignal<string | null>(null);
-
+  // The field hands back TEXT, not a number, so a half-typed "-" or "1."
+  // survives the keystroke that produced it. Text that is not a number moves
+  // nothing.
   const commitDraft = (raw: string): void => {
     const typed = Number.parseFloat(raw);
     if (Number.isFinite(typed)) {
@@ -330,10 +333,7 @@ export const Slider: Component<SliderProps> = (props) => {
       );
       if (next !== local.value) local.onChange(next);
     }
-    setDraft(null);
   };
-
-  const readout = (): string => draft() ?? format(local.value);
 
   // `children` resolves the caller's node ONCE. Reading `local.valueLabel`
   // twice — for the test and for the branch — would build the node twice and
@@ -364,35 +364,17 @@ export const Slider: Component<SliderProps> = (props) => {
         >
           <Match when={drawnValue()}>{drawnValue()}</Match>
           <Match when={local.editable}>
-            <input
-              class="sui-slider__value sui-slider__value--editable"
-              type="text"
-              inputmode="decimal"
-              aria-label={`${local.label} value`}
+            {/* No prefix and no suffix: the whole formatted string sits in the
+                field, the way SUI's own readout always has. The field shows
+                `format(value)` at rest and the RAW number while focused,
+                because `format` runs ONE WAY — a caller that renders "6
+                months" hands over no parser to run it backwards. */}
+            <SliderField
+              label={`${local.label} value`}
+              value={format(local.value)}
+              editValue={String(local.value)}
               disabled={local.disabled}
-              value={readout()}
-              // `size` tracks the text so the field is exactly as wide as what
-              // it shows. An input has no intrinsic content sizing, and a fixed
-              // width would either clip "cell 0–27" or leave a gap after "6".
-              size={readout().length || 1}
-              onFocus={(event) => {
-                setDraft(String(local.value));
-                event.currentTarget.select();
-              }}
-              onInput={(event) => setDraft(event.currentTarget.value)}
-              onBlur={(event) => commitDraft(event.currentTarget.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  event.currentTarget.blur();
-                } else if (event.key === "Escape") {
-                  setDraft(null);
-                  event.currentTarget.blur();
-                }
-                // Kobalte's root moves the thumb on arrow keys. Inside the
-                // field those keys belong to the caret.
-                event.stopPropagation();
-              }}
+              onCommit={commitDraft}
             />
           </Match>
         </Switch>
