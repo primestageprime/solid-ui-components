@@ -54,6 +54,7 @@ import {
   type JSX,
   Match,
   Switch,
+  children,
   createSignal,
   splitProps,
 } from "solid-js";
@@ -134,6 +135,10 @@ interface DrawnReadoutProps {
    *
    * The label line stays ONE row. Lay out and wrap the figures inside the
    * node.
+   *
+   * A node that resolves to nothing — `null`, `undefined` or `false` — leaves
+   * SUI's own readout in place, so a caller can draw the figures for one state
+   * of the page and keep `format(value)` for the rest.
    */
   valueLabel: JSX.Element;
   /** Not used beside a caller's node; kept here so the union narrows cleanly. */
@@ -330,6 +335,11 @@ export const Slider: Component<SliderProps> = (props) => {
 
   const readout = (): string => draft() ?? format(local.value);
 
+  // `children` resolves the caller's node ONCE. Reading `local.valueLabel`
+  // twice — for the test and for the branch — would build the node twice and
+  // leave the discarded copy's effects running against a detached DOM.
+  const drawnValue = children(() => local.valueLabel);
+
   return (
     <KobalteSlider
       {...(rest as KobalteSliderRootProps)}
@@ -352,9 +362,7 @@ export const Slider: Component<SliderProps> = (props) => {
         <Switch
           fallback={<KobalteSlider.ValueLabel class="sui-slider__value" />}
         >
-          <Match when={local.valueLabel !== undefined}>
-            {local.valueLabel}
-          </Match>
+          <Match when={drawnValue()}>{drawnValue()}</Match>
           <Match when={local.editable}>
             <input
               class="sui-slider__value sui-slider__value--editable"

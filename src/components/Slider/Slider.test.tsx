@@ -570,6 +570,23 @@ describe("Slider — valueLabel", () => {
     expect(thumb?.getAttribute("aria-valuetext")).toBe("9% a year");
   });
 
+  it("keeps SUI's readout when the node resolves to nothing", () => {
+    const { container } = render(() => (
+      <Slider
+        label="Annual discount"
+        value={9}
+        onChange={() => {}}
+        min={0}
+        max={20}
+        format={(n) => `${n}%`}
+        valueLabel={null}
+      />
+    ));
+    expect(container.querySelector(".sui-slider__value")?.textContent).toBe(
+      "9%",
+    );
+  });
+
   it("still draws the label and the track", () => {
     const { container, getByText } = render(() => (
       <Slider
