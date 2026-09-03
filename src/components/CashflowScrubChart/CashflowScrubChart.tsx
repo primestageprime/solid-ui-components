@@ -258,8 +258,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   const yDomain = createMemo<[number, number]>(() => {
     // Empty chart: a [0, 0] domain has no height, so the auto row's floor and
     // one unit above it stand in until data arrives.
-    if (props.cells.length === 0)
-      return [props.yMin ?? 0, props.yMax ?? 1];
+    if (props.cells.length === 0) return [props.yMin ?? 0, props.yMax ?? 1];
     const series = props.balanceSeries ?? [];
     const line = lineCells();
     const values = flatMap(
@@ -1043,7 +1042,16 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       cellWidth={cellWidth()}
       rightGutter={reservedSpace().rightGutter}
       xAxisExtraHeight={belowExtraHeight(reservedSpace().belowRows)}
+      // `yDomain` stays the FALLBACK. ScrubChart takes the fitted domain
+      // whenever `yFitDomain` returns one, and this computed domain whenever
+      // the callback is absent or returns null — see the prop docs.
       yDomain={yDomain()}
+      yFitDomain={props.yFitDomain}
+      yFitMargin={props.yFitMargin}
+      yFitTransition={props.yFitTransition}
+      yScaleMode={props.yScaleMode}
+      onYScaleModeChange={props.onYScaleModeChange}
+      yAxisWidth={props.yAxisWidth}
       showGridlines={props.showGridlines}
       formatYLabel={fmtAxisDollars}
       xTickCadence="auto"

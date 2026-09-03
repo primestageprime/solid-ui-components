@@ -370,7 +370,7 @@ describe("CashflowScrubChart", () => {
       const { container } = render(() => (
         <CashflowScrubChart
           cells={cells}
-          selected={0}
+          selected={9}
           onScrub={() => {}}
           markers={[{ index: 5 }]}
           onMarkerClick={onMarkerClick}
@@ -755,7 +755,10 @@ describe("CashflowScrubChart hover", () => {
         cells={cells}
         scrub={false}
         balanceSeries={[
-          { id: "s1", balanceCents: (c: CashflowCell) => c.balanceCents + 5000 },
+          {
+            id: "s1",
+            balanceCents: (c: CashflowCell) => c.balanceCents + 5000,
+          },
         ]}
       />
     ));
@@ -879,7 +882,13 @@ describe("CashflowScrubChart hover", () => {
       />
     ));
     const theme = readFileSync(
-      join(dirname(fileURLToPath(import.meta.url)), "..", "..", "themes", "default.css"),
+      join(
+        dirname(fileURLToPath(import.meta.url)),
+        "..",
+        "..",
+        "themes",
+        "default.css",
+      ),
       "utf8",
     );
     const marks = [
@@ -957,7 +966,7 @@ describe("CashflowScrubChart hover", () => {
       <CashflowScrubChart
         cells={ribbon}
         balanceLineCells={line}
-        selected={0}
+        selected={9}
         onScrub={() => {}}
       />
     ));
@@ -985,7 +994,7 @@ describe("CashflowScrubChart hover", () => {
     const { container } = render(() => (
       <CashflowScrubChart
         cells={cells}
-        selected={0}
+        selected={9}
         onScrub={() => {}}
         stripAccent="rgb(10, 20, 30)"
       />
@@ -1001,7 +1010,7 @@ describe("CashflowScrubChart hover", () => {
     const { container } = render(() => (
       <CashflowScrubChart
         cells={cells}
-        selected={0}
+        selected={9}
         onScrub={() => {}}
         stripAccent="rgb(10, 20, 30)"
         stripAccentDashed
@@ -1789,5 +1798,231 @@ describe("CashflowScrubChart gridlines", () => {
       container.querySelector(".sui-cashflow-scrub-chart__hover-rule"),
     ).toBeNull();
     expect(container.querySelector("[data-testid=label-tt]")).toBeNull();
+  });
+});
+
+describe("CashflowScrubChart y-fit forwarding", () => {
+  /** The one y-fit toggle ScrubChart draws in the origin corner. */
+  const fitButton = (container: HTMLElement): HTMLElement | null =>
+    container.querySelector<HTMLElement>(".sui-scrub-chart__y-fit-btn");
+
+  /**
+   * The y-domain the chart resolved, in cents, read back from the marks it
+   * draws. CashflowScrubChart exposes no render context of its own, so the
+   * test inverts the scale from three marks: the zero line gives
+   * `yToPlot(0)`, the selected dot gives `yToPlot(selectedBalance)`, and the
+   * selected rule spans `plotTop` to `plotBottom`. Two values fix the linear
+   * scale and the rule supplies the plot edges, so the pair maps back to the
+   * domain ends.
+   *
+   * The DOT carries the scale, not the balance line: the line rounds every
+   * point to one decimal, and a domain of a million cents packs 10,000 of
+   * them into a pixel, so that rounding moves the answer by a percent. The
+   * dot's `cy` is unrounded.
+   *
+   * Reading the DOMAIN, not a pixel ratio, is what makes the assertions below
+   * sound: `yFitDomain` also reserves an x-axis row for the toggle, so two
+   * charts with the same domain and different fit props draw the same data at
+   * different pixel scales.
+   */
+  const resolvedDomain = (
+    container: HTMLElement,
+    selectedBalance: number,
+  ): [number, number] => {
+    const attr = (selector: string, name: string): number =>
+      Number(container.querySelector(selector)!.getAttribute(name));
+    const zeroY = attr(".sui-cashflow-scrub-chart__zero-line", "y1");
+    const dotY = attr(".sui-cashflow-scrub-chart__selected-dot", "cy");
+    const perCent = (dotY - zeroY) / selectedBalance;
+    const plotTop = attr(".sui-cashflow-scrub-chart__selected-rule", "y1");
+    const plotBottom = attr(".sui-cashflow-scrub-chart__selected-rule", "y2");
+    return [(plotBottom - zeroY) / perCent, (plotTop - zeroY) / perCent];
+  };
+
+  /** Cells whose balance climbs by $100 a day, so the extent is known. */
+  const climbing = (count: number): CashflowCell[] =>
+    dailyCells(
+      d("2026-05-01"),
+      d(`2026-05-${String(count).padStart(2, "0")}`),
+    ).map((cell, i) => ({
+      ...cell,
+      cashflowCents: 10_000,
+      balanceCents: 10_000 * (i + 1),
+    }));
+
+  it("renders the fit toggle when the caller sets yFitDomain", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        yFitDomain={() => [0, 100_000]}
+      />
+    ));
+    expect(fitButton(container)).toBeTruthy();
+    expect(fitButton(container)!.getAttribute("aria-label")).toBe("Fit to all");
+  });
+
+  it("leaves a caller that sets none of the fit props unchanged", () => {
+    // The pin for every existing caller: no toggle, and the yMin/yMax domain
+    // still drives the y-axis.
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        selected={9}
+        yMin={0}
+        yMax={1_000_000}
+      />
+    ));
+    expect(fitButton(container)).toBeNull();
+    expect(container.querySelector(".sui-scrub-chart__y-fit")).toBeNull();
+    const [low, high] = resolvedDomain(container, 100_000);
+    expect(low).toBeCloseTo(0, 3);
+    expect(high).toBeCloseTo(1_000_000, 3);
+  });
+
+  it("reports a toggle click through onYScaleModeChange", () => {
+    const onYScaleModeChange = vi.fn();
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        yFitDomain={() => [0, 100_000]}
+        onYScaleModeChange={onYScaleModeChange}
+      />
+    ));
+    fitButton(container)!.dispatchEvent(
+      new MouseEvent("click", { bubbles: true }),
+    );
+    expect(onYScaleModeChange).toHaveBeenCalledTimes(1);
+    expect(onYScaleModeChange.mock.calls[0][0]).toBe("series");
+  });
+
+  it("shows the mode the caller controls through yScaleMode", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        yFitDomain={() => [0, 100_000]}
+        yScaleMode="series"
+      />
+    ));
+    // The button names the ACTION, so "series" mode offers the way back.
+    expect(fitButton(container)!.getAttribute("aria-label")).toBe(
+      "Fit to visible",
+    );
+  });
+
+  it("takes the yFitDomain extent over the yMin/yMax domain", () => {
+    // `yFitMargin={0}` and an already-nice extent make the fitted domain
+    // exactly [0, 100_000], while yMin/yMax ask for ten times that.
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        selected={9}
+        yMin={0}
+        yMax={1_000_000}
+        yFitDomain={() => [0, 100_000]}
+        yFitMargin={0}
+        yFitTransition={false}
+      />
+    ));
+    const [low, high] = resolvedDomain(container, 100_000);
+    expect(low).toBeCloseTo(0, 3);
+    expect(high).toBeCloseTo(100_000, 3);
+  });
+
+  it("pads the fitted extent by yFitMargin", () => {
+    // The same extent with the default margin reaches past 100_000, so the
+    // prop reaches ScrubChart rather than being dropped.
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        selected={9}
+        yMin={0}
+        yMax={1_000_000}
+        yFitDomain={() => [0, 100_000]}
+        yFitTransition={false}
+      />
+    ));
+    const [, high] = resolvedDomain(container, 100_000);
+    expect(high).toBeGreaterThan(100_000);
+    expect(high).toBeLessThan(1_000_000);
+  });
+
+  it("falls back to the computed domain when yFitDomain returns null", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        selected={9}
+        yMin={0}
+        yMax={1_000_000}
+        yFitDomain={() => null}
+      />
+    ));
+    const [low, high] = resolvedDomain(container, 100_000);
+    expect(low).toBeCloseTo(0, 3);
+    expect(high).toBeCloseTo(1_000_000, 3);
+  });
+
+  it("rescales the balance line and holds the bars when the mode changes", () => {
+    // The chart draws TWO series with different scales: the balance line
+    // reads `ctx.yToPlot`, and the ribbon bars read a percentage of the
+    // largest daily flow. A fit must move the first and leave the second.
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        selected={9}
+        yFitDomain={(_from, to) => [0, 10_000 * (to + 1)]}
+        yFitMargin={0}
+        yFitTransition={false}
+      />
+    ));
+    const linePoints = (): string =>
+      container
+        .querySelector(".sui-cashflow-scrub-chart__line")!
+        .getAttribute("points")!;
+    const barHeights = (): string[] =>
+      Array.from(
+        container.querySelectorAll<HTMLElement>(".sui-cashflow-cell__bar"),
+      ).map((bar) => bar.style.height);
+    const beforePoints = linePoints();
+    const beforeBars = barHeights();
+    expect(beforePoints).not.toBe("");
+    expect(beforeBars.length).toBeGreaterThan(0);
+
+    fitButton(container)!.dispatchEvent(
+      new MouseEvent("click", { bubbles: true }),
+    );
+    // "series" mode asks the callback about the whole range, so the domain
+    // widens and the line redraws lower.
+    expect(linePoints()).not.toBe(beforePoints);
+    expect(barHeights()).toEqual(beforeBars);
+  });
+
+  it("holds the y-axis column at the width the caller states", () => {
+    // The zero line starts at the plot's left edge, so the axis column width
+    // is readable from it. A caller needs this knob to widen a column that
+    // clips the toggle button.
+    const narrow = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        yFitDomain={() => [0, 100_000]}
+        yAxisWidth={40}
+      />
+    ));
+    const wide = render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        yFitDomain={() => [0, 100_000]}
+        yAxisWidth={96}
+      />
+    ));
+    const plotLeft = (container: HTMLElement): number =>
+      Number(
+        container
+          .querySelector(".sui-cashflow-scrub-chart__zero-line")!
+          .getAttribute("x1"),
+      );
+    expect(plotLeft(wide.container) - plotLeft(narrow.container)).toBeCloseTo(
+      56,
+      6,
+    );
   });
 });
