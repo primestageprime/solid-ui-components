@@ -10,7 +10,10 @@
 // glyph: no fill, no border, no ring. `Button` brings a shape and a colour
 // set with every variant, and the stylesheet would have to undo all of them,
 // so the control styles itself. It stays a real `<button>`, so a keyboard
-// still reaches it and a click still fires. ScrubChart.css holds the rules.
+// still reaches it and a click still fires. ScrubChart.css holds the rules,
+// under `.sui-scrub-chart__corner` and `.sui-scrub-chart__corner-btn` — the
+// shared names the expand chevron takes as well. The `__y-fit` names stay on
+// the markup as the hook a consumer overrides this one button with.
 //
 // The button shows the ACTION, not the state. In "visible" mode it shows
 // `zoom-out` and reads "Fit to all", because a click takes the reader there.
@@ -31,7 +34,7 @@
 // Levelling costs the corner a little height. The button centres on the x
 // tick labels, and it is taller than the drop from `plotBottom` to their
 // centre line, so its top edge sits ABOVE `plotBottom` by
-// -Y_FIT_LEVEL_OFFSET. helpers.ts derives that number; this module only
+// -CORNER_LEVEL_OFFSET. helpers.ts derives that number; this module only
 // applies it.
 //
 // This module owns the markup only. ScrubChart owns the mode signal and the
@@ -41,7 +44,7 @@
 import type { JSX } from "solid-js";
 import { Icon } from "../Icon";
 import { Tooltip } from "../Tooltip";
-import { Y_FIT_LEVEL_OFFSET } from "./helpers";
+import { CORNER_LEVEL_OFFSET } from "./helpers";
 import type { ScrubChartYScaleMode } from "./yScaleMode";
 
 /** Props for the y-fit button. `mode` is an accessor, so the parent's signal
@@ -60,14 +63,14 @@ export interface ScrubChartYFitControlProps {
 
 /** Where the control hangs from. An inline `top` beats the stylesheet's
  *  `bottom` inset, so the button tracks the x-axis row instead of the frame
- *  edge. `Y_FIT_LEVEL_OFFSET` then lifts the button until it centres on the x
+ *  edge. `CORNER_LEVEL_OFFSET` then lifts the button until it centres on the x
  *  tick labels. `undefined` leaves the stylesheet in charge. */
 const cornerStyle = (
   axisTop: (() => number) | undefined,
 ): JSX.CSSProperties | undefined =>
   axisTop === undefined
     ? undefined
-    : { top: `${axisTop() + Y_FIT_LEVEL_OFFSET}px`, bottom: "auto" };
+    : { top: `${axisTop() + CORNER_LEVEL_OFFSET}px`, bottom: "auto" };
 
 /** The mode a click moves to — the OTHER one of the two. */
 const otherMode = (mode: ScrubChartYScaleMode): ScrubChartYScaleMode =>
@@ -92,11 +95,14 @@ const actionLabel = (mode: ScrubChartYScaleMode): string =>
 export const ScrubChartYFitControl = (
   props: ScrubChartYFitControlProps,
 ): JSX.Element => (
-  <div class="sui-scrub-chart__y-fit" style={cornerStyle(props.axisTop)}>
+  <div
+    class="sui-scrub-chart__corner sui-scrub-chart__y-fit"
+    style={cornerStyle(props.axisTop)}
+  >
     <Tooltip content={actionLabel(props.mode())} triggerAs="span">
       <button
         type="button"
-        class="sui-scrub-chart__y-fit-btn"
+        class="sui-scrub-chart__corner-btn sui-scrub-chart__y-fit-btn"
         aria-label={actionLabel(props.mode())}
         onClick={() => props.onSelect(otherMode(props.mode()))}
       >

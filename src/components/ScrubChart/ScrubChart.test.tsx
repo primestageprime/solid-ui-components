@@ -717,8 +717,13 @@ describe("ScrubChart y-fit toggle", () => {
     expect(btn.tagName).toBe("BUTTON");
     expect(btn.getAttribute("type")).toBe("button");
 
+    // The shared corner class carries the look; the `__y-fit-btn` name stays
+    // on the same element as the public hook for this one button.
+    expect(btn.classList.contains("sui-scrub-chart__corner-btn")).toBe(true);
+    expect(btn.classList.contains("sui-scrub-chart__y-fit-btn")).toBe(true);
+
     const css = chartCss();
-    const rest = ruleBody(css, ".sui-scrub-chart__y-fit-btn");
+    const rest = ruleBody(css, ".sui-scrub-chart__corner-btn");
     // The button holds the full target at rest, and draws NO border there.
     for (const prop of ["width", "height", "min-width", "min-height"]) {
       expect(rest).toContain(`${prop}: ${Y_FIT_BUTTON_SIZE}px;`);
@@ -728,7 +733,7 @@ describe("ScrubChart y-fit toggle", () => {
 
     // A pseudo-element carries the hover border, inset on every side, so the
     // border is SMALLER than the target it sits in.
-    const ring = ruleBody(css, ".sui-scrub-chart__y-fit-btn::after");
+    const ring = ruleBody(css, ".sui-scrub-chart__corner-btn::after");
     expect(ring).toContain(`inset: ${Y_FIT_HOVER_INSET}px;`);
     expect(ring).toContain("border: 1px solid transparent;");
     const borderSize = Y_FIT_BUTTON_SIZE - 2 * Y_FIT_HOVER_INSET;
@@ -738,17 +743,17 @@ describe("ScrubChart y-fit toggle", () => {
     // Hover paints that border. Focus keeps a ring, so the affordance is not
     // hover-only.
     expect(
-      ruleBody(css, ".sui-scrub-chart__y-fit-btn:hover:not(:disabled)::after"),
+      ruleBody(css, ".sui-scrub-chart__corner-btn:hover:not(:disabled)::after"),
     ).toContain("border-color: var(--sui-accent);");
     expect(
-      ruleBody(css, ".sui-scrub-chart__y-fit-btn:focus-visible"),
+      ruleBody(css, ".sui-scrub-chart__corner-btn:focus-visible"),
     ).toContain("outline: 2px solid var(--sui-accent);");
   });
 
   it("colours the glyph with the series line's token", () => {
     // The showcase strokes its series with `--sui-accent`. The glyph takes the
     // same custom property, so the control names the line it rescales.
-    expect(ruleBody(chartCss(), ".sui-scrub-chart__y-fit-btn")).toContain(
+    expect(ruleBody(chartCss(), ".sui-scrub-chart__corner-btn")).toContain(
       "color: var(--sui-accent);",
     );
   });
