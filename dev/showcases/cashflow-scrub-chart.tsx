@@ -805,6 +805,16 @@ export const CashflowScrubChartShowcase: Component = () => {
           both and the chart owns the state. <code>yAxisWidth</code> states the
           column width, so a host can widen a column that clips the button.
         </p>
+        <p class="text-meta">
+          <code>yFitBounds</code> names the edges the fitted domain always
+          reaches, one entry per mode. Both modes are bounded at{" "}
+          <code>{"{ min: 0 }"}</code> here, so the zero line stays on the axis
+          however the window moves and the reader always sees the balance
+          against it. A bound only WIDENS the domain — a day in the red drops
+          the floor under it and stays on the plot, which is what separates the
+          bound from a pin. The bound applies LAST, after the margin and after
+          the snap, so the floor lands on exactly zero.
+        </p>
 
         <CashflowScrubChart
           cells={cells}
@@ -814,6 +824,7 @@ export const CashflowScrubChartShowcase: Component = () => {
           showGridlines
           yMin={0}
           yFitDomain={balanceExtent}
+          yFitBounds={{ visible: { min: 0 }, series: { min: 0 } }}
           yScaleMode={yScaleMode()}
           onYScaleModeChange={setYScaleMode}
           yAxisWidth={72}

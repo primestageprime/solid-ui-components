@@ -68,6 +68,53 @@ const renderSignupsChart = (
   );
 };
 
+// A cash position that spends into an overdraft before it recovers — the case
+// a PIN cannot serve. Pinning the floor at 0 would clip every deficit day off
+// the plot; a BOUND of 0 keeps the zero line on the axis and still draws them.
+const OVERDRAFT_CENTS = 400_000;
+const position: number[] = balances.map((cents) => cents - OVERDRAFT_CENTS);
+
+/** Extent of `position` over an inclusive cell range, in cents. */
+const positionExtent = (from: number, to: number): [number, number] => {
+  const slice = position.slice(from, to + 1);
+  return [Math.min(...slice), Math.max(...slice)];
+};
+
+const renderPositionChart = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => {
+  const toY = ctx.yToPlot;
+  if (!toY) return null;
+  const points = ctx.cells
+    .map(
+      (_, i) => `${ctx.cellToX(i).toFixed(1)},${toY(position[i]).toFixed(1)}`,
+    )
+    .join(" ");
+  const zeroY = toY(0);
+  return (
+    <svg
+      viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+      preserveAspectRatio="none"
+      class="scrub-chart-demo__svg"
+    >
+      <line
+        x1={0}
+        x2={ctx.width}
+        y1={zeroY}
+        y2={zeroY}
+        stroke="var(--sui-border)"
+        stroke-dasharray="4 4"
+      />
+      <polyline
+        points={points}
+        fill="none"
+        stroke="var(--sui-accent)"
+        stroke-width={1.6}
+      />
+    </svg>
+  );
+};
+
 const fmtDate = (d: Date): string =>
   d.toLocaleDateString("en-US", {
     weekday: "short",
@@ -410,6 +457,42 @@ export const ScrubChartShowcase: Component = () => {
           xTickCadence="auto"
           renderCell={cashflowDayCell}
           renderChart={renderSignupsChart}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>Y-fit bounds, a floor that includes rather than overrides</h3>
+        <p class="text-meta">
+          <code>yFitBounds</code> names the edges the fitted domain always
+          reaches, one entry per mode. A bound only WIDENS the domain: the floor
+          takes the lesser of the fitted min and <code>min</code>, and the
+          ceiling takes the greater of the fitted max and <code>max</code>. This
+          chart bounds both modes at <code>{"{ min: 0 }"}</code>, so the dashed
+          zero rule stays on the axis wherever the window sits, and the reader
+          always sees the line against it.
+        </p>
+        <p class="text-meta">
+          The cash position here spends into an overdraft before it recovers,
+          which is what separates the bound from <code>yFitPin</code>. A pin
+          OVERRIDES the edge, so a pinned floor of 0 would clip every deficit
+          day off the plot. Pan to the first weeks and watch the axis drop below
+          zero to keep them: the bound gives ground to the data, and the data
+          never gives ground to the bound. The bound also applies LAST, after
+          the margin and after the snap, so the floor lands on exactly zero.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          selected={selectedIdx()}
+          onScrub={(i) => setSelectedIdx(i)}
+          today={PINNED_TODAY}
+          showGridlines
+          yFitDomain={positionExtent}
+          yFitBounds={{ visible: { min: 0 }, series: { min: 0 } }}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderPositionChart}
         />
       </div>
 
