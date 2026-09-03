@@ -2,6 +2,71 @@
 
 ## [Unreleased]
 
+## 0.162.0
+
+### Added
+- **`Slider` takes an `editable` prop and turns the value readout into a text
+  field.** Off by default, so an existing slider renders exactly the markup it
+  rendered before.
+
+  ```tsx
+  <Slider label="Months to sample" value={months()} onChange={setMonths}
+          min={3} max={24} step={1} editable />
+  ```
+
+  The field shows `format(value)` at rest and the RAW number while focused, so
+  a reader sees the unit and a typist sees only what they must retype. Enter or
+  blur commits: the text is clamped to `[min, max]` and snapped to the nearest
+  `step` counted from `min`, so a typed value lands on the same grid the drag
+  handle lands on. Text that is not a number is dropped and the field returns
+  to the current value. The input is `type="text"`, not `type="number"`, so the
+  browser draws no spinner arrows beside a control that already has a track.
+
+- **`ScrubChart` takes a y-axis scale control.** `yFitDomain(from, to)` states
+  the extent for a cell range — both ends INCLUSIVE cell indices — and setting
+  it renders a small icon button in the chart's origin corner that switches
+  between fitting the visible window and fitting the whole series.
+
+  ```tsx
+  <ScrubChart cells={cells} renderChart={draw}
+              yFitDomain={(from, to) => extentOf(cells.slice(from, to + 1))}
+              yFitPin={{ min: 0 }} />
+  ```
+
+  The callback exists because `renderChart` is a slot: the chart never sees the
+  values, so the caller states the extent and ScrubChart pads it, snaps it and
+  pins it. `yFitPin` holds one or both ends at a fixed value — a pinned end
+  takes NO margin and NO `nice()` snap and renders exactly as given, because a
+  caller who returns 0 as the min would otherwise watch the margin push that 0
+  below zero. `yFitMargin` sets the fraction added above and below a FREE end,
+  default `0.08`. `yScaleMode` and `onYScaleModeChange` make the toggle
+  controlled; omit both and ScrubChart owns the signal, starting at `"visible"`.
+
+  `yFitTransition` sets the milliseconds the fitted domain takes to reach a new
+  target, default 240, `false` to snap. The tween RETARGETS rather than
+  restarts: a domain arriving mid-flight is followed from wherever the axis has
+  reached, which is what a pan needs, because the domain changes on every
+  frame. Tick VALUES come from the target domain, not the tweened one, so the
+  labels hold still and only their positions move. A reader who sets
+  `prefers-reduced-motion: reduce` gets the target at once. Only the fitted
+  domain animates — a static `yDomain` never gains motion it did not ask for.
+
+- **`Icon` draws `zoom-in` and `zoom-out`**, both in the `actions` group.
+
+### Changed
+- **`SegmentedControl` rounds its selected highlight to match the container.**
+  The highlight took one radius on all four corners, so it did not sit inside
+  the container's own rounding at either end. It now takes the container's
+  radius on the outer corners of an end segment and a smaller radius on the
+  inner corners, both derived from `--sui-radius-md`.
+
+### Fixed
+- **`ScrubChart` y tick labels no longer clip at the frame edge.** A label
+  centred on its tick lost its outer half when the tick sat on `plotTop` or
+  `plotBottom` — the ends of a fitted domain. Each label's BASELINE now clamps
+  inside the frame; the tick mark and the gridline keep their exact `y`, so
+  only the text moves and nothing lies about where the tick is.
+
 ## 0.161.0
 
 ### Added
