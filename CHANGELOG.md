@@ -3,6 +3,23 @@
 ## [Unreleased]
 
 ### Changed
+- **`ScrubChart`'s frame is now the component's stacking root.**
+  `.sui-scrub-chart__frame` takes `isolation: isolate`, so every level the
+  component states stays inside the frame. The corner buttons state
+  `z-index: 2`, and that number used to LEAK: neither the root
+  (`overflow: hidden` alone makes no stacking context) nor the frame
+  (`position: relative` at the auto level makes none either) contained it, so
+  the buttons competed in whatever stacking context an ancestor in the host
+  page happened to make. A consumer that drew its own control beside the chart
+  at level 2 found DOM order deciding between the two. It cannot now.
+
+  Nothing inside the frame changes rank. The corners still paint over the
+  highlight bands, the gridlines, the `renderChart` series, the axis tick
+  labels, the window band and the pan overlay, and
+  `.sui-cashflow-scrub-chart__hover-tooltip` still keeps the top over both.
+  `isolation` and not `z-index: 0`, so the frame makes the context without
+  entering the parent's own level ordering.
+
 - **`ScrubChart`'s corner buttons float above the chart and carry a resting
   scrim.** Both controls — the y-fit toggle on the left, the expand chevron on
   the right — now paint at `z-index: 2` on the shared
