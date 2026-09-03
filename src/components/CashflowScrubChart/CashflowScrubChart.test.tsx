@@ -1799,6 +1799,39 @@ describe("CashflowScrubChart gridlines", () => {
     ).toBeNull();
     expect(container.querySelector("[data-testid=label-tt]")).toBeNull();
   });
+
+  it("keeps the readout card INSIDE the frame that isolates", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(16)}
+        scrub={false}
+        hover
+        renderHoverTooltip={(_cell, index) => (
+          <div data-testid="inside-tt">idx {index}</div>
+        )}
+      />
+    ));
+    pointer(container.querySelector(".sui-scrub-chart__frame") as Element).move(
+      { clientX: 200, clientY: 30 },
+    );
+    const card = container.querySelector(
+      ".sui-cashflow-scrub-chart__hover-tooltip",
+    ) as Element;
+    // The card states `z-index: 2`, the same level as the corner controls, and
+    // wins on DOM order because it comes later in the frame. Move it out of
+    // the frame and the frame's stacking context no longer holds the two
+    // together, so the pairing breaks — pin the containment here.
+    expect(card.closest(".sui-scrub-chart__frame")).not.toBeNull();
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "CashflowScrubChart.css"),
+      "utf8",
+    );
+    expect(
+      css
+        .slice(css.indexOf(".sui-cashflow-scrub-chart__hover-tooltip {"))
+        .split("}")[0],
+    ).toContain("z-index: 2;");
+  });
 });
 
 describe("CashflowScrubChart y-fit forwarding", () => {

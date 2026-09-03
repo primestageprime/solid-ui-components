@@ -1700,6 +1700,43 @@ describe("ScrubChart corner control stacking", () => {
     }
   });
 
+  it("keeps the corner level INSIDE the frame's stacking context", () => {
+    const css = chartCss();
+
+    // The frame is the stacking root. Drop this and every level the component
+    // states escapes into the host page, where a consumer's own layer at the
+    // same level ties with it on DOM order — the defect the corner level was
+    // added to remove, one level up.
+    expect(ruleBody(css, ".sui-scrub-chart__frame")).toContain(
+      "isolation: isolate;",
+    );
+
+    // The root above the frame makes NO stacking context, so the frame is the
+    // only one. `overflow: hidden` there does not make one, and neither the
+    // root nor the frame may take a level of its own: a level on either would
+    // enter the component into the host's ordering again.
+    const root = ruleBody(css, ".sui-scrub-chart");
+    expect(root).not.toContain("z-index");
+    expect(root).not.toContain("isolation");
+    expect(ruleBody(css, ".sui-scrub-chart__frame")).not.toContain("z-index");
+
+    // Every element that states a level lives inside the frame, so the frame
+    // contains all of them. The hover layer hosts the readout card, which
+    // states the same 2 as the corner and must keep the top.
+    const { container } = bothCorners();
+    const frame = container.querySelector(".sui-scrub-chart__frame")!;
+    for (const name of [
+      ".sui-scrub-chart__y-fit",
+      ".sui-scrub-chart__expand",
+    ]) {
+      expect(frame.querySelector(name)).not.toBeNull();
+    }
+    // Nothing inside the frame may reach past its edge — the frame clips.
+    expect(ruleBody(css, ".sui-scrub-chart__frame")).toContain(
+      "overflow: hidden;",
+    );
+  });
+
   it("scrims the glyph at REST, not on hover alone", () => {
     const css = chartCss();
     const scrim = ruleBody(css, ".sui-scrub-chart__corner-btn::after");
