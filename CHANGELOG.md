@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## 0.163.0
 
 ### Changed
 - **`ScrubChart`'s frame is now the component's stacking root.**
@@ -197,6 +197,25 @@
   With no prefix and no suffix the field is what it always was, and `Slider
   editable` passes neither. A test renders the built-in path beside a bare
   `SliderField` and compares the markup of the two.
+
+  **Two edges the types do not catch, now documented.** The first is the
+  DOUBLED AFFIX: `value` carries the number part once `prefix` or `suffix` is
+  set, and nothing type-checks that split. A caller whose own formatter already
+  prints the sign passes `"$1,627.08"`, sets `prefix="$"`, and the field draws
+  `$$1,627.08`. A test that asserts each readout string carries no `"$"` and no
+  `"/"` at all catches whichever affix doubles.
+
+  The second is that **the caller owns parse, clamp, snap and the empty case.**
+  The field clamps nothing and snaps nothing on purpose, because a `$/mo`
+  figure has a different domain from the `%` the track moves. The consequence
+  is the caller's: on a `$50–$250 step $5` slider, a coach who types `137` gets
+  `137` — a value the control could never produce, and one that looks entirely
+  plausible on screen and in a forecast. The empty field is worse, because it
+  fails SILENTLY: `Number("")` is `0`, so an emptied field commits a real zero
+  rather than doing nothing. `Slider`'s own `editable` path commits only a
+  finite parse; a caller that wires its own `onCommit` inherits none of that
+  guard. The `valueLabel` showcase now numbers all four steps in one handler,
+  because a reader copies the handler rather than the prose.
 
 ### Fixed
 - **The editable readout no longer clips its last character.** `$132.61/mo`
