@@ -93,11 +93,26 @@ const monthlyAt = (percent: number): number =>
 const percentFromMonthly = (dollars: number): number =>
   (1 - dollars / LIST_PER_MONTH) * 100;
 
-/** Whole percents, inside the domain the slider offers. */
-const snapPercent = (percent: number): number =>
-  Math.min(20, Math.max(0, Math.round(percent)));
+/** The domain the track offers. The slider and the commit handler share it. */
+const MIN_PERCENT = 0;
+const MAX_PERCENT = 20;
+const PERCENT_STEP = 1;
 
-/** A figure with a thousands separator and two decimals, and no currency. */
+/** The nearest step the thumb can land on, counted FROM the minimum. */
+const snapPercent = (percent: number): number =>
+  MIN_PERCENT +
+  Math.round((percent - MIN_PERCENT) / PERCENT_STEP) * PERCENT_STEP;
+
+/** Inside the domain. The field clamps nothing, so the caller clamps. */
+const clampPercent = (percent: number): number =>
+  Math.min(MAX_PERCENT, Math.max(MIN_PERCENT, percent));
+
+/**
+ * A figure with a thousands separator and two decimals, and NO currency sign.
+ *
+ * The field draws `prefix="$"` beside this text, so a "$" in here would draw
+ * "$$1,627.08". `value` carries the number part only.
+ */
 const amount = (dollars: number): string =>
   dollars.toLocaleString("en-US", {
     minimumFractionDigits: 2,
@@ -108,19 +123,32 @@ const amount = (dollars: number): string =>
  * A typed figure, or null when the text carries no number.
  *
  * The caller owns the parse, so the caller strips the thousands separator: a
- * person types over "1,591.32" and leaves the comma where it was.
+ * person types over "1,591.32" and leaves the comma where it was. An EMPTY
+ * field reads as null, never as 0 — `Number("")` is 0, so a blind parse would
+ * commit a real zero the moment a person cleared the field.
  */
 const parseAmount = (text: string): number | null => {
   const typed = Number.parseFloat(text.replace(/[$,%\s]/g, ""));
   return Number.isFinite(typed) ? typed : null;
 };
 
-/** Read one figure back to a discount, and move the slider to it. */
+/**
+ * Read one typed figure back to a discount, and move the slider to it.
+ *
+ * `SliderField` owns none of these four steps, so the handler does all four.
+ * Drop any one and a person commits a value the thumb could never reach.
+ */
 const commitAs =
   (toPercent: (dollars: number) => number, set: (percent: number) => void) =>
   (text: string): void => {
+    // 1. PARSE the text the person typed.
     const typed = parseAmount(text);
-    if (typed !== null) set(snapPercent(toPercent(typed)));
+    // 2. REJECT the empty field. "" and any text without a number commit
+    //    NOTHING, so an emptied field leaves the discount where it stands.
+    if (typed === null) return;
+    // 3. SNAP to the step, then 4. CLAMP to the domain. Snap first, because a
+    //    snap after a clamp can push the result back outside the ends.
+    set(clampPercent(snapPercent(toPercent(typed))));
   };
 
 const AnnualDiscount: Component = () => {
@@ -130,8 +158,9 @@ const AnnualDiscount: Component = () => {
       label="Annual discount"
       value={percent()}
       onChange={setPercent}
-      min={0}
-      max={20}
+      min={MIN_PERCENT}
+      max={MAX_PERCENT}
+      step={PERCENT_STEP}
       format={(n) => `${n}% a year`}
       valueLabel={
         <span class="slider-discount-readout">
@@ -319,8 +348,17 @@ export const SliderShowcase: Component = () => {
           parts read as one unbroken string: one font, one baseline, and the
           border and the padding on the group rather than on the input. A press
           on the <code>$</code> lands on the number, because the group is the
-          input's own label. The caller owns each parse, including the thousands
-          separator in <code>1,591.32</code>.
+          input's own label. Keep the <code>$</code> out of <code>value</code>{" "}
+          as well, or the field draws <code>$$1,627.08</code>.
+        </span>
+        <span class="text-meta">
+          The caller owns PARSE, CLAMP, SNAP and the EMPTY CASE — read{" "}
+          <code>commitAs</code> in this file, which does all four in order. The
+          field clamps nothing and snaps nothing, so a typed <code>137</code> on
+          a <code>$50–$250 step $5</code> slider would otherwise stand as a
+          value the thumb could never reach. Clear a field here and press Enter:
+          it commits NOTHING, because <code>Number("")</code> is <code>0</code>{" "}
+          and a blind parse writes a real zero.
         </span>
         <span class="text-meta">
           <code>editable</code> beside <code>valueLabel</code> is a compile
