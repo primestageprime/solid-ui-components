@@ -633,7 +633,7 @@ State derivation:
     ```
 
 ## Slider
-- **Slider** — Atomic (Depth 1). A labelled range control that prints its own live value. Owns `Slider.css`; wraps `@kobalte/core/slider` (matches the Combobox/Select/Tooltip/Toast/ThemedNumberInput/DateRangePicker Kobalte-wrapping pattern — see CONTEXT.md). The label line carries the caption on the left and `format(value)` right-aligned on the right, so a control reads `Safety buffer` / `6 months` on one line and needs no separate readout beside it. **The value stays in the CONSUMER'S OWN UNITS** — the component runs no arithmetic beyond Kobalte's step snapping and formats nothing itself, so a dial that keeps integer cents passes cents and supplies a `format` that renders dollars. Assuming dollars would put a unit in the widget that only the consumer knows. Key props: `value` (`number`, controlled), `onChange` (`(value: number) => void`), `min`, `max`, `step` (default `1`), `label` (accessible name and visible caption — required), `format?` (`(value: number) => string`, default `String`), `disabled?`, `editable?` (`boolean`, default off — turns the readout into a field; see the note below), `ticks?` (`boolean | readonly number[]` — notches drawn on the track: `true` marks every `step` from `min` to `max` inclusive, an array marks exactly those values and ignores `step`, and omitted or `false` draws nothing; a value outside `[min, max]` is dropped rather than pulled to the edge, an end notch sits half its own width inside the track, and every notch is `aria-hidden` and takes no pointer events). Any other `SliderRootProps` (e.g. `name`, `onChangeEnd`, `inverted`, `orientation`) is forwarded via spread. Exported types: `SliderProps`, `SliderDataProps`, `SliderOverrides`. Factory: `createSlider({ format, ticks })` — curry the formatter and the tick set when the unit and the scale are static decisions. Uses `--sui-accent`, `--sui-accent-rgb`, `--sui-bg-primary`, `--sui-border`, `--sui-border-focus`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-font-family`, `--sui-font-mono`, `--sui-space-2` theme tokens. Use for: a bounded numeric input where the reader wants the value and the position at once — a runway dial, a buffer, a draw amount. For a value axis that also carries named threshold ticks, use `BandRail`.
+- **Slider** — Atomic (Depth 1). A labelled range control that prints its own live value. Owns `Slider.css`; wraps `@kobalte/core/slider` (matches the Combobox/Select/Tooltip/Toast/ThemedNumberInput/DateRangePicker Kobalte-wrapping pattern — see CONTEXT.md). The label line carries the caption on the left and `format(value)` right-aligned on the right, so a control reads `Safety buffer` / `6 months` on one line and needs no separate readout beside it. **The value stays in the CONSUMER'S OWN UNITS** — the component runs no arithmetic beyond Kobalte's step snapping and formats nothing itself, so a dial that keeps integer cents passes cents and supplies a `format` that renders dollars. Assuming dollars would put a unit in the widget that only the consumer knows. Key props: `value` (`number`, controlled), `onChange` (`(value: number) => void`), `min`, `max`, `step` (default `1`), `label` (accessible name and visible caption — required), `format?` (`(value: number) => string`, default `String`), `disabled?`, `editable?` (`boolean`, default off — turns the readout into a field; see the note below), `valueLabel?` (`JSX.Element` — a node drawn in place of the readout; forbidden beside `editable`, see the note below), `ticks?` (`boolean | readonly number[]` — notches drawn on the track: `true` marks every `step` from `min` to `max` inclusive, an array marks exactly those values and ignores `step`, and omitted or `false` draws nothing; a value outside `[min, max]` is dropped rather than pulled to the edge, an end notch sits half its own width inside the track, and every notch is `aria-hidden` and takes no pointer events). Any other `SliderRootProps` (e.g. `name`, `onChangeEnd`, `inverted`, `orientation`) is forwarded via spread. Exported types: `SliderProps`, `SliderDataProps`, `SliderOverrides`. Factory: `createSlider({ format, ticks })` — curry the formatter and the tick set when the unit and the scale are static decisions. Uses `--sui-accent`, `--sui-accent-rgb`, `--sui-bg-primary`, `--sui-border`, `--sui-border-focus`, `--sui-text-primary`, `--sui-text-secondary`, `--sui-font-family`, `--sui-font-mono`, `--sui-space-2` theme tokens. Use for: a bounded numeric input where the reader wants the value and the position at once — a runway dial, a buffer, a draw amount. For a value axis that also carries named threshold ticks, use `BandRail`.
   - **It does NOT emit `onChange` at mount, and that is why it exists.** `ThemedNumberInput` fires one `onChange(undefined)` at mount; a form that persists on every change writes that mount value over the stored one, which cost thorcasting a guard in `MoneyField`. This control emits only on a drag or a key that moves the thumb. Two tests pin it: none at mount, and none when the `value` prop changes.
   - **The track insets by half a thumb; the label line does not.** Kobalte places the thumb at `left: calc(pct%)` of the track with `translateX(-50%)`, so a flush track lets the thumb hang half its width outside the component — 8px past the right edge of a 290px column at max, where it overlaps the next control or is clipped by any parent that clips. The track carries a horizontal margin of half a thumb, the way a native range input insets it, and it must NOT also carry `width: 100%` or that beats the margin and pushes the thumb out instead. The inset is horizontal only, so a slider still lines up with the number input beside it.
   - **`aria-valuetext` is overridden on purpose.** Kobalte's own `aria-valuetext` comes from its internal number formatter, **not** from `getValueLabel` — that only feeds `ValueLabel`. Left alone a screen reader reads `6` where the sighted user sees `6 months`. The thumb carries `aria-valuetext={format(value)}`; Kobalte spreads `others` last on the thumb, so it wins.
@@ -651,7 +651,24 @@ State derivation:
     stops keydown propagation so arrow keys move the caret rather than the thumb,
     and it carries `aria-label` because a caption on the label line is not its
     accessible name.
-  - **No `variants.ts`, deliberately.** `format` and `ticks` are the only overrides, and a real caller's formatter carries its own units and currency — the same reason `BandRail` ships the base alongside its factory rather than a set of curried variants. Curry one at the call site with `createSlider`.
+  - **`valueLabel` hands the readout to the caller, and it is a UNION with
+    `editable`, not a second flag.** The node replaces the value node — the
+    value label, or the `editable` field. The caption, the label line and the
+    track stay SUI's. Pass it when one value has more than one honest reading:
+    an annual discount reads as `9%`, as `$136/mo` and as `$1,627.08/yr`, and a
+    coach who knows they want `$1,627.08` types that figure rather than hunting
+    for the percent that produces it. The caller draws each field inside the
+    node and owns each parse, which is why a composite `format` string does not
+    answer it — on focus SUI's own field swaps to the raw number and commits one
+    float, so only one of the three figures would stay typeable.
+    `<Slider editable valueLabel={…} />` is a COMPILE error, because SUI cannot
+    draw a field in a place it gave away; a runtime warning would hide the
+    mistake until the page ran. `format` still governs the thumb's
+    `aria-valuetext`, since a node changes what a reader SEES, not what the
+    thumb is worth. The label line stays ONE flex row and takes `min-width: 0`,
+    so the node shrinks inside the column and wraps its own figures. A node that
+    resolves to nothing leaves SUI's own readout in place.
+  - **No `variants.ts`, deliberately.** `format` and `ticks` are the only overrides, and a real caller's formatter carries its own units and currency — the same reason `BandRail` ships the base alongside its factory rather than a set of curried variants. Curry one at the call site with `createSlider`. `valueLabel` stays OUT of `SliderOverrides`: an override is a static visual decision, and a readout node is per-instance content that holds the caller's own fields and signals, the way `label` and `value` do. A curried variant still takes it, because `SliderDataProps` omits through each member of the union.
   - Example:
     ```tsx
     import { Slider, createSlider } from "solid-ui-components";
@@ -675,6 +692,23 @@ State derivation:
             min={3} max={24} ticks={[3, 6, 12, 18, 24]} />
     <Slider label="Annual raise" value={raise()} onChange={setRaise}
             min={0} max={15} step={0.5} ticks />
+
+    // One value, three readings — the caller draws the readout and owns each parse
+    <Slider
+      label="Annual discount"
+      value={percent()}
+      onChange={setPercent}
+      min={0}
+      max={20}
+      format={(n) => `${n}% a year`}
+      valueLabel={
+        <span class="discount-readout">
+          <input aria-label="Discount percent" value={`${percent()}%`} onChange={…} />
+          <input aria-label="Price per month" value={perMonth(percent())} onChange={…} />
+          <input aria-label="Price per year" value={perYear(percent())} onChange={…} />
+        </span>
+      }
+    />
 
     // Curry the formatter and the ticks when the unit and the scale are static
     const MonthsSlider = createSlider({

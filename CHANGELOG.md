@@ -43,6 +43,39 @@
   still style nothing themselves.
 
 ### Added
+- **`Slider` takes `valueLabel`, so a caller can draw the readout itself.** The
+  node replaces the value node — the value label, or the `editable` field. The
+  caption, the label line and the track stay SUI's.
+
+  ```tsx
+  <Slider label="Annual discount" value={percent()} onChange={setPercent}
+          min={0} max={20} format={(n) => `${n}% a year`}
+          valueLabel={<DiscountFigures percent={percent()} onPercent={setPercent} />} />
+  ```
+
+  One value can have more than one honest reading, and SUI printed exactly one
+  figure. An annual discount reads as `9%`, as `$136/mo` and as `$1,627.08/yr`:
+  the percent moves the track, the monthly figure compares against the monthly
+  plan, and the yearly figure is what the customer is charged. A coach who knows
+  they want `$1,627.08` types that figure rather than hunting for the percent
+  that produces it, so all three have to stay typeable. A `format` that returns
+  the whole composite string cannot do that — on focus the field swaps to the
+  raw number and commits one float, so two of the three readings go read-only.
+  The caller now draws each field inside the node and owns each parse.
+
+  **`editable` beside `valueLabel` is a COMPILE error**, not a runtime warning.
+  `SliderProps` is a union of the two readout shapes, the way `ComboboxProps`
+  narrows on `multiple`. SUI cannot draw a field in a place it gave away, and a
+  warning would hide the mistake until the page ran. `SliderDataProps` omits
+  through each member, so a curried variant keeps the same rule.
+
+  `format` still governs the thumb. A node changes what a reader SEES, not what
+  the thumb is worth, so `aria-valuetext` still announces `format(value)`.
+
+  The label line stays ONE flex row. It takes `min-width: 0`, so the caller's
+  node can shrink inside the column; the node lays out and wraps its own
+  figures. No existing slider changes shape.
+
 - **`ScrubChart` owns the expand chevron, and `CashflowScrubChart` forwards
   it.** `chartHeightExpanded` is the master switch: set it and the chart draws
   a chevron in the bottom-RIGHT corner of the frame, and a click moves the
