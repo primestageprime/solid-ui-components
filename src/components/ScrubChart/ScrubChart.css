@@ -14,8 +14,19 @@
   overflow: hidden;
 }
 
+/* The frame is the component's STACKING ROOT. Every level ScrubChart states
+   inside it — the corner controls, the hover readout — counts only against
+   its siblings in here, and never against a layer the consumer's own app
+   states. Without this the corner's `z-index: 2` climbs to whatever ancestor
+   in the host page makes a stacking context, and a consumer layer at the same
+   level ties with it on DOM order alone.
+   `isolation: isolate` and not `z-index: 0`: it makes the context without
+   entering the frame into the parent's own level ordering. `overflow: hidden`
+   here does NOT make one, and `position: relative` at the auto level does not
+   either, so the declaration must stay. */
 .sui-scrub-chart__frame {
   position: relative;
+  isolation: isolate;
   width: 100%;
   background: var(--sui-bg-base, transparent);
   overflow: hidden;
@@ -153,12 +164,16 @@
   /* The corner floats ABOVE every layer of the frame — the highlight bands,
      the gridlines, the consumer's plot, the axis tick labels, the window band
      and the gesture overlay. All of those paint at the auto level, so DOM
-     order alone decides between them, and a consumer's own positioned layer
-     can still beat a button that comes later. A stated level settles it: at a
-     narrow width a button lands on a tick label, and the button wins. It ties
-     with the hover readout (`.sui-cashflow-scrub-chart__hover-tooltip` states
-     the same 2), which comes later in the frame and so keeps the top — a
-     readout the reader is pointing at outranks a control. */
+     order alone decides between them, and a layer that comes later beats a
+     button. A stated level settles it: at a narrow width a button lands on a
+     tick label, and the button wins. It ties with the hover readout
+     (`.sui-cashflow-scrub-chart__hover-tooltip` states the same 2), which
+     comes later in the frame and so keeps the top — a readout the reader is
+     pointing at outranks a control.
+     This 2 stays INSIDE the component. The frame isolates, so the level is
+     read against the other layers of the frame and never against a layer the
+     consumer's app states. A consumer's own control at level 2 beside the
+     chart cannot compete with this one. */
   z-index: 2;
 }
 
