@@ -129,17 +129,72 @@
   padding-bottom: 0;
 }
 
-/* Y-fit toggle — opt-in (`yFitDomain`) segmented control that picks which cell
-   range sets the y extent. It sits at the bottom-left of the frame, in the row
-   ScrubChart reserves for it: `yFitRowHeight` adds Y_FIT_ROW_HEIGHT to the
-   bottom inset, so the plot and the x-axis labels both end above this control.
-   Keep the 2px inset in step with Y_FIT_ROW_HEIGHT in
-   ScrubChartYFitControl.tsx — that number counts this inset twice, plus the
-   rendered height of the control. Do NOT drop the reservation and park the
-   control over the plot: it then covers the lowest gridline and its label. */
+/* Y-fit control — opt-in (`yFitDomain`) icon button that picks which cell
+   range sets the y extent. It sits in the chart's ORIGIN CORNER: in the
+   y-axis label column, left of the plot, and level with the x-axis tick
+   labels. ScrubChart states the row's top edge through `axisTop`, and that
+   inline `top` beats the `bottom` inset below; the `bottom` inset serves a
+   control mounted on its own. Keep both 2px insets in step with `Y_FIT_INSET`
+   in helpers.ts. Both insets stay POSITIVE: the frame hides its overflow, so
+   a negative one clips the button. `Y_FIT_GUTTER` widens the COLUMN instead,
+   which moves the y labels right and leaves the button further from them. Do
+   NOT park the button over the plot: it then covers the lowest gridline and
+   its label. */
 .sui-scrub-chart__y-fit {
   position: absolute;
   left: 2px;
   bottom: 2px;
   display: flex;
+}
+
+/* The button is a bare glyph at rest: no fill, no border, no ring. It reads
+   as axis furniture, not as a form control, so it is a plain `<button>` and
+   not `Button` — every colour and shape rule `.sui-btn` brings would have to
+   be undone here. The glyph takes `--sui-accent`, the colour the default
+   series line strokes with, so the control names the line it rescales. Keep
+   the 26px size in step with `Y_FIT_BUTTON_SIZE` in helpers.ts: it is the hit
+   TARGET, and the border below is smaller. */
+.sui-scrub-chart__y-fit-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sui-accent);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* A pseudo-element draws the hover border, so the border hugs the glyph while
+   the button keeps the whole 26px target a pointer and a keyboard need. The
+   `inset` states how far in from that target the border sits — keep it in
+   step with `Y_FIT_HOVER_INSET` in helpers.ts. */
+.sui-scrub-chart__y-fit-btn::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+.sui-scrub-chart__y-fit-btn:hover:not(:disabled)::after {
+  border-color: var(--sui-accent);
+}
+
+/* A control a reader finds by hover alone is out of a keyboard's reach, so
+   focus keeps a ring of its own. */
+.sui-scrub-chart__y-fit-btn:focus-visible {
+  outline: 2px solid var(--sui-accent);
+  outline-offset: 0;
 }

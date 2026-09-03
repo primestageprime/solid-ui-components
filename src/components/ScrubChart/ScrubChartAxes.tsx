@@ -25,7 +25,11 @@
 // ============================================
 
 import { For, type JSX, Show } from "solid-js";
-import { clampLabelBaseline } from "./helpers";
+import {
+  X_LABEL_BASELINE_GAP,
+  clampLabelBaseline,
+  yLabelFloor,
+} from "./helpers";
 
 /** One y-axis tick: its data value + the pixel y it maps to. */
 export interface ScrubChartYTick {
@@ -52,6 +56,9 @@ export interface ScrubChartAxesProps {
   plotRight: () => number;
   plotBottom: () => number;
   yScaleActive: () => boolean;
+  /** Does the y-fit control hold the origin corner? True lifts the lowest y
+   *  label clear of the button — see `yLabelFloor` in helpers.ts. */
+  yFitCorner: () => boolean;
   yTicks: () => ScrubChartYTick[];
   xTicks: () => ScrubChartXTick[];
   formatY: () => (value: number) => string;
@@ -184,15 +191,23 @@ export const ScrubChartAxes = (props: ScrubChartAxesProps): JSX.Element => (
               y1={tick.y}
               y2={tick.y}
             />
-            {/* The label's y is CLAMPED to the frame; the tick and the
-                gridline above keep `tick.y`. A tick on the domain end sits
-                on `plotTop` (or on `plotBottom`), and a label centred there
-                loses its outer half to the frame edge. See
-                `clampLabelBaseline` in helpers.ts. */}
+            {/* The label's y is CLAMPED; the tick and the gridline above
+                keep `tick.y`. A tick on the domain end sits on `plotTop` (or
+                on `plotBottom`), and a label centred there loses its outer
+                half to the frame edge, or to the y-fit button in the origin
+                corner. See `clampLabelBaseline` and `yLabelFloor` in
+                helpers.ts. */}
             <text
               class="sui-scrub-chart__label sui-scrub-chart__label--y"
               x={props.plotLeft() - 6}
-              y={clampLabelBaseline(tick.y, props.chartHeight())}
+              y={clampLabelBaseline(
+                tick.y,
+                yLabelFloor(
+                  props.chartHeight(),
+                  props.plotBottom(),
+                  props.yFitCorner(),
+                ),
+              )}
               text-anchor="end"
               dominant-baseline="central"
             >
@@ -223,7 +238,7 @@ export const ScrubChartAxes = (props: ScrubChartAxesProps): JSX.Element => (
             <text
               class="sui-scrub-chart__label sui-scrub-chart__label--x"
               x={tick.x}
-              y={props.plotBottom() + 6}
+              y={props.plotBottom() + X_LABEL_BASELINE_GAP}
               text-anchor="middle"
               dominant-baseline="hanging"
             >

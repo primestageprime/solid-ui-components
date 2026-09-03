@@ -39,10 +39,7 @@ import { insetSpan } from "../../internal/geometry/insetSpan";
 import { clamp } from "../../internal/math/clamp";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import { DateAxis, type Cell } from "../DateAxis";
-import {
-  ScrubChartYFitControl,
-  Y_FIT_ROW_HEIGHT,
-} from "./ScrubChartYFitControl";
+import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
 import {
   ScrubChartAxes,
   ScrubChartGrid,
@@ -56,6 +53,8 @@ import {
   DEFAULT_X_AXIS_HEIGHT,
   DEFAULT_X_MAX_TICKS,
   DEFAULT_Y_TICK_COUNT,
+  Y_FIT_COLUMN,
+  Y_FIT_FOOTPRINT,
   defaultFormatX,
   defaultFormatY,
   matchesCadence,
@@ -106,19 +105,27 @@ export const ScrubChart = <C extends Cell>(
   // xAxisExtraHeight ADDS to it unconditionally — the extra row is for a
   // caller-owned layer below the axis (e.g. CashflowScrubChart's below-zone
   // labels), which needs its space whether or not ticks are drawn.
+  // The x-axis row also HOSTS the y-fit control, in the corner where the two
+  // axes meet. The 26px button is taller than the 22px label row, so the row
+  // grows to the control's footprint — 6px, against the whole row this
+  // control used to take below the labels. The button then centres on the
+  // tick labels. `xTickCadence="none"` draws no labels and no row, and the
+  // footprint becomes the whole row. Either way the button also reaches a
+  // little ABOVE `plotBottom`, and `yLabelFloor` lifts the lowest y label
+  // clear of it.
   const xAxisHeight = () =>
-    ((props.xTickCadence ?? "none") !== "none"
-      ? (props.xAxisHeight ?? DEFAULT_X_AXIS_HEIGHT)
-      : 0) +
-    (props.xAxisExtraHeight ?? 0) +
-    yFitRowHeight();
+    Math.max(
+      ((props.xTickCadence ?? "none") !== "none"
+        ? (props.xAxisHeight ?? DEFAULT_X_AXIS_HEIGHT)
+        : 0) + (props.xAxisExtraHeight ?? 0),
+      yFitFootprint(),
+    );
 
-  // The y-fit toggle gets a row of its own at the bottom of the frame, the
-  // way `xAxisExtraHeight` reserves a caller-owned row. The row raises
-  // `plotBottom`, so the lowest gridline and its label stay above the
-  // control. Without the row the control covers them — and a pinned floor
-  // makes that lowest label the one the reader needs.
-  const yFitRowHeight = () => (props.yFitDomain ? Y_FIT_ROW_HEIGHT : 0);
+  // The height the y-fit control asks of the x-axis row, or 0 without the
+  // control. The DEFAULT y-axis column asks for `Y_FIT_COLUMN` instead: the
+  // column carries a gutter that moves the y labels right of the button, and
+  // the row needs no such gutter.
+  const yFitFootprint = () => (props.yFitDomain ? Y_FIT_FOOTPRINT : 0);
 
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
@@ -245,6 +252,7 @@ export const ScrubChart = <C extends Cell>(
     tickCount: () => props.yTickCount ?? DEFAULT_Y_TICK_COUNT,
     formatLabel: fmtY,
     axisWidth: () => props.yAxisWidth,
+    minWidth: () => (props.yFitDomain ? Y_FIT_COLUMN : 0),
     transitionMs: () => props.yFitTransition ?? DEFAULT_Y_FIT_TRANSITION_MS,
   });
   const yScale = yAxis.scale;
@@ -580,6 +588,7 @@ export const ScrubChart = <C extends Cell>(
             plotRight={plotRight}
             plotBottom={plotBottom}
             yScaleActive={() => yScale() != null}
+            yFitCorner={() => props.yFitDomain != null}
             yTicks={yTicks}
             xTicks={xTicks}
             formatY={fmtY}
@@ -623,15 +632,17 @@ export const ScrubChart = <C extends Cell>(
         <Show when={props.renderChartOverlay && chartWidth() > 0}>
           {props.renderChartOverlay!(ctx())}
         </Show>
-        {/* Y-fit toggle — rendered only when `yFitDomain` is set. It sits
-            in the row `yFitRowHeight` reserves at the bottom of the frame, so
-            it covers no gridline, no label and no plot. It comes LAST in the
+        {/* Y-fit toggle — rendered only when `yFitDomain` is set. It sits in
+            the axis origin corner: `plotBottom` puts it level with the x-axis
+            tick labels, and the y-axis column holds it left of the plot, so
+            it covers no gridline, no label and no data. It comes LAST in the
             frame so it stacks above the gesture overlay and answers its own
             clicks. See ScrubChartYFitControl.tsx for the markup. */}
         <Show when={props.yFitDomain}>
           <ScrubChartYFitControl
             mode={yScaleMode}
             onSelect={selectYScaleMode}
+            axisTop={plotBottom}
           />
         </Show>
         {/* Hover readout layer — above all chrome, pointer-events:none so it

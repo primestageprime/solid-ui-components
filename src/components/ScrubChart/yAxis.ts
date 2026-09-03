@@ -49,6 +49,10 @@ export interface YAxisScalesOptions {
   formatLabel: Accessor<(value: number) => string>;
   /** The `yAxisWidth` prop. Set, it wins over the measured width. */
   axisWidth: Accessor<number | undefined>;
+  /** The narrowest column the DEFAULT width may report, in px. ScrubChart
+   *  asks for the y-fit control's footprint here, so the control fits left of
+   *  the plot. An explicit `axisWidth` ignores this number. */
+  minWidth: Accessor<number>;
   /** Time a new fitted domain takes to reach the screen. `false` snaps. */
   transitionMs: Accessor<number | false>;
 }
@@ -131,12 +135,10 @@ export const createYAxisScales = (options: YAxisScalesOptions): YAxisScales => {
     );
   });
 
-  // The label column is measured from the TARGET labels, so it holds still
-  // while the tween runs.
-  const width = createMemo<number>(() => {
+  // The width the LABELS ask for. It is measured from the TARGET labels, so
+  // it holds still while the tween runs. 0 without a y-axis.
+  const measuredWidth = (): number => {
     if (!targetScale()) return 0;
-    const override = options.axisWidth();
-    if (override != null) return Math.max(0, override);
     const values = tickValues();
     if (values.length === 0) return 0;
     const format = options.formatLabel();
@@ -145,6 +147,17 @@ export const createYAxisScales = (options: YAxisScalesOptions): YAxisScales => {
       0,
     );
     return Math.ceil(widest + Y_LABEL_GAP);
+  };
+
+  // `minWidth` raises the MEASURED width only. Short labels ("0", "1") measure
+  // narrower than the y-fit control, and the control would then overflow the
+  // frame or reach into the plot. An explicit `axisWidth` still wins as given:
+  // a caller who asks for a narrow column gets one, and clips the control.
+  const width = createMemo<number>(() => {
+    const override = options.axisWidth();
+    return override != null
+      ? Math.max(0, override)
+      : Math.max(measuredWidth(), options.minWidth());
   });
 
   return { scale, ticks, width };

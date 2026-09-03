@@ -8,11 +8,21 @@ import {
   type ScrubChartContext,
   type ScrubChartHighlight,
 } from "./ScrubChart";
-import { Y_LABEL_HALF_HEIGHT, clampLabelBaseline } from "./helpers";
 import {
-  ScrubChartYFitControl,
-  Y_FIT_ROW_HEIGHT,
-} from "./ScrubChartYFitControl";
+  DEFAULT_X_AXIS_HEIGHT,
+  Y_FIT_BUTTON_SIZE,
+  Y_FIT_COLUMN,
+  Y_FIT_FOOTPRINT,
+  Y_FIT_GUTTER,
+  Y_FIT_HOVER_INSET,
+  Y_FIT_INSET,
+  Y_FIT_LEVEL_OFFSET,
+  Y_LABEL_GAP,
+  Y_LABEL_HALF_HEIGHT,
+  clampLabelBaseline,
+  yLabelFloor,
+} from "./helpers";
+import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
 import { dailyCells, type Cell } from "../DateAxis";
 import { pointer, rectOf } from "../../test-utils";
 
@@ -675,8 +685,73 @@ describe("ScrubChart y-fit toggle", () => {
     return [(ctx.plotBottom - at0) / slope, (ctx.plotTop - at0) / slope];
   };
 
-  const seg = (container: HTMLElement, index: number): HTMLElement =>
-    container.querySelectorAll<HTMLElement>(".sui-segmented__seg")[index];
+  // The control is ONE button. It shows the action a click performs, so its
+  // accessible name is the assertion that pins the glyph-shows-action rule.
+  const fitButton = (container: HTMLElement): HTMLElement =>
+    container.querySelector<HTMLElement>(".sui-scrub-chart__y-fit-btn")!;
+
+  // jsdom runs no layout and loads no stylesheet, so the sizes live only in
+  // the CSS file. The test reads that file, the way the highlight-fill test
+  // above does, and pins the numbers helpers.ts mirrors.
+  const chartCss = (): string =>
+    readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "ScrubChart.css"),
+      "utf8",
+    );
+
+  /** The body of the FIRST rule whose selector starts with `selector`. */
+  const ruleBody = (css: string, selector: string): string =>
+    css.slice(css.indexOf(`${selector} {`)).split("}")[0];
+
+  it("keeps a 26px hit target under a smaller hover border", () => {
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitDomain={() => [10, 90]}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+      />
+    ));
+    // The target is a real button, so a pointer and a keyboard both reach it.
+    const btn = fitButton(container);
+    expect(btn.tagName).toBe("BUTTON");
+    expect(btn.getAttribute("type")).toBe("button");
+
+    const css = chartCss();
+    const rest = ruleBody(css, ".sui-scrub-chart__y-fit-btn");
+    // The button holds the full target at rest, and draws NO border there.
+    for (const prop of ["width", "height", "min-width", "min-height"]) {
+      expect(rest).toContain(`${prop}: ${Y_FIT_BUTTON_SIZE}px;`);
+    }
+    expect(rest).toContain("border: 0;");
+    expect(rest).toContain("background: none;");
+
+    // A pseudo-element carries the hover border, inset on every side, so the
+    // border is SMALLER than the target it sits in.
+    const ring = ruleBody(css, ".sui-scrub-chart__y-fit-btn::after");
+    expect(ring).toContain(`inset: ${Y_FIT_HOVER_INSET}px;`);
+    expect(ring).toContain("border: 1px solid transparent;");
+    const borderSize = Y_FIT_BUTTON_SIZE - 2 * Y_FIT_HOVER_INSET;
+    expect(borderSize).toBeGreaterThan(0);
+    expect(borderSize).toBeLessThan(Y_FIT_BUTTON_SIZE);
+
+    // Hover paints that border. Focus keeps a ring, so the affordance is not
+    // hover-only.
+    expect(
+      ruleBody(css, ".sui-scrub-chart__y-fit-btn:hover:not(:disabled)::after"),
+    ).toContain("border-color: var(--sui-accent);");
+    expect(
+      ruleBody(css, ".sui-scrub-chart__y-fit-btn:focus-visible"),
+    ).toContain("outline: 2px solid var(--sui-accent);");
+  });
+
+  it("colours the glyph with the series line's token", () => {
+    // The showcase strokes its series with `--sui-accent`. The glyph takes the
+    // same custom property, so the control names the line it rescales.
+    expect(ruleBody(chartCss(), ".sui-scrub-chart__y-fit-btn")).toContain(
+      "color: var(--sui-accent);",
+    );
+  });
 
   it("renders no fit toggle without yFitDomain", () => {
     const { container } = render(() => (
@@ -688,7 +763,7 @@ describe("ScrubChart y-fit toggle", () => {
       />
     ));
     expect(container.querySelector(".sui-scrub-chart__y-fit")).toBeNull();
-    expect(container.querySelector(".sui-segmented")).toBeNull();
+    expect(container.querySelector(".sui-scrub-chart__y-fit-btn")).toBeNull();
   });
 
   it("asks the callback for the visible window in visible mode", () => {
@@ -727,7 +802,7 @@ describe("ScrubChart y-fit toggle", () => {
     expect(asked[0]).toEqual([0, 9]);
   });
 
-  it("reports a segment click through onYScaleModeChange", () => {
+  it("reports a click through onYScaleModeChange as the other mode", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
       <ScrubChart
@@ -739,7 +814,7 @@ describe("ScrubChart y-fit toggle", () => {
         renderCell={() => <div />}
       />
     ));
-    fireEvent.click(seg(container, 1));
+    fireEvent.click(fitButton(container));
     expect(onChange).toHaveBeenCalledWith("series");
   });
 
@@ -757,7 +832,7 @@ describe("ScrubChart y-fit toggle", () => {
       />
     ));
     expect(asked[0]).toEqual([0, 0]);
-    fireEvent.click(seg(container, 1));
+    fireEvent.click(fitButton(container));
     expect(asked[asked.length - 1]).toEqual([0, 9]);
   });
 
@@ -865,12 +940,13 @@ describe("ScrubChart y-fit toggle", () => {
     expect(domainOf(seen!)[0]).toBeCloseTo(-100, 6);
   });
 
-  it("reserves a row below the plot for the toggle", () => {
+  it("hosts the toggle in the x-axis row, reserving no row of its own", () => {
     let withToggle: ScrubChartContext<Cell> | null = null;
     let without: ScrubChartContext<Cell> | null = null;
     render(() => (
       <ScrubChart
         cells={cells10()}
+        xTickCadence="month"
         yFitDomain={() => [10, 90]}
         renderChart={(ctx) => {
           withToggle = ctx;
@@ -882,6 +958,7 @@ describe("ScrubChart y-fit toggle", () => {
     render(() => (
       <ScrubChart
         cells={cells10()}
+        xTickCadence="month"
         yDomain={[10, 90]}
         renderChart={(ctx) => {
           without = ctx;
@@ -891,14 +968,75 @@ describe("ScrubChart y-fit toggle", () => {
       />
     ));
     // jsdom runs no layout, so the test states the CONTRACT instead of the
-    // pixels: the toggle's row raises plotBottom by exactly its height, and
-    // the frame keeps the height the caller asked for. The lowest gridline
-    // sits at plotBottom, so this is what keeps the control off it.
-    expect(withToggle!.plotBottom).toBeCloseTo(
-      without!.plotBottom - Y_FIT_ROW_HEIGHT,
-      3,
-    );
+    // pixels. The toggle sits in the axis origin corner and takes NO row of
+    // its own: the x-axis row grows from the label row to the button's
+    // footprint, and no further. Every px below plotBottom is that one row.
+    expect(without!.height - without!.plotBottom).toBe(DEFAULT_X_AXIS_HEIGHT);
+    expect(withToggle!.height - withToggle!.plotBottom).toBe(Y_FIT_FOOTPRINT);
     expect(withToggle!.height).toBe(without!.height);
+    // The button hangs from plotBottom in the y-axis column, so the column
+    // must hold it: the effective width covers the footprint AND the gutter
+    // that moves the labels right of the button.
+    expect(withToggle!.plotLeft).toBeGreaterThanOrEqual(Y_FIT_COLUMN);
+  });
+
+  it("holds the left margin open for the toggle when labels are narrow", () => {
+    let fitted: ScrubChartContext<Cell> | null = null;
+    let plain: ScrubChartContext<Cell> | null = null;
+    let explicit: ScrubChartContext<Cell> | null = null;
+    // "0" through "4" measure far narrower than the 26px button.
+    const labels = (v: number) => String(v);
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yFitPin={{ min: 0, max: 4 }}
+        yFitDomain={() => [0, 4]}
+        formatYLabel={labels}
+        renderChart={(ctx) => {
+          fitted = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yDomain={[0, 4]}
+        formatYLabel={labels}
+        renderChart={(ctx) => {
+          plain = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    // The labels alone ask for a column narrower than the control. With the
+    // control present the DEFAULT column grows to the button's footprint, so
+    // the button neither overflows the frame's left edge nor reaches into
+    // the plot.
+    expect(plain!.plotLeft).toBeLessThan(Y_FIT_COLUMN);
+    expect(fitted!.plotLeft).toBe(Y_FIT_COLUMN);
+    // The gutter is the whole difference between the column and the row.
+    expect(Y_FIT_COLUMN - Y_FIT_FOOTPRINT).toBe(Y_FIT_GUTTER);
+
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        yAxisWidth={12}
+        yFitPin={{ min: 0, max: 4 }}
+        yFitDomain={() => [0, 4]}
+        formatYLabel={labels}
+        renderChart={(ctx) => {
+          explicit = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    // An explicit width is used AS GIVEN. The caller owns the column, even
+    // when the width clips the control.
+    expect(explicit!.plotLeft).toBe(12);
   });
 
   it("reports the picked mode from the control on its own", () => {
@@ -909,11 +1047,44 @@ describe("ScrubChart y-fit toggle", () => {
         onSelect={(m) => picked.push(m)}
       />
     ));
-    // Mounted directly, so the control answers for its own markup: two
-    // segments, and a click reports the mode that segment stands for.
-    expect(container.querySelectorAll(".sui-segmented__seg")).toHaveLength(2);
-    fireEvent.click(seg(container, 1));
+    // Mounted directly, so the control answers for its own markup: one
+    // button, and a click reports the OTHER mode.
+    expect(
+      container.querySelectorAll(".sui-scrub-chart__y-fit-btn"),
+    ).toHaveLength(1);
+    fireEvent.click(fitButton(container));
     expect(picked).toEqual(["series"]);
+  });
+
+  // The button depicts what a click DOES, not the mode it is in. The name and
+  // the glyph must agree, so a reader who reads the label and a reader who
+  // reads the icon reach the same expectation.
+  it("names the ACTION a click performs, per mode", () => {
+    const visible = render(() => (
+      <ScrubChartYFitControl mode={() => "visible"} onSelect={() => {}} />
+    ));
+    expect(fitButton(visible.container).getAttribute("aria-label")).toBe(
+      "Fit to all",
+    );
+
+    const series = render(() => (
+      <ScrubChartYFitControl mode={() => "series"} onSelect={() => {}} />
+    ));
+    expect(fitButton(series.container).getAttribute("aria-label")).toBe(
+      "Fit to visible",
+    );
+  });
+
+  it("reports the other mode from series too", () => {
+    const picked: string[] = [];
+    const { container } = render(() => (
+      <ScrubChartYFitControl
+        mode={() => "series"}
+        onSelect={(m) => picked.push(m)}
+      />
+    ));
+    fireEvent.click(fitButton(container));
+    expect(picked).toEqual(["visible"]);
   });
 
   it("re-measures the y-axis column when the mode widens the labels", () => {
@@ -939,7 +1110,7 @@ describe("ScrubChart y-fit toggle", () => {
       />
     ));
     const narrow = seen!.plotLeft;
-    fireEvent.click(seg(container, 1));
+    fireEvent.click(fitButton(container));
     const wide = seen!.plotLeft;
     // The reserved column tracks the EFFECTIVE domain, not the `yDomain`
     // prop, so a mode switch widens it. Left of plotLeft is the only space
@@ -970,7 +1141,7 @@ describe("ScrubChart y-fit toggle", () => {
       />
     ));
     expect(seen!.plotLeft).toBe(44);
-    fireEvent.click(seg(container, 1));
+    fireEvent.click(fitButton(container));
     // The caller's width wins in both modes — measurement never overrides it.
     expect(seen!.plotLeft).toBe(44);
   });
@@ -1018,6 +1189,51 @@ describe("ScrubChart y-label clipping", () => {
     expect(clampLabelBaseline(0, 8)).toBe(4);
   });
 
+  // The floor is the whole collision fix. Without the y-fit control it is the
+  // frame; with the control it rises to the button's top edge.
+  it("floors a label on the frame without the y-fit control", () => {
+    expect(yLabelFloor(200, 172, false)).toBe(200);
+  });
+
+  it("floors a label on the button's top edge with the control", () => {
+    expect(yLabelFloor(200, 172, true)).toBe(172 + Y_FIT_LEVEL_OFFSET);
+    // The button starts ABOVE `plotBottom`, because it centres on the x tick
+    // labels and is taller than the drop to their centre line.
+    expect(Y_FIT_LEVEL_OFFSET).toBeLessThan(0);
+    // It still ends inside the frame the footprint reserves.
+    expect(Y_FIT_LEVEL_OFFSET + Y_FIT_BUTTON_SIZE).toBeLessThanOrEqual(
+      Y_FIT_FOOTPRINT,
+    );
+  });
+
+  // The gutter moves the y labels right. The lowest label therefore clears
+  // the button in BOTH axes, and the vertical floor still holds on its own.
+  it("keeps the lowest y label clear of the button after the gutter", () => {
+    // Horizontally: a y label ends `Y_LABEL_GAP` left of `plotLeft`, and the
+    // DEFAULT column is at least `Y_FIT_COLUMN` wide, so the label's RIGHT
+    // edge sits right of the button's RIGHT edge.
+    const buttonRight = Y_FIT_INSET + Y_FIT_BUTTON_SIZE;
+    expect(Y_FIT_COLUMN - Y_LABEL_GAP).toBeGreaterThanOrEqual(buttonRight);
+    // The gutter is what buys that clearance: without it the label would end
+    // over the button.
+    expect(Y_FIT_COLUMN - Y_LABEL_GAP - Y_FIT_GUTTER).toBeLessThan(buttonRight);
+    // Vertically: the floor still bounds the label by the button's top edge,
+    // and a label held there keeps its whole line box above the button.
+    const floor = yLabelFloor(200, 172, true);
+    expect(floor).toBe(172 + Y_FIT_LEVEL_OFFSET);
+    expect(
+      clampLabelBaseline(172, floor) + Y_LABEL_HALF_HEIGHT,
+    ).toBeLessThanOrEqual(floor);
+  });
+
+  it("keeps the top rule and the floor from fighting", () => {
+    // A floor under one whole label leaves no band. The label then centres in
+    // what room there is, so neither rule wins over the other.
+    expect(clampLabelBaseline(0, Y_LABEL_HALF_HEIGHT * 2)).toBe(
+      Y_LABEL_HALF_HEIGHT,
+    );
+  });
+
   it("draws the top and the bottom y label fully inside the frame", () => {
     // `nice()` puts a tick on each end of [0, 100], and this chart reserves
     // no x-axis row and no fit row, so both ticks sit on a frame edge.
@@ -1063,6 +1279,78 @@ describe("ScrubChart y-label clipping", () => {
     expect(rules).toContain(0);
     expect(rules).toContain(200);
   });
+
+  // The collision: the y-fit button holds the origin corner, and the lowest
+  // tick sits ON `plotBottom`. A label centred there loses its lower half
+  // behind the button. The assertions read the FLOOR the fix exposes, not a
+  // pixel — jsdom runs no layout and measures no text.
+  it("lifts the lowest y label clear of the y-fit button", () => {
+    let ctx: ScrubChartContext<Cell> | null = null;
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        chartHeight={200}
+        xTickCadence="month"
+        yFitPin={{ min: 0, max: 100 }}
+        yFitDomain={() => [0, 100]}
+        renderChart={(seen) => {
+          ctx = seen;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    const labels = [
+      ...container.querySelectorAll(".sui-scrub-chart__label--y"),
+    ];
+    const yOf = (text: string): number =>
+      Number(
+        labels.find((n) => n.textContent === text)?.getAttribute("y") ?? NaN,
+      );
+    const floor = yLabelFloor(200, ctx!.plotBottom, true);
+    // The label's whole line box sits above the button's top edge, and so
+    // above `plotBottom` as well.
+    expect(yOf("0")).toBe(floor - Y_LABEL_HALF_HEIGHT);
+    expect(yOf("0") + Y_LABEL_HALF_HEIGHT).toBeLessThanOrEqual(ctx!.plotBottom);
+    // The GRIDLINE stays on the tick — only the text moves.
+    const stubs = [...container.querySelectorAll(".sui-scrub-chart__tick")].map(
+      (n) => Number(n.getAttribute("y1")),
+    );
+    expect(stubs).toContain(ctx!.plotBottom);
+  });
+
+  // The two clamp rules are pinned TOGETHER: lifting the lowest label must
+  // not push the top one out through the frame's top edge.
+  it("keeps the top y label inside the frame while the floor lifts", () => {
+    let ctx: ScrubChartContext<Cell> | null = null;
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        chartHeight={200}
+        xTickCadence="month"
+        yFitPin={{ min: 0, max: 100 }}
+        yFitDomain={() => [0, 100]}
+        renderChart={(seen) => {
+          ctx = seen;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    const labels = [
+      ...container.querySelectorAll(".sui-scrub-chart__label--y"),
+    ];
+    const floor = yLabelFloor(200, ctx!.plotBottom, true);
+    // The top tick sits on `plotTop`, so the top rule moves it down by half a
+    // label. Every label holds BOTH bounds at once.
+    const top = labels.find((n) => n.textContent === "100");
+    expect(Number(top?.getAttribute("y"))).toBe(Y_LABEL_HALF_HEIGHT);
+    for (const label of labels) {
+      const y = Number(label.getAttribute("y"));
+      expect(y).toBeGreaterThanOrEqual(Y_LABEL_HALF_HEIGHT);
+      expect(y).toBeLessThanOrEqual(floor - Y_LABEL_HALF_HEIGHT);
+    }
+  });
 });
 
 // ── Y-domain tween ───────────────────────────────────────────────────────
@@ -1071,8 +1359,10 @@ describe("ScrubChart y-label clipping", () => {
 // injected clock, and these tests cover what ScrubChart wires around it.
 describe("ScrubChart y-domain tween", () => {
   const cells10 = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-10"));
-  const seg = (container: HTMLElement, index: number): HTMLElement =>
-    container.querySelectorAll<HTMLElement>(".sui-segmented__seg")[index];
+  // The control is ONE button. It shows the action a click performs, so its
+  // accessible name is the assertion that pins the glyph-shows-action rule.
+  const fitButton = (container: HTMLElement): HTMLElement =>
+    container.querySelector<HTMLElement>(".sui-scrub-chart__y-fit-btn")!;
   const domainOf = (ctx: ScrubChartContext<Cell>): [number, number] => {
     const at0 = ctx.yToPlot!(0);
     const slope = ctx.yToPlot!(1) - at0;
@@ -1109,7 +1399,7 @@ describe("ScrubChart y-domain tween", () => {
 
   it("shows the target domain at once when the tween is off", () => {
     const chart = renderChart({ transition: false });
-    fireEvent.click(seg(chart.container, 1));
+    fireEvent.click(fitButton(chart.container));
     expect(domainOf(chart.ctx())[1]).toBeCloseTo(SERIES_MAX, 6);
   });
 
@@ -1130,7 +1420,7 @@ describe("ScrubChart y-domain tween", () => {
       // The default transition applies, and the domain still arrives on the
       // same frame as the click — the tween is skipped, not shortened.
       const chart = renderChart({});
-      fireEvent.click(seg(chart.container, 1));
+      fireEvent.click(fitButton(chart.container));
       expect(domainOf(chart.ctx())[1]).toBeCloseTo(SERIES_MAX, 6);
     } finally {
       window.matchMedia = real;
@@ -1139,7 +1429,7 @@ describe("ScrubChart y-domain tween", () => {
 
   it("holds the old domain for the series while the tween runs", () => {
     const chart = renderChart({});
-    fireEvent.click(seg(chart.container, 1));
+    fireEvent.click(fitButton(chart.container));
     // `yToPlot` maps through the domain ON SCREEN, so the caller's series
     // moves WITH the axis instead of jumping ahead of it.
     expect(domainOf(chart.ctx())[1]).toBeCloseTo(VISIBLE_MAX, 6);
@@ -1148,7 +1438,7 @@ describe("ScrubChart y-domain tween", () => {
   it("measures the label column from the TARGET domain", () => {
     const chart = renderChart({});
     const narrow = chart.ctx().plotLeft;
-    fireEvent.click(seg(chart.container, 1));
+    fireEvent.click(fitButton(chart.container));
     // The column answers "8,000" the same frame, though the axis still shows
     // the old domain. A column measured per frame would resize all the way.
     expect(chart.ctx().plotLeft).toBeGreaterThan(narrow);
@@ -1165,7 +1455,7 @@ describe("ScrubChart y-domain tween", () => {
       [...chart.container.querySelectorAll(".sui-scrub-chart__label--y")].map(
         (n) => n.textContent,
       );
-    fireEvent.click(seg(chart.container, 1));
+    fireEvent.click(fitButton(chart.container));
     await vi.waitFor(() => expect(values()).toContain("10,000"), {
       timeout: 3000,
     });
@@ -1191,7 +1481,7 @@ describe("ScrubChart y-domain tween", () => {
   // and report arrival at the wrong number.
   it("settles the screen domain on the axis's target domain", async () => {
     const chart = renderChart({});
-    fireEvent.click(seg(chart.container, 1));
+    fireEvent.click(fitButton(chart.container));
     // `domainOf` reads the SCREEN scale through `yToPlot`.
     await vi.waitFor(
       () => expect(domainOf(chart.ctx())[1]).toBeCloseTo(SERIES_MAX, 6),
@@ -1215,7 +1505,7 @@ describe("ScrubChart y-domain tween", () => {
     });
     try {
       const chart = renderChart({});
-      fireEvent.click(seg(chart.container, 1));
+      fireEvent.click(fitButton(chart.container));
       // No frame runs, so the domain and every label must land this frame.
       expect(domainOf(chart.ctx())[1]).toBeCloseTo(SERIES_MAX, 6);
       const values = [
@@ -1236,7 +1526,7 @@ describe("ScrubChart y-domain tween", () => {
 
   it("renders the max tick's label at once when the tween is off", () => {
     const chart = renderChart({ transition: false });
-    fireEvent.click(seg(chart.container, 1));
+    fireEvent.click(fitButton(chart.container));
     const values = [
       ...chart.container.querySelectorAll(".sui-scrub-chart__label--y"),
     ].map((n) => n.textContent);
@@ -1250,7 +1540,7 @@ describe("ScrubChart y-domain tween", () => {
         (n) => n.textContent,
       );
     expect(values()).toContain("120");
-    fireEvent.click(seg(chart.container, 1));
+    fireEvent.click(fitButton(chart.container));
     // The ticks now come from the TARGET domain [0, 10000]. Only its zero
     // tick is inside the domain on screen, which still reaches 120, so the
     // rest wait above the plot and slide in as the tween runs. A per-frame

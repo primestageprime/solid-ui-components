@@ -34,7 +34,7 @@ const yMax = Math.max(0, ...balances);
 const yRange = yMax - yMin || 1;
 
 // A series whose early days are tiny next to its later ones — the case the
-// y-fit toggle answers. Fitted to the whole series, the first fortnight is a
+// y-fit button answers. Fitted to the whole series, the first fortnight is a
 // flat line on the floor; fitted to the visible window, it reads.
 const signups: number[] = cells.map((_, i) => Math.round(2 * 1.055 ** i));
 
@@ -378,13 +378,15 @@ export const ScrubChartShowcase: Component = () => {
         <h3>Y-fit toggle, with the floor pinned at zero</h3>
         <p class="text-meta">
           <code>yFitDomain</code> hands ScrubChart the extent of a cell range,
-          and the control in the bottom-left corner picks WHICH range: the
-          visible window (<code>zoom-in</code>) or the whole series (
-          <code>zoom-out</code>). Both states are fits. Drag the chart to pan,
-          then switch the control to see the trade-off: "visible" makes the
-          early detail legible, and "series" keeps the heights comparable across
-          a pan. Daily signups grow 5.5% a day here, so under "series" the first
-          fortnight lies flat on the floor.
+          and the small round button in the chart's origin corner — in the
+          y-axis label column, level with the month labels — picks WHICH range:
+          the visible window or the whole series. The button shows the ACTION,
+          not the state — under "visible" it reads <code>zoom-out</code> / "Fit
+          to all", and a click takes it there. Both modes are fits. Drag the
+          chart to pan, then press the button to see the trade-off: "visible"
+          makes the early detail legible, and "series" keeps the heights
+          comparable across a pan. Daily signups grow 5.5% a day here, so under
+          "series" the first fortnight lies flat on the floor.
         </p>
         <p class="text-meta">
           <code>yFitPin</code> holds one end at a fixed value in both modes.

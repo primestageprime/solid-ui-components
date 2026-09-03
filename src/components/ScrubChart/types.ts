@@ -239,8 +239,12 @@ export interface ScrubChartProps<C extends Cell> {
   /** Distance in px from the container's left edge to the y-axis line.
    *  Defaults to the narrowest width that fits the longest formatted label
    *  (computed via canvas text measurement, with an 8px gap to the axis
-   *  line). Set explicitly only when you need two charts' y-axes to align
-   *  to the same column. No effect unless `yDomain` is set. */
+   *  line). With `yFitDomain` set, that default is also at least wide enough
+   *  for the fit control that sits in the column, so short labels such as "0"
+   *  and "1" still leave the button room. Set explicitly only when you need
+   *  two charts' y-axes to align to the same column: an explicit width is
+   *  used AS GIVEN, and one narrower than the control clips it. No effect
+   *  unless `yDomain` or `yFitDomain` is set. */
   yAxisWidth?: number;
 
   // ── Right gutter (optional) ─────────────────────────────────────────
