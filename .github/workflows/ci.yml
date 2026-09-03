@@ -28,6 +28,26 @@ name: CI
 # declare a postinstall (see package-lock.json `hasInstallScript`), but it
 # resolves its binary from the per-platform optional dep at runtime, so
 # skipping it is inert.
+#
+# WHY EVERY INSTALL CACHES NPM
+# ----------------------------
+# `cache: "npm"` tells actions/setup-node to save and restore npm's download
+# cache, keyed on package-lock.json at the repo root. Without it, every job
+# here downloaded the full dependency tree from the registry on every run, and
+# the install was the job.
+#
+# That cost a release. On commit cd70770 the lint job ran 5m8s, hit its
+# `timeout-minutes: 5` cap and was cancelled. Biome's real work in that job is
+# 289ms over 1085 files — the remaining five minutes were `npm ci`. The re-run
+# of the same commit passed at 4m26s, 34 seconds under the cap. `publish.yml`
+# gates on a successful CI run, so the cancelled job skipped the publish:
+# version 0.163.0 never reached the registry, from code that was green.
+#
+# The lint timeout also goes from 5 to 10 minutes, to match `test`, `typecheck`
+# and `build`. The cache should make that raise moot. But a gate whose real
+# work takes 0.3s must never kill a good commit because the network was slow.
+#
+# Keep this in step with `publish.yml`, which caches on the same terms.
 
 on:
   pull_request:
@@ -44,6 +64,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
+          cache: "npm"
       - run: npm ci --ignore-scripts
       # Coverage rides along with the suite it already runs (~+20s on a 2-core
       # runner) so `componentsNeverExecuted` can be MEASURED. It cannot live in
@@ -54,12 +75,13 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
+          cache: "npm"
       - run: npm ci --ignore-scripts
       # Biome over `src/`, at zero errors AND zero warnings as of this job's
       # introduction — `--error-on-warnings` (via `lint:ci`) is what keeps it
@@ -85,6 +107,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
+          cache: "npm"
       - run: npm ci --ignore-scripts
       # `tsconfig.json` has `noEmit: true`, so this is a pure type-check
       # pass. Vite's build only transpiles — it doesn't type-check — so
@@ -103,6 +126,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
+          cache: "npm"
       # Vision-adherence ratchet: mechanical counts (bare hex colors,
       # inline styles, missing tests/docs/depth headers) may only go
       # down. Baseline lives in scripts/health-baseline.json; a
@@ -120,6 +144,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
+          cache: "npm"
       - run: npm ci --ignore-scripts
       # Builds both `build:client` and `build:server` per package.json.
       # Catches errors that compile cleanly but fail to bundle (circular
@@ -155,6 +180,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20"
+          cache: "npm"
       - run: npm ci --ignore-scripts
       # Two checks, and only one of them is a ratchet:
       #   • contamination (katex / d3-dag / kobalte in a bundle that never uses

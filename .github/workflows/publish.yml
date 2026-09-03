@@ -42,10 +42,18 @@ jobs:
           # verifies one tree and publishes another.
           ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
+      # `cache: "npm"` matches ci.yml, which caches for the same reason and
+      # carries the measurements: an uncached `npm ci` is minutes of registry
+      # downloads, and it once ran the lint gate past its timeout and skipped
+      # this workflow. This job installs the same tree from the same
+      # package-lock.json, so it caches on the same terms. `registry-url` scopes
+      # only the @primestageprime publish target; the cache stays keyed on the
+      # lockfile.
       - name: Setup Node.js (with GitHub Packages registry)
         uses: actions/setup-node@v5
         with:
           node-version: "20"
+          cache: "npm"
           registry-url: https://npm.pkg.github.com
           scope: "@primestageprime"
 
