@@ -140,6 +140,10 @@ export const CashflowScrubChartShowcase: Component = () => {
   );
   const [yScaleMode, setYScaleMode] =
     createSignal<ScrubChartYScaleMode>("visible");
+  const [expandSelectedIdx, setExpandSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
+  const [chartExpanded, setChartExpanded] = createSignal(false);
   const [scenarioOver, setScenarioOver] = createSignal(true);
   const [hideDomainPins, setHideDomainPins] = createSignal(true);
 
@@ -834,6 +838,50 @@ export const CashflowScrubChartShowcase: Component = () => {
           {yScaleMode() === "visible"
             ? "visible — the y-axis fits the days the ribbon shows, so a pan rescales the line."
             : "series — the y-axis fits every day, so the heights stay comparable across a pan."}
+        </MutedBody>
+      </div>
+
+      <div class="example-group">
+        <h3>Expand chevron, opposite the y-fit toggle</h3>
+        <p class="text-meta">
+          <code>chartHeightExpanded</code> is the master switch for the expand
+          control, and it reaches <code>ScrubChart</code> unchanged. Setting it
+          draws a chevron in the bottom-RIGHT corner of the frame, and a click
+          moves the chart between <code>chartHeight</code> (the collapsed
+          height, 200 here) and this one (480). A host needs no expand button of
+          its own.
+        </p>
+        <p class="text-meta">
+          The chevron mirrors the y-fit toggle across the frame — same size,
+          same inset, same bare glyph, same line on the x-axis row. This chart
+          draws BOTH, so the pair proves it never meets: the y-fit button holds
+          the left edge and the chevron the right. The height eases over{" "}
+          <code>expandTransition</code> ms, 240 by default, and a reader who
+          asks for less motion gets it at once. <code>expanded</code> and{" "}
+          <code>onExpandedChange</code> make the control controlled, which is
+          how the caption below reads the state; omit both and the chart owns
+          it, starting collapsed.
+        </p>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={expandSelectedIdx()}
+          onScrub={(i) => setExpandSelectedIdx(i)}
+          today={PINNED_TODAY}
+          showGridlines
+          chartHeight={200}
+          chartHeightExpanded={480}
+          expanded={chartExpanded()}
+          onExpandedChange={setChartExpanded}
+          yMin={0}
+          yFitDomain={balanceExtent}
+          yAxisWidth={72}
+        />
+
+        <MutedBody>
+          {chartExpanded()
+            ? "expanded — the frame holds chartHeightExpanded, and a click takes it back."
+            : "collapsed — the frame holds chartHeight, and a click grows it."}
         </MutedBody>
       </div>
 

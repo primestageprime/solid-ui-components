@@ -497,6 +497,44 @@ export const ScrubChartShowcase: Component = () => {
       </div>
 
       <div class="example-group">
+        <h3>Expand chevron, opposite the y-fit button</h3>
+        <p class="text-meta">
+          <code>chartHeightExpanded</code> is the master switch for the expand
+          control. Set it and ScrubChart draws a chevron in the bottom-RIGHT
+          corner of the frame, and a click moves the chart between{" "}
+          <code>chartHeight</code> (the collapsed height) and this one. The
+          glyph names the direction the frame moves: <code>chevron-down</code>{" "}
+          collapsed, <code>chevron-up</code> expanded.
+        </p>
+        <p class="text-meta">
+          The chevron mirrors the y-fit button across the frame — same size,
+          same inset, same bare glyph, same line on the x-axis row. This chart
+          shows BOTH, which is how a host draws them: one control on each edge,
+          so the two never meet. The height eases over{" "}
+          <code>expandTransition</code> ms, 240 by default, and a reader who
+          asks for less motion gets the new height at once. Omit{" "}
+          <code>expanded</code> and ScrubChart owns the state, starting
+          collapsed; pass it to drive the chart from your own signal.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          selected={selectedIdx()}
+          onScrub={(i) => setSelectedIdx(i)}
+          today={PINNED_TODAY}
+          showGridlines
+          chartHeight={200}
+          chartHeightExpanded={480}
+          yFitDomain={positionExtent}
+          yFitBounds={{ visible: { min: 0 }, series: { min: 0 } }}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderPositionChart}
+        />
+      </div>
+
+      <div class="example-group">
         <h3>Window mechanics</h3>
         <p class="text-meta">
           The blue band on the chart spans the cells currently visible in the
