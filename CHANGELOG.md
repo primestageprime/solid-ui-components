@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+## 0.166.0
+
+### Added
+- **`Dropdown` takes a `trigger` render prop, so a consumer draws its own
+  trigger.** The default trigger is a hard-coded `<button>`, and a `<button>`
+  cannot hold an `<input>`: that markup is invalid, and the button's own click
+  handler receives every click meant to place the caret. Pass a
+  `trigger={(state) => …}` function and `Dropdown` renders a
+  `<div role="combobox">` in its place. The div keeps the ARIA wiring and the
+  arrow keys, and binds no click of its own, so every click reaches the
+  element the consumer drew. The state object carries `open`, `selected`,
+  `toggle`, `openMenu` and `close`, so the consumer decides what opens the
+  menu — a caret, a pencil, or nothing. The new `DropdownTriggerState` type
+  exports beside `DropdownProps` and `DropdownItem`.
+
+  Three behaviours change only when a `trigger` is present. `toggle` and
+  `openMenu` open the menu with no option focused, so the menu no longer blurs
+  an input mid-typing; ArrowUp and ArrowDown still open the menu and focus a
+  row. `Dropdown` records the focused element when the menu opens and restores
+  it on every close path, so a consumer must not refocus in its own
+  `onChange`. Escape closes the menu while the menu is open, and reaches the
+  consumer once the menu is closed, where it can mean "revert the edit". Enter
+  stays unclaimed, and an `<input>` inside an ancestor `<form>` still submits
+  that form.
+
+  With `trigger` absent, `Dropdown` renders the same button as before.
+
 ## 0.165.0
 
 ### Removed
