@@ -39,6 +39,12 @@ export interface DropdownItem {
    *  Enter/Space does not select it and does not close the menu, and the
    *  keyboard navigation steps over it. */
   disabled?: boolean;
+  /** Why the row reads as it does — most often why `disabled` refuses it. The
+   *  row carries it as the native `title`, so a mouse user reads it on hover,
+   *  and as `aria-describedby` pointing at a screen-reader-only element, so a
+   *  keyboard or touch user hears it. It is independent of `disabled`: an
+   *  available row may carry a reason too. */
+  reason?: string;
 }
 
 /** A row the user can choose. `disabled` is optional, so only an explicit
@@ -57,6 +63,14 @@ const seekSelectable = (
     (i: number) => i >= 0 && i < items.length && isSelectable(items[i]),
     Array.from({ length: items.length }, (_, n) => from + n * step),
   ) ?? -1;
+
+/** The id of the element that carries an item's `reason`. The row points at
+ *  it with `aria-describedby`. `prefix` is the Dropdown's own unique id, so
+ *  two Dropdowns showing the same item never collide, and
+ *  `encodeURIComponent` maps each item id to one id and escapes the
+ *  whitespace that `aria-describedby`'s space-separated list would split on. */
+const reasonElementId = (prefix: string, itemId: string): string =>
+  `${prefix}-reason-${encodeURIComponent(itemId)}`;
 
 /** Nominal px box for a shape indicator. Matches `.sui-dropdown__dot` exactly:
  *  `shape: "circle"` and a bare `color` are the same mark, so a list mixing
@@ -410,19 +424,40 @@ export const Dropdown: Component<DropdownProps> = (props) => {
         >
           <For each={merged.items}>
             {(item, index) => (
-              <button
-                class={itemClass(item)}
-                type="button"
-                role="option"
-                aria-selected={item.id === merged.value}
-                aria-disabled={isSelectable(item) ? undefined : true}
-                tabindex={index() === activeIndex() ? 0 : -1}
-                onClick={() => select(item)}
-                onKeyDown={(e) => onOptionKeyDown(e, index())}
-              >
-                <Indicator color={item.color} shape={item.shape} />
-                {item.label}
-              </button>
+              <>
+                <button
+                  class={itemClass(item)}
+                  type="button"
+                  role="option"
+                  aria-selected={item.id === merged.value}
+                  aria-disabled={isSelectable(item) ? undefined : true}
+                  title={item.reason}
+                  aria-describedby={
+                    item.reason === undefined
+                      ? undefined
+                      : reasonElementId(menuId, item.id)
+                  }
+                  tabindex={index() === activeIndex() ? 0 : -1}
+                  onClick={() => select(item)}
+                  onKeyDown={(e) => onOptionKeyDown(e, index())}
+                >
+                  <Indicator color={item.color} shape={item.shape} />
+                  {item.label}
+                </button>
+                {/* The description sits outside the option, because a child
+                    of the button would join its accessible name. `sui-sr-only`
+                    takes it out of flow, so the menu's box is unchanged. */}
+                <Show when={item.reason}>
+                  {(reason) => (
+                    <span
+                      class="sui-sr-only"
+                      id={reasonElementId(menuId, item.id)}
+                    >
+                      {reason()}
+                    </span>
+                  )}
+                </Show>
+              </>
             )}
           </For>
           <Show when={merged.footer}>
