@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.165.0
+
 ### Removed
 - **`Icon` drops the `reset` glyph.** 0.164.0 added `undo` and `reset`
   together. `reset` leaves the set again: its name told a reader what the
