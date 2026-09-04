@@ -299,3 +299,137 @@ describe("Dropdown — trigger slot", () => {
     expect(trigger.getAttribute("role")).toBeNull();
   });
 });
+
+describe("Dropdown — disabled items", () => {
+  // Banana and Date are unavailable. The list keeps a selectable row at the
+  // start and in the middle, so a skip has somewhere to land in both
+  // directions, and it ends on a disabled row, so End must step back.
+  const mixed: DropdownItem[] = [
+    { id: "a", label: "Apple" },
+    { id: "b", label: "Banana", disabled: true },
+    { id: "c", label: "Cherry" },
+    { id: "d", label: "Date", disabled: true },
+  ];
+
+  const mountMixed = async (
+    onChange: (id: string) => void = () => {},
+    items: DropdownItem[] = mixed,
+    value = "a",
+  ) => {
+    const { container } = render(() => (
+      <Dropdown items={items} value={value} onChange={onChange} />
+    ));
+    const trigger = container.querySelector<HTMLButtonElement>(
+      ".sui-dropdown__trigger",
+    )!;
+    trigger.click();
+    await tick();
+    const options = [
+      ...container.querySelectorAll<HTMLElement>('[role="option"]'),
+    ];
+    return { container, trigger, options };
+  };
+
+  const tabStops = (options: HTMLElement[]) =>
+    options.map((o) => o.getAttribute("tabindex"));
+
+  it("marks a disabled row with aria-disabled and its own class", async () => {
+    const { options } = await mountMixed();
+    expect(options[1].getAttribute("aria-disabled")).toBe("true");
+    expect(options[1].classList.contains("sui-dropdown__item--disabled")).toBe(
+      true,
+    );
+    // An available row says nothing at all, as it always has.
+    expect(options[0].getAttribute("aria-disabled")).toBeNull();
+    expect(options[0].classList.contains("sui-dropdown__item--disabled")).toBe(
+      false,
+    );
+  });
+
+  it("clicking a disabled row fires no onChange and leaves the menu open", async () => {
+    const picked: string[] = [];
+    const { container, options } = await mountMixed((id) => picked.push(id));
+    // Enter and Space activate the same native button click, so this covers
+    // the keyboard path too.
+    options[1].click();
+    expect(picked).toEqual([]);
+    expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+    // An available row still selects and still closes.
+    options[2].click();
+    expect(picked).toEqual(["c"]);
+    expect(container.querySelector('[role="listbox"]')).toBeNull();
+  });
+
+  it("ArrowDown and ArrowUp step over a disabled row", async () => {
+    const { options } = await mountMixed();
+    expect(document.activeElement).toBe(options[0]);
+    key(options[0], "ArrowDown"); // Banana is unavailable → Cherry
+    expect(document.activeElement).toBe(options[2]);
+    expect(tabStops(options)).toEqual(["-1", "-1", "0", "-1"]);
+    key(options[2], "ArrowUp"); // back over Banana → Apple
+    expect(document.activeElement).toBe(options[0]);
+    expect(tabStops(options)).toEqual(["0", "-1", "-1", "-1"]);
+  });
+
+  it("holds the focus when only disabled rows lie ahead", async () => {
+    const { options } = await mountMixed();
+    key(options[0], "ArrowDown"); // → Cherry
+    key(options[2], "ArrowDown"); // Date is unavailable and last → stay
+    expect(document.activeElement).toBe(options[2]);
+    expect(tabStops(options)).toEqual(["-1", "-1", "0", "-1"]);
+  });
+
+  it("Home and End land on the first and last available row", async () => {
+    const { options } = await mountMixed();
+    key(options[0], "End"); // Date is unavailable → Cherry
+    expect(document.activeElement).toBe(options[2]);
+    key(options[2], "Home");
+    expect(document.activeElement).toBe(options[0]);
+    expect(tabStops(options)).toEqual(["0", "-1", "-1", "-1"]);
+  });
+
+  it("opens on an available row when the value itself is disabled", async () => {
+    const { options } = await mountMixed(() => {}, mixed, "b");
+    expect(document.activeElement).toBe(options[2]);
+    expect(tabStops(options)).toEqual(["-1", "-1", "0", "-1"]);
+  });
+
+  it("gives no row the tab stop when every row is disabled", async () => {
+    const allOff: DropdownItem[] = [
+      { id: "a", label: "Apple", disabled: true },
+      { id: "b", label: "Banana", disabled: true },
+    ];
+    const { container, options } = await mountMixed(() => {}, allOff, "a");
+    expect(options.length).toBe(2);
+    expect(options).not.toContain(document.activeElement);
+    expect(tabStops(options)).toEqual(["-1", "-1"]);
+    // The search stops at each end instead of looping, so these return.
+    key(options[0], "ArrowDown");
+    key(options[0], "ArrowUp");
+    key(options[0], "Home");
+    key(options[0], "End");
+    expect(tabStops(options)).toEqual(["-1", "-1"]);
+    expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+  });
+
+  it("dims the whole row, and not by the muted colour alone", async () => {
+    // jsdom applies no stylesheet, so read the rule itself — the same way the
+    // indicator suite compares the dot and the glyph boxes.
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "./Dropdown.css"),
+      "utf8",
+    );
+    const body = css.match(
+      /\.sui-dropdown__item--disabled[^{]*\{([^}]*)\}/,
+    )?.[1];
+    if (body === undefined)
+      throw new Error("no --disabled rule in Dropdown.css");
+    // The muted token carries the text.
+    expect(body).toContain("color: var(--sui-text-muted)");
+    // The opacity carries the label and the indicator together, and it is what
+    // separates a disabled row from a row whose own accent is that same token.
+    const opacity = Number(body.match(/opacity:\s*([\d.]+)/)?.[1]);
+    expect(opacity).toBeGreaterThan(0);
+    expect(opacity).toBeLessThan(1);
+  });
+});
