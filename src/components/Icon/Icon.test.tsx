@@ -49,10 +49,9 @@ describe("ICON_GROUPS covers every icon", () => {
   });
 });
 
-// Three round-ish marks now share the set, so each needs its own silhouette at
-// 16px. `refresh` keeps TWO arrowheads and reads as a repeating cycle. `reset`
-// draws ONE head on a near-closed ring and reads as a return to the start.
-// `undo` draws no ring at all: an open hook with the head at its left end.
+// Two round-ish marks share the set, so each needs its own silhouette at 16px.
+// `refresh` keeps TWO arrowheads and reads as a repeating cycle. `undo` draws
+// no ring at all: an open hook with the head at its left end.
 describe("Icon undo glyph", () => {
   it("is registered in ICON_PATHS with outline + solid", () => {
     expect(ICON_PATHS.undo).toBeDefined();
@@ -74,7 +73,7 @@ describe("Icon undo glyph", () => {
   });
 
   // One arc command draws the hook's bend. A second would close the shape into
-  // a ring, which is what `refresh` and `reset` already own.
+  // a ring, which is what `refresh` already owns.
   it("draws an open hook, not a ring", () => {
     const variants = ["outline", "solid"] as const;
     variants.forEach((variant) => {
@@ -84,44 +83,8 @@ describe("Icon undo glyph", () => {
   });
 });
 
-describe("Icon reset glyph", () => {
-  it("is registered in ICON_PATHS with outline + solid", () => {
-    expect(ICON_PATHS.reset).toBeDefined();
-    expect(ICON_PATHS.reset.outline).toContain("<path");
-    expect(ICON_PATHS.reset.solid).toContain("<path");
-  });
-
-  it("renders in both variants, and is reachable from the gallery's actions group", () => {
-    expect(ICON_GROUPS.actions).toContain("reset");
-    const variants = ["outline", "solid"] as const;
-    variants.forEach((variant) => {
-      const { container } = render(() => (
-        <Icon name="reset" variant={variant} />
-      ));
-      const el = container.querySelector('[role="img"]');
-      expect(el?.getAttribute("aria-label")).toBe("reset");
-      expect(el?.querySelector("svg path")?.getAttribute("d")).toBeTruthy();
-    });
-  });
-
-  // `refresh` splits its ring over two arcs and caps each one with a head, so
-  // it carries two of each. `reset` carries one arc and one head. The counts
-  // are what hold the two silhouettes apart.
-  it("draws one arc and one head, where refresh draws two of each", () => {
-    const variants = ["outline", "solid"] as const;
-    variants.forEach((variant) => {
-      const paths = ICON_PATHS.reset[variant].match(/<path/g) ?? [];
-      expect(paths.length).toBe(2);
-      expect((ICON_PATHS.reset[variant].match(/A/g) ?? []).length).toBe(1);
-      expect((ICON_PATHS.refresh[variant].match(/a5\.5 5\.5/g) ?? []).length).toBe(
-        2,
-      );
-    });
-  });
-});
-
-// `undo` and `reset` must not redraw `refresh`. This locks the two arcs both
-// variants carried before the pair was added.
+// `undo` must not redraw `refresh`. This locks the two arcs both variants
+// carried before `undo` was added.
 describe("Icon refresh glyph keeps its drawing", () => {
   const CYCLE =
     "M2.5 8a5.5 5.5 0 0 1 9.5-3.75V2M13.5 8a5.5 5.5 0 0 1-9.5 3.75V14";

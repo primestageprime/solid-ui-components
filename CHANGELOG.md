@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Removed
+- **`Icon` drops the `reset` glyph.** 0.164.0 added `undo` and `reset`
+  together. `reset` leaves the set again: its name told a reader what the
+  control does, not what the mark draws, and its near-closed ring sat too close
+  to `refresh` at 16px. The name leaves the `IconName` union, `ICON_PATHS` and
+  the `actions` group, so `name="reset"` is now a type error. `undo` and
+  `refresh` both remain, and neither one is redrawn. Reach for `refresh` when a
+  control fetches the data again, and for `undo` when a control steps back
+  through a history.
+
 ## 0.164.0
 
 ### Added
