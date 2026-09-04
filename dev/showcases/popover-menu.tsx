@@ -30,6 +30,28 @@ export const PopoverMenuShowcase: Component = () => {
       </div>
 
       <p class="text-meta">
+        Mark the current choice with <code>active</code>. The item gets{" "}
+        <code>sui-popover-menu__item--active</code> and{" "}
+        <code>aria-current="true"</code>, while the role stays{" "}
+        <code>menuitem</code>. <code>OverflowNav</code> uses this to keep the
+        selected mark on a nav tab that collapses into the kebab menu.
+      </p>
+      <div class="example-group">
+        <Row gap="sm" align="center">
+          <PopoverMenu
+            trigger={<span>View ▾</span>}
+            items={[
+              { id: "day", label: "Day", icon: "clock" },
+              { id: "week", label: "Week", icon: "clock", active: true },
+              { id: "month", label: "Month", icon: "clock" },
+            ]}
+            onSelect={(id) => setLast(id as string)}
+          />
+          <span class="text-meta">Week carries active</span>
+        </Row>
+      </div>
+
+      <p class="text-meta">
         Inside a short <code>overflow: hidden</code> ancestor (reproduces a
         clipping nav/panel frame). The menu is portaled to <code>document.body</code>
         and positioned <code>fixed</code>, so it escapes the clip instead of being

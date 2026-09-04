@@ -78,3 +78,49 @@ describe("PopoverMenu header slot", () => {
     expect(header!.textContent).toContain("me@corp.io");
   });
 });
+
+describe("PopoverMenu active item", () => {
+  const itemEls = (): HTMLElement[] =>
+    Array.from(document.body.querySelectorAll(".sui-popover-menu__item"));
+
+  it("marks only the active item with the modifier class and aria-current", () => {
+    const { container } = render(() => (
+      <PopoverMenu
+        trigger="View"
+        items={[
+          { id: "day", label: "Day" },
+          { id: "week", label: "Week", active: true },
+        ]}
+        onSelect={() => {}}
+      />
+    ));
+    openPanel(container);
+
+    const [day, week] = itemEls();
+    expect(week.classList.contains("sui-popover-menu__item--active")).toBe(
+      true,
+    );
+    expect(week.getAttribute("aria-current")).toBe("true");
+    // The role stays menuitem — aria-current, not aria-checked.
+    expect(week.getAttribute("role")).toBe("menuitem");
+    expect(week.hasAttribute("aria-checked")).toBe(false);
+
+    expect(day.classList.contains("sui-popover-menu__item--active")).toBe(
+      false,
+    );
+    expect(day.hasAttribute("aria-current")).toBe(false);
+  });
+
+  it("omits the modifier and aria-current when active is absent", () => {
+    const { container } = render(() => (
+      <PopoverMenu trigger="View" items={[...ITEMS]} onSelect={() => {}} />
+    ));
+    openPanel(container);
+
+    const [only] = itemEls();
+    expect(only.classList.contains("sui-popover-menu__item--active")).toBe(
+      false,
+    );
+    expect(only.hasAttribute("aria-current")).toBe(false);
+  });
+});
