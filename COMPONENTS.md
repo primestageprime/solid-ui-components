@@ -683,7 +683,9 @@ State derivation:
     `installNaNDeclarationShim` (which returns a restore function), and it
     installs itself on import. It drops a `NaN`-bearing declaration and
     NOTHING else — every other value still reaches jsdom and still gets
-    jsdom's own verdict.
+    jsdom's own verdict. The subpath resolves to TypeScript source, not to a
+    built file: the shim is test-only, no library module imports it, and
+    Vitest transpiles the source itself.
   - **No `variants.ts`, deliberately.** `format` and `ticks` are the only overrides, and a real caller's formatter carries its own units and currency — the same reason `BandRail` ships the base alongside its factory rather than a set of curried variants. Curry one at the call site with `createSlider`. `valueLabel` stays OUT of `SliderOverrides`: an override is a static visual decision, and a readout node is per-instance content that holds the caller's own fields and signals, the way `label` and `value` do. A curried variant still takes it, because `SliderDataProps` omits through each member of the union.
   - Example:
     ```tsx

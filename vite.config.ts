@@ -227,33 +227,14 @@ export default defineConfig(({ command, mode }) => {
             // components are wrapped, which is correct.
             minify: false,
             lib: {
-              // Two entries. The barrel is the library; the shim is a
-              // side-effect module a consumer lists in their vitest
-              // `setupFiles`, so nothing imports it and preserveModules alone
-              // would never emit it. See package.json
-              // "./testing/jsdom-nan-shim".
-              entry: {
-                index: resolve(__dirname, "src/index.ts"),
-                "testing/jsdomNaNDeclarationShim": resolve(
-                  __dirname,
-                  "src/testing/jsdomNaNDeclarationShim.ts",
-                ),
-              },
+              entry: resolve(__dirname, "src/index.ts"),
               name: "SolidUIComponents",
               formats: ["es"],
+              fileName: "index",
             },
             rollupOptions: {
               external: CLIENT_ROLLUP_EXTERNALS,
               output: {
-                // Vite names a lib-mode CSS asset after `lib.fileName` for a
-                // single entry and after `lib.name` for several. This build
-                // has two entries, so without this the stylesheet would land
-                // as dist/solid-ui-components.css and break the
-                // "./index.css" export every consumer imports.
-                assetFileNames: (assetInfo) =>
-                  (assetInfo.names ?? []).some((n) => n.endsWith(".css"))
-                    ? "index.css"
-                    : "[name].[ext]",
                 // PAIRED with `"sideEffects"` in package.json — see
                 // docs/adr/0005-per-module-dist-and-sideeffects.md. Do not
                 // remove one without the other; each is inert alone, which is

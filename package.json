@@ -24,8 +24,8 @@
     },
     "./testing/jsdom-nan-shim": {
       "source": "./src/testing/jsdomNaNDeclarationShim.ts",
-      "types": "./dist/testing/jsdomNaNDeclarationShim.d.ts",
-      "default": "./dist/testing/jsdomNaNDeclarationShim.js"
+      "types": "./src/testing/jsdomNaNDeclarationShim.ts",
+      "default": "./src/testing/jsdomNaNDeclarationShim.ts"
     },
     "./themes/_baseline.css": {
       "source": "./src/themes/_baseline.css",
