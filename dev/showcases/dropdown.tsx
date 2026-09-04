@@ -1,10 +1,11 @@
-import { type Component, createSignal } from "solid-js";
+import { type Component, Show, createSignal } from "solid-js";
 import {
   Dropdown,
   InlineSubtleDropdown,
   type DropdownItem,
   type DropdownTriggerState,
 } from "../../src/components/Dropdown";
+import { ShapeGlyph } from "../../src/components/Chart/shapes";
 import { Icon } from "../../src/components/Icon";
 import { Stack } from "../../src/components/Layout/Stack";
 
@@ -22,6 +23,30 @@ export const DropdownShowcase: Component = () => {
   const [scenario, setScenario] = createSignal<string>("lean");
   const [named, setNamed] = createSignal<string>("baseline");
   const [draftName, setDraftName] = createSignal<string>("Baseline");
+  // Rename example — the items are local, because Enter writes a new label back.
+  const [scenarios, setScenarios] = createSignal<DropdownItem[]>([
+    { id: "baseline", label: "Baseline", color: "#a855f7", shape: "circle" },
+    { id: "lean", label: "Lean", color: "#22d3ee", shape: "diamond" },
+    { id: "growth", label: "Growth", color: "#f97316", shape: "chevron" },
+  ]);
+  const [picked, setPicked] = createSignal<string>("baseline");
+  const [editing, setEditing] = createSignal(false);
+  const [draft, setDraft] = createSignal("");
+  let renameRef: HTMLInputElement | undefined;
+  const selectedLabel = () =>
+    scenarios().find((item) => item.id === picked())?.label ?? "";
+  /** Enter commits: write the draft back as the item's label, then leave edit
+   *  mode. The menu row shows the new name at once. */
+  const commitRename = () => {
+    const name = draft().trim();
+    if (name.length > 0)
+      setScenarios((items) =>
+        items.map((item) =>
+          item.id === picked() ? { ...item, label: name } : item,
+        ),
+      );
+    setEditing(false);
+  };
   return (
     <div class="component-section">
       <h2>Dropdown — Primitive (Depth 0)</h2>
@@ -116,6 +141,104 @@ export const DropdownShowcase: Component = () => {
           />
           <span class="text-meta">
             selected: {named()} — typed: {draftName()}
+          </span>
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>trigger — rename in place</h3>
+        <p class="text-meta">
+          The pill is the name field. Click the pencil to edit the selected
+          name. Press Enter to commit the new name. The menu row shows it
+          immediately. Press Escape to revert. Click the field to place the
+          caret — the menu stays shut, because the wrapper binds no click. Click
+          the caret button to open the menu. Dropdown restores the focus itself
+          after a pick, so this example does not refocus in{" "}
+          <code>onChange</code>.
+        </p>
+        <Stack gap="sm" class="dropdown-demo">
+          <Dropdown
+            items={scenarios()}
+            value={picked()}
+            onChange={(id) => {
+              setPicked(id);
+              setEditing(false);
+            }}
+            trigger={(state: DropdownTriggerState) => (
+              <>
+                <Show when={state.selected} fallback={null}>
+                  {(item) => (
+                    <svg
+                      class="name-trigger__mark"
+                      width="8"
+                      height="8"
+                      viewBox="0 0 8 8"
+                      aria-hidden="true"
+                    >
+                      <ShapeGlyph
+                        descriptor={{
+                          color: item().color ?? "#94a3b8",
+                          shape: item().shape ?? "circle",
+                        }}
+                        cx={4}
+                        cy={4}
+                        size={8}
+                      />
+                    </svg>
+                  )}
+                </Show>
+                <Show
+                  when={editing()}
+                  fallback={
+                    <>
+                      <span class="name-trigger__name">
+                        {state.selected?.label ?? "Select..."}
+                      </span>
+                      <button
+                        type="button"
+                        class="name-trigger__edit"
+                        aria-label="Rename this scenario"
+                        onClick={() => {
+                          setDraft(state.selected?.label ?? "");
+                          setEditing(true);
+                          queueMicrotask(() => renameRef?.focus());
+                        }}
+                      >
+                        <Icon name="edit" size="xs" />
+                      </button>
+                    </>
+                  }
+                >
+                  <input
+                    ref={renameRef}
+                    class="name-trigger__input"
+                    aria-label="Scenario name"
+                    value={draft()}
+                    onInput={(e) => setDraft(e.currentTarget.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        commitRename();
+                      } else if (e.key === "Escape" && !state.open) {
+                        setEditing(false);
+                      }
+                    }}
+                  />
+                </Show>
+                <button
+                  type="button"
+                  class="name-trigger__caret"
+                  aria-label={state.open ? "Close scenarios" : "Open scenarios"}
+                  onClick={state.toggle}
+                >
+                  &#9660;
+                </button>
+              </>
+            )}
+          />
+          <span class="text-meta">
+            selected: {picked()} — name: {selectedLabel()} — editing:{" "}
+            {String(editing())} — draft: {draft()}
           </span>
         </Stack>
       </div>

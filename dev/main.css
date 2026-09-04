@@ -1481,6 +1481,23 @@
 .name-trigger__pencil {
   opacity: 0.5;
 }
+.name-trigger__name {
+  white-space: nowrap;
+}
+.name-trigger__mark {
+  display: block;
+}
+.name-trigger__edit {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.5;
+}
+.name-trigger__edit:hover {
+  opacity: 1;
+}
 .name-trigger__caret {
   padding: 0;
   border: none;
