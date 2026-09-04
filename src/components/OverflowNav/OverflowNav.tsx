@@ -178,10 +178,11 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
   const menuItems = (): [PopoverMenuItem, ...PopoverMenuItem[]] | null => {
     const spill = overflowItems();
     if (spill.length === 0) return null;
-    return map((item) => ({ id: item.id, label: item.label }), spill) as [
-      PopoverMenuItem,
-      ...PopoverMenuItem[],
-    ];
+    // Carry `active` so a collapsed tab keeps its selected mark in the menu.
+    return map(
+      (item) => ({ id: item.id, label: item.label, active: item.active }),
+      spill,
+    ) as [PopoverMenuItem, ...PopoverMenuItem[]];
   };
 
   const handleMenuSelect = (id: string) => {
