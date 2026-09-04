@@ -3,7 +3,11 @@ import { render, cleanup } from "@solidjs/testing-library";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { Dropdown, type DropdownItem } from "./Dropdown";
+import {
+  Dropdown,
+  type DropdownItem,
+  type DropdownTriggerState,
+} from "./Dropdown";
 
 afterEach(cleanup);
 
@@ -191,5 +195,91 @@ describe("Dropdown — item indicators", () => {
     )).container.querySelector(".sui-dropdown__trigger")!;
     expect(bare.querySelector(".sui-dropdown__glyph")).toBeNull();
     expect(bare.querySelector(".sui-dropdown__dot")).toBeNull();
+  });
+});
+
+describe("Dropdown — trigger slot", () => {
+  /** A consumer trigger: an editable name input plus the caret it now owns. */
+  const nameSlot = (state: DropdownTriggerState) => (
+    <>
+      <input class="name-input" value={state.selected?.label ?? ""} />
+      <button
+        type="button"
+        class="slot-caret"
+        aria-label="Open"
+        onClick={state.toggle}
+      >
+        &#9660;
+      </button>
+    </>
+  );
+
+  const mountSlot = () => {
+    const { container } = render(() => (
+      <Dropdown
+        items={items}
+        value="b"
+        onChange={() => {}}
+        trigger={nameSlot}
+      />
+    ));
+    return container;
+  };
+
+  it("wraps the slot in a div[role=combobox], not a button", () => {
+    const container = mountSlot();
+    const trigger = container.querySelector(".sui-dropdown__trigger")!;
+    expect(trigger.tagName).toBe("DIV");
+    expect(trigger.getAttribute("role")).toBe("combobox");
+    expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    // The slot draws the label, so the built-in one is gone.
+    expect(trigger.querySelector(".sui-dropdown__label")).toBeNull();
+    expect(trigger.querySelector<HTMLInputElement>(".name-input")!.value).toBe(
+      "Banana",
+    );
+  });
+
+  it("leaves a click on the slot input alone", async () => {
+    const container = mountSlot();
+    container.querySelector<HTMLInputElement>(".name-input")!.click();
+    await tick();
+    expect(container.querySelector('[role="listbox"]')).toBeNull();
+  });
+
+  it("opens on toggle with no option focused", async () => {
+    const container = mountSlot();
+    container.querySelector<HTMLButtonElement>(".slot-caret")!.click();
+    await tick();
+    const options = [
+      ...container.querySelectorAll<HTMLElement>('[role="option"]'),
+    ];
+    expect(options.length).toBe(3);
+    expect(options).not.toContain(document.activeElement);
+    // Nothing holds the roving tab stop: `activeIndex` stays at -1.
+    expect(options.map((o) => o.getAttribute("tabindex"))).toEqual([
+      "-1",
+      "-1",
+      "-1",
+    ]);
+  });
+
+  it("ArrowDown on the wrapper opens the menu and focuses the first option", async () => {
+    const container = mountSlot();
+    key(container.querySelector(".sui-dropdown__trigger")!, "ArrowDown");
+    await tick();
+    const options = [
+      ...container.querySelectorAll<HTMLElement>('[role="option"]'),
+    ];
+    expect(options.length).toBe(3);
+    expect(document.activeElement).toBe(options[0]);
+    expect(options[0].getAttribute("tabindex")).toBe("0");
+  });
+
+  it("keeps the button trigger when the slot is absent", () => {
+    const { trigger } = mount();
+    expect(trigger.tagName).toBe("BUTTON");
+    expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
+    expect(trigger.getAttribute("role")).toBeNull();
   });
 });
