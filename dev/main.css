@@ -1464,6 +1464,33 @@
 .dropdown-demo {
   max-width: 300px;
 }
+/* Consumer-owned trigger for the Dropdown `trigger` slot example. The host
+   draws the whole trigger, so the host also owns its paint. */
+.name-trigger__input {
+  width: 12ch;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+.name-trigger__input:focus {
+  outline: none;
+}
+.name-trigger__pencil {
+  opacity: 0.5;
+  font-size: 11px;
+}
+.name-trigger__caret {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 8px;
+  opacity: 0.5;
+}
 .tooltip-demo__clip {
   display: inline-block;
   max-width: 180px;
