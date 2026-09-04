@@ -48,6 +48,35 @@ name: CI
 # work takes 0.3s must never kill a good commit because the network was slow.
 #
 # Keep this in step with `publish.yml`, which caches on the same terms.
+#
+# A SECOND RELEASE, THE SAME FAILURE
+# ----------------------------------
+# The cache does not make the caps safe. On commit c3d5791 the `test` job ran
+# 10m16s, hit its `timeout-minutes: 10` cap and was cancelled. `npm run
+# test:coverage` was still running; `npm run execution-coverage` never started.
+# The other five jobs all passed, so version 0.164.0 stayed off the registry
+# from code that was green — the same failure that cost 0.163.0.
+#
+# Two things make the job slower. This release moves jsdom from 26 to 30, and
+# jsdom 30 is heavier. This release also adds test files: SliderPointer, the
+# shim, and two icon blocks. The suite that fits in 10 minutes on jsdom 26 no
+# longer fits.
+#
+# The runner is the second variable, and it is the larger one. On run
+# 33847922169, the same morning, the `health` job hit its own 5-minute cap and
+# was cancelled at 5m15s, `build` ran 7m50s against a 10-minute cap, and `lint`
+# ran 7m11s. Those three jobs take 24s, 54s and 19s on a fast runner. A cap
+# must survive the slow runner, not the fast one.
+#
+# So each cap is now about double the slowest run that job records: `test` 10
+# to 20, and `lint`, `typecheck`, `build` and `health` to 15. `bundle-budget`
+# stays at 15, because its slowest run is 5m10s. `publish.yml` goes from 10 to
+# 15 to match `build`, which is the work it does.
+#
+# Local measurement on 8 cores, for scale only: `npm run test:coverage` takes
+# 46.3s for 3841 tests in 328 files, and `npm run execution-coverage` takes
+# 0.3s. The runner has fewer cores and also installs, so the recorded CI
+# durations above set the caps, not these numbers.
 
 on:
   pull_request:
@@ -58,7 +87,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -75,7 +104,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -101,7 +130,7 @@ jobs:
 
   typecheck:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -120,7 +149,7 @@ jobs:
 
   health:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -138,7 +167,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
