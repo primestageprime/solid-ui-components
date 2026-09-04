@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.167.0
+
 ### Added
 - **`DropdownItem` takes a `disabled` flag, so a row can read as unavailable.**
   Set `disabled: true` and the whole row dims — the label and the indicator
