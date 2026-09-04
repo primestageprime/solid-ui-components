@@ -70,9 +70,10 @@ describe("DataTableContainer fill mode", () => {
     expect(el.style.overflow).toBe("auto");
     // min-height:0 is what actually lets a flex child shrink below its content
     // and scroll; without it the box grows past its parent and never scrolls.
-    // Unitless "0" — that is what ScrollFillBox bakes, and jsdom preserves it
-    // verbatim rather than normalising to "0px".
-    expect(el.style.minHeight).toBe("0");
+    // ScrollFillBox bakes a unitless "0". jsdom 26 preserved it verbatim;
+    // jsdom 30 normalises it to "0px", the way a browser does. Both readings
+    // mean the same declaration, so the assertion takes either.
+    expect(["0", "0px"]).toContain(el.style.minHeight);
   });
 
   it("applies NO max-height in fill mode", () => {
