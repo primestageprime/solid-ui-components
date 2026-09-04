@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import {
   Dropdown,
   type DropdownItem,
+  type DropdownProps,
   type DropdownTriggerState,
 } from "./Dropdown";
 
@@ -431,5 +432,97 @@ describe("Dropdown — disabled items", () => {
     const opacity = Number(body.match(/opacity:\s*([\d.]+)/)?.[1]);
     expect(opacity).toBeGreaterThan(0);
     expect(opacity).toBeLessThan(1);
+  });
+});
+
+describe("Dropdown — a reason on a row", () => {
+  // Scale is refused and says why. Team is available and still carries a
+  // reason, because `reason` is independent of `disabled`. Starter carries
+  // none, so it stands for every row that shipped before this prop existed.
+  const explained: DropdownItem[] = [
+    { id: "starter", label: "Starter" },
+    { id: "team", label: "Team", reason: "Billed per seat" },
+    { id: "scale", label: "Scale", disabled: true, reason: "Sold out" },
+  ];
+
+  const mountExplained = async (props: Partial<DropdownProps> = {}) => {
+    const { container } = render(() => (
+      <Dropdown
+        items={explained}
+        value="starter"
+        onChange={() => {}}
+        {...props}
+      />
+    ));
+    const trigger = container.querySelector<HTMLButtonElement>(
+      ".sui-dropdown__trigger",
+    )!;
+    trigger.click();
+    await tick();
+    const options = [
+      ...container.querySelectorAll<HTMLElement>('[role="option"]'),
+    ];
+    return { container, trigger, options };
+  };
+
+  it("renders the reason as the row's native title", async () => {
+    const { options } = await mountExplained();
+    expect(options[2].getAttribute("title")).toBe("Sold out");
+    // An available row carries its reason the same way.
+    expect(options[1].getAttribute("title")).toBe("Billed per seat");
+  });
+
+  it("describes the row with an element that holds the reason", async () => {
+    const { container, options } = await mountExplained();
+    const id = options[2].getAttribute("aria-describedby")!;
+    expect(id).toBeTruthy();
+    const description = container.querySelector(`#${CSS.escape(id)}`)!;
+    expect(description.textContent).toBe("Sold out");
+    // Screen-reader-only, so the menu looks exactly as it did.
+    expect(description.classList.contains("sui-sr-only")).toBe(true);
+    // The description sits outside the option, or it would join the row's
+    // accessible name and read as part of the label.
+    expect(options[2].contains(description)).toBe(false);
+    expect(options[2].textContent).toBe("Scale");
+    // Two rows with a reason get two distinct ids.
+    expect(options[1].getAttribute("aria-describedby")).not.toBe(id);
+  });
+
+  it("emits neither attribute for a row without a reason", async () => {
+    const { container, options } = await mountExplained();
+    expect(options[0].hasAttribute("title")).toBe(false);
+    expect(options[0].hasAttribute("aria-describedby")).toBe(false);
+    // One description element per row that has a reason, and no more.
+    expect(container.querySelectorAll(".sui-sr-only").length).toBe(2);
+  });
+
+  it("reports a refused pick to onDisabledSelect and keeps the menu open", async () => {
+    const refused: string[] = [];
+    const picked: string[] = [];
+    const { container, options } = await mountExplained({
+      onChange: (id) => picked.push(id),
+      onDisabledSelect: (item) => refused.push(item.id),
+    });
+    // Enter and Space activate the same native button click, so this covers
+    // the keyboard path too.
+    options[2].click();
+    expect(refused).toEqual(["scale"]);
+    expect(picked).toEqual([]);
+    expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+    // An available row reports nothing here and still selects and closes.
+    options[1].click();
+    expect(refused).toEqual(["scale"]);
+    expect(picked).toEqual(["team"]);
+    expect(container.querySelector('[role="listbox"]')).toBeNull();
+  });
+
+  it("swallows the refused pick when no onDisabledSelect is given", async () => {
+    const picked: string[] = [];
+    const { container, options } = await mountExplained({
+      onChange: (id) => picked.push(id),
+    });
+    expect(() => options[2].click()).not.toThrow();
+    expect(picked).toEqual([]);
+    expect(container.querySelector('[role="listbox"]')).toBeTruthy();
   });
 });
