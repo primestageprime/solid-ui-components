@@ -126,7 +126,7 @@
     "@types/node": "^26.1.0",
     "@vitest/coverage-v8": "^4.1.10",
     "d3-scale": "^4.0.2",
-    "jsdom": "^26.1.0",
+    "jsdom": "^30.0.1",
     "solid-devtools": "^0.34.5",
     "solid-js": "^1.9.14",
     "typescript": "^6.0.3",
