@@ -52,7 +52,7 @@ jobs:
       - name: Setup Node.js (with GitHub Packages registry)
         uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           registry-url: https://npm.pkg.github.com
           scope: "@primestageprime"
