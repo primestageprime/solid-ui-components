@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added
+- **`DropdownItem` takes a `disabled` flag, so a row can read as unavailable.**
+  Set `disabled: true` and the whole row dims — the label and the indicator
+  together, through `--sui-text-muted` plus a lower opacity. The opacity is
+  what keeps a disabled row distinct from a row whose own accent is that same
+  muted token. The row reports `aria-disabled="true"` and carries the class
+  `sui-dropdown__item--disabled`. A click or an Enter/Space on it fires no
+  `onChange` and leaves the menu open. ArrowUp, ArrowDown, Home and End step
+  over it, so a disabled row never takes the roving tab stop; Home and End land
+  on the first and the last row the user can choose. The search stops at each
+  end of the list, so an all-disabled list keeps the focus where it is instead
+  of looping. A consumer that faked this with a sentinel colour and a `:has()`
+  rule can drop that workaround.
+
 ## 0.166.0
 
 ### Added

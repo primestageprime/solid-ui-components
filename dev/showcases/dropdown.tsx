@@ -18,10 +18,20 @@ const SCENARIOS: DropdownItem[] = [
   { id: "draft", label: "Draft", color: "#94a3b8" },
 ];
 
+/** A list with two rows the user cannot choose. `disabled` dims the whole row
+ *  — label and indicator together — and the keyboard steps over it. */
+const PLANS: DropdownItem[] = [
+  { id: "starter", label: "Starter", color: "#22d3ee", shape: "circle" },
+  { id: "team", label: "Team", color: "#a855f7", shape: "diamond" },
+  { id: "scale", label: "Scale (sold out)", color: "#f97316", disabled: true },
+  { id: "custom", label: "Custom (contact us)", disabled: true },
+];
+
 export const DropdownShowcase: Component = () => {
   const [v, setV] = createSignal<string>("us-east-1");
   const [scenario, setScenario] = createSignal<string>("lean");
   const [named, setNamed] = createSignal<string>("baseline");
+  const [plan, setPlan] = createSignal<string>("starter");
   const [draftName, setDraftName] = createSignal<string>("Baseline");
   // Rename example — the items are local, because Enter writes a new label back.
   const [scenarios, setScenarios] = createSignal<DropdownItem[]>([
@@ -85,6 +95,22 @@ export const DropdownShowcase: Component = () => {
             onChange={setScenario}
             items={SCENARIOS}
           />
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>disabled — a row the user cannot choose</h3>
+        <p class="text-meta">
+          An item with <code>disabled</code> dims the whole row — label and
+          indicator together — and reports <code>aria-disabled</code>. A click
+          on it fires no <code>onChange</code> and keeps the menu open. The
+          arrow keys, Home and End step over it, so it never takes the tab stop.
+          Open the menu and press End: the focus lands on Team, not on the two
+          rows below it.
+        </p>
+        <Stack gap="sm" class="dropdown-demo">
+          <Dropdown value={plan()} onChange={setPlan} items={PLANS} />
+          <span class="text-meta">selected: {plan()}</span>
         </Stack>
       </div>
 
