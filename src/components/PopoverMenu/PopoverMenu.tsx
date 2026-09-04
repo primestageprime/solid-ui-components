@@ -23,6 +23,12 @@ export interface PopoverMenuItem<Id extends string = string> {
   id: Id;
   label: string;
   icon?: IconName;
+  /**
+   * Marks the item as the current selection. It gets the
+   * `sui-popover-menu__item--active` class and `aria-current="true"`. The role
+   * stays `menuitem`, so this is a "you are here" mark, not a checkbox.
+   */
+  active?: boolean;
 }
 
 export interface PopoverMenuProps<Id extends string = string> {
@@ -45,6 +51,12 @@ export interface PopoverMenuProps<Id extends string = string> {
   /** Trigger button size */
   size?: "sm" | "md";
 }
+
+/** Class list for one menu item — adds the modifier when the item is current. */
+const itemClass = (active: boolean | undefined): string =>
+  active === true
+    ? "sui-popover-menu__item sui-popover-menu__item--active"
+    : "sui-popover-menu__item";
 
 /** Pixel size matching the matching Icon size class. */
 const ICON_SIZE_PX: Record<"xs" | "sm" | "md" | "lg" | "xl", number> = {
@@ -218,7 +230,8 @@ export const PopoverMenu = <Id extends string = string>(
             <For each={merged.items}>
               {(item) => (
                 <li
-                  class="sui-popover-menu__item"
+                  class={itemClass(item.active)}
+                  aria-current={item.active === true ? "true" : undefined}
                   // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: intentional ARIA menu composite — <ul> panel with role="menuitem" <li>s; full keyboard support (tabIndex + Enter/Space onKeyDown) provided below
                   role="menuitem"
                   tabIndex={0}

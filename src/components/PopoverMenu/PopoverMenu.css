@@ -120,6 +120,11 @@
   outline: none;
 }
 
+.sui-popover-menu__item--active {
+  background: rgba(var(--sui-accent-rgb), 0.15);
+  color: var(--sui-accent);
+}
+
 .sui-popover-menu__item-icon {
   display: inline-flex;
   align-items: center;
