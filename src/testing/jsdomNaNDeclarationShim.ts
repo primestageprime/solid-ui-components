@@ -33,9 +33,10 @@
 /**
  * Whether a CSS declaration value carries a `NaN`, and so cannot parse.
  *
- * Deliberately narrow: this is the ONLY class of invalid CSS the shim drops.
- * Every other malformed value still reaches jsdom and still throws, because a
- * test that writes real garbage CSS should fail.
+ * Deliberately narrow: a `NaN` value is the ONLY thing the shim drops. Every
+ * other value — malformed ones included — still reaches jsdom and still gets
+ * whatever verdict jsdom gives it, so a test that writes real garbage CSS
+ * keeps failing.
  */
 export const carriesNaN = (value: unknown): boolean =>
   typeof value === "string" && value.includes("NaN");
