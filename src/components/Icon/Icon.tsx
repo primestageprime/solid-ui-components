@@ -36,6 +36,8 @@ export const ICON_GROUPS = {
     "zoom-out",
     "filter",
     "refresh",
+    "undo",
+    "reset",
     "download",
     "pause",
     "edit",
@@ -84,6 +86,8 @@ export type IconName =
   | "zoom-out"
   | "filter"
   | "refresh"
+  | "undo"
+  | "reset"
   | "download"
   | "pause"
   | "edit"
@@ -292,6 +296,24 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M12 2v2.5h-2.5M4 14v-2.5h2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M2.5 8a5.5 5.5 0 0 1 9.5-3.75V2M13.5 8a5.5 5.5 0 0 1-9.5 3.75V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
             <path d="M12 2v2.5h-2.5M4 14v-2.5h2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+    // An open hook, not a ring: the shaft runs left along the top, and the head
+    // sits at the left end. The open silhouette keeps `undo` apart from the two
+    // round marks, `refresh` and `reset`, at 16px.
+    undo: {
+      outline: `<path d="M3.5 6H9.5A3 3 0 0 1 9.5 12H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M5.5 4L3.5 6L5.5 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M3.5 6H9.5A3 3 0 0 1 9.5 12H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M5.5 4L3.5 6L5.5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+    // A near-closed ring with ONE head, swept counter-clockwise back to the top.
+    // `refresh` carries TWO heads and reads as a repeating cycle; the single head
+    // is what makes this one read as a return to the start.
+    reset: {
+      outline: `<path d="M8 2.5A5.5 5.5 0 1 0 12 4.25V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M12 2v2.5h-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M8 2.5A5.5 5.5 0 1 0 12 4.25V2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M12 2v2.5h-2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
     // Downward arrow into a tray (outline style: shaft + arrowhead + open U-tray).
     download: {
