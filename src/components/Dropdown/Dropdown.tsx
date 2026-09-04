@@ -17,6 +17,7 @@ import {
   createUniqueId,
   onCleanup,
   mergeProps,
+  untrack,
 } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
 import { find, findIndex } from "../../fn";
@@ -129,6 +130,10 @@ export const Dropdown: Component<DropdownProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
   let triggerRef: HTMLButtonElement | undefined;
   let menuRef: HTMLDivElement | undefined;
+  // What held focus when a slot trigger opened the menu. `closeMenu` gives the
+  // focus back to it, because a slot leaves `triggerRef` undefined and the
+  // ARIA combobox pattern returns focus to the consumer's own element.
+  let focusOnClose: Element | null = null;
   const menuId = createUniqueId();
   const triggerId = createUniqueId();
 
@@ -172,6 +177,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
   };
 
   const openMenu = (focus: "first" | "last" | "selected") => {
+    if (merged.trigger) focusOnClose = document.activeElement;
     setOpen(true);
     setupListeners();
     // A slot trigger owns the focus. `toggle` and `openMenu` ask for
@@ -197,10 +203,26 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     setOpen(false);
     teardownListeners();
     setActiveIndex(-1);
+    const restore = focusOnClose;
+    focusOnClose = null;
+    if (!refocusTrigger) return;
+    // A slot trigger hands the focus back to whatever held it at open time —
+    // the consumer's own input. This covers every close path that returns
+    // focus: a pick and Escape alike. The element can have left the DOM in the
+    // meantime, so check it first.
+    if (
+      restore !== null &&
+      restore !== document.body &&
+      document.contains(restore) &&
+      restore instanceof HTMLElement
+    ) {
+      restore.focus();
+      return;
+    }
     // `triggerRef` holds the button only. A slot trigger leaves it undefined,
     // which guards the refocus: the wrapper `div` carries no tabindex, so
     // focusing it would do nothing anyway.
-    if (refocusTrigger) triggerRef?.focus();
+    triggerRef?.focus();
   };
 
   const toggle = () => {
@@ -254,10 +276,18 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     }
   };
 
-  /** The snapshot a `trigger` render prop reads. */
+  /** The state a `trigger` render prop reads. `open` and `selected` are
+   *  getters, so a consumer that reads them inside its own JSX gets a
+   *  fine-grained binding that updates in place. That matters: the slot is
+   *  invoked once, under `untrack`, or every open would rebuild the consumer's
+   *  element and throw away its focus, its caret and its IME state. */
   const triggerState = (): DropdownTriggerState => ({
-    open: open(),
-    selected: selected(),
+    get open() {
+      return open();
+    },
+    get selected() {
+      return selected();
+    },
     toggle,
     openMenu: () => openMenu("selected"),
     close: () => closeMenu(false),
@@ -312,7 +342,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
             aria-controls={open() ? menuId : undefined}
             onKeyDown={onTriggerKeyDown}
           >
-            {trigger()(triggerState())}
+            {untrack(() => trigger()(triggerState()))}
           </div>
         )}
       </Show>

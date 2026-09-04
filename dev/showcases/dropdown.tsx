@@ -5,6 +5,7 @@ import {
   type DropdownItem,
   type DropdownTriggerState,
 } from "../../src/components/Dropdown";
+import { Icon } from "../../src/components/Icon";
 import { Stack } from "../../src/components/Layout/Stack";
 
 const SCENARIOS: DropdownItem[] = [
@@ -72,7 +73,11 @@ export const DropdownShowcase: Component = () => {
           reaches the input below and places the caret where the user aims. Call{" "}
           <code>toggle</code> from the state to open the menu. Enter is
           unclaimed, so an input in an ancestor <code>&lt;form&gt;</code> still
-          submits.
+          submits. Dropdown restores the focus itself — after a pick or an
+          Escape it gives the focus back to the element that held it when the
+          menu opened, so do <em>not</em> refocus in your own{" "}
+          <code>onChange</code>. Type a name, open the menu, pick another
+          scenario: the caret comes back to the field.
         </p>
         <Stack gap="sm" class="dropdown-demo">
           <Dropdown
@@ -92,9 +97,12 @@ export const DropdownShowcase: Component = () => {
                   value={draftName()}
                   onInput={(e) => setDraftName(e.currentTarget.value)}
                 />
-                <span class="name-trigger__pencil" aria-hidden="true">
-                  &#9998;
-                </span>
+                <Icon
+                  name="edit"
+                  size="xs"
+                  class="name-trigger__pencil"
+                  aria-hidden="true"
+                />
                 <button
                   type="button"
                   class="name-trigger__caret"
