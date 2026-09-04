@@ -26,16 +26,16 @@ dispatches a notification to amygdala-ui.
    your own session trailers — the script pushes immediately after the commit,
    so you cannot amend the message later:
 
-   ```bash
-   RELEASE_TRAILERS='Co-Authored-By: Claude <noreply@anthropic.com>
-   Claude-Session: https://claude.ai/code/session_XXXXXXXX' \
-     .claude/skills/ship/scripts/release.sh patch   # or minor | major | X.Y.Z
-   ```
+```bash
+RELEASE_TRAILERS='Co-Authored-By: Claude <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_XXXXXXXX' \
+  .claude/skills/ship/scripts/release.sh patch   # or minor | major | X.Y.Z
+```
 
-   The script puts the value verbatim after a blank line at the end of the
-   commit message, and it keeps the newlines. Use your real model name and your
-   real session URL; the URL changes every session. When `RELEASE_TRAILERS` is
-   unset or empty, the commit message is only `chore: release X.Y.Z`.
+The script puts the value verbatim after a blank line at the end of the
+commit message, and it keeps the newlines. Use your real model name and your
+real session URL; the URL changes every session. When `RELEASE_TRAILERS` is
+unset or empty, the commit message is only `chore: release X.Y.Z`.
 
 4. **Verify**: `gh run watch` the publish run, or check
    https://github.com/orgs/primestageprime/packages?repo_name=solid-ui-components
