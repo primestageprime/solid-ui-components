@@ -34,7 +34,29 @@ export interface DropdownItem {
    *  *and* shape) so they survive small sizes, colour-blindness and greyscale.
    *  Without `shape`, `color` keeps rendering today's dot. */
   shape?: Shape;
+  /** Render the row as unavailable. The whole row dims — label and indicator
+   *  together — the row reports `aria-disabled="true"`, a click or an
+   *  Enter/Space does not select it and does not close the menu, and the
+   *  keyboard navigation steps over it. */
+  disabled?: boolean;
 }
+
+/** A row the user can choose. `disabled` is optional, so only an explicit
+ *  `true` makes a row unavailable. */
+const isSelectable = (item: DropdownItem): boolean => item.disabled !== true;
+
+/** The index of the first selectable item at `from` or beyond it, in the
+ *  `step` direction. Returns -1 when the search finds none, which is what an
+ *  all-disabled list gives — the caller then leaves the focus where it is. */
+const seekSelectable = (
+  items: readonly DropdownItem[],
+  from: number,
+  step: 1 | -1,
+): number =>
+  find(
+    (i: number) => i >= 0 && i < items.length && isSelectable(items[i]),
+    Array.from({ length: items.length }, (_, n) => from + n * step),
+  ) ?? -1;
 
 /** Nominal px box for a shape indicator. Matches `.sui-dropdown__dot` exactly:
  *  `shape: "circle"` and a bare `color` are the same mark, so a list mixing
@@ -167,11 +189,17 @@ export const Dropdown: Component<DropdownProps> = (props) => {
 
   onCleanup(teardownListeners);
 
-  // Focus the option at `i` (clamped), updating the roving tab stop.
-  const focusOption = (i: number) => {
+  // Focus the option at `i` (clamped), updating the roving tab stop. A
+  // disabled row never takes the tab stop: the search steps over it in the
+  // `step` direction and stops at the end of the list. With no selectable row
+  // in that direction — an all-disabled list included — the focus stays put,
+  // so the search always terminates.
+  const focusOption = (i: number, step: 1 | -1 = 1) => {
     const opts = menuRef?.querySelectorAll<HTMLElement>('[role="option"]');
     if (!opts || opts.length === 0) return;
-    const idx = clamp(i, 0, opts.length - 1);
+    const from = clamp(i, 0, opts.length - 1);
+    const idx = seekSelectable(merged.items, from, step);
+    if (idx < 0) return;
     setActiveIndex(idx);
     opts[idx]?.focus();
   };
@@ -189,13 +217,24 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     queueMicrotask(() => {
       const count = merged.items.length;
       if (count === 0) return;
-      let i = 0;
-      if (focus === "last") i = count - 1;
-      else if (focus === "selected") {
-        const sel = findIndex((it) => it.id === merged.value, merged.items);
-        i = sel >= 0 ? sel : 0;
+      // `"selected"` opens on the value's own row. When that row is disabled,
+      // the search runs forwards first and falls back to backwards, so the
+      // menu still opens on a row the user can choose.
+      switch (focus) {
+        case "last":
+          focusOption(count - 1, -1);
+          return;
+        case "first":
+          focusOption(0, 1);
+          return;
+        case "selected": {
+          const sel = findIndex((it) => it.id === merged.value, merged.items);
+          const from = sel >= 0 ? sel : 0;
+          if (seekSelectable(merged.items, from, 1) >= 0) focusOption(from, 1);
+          else focusOption(from, -1);
+          return;
+        }
       }
-      focusOption(i);
     });
   };
 
@@ -230,9 +269,21 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     else openMenu("selected");
   };
 
-  const select = (id: string) => {
-    merged.onChange(id);
+  // A disabled row keeps its click handler, because it stays a real option in
+  // the listbox (`aria-disabled`, not the native `disabled` attribute, so
+  // assistive tech still announces it). The guard lives here: a click or an
+  // Enter/Space on such a row changes nothing and leaves the menu open.
+  const select = (item: DropdownItem) => {
+    if (!isSelectable(item)) return;
+    merged.onChange(item.id);
     closeMenu(); // returns focus to the trigger
+  };
+
+  const itemClass = (item: DropdownItem): string => {
+    const classes = ["sui-dropdown__item"];
+    if (item.id === merged.value) classes.push("sui-dropdown__item--active");
+    if (!isSelectable(item)) classes.push("sui-dropdown__item--disabled");
+    return classes.join(" ");
   };
 
   const onTriggerKeyDown = (e: KeyboardEvent) => {
@@ -241,11 +292,11 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       open()
-        ? focusOption(activeIndex() < 0 ? 0 : activeIndex())
+        ? focusOption(activeIndex() < 0 ? 0 : activeIndex(), 1)
         : openMenu("first");
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      open() ? focusOption(activeIndex()) : openMenu("last");
+      open() ? focusOption(activeIndex(), -1) : openMenu("last");
     }
   };
 
@@ -253,19 +304,21 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        focusOption(index + 1);
+        focusOption(index + 1, 1);
         break;
       case "ArrowUp":
         e.preventDefault();
-        focusOption(index - 1);
+        focusOption(index - 1, -1);
         break;
       case "Home":
+        // Home and End land on the first and the last row the user can
+        // choose, so a disabled row at either end is stepped over.
         e.preventDefault();
-        focusOption(0);
+        focusOption(0, 1);
         break;
       case "End":
         e.preventDefault();
-        focusOption(merged.items.length - 1);
+        focusOption(merged.items.length - 1, -1);
         break;
       case "Tab":
         // Tab leaves the widget — close without stealing focus back.
@@ -358,12 +411,13 @@ export const Dropdown: Component<DropdownProps> = (props) => {
           <For each={merged.items}>
             {(item, index) => (
               <button
-                class={`sui-dropdown__item ${item.id === merged.value ? "sui-dropdown__item--active" : ""}`}
+                class={itemClass(item)}
                 type="button"
                 role="option"
                 aria-selected={item.id === merged.value}
+                aria-disabled={isSelectable(item) ? undefined : true}
                 tabindex={index() === activeIndex() ? 0 : -1}
-                onClick={() => select(item.id)}
+                onClick={() => select(item)}
                 onKeyDown={(e) => onOptionKeyDown(e, index())}
               >
                 <Indicator color={item.color} shape={item.shape} />

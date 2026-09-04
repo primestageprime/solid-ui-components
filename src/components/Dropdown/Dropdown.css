@@ -175,6 +175,20 @@
   color: var(--sui-accent);
 }
 
+/* Unavailable row. Two marks, not one: the muted text token AND a lower
+   opacity. The opacity carries the label and the indicator together, so the
+   whole row dims rather than the text alone — and it also separates a disabled
+   row from an item whose own accent is `var(--sui-text-muted)` (the "unknown"
+   colour), which stays fully opaque. The rule sits after `--active`, so a
+   disabled row that also holds the value still reads as unavailable. */
+.sui-dropdown__item--disabled,
+.sui-dropdown__item--disabled:hover {
+  background: transparent;
+  color: var(--sui-text-muted);
+  opacity: 0.5;
+  cursor: default;
+}
+
 .sui-dropdown__footer {
   border-top: 1px solid var(--sui-border);
 }
