@@ -2,7 +2,31 @@
 
 ## Unreleased
 
+## 0.164.0
+
 ### Added
+- **`PopoverMenu` marks the current item, and `OverflowNav` keeps that mark on
+  a collapsed tab.** `PopoverMenuItem` takes an optional `active` field.
+
+  ```tsx
+  <PopoverMenu items={[
+    { id: "cashflow", label: "Cashflow", active: true },
+    { id: "runway", label: "Runway" },
+  ]} onSelect={go} />
+  ```
+
+  The marked row renders `sui-popover-menu__item--active` and carries
+  `aria-current="true"`, so a reader on a screen reader hears which row the
+  page is on. The row reuses the `Dropdown` row treatment — a tinted accent
+  background, `rgba(var(--sui-accent-rgb), 0.15)`, and `var(--sui-accent)`
+  text — so both menus mark the current item the same way.
+
+  `OverflowNav` carries `active` through its spill map. A nav tab draws its
+  selected state on the bar, but once the bar ran out of room the tab collapsed
+  into the kebab menu and the state DISAPPEARED, so a reader on a narrow window
+  could not tell which page they were on. The collapsed tab now keeps its mark
+  inside the menu. Leave `active` unset and the row is what it was.
+
 - **`Icon` draws two new glyphs, `undo` and `reset`.** Both join the `actions`
   group, so the gallery shows them. The set now holds three round-ish marks,
   and each one carries its own silhouette at 16px: `refresh` keeps two arcs and
@@ -12,6 +36,48 @@
   arrowhead at the left end. Reach for `reset` when a control restores a
   starting value, and for `undo` when a control steps back through a history.
   `refresh` is unchanged, and a test now locks its path.
+
+### Fixed
+- **`Slider` mounts under jsdom 30, and SUI ships the shim that mounts it.**
+  Kobalte writes `left: calc(NaN%)` on a thumb's FIRST render: the thumbs
+  register in a `createEffect` that runs AFTER the style getter, so `index()`
+  is still `-1`, `values()[-1]` is `undefined`, and `undefined - min` is `NaN`.
+  A browser drops that declaration and draws the slider correctly. jsdom 30
+  (css-tree 3.2.1) throws `SyntaxError: ")" is expected` instead, so every
+  test that mounts a Slider fails.
+
+  **Add the shim to your Vitest `setupFiles`, then delete your Slider stubs.**
+
+  ```ts
+  // vitest.config.ts
+  test: {
+    setupFiles: ["@primestageprime/solid-ui-components/testing/jsdom-nan-shim"],
+  }
+  ```
+
+  The `./testing/jsdom-nan-shim` subpath ships as TypeScript SOURCE, not as a
+  build entry, so your own test pipeline compiles it beside the rest of your
+  setup. The shim wraps `CSSStyleDeclaration.prototype.setProperty` and drops
+  ONLY a declaration whose value carries `NaN`. Every other value reaches jsdom
+  unchanged and keeps whatever verdict jsdom gives it, so a test that writes
+  real garbage CSS still fails. The import installs the shim for its side
+  effect; `installNaNDeclarationShim()` is exported as well and returns a
+  function that restores the original `setProperty`.
+
+  SUI's Slider is not the cause. It forwards `min`, `max`, `value` and `step`
+  to Kobalte unchanged and does no arithmetic of its own. SUI's browser build
+  also leaves Kobalte external on purpose, so no patch of the dependency can
+  reach a consumer — a test-setup shim is the only place the fix fits. Delete
+  the `setupFiles` entry when Kobalte reads the thumb index before the style
+  getter, or when jsdom drops an invalid declaration again.
+
+### Changed
+- **SUI runs its own tests on jsdom 30.** The devDependency moves from the 26.x
+  line to `^30.0.1`. It is a devDependency, so no consumer sees it. `Table`'s
+  test now accepts jsdom 30's normalised `min-height`, and
+  `SliderPointer.test.tsx` covers the pointer drag, the snap to `step` and the
+  clamp at `min` and `max` — the paths that need a real thumb mount, and that
+  the jsdom failure had kept untested.
 
 ## 0.163.0
 
