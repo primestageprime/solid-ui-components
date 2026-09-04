@@ -152,6 +152,11 @@ export interface DropdownProps {
    *  call `toggle` from the state to open the menu. Enter stays unclaimed, so
    *  an `<input>` in an ancestor `<form>` still submits. */
   trigger?: (state: DropdownTriggerState) => JSX.Element;
+  /** Called when the user activates a disabled row, by click or by
+   *  Enter/Space. The pick still fires no `onChange` and still leaves the menu
+   *  open — this only tells the consumer that the user asked. Without it the
+   *  refused pick stays silent, as it always was. */
+  onDisabledSelect?: (item: DropdownItem) => void;
 }
 
 export const Dropdown: Component<DropdownProps> = (props) => {
@@ -286,9 +291,14 @@ export const Dropdown: Component<DropdownProps> = (props) => {
   // A disabled row keeps its click handler, because it stays a real option in
   // the listbox (`aria-disabled`, not the native `disabled` attribute, so
   // assistive tech still announces it). The guard lives here: a click or an
-  // Enter/Space on such a row changes nothing and leaves the menu open.
+  // Enter/Space on such a row changes nothing and leaves the menu open. It
+  // reports the refused pick to `onDisabledSelect`, so a consumer can answer
+  // it — with a toast, say — instead of losing it.
   const select = (item: DropdownItem) => {
-    if (!isSelectable(item)) return;
+    if (!isSelectable(item)) {
+      merged.onDisabledSelect?.(item);
+      return;
+    }
     merged.onChange(item.id);
     closeMenu(); // returns focus to the trigger
   };
