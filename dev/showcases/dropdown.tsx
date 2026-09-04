@@ -3,6 +3,7 @@ import {
   Dropdown,
   InlineSubtleDropdown,
   type DropdownItem,
+  type DropdownTriggerState,
 } from "../../src/components/Dropdown";
 import { Stack } from "../../src/components/Layout/Stack";
 
@@ -18,6 +19,8 @@ const SCENARIOS: DropdownItem[] = [
 export const DropdownShowcase: Component = () => {
   const [v, setV] = createSignal<string>("us-east-1");
   const [scenario, setScenario] = createSignal<string>("lean");
+  const [named, setNamed] = createSignal<string>("baseline");
+  const [draftName, setDraftName] = createSignal<string>("Baseline");
   return (
     <div class="component-section">
       <h2>Dropdown — Primitive (Depth 0)</h2>
@@ -56,6 +59,56 @@ export const DropdownShowcase: Component = () => {
             onChange={setScenario}
             items={SCENARIOS}
           />
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>trigger — render your own trigger</h3>
+        <p class="text-meta">
+          The <code>trigger</code> render prop replaces the whole trigger
+          content — indicator, label and caret — with your own element. The
+          wrapper is a <code>div[role="combobox"]</code> that keeps the ARIA
+          wiring and the arrow keys, and binds <em>no</em> click, so a click
+          reaches the input below and places the caret where the user aims. Call{" "}
+          <code>toggle</code> from the state to open the menu. Enter is
+          unclaimed, so an input in an ancestor <code>&lt;form&gt;</code> still
+          submits.
+        </p>
+        <Stack gap="sm" class="dropdown-demo">
+          <Dropdown
+            items={SCENARIOS}
+            value={named()}
+            onChange={(id) => {
+              setNamed(id);
+              setDraftName(
+                SCENARIOS.find((item) => item.id === id)?.label ?? "",
+              );
+            }}
+            trigger={(state: DropdownTriggerState) => (
+              <>
+                <input
+                  class="name-trigger__input"
+                  aria-label="Scenario name"
+                  value={draftName()}
+                  onInput={(e) => setDraftName(e.currentTarget.value)}
+                />
+                <span class="name-trigger__pencil" aria-hidden="true">
+                  &#9998;
+                </span>
+                <button
+                  type="button"
+                  class="name-trigger__caret"
+                  aria-label={state.open ? "Close scenarios" : "Open scenarios"}
+                  onClick={state.toggle}
+                >
+                  &#9660;
+                </button>
+              </>
+            )}
+          />
+          <span class="text-meta">
+            selected: {named()} — typed: {draftName()}
+          </span>
         </Stack>
       </div>
 
