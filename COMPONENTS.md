@@ -669,6 +669,20 @@ State derivation:
     thumb is worth. The label line stays ONE flex row and takes `min-width: 0`,
     so the node shrinks inside the column and wraps its own figures. A node that
     resolves to nothing leaves SUI's own readout in place.
+  - **Mounting a Slider under jsdom 30 needs a shim.** Kobalte builds the
+    thumb offset as `calc(NaN%)` on the first render, because the thumb
+    registers its index in an effect that runs after the style getter. A
+    browser drops that declaration, jsdom 26 dropped it too, and jsdom 30
+    THROWS `SyntaxError: ")" is expected` — so every consumer that mounted a
+    Slider had to stub the component instead. SUI publishes the drop as a
+    test-setup side effect. Add it to your vitest config:
+    ```ts
+    setupFiles: ["@primestageprime/solid-ui-components/testing/jsdom-nan-shim"]
+    ```
+    It exports `carriesNaN` (the predicate — a value string holding `NaN`) and
+    `installNaNDeclarationShim` (which returns a restore function), and it
+    installs itself on import. It drops a `NaN`-bearing declaration and
+    NOTHING else, so real garbage CSS still fails a test.
   - **No `variants.ts`, deliberately.** `format` and `ticks` are the only overrides, and a real caller's formatter carries its own units and currency — the same reason `BandRail` ships the base alongside its factory rather than a set of curried variants. Curry one at the call site with `createSlider`. `valueLabel` stays OUT of `SliderOverrides`: an override is a static visual decision, and a readout node is per-instance content that holds the caller's own fields and signals, the way `label` and `value` do. A curried variant still takes it, because `SliderDataProps` omits through each member of the union.
   - Example:
     ```tsx

@@ -1,3 +1,9 @@
+// Kobalte writes `calc(NaN%)` on a slider thumb's first render. jsdom 30
+// throws on it where a browser (and jsdom 26) drops it. This import installs
+// the drop. It is published as `<pkg>/testing/jsdom-nan-shim` so a consumer
+// can list it in their own `setupFiles`. See the file for the full reason.
+import "./testing/jsdomNaNDeclarationShim";
+
 // Test setup. Tests use the Solid testing-library `render` + raw DOM
 // assertions; no extra matchers required.
 //
@@ -64,4 +70,3 @@ if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
   window.matchMedia = stubMediaQueryList;
 }
 
-export {};
