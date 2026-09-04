@@ -94,7 +94,9 @@ describe("Dropdown — listbox a11y", () => {
     expect(picked).toEqual(["b"]);
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(container.querySelector('[role="listbox"]')).toBeNull();
+    // No trigger slot, so the focus goes back to the button, as it always has.
     expect(document.activeElement).toBe(trigger);
+    expect(trigger.tagName).toBe("BUTTON");
   });
 
   it("Escape closes the menu and refocuses the trigger", async () => {
@@ -274,6 +276,20 @@ describe("Dropdown — trigger slot", () => {
     expect(options.length).toBe(3);
     expect(document.activeElement).toBe(options[0]);
     expect(options[0].getAttribute("tabindex")).toBe("0");
+  });
+
+  it("gives the focus back to the slot element after a pick", async () => {
+    const container = mountSlot();
+    const input = container.querySelector<HTMLInputElement>(".name-input")!;
+    input.focus();
+    expect(document.activeElement).toBe(input);
+    container.querySelector<HTMLButtonElement>(".slot-caret")!.click();
+    await tick();
+    [...container.querySelectorAll<HTMLElement>('[role="option"]')][2].click();
+    expect(container.querySelector('[role="listbox"]')).toBeNull();
+    // The ARIA combobox pattern returns focus to the consumer's own element,
+    // so the consumer must not refocus it in `onChange`.
+    expect(document.activeElement).toBe(input);
   });
 
   it("keeps the button trigger when the slot is absent", () => {
