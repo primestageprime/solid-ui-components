@@ -19,6 +19,15 @@
   background: none;
 }
 
+/* Slot trigger — the `trigger` render prop swaps the button for a `div` that
+   keeps the same box. Only the button-only affordances change: the consumer's
+   own element (an input, say) draws the content and owns the pointer, so the
+   wrapper must not claim the hand cursor. No box-model geometry here; the
+   shared rule above already sets it. */
+.sui-dropdown__trigger--slot {
+  cursor: default;
+}
+
 .sui-dropdown--md .sui-dropdown__trigger {
   padding: 6px 12px;
   font-size: 13px;

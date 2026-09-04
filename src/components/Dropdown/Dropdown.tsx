@@ -74,6 +74,23 @@ const Indicator: Component<{ color?: string; shape?: Shape }> = (props) => (
   </Show>
 );
 
+/** What a `trigger` render prop receives: the live open state, the resolved
+ *  selection, and the three commands that drive the menu. The consumer draws
+ *  the whole trigger — indicator, label and caret — and calls `toggle` itself,
+ *  because the wrapper binds no click handler. */
+export interface DropdownTriggerState {
+  /** True while the listbox is open. */
+  open: boolean;
+  /** The item whose `id` matches `value`, or `undefined`. */
+  selected: DropdownItem | undefined;
+  /** Open the menu when it is closed; close it when it is open. */
+  toggle: () => void;
+  /** Open the menu. */
+  openMenu: () => void;
+  /** Close the menu. */
+  close: () => void;
+}
+
 export interface DropdownProps {
   /** Items to display in the dropdown menu */
   items: DropdownItem[];
@@ -91,6 +108,13 @@ export interface DropdownProps {
   subtle?: boolean;
   /** Optional class for the container */
   class?: string;
+  /** Render the trigger yourself. The slot replaces the whole trigger content
+   *  — indicator, label and caret — inside a `div[role="combobox"]` that keeps
+   *  the ARIA wiring and the arrow-key handler. The wrapper binds no click, so
+   *  every click reaches your element and a caret lands where the user aims;
+   *  call `toggle` from the state to open the menu. Enter stays unclaimed, so
+   *  an `<input>` in an ancestor `<form>` still submits. */
+  trigger?: (state: DropdownTriggerState) => JSX.Element;
 }
 
 export const Dropdown: Component<DropdownProps> = (props) => {
@@ -117,7 +141,12 @@ export const Dropdown: Component<DropdownProps> = (props) => {
   };
 
   const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") closeMenu();
+    if (e.key !== "Escape") return;
+    closeMenu();
+    // A slot trigger owns the second Escape. This listener binds only while the
+    // menu is open, so the first Escape closes the menu and stops here; the
+    // next one reaches the consumer's own element and can mean "revert".
+    if (merged.trigger) e.stopPropagation();
   };
 
   // Global listeners live only while the menu is open.
@@ -145,6 +174,11 @@ export const Dropdown: Component<DropdownProps> = (props) => {
   const openMenu = (focus: "first" | "last" | "selected") => {
     setOpen(true);
     setupListeners();
+    // A slot trigger owns the focus. `toggle` and `openMenu` ask for
+    // `"selected"`, and stealing focus there blurs the consumer's input
+    // mid-typing — so open with no option focused and `activeIndex` at -1.
+    // The arrow keys ask for `"first"`/`"last"` and still place focus.
+    if (merged.trigger && focus === "selected") return;
     // Defer until the listbox has rendered, then place focus.
     queueMicrotask(() => {
       const count = merged.items.length;
@@ -163,6 +197,9 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     setOpen(false);
     teardownListeners();
     setActiveIndex(-1);
+    // `triggerRef` holds the button only. A slot trigger leaves it undefined,
+    // which guards the refocus: the wrapper `div` carries no tabindex, so
+    // focusing it would do nothing anyway.
     if (refocusTrigger) triggerRef?.focus();
   };
 
@@ -217,6 +254,15 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     }
   };
 
+  /** The snapshot a `trigger` render prop reads. */
+  const triggerState = (): DropdownTriggerState => ({
+    open: open(),
+    selected: selected(),
+    toggle,
+    openMenu: () => openMenu("selected"),
+    close: () => closeMenu(false),
+  });
+
   const containerClass = () => {
     const classes = ["sui-dropdown"];
     if (merged.size) classes.push(`sui-dropdown--${merged.size}`);
@@ -228,25 +274,48 @@ export const Dropdown: Component<DropdownProps> = (props) => {
 
   return (
     <div class={containerClass()} ref={containerRef}>
-      <button
-        id={triggerId}
-        ref={triggerRef}
-        class="sui-dropdown__trigger"
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={open()}
-        aria-controls={open() ? menuId : undefined}
-        onClick={toggle}
-        onKeyDown={onTriggerKeyDown}
+      <Show
+        when={merged.trigger}
+        fallback={
+          <button
+            id={triggerId}
+            ref={triggerRef}
+            class="sui-dropdown__trigger"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={open()}
+            aria-controls={open() ? menuId : undefined}
+            onClick={toggle}
+            onKeyDown={onTriggerKeyDown}
+          >
+            <Indicator color={selected()?.color} shape={selected()?.shape} />
+            <span class="sui-dropdown__label">
+              {selected()?.label ?? merged.placeholder}
+            </span>
+            <span class="sui-dropdown__caret" aria-hidden="true">
+              &#9660;
+            </span>
+          </button>
+        }
       >
-        <Indicator color={selected()?.color} shape={selected()?.shape} />
-        <span class="sui-dropdown__label">
-          {selected()?.label ?? merged.placeholder}
-        </span>
-        <span class="sui-dropdown__caret" aria-hidden="true">
-          &#9660;
-        </span>
-      </button>
+        {(trigger) => (
+          // The wrapper must stay unfocusable. The consumer's own element
+          // inside the slot (an input, say) is the focus target and the tab
+          // stop; a tabindex here would add a second, empty stop before it.
+          // biome-ignore lint/a11y/useFocusableInteractive: see above
+          <div
+            class="sui-dropdown__trigger sui-dropdown__trigger--slot"
+            id={triggerId}
+            role="combobox"
+            aria-haspopup="listbox"
+            aria-expanded={open()}
+            aria-controls={open() ? menuId : undefined}
+            onKeyDown={onTriggerKeyDown}
+          >
+            {trigger()(triggerState())}
+          </div>
+        )}
+      </Show>
 
       <Show when={open()}>
         <div
