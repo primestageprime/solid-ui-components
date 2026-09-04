@@ -27,11 +27,42 @@ const PLANS: DropdownItem[] = [
   { id: "custom", label: "Custom (contact us)", disabled: true },
 ];
 
+/** The same list, with each refused row saying why. `reason` renders as the
+ *  row's `title` for a mouse user and as an `aria-describedby` target for a
+ *  screen reader. Team carries one while staying available. */
+const EXPLAINED_PLANS: DropdownItem[] = [
+  { id: "starter", label: "Starter", color: "#22d3ee", shape: "circle" },
+  {
+    id: "team",
+    label: "Team",
+    color: "#a855f7",
+    shape: "diamond",
+    reason: "Billed per seat, minimum five seats",
+  },
+  {
+    id: "scale",
+    label: "Scale",
+    color: "#f97316",
+    disabled: true,
+    reason: "Sold out until March",
+  },
+  {
+    id: "custom",
+    label: "Custom",
+    disabled: true,
+    reason: "Talk to sales to unlock this plan",
+  },
+];
+
 export const DropdownShowcase: Component = () => {
   const [v, setV] = createSignal<string>("us-east-1");
   const [scenario, setScenario] = createSignal<string>("lean");
   const [named, setNamed] = createSignal<string>("baseline");
   const [plan, setPlan] = createSignal<string>("starter");
+  const [explainedPlan, setExplainedPlan] = createSignal<string>("starter");
+  // What the last refused pick was, so the refusal reaches the user instead of
+  // disappearing. A real app shows a toast here.
+  const [refused, setRefused] = createSignal<string>("");
   const [draftName, setDraftName] = createSignal<string>("Baseline");
   // Rename example — the items are local, because Enter writes a new label back.
   const [scenarios, setScenarios] = createSignal<DropdownItem[]>([
@@ -111,6 +142,35 @@ export const DropdownShowcase: Component = () => {
         <Stack gap="sm" class="dropdown-demo">
           <Dropdown value={plan()} onChange={setPlan} items={PLANS} />
           <span class="text-meta">selected: {plan()}</span>
+        </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>reason — say why a row is refused</h3>
+        <p class="text-meta">
+          An item with <code>reason</code> carries it as the row's{" "}
+          <code>title</code>, so hovering Scale or Custom reads the refusal, and
+          as an <code>aria-describedby</code> target, so a screen reader
+          announces it as well. Team shows that a reason does not need{" "}
+          <code>disabled</code>. Click a refused row and{" "}
+          <code>onDisabledSelect</code> reports the pick — no{" "}
+          <code>onChange</code> fires and the menu stays open, so a consumer can
+          answer with a toast instead of losing the click.
+        </p>
+        <Stack gap="sm" class="dropdown-demo">
+          <Dropdown
+            value={explainedPlan()}
+            onChange={(id) => {
+              setRefused("");
+              setExplainedPlan(id);
+            }}
+            onDisabledSelect={(item) => setRefused(item.reason ?? item.label)}
+            items={EXPLAINED_PLANS}
+          />
+          <span class="text-meta">selected: {explainedPlan()}</span>
+          <Show when={refused()}>
+            {(message) => <span class="text-meta">refused: {message()}</span>}
+          </Show>
         </Stack>
       </div>
 
