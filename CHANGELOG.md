@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **`Icon` draws two new glyphs, `undo` and `reset`.** Both join the `actions`
+  group, so the gallery shows them. The set now holds three round-ish marks,
+  and each one carries its own silhouette at 16px: `refresh` keeps two arcs and
+  two arrowheads and reads as a repeating cycle; `reset` draws a near-closed
+  ring with ONE arrowhead and reads as a return to the start; `undo` draws no
+  ring at all, but an open hook whose shaft runs left along the top with the
+  arrowhead at the left end. Reach for `reset` when a control restores a
+  starting value, and for `undo` when a control steps back through a history.
+  `refresh` is unchanged, and a test now locks its path.
+
 ## 0.163.0
 
 ### Changed
