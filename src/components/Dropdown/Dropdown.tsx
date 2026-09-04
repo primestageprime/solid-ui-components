@@ -434,45 +434,53 @@ export const Dropdown: Component<DropdownProps> = (props) => {
         >
           <For each={merged.items}>
             {(item, index) => (
-              <>
-                <button
-                  class={itemClass(item)}
-                  type="button"
-                  role="option"
-                  aria-selected={item.id === merged.value}
-                  aria-disabled={isSelectable(item) ? undefined : true}
-                  title={item.reason}
-                  aria-describedby={
-                    item.reason === undefined
-                      ? undefined
-                      : reasonElementId(menuId, item.id)
-                  }
-                  tabindex={index() === activeIndex() ? 0 : -1}
-                  onClick={() => select(item)}
-                  onKeyDown={(e) => onOptionKeyDown(e, index())}
-                >
-                  <Indicator color={item.color} shape={item.shape} />
-                  {item.label}
-                </button>
-                {/* The description sits outside the option, because a child
-                    of the button would join its accessible name. `sui-sr-only`
-                    takes it out of flow, so the menu's box is unchanged. */}
-                <Show when={item.reason}>
-                  {(reason) => (
-                    <span
-                      class="sui-sr-only"
-                      id={reasonElementId(menuId, item.id)}
-                    >
-                      {reason()}
-                    </span>
-                  )}
-                </Show>
-              </>
+              <button
+                class={itemClass(item)}
+                type="button"
+                role="option"
+                aria-selected={item.id === merged.value}
+                aria-disabled={isSelectable(item) ? undefined : true}
+                title={item.reason}
+                aria-describedby={
+                  item.reason === undefined
+                    ? undefined
+                    : reasonElementId(menuId, item.id)
+                }
+                tabindex={index() === activeIndex() ? 0 : -1}
+                onClick={() => select(item)}
+                onKeyDown={(e) => onOptionKeyDown(e, index())}
+              >
+                <Indicator color={item.color} shape={item.shape} />
+                {item.label}
+              </button>
             )}
           </For>
           <Show when={merged.footer}>
             <div class="sui-dropdown__footer">{merged.footer}</div>
           </Show>
+        </div>
+
+        {/* The descriptions sit outside the listbox, because `listbox` owns
+            `option` elements only — a stray child there is an unowned node.
+            They also sit outside the option itself, because a child of the
+            button would join its accessible name. `aria-describedby` is an
+            IDREF, so the association holds across the DOM, and `sui-sr-only`
+            keeps each one out of flow. */}
+        <div class="sui-dropdown__reasons">
+          <For each={merged.items}>
+            {(item) => (
+              <Show when={item.reason}>
+                {(reason) => (
+                  <span
+                    class="sui-sr-only"
+                    id={reasonElementId(menuId, item.id)}
+                  >
+                    {reason()}
+                  </span>
+                )}
+              </Show>
+            )}
+          </For>
         </div>
       </Show>
     </div>

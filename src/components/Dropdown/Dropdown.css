@@ -116,6 +116,12 @@
   margin-top: 4px;
 }
 
+/* Holder for the screen-reader-only row descriptions. It sits beside the
+ * listbox, so it must add no box of its own. */
+.sui-dropdown__reasons {
+  display: contents;
+}
+
 /* ============================================
    Color layer — token-driven, adapts to the active theme
    ============================================

@@ -488,6 +488,29 @@ describe("Dropdown — a reason on a row", () => {
     expect(options[1].getAttribute("aria-describedby")).not.toBe(id);
   });
 
+  it("keeps the listbox owning options and the footer only", async () => {
+    const { container, options } = await mountExplained({
+      footer: <button type="button">Add new</button>,
+    });
+    const listbox = container.querySelector('[role="listbox"]')!;
+    const children = [...listbox.children];
+    // `listbox` owns `option` elements. The footer is the one other child, and
+    // it predates this rule, so it is tracked on its own. Nothing else, and a
+    // description least of all, may sit here as an unowned node.
+    expect(children.filter((c) => c.getAttribute("role") === "option")).toEqual(
+      options,
+    );
+    expect(children.filter((c) => c.getAttribute("role") !== "option")).toEqual(
+      [...container.querySelectorAll(".sui-dropdown__footer")],
+    );
+    // The descriptions moved to a holder beside the listbox, and the IDREF
+    // still reaches them from the row.
+    const id = options[2].getAttribute("aria-describedby")!;
+    const description = container.querySelector(`#${CSS.escape(id)}`)!;
+    expect(listbox.contains(description)).toBe(false);
+    expect(description.textContent).toBe("Sold out");
+  });
+
   it("emits neither attribute for a row without a reason", async () => {
     const { container, options } = await mountExplained();
     expect(options[0].hasAttribute("title")).toBe(false);
