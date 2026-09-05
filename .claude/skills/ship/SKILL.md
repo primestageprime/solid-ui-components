@@ -15,12 +15,21 @@ dispatches a notification to amygdala-ui.
 1. **Confirm main is green.** `gh run list --limit 3` — the three required
    checks (test, typecheck, build from `ci.yml`) must be passing on HEAD.
    If a recent push bypassed branch protection, wait for CI to settle.
-2. **Write the changelog.** Move the `## [Unreleased]` entries in
-   `CHANGELOG.md` into a new `## X.Y.Z` section (match existing entry style:
+2. **Write the changelog and commit it.** Move the `## [Unreleased]` entries
+   in `CHANGELOG.md` into a new `## X.Y.Z` section (match existing entry style:
    bold component name, em-dash, behavior summary, code samples where they
    help). Re-add an empty `## [Unreleased]` heading above it. Check
    `git log v<last-tag>..HEAD --oneline` for anything the Unreleased section
-   missed — workers sometimes forget changelog entries.
+   missed — workers sometimes forget changelog entries. Then commit the
+   changelog on its own, before you run the script:
+
+```bash
+git add CHANGELOG.md && git commit -m 'docs(changelog): write the X.Y.Z section'
+```
+
+   The script does NOT commit the changelog for you. It refuses to run on a
+   dirty working tree, so an uncommitted `CHANGELOG.md` stops the release.
+
 3. **Run the script** (does the mechanical rest — bump, lock sync, commit,
    push, tag; validates step 2 happened). You MUST set `RELEASE_TRAILERS` to
    your own session trailers — the script pushes immediately after the commit,
