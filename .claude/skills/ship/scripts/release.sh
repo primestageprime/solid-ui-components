@@ -8,6 +8,11 @@
 # [Unreleased] entries there and re-add an empty [Unreleased] heading.
 #
 # Usage: release.sh [patch|minor|major|X.Y.Z]   (default: patch)
+#
+# Optional env var RELEASE_TRAILERS: free text that this script puts after a
+# blank line at the end of the release commit message. An agent sets it to its
+# own Co-Authored-By and Claude-Session lines. When it is unset or empty, the
+# commit message is only the subject line.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 BUMP="${1:-patch}"
@@ -26,7 +31,13 @@ if ! grep -q "^## ${ver}" CHANGELOG.md; then
 fi
 
 git add package.json package-lock.json CHANGELOG.md
-git commit -m "chore: release ${ver}"
+commit_message="chore: release ${ver}"
+if [ -n "${RELEASE_TRAILERS:-}" ]; then
+  commit_message="${commit_message}
+
+${RELEASE_TRAILERS}"
+fi
+printf '%s\n' "$commit_message" | git commit -F -
 git push
 git tag "v${ver}"
 git push origin "v${ver}"
