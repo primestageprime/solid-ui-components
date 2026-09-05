@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.168.0
+
 ### Added
 - **`DropdownItem` takes a `reason`, and `Dropdown` takes an
   `onDisabledSelect`, so a refused row can explain itself and a refused pick
@@ -9,9 +11,10 @@
   carries it as the native `title`, so a mouse user reads it on hover, and it
   also points `aria-describedby` at a `sui-sr-only` element holding the same
   text, so a keyboard user and a touch user get it as well — a `title` alone
-  reaches neither. That element sits beside the option, not inside it, because
-  a child of the button joins the row's accessible name. A row without a
-  `reason` emits neither attribute. `reason` is independent of `disabled`, so
+  reaches neither. That element sits in a holder beside the listbox, not inside
+  the row, because a child of the button joins the row's accessible name, and a
+  `listbox` owns `option` elements only. A row without a `reason` emits neither
+  attribute. `reason` is independent of `disabled`, so
   an available row may carry one.
 
   `onDisabledSelect` fires when the user activates a disabled row, by click or
