@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Added
+- **`DropdownItem` takes a `reason`, and `Dropdown` takes an
+  `onDisabledSelect`, so a refused row can explain itself and a refused pick
+  reaches the consumer.** `reason` says why the row reads as it does. The row
+  carries it as the native `title`, so a mouse user reads it on hover, and it
+  also points `aria-describedby` at a `sui-sr-only` element holding the same
+  text, so a keyboard user and a touch user get it as well — a `title` alone
+  reaches neither. That element sits beside the option, not inside it, because
+  a child of the button joins the row's accessible name. A row without a
+  `reason` emits neither attribute. `reason` is independent of `disabled`, so
+  an available row may carry one.
+
+  `onDisabledSelect` fires when the user activates a disabled row, by click or
+  by Enter/Space, and receives the item. The refusal itself does not change:
+  no `onChange` fires and the menu stays open. Without the prop the pick is
+  swallowed, exactly as before. A consumer that set the `title` itself with a
+  delegated `mouseover` listener can drop that workaround.
+
 ## 0.167.0
 
 ### Added
