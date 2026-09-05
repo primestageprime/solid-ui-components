@@ -30,7 +30,7 @@ if ! grep -q "^## ${ver}" CHANGELOG.md; then
   exit 1
 fi
 
-git add package.json package-lock.json CHANGELOG.md
+git add package.json package-lock.json
 commit_message="chore: release ${ver}"
 if [ -n "${RELEASE_TRAILERS:-}" ]; then
   commit_message="${commit_message}
