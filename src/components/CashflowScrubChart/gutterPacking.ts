@@ -51,7 +51,7 @@ export interface GutterRow<Label> {
   readonly label: Label;
   /** Pixel y of the text row's centre. */
   readonly y: number;
-  /** 1-based row in the stack. Row 1 is the label's own parked row. */
+  /** Distance from the label's parked row, plus one. Rows at distance 1 above and below both report lane 2. Internal to gutterPacking. */
   readonly lane: number;
 }
 
@@ -147,7 +147,8 @@ const firstFreeRow = (
  * Give every label the first row in its ladder that no earlier label took.
  *
  * The walk runs top to bottom, so a label's row depends only on the labels
- * above it and the answer is stable under a reorder of the input.
+ * above it. The result is stable under input reorder for distinct parked y.
+ * Ties resolve by input order.
  *
  * The loop is kept as a loop, like `laneOf`: each label reads the boxes the
  * earlier labels drew, so a combinator form would only hide the same carried
