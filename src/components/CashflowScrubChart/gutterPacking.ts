@@ -143,18 +143,15 @@ const firstFreeRow = (
   );
 };
 
-/** The packing so far. Each label reads the boxes the earlier ones drew. */
-interface PackState<Label> {
-  readonly rows: readonly GutterRow<Label>[];
-  readonly taken: readonly Box[];
-  readonly spilled: readonly Label[];
-}
-
 /**
  * Give every label the first row in its ladder that no earlier label took.
  *
  * The walk runs top to bottom, so a label's row depends only on the labels
  * above it and the answer is stable under a reorder of the input.
+ *
+ * The loop is kept as a loop, like `laneOf`: each label reads the boxes the
+ * earlier labels drew, so a combinator form would only hide the same carried
+ * state. The arrays are local, so the function stays pure.
  *
  * @param labels  The gutter labels, in any order.
  * @param plot    The plot rectangle in pixel space.
@@ -166,21 +163,21 @@ export const packGutterRows = <Label extends GutterLabel>(
   plot: PlotRect,
   metrics: GutterMetrics,
 ): GutterPacking<Label> => {
-  const state = sortBy(
+  const rows: GutterRow<Label>[] = [];
+  const taken: Box[] = [];
+  const spilled: Label[] = [];
+  const topDown = sortBy(
     (label: Label) => parkedY(label.endY, label.height, plot),
     labels,
-  ).reduce(
-    (acc: PackState<Label>, label: Label) => {
-      const row = firstFreeRow(label, plot, metrics, acc.taken);
-      return row === undefined
-        ? { ...acc, spilled: [...acc.spilled, label] }
-        : {
-            rows: [...acc.rows, { label, y: row.y, lane: row.lane }],
-            taken: [...acc.taken, row.box],
-            spilled: acc.spilled,
-          };
-    },
-    { rows: [], taken: [], spilled: [] } as PackState<Label>,
   );
-  return { rows: state.rows, spilled: state.spilled };
+  for (const label of topDown) {
+    const row = firstFreeRow(label, plot, metrics, taken);
+    if (row === undefined) {
+      spilled.push(label);
+      continue;
+    }
+    taken.push(row.box);
+    rows.push({ label, y: row.y, lane: row.lane });
+  }
+  return { rows, spilled };
 };
