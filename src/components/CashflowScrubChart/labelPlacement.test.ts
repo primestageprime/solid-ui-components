@@ -461,6 +461,31 @@ describe("placeLabels — dropping is silent", () => {
     expect(warn).toHaveBeenCalledTimes(0);
     expect(error).toHaveBeenCalledTimes(0);
   });
+
+  it("drops a label past the gutter's last row and writes nothing", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const error = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    // A band five rows tall holds four labels. The fifth finds no free row.
+    const SHORT: PlotRect = {
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 4 * (LABEL_ROW_HEIGHT + LABEL_ROW_GAP) + LABEL_ROW_HEIGHT,
+    };
+    const results = placeLabels(
+      ["a", "b", "c", "d", "e"].map((id) =>
+        label(id, { placement: "right", endY: 0 }),
+      ),
+      SHORT,
+      NO_SERIES,
+      { rightGutter: NARROW + LABEL_GUTTER_GAP, belowRows: 0 },
+    );
+    expect(byId(results, "e")).toEqual({ kind: "dropped", id: "e" });
+    expect(warn).toHaveBeenCalledTimes(0);
+    expect(error).toHaveBeenCalledTimes(0);
+  });
 });
 
 describe("placeLabels — the contract", () => {
