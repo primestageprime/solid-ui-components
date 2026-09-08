@@ -349,7 +349,12 @@ describe("placeLabels — the gutter packer", () => {
   it("drops a label only when every row in the gutter is taken", () => {
     // A band five rows tall holds four labels. The fifth passes the lane cap
     // and finds no free row, so the ladder drops it.
-    const SHORT: PlotRect = { left: 0, top: 0, right: 200, bottom: 4 * 13 + 11 };
+    const SHORT: PlotRect = {
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 4 * 13 + 11,
+    };
     const results = placeLabels(
       ["a", "b", "c", "d", "e"].map((id) => rightLabel(id, 0)),
       SHORT,

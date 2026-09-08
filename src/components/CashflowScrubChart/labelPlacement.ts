@@ -31,11 +31,12 @@
 // `measureLabelWidth` from ScrubChart/helpers and hands the width in. Same
 // inputs → same output. Tested with identity scales, like deviationBand.ts.
 //
-// `laneOf` from internal/geometry/labelLayout is the seam that serves both the
-// right zone and the below zone. They are two CALLS with different packings,
-// not two algorithms. `laneOf` shares its outermost lane past the cap, which
-// permits an overlap this spec forbids, so each rung filters the survivors and
-// sends the rest down the ladder.
+// The two stacking rungs pack differently, so they use different packers. The
+// below zone stacks along X and calls `laneOf` from internal/geometry: it shares
+// its outermost lane past the cap, which permits an overlap this spec forbids,
+// so the rung filters the survivors and sends the rest down the ladder. The
+// right zone stacks along Y and calls `packGutterRows`, which tests the box each
+// row really draws and therefore needs no filter behind it.
 // ============================================
 import { map, some } from "../../fn";
 import {
@@ -46,6 +47,11 @@ import {
   type PlotRect,
   type Polyline,
 } from "./labelBoxes";
+import {
+  packGutterRows,
+  type GutterMetrics,
+  type GutterRow,
+} from "./gutterPacking";
 import type { CashflowLabelZone } from "./types";
 import {
   anchoredSpan,
@@ -77,11 +83,19 @@ export const BODY_LABEL_GAP = 6;
 export const BELOW_ROW_HEIGHT = 12;
 /** Below rows never exceed this, however many labels ask for one. */
 export const MAX_BELOW_ROWS = 2;
-/** Lane cap in the right gutter. */
+/** Row cap in the right gutter. */
 export const RIGHT_MAX_LANES = 4;
 /** Drop from the plot's bottom edge to the first below row, clearing the tick
  *  text that ScrubChartAxes hangs at `plotBottom + 6`. */
 export const BELOW_ZONE_TOP_GAP = 18;
+
+/** The gutter's pixel vocabulary, as `packGutterRows` reads it. */
+const GUTTER_METRICS: GutterMetrics = {
+  rowPitch: LABEL_ROW_HEIGHT + LABEL_ROW_GAP,
+  rowGap: LABEL_ROW_GAP,
+  gutterGap: LABEL_GUTTER_GAP,
+  maxRows: RIGHT_MAX_LANES,
+};
 
 // ── Inputs ──────────────────────────────────────────────────────────────────
 
@@ -315,41 +329,14 @@ const splitLaneOverflow = (
 };
 
 /**
- * The y a gutter label parks at: the y it asks for, pulled far enough inside
- * the plot band for the whole text row to stay in frame.
- *
- * It CLAMPS, it never refuses. `reserveLabelSpace` buys the gutter before any
- * scale exists, so it cannot know where a line ends. A line that ends at the
- * domain's maximum ends at `plot.top` EXACTLY, and half a text row then hangs
- * above the frame. Refusing that label spent the gutter and drew nothing in
- * it. A band too short for one row parks the text at the band's centre,
- * because a clamp with no room left is still a number the caller can draw.
- */
-const parkedY = (y: number, height: number, plot: PlotRect): number => {
-  const half = height / 2;
-  const lo = plot.top + half;
-  const hi = plot.bottom - half;
-  return hi < lo ? (plot.top + plot.bottom) / 2 : Math.min(Math.max(y, lo), hi);
-};
-
-/** The box a gutter label covers once its row y is known. */
-const gutterBox = (label: LabelCandidate, y: number, plot: PlotRect): Box => {
-  const x0 = plot.right + LABEL_GUTTER_GAP;
-  const half = label.height / 2;
-  return { x0, x1: x0 + label.width, y0: y - half, y1: y + half };
-};
-
-/**
  * Rung 2 — past `plotRight`, at the series' final y. The lane axis here is Y,
- * not X: two labels at the same y collide, and lane 2 sits one text row below.
- * Stacking sideways instead would need a gutter twice as wide as the one
+ * not X: two labels at the same y collide, and the next row sits one text row
+ * away. Stacking sideways instead would need a gutter twice as wide as the one
  * `reserveLabelSpace` bought.
  *
- * Every y is clamped into the plot band, so no label leaves this rung for a
- * VERTICAL reason. Two clamped rows can now land on each other, which the
- * lanes alone no longer prevent, so the last test is a box test against the
- * rows already placed. The first row meets an empty list and is therefore
- * always placed: a bought gutter always carries text.
+ * `packGutterRows` walks the rows the draw step really uses, so the row it
+ * returns needs no second box test. A label leaves this rung for one reason
+ * only: every row in the gutter is already taken.
  */
 const runRightRung = (
   labels: readonly LabelCandidate[],
@@ -364,45 +351,19 @@ const runRightRung = (
       label.width + LABEL_GUTTER_GAP <= space.rightGutter;
     (fits ? eligible : deferred).push(label);
   }
-  const rows: LaneInput[] = map((label: LabelCandidate) => {
-    const park = parkedY(label.endY, label.height, plot);
-    return {
-      label,
-      x: park,
-      span: [park - label.height / 2, park + label.height / 2] as const,
-    };
-  }, eligible);
-  const laned = laneOf(rows, {
-    maxLanes: RIGHT_MAX_LANES,
-    gutter: LABEL_ROW_GAP,
-  });
-  const { kept, spilled } = splitLaneOverflow(laned, LABEL_ROW_GAP);
-  const placed: PlacedLabel[] = [];
-  const taken: Box[] = [];
-  for (const row of kept) {
-    // `row.x` is the clamped lane-1 y. Lane n hangs one text row lower, and
-    // the second clamp keeps that offset in frame as well.
-    const y = parkedY(
-      row.x + (row.lane - 1) * (LABEL_ROW_HEIGHT + LABEL_ROW_GAP),
-      row.label.height,
-      plot,
-    );
-    const box = gutterBox(row.label, y, plot);
-    if (some((other: Box) => boxesTouch(box, other, LABEL_ROW_GAP), taken)) {
-      deferred.push(row.label);
-      continue;
-    }
-    taken.push(box);
-    placed.push({
-      kind: "placed",
+  const { rows, spilled } = packGutterRows(eligible, plot, GUTTER_METRICS);
+  const placed = map(
+    (row: GutterRow<LabelCandidate>) => ({
+      kind: "placed" as const,
       id: row.label.id,
-      zone: "right",
+      zone: "right" as const,
       x: plot.right + LABEL_GUTTER_GAP,
-      y,
-      anchor: "start",
+      y: row.y,
+      anchor: "start" as const,
       lane: row.lane,
-    });
-  }
+    }),
+    rows,
+  );
   return { placed, deferred: [...deferred, ...spilled] };
 };
 
