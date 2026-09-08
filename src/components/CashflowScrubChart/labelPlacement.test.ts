@@ -11,6 +11,7 @@ import {
   reserveLabelSpace,
   type LabelCandidate,
   type LabelPlacementResult,
+  type PlacedLabel,
   type PlotRect,
   type Polyline,
   type ReservedSpace,
@@ -270,6 +271,93 @@ describe("placeLabels — the right rung", () => {
     // gutter it never paid for.
     const results = placeLabels([label("auto")], PLOT, [ruleAt(50)], bought);
     expect(zoneOf(results, "auto")).toBe("right");
+  });
+});
+
+describe("placeLabels — the gutter packer", () => {
+  const space: ReservedSpace = {
+    rightGutter: NARROW + LABEL_GUTTER_GAP,
+    belowRows: 0,
+  };
+
+  /** One gutter row: the text row plus the clear space under it. */
+  const ROW_PITCH = LABEL_ROW_HEIGHT + LABEL_ROW_GAP;
+
+  /** A plot with room for four gutter rows under y=140. */
+  const TALL: PlotRect = { left: 0, top: 0, right: 200, bottom: 300 };
+
+  const rightLabel = (id: string, endY: number): LabelCandidate =>
+    label(id, { placement: "right", endY });
+
+  const placedOf = (
+    results: readonly LabelPlacementResult[],
+    id: string,
+  ): PlacedLabel => {
+    const hit = byId(results, id);
+    if (hit.kind !== "placed") throw new Error(`${id} was dropped, not placed`);
+    return hit;
+  };
+
+  it("moves a colliding label to the next free row instead of dropping it", () => {
+    // The lane pass measured every span at the lane-1 y, so the third label
+    // won a lane the draw step then refused. All three now pack against the
+    // rows they are really drawn in.
+    const results = placeLabels(
+      [rightLabel("a", 140), rightLabel("b", 150), rightLabel("c", 153)],
+      TALL,
+      NO_SERIES,
+      space,
+    );
+    expect([
+      zoneOf(results, "a"),
+      zoneOf(results, "b"),
+      zoneOf(results, "c"),
+    ]).toEqual(["right", "right", "right"]);
+    expect(placedOf(results, "a").y).toBe(140);
+    expect(placedOf(results, "b").y).toBe(150 + ROW_PITCH);
+    expect(placedOf(results, "c").y).toBe(153 + 2 * ROW_PITCH);
+  });
+
+  it("keeps every packed row clear of the row before it", () => {
+    const results = placeLabels(
+      [rightLabel("a", 140), rightLabel("b", 150), rightLabel("c", 153)],
+      TALL,
+      NO_SERIES,
+      space,
+    );
+    const ys = ["a", "b", "c"]
+      .map((id) => placedOf(results, id).y)
+      .sort((left, right) => left - right);
+    expect(ys[1] - ys[0]).toBeGreaterThanOrEqual(ROW_PITCH);
+    expect(ys[2] - ys[1]).toBeGreaterThanOrEqual(ROW_PITCH);
+  });
+
+  it("takes the row above when the plot's bottom edge blocks the rows below", () => {
+    // Both labels park on the same clamped row, and every row below it clamps
+    // back onto that same row, so the second label goes up instead.
+    const results = placeLabels(
+      [rightLabel("a", PLOT.bottom), rightLabel("b", PLOT.bottom)],
+      PLOT,
+      NO_SERIES,
+      space,
+    );
+    const parked = PLOT.bottom - ROW / 2;
+    expect(placedOf(results, "a").y).toBe(parked);
+    expect(placedOf(results, "b").y).toBe(parked - ROW_PITCH);
+  });
+
+  it("drops a label only when every row in the gutter is taken", () => {
+    // A band five rows tall holds four labels. The fifth passes the lane cap
+    // and finds no free row, so the ladder drops it.
+    const SHORT: PlotRect = { left: 0, top: 0, right: 200, bottom: 4 * 13 + 11 };
+    const results = placeLabels(
+      ["a", "b", "c", "d", "e"].map((id) => rightLabel(id, 0)),
+      SHORT,
+      NO_SERIES,
+      space,
+    );
+    expect(results.filter((r) => r.kind === "placed")).toHaveLength(4);
+    expect(zoneOf(results, "e")).toBe("dropped");
   });
 });
 
