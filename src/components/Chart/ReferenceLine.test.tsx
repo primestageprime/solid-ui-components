@@ -57,3 +57,72 @@ describe("ReferenceLine — type-level enforcement", () => {
     expect(true).toBe(true);
   });
 });
+
+describe("ReferenceLine — vertical caption", () => {
+  const flush = { top: 0, right: 0, bottom: 0, left: 0 };
+
+  const renderVertical = (value: number, label?: string) =>
+    render(() => (
+      <Chart
+        width={200}
+        height={100}
+        margin={flush}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+      >
+        <ReferenceLine orientation="vertical" value={value} label={label} />
+      </Chart>
+    ));
+
+  it("centres the caption on the rule at the top of the plot", () => {
+    const { container } = renderVertical(5, "today");
+    const text = container.querySelector(".sui-chart__ref-label")!;
+    expect(text.textContent).toBe("today");
+    expect(text.getAttribute("x")).toBe("100");
+    expect(text.getAttribute("y")).toBe("8");
+    expect(text.getAttribute("text-anchor")).toBe("middle");
+  });
+
+  it("clamps the caption inside the right plot edge", () => {
+    const { container } = renderVertical(10, "end");
+    const text = container.querySelector(".sui-chart__ref-label")!;
+    expect(text.getAttribute("x")).toBe("182");
+  });
+
+  it("clamps the caption inside the left plot edge", () => {
+    const { container } = renderVertical(0, "start");
+    const text = container.querySelector(".sui-chart__ref-label")!;
+    expect(text.getAttribute("x")).toBe("18");
+  });
+
+  it("drops the rule top only when a caption draws", () => {
+    const captioned = renderVertical(5, "today");
+    const plain = renderVertical(5);
+    expect(
+      captioned.container
+        .querySelector(".sui-chart__ref line")!
+        .getAttribute("y1"),
+    ).toBe("15");
+    expect(
+      plain.container.querySelector(".sui-chart__ref line")!.getAttribute("y1"),
+    ).toBe("0");
+    expect(plain.container.querySelector(".sui-chart__ref-label")).toBeNull();
+  });
+
+  it("keeps the horizontal caption on the right edge, anchored end", () => {
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        margin={flush}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+      >
+        <ReferenceLine orientation="horizontal" value={50} label="avg" />
+      </Chart>
+    ));
+    const text = container.querySelector(".sui-chart__ref-label")!;
+    expect(text.getAttribute("x")).toBe("196");
+    expect(text.getAttribute("text-anchor")).toBe("end");
+  });
+});
