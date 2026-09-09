@@ -345,6 +345,18 @@ export interface ReferenceLineStyleProps {
   stroke?: string;
   strokeWidth?: number;
   strokeDasharray?: string;
+  /**
+   * Caption for the rule. Each orientation gives it a different seat:
+   *
+   * - `orientation="horizontal"` — the caption sits at the right plot edge,
+   *   just above the rule, with `text-anchor="end"`.
+   * - `orientation="vertical"` — the caption sits at the top of the plot,
+   *   centred on the rule with `text-anchor="middle"`. It stays
+   *   `CAPTION_EDGE_INSET` px inside each plot edge, and the rule top drops
+   *   `CAPTION_RULE_CLEARANCE` px so the text and the line never overlap.
+   *
+   * The seat is a convention, not a prop. The caller cannot move it.
+   */
   label?: string;
   /** Color override; takes precedence over `stroke`. Defaults via CSS class. */
   color?: string;
@@ -365,6 +377,22 @@ export type ReferenceLineProps = ReferenceLineStyleProps & {
 
 const toScaleValue = (v: number | Date): number =>
   v instanceof Date ? v.getTime() : v;
+
+/**
+ * Distance (px) a vertical caption keeps from each plot edge. The clamp
+ * replaces an edge flip: a rule on the plot edge keeps its centred anchor
+ * and moves the text inboard instead. Mirrors the `rule` marker in
+ * `CashflowScrubChart`.
+ */
+const CAPTION_EDGE_INSET = 18;
+/** Baseline (px) of a vertical caption, measured from the plot top. */
+const CAPTION_BASELINE_Y = 8;
+/** Distance (px) the rule top drops to clear a vertical caption. */
+const CAPTION_RULE_CLEARANCE = 15;
+
+/** Holds `x` inside the plot, one caption inset in from each edge. */
+const clampCaptionX = (x: number, innerWidth: number): number =>
+  Math.min(Math.max(x, CAPTION_EDGE_INSET), innerWidth - CAPTION_EDGE_INSET);
 
 export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
   const ctx = useChart();
@@ -400,7 +428,7 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
       </Show>
       <Show when={resolved().orientation === "vertical"}>
         <line
-          y1={0}
+          y1={props.label ? CAPTION_RULE_CLEARANCE : 0}
           y2={ctx.innerHeight()}
           x1={ctx.xScale()(resolved().value)}
           x2={ctx.xScale()(resolved().value)}
@@ -409,6 +437,16 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
           stroke-dasharray={props.strokeDasharray ?? "4 4"}
           opacity={0.6}
         />
+        <Show when={props.label}>
+          <text
+            class="sui-chart__ref-label"
+            x={clampCaptionX(ctx.xScale()(resolved().value), ctx.innerWidth())}
+            y={CAPTION_BASELINE_Y}
+            text-anchor="middle"
+          >
+            {props.label}
+          </text>
+        </Show>
       </Show>
     </g>
   );

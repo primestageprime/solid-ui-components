@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+### Added
+- **A `CashflowScrubChart` `"rule"` marker draws a dot when it carries a
+  `valueCents`, so one marker can mark where a vertical rule crosses a
+  value.** The rule gives the dot its x and `valueCents` gives it its y, so a
+  rule and a `horizontalMarkers` line at the same value meet on the dot. One
+  marker describes one event, so the rule and its dot stay one marker instead
+  of two objects a consumer must keep in step. A rule with no `valueCents`
+  renders exactly as before.
+
+  The dot is decoration and stays decoration. It gets no `role`, no
+  `tabIndex`, no hit rect and no `onMarkerClick` path, and it carries
+  `pointer-events: none`, so it never becomes a tab stop, never takes a click
+  and never blocks the scrub gesture under it. The `"flag"` variant does not
+  change. The dot takes the panel colour as its fill and the accent colour as
+  a 2px stroke, through `--sui-cashflow-rule-dot-fill` and
+  `--sui-cashflow-rule-dot-stroke`.
+
+  The `"rule"` renderer moved to `ruleMarker.tsx`, because
+  `CashflowScrubChart.tsx` is already past the 500-line guidance.
+
 ## 0.168.0
 
 ### Added

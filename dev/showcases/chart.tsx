@@ -168,6 +168,46 @@ export const ChartShowcase: Component = () => {
             </ChartTooltip>
           </Chart>
 
+          <h3 class="showcase-heading-gap">Captioned vertical reference</h3>
+          <p class="text-meta">
+            A vertical <code>&lt;ReferenceLine&gt;</code> takes the same{" "}
+            <code>label</code> as a horizontal one, but seats it at the top of
+            the plot, centred on the rule. The two edge rules show the clamp:
+            the caption stops 18px inside each edge and keeps its centred
+            anchor. The horizontal caption keeps its own seat at the right edge.
+          </p>
+          <Chart
+            width={640}
+            height={220}
+            xDomain={xDomain}
+            yDomain={[0, 100]}
+            margin={{ top: 12, right: 16, bottom: 28, left: 40 }}
+          >
+            <Grid />
+            <YAxis tickCount={5} tickFormat={(v) => `${v}%`} />
+            <XAxis tickCount={6} />
+            <LineSeries
+              data={series}
+              x={(d) => d.t}
+              y={(d) => d.v}
+              strokeWidth={2}
+            />
+            <ReferenceLine orientation="vertical" value={0} label="start" />
+            <ReferenceLine
+              orientation="vertical"
+              value={30}
+              label="deploy"
+              strokeDasharray="3 3"
+            />
+            <ReferenceLine orientation="vertical" value={59} label="now" />
+            <ReferenceLine
+              orientation="horizontal"
+              value={avg}
+              label={`avg ${avg.toFixed(1)}`}
+              strokeDasharray="3 3"
+            />
+          </Chart>
+
           <h3 class="showcase-heading-gap">
             Wrapping tooltip (<code>maxWidth</code>)
           </h3>

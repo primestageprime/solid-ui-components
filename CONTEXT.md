@@ -119,6 +119,13 @@ _Avoid_: Layer, child, plugin.
 A closed data object (`{ color: string, shape: Shape, size?: number }`) the consumer produces per datum. The chart slot's render contract is `Descriptor → JSX`. `Shape` is a closed enum (`'circle' | 'chevron' | 'chevron-down' | 'pin' | { path; viewBox? }`); custom paths anchor at geometric center and scale uniformly to `size`.
 _Avoid_: Style, render spec.
 
+**Captioned vertical rule (altitude)**:
+`<ReferenceLine orientation="vertical" label>` is the generic path to a titled
+vertical rule; `CashflowScrubChart` paints the same thing through its `rule`
+marker, but that marker is a feature of that opinionated chart. A composed
+generic `<Chart>` cannot reach the marker, so the two live at different
+altitudes and both stay.
+
 ## Relationships
 
 - A **Composite** is composed of **Primitives** and/or lower-depth **Composites** — never the reverse.
