@@ -51,6 +51,7 @@ import {
   placeLabels,
   reserveLabelSpace,
 } from "./labelPlacement";
+import { RuleMarker } from "./ruleMarker";
 import {
   barFraction,
   buildLineSegments,
@@ -708,59 +709,17 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         >
           {(m) => {
             const x = ctx.cellToX(m.index);
-            // Reference rule ("Today" etc.): a full-height dotted rule with an
-            // always-visible caption at the top. Non-interactive — no hit
-            // area, no flag, no dot. The label is clamped inside the plot's
-            // horizontal span (same policy as the over-top label) and the rule
-            // starts below it so the two don't overlap.
+            // Reference rule ("Today" etc.), drawn by `ruleMarker.tsx`. It is
+            // non-interactive — no hit area, no flag, no click — and it draws
+            // a crossing dot only when the caller sets `valueCents`.
             if (m.variant === "rule") {
-              // The caption keeps its top-of-rule seat unless the caller names
-              // an explicit zone, in which case the label layer owns it and
-              // the rule takes its full height back.
-              const topCaption = Boolean(m.label) && !markerJoinsLadder(m);
-              const labelX = Math.min(
-                Math.max(x, ctx.plotLeft + 18),
-                ctx.plotRight - 18,
-              );
               return (
-                <g
-                  class={`sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--rule${emphasisClass(
-                    "sui-cashflow-scrub-chart__marker",
-                    markerJoinsLadder(m) ? `marker:${m.index}` : null,
-                  )}`}
-                >
-                  {topCaption && (
-                    <text
-                      class="sui-cashflow-scrub-chart__rule-label"
-                      x={labelX}
-                      y={ctx.plotTop + 8}
-                      text-anchor="middle"
-                    >
-                      {m.label}
-                    </text>
-                  )}
-                  <line
-                    class={`sui-cashflow-scrub-chart__rule-line${
-                      m.class ? ` ${m.class}` : ""
-                    }`}
-                    // The colour effect reads this rule's stroke back through
-                    // this attribute, and gives it to the marker label.
-                    data-marker-index={m.index}
-                    x1={x}
-                    x2={x}
-                    y1={ctx.plotTop + (topCaption ? 15 : 0)}
-                    y2={ctx.plotBottom}
-                    // Presentation attributes so `CashflowChartMarker.class`
-                    // wins on a plain single class. The stroke was
-                    // `var(--sui-text, …)` and `--sui-text` is not a token in
-                    // any theme, so it only ever rendered through its literal.
-                    stroke="var(--sui-cashflow-rule-stroke, var(--sui-text-primary, rgba(255, 255, 255, 1)))"
-                    stroke-width="1"
-                    stroke-linecap="round"
-                    stroke-dasharray="1 4"
-                    opacity="0.5"
-                  />
-                </g>
+                <RuleMarker
+                  marker={m}
+                  ctx={ctx}
+                  yToPlot={yToPlot}
+                  emphasisClass={emphasisClass}
+                />
               );
             }
             // Marker dots drop onto the primary line by default. An explicit
