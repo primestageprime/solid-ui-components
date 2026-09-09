@@ -74,6 +74,11 @@ const meanBalanceCents =
 const targetBalance = (_cell: CashflowCell, _i: number): number =>
   meanBalanceCents;
 
+// A runway floor — "keep this much in the bank". One horizontal marker draws
+// the line, and one rule marker at the same value drops a dot where the date
+// crosses it.
+const RUNWAY_FLOOR_CENTS = Math.round(meanBalanceCents);
+
 // Balance extent of a cell range, in cents — what `yFitDomain` asks for. The
 // chart never sees the values (its own line is drawn from `cells`), so the
 // caller states the extent. Both ends are INCLUSIVE cell indices. Returns the
@@ -121,6 +126,9 @@ export const CashflowScrubChartShowcase: Component = () => {
     Math.max(0, todayIndex),
   );
   const [commandedSelectedIdx, setCommandedSelectedIdx] = createSignal(
+    Math.max(0, todayIndex),
+  );
+  const [crossingSelectedIdx, setCrossingSelectedIdx] = createSignal(
     Math.max(0, todayIndex),
   );
   const [hoverEmphasisSelectedIdx, setHoverEmphasisSelectedIdx] = createSignal(
@@ -557,6 +565,42 @@ export const CashflowScrubChartShowcase: Component = () => {
               index: Math.max(0, todayIndex),
               variant: "rule",
               label: "Today",
+            },
+          ]}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>Rule marker &mdash; a dot at the crossing</h3>
+        <p class="text-meta">
+          A <code>"rule"</code> marker draws a dot when, and only when, it
+          carries a <code>valueCents</code>. The rule gives the dot its x and{" "}
+          <code>valueCents</code> gives it its y, so the dot lands where this
+          date crosses the <code>Runway floor</code> line below &mdash; one
+          marker for one event, instead of a rule and a separate dot that must
+          be kept in step.
+        </p>
+        <p class="text-meta">
+          The dot is decoration. It takes no focus, no pointer and no click, so
+          the scrub gesture under it still works and no keyboard user meets a
+          control that does nothing. Drop <code>valueCents</code> and the rule
+          draws alone, exactly as the <code>Today</code> rule above does.
+        </p>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={crossingSelectedIdx()}
+          onScrub={(i) => setCrossingSelectedIdx(i)}
+          today={PINNED_TODAY}
+          horizontalMarkers={[
+            { valueCents: RUNWAY_FLOOR_CENTS, label: "Runway floor" },
+          ]}
+          markers={[
+            {
+              index: Math.max(0, todayIndex),
+              variant: "rule",
+              label: "Today",
+              valueCents: RUNWAY_FLOOR_CENTS,
             },
           ]}
         />

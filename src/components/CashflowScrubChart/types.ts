@@ -134,8 +134,10 @@ export interface CashflowChartMarker {
    * rule dropping from a flag at the plot top to a dot on the balance line,
    * clickable via `onMarkerClick`. `"rule"` is a reference line: a full-height
    * dotted rule with its `label` always visible at the top — non-interactive
-   * (no flag, no dot, no click) — for marking a date like "Today" rather than
-   * a selectable instance.
+   * (no flag, no click) — for marking a date like "Today" rather than a
+   * selectable instance. A rule draws a dot only when `valueCents` names the
+   * value it crosses, and that dot stays decoration: it takes no focus, no
+   * pointer and no click.
    */
   variant?: "flag" | "rule";
   /** Small caption rendered at the top of a `"rule"` marker, or placed by the
@@ -154,11 +156,21 @@ export interface CashflowChartMarker {
    */
   labelPlacement?: CashflowLabelZone;
   /**
-   * The marker's y value, in cents. Without it the dot lands on the primary
-   * balance line (`lineCells()[index].balanceCents`), which is where every
-   * marker sat before this field existed. Per-marker because one chart's
-   * markers routinely point at values off the primary line — a scenario
-   * balance, a threshold, a value with no cell of its own.
+   * The marker's y value, in cents. Both variants read it, and each reads it
+   * differently.
+   *
+   * On a `"flag"` marker it MOVES the dot. Without it the dot lands on the
+   * primary balance line (`lineCells()[index].balanceCents`), which is where
+   * every marker sat before this field existed.
+   *
+   * On a `"rule"` marker it CREATES the dot. A rule with no `valueCents`
+   * draws the rule alone. With one, the rule keeps a dot at that value —
+   * the crossing point of this rule and a `horizontalMarkers` line at the
+   * same value, most often.
+   *
+   * Per-marker because one chart's markers routinely point at values off the
+   * primary line — a scenario balance, a threshold, a value with no cell of
+   * its own.
    */
   valueCents?: number;
   /**
