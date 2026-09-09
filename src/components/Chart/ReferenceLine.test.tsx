@@ -57,3 +57,33 @@ describe("ReferenceLine — type-level enforcement", () => {
     expect(true).toBe(true);
   });
 });
+
+describe("ReferenceLine — class prop", () => {
+  it("appends the caller class to the root group", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <ReferenceLine
+          orientation="horizontal"
+          value={50}
+          label="target"
+          class="my-ref"
+        />
+      </Chart>
+    ));
+    const group = container.querySelector(".sui-chart__ref")!;
+    expect(group.classList.contains("my-ref")).toBe(true);
+    expect(group.querySelector("line")).toBeTruthy();
+    expect(group.querySelector(".sui-chart__ref-label")).toBeTruthy();
+  });
+
+  it("keeps the base class alone when the caller omits class", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <ReferenceLine orientation="vertical" value={5} />
+      </Chart>
+    ));
+    expect(
+      container.querySelector(".sui-chart__ref")!.getAttribute("class"),
+    ).toBe("sui-chart__ref");
+  });
+});

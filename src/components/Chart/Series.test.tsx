@@ -97,3 +97,32 @@ describe("PointSeries — emphasizeNearestX", () => {
     expect(Number(emphasized!.getAttribute("r"))).toBe(12); // 4 * 3
   });
 });
+
+describe("PointSeries — class prop", () => {
+  it("appends the caller class to the root group", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <PointSeries
+          data={data}
+          x={(d) => d.x}
+          y={(d) => d.y}
+          class="my-points"
+        />
+      </Chart>
+    ));
+    const group = container.querySelector(".sui-chart__points")!;
+    expect(group.classList.contains("my-points")).toBe(true);
+    expect(group.querySelectorAll("circle").length).toBe(4);
+  });
+
+  it("keeps the base class alone when the caller omits class", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <PointSeries data={data} x={(d) => d.x} y={(d) => d.y} />
+      </Chart>
+    ));
+    expect(
+      container.querySelector(".sui-chart__points")!.getAttribute("class"),
+    ).toBe("sui-chart__points");
+  });
+});

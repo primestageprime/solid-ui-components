@@ -149,6 +149,7 @@ export interface PointSeriesProps<T> extends SeriesBase<T> {
   emphasizeNearestX?: boolean;
   /** Radius multiplier applied to the emphasized point. Default 2. */
   emphasisScale?: number;
+  class?: string;
 }
 
 export function PointSeries<T>(props: PointSeriesProps<T>) {
@@ -191,7 +192,10 @@ export function PointSeries<T>(props: PointSeriesProps<T>) {
 
   const isWinner = () => ctx.emphasis.winnerId() === slotId;
   return (
-    <g class="sui-chart__points" clip-path={ctx.clip.plotPathUrl()}>
+    <g
+      class={`sui-chart__points${props.class ? ` ${props.class}` : ""}`}
+      clip-path={ctx.clip.plotPathUrl()}
+    >
       <For each={props.data}>
         {(d, i) => {
           const xv = props.x(d);
@@ -356,6 +360,7 @@ export interface ReferenceLineStyleProps {
 export type ReferenceLineProps = ReferenceLineStyleProps & {
   orientation: "horizontal" | "vertical";
   value: number | Date;
+  class?: string;
 };
 
 const toScaleValue = (v: number | Date): number =>
@@ -370,7 +375,7 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
   const strokeColor = () => props.color ?? props.stroke ?? "currentColor";
 
   return (
-    <g class="sui-chart__ref">
+    <g class={`sui-chart__ref${props.class ? ` ${props.class}` : ""}`}>
       <Show when={resolved().orientation === "horizontal"}>
         <line
           x1={0}
