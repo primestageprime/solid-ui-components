@@ -418,6 +418,87 @@ describe("CashflowScrubChart", () => {
       expect(onMarkerClick).not.toHaveBeenCalled();
     });
 
+    it("draws a rule dot where the rule crosses a horizontal marker", () => {
+      const cells = makeCells(10);
+      const crossingCents = cells[4].balanceCents + 25_000;
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[
+            {
+              index: 4,
+              variant: "rule",
+              label: "Today",
+              valueCents: crossingCents,
+            },
+          ]}
+          horizontalMarkers={[{ valueCents: crossingCents }]}
+        />
+      ));
+      const g = container.querySelector(
+        ".sui-cashflow-scrub-chart__marker--rule",
+      )!;
+      const dot = g.querySelector(".sui-cashflow-scrub-chart__rule-dot")!;
+      // x: the dot sits on the vertical rule this marker draws.
+      const ruleLine = g.querySelector(".sui-cashflow-scrub-chart__rule-line")!;
+      expect(dot.getAttribute("cx")).toBe(ruleLine.getAttribute("x1"));
+      // y: the dot sits on the horizontal rule at the same value. Both lines
+      // use one scale, so the dot marks the crossing.
+      const hLine = container.querySelector(
+        ".sui-cashflow-scrub-chart__hrule-line",
+      )!;
+      expect(dot.getAttribute("cy")).toBe(hLine.getAttribute("y1"));
+      expect(dot.getAttribute("r")).toBe("4.5");
+    });
+
+    it("omits the rule dot when the rule marker carries no valueCents", () => {
+      const cells = makeCells(10);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 4, variant: "rule", label: "Today" }]}
+        />
+      ));
+      expect(
+        container.querySelector(".sui-cashflow-scrub-chart__rule-dot"),
+      ).toBeNull();
+    });
+
+    it("keeps the rule dot decorative: no button role, no tab stop, no click", () => {
+      const onMarkerClick = vi.fn();
+      const cells = makeCells(10);
+      const { container } = render(() => (
+        <CashflowScrubChart
+          cells={cells}
+          scrub={false}
+          markers={[{ index: 4, variant: "rule", valueCents: 12_345 }]}
+          onMarkerClick={onMarkerClick}
+        />
+      ));
+      const g = container.querySelector(
+        ".sui-cashflow-scrub-chart__marker--rule",
+      )!;
+      const dot = g.querySelector(".sui-cashflow-scrub-chart__rule-dot")!;
+      // A "flag" marker earns role="button" and tabIndex={0}. A rule dot earns
+      // neither, on the group or on the circle.
+      expect(g.getAttribute("role")).toBeNull();
+      expect(g.getAttribute("tabindex")).toBeNull();
+      expect(dot.getAttribute("role")).toBeNull();
+      expect(dot.getAttribute("tabindex")).toBeNull();
+      // The marker group holds no focusable node.
+      expect(g.querySelectorAll("[tabindex]").length).toBe(0);
+      // No hit rect, and the dot takes no pointer.
+      expect(
+        g.querySelector(".sui-cashflow-scrub-chart__marker-hit"),
+      ).toBeNull();
+      expect(dot.getAttribute("pointer-events")).toBe("none");
+      dot.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      g.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(onMarkerClick).not.toHaveBeenCalled();
+    });
+
     it("renders no marker layer by default, drops out-of-range indices, and composes in plain mode", () => {
       const cells = makeCells(5);
       const none = render(() => (
