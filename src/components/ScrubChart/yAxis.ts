@@ -88,6 +88,10 @@ export const createYAxisScales = (options: YAxisScalesOptions): YAxisScales => {
     reducedMotion: prefersReducedMotion,
   });
 
+  // The precedence site: a FITTED domain wins over the `yDomain` prop, and it
+  // arrives already snapped, so only the static domain gets `nice()` here.
+  // `docs/adr/0009-two-y-domain-rules-stay-separate.md` explains which of the
+  // repo's two y-domain rules ran, and why they stay separate.
   const buildScale = (
     domain: YDomain | null | undefined,
     fitted: boolean,
