@@ -21,6 +21,29 @@ interface SeriesBase<T> {
   skipMissing?: boolean;
 }
 
+// ── The missing-value boundary ───────────────────────────────────────────
+//
+// Two conventions for "this point has no value" live in this repo. They are
+// scoped, not competing, and this ticket has been filed twice:
+//
+// - `Chart` (this file) takes NaN plus `skipMissing`. The datum type `T`
+//   belongs to the caller, so `Chart` cannot state what an absent value looks
+//   like inside it. It reads the caller's `x`/`y` accessors and treats the
+//   number they return as the whole contract; NaN is the only absent number.
+// - `CashflowScrubChart` takes `null` (see `CashflowScrubChart/helpers.ts`,
+//   `buildLineSegments`). Its accessors are cell-indexed and it owns the cell
+//   type, so a cell legitimately holds no value and `null` says exactly that.
+//
+// Do not converge them. Both `null` and NaN-plus-`skipMissing` appear in
+// public props, so either move is a breaking public API change.
+//
+// Inside `Chart`, however, the test itself stays in one place — here.
+const isMissingPoint = (
+  skipMissing: boolean,
+  xv: number,
+  yv: number,
+): boolean => skipMissing && (Number.isNaN(xv) || Number.isNaN(yv));
+
 const buildLine = <T,>(
   data: readonly T[],
   x: (d: T) => number,
@@ -34,7 +57,7 @@ const buildLine = <T,>(
   for (const d of data) {
     const xv = x(d);
     const yv = y(d);
-    if (skipMissing && (Number.isNaN(xv) || Number.isNaN(yv))) {
+    if (isMissingPoint(skipMissing, xv, yv)) {
       need = true;
       continue;
     }
@@ -200,11 +223,7 @@ export function PointSeries<T>(props: PointSeriesProps<T>) {
         {(d, i) => {
           const xv = props.x(d);
           const yv = props.y(d);
-          if (
-            (props.skipMissing ?? true) &&
-            (Number.isNaN(xv) || Number.isNaN(yv))
-          )
-            return null;
+          if (isMissingPoint(props.skipMissing ?? true, xv, yv)) return null;
           const isEmphasized = () => isWinner() && i() === nearestIdx();
           const r = () =>
             isEmphasized()
