@@ -11,7 +11,7 @@ The pointers this ADR added to the code shifted several of them.
 ## The two rules do not both run
 
 `CashflowScrubChart` computes `chartYDomain` and feeds it to `ScrubChart`'s
-`yDomain` prop (`CashflowScrubChart.tsx:1011`). `yDomain` is the **fallback**.
+`yDomain` prop (`CashflowScrubChart.tsx:996`). `yDomain` is the **fallback**.
 When `yFitDomain` returns an extent, `ScrubChart` builds the scale from the
 FITTED domain and the prop never reaches the axis
 (`yAxis.ts:108` — `buildScale(fitted ?? options.staticDomain(), fitted != null)`).
@@ -29,8 +29,8 @@ So on any one render exactly one rule decides the domain:
 
 ## The Cashflow order
 
-`CashflowScrubChart/helpers.ts:182-224` (`chartYDomain`). Three modes, and
-`yMax` alone picks the mode (`chartYDomainMode`, `:146`).
+`CashflowScrubChart/helpers.ts:194-206` (`chartYDomain`). Three modes, and
+`yMax` alone picks the mode (`chartYDomainMode`, `:158`).
 
 1. **`yMax` set → `"fixed"`.** `yPadFraction` is ignored. The domain is
    `[yMin ?? min(0, ...values), yMax]`.
@@ -45,7 +45,7 @@ built.nice()`).
 
 ## The ScrubChart order
 
-`ScrubChart/yScaleMode.ts`, wired at `ScrubChart.tsx:257-279`.
+`ScrubChart/yScaleMode.ts`, wired at `ScrubChart.tsx:261` (the `fittedDomain` memo).
 
 0. No callback, or the callback returns `null` → fall back to the `yDomain`
    prop, which the scale then `nice()`s (`yAxis.ts:103`, `:108`).
@@ -116,7 +116,7 @@ domain flips the axis.
 
 ### g. Empty data
 
-Cashflow returns `[yMin ?? 0, yMax ?? 1]` (`CashflowScrubChart.tsx:262`).
+Cashflow returns `[yMin ?? 0, yMax ?? 1]` (`CashflowScrubChart.tsx:256`).
 ScrubChart's callback returns `null` and the fallback runs.
 
 ### h. Mode-awareness
@@ -148,5 +148,5 @@ the other draws.
 | `src/components/ScrubChart/yScaleMode.test.ts:10-239` | 25 cases over `fitCellRange`, `fitYDomain`, `widenToYFitBounds` |
 | `src/components/CashflowScrubChart/CashflowScrubChart.test.tsx:2026` | the fit-over-`yMin`/`yMax` precedence |
 
-`extentOf` (`CashflowScrubChart/helpers.ts:158`) has **no unit test**. Its
+`extentOf` (`CashflowScrubChart/helpers.ts:170`) has **no unit test**. Its
 callers cover it indirectly.

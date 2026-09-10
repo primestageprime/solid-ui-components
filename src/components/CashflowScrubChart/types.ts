@@ -186,7 +186,10 @@ export interface CashflowChartMarker extends ScrubChartMarker {
    * This is the CASHFLOW SPELLING of `value`, inherited from
    * `ScrubChartMarker`, and it is NOT deprecated. This chart's y-domain IS
    * cents, so the two hold the identical number and no conversion happens
-   * either way. `value` wins when both are set.
+   * either way. `valueCents` WINS when both are set — it names its unit, and a
+   * caller who spreads a generic marker and adds `valueCents` would otherwise
+   * get the spread `value` in the wrong unit. Setting both is still a caller
+   * mistake; dside task 45209 tracks making it unrepresentable.
    *
    * Both names stay on purpose. Every other y on this chart is cents-named —
    * `horizontalMarkers[].valueCents` is required and carries the same unit —

@@ -37,7 +37,15 @@ interface SeriesBase<T> {
 // Do not converge them. Both `null` and NaN-plus-`skipMissing` appear in
 // public props, so either move is a breaking public API change.
 //
-// Inside `Chart`, however, the test itself stays in one place — here.
+// Inside `Chart`, `buildLine` and `PointSeries` share this one test.
+//
+// `AreaSeries` does NOT. Its baseline-closing loop tests `Number.isNaN(xv)`
+// alone: it ignores `y` and ignores `skipMissing`, so a datum with a valid `x`
+// and a NaN `y` still sets the closing `first`/`last`. A trailing NaN `y`
+// therefore closes the fill at an x where the top line has no point, and the
+// filled region runs past the drawn line. That is a real defect, it predates
+// this helper, and folding it in here would change rendered output — so it is
+// filed as dside task 45210 rather than fixed in a refactor that promises none.
 const isMissingPoint = (
   skipMissing: boolean,
   xv: number,

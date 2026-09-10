@@ -638,10 +638,16 @@ export const ScrubChart = <C extends Cell>(
             host's size is irrelevant. No vertical inflation: a series past the
             domain clips hard at `plotTop`.
 
-            It renders AFTER `renderChart` on purpose. A consumer that reaches
-            its own chart with `frame.querySelector("svg")` must not get this
-            host instead. `url(#id)` resolves document-wide, so a reference
-            from the earlier <svg> still finds this clipPath.
+            It renders AFTER `renderChart` on purpose: this host is
+            UNCONDITIONAL, so placing it first would put a zero-size <svg> ahead
+            of the consumer's chart in every ScrubChart ever rendered.
+            `url(#id)` resolves document-wide, so a reference from the earlier
+            <svg> still finds this clipPath.
+
+            This does NOT make `frame.querySelector("svg")` reach the
+            consumer's chart. `ScrubChartHighlights` and `ScrubChartGrid` each
+            render their own <svg> before `renderChart` too. They are opt-in;
+            this host is not, which is the whole reason it moved.
 
             `width`/`height` are attributes as well as CSS. Without the
             stylesheet — SSR's first paint, or a consumer build that strips

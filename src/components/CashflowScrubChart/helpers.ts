@@ -26,13 +26,25 @@ import type { CashflowCell, CashflowChartMarker } from "./types";
  * `valueCents` is this chart's own spelling of the same number. NEITHER is
  * deprecated — see the note on `CashflowChartMarker.valueCents`. This chart's
  * y-domain is ALREADY in cents, so the two hold the identical number and no
- * conversion happens — `value` simply wins when both are set. Returns
- * `undefined` when the marker names neither, which every caller reads as
- * "no explicit y".
+ * conversion happens.
+ *
+ * `valueCents` WINS when a caller sets both, because it is the more specific
+ * name and it states its unit. The case that decides this: a caller adapting a
+ * generic marker writes `{ ...m, valueCents: toCents(m.amount) }`, and the
+ * spread carries `m.value` along in whatever unit that source used. Letting
+ * `value` win there puts the dot at a raw number on a cents axis — off by
+ * 100x, with no type error. Letting `valueCents` win reads the field the
+ * caller wrote on purpose.
+ *
+ * Setting both is still a caller mistake; this only picks the safer loser.
+ * Making it unrepresentable is dside task 45209.
+ *
+ * Returns `undefined` when the marker names neither, which every caller reads
+ * as "no explicit y".
  */
 export const markerValueCents = (
   marker: CashflowChartMarker,
-): number | undefined => marker.value ?? marker.valueCents;
+): number | undefined => marker.valueCents ?? marker.value;
 
 /** Signed dollar label — `+$1,234` / `−$1,234` — for the per-day amount row. */
 export const fmtDollars = (cents: number): string => {

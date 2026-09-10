@@ -2329,21 +2329,23 @@ describe("marker value replaces valueCents", () => {
     );
   });
 
-  it("lets `value` win when a caller sets both", () => {
+  it("lets `valueCents` win when a caller sets both", () => {
     const cells = makeCells(8);
     const wanted = cells[3].balanceCents + 50_000;
+    // The shape this protects: `{ ...generic, valueCents: toCents(x) }`, where
+    // the spread drags a `value` in some other unit along with it.
     const both = render(() => (
       <CashflowScrubChart
         cells={cells}
         scrub={false}
-        markers={[{ index: 3, value: wanted, valueCents: 1 }]}
+        markers={[{ index: 3, value: 1, valueCents: wanted }]}
       />
     ));
     const valueOnly = render(() => (
       <CashflowScrubChart
         cells={cells}
         scrub={false}
-        markers={[{ index: 3, value: wanted }]}
+        markers={[{ index: 3, valueCents: wanted }]}
       />
     ));
     expect(dotCy(both.container as HTMLElement)).toBe(

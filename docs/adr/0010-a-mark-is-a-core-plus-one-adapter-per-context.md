@@ -4,6 +4,9 @@ Status: proposed, 2026-09-10. Numbered after ADR 0009, which decides a
 separate y-domain question. Decides dside `sui` #45161, and unblocks #45162,
 #45164, #45165, #45169 and #45170.
 
+Line numbers were checked on this branch, NOT on `223ef9d`. The clip work in
+this same wave moved several of them.
+
 ## The problem
 
 `Chart` gives a caller slot children. Each child reads what it needs from
@@ -12,9 +15,9 @@ that way.
 
 `ScrubChart` gives the opposite. Its only extension points are three opaque
 render callbacks — `renderChart`, `renderChartOverlay` and `renderHoverOverlay`
-at `src/components/ScrubChart/types.ts:118-131`. Each hands the caller some
-numbers and an empty SVG. `ScrubChart` exposes geometry (`cellToX` at
-`types.ts:79`, `yToPlot` at `:105`) but draws nothing and offers no vocabulary
+at `src/components/ScrubChart/types.ts:181`, `:185` and `:194`. Each hands the
+caller some numbers and an empty SVG. `ScrubChart` exposes geometry (`cellToX` at
+`types.ts:117`, `yToPlot` at `:143`) but draws nothing and offers no vocabulary
 for a caller to say what to draw.
 
 So a consumer that wants a rule, a label, a band or a crosshair draws it by
@@ -27,10 +30,10 @@ Measured on `main` at `223ef9d`, and confirmed by two independent reviewers.
 
 `ChartContext.Provider` mounts in exactly one place: `Chart.tsx:302`, closing at
 `:373`. `ScrubChart` imports no `Chart`; it owns its own frame and raw `<svg>`
-children, and it invokes the three callbacks at `ScrubChart.tsx:622`, `:678` and
-`:716` inside its own JSX. Solid resolves `useContext` through the owner chain,
+children, and it invokes the three callbacks at `ScrubChart.tsx:633`, `:730` and
+`:768` inside its own JSX. Solid resolves `useContext` through the owner chain,
 which runs consumer → `CashflowScrubChart` → `ScrubChart`. No `Chart` sits on
-it. `ReferenceLine`'s `useChart()` at `Series.tsx:398` therefore hits the throw
+it. `ReferenceLine`'s `useChart()` at `Series.tsx:425` therefore hits the throw
 at `context.ts:122-124`.
 
 It does not render wrong. **It throws.**
@@ -132,7 +135,7 @@ one chart loses one mark. That asymmetry is the point.
 - #45164 and #45165 get a landing place: the modules move, and gain a
   `ScrubChart` adapter and a `Chart` adapter.
 - #45169's crosshair and #45170's label emphasis need `ScrubChart` to expose
-  hover state, which it holds at `ScrubChart.tsx:173` and currently returns as
+  hover state, which it holds at `ScrubChart.tsx:177` and currently returns as
   `null`. That is a separate, smaller decision from this one.
 - A stub-filled `ChartContext` must not appear in `ScrubChart`. If someone
   proposes one later, this ADR is the reason it was rejected.
