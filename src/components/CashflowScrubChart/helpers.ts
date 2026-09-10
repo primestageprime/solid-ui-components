@@ -76,6 +76,13 @@ export const barFraction = (cents: number, maxAbsCents: number): number => {
 // Map a balance accessor over the cells into one or more polyline point
 // strings, splitting on every `null` so a gap breaks the line rather than
 // connecting across it. Pure: same cells + accessor → same segments.
+//
+// `null` — not NaN — is the missing-value convention here, because these
+// accessors are cell-indexed and a cell legitimately holds no value. `Chart`
+// takes NaN plus `skipMissing` instead, because there the datum type is the
+// caller's. The two are scoped, not competing; do NOT converge them. The full
+// statement of the boundary lives in `Chart/Series.tsx`, above
+// `isMissingPoint`.
 export const buildLineSegments = (
   cells: CashflowCell[],
   cellToX: (i: number) => number,
