@@ -2293,3 +2293,75 @@ describe("CashflowScrubChart expand forwarding", () => {
     );
   });
 });
+
+// ── ScrubChartMarker.value ───────────────────────────────────────────
+// Self-contained: this block builds its own cells and asserts only on the
+// value/valueCents pair, so a merge can keep it beside another branch's block.
+describe("marker value replaces valueCents", () => {
+  const dotCy = (container: HTMLElement): number =>
+    Number(
+      container
+        .querySelector(".sui-cashflow-scrub-chart__marker-dot")!
+        .getAttribute("cy"),
+    );
+
+  it("places the flag dot from `value` the same way `valueCents` did", () => {
+    const cells = makeCells(8);
+    const target = cells[3].balanceCents + 50_000;
+    const byValue = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        markers={[{ index: 3, value: target }]}
+      />
+    ));
+    const byValueCents = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        markers={[{ index: 3, valueCents: target }]}
+      />
+    ));
+    // The y-domain here IS cents, so the two fields carry the same number
+    // and no conversion sits between them.
+    expect(dotCy(byValue.container as HTMLElement)).toBe(
+      dotCy(byValueCents.container as HTMLElement),
+    );
+  });
+
+  it("lets `value` win when a caller sets both", () => {
+    const cells = makeCells(8);
+    const wanted = cells[3].balanceCents + 50_000;
+    const both = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        markers={[{ index: 3, value: wanted, valueCents: 1 }]}
+      />
+    ));
+    const valueOnly = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        markers={[{ index: 3, value: wanted }]}
+      />
+    ));
+    expect(dotCy(both.container as HTMLElement)).toBe(
+      dotCy(valueOnly.container as HTMLElement),
+    );
+  });
+
+  it("draws the rule's crossing dot from `value`", () => {
+    const cells = makeCells(8);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        markers={[{ index: 4, variant: "rule", value: cells[4].balanceCents }]}
+      />
+    ));
+    expect(
+      container.querySelector(".sui-cashflow-scrub-chart__rule-dot"),
+    ).toBeTruthy();
+  });
+});

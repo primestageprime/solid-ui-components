@@ -1,8 +1,10 @@
 export { ScrubChart, createScrubChart } from "./ScrubChart";
 export type {
   ScrubChartProps,
+  ScrubChartClip,
   ScrubChartContext,
   ScrubChartHighlight,
+  ScrubChartMarker,
   ScrubChartOverrides,
   ScrubChartDataProps,
   ScrubChartXTickCadence,

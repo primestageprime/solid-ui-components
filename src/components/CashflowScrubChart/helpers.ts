@@ -17,7 +17,20 @@ import {
   formatCompactNumber,
   formatGroupedNumber,
 } from "../../internal/format/number";
-import type { CashflowCell } from "./types";
+import type { CashflowCell, CashflowChartMarker } from "./types";
+
+/**
+ * The marker's y value in cents, from whichever field the caller filled.
+ *
+ * `value` is the current, unit-free name inherited from `ScrubChartMarker`;
+ * `valueCents` is the deprecated alias it replaces. This chart's y-domain is
+ * ALREADY in cents, so the two hold the identical number and no conversion
+ * happens — `value` simply wins when both are set. Returns `undefined` when
+ * the marker names neither, which every caller reads as "no explicit y".
+ */
+export const markerValueCents = (
+  marker: CashflowChartMarker,
+): number | undefined => marker.value ?? marker.valueCents;
 
 /** Signed dollar label — `+$1,234` / `−$1,234` — for the per-day amount row. */
 export const fmtDollars = (cents: number): string => {

@@ -33,7 +33,6 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  createUniqueId,
 } from "solid-js";
 import { ScrubChart } from "../ScrubChart";
 import { buildDeviationBand } from "./deviationBand";
@@ -60,6 +59,7 @@ import {
   fmtAxisDollars,
   fmtDollars,
   formatCornerLabel,
+  markerValueCents,
 } from "./helpers";
 import type {
   CashflowBalanceSeries,
@@ -94,12 +94,6 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // ribbon `cells`; when `balanceLineCells` is supplied the line is DECOUPLED
   // from the ribbon (same geometry, different balances). Indexed positionally.
   const lineCells = (): CashflowCell[] => props.balanceLineCells ?? props.cells;
-  // Unique clipPath id per instance — multiple charts on one page must not
-  // share a clip rect (each has its own plot geometry). createUniqueId (the
-  // same mechanism Chart.tsx uses) keeps the id deterministic across
-  // server/client renders, unlike the Math.random id it replaces.
-  const clipId = `sui-cashflow-clip-${createUniqueId()}`;
-
   // The primary line's own label, which the ladder places first. `undefined`
   // says the caller named none, and the primary line then joins no label list.
   const primaryLabel = (): PrimaryLineLabel | undefined =>
@@ -529,18 +523,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       >
         {/* Clip the plotted content (cone fills + balance lines) to the plot
             rect so a cone exceeding the line-based domain clips at the plot TOP
-            rather than spilling over the axis labels. */}
-        <defs>
-          <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
-            <rect
-              x={ctx.plotLeft}
-              y={ctx.plotTop}
-              width={Math.max(0, ctx.plotRight - ctx.plotLeft)}
-              height={Math.max(0, ctx.plotBottom - ctx.plotTop)}
-            />
-          </clipPath>
-        </defs>
-        <g clip-path={`url(#${clipId})`}>
+            rather than spilling over the axis labels. ScrubChart owns the rect
+            and the id now — see `ScrubChartClip`. */}
+        <g clip-path={ctx.clip.plotPathUrl}>
           <For each={bands}>
             {(band) => (
               <polygon
@@ -723,9 +708,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
               );
             }
             // Marker dots drop onto the primary line by default. An explicit
-            // `valueCents` overrides that and places the dot anywhere else.
+            // marker value overrides that and places the dot anywhere else.
             const balanceValue =
-              m.valueCents ?? lineCells()[m.index]?.balanceCents;
+              markerValueCents(m) ?? lineCells()[m.index]?.balanceCents;
             if (balanceValue == null) return null;
             const y = yToPlot(balanceValue);
             const activate = () =>
