@@ -151,6 +151,11 @@ export const extentOf = (values: readonly number[]): [number, number] => {
  * the zero-INDEPENDENT row: it frames the values with symmetric padding so a
  * line living in a narrow band uses the full height, and a flat series pads
  * around its own value (or ±1 at zero) rather than collapsing to no height.
+ *
+ * This is ONE of the repo's two y-domain rules, and it runs only when
+ * `ScrubChart` has no fitted domain. `docs/adr/0009-two-y-domain-rules-stay-separate.md`
+ * puts this order beside `ScrubChart`'s `fitYDomain` and lists the eight
+ * differences. Read it before you reconcile the two.
  */
 export const chartYDomain = (
   values: readonly number[],
