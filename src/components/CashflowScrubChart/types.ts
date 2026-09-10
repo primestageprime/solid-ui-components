@@ -183,10 +183,16 @@ export interface CashflowChartMarker extends ScrubChartMarker {
    * primary line — a scenario balance, a threshold, a value with no cell of
    * its own.
    *
-   * @deprecated Use `value` (inherited from `ScrubChartMarker`). This chart's
-   * y-domain IS cents, so the two carry the identical number and no
-   * conversion happens either way. `value` wins when both are set. The alias
-   * stays so no caller breaks; it will go in a later major.
+   * This is the CASHFLOW SPELLING of `value`, inherited from
+   * `ScrubChartMarker`, and it is NOT deprecated. This chart's y-domain IS
+   * cents, so the two hold the identical number and no conversion happens
+   * either way. `value` wins when both are set.
+   *
+   * Both names stay on purpose. Every other y on this chart is cents-named —
+   * `horizontalMarkers[].valueCents` is required and carries the same unit —
+   * so a cashflow caller reads one vocabulary throughout. `value` exists for
+   * code written against `ScrubChartMarker` that does not know it is looking
+   * at money.
    */
   valueCents?: number;
   /**

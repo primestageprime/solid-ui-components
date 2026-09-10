@@ -22,11 +22,13 @@ import type { CashflowCell, CashflowChartMarker } from "./types";
 /**
  * The marker's y value in cents, from whichever field the caller filled.
  *
- * `value` is the current, unit-free name inherited from `ScrubChartMarker`;
- * `valueCents` is the deprecated alias it replaces. This chart's y-domain is
- * ALREADY in cents, so the two hold the identical number and no conversion
- * happens — `value` simply wins when both are set. Returns `undefined` when
- * the marker names neither, which every caller reads as "no explicit y".
+ * `value` is the unit-free name inherited from `ScrubChartMarker`;
+ * `valueCents` is this chart's own spelling of the same number. NEITHER is
+ * deprecated — see the note on `CashflowChartMarker.valueCents`. This chart's
+ * y-domain is ALREADY in cents, so the two hold the identical number and no
+ * conversion happens — `value` simply wins when both are set. Returns
+ * `undefined` when the marker names neither, which every caller reads as
+ * "no explicit y".
  */
 export const markerValueCents = (
   marker: CashflowChartMarker,
