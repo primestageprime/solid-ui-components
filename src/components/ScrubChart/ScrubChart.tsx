@@ -90,6 +90,7 @@ export type {
   ScrubChartClip,
   ScrubChartContext,
   ScrubChartHighlight,
+  ScrubChartMarker,
   ScrubChartProps,
   ScrubChartOverrides,
   ScrubChartDataProps,

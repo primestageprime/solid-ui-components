@@ -4,6 +4,7 @@ export type {
   ScrubChartClip,
   ScrubChartContext,
   ScrubChartHighlight,
+  ScrubChartMarker,
   ScrubChartOverrides,
   ScrubChartDataProps,
   ScrubChartXTickCadence,

@@ -59,6 +59,7 @@ import {
   fmtAxisDollars,
   fmtDollars,
   formatCornerLabel,
+  markerValueCents,
 } from "./helpers";
 import type {
   CashflowBalanceSeries,
@@ -707,9 +708,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
               );
             }
             // Marker dots drop onto the primary line by default. An explicit
-            // `valueCents` overrides that and places the dot anywhere else.
+            // marker value overrides that and places the dot anywhere else.
             const balanceValue =
-              m.valueCents ?? lineCells()[m.index]?.balanceCents;
+              markerValueCents(m) ?? lineCells()[m.index]?.balanceCents;
             if (balanceValue == null) return null;
             const y = yToPlot(balanceValue);
             const activate = () =>

@@ -41,7 +41,12 @@ export type {
  *  whose candidate count fits under `xMaxTicks` — week → month → quarter →
  *  year, falling back to a strided coarsest cadence for very long ranges. */
 export type ScrubChartXTickCadence =
-  "none" | "auto" | "week" | "month" | "quarter" | "year";
+  | "none"
+  | "auto"
+  | "week"
+  | "month"
+  | "quarter"
+  | "year";
 
 /** Resolved cadence — never `"auto"` or `"none"`, just the unit actually used. */
 export type ResolvedXTickCadence = "week" | "month" | "quarter" | "year";
@@ -72,6 +77,37 @@ export interface ScrubChartHighlight {
    *  define on this class. Per-band because two bands on one chart routinely
    *  carry different meanings, and styling one through the shared base class
    *  recolours every other band too. */
+  class?: string;
+}
+
+/**
+ * One POINT MARKER: a cell index paired with a y value, so a chart can put a
+ * mark exactly where a caller means — "this date, at this amount".
+ *
+ * GEOMETRY ONLY. The shape carries where the mark goes and what it is called;
+ * it carries no variant, no selection state and no interactivity. A consumer
+ * that needs those extends this interface and adds them, which is what
+ * `CashflowChartMarker` does — the base stays the part every chart shares.
+ *
+ * `index` is a CELL INDEX, matching `ScrubChartHighlight`, because a caller
+ * already picks its cells and the chart already owns the index → pixel map.
+ * `value` is in Y-DOMAIN UNITS — the domain `yDomain` states and
+ * `ScrubChartContext.yToPlot` consumes — so the name says nothing about the
+ * unit that domain happens to use. A cents chart passes cents, a percent
+ * chart passes percent, and neither needs a conversion.
+ */
+export interface ScrubChartMarker {
+  /** Cell index the marker sits on. */
+  index: number;
+  /** Y position in y-domain units. Optional: a marker with no value leaves
+   *  the y placement to the consumer (e.g. "sit on the series line"). */
+  value?: number;
+  /** Caption for this marker. Placement is the consumer's to decide. */
+  label?: string;
+  /** Extra CSS class on this marker's own marks ONLY, alongside whatever base
+   *  class the consumer draws with. Per-marker because two markers routinely
+   *  share one base class, and styling one through that class restyles every
+   *  other marker too. */
   class?: string;
 }
 

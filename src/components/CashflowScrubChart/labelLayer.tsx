@@ -40,6 +40,7 @@
 import { type Component, For, Show } from "solid-js";
 import { filter, flatMap, map } from "../../fn";
 import { measureLabelWidth } from "../ScrubChart/helpers";
+import { markerValueCents } from "./helpers";
 import {
   LABEL_ROW_HEIGHT,
   type LabelCandidate,
@@ -236,7 +237,7 @@ const markerCandidates = (
   filter(
     (c): c is ChartLabel => c !== null,
     map((m: CashflowChartMarker) => {
-      const value = m.valueCents ?? geometry.primaryCents(m.index);
+      const value = markerValueCents(m) ?? geometry.primaryCents(m.index);
       if (value == null) return null;
       const y = geometry.yToPlot(value);
       return {
