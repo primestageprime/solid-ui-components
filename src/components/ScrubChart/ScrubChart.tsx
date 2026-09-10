@@ -630,14 +630,30 @@ export const ScrubChart = <C extends Cell>(
             yTicks={yTicks}
           />
         </Show>
+        <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
         {/* Clip host — ScrubChart owns no <svg> around `renderChart` (the
             consumer supplies its own), so the plot-rect <clipPath> lives in a
             zero-size <svg> of its own. A clipPath paints nothing itself, and
             `userSpaceOnUse` resolves against the REFERENCING element, so the
             host's size is irrelevant. No vertical inflation: a series past the
-            domain clips hard at `plotTop`. */}
+            domain clips hard at `plotTop`.
+
+            It renders AFTER `renderChart` on purpose. A consumer that reaches
+            its own chart with `frame.querySelector("svg")` must not get this
+            host instead. `url(#id)` resolves document-wide, so a reference
+            from the earlier <svg> still finds this clipPath.
+
+            `width`/`height` are attributes as well as CSS. Without the
+            stylesheet — SSR's first paint, or a consumer build that strips
+            component CSS — a bare inline <svg> falls back to 300x150 and
+            would push the consumer's chart down. */}
         <Show when={chartWidth() > 0}>
-          <svg class="sui-scrub-chart__defs" aria-hidden="true">
+          <svg
+            class="sui-scrub-chart__defs"
+            width="0"
+            height="0"
+            aria-hidden="true"
+          >
             <defs>
               <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
                 <rect
@@ -650,7 +666,6 @@ export const ScrubChart = <C extends Cell>(
             </defs>
           </svg>
         </Show>
-        <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
         {/* Axis chrome — drawn after the chart so labels sit on top of any
             line bleed but the lines themselves can still be clipped to the
             plot region by the consumer. Pointer-events disabled so the
