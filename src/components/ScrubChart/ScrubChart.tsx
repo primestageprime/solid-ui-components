@@ -30,6 +30,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  createUniqueId,
   mergeProps,
   onCleanup,
   onMount,
@@ -69,6 +70,7 @@ import {
 import { DEFAULT_Y_FIT_TRANSITION_MS } from "./yDomainTween";
 import type {
   ResolvedXTickCadence,
+  ScrubChartClip,
   ScrubChartContext,
   ScrubChartDataProps,
   ScrubChartOverrides,
@@ -85,6 +87,7 @@ import "./ScrubChart.css";
 import { map, filter } from "../../fn";
 
 export type {
+  ScrubChartClip,
   ScrubChartContext,
   ScrubChartHighlight,
   ScrubChartProps,
@@ -448,6 +451,12 @@ export const ScrubChart = <C extends Cell>(
     return s ? s(v) : v;
   };
 
+  // Unique clipPath id per instance — two charts on one page each have their
+  // own plot geometry and must not share a rect. `createUniqueId` keeps the id
+  // stable across server/client renders.
+  const clipId = `sui-scrub-chart-clip-${createUniqueId()}`;
+  const clip: ScrubChartClip = { plotPathUrl: `url(#${clipId})` };
+
   const ctx = (): ScrubChartContext<C> => ({
     cellToX: indexToX,
     cellBounds: indexBounds,
@@ -466,6 +475,7 @@ export const ScrubChart = <C extends Cell>(
     plotHeight: plotHeight(),
     yToPlot: yScale() ? yToPlot : null,
     hoverIndex: null,
+    clip,
   });
 
   // ── Pointer-driven pan / click on the chart frame ────────────────────
@@ -618,6 +628,26 @@ export const ScrubChart = <C extends Cell>(
             plotRight={plotRight}
             yTicks={yTicks}
           />
+        </Show>
+        {/* Clip host — ScrubChart owns no <svg> around `renderChart` (the
+            consumer supplies its own), so the plot-rect <clipPath> lives in a
+            zero-size <svg> of its own. A clipPath paints nothing itself, and
+            `userSpaceOnUse` resolves against the REFERENCING element, so the
+            host's size is irrelevant. No vertical inflation: a series past the
+            domain clips hard at `plotTop`. */}
+        <Show when={chartWidth() > 0}>
+          <svg class="sui-scrub-chart__defs" aria-hidden="true">
+            <defs>
+              <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+                <rect
+                  x={plotLeft()}
+                  y={plotTop()}
+                  width={Math.max(0, plotRight() - plotLeft())}
+                  height={Math.max(0, plotBottom() - plotTop())}
+                />
+              </clipPath>
+            </defs>
+          </svg>
         </Show>
         <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
         {/* Axis chrome — drawn after the chart so labels sit on top of any

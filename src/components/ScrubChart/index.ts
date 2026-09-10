@@ -1,6 +1,7 @@
 export { ScrubChart, createScrubChart } from "./ScrubChart";
 export type {
   ScrubChartProps,
+  ScrubChartClip,
   ScrubChartContext,
   ScrubChartHighlight,
   ScrubChartOverrides,

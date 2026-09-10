@@ -9,6 +9,8 @@
 //
 //   • ScrubChartXTickCadence  — the cadence enum a consumer asks for.
 //   • ScrubChartHighlight     — one shaded band spanning a cell range.
+//   • ScrubChartMarker        — one point marker, in cell index + y value.
+//   • ScrubChartClip          — the clip refs the context hands out.
 //   • ResolvedXTickCadence    — the cadence actually chosen (never auto/none).
 //   • ScrubChartContext<C>    — the render-slot context handed to renderChart.
 //   • ScrubChartProps<C>      — the full prop surface of <ScrubChart>.
@@ -107,6 +109,31 @@ export interface ScrubChartContext<C extends Cell> {
    *  the `renderHoverOverlay` slot (it is `null` in `renderChart` /
    *  `renderChartOverlay` so those don't re-run on every pointer move). */
   hoverIndex: number | null;
+  /**
+   * Clip references ScrubChart owns, so a consumer never hand-rolls one.
+   *
+   * `plotPathUrl` is a ready-to-use `url(#id)` for a `<clipPath>` ScrubChart
+   * renders itself. Put it on a `<g clip-path={ctx.clip.plotPathUrl}>` inside
+   * the consumer's own `<svg>` and the group clips to the plot rect —
+   * `plotLeft`/`plotTop` to `plotRight`/`plotBottom`, with no vertical
+   * inflation, so a series that exceeds the domain clips hard at the plot top
+   * instead of painting over the axis labels.
+   *
+   * The rect uses `clipPathUnits="userSpaceOnUse"`, and the coordinates above
+   * are ABSOLUTE chart pixels, so the referencing `<svg>` must share the
+   * chart's user space — `viewBox="0 0 {ctx.width} {ctx.height}"`, the same
+   * frame every ScrubChart consumer already draws in.
+   *
+   * A plain string, not an accessor, like every other member of this context.
+   * The id is per-instance, so two charts on one page never share a rect.
+   */
+  clip: ScrubChartClip;
+}
+
+/** Clip references ScrubChart renders and hands to `renderChart`. */
+export interface ScrubChartClip {
+  /** `url(#id)` for the plot-rect `<clipPath>`. Feed it to `clip-path`. */
+  plotPathUrl: string;
 }
 
 export interface ScrubChartProps<C extends Cell> {
