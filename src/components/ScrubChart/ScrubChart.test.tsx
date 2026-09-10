@@ -7,6 +7,7 @@ import {
   ScrubChart,
   type ScrubChartContext,
   type ScrubChartHighlight,
+  type ScrubChartMarker,
 } from "./ScrubChart";
 import {
   DEFAULT_X_AXIS_HEIGHT,
@@ -1777,5 +1778,124 @@ describe("ScrubChart corner control stacking", () => {
         btn.closest(".sui-scrub-chart__corner")!.classList.length,
       ).toBeGreaterThan(1);
     }
+  });
+});
+
+// ── Plot clip + marker geometry ──────────────────────────────────────
+// Self-contained on purpose: this block builds its own fixtures and shares
+// nothing with the blocks above, so a merge can keep it alongside another
+// branch's block.
+describe("ScrubChart plot clip", () => {
+  const clipCells = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-31"));
+
+  const renderWithCtx = (
+    seen: { ctx: ScrubChartContext<Cell> | null },
+    yDomain?: [number, number],
+  ) =>
+    render(() => (
+      <ScrubChart
+        cells={clipCells()}
+        selected={5}
+        onScrub={() => {}}
+        yDomain={yDomain}
+        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+        renderChart={(ctx) => {
+          seen.ctx = ctx;
+          return <svg data-testid="clip-chart" />;
+        }}
+      />
+    ));
+
+  it("renders a clipPath the context's plotPathUrl points at", () => {
+    const seen: { ctx: ScrubChartContext<Cell> | null } = { ctx: null };
+    const { container } = renderWithCtx(seen);
+
+    const url = seen.ctx!.clip.plotPathUrl;
+    // A plain string, not an accessor — every other ctx member is a value.
+    expect(typeof url).toBe("string");
+    const id = /^url\(#(.+)\)$/.exec(url)?.[1];
+    expect(id).toBeTruthy();
+    expect(id!.startsWith("sui-scrub-chart-clip-")).toBe(true);
+    expect(container.querySelector(`clipPath#${id}`)).toBeTruthy();
+  });
+
+  it("clips to the plot rect exactly, with no vertical inflation", () => {
+    const seen: { ctx: ScrubChartContext<Cell> | null } = { ctx: null };
+    const { container } = renderWithCtx(seen, [0, 100]);
+
+    const ctx = seen.ctx!;
+    const rect = container.querySelector("clipPath rect")!;
+    // Hard clip at plotTop: CashflowScrubChart depends on a cone that
+    // exceeds the domain being cut at the axis, not spilling over it.
+    expect(rect.getAttribute("y")).toBe(String(ctx.plotTop));
+    expect(rect.getAttribute("x")).toBe(String(ctx.plotLeft));
+    expect(rect.getAttribute("width")).toBe(
+      String(ctx.plotRight - ctx.plotLeft),
+    );
+    expect(rect.getAttribute("height")).toBe(
+      String(ctx.plotBottom - ctx.plotTop),
+    );
+  });
+
+  it("uses userSpaceOnUse so a consumer svg in chart coords matches", () => {
+    const seen: { ctx: ScrubChartContext<Cell> | null } = { ctx: null };
+    const { container } = renderWithCtx(seen);
+    expect(
+      container.querySelector("clipPath")!.getAttribute("clipPathUnits"),
+    ).toBe("userSpaceOnUse");
+  });
+
+  it("gives two charts on one page their own clip ids", () => {
+    const first: { ctx: ScrubChartContext<Cell> | null } = { ctx: null };
+    const second: { ctx: ScrubChartContext<Cell> | null } = { ctx: null };
+    renderWithCtx(first);
+    renderWithCtx(second);
+    expect(first.ctx!.clip.plotPathUrl).not.toBe(second.ctx!.clip.plotPathUrl);
+  });
+});
+
+describe("ScrubChartMarker", () => {
+  it("states its point in cell index + y-domain units", () => {
+    // A compile-time check with a runtime witness: the shape is geometry
+    // only, and `value` rides the y domain rather than any fixed unit.
+    const marker: ScrubChartMarker = {
+      index: 3,
+      value: 42.5,
+      label: "Runway floor",
+      class: "custom",
+    };
+    expect(marker.index).toBe(3);
+    expect(marker.value).toBe(42.5);
+    expect(marker.label).toBe("Runway floor");
+    expect(marker.class).toBe("custom");
+  });
+
+  it("maps `value` through the same yToPlot the context hands out", () => {
+    const seen: { ctx: ScrubChartContext<Cell> | null } = { ctx: null };
+    const marker: ScrubChartMarker = { index: 2, value: 50 };
+    render(() => (
+      <ScrubChart
+        cells={dailyCells(d("2026-05-01"), d("2026-05-31"))}
+        selected={2}
+        onScrub={() => {}}
+        yDomain={[0, 100]}
+        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+        renderChart={(c) => {
+          seen.ctx = c;
+          return <svg data-testid="marker-chart" />;
+        }}
+      />
+    ));
+    const ctx = seen.ctx!;
+    // Midpoint of the domain sits at the midpoint of the plot.
+    expect(ctx.yToPlot!(marker.value!)).toBeCloseTo(
+      (ctx.plotTop + ctx.plotBottom) / 2,
+      5,
+    );
+  });
+
+  it("leaves `value` optional so a marker can ride the series line", () => {
+    const marker: ScrubChartMarker = { index: 0 };
+    expect(marker.value).toBeUndefined();
   });
 });
