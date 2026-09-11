@@ -1,4 +1,13 @@
 export { ScrubChart, createScrubChart } from "./ScrubChart";
+export { createScrubChartEmphasis } from "./createScrubChartEmphasis";
+export type { ScrubChartEmphasis } from "./createScrubChartEmphasis";
+export type { EmphasisColorSource } from "./emphasisColor";
+export {
+  emphasisClassName,
+  emphasisStateFor,
+  emphasisStates,
+} from "./emphasis";
+export type { EmphasisState } from "./emphasis";
 export { ScrubChartReferenceLine } from "./ScrubChartReferenceLine";
 export type { ScrubChartReferenceLineProps } from "./ScrubChartReferenceLine";
 export { ScrubChartBand } from "./ScrubChartBand";

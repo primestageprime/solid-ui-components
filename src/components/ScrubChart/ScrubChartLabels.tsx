@@ -44,6 +44,7 @@ import {
   drawnLabels,
   placeLabels,
 } from "../Chart/labelPlacement";
+import { emphasisClassName } from "./emphasis";
 import type { ScrubChartContext } from "./types";
 
 export interface ScrubChartLabelsProps<C extends Cell> {
@@ -122,13 +123,16 @@ export function ScrubChartLabels<C extends Cell>(
     return drawnLabels(props.labels, results);
   });
 
-  const emphasis = (id: string): string => {
-    const active = props.highlightedId ?? null;
-    if (active === null) return "";
-    return active === id
-      ? ` ${props.classPrefix}__label--highlighted`
-      : ` ${props.classPrefix}__label--muted`;
-  };
+  // Delegates to the shared pure core (`./emphasis.ts`) rather than
+  // classifying highlighted/muted by hand — the same core
+  // `createScrubChartEmphasis`'s `classFor` calls, so a label and the line it
+  // names always agree on which state wins.
+  const emphasis = (id: string): string =>
+    emphasisClassName(
+      `${props.classPrefix}__label`,
+      props.highlightedId ?? null,
+      id,
+    );
   const colorStyle = (id: string) => {
     const color = props.colorOf?.(id);
     return color === undefined ? undefined : { fill: color };
