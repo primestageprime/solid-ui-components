@@ -38,7 +38,7 @@
 // right zone stacks along Y and calls `packGutterRows`, which tests the box each
 // row really draws and therefore needs no filter behind it.
 // ============================================
-import { map, some } from "../../fn";
+import { filter, map, some } from "../../fn";
 import {
   boxInsidePlot,
   boxesTouch,
@@ -52,7 +52,6 @@ import {
   type GutterMetrics,
   type GutterRow,
 } from "./gutterPacking";
-import type { CashflowLabelZone } from "./types";
 import {
   anchoredSpan,
   fitAnchor,
@@ -61,10 +60,19 @@ import {
   type LaneBox,
 } from "../../internal/geometry/labelLayout";
 
-// `CashflowLabelZone` is PUBLIC API, so it is declared in `types.ts` with the
-// rest of the prop vocabulary and re-exported here for the callers that only
-// import the ladder.
-export type { CashflowLabelZone } from "./types";
+/**
+ * Where a label prefers to sit. A caller cannot see the data, the container
+ * width or the theme's font, so a caller cannot know what fits — this is a
+ * preference, not a lock. The ladder walks body → right → below and takes
+ * the first zone the label fits. Defaults to "auto", which starts at the top.
+ *
+ * Declared here, next to the ladder that reads it — this CORE's own type, per
+ * docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md.
+ * `CashflowScrubChart`'s public `CashflowLabelZone` is an alias of this type
+ * (`CashflowScrubChart/types.ts`), kept so its byte-identical public API
+ * survives the move.
+ */
+export type LabelZone = "auto" | "body" | "right" | "below";
 
 /** The zone a label actually got. "auto" is a preference and never an answer. */
 export type ResolvedLabelZone = "body" | "right" | "below";
@@ -107,7 +115,7 @@ export interface LabelReservation {
   /** Measured text width in px, from `measureLabelWidth`. */
   readonly width: number;
   /** The caller's stated zone. "auto" reserves nothing. */
-  readonly placement: CashflowLabelZone;
+  readonly placement: LabelZone;
 }
 
 /** The space the frame must buy before it builds its scales. */
@@ -131,7 +139,7 @@ export interface LabelCandidate {
   /** Text row height in px. */
   readonly height: number;
   /** The caller's stated zone. */
-  readonly placement: CashflowLabelZone;
+  readonly placement: LabelZone;
   /** Pixel x of the point this label names. */
   readonly x: number;
   /** Pixel y of the point this label names. */
@@ -225,7 +233,7 @@ interface RungResult {
 }
 
 /** A label enters the ladder at its preferred rung and never climbs back up. */
-const startsAt = (zone: CashflowLabelZone, rung: ResolvedLabelZone): boolean =>
+const startsAt = (zone: LabelZone, rung: ResolvedLabelZone): boolean =>
   zone === "auto" || zone === "body"
     ? true
     : zone === "right"
@@ -457,3 +465,57 @@ export const placeLabels = (
     labels,
   );
 };
+
+// ── Pairing for paint ───────────────────────────────────────────────────────
+//
+// `placeLabels` answers WHERE. A caller that wants to DRAW the result still
+// needs the label's own TEXT back, and needs the dropped labels gone. Both
+// adapters (`Chart`'s Labels slot and `ScrubChart`'s `ScrubChartLabels`) do
+// this same pairing before they paint, so it lives here rather than being
+// written twice — this is still geometry-and-text, not JSX, so it stays in
+// the core module per the ADR.
+
+/** One label candidate, with the text an adapter draws once it is placed. */
+export interface ChartLabel extends LabelCandidate {
+  readonly text: string;
+}
+
+/** A label the ladder placed, paired back with the text and box to draw. */
+export interface DrawnLabel {
+  readonly placed: PlacedLabel;
+  readonly text: string;
+  /** Measured text width in px — an adapter's hit box spans it. */
+  readonly width: number;
+  /** Text row height in px — an adapter's hit box spans it. */
+  readonly height: number;
+}
+
+/**
+ * Pair each result with its candidate and drop the ones the ladder refused.
+ *
+ * A dropped label draws nothing. Silence is the specified behaviour of
+ * `placeLabels`: a caller cannot see the container width or the theme's
+ * font, so a drop is the ladder doing its job, not a fault to report.
+ *
+ * @param labels  The candidates `placeLabels` was called with, same order.
+ * @param results `placeLabels`'s result, one per candidate, same order.
+ */
+export const drawnLabels = (
+  labels: readonly ChartLabel[],
+  results: readonly LabelPlacementResult[],
+): readonly DrawnLabel[] =>
+  filter(
+    (d): d is DrawnLabel => d !== null,
+    map(
+      (result: LabelPlacementResult, i: number) =>
+        result.kind === "placed"
+          ? {
+              placed: result,
+              text: labels[i].text,
+              width: labels[i].width,
+              height: labels[i].height,
+            }
+          : null,
+      results,
+    ),
+  );

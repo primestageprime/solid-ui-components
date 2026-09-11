@@ -26,6 +26,7 @@
 
 import type { JSX } from "solid-js";
 import type { Cell } from "../DateAxis";
+import type { LabelZone } from "../Chart/labelPlacement";
 import type {
   ScrubChartHighlight,
   ScrubChartMarker,
@@ -50,8 +51,13 @@ export type CashflowCell = Cell & {
  *
  * Per-datum and not a curried variant: one chart's labels routinely need
  * different zones, and a variant would force them all into one.
+ *
+ * An alias of `Chart`'s `LabelZone` (`Chart/labelPlacement.ts`) — the ladder
+ * moved there as a CORE per
+ * docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md. Kept as its
+ * own name here so this module's public API stays byte-identical.
  */
-export type CashflowLabelZone = "auto" | "body" | "right" | "below";
+export type CashflowLabelZone = LabelZone;
 
 /**
  * Draws a deviation band between this series and a reference line (the primary
