@@ -26,14 +26,7 @@
 // rather than hidden. Per-series, so one chart can hold both.
 // ============================================
 
-import {
-  type Component,
-  For,
-  Show,
-  createEffect,
-  createMemo,
-  createSignal,
-} from "solid-js";
+import { type Component, For, Show, createEffect, createMemo } from "solid-js";
 import {
   ScrubChart,
   ScrubChartBand,
@@ -42,6 +35,8 @@ import {
   ScrubChartLabels,
   ScrubChartReferenceLine,
   ScrubChartTooltip,
+  createScrubChartEmphasis,
+  emphasisClassName,
 } from "../ScrubChart";
 import { belowExtraHeight, reserveLabelSpace } from "../Chart/labelPlacement";
 import {
@@ -73,7 +68,7 @@ import type {
   CashflowSeriesFill,
 } from "./types";
 import "./CashflowScrubChart.css";
-import { every, filter, flatMap, join, map, pipe, some } from "../../fn";
+import { filter, flatMap, join, map, pipe, some } from "../../fn";
 
 // Re-export the public type surface so the folder barrel (and existing
 // consumers importing from this module) keep resolving the same names.
@@ -114,7 +109,17 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // running-balance line, `series:<id>` for a balance series, `marker:<index>`
   // for a marker — so the label layer reports the same string the candidate
   // builders minted.
-  const [hoveredLabel, setHoveredLabel] = createSignal<string | null>(null);
+  //
+  // The hover signal, the highlighted/muted classification, and the DOM
+  // colour read-back are all generic across any `ScrubChart`-hosted chart —
+  // per docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md — so
+  // they live in the `ScrubChart` adapter `createScrubChartEmphasis`
+  // (`../ScrubChart/createScrubChartEmphasis.ts`). That module's header also
+  // carries the design decision behind keeping the DOM read-back at all —
+  // see it before touching this feature. Only the id vocabulary above, and
+  // the "hide the emphasis when the named line paints nothing" guard below,
+  // are cashflow's own.
+  const emphasis = createScrubChartEmphasis();
 
   /**
    * The label id the chart emphasises, or `null` while it emphasises none.
@@ -127,9 +132,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
    * the reader the opposite of the truth.
    */
   const emphasisId = (): string | null => {
-    const active = hoveredLabel();
+    const active = emphasis.hoveredId();
     if (active === null) return null;
-    return labelColors()[active] === undefined ? null : active;
+    return emphasis.colorFor(active) === undefined ? null : active;
   };
 
   /**
@@ -141,11 +146,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
    *              back.
    * @returns A leading-space class string, or `""` when no label is hovered.
    */
-  const emphasisClass = (block: string, id: string | null): string => {
-    const active = emphasisId();
-    if (active === null) return "";
-    return active === id ? ` ${block}--highlighted` : ` ${block}--muted`;
-  };
+  const emphasisClass = (block: string, id: string | null): string =>
+    emphasisClassName(block, emphasisId(), id);
 
   // ── Label colour, read back from the drawn line ──────────────────────
   // A label names one line, so it reads best in that line's own colour. The
@@ -153,49 +155,14 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // it as a `stroke`. An SVG `<text>` takes its colour from `fill`, so no CSS
   // rule and no new prop can carry the stroke across. The chart therefore
   // reads the RESOLVED stroke back from the DOM after each render, and hands
-  // it to the label layer as a `fill`.
+  // it to the label layer as a `fill`. `emphasis.refreshColors` does the
+  // reading; this effect owns only WHEN to re-read, because only this
+  // component knows which props change which lines are drawn.
   //
   // ONE known limit: a theme swap alone does not recolour a label. The map is
   // read again when the chart re-renders for another reason.
   let chartSvgEl: SVGSVGElement | undefined;
   let markersSvgEl: SVGSVGElement | undefined;
-  const [labelColors, setLabelColors] = createSignal<Record<string, string>>(
-    {},
-  );
-
-  /** Whether a resolved stroke names a colour a label can take. */
-  const isPaintedStroke = (stroke: string): boolean =>
-    stroke !== "" && stroke !== "none" && stroke !== "rgba(0, 0, 0, 0)";
-
-  /** Read one root's tagged elements into the map, keyed by the label id. */
-  const collectStrokes = (
-    root: SVGSVGElement | undefined,
-    attribute: string,
-    idOf: (value: string) => string,
-    into: Record<string, string>,
-  ): void => {
-    if (!root) return;
-    for (const el of Array.from(root.querySelectorAll(`[${attribute}]`))) {
-      const value = el.getAttribute(attribute);
-      if (value === null) continue;
-      const id = idOf(value);
-      if (into[id] !== undefined) continue;
-      const stroke = window.getComputedStyle(el).stroke;
-      if (isPaintedStroke(stroke)) into[id] = stroke;
-    }
-  };
-
-  /** Whether two colour maps hold the same keys and the same colours. */
-  const sameColors = (
-    a: Record<string, string>,
-    b: Record<string, string>,
-  ): boolean => {
-    const keys = Object.keys(a);
-    return (
-      keys.length === Object.keys(b).length &&
-      every((k: string) => a[k] === b[k], keys)
-    );
-  };
 
   createEffect(() => {
     // Track every prop that changes which lines the chart draws, so the
@@ -203,33 +170,25 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     void props.balanceSeries;
     void props.markers;
     void props.cells;
-    // The server renders no DOM, so there is no computed style to read.
-    if (typeof window === "undefined") return;
-    if (!chartSvgEl && !markersSvgEl) return;
-    const next: Record<string, string> = {};
-    // The primary line carries its own attribute, not a `data-series-id`: it
-    // is not a series, and its label id takes no `series:` prefix.
-    collectStrokes(
-      chartSvgEl,
-      "data-primary-line",
-      () => PRIMARY_LABEL_ID,
-      next,
-    );
-    collectStrokes(
-      chartSvgEl,
-      "data-series-id",
-      (value) => `series:${value}`,
-      next,
-    );
-    collectStrokes(
-      markersSvgEl,
-      "data-marker-index",
-      (value) => `marker:${value}`,
-      next,
-    );
-    // Keep the previous map when nothing changed. Solid compares by identity,
-    // so returning it notifies no reader and the effect never churns.
-    setLabelColors((prev) => (sameColors(next, prev) ? prev : next));
+    emphasis.refreshColors([
+      // The primary line carries its own attribute, not a `data-series-id`:
+      // it is not a series, and its label id takes no `series:` prefix.
+      {
+        root: chartSvgEl,
+        attribute: "data-primary-line",
+        idOf: () => PRIMARY_LABEL_ID,
+      },
+      {
+        root: chartSvgEl,
+        attribute: "data-series-id",
+        idOf: (value) => `series:${value}`,
+      },
+      {
+        root: markersSvgEl,
+        attribute: "data-marker-index",
+        idOf: (value) => `marker:${value}`,
+      },
+    ]);
   });
 
   /** Whether any label reaches the ladder, and so whether the layer draws. */
@@ -822,8 +781,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           reservedSpace={reservedSpace()}
           classPrefix="sui-cashflow-scrub-chart"
           highlightedId={emphasisId()}
-          onHoverLabel={setHoveredLabel}
-          colorOf={(id) => labelColors()[id]}
+          onHoverLabel={emphasis.setHoveredId}
+          colorOf={emphasis.colorFor}
         />
       </svg>
     );
@@ -852,7 +811,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     // which covers a "right" zone label in the gutter. A "below" zone label
     // sits under the x-axis and INSIDE the plot's horizontal span, so only
     // this check covers it.
-    if (hoveredLabel() !== null) return null;
+    if (emphasis.hoveredId() !== null) return null;
     const idx = ctx.hoverIndex;
     if (idx == null || ctx.cells.length === 0 || !ctx.yToPlot) return null;
     const x = ctx.cellToX(idx);
