@@ -80,6 +80,16 @@ export interface CrosshairMark {
  * itself, when the point omits one) and its own `y`.
  */
 export function buildCrosshair(input: CrosshairInput): CrosshairMark {
+  const dots: CrosshairDot[] = [];
+  for (const p of input.points) {
+    dots.push({
+      id: p.id,
+      cx: p.x ?? input.x,
+      cy: p.y,
+      stroke: p.stroke,
+      class: p.class,
+    });
+  }
   return {
     guide: {
       x1: input.x,
@@ -87,12 +97,6 @@ export function buildCrosshair(input: CrosshairInput): CrosshairMark {
       y1: input.plotTop,
       y2: input.plotBottom,
     },
-    dots: input.points.map((p) => ({
-      id: p.id,
-      cx: p.x ?? input.x,
-      cy: p.y,
-      stroke: p.stroke,
-      class: p.class,
-    })),
+    dots,
   };
 }

@@ -35,6 +35,8 @@ import { observeSize } from "../../internal/dom/observeSize";
 import { placeTooltipX } from "../Chart/tooltipPlacement";
 import type { ScrubChartContext } from "./types";
 
+/** Props for `ScrubChartTooltip` — the `ScrubChart` adapter for the
+ *  `placeTooltipX` core. */
 export interface ScrubChartTooltipProps<C extends Cell> {
   /** The current frame's geometry, passed by the caller — there is no
    *  Solid context for `ScrubChart` (see the ADR). Only `ctx.width` is

@@ -19,7 +19,15 @@ import "./health-view.css";
 type Metrics = Record<string, number | undefined>;
 type HistoryEntry = { at: string; metrics: Metrics; baseline?: Metrics };
 
-const baseline = baselineJson as Metrics;
+// `_raises` (a per-metric `{ from, to, reason }` record scripts/health.mjs
+// stamps onto the baseline when a ceiling is deliberately raised, per
+// AGENT_GUIDE.md's health-ratchet section) is not a metric count, so it is
+// dropped before the cast below rather than widening `Metrics` to admit it.
+const { _raises: _baselineRaises, ...baselineMetrics } = baselineJson as Record<
+  string,
+  unknown
+>;
+const baseline = baselineMetrics as Metrics;
 const history = historyJson as HistoryEntry[];
 
 const latestMetrics = history[history.length - 1]?.metrics ?? baseline;

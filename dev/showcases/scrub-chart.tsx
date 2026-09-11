@@ -2,8 +2,10 @@ import { type Component, createMemo, createSignal } from "solid-js";
 import {
   ScrubChart,
   ScrubChartBand,
+  ScrubChartCrosshair,
   ScrubChartLabels,
   ScrubChartReferenceLine,
+  ScrubChartTooltip,
 } from "../../src/components/ScrubChart";
 import { dailyCells, type Cell } from "../../src/components/DateAxis";
 import { cashflowAt, cashflowDayCell, fmtDollars } from "./cashflow-day-cell";
@@ -375,6 +377,45 @@ const renderBandChart = (
   );
 };
 
+// The hover crosshair + tooltip — `ScrubChart`'s adapters for the
+// `buildCrosshair` and `placeTooltipX` cores (ADR 0010, dside task 45169).
+// `CashflowScrubChart`'s own hover readout composes these same two
+// components; this demo shows the plain call site.
+const renderHoverOverlay = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => {
+  const idx = ctx.hoverIndex;
+  if (idx == null || !ctx.yToPlot) return null;
+  const x = ctx.cellToX(idx);
+  return (
+    <>
+      <svg
+        viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+        preserveAspectRatio="none"
+        class="scrub-chart-demo__svg"
+      >
+        <ScrubChartCrosshair
+          ctx={ctx}
+          class="scrub-chart-demo__crosshair-guide"
+          dotClass="scrub-chart-demo__crosshair-dot"
+          dotFill="var(--sui-bg-elevated)"
+          dotStroke="var(--sui-accent)"
+          dotStrokeWidth={1.5}
+          series={[{ id: "balance", value: (c) => c.balanceCents }]}
+        />
+      </svg>
+      <ScrubChartTooltip
+        ctx={ctx}
+        anchorX={x}
+        anchorY={ctx.plotTop}
+        class="scrub-chart-demo__tooltip"
+      >
+        {fmtDollars(ctx.cells[idx].balanceCents / 100)}
+      </ScrubChartTooltip>
+    </>
+  );
+};
+
 export const ScrubChartShowcase: Component = () => {
   const [selectedIdx, setSelectedIdx] = createSignal(Math.max(0, todayIndex));
   const cell = createMemo(() => cells[selectedIdx()]);
@@ -707,6 +748,31 @@ export const ScrubChartShowcase: Component = () => {
           xTickCadence="auto"
           renderCell={cashflowDayCell}
           renderChart={renderPositionChart}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>Hover crosshair + tooltip via the ScrubChart adapters</h3>
+        <p class="text-meta">
+          <code>ScrubChartCrosshair</code> and <code>ScrubChartTooltip</code>{" "}
+          call the same <code>buildCrosshair</code> / <code>placeTooltipX</code>{" "}
+          cores <code>Chart</code>'s own <code>Crosshair</code> /{" "}
+          <code>ChartTooltip</code> call. Every dot shares the guide's x
+          (index-addressed, unlike <code>Chart</code>'s nearest-point search),
+          and the tooltip flips off a MEASURED width, so it never clips even
+          hovered near an edge. Move the pointer over the chart below.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          hover
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderScaledChart}
+          renderHoverOverlay={renderHoverOverlay}
         />
       </div>
 

@@ -86,6 +86,9 @@
       "anchored",
       "cssvar"
     ],
+    "src/components/ScrubChart/ScrubChartTooltip.tsx": [
+      "anchored"
+    ],
     "src/components/ChartCanvas/ChartCanvas.tsx": [
       "measured"
     ],

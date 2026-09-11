@@ -2325,6 +2325,21 @@
   text-anchor: end;
 }
 
+/* Hover crosshair + tooltip demo. */
+.scrub-chart-demo__crosshair-guide {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+.scrub-chart-demo__tooltip {
+  position: absolute;
+  padding: 4px 8px;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md, 8px);
+  font-size: 12px;
+  pointer-events: none;
+}
+
 .scrub-chart-demo__band--forecast {
   fill: var(--sui-accent);
   opacity: 0.1;

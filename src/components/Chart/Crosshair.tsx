@@ -50,16 +50,18 @@ export function Crosshair<T>(props: CrosshairProps<T>) {
     const hx = ctx.hoverX();
     if (hx == null) return null;
     const points: { id: string; x: number; y: number; stroke?: string }[] = [];
-    (props.series ?? []).forEach((s, i) => {
+    const series = props.series ?? [];
+    for (let i = 0; i < series.length; i++) {
+      const s = series[i];
       const p = nearestPoint(s.data, s.x, hx);
-      if (p == null) return;
+      if (p == null) continue;
       points.push({
         id: String(i),
         x: ctx.xScale()(s.x(p)),
         y: ctx.yScale()(s.y(p)),
         stroke: s.stroke,
       });
-    });
+    }
     return buildCrosshair({
       x: ctx.xScale()(hx),
       points,

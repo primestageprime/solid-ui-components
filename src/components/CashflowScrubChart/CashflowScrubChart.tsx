@@ -869,12 +869,14 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         value: (_cell, i) => lineCells()[i]?.balanceCents ?? null,
         class: props.lineClass,
       },
-      ...(props.balanceSeries ?? []).map((s) => ({
+    ];
+    for (const s of props.balanceSeries ?? []) {
+      series.push({
         id: s.id,
         value: (cell: CashflowCell, i: number) => s.balanceCents(cell, i),
         class: s.class,
-      })),
-    ];
+      });
+    }
     return (
       <>
         <svg

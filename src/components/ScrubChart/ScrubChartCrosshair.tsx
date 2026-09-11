@@ -29,7 +29,10 @@
 // ============================================
 import { For, Show, createMemo } from "solid-js";
 import type { Cell } from "../DateAxis";
-import { buildCrosshair, type CrosshairPointInput } from "../Chart/crosshairMark";
+import {
+  buildCrosshair,
+  type CrosshairPointInput,
+} from "../Chart/crosshairMark";
 import type { ScrubChartContext } from "./types";
 
 /** One line to spotlight at the hovered cell. */
@@ -49,6 +52,8 @@ export interface ScrubChartCrosshairSeries<C extends Cell> {
   class?: string;
 }
 
+/** Props for `ScrubChartCrosshair` — the `ScrubChart` adapter for the
+ *  `buildCrosshair` core. */
 export interface ScrubChartCrosshairProps<C extends Cell> {
   /** The current frame's geometry, passed by the caller — there is no
    *  Solid context for `ScrubChart` (see the ADR). */
@@ -118,11 +123,10 @@ export function ScrubChartCrosshair<C extends Cell>(
     });
   });
 
-  const dotClass = (mark: string | undefined): string | undefined => {
-    const classes = [props.dotClass, mark].filter((c): c is string =>
-      Boolean(c),
-    );
-    return classes.length > 0 ? classes.join(" ") : undefined;
+  const dotClass = (seriesClass: string | undefined): string | undefined => {
+    if (props.dotClass && seriesClass)
+      return `${props.dotClass} ${seriesClass}`;
+    return props.dotClass ?? seriesClass;
   };
 
   return (
