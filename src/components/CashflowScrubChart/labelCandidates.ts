@@ -1,12 +1,21 @@
 // ============================================
-// labelLayer — the paint half of the chart-label feature.
+// labelCandidates — cashflow-bound label vocabulary for the label ladder.
 //
-// `labelPlacement.ts` decides WHERE a label goes. This module decides WHICH
-// labels exist, measures them, and draws the survivors. It sits in its own
-// file because `CashflowScrubChart.tsx` is already past the 500-line guidance.
+// `Chart/labelPlacement.ts` (the CORE, per
+// docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md) decides
+// WHERE a label goes. This module decides WHICH labels a CashflowScrubChart
+// draws: it reads `CashflowBalanceSeries`, `CashflowChartMarker` and
+// `balanceCents`, none of which the core may know. `ScrubChart`'s adapter
+// (`ScrubChartLabels.tsx`) calls these builders and then the core; `Chart`'s
+// own Labels adapter needs no such builder, because a `Chart` caller already
+// supplies label candidates directly through accessors over its own data.
+//
+// Was `labelLayer.tsx` — renamed once the paint half
+// (`ChartLabelLayer`) moved out to `ScrubChart/ScrubChartLabels.tsx`. What is
+// left here is pure: no Solid import, no JSX.
 //
 // The two exported builders run at two different times, and the order is the
-// whole mechanism (see labelPlacement.ts's header):
+// whole mechanism (see Chart/labelPlacement.ts's header):
 //
 //   labelReservations(...)  BEFORE the scales exist. Text and stated zone
 //                           only — that is all `reserveLabelSpace` may read.
@@ -37,19 +46,16 @@
 // before this feature existed and no current chart moves. An explicit zone
 // moves the caption into the ladder and hands the rule its full height back.
 // ============================================
-import { type Component, For, Show } from "solid-js";
 import { filter, flatMap, map } from "../../fn";
 import { measureLabelWidth } from "../ScrubChart/helpers";
-import { markerValueCents } from "./helpers";
 import {
   LABEL_ROW_HEIGHT,
-  type LabelCandidate,
+  type ChartLabel,
   type LabelPoint,
-  type Polyline,
-  type LabelPlacementResult,
   type LabelReservation,
-  type PlacedLabel,
-} from "./labelPlacement";
+  type Polyline,
+} from "../Chart/labelPlacement";
+import { markerValueCents } from "./helpers";
 import type {
   CashflowBalanceSeries,
   CashflowCell,
@@ -149,11 +155,6 @@ export const labelReservations = (
     ladderMarkers(markers),
   ),
 ];
-
-/** One label with its text kept, so the layer can draw what the ladder placed. */
-export interface ChartLabel extends LabelCandidate {
-  readonly text: string;
-}
 
 /** The last index whose accessor returns a value, or `null` for an empty line. */
 const lastDefinedIndex = (
@@ -340,142 +341,4 @@ export const drawnPolylines = (
       series,
     ),
   ];
-};
-
-/** A label the ladder placed, paired back with the text and box to draw. */
-interface DrawnLabel {
-  readonly placed: PlacedLabel;
-  readonly text: string;
-  /** Measured text width in px — the hit box spans it. */
-  readonly width: number;
-  /** Text row height in px — the hit box spans it. */
-  readonly height: number;
-}
-
-/**
- * Pair each result with its candidate and drop the ones the ladder refused.
- *
- * A dropped label draws nothing and logs nothing. Silence is the specified
- * behaviour: a caller cannot see the container width or the theme's font, so
- * a drop is the component doing its job, not a fault to report.
- */
-export const drawnLabels = (
-  labels: readonly ChartLabel[],
-  results: readonly LabelPlacementResult[],
-): readonly DrawnLabel[] =>
-  filter(
-    (d): d is DrawnLabel => d !== null,
-    map(
-      (result: LabelPlacementResult, i: number) =>
-        result.kind === "placed"
-          ? {
-              placed: result,
-              text: labels[i].text,
-              width: labels[i].width,
-              height: labels[i].height,
-            }
-          : null,
-      results,
-    ),
-  );
-
-/** Clear space added around a label's text box to make it easy to point at. */
-const LABEL_HIT_PAD = 3;
-
-/**
- * The left edge of a label's text box.
- *
- * `placed.x` is an anchor point, not a left edge: the ladder pairs it with a
- * `text-anchor`, and the three anchors put the text on three different sides
- * of that number. The hit box has to cover the glyphs, so it reads the anchor
- * back.
- */
-const hitLeft = (label: DrawnLabel): number =>
-  label.placed.anchor === "start"
-    ? label.placed.x
-    : label.placed.anchor === "end"
-      ? label.placed.x - label.width
-      : label.placed.x - label.width / 2;
-
-/**
- * The label layer: one `<text>` per placed label, in one `<g>`.
- *
- * Emitted AFTER the primary line so it paints on top. SVG has no z-index, so
- * document order is paint order — appending the layer reorders nothing that
- * was already there. It sits outside the plot's clip path because the right
- * and below zones are, by construction, outside the plot rectangle.
- *
- * A label NAMES a line, so pointing at it asks which line. `onHoverLabel`
- * turns that question on: each label gets a padded transparent hit box and
- * reports its id on enter and `null` on leave, and `highlightedId` comes back
- * as the emphasis class. Without the callback the layer takes no pointer
- * event at all — it must not eat the scrub gestures it sits over.
- *
- * `colorOf` answers the same question at rest: the caller reads the drawn
- * line's colour and the label takes it. The layer writes that colour as an
- * INLINE STYLE. A `fill` presentation attribute sits below every CSS
- * declaration in the cascade, so any plain `.sui-cashflow-scrub-chart__label
- * { fill: … }` rule on the page paints over the attribute. A consumer loads
- * exactly such a rule: `package.json` maps `index.css` to `dist/index.css`
- * even while the `source` condition is active, so a stale second copy of this
- * stylesheet reaches the page beside the fresh one. An inline style beats
- * every class rule that carries no `!important`, so the colour survives.
- * The layer sets no style at all when no colour resolves, so the CSS default
- * applies. Muting stays on `opacity`, which the inline `fill` does not touch.
- */
-export const ChartLabelLayer: Component<{
-  labels: readonly ChartLabel[];
-  results: readonly LabelPlacementResult[];
-  /** Id of the label the pointer rests on, or `null` when it rests on none. */
-  highlightedId?: string | null;
-  /** Called with a label id on pointer enter, and with `null` on leave. */
-  onHoverLabel?: (id: string | null) => void;
-  /** Colour of the line a label names, or `undefined` when none resolves. */
-  colorOf?: (id: string) => string | undefined;
-}> = (props) => {
-  /** The emphasis modifier one label takes while any label is hovered. */
-  const emphasis = (id: string): string => {
-    const active = props.highlightedId ?? null;
-    if (active === null) return "";
-    return active === id
-      ? " sui-cashflow-scrub-chart__label--highlighted"
-      : " sui-cashflow-scrub-chart__label--muted";
-  };
-  /** The inline style one label takes, or `undefined` when no colour resolves. */
-  const colorStyle = (id: string) => {
-    const color = props.colorOf?.(id);
-    return color === undefined ? undefined : { fill: color };
-  };
-  return (
-    <g class="sui-cashflow-scrub-chart__labels">
-      <For each={drawnLabels(props.labels, props.results)}>
-        {(label) => (
-          <g
-            class="sui-cashflow-scrub-chart__label-group"
-            onPointerEnter={() => props.onHoverLabel?.(label.placed.id)}
-            onPointerLeave={() => props.onHoverLabel?.(null)}
-          >
-            <Show when={props.onHoverLabel}>
-              <rect
-                class="sui-cashflow-scrub-chart__label-hit"
-                x={hitLeft(label) - LABEL_HIT_PAD}
-                y={label.placed.y - label.height / 2 - LABEL_HIT_PAD}
-                width={label.width + LABEL_HIT_PAD * 2}
-                height={label.height + LABEL_HIT_PAD * 2}
-              />
-            </Show>
-            <text
-              class={`sui-cashflow-scrub-chart__label sui-cashflow-scrub-chart__label--${label.placed.zone}${emphasis(label.placed.id)}`}
-              x={label.placed.x}
-              y={label.placed.y}
-              text-anchor={label.placed.anchor}
-              style={colorStyle(label.placed.id)}
-            >
-              {label.text}
-            </text>
-          </g>
-        )}
-      </For>
-    </g>
-  );
 };

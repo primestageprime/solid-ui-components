@@ -27,7 +27,7 @@
 import type { Component } from "solid-js";
 import type { ScrubChartContext } from "../ScrubChart";
 import { markerValueCents } from "./helpers";
-import { markerJoinsLadder } from "./labelLayer";
+import { markerJoinsLadder } from "./labelCandidates";
 import type { CashflowCell, CashflowChartMarker } from "./types";
 
 /** Radius of the crossing dot, in user units. */

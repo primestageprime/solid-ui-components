@@ -37,22 +37,18 @@ import {
 import {
   ScrubChart,
   ScrubChartBand,
+  ScrubChartLabels,
   ScrubChartReferenceLine,
 } from "../ScrubChart";
+import { belowExtraHeight, reserveLabelSpace } from "../Chart/labelPlacement";
 import {
-  ChartLabelLayer,
   PRIMARY_LABEL_ID,
   type PrimaryLineLabel,
   drawnPolylines,
   labelCandidates,
   labelReservations,
   markerJoinsLadder,
-} from "./labelLayer";
-import {
-  belowExtraHeight,
-  placeLabels,
-  reserveLabelSpace,
-} from "./labelPlacement";
+} from "./labelCandidates";
 import { RuleMarker } from "./ruleMarker";
 import {
   barFraction,
@@ -779,8 +775,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   //   • The layer no longer sits under the window band, so a label in the
   //     scrub window is no longer tinted by it.
   //
-  // The placement pass runs here, in the same frame the reservation bought —
-  // `ctx` carries the identical geometry the chart svg reads.
+  // Building the CANDIDATES (which labels exist, at what point) is this
+  // component's own job — cashflow-bound, per `labelCandidates.ts`. WHERE
+  // each one lands is the ladder CORE's job, called inside `ScrubChartLabels`
+  // — the `ScrubChart` adapter per
+  // docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md. `ctx`
+  // carries the identical geometry the chart svg reads.
   const renderLabels = (
     ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
   ) => {
@@ -800,17 +800,6 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       ctx.cells,
       labelGeometry,
     );
-    const placements = placeLabels(
-      labels,
-      {
-        left: ctx.plotLeft,
-        right: ctx.plotRight,
-        top: ctx.plotTop,
-        bottom: ctx.plotBottom,
-      },
-      drawnPolylines(ctx.cells, props.balanceSeries ?? [], labelGeometry),
-      reservedSpace(),
-    );
     return (
       <svg
         class="sui-cashflow-scrub-chart__chart sui-cashflow-scrub-chart__label-overlay"
@@ -819,9 +808,16 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         viewBox={`0 0 ${ctx.width} ${ctx.height}`}
         preserveAspectRatio="none"
       >
-        <ChartLabelLayer
+        <ScrubChartLabels
+          ctx={ctx}
           labels={labels}
-          results={placements}
+          polylines={drawnPolylines(
+            ctx.cells,
+            props.balanceSeries ?? [],
+            labelGeometry,
+          )}
+          reservedSpace={reservedSpace()}
+          classPrefix="sui-cashflow-scrub-chart"
           highlightedId={emphasisId()}
           onHoverLabel={setHoveredLabel}
           colorOf={(id) => labelColors()[id]}
