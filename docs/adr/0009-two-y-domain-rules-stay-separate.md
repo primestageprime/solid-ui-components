@@ -11,7 +11,7 @@ The pointers this ADR added to the code shifted several of them.
 ## The two rules do not both run
 
 `CashflowScrubChart` computes `chartYDomain` and feeds it to `ScrubChart`'s
-`yDomain` prop (`CashflowScrubChart.tsx:996`). `yDomain` is the **fallback**.
+`yDomain` prop (`CashflowScrubChart.tsx:911`). `yDomain` is the **fallback**.
 When `yFitDomain` returns an extent, `ScrubChart` builds the scale from the
 FITTED domain and the prop never reaches the axis
 (`yAxis.ts:108` — `buildScale(fitted ?? options.staticDomain(), fitted != null)`).
@@ -116,7 +116,7 @@ domain flips the axis.
 
 ### g. Empty data
 
-Cashflow returns `[yMin ?? 0, yMax ?? 1]` (`CashflowScrubChart.tsx:256`).
+Cashflow returns `[yMin ?? 0, yMax ?? 1]` (`CashflowScrubChart.tsx:217`).
 ScrubChart's callback returns `null` and the fallback runs.
 
 ### h. Mode-awareness

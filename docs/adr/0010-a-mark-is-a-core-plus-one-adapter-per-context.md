@@ -4,8 +4,8 @@ Status: ACCEPTED by Adlai, 2026-09-11. Proposed 2026-09-10. Numbered after
 ADR 0009, which decides a separate y-domain question. Decides dside `sui` #45161, and unblocks #45162,
 #45164, #45165, #45169 and #45170.
 
-Line numbers were checked on this branch, NOT on `223ef9d`. The clip work in
-this same wave moved several of them.
+Line numbers were re-checked on this branch after the wave landed on
+2026-09-11, NOT on `223ef9d`. The clip work and the wave moved several of them.
 
 ## The problem
 
@@ -15,7 +15,7 @@ that way.
 
 `ScrubChart` gives the opposite. Its only extension points are three opaque
 render callbacks — `renderChart`, `renderChartOverlay` and `renderHoverOverlay`
-at `src/components/ScrubChart/types.ts:181`, `:185` and `:194`. Each hands the
+at `src/components/ScrubChart/types.ts:193`, `:197` and `:206`. Each hands the
 caller some numbers and an empty SVG. `ScrubChart` exposes geometry (`cellToX` at
 `types.ts:117`, `yToPlot` at `:143`) but draws nothing and offers no vocabulary
 for a caller to say what to draw.
@@ -30,10 +30,10 @@ Measured on `main` at `223ef9d`, and confirmed by two independent reviewers.
 
 `ChartContext.Provider` mounts in exactly one place: `Chart.tsx:302`, closing at
 `:373`. `ScrubChart` imports no `Chart`; it owns its own frame and raw `<svg>`
-children, and it invokes the three callbacks at `ScrubChart.tsx:633`, `:730` and
-`:768` inside its own JSX. Solid resolves `useContext` through the owner chain,
+children, and it invokes the three callbacks at `ScrubChart.tsx:637`, `:734` and
+`:772` inside its own JSX. Solid resolves `useContext` through the owner chain,
 which runs consumer → `CashflowScrubChart` → `ScrubChart`. No `Chart` sits on
-it. `ReferenceLine`'s `useChart()` at `Series.tsx:425` therefore hits the throw
+it. `ReferenceLine`'s `useChart()` at `Series.tsx:426` therefore hits the throw
 at `context.ts:122-124`.
 
 It does not render wrong. **It throws.**
@@ -120,12 +120,14 @@ adapters exist to absorb.
 This is not a new idea here. It is the shape this codebase already converged on,
 by hand, in the two places the altitude audit rates highest:
 
-- `buildDeviationBand<T>` (`CashflowScrubChart/deviationBand.ts:113`) already
+- `buildDeviationBand<T>` (`CashflowScrubChart/deviationBand.ts:113` at decision time; now
+  `Chart/deviationBand.ts:131`) already
   takes `items`, `cellToX`, `yToPlot` and two accessors. It is a core today. Its
   ticket, #45165, says it "is generic today" — the only fault is that it is
   filed under the wrong directory.
 - `placeLabels(labels, plot, polylines, space)`
-  (`CashflowScrubChart/labelPlacement.ts`) touches no cell, no cents and no
+  (`CashflowScrubChart/labelPlacement.ts` at decision time; now
+  `Chart/labelPlacement.ts:447`) touches no cell, no cents and no
   Solid. `labelBoxes.ts` is the same. Over 400 lines of tested geometry, already
   pure. #45164 calls it "the highest-value item on the altitude audit" and says
   the only thing in the way is a NAME.
@@ -161,3 +163,17 @@ one chart loses one mark. That asymmetry is the point.
   `null`. That is a separate, smaller decision from this one.
 - A stub-filled `ChartContext` must not appear in `ScrubChart`. If someone
   proposes one later, this ADR is the reason it was rejected.
+
+## Implemented
+
+The five tickets landed on `feat/altitude-unblocked-wave` on 2026-09-11. The
+cores live under `src/components/Chart/`: `referenceLine.ts`,
+`deviationBand.ts`, `labelPlacement.ts`, `labelBoxes.ts`, `gutterPacking.ts`,
+`labelPairing.ts`, `crosshairMark.ts` and `tooltipPlacement.ts`. The
+`ScrubChart` adapters live under `src/components/ScrubChart/`:
+`ScrubChartReferenceLine`, `ScrubChartBand`, `ScrubChartLabels`,
+`ScrubChartCrosshair`, `ScrubChartTooltip` and `createScrubChartEmphasis`.
+`ScrubChartContext` gained `liveHoverIndex`, a fine-grained accessor, so the
+base context keeps `hoverIndex: null` and `renderChart` does not re-run on
+pointer move. #45170 kept the DOM stroke read-back, generalised into
+`ScrubChart/emphasisColor.ts`; the ticket records why the two alternatives lost.
