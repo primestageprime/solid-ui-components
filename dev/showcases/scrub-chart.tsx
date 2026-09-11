@@ -1,5 +1,8 @@
 import { type Component, createMemo, createSignal } from "solid-js";
-import { ScrubChart } from "../../src/components/ScrubChart";
+import {
+  ScrubChart,
+  ScrubChartReferenceLine,
+} from "../../src/components/ScrubChart";
 import { dailyCells, type Cell } from "../../src/components/DateAxis";
 import { cashflowAt, cashflowDayCell, fmtDollars } from "./cashflow-day-cell";
 import { NarrowStack } from "../../src/components/Layout";
@@ -271,6 +274,30 @@ const renderBoundedChart = (
   );
 };
 
+// A threshold AMOUNT — `ScrubChart`'s adapter for the reference-line mark
+// (ADR 0010). It calls the SAME core `Chart`'s own `<ReferenceLine>` calls;
+// only the coordinate space differs — frame-absolute here (`ctx.plotLeft` /
+// `ctx.plotRight`), plot-local there. `CashflowScrubChart` draws its zero
+// line and its `horizontalMarkers` through this same component.
+const renderThresholdOverlay = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => (
+  <svg
+    viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+    preserveAspectRatio="none"
+    class="scrub-chart-demo__svg"
+  >
+    <ScrubChartReferenceLine
+      ctx={ctx}
+      value={200_000}
+      label="Runway floor"
+      stroke="var(--sui-warning, #f5a623)"
+      strokeDasharray="5 4"
+      opacity={0.8}
+    />
+  </svg>
+);
+
 export const ScrubChartShowcase: Component = () => {
   const [selectedIdx, setSelectedIdx] = createSignal(Math.max(0, todayIndex));
   const cell = createMemo(() => cells[selectedIdx()]);
@@ -418,6 +445,31 @@ export const ScrubChartShowcase: Component = () => {
           xTickCadence="auto"
           renderCell={cashflowDayCell}
           renderChart={renderBoundedChart}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>A threshold line via the ScrubChart adapter</h3>
+        <p class="text-meta">
+          <code>ScrubChartReferenceLine</code> draws a horizontal rule at a
+          fixed Y value, spanning the full plot width — a THRESHOLD AMOUNT, same
+          as the low-level <code>Chart</code> kit's <code>ReferenceLine</code>.
+          Both call one pure core (<code>buildReferenceLine</code>); this
+          adapter converts <code>ScrubChart</code>'s frame-absolute pixels
+          before it does, so the rule lands correctly even though{" "}
+          <code>ScrubChart</code> has no <code>Chart</code> context to read.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          showGridlines
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderScaledChart}
+          renderChartOverlay={renderThresholdOverlay}
         />
       </div>
 
