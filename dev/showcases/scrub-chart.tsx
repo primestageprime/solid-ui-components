@@ -1,6 +1,7 @@
 import { type Component, createMemo, createSignal } from "solid-js";
 import {
   ScrubChart,
+  ScrubChartBand,
   ScrubChartReferenceLine,
 } from "../../src/components/ScrubChart";
 import { dailyCells, type Cell } from "../../src/components/DateAxis";
@@ -298,6 +299,47 @@ const renderThresholdOverlay = (
   </svg>
 );
 
+// A deviation band between the balance line and zero — `ScrubChart`'s
+// adapter for the shared `buildDeviationBand` core (ADR 0010, dside task
+// 45165). `ScrubChartBand` carries no colour default; this demo picks its
+// own reading via `positiveClass` / `negativeClass` (see main.css), same as
+// any other caller would — `CashflowScrubChart`'s green-above / red-below
+// surplus reading is a DIFFERENT caller's default, not a fact this adapter
+// knows.
+const renderBandChart = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => {
+  const toY = ctx.yToPlot ?? ((cents: number) => cents);
+  const points = ctx.cells
+    .map(
+      (c, i) =>
+        `${ctx.cellToX(i).toFixed(1)},${toY(c.balanceCents).toFixed(1)}`,
+    )
+    .join(" ");
+  return (
+    <svg
+      viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+      preserveAspectRatio="none"
+      class="scrub-chart-demo__svg"
+    >
+      <ScrubChartBand
+        ctx={ctx}
+        items={ctx.cells}
+        series={(c) => c.balanceCents}
+        reference={() => 0}
+        positiveClass="scrub-chart-demo__deviation--positive"
+        negativeClass="scrub-chart-demo__deviation--negative"
+      />
+      <polyline
+        points={points}
+        fill="none"
+        stroke="var(--sui-accent)"
+        stroke-width={1.6}
+      />
+    </svg>
+  );
+};
+
 export const ScrubChartShowcase: Component = () => {
   const [selectedIdx, setSelectedIdx] = createSignal(Math.max(0, todayIndex));
   const cell = createMemo(() => cells[selectedIdx()]);
@@ -470,6 +512,30 @@ export const ScrubChartShowcase: Component = () => {
           renderCell={cashflowDayCell}
           renderChart={renderScaledChart}
           renderChartOverlay={renderThresholdOverlay}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>A deviation band via the ScrubChart adapter</h3>
+        <p class="text-meta">
+          <code>ScrubChartBand</code> shades the gap between the balance line
+          and zero, split at every crossing — the same core (
+          <code>buildDeviationBand</code>) <code>CashflowScrubChart</code> calls
+          for its own green-above / red-below reading.{" "}
+          <code>ScrubChartBand</code> itself carries no such default: this
+          demo's colours come entirely from the <code>positiveClass</code> /{" "}
+          <code>negativeClass</code> props below.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          showGridlines
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderBandChart}
         />
       </div>
 

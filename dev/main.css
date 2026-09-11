@@ -2330,6 +2330,29 @@
   opacity: 0.1;
 }
 
+/* Deviation-band demo — ScrubChartBand carries no colour default of its own
+   (ADR 0010); this picks its own reading, deliberately NOT green/red, to show
+   the polarity is a caller choice, not a fact the adapter bakes in. */
+.scrub-chart-demo__deviation--positive {
+  fill: var(--sui-accent);
+  opacity: 0.18;
+}
+.scrub-chart-demo__deviation--negative {
+  fill: var(--sui-text-secondary);
+  opacity: 0.18;
+}
+
+/* Chart's own deviation-band demo — same reasoning: DeviationBand bakes in
+   no colour, so this picks its own (accent/secondary, not green/red). */
+.chart-demo__deviation--positive {
+  fill: var(--sui-accent);
+  opacity: 0.18;
+}
+.chart-demo__deviation--negative {
+  fill: var(--sui-text-secondary);
+  opacity: 0.18;
+}
+
 /* dotchart composition smoke — hand-built chip row + debug readout/table.
    Only the per-row accent colour is data-driven (bridged via
    --dotchart-row-color); everything else is static chrome. */

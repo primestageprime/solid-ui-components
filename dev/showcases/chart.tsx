@@ -15,6 +15,7 @@ import {
   PointSeries,
   BarSeries,
   ReferenceLine,
+  DeviationBand,
   Crosshair,
   ChartTooltip,
   domainOf,
@@ -166,6 +167,49 @@ export const ChartShowcase: Component = () => {
                 </span>
               )}
             </ChartTooltip>
+          </Chart>
+
+          <h3 class="showcase-heading-gap">
+            Deviation band — the Chart adapter
+          </h3>
+          <p class="text-meta">
+            <code>DeviationBand</code> shades the gap between a series and a
+            reference line, split at every crossing — the <code>Chart</code>
+            -side adapter for the SAME <code>buildDeviationBand</code> core{" "}
+            <code>ScrubChart</code>'s <code>ScrubChartBand</code> adapter calls
+            (ADR 0010). It bakes in no colour: this demo's colours come entirely
+            from <code>positiveClass</code> / <code>negativeClass</code> below.
+          </p>
+          <Chart
+            width={640}
+            height={220}
+            xDomain={xDomain}
+            yDomain={[0, 100]}
+            margin={{ top: 12, right: 16, bottom: 28, left: 40 }}
+          >
+            <Grid />
+            <YAxis tickCount={5} tickFormat={(v) => `${v}%`} />
+            <XAxis tickCount={6} />
+            <DeviationBand
+              data={series}
+              x={(d) => d.t}
+              series={(d) => d.v}
+              reference={() => avg}
+              positiveClass="chart-demo__deviation--positive"
+              negativeClass="chart-demo__deviation--negative"
+            />
+            <ReferenceLine
+              orientation="horizontal"
+              value={avg}
+              label={`avg ${avg.toFixed(1)}`}
+              strokeDasharray="3 3"
+            />
+            <LineSeries
+              data={series}
+              x={(d) => d.t}
+              y={(d) => d.v}
+              strokeWidth={2}
+            />
           </Chart>
 
           <h3 class="showcase-heading-gap">Captioned vertical reference</h3>
