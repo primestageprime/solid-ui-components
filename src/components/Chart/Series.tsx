@@ -11,6 +11,7 @@ import {
   onCleanup,
 } from "solid-js";
 import { useChart } from "./context";
+import { buildReferenceLine } from "./referenceLine";
 import { slotId as brandSlotId } from "./slot-types";
 
 interface SeriesBase<T> {
@@ -428,29 +429,42 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
     value: toScaleValue(props.value),
   }));
   const strokeColor = () => props.color ?? props.stroke ?? "currentColor";
+  // Plot-local pixels: x1=0 sits at the plot's left edge. `ScrubChart`'s
+  // adapter (ScrubChartReferenceLine.tsx) supplies frame-absolute pixels
+  // instead — the coordinate difference the two adapters exist to absorb.
+  const horizontalMark = createMemo(() =>
+    buildReferenceLine({
+      y: ctx.yScale()(resolved().value),
+      x1: 0,
+      x2: ctx.innerWidth(),
+      caption: props.label,
+    }),
+  );
 
   return (
     <g class={`sui-chart__ref${props.class ? ` ${props.class}` : ""}`}>
       <Show when={resolved().orientation === "horizontal"}>
         <line
-          x1={0}
-          x2={ctx.innerWidth()}
-          y1={ctx.yScale()(resolved().value)}
-          y2={ctx.yScale()(resolved().value)}
+          x1={horizontalMark().line.x1}
+          x2={horizontalMark().line.x2}
+          y1={horizontalMark().line.y1}
+          y2={horizontalMark().line.y2}
           stroke={strokeColor()}
           stroke-width={props.strokeWidth ?? 1}
           stroke-dasharray={props.strokeDasharray ?? "4 4"}
           opacity={0.6}
         />
-        <Show when={props.label}>
-          <text
-            class="sui-chart__ref-label"
-            x={ctx.innerWidth() - 4}
-            y={ctx.yScale()(resolved().value) - 4}
-            text-anchor="end"
-          >
-            {props.label}
-          </text>
+        <Show when={horizontalMark().caption}>
+          {(caption) => (
+            <text
+              class="sui-chart__ref-label"
+              x={caption().x}
+              y={caption().y}
+              text-anchor={caption().textAnchor}
+            >
+              {caption().text}
+            </text>
+          )}
         </Show>
       </Show>
       <Show when={resolved().orientation === "vertical"}>
