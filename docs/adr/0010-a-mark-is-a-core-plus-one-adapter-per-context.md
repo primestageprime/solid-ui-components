@@ -40,7 +40,7 @@ It does not render wrong. **It throws.**
 
 The coordinates disagree as well. `ReferenceLine` emits plot-local coordinates
 (`x1=0`, `x2=ctx.innerWidth()`) and depends on `Chart`'s margin translate.
-`ScrubChart`'s `yToPlot` (`:446-449`), `plotLeft` and `plotRight` are
+`ScrubChart`'s `yToPlot` (`:450`), `plotLeft` and `plotRight` are
 frame-absolute. An `x1` of `0` lands at the frame's left edge, left of the
 y-axis column.
 
