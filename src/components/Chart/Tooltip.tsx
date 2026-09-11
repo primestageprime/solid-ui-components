@@ -17,6 +17,7 @@ import {
 import { Portal } from "solid-js/web";
 import { observeSize } from "../../internal/dom/observeSize";
 import { useChart } from "./context";
+import { placeTooltipX } from "./tooltipPlacement";
 
 export interface ChartTooltipProps<T> {
   data: readonly T[];
@@ -117,15 +118,14 @@ export function ChartTooltip<T>(props: ChartTooltipProps<T>) {
         // RIGHT of the anchor; when that overflows the chart the tooltip flips
         // to the left of the anchor instead, which reads better than sliding it
         // along the edge and keeps the anchor gap symmetric.
-        const px = () => {
-          const rightEdge = ctx.width();
-          const preferred = anchorX() + offset().x;
-          if (preferred + tipWidth() <= rightEdge) return preferred;
-          const flipped = anchorX() - offset().x - tipWidth();
-          if (flipped >= 0) return flipped;
-          // Wider than the chart itself: pin to whichever edge loses less.
-          return Math.max(0, rightEdge - tipWidth());
-        };
+        const px = () =>
+          placeTooltipX({
+            anchorX: anchorX(),
+            tipWidth: tipWidth(),
+            offsetX: offset().x,
+            boundsLeft: 0,
+            boundsRight: ctx.width(),
+          });
         const py = () => {
           const baseTop = ctx.margin().top;
           const p = pt().p;
