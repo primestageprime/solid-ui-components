@@ -34,7 +34,7 @@ import {
   createMemo,
   createSignal,
 } from "solid-js";
-import { ScrubChart } from "../ScrubChart";
+import { ScrubChart, ScrubChartReferenceLine } from "../ScrubChart";
 import { buildDeviationBand } from "./deviationBand";
 import {
   ChartLabelLayer,
@@ -346,7 +346,6 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   ) => {
     if (ctx.cells.length === 0 || !ctx.yToPlot) return null;
     const yToPlot = ctx.yToPlot;
-    const zeroY = yToPlot(0);
 
     // The primary line reads its balance from lineCells (decoupled from the
     // ribbon when balanceLineCells is set); geometry (x) stays from ctx.
@@ -551,12 +550,10 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
               />
             )}
           </For>
-          <line
+          <ScrubChartReferenceLine
+            ctx={ctx}
+            value={0}
             class="sui-cashflow-scrub-chart__zero-line"
-            x1={ctx.plotLeft}
-            x2={ctx.plotRight}
-            y1={zeroY}
-            y2={zeroY}
           />
           {seriesLines(seriesUnder)}
           <polyline
@@ -656,38 +653,25 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             paints first" ordering the gridlines use. Non-interactive: no
             hit area, no click. */}
         <For each={hLines}>
-          {(m) => {
-            const y = yToPlot(m.valueCents);
-            return (
-              <g class="sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--hrule">
-                <line
-                  class={`sui-cashflow-scrub-chart__hrule-line${
-                    m.class ? ` ${m.class}` : ""
-                  }`}
-                  x1={ctx.plotLeft}
-                  x2={ctx.plotRight}
-                  y1={y}
-                  y2={y}
-                  // Presentation attributes so `CashflowHorizontalMarker.class`
-                  // wins on a plain single class.
-                  stroke="var(--sui-cashflow-marker, rgba(224, 178, 77, 1))"
-                  stroke-width="1"
-                  stroke-dasharray="5 4"
-                  opacity="0.7"
-                />
-                {m.label && (
-                  <text
-                    class="sui-cashflow-scrub-chart__hrule-label"
-                    x={ctx.plotRight - 4}
-                    y={y - 4}
-                    text-anchor="end"
-                  >
-                    {m.label}
-                  </text>
-                )}
-              </g>
-            );
-          }}
+          {(m) => (
+            <g class="sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--hrule">
+              <ScrubChartReferenceLine
+                ctx={ctx}
+                value={m.valueCents}
+                label={m.label}
+                class={`sui-cashflow-scrub-chart__hrule-line${
+                  m.class ? ` ${m.class}` : ""
+                }`}
+                labelClass="sui-cashflow-scrub-chart__hrule-label"
+                // Presentation attributes so `CashflowHorizontalMarker.class`
+                // wins on a plain single class.
+                stroke="var(--sui-cashflow-marker, rgba(224, 178, 77, 1))"
+                strokeWidth={1}
+                strokeDasharray="5 4"
+                opacity={0.7}
+              />
+            </g>
+          )}
         </For>
         <For
           each={filter((m) => m.index >= 0 && m.index < ctx.cells.length, list)}
