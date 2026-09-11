@@ -1,6 +1,19 @@
 // ============================================
 // deviationBand — pure geometry for a deviation band between two lines.
 //
+// A CORE per docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md:
+// it takes explicit pixel geometry (via `cellToX` / `yToPlot`) and returns
+// the runs to draw. It reads no context, touches no cell, and knows no unit.
+//
+// Two adapters call this core:
+//   - `Chart`'s `DeviationBand` (DeviationBand.tsx) supplies PLOT-LOCAL
+//     pixels from `useChart()`'s `xScale` / `yScale`.
+//   - `ScrubChart`'s `ScrubChartBand` (../ScrubChart/ScrubChartBand.tsx)
+//     supplies FRAME-ABSOLUTE pixels from its own `cellToX` / `yToPlot`.
+// Neither fact belongs here. The core does arithmetic on whatever pixel
+// space it is given; the adapter is where the coordinate difference is
+// absorbed.
+//
 // A deviation chart shades the gap between a `series` line and a `reference`
 // line, coloured by the sign of the deviation: "positive" where the
 // series runs ABOVE the reference, "negative" where it dips below. A vertex
@@ -8,6 +21,11 @@
 // meet — no fill bleeds across a crossover. Either accessor returning `null`
 // breaks the band: spans on each side are shaded independently, the gap is
 // left empty.
+//
+// The green-above / red-below READING (and `CashflowSeriesFill`'s class
+// names) is a cashflow surplus/shortfall convention, not a general truth
+// about bands — it stays a `CashflowScrubChart` default, applied by its
+// caller of `ScrubChartBand`, not by this core or by either adapter.
 //
 // Pure and generic over the item type: same inputs → same polygons, no DOM,
 // no Solid reactivity. Lives in its own module so the crossing-split logic
