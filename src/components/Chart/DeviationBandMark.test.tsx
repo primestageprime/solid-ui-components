@@ -37,7 +37,6 @@ describe("DeviationBand — the Chart adapter", () => {
   });
 
   it("uses xScale/yScale — plot-local, matching the chart's own geometry", () => {
-    let capturedX0: number | undefined;
     const { container } = render(() => {
       return (
         <Chart width={200} height={100} xDomain={[0, 4]} yDomain={[-10, 10]}>
@@ -52,10 +51,10 @@ describe("DeviationBand — the Chart adapter", () => {
       );
     });
     // xScale maps [0,4] -> [0, innerWidth]; x=0 -> 0 in plot-local coords.
-    capturedX0 = 0;
+    const plotLocalX0 = 0;
     const polygon = container.querySelector(".band-pos")!;
     expect(polygon.getAttribute("points")).toContain(
-      `${capturedX0.toFixed(1)},`,
+      `${plotLocalX0.toFixed(1)},`,
     );
   });
 

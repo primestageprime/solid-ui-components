@@ -143,9 +143,9 @@ describe("AreaSeries — closes the fill at the drawn line's ends", () => {
   // Every "<x>,<y>" pair in the path, in order.
   const pairs = (d: string): [number, number][] => {
     const out: [number, number][] = [];
-    const re = /(-?[\d.]+),(-?[\d.]+)/g;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(d)) !== null) out.push([Number(m[1]), Number(m[2])]);
+    for (const m of d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)) {
+      out.push([Number(m[1]), Number(m[2])]);
+    }
     return out;
   };
 

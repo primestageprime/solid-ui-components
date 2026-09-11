@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { ScrubChart } from "./ScrubChart";
-import type { ScrubChartContext } from "./types";
 import { ScrubChartTooltip } from "./ScrubChartTooltip";
 import { dailyCells, type Cell } from "../DateAxis";
 
