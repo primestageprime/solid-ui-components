@@ -2,7 +2,59 @@
 
 ## Unreleased
 
+## 0.169.0
+
 ### Added
+- **`ScrubChart` gains a mark vocabulary: `ScrubChartReferenceLine`,
+  `ScrubChartBand`, `ScrubChartLabels`, `ScrubChartCrosshair`,
+  `ScrubChartTooltip` and `createScrubChartEmphasis`.** ADR 0010 decides that
+  a mark is two modules: a pure core that takes explicit geometry and returns
+  data, and one thin adapter per chart context. Each `ScrubChart` adapter takes
+  the render context as a `ctx` prop, reads `cellToX`, `yToPlot` and the plot
+  edges from it, and calls the same core `Chart` uses. A consumer that drew a
+  rule, a band, a label ladder or a crosshair by hand inside `renderChart` can
+  compose these instead. `CashflowScrubChart` now does, with byte-identical
+  props.
+
+  ```tsx
+  renderChart={(ctx) => (
+    <svg>
+      <ScrubChartReferenceLine ctx={ctx} value={0} class="my-chart__zero" />
+    </svg>
+  )}
+  ```
+
+- **`Chart` gains `DeviationBand` and `ChartLabels`.** `DeviationBand` fills
+  between a series and a reference, split by sign; the classes for each sign
+  are the caller's. `ChartLabels` runs the label ladder against the plot and
+  draws the survivors. `ReferenceLine`, `Crosshair` and `ChartTooltip` now call
+  the shared cores. Their output does not change.
+
+- **`ScrubChart` owns the plot clip.** The render context carries
+  `clip.plotPathUrl`, a ready `url(#id)` for a `<clipPath>` ScrubChart renders
+  itself. Put it on `clip-path` and the group clips to the plot rect, with no
+  vertical inflation.
+
+- **`ScrubChartMarker` is ScrubChart's first marker type: `index`, `value`,
+  `label`, `class`.** `value` is in y-domain units, the same domain `yToPlot`
+  consumes. `CashflowChartMarker` extends it and keeps `valueCents` as its own
+  spelling. When a caller sets both, `valueCents` wins, because it names its
+  unit.
+
+- **`ScrubChartContext.liveHoverIndex` is the hover signal's own accessor,
+  present in all three render slots.** `hoverIndex` stays `null` outside
+  `renderHoverOverlay`, so `renderChart` still does not re-run on pointer move.
+  A slot that wants the live value calls `liveHoverIndex()` inside its own JSX
+  or memo, and subscribes only there.
+
+- **A vertical `ReferenceLine` draws its label.** The caption sits at the top
+  of the plot, centred on the rule, clamped 18px inside each plot edge. The
+  rule top drops 15px only when a caption draws. A horizontal rule does not
+  change.
+
+- **`ReferenceLine` and `PointSeries` take a `class` prop.** Each appends the
+  caller class to its BEM root group, the same as the other plottable children.
+
 - **A `CashflowScrubChart` `"rule"` marker draws a dot when it carries a
   `valueCents`, so one marker can mark where a vertical rule crosses a
   value.** The rule gives the dot its x and `valueCents` gives it its y, so a
@@ -21,6 +73,27 @@
 
   The `"rule"` renderer moved to `ruleMarker.tsx`, because
   `CashflowScrubChart.tsx` is already past the 500-line guidance.
+
+### Changed
+- **The `CashflowScrubChart` hover tooltip flips on its measured width, not
+  on a midpoint test.** It no longer clips at a plot edge. The rows do not
+  change.
+
+- **The label ladder, its box geometry, the gutter packer and
+  `buildDeviationBand` moved from `CashflowScrubChart/` to `Chart/`.** They
+  are the cores the new adapters call. `CashflowLabelZone` is now an alias of
+  `LabelZone`. No public prop changes.
+
+### Fixed
+- **`AreaSeries` closes its fill at the drawn line's ends.** A trailing or
+  leading datum with a NaN `y` no longer extends the fill past the line. The
+  closing loop uses the same missing-point test as the top edge, with the same
+  `skipMissing`.
+
+- **The right label gutter packs against the rows it draws.** The packer tests
+  each candidate box against the boxes already drawn, so a label with a free
+  row under it is no longer dropped. The gutter, the row pitch and the row cap
+  keep their numbers.
 
 ## 0.168.0
 
