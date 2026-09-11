@@ -1,7 +1,7 @@
 # A mark is a pure core with one thin adapter per chart context
 
-Status: proposed, 2026-09-10. Numbered after ADR 0009, which decides a
-separate y-domain question. Decides dside `sui` #45161, and unblocks #45162,
+Status: ACCEPTED by Adlai, 2026-09-11. Proposed 2026-09-10. Numbered after
+ADR 0009, which decides a separate y-domain question. Decides dside `sui` #45161, and unblocks #45162,
 #45164, #45165, #45169 and #45170.
 
 Line numbers were checked on this branch, NOT on `223ef9d`. The clip work in
@@ -79,6 +79,27 @@ A mark is **two modules, not one**.
 
 The seam sits between the core and the adapters.
 
+### A core returns DATA, not JSX
+
+This is the load-bearing half of the rule. A core that returned JSX would read
+its context to build that JSX, and the seam would be gone.
+
+The repo already answers it, in the same two modules that prove the pattern:
+
+| Core | Returns |
+|---|---|
+| `buildDeviationBand<T>` | `BandRun[]` |
+| `placeLabels` | `readonly LabelPlacementResult[]` |
+
+Both hand back geometry. Neither imports Solid. So a core is unit-testable with
+plain numbers, and the adapter is the only module that knows what an SVG
+element is.
+
+That split also decides where the coordinate difference is absorbed. A core
+takes the geometry it is given and does arithmetic on it. The adapter supplies
+plot-local numbers from `Chart`, or frame-absolute numbers from `ScrubChart`,
+and renders whatever comes back.
+
 ### Why this seam and not another
 
 *One adapter means a hypothetical seam. Two adapters means a real one.* Here
@@ -120,7 +141,8 @@ one chart loses one mark. That asymmetry is the point.
 
 ## What this does not decide
 
-- The core's exact geometry interface per mark. That is per-ticket work.
+- The core's exact geometry interface per mark — WHICH numbers it takes. That
+  is per-ticket work. What it RETURNS is decided above: data.
 - Whether `ScrubChart`'s three render callbacks are retired. They stay for now;
   adapters mount inside them.
 - Whether `Chart`'s existing children are refactored onto cores immediately. A
