@@ -37,8 +37,11 @@ import {
 import {
   ScrubChart,
   ScrubChartBand,
+  ScrubChartCrosshair,
+  type ScrubChartCrosshairSeries,
   ScrubChartLabels,
   ScrubChartReferenceLine,
+  ScrubChartTooltip,
 } from "../ScrubChart";
 import { belowExtraHeight, reserveLabelSpace } from "../Chart/labelPlacement";
 import {
@@ -852,33 +855,26 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     if (hoveredLabel() !== null) return null;
     const idx = ctx.hoverIndex;
     if (idx == null || ctx.cells.length === 0 || !ctx.yToPlot) return null;
-    const yToPlot = ctx.yToPlot;
-    const cell = ctx.cells[idx];
     const x = ctx.cellToX(idx);
-    // A hollow dot for the primary line (from lineCells) + each overlay series
-    // with a value.
-    //
-    // Each dot carries the class of the LINE it sits on — `lineClass` for the
-    // primary, the series' own `class` for an overlay — alongside the shared
-    // hover-dot class. A class on a series must reach EVERY mark that series
-    // draws: with a single fixed class here, a consumer could style its line
-    // and could not touch its dot, so a series hidden through its own class
-    // (stroke: none, fill: none) kept an unexplained circle on the crosshair
-    // that matched nothing in the tooltip.
-    const primaryLineCell = lineCells()[idx];
-    const dots: { y: number; class?: string }[] = primaryLineCell
-      ? [{ y: yToPlot(primaryLineCell.balanceCents), class: props.lineClass }]
-      : [];
-    for (const s of props.balanceSeries ?? []) {
-      const v = s.balanceCents(cell, idx);
-      if (v != null) dots.push({ y: yToPlot(v), class: s.class });
-    }
-    // Flip the card to the pointer's left in the right half so it never
-    // clips off the right edge; anchor its top at the plot top.
-    const flipLeft = x > (ctx.plotLeft + ctx.plotRight) / 2;
-    const cardStyle: import("solid-js").JSX.CSSProperties = flipLeft
-      ? { right: `${ctx.width - x + 12}px`, top: `${ctx.plotTop}px` }
-      : { left: `${x + 12}px`, top: `${ctx.plotTop}px` };
+    // One crosshair line per drawn line: the primary (read from `lineCells`,
+    // decoupled from `ctx.cells` — see the `lineCells` doc comment) plus
+    // each overlay series with a value at this cell. Each carries the class
+    // of the LINE it sits on — `lineClass` for the primary, the series' own
+    // `class` for an overlay — alongside the shared hover-dot class, so a
+    // series hidden through its own class does not leave an unexplained
+    // circle on the crosshair.
+    const series: ScrubChartCrosshairSeries<CashflowCell>[] = [
+      {
+        id: "primary",
+        value: (_cell, i) => lineCells()[i]?.balanceCents ?? null,
+        class: props.lineClass,
+      },
+      ...(props.balanceSeries ?? []).map((s) => ({
+        id: s.id,
+        value: (cell: CashflowCell, i: number) => s.balanceCents(cell, i),
+        class: s.class,
+      })),
+    ];
     return (
       <>
         <svg
@@ -887,45 +883,34 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           viewBox={`0 0 ${ctx.width} ${ctx.height}`}
           preserveAspectRatio="none"
         >
-          <line
+          <ScrubChartCrosshair
+            ctx={ctx}
+            series={series}
             class="sui-cashflow-scrub-chart__hover-rule"
-            x1={x}
-            x2={x}
-            y1={ctx.plotTop}
-            y2={ctx.plotBottom}
+            dotClass="sui-cashflow-scrub-chart__hover-dot"
+            // Defaults as PRESENTATION ATTRIBUTES, not as a rule in the
+            // stylesheet. The line's class and a base rule are both single
+            // -class selectors, so a rule here would tie with the caller's
+            // class and let stylesheet ORDER decide — and a consumer whose
+            // CSS loads before SUI's would find the dot unreachable again,
+            // which is the whole defect this class was added to fix. A
+            // presentation attribute loses to any author rule, so the
+            // caller's class always wins. Themes move these two variables.
+            dotFill="var(--sui-cashflow-hover-dot-fill, var(--sui-bg-elevated))"
+            dotStroke="var(--sui-cashflow-hover-dot-stroke, var(--sui-text-primary))"
+            dotStrokeWidth={1.5}
+            dotOpacity={0.9}
           />
-          <For each={dots}>
-            {(dot) => (
-              <circle
-                class={`sui-cashflow-scrub-chart__hover-dot${
-                  dot.class ? ` ${dot.class}` : ""
-                }`}
-                cx={x}
-                cy={dot.y}
-                r={3.5}
-                // Defaults as PRESENTATION ATTRIBUTES, not as a rule in the
-                // stylesheet. The line's class and a base rule are both single
-                // -class selectors, so a rule here would tie with the caller's
-                // class and let stylesheet ORDER decide — and a consumer whose
-                // CSS loads before SUI's would find the dot unreachable again,
-                // which is the whole defect this class was added to fix. A
-                // presentation attribute loses to any author rule, so the
-                // caller's class always wins. Themes move these two variables.
-                fill="var(--sui-cashflow-hover-dot-fill, var(--sui-bg-elevated))"
-                stroke="var(--sui-cashflow-hover-dot-stroke, var(--sui-text-primary))"
-                stroke-width="1.5"
-                opacity="0.9"
-              />
-            )}
-          </For>
         </svg>
         <Show when={props.renderHoverTooltip}>
-          <div
+          <ScrubChartTooltip
+            ctx={ctx}
+            anchorX={x}
+            anchorY={ctx.plotTop}
             class="sui-cashflow-scrub-chart__hover-tooltip"
-            style={cardStyle}
           >
-            {props.renderHoverTooltip!(cell, idx)}
-          </div>
+            {props.renderHoverTooltip!(ctx.cells[idx], idx)}
+          </ScrubChartTooltip>
         </Show>
       </>
     );
