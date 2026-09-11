@@ -34,8 +34,11 @@ import {
   createMemo,
   createSignal,
 } from "solid-js";
-import { ScrubChart, ScrubChartReferenceLine } from "../ScrubChart";
-import { buildDeviationBand } from "./deviationBand";
+import {
+  ScrubChart,
+  ScrubChartBand,
+  ScrubChartReferenceLine,
+} from "../ScrubChart";
 import {
   ChartLabelLayer,
   PRIMARY_LABEL_ID,
@@ -424,35 +427,14 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 
     // Deviation bands — the coloured area between a `fill`-bearing series and
     // its reference line (primary line by default). Drawn at the very back so
-    // the lines and decorations sit on top. Split at crossings by the geometry
-    // helper, so each polygon is uniformly green (series above reference) or
-    // red (series below reference).
-    const bands = pipe(
+    // the lines and decorations sit on top. Rendered by `ScrubChartBand`, the
+    // `ScrubChart` adapter for the shared `buildDeviationBand` core (ADR
+    // 0010, dside task 45165). The green-above / red-below reading is THIS
+    // component's own default — the adapter carries no polarity of its own —
+    // applied below as the per-sign class and fill passed at the call site.
+    const fillSeries = filter(
+      (s) => Boolean(s.fill),
       props.balanceSeries ?? [],
-      filter((s) => Boolean(s.fill)),
-      flatMap((s) => {
-        const fill = s.fill!;
-        const reference =
-          fill.baseline ?? ((c: CashflowCell) => c.balanceCents);
-        const overrideClass = (sign: "positive" | "negative") =>
-          sign === "positive" ? fill.positiveClass : fill.negativeClass;
-        return map(
-          (run, i) => ({
-            key: `${s.id}-${i}`,
-            seriesId: s.id,
-            sign: run.sign,
-            points: run.points,
-            overrideClass: overrideClass(run.sign),
-          }),
-          buildDeviationBand(
-            ctx.cells,
-            ctx.cellToX,
-            yToPlot,
-            s.balanceCents,
-            reference,
-          ),
-        );
-      }),
     );
 
     // Selection decorations are part of the scrub layer — omitted in plain
@@ -525,30 +507,37 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             rather than spilling over the axis labels. ScrubChart owns the rect
             and the id now — see `ScrubChartClip`. */}
         <g clip-path={ctx.clip.plotPathUrl}>
-          <For each={bands}>
-            {(band) => (
-              <polygon
-                class={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--${
-                  band.sign
-                }${
-                  band.overrideClass ? ` ${band.overrideClass}` : ""
-                }${emphasisClass(
-                  "sui-cashflow-scrub-chart__band",
-                  `series:${band.seriesId}`,
-                )}`}
-                points={band.points}
-                // Defaults as presentation attributes so `fill.positiveClass` /
-                // `fill.negativeClass` win on a plain single class — see the
-                // balance lines above. The sign picks the value here because
-                // the class that used to carry it is now only a hook.
-                stroke="none"
-                fill={
-                  band.sign === "positive"
-                    ? "var(--sui-cashflow-band-positive, rgba(0, 200, 120, 0.18))"
-                    : "var(--sui-cashflow-band-negative, rgba(230, 70, 70, 0.18))"
-                }
-              />
-            )}
+          <For each={fillSeries}>
+            {(s) => {
+              const fill = s.fill!;
+              const reference =
+                fill.baseline ?? ((c: CashflowCell) => c.balanceCents);
+              // Defaults as presentation attributes (positiveFill/negativeFill)
+              // so `fill.positiveClass` / `fill.negativeClass` win on a plain
+              // single class — see the balance lines above.
+              return (
+                <ScrubChartBand
+                  ctx={ctx}
+                  items={ctx.cells}
+                  series={s.balanceCents}
+                  reference={reference}
+                  positiveClass={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--positive${
+                    fill.positiveClass ? ` ${fill.positiveClass}` : ""
+                  }${emphasisClass(
+                    "sui-cashflow-scrub-chart__band",
+                    `series:${s.id}`,
+                  )}`}
+                  negativeClass={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--negative${
+                    fill.negativeClass ? ` ${fill.negativeClass}` : ""
+                  }${emphasisClass(
+                    "sui-cashflow-scrub-chart__band",
+                    `series:${s.id}`,
+                  )}`}
+                  positiveFill="var(--sui-cashflow-band-positive, rgba(0, 200, 120, 0.18))"
+                  negativeFill="var(--sui-cashflow-band-negative, rgba(230, 70, 70, 0.18))"
+                />
+              );
+            }}
           </For>
           <ScrubChartReferenceLine
             ctx={ctx}
