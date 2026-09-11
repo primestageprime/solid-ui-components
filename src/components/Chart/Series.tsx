@@ -38,15 +38,10 @@ interface SeriesBase<T> {
 // Do not converge them. Both `null` and NaN-plus-`skipMissing` appear in
 // public props, so either move is a breaking public API change.
 //
-// Inside `Chart`, `buildLine` and `PointSeries` share this one test.
-//
-// `AreaSeries` does NOT. Its baseline-closing loop tests `Number.isNaN(xv)`
-// alone: it ignores `y` and ignores `skipMissing`, so a datum with a valid `x`
-// and a NaN `y` still sets the closing `first`/`last`. A trailing NaN `y`
-// therefore closes the fill at an x where the top line has no point, and the
-// filled region runs past the drawn line. That is a real defect, it predates
-// this helper, and folding it in here would change rendered output — so it is
-// filed as dside task 45210 rather than fixed in a refactor that promises none.
+// Inside `Chart`, `buildLine`, `PointSeries` and `AreaSeries`'s
+// baseline-closing loop all share this one test. The closing loop once tested
+// `Number.isNaN(xv)` alone, so a trailing NaN `y` closed the fill past the
+// drawn line; dside task 45210 fixed that.
 const isMissingPoint = (
   skipMissing: boolean,
   xv: number,
@@ -140,12 +135,15 @@ export function AreaSeries<T>(props: AreaSeriesProps<T>) {
       props.skipMissing ?? true,
     );
     if (!top) return "";
-    // Find first/last data x to close the area along the baseline.
+    // Find the first and last DRAWN x to close the area along the baseline.
+    // The same missing-point test `buildLine` uses, so the fill never runs
+    // past the top line (dside task 45210).
+    const skipMissing = props.skipMissing ?? true;
     let first: number | null = null;
     let last: number | null = null;
     for (const dd of props.data) {
       const xv = props.x(dd);
-      if (Number.isNaN(xv)) continue;
+      if (isMissingPoint(skipMissing, xv, props.y(dd))) continue;
       if (first === null) first = xv;
       last = xv;
     }
