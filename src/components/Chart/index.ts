@@ -23,6 +23,8 @@ export { Crosshair } from "./Crosshair";
 export type { CrosshairProps, CrosshairSeries } from "./Crosshair";
 export { DeviationBand } from "./DeviationBandMark";
 export type { DeviationBandProps } from "./DeviationBandMark";
+export { ChartLabels } from "./ChartLabels";
+export type { ChartLabelsProps } from "./ChartLabels";
 export { ChartTooltip } from "./Tooltip";
 export type { ChartTooltipProps } from "./Tooltip";
 export { useChart } from "./context";

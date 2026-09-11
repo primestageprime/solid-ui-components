@@ -2,6 +2,7 @@ import { type Component, createMemo, createSignal } from "solid-js";
 import {
   ScrubChart,
   ScrubChartBand,
+  ScrubChartLabels,
   ScrubChartReferenceLine,
 } from "../../src/components/ScrubChart";
 import { dailyCells, type Cell } from "../../src/components/DateAxis";
@@ -275,6 +276,40 @@ const renderBoundedChart = (
   );
 };
 
+// The label ladder — `ScrubChart`'s adapter for the shared `placeLabels`
+// core (ADR 0010, dside task 45164). `CashflowScrubChart` builds its own
+// cashflow-bound candidates and calls this same adapter; this demo supplies
+// one candidate by hand to show the call site a plain `ScrubChart` consumer
+// would write.
+const renderLabelOverlay = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => (
+  <svg
+    viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+    preserveAspectRatio="none"
+    class="scrub-chart-demo__svg"
+  >
+    <ScrubChartLabels
+      ctx={ctx}
+      labels={[
+        {
+          id: "balance",
+          text: "Balance",
+          width: 50,
+          height: 11,
+          placement: "right",
+          x: ctx.cellToX(cells.length - 1),
+          y: ctx.yToPlot?.(cells[cells.length - 1].balanceCents) ?? 0,
+          endY: ctx.yToPlot?.(cells[cells.length - 1].balanceCents) ?? 0,
+        },
+      ]}
+      polylines={[]}
+      reservedSpace={{ rightGutter: 56, belowRows: 0 }}
+      classPrefix="scrub-chart-demo__label"
+    />
+  </svg>
+);
+
 // A threshold AMOUNT — `ScrubChart`'s adapter for the reference-line mark
 // (ADR 0010). It calls the SAME core `Chart`'s own `<ReferenceLine>` calls;
 // only the coordinate space differs — frame-absolute here (`ctx.plotLeft` /
@@ -487,6 +522,29 @@ export const ScrubChartShowcase: Component = () => {
           xTickCadence="auto"
           renderCell={cashflowDayCell}
           renderChart={renderBoundedChart}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>The label ladder via the ScrubChart adapter</h3>
+        <p class="text-meta">
+          <code>ScrubChartLabels</code> calls the same <code>placeLabels</code>{" "}
+          core as <code>Chart</code>'s own Labels slot child — the coordinate
+          difference is frame-absolute here, plot-local there.{" "}
+          <code>CashflowScrubChart</code> calls this adapter with candidates it
+          builds from its own balance series and markers.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          showGridlines
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderScaledChart}
+          renderChartOverlay={renderLabelOverlay}
         />
       </div>
 

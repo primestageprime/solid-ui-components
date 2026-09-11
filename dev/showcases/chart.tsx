@@ -16,6 +16,7 @@ import {
   BarSeries,
   ReferenceLine,
   DeviationBand,
+  ChartLabels,
   Crosshair,
   ChartTooltip,
   domainOf,
@@ -209,6 +210,41 @@ export const ChartShowcase: Component = () => {
               x={(d) => d.t}
               y={(d) => d.v}
               strokeWidth={2}
+            />
+          </Chart>
+
+          <h3 class="showcase-heading-gap">Labels — the Chart adapter</h3>
+          <p class="text-meta">
+            <code>ChartLabels</code> places one label per item with the same
+            ladder core (<code>placeLabels</code>) <code>ScrubChart</code>'s{" "}
+            <code>ScrubChartLabels</code> adapter calls (ADR 0010, dside task
+            45164) — body first, then the right gutter, then a row under the
+            axis.
+          </p>
+          <Chart
+            width={640}
+            height={220}
+            xDomain={xDomain}
+            yDomain={[0, 100]}
+            margin={{ top: 12, right: 60, bottom: 28, left: 40 }}
+          >
+            <Grid />
+            <YAxis tickCount={5} tickFormat={(v) => `${v}%`} />
+            <XAxis tickCount={6} />
+            <LineSeries
+              data={series}
+              x={(d) => d.t}
+              y={(d) => d.v}
+              strokeWidth={2}
+            />
+            <ChartLabels
+              data={[series[series.length - 1]]}
+              id={() => "last"}
+              text={(d) => `${d.v.toFixed(1)}%`}
+              width={() => 34}
+              x={(d) => d.t}
+              y={(d) => d.v}
+              placement={() => "right"}
             />
           </Chart>
 
