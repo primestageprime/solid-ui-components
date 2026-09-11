@@ -6,7 +6,7 @@
 // the runs to draw. It reads no context, touches no cell, and knows no unit.
 //
 // Two adapters call this core:
-//   - `Chart`'s `DeviationBand` (DeviationBand.tsx) supplies PLOT-LOCAL
+//   - `Chart`'s `DeviationBand` (DeviationBandMark.tsx) supplies PLOT-LOCAL
 //     pixels from `useChart()`'s `xScale` / `yScale`.
 //   - `ScrubChart`'s `ScrubChartBand` (../ScrubChart/ScrubChartBand.tsx)
 //     supplies FRAME-ABSOLUTE pixels from its own `cellToX` / `yToPlot`.
