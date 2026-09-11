@@ -357,6 +357,64 @@ describe("ScrubChart hover plumbing", () => {
     expect(layer()).toBeNull();
   });
 
+  it("exposes liveHoverIndex as a fine-grained accessor in every render slot", () => {
+    // liveHoverIndex differs from hoverIndex: it is the SAME accessor in
+    // renderChart, renderChartOverlay and renderHoverOverlay, and a consumer
+    // that calls it inside its own JSX/memo subscribes directly to the
+    // pointer-move signal — renderChart itself must NOT re-run.
+    const renderChartCalls = vi.fn();
+    const renderChartOverlayCalls = vi.fn();
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        hover
+        yDomain={[0, 100]}
+        renderChart={(ctx) => {
+          renderChartCalls();
+          return (
+            <div
+              data-testid="live-chart"
+              data-idx={String(ctx.liveHoverIndex())}
+            />
+          );
+        }}
+        renderChartOverlay={(ctx) => {
+          renderChartOverlayCalls();
+          return (
+            <div
+              data-testid="live-overlay"
+              data-idx={String(ctx.liveHoverIndex())}
+            />
+          );
+        }}
+        renderCell={() => <div />}
+        renderHoverOverlay={() => <div />}
+      />
+    ));
+    const frame = container.querySelector(".sui-scrub-chart__frame")!;
+    const liveChart = container.querySelector("[data-testid=live-chart]")!;
+    const liveOverlay = container.querySelector("[data-testid=live-overlay]")!;
+
+    expect(liveChart.getAttribute("data-idx")).toBe("null");
+    expect(liveOverlay.getAttribute("data-idx")).toBe("null");
+    expect(renderChartCalls).toHaveBeenCalledTimes(1);
+    expect(renderChartOverlayCalls).toHaveBeenCalledTimes(1);
+
+    pointer(frame).move({ clientX: 200, clientY: 30 });
+    const idx = Number(liveChart.getAttribute("data-idx"));
+    expect(idx).toBeGreaterThanOrEqual(0);
+    expect(idx).toBeLessThan(10);
+    expect(liveOverlay.getAttribute("data-idx")).toBe(String(idx));
+    // The slot function bodies never re-ran; only the reactive attribute did.
+    expect(renderChartCalls).toHaveBeenCalledTimes(1);
+    expect(renderChartOverlayCalls).toHaveBeenCalledTimes(1);
+
+    pointer(frame).leave();
+    expect(liveChart.getAttribute("data-idx")).toBe("null");
+    expect(liveOverlay.getAttribute("data-idx")).toBe("null");
+  });
+
   it("still clamps a click past the right edge to the last cell", () => {
     // The hover fix must not reach the click-to-scrub gesture, which keeps the
     // clamp: a click past the last cell still means the last cell.

@@ -476,6 +476,10 @@ export const ScrubChart = <C extends Cell>(
     plotHeight: plotHeight(),
     yToPlot: yScale() ? yToPlot : null,
     hoverIndex: null,
+    // The signal's own getter, not a call — every slot gets the SAME
+    // accessor, so a consumer that calls it inside its own memo subscribes
+    // straight to the signal instead of to this (non-reactive) ctx snapshot.
+    liveHoverIndex: hoverIndex,
     clip,
   });
 

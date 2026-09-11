@@ -146,6 +146,18 @@ export interface ScrubChartContext<C extends Cell> {
    *  `renderChartOverlay` so those don't re-run on every pointer move). */
   hoverIndex: number | null;
   /**
+   * Fine-grained read of the live hover state, present in all three render
+   * slots (`renderChart`, `renderChartOverlay`, `renderHoverOverlay`) — unlike
+   * `hoverIndex` above, this field is the SAME accessor in every slot, so a
+   * consumer can read it from `renderChart` or `renderChartOverlay` too.
+   *
+   * Call it inside your OWN `createMemo` or effect to subscribe only there —
+   * `ctx` itself is a plain snapshot object, not reactive, so reading this
+   * field is the only way a slot that isn't `renderHoverOverlay` learns about
+   * pointer movement without ScrubChart re-invoking the whole slot.
+   */
+  liveHoverIndex: () => number | null;
+  /**
    * Clip references ScrubChart owns, so a consumer never hand-rolls one.
    *
    * `plotPathUrl` is a ready-to-use `url(#id)` for a `<clipPath>` ScrubChart
