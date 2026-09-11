@@ -5,27 +5,18 @@
 // ============================================
 // The `Chart` ADAPTER for the deviation-band mark, per
 // docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md.
-//
-// Filed as DeviationBandMark.tsx, not DeviationBand.tsx: this directory
-// already has `deviationBand.ts` (the core), and a name differing only in
-// case breaks TypeScript's and Vite's module resolution on a case-preserving
-// filesystem (macOS APFS) — the import silently resolves to the wrong
-// module. `ReferenceLine` (Series.tsx) dodges the same hazard against
-// `referenceLine.ts` by living inside an unrelated filename; this component
-// takes the same approach, one step further. The export stays `DeviationBand`.
-//
-// `buildDeviationBand` (`./deviationBand.ts`) is the CORE: it takes explicit
-// pixel geometry and returns `BandRun[]`, data — never JSX. This adapter
-// reads `useChart()` — PLOT-LOCAL, value-addressed — and converts `data`
-// through `xScale` / `yScale` into that geometry, then draws whatever the
-// core returns. `ScrubChart`'s `ScrubChartBand`
+// `buildDeviationBand` (`./deviationBand.ts`) is the CORE. This adapter
+// reads `useChart()` — PLOT-LOCAL — and converts `data` through
+// `xScale`/`yScale` into the core's geometry. `ScrubChart`'s `ScrubChartBand`
 // (`../ScrubChart/ScrubChartBand.tsx`) is the other adapter; it supplies
-// FRAME-ABSOLUTE pixels from a `ScrubChartContext` instead — the coordinate
-// difference the two adapters exist to absorb.
-//
-// This adapter carries no colour or polarity reading of its own — no
-// "positive is green" default. `positiveClass` / `negativeClass` are plain
-// per-sign pass-through props, left undefined when the caller supplies none.
+// FRAME-ABSOLUTE pixels instead — the difference the two adapters absorb.
+// It carries no colour default of its own: `positiveClass`/`negativeClass`
+// are plain per-sign pass-through props.
+// Filed as DeviationBandMark.tsx, not DeviationBand.tsx: a name differing
+// only in case from the core's `deviationBand.ts` breaks TS/Vite module
+// resolution on a case-preserving filesystem (macOS). `ReferenceLine`
+// (Series.tsx) dodges the same hazard the same way. The export stays
+// `DeviationBand`.
 // ============================================
 import { For, createMemo } from "solid-js";
 import { useChart } from "./context";
