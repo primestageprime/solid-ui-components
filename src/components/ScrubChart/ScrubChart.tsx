@@ -30,6 +30,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  createUniqueId,
   mergeProps,
   onCleanup,
   onMount,
@@ -69,6 +70,7 @@ import {
 import { DEFAULT_Y_FIT_TRANSITION_MS } from "./yDomainTween";
 import type {
   ResolvedXTickCadence,
+  ScrubChartClip,
   ScrubChartContext,
   ScrubChartDataProps,
   ScrubChartOverrides,
@@ -85,8 +87,10 @@ import "./ScrubChart.css";
 import { map, filter } from "../../fn";
 
 export type {
+  ScrubChartClip,
   ScrubChartContext,
   ScrubChartHighlight,
+  ScrubChartMarker,
   ScrubChartProps,
   ScrubChartOverrides,
   ScrubChartDataProps,
@@ -448,6 +452,12 @@ export const ScrubChart = <C extends Cell>(
     return s ? s(v) : v;
   };
 
+  // Unique clipPath id per instance — two charts on one page each have their
+  // own plot geometry and must not share a rect. `createUniqueId` keeps the id
+  // stable across server/client renders.
+  const clipId = `sui-scrub-chart-clip-${createUniqueId()}`;
+  const clip: ScrubChartClip = { plotPathUrl: `url(#${clipId})` };
+
   const ctx = (): ScrubChartContext<C> => ({
     cellToX: indexToX,
     cellBounds: indexBounds,
@@ -466,6 +476,11 @@ export const ScrubChart = <C extends Cell>(
     plotHeight: plotHeight(),
     yToPlot: yScale() ? yToPlot : null,
     hoverIndex: null,
+    // The signal's own getter, not a call — every slot gets the SAME
+    // accessor, so a consumer that calls it inside its own memo subscribes
+    // straight to the signal instead of to this (non-reactive) ctx snapshot.
+    liveHoverIndex: hoverIndex,
+    clip,
   });
 
   // ── Pointer-driven pan / click on the chart frame ────────────────────
@@ -620,6 +635,47 @@ export const ScrubChart = <C extends Cell>(
           />
         </Show>
         <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
+        {/* Clip host — ScrubChart owns no <svg> around `renderChart` (the
+            consumer supplies its own), so the plot-rect <clipPath> lives in a
+            zero-size <svg> of its own. A clipPath paints nothing itself, and
+            `userSpaceOnUse` resolves against the REFERENCING element, so the
+            host's size is irrelevant. No vertical inflation: a series past the
+            domain clips hard at `plotTop`.
+
+            It renders AFTER `renderChart` on purpose: this host is
+            UNCONDITIONAL, so placing it first would put a zero-size <svg> ahead
+            of the consumer's chart in every ScrubChart ever rendered.
+            `url(#id)` resolves document-wide, so a reference from the earlier
+            <svg> still finds this clipPath.
+
+            This does NOT make `frame.querySelector("svg")` reach the
+            consumer's chart. `ScrubChartHighlights` and `ScrubChartGrid` each
+            render their own <svg> before `renderChart` too. They are opt-in;
+            this host is not, which is the whole reason it moved.
+
+            `width`/`height` are attributes as well as CSS. Without the
+            stylesheet — SSR's first paint, or a consumer build that strips
+            component CSS — a bare inline <svg> falls back to 300x150 and
+            would push the consumer's chart down. */}
+        <Show when={chartWidth() > 0}>
+          <svg
+            class="sui-scrub-chart__defs"
+            width="0"
+            height="0"
+            aria-hidden="true"
+          >
+            <defs>
+              <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+                <rect
+                  x={plotLeft()}
+                  y={plotTop()}
+                  width={Math.max(0, plotRight() - plotLeft())}
+                  height={Math.max(0, plotBottom() - plotTop())}
+                />
+              </clipPath>
+            </defs>
+          </svg>
+        </Show>
         {/* Axis chrome — drawn after the chart so labels sit on top of any
             line bleed but the lines themselves can still be clipped to the
             plot region by the consumer. Pointer-events disabled so the

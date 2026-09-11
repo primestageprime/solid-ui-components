@@ -17,7 +17,34 @@ import {
   formatCompactNumber,
   formatGroupedNumber,
 } from "../../internal/format/number";
-import type { CashflowCell } from "./types";
+import type { CashflowCell, CashflowChartMarker } from "./types";
+
+/**
+ * The marker's y value in cents, from whichever field the caller filled.
+ *
+ * `value` is the unit-free name inherited from `ScrubChartMarker`;
+ * `valueCents` is this chart's own spelling of the same number. NEITHER is
+ * deprecated — see the note on `CashflowChartMarker.valueCents`. This chart's
+ * y-domain is ALREADY in cents, so the two hold the identical number and no
+ * conversion happens.
+ *
+ * `valueCents` WINS when a caller sets both, because it is the more specific
+ * name and it states its unit. The case that decides this: a caller adapting a
+ * generic marker writes `{ ...m, valueCents: toCents(m.amount) }`, and the
+ * spread carries `m.value` along in whatever unit that source used. Letting
+ * `value` win there puts the dot at a raw number on a cents axis — off by
+ * 100x, with no type error. Letting `valueCents` win reads the field the
+ * caller wrote on purpose.
+ *
+ * Setting both is still a caller mistake; this only picks the safer loser.
+ * Making it unrepresentable is dside task 45209.
+ *
+ * Returns `undefined` when the marker names neither, which every caller reads
+ * as "no explicit y".
+ */
+export const markerValueCents = (
+  marker: CashflowChartMarker,
+): number | undefined => marker.valueCents ?? marker.value;
 
 /** Signed dollar label — `+$1,234` / `−$1,234` — for the per-day amount row. */
 export const fmtDollars = (cents: number): string => {
@@ -63,6 +90,13 @@ export const barFraction = (cents: number, maxAbsCents: number): number => {
 // Map a balance accessor over the cells into one or more polyline point
 // strings, splitting on every `null` so a gap breaks the line rather than
 // connecting across it. Pure: same cells + accessor → same segments.
+//
+// `null` — not NaN — is the missing-value convention here, because these
+// accessors are cell-indexed and a cell legitimately holds no value. `Chart`
+// takes NaN plus `skipMissing` instead, because there the datum type is the
+// caller's. The two are scoped, not competing; do NOT converge them. The full
+// statement of the boundary lives in `Chart/Series.tsx`, above
+// `isMissingPoint`.
 export const buildLineSegments = (
   cells: CashflowCell[],
   cellToX: (i: number) => number,
@@ -151,6 +185,11 @@ export const extentOf = (values: readonly number[]): [number, number] => {
  * the zero-INDEPENDENT row: it frames the values with symmetric padding so a
  * line living in a narrow band uses the full height, and a flat series pads
  * around its own value (or ±1 at zero) rather than collapsing to no height.
+ *
+ * This is ONE of the repo's two y-domain rules, and it runs only when
+ * `ScrubChart` has no fitted domain. `docs/adr/0009-two-y-domain-rules-stay-separate.md`
+ * puts this order beside `ScrubChart`'s `fitYDomain` and lists the eight
+ * differences. Read it before you reconcile the two.
  */
 export const chartYDomain = (
   values: readonly number[],

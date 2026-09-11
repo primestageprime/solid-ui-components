@@ -3,6 +3,7 @@
 // Crosshair — Structural (Depth 1). SVG chart slot; composes no library components.
 // Chart slot: Crosshair — vertical guide + dot at hovered series points.
 import { For, Show, createMemo } from "solid-js";
+import { buildCrosshair } from "./crosshairMark";
 import { useChart } from "./context";
 
 export interface CrosshairSeries<T> {
@@ -42,47 +43,60 @@ export function Crosshair<T>(props: CrosshairProps<T>) {
   const ctx = useChart();
   const guide = () => props.guide ?? true;
 
-  const points = createMemo(() => {
+  // Value-addressed: each series' nearest point to the hovered x can sit at
+  // a slightly different x than the guide, so every point supplies its own.
+  // See crosshairMark.ts for why `ScrubChartCrosshair` (index-addressed) does not.
+  const mark = createMemo(() => {
     const hx = ctx.hoverX();
-    if (hx == null) return [];
-    const out: { cx: number; cy: number; stroke?: string }[] = [];
-    for (const s of props.series ?? []) {
+    if (hx == null) return null;
+    const points: { id: string; x: number; y: number; stroke?: string }[] = [];
+    const series = props.series ?? [];
+    for (let i = 0; i < series.length; i++) {
+      const s = series[i];
       const p = nearestPoint(s.data, s.x, hx);
       if (p == null) continue;
-      out.push({
-        cx: ctx.xScale()(s.x(p)),
-        cy: ctx.yScale()(s.y(p)),
+      points.push({
+        id: String(i),
+        x: ctx.xScale()(s.x(p)),
+        y: ctx.yScale()(s.y(p)),
         stroke: s.stroke,
       });
     }
-    return out;
+    return buildCrosshair({
+      x: ctx.xScale()(hx),
+      points,
+      plotTop: 0,
+      plotBottom: ctx.innerHeight(),
+    });
   });
 
   return (
-    <Show when={ctx.hoverX() != null}>
-      {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: decorative SVG chrome; <g> has no tabindex/handlers and is not actually focusable */}
-      <g class="sui-chart__crosshair" aria-hidden="true">
-        <Show when={guide()}>
-          <line
-            class="sui-chart__crosshair-guide"
-            x1={ctx.xScale()(ctx.hoverX()!)}
-            x2={ctx.xScale()(ctx.hoverX()!)}
-            y1={0}
-            y2={ctx.innerHeight()}
-          />
-        </Show>
-        <For each={points()}>
-          {(p) => (
-            <circle
-              class="sui-chart__crosshair-dot"
-              cx={p.cx}
-              cy={p.cy}
-              r={3.5}
-              stroke={p.stroke}
+    <Show when={mark()}>
+      {(m) => (
+        // biome-ignore lint/a11y/noAriaHiddenOnFocusable: decorative SVG chrome; <g> has no tabindex/handlers and is not actually focusable
+        <g class="sui-chart__crosshair" aria-hidden="true">
+          <Show when={guide()}>
+            <line
+              class="sui-chart__crosshair-guide"
+              x1={m().guide.x1}
+              x2={m().guide.x2}
+              y1={m().guide.y1}
+              y2={m().guide.y2}
             />
-          )}
-        </For>
-      </g>
+          </Show>
+          <For each={m().dots}>
+            {(d) => (
+              <circle
+                class="sui-chart__crosshair-dot"
+                cx={d.cx}
+                cy={d.cy}
+                r={3.5}
+                stroke={d.stroke}
+              />
+            )}
+          </For>
+        </g>
+      )}
     </Show>
   );
 }

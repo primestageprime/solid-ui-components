@@ -26,7 +26,8 @@
 
 import type { Component } from "solid-js";
 import type { ScrubChartContext } from "../ScrubChart";
-import { markerJoinsLadder } from "./labelLayer";
+import { markerValueCents } from "./helpers";
+import { markerJoinsLadder } from "./labelCandidates";
 import type { CashflowCell, CashflowChartMarker } from "./types";
 
 /** Radius of the crossing dot, in user units. */
@@ -71,7 +72,7 @@ export const RuleMarker: Component<RuleMarkerProps> = (props) => {
   const ladderId = () =>
     markerJoinsLadder(marker()) ? `marker:${marker().index}` : null;
   const dotY = () => {
-    const value = marker().valueCents;
+    const value = markerValueCents(marker());
     return value == null ? null : props.yToPlot(value);
   };
   return (

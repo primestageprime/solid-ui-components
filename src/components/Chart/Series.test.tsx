@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import type { Component } from "solid-js";
 import { Chart } from "./Chart";
-import { PointSeries } from "./Series";
+import { AreaSeries, PointSeries } from "./Series";
 import { useChart } from "./context";
 
 interface Datum {
@@ -124,5 +124,56 @@ describe("PointSeries — class prop", () => {
     expect(
       container.querySelector(".sui-chart__points")!.getAttribute("class"),
     ).toBe("sui-chart__points");
+  });
+});
+
+// dside task 45210: the fill must close at the last DRAWN point, not at the
+// last datum with a finite x.
+describe("AreaSeries — closes the fill at the drawn line's ends", () => {
+  const renderArea = (points: readonly Datum[]) => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <AreaSeries data={points} x={(d) => d.x} y={(d) => d.y} />
+      </Chart>
+    ));
+    const path = container.querySelector<SVGPathElement>(".sui-chart__area");
+    return path?.getAttribute("d") ?? "";
+  };
+
+  // Every "<x>,<y>" pair in the path, in order.
+  const pairs = (d: string): [number, number][] => {
+    const out: [number, number][] = [];
+    for (const m of d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)) {
+      out.push([Number(m[1]), Number(m[2])]);
+    }
+    return out;
+  };
+
+  it("a trailing NaN y does not extend the fill past the line", () => {
+    const d = renderArea([
+      { x: 0, y: 10 },
+      { x: 5, y: 20 },
+      { x: 10, y: NaN },
+    ]);
+    const p = pairs(d);
+    // top line: 2 points; closing: 2 baseline points.
+    expect(p.length).toBe(4);
+    const lastDrawn = p[1];
+    const closeFirst = p[2];
+    const closeLast = p[3];
+    expect(closeFirst[0]).toBe(lastDrawn[0]);
+    expect(closeLast[0]).toBe(p[0][0]);
+  });
+
+  it("a leading NaN y does not extend the fill before the line", () => {
+    const d = renderArea([
+      { x: 0, y: NaN },
+      { x: 5, y: 20 },
+      { x: 10, y: 30 },
+    ]);
+    const p = pairs(d);
+    expect(p.length).toBe(4);
+    expect(p[2][0]).toBe(p[1][0]);
+    expect(p[3][0]).toBe(p[0][0]);
   });
 });

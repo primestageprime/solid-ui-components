@@ -63,6 +63,17 @@
   pointer-events: none;
 }
 
+/* Clip host — a zero-size <svg> carrying only the plot-rect <clipPath> that
+   `ctx.clip.plotPathUrl` points at. It paints nothing and must never take
+   layout room or pointer events. */
+.sui-scrub-chart__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .sui-scrub-chart__overlay {
   position: absolute;
   inset: 0;

@@ -9,6 +9,8 @@
 //
 //   • ScrubChartXTickCadence  — the cadence enum a consumer asks for.
 //   • ScrubChartHighlight     — one shaded band spanning a cell range.
+//   • ScrubChartMarker        — one point marker, in cell index + y value.
+//   • ScrubChartClip          — the clip refs the context hands out.
 //   • ResolvedXTickCadence    — the cadence actually chosen (never auto/none).
 //   • ScrubChartContext<C>    — the render-slot context handed to renderChart.
 //   • ScrubChartProps<C>      — the full prop surface of <ScrubChart>.
@@ -39,7 +41,12 @@ export type {
  *  whose candidate count fits under `xMaxTicks` — week → month → quarter →
  *  year, falling back to a strided coarsest cadence for very long ranges. */
 export type ScrubChartXTickCadence =
-  "none" | "auto" | "week" | "month" | "quarter" | "year";
+  | "none"
+  | "auto"
+  | "week"
+  | "month"
+  | "quarter"
+  | "year";
 
 /** Resolved cadence — never `"auto"` or `"none"`, just the unit actually used. */
 export type ResolvedXTickCadence = "week" | "month" | "quarter" | "year";
@@ -70,6 +77,37 @@ export interface ScrubChartHighlight {
    *  define on this class. Per-band because two bands on one chart routinely
    *  carry different meanings, and styling one through the shared base class
    *  recolours every other band too. */
+  class?: string;
+}
+
+/**
+ * One POINT MARKER: a cell index paired with a y value, so a chart can put a
+ * mark exactly where a caller means — "this date, at this amount".
+ *
+ * GEOMETRY ONLY. The shape carries where the mark goes and what it is called;
+ * it carries no variant, no selection state and no interactivity. A consumer
+ * that needs those extends this interface and adds them, which is what
+ * `CashflowChartMarker` does — the base stays the part every chart shares.
+ *
+ * `index` is a CELL INDEX, matching `ScrubChartHighlight`, because a caller
+ * already picks its cells and the chart already owns the index → pixel map.
+ * `value` is in Y-DOMAIN UNITS — the domain `yDomain` states and
+ * `ScrubChartContext.yToPlot` consumes — so the name says nothing about the
+ * unit that domain happens to use. A cents chart passes cents, a percent
+ * chart passes percent, and neither needs a conversion.
+ */
+export interface ScrubChartMarker {
+  /** Cell index the marker sits on. */
+  index: number;
+  /** Y position in y-domain units. Optional: a marker with no value leaves
+   *  the y placement to the consumer (e.g. "sit on the series line"). */
+  value?: number;
+  /** Caption for this marker. Placement is the consumer's to decide. */
+  label?: string;
+  /** Extra CSS class on this marker's own marks ONLY, alongside whatever base
+   *  class the consumer draws with. Per-marker because two markers routinely
+   *  share one base class, and styling one through that class restyles every
+   *  other marker too. */
   class?: string;
 }
 
@@ -107,6 +145,43 @@ export interface ScrubChartContext<C extends Cell> {
    *  the `renderHoverOverlay` slot (it is `null` in `renderChart` /
    *  `renderChartOverlay` so those don't re-run on every pointer move). */
   hoverIndex: number | null;
+  /**
+   * Fine-grained read of the live hover state, present in all three render
+   * slots (`renderChart`, `renderChartOverlay`, `renderHoverOverlay`) — unlike
+   * `hoverIndex` above, this field is the SAME accessor in every slot, so a
+   * consumer can read it from `renderChart` or `renderChartOverlay` too.
+   *
+   * Call it inside your OWN `createMemo` or effect to subscribe only there —
+   * `ctx` itself is a plain snapshot object, not reactive, so reading this
+   * field is the only way a slot that isn't `renderHoverOverlay` learns about
+   * pointer movement without ScrubChart re-invoking the whole slot.
+   */
+  liveHoverIndex: () => number | null;
+  /**
+   * Clip references ScrubChart owns, so a consumer never hand-rolls one.
+   *
+   * `plotPathUrl` is a ready-to-use `url(#id)` for a `<clipPath>` ScrubChart
+   * renders itself. Put it on a `<g clip-path={ctx.clip.plotPathUrl}>` inside
+   * the consumer's own `<svg>` and the group clips to the plot rect —
+   * `plotLeft`/`plotTop` to `plotRight`/`plotBottom`, with no vertical
+   * inflation, so a series that exceeds the domain clips hard at the plot top
+   * instead of painting over the axis labels.
+   *
+   * The rect uses `clipPathUnits="userSpaceOnUse"`, and the coordinates above
+   * are ABSOLUTE chart pixels, so the referencing `<svg>` must share the
+   * chart's user space — `viewBox="0 0 {ctx.width} {ctx.height}"`, the same
+   * frame every ScrubChart consumer already draws in.
+   *
+   * A plain string, not an accessor, like every other member of this context.
+   * The id is per-instance, so two charts on one page never share a rect.
+   */
+  clip: ScrubChartClip;
+}
+
+/** Clip references ScrubChart renders and hands to `renderChart`. */
+export interface ScrubChartClip {
+  /** `url(#id)` for the plot-rect `<clipPath>`. Feed it to `clip-path`. */
+  plotPathUrl: string;
 }
 
 export interface ScrubChartProps<C extends Cell> {

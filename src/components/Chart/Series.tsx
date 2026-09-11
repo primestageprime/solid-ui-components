@@ -11,6 +11,7 @@ import {
   onCleanup,
 } from "solid-js";
 import { useChart } from "./context";
+import { buildReferenceLine } from "./referenceLine";
 import { slotId as brandSlotId } from "./slot-types";
 
 interface SeriesBase<T> {
@@ -20,6 +21,32 @@ interface SeriesBase<T> {
   /** Skip points where x or y is NaN. Default true. */
   skipMissing?: boolean;
 }
+
+// ── The missing-value boundary ───────────────────────────────────────────
+//
+// Two conventions for "this point has no value" live in this repo. They are
+// scoped, not competing, and this ticket has been filed twice:
+//
+// - `Chart` (this file) takes NaN plus `skipMissing`. The datum type `T`
+//   belongs to the caller, so `Chart` cannot state what an absent value looks
+//   like inside it. It reads the caller's `x`/`y` accessors and treats the
+//   number they return as the whole contract; NaN is the only absent number.
+// - `CashflowScrubChart` takes `null` (see `CashflowScrubChart/helpers.ts`,
+//   `buildLineSegments`). Its accessors are cell-indexed and it owns the cell
+//   type, so a cell legitimately holds no value and `null` says exactly that.
+//
+// Do not converge them. Both `null` and NaN-plus-`skipMissing` appear in
+// public props, so either move is a breaking public API change.
+//
+// Inside `Chart`, `buildLine`, `PointSeries` and `AreaSeries`'s
+// baseline-closing loop all share this one test. The closing loop once tested
+// `Number.isNaN(xv)` alone, so a trailing NaN `y` closed the fill past the
+// drawn line; dside task 45210 fixed that.
+const isMissingPoint = (
+  skipMissing: boolean,
+  xv: number,
+  yv: number,
+): boolean => skipMissing && (Number.isNaN(xv) || Number.isNaN(yv));
 
 const buildLine = <T,>(
   data: readonly T[],
@@ -34,7 +61,7 @@ const buildLine = <T,>(
   for (const d of data) {
     const xv = x(d);
     const yv = y(d);
-    if (skipMissing && (Number.isNaN(xv) || Number.isNaN(yv))) {
+    if (isMissingPoint(skipMissing, xv, yv)) {
       need = true;
       continue;
     }
@@ -108,12 +135,15 @@ export function AreaSeries<T>(props: AreaSeriesProps<T>) {
       props.skipMissing ?? true,
     );
     if (!top) return "";
-    // Find first/last data x to close the area along the baseline.
+    // Find the first and last DRAWN x to close the area along the baseline.
+    // The same missing-point test `buildLine` uses, so the fill never runs
+    // past the top line (dside task 45210).
+    const skipMissing = props.skipMissing ?? true;
     let first: number | null = null;
     let last: number | null = null;
     for (const dd of props.data) {
       const xv = props.x(dd);
-      if (Number.isNaN(xv)) continue;
+      if (isMissingPoint(skipMissing, xv, props.y(dd))) continue;
       if (first === null) first = xv;
       last = xv;
     }
@@ -200,11 +230,7 @@ export function PointSeries<T>(props: PointSeriesProps<T>) {
         {(d, i) => {
           const xv = props.x(d);
           const yv = props.y(d);
-          if (
-            (props.skipMissing ?? true) &&
-            (Number.isNaN(xv) || Number.isNaN(yv))
-          )
-            return null;
+          if (isMissingPoint(props.skipMissing ?? true, xv, yv)) return null;
           const isEmphasized = () => isWinner() && i() === nearestIdx();
           const r = () =>
             isEmphasized()
@@ -401,29 +427,42 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
     value: toScaleValue(props.value),
   }));
   const strokeColor = () => props.color ?? props.stroke ?? "currentColor";
+  // Plot-local pixels: x1=0 sits at the plot's left edge. `ScrubChart`'s
+  // adapter (ScrubChartReferenceLine.tsx) supplies frame-absolute pixels
+  // instead — the coordinate difference the two adapters exist to absorb.
+  const horizontalMark = createMemo(() =>
+    buildReferenceLine({
+      y: ctx.yScale()(resolved().value),
+      x1: 0,
+      x2: ctx.innerWidth(),
+      caption: props.label,
+    }),
+  );
 
   return (
     <g class={`sui-chart__ref${props.class ? ` ${props.class}` : ""}`}>
       <Show when={resolved().orientation === "horizontal"}>
         <line
-          x1={0}
-          x2={ctx.innerWidth()}
-          y1={ctx.yScale()(resolved().value)}
-          y2={ctx.yScale()(resolved().value)}
+          x1={horizontalMark().line.x1}
+          x2={horizontalMark().line.x2}
+          y1={horizontalMark().line.y1}
+          y2={horizontalMark().line.y2}
           stroke={strokeColor()}
           stroke-width={props.strokeWidth ?? 1}
           stroke-dasharray={props.strokeDasharray ?? "4 4"}
           opacity={0.6}
         />
-        <Show when={props.label}>
-          <text
-            class="sui-chart__ref-label"
-            x={ctx.innerWidth() - 4}
-            y={ctx.yScale()(resolved().value) - 4}
-            text-anchor="end"
-          >
-            {props.label}
-          </text>
+        <Show when={horizontalMark().caption}>
+          {(caption) => (
+            <text
+              class="sui-chart__ref-label"
+              x={caption().x}
+              y={caption().y}
+              text-anchor={caption().textAnchor}
+            >
+              {caption().text}
+            </text>
+          )}
         </Show>
       </Show>
       <Show when={resolved().orientation === "vertical"}>

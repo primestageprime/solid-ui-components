@@ -26,31 +26,27 @@
 // rather than hidden. Per-series, so one chart can hold both.
 // ============================================
 
+import { type Component, For, Show, createEffect, createMemo } from "solid-js";
 import {
-  type Component,
-  For,
-  Show,
-  createEffect,
-  createMemo,
-  createSignal,
-  createUniqueId,
-} from "solid-js";
-import { ScrubChart } from "../ScrubChart";
-import { buildDeviationBand } from "./deviationBand";
+  ScrubChart,
+  ScrubChartBand,
+  ScrubChartCrosshair,
+  type ScrubChartCrosshairSeries,
+  ScrubChartLabels,
+  ScrubChartReferenceLine,
+  ScrubChartTooltip,
+  createScrubChartEmphasis,
+  emphasisClassName,
+} from "../ScrubChart";
+import { belowExtraHeight, reserveLabelSpace } from "../Chart/labelPlacement";
 import {
-  ChartLabelLayer,
   PRIMARY_LABEL_ID,
   type PrimaryLineLabel,
   drawnPolylines,
   labelCandidates,
   labelReservations,
   markerJoinsLadder,
-} from "./labelLayer";
-import {
-  belowExtraHeight,
-  placeLabels,
-  reserveLabelSpace,
-} from "./labelPlacement";
+} from "./labelCandidates";
 import { RuleMarker } from "./ruleMarker";
 import {
   barFraction,
@@ -60,6 +56,7 @@ import {
   fmtAxisDollars,
   fmtDollars,
   formatCornerLabel,
+  markerValueCents,
 } from "./helpers";
 import type {
   CashflowBalanceSeries,
@@ -71,7 +68,7 @@ import type {
   CashflowSeriesFill,
 } from "./types";
 import "./CashflowScrubChart.css";
-import { every, filter, flatMap, join, map, pipe, some } from "../../fn";
+import { filter, flatMap, join, map, pipe, some } from "../../fn";
 
 // Re-export the public type surface so the folder barrel (and existing
 // consumers importing from this module) keep resolving the same names.
@@ -94,12 +91,6 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // ribbon `cells`; when `balanceLineCells` is supplied the line is DECOUPLED
   // from the ribbon (same geometry, different balances). Indexed positionally.
   const lineCells = (): CashflowCell[] => props.balanceLineCells ?? props.cells;
-  // Unique clipPath id per instance — multiple charts on one page must not
-  // share a clip rect (each has its own plot geometry). createUniqueId (the
-  // same mechanism Chart.tsx uses) keeps the id deterministic across
-  // server/client renders, unlike the Math.random id it replaces.
-  const clipId = `sui-cashflow-clip-${createUniqueId()}`;
-
   // The primary line's own label, which the ladder places first. `undefined`
   // says the caller named none, and the primary line then joins no label list.
   const primaryLabel = (): PrimaryLineLabel | undefined =>
@@ -118,7 +109,17 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // running-balance line, `series:<id>` for a balance series, `marker:<index>`
   // for a marker — so the label layer reports the same string the candidate
   // builders minted.
-  const [hoveredLabel, setHoveredLabel] = createSignal<string | null>(null);
+  //
+  // The hover signal, the highlighted/muted classification, and the DOM
+  // colour read-back are all generic across any `ScrubChart`-hosted chart —
+  // per docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md — so
+  // they live in the `ScrubChart` adapter `createScrubChartEmphasis`
+  // (`../ScrubChart/createScrubChartEmphasis.ts`). That module's header also
+  // carries the design decision behind keeping the DOM read-back at all —
+  // see it before touching this feature. Only the id vocabulary above, and
+  // the "hide the emphasis when the named line paints nothing" guard below,
+  // are cashflow's own.
+  const emphasis = createScrubChartEmphasis();
 
   /**
    * The label id the chart emphasises, or `null` while it emphasises none.
@@ -131,9 +132,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
    * the reader the opposite of the truth.
    */
   const emphasisId = (): string | null => {
-    const active = hoveredLabel();
+    const active = emphasis.hoveredId();
     if (active === null) return null;
-    return labelColors()[active] === undefined ? null : active;
+    return emphasis.colorFor(active) === undefined ? null : active;
   };
 
   /**
@@ -145,11 +146,8 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
    *              back.
    * @returns A leading-space class string, or `""` when no label is hovered.
    */
-  const emphasisClass = (block: string, id: string | null): string => {
-    const active = emphasisId();
-    if (active === null) return "";
-    return active === id ? ` ${block}--highlighted` : ` ${block}--muted`;
-  };
+  const emphasisClass = (block: string, id: string | null): string =>
+    emphasisClassName(block, emphasisId(), id);
 
   // ── Label colour, read back from the drawn line ──────────────────────
   // A label names one line, so it reads best in that line's own colour. The
@@ -157,49 +155,14 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   // it as a `stroke`. An SVG `<text>` takes its colour from `fill`, so no CSS
   // rule and no new prop can carry the stroke across. The chart therefore
   // reads the RESOLVED stroke back from the DOM after each render, and hands
-  // it to the label layer as a `fill`.
+  // it to the label layer as a `fill`. `emphasis.refreshColors` does the
+  // reading; this effect owns only WHEN to re-read, because only this
+  // component knows which props change which lines are drawn.
   //
   // ONE known limit: a theme swap alone does not recolour a label. The map is
   // read again when the chart re-renders for another reason.
   let chartSvgEl: SVGSVGElement | undefined;
   let markersSvgEl: SVGSVGElement | undefined;
-  const [labelColors, setLabelColors] = createSignal<Record<string, string>>(
-    {},
-  );
-
-  /** Whether a resolved stroke names a colour a label can take. */
-  const isPaintedStroke = (stroke: string): boolean =>
-    stroke !== "" && stroke !== "none" && stroke !== "rgba(0, 0, 0, 0)";
-
-  /** Read one root's tagged elements into the map, keyed by the label id. */
-  const collectStrokes = (
-    root: SVGSVGElement | undefined,
-    attribute: string,
-    idOf: (value: string) => string,
-    into: Record<string, string>,
-  ): void => {
-    if (!root) return;
-    for (const el of Array.from(root.querySelectorAll(`[${attribute}]`))) {
-      const value = el.getAttribute(attribute);
-      if (value === null) continue;
-      const id = idOf(value);
-      if (into[id] !== undefined) continue;
-      const stroke = window.getComputedStyle(el).stroke;
-      if (isPaintedStroke(stroke)) into[id] = stroke;
-    }
-  };
-
-  /** Whether two colour maps hold the same keys and the same colours. */
-  const sameColors = (
-    a: Record<string, string>,
-    b: Record<string, string>,
-  ): boolean => {
-    const keys = Object.keys(a);
-    return (
-      keys.length === Object.keys(b).length &&
-      every((k: string) => a[k] === b[k], keys)
-    );
-  };
 
   createEffect(() => {
     // Track every prop that changes which lines the chart draws, so the
@@ -207,33 +170,25 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     void props.balanceSeries;
     void props.markers;
     void props.cells;
-    // The server renders no DOM, so there is no computed style to read.
-    if (typeof window === "undefined") return;
-    if (!chartSvgEl && !markersSvgEl) return;
-    const next: Record<string, string> = {};
-    // The primary line carries its own attribute, not a `data-series-id`: it
-    // is not a series, and its label id takes no `series:` prefix.
-    collectStrokes(
-      chartSvgEl,
-      "data-primary-line",
-      () => PRIMARY_LABEL_ID,
-      next,
-    );
-    collectStrokes(
-      chartSvgEl,
-      "data-series-id",
-      (value) => `series:${value}`,
-      next,
-    );
-    collectStrokes(
-      markersSvgEl,
-      "data-marker-index",
-      (value) => `marker:${value}`,
-      next,
-    );
-    // Keep the previous map when nothing changed. Solid compares by identity,
-    // so returning it notifies no reader and the effect never churns.
-    setLabelColors((prev) => (sameColors(next, prev) ? prev : next));
+    emphasis.refreshColors([
+      // The primary line carries its own attribute, not a `data-series-id`:
+      // it is not a series, and its label id takes no `series:` prefix.
+      {
+        root: chartSvgEl,
+        attribute: "data-primary-line",
+        idOf: () => PRIMARY_LABEL_ID,
+      },
+      {
+        root: chartSvgEl,
+        attribute: "data-series-id",
+        idOf: (value) => `series:${value}`,
+      },
+      {
+        root: markersSvgEl,
+        attribute: "data-marker-index",
+        idOf: (value) => `marker:${value}`,
+      },
+    ]);
   });
 
   /** Whether any label reaches the ladder, and so whether the layer draws. */
@@ -352,7 +307,6 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   ) => {
     if (ctx.cells.length === 0 || !ctx.yToPlot) return null;
     const yToPlot = ctx.yToPlot;
-    const zeroY = yToPlot(0);
 
     // The primary line reads its balance from lineCells (decoupled from the
     // ribbon when balanceLineCells is set); geometry (x) stays from ctx.
@@ -431,35 +385,14 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
 
     // Deviation bands — the coloured area between a `fill`-bearing series and
     // its reference line (primary line by default). Drawn at the very back so
-    // the lines and decorations sit on top. Split at crossings by the geometry
-    // helper, so each polygon is uniformly green (series above reference) or
-    // red (series below reference).
-    const bands = pipe(
+    // the lines and decorations sit on top. Rendered by `ScrubChartBand`, the
+    // `ScrubChart` adapter for the shared `buildDeviationBand` core (ADR
+    // 0010, dside task 45165). The green-above / red-below reading is THIS
+    // component's own default — the adapter carries no polarity of its own —
+    // applied below as the per-sign class and fill passed at the call site.
+    const fillSeries = filter(
+      (s) => Boolean(s.fill),
       props.balanceSeries ?? [],
-      filter((s) => Boolean(s.fill)),
-      flatMap((s) => {
-        const fill = s.fill!;
-        const reference =
-          fill.baseline ?? ((c: CashflowCell) => c.balanceCents);
-        const overrideClass = (sign: "positive" | "negative") =>
-          sign === "positive" ? fill.positiveClass : fill.negativeClass;
-        return map(
-          (run, i) => ({
-            key: `${s.id}-${i}`,
-            seriesId: s.id,
-            sign: run.sign,
-            points: run.points,
-            overrideClass: overrideClass(run.sign),
-          }),
-          buildDeviationBand(
-            ctx.cells,
-            ctx.cellToX,
-            yToPlot,
-            s.balanceCents,
-            reference,
-          ),
-        );
-      }),
     );
 
     // Selection decorations are part of the scrub layer — omitted in plain
@@ -529,49 +462,45 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       >
         {/* Clip the plotted content (cone fills + balance lines) to the plot
             rect so a cone exceeding the line-based domain clips at the plot TOP
-            rather than spilling over the axis labels. */}
-        <defs>
-          <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
-            <rect
-              x={ctx.plotLeft}
-              y={ctx.plotTop}
-              width={Math.max(0, ctx.plotRight - ctx.plotLeft)}
-              height={Math.max(0, ctx.plotBottom - ctx.plotTop)}
-            />
-          </clipPath>
-        </defs>
-        <g clip-path={`url(#${clipId})`}>
-          <For each={bands}>
-            {(band) => (
-              <polygon
-                class={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--${
-                  band.sign
-                }${
-                  band.overrideClass ? ` ${band.overrideClass}` : ""
-                }${emphasisClass(
-                  "sui-cashflow-scrub-chart__band",
-                  `series:${band.seriesId}`,
-                )}`}
-                points={band.points}
-                // Defaults as presentation attributes so `fill.positiveClass` /
-                // `fill.negativeClass` win on a plain single class — see the
-                // balance lines above. The sign picks the value here because
-                // the class that used to carry it is now only a hook.
-                stroke="none"
-                fill={
-                  band.sign === "positive"
-                    ? "var(--sui-cashflow-band-positive, rgba(0, 200, 120, 0.18))"
-                    : "var(--sui-cashflow-band-negative, rgba(230, 70, 70, 0.18))"
-                }
-              />
-            )}
+            rather than spilling over the axis labels. ScrubChart owns the rect
+            and the id now — see `ScrubChartClip`. */}
+        <g clip-path={ctx.clip.plotPathUrl}>
+          <For each={fillSeries}>
+            {(s) => {
+              const fill = s.fill!;
+              const reference =
+                fill.baseline ?? ((c: CashflowCell) => c.balanceCents);
+              // Defaults as presentation attributes (positiveFill/negativeFill)
+              // so `fill.positiveClass` / `fill.negativeClass` win on a plain
+              // single class — see the balance lines above.
+              return (
+                <ScrubChartBand
+                  ctx={ctx}
+                  items={ctx.cells}
+                  series={s.balanceCents}
+                  reference={reference}
+                  positiveClass={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--positive${
+                    fill.positiveClass ? ` ${fill.positiveClass}` : ""
+                  }${emphasisClass(
+                    "sui-cashflow-scrub-chart__band",
+                    `series:${s.id}`,
+                  )}`}
+                  negativeClass={`sui-cashflow-scrub-chart__band sui-cashflow-scrub-chart__band--negative${
+                    fill.negativeClass ? ` ${fill.negativeClass}` : ""
+                  }${emphasisClass(
+                    "sui-cashflow-scrub-chart__band",
+                    `series:${s.id}`,
+                  )}`}
+                  positiveFill="var(--sui-cashflow-band-positive, rgba(0, 200, 120, 0.18))"
+                  negativeFill="var(--sui-cashflow-band-negative, rgba(230, 70, 70, 0.18))"
+                />
+              );
+            }}
           </For>
-          <line
+          <ScrubChartReferenceLine
+            ctx={ctx}
+            value={0}
             class="sui-cashflow-scrub-chart__zero-line"
-            x1={ctx.plotLeft}
-            x2={ctx.plotRight}
-            y1={zeroY}
-            y2={zeroY}
           />
           {seriesLines(seriesUnder)}
           <polyline
@@ -671,38 +600,25 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
             paints first" ordering the gridlines use. Non-interactive: no
             hit area, no click. */}
         <For each={hLines}>
-          {(m) => {
-            const y = yToPlot(m.valueCents);
-            return (
-              <g class="sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--hrule">
-                <line
-                  class={`sui-cashflow-scrub-chart__hrule-line${
-                    m.class ? ` ${m.class}` : ""
-                  }`}
-                  x1={ctx.plotLeft}
-                  x2={ctx.plotRight}
-                  y1={y}
-                  y2={y}
-                  // Presentation attributes so `CashflowHorizontalMarker.class`
-                  // wins on a plain single class.
-                  stroke="var(--sui-cashflow-marker, rgba(224, 178, 77, 1))"
-                  stroke-width="1"
-                  stroke-dasharray="5 4"
-                  opacity="0.7"
-                />
-                {m.label && (
-                  <text
-                    class="sui-cashflow-scrub-chart__hrule-label"
-                    x={ctx.plotRight - 4}
-                    y={y - 4}
-                    text-anchor="end"
-                  >
-                    {m.label}
-                  </text>
-                )}
-              </g>
-            );
-          }}
+          {(m) => (
+            <g class="sui-cashflow-scrub-chart__marker sui-cashflow-scrub-chart__marker--hrule">
+              <ScrubChartReferenceLine
+                ctx={ctx}
+                value={m.valueCents}
+                label={m.label}
+                class={`sui-cashflow-scrub-chart__hrule-line${
+                  m.class ? ` ${m.class}` : ""
+                }`}
+                labelClass="sui-cashflow-scrub-chart__hrule-label"
+                // Presentation attributes so `CashflowHorizontalMarker.class`
+                // wins on a plain single class.
+                stroke="var(--sui-cashflow-marker, rgba(224, 178, 77, 1))"
+                strokeWidth={1}
+                strokeDasharray="5 4"
+                opacity={0.7}
+              />
+            </g>
+          )}
         </For>
         <For
           each={filter((m) => m.index >= 0 && m.index < ctx.cells.length, list)}
@@ -723,9 +639,9 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
               );
             }
             // Marker dots drop onto the primary line by default. An explicit
-            // `valueCents` overrides that and places the dot anywhere else.
+            // marker value overrides that and places the dot anywhere else.
             const balanceValue =
-              m.valueCents ?? lineCells()[m.index]?.balanceCents;
+              markerValueCents(m) ?? lineCells()[m.index]?.balanceCents;
             if (balanceValue == null) return null;
             const y = yToPlot(balanceValue);
             const activate = () =>
@@ -821,8 +737,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   //   • The layer no longer sits under the window band, so a label in the
   //     scrub window is no longer tinted by it.
   //
-  // The placement pass runs here, in the same frame the reservation bought —
-  // `ctx` carries the identical geometry the chart svg reads.
+  // Building the CANDIDATES (which labels exist, at what point) is this
+  // component's own job — cashflow-bound, per `labelCandidates.ts`. WHERE
+  // each one lands is the ladder CORE's job, called inside `ScrubChartLabels`
+  // — the `ScrubChart` adapter per
+  // docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md. `ctx`
+  // carries the identical geometry the chart svg reads.
   const renderLabels = (
     ctx: import("../ScrubChart").ScrubChartContext<CashflowCell>,
   ) => {
@@ -842,17 +762,6 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       ctx.cells,
       labelGeometry,
     );
-    const placements = placeLabels(
-      labels,
-      {
-        left: ctx.plotLeft,
-        right: ctx.plotRight,
-        top: ctx.plotTop,
-        bottom: ctx.plotBottom,
-      },
-      drawnPolylines(ctx.cells, props.balanceSeries ?? [], labelGeometry),
-      reservedSpace(),
-    );
     return (
       <svg
         class="sui-cashflow-scrub-chart__chart sui-cashflow-scrub-chart__label-overlay"
@@ -861,12 +770,19 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
         viewBox={`0 0 ${ctx.width} ${ctx.height}`}
         preserveAspectRatio="none"
       >
-        <ChartLabelLayer
+        <ScrubChartLabels
+          ctx={ctx}
           labels={labels}
-          results={placements}
+          polylines={drawnPolylines(
+            ctx.cells,
+            props.balanceSeries ?? [],
+            labelGeometry,
+          )}
+          reservedSpace={reservedSpace()}
+          classPrefix="sui-cashflow-scrub-chart"
           highlightedId={emphasisId()}
-          onHoverLabel={setHoveredLabel}
-          colorOf={(id) => labelColors()[id]}
+          onHoverLabel={emphasis.setHoveredId}
+          colorOf={emphasis.colorFor}
         />
       </svg>
     );
@@ -895,36 +811,31 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     // which covers a "right" zone label in the gutter. A "below" zone label
     // sits under the x-axis and INSIDE the plot's horizontal span, so only
     // this check covers it.
-    if (hoveredLabel() !== null) return null;
+    if (emphasis.hoveredId() !== null) return null;
     const idx = ctx.hoverIndex;
     if (idx == null || ctx.cells.length === 0 || !ctx.yToPlot) return null;
-    const yToPlot = ctx.yToPlot;
-    const cell = ctx.cells[idx];
     const x = ctx.cellToX(idx);
-    // A hollow dot for the primary line (from lineCells) + each overlay series
-    // with a value.
-    //
-    // Each dot carries the class of the LINE it sits on — `lineClass` for the
-    // primary, the series' own `class` for an overlay — alongside the shared
-    // hover-dot class. A class on a series must reach EVERY mark that series
-    // draws: with a single fixed class here, a consumer could style its line
-    // and could not touch its dot, so a series hidden through its own class
-    // (stroke: none, fill: none) kept an unexplained circle on the crosshair
-    // that matched nothing in the tooltip.
-    const primaryLineCell = lineCells()[idx];
-    const dots: { y: number; class?: string }[] = primaryLineCell
-      ? [{ y: yToPlot(primaryLineCell.balanceCents), class: props.lineClass }]
-      : [];
+    // One crosshair line per drawn line: the primary (read from `lineCells`,
+    // decoupled from `ctx.cells` — see the `lineCells` doc comment) plus
+    // each overlay series with a value at this cell. Each carries the class
+    // of the LINE it sits on — `lineClass` for the primary, the series' own
+    // `class` for an overlay — alongside the shared hover-dot class, so a
+    // series hidden through its own class does not leave an unexplained
+    // circle on the crosshair.
+    const series: ScrubChartCrosshairSeries<CashflowCell>[] = [
+      {
+        id: "primary",
+        value: (_cell, i) => lineCells()[i]?.balanceCents ?? null,
+        class: props.lineClass,
+      },
+    ];
     for (const s of props.balanceSeries ?? []) {
-      const v = s.balanceCents(cell, idx);
-      if (v != null) dots.push({ y: yToPlot(v), class: s.class });
+      series.push({
+        id: s.id,
+        value: (cell: CashflowCell, i: number) => s.balanceCents(cell, i),
+        class: s.class,
+      });
     }
-    // Flip the card to the pointer's left in the right half so it never
-    // clips off the right edge; anchor its top at the plot top.
-    const flipLeft = x > (ctx.plotLeft + ctx.plotRight) / 2;
-    const cardStyle: import("solid-js").JSX.CSSProperties = flipLeft
-      ? { right: `${ctx.width - x + 12}px`, top: `${ctx.plotTop}px` }
-      : { left: `${x + 12}px`, top: `${ctx.plotTop}px` };
     return (
       <>
         <svg
@@ -933,45 +844,34 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
           viewBox={`0 0 ${ctx.width} ${ctx.height}`}
           preserveAspectRatio="none"
         >
-          <line
+          <ScrubChartCrosshair
+            ctx={ctx}
+            series={series}
             class="sui-cashflow-scrub-chart__hover-rule"
-            x1={x}
-            x2={x}
-            y1={ctx.plotTop}
-            y2={ctx.plotBottom}
+            dotClass="sui-cashflow-scrub-chart__hover-dot"
+            // Defaults as PRESENTATION ATTRIBUTES, not as a rule in the
+            // stylesheet. The line's class and a base rule are both single
+            // -class selectors, so a rule here would tie with the caller's
+            // class and let stylesheet ORDER decide — and a consumer whose
+            // CSS loads before SUI's would find the dot unreachable again,
+            // which is the whole defect this class was added to fix. A
+            // presentation attribute loses to any author rule, so the
+            // caller's class always wins. Themes move these two variables.
+            dotFill="var(--sui-cashflow-hover-dot-fill, var(--sui-bg-elevated))"
+            dotStroke="var(--sui-cashflow-hover-dot-stroke, var(--sui-text-primary))"
+            dotStrokeWidth={1.5}
+            dotOpacity={0.9}
           />
-          <For each={dots}>
-            {(dot) => (
-              <circle
-                class={`sui-cashflow-scrub-chart__hover-dot${
-                  dot.class ? ` ${dot.class}` : ""
-                }`}
-                cx={x}
-                cy={dot.y}
-                r={3.5}
-                // Defaults as PRESENTATION ATTRIBUTES, not as a rule in the
-                // stylesheet. The line's class and a base rule are both single
-                // -class selectors, so a rule here would tie with the caller's
-                // class and let stylesheet ORDER decide — and a consumer whose
-                // CSS loads before SUI's would find the dot unreachable again,
-                // which is the whole defect this class was added to fix. A
-                // presentation attribute loses to any author rule, so the
-                // caller's class always wins. Themes move these two variables.
-                fill="var(--sui-cashflow-hover-dot-fill, var(--sui-bg-elevated))"
-                stroke="var(--sui-cashflow-hover-dot-stroke, var(--sui-text-primary))"
-                stroke-width="1.5"
-                opacity="0.9"
-              />
-            )}
-          </For>
         </svg>
         <Show when={props.renderHoverTooltip}>
-          <div
+          <ScrubChartTooltip
+            ctx={ctx}
+            anchorX={x}
+            anchorY={ctx.plotTop}
             class="sui-cashflow-scrub-chart__hover-tooltip"
-            style={cardStyle}
           >
-            {props.renderHoverTooltip!(cell, idx)}
-          </div>
+            {props.renderHoverTooltip!(ctx.cells[idx], idx)}
+          </ScrubChartTooltip>
         </Show>
       </>
     );

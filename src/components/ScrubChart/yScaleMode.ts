@@ -120,6 +120,12 @@ const withHeight = (
  * Two ends pinned skip every step: the caller stated the whole domain, so this
  * function returns it as given.
  *
+ * This is ONE of the repo's two y-domain rules, and it OVERRIDES the `yDomain`
+ * prop whenever `yFitDomain` returns an extent.
+ * `docs/adr/0009-two-y-domain-rules-stay-separate.md` puts this order beside
+ * `CashflowScrubChart`'s `chartYDomain` and lists the eight differences. Read
+ * it before you reconcile the two.
+ *
  * @param extent The fitted extent in data units, in either order.
  * @param mode The mode that produced the extent. It selects the pin.
  * @param pin Fixed ends, or undefined when both ends are free.

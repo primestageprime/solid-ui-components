@@ -1,5 +1,12 @@
 import { type Component, createMemo, createSignal } from "solid-js";
-import { ScrubChart } from "../../src/components/ScrubChart";
+import {
+  ScrubChart,
+  ScrubChartBand,
+  ScrubChartCrosshair,
+  ScrubChartLabels,
+  ScrubChartReferenceLine,
+  ScrubChartTooltip,
+} from "../../src/components/ScrubChart";
 import { dailyCells, type Cell } from "../../src/components/DateAxis";
 import { cashflowAt, cashflowDayCell, fmtDollars } from "./cashflow-day-cell";
 import { NarrowStack } from "../../src/components/Layout";
@@ -271,6 +278,144 @@ const renderBoundedChart = (
   );
 };
 
+// The label ladder — `ScrubChart`'s adapter for the shared `placeLabels`
+// core (ADR 0010, dside task 45164). `CashflowScrubChart` builds its own
+// cashflow-bound candidates and calls this same adapter; this demo supplies
+// one candidate by hand to show the call site a plain `ScrubChart` consumer
+// would write.
+const renderLabelOverlay = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => (
+  <svg
+    viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+    preserveAspectRatio="none"
+    class="scrub-chart-demo__svg"
+  >
+    <ScrubChartLabels
+      ctx={ctx}
+      labels={[
+        {
+          id: "balance",
+          text: "Balance",
+          width: 50,
+          height: 11,
+          placement: "right",
+          x: ctx.cellToX(cells.length - 1),
+          y: ctx.yToPlot?.(cells[cells.length - 1].balanceCents) ?? 0,
+          endY: ctx.yToPlot?.(cells[cells.length - 1].balanceCents) ?? 0,
+        },
+      ]}
+      polylines={[]}
+      reservedSpace={{ rightGutter: 56, belowRows: 0 }}
+      classPrefix="scrub-chart-demo__label"
+    />
+  </svg>
+);
+
+// A threshold AMOUNT — `ScrubChart`'s adapter for the reference-line mark
+// (ADR 0010). It calls the SAME core `Chart`'s own `<ReferenceLine>` calls;
+// only the coordinate space differs — frame-absolute here (`ctx.plotLeft` /
+// `ctx.plotRight`), plot-local there. `CashflowScrubChart` draws its zero
+// line and its `horizontalMarkers` through this same component.
+const renderThresholdOverlay = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => (
+  <svg
+    viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+    preserveAspectRatio="none"
+    class="scrub-chart-demo__svg"
+  >
+    <ScrubChartReferenceLine
+      ctx={ctx}
+      value={200_000}
+      label="Runway floor"
+      stroke="var(--sui-warning, #f5a623)"
+      strokeDasharray="5 4"
+      opacity={0.8}
+    />
+  </svg>
+);
+
+// A deviation band between the balance line and zero — `ScrubChart`'s
+// adapter for the shared `buildDeviationBand` core (ADR 0010, dside task
+// 45165). `ScrubChartBand` carries no colour default; this demo picks its
+// own reading via `positiveClass` / `negativeClass` (see main.css), same as
+// any other caller would — `CashflowScrubChart`'s green-above / red-below
+// surplus reading is a DIFFERENT caller's default, not a fact this adapter
+// knows.
+const renderBandChart = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => {
+  const toY = ctx.yToPlot ?? ((cents: number) => cents);
+  const points = ctx.cells
+    .map(
+      (c, i) =>
+        `${ctx.cellToX(i).toFixed(1)},${toY(c.balanceCents).toFixed(1)}`,
+    )
+    .join(" ");
+  return (
+    <svg
+      viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+      preserveAspectRatio="none"
+      class="scrub-chart-demo__svg"
+    >
+      <ScrubChartBand
+        ctx={ctx}
+        items={ctx.cells}
+        series={(c) => c.balanceCents}
+        reference={() => 0}
+        positiveClass="scrub-chart-demo__deviation--positive"
+        negativeClass="scrub-chart-demo__deviation--negative"
+      />
+      <polyline
+        points={points}
+        fill="none"
+        stroke="var(--sui-accent)"
+        stroke-width={1.6}
+      />
+    </svg>
+  );
+};
+
+// The hover crosshair + tooltip — `ScrubChart`'s adapters for the
+// `buildCrosshair` and `placeTooltipX` cores (ADR 0010, dside task 45169).
+// `CashflowScrubChart`'s own hover readout composes these same two
+// components; this demo shows the plain call site.
+const renderHoverOverlay = (
+  ctx: import("../../src/components/ScrubChart").ScrubChartContext<CashflowCell>,
+) => {
+  const idx = ctx.hoverIndex;
+  if (idx == null || !ctx.yToPlot) return null;
+  const x = ctx.cellToX(idx);
+  return (
+    <>
+      <svg
+        viewBox={`0 0 ${ctx.width} ${ctx.height}`}
+        preserveAspectRatio="none"
+        class="scrub-chart-demo__svg"
+      >
+        <ScrubChartCrosshair
+          ctx={ctx}
+          class="scrub-chart-demo__crosshair-guide"
+          dotClass="scrub-chart-demo__crosshair-dot"
+          dotFill="var(--sui-bg-elevated)"
+          dotStroke="var(--sui-accent)"
+          dotStrokeWidth={1.5}
+          series={[{ id: "balance", value: (c) => c.balanceCents }]}
+        />
+      </svg>
+      <ScrubChartTooltip
+        ctx={ctx}
+        anchorX={x}
+        anchorY={ctx.plotTop}
+        class="scrub-chart-demo__tooltip"
+      >
+        {fmtDollars(ctx.cells[idx].balanceCents / 100)}
+      </ScrubChartTooltip>
+    </>
+  );
+};
+
 export const ScrubChartShowcase: Component = () => {
   const [selectedIdx, setSelectedIdx] = createSignal(Math.max(0, todayIndex));
   const cell = createMemo(() => cells[selectedIdx()]);
@@ -422,6 +567,78 @@ export const ScrubChartShowcase: Component = () => {
       </div>
 
       <div class="example-group">
+        <h3>The label ladder via the ScrubChart adapter</h3>
+        <p class="text-meta">
+          <code>ScrubChartLabels</code> calls the same <code>placeLabels</code>{" "}
+          core as <code>Chart</code>'s own Labels slot child — the coordinate
+          difference is frame-absolute here, plot-local there.{" "}
+          <code>CashflowScrubChart</code> calls this adapter with candidates it
+          builds from its own balance series and markers.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          showGridlines
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderScaledChart}
+          renderChartOverlay={renderLabelOverlay}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>A threshold line via the ScrubChart adapter</h3>
+        <p class="text-meta">
+          <code>ScrubChartReferenceLine</code> draws a horizontal rule at a
+          fixed Y value, spanning the full plot width — a THRESHOLD AMOUNT, same
+          as the low-level <code>Chart</code> kit's <code>ReferenceLine</code>.
+          Both call one pure core (<code>buildReferenceLine</code>); this
+          adapter converts <code>ScrubChart</code>'s frame-absolute pixels
+          before it does, so the rule lands correctly even though{" "}
+          <code>ScrubChart</code> has no <code>Chart</code> context to read.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          showGridlines
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderScaledChart}
+          renderChartOverlay={renderThresholdOverlay}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>A deviation band via the ScrubChart adapter</h3>
+        <p class="text-meta">
+          <code>ScrubChartBand</code> shades the gap between the balance line
+          and zero, split at every crossing — the same core (
+          <code>buildDeviationBand</code>) <code>CashflowScrubChart</code> calls
+          for its own green-above / red-below reading.{" "}
+          <code>ScrubChartBand</code> itself carries no such default: this
+          demo's colours come entirely from the <code>positiveClass</code> /{" "}
+          <code>negativeClass</code> props below.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          showGridlines
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderBandChart}
+        />
+      </div>
+
+      <div class="example-group">
         <h3>Y-fit toggle, with the floor pinned at zero</h3>
         <p class="text-meta">
           <code>yFitDomain</code> hands ScrubChart the extent of a cell range,
@@ -531,6 +748,31 @@ export const ScrubChartShowcase: Component = () => {
           xTickCadence="auto"
           renderCell={cashflowDayCell}
           renderChart={renderPositionChart}
+        />
+      </div>
+
+      <div class="example-group">
+        <h3>Hover crosshair + tooltip via the ScrubChart adapters</h3>
+        <p class="text-meta">
+          <code>ScrubChartCrosshair</code> and <code>ScrubChartTooltip</code>{" "}
+          call the same <code>buildCrosshair</code> / <code>placeTooltipX</code>{" "}
+          cores <code>Chart</code>'s own <code>Crosshair</code> /{" "}
+          <code>ChartTooltip</code> call. Every dot shares the guide's x
+          (index-addressed, unlike <code>Chart</code>'s nearest-point search),
+          and the tooltip flips off a MEASURED width, so it never clips even
+          hovered near an edge. Move the pointer over the chart below.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          scrub={false}
+          hover
+          yDomain={[yMin, yMax]}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderScaledChart}
+          renderHoverOverlay={renderHoverOverlay}
         />
       </div>
 

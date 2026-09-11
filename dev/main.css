@@ -2325,9 +2325,47 @@
   text-anchor: end;
 }
 
+/* Hover crosshair + tooltip demo. */
+.scrub-chart-demo__crosshair-guide {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+.scrub-chart-demo__tooltip {
+  position: absolute;
+  padding: 4px 8px;
+  background: var(--sui-bg-elevated);
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md, 8px);
+  font-size: 12px;
+  pointer-events: none;
+}
+
 .scrub-chart-demo__band--forecast {
   fill: var(--sui-accent);
   opacity: 0.1;
+}
+
+/* Deviation-band demo — ScrubChartBand carries no colour default of its own
+   (ADR 0010); this picks its own reading, deliberately NOT green/red, to show
+   the polarity is a caller choice, not a fact the adapter bakes in. */
+.scrub-chart-demo__deviation--positive {
+  fill: var(--sui-accent);
+  opacity: 0.18;
+}
+.scrub-chart-demo__deviation--negative {
+  fill: var(--sui-text-secondary);
+  opacity: 0.18;
+}
+
+/* Chart's own deviation-band demo — same reasoning: DeviationBand bakes in
+   no colour, so this picks its own (accent/secondary, not green/red). */
+.chart-demo__deviation--positive {
+  fill: var(--sui-accent);
+  opacity: 0.18;
+}
+.chart-demo__deviation--negative {
+  fill: var(--sui-text-secondary);
+  opacity: 0.18;
 }
 
 /* dotchart composition smoke — hand-built chip row + debug readout/table.

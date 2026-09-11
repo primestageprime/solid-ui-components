@@ -15,17 +15,23 @@
 //     and a reference line (surplus green / shortfall red, split at crossings).
 //   • CashflowBalanceSeries — an extra balance line overlaid on the chart, with
 //     an optional `fill` band.
-//   • CashflowChartMarker — one plotline marker pinned to a cell index.
+//   • CashflowChartMarker — one plotline marker pinned to a cell index,
+//     extending ScrubChart's geometry-only `ScrubChartMarker`.
 //   • CashflowScrubChartProps — the component's full call-site contract.
 //
 // Kept as a leaf module: it imports only the `Cell` base type from DateAxis and
-// the `ScrubChartHighlight` band shape it forwards, and has no runtime side
-// effects, so importing it is cheap and cycle-free.
+// the `ScrubChartHighlight` / `ScrubChartMarker` shapes it builds on, and has
+// no runtime side effects, so importing it is cheap and cycle-free.
 // ============================================
 
 import type { JSX } from "solid-js";
 import type { Cell } from "../DateAxis";
-import type { ScrubChartHighlight, ScrubChartProps } from "../ScrubChart";
+import type { LabelZone } from "../Chart/labelPlacement";
+import type {
+  ScrubChartHighlight,
+  ScrubChartMarker,
+  ScrubChartProps,
+} from "../ScrubChart";
 
 /**
  * Payload shape for each day-cell. `cashflowCents` is the day's net flow
@@ -45,8 +51,13 @@ export type CashflowCell = Cell & {
  *
  * Per-datum and not a curried variant: one chart's labels routinely need
  * different zones, and a variant would force them all into one.
+ *
+ * An alias of `Chart`'s `LabelZone` (`Chart/labelPlacement.ts`) — the ladder
+ * moved there as a CORE per
+ * docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md. Kept as its
+ * own name here so this module's public API stays byte-identical.
  */
-export type CashflowLabelZone = "auto" | "body" | "right" | "below";
+export type CashflowLabelZone = LabelZone;
 
 /**
  * Draws a deviation band between this series and a reference line (the primary
@@ -125,9 +136,15 @@ export interface CashflowBalanceSeries {
   fill?: CashflowSeriesFill;
 }
 
-/** One plotline marker: the cell index it sits on, optionally selected. */
-export interface CashflowChartMarker {
-  index: number;
+/**
+ * One plotline marker: the cell index it sits on, optionally selected.
+ *
+ * The geometry — `index`, `value`, `label`, `class` — comes from
+ * `ScrubChartMarker`, which every ScrubChart consumer shares. What this
+ * interface adds is the CASHFLOW treatment of that point: the `flag` / `rule`
+ * variants, the selection state, the label zone, and the click behaviour.
+ */
+export interface CashflowChartMarker extends ScrubChartMarker {
   selected?: boolean;
   /**
    * Visual treatment. `"flag"` (default) is the instance marker: a dashed
@@ -135,7 +152,7 @@ export interface CashflowChartMarker {
    * clickable via `onMarkerClick`. `"rule"` is a reference line: a full-height
    * dotted rule with its `label` always visible at the top — non-interactive
    * (no flag, no click) — for marking a date like "Today" rather than a
-   * selectable instance. A rule draws a dot only when `valueCents` names the
+   * selectable instance. A rule draws a dot only when `value` names the
    * value it crosses, and that dot stays decoration: it takes no focus, no
    * pointer and no click.
    */
@@ -163,14 +180,28 @@ export interface CashflowChartMarker {
    * primary balance line (`lineCells()[index].balanceCents`), which is where
    * every marker sat before this field existed.
    *
-   * On a `"rule"` marker it CREATES the dot. A rule with no `valueCents`
-   * draws the rule alone. With one, the rule keeps a dot at that value —
-   * the crossing point of this rule and a `horizontalMarkers` line at the
-   * same value, most often.
+   * On a `"rule"` marker it CREATES the dot. A rule with no value draws the
+   * rule alone. With one, the rule keeps a dot at that value — the crossing
+   * point of this rule and a `horizontalMarkers` line at the same value, most
+   * often.
    *
    * Per-marker because one chart's markers routinely point at values off the
    * primary line — a scenario balance, a threshold, a value with no cell of
    * its own.
+   *
+   * This is the CASHFLOW SPELLING of `value`, inherited from
+   * `ScrubChartMarker`, and it is NOT deprecated. This chart's y-domain IS
+   * cents, so the two hold the identical number and no conversion happens
+   * either way. `valueCents` WINS when both are set — it names its unit, and a
+   * caller who spreads a generic marker and adds `valueCents` would otherwise
+   * get the spread `value` in the wrong unit. Setting both is still a caller
+   * mistake; dside task 45209 tracks making it unrepresentable.
+   *
+   * Both names stay on purpose. Every other y on this chart is cents-named —
+   * `horizontalMarkers[].valueCents` is required and carries the same unit —
+   * so a cashflow caller reads one vocabulary throughout. `value` exists for
+   * code written against `ScrubChartMarker` that does not know it is looking
+   * at money.
    */
   valueCents?: number;
   /**
