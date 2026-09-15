@@ -1,11 +1,11 @@
 // ============================================
 // TreeDiffChart — edge routing. Pure geometry, no DOM.
 //
-// Ported from the Scenario Tree Explorer prototype. A shallow run gets an
-// S-curve. Once the drop outweighs the run the S would hook back on itself,
-// so the router switches to a rounded elbow: its last segment always runs
-// level, and the arrowhead meets the box square on. Two boxes in one column
-// get a short vertical curve between the facing edges.
+// Ported from the Scenario Tree Explorer prototype, minus its S-curve: every
+// horizontal run is a rounded elbow whose vertical leg sits in the corridor
+// next to the source box. Its last segment always runs level, so the
+// arrowhead meets the box square on. Two boxes in one column get a short
+// vertical curve between the facing edges.
 // ============================================
 
 export type Box = {
@@ -17,11 +17,9 @@ export type Box = {
   height: number;
 };
 
-/** Horizontal control-point reach of the S-curve, capped so wide runs stay taut. */
-const S_REACH_MAX = 170;
-const S_REACH_RATIO = 0.45;
-/** Above this drop-to-run ratio the S-curve gives way to the elbow. */
-const ELBOW_THRESHOLD = 0.9;
+/** How far past the source edge the elbow turns down, so the vertical leg
+ * sits in the corridor between columns instead of behind a neighbour box. */
+const TURN_REACH = 20;
 const ELBOW_RADIUS = 16;
 /** Vertical bow of the same-column curve. */
 const STACK_BOW = 22;
@@ -29,8 +27,11 @@ const STACK_BOW = 22;
 const SAME_COLUMN_EPSILON = 12;
 
 /**
- * Path from `(x1, y1)` to `(x2, y2)`. `dir` is +1 when the run goes right,
- * -1 when it goes left; the endpoints already sit on the box edges.
+ * Rounded elbow from `(x1, y1)` to `(x2, y2)`. `dir` is +1 when the run goes
+ * right, -1 when it goes left; the endpoints already sit on the box edges.
+ * The path leaves level, turns down (or up) in the corridor next to the
+ * source, and arrives level, so the arrowhead meets the box square on. A
+ * level run degenerates to a straight line.
  */
 export function routeRun(
   x1: number,
@@ -41,13 +42,13 @@ export function routeRun(
 ): string {
   const dx = Math.abs(x2 - x1);
   const dy = Math.abs(y2 - y1);
-  if (dy <= dx * ELBOW_THRESHOLD) {
-    const k = Math.min(dx * S_REACH_RATIO, S_REACH_MAX);
-    return `M ${x1} ${y1} C ${x1 + dir * k} ${y1} ${x2 - dir * k} ${y2} ${x2} ${y2}`;
-  }
-  const xm = (x1 + x2) / 2;
+  const xm = x1 + dir * Math.min(dx / 2, TURN_REACH);
   const vd = y2 > y1 ? 1 : -1;
-  const r = Math.min(ELBOW_RADIUS, dx / 2 - 1, dy / 2);
+  const r = Math.min(
+    ELBOW_RADIUS,
+    Math.min(dx - TURN_REACH, TURN_REACH) - 1,
+    dy / 2,
+  );
   if (r < 2) {
     return `M ${x1} ${y1} L ${xm} ${y1} L ${xm} ${y2} L ${x2} ${y2}`;
   }

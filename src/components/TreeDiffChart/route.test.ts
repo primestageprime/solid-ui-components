@@ -9,29 +9,32 @@ const box = (x: number, y: number, width = 100, height = 40) => ({
 });
 
 describe("routeRun", () => {
-  it("draws one cubic S-curve for a shallow run", () => {
-    const d = routeRun(0, 0, 200, 50, 1);
-    expect(d.startsWith("M 0 0 C ")).toBe(true);
-    expect(d.endsWith(" 200 50")).toBe(true);
-    expect(d).not.toContain("Q");
+  it("turns down in the corridor next to the source, not at the midpoint", () => {
+    const d = routeRun(0, 0, 230, 60, 1);
+    expect(d.startsWith("M 0 0 L 4 0 Q 20 0 20 16 L 20 44 Q 20 60 36 60")).toBe(
+      true,
+    );
+    expect(d.endsWith(" L 230 60")).toBe(true);
   });
 
-  it("switches to a rounded elbow once the drop outweighs the run", () => {
-    const d = routeRun(0, 0, 100, 300, 1);
-    expect(d).toContain("Q");
-    // The last segment runs level into the target.
-    expect(d.endsWith(" L 100 300")).toBe(true);
+  it("turns at the midpoint of a run shorter than two reaches", () => {
+    const d = routeRun(0, 0, 30, 60, 1);
+    expect(d).toContain(" L 15 ");
+    expect(d.endsWith(" L 30 60")).toBe(true);
   });
 
   it("mirrors the elbow for a leftward run", () => {
-    const d = routeRun(100, 0, 0, 300, -1);
-    expect(d.startsWith("M 100 0 L 66 0")).toBe(true);
-    expect(d.endsWith(" L 0 300")).toBe(true);
+    const d = routeRun(230, 0, 0, 60, -1);
+    expect(d.startsWith("M 230 0 L 226 0 Q 210 0 210 16")).toBe(true);
+    expect(d.endsWith(" L 0 60")).toBe(true);
+  });
+
+  it("degenerates to a straight line for a level run", () => {
+    expect(routeRun(0, 0, 100, 0, 1)).toBe("M 0 0 L 20 0 L 20 0 L 100 0");
   });
 
   it("falls back to square corners when there is no room for a radius", () => {
-    const d = routeRun(0, 0, 4, 300, 1);
-    expect(d).toBe("M 0 0 L 2 0 L 2 300 L 4 300");
+    expect(routeRun(0, 0, 4, 300, 1)).toBe("M 0 0 L 2 0 L 2 300 L 4 300");
   });
 });
 
