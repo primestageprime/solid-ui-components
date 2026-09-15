@@ -18,10 +18,11 @@ import { filter, join, map } from "../../fn";
 import { DagArrowMarker, DagSvgEdge } from "../../internal/dag-svg";
 import {
   computeTreeDiffLayout,
+  type LayoutEdge,
   type LayoutNode,
   type TreeDiffLayout,
 } from "./layout";
-import { edgePath } from "./route";
+import { edgePath, trunkPath } from "./route";
 import type { TreeDiffChartProps, TreeDiffSide } from "./types";
 import "./TreeDiffChart.css";
 
@@ -91,10 +92,13 @@ export function TreeDiffChart(props: TreeDiffChartProps): JSX.Element {
   const boxes = createMemo(
     () => new Map(map((n: LayoutNode) => [n.id, n] as const, layout().nodes)),
   );
-  const pathFor = (from: string, to: string): string => {
-    const a = boxes().get(from);
-    const b = boxes().get(to);
-    return a && b ? edgePath(a, b) : "";
+  const pathFor = (edge: LayoutEdge): string => {
+    const a = boxes().get(edge.from);
+    const b = boxes().get(edge.to);
+    if (!a || !b) return "";
+    if (edge.trunkX === undefined) return edgePath(a, b);
+    const dir = b.x > edge.trunkX ? 1 : -1;
+    return trunkPath(edge.trunkX, a.y + a.height / 2, b, dir);
   };
   // Only group and leaf nodes are actionable: roots and the pruned node
   // carry no id the consumer minted.
@@ -185,7 +189,7 @@ export function TreeDiffChart(props: TreeDiffChartProps): JSX.Element {
         {(edge) => (
           <DagSvgEdge
             class={`sui-tree-diff__edge sui-tree-diff__edge--${edge.side}`}
-            d={pathFor(edge.from, edge.to)}
+            d={pathFor(edge)}
             arrowMarkerId={markerId(edge.side)}
           />
         )}

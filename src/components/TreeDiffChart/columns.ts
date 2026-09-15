@@ -5,7 +5,7 @@
 import { sum } from "../../fn";
 
 export const BOX_HEIGHT = 44;
-export const CHART_WIDTH = 980;
+export const CHART_WIDTH = 1080;
 export const ROOT_Y = 52;
 export const SPINE_RULE_Y = 84;
 export const BAND_TOP = 104;
@@ -18,8 +18,11 @@ export const W_LEAF = 158;
 export const W_ROOT = 216;
 export const W_SAME = 300;
 const GAP_MAX = 132;
-const SIDE_MARGIN = 20;
+/** Outer margin. Wide enough to hold the root trunk left of the group column. */
+const SIDE_MARGIN = 72;
 const ROOT_INSET = 14;
+/** The trunk drops from this far inside the root's outer edge. */
+const TRUNK_INSET = 12;
 
 /**
  * Lay a row of fixed-width boxes across `W` with equal gaps, capped so a
@@ -57,6 +60,9 @@ type Columns = {
   sharedLeaf: number;
   rootL: number;
   rootR: number;
+  /** x of the vertical trunk each root's edges share. */
+  trunkL: number;
+  trunkR: number;
   cx: number;
 };
 
@@ -80,6 +86,8 @@ function computeColumns(): Columns {
     sharedLeaf: cx + span / 2 - W_LEAF / 2,
     rootL,
     rootR: CHART_WIDTH - rootL,
+    trunkL: rootL - W_ROOT / 2 + TRUNK_INSET,
+    trunkR: CHART_WIDTH - (rootL - W_ROOT / 2 + TRUNK_INSET),
     cx,
   };
 }

@@ -4,8 +4,9 @@
 // Ported from the Scenario Tree Explorer prototype, minus its S-curve: every
 // horizontal run is a rounded elbow whose vertical leg sits in the corridor
 // next to the source box. Its last segment always runs level, so the
-// arrowhead meets the box square on. Two boxes in one column get a short
-// vertical curve between the facing edges.
+// arrowhead meets the box square on. Edges that leave a root drop along a
+// shared vertical trunk and turn level into their target, so one root's
+// edges read as one line with branches.
 // ============================================
 
 export type Box = {
@@ -62,18 +63,42 @@ export function routeRun(
   );
 }
 
+/**
+ * Trunk path: drop from `(trunkX, topY)` straight down (or up) to the
+ * target's center y, then turn level into the target's near edge. `dir` is
+ * +1 when the target sits right of the trunk, -1 when it sits left.
+ */
+export function trunkPath(
+  trunkX: number,
+  topY: number,
+  to: Box,
+  dir: 1 | -1,
+): string {
+  const x2 = dir === 1 ? to.x - to.width / 2 : to.x + to.width / 2;
+  const y2 = to.y;
+  const vd = y2 > topY ? 1 : -1;
+  const r = Math.min(
+    ELBOW_RADIUS,
+    Math.abs(x2 - trunkX) - 1,
+    Math.abs(y2 - topY) / 2,
+  );
+  if (r < 2) {
+    return `M ${trunkX} ${topY} L ${trunkX} ${y2} L ${x2} ${y2}`;
+  }
+  return (
+    `M ${trunkX} ${topY}` +
+    ` L ${trunkX} ${y2 - vd * r}` +
+    ` Q ${trunkX} ${y2} ${trunkX + dir * r} ${y2}` +
+    ` L ${x2} ${y2}`
+  );
+}
+
 /** SVG path `d` from the edge of box `a` to the edge of box `b`. */
 export function edgePath(a: Box, b: Box): string {
-  const dx = Math.abs(b.x - a.x);
-  // Stacked boxes: drop from the bottom of `a` to the top of `b`. When the
-  // target's center lies inside the source's span (a wide root over a
-  // narrower group) the drop starts at the target's x, so the arrow is one
-  // straight line instead of a hook that crosses the source box.
-  if (dx < SAME_COLUMN_EPSILON || dx < a.width / 2) {
-    const x = dx < SAME_COLUMN_EPSILON ? a.x : b.x;
+  if (Math.abs(b.x - a.x) < SAME_COLUMN_EPSILON) {
     const aBottom = a.y + a.height / 2;
     const bTop = b.y - b.height / 2;
-    return `M ${x} ${aBottom} C ${x} ${aBottom + STACK_BOW} ${b.x} ${bTop - STACK_BOW} ${b.x} ${bTop}`;
+    return `M ${a.x} ${aBottom} C ${a.x} ${aBottom + STACK_BOW} ${b.x} ${bTop - STACK_BOW} ${b.x} ${bTop}`;
   }
   const right = b.x > a.x;
   const x1 = right ? a.x + a.width / 2 : a.x - a.width / 2;

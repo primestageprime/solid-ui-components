@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { edgePath, routeRun } from "./route";
+import { edgePath, routeRun, trunkPath } from "./route";
 
 const box = (x: number, y: number, width = 100, height = 40) => ({
   x,
@@ -51,13 +51,26 @@ describe("edgePath", () => {
     expect(d.endsWith(" 50 0")).toBe(true);
   });
 
-  it("drops straight from a wide source when the target's center sits inside its span", () => {
-    const d = edgePath(box(122, 0, 216), box(95, 200, 150));
-    expect(d).toBe("M 95 20 C 95 42 95 158 95 180");
-  });
-
   it("joins stacked boxes bottom to top with a short vertical curve", () => {
     const d = edgePath(box(100, 0), box(100, 200));
     expect(d).toBe("M 100 20 C 100 42 100 158 100 180");
+  });
+});
+
+describe("trunkPath", () => {
+  it("drops along the trunk and turns level into the target's near edge", () => {
+    const d = trunkPath(50, 74, box(150, 200, 100, 40), 1);
+    expect(d).toBe("M 50 74 L 50 184 Q 50 200 66 200 L 100 200");
+  });
+
+  it("mirrors for a target left of the trunk", () => {
+    const d = trunkPath(1030, 74, box(930, 200, 100, 40), -1);
+    expect(d).toBe("M 1030 74 L 1030 184 Q 1030 200 1014 200 L 980 200");
+  });
+
+  it("uses square corners when the branch is too short for a radius", () => {
+    expect(trunkPath(98, 0, box(150, 200, 100, 40), 1)).toBe(
+      "M 98 0 L 98 200 L 100 200",
+    );
   });
 });

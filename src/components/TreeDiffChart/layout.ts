@@ -43,6 +43,12 @@ export type LayoutEdge = {
   to: string;
   /** Paint side, taken from the target node. */
   side: TreeDiffSide;
+  /**
+   * Set on edges that leave a root: the x of the vertical trunk the edge
+   * drops along before it turns level into its target. Every edge from the
+   * same root shares one trunk, so they draw as one line with branches.
+   */
+  trunkX?: number;
 };
 
 export type LayoutBand = {
@@ -231,7 +237,12 @@ function placeDivergedBand(
               node(gb, "group", "baseline", COLUMNS.groupL, midY, W_GROUP),
             ],
             edges: [
-              { from: ROOT_BASELINE_ID, to: gb.id, side: "baseline" as const },
+              {
+                from: ROOT_BASELINE_ID,
+                to: gb.id,
+                side: "baseline" as const,
+                trunkX: COLUMNS.trunkL,
+              },
             ],
           },
         ]
@@ -243,7 +254,12 @@ function placeDivergedBand(
               node(gc, "group", "compare", COLUMNS.groupR, midY, W_GROUP),
             ],
             edges: [
-              { from: ROOT_COMPARE_ID, to: gc.id, side: "compare" as const },
+              {
+                from: ROOT_COMPARE_ID,
+                to: gc.id,
+                side: "compare" as const,
+                trunkX: COLUMNS.trunkR,
+              },
             ],
           },
         ]
@@ -267,8 +283,18 @@ function placeSharedBand(
   const group: Placed = {
     nodes: [node(gb, "group", "shared", gx, midY, W_GROUP)],
     edges: [
-      { from: ROOT_BASELINE_ID, to: gb.id, side: "shared" },
-      { from: ROOT_COMPARE_ID, to: gb.id, side: "shared" },
+      {
+        from: ROOT_BASELINE_ID,
+        to: gb.id,
+        side: "shared",
+        trunkX: COLUMNS.trunkL,
+      },
+      {
+        from: ROOT_COMPARE_ID,
+        to: gb.id,
+        side: "shared",
+        trunkX: COLUMNS.trunkR,
+      },
     ],
   };
   const rows = map((k: TreeDiffChild, i: number): Placed => {
@@ -299,8 +325,18 @@ function placeSameBand(count: number, y0: number): Placed {
   return {
     nodes: [same],
     edges: [
-      { from: ROOT_BASELINE_ID, to: SAME_ID, side: "shared" },
-      { from: ROOT_COMPARE_ID, to: SAME_ID, side: "shared" },
+      {
+        from: ROOT_BASELINE_ID,
+        to: SAME_ID,
+        side: "shared",
+        trunkX: COLUMNS.trunkL,
+      },
+      {
+        from: ROOT_COMPARE_ID,
+        to: SAME_ID,
+        side: "shared",
+        trunkX: COLUMNS.trunkR,
+      },
     ],
   };
 }
@@ -405,7 +441,13 @@ export function computeTreeDiffLayout(
     cursor += height;
   }
 
-  const { nodes, edges } = dedupe(merge(parts));
+  const { nodes, edges: unordered } = dedupe(merge(parts));
+  // Shared (dim) edges draw first so a coloured trunk segment they overlap
+  // stays in that side's ink.
+  const edges = sortBy(
+    (e: LayoutEdge) => (e.side === "shared" ? 0 : 1),
+    unordered,
+  );
   return {
     width: CHART_WIDTH,
     height: cursor + BOTTOM_PAD,

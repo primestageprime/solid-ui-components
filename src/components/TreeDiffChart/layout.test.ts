@@ -98,7 +98,12 @@ describe("computeTreeDiffLayout — differences mode", () => {
   it("colours each edge by its target and dedupes the shared arrows", () => {
     const into = (to: string) => layout.edges.filter((x) => x.to === to);
     expect(into("g_pay_b")).toEqual([
-      { from: ROOT_BASELINE_ID, to: "g_pay_b", side: "baseline" },
+      {
+        from: ROOT_BASELINE_ID,
+        to: "g_pay_b",
+        side: "baseline",
+        trunkX: expect.any(Number),
+      },
     ]);
     expect(into("l_ana88")[0].side).toBe("compare");
     expect(
@@ -112,6 +117,27 @@ describe("computeTreeDiffLayout — differences mode", () => {
         .sort(),
     ).toEqual([ROOT_BASELINE_ID, ROOT_COMPARE_ID]);
     expect(layout.edges.every((x) => n.has(x.from) && n.has(x.to))).toBe(true);
+  });
+
+  it("gives every root edge its side's trunk, left of the group column", () => {
+    const fromRoot = layout.edges.filter(
+      (x) => x.from === ROOT_BASELINE_ID || x.from === ROOT_COMPARE_ID,
+    );
+    expect(fromRoot.every((x) => x.trunkX !== undefined)).toBe(true);
+    const trunks = new Set(fromRoot.map((x) => x.trunkX));
+    expect(trunks.size).toBe(2);
+    const gb = n.get("g_pay_b")!;
+    const [leftTrunk] = [...trunks].sort((a, b) => a! - b!);
+    expect(leftTrunk!).toBeLessThan(gb.x - gb.width / 2);
+    expect(layout.edges.some((x) => x.from === "g_pay_b" && x.trunkX)).toBe(
+      false,
+    );
+  });
+
+  it("draws shared edges before coloured ones", () => {
+    const firstColoured = layout.edges.findIndex((x) => x.side !== "shared");
+    const lastShared = layout.edges.map((x) => x.side).lastIndexOf("shared");
+    expect(lastShared).toBeLessThan(firstColoured);
   });
 
   it("grows the height with the bands", () => {
