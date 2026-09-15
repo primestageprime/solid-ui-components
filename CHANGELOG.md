@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.170.0
+
 ### Fixed
 - **`ScrubChart` paints its first frame at the real frame width.** The width
   signal seeds at 1200 and the `ResizeObserver` defers even its first reading
