@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Added
+- **`TreeDiffChart` (workshop bench + showcase, not yet exported from the
+  barrel).** A new Primitive that draws a pre-computed diff of two scenario
+  trees: the baseline root on the left, the comparison root on the right, one
+  band per root entry between them, and a pruned `[SAME]` node for every
+  identical entry. The consumer computes the diff and passes bands; the chart
+  owns layout, routing and paint. Ported from the thorcasting Scenario Tree
+  Explorer prototype. Three layouts follow the container width: narrow (two
+  columns, one row per line), compact (one chip per root, a trunk per side),
+  and wide (a spine of head, commit and root tree per side). `selectedId`
+  lights a pair: the clicked node, its counterpart on the other side, the
+  chain to the spine, and what a selected group holds; the rest dims. Lives
+  on bench `workshop:tree-diff-chart` and showcase `tree-diff-chart` until
+  promotion (dside #49153).
+
 ## 0.169.0
 
 ### Added
