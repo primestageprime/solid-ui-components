@@ -26,7 +26,7 @@ import {
 } from "./helpers";
 import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
 import { dailyCells, type Cell } from "../DateAxis";
-import { pointer, rectOf } from "../../test-utils";
+import { installRects, pointer, rectOf } from "../../test-utils";
 
 // `cellAtClientX` reads exactly one field of this box — `left`, to convert a
 // client coordinate into a plot-relative one. The 1200 that sets dayPitch does
@@ -2020,5 +2020,58 @@ describe("y tick count follows the target height", () => {
     const values = yLabelValues(container);
     expect(values[values.length - 1]).toBe(200_000);
     expect(values).toHaveLength(6);
+  });
+});
+
+describe("ScrubChart first-frame width", () => {
+  const cells10 = (): Cell[] => dailyCells(d("2026-05-01"), d("2026-05-10"));
+  const FRAME = "sui-scrub-chart__frame";
+
+  it("reads the frame width at mount, before any ResizeObserver delivery", () => {
+    // jsdom installs no ResizeObserver, so the only path to a real width on
+    // the first render is a synchronous read in onMount. The stub answers for
+    // the frame alone; every other rect stays jsdom-zero.
+    const restore = installRects((el) =>
+      el.classList.contains(FRAME)
+        ? rectOf({ left: 0, top: 0, width: 640, height: 200 })
+        : null,
+    );
+    try {
+      let seen: ScrubChartContext<Cell> | null = null;
+      render(() => (
+        <ScrubChart
+          cells={cells10()}
+          scrub={false}
+          renderChart={(ctx) => {
+            seen = ctx;
+            return <svg />;
+          }}
+          renderCell={() => <div />}
+        />
+      ));
+      expect(seen!.width).toBe(640);
+      expect(seen!.plotRight).toBe(640);
+    } finally {
+      restore();
+    }
+  });
+
+  it("keeps the 1200 seed when the frame has no layout box yet", () => {
+    // A zero-width rect means the frame is not laid out (display: none, or a
+    // detached host). The seed stays until the observer reports a real size,
+    // which is the behaviour every existing jsdom test relies on.
+    let seen: ScrubChartContext<Cell> | null = null;
+    render(() => (
+      <ScrubChart
+        cells={cells10()}
+        scrub={false}
+        renderChart={(ctx) => {
+          seen = ctx;
+          return <svg />;
+        }}
+        renderCell={() => <div />}
+      />
+    ));
+    expect(seen!.width).toBe(1200);
   });
 });
