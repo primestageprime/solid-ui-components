@@ -68,6 +68,11 @@ describe("TreeDiffChart", () => {
     expect(container.querySelector("svg")?.getAttribute("aria-label")).toBe(
       "Tree diff of Baseline against Foo",
     );
+    expect(
+      container
+        .querySelector("svg")
+        ?.classList.contains("sui-tree-diff--compact"),
+    ).toBe(true);
   });
 
   it("paints each side with its own class and marker", () => {

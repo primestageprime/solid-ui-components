@@ -155,3 +155,23 @@
 .sui-tree-diff__spine-label--compare {
   fill: var(--sui-accent);
 }
+
+/* Narrow layout: the dashed center divider and the joiner between a changed pair. */
+.sui-tree-diff__divider {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.sui-tree-diff__joiner {
+  stroke: var(--sui-border-bright);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+/* Narrow layout: the column heads are the scenario names, so they read as titles. */
+.sui-tree-diff--narrow .sui-tree-diff__spine-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}

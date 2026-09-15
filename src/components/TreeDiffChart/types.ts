@@ -44,9 +44,21 @@ export type TreeDiffBand = {
   children: TreeDiffChild[];
 };
 
+/**
+ * One side of the comparison. In the wide layout each side draws a spine of
+ * three nodes: the head (scenario), its commit, and its root tree. Narrower
+ * layouts fold the three into one chip titled `label`, subtitled with the
+ * root hash and, when given, the commit hash.
+ */
 export type TreeDiffRoot = {
+  /** Scenario name. Title of the head node and of the chip. */
   label: string;
+  /** Root tree hash. */
   hash: string;
+  /** Commit hash. Its own node in the wide layout; appended to the chip otherwise. */
+  commit?: string;
+  /** Subtitle of the head node in the wide layout, e.g. the scenario id. */
+  ref?: string;
 };
 
 /**
@@ -70,7 +82,11 @@ export type TreeDiffChartProps = {
   onNodeClick?: (id: string) => void;
 };
 
-/** Synthetic ids the layout mints for the two roots and the pruned node. */
+/** Synthetic ids the layout mints for the spine nodes and the pruned node. */
 export const ROOT_BASELINE_ID = "__root_baseline";
 export const ROOT_COMPARE_ID = "__root_compare";
+export const COMMIT_BASELINE_ID = "__commit_baseline";
+export const COMMIT_COMPARE_ID = "__commit_compare";
+export const HEAD_BASELINE_ID = "__head_baseline";
+export const HEAD_COMPARE_ID = "__head_compare";
 export const SAME_ID = "__same";

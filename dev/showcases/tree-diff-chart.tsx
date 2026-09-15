@@ -21,9 +21,14 @@ const e = (id: string, label: string, hash: string): TreeDiffEntry => ({
 });
 
 // ─── Shared entries ───────────────────────────────────────────────────────
-const BASELINE = { label: "Baseline", hash: "3f7ac10" };
-const FOO = { label: "Foo", hash: "c05e8b2" };
-const BAR = { label: "Bar", hash: "7a41d0e" };
+const BASELINE = {
+  label: "Baseline",
+  hash: "3f7ac10",
+  commit: "6d2b0e4",
+  ref: "sc_base",
+};
+const FOO = { label: "Foo", hash: "c05e8b2", commit: "9be4413", ref: "sc_foo" };
+const BAR = { label: "Bar", hash: "7a41d0e", commit: "5d7c228", ref: "sc_bar" };
 
 const G_PAY_B = e("g_pay_b", "bucket:payroll", "d41aa07");
 const G_PAY_F = e("g_pay_f", "bucket:payroll", "5e9c3b8");

@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { computeTreeDiffLayout, CHART_WIDTH } from "./layout";
+import { computeTreeDiffLayout } from "./layout";
 import {
+  COMMIT_BASELINE_ID,
+  HEAD_BASELINE_ID,
+  HEAD_COMPARE_ID,
   ROOT_BASELINE_ID,
   ROOT_COMPARE_ID,
   SAME_ID,
@@ -11,8 +14,13 @@ import {
 const e = (id: string, label = id): TreeDiffEntry => ({ id, label, hash: id });
 
 const roots = {
-  baseline: { label: "Baseline", hash: "3f7ac10" },
-  compare: { label: "Foo", hash: "c05e8b2" },
+  baseline: {
+    label: "Baseline",
+    hash: "3f7ac10",
+    commit: "6d2b0e4",
+    ref: "sc_base",
+  },
+  compare: { label: "Foo", hash: "c05e8b2", commit: "9be4413", ref: "sc_foo" },
 };
 
 // Situation 1 from the prototype: one value changes. Payroll forks (tax and
@@ -59,8 +67,9 @@ describe("computeTreeDiffLayout — differences mode", () => {
     expect(b.side).toBe("baseline");
     expect(c.side).toBe("compare");
     expect(b.y).toBe(c.y);
-    expect(b.x + c.x).toBeCloseTo(CHART_WIDTH);
-    expect(b.hash).toBe("root 3f7ac10");
+    expect(b.x + c.x).toBeCloseTo(layout.width);
+    expect(b.hash).toBe("root 3f7ac10 · 6d2b0e4");
+    expect(layout.mode).toBe("compact");
   });
 
   it("shows only the diverged band, then prunes the rest into [SAME]", () => {
@@ -84,7 +93,7 @@ describe("computeTreeDiffLayout — differences mode", () => {
     expect(gb.x).toBeLessThan(bo.x);
     expect(bo.x).toBeLessThan(gc.x);
     expect(bo.side).toBe("shared");
-    expect(bo.x).toBeCloseTo(CHART_WIDTH / 2);
+    expect(bo.x).toBeCloseTo(layout.width / 2);
     expect(n.get("l_ana85")!.x).toBeLessThan(bo.x);
     expect(n.get("l_ana88")!.x).toBeGreaterThan(bo.x);
   });
@@ -177,7 +186,7 @@ describe("computeTreeDiffLayout — full mode", () => {
   });
 
   it("centers a childless identical group", () => {
-    expect(n.get("g_rev")!.x).toBeCloseTo(CHART_WIDTH / 2);
+    expect(n.get("g_rev")!.x).toBeCloseTo(layout.width / 2);
   });
 });
 
@@ -196,8 +205,107 @@ describe("computeTreeDiffLayout — added and removed entries", () => {
     const n = byId(layout);
     expect(n.get("g_new")!.side).toBe("compare");
     expect(n.get("l_x")!.side).toBe("compare");
-    expect(n.get("l_x")!.x).toBeGreaterThan(CHART_WIDTH / 2);
+    expect(n.get("l_x")!.x).toBeGreaterThan(layout.width / 2);
     expect(layout.bands[0].note).toBe("1 line moved");
     expect(layout.edges.some((x) => x.from === ROOT_BASELINE_ID)).toBe(false);
+  });
+});
+
+describe("computeTreeDiffLayout — wide mode (spine per side)", () => {
+  const layout = computeTreeDiffLayout({
+    ...roots,
+    bands: [opex, revenue, payroll],
+    mode: "differences",
+    width: 1400,
+  });
+  const n = byId(layout);
+
+  it("stacks head, commit and root tree on each side's spine", () => {
+    expect(layout.mode).toBe("wide");
+    const head = n.get(HEAD_BASELINE_ID)!;
+    const commit = n.get(COMMIT_BASELINE_ID)!;
+    const root = n.get(ROOT_BASELINE_ID)!;
+    expect(head.kind).toBe("head");
+    expect(head.label).toBe("Baseline");
+    expect(head.hash).toBe("sc_base");
+    expect(commit.hash).toBe("6d2b0e4");
+    expect(root.label).toBe("root tree");
+    expect(root.hash).toBe("3f7ac10");
+    expect(head.x).toBe(commit.x);
+    expect(commit.x).toBe(root.x);
+    expect(head.y).toBeLessThan(commit.y);
+    expect(commit.y).toBeLessThan(root.y);
+    expect(n.get(HEAD_COMPARE_ID)!.x + head.x).toBeCloseTo(layout.width);
+  });
+
+  it("links the spine and routes root edges as runs, not trunks", () => {
+    const spine = layout.edges.filter(
+      (x) => x.to === COMMIT_BASELINE_ID || x.to === ROOT_BASELINE_ID,
+    );
+    expect(spine.map((x) => x.from).sort()).toEqual(
+      [HEAD_BASELINE_ID, COMMIT_BASELINE_ID].sort(),
+    );
+    expect(spine.every((x) => x.side === "baseline")).toBe(true);
+    expect(
+      layout.edges.some(
+        (x) => x.from === ROOT_BASELINE_ID && x.trunkX !== undefined,
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps the root tree left of the group column", () => {
+    expect(n.get(ROOT_BASELINE_ID)!.x).toBeLessThan(n.get("g_pay_b")!.x);
+    expect(n.get(ROOT_COMPARE_ID)!.x).toBeGreaterThan(n.get("g_pay_f")!.x);
+  });
+
+  it("skips the commit node when no commit is given", () => {
+    const bare = computeTreeDiffLayout({
+      baseline: { label: "A", hash: "a" },
+      compare: { label: "B", hash: "b" },
+      bands: [payroll],
+      mode: "differences",
+      width: 1400,
+    });
+    const m = byId(bare);
+    expect(m.has(COMMIT_BASELINE_ID)).toBe(false);
+    expect(
+      bare.edges.some(
+        (x) => x.from === HEAD_BASELINE_ID && x.to === ROOT_BASELINE_ID,
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("computeTreeDiffLayout — narrow mode (two columns)", () => {
+  const layout = computeTreeDiffLayout({
+    ...roots,
+    bands: [opex, revenue, payroll],
+    mode: "differences",
+    width: 600,
+  });
+  const n = byId(layout);
+
+  it("draws no roots and no edges; the scenario names head the columns", () => {
+    expect(layout.mode).toBe("narrow");
+    expect(layout.edges).toEqual([]);
+    expect(n.has(ROOT_BASELINE_ID)).toBe(false);
+    expect(layout.captions.map((c) => c.text)).toEqual(["Baseline", "Foo"]);
+  });
+
+  it("puts each side's leaf in its column and a shared leaf on the divider", () => {
+    expect(n.get("l_ana85")!.x).toBeLessThan(layout.width / 2);
+    expect(n.get("l_ana88")!.x).toBeGreaterThan(layout.width / 2);
+    expect(n.get("l_bo")!.x).toBeCloseTo(layout.width / 2);
+    expect(n.has("g_pay_b")).toBe(false);
+  });
+
+  it("joins each changed pair and divides every band", () => {
+    const joiners = layout.guides.filter((g) => g.kind === "joiner");
+    expect(joiners.map((g) => g.y1).sort()).toEqual(
+      [n.get("l_ana85")!.y, n.get("l_tax")!.y].sort(),
+    );
+    expect(layout.guides.filter((g) => g.kind === "divider").length).toBe(1);
+    expect(n.get(SAME_ID)?.hash).toBe("2 subtrees · pruned");
+    expect(layout.bands[0].labelAnchor).toBe("start");
   });
 });
