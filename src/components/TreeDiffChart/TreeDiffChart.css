@@ -1,7 +1,23 @@
-/* TreeDiffChart — Atomic Primitive (Depth 1).
+/* TreeDiffChart — Composite (Depth 2).
  * The SVG coordinate system is the layout engine; nothing here is box-model
- * geometry. Three colours carry the whole picture: baseline ink, accent for
- * the comparison, and a dim border tone for what both sides share. */
+ * geometry.
+ *
+ * TWO PAINT SCHEMES, and the second overrides the first.
+ *
+ * By default three colours carry the picture by SIDE: baseline ink, accent
+ * for the comparison, and a dim border tone for what both sides share.
+ *
+ * When the consumer supplies a per-entry `kind`, colour switches to meaning
+ * CHANGE instead of side — grey/blue/green/red, keyed to the legend. Those
+ * rules MUST stay below the side block: they have equal specificity (one
+ * class + one class), so source order is the only thing that makes kind win.
+ * Move them up and every class-assertion test still passes while the chart
+ * silently paints by side.
+ *
+ * A consumer-supplied label is HTML in a foreignObject, not SVG text, so it
+ * takes `color` where SVG text takes `fill`. Every rule that tints a label
+ * therefore sets BOTH — drop the `color` half and the HTML labels fall back
+ * to Text.css's default ink. */
 
 .sui-tree-diff {
   display: block;
@@ -28,6 +44,19 @@
   font-size: 12px;
   font-weight: 600;
   fill: var(--sui-text-primary);
+  color: var(--sui-text-primary);
+}
+
+/* The foreignObject label slot. The box width is the constraint, so the
+ * trigger fills it exactly and the text ellipsizes at its edge. */
+.sui-tree-diff__label-trigger {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: none;
+  padding: 0;
+  background: none;
 }
 
 .sui-tree-diff__hash {
@@ -42,6 +71,7 @@
 
 .sui-tree-diff__node--baseline .sui-tree-diff__label {
   fill: var(--sui-text-primary);
+  color: var(--sui-text-primary);
 }
 
 .sui-tree-diff__node--compare .sui-tree-diff__body {
@@ -52,6 +82,7 @@
 
 .sui-tree-diff__node--compare .sui-tree-diff__label {
   fill: var(--sui-accent);
+  color: var(--sui-accent);
 }
 
 .sui-tree-diff__node--shared .sui-tree-diff__body {
@@ -61,6 +92,7 @@
 
 .sui-tree-diff__node--shared .sui-tree-diff__label {
   fill: var(--sui-text-muted);
+  color: var(--sui-text-muted);
   font-weight: 500;
 }
 
@@ -73,6 +105,7 @@
   font-size: 14px;
   letter-spacing: 0.1em;
   fill: var(--sui-text-secondary);
+  color: var(--sui-text-secondary);
 }
 
 /* A selected node keeps its own colour and thickens; a shared one takes ink. */
@@ -89,6 +122,49 @@
 .sui-tree-diff__node--shared.sui-tree-diff__node--selected
   .sui-tree-diff__label {
   fill: var(--sui-text-secondary);
+  color: var(--sui-text-secondary);
+}
+
+/* ─── Change kind overrides side ──────────────────────────────────────────
+ * Consumer-supplied `kind`. These sit BELOW every side rule on purpose (see
+ * the file header): equal specificity, so order is what makes them win.
+ * Tone tokens only — a theme that re-points success/danger restyles the
+ * chart and its legend together. */
+
+.sui-tree-diff__node--kind-unchanged .sui-tree-diff__body {
+  stroke: var(--sui-text-muted);
+}
+
+.sui-tree-diff__node--kind-unchanged .sui-tree-diff__label {
+  fill: var(--sui-text-muted);
+  color: var(--sui-text-muted);
+}
+
+.sui-tree-diff__node--kind-changed .sui-tree-diff__body {
+  stroke: var(--sui-accent);
+}
+
+.sui-tree-diff__node--kind-changed .sui-tree-diff__label {
+  fill: var(--sui-accent);
+  color: var(--sui-accent);
+}
+
+.sui-tree-diff__node--kind-added .sui-tree-diff__body {
+  stroke: var(--sui-success);
+}
+
+.sui-tree-diff__node--kind-added .sui-tree-diff__label {
+  fill: var(--sui-success);
+  color: var(--sui-success);
+}
+
+.sui-tree-diff__node--kind-removed .sui-tree-diff__body {
+  stroke: var(--sui-danger);
+}
+
+.sui-tree-diff__node--kind-removed .sui-tree-diff__label {
+  fill: var(--sui-danger);
+  color: var(--sui-danger);
 }
 
 .sui-tree-diff__node--dim {
@@ -116,6 +192,49 @@
 .sui-tree-diff__edge--shared {
   stroke: var(--sui-border-bright);
   opacity: 0.55;
+}
+
+/* Edge + arrowhead take the kind of the node the arrow POINTS AT. Both, or a
+ * green line ends in a grey arrowhead. Below the side rules, same reason. */
+
+.sui-tree-diff__edge--kind-unchanged {
+  stroke: var(--sui-text-muted);
+  opacity: 1;
+}
+
+.sui-tree-diff__edge--kind-changed {
+  stroke: var(--sui-accent);
+  opacity: 1;
+}
+
+.sui-tree-diff__edge--kind-added {
+  stroke: var(--sui-success);
+  opacity: 1;
+}
+
+.sui-tree-diff__edge--kind-removed {
+  stroke: var(--sui-danger);
+  opacity: 1;
+}
+
+.sui-tree-diff__arrow--kind-unchanged {
+  fill: var(--sui-text-muted);
+  stroke: none;
+}
+
+.sui-tree-diff__arrow--kind-changed {
+  fill: var(--sui-accent);
+  stroke: none;
+}
+
+.sui-tree-diff__arrow--kind-added {
+  fill: var(--sui-success);
+  stroke: none;
+}
+
+.sui-tree-diff__arrow--kind-removed {
+  fill: var(--sui-danger);
+  stroke: none;
 }
 
 .sui-tree-diff__edge--hot {

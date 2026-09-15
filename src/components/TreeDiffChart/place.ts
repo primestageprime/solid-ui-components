@@ -62,6 +62,8 @@ function node(
     y,
     width,
     height: BOX_HEIGHT,
+    changeKind: entry.kind,
+    labelFromData: true,
   };
 }
 
@@ -252,6 +254,7 @@ export function placeChip(
     y: CHIP_Y,
     width: f.chip,
     height: BOX_HEIGHT,
+    labelFromData: true,
   };
 }
 
@@ -282,6 +285,7 @@ export function placeSpine(
     hash: string,
     y: number,
     width: number,
+    labelFromData = false,
   ): LayoutNode => ({
     id,
     label,
@@ -292,6 +296,7 @@ export function placeSpine(
     y,
     width,
     height: BOX_HEIGHT,
+    labelFromData,
   });
   const head = box(
     ids.head,
@@ -300,6 +305,7 @@ export function placeSpine(
     root.ref ?? "",
     rootY - SPINE_HEAD_RISE,
     f.wHead,
+    true,
   );
   const tree = box(
     ids.root,
