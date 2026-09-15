@@ -3,6 +3,15 @@
 ## Unreleased
 
 ### Fixed
+- **`ScrubChart` paints its first frame at the real frame width.** The width
+  signal seeds at 1200 and the `ResizeObserver` defers even its first reading
+  to the next animation frame. The SVGs state a `viewBox` in chart units with
+  `preserveAspectRatio="none"`, so the first paint stretched 1200 units over
+  the real width: the y-axis column and the right label gutter drew scaled for
+  one frame, then snapped. The chart now reads the frame width once in
+  `onMount`, before the first paint, and the observer takes over from there. A
+  host that remounts the chart per route no longer sees the flicker and needs
+  no width cache (dside #45152).
 - **`ScrubChart` derives its default `yTickCount` from the plot height.** The
   fitted domain snaps with `nice(tickCount)`, and the count was a constant
   5, so the expand chevron took the chart from 200px to 480px and the axis

@@ -178,6 +178,16 @@ export const ScrubChart = <C extends Cell>(
   let frameEl: HTMLDivElement | undefined;
   onMount(() => {
     if (!frameEl) return;
+    // First frame. The seed is 1200; the SVGs state a `viewBox` in chart
+    // units with `preserveAspectRatio="none"`, so a first paint at the seed
+    // stretches 1200 units over the real frame width and the fixed pixel
+    // reservations (y-axis column, right gutter) draw scaled for one frame,
+    // then snap. onMount runs after DOM insertion and before that paint, so
+    // one synchronous read puts the real width on the first frame. A zero
+    // width means the frame has no layout box yet (display: none, a detached
+    // host, jsdom); the seed stays until the observer reports a real size.
+    const width = Math.round(frameEl.getBoundingClientRect().width);
+    if (width > 0) setChartWidth(width);
     // observeSize change-guards and rAF-defers the write. Setting chartWidth
     // synchronously inside the observer dispatch re-rendered the chart (and the
     // page around it) mid-delivery, which re-queued this same observer and made
