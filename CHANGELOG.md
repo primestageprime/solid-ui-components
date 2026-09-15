@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Fixed
+- **`ScrubChart` derives its default `yTickCount` from the plot height.** The
+  fitted domain snaps with `nice(tickCount)`, and the count was a constant
+  5, so the expand chevron took the chart from 200px to 480px and the axis
+  kept the same snap: on a $0 to $161.5k extent, 35% of the plot held no
+  data at both heights. The default is now one tick per 40px of plot height
+  at the TARGET chart height (5 on the default 200px chart, 12 at 480px), so
+  the expanded chart snaps to a finer step and the empty share drops to 19%.
+  An explicit `yTickCount` holds at every height. `CashflowScrubChart` now
+  forwards `yTickCount`, which its wrapper had dropped, so a consumer can
+  override the derived count (dside #49171).
+
 ### Added
 - **`TreeDiffChart` (workshop bench + showcase, not yet exported from the
   barrel).** A new Primitive that draws a pre-computed diff of two scenario

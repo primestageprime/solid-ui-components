@@ -343,8 +343,16 @@ export interface ScrubChartProps<C extends Cell> {
   onYScaleModeChange?: (mode: ScrubChartYScaleMode) => void;
   /** Format y-axis tick values for display. Default: locale number. */
   formatYLabel?: (value: number) => string;
-  /** Approximate number of y-axis ticks. Default 5. d3-scale picks the
-   *  nearest "nice" count. */
+  /**
+   * Approximate number of y-axis ticks. d3-scale picks the nearest "nice"
+   * count. The fitted domain snaps to this count too, so it also sets how
+   * much of the plot the snap can leave empty.
+   *
+   * Default: one tick per 40px of plot height, read at the TARGET chart
+   * height — 5 on the default 200px chart, 12 at `chartHeightExpanded`
+   * 480. The default therefore follows the expand chevron; an explicit
+   * count holds at every height.
+   */
   yTickCount?: number;
   /**
    * Draw a horizontal gridline across the plot at every y-axis tick — the
