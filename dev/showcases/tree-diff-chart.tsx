@@ -143,8 +143,10 @@ export const TreeDiffChartShowcase: Component = () => {
           Situation 1: Foo raises Ana from $8,500 to $8,800 and the employer
           payroll tax moves with it. Bo's salary is untouched, so it stays one
           shared node in the middle. Seven of eight root entries prune. Click a
-          group or leaf to select it; <code>onNodeClick</code> fires with the
-          entry id.
+          group or leaf: <code>onNodeClick</code> fires with the entry id, and{" "}
+          <code>selectedId</code> lights the pair: the clicked node, its
+          counterpart on the other side, the chain to the roots on both sides,
+          and what a selected group holds. The rest dims.
         </p>
         <SpacedStack>
           <TreeDiffChart

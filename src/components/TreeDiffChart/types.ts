@@ -76,7 +76,10 @@ export type TreeDiffChartProps = {
   bands: TreeDiffBand[];
   /** Defaults to `differences`. */
   mode?: TreeDiffMode;
-  /** Id of the node drawn in the selected state. */
+  /**
+   * Id of the selected node. Its counterpart on the other side lights with
+   * it, the chain to the spine stays lit on both sides, and the rest dims.
+   */
   selectedId?: string;
   /** When set, group and leaf nodes are focusable and fire on click / Enter / Space. */
   onNodeClick?: (id: string) => void;

@@ -75,15 +75,24 @@
   fill: var(--sui-text-secondary);
 }
 
+/* A selected node keeps its own colour and thickens; a shared one takes ink. */
 .sui-tree-diff__node--selected .sui-tree-diff__body {
-  stroke: var(--sui-accent);
   stroke-width: 3.5;
   stroke-dasharray: none;
-  fill: rgba(var(--sui-accent-rgb), 0.12);
 }
 
-.sui-tree-diff__node--selected .sui-tree-diff__label {
-  fill: var(--sui-accent);
+.sui-tree-diff__node--shared.sui-tree-diff__node--selected
+  .sui-tree-diff__body {
+  stroke: var(--sui-text-secondary);
+}
+
+.sui-tree-diff__node--shared.sui-tree-diff__node--selected
+  .sui-tree-diff__label {
+  fill: var(--sui-text-secondary);
+}
+
+.sui-tree-diff__node--dim {
+  opacity: 0.22;
 }
 
 .sui-tree-diff__node:focus-visible .sui-tree-diff__body {
@@ -107,6 +116,15 @@
 .sui-tree-diff__edge--shared {
   stroke: var(--sui-border-bright);
   opacity: 0.55;
+}
+
+.sui-tree-diff__edge--hot {
+  stroke-width: 3;
+  opacity: 1;
+}
+
+.sui-tree-diff__edge--dim {
+  opacity: 0.08;
 }
 
 .sui-tree-diff__arrow--baseline {

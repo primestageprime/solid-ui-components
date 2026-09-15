@@ -126,6 +126,20 @@ describe("TreeDiffChart", () => {
     ).toBeNull();
   });
 
+  it("lights the counterpart and the chain, and dims the rest", () => {
+    const { container } = mount({ selectedId: "l_a2" });
+    const cls = (id: string) => nodeById(container, id).classList;
+    expect(cls("l_a2").contains("sui-tree-diff__node--selected")).toBe(true);
+    expect(cls("l_a1").contains("sui-tree-diff__node--selected")).toBe(true);
+    expect(cls("g_b").contains("sui-tree-diff__node--dim")).toBe(false);
+    expect(cls("l_bo").contains("sui-tree-diff__node--dim")).toBe(true);
+    expect(cls("__same").contains("sui-tree-diff__node--dim")).toBe(true);
+    const hot = container.querySelectorAll("path.sui-tree-diff__edge--hot");
+    const dim = container.querySelectorAll("path.sui-tree-diff__edge--dim");
+    expect(hot.length).toBe(4);
+    expect(dim.length).toBe(4);
+  });
+
   it("renders no buttons without onNodeClick", () => {
     const { container } = mount();
     expect(container.querySelectorAll('g[role="button"]').length).toBe(0);

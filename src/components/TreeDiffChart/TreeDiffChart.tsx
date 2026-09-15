@@ -29,6 +29,7 @@ import {
 import { filter, join, map } from "../../fn";
 import { DagArrowMarker, DagSvgEdge } from "../../internal/dag-svg";
 import { observeSize } from "../../internal/dom/observeSize";
+import { computeHighlight, edgeKey } from "./highlight";
 import { computeTreeDiffLayout } from "./layout";
 import type {
   LayoutEdge,
@@ -52,19 +53,36 @@ const GUIDE_CLASS: Record<LayoutGuide["kind"], string> = {
 const HEAD_RADIUS = 23;
 const BOX_RADIUS = 7;
 
-const nodeClass = (n: LayoutNode, selected: boolean, clickable: boolean) => {
+type NodeFlags = { selected: boolean; dim: boolean; clickable: boolean };
+
+const nodeClass = (n: LayoutNode, flags: NodeFlags) => {
   const classes = [
     "sui-tree-diff__node",
     `sui-tree-diff__node--${n.side}`,
     n.kind === "same" ? "sui-tree-diff__node--same" : "",
-    selected ? "sui-tree-diff__node--selected" : "",
-    clickable ? "sui-tree-diff__node--clickable" : "",
+    flags.selected ? "sui-tree-diff__node--selected" : "",
+    flags.dim ? "sui-tree-diff__node--dim" : "",
+    flags.clickable ? "sui-tree-diff__node--clickable" : "",
   ];
   return join(
     " ",
     filter((c: string) => c !== "", classes),
   );
 };
+
+const edgeClass = (edge: LayoutEdge, hot: boolean, dim: boolean) =>
+  join(
+    " ",
+    filter(
+      (c: string) => c !== "",
+      [
+        "sui-tree-diff__edge",
+        `sui-tree-diff__edge--${edge.side}`,
+        hot ? "sui-tree-diff__edge--hot" : "",
+        dim ? "sui-tree-diff__edge--dim" : "",
+      ],
+    ),
+  );
 
 /** The box and its two text lines. Shared by the static and the button node. */
 function NodeBody(props: { node: LayoutNode }): JSX.Element {
@@ -115,6 +133,16 @@ export function TreeDiffChart(props: TreeDiffChartProps): JSX.Element {
       width: width(),
     }),
   );
+  // Pair selection: the clicked node, its counterpart, the chain to the
+  // spine on both sides, and one level down. Everything else dims.
+  const highlight = createMemo(() =>
+    computeHighlight(props.selectedId, props.bands, layout().edges),
+  );
+  const flagsFor = (n: LayoutNode, clickable: boolean): NodeFlags => ({
+    selected: highlight().selected.has(n.id),
+    dim: !!props.selectedId && !highlight().hot.has(n.id),
+    clickable,
+  });
   const boxes = createMemo(
     () => new Map(map((n: LayoutNode) => [n.id, n] as const, layout().nodes)),
   );
@@ -205,7 +233,11 @@ export function TreeDiffChart(props: TreeDiffChartProps): JSX.Element {
         <For each={layout().edges}>
           {(edge) => (
             <DagSvgEdge
-              class={`sui-tree-diff__edge sui-tree-diff__edge--${edge.side}`}
+              class={edgeClass(
+                edge,
+                highlight().live.has(edgeKey(edge)),
+                !!props.selectedId && !highlight().live.has(edgeKey(edge)),
+              )}
               d={pathFor(edge)}
               arrowMarkerId={markerId(edge.side)}
             />
@@ -218,7 +250,7 @@ export function TreeDiffChart(props: TreeDiffChartProps): JSX.Element {
               when={clickable(n)}
               fallback={
                 <g
-                  class={nodeClass(n, props.selectedId === n.id, false)}
+                  class={nodeClass(n, flagsFor(n, false))}
                   data-node-id={n.id}
                   aria-label={`${n.label} ${n.hash}`}
                 >
@@ -228,7 +260,7 @@ export function TreeDiffChart(props: TreeDiffChartProps): JSX.Element {
             >
               {/* biome-ignore lint/a11y/useSemanticElements: a native <button> is not valid inside SVG; role="button" on the <g> is the accessible affordance for an SVG hit target */}
               <g
-                class={nodeClass(n, props.selectedId === n.id, true)}
+                class={nodeClass(n, flagsFor(n, true))}
                 data-node-id={n.id}
                 role="button"
                 tabIndex={0}
