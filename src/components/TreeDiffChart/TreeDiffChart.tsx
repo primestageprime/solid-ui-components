@@ -1,17 +1,25 @@
 // lastReviewedAt: 2026-09-15
 // lastReviewedBy: adlai.arnold
 /**
- * TreeDiffChart — Atomic Primitive (Depth 1).
+ * TreeDiffChart — Composite (Depth 2).
  *
  * Draws a pre-computed diff of two scenario trees as one SVG: the baseline
  * root on the left, the comparison root on the right, one band per root
  * entry between them, and a pruned [SAME] node for every identical entry.
  * Owns its own CSS and consumes the arrowhead marker from
- * `src/internal/dag-svg`, a utility module rather than a Primitive.
+ * `src/internal/dag-svg`, a utility module rather than a Primitive. It also
+ * composes Depth-1 atomics — Tooltip and Text for the ellipsized node
+ * labels, Legend for the change-kind key, Layout for the stack of the two —
+ * which is what makes it Depth 2 rather than the Primitive it began as.
  *
  * The consumer computes the diff. This component owns layout (`layout.ts`),
- * edge routing (`route.ts`) and paint. Nodes are plain SVG rect + text, so
- * the SVG coordinate system is the whole layout engine.
+ * edge routing (`route.ts`) and paint. Nodes are SVG rect + text, so the SVG
+ * coordinate system is the whole layout engine; the one exception is the
+ * title line of a consumer-supplied label, which is HTML in a
+ * `foreignObject` so it can ellipsize (see `NodeLabel`).
+ *
+ * Colour means SIDE by default and CHANGE when the consumer supplies a
+ * `kind` per entry (`kinds.ts`). The chart never infers a kind.
  *
  * Responsive: the host div is measured and the layout mode follows its
  * width (`frame.ts`). The SVG's viewBox is the measured width, so boxes
