@@ -92,8 +92,10 @@ Cashflow's `yMin` / `yMax` REPLACE an end, and `yMin` is dropped entirely in
 Both domains end up snapped, so this is not "snap versus no snap". Read
 `buildScale` in `yAxis.ts`: `return fitted ? built : built.nice()`. The fitted
 domain arrives pre-snapped from `fitYDomain`, which calls
-`.nice(tickCount)` with `tickCount` = `DEFAULT_Y_TICK_COUNT` = `5`
-(`ScrubChart/helpers.ts:42`). The static Cashflow domain is snapped HERE
+`.nice(tickCount)` with `tickCount` = the `yTickCount` prop, or
+`defaultYTickCount(plotHeight)` (`ScrubChart/helpers.ts`): one tick per 40px
+of plot height at the target chart height, which is `5` on the default 200px
+chart and `12` at a `chartHeightExpanded` of 480 (dside #49171). The static Cashflow domain is snapped HERE
 instead, by a bare `.nice()`, which uses d3's own default of about 10.
 
 So the same data can land on different bounds through the two paths, because

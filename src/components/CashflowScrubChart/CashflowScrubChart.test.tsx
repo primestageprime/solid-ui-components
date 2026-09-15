@@ -2177,6 +2177,38 @@ describe("CashflowScrubChart y-fit forwarding", () => {
   });
 });
 
+describe("CashflowScrubChart yTickCount forwarding", () => {
+  /** Cells whose balance climbs by $100 a day, so the extent is known. */
+  const climbing = (count: number): CashflowCell[] =>
+    dailyCells(
+      d("2026-05-01"),
+      d(`2026-05-${String(count).padStart(2, "0")}`),
+    ).map((cell, i) => ({
+      ...cell,
+      cashflowCents: 10_000,
+      balanceCents: 10_000 * (i + 1),
+    }));
+
+  const yLabelCount = (extra: Record<string, unknown>): number =>
+    render(() => (
+      <CashflowScrubChart
+        cells={climbing(10)}
+        yFitDomain={() => [0, 100_000]}
+        yFitMargin={0}
+        yFitTransition={false}
+        {...extra}
+      />
+    )).container.querySelectorAll(".sui-scrub-chart__label--y").length;
+
+  it("forwards yTickCount to ScrubChart", () => {
+    // ScrubChartProps declared the prop and the wrapper dropped it, so a
+    // consumer could not override the height-derived default (dside #49171).
+    // Two ticks on [0, 100_000] is the two ends and the midpoint.
+    expect(yLabelCount({ yTickCount: 2 })).toBe(3);
+    expect(yLabelCount({})).toBeGreaterThan(3);
+  });
+});
+
 describe("CashflowScrubChart expand forwarding", () => {
   /** The one expand chevron ScrubChart draws in the bottom-right corner. */
   const expandButton = (container: HTMLElement): HTMLElement | null =>

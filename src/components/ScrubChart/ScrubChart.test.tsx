@@ -21,6 +21,7 @@ import {
   Y_LABEL_GAP,
   Y_LABEL_HALF_HEIGHT,
   clampLabelBaseline,
+  defaultYTickCount,
   yLabelFloor,
 } from "./helpers";
 import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
@@ -1955,5 +1956,69 @@ describe("ScrubChartMarker", () => {
   it("leaves `value` optional so a marker can ride the series line", () => {
     const marker: ScrubChartMarker = { index: 0 };
     expect(marker.value).toBeUndefined();
+  });
+});
+
+// ── Y tick count follows the target height (dside #49171) ─────────────
+// The fitted domain snaps with `nice(tickCount)`. A count that held at 5
+// whatever the height made an expanded chart snap to the same domain as the
+// collapsed one, so 2.4x the pixels carried the same empty axis. The default
+// now reads the plot height at the TARGET chart height.
+describe("y tick count follows the target height", () => {
+  it("asks for one tick per 40px of plot, never fewer than 2", () => {
+    // The default 200px chart with the x-axis row: 178px keeps 5.
+    expect(defaultYTickCount(178)).toBe(5);
+    // A 480px chart with the corner row: 454px gets 12.
+    expect(defaultYTickCount(454)).toBe(12);
+    expect(defaultYTickCount(10)).toBe(2);
+  });
+
+  /** The y tick values on screen, read from the labels, low to high. */
+  const yLabelValues = (container: HTMLElement): number[] =>
+    [...container.querySelectorAll(".sui-scrub-chart__label--y")]
+      .map((el) => Number(el.textContent!.replace(/[^\d-]/g, "")))
+      .sort((a, b) => a - b);
+
+  // The measured extent from the task: $0 to $161.5k. The default margin
+  // pads it to about [-13k, 175k].
+  const fitted = (extra: Record<string, unknown>) =>
+    render(() => (
+      <ScrubChart
+        cells={dailyCells(d("2026-05-01"), d("2026-05-10"))}
+        yFitDomain={() => [0, 161_500]}
+        yFitTransition={false}
+        chartHeight={200}
+        chartHeightExpanded={480}
+        expandTransition={false}
+        renderChart={() => <svg />}
+        renderCell={() => <div />}
+        {...extra}
+      />
+    ));
+
+  it("snaps the collapsed chart on 5 ticks", () => {
+    const { container } = fitted({});
+    const values = yLabelValues(container);
+    // 5 ticks on a 188k span is a $50k step, so the axis reaches 200k.
+    expect(values[0]).toBe(-50_000);
+    expect(values[values.length - 1]).toBe(200_000);
+    expect(values).toHaveLength(6);
+  });
+
+  it("snaps the expanded chart on more ticks, so less of it is empty", () => {
+    const { container } = fitted({ expanded: true });
+    const values = yLabelValues(container);
+    // 12 ticks is a $20k step: the top snaps to 180k instead of 200k, and
+    // 11 gridlines on 480px is the density 6 gridlines is on 200px.
+    expect(values[0]).toBe(-20_000);
+    expect(values[values.length - 1]).toBe(180_000);
+    expect(values).toHaveLength(11);
+  });
+
+  it("holds an explicit yTickCount at every height", () => {
+    const { container } = fitted({ expanded: true, yTickCount: 5 });
+    const values = yLabelValues(container);
+    expect(values[values.length - 1]).toBe(200_000);
+    expect(values).toHaveLength(6);
   });
 });

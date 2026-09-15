@@ -373,7 +373,7 @@ export interface CashflowScrubChartProps {
   yPadFraction?: number;
 
   // ── Y-fit control (optional) ─────────────────────────────────────────
-  // The six props below are ScrubChart's own, forwarded unchanged. Each one
+  // The seven props below are ScrubChart's own, forwarded unchanged. Each one
   // takes its type from `ScrubChartProps` through an indexed access, so the
   // wrapper cannot drift from the chart it wraps. `ScrubChartYFitPin` is not
   // in the set: it is the only y-fit prop with no cashflow reading yet, so
@@ -398,6 +398,14 @@ export interface CashflowScrubChartProps {
   /** Fraction of the fitted extent added above and below each end. Default
    *  0.08. No effect without `yFitDomain`. */
   yFitMargin?: ScrubChartProps<CashflowCell>["yFitMargin"];
+  /**
+   * Approximate number of y-axis ticks. The fitted domain snaps to this
+   * count, so it also sets how much of the plot the snap leaves empty.
+   * Default: one tick per 40px of plot height at the target chart height, so
+   * the snap follows the expand chevron. Set it to hold one count at every
+   * height.
+   */
+  yTickCount?: ScrubChartProps<CashflowCell>["yTickCount"];
   /**
    * Edges the fitted domain always includes, per y-scale mode.
    *

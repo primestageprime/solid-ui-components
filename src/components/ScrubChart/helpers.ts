@@ -39,7 +39,10 @@ export const DEFAULT_CHART_WIDTH = 1200;
 export const DEFAULT_CHART_HEIGHT = 200;
 export const DEFAULT_CELL_WIDTH = 40;
 export const DEFAULT_X_AXIS_HEIGHT = 22;
-export const DEFAULT_Y_TICK_COUNT = 5;
+// Plot pixels one y tick stands for when the caller sets no `yTickCount`.
+// 40px keeps the default 200px chart at 5 ticks, and a chart expanded to
+// 480px gets 12, so the gridlines keep one density at every height.
+export const Y_TICK_PITCH = 40;
 export const DEFAULT_X_MAX_TICKS = 12;
 export const Y_LABEL_GAP = 8; // px between the longest label and the axis line
 export const Y_LABEL_FONT = "10px system-ui, -apple-system, sans-serif";
@@ -53,6 +56,23 @@ export const Y_LABEL_HALF_HEIGHT = 6;
 // ── Origin-corner geometry ───────────────────────────────────────────────
 // The x tick labels and the y-fit button share the corner below
 // `plotBottom`. These numbers place both, so one edit moves them together.
+
+/**
+ * The y tick count a plot of `plotHeight` px asks d3 for.
+ *
+ * ScrubChart snaps the fitted domain with `nice(tickCount)`, so the count
+ * sets how much of the plot the snap can leave empty: a 200px chart with 5
+ * ticks and a 480px chart with 5 ticks snap to the same domain, and the
+ * taller chart spends its new pixels on the same empty axis. One tick per
+ * `Y_TICK_PITCH` px keeps the snap in step with the height. The count reads
+ * the TARGET height, not the tweened one, so an expand retargets the fit
+ * once. The floor of 2 keeps a tick on each end of a very short plot.
+ *
+ * @param plotHeight `plotBottom - plotTop` at the target chart height, in px.
+ * @returns The tick count. `Math.ceil` puts the 178px default plot on 5.
+ */
+export const defaultYTickCount = (plotHeight: number): number =>
+  Math.max(2, Math.ceil(plotHeight / Y_TICK_PITCH));
 
 /** Pixel gap from `plotBottom` down to an x tick label's `y`. Keep it in step
  *  with <ScrubChartAxes>, which draws the label at that y. */

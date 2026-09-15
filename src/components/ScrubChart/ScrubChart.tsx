@@ -55,7 +55,7 @@ import {
   DEFAULT_CHART_WIDTH,
   DEFAULT_X_AXIS_HEIGHT,
   DEFAULT_X_MAX_TICKS,
-  DEFAULT_Y_TICK_COUNT,
+  defaultYTickCount,
   CORNER_FOOTPRINT,
   Y_FIT_COLUMN,
   defaultFormatX,
@@ -191,6 +191,14 @@ export const ScrubChart = <C extends Cell>(
   const plotTop = () => vSpan().start;
   const plotBottom = () => vSpan().end;
   const plotHeight = () => vSpan().size;
+  // The y tick count follows the plot height the chart MOVES TOWARD, not the
+  // height on screen: the count then changes once per expand, and the
+  // y-domain tween carries the resnapped fit beside the height tween. A
+  // count read from the tweened height would retarget the fit on every
+  // frame the count crossed a step. See `defaultYTickCount`.
+  const yTickCount = () =>
+    props.yTickCount ??
+    defaultYTickCount(insetSpan(targetHeight(), 0, xAxisHeight()).size);
 
   // ── Track the inner DateAxis's scroll position + viewport width so we
   //    can render the window-band overlay over the slice of overview data
@@ -275,7 +283,7 @@ export const ScrubChart = <C extends Cell>(
         mode,
         props.yFitPin,
         props.yFitMargin ?? DEFAULT_Y_FIT_MARGIN,
-        props.yTickCount ?? DEFAULT_Y_TICK_COUNT,
+        yTickCount(),
       ),
       mode,
       props.yFitBounds,
@@ -298,7 +306,7 @@ export const ScrubChart = <C extends Cell>(
     staticDomain: () => props.yDomain,
     plotTop,
     plotBottom,
-    tickCount: () => props.yTickCount ?? DEFAULT_Y_TICK_COUNT,
+    tickCount: yTickCount,
     formatLabel: fmtY,
     axisWidth: () => props.yAxisWidth,
     minWidth: () => (props.yFitDomain ? Y_FIT_COLUMN : 0),
