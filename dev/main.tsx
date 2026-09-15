@@ -31,6 +31,7 @@ import { CellRendererShowcase } from "./showcases/cell-renderers";
 import { GapCellShowcase } from "./showcases/gap-cell";
 import { ComboboxShowcase } from "./showcases/combobox";
 import { DagChartShowcase } from "./showcases/dag-chart";
+import { TreeDiffChartShowcase } from "./showcases/tree-diff-chart";
 import { DateAxisShowcase } from "./showcases/date-axis";
 import { ScrubChartShowcase } from "./showcases/scrub-chart";
 import { CashflowScrubChartShowcase } from "./showcases/cashflow-scrub-chart";
@@ -271,6 +272,12 @@ const items: Item[] = [
     id: "dag-chart",
     label: "DagChart",
     component: DagChartShowcase,
+    tags: ["depth:0", "chart", "data"],
+  },
+  {
+    id: "tree-diff-chart",
+    label: "TreeDiffChart",
+    component: TreeDiffChartShowcase,
     tags: ["depth:0", "chart", "data"],
   },
   {
