@@ -1,0 +1,195 @@
+/* TreeDiffChart — Atomic Primitive (Depth 1).
+ * The SVG coordinate system is the layout engine; nothing here is box-model
+ * geometry. Three colours carry the whole picture: baseline ink, accent for
+ * the comparison, and a dim border tone for what both sides share. */
+
+.sui-tree-diff {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--sui-font-mono);
+}
+
+.sui-tree-diff__node {
+  outline: none;
+}
+
+.sui-tree-diff__node--clickable {
+  cursor: pointer;
+}
+
+.sui-tree-diff__body {
+  fill: var(--sui-bg-elevated);
+  stroke: var(--sui-border-bright);
+  stroke-width: 1.5;
+}
+
+.sui-tree-diff__label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--sui-text-primary);
+}
+
+.sui-tree-diff__hash {
+  font-size: 10px;
+  fill: var(--sui-text-muted);
+}
+
+.sui-tree-diff__node--baseline .sui-tree-diff__body {
+  stroke: var(--sui-text-secondary);
+  stroke-width: 2;
+}
+
+.sui-tree-diff__node--baseline .sui-tree-diff__label {
+  fill: var(--sui-text-primary);
+}
+
+.sui-tree-diff__node--compare .sui-tree-diff__body {
+  stroke: var(--sui-accent);
+  fill: rgba(var(--sui-accent-rgb), 0.12);
+  stroke-width: 2;
+}
+
+.sui-tree-diff__node--compare .sui-tree-diff__label {
+  fill: var(--sui-accent);
+}
+
+.sui-tree-diff__node--shared .sui-tree-diff__body {
+  stroke: var(--sui-border-bright);
+  stroke-dasharray: 4 3;
+}
+
+.sui-tree-diff__node--shared .sui-tree-diff__label {
+  fill: var(--sui-text-muted);
+  font-weight: 500;
+}
+
+.sui-tree-diff__node--same .sui-tree-diff__body {
+  stroke-dasharray: 6 4;
+  stroke-width: 2;
+}
+
+.sui-tree-diff__node--same .sui-tree-diff__label {
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  fill: var(--sui-text-secondary);
+}
+
+/* A selected node keeps its own colour and thickens; a shared one takes ink. */
+.sui-tree-diff__node--selected .sui-tree-diff__body {
+  stroke-width: 3.5;
+  stroke-dasharray: none;
+}
+
+.sui-tree-diff__node--shared.sui-tree-diff__node--selected
+  .sui-tree-diff__body {
+  stroke: var(--sui-text-secondary);
+}
+
+.sui-tree-diff__node--shared.sui-tree-diff__node--selected
+  .sui-tree-diff__label {
+  fill: var(--sui-text-secondary);
+}
+
+.sui-tree-diff__node--dim {
+  opacity: 0.22;
+}
+
+.sui-tree-diff__node:focus-visible .sui-tree-diff__body {
+  stroke: var(--sui-text-primary);
+  stroke-width: 3;
+}
+
+.sui-tree-diff__edge {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.sui-tree-diff__edge--baseline {
+  stroke: var(--sui-text-secondary);
+}
+
+.sui-tree-diff__edge--compare {
+  stroke: var(--sui-accent);
+}
+
+.sui-tree-diff__edge--shared {
+  stroke: var(--sui-border-bright);
+  opacity: 0.55;
+}
+
+.sui-tree-diff__edge--hot {
+  stroke-width: 3;
+  opacity: 1;
+}
+
+.sui-tree-diff__edge--dim {
+  opacity: 0.08;
+}
+
+.sui-tree-diff__arrow--baseline {
+  fill: var(--sui-text-secondary);
+  stroke: none;
+}
+
+.sui-tree-diff__arrow--compare {
+  fill: var(--sui-accent);
+  stroke: none;
+}
+
+.sui-tree-diff__arrow--shared {
+  fill: var(--sui-border-bright);
+  stroke: none;
+}
+
+.sui-tree-diff__band-rule {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+
+.sui-tree-diff__band-label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--sui-text-secondary);
+}
+
+.sui-tree-diff__band-note {
+  font-size: 10px;
+  fill: var(--sui-text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sui-tree-diff__spine-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sui-tree-diff__spine-label--baseline {
+  fill: var(--sui-text-secondary);
+}
+
+.sui-tree-diff__spine-label--compare {
+  fill: var(--sui-accent);
+}
+
+/* Narrow layout: the dashed center divider and the joiner between a changed pair. */
+.sui-tree-diff__divider {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.sui-tree-diff__joiner {
+  stroke: var(--sui-border-bright);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+/* Narrow layout: the column heads are the scenario names, so they read as titles. */
+.sui-tree-diff--narrow .sui-tree-diff__spine-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}

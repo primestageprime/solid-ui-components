@@ -524,3 +524,20 @@ Each entry: date · surface · decision · the discriminator answers · choice �
   (→ `Link`), and no Layout variant both grew and kept a tight gap (→ added
   `GrowTightStack`). `badgeTone` remains dead API — `CountBadge` is
   deliberately single-tone per the #2 Rule.
+- **2026-09-15 · SUI TreeDiffChart · side-by-side scenario tree diff** — new
+  Primitive on bench `workshop:tree-diff-chart` (dside #49153), ported from the
+  thorcasting Scenario Tree Explorer artifact (ADR 0014). Discriminators: two
+  roots that flow toward a shared center, one band per root entry, pruned
+  identical subtrees. **Not DagChart**: its layout is d3-dag sugiyama with
+  roots forced to layer 0 and `nodeRank` is advisory only, so it cannot draw a
+  mirrored two-root graph. **Not SwimlaneChart** either: its column-and-overflow
+  rules fight the band model. Chosen: SwimlaneChart's STRUCTURE (own pure
+  `layout.ts`, `internal/dag-svg` arrow marker and edge, no d3-shape per
+  ADR 0002) with a band layout and an S-curve / rounded-elbow router. Nodes are
+  plain SVG rect + text, not `DagSvgNode` foreignObject cards, so no node-card
+  component was needed and Layout Purity does not reach inside the chart. The
+  consumer pre-computes the diff and passes bands; SUI owns layout, routing and
+  paint (Adlai: "it's just a display concern"). Toolbar stays in the consumer:
+  `Select` × 2, `SegmentedControl`, `CaptionLabel`, `SpreadRow`/`ClusterRow`.
+  Band rules and captions are drawn in the SVG, not `LabeledDivider`, so they
+  scale with the diagram.
