@@ -20,6 +20,7 @@ import {
   MIN_STROKE,
   type Level,
   type Transfer,
+  axisTicks,
   changeTimes,
   droplinePositions,
   levelsRailGeometry,
@@ -485,7 +486,7 @@ describe("transferRibbons", () => {
   const maxCount = maxCountOf(LEVELS, TRANSFERS);
 
   it("runs from the source rail to the destination rail at the change x", () => {
-    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, DOMAIN, maxCount);
+    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, maxCount);
     expect(first.x).toBe(x(utc("2025-04-01")));
     expect(first.y1).toBe(y(6500));
     expect(first.y2).toBe(y(8000));
@@ -494,12 +495,12 @@ describe("transferRibbons", () => {
   });
 
   it("is as wide as the moving count on the SAME scale as the rails", () => {
-    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, DOMAIN, maxCount);
+    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, maxCount);
     expect(first.width).toBe(strokeFor(2, maxCount));
   });
 
   it("points upward for a raise — y2 is above y1 on the screen", () => {
-    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, DOMAIN, maxCount);
+    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, maxCount);
     expect(first.y2).toBeLessThan(first.y1);
   });
 
@@ -507,7 +508,7 @@ describe("transferRibbons", () => {
     const orphan: readonly Transfer[] = [
       { at: utc("2025-04-01"), from: "l6", to: "nowhere", count: 1 },
     ];
-    expect(transferRibbons(orphan, LEVELS, x, y, DOMAIN, maxCount)).toEqual([]);
+    expect(transferRibbons(orphan, LEVELS, x, y, maxCount)).toEqual([]);
   });
 });
 
@@ -646,5 +647,31 @@ describe("rail labels", () => {
       domain: DOMAIN,
     }).rails;
     expect(rail.labelAt).toBeUndefined();
+  });
+});
+
+describe("axisTicks", () => {
+  it("keeps a month cadence for a domain short enough to read", () => {
+    const ticks = axisTicks(DOMAIN, xScaleFor(DOMAIN));
+    expect(ticks).toHaveLength(13);
+    expect(ticks[0].label).toBe("Jan");
+  });
+
+  it("switches to a year cadence rather than printing a grey stripe", () => {
+    const long: TimeDomain = [utc("2025-01-01"), utc("2030-01-01")];
+    const ticks = axisTicks(long, xScaleFor(long));
+    expect(map((tick) => tick.label, ticks)).toEqual([
+      "2025",
+      "2026",
+      "2027",
+      "2028",
+      "2029",
+      "2030",
+    ]);
+  });
+
+  it("puts the first year tick on the plot's left edge", () => {
+    const long: TimeDomain = [utc("2025-01-01"), utc("2030-01-01")];
+    expect(axisTicks(long, xScaleFor(long))[0].x).toBe(PLOT_LEFT);
   });
 });

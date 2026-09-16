@@ -12,7 +12,21 @@
 export { LevelsTimeline } from "./LevelsTimeline";
 export type { LevelsTimelineProps } from "./LevelsTimeline";
 export {
+  MAX_STROKE,
+  MIN_STROKE,
+  MONTHLY_TICK_LIMIT,
+  RAIL_LABEL_GAP,
+  axisTicks,
+  changeTimes,
+  droplinePositions,
   flagPositions,
+  levelsRailGeometry,
+  maxCountOf,
+  railSpans,
+  strokeFor,
+  transferRibbons,
+  valueDomainOf,
+  yearTicks,
   levelsTimelineGeometry,
   monthTicks,
   stepPath,
@@ -23,7 +37,15 @@ export {
   yScaleFor,
 } from "./geometry";
 export type {
+  CountPoint,
+  Dropline,
   Flag,
+  Level,
+  LevelsRailGeometry,
+  Rail,
+  RailSpan,
+  Ribbon,
+  Transfer,
   LevelPoint,
   LevelsTimelineGeometry,
   Line,

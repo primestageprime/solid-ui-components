@@ -552,7 +552,6 @@ export const transferRibbons = (
   levels: readonly Level[],
   xScale: (at: TimeValue) => number,
   yScale: (value: number) => number,
-  domain: TimeDomain,
   maxCount: number,
 ): readonly Ribbon[] => {
   const indexById = new Map(
@@ -625,6 +624,46 @@ export const droplinePositions = (
   );
 };
 
+/**
+ * Longest span, in months, that still gets a tick per month. Past this the
+ * axis switches to one tick per YEAR: sixty-one month labels in the width of a
+ * card is not an axis, it is a grey stripe. The threshold is the component's
+ * own legibility decision about its own axis — it is not derived from, and
+ * cannot be overridden by, the consumer's data.
+ */
+export const MONTHLY_TICK_LIMIT = 18;
+
+/** One tick per January in the domain, labelled with the year. */
+export const yearTicks = (
+  domain: TimeDomain,
+  xScale: (at: TimeValue) => number,
+): readonly MonthTick[] =>
+  map(
+    (cell: { start: Date }) => ({
+      key: cell.start.toISOString(),
+      label: String(cell.start.getUTCFullYear()),
+      x: xScale(cell.start),
+    }),
+    filter(
+      (cell: { start: Date }) => cell.start.getUTCMonth() === 0,
+      monthlyCells(asDate(domain[0]), asDate(domain[1])),
+    ),
+  );
+
+/**
+ * Month ticks for a short domain, year ticks for a long one. The cadence is
+ * chosen from the span alone, so the same chart stays readable whether it is
+ * shown a quarter or a decade.
+ */
+export const axisTicks = (
+  domain: TimeDomain,
+  xScale: (at: TimeValue) => number,
+): readonly MonthTick[] =>
+  monthlyCells(asDate(domain[0]), asDate(domain[1])).length >
+  MONTHLY_TICK_LIMIT
+    ? yearTicks(domain, xScale)
+    : monthTicks(domain, xScale);
+
 /** Clearance between a rail's top edge and the baseline of its label. */
 export const RAIL_LABEL_GAP = 4;
 
@@ -668,7 +707,6 @@ export const levelsRailGeometry = (input: {
       input.levels,
       xScale,
       yScale,
-      input.domain,
       maxCount,
     ),
     droplines: droplinePositions(
@@ -679,7 +717,7 @@ export const levelsRailGeometry = (input: {
       xScale,
     ),
     flags: flagPositions(input.mutations, xScale),
-    ticks: monthTicks(input.domain, xScale),
+    ticks: axisTicks(input.domain, xScale),
   };
 };
 
