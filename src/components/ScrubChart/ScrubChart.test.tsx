@@ -86,11 +86,17 @@ describe("ScrubChart composition", () => {
     ) as HTMLElement;
     expect(numericFrame.style.height).toBe("260px");
 
+    // In fill mode the height is the STYLESHEET's, not an inline style: the
+    // modifier gives the root a height and the frame `flex:1`. An inline
+    // `height:100%` here resolved against a root with no height of its own.
     const filled = render(() => chart("fill"));
     const filledFrame = filled.container.querySelector(
       ".sui-scrub-chart__frame",
     ) as HTMLElement;
-    expect(filledFrame.style.height).toBe("100%");
+    expect(filledFrame.style.height).toBe("");
+    expect(
+      filled.container.querySelector(".sui-scrub-chart--fill"),
+    ).toBeTruthy();
   });
 
   it("renders no expand chevron in fill mode — the container owns the height", () => {

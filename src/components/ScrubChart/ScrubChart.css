@@ -269,3 +269,28 @@
   outline: 2px solid var(--sui-accent);
   outline-offset: 0;
 }
+
+/* FILL MODE (`chartHeight="fill"`). The root takes the container's height and
+   the frame takes what is left of it after the axis ribbon.
+
+   The height lives HERE rather than in an inline style, and that is the whole
+   bug this rule fixes: an inline `height:100%` on the frame resolves against
+   the ROOT, and without the rule below the root has no height of its own — so
+   it computed to `auto`, sized from content, and fed the component's own
+   fallback height straight back into the measurement it was supposed to take.
+
+   `min-height: 0` on both is what lets them shrink inside a flex cell; without
+   it a flex item's automatic minimum size is its content and the cell loses.
+
+   Placed at the END of the file on purpose: `ScrubChart.test.tsx` scrapes this
+   stylesheet for the base `.sui-scrub-chart__frame` block by substring, and a
+   compound selector containing that text earlier in the file shadows it. */
+.sui-scrub-chart--fill {
+  height: 100%;
+  min-height: 0;
+}
+
+.sui-scrub-chart--fill .sui-scrub-chart__frame {
+  flex: 1 1 0;
+  min-height: 0;
+}

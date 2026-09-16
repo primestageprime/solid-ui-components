@@ -1127,8 +1127,21 @@
 /* ── Content ───────────────────────────────────────────── */
 
 .showcase__content {
+  /* The gallery's own padding, named ONCE so the two things that depend on it
+     cannot drift: the padding below, and the bench-viewport height derived
+     from it. */
+  --showcase-pad: 32px;
+  /* THE BENCH VIEWPORT — the height a full-height bench may occupy so its
+     bottom edge lands on the window's bottom edge and no scrollbar appears.
+     This element IS the scroll container and its padding IS the only chrome
+     above and below the bench (a bench's own title lives inside the bench),
+     so the subtraction is exactly that padding, doubled — derived here rather
+     than written as a number in each bench.
+     `dvh`, not `vh`: on mobile `vh` is the LARGEST viewport, so a visible
+     toolbar makes a `100vh` box overflow by the toolbar's height. */
+  --sui-bench-viewport: calc(100dvh - var(--showcase-pad) * 2);
   flex: 1;
-  padding: 32px;
+  padding: var(--showcase-pad);
   max-width: 1000px;
   overflow-y: auto;
 }
@@ -2806,5 +2819,5 @@ th:has(.tf-th-center) .hud-table__header-content {
    own. 64px is that padding, so the board ends flush with the viewport.
    HEIGHT ONLY — every row and column inside is a Layout variant. */
 .scenario-board-frame {
-  height: calc(100vh - 64px);
+  height: var(--sui-bench-viewport);
 }

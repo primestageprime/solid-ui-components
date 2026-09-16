@@ -641,10 +641,19 @@ export const ScrubChart = <C extends Cell>(
   };
 
   return (
-    <div class="sui-scrub-chart">
+    <div
+      class="sui-scrub-chart"
+      classList={{ "sui-scrub-chart--fill": filling() }}
+    >
       <div
         class="sui-scrub-chart__frame"
-        style={filling() ? { height: "100%" } : { height: `${chartHeight()}px` }}
+        // In fill mode the HEIGHT IS THE STYLESHEET'S: the modifier gives the
+        // root a height and the frame `flex:1`, so the frame takes what the
+        // container has left after the ribbon. An inline `height:100%` here
+        // resolved against a root with no height of its own — computing to
+        // `auto`, sizing from content, and feeding the fallback straight back
+        // into the measurement.
+        style={filling() ? undefined : { height: `${chartHeight()}px` }}
         ref={(el) => (frameEl = el)}
         onPointerMove={handleHoverMove}
         onPointerLeave={handleHoverLeave}

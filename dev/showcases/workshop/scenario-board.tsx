@@ -66,7 +66,8 @@ import type { SegmentOption } from "../../../src/components/SegmentedControl";
 
 import { GhostButton } from "../../../src/components/Button";
 import {
-  ClipFillColumn,
+  GrowFillBox,
+  HalfFillColumn,
   LooseWrapRow,
   MajorFillColumn,
   MinorFillColumn,
@@ -76,7 +77,7 @@ import {
   ViewportColumn,
   WidePaneBox,
 } from "../../../src/components/Layout";
-import { CardSurface } from "../../../src/components/Surface";
+import { CardSurface, FillCardSurface } from "../../../src/components/Surface";
 import { SectionTitle, TextTitle } from "../../../src/components/Text";
 
 export const meta = { label: "Scenario Board" };
@@ -237,15 +238,6 @@ const LEVEL_DOMAIN: readonly [number, number] = [0, 10];
 const DOLLARS_PER_LEVEL = 1000;
 
 /** The gauge's domain and its fixed reference, both the consumer's. */
-/**
- * The running-balance chart's height, in PIXELS.
- *
- * `CashflowScrubChart.chartHeight` is a number of pixels with no fill mode, so
- * the board cannot tell it "half the top band" — it can only name a number.
- * Sized to sit inside half the band at the gallery's usual height.
- */
-const CHART_HEIGHT = 110;
-
 const RATE_DOMAIN: readonly [number, number] = [-30000, 30000];
 /**
  * What the company nets per month BEFORE this scenario's changes. The gauge's
@@ -762,15 +754,21 @@ const ScenarioBoardBench: Component = () => {
             ClipFillColumn — it takes half the band AND clips — because a chart
             that cannot fill a shorter box would otherwise paint straight over
             the controls beneath it. See the header note on which charts fill. */}
+        {/* The top 30%, halved. Each card is a FillCardSurface — it takes
+            its half of the band and lays out a column that fills it — so the
+            title keeps its own height and the GrowBox hands the chart
+            everything left. Both charts now ABSORB that box: the balance chart
+            through `chartHeight="fill"`, the timeline by measuring the height
+            it is given. Nothing clips and nothing is sized in pixels here. */}
         <MinorFillColumn>
-          <ClipFillColumn>
-            <CardSurface>
-              <TightStack>
-                <TextTitle>Running balance</TextTitle>
+          <HalfFillColumn>
+            <FillCardSurface>
+              <TextTitle>Running balance</TextTitle>
+              <GrowFillBox>
                 <CashflowScrubChart
                   cells={balanceCells()}
                   scrub={false}
-                  chartHeight={CHART_HEIGHT}
+                  chartHeight="fill"
                   showGridlines
                   lineLabel="Committed"
                   balanceSeries={[
@@ -778,14 +776,14 @@ const ScenarioBoardBench: Component = () => {
                     fanSeries("pessimistic", -1),
                   ]}
                 />
-              </TightStack>
-            </CardSurface>
-          </ClipFillColumn>
+              </GrowFillBox>
+            </FillCardSurface>
+          </HalfFillColumn>
 
-          <ClipFillColumn>
-            <CardSurface>
-              <TightStack>
-                <TextTitle>Pay levels through the year</TextTitle>
+          <HalfFillColumn>
+            <FillCardSurface>
+              <TextTitle>Pay levels through the year</TextTitle>
+              <GrowFillBox>
                 <LevelsTimeline
                   levels={levelsOf(people())}
                   transfers={transfersOf(people())}
@@ -794,9 +792,9 @@ const ScenarioBoardBench: Component = () => {
                   selectedMutationId={selectedMutation()}
                   onSelectMutation={selectMutation}
                 />
-              </TightStack>
-            </CardSurface>
-          </ClipFillColumn>
+              </GrowFillBox>
+            </FillCardSurface>
+          </HalfFillColumn>
         </MinorFillColumn>
 
         <CardSurface>

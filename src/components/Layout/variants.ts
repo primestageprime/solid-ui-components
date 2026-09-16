@@ -459,6 +459,37 @@ export const ViewportColumn: Component<StackDataProps> = createStack({
   fill: true,
 });
 
+/** GrowFillBox — the COLUMN-context sibling of `GrowBox`: fills the space its
+ *  parent column has left and may shrink past its content
+ *  (`flex-grow:1; flex-basis:0%; min-height:0; min-width:0`).
+ *
+ *  `GrowBox` carries `min-width:0` and nothing for the other axis, because it
+ *  was written for a row. In a COLUMN that omission is decisive: a flex item's
+ *  automatic minimum size is its content, so a `GrowBox` holding a chart that
+ *  reports an 800px intrinsic height refuses to shrink into a 150px cell and
+ *  overflows it instead — silently, since the parent is the one with
+ *  `overflow` and the child is simply taller than its box. `min-height:0` is
+ *  what lets the cell win. For the growing region of a card whose header keeps
+ *  its own height. */
+export const GrowFillBox: Component<BoxDataProps> = createBox({
+  grow: true,
+  style: { "flex-basis": "0%", "min-height": "0", "min-width": "0" },
+});
+
+/** HalfFillColumn — an EQUAL share of a proportional split (`flex:1 1 0;
+ *  min-height:0`). Two of them halve their parent, three of them third it.
+ *
+ *  The `0` basis is the load-bearing part and the reason this is not
+ *  `ClipFillColumn`: a basis of `auto` measures each child's CONTENT first, so
+ *  a tall chart beside a short one takes the lion's share and "equal halves"
+ *  silently becomes "proportional to content". A zero basis divides the space
+ *  before content is consulted. For two stacked charts that must get the same
+ *  room whatever they contain. */
+export const HalfFillColumn: Component<StackDataProps> = createStack({
+  gap: "sm",
+  style: { flex: "1 1 0", "min-height": "0" },
+});
+
 /** MinorFillColumn — the SMALLER share of a proportional vertical split
  *  (`flex:30; min-height:0`), paired with `MajorFillColumn`.
  *
