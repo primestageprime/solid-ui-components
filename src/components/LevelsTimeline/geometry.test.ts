@@ -13,8 +13,21 @@
 // and the step vertices themselves.
 // ============================================
 import { describe, expect, it } from "vitest";
+import { map } from "../../fn";
 import {
   FLAG_RULE_TOP,
+  MAX_STROKE,
+  MIN_STROKE,
+  type Level,
+  type Transfer,
+  changeTimes,
+  droplinePositions,
+  levelsRailGeometry,
+  maxCountOf,
+  railSpans,
+  strokeFor,
+  transferRibbons,
+  valueDomainOf,
   PLOT_BOTTOM,
   PLOT_LEFT,
   PLOT_RIGHT,
@@ -292,5 +305,346 @@ describe("levelsTimelineGeometry — the whole observation", () => {
       );
     }
     expect(geometry.flags).toHaveLength(3);
+  });
+});
+
+// ============================================
+// The RAIL model (Peter, 2026-09-16) — a line is a pay LEVEL, not a person.
+//
+// A level sits at a fixed y and never moves; what varies along it is its
+// THICKNESS, which is proportional to the headcount holding that level. A
+// raise is a FLOW between two rails, and every x at which anything changes
+// carries a dropline.
+//
+// The old stepped model above is still tested, and still shipped, because a
+// consumer bench (scenario-board) is still on it.
+// ============================================
+
+const LEVELS: readonly Level[] = [
+  {
+    id: "l5",
+    label: "L5",
+    value: 5000,
+    points: [
+      { at: utc("2025-01-01"), count: 3 },
+      { at: utc("2025-07-01"), count: 4 },
+      { at: utc("2025-11-15"), count: 5 },
+    ],
+  },
+  {
+    id: "l6",
+    label: "L6",
+    value: 6500,
+    points: [
+      { at: utc("2025-01-01"), count: 4 },
+      { at: utc("2025-04-01"), count: 2 },
+    ],
+  },
+  {
+    id: "l7",
+    label: "L7",
+    value: 8000,
+    points: [
+      { at: utc("2025-01-01"), count: 2 },
+      { at: utc("2025-04-01"), count: 4 },
+      { at: utc("2025-10-01"), count: 3 },
+    ],
+  },
+  {
+    id: "l8",
+    label: "L8",
+    value: 10000,
+    points: [
+      { at: utc("2025-07-01"), count: 1 },
+      { at: utc("2025-10-01"), count: 2 },
+    ],
+  },
+];
+
+const TRANSFERS: readonly Transfer[] = [
+  { at: utc("2025-04-01"), from: "l6", to: "l7", count: 2 },
+  { at: utc("2025-10-01"), from: "l7", to: "l8", count: 1 },
+];
+
+describe("maxCountOf", () => {
+  it("is the largest headcount anywhere on the chart, transfers included", () => {
+    expect(maxCountOf(LEVELS, TRANSFERS)).toBe(5);
+  });
+
+  it("is zero for an empty chart rather than -Infinity", () => {
+    expect(maxCountOf([], [])).toBe(0);
+  });
+
+  it("counts a transfer larger than any standing headcount", () => {
+    const big: readonly Transfer[] = [
+      { at: 0, from: "l5", to: "l6", count: 99 },
+    ];
+    expect(maxCountOf(LEVELS, big)).toBe(99);
+  });
+});
+
+describe("strokeFor", () => {
+  it("scales as a PROPORTION of the chart's own maximum, not an absolute", () => {
+    // The same count reads differently on a chart whose maximum differs —
+    // that is the point: the picture works at any scale.
+    expect(strokeFor(5, 5)).toBe(MAX_STROKE);
+    expect(strokeFor(10, 10)).toBe(MAX_STROKE);
+    expect(strokeFor(5, 10)).toBe(MIN_STROKE + 0.5 * (MAX_STROKE - MIN_STROKE));
+  });
+
+  it("gives the thinnest visible rail to a single person, never zero", () => {
+    expect(strokeFor(1, 100)).toBeGreaterThanOrEqual(MIN_STROKE);
+  });
+
+  it("draws NOTHING where nobody holds the level", () => {
+    expect(strokeFor(0, 5)).toBe(0);
+    expect(strokeFor(-2, 5)).toBe(0);
+  });
+
+  it("reads an empty chart as the thinnest rail instead of NaN", () => {
+    expect(strokeFor(3, 0)).toBe(MIN_STROKE);
+  });
+
+  it("clamps a count above the maximum rather than overflowing the rail", () => {
+    expect(strokeFor(99, 5)).toBe(MAX_STROKE);
+  });
+});
+
+describe("valueDomainOf", () => {
+  it("spans the levels' own values, padded", () => {
+    const [lo, hi] = valueDomainOf(LEVELS);
+    expect(lo).toBeLessThan(5000);
+    expect(hi).toBeGreaterThan(10000);
+  });
+
+  it("opens up a single-level chart rather than collapsing it", () => {
+    const [lo, hi] = valueDomainOf([LEVELS[0]]);
+    expect(hi).toBeGreaterThan(lo);
+  });
+
+  it("survives no levels at all", () => {
+    const [lo, hi] = valueDomainOf([]);
+    expect(hi).toBeGreaterThan(lo);
+  });
+});
+
+describe("railSpans", () => {
+  const x = xScaleFor(DOMAIN);
+  const y = yScaleFor(valueDomainOf(LEVELS));
+  const maxCount = maxCountOf(LEVELS, TRANSFERS);
+
+  it("holds one span per count point, out to the next change", () => {
+    const spans = railSpans(LEVELS[1], x, y, DOMAIN[1], maxCount);
+    expect(spans).toHaveLength(2);
+    expect(spans[0].x2).toBe(spans[1].x1);
+    expect(spans[1].x2).toBe(PLOT_RIGHT);
+  });
+
+  it("keeps a rail at ONE y — a level does not move, its thickness does", () => {
+    const spans = railSpans(LEVELS[2], x, y, DOMAIN[1], maxCount);
+    expect(new Set(map((span) => span.y, spans)).size).toBe(1);
+  });
+
+  it("thins where people leave and thickens where they arrive", () => {
+    const [before, after] = railSpans(LEVELS[1], x, y, DOMAIN[1], maxCount);
+    expect(after.width).toBeLessThan(before.width);
+    const l7 = railSpans(LEVELS[2], x, y, DOMAIN[1], maxCount);
+    expect(l7[1].width).toBeGreaterThan(l7[0].width);
+  });
+
+  it("starts a level that appears mid-chart at its own first point", () => {
+    const spans = railSpans(LEVELS[3], x, y, DOMAIN[1], maxCount);
+    expect(spans[0].x1).toBeGreaterThan(PLOT_LEFT);
+  });
+
+  it("draws no span across a stretch nobody holds", () => {
+    const emptied: Level = {
+      id: "gone",
+      label: "Gone",
+      value: 7000,
+      points: [
+        { at: utc("2025-01-01"), count: 2 },
+        { at: utc("2025-06-01"), count: 0 },
+        { at: utc("2025-09-01"), count: 1 },
+      ],
+    };
+    const spans = railSpans(emptied, x, y, DOMAIN[1], maxCount);
+    expect(spans).toHaveLength(2);
+    expect(spans[1].x1).toBe(x(utc("2025-09-01")));
+  });
+
+  it("draws nothing for a level with no points", () => {
+    const empty: Level = { id: "e", label: "E", value: 1, points: [] };
+    expect(railSpans(empty, x, y, DOMAIN[1], maxCount)).toEqual([]);
+  });
+});
+
+describe("transferRibbons", () => {
+  const x = xScaleFor(DOMAIN);
+  const y = yScaleFor(valueDomainOf(LEVELS));
+  const maxCount = maxCountOf(LEVELS, TRANSFERS);
+
+  it("runs from the source rail to the destination rail at the change x", () => {
+    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, DOMAIN, maxCount);
+    expect(first.x).toBe(x(utc("2025-04-01")));
+    expect(first.y1).toBe(y(6500));
+    expect(first.y2).toBe(y(8000));
+    expect(first.fromId).toBe("l6");
+    expect(first.toId).toBe("l7");
+  });
+
+  it("is as wide as the moving count on the SAME scale as the rails", () => {
+    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, DOMAIN, maxCount);
+    expect(first.width).toBe(strokeFor(2, maxCount));
+  });
+
+  it("points upward for a raise — y2 is above y1 on the screen", () => {
+    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, DOMAIN, maxCount);
+    expect(first.y2).toBeLessThan(first.y1);
+  });
+
+  it("skips a transfer naming a level the chart does not have", () => {
+    const orphan: readonly Transfer[] = [
+      { at: utc("2025-04-01"), from: "l6", to: "nowhere", count: 1 },
+    ];
+    expect(transferRibbons(orphan, LEVELS, x, y, DOMAIN, maxCount)).toEqual([]);
+  });
+});
+
+describe("changeTimes", () => {
+  it("is every moment anything changes, deduped and in order", () => {
+    const times = changeTimes(LEVELS, TRANSFERS);
+    expect(map((t) => new Date(t).toISOString().slice(0, 10), times)).toEqual([
+      "2025-01-01",
+      "2025-04-01",
+      "2025-07-01",
+      "2025-10-01",
+      "2025-11-15",
+    ]);
+  });
+
+  it("counts a transfer at a moment no count point mentions", () => {
+    const extra: readonly Transfer[] = [
+      { at: utc("2025-05-05"), from: "l5", to: "l6", count: 1 },
+    ];
+    expect(changeTimes(LEVELS, extra)).toContain(timeOf(utc("2025-05-05")));
+  });
+});
+
+describe("droplinePositions", () => {
+  const x = xScaleFor(DOMAIN);
+
+  it("marks a change that no numbered flag already marks", () => {
+    const lines = droplinePositions(LEVELS, TRANSFERS, MUTATIONS, DOMAIN, x);
+    expect(lines).toHaveLength(1);
+    expect(lines[0].x).toBe(x(utc("2025-11-15")));
+  });
+
+  it("yields to the flag's own rule where the two coincide", () => {
+    const lines = droplinePositions(LEVELS, TRANSFERS, MUTATIONS, DOMAIN, x);
+    const flagXs = new Set(map((flag) => flag.x, flagPositions(MUTATIONS, x)));
+    for (const line of lines) expect(flagXs.has(line.x)).toBe(false);
+  });
+
+  it("does not rule the domain's own left edge — that is the frame", () => {
+    const lines = droplinePositions(LEVELS, TRANSFERS, [], DOMAIN, x);
+    expect(map((line) => line.x, lines)).not.toContain(PLOT_LEFT);
+  });
+
+  it("rules every change when no mutation is numbered at all", () => {
+    const lines = droplinePositions(LEVELS, TRANSFERS, [], DOMAIN, x);
+    expect(lines).toHaveLength(4); // the five changes, less the domain start
+  });
+});
+
+describe("levelsRailGeometry — the whole observation", () => {
+  const geometry = levelsRailGeometry({
+    levels: LEVELS,
+    transfers: TRANSFERS,
+    mutations: MUTATIONS,
+    domain: DOMAIN,
+  });
+
+  it("carries one rail per level, in the consumer's own order", () => {
+    expect(map((rail) => rail.id, geometry.rails)).toEqual([
+      "l5",
+      "l6",
+      "l7",
+      "l8",
+    ]);
+    expect(geometry.rails[0].seriesIndex).toBe(1);
+  });
+
+  it("carries the ribbons, the flags and the un-numbered dropline", () => {
+    expect(geometry.ribbons).toHaveLength(2);
+    expect(geometry.flags).toHaveLength(3);
+    expect(geometry.droplines).toHaveLength(1);
+  });
+
+  it("prints the table a reader checks the shape against", () => {
+    const [lo, hi] = geometry.yDomain;
+    console.table([
+      { field: "valueDomain.lo", value: round(lo) },
+      { field: "valueDomain.hi", value: round(hi) },
+      { field: "maxCount", value: geometry.maxCount },
+      { field: "stroke", value: `${MIN_STROKE}..${MAX_STROKE}` },
+    ]);
+    console.table(
+      geometry.rails.flatMap((rail) =>
+        rail.spans.map((span) => ({
+          level: rail.label,
+          y: round(span.y),
+          x1: round(span.x1),
+          x2: round(span.x2),
+          count: span.count,
+          width: round(span.width),
+        })),
+      ),
+    );
+    console.table(
+      geometry.ribbons.map((ribbon) => ({
+        from: ribbon.fromId,
+        to: ribbon.toId,
+        count: ribbon.count,
+        x: round(ribbon.x),
+        y1: round(ribbon.y1),
+        y2: round(ribbon.y2),
+        width: round(ribbon.width),
+      })),
+    );
+    console.table(
+      geometry.droplines.map((line) => ({ key: line.key, x: round(line.x) })),
+    );
+    expect(geometry.rails).toHaveLength(4);
+  });
+});
+
+describe("rail labels", () => {
+  const geometry = levelsRailGeometry({
+    levels: LEVELS,
+    transfers: TRANSFERS,
+    mutations: MUTATIONS,
+    domain: DOMAIN,
+  });
+
+  it("sits just above the rail's left end, clear of its thickness", () => {
+    const l5 = geometry.rails[0];
+    expect(l5.labelAt?.x).toBe(PLOT_LEFT + 2);
+    expect(l5.labelAt?.y).toBeLessThan(l5.spans[0].y - l5.spans[0].width / 2);
+  });
+
+  it("travels in with a level that appears mid-chart", () => {
+    const l8 = geometry.rails[3];
+    expect(l8.labelAt?.x).toBeGreaterThan(PLOT_LEFT + 2);
+  });
+
+  it("is absent for a level nobody ever holds — nothing to name", () => {
+    const [rail] = levelsRailGeometry({
+      levels: [{ id: "e", label: "E", value: 1, points: [] }],
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+    }).rails;
+    expect(rail.labelAt).toBeUndefined();
   });
 });

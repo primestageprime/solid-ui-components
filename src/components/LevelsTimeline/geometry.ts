@@ -30,7 +30,7 @@
 // ============================================
 import { clamp } from "../../internal/math/clamp";
 import { monthlyCells } from "../DateAxis/cells";
-import { join, map, sortBy } from "../../fn";
+import { filter, join, map, sortBy } from "../../fn";
 
 /** A moment, as the consumer prefers to express it. */
 export type TimeValue = Date | number;
@@ -353,4 +353,344 @@ const lineFor = (
     vertices,
     path: pathFrom(vertices),
   };
+};
+
+// ============================================================================
+// The RAIL model (Peter, 2026-09-16) — a line is a pay LEVEL, not a person.
+//
+// The stepped model above is DEPRECATED but still shipped: scenario-board
+// consumes it today, so it is moved off at its own pace and deleted only once
+// nothing reads it. Everything below is the addition, standing beside it.
+//
+// The two models differ in what VARIES along a line:
+//
+//   • stepped  — y moves, thickness is constant. A person's pay steps up.
+//   • rail     — y is FIXED, thickness moves. A pay level does not go
+//                anywhere; what changes is how many people hold it.
+//
+// So a rail has no risers at all. It is a run of horizontal SPANS at one y,
+// each as thick as the headcount holding that level over that stretch. People
+// moving between levels are not a step in either line — they are a FLOW, drawn
+// as a ribbon from the source rail to the destination rail at the moment of
+// the move, on the same width scale, so the lower rail visibly thins and the
+// upper one thickens across that x.
+//
+// Thickness is a PROPORTION of the chart's own maximum, never an absolute
+// count, so the picture reads the same for a team of six and a company of six
+// hundred. The chart does no arithmetic on the consumer's counts beyond that
+// one scale: it never sums a level, never derives a headcount from the
+// transfers, and never reconciles the two against each other. If a transfer
+// says two people moved and the counts disagree, the chart draws both — the
+// disagreement is the consumer's to see, not this file's to paper over.
+// ============================================================================
+
+/** "From `at`, hold `count` people at this level." */
+export interface CountPoint {
+  readonly at: TimeValue;
+  readonly count: number;
+}
+
+/** One pay level: a rail at a fixed y, thickening and thinning over time. */
+export interface Level {
+  readonly id: string;
+  readonly label: string;
+  /** The rail's y, in the consumer's own units — a pay figure or a rank. */
+  readonly value: number;
+  readonly points: readonly CountPoint[];
+}
+
+/** People moving between two levels at one moment. A raise, drawn as a flow. */
+export interface Transfer {
+  readonly at: TimeValue;
+  /** Source level id. */
+  readonly from: string;
+  /** Destination level id. */
+  readonly to: string;
+  readonly count: number;
+}
+
+/** One stretch of a rail: a horizontal run at `y`, `width` thick. */
+export interface RailSpan {
+  readonly levelId: string;
+  readonly x1: number;
+  readonly x2: number;
+  readonly y: number;
+  readonly count: number;
+  readonly width: number;
+}
+
+/** A rail: one level, placed, with its spans. */
+export interface Rail {
+  readonly id: string;
+  readonly label: string;
+  readonly value: number;
+  readonly y: number;
+  /** 1-based position in the CONSUMER's order — the `--sui-series-N` index. */
+  readonly seriesIndex: number;
+  readonly spans: readonly RailSpan[];
+  /**
+   * Where the level's own short label sits: just above the rail's LEFT END,
+   * wherever that is. A level that appears mid-chart carries its label in with
+   * it rather than announcing itself at an edge it does not reach.
+   * `undefined` when nobody ever holds the level, so there is nothing to name.
+   */
+  readonly labelAt?: Point;
+}
+
+/** A flow between two rails: a vertical ribbon at one x. */
+export interface Ribbon {
+  readonly key: string;
+  readonly fromId: string;
+  readonly toId: string;
+  readonly count: number;
+  readonly x: number;
+  /** The source rail's y. */
+  readonly y1: number;
+  /** The destination rail's y. */
+  readonly y2: number;
+  readonly width: number;
+  /** The source level's 1-based token index — a flow wears its ORIGIN's tone. */
+  readonly seriesIndex: number;
+}
+
+/** A thin rule at a change no numbered flag already marks. */
+export interface Dropline {
+  readonly key: string;
+  readonly x: number;
+}
+
+export interface LevelsRailGeometry {
+  readonly yDomain: readonly [number, number];
+  /** The largest headcount anywhere — the denominator of every width. */
+  readonly maxCount: number;
+  readonly rails: readonly Rail[];
+  readonly ribbons: readonly Ribbon[];
+  readonly droplines: readonly Dropline[];
+  readonly flags: readonly Flag[];
+  readonly ticks: readonly MonthTick[];
+}
+
+/** The thinnest a rail anybody holds is ever drawn. One person must be visible. */
+export const MIN_STROKE = 1.5;
+/** The thickest — reached by whoever holds the chart's own maximum. */
+export const MAX_STROKE = 10;
+
+/**
+ * Width for a headcount, as a proportion of the chart's maximum.
+ *
+ * Zero people is drawn as NOTHING rather than as a hairline: an empty level is
+ * an absence, and a hairline would read as "one person, roughly".
+ */
+export const strokeFor = (count: number, maxCount: number): number => {
+  if (count <= 0) return 0;
+  if (maxCount <= 0) return MIN_STROKE;
+  const fraction = clamp(count / maxCount, 0, 1);
+  return MIN_STROKE + fraction * (MAX_STROKE - MIN_STROKE);
+};
+
+/** The largest headcount anywhere on the chart, standing or moving. */
+export const maxCountOf = (
+  levels: readonly Level[],
+  transfers: readonly Transfer[],
+): number => {
+  const counts = allCounts(levels, transfers);
+  return counts.length === 0 ? 0 : Math.max(...counts);
+};
+
+/** Every level's value, padded. Never zero-height, never NaN. */
+export const valueDomainOf = (
+  levels: readonly Level[],
+): readonly [number, number] => {
+  if (levels.length === 0) return [0, 1];
+  const values = map((level: Level) => level.value, levels);
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const span = hi - lo;
+  const pad = span === 0 ? FLAT_Y_PAD : span * Y_PAD_FRACTION;
+  return [lo - pad, hi + pad];
+};
+
+/**
+ * One span per count point, each running to the next change (or the domain
+ * end). A span nobody holds is omitted entirely, which is what lets a level
+ * empty out for a stretch and come back without a line across the gap.
+ */
+export const railSpans = (
+  level: Level,
+  xScale: (at: TimeValue) => number,
+  yScale: (value: number) => number,
+  domainEnd: TimeValue,
+  maxCount: number,
+): readonly RailSpan[] => {
+  if (level.points.length === 0) return [];
+  const ordered = sortBy((point: CountPoint) => timeOf(point.at), level.points);
+  const y = yScale(level.value);
+  const spans: RailSpan[] = [];
+  for (const [index, point] of ordered.entries()) {
+    if (point.count <= 0) continue;
+    const next = ordered[index + 1];
+    spans.push({
+      levelId: level.id,
+      x1: xScale(point.at),
+      x2: xScale(next === undefined ? domainEnd : next.at),
+      y,
+      count: point.count,
+      width: strokeFor(point.count, maxCount),
+    });
+  }
+  return spans;
+};
+
+/**
+ * The flows. A ribbon wears its SOURCE's tone: the reader is watching a
+ * quantity leave one rail, and it is the departure that needs explaining.
+ * A transfer naming a level the chart does not have is dropped rather than
+ * drawn to nowhere.
+ */
+export const transferRibbons = (
+  transfers: readonly Transfer[],
+  levels: readonly Level[],
+  xScale: (at: TimeValue) => number,
+  yScale: (value: number) => number,
+  domain: TimeDomain,
+  maxCount: number,
+): readonly Ribbon[] => {
+  const indexById = new Map(
+    map((level: Level, index: number) => [level.id, index] as const, levels),
+  );
+  const ordered = sortBy(
+    (transfer: Transfer) => timeOf(transfer.at),
+    transfers,
+  );
+  const ribbons: Ribbon[] = [];
+  for (const transfer of ordered) {
+    const fromIndex = indexById.get(transfer.from);
+    const toIndex = indexById.get(transfer.to);
+    if (fromIndex === undefined || toIndex === undefined) continue;
+    ribbons.push({
+      key: `${transfer.from}-${transfer.to}-${timeOf(transfer.at)}`,
+      fromId: transfer.from,
+      toId: transfer.to,
+      count: transfer.count,
+      x: xScale(transfer.at),
+      y1: yScale(levels[fromIndex].value),
+      y2: yScale(levels[toIndex].value),
+      width: strokeFor(transfer.count, maxCount),
+      seriesIndex: fromIndex + 1,
+    });
+  }
+  return ribbons;
+};
+
+/** Every moment anything changes — a count point or a transfer — deduped. */
+export const changeTimes = (
+  levels: readonly Level[],
+  transfers: readonly Transfer[],
+): readonly number[] => {
+  const times = new Set<number>();
+  for (const level of levels) {
+    for (const point of level.points) times.add(timeOf(point.at));
+  }
+  for (const transfer of transfers) times.add(timeOf(transfer.at));
+  return sortBy((time: number) => time, [...times]);
+};
+
+/**
+ * A rule at every change a numbered flag does NOT already mark.
+ *
+ * Two omissions, both deliberate. The domain's own left edge is the frame, not
+ * an event — everything starts somewhere, and ruling that tells the reader
+ * nothing. And where a change coincides with a mutation, the flag's own rule is
+ * drawn instead, so the reader never sees two rules in one column and wonders
+ * what the second one means.
+ */
+export const droplinePositions = (
+  levels: readonly Level[],
+  transfers: readonly Transfer[],
+  mutations: readonly Mutation[],
+  domain: TimeDomain,
+  xScale: (at: TimeValue) => number,
+): readonly Dropline[] => {
+  const start = timeOf(domain[0]);
+  const flagged = new Set(
+    map((mutation: Mutation) => timeOf(mutation.at), mutations),
+  );
+  const wanted = filter(
+    (time: number) => time !== start && !flagged.has(time),
+    changeTimes(levels, transfers),
+  );
+  return map(
+    (time: number) => ({ key: String(time), x: xScale(time) }),
+    wanted,
+  );
+};
+
+/** Clearance between a rail's top edge and the baseline of its label. */
+export const RAIL_LABEL_GAP = 4;
+
+/** Just above the left end of the first span anybody holds. */
+const railLabelAt = (spans: readonly RailSpan[]): Point | undefined => {
+  const first = spans[0];
+  if (first === undefined) return undefined;
+  return { x: first.x1 + 2, y: first.y - first.width / 2 - RAIL_LABEL_GAP };
+};
+
+/** The whole rail observation: scales resolved, rails, flows, rules, flags. */
+export const levelsRailGeometry = (input: {
+  readonly levels: readonly Level[];
+  readonly transfers: readonly Transfer[];
+  readonly mutations: readonly Mutation[];
+  readonly domain: TimeDomain;
+}): LevelsRailGeometry => {
+  const xScale = xScaleFor(input.domain);
+  const yDomain = valueDomainOf(input.levels);
+  const yScale = yScaleFor(yDomain);
+  const maxCount = maxCountOf(input.levels, input.transfers);
+  const spansOf = (level: Level): readonly RailSpan[] =>
+    railSpans(level, xScale, yScale, input.domain[1], maxCount);
+  return {
+    yDomain,
+    maxCount,
+    rails: map(
+      (level: Level, index: number) => ({
+        id: level.id,
+        label: level.label,
+        value: level.value,
+        y: yScale(level.value),
+        seriesIndex: index + 1,
+        spans: spansOf(level),
+        labelAt: railLabelAt(spansOf(level)),
+      }),
+      input.levels,
+    ),
+    ribbons: transferRibbons(
+      input.transfers,
+      input.levels,
+      xScale,
+      yScale,
+      input.domain,
+      maxCount,
+    ),
+    droplines: droplinePositions(
+      input.levels,
+      input.transfers,
+      input.mutations,
+      input.domain,
+      xScale,
+    ),
+    flags: flagPositions(input.mutations, xScale),
+    ticks: monthTicks(input.domain, xScale),
+  };
+};
+
+const allCounts = (
+  levels: readonly Level[],
+  transfers: readonly Transfer[],
+): readonly number[] => {
+  const counts: number[] = [];
+  for (const level of levels) {
+    for (const point of level.points) counts.push(point.count);
+  }
+  for (const transfer of transfers) counts.push(transfer.count);
+  return counts;
 };
