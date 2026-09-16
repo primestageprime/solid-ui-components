@@ -79,10 +79,15 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
   // One sentence, same disposition as BandRail: the announcement has to carry
   // what the picture carries — which needle is where, and the difference — or
   // the reading is colour-only.
+  //
+  // It announces the DRAWN values, not the raw ones, for the same reason the
+  // delta is computed against them: a needle parked at a pole must not read out
+  // a number the dial contradicts. A screen-reader user gets the picture, and
+  // the picture is clamped.
   const valueText = () =>
-    `${props.label}: ${props.value}. ${baselineLabel()}: ${props.baseline}. ${props.format(
-      geometry().delta,
-    )} against ${baselineLabel().toLowerCase()}.`;
+    `${props.label}: ${geometry().drawnValue}. ${baselineLabel()}: ${
+      geometry().drawnBaseline
+    }. ${props.format(geometry().delta)} against ${baselineLabel().toLowerCase()}.`;
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA meter; a native <meter> is a replaced element with its own UA bar rendering and cannot host the SVG dial that IS this readout.
@@ -92,7 +97,7 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
       aria-label={props.label}
       aria-valuemin={props.domain[0]}
       aria-valuemax={props.domain[1]}
-      aria-valuenow={props.value}
+      aria-valuenow={geometry().drawnValue}
       aria-valuetext={valueText()}
     >
       <svg

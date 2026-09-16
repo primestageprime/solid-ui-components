@@ -290,6 +290,10 @@ export interface GaugeInput {
 
 /** Everything the component paints. Nothing is decided after this. */
 export interface GaugeGeometry {
+  /** The consumer's value, clamped — what the needle actually points at. */
+  readonly drawnValue: number;
+  /** The consumer's baseline, clamped. */
+  readonly drawnBaseline: number;
   readonly zeroAngle: number;
   readonly baselineAngle: number;
   readonly valueAngle: number;
@@ -355,6 +359,8 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
   const zoneEnd = pointAt(CENTER, RING_OUTER, zero);
   const ids = labelOrder(drawnBaseline, drawn);
   return {
+    drawnValue: drawn,
+    drawnBaseline: drawnBaseline,
     zeroAngle: zero,
     baselineAngle,
     valueAngle,

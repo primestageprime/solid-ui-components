@@ -117,4 +117,23 @@ describe("RateGauge", () => {
     ));
     expect(container.innerHTML).not.toContain("NaN");
   });
+
+  // The picture is clamped, so the announcement has to be too: a meter that
+  // read out 999999 beside a needle parked at the pole and a delta of
+  // +$25,000/mo would be describing a different gauge.
+  it("announces the value it DREW, never the one past the end of the domain", () => {
+    const { getByRole } = render(() => (
+      <RateGauge
+        domain={DOMAIN}
+        baseline={5000}
+        value={999999}
+        label="Foo"
+        format={money}
+      />
+    ));
+    const meter = getByRole("meter");
+    expect(meter.getAttribute("aria-valuenow")).toBe("30000");
+    expect(meter.getAttribute("aria-valuetext")).not.toContain("999999");
+    expect(meter.getAttribute("aria-valuetext")).toContain("+$25,000/mo");
+  });
 });

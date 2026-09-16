@@ -131,16 +131,19 @@ const RateGaugeBench: Component = () => (
           value={23000}
           label="Foo"
         />
-        {/* The mockup's second card reads −$8,833/mo, so this pair is chosen
-            to PRINT that: baseline +5,000 with the needle at −3,833. The brief
-            said "value −8833", which would instead be the needle's position
-            against some other baseline — one for Peter to settle. Either
-            reading is a drag of the slider below. */}
+        {/* The brief's values, exactly as given: baseline +5,000, needle at
+            −8,833, so the delta prints −$13,833/mo. Note that the brief's
+            format examples (+$23,000/mo, −$8,833/mo) do NOT reconcile with the
+            value/baseline pairs it gives for either card — card 1's delta is
+            +18,000, not +23,000 — so they read as illustrations of the
+            FORMATTER rather than as the mockups' deltas. If the mockups really
+            print those figures, the value/baseline pairs are what needs
+            correcting; the slider below reaches either reading. */}
         <RateCard
           title="Rate, right now"
           note="Below zero — the lower half lights, the bracket sweeps back past the baseline, and the delta carries a real minus sign."
           baseline={5000}
-          value={-3833}
+          value={-8833}
           label="Foo"
         />
       </WrapRow>
