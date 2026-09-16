@@ -1071,14 +1071,24 @@ const ScenarioBoardBench: Component = () => {
                   <TextTitle>Changes</TextTitle>
                   {/* The as-of control has NOTHING TO OFFER until a date has
                       been picked, and an empty segmented bar would be a
-                      control that cannot be operated. The hint takes its place
-                      — same slot, same row — and says the one thing the reader
-                      needs to know to get out of the empty state. */}
+                      control that cannot be operated. Peter's sentence takes
+                      its place — same slot, same row — and says the one thing
+                      the reader needs to know to get out of the empty state.
+
+                      NOT `EmptyState`, though it was the obvious candidate:
+                      that component is a CENTRED placeholder with an icon that
+                      stands in for absent content, and the content here is not
+                      absent — the two dials below still show what everyone is
+                      paid today, which is exactly what Peter asked to keep.
+                      This is a hint about a missing INPUT, in the slot the
+                      missing control would have occupied, so it stays the
+                      muted text variant. */}
                   <Show
                     when={selectedSegment()}
                     fallback={
                       <NoteText>
-                        add a date on the chart to make changes
+                        To change payroll click the pay levels chart to
+                        indicate when
                       </NoteText>
                     }
                   >
