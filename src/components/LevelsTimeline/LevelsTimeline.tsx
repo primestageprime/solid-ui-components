@@ -52,12 +52,7 @@ import {
 import {
   AXIS_TICK_LENGTH,
   FLAG_RULE_TOP,
-  PLOT_LEFT,
-  PLOT_TOP,
-  PLOT_RIGHT,
-  VIEW_HEIGHT,
-  VIEW_WIDTH,
-  viewHeightFor,
+
   type Flag,
   type Level,
   type Mutation,
@@ -181,11 +176,13 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
    * "definite height?" branch to get wrong, and no feedback loop — the measured
    * height either came from the consumer or came from our own fixed ratio.
    */
-  const [viewHeight, setViewHeight] = createSignal(VIEW_HEIGHT);
+  const [box, setBox] = createSignal<{ width: number; height: number }>();
   let host: HTMLDivElement | undefined;
   onMount(() => {
     if (host === undefined) return;
-    const stop = observeSize(host, (box) => setViewHeight(viewHeightFor(box)));
+    const stop = observeSize(host, (measured) =>
+      setBox({ width: measured.width, height: measured.height }),
+    );
     onCleanup(stop);
   });
 
@@ -195,7 +192,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       transfers: transfers(),
       mutations: props.mutations,
       domain: props.domain,
-      viewHeight: viewHeight(),
+      box: box(),
     }),
   );
   const frame = () => geometry().frame;
@@ -293,22 +290,22 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
   const pointerX = (event: PointerEvent | MouseEvent): number | undefined => {
     const svg = (event.currentTarget as SVGGraphicsElement).ownerSVGElement;
-    const box = svg?.getBoundingClientRect();
-    if (box === undefined || box.width === 0) return undefined;
-    return ((event.clientX - box.left) / box.width) * VIEW_WIDTH;
+    const rect = svg?.getBoundingClientRect();
+    if (rect === undefined || rect.width === 0) return undefined;
+    return ((event.clientX - rect.left) / rect.width) * frame().viewWidth;
   };
 
   const onPlotMove = (event: PointerEvent): void => {
     const x = pointerX(event);
     if (x === undefined) return;
-    setHover(hoverAt(props.levels, props.domain, x));
+    setHover(hoverAt(props.levels, props.domain, x, frame()));
   };
 
   const onPlotClick = (event: MouseEvent): void => {
     if (props.onPick === undefined) return;
     const x = pointerX(event);
     if (x === undefined) return;
-    props.onPick(hoverAt(props.levels, props.domain, x).at);
+    props.onPick(hoverAt(props.levels, props.domain, x, frame()).at);
   };
 
   /**
@@ -336,8 +333,8 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       anchorX: at.x,
       tipWidth: panelWidth(),
       offsetX: PANEL_OFFSET,
-      boundsLeft: PLOT_LEFT,
-      boundsRight: PLOT_RIGHT,
+      boundsLeft: frame().plotLeft,
+      boundsRight: frame().plotRight,
     });
 
   const formatValue = (value: number): string =>
@@ -366,7 +363,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           names the graphic and leaves its contents reachable. */}
       <svg
         class="sui-levels-timeline__canvas"
-        viewBox={`0 0 ${VIEW_WIDTH} ${frame().viewHeight}`}
+        viewBox={`0 0 ${frame().viewWidth} ${frame().viewHeight}`}
       >
         <title>{description()}</title>
         {/* One opacity gradient per OPEN-ended flow — nothing else needs one
@@ -395,8 +392,8 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         <g>
           <line
             class="sui-levels-timeline__baseline"
-            x1={PLOT_LEFT}
-            x2={PLOT_RIGHT}
+            x1={frame().plotLeft}
+            x2={frame().plotRight}
             y1={frame().plotBottom}
             y2={frame().plotBottom}
           />
@@ -412,14 +409,19 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                   y1={frame().plotBottom}
                   y2={frame().plotBottom + AXIS_TICK_LENGTH}
                 />
-                <text
-                  class="sui-levels-timeline__tick-label"
-                  x={tick.x}
-                  y={frame().axisLabelY}
-                  text-anchor="middle"
-                >
-                  {tick.label}
-                </text>
+                {/* Every boundary gets a tick; in compact chrome only every
+                    third gets a LABEL, because a full month row does not fit
+                    and overlapping text is worse than none. */}
+                <Show when={tick.showLabel}>
+                  <text
+                    class="sui-levels-timeline__tick-label"
+                    x={tick.x}
+                    y={frame().axisLabelY}
+                    text-anchor="middle"
+                  >
+                    {tick.label}
+                  </text>
+                </Show>
               </g>
             )}
           </For>
@@ -488,10 +490,10 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
               ? ""
               : "sui-levels-timeline__surface--pickable",
           ])}
-          x={PLOT_LEFT}
-          y={PLOT_TOP}
-          width={PLOT_RIGHT - PLOT_LEFT}
-          height={frame().plotBottom - PLOT_TOP}
+          x={frame().plotLeft}
+          y={frame().plotTop}
+          width={frame().plotRight - frame().plotLeft}
+          height={frame().plotBottom - frame().plotTop}
           onPointerMove={onPlotMove}
           onPointerLeave={() => setHover(undefined)}
           onClick={onPlotClick}
@@ -514,7 +516,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                 <g
                   ref={panel}
                   class="sui-levels-timeline__panel"
-                  transform={`translate(${panelX(at())} ${PLOT_TOP})`}
+                  transform={`translate(${panelX(at())} ${frame().plotTop})`}
                 >
                   <rect
                     class="sui-levels-timeline__panel-box"

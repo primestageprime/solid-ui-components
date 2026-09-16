@@ -91,6 +91,8 @@ export interface MonthTick {
   readonly key: string;
   readonly label: string;
   readonly x: number;
+  /** False where the tick is drawn but its label is thinned out. */
+  readonly showLabel: boolean;
 }
 
 // ── the canvas ───────────────────────────────────────────────────────────────
@@ -117,8 +119,21 @@ export const PLOT_BOTTOM = 190;
  * tick text stays the same size whatever height the chart is given.
  */
 export const AXIS_BAND = VIEW_HEIGHT - PLOT_BOTTOM;
-/** Below this there is no plot left to speak of, only chrome. */
-export const MIN_VIEW_HEIGHT = 120;
+/**
+ * Below this there is no plot left to speak of, even in compact chrome.
+ * Low, because compact chrome is only 16 units — the old value of 120 was
+ * sized for the full chrome and is not a floor a short box should hit.
+ */
+export const MIN_VIEW_HEIGHT = 72;
+
+/** The least of the box the PLOT may be reduced to before chrome gives way. */
+export const MIN_PLOT_FRACTION = 0.6;
+/** The axis, reduced to one tick row with thinned labels. */
+export const COMPACT_AXIS_BAND = 14;
+/** In compact chrome the plot starts here and the flags overlay its top. */
+export const COMPACT_PLOT_TOP = 2;
+/** Label every Nth tick in compact chrome — a full month row will not fit. */
+export const COMPACT_LABEL_EVERY = 3;
 
 /** The month axis, below the plot. */
 export const AXIS_TICK_LENGTH = 4;
@@ -152,24 +167,99 @@ export const BAND_INSET_FRACTION = 0.18;
  * stretches, which is the part that carries data.
  */
 export interface Frame {
+  /**
+   * The viewBox WIDTH. Normally `VIEW_WIDTH`, but widened when the height has
+   * been clamped up — see `frameForBox` for why that is not optional.
+   */
+  readonly viewWidth: number;
+  readonly plotLeft: number;
+  readonly plotRight: number;
   readonly viewHeight: number;
+  readonly plotTop: number;
   readonly plotBottom: number;
   readonly plotHeight: number;
   readonly axisLabelY: number;
   readonly bandInset: number;
+  /** True when the chrome has given way to keep the plot worth looking at. */
+  readonly compact: boolean;
+  /** Label every Nth axis tick. 1 in full chrome. */
+  readonly labelEvery: number;
 }
 
-export const frameFor = (viewHeight: number): Frame => {
+/**
+ * The height below which FULL chrome would leave the plot too small to read.
+ *
+ * Derived rather than picked: full chrome is the flag band plus the axis band,
+ * and the plot is required to keep `MIN_PLOT_FRACTION` of the box, so the
+ * threshold is whatever height makes those two statements agree. Change the
+ * fraction and the threshold follows.
+ */
+export const COMPACT_BELOW =
+  (PLOT_TOP + AXIS_BAND) / (1 - MIN_PLOT_FRACTION);
+
+/**
+ * The vertical layout for one view height, in one of two chrome modes.
+ *
+ * COMPACT chrome is what stops a short box from being all frame and no chart.
+ * The board reported a ~156px cell showing flags, an axis and rules but no
+ * rails at all — the fixed 78 units of chrome had eaten the plot down to 46
+ * units, and at that size the width caps collapsed to zero. So below
+ * `COMPACT_BELOW` the flags OVERLAY the top of the plot rather than sitting in
+ * a band of their own, and the axis shrinks to a single tick row with thinned
+ * labels. Nothing changes size: the flags and the text are the same, they just
+ * stop reserving space no short box can spare.
+ */
+export const frameFor = (
+  viewHeight: number,
+  viewWidth: number = VIEW_WIDTH,
+): Frame => {
   const height = Math.max(MIN_VIEW_HEIGHT, viewHeight);
-  const plotBottom = height - AXIS_BAND;
-  const plotHeight = plotBottom - PLOT_TOP;
+  const width = Math.max(VIEW_WIDTH, viewWidth);
+  const compact = height < COMPACT_BELOW;
+  const plotTop = compact ? COMPACT_PLOT_TOP : PLOT_TOP;
+  const axisBand = compact ? COMPACT_AXIS_BAND : AXIS_BAND;
+  const plotBottom = height - axisBand;
+  const plotHeight = plotBottom - plotTop;
   return {
+    viewWidth: width,
+    plotLeft: PLOT_LEFT,
+    plotRight: width - PLOT_LEFT,
     viewHeight: height,
+    plotTop,
     plotBottom,
     plotHeight,
-    axisLabelY: plotBottom + 20,
+    axisLabelY: plotBottom + (compact ? 10 : 20),
     bandInset: plotHeight * BAND_INSET_FRACTION,
+    compact,
+    labelEvery: compact ? COMPACT_LABEL_EVERY : 1,
   };
+};
+
+/**
+ * The frame for a MEASURED box — the one the component actually uses.
+ *
+ * Deriving the height from the box's aspect is not enough on its own, and this
+ * is the trap the board fell into. The height has a floor, and once that floor
+ * bites the viewBox aspect no longer matches the box: SVG's default
+ * `xMidYMid meet` then scales the whole drawing down to fit the height and
+ * CENTRES it, so a 2202×116 cell with a 640×120 viewBox drew everything into a
+ * 619px strip in the middle. From the reader's side that reads as "the rails
+ * do not render" — the flags and the axis span the box because they are drawn
+ * at the strip's scale too, and the rails are simply too compressed to see.
+ *
+ * So when the floor bites, the viewBox is WIDENED to keep the aspect honest.
+ * `preserveAspectRatio="none"` would also fill the box, but by stretching the
+ * text, which is worse than the problem.
+ */
+export const frameForBox = (box: {
+  readonly width: number;
+  readonly height: number;
+}): Frame => {
+  if (box.width <= 0 || box.height <= 0) return DEFAULT_FRAME;
+  const natural = (VIEW_WIDTH * box.height) / box.width;
+  if (natural >= MIN_VIEW_HEIGHT) return frameFor(natural);
+  // The floor bites: keep the height at the floor and widen to suit.
+  return frameFor(MIN_VIEW_HEIGHT, (MIN_VIEW_HEIGHT * box.width) / box.height);
 };
 
 /** The width-driven layout: what the chart uses when it is given no height. */
@@ -199,14 +289,17 @@ export const timeOf = (at: TimeValue): number =>
  * Time → x, clamped to the plot. A zero-width domain reads as the left edge
  * rather than dividing by zero.
  */
-export const xScaleFor = (domain: TimeDomain): ((at: TimeValue) => number) => {
+export const xScaleFor = (
+  domain: TimeDomain,
+  frame: Frame = DEFAULT_FRAME,
+): ((at: TimeValue) => number) => {
   const start = timeOf(domain[0]);
   const end = timeOf(domain[1]);
   const span = end - start;
-  if (span <= 0) return () => PLOT_LEFT;
+  if (span <= 0) return () => frame.plotLeft;
   return (at: TimeValue): number => {
     const fraction = (timeOf(at) - start) / span;
-    return PLOT_LEFT + clamp(fraction, 0, 1) * (PLOT_RIGHT - PLOT_LEFT);
+    return frame.plotLeft + clamp(fraction, 0, 1) * (frame.plotRight - frame.plotLeft);
   };
 };
 
@@ -229,12 +322,14 @@ export const flagPositions = (
 export const monthTicks = (
   domain: TimeDomain,
   xScale: (at: TimeValue) => number,
+  labelEvery = 1,
 ): readonly MonthTick[] =>
   map(
-    (cell: { start: Date }) => ({
+    (cell: { start: Date }, index: number) => ({
       key: cell.start.toISOString(),
       label: MONTH_LABELS[cell.start.getUTCMonth()],
       x: xScale(cell.start),
+      showLabel: index % Math.max(1, labelEvery) === 0,
     }),
     monthlyCells(asDate(domain[0]), asDate(domain[1])),
   );
@@ -412,6 +507,21 @@ export interface LevelsRailGeometry {
 export const FILL_FRACTION = 0.6;
 /** Clear air left between two adjacent levels' bands at their fattest. */
 export const BAND_MARGIN = 4;
+/**
+ * …but never more than this share of the gap it has to fit inside.
+ *
+ * An ABSOLUTE margin is what emptied the board's short cell: with seven levels
+ * in a 46-unit plot the tightest pair sat 3.74 units apart, the 4-unit margin
+ * ate all of it, and the adjacency cap came out at exactly zero — so every
+ * band was zero units tall and the chart drew its flags, its axis and its
+ * rules over nothing at all. A margin that scales cannot do that: it takes a
+ * share of the gap and always leaves the rest.
+ */
+export const BAND_MARGIN_FRACTION = 0.3;
+
+/** The margin two levels `gap` apart actually get. */
+export const marginFor = (gap: number): number =>
+  Math.min(BAND_MARGIN, Math.max(0, gap) * BAND_MARGIN_FRACTION);
 
 /** The plot's height — the space the stack is laid out in. */
 
@@ -444,7 +554,7 @@ export const adjacencyWidth = (
     const next = byValue[index + 1];
     if (next === undefined) continue;
     const gap = Math.abs(yScale(level.value) - yScale(next.value));
-    const room = gap - BAND_MARGIN;
+    const room = gap - marginFor(gap);
     const halves = (maxCountIn(level) + maxCountIn(next)) / 2;
     if (halves <= 0) continue;
     limits.push(Math.max(0, room) / halves);
@@ -476,7 +586,8 @@ export const edgeWidth = (
     const most = maxCountIn(level);
     if (most <= 0) continue;
     const y = yScale(level.value);
-    const room = Math.min(y - PLOT_TOP, frame.plotBottom - y) - BAND_MARGIN;
+    const reach = Math.min(y - frame.plotTop, frame.plotBottom - y);
+    const room = reach - marginFor(reach * 2);
     limits.push((2 * Math.max(0, room)) / most);
   }
   return limits.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...limits);
@@ -487,17 +598,32 @@ export const edgeWidth = (
  * fill width alone would smear close levels together and overrun the frame,
  * and either cap alone would draw a sparse chart in hairlines.
  */
+/**
+ * The thinnest a band is ever drawn, whatever the caps say.
+ *
+ * A cap of zero means "there is no room", and the honest answer to that is
+ * still not to draw nothing: a chart of invisible data looks broken, where
+ * bands that touch merely look tight. So the caps floor here. Below the floor
+ * adjacent bands may meet, which is a legible picture; zero is not a picture.
+ */
+export const MIN_PER_PERSON = 1;
+
 export const perPersonWidth = (
   levels: readonly Level[],
   yScale: (value: number) => number,
   peak: number,
   frame: Frame,
 ): number =>
-  Math.min(
-    fillWidth(peak, frame),
-    adjacencyWidth(levels, yScale),
-    edgeWidth(levels, yScale, frame),
-  );
+  peak <= 0
+    ? 0
+    : Math.max(
+        MIN_PER_PERSON,
+        Math.min(
+          fillWidth(peak, frame),
+          adjacencyWidth(levels, yScale),
+          edgeWidth(levels, yScale, frame),
+        ),
+      );
 
 /** A band's thickness. Purely proportional, so conservation is exact. */
 export const bandWidth = (count: number, perPerson: number): number =>
@@ -580,9 +706,9 @@ export const MIN_TRANSITION = 16;
 export const MAX_TRANSITION = 72;
 
 /** How wide every blend is, for this plot. One number, shared by everything. */
-export const transitionWidth = (): number =>
+export const transitionWidth = (frame: Frame = DEFAULT_FRAME): number =>
   clamp(
-    (PLOT_RIGHT - PLOT_LEFT) * TRANSITION_FRACTION,
+    (frame.plotRight - frame.plotLeft) * TRANSITION_FRACTION,
     MIN_TRANSITION,
     MAX_TRANSITION,
   );
@@ -993,7 +1119,7 @@ export const yScaleFor = (
 ): ((value: number) => number) => {
   const [lo, hi] = yDomain;
   const span = hi - lo;
-  const top = PLOT_TOP + frame.bandInset;
+  const top = frame.plotTop + frame.bandInset;
   const bottom = frame.plotBottom - frame.bandInset;
   const middle = (top + bottom) / 2;
   if (span <= 0) return () => middle;
@@ -1015,6 +1141,7 @@ export const railSpans = (
   half: number,
   /** Every moment anything changes ANYWHERE on the chart. */
   moments: readonly number[],
+  frame: Frame = DEFAULT_FRAME,
 ): readonly RailSpan[] => {
   if (level.points.length === 0) return [];
   const y = yScale(level.value);
@@ -1040,8 +1167,8 @@ export const railSpans = (
       // count did not change. A rail that nothing happened to is bridged by a
       // carry of identical width at both ends, which draws as a straight
       // continuation and costs the reader nothing.
-      x1: from <= PLOT_LEFT ? PLOT_LEFT : from + half,
-      x2: to >= PLOT_RIGHT ? PLOT_RIGHT : to - half,
+      x1: from <= frame.plotLeft ? frame.plotLeft : from + half,
+      x2: to >= frame.plotRight ? frame.plotRight : to - half,
       y,
       count,
       width: bandWidth(count, perPerson),
@@ -1059,18 +1186,22 @@ export const railSpans = (
  * both ends. Shortened when two changes sit close enough together that a full
  * transition either side would eat the band between them.
  */
-export const transitionHalf = (changeXs: readonly number[]): number => {
+export const transitionHalf = (
+  changeXs: readonly number[],
+  frame: Frame = DEFAULT_FRAME,
+): number => {
   const stops = sortBy(
     (x: number) => x,
-    [PLOT_LEFT, ...changeXs, PLOT_RIGHT],
+    [frame.plotLeft, ...changeXs, frame.plotRight],
   );
   const gaps: number[] = [];
   for (const [index, x] of stops.entries()) {
     const next = stops[index + 1];
     if (next !== undefined && next > x) gaps.push(next - x);
   }
-  const room = gaps.length === 0 ? PLOT_RIGHT - PLOT_LEFT : Math.min(...gaps);
-  return Math.min(transitionWidth() / 2, (room / 2) * 0.9);
+  const room =
+    gaps.length === 0 ? frame.plotRight - frame.plotLeft : Math.min(...gaps);
+  return Math.min(transitionWidth(frame) / 2, (room / 2) * 0.9);
 };
 
 // Peter, 2026-09-16: "don't label the series directly on the plot." There is
@@ -1087,15 +1218,22 @@ export const levelsRailGeometry = (input: {
   readonly domain: TimeDomain;
   /** The viewBox height to lay out in. Omitted = the width-driven default. */
   readonly viewHeight?: number;
+  /** The MEASURED box, which wins over `viewHeight` when both are given. */
+  readonly box?: { readonly width: number; readonly height: number };
 }): LevelsRailGeometry => {
-  const frame = frameFor(input.viewHeight ?? VIEW_HEIGHT);
-  const xScale = xScaleFor(input.domain);
+  const frame = input.box === undefined
+    ? frameFor(input.viewHeight ?? VIEW_HEIGHT)
+    : frameForBox(input.box);
+  const xScale = xScaleFor(input.domain, frame);
   const yDomain = valueDomainOf(input.levels);
   const yScale = yScaleFor(yDomain, frame);
   const peak = peakHeadcount(input.levels);
   const perPerson = perPersonWidth(input.levels, yScale, peak, frame);
   const moments = changeTimes(input.levels, input.transfers);
-  const half = transitionHalf(map((time: number) => xScale(time), moments));
+  const half = transitionHalf(
+    map((time: number) => xScale(time), moments),
+    frame,
+  );
   const rails = map((level: Level) => {
     const spans = railSpans(
       level,
@@ -1105,6 +1243,7 @@ export const levelsRailGeometry = (input: {
       perPerson,
       half,
       moments,
+      frame,
     );
     return {
       id: level.id,
@@ -1138,7 +1277,7 @@ export const levelsRailGeometry = (input: {
       xScale,
     ),
     flags: flagPositions(input.mutations, xScale, frame),
-    ticks: axisTicks(input.domain, xScale),
+    ticks: axisTicks(input.domain, xScale, frame),
   };
 };
 
@@ -1161,6 +1300,8 @@ export const yearTicks = (
       key: cell.start.toISOString(),
       label: String(cell.start.getUTCFullYear()),
       x: xScale(cell.start),
+      // A year row is already sparse; thinning it would leave gaps of nothing.
+      showLabel: true,
     }),
     filter(
       (cell: { start: Date }) => cell.start.getUTCMonth() === 0,
@@ -1176,10 +1317,11 @@ export const yearTicks = (
 export const axisTicks = (
   domain: TimeDomain,
   xScale: (at: TimeValue) => number,
+  frame: Frame = DEFAULT_FRAME,
 ): readonly MonthTick[] =>
   monthlyCells(asDate(domain[0]), asDate(domain[1])).length > MONTHLY_TICK_LIMIT
     ? yearTicks(domain, xScale)
-    : monthTicks(domain, xScale);
+    : monthTicks(domain, xScale, frame.labelEvery);
 
 // ── hover and pick ───────────────────────────────────────────────────────────
 
@@ -1217,13 +1359,17 @@ export const levelsAt = (
 };
 
 /** x → time. The inverse of `xScaleFor`, clamped to the domain. */
-export const timeAtX = (domain: TimeDomain, x: number): number => {
+export const timeAtX = (
+  domain: TimeDomain,
+  x: number,
+  frame: Frame = DEFAULT_FRAME,
+): number => {
   const start = timeOf(domain[0]);
   const end = timeOf(domain[1]);
   const span = end - start;
   if (span <= 0) return start;
   const fraction = clamp(
-    (x - PLOT_LEFT) / (PLOT_RIGHT - PLOT_LEFT),
+    (x - frame.plotLeft) / (frame.plotRight - frame.plotLeft),
     0,
     1,
   );
@@ -1271,11 +1417,12 @@ export const hoverAt = (
   levels: readonly Level[],
   domain: TimeDomain,
   x: number,
+  frame: Frame = DEFAULT_FRAME,
 ): Hover => {
   const at = clamp(
-    snapToMonth(timeAtX(domain, x)),
+    snapToMonth(timeAtX(domain, x, frame)),
     timeOf(domain[0]),
     timeOf(domain[1]),
   );
-  return { at, x: xScaleFor(domain)(at), rows: levelsAt(levels, at) };
+  return { at, x: xScaleFor(domain, frame)(at), rows: levelsAt(levels, at) };
 };

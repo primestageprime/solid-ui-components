@@ -18,15 +18,18 @@ import {
   FILL_FRACTION,
   MAX_TRANSITION,
   PLOT_BOTTOM,
+  MIN_PER_PERSON,
+  MIN_PLOT_FRACTION,
   MIN_VIEW_HEIGHT,
   frameFor,
+  frameForBox,
   viewHeightFor,
   VIEW_HEIGHT,
+  VIEW_WIDTH,
   PLOT_LEFT,
   PLOT_RIGHT,
   PLOT_TOP,
   TRANSITION_FRACTION,
-  VIEW_WIDTH,
   type BandRun,
   type FlowBand,
   type Level,
@@ -1065,9 +1068,19 @@ describe("fill-height", () => {
     expect(frameFor(10).plotHeight).toBeGreaterThan(0);
   });
 
-  it("stretches ONLY the plot — the flag band and the axis band are fixed", () => {
+  it("keeps the plot at 60% of the box or better, at every height", () => {
+    for (const viewHeight of [MIN_VIEW_HEIGHT, 100, 156, 195, 232, 480]) {
+      const frame = frameFor(viewHeight);
+      expect(frame.plotHeight / frame.viewHeight).toBeGreaterThanOrEqual(
+        MIN_PLOT_FRACTION - 1e-9,
+      );
+    }
+  });
+
+  it("stretches ONLY the plot — the chrome bands are fixed", () => {
     const tall = frameFor(400);
-    expect(PLOT_TOP).toBe(36);
+    expect(tall.compact).toBe(false);
+    expect(tall.plotTop).toBe(PLOT_TOP);
     expect(tall.viewHeight - tall.plotBottom).toBe(
       DEFAULT_FRAME.viewHeight - DEFAULT_FRAME.plotBottom,
     );
@@ -1087,7 +1100,7 @@ describe("fill-height", () => {
       expect(frame.viewHeight).toBe(viewHeight);
       for (const rail of geometry.rails) {
         for (const span of rail.spans) {
-          expect(spanTop(span)).toBeGreaterThanOrEqual(PLOT_TOP);
+          expect(spanTop(span)).toBeGreaterThanOrEqual(frame.plotTop);
           expect(spanBottom(span)).toBeLessThanOrEqual(frame.plotBottom);
         }
       }
@@ -1213,5 +1226,139 @@ describe("hoverAt", () => {
     const hover = hoverAt(LEVELS, DOMAIN, PLOT_RIGHT);
     expect(hover.at).toBeLessThanOrEqual(timeOf(DOMAIN[1]));
     expect(hover.x).toBeLessThanOrEqual(PLOT_RIGHT);
+  });
+});
+
+describe("compact chrome — the board's short cell", () => {
+  /** The board's shape: seven levels across three bands, one person each. */
+  const BOARD: readonly Level[] = map(
+    (pay: number) => ({
+      id: `L${pay}`,
+      label: `L${pay}`,
+      value: pay,
+      points: [{ at: utc("2025-01-01"), count: 1 }],
+    }),
+    [2000, 3000, 4000, 6000, 7000, 9000, 10000],
+  );
+
+  it("draws rails with POSITIVE height in an 800x156 box", () => {
+    // The regression: full chrome (78 of 125 units) left a 46-unit plot, the
+    // tightest of seven unevenly-spaced levels sat 3.74 units apart, the
+    // absolute 4-unit margin ate all of it, and the adjacency cap came out at
+    // exactly ZERO — so every band was zero tall and the chart drew its flags,
+    // axis and rules over nothing.
+    const geometry = levelsRailGeometry({
+      levels: BOARD,
+      transfers: [],
+      mutations: MUTATIONS,
+      domain: DOMAIN,
+      box: { width: 800, height: 156 },
+    });
+    expect(geometry.frame.compact).toBe(true);
+    expect(geometry.perPerson).toBeGreaterThan(0);
+    expect(geometry.rails).toHaveLength(7);
+    for (const rail of geometry.rails) {
+      expect(rail.spans.length).toBeGreaterThan(0);
+      for (const span of rail.spans) {
+        expect(span.width).toBeGreaterThan(0);
+        expect(spanBottom(span) - spanTop(span)).toBeGreaterThan(0);
+      }
+      expect(rail.runs.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("never lets a cap of zero mean a band of zero", () => {
+    // Tightly-stacked levels in a short plot: the caps may say there is no
+    // room, and the answer is still a visible band, not an invisible one.
+    const tight: readonly Level[] = map(
+      (pay: number) => ({
+        id: `t${pay}`,
+        label: `t${pay}`,
+        value: pay,
+        points: [{ at: utc("2025-01-01"), count: 1 }],
+      }),
+      [1000, 1010, 1020, 1030, 1040, 1050],
+    );
+    const geometry = levelsRailGeometry({
+      levels: tight,
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+      box: { width: 2202, height: 116 },
+    });
+    expect(geometry.perPerson).toBeGreaterThanOrEqual(MIN_PER_PERSON);
+    for (const rail of geometry.rails) {
+      for (const span of rail.spans) expect(span.width).toBeGreaterThan(0);
+    }
+  });
+
+  it("thins the axis labels rather than overlapping them", () => {
+    const geometry = levelsRailGeometry({
+      levels: BOARD,
+      transfers: [],
+      mutations: MUTATIONS,
+      domain: DOMAIN,
+      box: { width: 800, height: 156 },
+    });
+    const labelled = filter((tick) => tick.showLabel, geometry.ticks);
+    // Every boundary keeps its tick; only every third keeps its label.
+    expect(geometry.ticks).toHaveLength(13);
+    expect(labelled.length).toBeLessThan(geometry.ticks.length);
+    expect(labelled.length).toBeGreaterThan(2);
+  });
+
+  it("keeps full chrome when the box can afford it", () => {
+    const geometry = levelsRailGeometry({
+      levels: BOARD,
+      transfers: [],
+      mutations: MUTATIONS,
+      domain: DOMAIN,
+      box: { width: 800, height: 320 },
+    });
+    expect(geometry.frame.compact).toBe(false);
+    expect(geometry.frame.plotTop).toBe(PLOT_TOP);
+    expect(filter((tick) => tick.showLabel, geometry.ticks)).toHaveLength(13);
+  });
+});
+
+describe("frameForBox — the viewBox aspect must track the box", () => {
+  const aspectOf = (frame: { viewWidth: number; viewHeight: number }) =>
+    frame.viewWidth / frame.viewHeight;
+
+  it("matches the box's aspect when the height floor does not bite", () => {
+    const frame = frameForBox({ width: 800, height: 320 });
+    expect(aspectOf(frame)).toBeCloseTo(800 / 320, 6);
+    expect(frame.viewWidth).toBe(VIEW_WIDTH);
+  });
+
+  it("WIDENS rather than letterboxing when the floor does bite", () => {
+    // The board's real box. Clamping the height alone left a 640x120 viewBox
+    // against a 19:1 box, and `xMidYMid meet` then drew everything into a
+    // 619px strip in the middle of 2202px — which reads as "nothing renders".
+    const frame = frameForBox({ width: 2202, height: 116 });
+    expect(frame.viewHeight).toBe(MIN_VIEW_HEIGHT);
+    expect(aspectOf(frame)).toBeCloseTo(2202 / 116, 6);
+    expect(frame.viewWidth).toBeGreaterThan(VIEW_WIDTH);
+    expect(frame.plotRight).toBe(frame.viewWidth - frame.plotLeft);
+  });
+
+  it("scales the plot with the widened viewBox, not just the frame", () => {
+    const frame = frameForBox({ width: 2202, height: 116 });
+    const geometry = levelsRailGeometry({
+      levels: LEVELS,
+      transfers: TRANSFERS,
+      mutations: MUTATIONS,
+      domain: DOMAIN,
+      box: { width: 2202, height: 116 },
+    });
+    // The last span reaches the widened right edge, so the drawing fills the
+    // box rather than stopping at the old 626.
+    const last = geometry.rails[0].spans[geometry.rails[0].spans.length - 1];
+    expect(last.x2).toBe(frame.plotRight);
+    expect(last.x2).toBeGreaterThan(VIEW_WIDTH);
+  });
+
+  it("falls back to the default before the box has been laid out", () => {
+    expect(frameForBox({ width: 0, height: 0 })).toBe(DEFAULT_FRAME);
   });
 });

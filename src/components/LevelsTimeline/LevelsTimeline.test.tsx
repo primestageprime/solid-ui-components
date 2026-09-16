@@ -599,3 +599,112 @@ describe("LevelsTimeline — hover and pick", () => {
     ).toHaveLength(0);
   });
 });
+
+describe("LevelsTimeline — compact chrome in a short box", () => {
+  /** The board's shape: one person per level, seven levels, unevenly spaced. */
+  const BOARD: readonly Level[] = map(
+    (pay: number) => ({
+      id: `L${pay}`,
+      label: `L${pay}`,
+      value: pay,
+      points: [{ at: new Date("2025-01-01"), count: 1 }],
+    }),
+    [2000, 3000, 4000, 6000, 7000, 9000, 10000],
+  );
+
+  const withObservedBox = async (
+    box: { width: number; height: number },
+    run: () => void,
+  ) => {
+    const original = globalThis.ResizeObserver;
+    class Stub {
+      constructor(private readonly cb: ResizeObserverCallback) {}
+      observe(target: Element) {
+        this.cb(
+          [{ target, contentRect: box } as unknown as ResizeObserverEntry],
+          this as unknown as ResizeObserver,
+        );
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    globalThis.ResizeObserver = Stub as unknown as typeof ResizeObserver;
+    try {
+      run();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    } finally {
+      globalThis.ResizeObserver = original;
+    }
+  };
+
+  const renderIn = async (box: { width: number; height: number }) => {
+    let container!: HTMLElement;
+    await withObservedBox(box, () => {
+      container = render(() => (
+        <LevelsTimeline
+          levels={BOARD}
+          mutations={MUTATIONS}
+          domain={DOMAIN}
+        />
+      )).container;
+    });
+    return container;
+  };
+
+  it("DRAWS RAILS in an 800x156 box — the reported regression", async () => {
+    const container = await renderIn({ width: 800, height: 156 });
+    const rails = container.querySelectorAll(
+      ".sui-levels-timeline__rail-group .sui-levels-timeline__rail",
+    );
+    expect(rails.length).toBeGreaterThan(0);
+    for (const rail of rails) {
+      const d = rail.getAttribute("d") ?? "";
+      expect(d).not.toContain("NaN");
+      // A band of zero height would repeat its y — the old bug drew exactly
+      // that, and it is what made the chart look empty.
+      const ys = filter(
+        (_n: number, i: number) => i % 2 === 1,
+        map(
+          (m: RegExpMatchArray) => Number(m[0]),
+          [...d.matchAll(/-?\d+(?:\.\d+)?/g)],
+        ),
+      );
+      expect(new Set(ys).size).toBeGreaterThan(1);
+    }
+  });
+
+  it("keeps the viewBox aspect equal to the box's, so nothing letterboxes", async () => {
+    const container = await renderIn({ width: 2202, height: 116 });
+    const viewBox = container.querySelector("svg")?.getAttribute("viewBox");
+    const [, , w, h] = (viewBox ?? "").split(" ").map(Number);
+    expect(w / h).toBeCloseTo(2202 / 116, 3);
+    // Widened, because the height hit its floor.
+    expect(w).toBeGreaterThan(640);
+  });
+
+  it("puts the hover surface across the WHOLE plot, not a centred strip", async () => {
+    // This is what stopped onPick firing on the board: the pickable surface
+    // was the letterboxed strip rather than the plot the reader sees.
+    const container = await renderIn({ width: 2202, height: 116 });
+    const surface = container.querySelector(".sui-levels-timeline__surface");
+    const viewBox = container.querySelector("svg")?.getAttribute("viewBox");
+    const [, , w] = (viewBox ?? "").split(" ").map(Number);
+    expect(Number(surface?.getAttribute("width"))).toBe(w - 14 * 2);
+  });
+
+  it("keeps full chrome, and every axis label, when the box is tall enough", async () => {
+    const container = await renderIn({ width: 800, height: 320 });
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__tick-label"),
+    ).toHaveLength(13);
+  });
+
+  it("thins the axis labels in the short box", async () => {
+    const container = await renderIn({ width: 800, height: 156 });
+    const labels = container.querySelectorAll(
+      ".sui-levels-timeline__tick-label",
+    );
+    expect(labels.length).toBeGreaterThan(2);
+    expect(labels.length).toBeLessThan(13);
+  });
+});
