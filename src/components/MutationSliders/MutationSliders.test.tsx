@@ -8,9 +8,25 @@
 // readout is the future amount through the caller's own `format`.
 // ============================================
 import { fireEvent, render } from "@solidjs/testing-library";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { map } from "../../fn";
 import { createSignal } from "solid-js";
-import { type FakeSizer, installFakeSizer } from "../../test-utils";
+import {
+  type FakeSizer,
+  installFakeSizer,
+  installPointerCapture,
+  installRects,
+  rectOf,
+} from "../../test-utils";
 import { MutationSliders } from "./MutationSliders";
 import { ADD_SLOT, ARROW_SLOT, DIAL_SLOT, type Entity } from "./geometry";
 
@@ -591,6 +607,134 @@ describe("MutationSliders", () => {
       <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
     ));
     expect(queryByLabelText("Add entity")).toBeNull();
+  });
+
+  describe("a drag is continuous — it does not snap to the keyboard's step", () => {
+    // Peter, 2026-09-16: "the sliders for the mutations no longer slide freely
+    // along the axis. They appear to snap to things."
+    const BAND: readonly [number, number] = [70_000, 110_000];
+    const SOLO: readonly Entity[] = [
+      { id: "ana", label: "Ana", old: 90_000, value: 90_000, range: BAND },
+    ];
+    /** The track's box: 200px tall, top at 0. Vertical, so y=0 is the MAX. */
+    const TRACK_TOP_PX = 0;
+    const TRACK_HEIGHT = 200;
+
+    /** Press the track at `clientY`, which is how kobalte starts a slide. */
+    const dragTo = (container: HTMLElement, clientY: number) => {
+      const track = container.querySelector(
+        ".sui-mutation-sliders__track",
+      ) as HTMLElement;
+      // kobalte captures the pointer on the track; jsdom has no such method.
+      const capture = installPointerCapture(track);
+      fireEvent.pointerDown(track, { clientY, pointerId: 1, button: 0 });
+      capture.restore();
+    };
+
+    let restoreRects: () => void;
+    beforeEach(() => {
+      restoreRects = installRects((el) =>
+        el.classList?.contains("sui-mutation-sliders__track")
+          ? rectOf({
+              left: 0,
+              top: TRACK_TOP_PX,
+              width: 22,
+              height: TRACK_HEIGHT,
+            })
+          : null,
+      );
+    });
+    afterEach(() => restoreRects());
+
+    it("emits a value that is NOT a multiple of the keyboard step", () => {
+      const onChange = vi.fn();
+      const { container } = render(() => (
+        <MutationSliders entities={SOLO} onChange={onChange} />
+      ));
+      // The derived track is the band itself, so niceStep is 1000 here. A
+      // pointer 63/200 of the way down must land between two of those rungs.
+      dragTo(container, 63);
+      expect(onChange).toHaveBeenCalled();
+      const emitted = onChange.mock.calls[0][1] as number;
+      expect(emitted % 1_000).not.toBe(0);
+      expect(emitted).toBeGreaterThan(BAND[0]);
+      expect(emitted).toBeLessThan(BAND[1]);
+    });
+
+    it("follows the pointer — a different position gives a different value", () => {
+      const onChange = vi.fn();
+      const { container } = render(() => (
+        <MutationSliders entities={SOLO} onChange={onChange} />
+      ));
+      dragTo(container, 63);
+      dragTo(container, 64);
+      const [first, second] = map(
+        (call: unknown[]) => call[1] as number,
+        onChange.mock.calls,
+      );
+      // One pixel apart must not resolve to the same rung.
+      expect(second).not.toBe(first);
+    });
+
+    it("still clamps a drag to the entity's band", () => {
+      const onChange = vi.fn();
+      const { container } = render(() => (
+        <MutationSliders entities={SOLO} onChange={onChange} />
+      ));
+      dragTo(container, TRACK_HEIGHT + 500);
+      expect(onChange).toHaveBeenCalledWith("ana", BAND[0]);
+    });
+  });
+
+  describe("the keyboard keeps its own, coarser step", () => {
+    const BAND: readonly [number, number] = [70_000, 110_000];
+    const SOLO: readonly Entity[] = [
+      { id: "ana", label: "Ana", old: 90_000, value: 90_000, range: BAND },
+    ];
+
+    it("moves by the NICE step, not by the drag unit", () => {
+      const onChange = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders entities={SOLO} onChange={onChange} />
+      ));
+      fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+      // niceStep([70k, 110k]) is 500; the drag unit is 1.
+      expect(onChange).toHaveBeenCalledWith("ana", 90_500);
+    });
+
+    it("fires ONCE — kobalte's own tiny step is blocked, not merely added to", () => {
+      // The capture listener stops the event before kobalte's delegated
+      // handler sees it. Without that, every arrow press would emit twice.
+      const onChange = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders entities={SOLO} onChange={onChange} />
+      ));
+      fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+      expect(onChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("pages by ten nice steps on Shift+arrow and on PageUp", () => {
+      const onChange = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders entities={SOLO} onChange={onChange} />
+      ));
+      const thumb = getByLabelText("Ana");
+      fireEvent.keyDown(thumb, { key: "ArrowUp", shiftKey: true });
+      expect(onChange).toHaveBeenLastCalledWith("ana", 95_000);
+      fireEvent.keyDown(thumb, { key: "PageDown" });
+      expect(onChange).toHaveBeenLastCalledWith("ana", 85_000);
+    });
+
+    it("leaves Home and End to kobalte, clamped onto the band", () => {
+      const onChange = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders entities={SOLO} onChange={onChange} />
+      ));
+      const thumb = getByLabelText("Ana");
+      fireEvent.focus(thumb);
+      fireEvent.keyDown(thumb, { key: "End" });
+      expect(onChange).toHaveBeenLastCalledWith("ana", BAND[1]);
+    });
   });
 
   describe("paging, when the row is too narrow for every dial", () => {

@@ -70,6 +70,13 @@
 // table (geometry.test.ts). This file only paints what that returns: there is
 // nowhere in this module for a number to be decided.
 //
+// A DRAG IS CONTINUOUS and a KEY PRESS IS NOT, and they need different steps.
+// Kobalte's `step` governs both, so it gets the fine one — `dragStep`, the
+// smallest unit the domain can express — and the arrow keys are intercepted in
+// the capture phase and moved by `niceStep` instead. Handing Kobalte a keyboard
+// -sized step made the thumb jump between rungs under the pointer (Peter,
+// 2026-09-16: "they appear to snap to things").
+//
 // The values are in the CONSUMER'S OWN UNITS. The component formats nothing
 // itself — `format` is the caller's, exactly as on Slider.
 //
@@ -119,6 +126,7 @@ import {
   VIEW_WIDTH,
   clampToRange,
   deltaLabelOf,
+  dragStep,
   dialGeometry,
   niceStep,
   type RowLayout,
@@ -171,6 +179,23 @@ export interface MutationSlidersProps {
    */
   format?: (value: number) => string;
 }
+
+/** Which way each arrow key moves the value. */
+const ARROW_DIRECTION: Record<string, number> = {
+  ArrowUp: 1,
+  ArrowRight: 1,
+  ArrowDown: -1,
+  ArrowLeft: -1,
+};
+
+/** Which way each page key moves it. */
+const PAGE_DIRECTION: Record<string, number> = {
+  PageUp: 1,
+  PageDown: -1,
+};
+
+/** A page key, and Shift+arrow, move ten arrow steps. */
+const PAGE_MULTIPLE = 10;
 
 /** The removed entity's readout: there is no future amount to print. */
 const NO_VALUE = "—";
@@ -341,7 +366,16 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
    */
   const domain = (): Domain => props.domain ?? trackDomainOf(props.entities);
 
-  const step = (): number => niceStep(domain());
+  /**
+   * What a POINTER drag moves by: the finest unit the domain can express, so
+   * the thumb tracks the pointer instead of jumping between rungs. Kobalte's
+   * `step` governs the drag as well as the keyboard, which is why this is not
+   * `niceStep` — see `dragStep` in geometry.ts.
+   */
+  const step = (): number => dragStep(domain());
+
+  /** What an ARROW KEY moves by. Ten of these for a page key. */
+  const keyStep = (): number => niceStep(domain());
 
   /** The required line: what this person will be paid. */
   const futureReadout = (dial: DialGeometry): string =>
@@ -407,6 +441,48 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
           // out instead. The component is controlled, so an emitted value that
           // the caller writes straight back leaves the thumb parked on the band
           // edge, which is exactly the "stops dead at the edge" behaviour.
+          /**
+           * Arrow and page keys, intercepted in the CAPTURE phase.
+           *
+           * Kobalte's own thumb handler steps by its `step`, which is now the
+           * drag unit — one pound on a salary scale, which no keyboard user
+           * wants. Its handler runs unconditionally and does not check
+           * `defaultPrevented`, so the only way to replace it is to stop the
+           * event before it arrives: a capture listener on the dial fires
+           * ahead of Solid's delegated one, and `stopPropagation` there means
+           * Kobalte never sees the key at all.
+           *
+           * Home and End are deliberately left to Kobalte: they run to the
+           * domain's ends, and `handleChange` clamps them onto the band.
+           */
+          const bindKeys = (el: HTMLElement): void => {
+            const onKeyDown = (event: KeyboardEvent): void => {
+              const direction = ARROW_DIRECTION[event.key] ?? 0;
+              const paging = PAGE_DIRECTION[event.key] ?? 0;
+              if (direction === 0 && paging === 0) return;
+              if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+              event.preventDefault();
+              event.stopPropagation();
+
+              const current = dial();
+              if (current.removed) return;
+              // Shift+arrow pages, the way it does in Kobalte's own handler.
+              const magnitude =
+                paging !== 0 || event.shiftKey
+                  ? keyStep() * PAGE_MULTIPLE
+                  : keyStep();
+              const sign = paging !== 0 ? paging : direction;
+              const from = current.clampedValue ?? current.range[0];
+              const next = clampToRange(current.range, from + sign * magnitude);
+              if (next !== current.clampedValue) {
+                props.onChange(entity().id, next);
+              }
+            };
+            el.addEventListener("keydown", onKeyDown, true);
+            onCleanup(() => el.removeEventListener("keydown", onKeyDown, true));
+          };
+
           const handleChange = (values: number[]): void => {
             const current = dial();
             props.onChange(entity().id, clampToRange(current.range, values[0]));
@@ -424,6 +500,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                 {entity().label}
               </NowrapLabel>
               <KobalteSlider
+                ref={bindKeys}
                 class="sui-mutation-sliders__dial"
                 orientation="vertical"
                 value={[dial().clampedValue ?? dial().range[0]]}

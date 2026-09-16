@@ -468,6 +468,9 @@ const NICE_MANTISSAS = [1, 2, 5, 10] as const;
  * of salaries, where it meant a hundred thousand arrow presses to cross the
  * track. A step is a property of the SCALE, and the scale is already here.
  *
+ * This governs the KEYBOARD only. A pointer drag is continuous — see
+ * `dragStep` above for why the two cannot be the same number.
+ *
  * It is a hundredth of the span, rounded UP to 1, 2 or 5 times a power of ten
  * — so `[30_000, 130_000]` steps by 1,000 and a reader crosses the dial in a
  * hundred presses. Up rather than to-nearest, so the step is never FINER than
@@ -481,6 +484,31 @@ const NICE_MANTISSAS = [1, 2, 5, 10] as const;
  * level 6.3 to a caller whose levels are integers. A fractional domain (a
  * ratio in `[0, 1]`) keeps its fractional step, because its ends say so.
  */
+/**
+ * The finest movement a DRAG may produce — deliberately NOT `niceStep`.
+ *
+ * Peter, 2026-09-16: "the sliders ... no longer slide freely along the axis.
+ * They appear to snap to things." They did: `niceStep` was handed to Kobalte
+ * as its `step`, and Kobalte's step governs the POINTER as well as the
+ * keyboard. A step sized for "how far should one arrow press move" is far too
+ * coarse for a thumb that should track the pointer.
+ *
+ * So the two are separated. A drag moves by the smallest unit the domain can
+ * meaningfully express — one whole unit where the domain's ends are whole
+ * numbers (a salary moves by the pound, not by the thousand), and a
+ * thousandth of the span where they are fractional, which is finer than any
+ * display could distinguish. `niceStep` now applies to arrow keys ONLY.
+ *
+ * The value that comes out is not rounded for display: the consumer's
+ * `format` already decides how a figure reads.
+ */
+export const dragStep = (domain: Domain): number => {
+  const span = Math.abs(domain[1] - domain[0]);
+  if (span === 0 || !Number.isFinite(span)) return 1;
+  const whole = Number.isInteger(domain[0]) && Number.isInteger(domain[1]);
+  return whole ? 1 : span / 1000;
+};
+
 export const niceStep = (domain: Domain): number => {
   const span = Math.abs(domain[1] - domain[0]);
   if (span === 0 || !Number.isFinite(span)) return 1;

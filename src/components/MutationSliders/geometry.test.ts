@@ -33,6 +33,7 @@ import {
   windowLabel,
   deltaLabelOf,
   deltaOf,
+  dragStep,
   niceStep,
   trackDomainOf,
   changeLineFor,
@@ -470,6 +471,29 @@ describe("niceStep", () => {
 
   it("survives a zero-width domain rather than dividing by it", () => {
     expect(niceStep([5, 5])).toBe(1);
+  });
+});
+
+describe("dragStep — the drag is continuous, the keyboard is not", () => {
+  it("moves by ONE unit on a domain counted in whole numbers", () => {
+    // Peter, 2026-09-16: "they appear to snap to things". They did — the
+    // keyboard's step was governing the pointer too.
+    expect(dragStep([30_000, 130_000])).toBe(1);
+    expect(dragStep([0, 10])).toBe(1);
+  });
+
+  it("moves by a thousandth of a fractional span — finer than any readout", () => {
+    expect(dragStep([0, 1.5])).toBeCloseTo(0.0015);
+  });
+
+  it("is FAR finer than the keyboard step it replaced on the drag path", () => {
+    const domain: Domain = [40_000, 110_000];
+    expect(dragStep(domain)).toBeLessThan(niceStep(domain));
+    expect(niceStep(domain) / dragStep(domain)).toBeGreaterThan(100);
+  });
+
+  it("survives a zero-width domain rather than dividing by it", () => {
+    expect(dragStep([5, 5])).toBe(1);
   });
 });
 
