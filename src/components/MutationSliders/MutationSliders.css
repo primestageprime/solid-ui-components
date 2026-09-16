@@ -62,7 +62,7 @@
   --sui-mutation-grip-width: 22px;
   /* The track's centre line, mirroring TRACK_X. It is NOT the canvas centre:
      the delta label occupies the right of the dial. */
-  --sui-mutation-track-x: 22px;
+  --sui-mutation-track-x: 44px;
   /* The grab handle over the future arrowhead. It draws nothing: the SVG
      already drew the arrow, so both arrowheads come from one geometry
      function and cannot drift apart in shape. */

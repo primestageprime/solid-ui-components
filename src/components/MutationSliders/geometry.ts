@@ -162,8 +162,26 @@ export const VIEW_WIDTH = 88;
  * that separates two arrows a thousand pounds apart.
  */
 export const VIEW_HEIGHT = 260;
-/** The centre line of the TRACK — not of the canvas. */
-export const TRACK_X = 22;
+/**
+ * The centre line of the track, and of the canvas — the two are the same
+ * (Peter, 2026-09-16: the name, the dial and the amount should sit on ONE
+ * vertical axis).
+ *
+ * It used to sit left of centre so the delta label had the canvas's right
+ * half to itself. That put the track off the column's axis, because the
+ * column centres on the dial's BOX: the name and the readout centred at 44
+ * while the track stood at 22, and the eye reads the track as the thing the
+ * column is about.
+ *
+ * Centring it costs nothing here. The label now starts at `DELTA_X` and runs
+ * PAST the canvas's right edge — the overlay is `overflow: visible` — into
+ * the next column's left margin, which is empty precisely BECAUSE the canvas
+ * is symmetric: the left half needs only an arrowhead's width and the right
+ * half needs a figure. Widening the canvas to fit the label inside it would
+ * have added ~32px of blank space to every dial and cost a column of paging
+ * at any given width.
+ */
+export const TRACK_X = VIEW_WIDTH / 2;
 /**
  * The track's inset at BOTH ends. It is the room an arrowhead needs beside the
  * domain's own extremes, so an amount sitting on `max` still draws its arrow

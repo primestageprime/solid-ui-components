@@ -13,7 +13,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { map } from "../../fn";
 import {
+  ARROW_GAP,
   ARROW_HALF,
+  ARROW_LENGTH,
   type Domain,
   type Entity,
   TRACK_BOTTOM,
@@ -990,6 +992,20 @@ describe("the CSS mirrors the canvas", () => {
 
   it("lets the DIAL take the leftover height inside its column", () => {
     expect(css).toContain("flex: 1 1 var(--sui-mutation-dial-height)");
+  });
+
+  // Peter, 2026-09-16: the name, the dial and the amount on ONE axis. The
+  // column centres on the dial's BOX, so the track has to BE the box's centre
+  // — otherwise the marks sit off the axis the text is centred on.
+  it("puts the track on the canvas's centre line, so the column has one axis", () => {
+    expect(TRACK_X).toBe(VIEW_WIDTH / 2);
+  });
+
+  it("still leaves the delta label clear of the future arrow", () => {
+    // It runs past the canvas edge into the next column's empty left margin,
+    // which is only empty because the canvas is symmetric.
+    expect(DELTA_X).toBeGreaterThan(TRACK_X);
+    expect(DELTA_X).toBeGreaterThanOrEqual(TRACK_X + ARROW_GAP + ARROW_LENGTH);
   });
 
   it("declares the floor that geometry stops shrinking at", () => {
