@@ -2787,3 +2787,14 @@ th:has(.tf-th-center) .hud-table__header-content {
   color: var(--sui-text-muted);
   font-size: 0.875rem;
 }
+
+/* Scenario Board bench — the two faint alternatives fanning away from the
+   committed balance line. A consumer's own series class owns colour, dash and
+   opacity (CashflowBalanceSeries.class); the chart ships none, so without this
+   rule the fan would read as three equally-committed lines. */
+.scenario-board-demo__fan {
+  stroke: var(--sui-accent);
+  stroke-width: 1.4;
+  stroke-opacity: 0.28;
+  stroke-dasharray: 5 4;
+}
