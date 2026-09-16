@@ -176,8 +176,8 @@ const PEOPLE: readonly Person[] = [
   // Each person's four bumps are a PERMUTATION of +500/+1000/+1500/+2000, so
   // nobody repeats an amount. The permutations are chosen to share their
   // intermediate figures, which keeps the whole track to eight distinct levels
-  // — one per theme tone, and thin enough to read — while still fanning to
-  // four different destinations out of $6k on the very first bump.
+  // — few enough that the bands stay readable against each other — while still
+  // fanning to four different destinations out of $6k on the very first bump.
   {
     name: "Hal",
     track: "C",

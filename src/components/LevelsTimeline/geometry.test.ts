@@ -405,29 +405,26 @@ describe("adjacent bands never overlap", () => {
   const geometry = geometryOf();
 
   it("leaves clear air between every pair of bands at every change", () => {
+    // Straight at the invariant: at every moment, take each level's headcount,
+    // give it the band it would be drawn with, and check that no two of them
+    // touch. Nothing about spans or paths — just the widths and the y's.
     for (const time of changeTimes(LEVELS, TRANSFERS)) {
-      const live = flatMap(
-        (rail: Rail) =>
-          map(
-            (span: RailSpan) => span,
-            rail.spans.filter(
-              (span) =>
-                span.x1 <= geometry.rails[0].spans[0].x2 + Number.MAX_VALUE &&
-                countAt(
-                  LEVELS[Number(rail.seriesIndex) - 1],
-                  time,
-                ) > 0 &&
-                span.count === countAt(LEVELS[Number(rail.seriesIndex) - 1], time),
-            ),
-          ),
-        geometry.rails,
+      const live = filter(
+        (band: { top: number; bottom: number }) => band.bottom > band.top,
+        map((rail: Rail) => {
+          const level = find((one: Level) => one.id === rail.id, LEVELS);
+          const half =
+            bandWidth(countAt(level as Level, time), geometry.perPerson) / 2;
+          return { top: rail.y - half, bottom: rail.y + half };
+        }, geometry.rails),
       );
-      const ordered = sortBy((span: RailSpan) => span.y, live);
-      for (const [index, span] of ordered.entries()) {
+      const ordered = sortBy(
+        (band: { top: number }) => band.top,
+        live,
+      );
+      for (const [index, band] of ordered.entries()) {
         if (index === 0) continue;
-        const above = ordered[index - 1];
-        if (above.y === span.y) continue;
-        expect(spanTop(span)).toBeGreaterThanOrEqual(spanBottom(above));
+        expect(band.top).toBeGreaterThanOrEqual(ordered[index - 1].bottom);
       }
     }
   });
@@ -575,10 +572,10 @@ describe("flowBands", () => {
     expect(round(first.dstBottom - first.dstTop)).toBe(round(expected));
   });
 
-  it("carries BOTH tones, so the ribbon can graduate along its length", () => {
+  it("names both of its ends, so a reader can trace it to its levels", () => {
     const [first] = moves();
-    expect(first.fromSeriesIndex).toBe(2);
-    expect(first.toSeriesIndex).toBe(3);
+    expect(first.fromId).toBe("l6");
+    expect(first.toId).toBe("l7");
     expect(first.kind).toBe("move");
   });
 
@@ -600,18 +597,18 @@ describe("one-ended flows — departures and hires", () => {
       geometryOf(LEVELS, transfers).flows,
     );
 
-  it("runs a departure out of its source with only the source's tone", () => {
+  it("runs a departure out of its source, with no destination named", () => {
     const [leaving] = flowsFor([{ at: utc("2025-07-01"), from: "l6", count: 1 }]);
     expect(leaving.kind).toBe("departure");
-    expect(leaving.fromSeriesIndex).toBe(2);
-    expect(leaving.toSeriesIndex).toBeUndefined();
+    expect(leaving.fromId).toBe("l6");
+    expect(leaving.toId).toBeUndefined();
   });
 
-  it("runs a hire into its destination with only the destination's tone", () => {
+  it("runs a hire into its destination, with no source named", () => {
     const [joining] = flowsFor([{ at: utc("2025-07-01"), to: "l7", count: 1 }]);
     expect(joining.kind).toBe("hire");
-    expect(joining.fromSeriesIndex).toBeUndefined();
-    expect(joining.toSeriesIndex).toBe(3);
+    expect(joining.fromId).toBeUndefined();
+    expect(joining.toId).toBe("l7");
   });
 
   it("keeps a one-ended flow the same width along its whole length", () => {
@@ -749,7 +746,7 @@ describe("levelsRailGeometry — the whole observation", () => {
       "l7",
       "l8",
     ]);
-    expect(geometry.rails[0].seriesIndex).toBe(1);
+    expect(geometry.rails[0].value).toBe(5000);
   });
 
   it("carries the flows, the flags and the un-numbered dropline", () => {
@@ -963,7 +960,7 @@ describe("flush joins", () => {
       domain: DOMAIN,
     });
     const move = geometry.flows.find(
-      (flow) => flow.kind === "move" && flow.fromSeriesIndex === 1,
+      (flow) => flow.kind === "move" && flow.fromId === "L2",
     );
     const source = geometry.rails[0];
     const ending = source.spans[source.spans.length - 1];
@@ -1003,7 +1000,7 @@ describe("continuations — a rail nothing happened to must not read as dashed",
       (flow: FlowBand) =>
         flow.kind === "continuation" &&
         Math.abs((flow.x0 + flow.x1) / 2 - at) < 0.001 &&
-        flow.fromSeriesIndex === 1,
+        flow.fromId === "l5",
       geometry.flows,
     );
     expect(continuation).toBeDefined();
@@ -1020,18 +1017,18 @@ describe("continuations — a rail nothing happened to must not read as dashed",
       (flow: FlowBand) =>
         flow.kind === "carry" &&
         Math.abs((flow.x0 + flow.x1) / 2 - at) < 0.001 &&
-        flow.fromSeriesIndex === 3,
+        flow.fromId === "l7",
       geometry.flows,
     );
     expect(carry).toBeDefined();
   });
 
-  it("wears the rail's own tone at both ends either way", () => {
+  it("names the SAME level at both ends either way — it is one rail", () => {
     for (const flow of filter(
       (one: FlowBand) => one.kind === "carry" || one.kind === "continuation",
       geometry.flows,
     )) {
-      expect(flow.fromSeriesIndex).toBe(flow.toSeriesIndex);
+      expect(flow.fromId).toBe(flow.toId);
     }
   });
 });

@@ -29,10 +29,11 @@
 // this module for a number to be decided.
 //
 // Why it is still Atomic: the only consumer text it PAINTS is a mutation's
-// flag number and a level's own short code ("L7") — both enumerated and short
-// by construction, like an axis tick. A free-text label would drag in the
-// ellipsize-plus-Tooltip treatment Peter's standing rule requires and make this
-// Depth 2, which is what happened to RateGauge. See the /promote questions.
+// flag number, which is enumerated and short by construction. Nothing else in
+// the plot carries ink — no series labels, no legend, no colour coding. A
+// level is told apart by WHERE IT SITS, and that is deliberate: a per-level
+// colour ramp reads as a ranking, as though one pay level were a better KIND
+// of thing than another, when the only difference between them is height.
 //
 // No size/variant props and no factory: every prop is DATA. The chart fills
 // its container's width and the consumer constrains it, as RateGauge does.
@@ -55,7 +56,6 @@ import {
   type Flag,
   type Level,
   type Mutation,
-  type Rail,
   type FlowBand,
   type TimeDomain,
   type Transfer,
@@ -84,13 +84,6 @@ export interface LevelsTimelineProps {
   /** Provided => the flags become buttons. Omitted => the chart is a readout. */
   onSelectMutation?: (id: string) => void;
 }
-
-/** How many series colours the theme defines (`--sui-series-1` … `-8`). */
-const SERIES_TOKEN_COUNT = 8;
-
-/** `1..8`, wrapping — a ninth rail reuses the first colour rather than none. */
-const tokenOf = (seriesIndex: number): number =>
-  ((seriesIndex - 1) % SERIES_TOKEN_COUNT) + 1;
 
 const EMPTY_TRANSFERS: readonly Transfer[] = [];
 
@@ -171,43 +164,37 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       ),
     ]);
 
-  /** `sui-levels-timeline__<block> sui-levels-timeline__tone-N`. */
-  const toneClass = (block: string, seriesIndex: number | undefined): string =>
-    `sui-levels-timeline__${block} sui-levels-timeline__tone-${tokenOf(
-      seriesIndex ?? 1,
-    )}`;
-
-  const railClass = (rail: Rail): string => toneClass("rail", rail.seriesIndex);
+  const RAIL_CLASS = "sui-levels-timeline__rail";
 
   /**
-   * A CONTINUATION is painted exactly as the band is — same classes, same
-   * tone, full opacity — because nothing happened to that rail here and the
-   * join must be invisible. It is only split at all because something happened
-   * elsewhere on the chart, and a rail that read as dashed would be inventing
-   * an event it did not have.
+   * A CONTINUATION is painted exactly as the band is — same class, full
+   * opacity — because nothing happened to that rail here and the join must be
+   * invisible. It is only split at all because something happened elsewhere on
+   * the chart, and a rail that read as dashed would be inventing an event it
+   * did not have.
    */
   const isContinuation = (flow: FlowBand): boolean =>
     flow.kind === "continuation";
 
+  /**
+   * A one-ended flow is the ONLY thing that still needs a gradient, and it is
+   * an opacity gradient rather than a colour one: the chart is a single colour
+   * now, so a departure and a hire are the same shape in the same ink and the
+   * fade is all that tells them apart. A departure dissolves out of the
+   * picture, a hire condenses into it.
+   */
+  const isOpen = (flow: FlowBand): boolean =>
+    flow.kind === "departure" || flow.kind === "hire";
+
   const flowClass = (flow: FlowBand): string =>
     isContinuation(flow)
-      ? toneClass("rail", flow.fromSeriesIndex)
+      ? RAIL_CLASS
       : join(" ", [
           "sui-levels-timeline__ribbon",
           `sui-levels-timeline__ribbon--${flow.kind}`,
         ]);
 
-  /**
-   * A flow is painted with its own horizontal gradient, running from the
-   * source level's tone to the destination's — which is what makes a ribbon
-   * read as belonging to both ends rather than being stolen from one of them.
-   * A one-ended flow graduates to TRANSPARENT instead, so a departure fades
-   * out of the picture and a hire fades into it; that fade is the only thing
-   * distinguishing the two, since both are the same shape.
-   */
   const gradientId = (flow: FlowBand): string => `${maskId}-${flow.key}`;
-  const toneVar = (index: number | undefined): string =>
-    index === undefined ? "transparent" : `var(--sui-series-${tokenOf(index)})`;
 
   /** Per-INSTANCE id prefix for this chart's gradients. */
   const maskId = createUniqueId();
@@ -254,15 +241,25 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
       >
         <title>{description()}</title>
-        {/* One gradient per flow. The ids are per-INSTANCE (createUniqueId)
-            because three charts on one page — which the bench stacks — would
-            otherwise share one set and the first mounted would own them all. */}
+        {/* One opacity gradient per OPEN-ended flow — nothing else needs one
+            now that the chart is a single colour. The ids are per-INSTANCE
+            (createUniqueId) because three charts on one page, which the bench
+            stacks, would otherwise share one set and the first mounted would
+            own them all. */}
         <defs>
-          <For each={filter((flow: FlowBand) => !isContinuation(flow), geometry().flows)}>
+          <For each={filter(isOpen, geometry().flows)}>
             {(flow) => (
               <linearGradient id={gradientId(flow)} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stop-color={toneVar(flow.fromSeriesIndex)} />
-                <stop offset="100%" stop-color={toneVar(flow.toSeriesIndex)} />
+                <stop
+                  offset="0%"
+                  stop-color="currentColor"
+                  stop-opacity={flow.kind === "hire" ? 0 : 1}
+                />
+                <stop
+                  offset="100%"
+                  stop-color="currentColor"
+                  stop-opacity={flow.kind === "hire" ? 1 : 0}
+                />
               </linearGradient>
             )}
           </For>
@@ -335,11 +332,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
               <path
                 class={flowClass(flow)}
                 d={flow.path}
-                fill={
-                  isContinuation(flow)
-                    ? undefined
-                    : `url(#${gradientId(flow)})`
-                }
+                fill={isOpen(flow) ? `url(#${gradientId(flow)})` : undefined}
               />
             )}
           </For>
@@ -348,7 +341,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             {(rail) => (
               <g class="sui-levels-timeline__rail-group">
                 <For each={rail.runs}>
-                  {(run) => <path class={railClass(rail)} d={run.path} />}
+                  {(run) => <path class={RAIL_CLASS} d={run.path} />}
                 </For>
               </g>
             )}

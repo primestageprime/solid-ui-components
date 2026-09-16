@@ -4,15 +4,12 @@
    box-model geometry here — the SVG coordinate system is this component's
    layout engine (Layout Purity exemption 2: svg/canvas rendering).
 
-   Every colour is a theme token. A level's tone comes from the `--sui-series-*`
-   ramp (ADR 0003) by its index in the consumer's own order.
-
-   ORDER MATTERS in this file. The `__tone-N` classes set BOTH `stroke` and
-   `fill` from one token, because everything that carries a level's colour is
-   now a filled band. Anything that must NOT be stroked therefore declares
-   `stroke: none` AFTER the tone block — same specificity, later wins. Move
-   `.__rail` above the tone block and every band gains an outline in its own
-   colour. */
+   THE WHOLE CHART IS ONE COLOUR (Peter, 2026-09-16: "Don't colour-code the
+   pay levels. It seems to assign judgements."). Bands, carries and ribbons all
+   paint in `--sui-accent`; what tells two levels apart is where they sit, not
+   what shade they are. The accent is set once on the canvas and inherited as
+   `currentColor`, which is also what lets the open-flow gradients fade a stop
+   to transparent without naming a colour at all. */
 
 .sui-levels-timeline {
   display: block;
@@ -24,6 +21,8 @@
   width: 100%;
   height: auto;
   overflow: visible;
+  /* The one colour, set once. Everything below inherits it. */
+  color: var(--sui-accent);
 }
 
 /* ---- The frame ---- */
@@ -56,8 +55,10 @@
   stroke-dasharray: 2 3;
 }
 
+/* Selection is the BRIGHTEST thing on the chart, not the accent — the bands
+   are accent now, and a rule in the same ink would disappear into them. */
 .sui-levels-timeline__rule--selected {
-  stroke: var(--sui-accent);
+  stroke: var(--sui-text-primary);
   stroke-width: 1.5;
   stroke-dasharray: none;
 }
@@ -79,44 +80,6 @@
   opacity: 0.6;
 }
 
-/* ---- The series ramp ----
-
-   One class drives both channels: a rail is STROKED with its tone, a flow
-   ribbon is FILLED with it. See the ordering note at the top of this file. */
-
-.sui-levels-timeline__tone-1 {
-  stroke: var(--sui-series-1);
-  fill: var(--sui-series-1);
-}
-.sui-levels-timeline__tone-2 {
-  stroke: var(--sui-series-2);
-  fill: var(--sui-series-2);
-}
-.sui-levels-timeline__tone-3 {
-  stroke: var(--sui-series-3);
-  fill: var(--sui-series-3);
-}
-.sui-levels-timeline__tone-4 {
-  stroke: var(--sui-series-4);
-  fill: var(--sui-series-4);
-}
-.sui-levels-timeline__tone-5 {
-  stroke: var(--sui-series-5);
-  fill: var(--sui-series-5);
-}
-.sui-levels-timeline__tone-6 {
-  stroke: var(--sui-series-6);
-  fill: var(--sui-series-6);
-}
-.sui-levels-timeline__tone-7 {
-  stroke: var(--sui-series-7);
-  fill: var(--sui-series-7);
-}
-.sui-levels-timeline__tone-8 {
-  stroke: var(--sui-series-8);
-  fill: var(--sui-series-8);
-}
-
 /* ---- The rails ----
 
    A rail is a closed BAND, not a stroked line: its thickness is the outline
@@ -126,12 +89,14 @@
    version wanted) silently turns every band into a hollow outline. */
 
 .sui-levels-timeline__rail {
+  fill: currentColor;
   stroke: none;
 }
 
 /* ---- The flows ---- */
 
 .sui-levels-timeline__ribbon {
+  fill: currentColor;
   stroke: none;
   /* Translucent so the rails it joins stay the solid thing on the page, and
      so two ribbons crossing read as two rather than as a third shape. Its
@@ -168,12 +133,12 @@
 }
 
 .sui-levels-timeline__flag--selected .sui-levels-timeline__flag-box {
-  fill: var(--sui-accent);
-  stroke: var(--sui-accent);
+  fill: var(--sui-text-primary);
+  stroke: var(--sui-text-primary);
 }
 
 .sui-levels-timeline__flag--selected .sui-levels-timeline__flag-label {
-  fill: var(--sui-on-accent);
+  fill: var(--sui-bg-elevated);
 }
 
 .sui-levels-timeline__flag--muted {

@@ -332,7 +332,9 @@ describe("LevelsTimeline — departures and hires", () => {
     ).toHaveLength(1);
   });
 
-  it("graduates every flow from its source's tone to its destination's", () => {
+  it("fades ONLY the open-ended flows, and by opacity rather than colour", () => {
+    // The chart is one colour now, so a departure and a hire are the same
+    // shape in the same ink — the fade is the whole of what tells them apart.
     const { container } = renderOpen();
     const stopsOf = (kind: string) => {
       const fill = container
@@ -340,20 +342,28 @@ describe("LevelsTimeline — departures and hires", () => {
         ?.getAttribute("fill");
       const id = (fill ?? "").replace(/^url\(#/, "").replace(/\)$/, "");
       return map(
-        (stop: Element) => stop.getAttribute("stop-color"),
+        (stop: Element) => stop.getAttribute("stop-opacity"),
         [...(container.querySelector(`#${CSS.escape(id)}`)?.children ?? [])],
       );
     };
-    // A move carries both tones; a one-ended flow graduates to nothing.
-    expect(stopsOf("move")).toEqual([
-      "var(--sui-series-2)",
-      "var(--sui-series-3)",
-    ]);
-    expect(stopsOf("departure")[1]).toBe("transparent");
-    expect(stopsOf("hire")[0]).toBe("transparent");
+    expect(stopsOf("departure")).toEqual(["1", "0"]);
+    expect(stopsOf("hire")).toEqual(["0", "1"]);
+    // A move needs no gradient at all — it is solid, one colour end to end.
+    expect(
+      container
+        .querySelector(".sui-levels-timeline__ribbon--move")
+        ?.getAttribute("fill"),
+    ).toBeNull();
   });
 
-  it("gives every instance its own mask ids, so stacked charts don't collide", () => {
+  it("puts no series colour anywhere — identity is vertical position", () => {
+    const { container } = renderOpen();
+    for (const path of container.querySelectorAll("path")) {
+      expect(path.getAttribute("class") ?? "").not.toContain("__tone-");
+    }
+  });
+
+  it("gives every instance its own gradient ids, so stacked charts don't collide", () => {
     const { container } = render(() => (
       <>
         <LevelsTimeline

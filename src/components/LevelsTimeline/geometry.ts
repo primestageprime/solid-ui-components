@@ -307,8 +307,6 @@ export interface Rail {
   readonly value: number;
   /** Where the level sits — proportional to `value`. */
   readonly y: number;
-  /** 1-based position in the CONSUMER's order — the `--sui-series-N` index. */
-  readonly seriesIndex: number;
   readonly spans: readonly RailSpan[];
   /** The closed bands this rail paints as — one per contiguous stretch. */
   readonly runs: readonly BandRun[];
@@ -688,10 +686,10 @@ export interface FlowBand {
   readonly dstTop: number;
   readonly dstBottom: number;
   readonly path: string;
-  /** Token index of the source level — the left end of the gradient. */
-  readonly fromSeriesIndex?: number;
-  /** Token index of the destination level — the right end of the gradient. */
-  readonly toSeriesIndex?: number;
+  /** Source level id. Absent on a hire. */
+  readonly fromId?: string;
+  /** Destination level id. Absent on a departure. */
+  readonly toId?: string;
 }
 
 /** A root slice on a band's edge: [top, bottom]. */
@@ -874,12 +872,8 @@ export const flowBands = (
         dstTop: dst[0],
         dstBottom: dst[1],
         path: flowPath(x0, x1, src, dst),
-        fromSeriesIndex: hasFrom
-          ? railById.get(one.from as string)?.seriesIndex
-          : undefined,
-        toSeriesIndex: hasTo
-          ? railById.get(one.to as string)?.seriesIndex
-          : undefined,
+        fromId: hasFrom ? one.from : undefined,
+        toId: hasTo ? one.to : undefined,
       });
     }
 
@@ -896,8 +890,8 @@ export const flowBands = (
         dstTop: carry.to[0],
         dstBottom: carry.to[1],
         path: flowPath(x0, x1, carry.from, carry.to),
-        fromSeriesIndex: carry.rail.seriesIndex,
-        toSeriesIndex: carry.rail.seriesIndex,
+        fromId: carry.rail.id,
+        toId: carry.rail.id,
       });
     }
   }
@@ -1030,7 +1024,7 @@ export const levelsRailGeometry = (input: {
   const perPerson = perPersonWidth(input.levels, yScale, peak);
   const moments = changeTimes(input.levels, input.transfers);
   const half = transitionHalf(map((time: number) => xScale(time), moments));
-  const rails = map((level: Level, index: number) => {
+  const rails = map((level: Level) => {
     const spans = railSpans(
       level,
       xScale,
@@ -1045,7 +1039,6 @@ export const levelsRailGeometry = (input: {
       label: level.label,
       value: level.value,
       y: yScale(level.value),
-      seriesIndex: index + 1,
       spans,
       runs: railRuns(spans),
     };
