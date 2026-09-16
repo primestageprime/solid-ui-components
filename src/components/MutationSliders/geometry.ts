@@ -192,6 +192,19 @@ export const DELTA_X = TRACK_X + ARROW_GAP + ARROW_LENGTH + 5;
 /** A REAL minus sign (U+2212), not a hyphen — this is a number, not a dash. */
 export const MINUS = "\u2212";
 
+// ── the row, when it does not all fit ────────────────────────────────────────
+// Peter, 2026-09-16: "If there isn't enough space to show all of the sliders in
+// the mutations, show left/right arrows. Minimum of 1 slider."
+
+/** The gap the row puts between dials — `ClusterRow`'s `sm` step, in px. */
+export const ROW_GAP = 8;
+/** What one dial costs the row: its own canvas plus the gap after it. */
+export const DIAL_SLOT = VIEW_WIDTH + ROW_GAP;
+/** What one chevron button costs, including its gap. */
+export const ARROW_SLOT = 32;
+/** What the `+` costs, including its gap. */
+export const ADD_SLOT = 32;
+
 /** `d` for the track: one vertical line with a short cap at each end. */
 export const TRACK_PATH = [
   `M ${TRACK_X} ${TRACK_TOP} L ${TRACK_X} ${TRACK_BOTTOM}`,
@@ -352,6 +365,97 @@ export const deltaLabelOf = (
   delta === null
     ? null
     : `${delta > 0 ? "+" : MINUS}${format(Math.abs(delta))}`;
+
+/** A half-open range of entity indices: `[start, end)`. */
+export interface Window {
+  readonly start: number;
+  readonly end: number;
+}
+
+/**
+ * Which entities fit, given the room left for dials.
+ *
+ * MINIMUM ONE, always. A row too narrow for a whole dial shows one anyway and
+ * lets it be clipped: a component that renders nothing because the container
+ * is small is a component that looks broken, and the reader can still page to
+ * whichever dial they want.
+ *
+ * `offset` is CLAMPED rather than trusted. The caller holds it in a signal, and
+ * entities can be removed underneath it — an offset pointing past the end must
+ * settle onto the last full window, not render an empty row.
+ */
+export const visibleWindow = (
+  available: number,
+  dialWidth: number,
+  count: number,
+  offset: number,
+): Window => {
+  if (count <= 0) return { start: 0, end: 0 };
+  const fits = dialWidth > 0 ? Math.floor(available / dialWidth) : 0;
+  const capacity = Math.min(Math.max(fits, 1), count);
+  const start = clamp(Math.trunc(offset), 0, count - capacity);
+  return { start, end: start + capacity };
+};
+
+/** A resolved row: which dials show, how many fit, and whether it pages. */
+export interface RowLayout extends Window {
+  /** How many dials the row can show at this width. Never below 1. */
+  readonly capacity: number;
+  /** Whether the chevrons are needed at all. */
+  readonly paging: boolean;
+}
+
+/**
+ * The whole row decision, from the measured width.
+ *
+ * TWO PASSES, and the second one is the point: the chevrons only exist when
+ * the row pages, but they also TAKE room, which can be what makes it page. So
+ * the first pass asks whether everything fits with no chevrons; only if it
+ * does not are their slots subtracted and the window recomputed. One pass
+ * either reserves space for arrows that never appear — losing a dial that
+ * would have fitted — or forgets them and overflows by exactly two buttons.
+ *
+ * The `+` is different: it is visible at every offset, including after the
+ * last page, so its slot is reserved whether or not the row pages.
+ */
+export const rowLayout = (
+  width: number,
+  count: number,
+  offset: number,
+  adding: boolean,
+): RowLayout => {
+  const forAdd = adding ? ADD_SLOT : 0;
+  const whole = visibleWindow(width - forAdd, DIAL_SLOT, count, offset);
+  if (whole.end - whole.start >= count) {
+    return { ...whole, capacity: count, paging: false };
+  }
+  const paged = visibleWindow(
+    width - forAdd - 2 * ARROW_SLOT,
+    DIAL_SLOT,
+    count,
+    offset,
+  );
+  return { ...paged, capacity: paged.end - paged.start, paging: true };
+};
+
+/**
+ * What the row calls itself: "dials 3–5 of 7", in ONE-based human counting
+ * rather than the half-open indices above.
+ *
+ * A single visible dial reads "dial 3 of 7" — an en-dash range with the same
+ * number on both sides is a thing a screen reader says twice for no reason.
+ */
+export const windowLabel = (
+  start: number,
+  end: number,
+  count: number,
+): string => {
+  if (count === 0) return "no dials";
+  const first = start + 1;
+  return first === end
+    ? `dial ${first} of ${count}`
+    : `dials ${first}\u2013${end} of ${count}`;
+};
 
 /** The mantissas a "nice" step is allowed to take, smallest first. */
 const NICE_MANTISSAS = [1, 2, 5, 10] as const;

@@ -73,6 +73,14 @@
 // The values are in the CONSUMER'S OWN UNITS. The component formats nothing
 // itself — `format` is the caller's, exactly as on Slider.
 //
+// WHEN IT DOES NOT ALL FIT, the row pages. It MEASURES ITSELF — how much room
+// a row of dials has is a fact about the page it was dropped into, not
+// something a consumer should have to re-measure and re-pass on every layout
+// change — shows as many whole dials as fit, never fewer than ONE, and grows a
+// chevron at each end. Paging moves the window by one dial rather than by a
+// screenful: the row exists to be compared across, and a full-page jump means
+// no two neighbours either side of a boundary are ever on screen together.
+//
 // LAYOUT PURITY — the ROW, each entity's COLUMN and the readout are composed
 // from Layout and Text variants. The only geometry this component owns is the
 // dial's own interior: a fixed canvas with an SVG overlay and a percentage-
@@ -84,8 +92,18 @@
 // and no tone to curry.
 // ============================================
 import { Slider as KobalteSlider } from "@kobalte/core/slider";
-import { type Component, Index, Show } from "solid-js";
+import {
+  type Component,
+  Index,
+  Show,
+  createMemo,
+  createSignal,
+  onCleanup,
+} from "solid-js";
+import { clamp } from "../../internal/math/clamp";
+import { observeSize } from "../../internal/dom/observeSize";
 import { SmallGhostButton } from "../Button";
+import { Icon } from "../Icon";
 import { ClusterRow, TightCenteredColumn } from "../Layout";
 import { MonoMeta, MonoValue, NowrapLabel } from "../Text";
 import {
@@ -103,7 +121,10 @@ import {
   deltaLabelOf,
   dialGeometry,
   niceStep,
+  type RowLayout,
+  rowLayout,
   trackDomainOf,
+  windowLabel,
 } from "./geometry";
 import "./MutationSliders.css";
 
@@ -252,6 +273,61 @@ const DialMarks: Component<{
 export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   const format = (value: number): string => (props.format ?? String)(value);
 
+  // ── the row, when it does not all fit ──────────────────────────────────
+  // The row measures ITSELF rather than taking a width prop: how much room a
+  // row of dials has is a fact about the page it was dropped into, and a
+  // consumer would have to re-measure and re-pass it on every layout change.
+  //
+  // `0` means NOT MEASURED YET, and an unmeasured row shows EVERYTHING rather
+  // than falling back to the one-dial minimum. The distinction matters well
+  // beyond the first frame: `observeSize` returns a no-op disposer wherever
+  // `ResizeObserver` is undefined — SSR, jsdom, older engines — so a width that
+  // never arrives is a real and permanent state, not a transient one. Reading
+  // it as "one dial" would leave those environments showing a single entity
+  // for ever, which looks like a broken component rather than a narrow one.
+  //
+  // Unknown is not narrow. The minimum-of-one rule is about a container that
+  // was MEASURED and found too small.
+  const [width, setWidth] = createSignal(0);
+  const [offset, setOffset] = createSignal(0);
+
+  const measure = (el: HTMLDivElement): void => {
+    setWidth(el.clientWidth);
+    onCleanup(observeSize(el, (size) => setWidth(size.width)));
+  };
+
+  const layout = createMemo((): RowLayout => {
+    const count = props.entities.length;
+    if (width() <= 0) {
+      return { start: 0, end: count, capacity: count, paging: false };
+    }
+    return rowLayout(width(), count, offset(), props.onAdd !== undefined);
+  });
+
+  /**
+   * Page by ONE dial, not by a screenful.
+   *
+   * The row exists to be COMPARED across, and a full-page jump means no two
+   * neighbours either side of a boundary are ever on screen together — the
+   * reader loses exactly the adjacency they were reading. Stepping by one
+   * keeps every pair reachable, at the cost of more presses on a long row.
+   */
+  const page = (delta: number): void => {
+    const { capacity } = layout();
+    setOffset((current) =>
+      clamp(current + delta, 0, Math.max(props.entities.length - capacity, 0)),
+    );
+  };
+
+  // The window is derived, so it CANNOT disagree with the arrows' disabled
+  // state: both read the same memo.
+  const atStart = (): boolean => layout().start === 0;
+  const atEnd = (): boolean => layout().end >= props.entities.length;
+
+  const visible = createMemo(() =>
+    props.entities.slice(layout().start, layout().end),
+  );
+
   /**
    * Arrow keys and drags move by a step DERIVED from the domain — see
    * `niceStep`. There is no `step` prop because nobody was configuring one,
@@ -287,13 +363,37 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   };
 
   return (
-    <ClusterRow class="sui-mutation-sliders">
+    <ClusterRow
+      ref={measure}
+      class="sui-mutation-sliders"
+      // A group rather than a bare div, so the window is ANNOUNCED. Without
+      // it a screen-reader user paging the row hears five dials change names
+      // and nothing telling them where in the seven they now are.
+      role="group"
+      aria-label={windowLabel(
+        layout().start,
+        layout().end,
+        props.entities.length,
+      )}
+    >
+      {/* The chevrons exist only when the row pages. A permanently-present
+          pair, greyed out on a row that fits, would be two controls promising
+          something the row cannot do. */}
+      <Show when={layout().paging}>
+        <SmallGhostButton
+          aria-label="Previous dial"
+          disabled={atStart()}
+          onClick={() => page(-1)}
+        >
+          <Icon name="chevron-left" size="sm" />
+        </SmallGhostButton>
+      </Show>
       {/* `Index`, not `For`. The row is POSITIONAL and its entities change
           value in place, so keying by item identity would replace the whole
           column — and the thumb's DOM node with it — on every step of a drag,
           which drops the pointer capture mid-gesture. Keying by position keeps
           each dial's node and updates only what it draws. */}
-      <Index each={props.entities}>
+      <Index each={visible()}>
         {(entity) => {
           const dial = (): DialGeometry => dialGeometry(domain(), entity());
 
@@ -384,6 +484,18 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
           );
         }}
       </Index>
+      <Show when={layout().paging}>
+        <SmallGhostButton
+          aria-label="Next dial"
+          disabled={atEnd()}
+          onClick={() => page(1)}
+        >
+          <Icon name="chevron-right" size="sm" />
+        </SmallGhostButton>
+      </Show>
+      {/* The `+` stays past the last page ON PURPOSE: hiding the only way to
+          add someone whenever the row happens to be scrolled is a dead end the
+          reader has to guess their way out of. */}
       <Show when={props.onAdd}>
         {(onAdd) => (
           <SmallGhostButton aria-label="Add entity" onClick={() => onAdd()()}>

@@ -20,6 +20,7 @@ import { GhostButton } from "../../../src/components/Button";
 import { CardSurface } from "../../../src/components/Surface";
 import {
   ClusterRow,
+  ConstrainedBox,
   SpacedStack,
   SpreadRow,
 } from "../../../src/components/Layout";
@@ -52,6 +53,11 @@ const SKETCH: readonly Entity[] = [
   { id: "reilly", label: "Reilly", old: 105_000, value: 74_000, range: SENIOR },
   { id: "flynn", label: "Flynn", old: 78_000, value: 55_000, range: MID },
   { id: "joe", label: "Joe", old: 48_000, value: null, range: JUNIOR },
+  // Three more, so the row has more dials than a gallery width can hold and
+  // the chevrons have something to page through.
+  { id: "nadia", label: "Nadia", old: 58_000, value: 66_000, range: MID },
+  { id: "omar", label: "Omar", old: 96_000, value: 88_000, range: SENIOR },
+  { id: "priya", label: "Priya", old: null, value: 47_000, range: JUNIOR },
 ];
 
 /**

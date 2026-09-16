@@ -23,8 +23,14 @@ import {
   VIEW_WIDTH,
   DELTA_X,
   MINUS,
+  ADD_SLOT,
+  ARROW_SLOT,
+  DIAL_SLOT,
   arrowPath,
   bandFor,
+  rowLayout,
+  visibleWindow,
+  windowLabel,
   deltaLabelOf,
   deltaOf,
   niceStep,
@@ -621,6 +627,141 @@ describe("the delta label's place on the dial", () => {
     const joe = dialGeometry(trackDomainOf(FIXTURE), FIXTURE[5]);
     expect(joe.delta).toBeNull();
     expect(joe.deltaY).toBeNull();
+  });
+});
+
+describe("visibleWindow", () => {
+  const ROOM_FOR_THREE = DIAL_SLOT * 3;
+
+  it("shows as many WHOLE dials as fit", () => {
+    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 9, 0)).toEqual({
+      start: 0,
+      end: 3,
+    });
+  });
+
+  it("never shows a partial dial — the remainder is not a quarter of one", () => {
+    expect(visibleWindow(DIAL_SLOT * 3.9, DIAL_SLOT, 9, 0)).toEqual({
+      start: 0,
+      end: 3,
+    });
+  });
+
+  it("shows everything when everything fits, and never more", () => {
+    expect(visibleWindow(DIAL_SLOT * 50, DIAL_SLOT, 4, 0)).toEqual({
+      start: 0,
+      end: 4,
+    });
+  });
+
+  it("shows ONE dial when not even one fits, rather than nothing", () => {
+    // Peter, 2026-09-16: "Minimum of 1 slider." A row that renders nothing
+    // because its container is narrow looks broken; a clipped dial does not.
+    expect(visibleWindow(10, DIAL_SLOT, 9, 0)).toEqual({ start: 0, end: 1 });
+    expect(visibleWindow(0, DIAL_SLOT, 9, 0)).toEqual({ start: 0, end: 1 });
+    expect(visibleWindow(-500, DIAL_SLOT, 9, 0)).toEqual({ start: 0, end: 1 });
+  });
+
+  it("pages by moving the window, keeping its size", () => {
+    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 9, 4)).toEqual({
+      start: 4,
+      end: 7,
+    });
+  });
+
+  it("clamps an offset past the end onto the LAST full window", () => {
+    // The caller holds the offset in a signal and entities can be removed
+    // underneath it; a stale offset must settle, not empty the row.
+    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 9, 99)).toEqual({
+      start: 6,
+      end: 9,
+    });
+  });
+
+  it("clamps a negative offset to the start", () => {
+    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 9, -4)).toEqual({
+      start: 0,
+      end: 3,
+    });
+  });
+
+  it("is empty for an empty row rather than showing a dial that is not there", () => {
+    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 0, 0)).toEqual({
+      start: 0,
+      end: 0,
+    });
+  });
+
+  it("survives a zero dial width instead of dividing by it", () => {
+    expect(visibleWindow(500, 0, 9, 0)).toEqual({ start: 0, end: 1 });
+  });
+});
+
+describe("rowLayout", () => {
+  it("does not page, and reserves no arrows, when everything fits", () => {
+    const layout = rowLayout(DIAL_SLOT * 9 + ADD_SLOT, 9, 0, true);
+    expect(layout.paging).toBe(false);
+    expect(layout).toMatchObject({ start: 0, end: 9, capacity: 9 });
+  });
+
+  it("pages, and takes the arrows' room, when it does not", () => {
+    const layout = rowLayout(
+      DIAL_SLOT * 3 + ADD_SLOT + 2 * ARROW_SLOT,
+      9,
+      0,
+      true,
+    );
+    expect(layout.paging).toBe(true);
+    expect(layout.capacity).toBe(3);
+  });
+
+  // The two-pass rule, stated as a case: a width that fits every dial EXACTLY
+  // must not be spoiled by reserving arrows it then never draws.
+  it("does not lose a dial to arrows that never appear", () => {
+    const exact = DIAL_SLOT * 5 + ADD_SLOT;
+    expect(rowLayout(exact, 5, 0, true)).toMatchObject({
+      capacity: 5,
+      paging: false,
+    });
+  });
+
+  // ...and the converse: one dial too many, and the arrows' room comes out of
+  // the dials, so the count can drop by more than the one that overflowed.
+  it("pays for the arrows out of the dials once it must page", () => {
+    const exact = DIAL_SLOT * 5 + ADD_SLOT;
+    const layout = rowLayout(exact, 6, 0, true);
+    expect(layout.paging).toBe(true);
+    expect(layout.capacity).toBeLessThan(5);
+  });
+
+  it("reserves the + slot whether or not the row pages", () => {
+    const width = DIAL_SLOT * 4;
+    expect(rowLayout(width, 4, 0, true).capacity).toBeLessThan(
+      rowLayout(width, 4, 0, false).capacity,
+    );
+  });
+
+  it("still shows one dial in a container far too narrow for any", () => {
+    expect(rowLayout(20, 9, 0, true)).toMatchObject({
+      start: 0,
+      end: 1,
+      capacity: 1,
+      paging: true,
+    });
+  });
+});
+
+describe("windowLabel", () => {
+  it("names the window the way a reader counts, from one", () => {
+    expect(windowLabel(2, 5, 7)).toBe("dials 3\u20135 of 7");
+  });
+
+  it("says `dial 3 of 7` for a single one, not `dials 3-3`", () => {
+    expect(windowLabel(2, 3, 7)).toBe("dial 3 of 7");
+  });
+
+  it("has something to say about an empty row", () => {
+    expect(windowLabel(0, 0, 0)).toBe("no dials");
   });
 });
 

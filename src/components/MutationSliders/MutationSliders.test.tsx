@@ -12,7 +12,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createSignal } from "solid-js";
 import { type FakeSizer, installFakeSizer } from "../../test-utils";
 import { MutationSliders } from "./MutationSliders";
-import type { Entity } from "./geometry";
+import { ADD_SLOT, ARROW_SLOT, DIAL_SLOT, type Entity } from "./geometry";
 
 // Kobalte's Slider measures its track through ResizeObserver; jsdom lacks it.
 let sizer: FakeSizer;
@@ -68,6 +68,10 @@ const FIXTURE: readonly Entity[] = [
     range: [40_000, 60_000],
   },
 ];
+
+/** A button by its accessible name, or null. Paging controls come and go. */
+const queryButton = (container: HTMLElement, label: string): Element | null =>
+  container.querySelector(`button[aria-label="${label}"]`);
 
 /** Thousands, the way a pay table is read. */
 const asK = (n: number): string => `$${Math.round(n / 1000)}k`;
@@ -587,6 +591,154 @@ describe("MutationSliders", () => {
       <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
     ));
     expect(queryByLabelText("Add entity")).toBeNull();
+  });
+
+  describe("paging, when the row is too narrow for every dial", () => {
+    /** Nine people on one junior band — enough that a gallery row must page. */
+    const NINE: readonly Entity[] = Array.from({ length: 9 }, (_, i) => ({
+      id: `p${i}`,
+      label: `P${i}`,
+      old: 44_000,
+      value: 44_000 + i * 1_000,
+      range: [40_000, 60_000] as const,
+    }));
+
+    /** A width that fits exactly `n` dials once the arrows and + are paid for. */
+    const widthFor = (n: number) => DIAL_SLOT * n + ADD_SLOT + 2 * ARROW_SLOT;
+
+    const row = (container: HTMLElement) =>
+      container.querySelector('[role="group"]') as HTMLElement;
+
+    it("shows every dial, and no chevrons, until it is measured", () => {
+      // An UNMEASURED row is not a narrow one. `observeSize` no-ops wherever
+      // ResizeObserver is missing (SSR, jsdom), so falling back to one dial
+      // there would look like a broken component for ever.
+      const { container } = render(() => (
+        <MutationSliders entities={NINE} onChange={() => {}} />
+      ));
+      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(9);
+      expect(queryButton(container, "Next dial")).toBeNull();
+    });
+
+    it("shows as many whole dials as fit, and grows chevrons", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={NINE} onChange={() => {}} onAdd={() => {}} />
+      ));
+      await sizer.resizeAll({ width: widthFor(3), height: 300 });
+      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(3);
+      expect(queryButton(container, "Previous dial")).toBeTruthy();
+      expect(queryButton(container, "Next dial")).toBeTruthy();
+    });
+
+    it("draws NO chevrons when everything fits", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={NINE} onChange={() => {}} onAdd={() => {}} />
+      ));
+      await sizer.resizeAll({ width: widthFor(20), height: 300 });
+      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(9);
+      expect(queryButton(container, "Previous dial")).toBeNull();
+    });
+
+    it("shows ONE dial when the container is far too narrow for any", async () => {
+      // Peter, 2026-09-16: "Minimum of 1 slider."
+      const { container } = render(() => (
+        <MutationSliders entities={NINE} onChange={() => {}} />
+      ));
+      await sizer.resizeAll({ width: 30, height: 300 });
+      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(1);
+    });
+
+    it("pages by ONE dial, so every neighbouring pair stays reachable", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={NINE} onChange={() => {}} />
+      ));
+      await sizer.resizeAll({ width: widthFor(3), height: 300 });
+      expect(row(container).getAttribute("aria-label")).toBe("dials 1–3 of 9");
+      fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
+      expect(row(container).getAttribute("aria-label")).toBe("dials 2–4 of 9");
+    });
+
+    it("disables the chevron at each end rather than wrapping round", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={NINE} onChange={() => {}} />
+      ));
+      await sizer.resizeAll({ width: widthFor(3), height: 300 });
+      const prev = () =>
+        queryButton(container, "Previous dial") as HTMLButtonElement;
+      const next = () =>
+        queryButton(container, "Next dial") as HTMLButtonElement;
+      expect(prev().disabled).toBe(true);
+      expect(next().disabled).toBe(false);
+      for (let i = 0; i < 20; i += 1) fireEvent.click(next());
+      expect(next().disabled).toBe(true);
+      expect(prev().disabled).toBe(false);
+      // Twenty clicks on a nine-dial row must not run off the end.
+      expect(row(container).getAttribute("aria-label")).toBe("dials 7–9 of 9");
+    });
+
+    it("keeps the + reachable on the last page", async () => {
+      // Hiding the only way to add someone whenever the row happens to be
+      // scrolled is a dead end the reader has to guess their way out of.
+      const { container } = render(() => (
+        <MutationSliders entities={NINE} onChange={() => {}} onAdd={() => {}} />
+      ));
+      await sizer.resizeAll({ width: widthFor(3), height: 300 });
+      fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
+      expect(queryButton(container, "Add entity")).toBeTruthy();
+    });
+
+    it("announces a single visible dial as `dial 5 of 9`, not `dials 5–5`", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={NINE} onChange={() => {}} />
+      ));
+      await sizer.resizeAll({ width: 30, height: 300 });
+      fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
+      expect(row(container).getAttribute("aria-label")).toBe("dial 2 of 9");
+    });
+
+    it("settles a stale offset when entities are removed underneath it", async () => {
+      const [people, setPeople] = createSignal<readonly Entity[]>(NINE);
+      const { container } = render(() => (
+        <MutationSliders entities={people()} onChange={() => {}} />
+      ));
+      await sizer.resizeAll({ width: widthFor(3), height: 300 });
+      for (let i = 0; i < 6; i += 1)
+        fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
+      expect(row(container).getAttribute("aria-label")).toBe("dials 7–9 of 9");
+      setPeople(NINE.slice(0, 6));
+      // The window must land on the last full page, not empty the row.
+      expect(row(container).getAttribute("aria-label")).toBe("dials 4–6 of 6");
+      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(3);
+    });
+
+    it("stops paging entirely once few enough entities remain", async () => {
+      // The two-pass rule, from the other side: with the chevrons gone their
+      // 64px comes BACK to the dials, so a width that paged three of nine
+      // shows all four of four — not three of four with a dead pair of arrows.
+      const [people, setPeople] = createSignal<readonly Entity[]>(NINE);
+      const { container } = render(() => (
+        <MutationSliders entities={people()} onChange={() => {}} />
+      ));
+      await sizer.resizeAll({ width: widthFor(3), height: 300 });
+      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(3);
+      setPeople(NINE.slice(0, 4));
+      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(4);
+      expect(queryButton(container, "Next dial")).toBeNull();
+      expect(row(container).getAttribute("aria-label")).toBe("dials 1–4 of 4");
+    });
+
+    it("still lets a visible dial be dragged and removed", async () => {
+      const onChange = vi.fn();
+      const { container } = render(() => (
+        <MutationSliders entities={NINE} onChange={onChange} />
+      ));
+      await sizer.resizeAll({ width: widthFor(3), height: 300 });
+      fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
+      const thumb = container.querySelector('[aria-label="P2"]') as HTMLElement;
+      fireEvent.keyDown(thumb, { key: "ArrowUp" });
+      // The id must be P2's, not the id at visible index 0.
+      expect(onChange.mock.calls[0][0]).toBe("p2");
+    });
   });
 
   it("renders an empty row without a dial rather than failing", () => {
