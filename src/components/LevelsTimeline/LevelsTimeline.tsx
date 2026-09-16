@@ -164,25 +164,57 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   const transfers = () => props.transfers ?? EMPTY_TRANSFERS;
 
   /**
-   * FILL-HEIGHT. The chart is normally sized by its width — the CSS gives the
-   * host an `aspect-ratio`, which applies only while its height is
-   * indeterminate. Drop it in a box that HAS a height and the aspect-ratio
-   * stops applying, the host fills that height instead, and what we measure is
-   * the box the consumer actually gave us.
+   * FILL-HEIGHT, and why the measurement is defended as carefully as it is.
    *
-   * That is what makes this one code path rather than two: a box with no
-   * height of its own reports exactly the height our own aspect gave it, so
-   * `viewHeightFor` returns the default and nothing moves. There is no
-   * "definite height?" branch to get wrong, and no feedback loop — the measured
-   * height either came from the consumer or came from our own fixed ratio.
+   * The CSS gives the host an `aspect-ratio`, which applies only while its
+   * height is indeterminate — so in ordinary flow the height comes from the
+   * width, and in a box that HAS a height the aspect-ratio stops applying and
+   * the host fills it. Either way, what we measure is the box the consumer
+   * actually gave us, which is what makes this one code path and not two.
+   *
+   * A ZERO BOX IS NOT A MEASUREMENT. It is the layout saying "not yet", and
+   * treating it as an answer is how this component came to draw at its default
+   * size inside a consumer's cell forever. The board's chart sits at the end of
+   * a chain — viewport calc, three nested flex columns each with `min-height:
+   * 0`, a card, a grow box — where every link takes its height from its parent.
+   * Nothing in that chain has a height at the moment the innermost child first
+   * mounts, so the first observation can legitimately be 0×0. If that is stored
+   * and no further resize ever happens, the fallback is permanent, and the
+   * symptom is a chart that renders at 640×232 in a 2218×134 cell — which
+   * `meet` then letterboxes to a sixth of the width.
+   *
+   * So: zeroes are ignored rather than stored, the element is measured directly
+   * on mount instead of waiting for the observer's first delivery, and a zero
+   * observation schedules another look rather than being taken at its word.
+   * Any later non-zero observation wins; nothing latches.
+   *
+   * The element measured is the HOST — the outer div, which is the one the
+   * consumer's box sizes. The `<svg>` inside it is `height: 100%` of the host,
+   * so measuring the svg would measure our own output and say nothing.
    */
   const [box, setBox] = createSignal<{ width: number; height: number }>();
   let host: HTMLDivElement | undefined;
+
+  const measureHost = (): void => {
+    if (host === undefined) return;
+    const rect = host.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      setBox({ width: rect.width, height: rect.height });
+    }
+  };
+
   onMount(() => {
     if (host === undefined) return;
-    const stop = observeSize(host, (measured) =>
-      setBox({ width: measured.width, height: measured.height }),
-    );
+    measureHost();
+    const stop = observeSize(host, (measured) => {
+      if (measured.width > 0 && measured.height > 0) {
+        setBox(measured);
+        return;
+      }
+      // Not laid out yet. Look again once this frame's layout has settled
+      // rather than recording a zero as though it were the answer.
+      queueMicrotask(measureHost);
+    });
     onCleanup(stop);
   });
 

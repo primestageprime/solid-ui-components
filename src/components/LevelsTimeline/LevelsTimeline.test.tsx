@@ -794,3 +794,171 @@ describe("LevelsTimeline — the board's wide short cell", () => {
     expect(narrow.width / 718).toBe(wide.width / 2218);
   });
 });
+
+describe("LevelsTimeline — a zero box must never latch", () => {
+  /**
+   * A harness that can SEQUENCE observations, which is what this needs: the
+   * board's failure was a first delivery of 0×0 followed by a real size, and a
+   * single-shot stub cannot express that.
+   */
+  const withSequencedBoxes = async (
+    boxes: readonly { width: number; height: number }[],
+    run: () => void,
+  ) => {
+    const originalRO = globalThis.ResizeObserver;
+    const originalRect = Element.prototype.getBoundingClientRect;
+    let deliver: ((box: { width: number; height: number }) => void) | undefined;
+    // The element's own rect follows the latest delivered box, so a
+    // re-measurement after a zero sees what layout would have settled on.
+    let current = boxes[boxes.length - 1];
+    Element.prototype.getBoundingClientRect = function rect(this: Element) {
+      return this.classList?.contains("sui-levels-timeline")
+        ? ({ left: 0, top: 0, ...current } as DOMRect)
+        : ({ left: 0, top: 0, width: 0, height: 0 } as DOMRect);
+    };
+    class Stub {
+      constructor(private readonly cb: ResizeObserverCallback) {}
+      observe(target: Element) {
+        deliver = (box) =>
+          this.cb(
+            [{ target, contentRect: box } as unknown as ResizeObserverEntry],
+            this as unknown as ResizeObserver,
+          );
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    globalThis.ResizeObserver = Stub as unknown as typeof ResizeObserver;
+    try {
+      // Mount with the FIRST box already in place as the element's rect, so
+      // the on-mount measurement sees the same thing the observer will.
+      current = boxes[0];
+      run();
+      for (const box of boxes) {
+        current = box;
+        deliver?.(box);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+    } finally {
+      globalThis.ResizeObserver = originalRO;
+      Element.prototype.getBoundingClientRect = originalRect;
+    }
+  };
+
+  const viewBoxOf = (container: HTMLElement) =>
+    container.querySelector("svg")?.getAttribute("viewBox");
+
+  it("recovers when the FIRST observation is 0x0 and the next is real", async () => {
+    // The board's chain: viewport calc → three flex columns with min-height: 0
+    // → card → grow box. Nothing in it has a height when the innermost child
+    // first mounts, so 0×0 is a legitimate first answer — and latching it left
+    // the chart at its default size in a 2218×134 cell forever.
+    let container!: HTMLElement;
+    await withSequencedBoxes(
+      [
+        { width: 0, height: 0 },
+        { width: 2218, height: 134 },
+      ],
+      () => {
+        container = render(() => (
+          <LevelsTimeline
+            levels={LEVELS}
+            mutations={MUTATIONS}
+            domain={DOMAIN}
+            onPick={() => undefined}
+          />
+        )).container;
+      },
+    );
+    expect(viewBoxOf(container)).toBe("0 0 2218 134");
+  });
+
+  it("ignores a zero rather than storing it, so the default survives intact", async () => {
+    let container!: HTMLElement;
+    await withSequencedBoxes([{ width: 0, height: 0 }], () => {
+      container = render(() => (
+        <LevelsTimeline levels={LEVELS} mutations={MUTATIONS} domain={DOMAIN} />
+      )).container;
+    });
+    // Never measured, so the width-driven default — not a collapsed viewBox.
+    expect(viewBoxOf(container)).toBe("0 0 640 232");
+  });
+
+  it("lets the LATEST non-zero observation win, however many arrive", async () => {
+    let container!: HTMLElement;
+    await withSequencedBoxes(
+      [
+        { width: 0, height: 0 },
+        { width: 800, height: 300 },
+        { width: 0, height: 0 },
+        { width: 2218, height: 134 },
+      ],
+      () => {
+        container = render(() => (
+          <LevelsTimeline levels={LEVELS} mutations={MUTATIONS} domain={DOMAIN} />
+        )).container;
+      },
+    );
+    expect(viewBoxOf(container)).toBe("0 0 2218 134");
+  });
+
+  it("re-measures when the ONLY observation is a zero but layout has settled", async () => {
+    // THE board's actual mechanism, and the one case the old code could not
+    // recover from: the observer fires once, early, with 0×0; layout then
+    // settles; and because the element never changes size again, no second
+    // observation ever arrives. Storing that zero left the chart at its
+    // default forever. Here the element's own rect is real while the only
+    // delivery is a zero — so the ONLY way to reach the right answer is to go
+    // and look at the element instead of believing the delivery.
+    const originalRO = globalThis.ResizeObserver;
+    const originalRect = Element.prototype.getBoundingClientRect;
+    const real = { width: 2218, height: 134 };
+    Element.prototype.getBoundingClientRect = function rect(this: Element) {
+      return this.classList?.contains("sui-levels-timeline")
+        ? ({ left: 0, top: 0, ...real } as DOMRect)
+        : ({ left: 0, top: 0, width: 0, height: 0 } as DOMRect);
+    };
+    class ZeroOnce {
+      constructor(private readonly cb: ResizeObserverCallback) {}
+      observe(target: Element) {
+        this.cb(
+          [
+            {
+              target,
+              contentRect: { width: 0, height: 0 },
+            } as unknown as ResizeObserverEntry,
+          ],
+          this as unknown as ResizeObserver,
+        );
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    globalThis.ResizeObserver = ZeroOnce as unknown as typeof ResizeObserver;
+    let container!: HTMLElement;
+    try {
+      container = render(() => (
+        <LevelsTimeline levels={LEVELS} mutations={MUTATIONS} domain={DOMAIN} />
+      )).container;
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    } finally {
+      globalThis.ResizeObserver = originalRO;
+      Element.prototype.getBoundingClientRect = originalRect;
+    }
+    expect(viewBoxOf(container)).toBe("0 0 2218 134");
+  });
+
+  it("measures the HOST, not the svg it draws into", async () => {
+    // The svg is `height: 100%` of the host, so measuring the svg would
+    // measure our own output and tell us nothing about the consumer's box.
+    let container!: HTMLElement;
+    await withSequencedBoxes([{ width: 2218, height: 134 }], () => {
+      container = render(() => (
+        <LevelsTimeline levels={LEVELS} mutations={MUTATIONS} domain={DOMAIN} />
+      )).container;
+    });
+    const host = container.querySelector(".sui-levels-timeline");
+    expect(host?.tagName.toLowerCase()).toBe("div");
+    expect(viewBoxOf(container)).toBe("0 0 2218 134");
+  });
+})
