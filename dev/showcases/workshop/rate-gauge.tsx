@@ -25,6 +25,7 @@ import {
   TextTitle,
 } from "../../../src/components/Text";
 import {
+  ConstrainedBox,
   SpacedStack,
   TightStack,
   WrapRow,
@@ -54,13 +55,18 @@ const RateCard: Component<{
   <CardSurface>
     <TightStack>
       <TextTitle>{props.title}</TextTitle>
-      <RateGauge
-        domain={DOMAIN}
-        baseline={props.baseline}
-        value={props.value}
-        label={props.label}
-        format={perMonth}
-      />
+      {/* The gauge fills the box it is given, so the CONSUMER decides how big
+          the dial is — here a 400px ConstrainedBox, which is what keeps the
+          label text at a readable size relative to the ring. */}
+      <ConstrainedBox>
+        <RateGauge
+          domain={DOMAIN}
+          baseline={props.baseline}
+          value={props.value}
+          label={props.label}
+          format={perMonth}
+        />
+      </ConstrainedBox>
       <CaptionLabel>{props.note}</CaptionLabel>
     </TightStack>
   </CardSurface>
@@ -74,13 +80,15 @@ const ScrubbedCard: Component = () => {
     <CardSurface>
       <TightStack>
         <TextTitle>Rate, right now</TextTitle>
-        <RateGauge
-          domain={DOMAIN}
-          baseline={baseline}
-          value={value()}
-          label="Foo"
-          format={perMonth}
-        />
+        <ConstrainedBox>
+          <RateGauge
+            domain={DOMAIN}
+            baseline={baseline}
+            value={value()}
+            label="Foo"
+            format={perMonth}
+          />
+        </ConstrainedBox>
         <Slider
           label="Foo's rate"
           value={value()}

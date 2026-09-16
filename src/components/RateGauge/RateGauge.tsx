@@ -85,6 +85,7 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
     )} against ${baselineLabel().toLowerCase()}.`;
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA meter; a native <meter> is a replaced element with its own UA bar rendering and cannot host the SVG dial that IS this readout.
     <div
       class={`sui-rate-gauge sui-rate-gauge--${tone()}`}
       role="meter"
