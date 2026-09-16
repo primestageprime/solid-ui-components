@@ -156,7 +156,12 @@ const MutationSlidersBench: Component = () => {
       </MutedBody>
       <SpacedStack>
         <SpreadRow>
-          <MonoMeta>scale $30k–$130k · step $1k, Shift+arrow for $10k</MonoMeta>
+          {/* No scale is quoted here on purpose: the component derives the
+              track from the bands, so a number written into this line would
+              be stale the moment an entity is hired or let go. */}
+          <MonoMeta>
+            track derived from the bands · Shift+arrow jumps a tenth of it
+          </MonoMeta>
           <ClusterRow>
             <GhostButton onClick={reset}>Reset</GhostButton>
           </ClusterRow>
