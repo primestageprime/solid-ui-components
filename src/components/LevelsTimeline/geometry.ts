@@ -323,10 +323,18 @@ export interface LevelsRailGeometry {
 export const FILL_FRACTION = 0.6;
 /** Clear air left between two adjacent levels' bands at their fattest. */
 export const BAND_MARGIN = 4;
-/** Headroom above and below the outermost levels, as a fraction of their span. */
-export const Y_PAD_FRACTION = 0.12;
-/** The half-height a FLAT chart is opened up to, where a fraction gives zero. */
-export const FLAT_Y_PAD = 1;
+/**
+ * Headroom kept at the top and bottom of the plot, as a fraction of its
+ * height, for the outermost bands to grow into.
+ *
+ * This is a fraction of the PLOT, not of the value span, and that is the whole
+ * point. Padding the value domain — the obvious thing, and what this did at
+ * first — reserves an amount of y that depends on the consumer's pay figures,
+ * so a chart whose levels happen to sit close together gets almost no headroom
+ * and its outermost band hangs off the axis. Reserving plot space instead
+ * guarantees the room is there whatever the numbers say.
+ */
+export const BAND_INSET_FRACTION = 0.18;
 
 /** The plot's height — the space the stack is laid out in. */
 export const PLOT_HEIGHT = PLOT_BOTTOM - PLOT_TOP;
@@ -374,15 +382,43 @@ export const maxCountIn = (level: Level): number =>
     : Math.max(0, ...map((point: CountPoint) => point.count, level.points));
 
 /**
- * Thickness per person: the smaller of the two answers. See the header — the
- * fill width alone would smear close levels together, and the adjacency width
- * alone would draw a sparse chart in hairlines.
+ * The width at which no band overruns the plot's own top or bottom edge.
+ *
+ * The adjacency cap only polices the space BETWEEN levels; nothing in it stops
+ * the outermost band from hanging off the axis, which is exactly what happened
+ * on a two-level track whose bands wanted to be 92 units wide in a 154-unit
+ * plot. Every level is asked how much room it has to its nearer edge.
+ */
+export const edgeWidth = (
+  levels: readonly Level[],
+  yScale: (value: number) => number,
+): number => {
+  const limits: number[] = [];
+  for (const level of levels) {
+    const most = maxCountIn(level);
+    if (most <= 0) continue;
+    const y = yScale(level.value);
+    const room = Math.min(y - PLOT_TOP, PLOT_BOTTOM - y) - BAND_MARGIN;
+    limits.push((2 * Math.max(0, room)) / most);
+  }
+  return limits.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...limits);
+};
+
+/**
+ * Thickness per person: the smallest of three answers. See the header — the
+ * fill width alone would smear close levels together and overrun the frame,
+ * and either cap alone would draw a sparse chart in hairlines.
  */
 export const perPersonWidth = (
   levels: readonly Level[],
   yScale: (value: number) => number,
   peak: number,
-): number => Math.min(fillWidth(peak), adjacencyWidth(levels, yScale));
+): number =>
+  Math.min(
+    fillWidth(peak),
+    adjacencyWidth(levels, yScale),
+    edgeWidth(levels, yScale),
+  );
 
 /** A band's thickness. Purely proportional, so conservation is exact. */
 export const bandWidth = (count: number, perPerson: number): number =>
@@ -886,7 +922,10 @@ export const flowBands = (
 
 // ── placing the levels ───────────────────────────────────────────────────────
 
-/** Every level's value, padded. Never zero-height, never NaN. */
+/** The room reserved at each end of the plot for the outermost bands. */
+export const BAND_INSET = PLOT_HEIGHT * BAND_INSET_FRACTION;
+
+/** The levels' own range. No padding — the inset does that job now. */
 export const valueDomainOf = (
   levels: readonly Level[],
 ): readonly [number, number] => {
@@ -894,21 +933,25 @@ export const valueDomainOf = (
   const values = map((level: Level) => level.value, levels);
   const lo = Math.min(...values);
   const hi = Math.max(...values);
-  const span = hi - lo;
-  const pad = span === 0 ? FLAT_Y_PAD : span * Y_PAD_FRACTION;
-  return [lo - pad, hi + pad];
+  return lo === hi ? [lo - 1, hi + 1] : [lo, hi];
 };
 
-/** Value → y, inverted (the domain top sits at the plot top). */
+/**
+ * Value → y, inverted, mapped into the plot MINUS its inset at each end — so
+ * the highest level sits `BAND_INSET` below the plot top with room for its
+ * band, rather than on the edge with half of it outside.
+ */
 export const yScaleFor = (
   yDomain: readonly [number, number],
 ): ((value: number) => number) => {
   const [lo, hi] = yDomain;
   const span = hi - lo;
-  const middle = (PLOT_TOP + PLOT_BOTTOM) / 2;
+  const top = PLOT_TOP + BAND_INSET;
+  const bottom = PLOT_BOTTOM - BAND_INSET;
+  const middle = (top + bottom) / 2;
   if (span <= 0) return () => middle;
   return (value: number): number =>
-    PLOT_BOTTOM - clamp((value - lo) / span, 0, 1) * PLOT_HEIGHT;
+    bottom - clamp((value - lo) / span, 0, 1) * (bottom - top);
 };
 
 /**

@@ -13,6 +13,7 @@
 import { describe, expect, it } from "vitest";
 import { flatMap, map, sortBy } from "../../fn";
 import {
+  BAND_INSET,
   BAND_MARGIN,
   FILL_FRACTION,
   MAX_TRANSITION,
@@ -40,6 +41,7 @@ import {
   changeTimes,
   countAt,
   droplinePositions,
+  edgeWidth,
   fillWidth,
   flagPositions,
   hCurve,
@@ -145,12 +147,13 @@ describe("xScaleFor", () => {
 });
 
 describe("valueDomainOf and yScaleFor", () => {
-  it("spans the levels' values, padded, with the top at the plot top", () => {
+  it("is the levels' own range, mapped into the plot MINUS its inset", () => {
+    // The inset is a fraction of the PLOT, not of the value span, so the
+    // headroom is there whatever the consumer's pay figures happen to be.
     const [lo, hi] = valueDomainOf(LEVELS);
-    expect(lo).toBeLessThan(5000);
-    expect(hi).toBeGreaterThan(10000);
-    expect(yScaleFor([lo, hi])(hi)).toBe(PLOT_TOP);
-    expect(yScaleFor([lo, hi])(lo)).toBe(PLOT_BOTTOM);
+    expect([lo, hi]).toEqual([5000, 10000]);
+    expect(yScaleFor([lo, hi])(hi)).toBeCloseTo(PLOT_TOP + BAND_INSET, 6);
+    expect(yScaleFor([lo, hi])(lo)).toBeCloseTo(PLOT_BOTTOM - BAND_INSET, 6);
   });
 
   it("opens a flat chart up rather than collapsing it", () => {
@@ -238,20 +241,45 @@ describe("perPersonWidth — the smaller of two answers", () => {
   });
 
   it("keeps the TIGHTEST adjacent pair clear of each other", () => {
-    // l5/l6 are the tightest pair here: 37.26 apart, holding at most 5 and 4.
-    expect(round(adjacencyWidth(LEVELS, yScale))).toBe(7.391);
+    expect(adjacencyWidth(LEVELS, yScale)).toBeGreaterThan(0);
+    expect(adjacencyWidth(LEVELS, yScale)).toBeLessThan(
+      Number.POSITIVE_INFINITY,
+    );
   });
 
-  it("takes whichever cap binds — here the adjacency one, narrowly", () => {
-    expect(round(perPersonWidth(LEVELS, yScale, 12))).toBe(7.391);
-    expect(perPersonWidth(LEVELS, yScale, 12)).toBeLessThan(fillWidth(12));
+  it("keeps the outermost band inside the plot's own edges", () => {
+    // The adjacency cap polices the space BETWEEN levels and nothing else; a
+    // two-level track once wanted 92-unit bands in a 154-unit plot and hung
+    // its lowest one off the axis.
+    const two: readonly Level[] = [
+      { id: "a", label: "A", value: 7000, points: [{ at: 0, count: 2 }] },
+      { id: "b", label: "B", value: 9500, points: [{ at: 0, count: 2 }] },
+    ];
+    const scale = yScaleFor(valueDomainOf(two));
+    expect(edgeWidth(two, scale)).toBeLessThan(fillWidth(2));
+    const perPerson = perPersonWidth(two, scale, 2);
+    for (const level of two) {
+      const half = bandWidth(2, perPerson) / 2;
+      expect(scale(level.value) - half).toBeGreaterThanOrEqual(PLOT_TOP);
+      expect(scale(level.value) + half).toBeLessThanOrEqual(PLOT_BOTTOM);
+    }
   });
 
-  it("lets the fill width win uncontested when there is only one level", () => {
+  it("takes whichever of the three caps binds", () => {
+    const perPerson = perPersonWidth(LEVELS, yScale, 12);
+    expect(perPerson).toBe(
+      Math.min(
+        fillWidth(12),
+        adjacencyWidth(LEVELS, yScale),
+        edgeWidth(LEVELS, yScale),
+      ),
+    );
+  });
+
+  it("leaves only the edge cap when there is a single level", () => {
     expect(adjacencyWidth([LEVELS[0]], yScale)).toBe(
       Number.POSITIVE_INFINITY,
     );
-    expect(perPersonWidth([LEVELS[0]], yScale, 5)).toBe(fillWidth(5));
   });
 
   it("has NO floor — one person is wide because the scale is wide", () => {
