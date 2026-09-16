@@ -28,6 +28,9 @@
      without the line being thick enough to blur the old-vs-new comparison. */
   --sui-mutation-grip-width: 16px;
   --sui-mutation-thumb-height: 10px;
+  /* Narrower than the box it rides on, so a one-unit change still shows the
+     box either side of the thumb rather than under it. */
+  --sui-mutation-thumb-width: 10px;
   font-family: var(--sui-font-family, system-ui, sans-serif);
 }
 
@@ -112,8 +115,8 @@
    horizontal placement is a `left`/`width` pair rather than the other half of
    a two-axis transform, which would be silently dropped. */
 .sui-mutation-sliders__thumb {
-  left: 0;
-  width: 100%;
+  left: calc(50% - var(--sui-mutation-thumb-width) / 2);
+  width: var(--sui-mutation-thumb-width);
   height: var(--sui-mutation-thumb-height);
   background: var(--sui-accent);
   border-radius: 2px;

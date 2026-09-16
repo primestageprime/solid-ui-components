@@ -95,11 +95,16 @@ export const TRACK_TOP = 12;
 export const TRACK_BOTTOM = VIEW_HEIGHT - TRACK_TOP;
 
 /** Half-width of the short caps that mark the domain's two ends. */
-export const CAP_HALF = 5;
-/** Half-width of the fixed OLD tick — wider than the track, narrower than a cap. */
+export const CAP_HALF = 6;
+/** Half-width of the fixed OLD tick. */
 export const OLD_TICK_HALF = 7;
-/** Half-width of the old→new bar. */
-export const BOX_HALF = 5;
+/**
+ * Half-width of the old→new bar. It is the WIDEST mark on the dial, wider than
+ * the thumb that rides on it, because a one-unit change is shorter than the
+ * thumb is tall — drawn any narrower, the box for a small move is entirely
+ * hidden under the thumb and the reader sees no change at all.
+ */
+export const BOX_HALF = 8;
 /** Half-height of the thumb, which the arrowhead sits clear of. */
 export const THUMB_HALF = 5;
 /** How far the arrowhead's apex runs past the thumb. */
