@@ -364,8 +364,14 @@ export const metricsFor = (
   box: Box | undefined,
   labels: readonly string[],
 ): Metrics => {
-  const labelWidth = labelColumnWidth(labels);
-  const ringOuter = ringOuterFor(box, labelWidth);
+  // The DIAL is sized first, against the column's capped estimate, because the
+  // instrument is the thing the card is for. Only then does the column take
+  // whatever width is left over — which matters when the box is tall and
+  // narrow-ish, where the dial is bound by the height and would otherwise
+  // leave a band of dead space to the right of a needlessly clipped label.
+  // The column never grows at the dial's expense, only into slack.
+  const sizing = labelColumnWidth(labels);
+  const ringOuter = ringOuterFor(box, sizing);
   const brace = ringOuter * RATIO.brace;
   const outerExtent = extentOf(ringOuter);
   const center = {
@@ -373,6 +379,17 @@ export const metricsFor = (
     cy: box === undefined ? outerExtent + CANVAS_MARGIN : box.height / 2,
   };
   const labelX = center.cx + outerExtent + LABEL_GAP;
+  const textX = labelX + TEXT_GAP;
+  const labelWidth =
+    box === undefined
+      ? sizing
+      : Math.max(
+          MIN_LABEL_WIDTH,
+          Math.min(
+            wantedColumnWidth(labels),
+            box.width - textX - CANVAS_MARGIN,
+          ),
+        );
   return {
     center,
     ringInner: ringOuter * RATIO.inner,
@@ -384,11 +401,11 @@ export const metricsFor = (
     turn: brace + CALLOUT_STUB,
     outerExtent,
     labelX,
-    textX: labelX + TEXT_GAP,
+    textX,
     elbowX: labelX - ELBOW_INSET,
     turnX: center.cx + brace + CALLOUT_STUB,
     labelWidth,
-    viewWidth: box?.width ?? labelX + TEXT_GAP + labelWidth + CANVAS_MARGIN,
+    viewWidth: box?.width ?? textX + labelWidth + CANVAS_MARGIN,
     viewHeight: box?.height ?? (outerExtent + CANVAS_MARGIN) * 2,
   };
 };
@@ -428,14 +445,22 @@ const LABEL_CHAR_WIDTH = 7.3;
 const MIN_LABEL_WIDTH = 56;
 const MAX_LABEL_WIDTH = 124;
 
-/** How wide a label column has to be to hold these strings. */
-export const labelColumnWidth = (texts: readonly string[]): number => {
-  const widest = Math.max(
+/** How wide these strings would like the column to be, unbounded. */
+const wantedColumnWidth = (texts: readonly string[]): number =>
+  Math.max(
     MIN_LABEL_WIDTH,
     ...map((text: string) => text.length * LABEL_CHAR_WIDTH, texts),
   );
-  return Math.min(MAX_LABEL_WIDTH, widest);
-};
+
+/**
+ * How wide a label column has to be to hold these strings.
+ *
+ * Capped, because the dial is sized around this figure and a long scenario
+ * name would otherwise squeeze the instrument to make room for words that are
+ * going to ellipsize anyway.
+ */
+export const labelColumnWidth = (texts: readonly string[]): number =>
+  Math.min(MAX_LABEL_WIDTH, wantedColumnWidth(texts));
 
 /**
  * Where every leader finishes turning and becomes horizontal.

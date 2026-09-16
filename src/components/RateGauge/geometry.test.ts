@@ -863,6 +863,51 @@ describe("the canvas", () => {
     expect(g.metrics.textX + g.metrics.labelWidth).toBeLessThanOrEqual(540);
   });
 
+  // The dial is sized first and the column takes the slack, so a box with
+  // width to spare spends it on words rather than on dead space — but only
+  // when the words actually want it. A column wider than its text is just
+  // dead space under another name.
+  it("widens the label column into width the dial did not need", () => {
+    const long = (box?: { width: number; height: number }) =>
+      gaugeGeometry({
+        domain: DOMAIN,
+        baseline: 5000,
+        value: 23000,
+        labels: ["BOOKKEEPING RETAINER · NORTHERN", "+$18,000/MO", "BASELINE"],
+        box,
+      });
+    // Unmeasured, the column is capped so a long name cannot squeeze the dial.
+    expect(long().metrics.labelWidth).toBe(124);
+    // Measured and height-bound, the leftover width goes to the name.
+    const tall = long({ width: 540, height: 400 });
+    expect(tall.metrics.labelWidth).toBeGreaterThan(124);
+    expect(tall.metrics.textX + tall.metrics.labelWidth).toBeLessThanOrEqual(540);
+  });
+
+  it("does not make the column wider than its own text wants", () => {
+    const tall = read({ width: 900, height: 400 });
+    // The longest label is 11 characters; the column stops there rather than
+    // running on to the edge.
+    expect(tall.metrics.labelWidth).toBeLessThan(120);
+  });
+
+  it("never widens the column at the dial's expense", () => {
+    const withShortLabels = gaugeGeometry({
+      domain: DOMAIN,
+      baseline: 5000,
+      value: 23000,
+      labels: ["A", "B", "C"],
+      box: { width: 540, height: 850 },
+    });
+    const withLongLabels = read({ width: 540, height: 850 });
+    // Both are bound by the same budget, so the dial is the same size
+    // whatever the words are — the column absorbs the difference.
+    expect(withShortLabels.metrics.ringOuter).toBeCloseTo(
+      withLongLabels.metrics.ringOuter,
+      9,
+    );
+  });
+
   it("keeps the ANNOTATION fixed while the dial grows", () => {
     const small = read();
     const large = read({ width: 540, height: 850 });
