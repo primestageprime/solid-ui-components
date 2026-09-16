@@ -184,7 +184,7 @@ describe("ScrubChart composition", () => {
       expect(boxOf()).toBe("0 0 900 420");
     } finally {
       restore();
-      sizer.uninstall?.();
+      sizer.restore();
     }
   });
 
