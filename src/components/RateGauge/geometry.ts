@@ -24,7 +24,7 @@
 //     "zero" line that is not at zero.
 // ============================================
 import { clamp } from "../../internal/math/clamp";
-import { join, map, sortBy, sum } from "../../fn";
+import { filter, join, map, sortBy, sum } from "../../fn";
 
 /** A value domain, mapped linearly onto [−90°, +90°]. */
 export type Domain = readonly [number, number];
@@ -80,6 +80,11 @@ export interface Callout {
   readonly points: readonly Point[];
   /** `d` for the leader, built from `points`. */
   readonly leader: string;
+  /**
+   * Whether to draw the terminal dot. False when the dot would sit on top of
+   * a mark it does not name — see `dotIsClear`.
+   */
+  readonly showDot: boolean;
 }
 
 // ── the canvas ───────────────────────────────────────────────────────────────
@@ -93,20 +98,48 @@ export const CENTER: Center = { cx: 66, cy: 95 };
 /** Ring radii — the annulus the two zones are painted into. */
 export const RING_INNER = 48;
 export const RING_OUTER = 64;
-/** A needle stops just short of the ring's inner edge. */
-export const NEEDLE_RADIUS = RING_INNER - 3;
-/** The baseline's sweep wedge is a short sector near the pivot. */
-export const WEDGE_RADIUS = 34;
+/**
+ * The live needle stops well short of the ring's inner edge, and the gap is
+ * the point: a clock hand that touches its own dial reads as stuck to it.
+ * The cap lives inside that clearance rather than hugging the band — asked
+ * for in that order, and clearance wins.
+ */
+export const VALUE_NEEDLE_RADIUS = RING_INNER - 6;
+/**
+ * The baseline needle stops SHORTER, and not only because it is the secondary
+ * mark. It is what keeps the value's cap arc off it: the cap lives on the
+ * circle at `VALUE_NEEDLE_RADIUS`, and it spans more than the angle between
+ * two nearly-equal needles — at the near-baseline fixture they are 1.2° apart
+ * against a 10° cap. Narrowing the cap until it cleared would make it
+ * invisible, so the reference stops before the circle the cap occupies.
+ */
+export const BASELINE_NEEDLE_RADIUS = RING_INNER - 10;
+/**
+ * How far the delta sector reaches from the pivot. It stops at the baseline
+ * needle's own length, so it reads as the area those two needles enclose
+ * rather than as a third mark with an edge of its own.
+ */
+export const SECTOR_RADIUS = RING_INNER - 10;
 /** The delta bracket rides outside the ring. */
 export const BRACKET_RADIUS = RING_OUTER + 10;
-/** Half-length of the cap drawn across a needle's tip. */
-export const NEEDLE_CAP_HALF = 6;
 /** Half-length of a bracket end cap, measured radially. */
 export const BRACKET_CAP_HALF = 4;
+/** Half the cap arc's stroke, so its radial footprint can be reasoned about. */
+export const CAP_STROKE_HALF = 1.25;
+/** Radius of the filled terminal dot on a callout's anchor. */
+export const TERMINAL_RADIUS = 2.5;
 /** The pivot dot. */
 export const PIVOT_RADIUS = 4;
 
-/** Half-span of the needle's cap arc, in degrees either side of the needle. */
+/**
+ * Half-span of the needle's cap arc, in degrees either side of the needle.
+ *
+ * Narrow on purpose (Peter, 2026-09-16, reversing a widening): ~7 units of
+ * chord at the cap's radius, which at small sizes reads as a straight tip
+ * mark. That is fine — the geometry is a real arc, so the gauge blown up to
+ * any size shows the curvature rather than having to fake it later. A cap wide
+ * enough to look curved at thumbnail size is too wide at full size.
+ */
 export const CAP_ARC_HALF_SPAN = 5;
 
 /**
@@ -298,10 +331,16 @@ export const needleEndpoint = (
 };
 
 /**
- * The faint sector from the pivot between the zero line and the baseline —
- * the baseline's sweep. Nothing to fill when the baseline IS zero.
+ * The faint sector from the pivot between the two needles — the visual BODY of
+ * the delta, shading the same angular range the bracket spans outside the ring.
+ *
+ * It used to run from the zero line to the baseline, showing the baseline's own
+ * sweep. That answered a question nobody asked: the reader wants the CHANGE,
+ * and the change is the angle between where the rate was and where it is.
+ * Nothing to fill when the two coincide, which is the same "no delta" the
+ * collapsed single callout and the absent bracket already say.
  */
-export const wedgePath = (
+export const sectorPath = (
   center: Center,
   radius: number,
   from: number,
@@ -372,7 +411,7 @@ export interface GaugeGeometry {
   readonly delta: number;
   readonly positiveRing: string;
   readonly negativeRing: string;
-  readonly wedge: string;
+  readonly deltaSector: string;
   readonly bracket: string;
   readonly zeroLine: { readonly x2: number; readonly y2: number };
   readonly baselineTip: NeedleTip;
@@ -380,6 +419,82 @@ export interface GaugeGeometry {
   /** The HUD callouts, in anchor order, already placed and elbowed. */
   readonly callouts: readonly Callout[];
 }
+
+/**
+ * A mark the dial already draws, as the radial band it occupies over an
+ * angular span. Everything a terminal dot could land on reduces to one of
+ * these, which is what lets the overlap test be arithmetic rather than a
+ * list of special cases.
+ */
+interface MarkBand {
+  readonly inner: number;
+  readonly outer: number;
+  readonly from: number;
+  readonly to: number;
+}
+
+/** Does a dot at this anchor overlap that band, radially AND angularly? */
+const hitsBand = (radius: number, angle: number, band: MarkBand): boolean => {
+  const radial =
+    radius + TERMINAL_RADIUS > band.inner && radius - TERMINAL_RADIUS < band.outer;
+  const low = Math.min(band.from, band.to);
+  const high = Math.max(band.from, band.to);
+  return radial && angle >= low && angle <= high;
+};
+
+/** Two dots collide when their discs touch. */
+export const dotsCollide = (a: Point, b: Point): boolean =>
+  Math.hypot(a.x - b.x, a.y - b.y) < TERMINAL_RADIUS * 2;
+
+/**
+ * Whether a callout's terminal dot should be drawn.
+ *
+ * A dot exists to say "this is the thing I am naming". Sitting on top of some
+ * OTHER mark it therefore reads as a blemish on that mark rather than as a
+ * terminal — so the dot is dropped and the leader starts bare from the anchor.
+ *
+ * The one mark a dot may sit on is the one its own callout names: the delta's
+ * anchor is the middle of the bracket, and a dot there is the terminal for the
+ * bracket, not damage to it. That exception is the whole reason this is a rule
+ * rather than "hide all the dots" — without it every dot would drop, since the
+ * needle callouts are anchored on the ring's outer edge.
+ */
+const dotIsClear = (
+  radius: number,
+  angle: number,
+  /** Every mark EXCEPT the one this callout names — the caller drops that one. */
+  marks: readonly MarkBand[],
+  otherAnchors: readonly Point[],
+): boolean => {
+  const anchor = pointAt(CENTER, radius, angle);
+  for (const other of otherAnchors) {
+    if (dotsCollide(anchor, other)) return false;
+  }
+  for (const band of marks) {
+    if (hitsBand(radius, angle, band)) return false;
+  }
+  return true;
+};
+
+/** The marks a dot can land on, for one reading of the dial. */
+const markBands = (angles: {
+  baseline: number;
+  value: number;
+}): { readonly ring: MarkBand; readonly cap: MarkBand; readonly bracket: MarkBand } => ({
+  ring: { inner: RING_INNER, outer: RING_OUTER, from: -QUARTER_TURN, to: QUARTER_TURN },
+  cap: {
+    inner: VALUE_NEEDLE_RADIUS - CAP_STROKE_HALF,
+    outer: VALUE_NEEDLE_RADIUS + CAP_STROKE_HALF,
+    from: angles.value - CAP_ARC_HALF_SPAN,
+    to: angles.value + CAP_ARC_HALF_SPAN,
+  },
+  bracket: {
+    inner: BRACKET_RADIUS - BRACKET_CAP_HALF,
+    outer: BRACKET_RADIUS + BRACKET_CAP_HALF,
+    from: angles.baseline,
+    to: angles.value,
+  },
+});
 
 /** One callout before the spacing pass has decided where its row sits. */
 interface Unplaced {
@@ -506,11 +621,25 @@ const placeCallouts = (
   const naturals = map((e: { naturalY: number }) => e.naturalY, sorted);
   const turns = map((e: { turn: Point }) => e.turn, sorted);
   const rows = placeRows(naturals);
+  const bands = markBands(angles);
+  const anchors = map(
+    (callout: Unplaced) => pointAt(CENTER, callout.radius, callout.angle),
+    ordered,
+  );
   return map((callout: Unplaced, index: number) => {
-    const anchor = pointAt(CENTER, callout.radius, callout.angle);
+    const anchor = anchors[index];
     const points = leaderPoints(anchor, turns[index], rows[index]);
+    // Every mark except the one this callout names. The delta names the
+    // bracket, so a dot on the bracket is its terminal rather than a blemish;
+    // every other callout is anchored on the ring, which it does NOT name.
+    const others =
+      callout.id === "delta"
+        ? [bands.ring, bands.cap]
+        : [bands.ring, bands.cap, bands.bracket];
+    const neighbours = filter((_: Point, i: number) => i !== index, anchors);
     return {
       id: callout.id,
+      showDot: dotIsClear(callout.radius, callout.angle, others, neighbours),
       anchor,
       angle: callout.angle,
       stub: stubs[index],
@@ -550,11 +679,21 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
     delta: drawn - drawnBaseline,
     positiveRing: ringArcPath(CENTER, RING_INNER, RING_OUTER, zero, QUARTER_TURN),
     negativeRing: ringArcPath(CENTER, RING_INNER, RING_OUTER, -QUARTER_TURN, zero),
-    wedge: wedgePath(CENTER, WEDGE_RADIUS, zero, baselineAngle),
+    deltaSector: sectorPath(CENTER, SECTOR_RADIUS, baselineAngle, valueAngle),
     bracket,
     zeroLine: { x2: zoneEnd.x, y2: zoneEnd.y },
-    baselineTip: needleEndpoint(CENTER, NEEDLE_RADIUS, input.domain, input.baseline),
-    valueTip: needleEndpoint(CENTER, NEEDLE_RADIUS, input.domain, input.value),
+    baselineTip: needleEndpoint(
+      CENTER,
+      BASELINE_NEEDLE_RADIUS,
+      input.domain,
+      input.baseline,
+    ),
+    valueTip: needleEndpoint(
+      CENTER,
+      VALUE_NEEDLE_RADIUS,
+      input.domain,
+      input.value,
+    ),
     callouts: placeCallouts(
       { zero, baseline: baselineAngle, value: valueAngle },
       collapsed,

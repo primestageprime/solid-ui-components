@@ -141,9 +141,10 @@ const RateGaugeBench: Component = () => (
           A right-facing half ring split at zero: the upper half is the positive
           zone, the lower half the negative one, and the half the needle is not
           in is dimmed so the live one reads as lit. The dashed needle is the
-          baseline with the faint sector it has swept from zero; the solid,
-          capped needle is the rate right now; the bracket outside the ring
-          spans the difference and carries the signed delta.
+          baseline and the solid, capped needle is the rate right now; the
+          faint sector between them is the change drawn as an area, and the
+          bracket outside the ring spans that same angle and carries the signed
+          delta.
         </MutedBody>
       </TightStack>
 

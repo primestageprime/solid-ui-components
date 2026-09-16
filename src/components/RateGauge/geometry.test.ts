@@ -9,9 +9,17 @@
 import { describe, expect, it } from "vitest";
 import {
   angleFor,
+  BASELINE_NEEDLE_RADIUS,
+  BRACKET_RADIUS,
+  CAP_ARC_HALF_SPAN,
+  CAP_STROKE_HALF,
+  dotsCollide,
+  RING_INNER,
+  VALUE_NEEDLE_RADIUS,
   VIEW_HEIGHT,
   bracketPath,
   CALLOUT_PITCH,
+  CENTER as CENTER_FOR_TEST,
   capArc,
   clampedValue,
   gaugeGeometry,
@@ -19,7 +27,8 @@ import {
   type Point,
   pointAt,
   ringArcPath,
-  wedgePath,
+  SECTOR_RADIUS,
+  sectorPath,
   zoneOf,
 } from "./geometry";
 
@@ -115,6 +124,19 @@ describe("needleEndpoint", () => {
     // The cap is an arc command at the needle's own radius.
     expect(tip.capArc).toMatch(/^M .* A 40 40 /);
   });
+
+  // The cap is narrow, and at small sizes it will read as a straight tip mark.
+  // What matters is that the GEOMETRY is a real arc — its sagitta is nonzero,
+  // so the same gauge blown up shows the curvature instead of having to be
+  // re-cut later. A chord would have a sagitta of exactly zero at every size.
+  it("is a real arc, however straight it looks small", () => {
+    const tip = needleEndpoint({ cx: 0, cy: 0 }, VALUE_NEEDLE_RADIUS, DOMAIN, 0);
+    const sagitta =
+      VALUE_NEEDLE_RADIUS *
+      (1 - Math.cos((CAP_ARC_HALF_SPAN * Math.PI) / 180));
+    expect(sagitta).toBeGreaterThan(0);
+    expect(tip.capArc).toMatch(/ A /);
+  });
 });
 
 describe("capArc", () => {
@@ -141,15 +163,111 @@ describe("capArc", () => {
   });
 });
 
-describe("wedgePath", () => {
-  it("fills the sector from the zero angle to the baseline", () => {
-    const wedge = wedgePath({ cx: 0, cy: 0 }, 30, 0, 45);
-    expect(wedge).toMatch(/^M 0 0 L/);
-    expect(wedge.endsWith("Z")).toBe(true);
+describe("clearance between the needle and the ring", () => {
+  // A clock hand that touches its own dial reads as stuck to it. The cap lives
+  // INSIDE that clearance rather than hugging the band — clearance wins.
+  it("leaves a visible gap between the cap's outer edge and the ring", () => {
+    const capOuterEdge = VALUE_NEEDLE_RADIUS + CAP_STROKE_HALF;
+    expect(RING_INNER - capOuterEdge).toBeGreaterThan(3);
   });
 
-  it("emits nothing when the baseline IS zero", () => {
-    expect(wedgePath({ cx: 0, cy: 0 }, 30, 0, 0)).toBe("");
+  it("keeps the whole cap arc off the ring — it is concentric, so it cannot drift", () => {
+    // Every point of the cap is at one radius, which is what makes the
+    // clearance a single subtraction rather than a per-angle check.
+    expect(VALUE_NEEDLE_RADIUS + CAP_STROKE_HALF).toBeLessThan(RING_INNER);
+  });
+});
+
+describe("terminal dots", () => {
+  const dots = (baseline: number, value: number) =>
+    Object.fromEntries(
+      gaugeGeometry({ domain: DOMAIN, baseline, value }).callouts.map((c) => [
+        c.id,
+        c.showDot,
+      ]),
+    );
+
+  // The needle callouts are anchored on the ring's OUTER EDGE, which they do
+  // not name — a dot there reads as a blemish on the band.
+  it("drops the dots that sit on the ring band", () => {
+    expect(dots(5000, 23000).value).toBe(false);
+    expect(dots(5000, 23000).baseline).toBe(false);
+    expect(dots(5000, -8833).value).toBe(false);
+  });
+
+  // The delta's anchor IS the middle of the bracket, so its dot is that
+  // bracket's terminal rather than damage to it.
+  it("keeps the dot on the mark its own callout names", () => {
+    expect(dots(5000, 23000).delta).toBe(true);
+    expect(dots(5000, -8833).delta).toBe(true);
+  });
+
+  it("drops a dot that would land on another callout's dot", () => {
+    const a = { x: 100, y: 100 };
+    expect(dotsCollide(a, { x: 102, y: 100 })).toBe(true);
+    expect(dotsCollide(a, { x: 106, y: 100 })).toBe(false);
+  });
+
+  it("drops the collapsed row's dot too — it is on the ring like the others", () => {
+    expect(dots(5000, 5000).valueAndBaseline).toBe(false);
+  });
+});
+
+describe("the cap clears the baseline needle", () => {
+  // A cap wide enough to look curved spans far more than the angle between two
+  // nearly-equal needles, so it cannot be kept off the baseline by narrowing
+  // it. The baseline needle stops short of the cap's circle instead.
+  it("keeps the baseline needle inside the circle the cap occupies", () => {
+    expect(BASELINE_NEEDLE_RADIUS).toBeLessThan(
+      VALUE_NEEDLE_RADIUS - CAP_STROKE_HALF,
+    );
+  });
+
+  it("cannot reach the bracket either — they live at different radii", () => {
+    const near = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 5500 });
+    // Every cap point is at the value needle's radius; the bracket is outside
+    // the ring. The two can never meet, whatever the delta.
+    expect(VALUE_NEEDLE_RADIUS).toBeLessThan(BRACKET_RADIUS);
+    expect(near.valueTip.capArc).not.toBe("");
+  });
+});
+
+describe("sectorPath", () => {
+  it("fills the sector from the pivot between the two given angles", () => {
+    const sector = sectorPath({ cx: 0, cy: 0 }, 30, 0, 45);
+    expect(sector).toMatch(/^M 0 0 L/);
+    expect(sector.endsWith("Z")).toBe(true);
+  });
+
+  it("emits nothing for a zero-width sector", () => {
+    expect(sectorPath({ cx: 0, cy: 0 }, 30, 0, 0)).toBe("");
+  });
+});
+
+describe("the delta sector", () => {
+  const sectorOf = (baseline: number, value: number) =>
+    gaugeGeometry({ domain: DOMAIN, baseline, value }).deltaSector;
+
+  // It shades the same angular range the bracket spans — it IS the delta,
+  // drawn as an area instead of as a line outside the ring.
+  it("spans baseline to value, not zero to baseline", () => {
+    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 23000 });
+    const start = pointAt(CENTER_FOR_TEST, SECTOR_RADIUS, g.baselineAngle);
+    const end = pointAt(CENTER_FOR_TEST, SECTOR_RADIUS, g.valueAngle);
+    expect(g.deltaSector).toContain(`L ${start.x} ${start.y}`);
+    expect(g.deltaSector).toContain(`${end.x} ${end.y}`);
+  });
+
+  it("is present below the baseline too, sweeping the other way", () => {
+    expect(sectorOf(5000, -8833)).not.toBe("");
+  });
+
+  it("has zero width when the value sits on the baseline", () => {
+    expect(sectorOf(5000, 5000)).toBe("");
+  });
+
+  it("does not care where zero is — a baseline AT zero still shades a delta", () => {
+    expect(sectorOf(0, 12000)).not.toBe("");
   });
 });
 
@@ -342,7 +460,7 @@ describe("gaugeGeometry — the printed table", () => {
       "baseline",
     ]);
     expect(above.bracket).not.toBe("");
-    expect(above.wedge).not.toBe("");
+    expect(above.deltaSector).not.toBe("");
 
     const below = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: -8833 });
     expect(below.zone).toBe("negative");

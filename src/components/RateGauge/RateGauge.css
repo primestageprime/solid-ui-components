@@ -44,11 +44,23 @@
 
 /* ---- The reference marks ---- */
 
-/* The baseline's swept sector: a hint of where the reference sits relative to
-   zero, deliberately faint enough never to compete with a zone. */
-.sui-rate-gauge__wedge {
+/* The delta, drawn as an area: the sector the baseline and value needles
+   enclose. It takes the ACTIVE tone, because it is the change the card exists
+   to report — but at low alpha, so it never competes with the lit zone behind
+   it or with the needles that bound it. */
+.sui-rate-gauge__delta-sector {
   fill: var(--sui-text-muted);
   fill-opacity: 0.18;
+}
+
+.sui-rate-gauge--positive .sui-rate-gauge__delta-sector {
+  fill: var(--sui-success);
+  fill-opacity: 0.22;
+}
+
+.sui-rate-gauge--negative .sui-rate-gauge__delta-sector {
+  fill: var(--sui-danger);
+  fill-opacity: 0.22;
 }
 
 .sui-rate-gauge__zero {
@@ -65,6 +77,12 @@
 /* The cap is an ARC concentric with the ring, so it must not fill. */
 .sui-rate-gauge__needle-cap {
   fill: none;
+}
+
+/* Rounded ends, so the cap reads as a clock hand's tip mark rather than as a
+   cut-off band. Same weight as the needle it belongs to. */
+.sui-rate-gauge__needle-cap {
+  stroke-linecap: round;
 }
 
 .sui-rate-gauge__needle {
@@ -98,7 +116,6 @@
 
 .sui-rate-gauge__needle-cap {
   stroke-width: 2.5;
-  stroke-linecap: round;
 }
 
 .sui-rate-gauge__bracket {

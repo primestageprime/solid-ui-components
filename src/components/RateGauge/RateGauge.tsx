@@ -9,12 +9,13 @@
 // in is dimmed, so the live half reads as lit.
 //
 // Three marks, all the consumer's own values:
-//   • a dashed grey needle at the BASELINE, with the faint sector it has swept
-//     from zero;
+//   • a dashed grey needle at the BASELINE;
 //   • a solid needle in the active tone at the CURRENT value, capped at the tip
 //     with a short arc concentric with the ring;
 //   • a bracket outside the ring spanning the angular difference, labelled with
-//     the signed delta — formatted by the CONSUMER, never here.
+//     the signed delta — formatted by the CONSUMER, never here — and the faint
+//     sector between the two needles, which is that same difference drawn as an
+//     area in the active tone.
 //
 // Each mark carries a HUD CALLOUT: a terminal on the dial, a leader that runs
 // radially out, turns, and levels off into a shared column, and a label on the
@@ -47,6 +48,7 @@ import {
   COLUMN_TICK_HALF,
   gaugeGeometry,
   PIVOT_RADIUS,
+  TERMINAL_RADIUS,
   VIEW_HEIGHT,
   VIEW_WIDTH,
   type Domain,
@@ -76,9 +78,6 @@ const DEFAULT_BASELINE_LABEL = "Baseline";
 const LABEL_BOX_HEIGHT = 14;
 /** Right-hand breathing room, so a truncating label never touches the edge. */
 const LABEL_BOX_MARGIN = 4;
-/** Radius of the filled terminal dot on a callout's anchor. */
-const TERMINAL_RADIUS = 2.5;
-
 /** `sui-rate-gauge__<block>--lit` where the zone holds the needle, else `--dim`. */
 const zoneClass = (block: string, lit: boolean): string =>
   `sui-rate-gauge__${block} sui-rate-gauge__${block}--${lit ? "lit" : "dim"}`;
@@ -153,9 +152,13 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
           d={geometry().negativeRing}
         />
 
-        {/* The baseline's swept sector, then the zero reference it swept from. */}
-        <Show when={geometry().wedge}>
-          <path class="sui-rate-gauge__wedge" d={geometry().wedge} />
+        {/* The delta as an AREA: the sector the two needles enclose, in the
+            active tone at low alpha. Then the zero reference line. */}
+        <Show when={geometry().deltaSector}>
+          <path
+            class="sui-rate-gauge__delta-sector"
+            d={geometry().deltaSector}
+          />
         </Show>
         <line
           class="sui-rate-gauge__zero"
@@ -206,14 +209,19 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
           {(callout) => (
             <g class={`sui-rate-gauge__row sui-rate-gauge__row--${callout.id}`}>
               <path class="sui-rate-gauge__leader" d={callout.leader} />
-              {/* The terminal: filled for a live mark, open for the baseline —
-                  the same distinction the dashed needle already makes. */}
-              <circle
-                class="sui-rate-gauge__terminal"
-                cx={callout.anchor.x}
-                cy={callout.anchor.y}
-                r={TERMINAL_RADIUS}
-              />
+              {/* The terminal, when geometry says there is room for one. A dot
+                  on a mark the callout does not name reads as a blemish on
+                  that mark, so those leaders start bare from the anchor
+                  instead. Filled for a live mark, open for the baseline — the
+                  same distinction the dashed needle already makes. */}
+              <Show when={callout.showDot}>
+                <circle
+                  class="sui-rate-gauge__terminal"
+                  cx={callout.anchor.x}
+                  cy={callout.anchor.y}
+                  r={TERMINAL_RADIUS}
+                />
+              </Show>
               <line
                 class="sui-rate-gauge__column-tick"
                 x1={callout.labelX}
