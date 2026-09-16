@@ -220,6 +220,26 @@ describe("RateGauge", () => {
     expect(container.querySelector("foreignObject")).not.toBeNull();
   });
 
+  // The collapsed row's text is longer than any of the three props it is made
+  // from, so sizing the column from the props measured a string the gauge was
+  // never going to draw — and the board's card clipped "Scenario = Baseline"
+  // to "SCENA…" beside 500px of empty space.
+  it("sizes the column for the collapsed row's own words", () => {
+    const { container } = render(() => (
+      <RateGauge
+        domain={DOMAIN}
+        baseline={5000}
+        value={5000}
+        label="Scenario A"
+        format={money}
+      />
+    ));
+    const box = container.querySelector("foreignObject");
+    // "Scenario A = Baseline" is 21 characters; "Baseline" alone is 8, and a
+    // column cut to the shorter one would truncate the row it actually draws.
+    expect(Number(box?.getAttribute("width"))).toBeGreaterThan(8 * 7.3 * 1.5);
+  });
+
   it("takes the consumer's name for the baseline needle", () => {
     const { container } = render(() => (
       <RateGauge

@@ -153,6 +153,21 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
     onCleanup(stop);
   });
 
+  const baselineLabel = () => props.baselineLabel ?? DEFAULT_BASELINE_LABEL;
+
+  /** Exactly the strings the callouts will carry, for sizing the column. */
+  const columnTexts = (): readonly string[] => {
+    const drawnValue = clampedValue(props.domain, props.value);
+    const drawnBaseline = clampedValue(props.domain, props.baseline);
+    return drawnValue === drawnBaseline
+      ? [`${props.label} = ${baselineLabel()}`]
+      : [
+          props.label,
+          props.format(drawnValue - drawnBaseline),
+          baselineLabel(),
+        ];
+  };
+
   const geometry = createMemo(() =>
     gaugeGeometry({
       domain: props.domain,
@@ -160,19 +175,15 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
       value: props.value,
       comfortable: props.comfortable,
       // The canvas is cut to the words as well as to the dial, so geometry is
-      // handed the strings that will end up in the column.
-      labels: [
-        props.label,
-        props.format(
-          clampedValue(props.domain, props.value) -
-            clampedValue(props.domain, props.baseline),
-        ),
-        props.baselineLabel ?? DEFAULT_BASELINE_LABEL,
-      ],
+      // handed the strings that will END UP in the column — which is not the
+      // same as the three props. When the two needles coincide the callouts
+      // collapse to one row naming both, and that row's text is longer than
+      // any of the three; sizing the column from the props measured a string
+      // the gauge was never going to draw.
+      labels: columnTexts(),
       box: box(),
     }),
   );
-  const baselineLabel = () => props.baselineLabel ?? DEFAULT_BASELINE_LABEL;
   const tone = () => geometry().tone;
 
   /** The words each callout carries. The delta row is the only formatted one. */
