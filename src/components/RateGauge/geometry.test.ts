@@ -25,6 +25,7 @@ import {
   CALLOUT_PITCH,
   CENTER as CENTER_FOR_TEST,
   type Center,
+  LABEL_X,
   capArc,
   clampedValue,
   gaugeGeometry,
@@ -325,16 +326,10 @@ describe("bracePath", () => {
     expect(brace).not.toMatch(/ L /);
   });
 
-  it("collapses to the cusp alone when the delta is tiny", () => {
-    // ~1.2 degrees, the near-baseline fixture. There is no arc left to sweep.
-    const brace = bracePath(center, 60, 24.4, 25.6, BRACE_CUSP_DEPTH);
-    expect(brace).not.toBe("");
-    expect(brace).not.toMatch(/NaN/);
-    expect(brace).not.toMatch(/ A /);
-    expect((brace.match(/ C /g) ?? []).length).toBe(2);
-    // Still points outward by the full depth, so the label still routes.
-    const apex = pointAt(center, 60 + BRACE_CUSP_DEPTH, 25);
-    expect(brace).toContain(`${apex.x} ${apex.y}`);
+  // A lone cusp at this width is a chevron, not a brace — it was tried and read
+  // as a mark of its own. Below the arms' floor there is simply no brace.
+  it("draws nothing at all when the delta is too tiny for arms", () => {
+    expect(bracePath(center, 60, 24.4, 25.6, BRACE_CUSP_DEPTH)).toBe("");
   });
 
   it("sweeps the other way below the baseline without inverting the cusp", () => {
@@ -400,18 +395,45 @@ describe("the brace stays inside the needles", () => {
     staysInside(33, 17);
   });
 
-  it("falls back to the cusp alone when there is no arm left either", () => {
-    expect(braceRegime(RADIUS, 24.4, 25.6)).toBe("cusp");
-    const brace = bracePath(center, RADIUS, 24.4, 25.6, BRACE_CUSP_DEPTH);
-    expect(brace).not.toMatch(/ A /);
-    expect(brace).not.toMatch(/ Q /);
+  it("draws no brace at all when there is no arm left either", () => {
+    expect(braceRegime(RADIUS, 24.4, 25.6)).toBe("none");
+    expect(bracePath(center, RADIUS, 24.4, 25.6, BRACE_CUSP_DEPTH)).toBe("");
+  });
+
+  // The delta still has its callout — only the brace goes. The leader starts
+  // on the brace circle instead of on a cusp tip, and routes as it always does.
+  it("keeps the delta's leader when the brace is dropped, starting on the circle", () => {
+    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 5500 });
+    expect(g.brace).toBe("");
+    const delta = g.callouts.find((c) => c.id === "delta");
+    expect(delta).toBeDefined();
+    const onCircle = pointAt(
+      CENTER_FOR_TEST,
+      BRACKET_RADIUS,
+      (g.baselineAngle + g.valueAngle) / 2,
+    );
+    expect(delta?.anchor).toEqual(onCircle);
+    // Still a full leader: out, across, and into the shared label column.
+    expect(delta?.points.length).toBeGreaterThanOrEqual(3);
+    expect(delta?.labelX).toBe(LABEL_X);
+  });
+
+  it("puts the delta's leader back on the cusp as soon as a brace is drawn", () => {
+    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 23000 });
+    const delta = g.callouts.find((c) => c.id === "delta");
+    const apex = pointAt(
+      CENTER_FOR_TEST,
+      BRACKET_RADIUS + BRACE_CUSP_DEPTH,
+      (g.baselineAngle + g.valueAngle) / 2,
+    );
+    expect(delta?.anchor).toEqual(apex);
   });
 
   it("spends the budget from the outside in as the span closes", () => {
     const regimes = [54, 22, 16, 12, 1.2].map((span) =>
       braceRegime(RADIUS, 25 - span / 2, 25 + span / 2),
     );
-    expect(regimes).toEqual(["full", "full", "arms", "cusp", "cusp"]);
+    expect(regimes).toEqual(["full", "full", "arms", "none", "none"]);
   });
 
   it("holds for the real dial, above and below the baseline", () => {

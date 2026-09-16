@@ -521,12 +521,11 @@ export const bracePath = (
   const bareArm = half - BRACE_END_MARGIN;
   const fits = (arm: number) => arm - cusp >= BRACE_MIN_ARM;
 
-  // CUSP ONLY — no room for arms either way. Below the cusp's own floor this
-  // is all there is, and it is the one shape allowed to reach the needles:
-  // a cusp narrowed to a sub-degree delta would be a needle, not a brace.
-  if (cusp >= half || !fits(bareArm)) {
-    return `M ${baseA.x} ${baseA.y} ${peak}`;
-  }
+  // NO BRACE — too narrow for arms, so there is nothing left that reads as a
+  // brace. A lone cusp at this width is a chevron, not a `}`; it was tried and
+  // looked like a mark of its own. The delta's leader simply starts on the
+  // brace circle instead, and the label does the rest.
+  if (cusp >= half || !fits(bareArm)) return "";
 
   const curled = fits(withCurlsArm);
   const arm = curled ? withCurlsArm : bareArm;
@@ -556,7 +555,7 @@ export const bracePath = (
 };
 
 /** Which shape `bracePath` will draw for a span — the same budget, named. */
-export type BraceRegime = "full" | "arms" | "cusp";
+export type BraceRegime = "full" | "arms" | "none";
 
 export const braceRegime = (
   radius: number,
@@ -569,7 +568,7 @@ export const braceRegime = (
     Math.min(BRACE_CUSP_HALF_SPAN, half * 0.6),
   );
   const curlStep = ((BRACE_END_CURL / radius) * 180) / Math.PI;
-  if (cusp >= half || half - BRACE_END_MARGIN - cusp < BRACE_MIN_ARM) return "cusp";
+  if (cusp >= half || half - BRACE_END_MARGIN - cusp < BRACE_MIN_ARM) return "none";
   return half - curlStep - BRACE_END_MARGIN - cusp >= BRACE_MIN_ARM ? "full" : "arms";
 };
 
@@ -635,6 +634,11 @@ export const dotsCollide = (a: Point, b: Point): boolean =>
  * A dot exists to say "this is the thing I am naming". Sitting on top of some
  * OTHER mark it therefore reads as a blemish on that mark rather than as a
  * terminal — so the dot is dropped and the leader starts bare from the anchor.
+ *
+ * The bands are the dial's RESERVED extents, not only what a given reading
+ * happens to draw — so the delta's anchor reads as covered whether or not its
+ * brace was wide enough to be drawn. That is deliberate: a dot appearing only
+ * on the narrowest gauges would make those the odd ones out.
  *
  * There is no exception for the mark a callout names. There used to be one,
  * to keep the delta's dot on the bracket it annotated — but the bracket is a
@@ -774,22 +778,24 @@ const leaderPoints = (
 const placeCallouts = (
   angles: { zero: number; baseline: number; value: number },
   collapsed: boolean,
-  hasBrace: boolean,
+  hasDelta: boolean,
+  cuspDepth: number,
 ): readonly Callout[] => {
   const unplaced: readonly Unplaced[] = collapsed
     ? [{ id: "valueAndBaseline", angle: angles.value, radius: RING_OUTER }]
     : [
         { id: "value", angle: angles.value, radius: RING_OUTER },
         { id: "baseline", angle: angles.baseline, radius: RING_OUTER },
-        ...(hasBrace
+        ...(hasDelta
           ? [
               {
                 id: "delta" as LabelId,
                 angle: (angles.baseline + angles.value) / 2,
-                // The cusp's tip, not the brace circle: the leader has to leave
+                // The cusp's tip when there IS a cusp: the leader has to leave
                 // from the point the brace makes, or the brace reads as a mark
-                // the label happens to pass over.
-                radius: BRACKET_RADIUS + BRACE_CUSP_DEPTH,
+                // the label happens to pass over. With no brace drawn, the
+                // leader starts on the brace circle itself and is just a line.
+                radius: BRACKET_RADIUS + cuspDepth,
               },
             ]
           : []),
@@ -886,7 +892,8 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
     callouts: placeCallouts(
       { zero, baseline: baselineAngle, value: valueAngle },
       collapsed,
-      brace !== "",
+      !collapsed,
+      brace === "" ? 0 : BRACE_CUSP_DEPTH,
     ),
   };
 };

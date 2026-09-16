@@ -8,11 +8,10 @@
  * The gauge is handed a domain, a baseline, a value, a name and that
  * formatter, and paints. It formats nothing and decides no units.
  *
- * Three situations, matching the review the component has to survive:
- *   1. above baseline — the green mockup;
- *   2. below baseline — the red mockup;
- *   3. a slider-driven one, so the needle, the bracket and the zone dimming
- *      can be watched moving through zero and into both clamps.
+ * The slider-driven card comes FIRST, because the thing worth looking at is
+ * the gauge moving: the needle, the brace and the zone dimming through zero,
+ * into both clamps, and down to a delta too narrow for a brace at all. The
+ * static cards below it pin the two situations from the mockups.
  */
 import { createSignal, type Component } from "solid-js";
 import { RateGauge } from "../../../src/components/RateGauge";
@@ -125,7 +124,9 @@ const ScrubbedCard: Component = () => {
         <CaptionLabel>
           Baseline is fixed at {perMonth(baseline)}. The slider runs past both
           ends of the gauge's domain, so the needle parks at a pole and the
-          delta reports the value the gauge actually DREW.
+          delta reports the value the gauge actually DREW. Close in on the
+          baseline and the brace runs out of room: the curls go first, then the
+          arms, and at the narrowest the delta's leader is a plain line.
         </CaptionLabel>
       </TightStack>
     </CardSurface>
@@ -143,10 +144,13 @@ const RateGaugeBench: Component = () => (
           in is dimmed so the live one reads as lit. The dashed needle is the
           baseline and the solid, capped needle is the rate right now; the
           faint sector between them is the change drawn as an area, and the
-          bracket outside the ring spans that same angle and carries the signed
-          delta.
+          curly brace outside the ring spans that same angle and carries the
+          signed delta on a leader from its cusp. Scrub the slider first — the
+          brace sheds its curls, then its arms, as the difference narrows.
         </MutedBody>
       </TightStack>
+
+      <ScrubbedCard />
 
       <WrapRow>
         <RateCard
@@ -163,10 +167,10 @@ const RateGaugeBench: Component = () => (
             +18,000, not +23,000 — so they read as illustrations of the
             FORMATTER rather than as the mockups' deltas. If the mockups really
             print those figures, the value/baseline pairs are what needs
-            correcting; the slider below reaches either reading. */}
+            correcting; the slider above reaches either reading. */}
         <RateCard
           title="Rate, right now"
-          note="Below zero — the lower half lights, the bracket sweeps back past the baseline, and the delta carries a real minus sign."
+          note="Below zero — the lower half lights, the brace sweeps back past the baseline, and the delta carries a real minus sign."
           baseline={5000}
           value={-8833}
           label="Scenario A"
@@ -187,7 +191,6 @@ const RateGaugeBench: Component = () => (
         <CaptionSpecimen />
       </WrapRow>
 
-      <ScrubbedCard />
     </SpacedStack>
   </div>
 );
