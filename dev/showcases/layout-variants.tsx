@@ -38,6 +38,7 @@ import {
   MinorFillColumn,
   ViewportColumn,
   FillWrapRow,
+  GrowCenterColumn,
   MajorPaneBox,
   ClipFillColumnFlush,
   ScrollFillColumn,
@@ -71,7 +72,11 @@ import {
   Placeholder,
 } from "../../src/components/Placeholder";
 import { ContentStack, ClusterRow } from "../../src/components/Layout";
-import { SubsectionTitle, TextSublabel, TextBody } from "../../src/components/Text";
+import {
+  SubsectionTitle,
+  TextSublabel,
+  TextBody,
+} from "../../src/components/Text";
 import "./layout-variants.css";
 
 type Slot = Component<{ children?: JSX.Element; class?: string }>;
@@ -89,59 +94,281 @@ interface VariantSpec {
 }
 
 const ROWS: VariantSpec[] = [
-  { name: "StretchRow", note: "children stretch to equal height — a swimlane of cards", Variant: StretchRow, kind: "blocks" },
-  { name: "TopSpreadRow", note: "title left, badge right, both pinned to the FIRST text line", Variant: TopSpreadRow },
-  { name: "BaselineClusterRow", note: "a cluster sharing one text baseline — value + units", Variant: BaselineClusterRow },
-  { name: "BaselineWrapRow", note: "the same, allowed to wrap on narrow widths", Variant: BaselineWrapRow },
-  { name: "LooseWrapRow", note: "WrapRow at the sm (8px) step — align left UNSET so tiles sharing a line stretch to equal height", Variant: LooseWrapRow },
-  { name: "IconClusterRow", note: "icon-only buttons spaced ~one glyph apart", Variant: IconClusterRow },
-  { name: "GrowClusterRow", note: "a cluster that itself grows inside a toolbar row", Variant: GrowClusterRow },
-  { name: "GrowCenterRow", note: "grows and centres its content — a meta cell", Variant: GrowCenterRow },
-  { name: "GrowWrapRow", note: "grows, wraps — assignee chips that overflow to a second line", Variant: GrowWrapRow },
-  { name: "NoShrinkClusterRow", note: "holds its intrinsic size beside a shrinking sibling", Variant: NoShrinkClusterRow },
-  { name: "TightNoShrinkClusterRow", note: "the same at an xs gap — a dense meta cell", Variant: TightNoShrinkClusterRow },
-  { name: "ChipCluster", note: "a wrapping chip group that refuses to shrink", Variant: ChipCluster },
-  { name: "PaneRow", note: "the top-level split: a sidebar beside a filling pane", Variant: PaneRow, kind: "blocks" },
+  {
+    name: "StretchRow",
+    note: "children stretch to equal height — a swimlane of cards",
+    Variant: StretchRow,
+    kind: "blocks",
+  },
+  {
+    name: "TopSpreadRow",
+    note: "title left, badge right, both pinned to the FIRST text line",
+    Variant: TopSpreadRow,
+  },
+  {
+    name: "BaselineClusterRow",
+    note: "a cluster sharing one text baseline — value + units",
+    Variant: BaselineClusterRow,
+  },
+  {
+    name: "BaselineWrapRow",
+    note: "the same, allowed to wrap on narrow widths",
+    Variant: BaselineWrapRow,
+  },
+  {
+    name: "LooseWrapRow",
+    note: "WrapRow at the sm (8px) step — align left UNSET so tiles sharing a line stretch to equal height",
+    Variant: LooseWrapRow,
+  },
+  {
+    name: "IconClusterRow",
+    note: "icon-only buttons spaced ~one glyph apart",
+    Variant: IconClusterRow,
+  },
+  {
+    name: "GrowClusterRow",
+    note: "a cluster that itself grows inside a toolbar row",
+    Variant: GrowClusterRow,
+  },
+  {
+    name: "GrowCenterRow",
+    note: "grows and centres its content — a meta cell",
+    Variant: GrowCenterRow,
+  },
+  {
+    name: "GrowWrapRow",
+    note: "grows, wraps — assignee chips that overflow to a second line",
+    Variant: GrowWrapRow,
+  },
+  {
+    name: "NoShrinkClusterRow",
+    note: "holds its intrinsic size beside a shrinking sibling",
+    Variant: NoShrinkClusterRow,
+  },
+  {
+    name: "TightNoShrinkClusterRow",
+    note: "the same at an xs gap — a dense meta cell",
+    Variant: TightNoShrinkClusterRow,
+  },
+  {
+    name: "ChipCluster",
+    note: "a wrapping chip group that refuses to shrink",
+    Variant: ChipCluster,
+  },
+  {
+    name: "PaneRow",
+    note: "the top-level split: a sidebar beside a filling pane",
+    Variant: PaneRow,
+    kind: "blocks",
+  },
 ];
 
 const COLUMNS: VariantSpec[] = [
-  { name: "CenteredColumn", note: "children centred on the cross axis — a stat cell", Variant: CenteredColumn },
-  { name: "SmallTightStack", note: "dense start-aligned column for indicator rows", Variant: SmallTightStack },
-  { name: "SpacedStack", note: "a plain column at the md (12px) gap step, one rung up from NarrowStack", Variant: SpacedStack },
-  { name: "ConversationStack", note: "capped reading width for a message tree", Variant: ConversationStack },
-  { name: "PaddedStack", note: "a stack with its own inset", Variant: PaddedStack },
-  { name: "GrowColumn", note: "takes its share of a row and may shrink past its content", Variant: GrowColumn },
-  { name: "GrowStack", note: "the same with an sm gap between sections", Variant: GrowStack },
-  { name: "NoShrinkColumn", note: "fixed data column beside a GrowColumn that absorbs the slack", Variant: NoShrinkColumn },
-  { name: "WrapItemStack", note: "one item in a WrapRow at its NATURAL width — shrinks so an inner fit table scrolls, capped at the row; deliberately not flex:1, which would equalise wrap items", Variant: WrapItemStack },
-  { name: "ClipColumn", note: "clips whatever overflows rather than scrolling", Variant: ClipColumn, kind: "tall", bounded: true },
-  { name: "ClipFillColumn", note: "fills the height it is given, clips the rest", Variant: ClipFillColumn, kind: "tall", bounded: true },
-  { name: "ClipFillColumnFlush", note: "the same with no gap between children", Variant: ClipFillColumnFlush, kind: "tall", bounded: true },
-  { name: "ScrollFillColumn", note: "fills its height and scrolls its own overflow", Variant: ScrollFillColumn, kind: "tall", bounded: true },
-  { name: "ViewportColumn", note: "fills a parent of DEFINITE height (height:100%) — the bridge from a CSS-sized block frame into Layout; FillColumn's flex:1 does nothing in a block parent", Variant: ViewportColumn, kind: "tall", bounded: true },
-  { name: "MinorFillColumn", note: "the smaller share (flex:30) of a proportional vertical split — grow factors, not percentages, so no ancestor needs a definite height", Variant: MinorFillColumn, kind: "tall", bounded: true },
-  { name: "MajorFillColumn", note: "the larger share (flex:70) of that same split", Variant: MajorFillColumn, kind: "tall", bounded: true },
+  {
+    name: "CenteredColumn",
+    note: "children centred on the cross axis — a stat cell",
+    Variant: CenteredColumn,
+  },
+  {
+    name: "SmallTightStack",
+    note: "dense start-aligned column for indicator rows",
+    Variant: SmallTightStack,
+  },
+  {
+    name: "SpacedStack",
+    note: "a plain column at the md (12px) gap step, one rung up from NarrowStack",
+    Variant: SpacedStack,
+  },
+  {
+    name: "ConversationStack",
+    note: "capped reading width for a message tree",
+    Variant: ConversationStack,
+  },
+  {
+    name: "PaddedStack",
+    note: "a stack with its own inset",
+    Variant: PaddedStack,
+  },
+  {
+    name: "GrowColumn",
+    note: "takes its share of a row and may shrink past its content",
+    Variant: GrowColumn,
+  },
+  {
+    name: "GrowStack",
+    note: "the same with an sm gap between sections",
+    Variant: GrowStack,
+  },
+  {
+    name: "NoShrinkColumn",
+    note: "fixed data column beside a GrowColumn that absorbs the slack",
+    Variant: NoShrinkColumn,
+  },
+  {
+    name: "WrapItemStack",
+    note: "one item in a WrapRow at its NATURAL width — shrinks so an inner fit table scrolls, capped at the row; deliberately not flex:1, which would equalise wrap items",
+    Variant: WrapItemStack,
+  },
+  {
+    name: "ClipColumn",
+    note: "clips whatever overflows rather than scrolling",
+    Variant: ClipColumn,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "ClipFillColumn",
+    note: "fills the height it is given, clips the rest",
+    Variant: ClipFillColumn,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "ClipFillColumnFlush",
+    note: "the same with no gap between children",
+    Variant: ClipFillColumnFlush,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "ScrollFillColumn",
+    note: "fills its height and scrolls its own overflow",
+    Variant: ScrollFillColumn,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "ViewportColumn",
+    note: "fills a parent of DEFINITE height (height:100%) — the bridge from a CSS-sized block frame into Layout; FillColumn's flex:1 does nothing in a block parent",
+    Variant: ViewportColumn,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "MinorFillColumn",
+    note: "the smaller share (flex:30) of a proportional vertical split — grow factors, not percentages, so no ancestor needs a definite height",
+    Variant: MinorFillColumn,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "MajorFillColumn",
+    note: "the larger share (flex:70) of that same split",
+    Variant: MajorFillColumn,
+    kind: "tall",
+    bounded: true,
+  },
 ];
 
 const BOXES: VariantSpec[] = [
-  { name: "FillWrapRow", note: "a wrapping row that fills its parent COLUMN's height and stretches its cells — a flex row in a flex column otherwise sits at content height and leaves the rest empty", Variant: FillWrapRow, kind: "tall", bounded: true },
-  { name: "MajorPaneBox", note: "60% of its row beside a companion filling the other 40% — DEFINITE, because a max-content box whose child measures itself to decide its content oscillates", Variant: MajorPaneBox },
-  { name: "ClipBox", note: "a plain box that clips overflow", Variant: ClipBox, kind: "tall", bounded: true },
-  { name: "ClipFillBox", note: "grows into its parent and clips", Variant: ClipFillBox, kind: "tall", bounded: true },
-  { name: "ScrollBox", note: "scrolls both axes", Variant: ScrollBox, kind: "tall", bounded: true },
-  { name: "ScrollYBox", note: "scrolls vertically only", Variant: ScrollYBox, kind: "tall", bounded: true },
-  { name: "ScrollXBox", note: "scrolls horizontally only — a wide table or timeline", Variant: ScrollXBox, kind: "wide", bounded: true },
-  { name: "ScrollFillBox", note: "fills its share of a flex parent, then scrolls", Variant: ScrollFillBox, kind: "tall", bounded: true },
-  { name: "ScrollPanel", note: "a bordered panel capped at 320px that scrolls inside", Variant: ScrollPanel, kind: "tall", bounded: true },
-  { name: "NoShrinkScrollBox", note: "keeps its size in a flex parent and scrolls itself", Variant: NoShrinkScrollBox, kind: "tall", bounded: true },
+  {
+    name: "GrowCenterColumn",
+    note: "fills the height its parent column has left and CENTRES its child — the sibling of GrowFillBox for an instrument that keeps its own aspect and would otherwise pin to the top",
+    Variant: GrowCenterColumn,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "FillWrapRow",
+    note: "a wrapping row that fills its parent COLUMN's height and stretches its cells — a flex row in a flex column otherwise sits at content height and leaves the rest empty",
+    Variant: FillWrapRow,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "MajorPaneBox",
+    note: "60% of its row beside a companion filling the other 40% — DEFINITE, because a max-content box whose child measures itself to decide its content oscillates",
+    Variant: MajorPaneBox,
+  },
+  {
+    name: "ClipBox",
+    note: "a plain box that clips overflow",
+    Variant: ClipBox,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "ClipFillBox",
+    note: "grows into its parent and clips",
+    Variant: ClipFillBox,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "ScrollBox",
+    note: "scrolls both axes",
+    Variant: ScrollBox,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "ScrollYBox",
+    note: "scrolls vertically only",
+    Variant: ScrollYBox,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "ScrollXBox",
+    note: "scrolls horizontally only — a wide table or timeline",
+    Variant: ScrollXBox,
+    kind: "wide",
+    bounded: true,
+  },
+  {
+    name: "ScrollFillBox",
+    note: "fills its share of a flex parent, then scrolls",
+    Variant: ScrollFillBox,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "ScrollPanel",
+    note: "a bordered panel capped at 320px that scrolls inside",
+    Variant: ScrollPanel,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "NoShrinkScrollBox",
+    note: "keeps its size in a flex parent and scrolls itself",
+    Variant: NoShrinkScrollBox,
+    kind: "tall",
+    bounded: true,
+  },
 ];
 
 const GRIDS: VariantSpec[] = [
-  { name: "CardGrid", note: "dashboard tiles ≥280px, as many columns as fit", Variant: CardGrid, kind: "blocks" },
-  { name: "LooseCardGrid", note: "the same at the sm (8px) gutter — for a KPI strip needing more air", Variant: LooseCardGrid, kind: "blocks" },
-  { name: "WideCardGrid", note: "the same for wide cards (≥420px)", Variant: WideCardGrid, kind: "wide" },
-  { name: "ChipGrid", note: "many small equal cells (≥150px) — a filter bar", Variant: ChipGrid, kind: "chips" },
-  { name: "LabelValueGrid", note: "a label column sized to its content beside a value column", Variant: LabelValueGrid, kind: "pairs" },
+  {
+    name: "CardGrid",
+    note: "dashboard tiles ≥280px, as many columns as fit",
+    Variant: CardGrid,
+    kind: "blocks",
+  },
+  {
+    name: "LooseCardGrid",
+    note: "the same at the sm (8px) gutter — for a KPI strip needing more air",
+    Variant: LooseCardGrid,
+    kind: "blocks",
+  },
+  {
+    name: "WideCardGrid",
+    note: "the same for wide cards (≥420px)",
+    Variant: WideCardGrid,
+    kind: "wide",
+  },
+  {
+    name: "ChipGrid",
+    note: "many small equal cells (≥150px) — a filter bar",
+    Variant: ChipGrid,
+    kind: "chips",
+  },
+  {
+    name: "LabelValueGrid",
+    note: "a label column sized to its content beside a value column",
+    Variant: LabelValueGrid,
+    kind: "pairs",
+  },
 ];
 
 const CHILDREN: Record<NonNullable<VariantSpec["kind"]>, () => JSX.Element> = {
@@ -176,7 +403,9 @@ const CHILDREN: Record<NonNullable<VariantSpec["kind"]>, () => JSX.Element> = {
 };
 
 const frameClass = (spec: VariantSpec): string =>
-  spec.bounded ? "layout-demo-frame layout-demo-frame--tall" : "layout-demo-frame";
+  spec.bounded
+    ? "layout-demo-frame layout-demo-frame--tall"
+    : "layout-demo-frame";
 
 const VariantFrame: Component<{ spec: VariantSpec }> = (props) => (
   <ContentStack>

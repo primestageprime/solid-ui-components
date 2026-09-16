@@ -701,6 +701,19 @@ export const FillWrapRow: Component<RowDataProps> = createRow({
   style: { flex: "1", "min-height": "0" },
 });
 
+/** GrowCenterColumn — fills the height its parent column has left and CENTRES
+ *  its child in it (`flex:1 1 0; min-height:0; justify:center`).
+ *
+ *  The sibling of `GrowFillBox` for content that should not be stretched. A
+ *  chart that fills its box wants `GrowFillBox`; an INSTRUMENT that keeps its
+ *  own aspect — a dial, a gauge — grows until it is width-bound and then has
+ *  height to spare, and pinning it to the top of a tall card reads as a
+ *  mistake. This claims the same space and centres what sits in it. */
+export const GrowCenterColumn: Component<StackDataProps> = createStack({
+  justify: "center",
+  style: { flex: "1 1 0", "min-height": "0" },
+});
+
 /** GrowCenterRow — a growing, center-justified cluster: `flex:1; min-width:0;
  *  align:center; justify:center; gap:xs`. A row-3 meta cell that centers its
  *  content in its share of the strip. */

@@ -79,6 +79,7 @@ import type { SegmentOption } from "../../../src/components/SegmentedControl";
 
 import { GhostButton } from "../../../src/components/Button";
 import {
+  GrowCenterColumn,
   GrowFillBox,
   HalfFillColumn,
   FillWrapRow,
@@ -1013,23 +1014,30 @@ const ScenarioBoardBench: Component = () => {
           <FillWrapRow>
             <MajorPaneBox>
               <FillCardSurface>
-                <TightStack>
-                  {/* The as-of control lives HERE, in the card's header, not
+                {/* NO extra Stack here. `FillCardSurface` already lays its
+                    children out as a column that FILLS the card, so a
+                    TightStack inside it is a SECOND column sitting at its own
+                    content height — which is what left the dials ending 40%
+                    down the card with dead space beneath them. The header
+                    keeps its intrinsic height; GrowFillBox hands the component
+                    every pixel that is left. */}
+                {/* The as-of control lives HERE, in the card's header, not
                       in a strip of its own (Peter: "merge the As Of with the
                       mutations — it's a selector for which position we're
                       mutating"). Title left, selector in the middle, Reset
                       right: the thing being edited is named beside the dials
                       that edit it. */}
-                  <SpreadRow>
-                    <TextTitle>Changes</TextTitle>
-                    <SegmentedControl
-                      options={segmentOptionsOf(mutations())}
-                      value={editing()}
-                      onValueChange={setEditing}
-                      aria-label="Change being edited"
-                    />
-                    <GhostButton onClick={reset}>Reset</GhostButton>
-                  </SpreadRow>
+                <SpreadRow>
+                  <TextTitle>Changes</TextTitle>
+                  <SegmentedControl
+                    options={segmentOptionsOf(mutations())}
+                    value={editing()}
+                    onValueChange={setEditing}
+                    aria-label="Change being edited"
+                  />
+                  <GhostButton onClick={reset}>Reset</GhostButton>
+                </SpreadRow>
+                <GrowFillBox>
                   <MutationSliders
                     entities={dials()}
                     domain={PAY_DOMAIN}
@@ -1041,7 +1049,7 @@ const ScenarioBoardBench: Component = () => {
                     onAdd={hire}
                     format={formatMoney}
                   />
-                </TightStack>
+                </GrowFillBox>
               </FillCardSurface>
             </MajorPaneBox>
 
@@ -1051,8 +1059,15 @@ const ScenarioBoardBench: Component = () => {
               the opposite of the sketch's wide-left / narrow-right split. */}
             <GrowFillBox class="scenario-board-gauge">
               <FillCardSurface>
-                <TightStack>
-                  <TextTitle>Rate, right now</TextTitle>
+                {/* NO extra Stack here. `FillCardSurface` already lays its
+                    children out as a column that FILLS the card, so a
+                    TightStack inside it is a SECOND column sitting at its own
+                    content height — which is what left the dials ending 40%
+                    down the card with dead space beneath them. The header
+                    keeps its intrinsic height; GrowFillBox hands the component
+                    every pixel that is left. */}
+                <TextTitle>Rate, right now</TextTitle>
+                <GrowCenterColumn>
                   <RateGauge
                     domain={RATE_DOMAIN}
                     baseline={RATE_BASELINE}
@@ -1061,7 +1076,7 @@ const ScenarioBoardBench: Component = () => {
                     label="Scenario"
                     format={perYear}
                   />
-                </TightStack>
+                </GrowCenterColumn>
               </FillCardSurface>
             </GrowFillBox>
           </FillWrapRow>
