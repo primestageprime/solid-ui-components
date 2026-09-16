@@ -1074,3 +1074,73 @@ describe("LevelsTimeline — updates must not recreate the DOM", () => {
     }
   });
 });
+
+describe("LevelsTimeline — the first frame must already be right", () => {
+  it("has the MEASURED viewBox on first render, with no rAF and no observer", () => {
+    // The sliders agent's finding, checked here: a `ref` runs before the
+    // element is in the document, so anything that measures from a ref reads
+    // zero and only recovers when observeSize's rAF-deferred delivery lands —
+    // one wrong frame on a visible screen, and a frozen wrong chart in a
+    // hidden tab where rAF may never run at all.
+    //
+    // This asserts the synchronous path: a ResizeObserver that NEVER delivers,
+    // no rAF awaited, and the viewBox is still the measured one. If the first
+    // measurement were deferred, this would read the 640x232 default.
+    const originalRO = globalThis.ResizeObserver;
+    const originalRect = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function rect(this: Element) {
+      return this.classList?.contains("sui-levels-timeline")
+        ? ({ left: 0, top: 0, width: 2218, height: 134 } as DOMRect)
+        : ({ left: 0, top: 0, width: 0, height: 0 } as DOMRect);
+    };
+    class NeverDelivers {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    globalThis.ResizeObserver = NeverDelivers as unknown as typeof ResizeObserver;
+    try {
+      const { container } = render(() => (
+        <LevelsTimeline levels={LEVELS} mutations={MUTATIONS} domain={DOMAIN} />
+      ));
+      // Read IMMEDIATELY — no await, no frame.
+      expect(container.querySelector("svg")?.getAttribute("viewBox")).toBe(
+        "0 0 2218 134",
+      );
+    } finally {
+      globalThis.ResizeObserver = originalRO;
+      Element.prototype.getBoundingClientRect = originalRect;
+    }
+  });
+
+  it("does not re-measure on a data update — only a resize moves the viewBox", () => {
+    // If a prop change triggered a re-measure cycle, every drag step would
+    // resize the viewBox and that is its own flicker.
+    const originalRect = Element.prototype.getBoundingClientRect;
+    let reads = 0;
+    Element.prototype.getBoundingClientRect = function rect(this: Element) {
+      if (this.classList?.contains("sui-levels-timeline")) {
+        reads += 1;
+        return { left: 0, top: 0, width: 2218, height: 134 } as DOMRect;
+      }
+      return { left: 0, top: 0, width: 0, height: 0 } as DOMRect;
+    };
+    try {
+      const [levels, setLevels] = createSignal(LEVELS);
+      const { container } = render(() => (
+        <LevelsTimeline levels={levels()} mutations={MUTATIONS} domain={DOMAIN} />
+      ));
+      const afterMount = reads;
+      const viewBox = container.querySelector("svg")?.getAttribute("viewBox");
+      for (let step = 0; step < 10; step += 1) {
+        setLevels([...LEVELS]);
+      }
+      expect(reads).toBe(afterMount);
+      expect(container.querySelector("svg")?.getAttribute("viewBox")).toBe(
+        viewBox,
+      );
+    } finally {
+      Element.prototype.getBoundingClientRect = originalRect;
+    }
+  });
+});
