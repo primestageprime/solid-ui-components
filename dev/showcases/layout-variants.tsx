@@ -37,6 +37,7 @@ import {
   MajorFillColumn,
   MinorFillColumn,
   ViewportColumn,
+  FillWrapRow,
   MajorPaneBox,
   ClipFillColumnFlush,
   ScrollFillColumn,
@@ -123,6 +124,7 @@ const COLUMNS: VariantSpec[] = [
 ];
 
 const BOXES: VariantSpec[] = [
+  { name: "FillWrapRow", note: "a wrapping row that fills its parent COLUMN's height and stretches its cells — a flex row in a flex column otherwise sits at content height and leaves the rest empty", Variant: FillWrapRow, kind: "tall", bounded: true },
   { name: "MajorPaneBox", note: "60% of its row beside a companion filling the other 40% — DEFINITE, because a max-content box whose child measures itself to decide its content oscillates", Variant: MajorPaneBox },
   { name: "ClipBox", note: "a plain box that clips overflow", Variant: ClipBox, kind: "tall", bounded: true },
   { name: "ClipFillBox", note: "grows into its parent and clips", Variant: ClipFillBox, kind: "tall", bounded: true },

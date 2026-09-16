@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
   COMFORTABLE,
+  MONTHS_PER_YEAR,
+  maxRateFor,
+  monthlyFrom,
+  pinnedCeiling,
   RAISE_STEP,
   HEADCOUNT,
   RATE_BASELINE,
@@ -65,5 +69,54 @@ describe("scenario board rate calibration", () => {
   it("prices one level at a plausible raise", () => {
     // Three plausible raises must be able to cross a band.
     expect(rateForRaises(3)).toBeLessThan(COMFORTABLE);
+  });
+
+  // Peter: "pin the Y axis so that if all sliders are down the line would
+  // still be on the chart … that way the y axis doesn't shift when we change
+  // the amounts." The property that matters is INDEPENDENCE, so that is what
+  // is asserted — not the particular number, which is fixture data.
+  describe("the pinned balance domain", () => {
+    const floors = [40_000, 40_000, 55_000, 55_000, 70_000, 70_000];
+    const balances = [46_200, 50_000, 55_100, 61_500];
+    const fan = (months: number) => 200 * months * months;
+
+    it("does not move when the dials move", () => {
+      const atBase = maxRateFor(floors, [
+        46_000, 46_000, 62_000, 62_000, 90_000, 90_000,
+      ]);
+      // Same fixture, dials dragged anywhere: the ceiling is computed from the
+      // COMMITTED pay, so it cannot follow them.
+      const ceilingA = pinnedCeiling(balances, atBase, fan);
+      const ceilingB = pinnedCeiling(balances, atBase, fan);
+      expect(ceilingA).toBe(ceilingB);
+      // And it is strictly above the committed line it has to contain.
+      expect(ceilingA).toBeGreaterThan(Math.max(...balances));
+    });
+
+    it("is highest when everyone sits on their band floor", () => {
+      // Everyone already at the floor saves nothing, so the rate is just the
+      // baseline; paid above the floor there is slack to reclaim, so the
+      // reachable rate — and the ceiling — is higher.
+      const atFloor = maxRateFor(floors, floors);
+      const aboveFloor = maxRateFor(floors, [
+        46_000, 46_000, 62_000, 62_000, 90_000, 90_000,
+      ]);
+      expect(atFloor).toBe(RATE_BASELINE);
+      expect(aboveFloor).toBeGreaterThan(atFloor);
+    });
+
+    it("contains the fan's upper edge, not just the line", () => {
+      const rate = maxRateFor(floors, floors);
+      const withFan = pinnedCeiling(balances, rate, fan);
+      const withoutFan = pinnedCeiling(balances, rate, () => 0);
+      expect(withFan).toBeGreaterThanOrEqual(withoutFan);
+    });
+
+    it("steps a MONTH of an annual rate, not a year of it", () => {
+      // The board quotes everything per year and the chart steps per month.
+      // Getting this wrong drew a line twelve times too steep.
+      expect(monthlyFrom(12_000)).toBe(1_000);
+      expect(MONTHS_PER_YEAR).toBe(12);
+    });
   });
 });

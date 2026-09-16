@@ -55,6 +55,9 @@ import {
   RATE_BASELINE,
   RATE_DOMAIN,
   bandOfRate,
+  maxRateFor,
+  monthlyFrom,
+  pinnedCeiling,
   rateBandTable,
   rateFromPayChange,
 } from "./scenario-board-rate";
@@ -77,7 +80,7 @@ import { GhostButton } from "../../../src/components/Button";
 import {
   GrowFillBox,
   HalfFillColumn,
-  LooseWrapRow,
+  FillWrapRow,
   MajorFillColumn,
   MinorFillColumn,
   SpreadRow,
@@ -654,7 +657,7 @@ export const projectedBalances = (rate: number, nowIndex: number): number[] =>
   map((_cell: { start: Date }, index: number) => {
     const committed = COMMITTED[Math.min(nowIndex, COMMITTED.length - 1)] ?? 0;
     if (index <= nowIndex) return COMMITTED[index] ?? committed;
-    return committed + rate * (index - nowIndex);
+    return committed + monthlyFrom(rate) * (index - nowIndex);
   }, CELLS);
 
 /**
@@ -663,12 +666,30 @@ export const projectedBalances = (rate: number, nowIndex: number): number[] =>
  * and the uncertainty is about the projection — so there is none over the part
  * that already happened.
  */
-const UNCERTAINTY_PER_MONTH_SQUARED = 800;
+const UNCERTAINTY_PER_MONTH_SQUARED = 200;
 
 export const fanAt = (index: number, nowIndex: number): number => {
   const months = index - nowIndex;
   return months <= 0 ? 0 : UNCERTAINTY_PER_MONTH_SQUARED * months * months;
 };
+
+/**
+ * The chart's PINNED y-domain, in dollars. Computed once from the fixture's
+ * extremes, so dragging a dial moves the LINE and never the axis under it.
+ */
+const BAND_FLOORS: readonly number[] = map(
+  (person: Person) => bandOf(person.band).range[0],
+  PEOPLE,
+);
+const COMMITTED_PAY: readonly number[] = map(
+  (person: Person) => person.base ?? bandOf(person.band).range[0],
+  PEOPLE,
+);
+export const PINNED_CEILING = pinnedCeiling(
+  COMMITTED,
+  maxRateFor(BAND_FLOORS, COMMITTED_PAY),
+  (months) => fanAt(months, 0),
+);
 
 /** The chart's cells. Cents, because the chart's y IS cents. */
 export const balanceCells = (
@@ -984,7 +1005,7 @@ const ScenarioBoardBench: Component = () => {
         </MinorFillColumn>
 
         <MajorFillColumn>
-          <LooseWrapRow>
+          <FillWrapRow>
             <MajorPaneBox>
               <FillCardSurface>
                 <TightStack>
@@ -1037,7 +1058,7 @@ const ScenarioBoardBench: Component = () => {
                 </TightStack>
               </FillCardSurface>
             </GrowFillBox>
-          </LooseWrapRow>
+          </FillWrapRow>
         </MajorFillColumn>
       </ViewportColumn>
     </div>

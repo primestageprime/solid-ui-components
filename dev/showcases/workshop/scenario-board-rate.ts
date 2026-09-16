@@ -116,3 +116,64 @@ export const rateBandTable = (): RateRow[] =>
     rate: rateForRaises(raises),
     band: bandOfRate(rateForRaises(raises)),
   }));
+
+/**
+ * MONTHS IN A YEAR. Every figure on this board is $/yr, and the balance chart
+ * steps a MONTH at a time, so a projection that added the annual rate per
+ * month would run twelve times too steep. The conversion has exactly one home.
+ */
+export const MONTHS_PER_YEAR = 12;
+
+/** A year's rate as a month's worth of it. */
+export const monthlyFrom = (ratePerYear: number): number =>
+  ratePerYear / MONTHS_PER_YEAR;
+
+/**
+ * The HIGHEST rate this fixture can reach — everyone on their band FLOOR.
+ *
+ * Paying everybody as little as their role permits is the cheapest the payroll
+ * can be, so it leaves the most surplus, so it draws the steepest line. That
+ * is the top of the balance chart's pinned domain.
+ *
+ * Takes the pay figures rather than reading a fixture, so the test can assert
+ * the one property that matters — that the answer does not depend on where the
+ * dials happen to be right now.
+ */
+export const maxRateFor = (
+  floors: readonly number[],
+  committedPay: readonly number[],
+): number => {
+  let saving = 0;
+  for (const [i, floor] of floors.entries())
+    saving += (committedPay[i] ?? floor) - floor;
+  return RATE_BASELINE + saving;
+};
+
+/**
+ * The balance chart's PINNED ceiling, in dollars.
+ *
+ * Peter, 2026-09-16: "Running balance should pin the Y axis so that if all
+ * sliders are down the line would still be on the chart… that way the y axis
+ * doesn't shift when we change the amounts." So the domain is computed from
+ * what the fixture COULD reach, once, and never from what the dials read now.
+ *
+ * The worst case for the ceiling is the projection starting as early as
+ * possible (so it has the most months to climb) at the highest rate, plus the
+ * fan's upper edge at that month — the fan is drawn, so it has to fit too.
+ * Rounded UP to a whole `tick` so the axis lands on a readable number.
+ */
+export const pinnedCeiling = (
+  balances: readonly number[],
+  maxRate: number,
+  fanAt: (monthsAfterNow: number) => number,
+  tick = 20_000,
+): number => {
+  const monthly = monthlyFrom(maxRate);
+  let highest = 0;
+  for (const [index] of balances.entries()) {
+    // `now` at month 0 gives the projection the most room to climb.
+    const projected = (balances[0] ?? 0) + monthly * index + fanAt(index);
+    highest = Math.max(highest, projected, balances[index] ?? 0);
+  }
+  return Math.ceil(highest / tick) * tick;
+};

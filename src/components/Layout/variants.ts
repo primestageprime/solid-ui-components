@@ -682,6 +682,25 @@ export const GrowWrapRow: Component<RowDataProps> = createRow({
   style: { flex: "1", "min-width": "0" },
 });
 
+/** FillWrapRow — a wrapping row that FILLS its parent column's height and
+ *  stretches its cells to match (`flex:1; min-height:0; wrap; gap:sm`).
+ *
+ *  The gap the other wrapping rows leave: a flex ROW inside a flex COLUMN
+ *  takes its height from its CONTENT, because the column's `align-items:
+ *  stretch` governs the cross axis, which for a column is the WIDTH. So a row
+ *  of cards in a sized column sits at content height and leaves the rest of
+ *  the column empty — 227px of it, on the board this was written for.
+ *  `flex:1` claims the height and `min-height:0` lets it shrink again.
+ *
+ *  Not `GrowWrapRow`, which grows along a ROW (`flex:1; min-width:0`) and
+ *  centres its items, so cards would float in the middle at their own heights
+ *  rather than filling. Not `PaneRow`, which fills but does not wrap. */
+export const FillWrapRow: Component<RowDataProps> = createRow({
+  gap: "sm",
+  wrap: true,
+  style: { flex: "1", "min-height": "0" },
+});
+
 /** GrowCenterRow — a growing, center-justified cluster: `flex:1; min-width:0;
  *  align:center; justify:center; gap:xs`. A row-3 meta cell that centers its
  *  content in its share of the strip. */
