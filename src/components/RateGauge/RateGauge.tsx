@@ -400,6 +400,10 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
                       <text
                         class={`sui-rate-gauge__label${
                           index === 0 ? "" : " sui-rate-gauge__label--relative"
+                        }${
+                          callout.id === "delta"
+                            ? " sui-rate-gauge__label--payroll"
+                            : ""
                         }`}
                         x={callout.textX}
                         y={callout.lineY[index]}

@@ -66,6 +66,17 @@ const perMonth = (delta: number): string =>
   `${delta < 0 ? "−" : "+"}$${Math.abs(delta).toLocaleString("en-US")}/mo`;
 
 /**
+ * The consumer's MAGNITUDE formatter — an amount, never a sign.
+ *
+ * Separate from `perMonth` on purpose: that one prints a signed CHANGE, this
+ * one a bare quantity whose direction the gauge's own sentence supplies
+ * ("… over breakeven", "… to payroll"). Passing the signed one here would
+ * print "+$7,000/mo over breakeven" and say the same thing twice.
+ */
+const amountPerMonth = (magnitude: number): string =>
+  `$${Math.round(magnitude).toLocaleString("en-US")}/mo`;
+
+/**
  * One card, exactly as a consumer would compose it around the gauge.
  *
  * The gauge fills whatever box it is given, so the CONSUMER decides the size —

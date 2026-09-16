@@ -305,3 +305,12 @@
   text-transform: none;
   letter-spacing: 0;
 }
+
+/* The brace's line is a SENTENCE, not a name — "$18,000/mo off payroll" reads
+   as shouting in caps, and it is the one line one that describes rather than
+   labels. It keeps its callout's tone and its weight, because it is still the
+   figure the card exists to report. */
+.sui-rate-gauge .sui-rate-gauge__row .sui-rate-gauge__label--payroll {
+  text-transform: none;
+  letter-spacing: 0;
+}
