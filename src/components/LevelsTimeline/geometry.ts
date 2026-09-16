@@ -126,6 +126,9 @@ export const AXIS_BAND = VIEW_HEIGHT - PLOT_BOTTOM;
  */
 export const MIN_VIEW_HEIGHT = 72;
 
+/** Narrower than this and there is no chart left, only margins. */
+export const MIN_VIEW_WIDTH = 320;
+
 /** The least of the box the PLOT may be reduced to before chrome gives way. */
 export const MIN_PLOT_FRACTION = 0.6;
 /** The axis, reduced to one tick row with thinned labels. */
@@ -214,7 +217,7 @@ export const frameFor = (
   viewWidth: number = VIEW_WIDTH,
 ): Frame => {
   const height = Math.max(MIN_VIEW_HEIGHT, viewHeight);
-  const width = Math.max(VIEW_WIDTH, viewWidth);
+  const width = Math.max(MIN_VIEW_WIDTH, viewWidth);
   const compact = height < COMPACT_BELOW;
   const plotTop = compact ? COMPACT_PLOT_TOP : PLOT_TOP;
   const axisBand = compact ? COMPACT_AXIS_BAND : AXIS_BAND;
@@ -238,28 +241,43 @@ export const frameFor = (
 /**
  * The frame for a MEASURED box — the one the component actually uses.
  *
- * Deriving the height from the box's aspect is not enough on its own, and this
- * is the trap the board fell into. The height has a floor, and once that floor
- * bites the viewBox aspect no longer matches the box: SVG's default
- * `xMidYMid meet` then scales the whole drawing down to fit the height and
- * CENTRES it, so a 2202×116 cell with a 640×120 viewBox drew everything into a
- * 619px strip in the middle. From the reader's side that reads as "the rails
- * do not render" — the flags and the axis span the box because they are drawn
- * at the strip's scale too, and the rails are simply too compressed to see.
+ * ONE VIEWBOX UNIT IS ONE CSS PIXEL. That is the whole rule, and everything
+ * awkward about sizing this chart came from not following it.
  *
- * So when the floor bites, the viewBox is WIDENED to keep the aspect honest.
- * `preserveAspectRatio="none"` would also fill the box, but by stretching the
- * text, which is worse than the problem.
+ * The viewBox used to be a fixed 640 wide with the height derived from the
+ * box's aspect. Two things went wrong with that, and they look unrelated until
+ * the rule is written down:
+ *
+ *   • SCALE. A fixed 640 units across a 2218px card makes one unit 3.5 pixels,
+ *     so a 9-unit label paints at 31px and the chart reads as a zoomed
+ *     screenshot. The same label on a 718px card paints at 10px. Nothing in
+ *     the data changed — only the card width.
+ *   • LETTERBOXING. The height had a floor, and once the floor bit, the
+ *     viewBox aspect stopped matching the box. SVG's default `xMidYMid meet`
+ *     then scaled the drawing to fit and CENTRED it; the board measured its
+ *     chart occupying 16% of the width of its own cell, which reads as "the
+ *     rails do not render".
+ *
+ * Tracking the box in BOTH dimensions fixes both at once: the aspect then
+ * matches by construction at every shape, and the pixel scale is 1 by
+ * definition. Chrome, text and stroke widths are all quoted in units, so they
+ * are now quoted in pixels — a 9px label is 9px on any card.
+ *
+ * `MIN_VIEW_HEIGHT` survives as a PLOT-QUALITY floor rather than an aspect
+ * clamp. Where the box is shorter than the floor, the whole viewBox is scaled
+ * up TOGETHER — both dimensions — so the aspect is still exactly the box's and
+ * the chart merely draws at a smaller effective scale. It never letterboxes.
  */
 export const frameForBox = (box: {
   readonly width: number;
   readonly height: number;
 }): Frame => {
   if (box.width <= 0 || box.height <= 0) return DEFAULT_FRAME;
-  const natural = (VIEW_WIDTH * box.height) / box.width;
-  if (natural >= MIN_VIEW_HEIGHT) return frameFor(natural);
-  // The floor bites: keep the height at the floor and widen to suit.
-  return frameFor(MIN_VIEW_HEIGHT, (MIN_VIEW_HEIGHT * box.width) / box.height);
+  // Scaling BOTH dimensions is what keeps the aspect exact. Scaling one of
+  // them was the letterbox.
+  const scale =
+    box.height < MIN_VIEW_HEIGHT ? MIN_VIEW_HEIGHT / box.height : 1;
+  return frameFor(box.height * scale, box.width * scale);
 };
 
 /** The width-driven layout: what the chart uses when it is given no height. */

@@ -442,14 +442,13 @@ describe("LevelsTimeline — fill-height", () => {
     );
   });
 
-  it("rebuilds its viewBox to the aspect of a box that HAS a height", async () => {
+  it("rebuilds its viewBox to BE the box it was given, one unit per pixel", async () => {
     let container!: HTMLElement;
     await withObservedBox({ width: 800, height: 320 }, () => {
       container = renderRails().container;
     });
-    // 800x320 is 2.5:1, so a 640-wide viewBox wants to be 256 tall.
     expect(container.querySelector("svg")?.getAttribute("viewBox")).toBe(
-      "0 0 640 256",
+      "0 0 800 320",
     );
   });
 
@@ -458,7 +457,7 @@ describe("LevelsTimeline — fill-height", () => {
     await withObservedBox({ width: 800, height: 320 }, () => {
       container = renderRails().container;
     });
-    const viewHeight = 256;
+    const viewHeight = 320;
     // Every command in these paths takes x,y PAIRS (M and L one, C three), so
     // the y values are the odd-indexed numbers. Taking all of them would sweep
     // in the x's, which legitimately run to 626 and would fail this.
@@ -706,5 +705,92 @@ describe("LevelsTimeline — compact chrome in a short box", () => {
     );
     expect(labels.length).toBeGreaterThan(2);
     expect(labels.length).toBeLessThan(13);
+  });
+});
+
+describe("LevelsTimeline — the board's wide short cell", () => {
+  const withObservedBox = async (
+    box: { width: number; height: number },
+    run: () => void,
+  ) => {
+    const original = globalThis.ResizeObserver;
+    class Stub {
+      constructor(private readonly cb: ResizeObserverCallback) {}
+      observe(target: Element) {
+        this.cb(
+          [{ target, contentRect: box } as unknown as ResizeObserverEntry],
+          this as unknown as ResizeObserver,
+        );
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    globalThis.ResizeObserver = Stub as unknown as typeof ResizeObserver;
+    try {
+      run();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    } finally {
+      globalThis.ResizeObserver = original;
+    }
+  };
+
+  const renderIn = async (box: { width: number; height: number }) => {
+    let container!: HTMLElement;
+    await withObservedBox(box, () => {
+      container = render(() => (
+        <LevelsTimeline
+          levels={LEVELS}
+          transfers={TRANSFERS}
+          mutations={MUTATIONS}
+          domain={DOMAIN}
+          onPick={() => undefined}
+        />
+      )).container;
+    });
+    const viewBox = container.querySelector("svg")?.getAttribute("viewBox");
+    const [, , width, height] = (viewBox ?? "").split(" ").map(Number);
+    return { container, width, height };
+  };
+
+  it("matches 2218x134 within 2% and gives the pick surface the whole width", async () => {
+    // The board's cell. The old fixed-640 viewBox was 2.76:1 against a 16.6:1
+    // box, so `meet` drew the chart into 16% of the width — which is why the
+    // board could neither see the rails nor click them.
+    const { container, width, height } = await renderIn({
+      width: 2218,
+      height: 134,
+    });
+    expect(Math.abs(width / height / (2218 / 134) - 1)).toBeLessThan(0.02);
+    const surface = container.querySelector(".sui-levels-timeline__surface");
+    const covered = Number(surface?.getAttribute("width")) / width;
+    expect(covered).toBeGreaterThanOrEqual(0.95);
+  });
+
+  it("leaves a 718x260 card looking as it did — one unit was already ~one px", async () => {
+    const { container, width, height } = await renderIn({
+      width: 718,
+      height: 260,
+    });
+    expect([width, height]).toEqual([718, 260]);
+    // Tall enough for full chrome, so every axis label survives.
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__tick-label"),
+    ).toHaveLength(13);
+    expect(
+      container.querySelectorAll(
+        ".sui-levels-timeline__rail-group .sui-levels-timeline__rail",
+      ).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("keeps chrome the same PIXEL size on a narrow card and a wide one", async () => {
+    // The zoom fault: the same label used to paint at 10px on a bench card and
+    // 31px on the board, because the unit changed size with the card.
+    const narrow = await renderIn({ width: 718, height: 260 });
+    const wide = await renderIn({ width: 2218, height: 260 });
+    const fontOf = (c: HTMLElement) =>
+      c.querySelector(".sui-levels-timeline__flag-box")?.getAttribute("height");
+    expect(fontOf(narrow.container)).toBe(fontOf(wide.container));
+    expect(narrow.width / 718).toBe(wide.width / 2218);
   });
 });

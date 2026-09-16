@@ -21,6 +21,7 @@ import {
   MIN_PER_PERSON,
   MIN_PLOT_FRACTION,
   MIN_VIEW_HEIGHT,
+  MIN_VIEW_WIDTH,
   frameFor,
   frameForBox,
   viewHeightFor,
@@ -1321,41 +1322,64 @@ describe("compact chrome — the board's short cell", () => {
   });
 });
 
-describe("frameForBox — the viewBox aspect must track the box", () => {
+describe("frameForBox — one unit is one CSS pixel", () => {
   const aspectOf = (frame: { viewWidth: number; viewHeight: number }) =>
     frame.viewWidth / frame.viewHeight;
 
-  it("matches the box's aspect when the height floor does not bite", () => {
+  it("IS the box, when the box is big enough to be taken literally", () => {
     const frame = frameForBox({ width: 800, height: 320 });
+    expect(frame.viewWidth).toBe(800);
+    expect(frame.viewHeight).toBe(320);
+    // One unit is one pixel, so a 9-unit label is 9px on any card.
     expect(aspectOf(frame)).toBeCloseTo(800 / 320, 6);
-    expect(frame.viewWidth).toBe(VIEW_WIDTH);
   });
 
-  it("WIDENS rather than letterboxing when the floor does bite", () => {
-    // The board's real box. Clamping the height alone left a 640x120 viewBox
-    // against a 19:1 box, and `xMidYMid meet` then drew everything into a
-    // 619px strip in the middle of 2202px — which reads as "nothing renders".
-    const frame = frameForBox({ width: 2202, height: 116 });
+  it("matches the aspect of a WIDE SHORT box — the board's real shape", () => {
+    // 2218x134 is 16.6:1. The old fixed-640 viewBox was 2.76:1 there, and
+    // `meet` drew the whole chart into 16% of the cell's width.
+    const frame = frameForBox({ width: 2218, height: 134 });
+    expect(aspectOf(frame)).toBeCloseTo(2218 / 134, 6);
+    expect(frame.viewWidth).toBe(2218);
+    expect(frame.viewHeight).toBe(134);
+  });
+
+  it("keeps the aspect EXACT when the plot-quality floor bites", () => {
+    // Both dimensions scale together, so this is a smaller effective scale,
+    // never a letterbox.
+    const frame = frameForBox({ width: 2202, height: 40 });
     expect(frame.viewHeight).toBe(MIN_VIEW_HEIGHT);
-    expect(aspectOf(frame)).toBeCloseTo(2202 / 116, 6);
-    expect(frame.viewWidth).toBeGreaterThan(VIEW_WIDTH);
-    expect(frame.plotRight).toBe(frame.viewWidth - frame.plotLeft);
+    expect(aspectOf(frame)).toBeCloseTo(2202 / 40, 6);
+    expect(frame.viewWidth).toBeGreaterThan(2202);
   });
 
-  it("scales the plot with the widened viewBox, not just the frame", () => {
-    const frame = frameForBox({ width: 2202, height: 116 });
+  it("holds the pixel scale constant across card widths", () => {
+    // The whole point: the same label is the same size on both cards.
+    const narrow = frameForBox({ width: 718, height: 260 });
+    const wide = frameForBox({ width: 2218, height: 260 });
+    expect(narrow.viewHeight).toBe(260);
+    expect(wide.viewHeight).toBe(260);
+    expect(wide.viewWidth / 2218).toBe(narrow.viewWidth / 718);
+  });
+
+  it("scales the plot with the box, not just the frame", () => {
+    const frame = frameForBox({ width: 2218, height: 134 });
     const geometry = levelsRailGeometry({
       levels: LEVELS,
       transfers: TRANSFERS,
       mutations: MUTATIONS,
       domain: DOMAIN,
-      box: { width: 2202, height: 116 },
+      box: { width: 2218, height: 134 },
     });
-    // The last span reaches the widened right edge, so the drawing fills the
-    // box rather than stopping at the old 626.
-    const last = geometry.rails[0].spans[geometry.rails[0].spans.length - 1];
+    const rail = geometry.rails[0];
+    const last = rail.spans[rail.spans.length - 1];
     expect(last.x2).toBe(frame.plotRight);
     expect(last.x2).toBeGreaterThan(VIEW_WIDTH);
+  });
+
+  it("refuses a box too narrow to hold a chart at all", () => {
+    expect(frameForBox({ width: 100, height: 300 }).viewWidth).toBe(
+      MIN_VIEW_WIDTH,
+    );
   });
 
   it("falls back to the default before the box has been laid out", () => {

@@ -25,6 +25,7 @@ export {
   bandPath,
   DEFAULT_FRAME,
   MIN_VIEW_HEIGHT,
+  MIN_VIEW_WIDTH,
   bandWidth,
   COMPACT_BELOW,
   MIN_PER_PERSON,
