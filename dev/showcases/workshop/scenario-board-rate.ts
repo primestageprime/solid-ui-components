@@ -14,9 +14,9 @@
  *
  * Pay is an OUTFLOW, so a raise LOWERS the company's rate:
  *
- *     rate = BASELINE − raises × DOLLARS_PER_LEVEL
+ *     rate = BASELINE − total pay increase
  *
- * With BASELINE = 24,000, COMFORTABLE = 12,000 and one level = $5,000/mo,
+ * With BASELINE = 24,000, COMFORTABLE = 12,000 and a raise of $5,000/yr,
  * every one of those four readings falls out of the same line:
  *
  *     raises   pay change     rate      band     why
@@ -40,7 +40,14 @@
  * `rateBandTable()` prints exactly the table above, and the test asserts it.
  */
 
-/** What the company nets per month BEFORE the scenario's changes. */
+/**
+ * What the company nets per YEAR before the scenario's changes — its surplus,
+ * not its revenue, which is why it is small beside a payroll of six salaries.
+ *
+ * EVERY figure on this board is $/yr: pay, the bands, the rate, the gauge's
+ * domain. One unit throughout means no conversion can be got wrong, and it is
+ * the unit a salary is quoted in.
+ */
 export const RATE_BASELINE = 24_000;
 
 /**
@@ -54,11 +61,14 @@ export const COMFORTABLE = 12_000;
 export const RATE_DOMAIN: readonly [number, number] = [-30_000, 30_000];
 
 /**
- * What one level of pay is worth per month — the board's only unit conversion.
- * $5,000 makes a single-level drag a plausible raise rather than a rounding
- * error, which is what lets three of them reach the yellow band.
+ * The size of a "plausible raise" the calibration is solved around, in $/yr.
+ *
+ * Pay is a CONTINUOUS dollar amount — a drag can land anywhere — so this is
+ * not a quantum and nothing snaps to it. It is the raise size the four
+ * readings below are computed at, so that "three raises" names a definite
+ * point on the dial rather than an arbitrary one.
  */
-export const DOLLARS_PER_LEVEL = 5_000;
+export const RAISE_STEP = 5_000;
 
 /** Which band a rate falls in. The gauge draws this; we name it for the table. */
 export type RateBand = "red" | "yellow" | "green";
@@ -81,7 +91,7 @@ export const rateFromPayChange = (payChange: number): number =>
 
 /** The rate after `raises` people each move up one level. The calibration model. */
 export const rateForRaises = (raises: number): number =>
-  rateFromPayChange(raises * DOLLARS_PER_LEVEL);
+  rateFromPayChange(raises * RAISE_STEP);
 
 /** One row of the calibration table. */
 export interface RateRow {
@@ -102,7 +112,7 @@ export const HEADCOUNT = 6;
 export const rateBandTable = (): RateRow[] =>
   [0, 1, 3, HEADCOUNT].map((raises) => ({
     raises,
-    payChange: raises * DOLLARS_PER_LEVEL,
+    payChange: raises * RAISE_STEP,
     rate: rateForRaises(raises),
     band: bandOfRate(rateForRaises(raises)),
   }));

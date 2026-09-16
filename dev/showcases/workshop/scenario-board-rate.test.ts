@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   COMFORTABLE,
-  DOLLARS_PER_LEVEL,
+  RAISE_STEP,
   HEADCOUNT,
   RATE_BASELINE,
   RATE_DOMAIN,
@@ -30,7 +30,7 @@ describe("scenario board rate calibration", () => {
   // what makes a future edit fail for the RIGHT reason: "three raises no
   // longer reach yellow" rather than "9000 !== 8000".
   it("satisfies the inequalities the constants were solved from", () => {
-    const raise = DOLLARS_PER_LEVEL;
+    const raise = RAISE_STEP;
     expect(RATE_BASELINE - 1 * raise).toBeGreaterThanOrEqual(COMFORTABLE);
     expect(RATE_BASELINE - 3 * raise).toBeLessThan(COMFORTABLE);
     expect(RATE_BASELINE - 3 * raise).toBeGreaterThan(0);
@@ -63,8 +63,7 @@ describe("scenario board rate calibration", () => {
   });
 
   it("prices one level at a plausible raise", () => {
-    // Three single-level drags must be able to cross a band. At $1,000 they
-    // could not, which is why this is $5,000.
+    // Three plausible raises must be able to cross a band.
     expect(rateForRaises(3)).toBeLessThan(COMFORTABLE);
   });
 });

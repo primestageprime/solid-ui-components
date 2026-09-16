@@ -34,7 +34,7 @@
  * derives rails FROM, not something it draws. The Total went with the change —
  * headcount-weighted rails say what it used to say, and better.
  */
-import { createSignal, onMount, type Component } from "solid-js";
+import { createSignal, onCleanup, onMount, type Component } from "solid-js";
 import {
   filter,
   find,
@@ -52,7 +52,6 @@ import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import { monthlyCells } from "../../../src/components/DateAxis";
 import {
   COMFORTABLE,
-  DOLLARS_PER_LEVEL,
   RATE_BASELINE,
   RATE_DOMAIN,
   bandOfRate,
@@ -139,9 +138,9 @@ interface Band {
 type BandId = "A" | "B" | "C";
 
 const BANDS: readonly Band[] = [
-  { id: "A", label: "Support", range: [1, 3] },
-  { id: "B", label: "Delivery", range: [4, 6] },
-  { id: "C", label: "Platform", range: [7, 10] },
+  { id: "A", label: "Junior", range: [40_000, 60_000] },
+  { id: "B", label: "Mid", range: [55_000, 80_000] },
+  { id: "C", label: "Senior", range: [70_000, 110_000] },
 ];
 
 /**
@@ -187,30 +186,48 @@ const PEOPLE: readonly Person[] = [
     id: "peter",
     label: "Peter",
     band: "A",
-    base: 2,
-    changes: { spring: 3 },
+    base: 46_000,
+    changes: { spring: 52_000 },
   },
-  { id: "joe", label: "Joe", band: "A", base: 2, changes: { spring: null } },
+  {
+    id: "joe",
+    label: "Joe",
+    band: "A",
+    base: 46_000,
+    changes: { spring: null },
+  },
   {
     id: "elaina",
     label: "Elaina",
     band: "B",
-    base: 4,
-    changes: { spring: 5 },
+    base: 62_000,
+    changes: { spring: 68_000 },
   },
   {
     id: "reilly",
     label: "Reilly",
     band: "B",
-    base: 4,
-    changes: { autumn: 5 },
+    base: 62_000,
+    changes: { autumn: 68_000 },
   },
-  { id: "adlai", label: "Adlai", band: "C", base: 7, changes: { summer: 8 } },
-  { id: "flynn", label: "Flynn", band: "C", base: 7, changes: { autumn: 8 } },
+  {
+    id: "adlai",
+    label: "Adlai",
+    band: "C",
+    base: 90_000,
+    changes: { summer: 95_000 },
+  },
+  {
+    id: "flynn",
+    label: "Flynn",
+    band: "C",
+    base: 90_000,
+    changes: { autumn: 104_000 },
+  },
 ];
 
-/** The dial domain, in the consumer's own levels. */
-const LEVEL_DOMAIN: readonly [number, number] = [0, 10];
+/** The dial domain, in $/yr. Spans every band, so one scale serves all six. */
+const PAY_DOMAIN: readonly [number, number] = [40_000, 110_000];
 
 /**
  * The chart fixture: thirteen months of net monthly flow in dollars, opening
@@ -268,7 +285,7 @@ export const deltaOf = (entity: Amounts): number =>
 export const payChangeOf = (entities: readonly Amounts[]): number =>
   pipe(
     entities,
-    map((entity: Amounts) => deltaOf(entity) * DOLLARS_PER_LEVEL),
+    map((entity: Amounts) => deltaOf(entity)),
     sum,
   );
 
@@ -330,14 +347,16 @@ const bandOf = (bandId: BandId): Band =>
  * as an open-ended flow, so an id built two ways would make a ribbon vanish in
  * silence instead of failing loudly.
  */
-const levelIdFor = (bandId: BandId, pay: number): string => `${bandId}-L${pay}`;
+const levelIdFor = (bandId: BandId, pay: number): string =>
+  `${bandId}-${Math.round(pay)}`;
 
 /**
  * A rail's caption. Deliberately SHORT and enumerated — `A · L2` — because the
  * chart paints it above the rail's left end the way an axis paints a tick, with
  * no ellipsize and no tooltip behind it.
  */
-const payLabel = (bandId: BandId, pay: number): string => `${bandId} · L${pay}`;
+const payLabel = (bandId: BandId, pay: number): string =>
+  `${bandId} · ${formatMoney(pay)}`;
 
 /** The people in one band, in fixture order. */
 const peopleIn = (people: readonly Person[], bandId: BandId): Person[] =>
@@ -597,39 +616,98 @@ export const runningBalances = (
   return balances;
 };
 
-const BALANCES = runningBalances(MONTHLY_NET, OPENING_BALANCE);
+/** The COMMITTED balance — what the fixture's flows have already produced. */
+const COMMITTED = runningBalances(MONTHLY_NET, OPENING_BALANCE);
 
-/** The chart's thirteen monthly cells. Cents, because the chart's y IS cents. */
-export const balanceCells = (): CashflowCell[] =>
-  map(
+/** The chart's months, as dates. One cell each. */
+const CELLS = monthlyCells(DOMAIN_START, DOMAIN_END);
+
+/**
+ * Which month "now" falls in — the mutation the reader is editing.
+ *
+ * Tying NOW to the as-of selection rather than pinning it to a fixed month is
+ * what makes the chart answer the question the rest of the board is asking:
+ * the balance is HISTORY up to the point being mutated and a PROJECTION after
+ * it, so moving the selector moves the boundary between the two.
+ */
+export const monthIndexOf = (at: TimeValue): number => {
+  const when = timeOf(at);
+  let index = 0;
+  for (const [i, cell] of CELLS.entries()) {
+    if (cell.start.getTime() <= when) index = i;
+  }
+  return index;
+};
+
+/**
+ * The balance line: COMMITTED up to `nowIndex`, then PROJECTED forward at the
+ * scenario's live rate.
+ *
+ *     balance(m) = balance(now) + rate × (m − now)
+ *
+ * This is the wire from the dials to the chart. A drag changes the rate, the
+ * rate changes every month after now, and the line visibly pivots about the
+ * now point — which is the whole reason the board puts them on one screen.
+ * Before now nothing moves, because the past is not a forecast.
+ */
+export const projectedBalances = (rate: number, nowIndex: number): number[] =>
+  map((_cell: { start: Date }, index: number) => {
+    const committed = COMMITTED[Math.min(nowIndex, COMMITTED.length - 1)] ?? 0;
+    if (index <= nowIndex) return COMMITTED[index] ?? committed;
+    return committed + rate * (index - nowIndex);
+  }, CELLS);
+
+/**
+ * The fan's half-width at a month: ZERO at now, widening with the SQUARE of
+ * the months since. A forecast is surer about next month than about next year,
+ * and the uncertainty is about the projection — so there is none over the part
+ * that already happened.
+ */
+const UNCERTAINTY_PER_MONTH_SQUARED = 800;
+
+export const fanAt = (index: number, nowIndex: number): number => {
+  const months = index - nowIndex;
+  return months <= 0 ? 0 : UNCERTAINTY_PER_MONTH_SQUARED * months * months;
+};
+
+/** The chart's cells. Cents, because the chart's y IS cents. */
+export const balanceCells = (
+  rate: number,
+  nowIndex: number,
+): CashflowCell[] => {
+  const balances = projectedBalances(rate, nowIndex);
+  return map(
     (cell: { start: Date; end: Date }, index: number) => ({
       ...cell,
       cashflowCents: (MONTHLY_NET[index] ?? 0) * 100,
-      balanceCents: (BALANCES[index] ?? 0) * 100,
+      balanceCents: (balances[index] ?? 0) * 100,
     }),
-    monthlyCells(DOMAIN_START, DOMAIN_END),
+    CELLS,
   );
+};
 
-/**
- * One faint alternative in the fan: the same line, pulled away from the
- * committed balance by a spread that widens with the months, because a
- * forecast is surer about next month than about next year.
- */
-const SPREAD_PER_MONTH_SQUARED = 220;
-
-export const fanAt = (index: number, sign: number): number =>
-  sign * SPREAD_PER_MONTH_SQUARED * index * index;
-
-const fanSeries = (id: string, sign: number) => ({
+/** One faint alternative in the fan, above or below the projection. */
+const fanSeries = (id: string, sign: number, nowIndex: number) => ({
   id,
   class: "scenario-board-demo__fan",
   balanceCents: (cell: CashflowCell, index: number): number =>
-    cell.balanceCents + fanAt(index, sign) * 100,
+    cell.balanceCents + sign * fanAt(index, nowIndex) * 100,
 });
 
+/**
+ * Money, short. `$104k` on a dial, `$95.5k` when the drag lands between —
+ * continuous amounts need a format that does not pretend to be exact, and the
+ * dial is read at a glance rather than audited.
+ */
+export const formatMoney = (amount: number): string => {
+  const k = amount / 1000;
+  const rounded = Math.round(k * 10) / 10;
+  return `$${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}k`;
+};
+
 /** The consumer's money formatter — a real minus sign, as the gauge bench uses. */
-const perMonth = (delta: number): string =>
-  `${delta < 0 ? "−" : "+"}$${Math.abs(delta).toLocaleString("en-US")}/mo`;
+const perYear = (delta: number): string =>
+  `${delta < 0 ? "−" : "+"}$${Math.abs(Math.round(delta)).toLocaleString("en-US")}/yr`;
 
 /**
  * Set one person's pay AT ONE MUTATION, leaving every other person and every
@@ -681,8 +759,8 @@ const printTables = (
         old: dial.old ?? "— (not yet hired)",
         new: dial.value ?? "— (terminated)",
         delta: deltaOf(dial),
-        costs: deltaOf(dial) * DOLLARS_PER_LEVEL,
-        rateEffect: -deltaOf(dial) * DOLLARS_PER_LEVEL,
+        costs: deltaOf(dial),
+        rateEffect: -deltaOf(dial),
       }),
       entitiesForMutation(people, mutationId, mutations),
     ),
@@ -734,11 +812,11 @@ const printTables = (
   const dials = entitiesForMutation(people, mutationId, mutations);
   console.log(
     "baseline",
-    perMonth(RATE_BASELINE),
+    perYear(RATE_BASELINE),
     "· pay change",
-    perMonth(payChangeOf(dials)),
+    perYear(payChangeOf(dials)),
     "· rate",
-    perMonth(rateOf(dials)),
+    perYear(rateOf(dials)),
   );
   /* eslint-enable no-console */
 };
@@ -760,6 +838,39 @@ const ScenarioBoardBench: Component = () => {
   const dials = () => entitiesForMutation(people(), editing(), mutations());
   const rate = () => rateOf(dials());
 
+  /** The month the projection pivots on: the mutation being edited. */
+  const nowIndex = () => {
+    const chosen = find((m: Mutation) => m.id === editing(), mutations());
+    return chosen === undefined ? 0 : monthIndexOf(chosen.at);
+  };
+
+  /**
+   * The people the TIMELINE draws, which lag the dials by one gesture.
+   *
+   * Pay is continuous, so a drag passes through every intermediate dollar on
+   * its way — and the timeline keys a rail by pay AMOUNT, so following the
+   * live value would spawn a rail per pixel of travel and throw them all away
+   * again. The gauge and the balance chart follow the drag live, because a
+   * number and a line can move continuously; the rails wait for it to stop.
+   *
+   * INTERIM: `MutationSliders` exposes `onChange` and no `onChangeEnd`, so the
+   * gesture's end is detected here on `pointerup`/`keyup`. That belongs in the
+   * component — its agent has been asked for `onChangeEnd?` — and this whole
+   * block collapses to one prop when it lands.
+   */
+  const [committed, setCommitted] = createSignal<readonly Person[]>(PEOPLE);
+  const commit = (): void => {
+    setCommitted(people());
+  };
+  onMount(() => {
+    window.addEventListener("pointerup", commit);
+    window.addEventListener("keyup", commit);
+    onCleanup(() => {
+      window.removeEventListener("pointerup", commit);
+      window.removeEventListener("keyup", commit);
+    });
+  });
+
   onMount(() => {
     if (DEBUG) printTables(people(), mutations(), editing());
   });
@@ -772,6 +883,7 @@ const ScenarioBoardBench: Component = () => {
   /** ⊗ Terminate: this person is gone from the selected mutation onward. */
   const terminate = (id: string): void => {
     setPeople((current) => withChange(current, id, editing(), null));
+    commit();
   };
 
   /**
@@ -781,6 +893,7 @@ const ScenarioBoardBench: Component = () => {
    */
   const restore = (id: string): void => {
     setPeople((current) => withoutChange(current, id, editing()));
+    commit();
   };
 
   /** A HIRE, at the mutation being edited: no base pay, so no prior arrow. */
@@ -792,9 +905,10 @@ const ScenarioBoardBench: Component = () => {
         label: `Hire ${current.length - PEOPLE.length + 1}`,
         band: "C",
         base: null,
-        changes: { [editing()]: 9 },
+        changes: { [editing()]: 78_000 },
       },
     ]);
+    commit();
   };
 
   /**
@@ -814,6 +928,7 @@ const ScenarioBoardBench: Component = () => {
 
   const reset = (): void => {
     setPeople(PEOPLE);
+    setCommitted(PEOPLE);
     setMutations(SEED_MUTATIONS);
     setEditing(SEED_MUTATIONS[1].id);
   };
@@ -839,14 +954,14 @@ const ScenarioBoardBench: Component = () => {
               <TextTitle>Running balance</TextTitle>
               <GrowFillBox>
                 <CashflowScrubChart
-                  cells={balanceCells()}
+                  cells={balanceCells(rate(), nowIndex())}
                   scrub={false}
                   chartHeight="fill"
                   showGridlines
                   lineLabel="Committed"
                   balanceSeries={[
-                    fanSeries("optimistic", 1),
-                    fanSeries("pessimistic", -1),
+                    fanSeries("optimistic", 1, nowIndex()),
+                    fanSeries("pessimistic", -1, nowIndex()),
                   ]}
                 />
               </GrowFillBox>
@@ -858,14 +973,14 @@ const ScenarioBoardBench: Component = () => {
               <TextTitle>Pay levels through the year</TextTitle>
               <GrowFillBox>
                 <LevelsTimeline
-                  levels={levelsOf(people(), mutations())}
-                  transfers={transfersOf(people(), mutations())}
+                  levels={levelsOf(committed(), mutations())}
+                  transfers={transfersOf(committed(), mutations())}
                   mutations={mutations()}
                   domain={TIME_DOMAIN}
                   selectedMutationId={editing()}
                   onSelectMutation={setEditing}
                   onPick={pick}
-                  formatValue={(pay) => `L${pay}`}
+                  formatValue={formatMoney}
                 />
               </GrowFillBox>
             </FillCardSurface>
@@ -895,12 +1010,12 @@ const ScenarioBoardBench: Component = () => {
                   </SpreadRow>
                   <MutationSliders
                     entities={dials()}
-                    domain={LEVEL_DOMAIN}
+                    domain={PAY_DOMAIN}
                     onChange={setPay}
                     onRemove={terminate}
                     onRestore={restore}
                     onAdd={hire}
-                    format={(value) => `L${value}`}
+                    format={formatMoney}
                   />
                 </TightStack>
               </FillCardSurface>
@@ -920,7 +1035,7 @@ const ScenarioBoardBench: Component = () => {
                     comfortable={COMFORTABLE}
                     value={rate()}
                     label="Scenario"
-                    format={perMonth}
+                    format={perYear}
                   />
                 </TightStack>
               </FillCardSurface>
