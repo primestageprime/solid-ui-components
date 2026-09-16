@@ -55,6 +55,7 @@ import {
   RATE_BASELINE,
   RATE_DOMAIN,
   bandOfRate,
+  isPresentAt,
   maxRateFor,
   monthlyFrom,
   pinnedCeiling,
@@ -594,15 +595,19 @@ export const entitiesForMutation = (
   mutationId: string,
   mutations: readonly Mutation[],
 ): Dial[] =>
-  map(
-    (person: Person) => ({
+  pipe(
+    people,
+    map((person: Person) => ({
       id: person.id,
       label: person.label,
       old: payBefore(person, mutationId, mutations),
       value: payFrom(person, mutationId, mutations),
       range: bandOf(person.band).range,
-    }),
-    people,
+    })),
+    // Anyone with NO pay either side of this mutation is not on the payroll
+    // then — terminated at an earlier one, or not hired until a later one. See
+    // `isPresentAt` for the table of four cases this one condition covers.
+    filter((dial: Dial) => isPresentAt(dial.old, dial.value)),
   );
 
 /** Running balance, month by month, in dollars. */
@@ -1016,18 +1021,19 @@ const ScenarioBoardBench: Component = () => {
                       right: the thing being edited is named beside the dials
                       that edit it. */}
                   <SpreadRow>
-                    <TextTitle>Mutations</TextTitle>
+                    <TextTitle>Changes</TextTitle>
                     <SegmentedControl
                       options={segmentOptionsOf(mutations())}
                       value={editing()}
                       onValueChange={setEditing}
-                      aria-label="Mutation being edited"
+                      aria-label="Change being edited"
                     />
                     <GhostButton onClick={reset}>Reset</GhostButton>
                   </SpreadRow>
                   <MutationSliders
                     entities={dials()}
                     domain={PAY_DOMAIN}
+                    snap={1_000}
                     onChange={setPay}
                     onChangeEnd={commit}
                     onRemove={terminate}

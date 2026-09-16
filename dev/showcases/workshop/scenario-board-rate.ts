@@ -177,3 +177,28 @@ export const pinnedCeiling = (
   }
   return Math.ceil(highest / tick) * tick;
 };
+
+/**
+ * Is this person on the payroll at the mutation being edited?
+ *
+ * ONE condition covers four cases, which is why it is worth having as a named
+ * rule rather than inline: given their pay just BEFORE the mutation and their
+ * pay FROM it,
+ *
+ *   before   from    who they are                      shown?
+ *   ------   -----   -------------------------------   ------
+ *   $60k     $65k    a raise (or no change)            yes
+ *   $60k     null    TERMINATED at this mutation       yes — struck through
+ *   null     $60k    HIRED at this mutation            yes
+ *   null     null    terminated EARLIER, or not yet
+ *                    hired at all                      no
+ *
+ * Peter, 2026-09-16: a terminated person shows at the mutation that terminated
+ * them and at none after it. The last row is that rule — and it gives "not
+ * hired yet" for free, since somebody who joins at a later mutation is equally
+ * absent from this one.
+ */
+export const isPresentAt = (
+  payBefore: number | null,
+  payFrom: number | null,
+): boolean => payBefore !== null || payFrom !== null;

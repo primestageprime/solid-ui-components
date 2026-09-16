@@ -5,6 +5,7 @@ import {
   maxRateFor,
   monthlyFrom,
   pinnedCeiling,
+  isPresentAt,
   RAISE_STEP,
   HEADCOUNT,
   RATE_BASELINE,
@@ -117,6 +118,37 @@ describe("scenario board rate calibration", () => {
       // Getting this wrong drew a line twelve times too steep.
       expect(monthlyFrom(12_000)).toBe(1_000);
       expect(MONTHS_PER_YEAR).toBe(12);
+    });
+  });
+
+  // Peter: a terminated person shows at the mutation that terminated them and
+  // at none after it. Named for the scenario rather than the arguments, so a
+  // failure says which case broke.
+  describe("who appears on the dials", () => {
+    it("shows a raise, a termination AT this mutation, and a hire", () => {
+      expect(isPresentAt(60_000, 65_000)).toBe(true);
+      expect(isPresentAt(60_000, null)).toBe(true);
+      expect(isPresentAt(null, 60_000)).toBe(true);
+    });
+
+    it("hides someone terminated at an EARLIER mutation", () => {
+      // Terminated at mutation 2: present at 1 (still paid) and at 2 (the
+      // termination itself), absent at 3 — where both amounts are null
+      // because nothing carries forward.
+      expect(isPresentAt(60_000, 60_000)).toBe(true);
+      expect(isPresentAt(60_000, null)).toBe(true);
+      expect(isPresentAt(null, null)).toBe(false);
+    });
+
+    it("hides someone who is not hired until a LATER mutation", () => {
+      // The same condition, for free: nothing before, nothing from.
+      expect(isPresentAt(null, null)).toBe(false);
+    });
+
+    it("shows them again once restored, because the carry comes back", () => {
+      // Restoring DELETES the null change, so the previous pay carries
+      // through and both amounts are numbers again.
+      expect(isPresentAt(60_000, 60_000)).toBe(true);
     });
   });
 });
