@@ -120,10 +120,21 @@ export const BASELINE_NEEDLE_RADIUS = RING_INNER - 10;
  * rather than as a third mark with an edge of its own.
  */
 export const SECTOR_RADIUS = RING_INNER - 10;
-/** The delta bracket rides outside the ring. */
+/** The delta brace rides outside the ring; its cusp reaches further still. */
 export const BRACKET_RADIUS = RING_OUTER + 10;
-/** Half-length of a bracket end cap, measured radially. */
-export const BRACKET_CAP_HALF = 4;
+/** How far the brace's end curls turn back toward the ring. */
+export const BRACE_END_CURL = 4;
+/**
+ * How far the brace's cusp points OUTWARD from the ring at its midpoint.
+ *
+ * The cusp is the brace's terminal — the delta's leader leaves from its tip —
+ * so this also sets where that callout is anchored. Deep enough to read as a
+ * point rather than a bulge, shallow enough not to crowd the label column.
+ */
+export const BRACE_CUSP_DEPTH = 6;
+/** Angular half-width of the cusp, and the floor it collapses to. */
+const BRACE_CUSP_HALF_SPAN = 9;
+const BRACE_MIN_CUSP_HALF_SPAN = 3.5;
 /** Half the cap arc's stroke, so its radial footprint can be reasoned about. */
 export const CAP_STROKE_HALF = 1.25;
 /** Radius of the filled terminal dot on a callout's anchor. */
@@ -358,36 +369,63 @@ export const sectorPath = (
 };
 
 /**
- * The delta bracket: an arc outside the ring spanning the two needle angles,
- * with a short radial cap at each end. Nothing to draw when they coincide —
- * a zero-length bracket with two caps would read as a mark of its own.
+ * The delta brace: a curly `}` bent around the outside of the ring, spanning
+ * the two needle angles with its cusp pointing away from the dial.
+ *
+ * It replaced a plain arc with end caps. A bracket says "these two marks", a
+ * brace says "these two marks, and THIS is what they amount to" — and the cusp
+ * gives the delta's label a terminal of its own, which is why that callout no
+ * longer carries a dot. The leader leaves from the cusp's tip.
+ *
+ * Built as: an inward end curl, an arc to the cusp's base, two cubics meeting
+ * at a point, an arc to the other end, and its curl. The cubics' first control
+ * points sit ON the brace circle, so each half leaves the arc tangentially and
+ * arrives at the apex steeply — that difference in tangent is what makes the
+ * meeting point a cusp rather than a bump.
+ *
+ * At a tiny delta the two ends close on the middle and there is no arc left to
+ * sweep: the brace collapses to its cusp alone, which is the honest picture of
+ * a difference too small to span.
  */
-export const bracketPath = (
+export const bracePath = (
   center: Center,
   radius: number,
   from: number,
   to: number,
+  cuspDepth: number,
 ): string => {
   if (from === to) return "";
-  const start = pointAt(center, radius, from);
-  const end = pointAt(center, radius, to);
-  const capEnds = map(
-    (degrees: number) => ({
-      near: pointAt(center, radius - BRACKET_CAP_HALF, degrees),
-      far: pointAt(center, radius + BRACKET_CAP_HALF, degrees),
-    }),
-    [from, to],
+  const mid = (from + to) / 2;
+  const direction = to > from ? 1 : -1;
+  const half = Math.abs(to - from) / 2;
+  const cusp = Math.max(
+    BRACE_MIN_CUSP_HALF_SPAN,
+    Math.min(BRACE_CUSP_HALF_SPAN, half * 0.6),
   );
-  const caps = map(
-    (cap: { near: Point; far: Point }) =>
-      `M ${cap.near.x} ${cap.near.y} L ${cap.far.x} ${cap.far.y}`,
-    capEnds,
-  );
-  const arc = [
-    `M ${start.x} ${start.y}`,
-    `A ${radius} ${radius} 0 ${arcFlags(from, to)} ${end.x} ${end.y}`,
+  const apex = pointAt(center, radius + cuspDepth, mid);
+  const baseA = pointAt(center, radius, mid - direction * cusp);
+  const baseB = pointAt(center, radius, mid + direction * cusp);
+  const shoulderA = pointAt(center, radius, mid - direction * cusp * 0.45);
+  const liftA = pointAt(center, radius + cuspDepth * 0.85, mid - direction * cusp * 0.12);
+  const liftB = pointAt(center, radius + cuspDepth * 0.85, mid + direction * cusp * 0.12);
+  const shoulderB = pointAt(center, radius, mid + direction * cusp * 0.45);
+  const peak = [
+    `C ${shoulderA.x} ${shoulderA.y} ${liftA.x} ${liftA.y} ${apex.x} ${apex.y}`,
+    `C ${liftB.x} ${liftB.y} ${shoulderB.x} ${shoulderB.y} ${baseB.x} ${baseB.y}`,
   ].join(" ");
-  return [arc, ...caps].join(" ");
+  if (cusp >= half) return `M ${baseA.x} ${baseA.y} ${peak}`;
+  const endA = pointAt(center, radius, from);
+  const endB = pointAt(center, radius, to);
+  const curlA = pointAt(center, radius - BRACE_END_CURL, from);
+  const curlB = pointAt(center, radius - BRACE_END_CURL, to);
+  return [
+    `M ${curlA.x} ${curlA.y}`,
+    `L ${endA.x} ${endA.y}`,
+    `A ${radius} ${radius} 0 ${arcFlags(from, mid - direction * cusp)} ${baseA.x} ${baseA.y}`,
+    peak,
+    `A ${radius} ${radius} 0 ${arcFlags(mid + direction * cusp, to)} ${endB.x} ${endB.y}`,
+    `L ${curlB.x} ${curlB.y}`,
+  ].join(" ");
 };
 
 /** What `gaugeGeometry` is asked about. */
@@ -412,7 +450,7 @@ export interface GaugeGeometry {
   readonly positiveRing: string;
   readonly negativeRing: string;
   readonly deltaSector: string;
-  readonly bracket: string;
+  readonly brace: string;
   readonly zeroLine: { readonly x2: number; readonly y2: number };
   readonly baselineTip: NeedleTip;
   readonly valueTip: NeedleTip;
@@ -453,11 +491,14 @@ export const dotsCollide = (a: Point, b: Point): boolean =>
  * OTHER mark it therefore reads as a blemish on that mark rather than as a
  * terminal — so the dot is dropped and the leader starts bare from the anchor.
  *
- * The one mark a dot may sit on is the one its own callout names: the delta's
- * anchor is the middle of the bracket, and a dot there is the terminal for the
- * bracket, not damage to it. That exception is the whole reason this is a rule
- * rather than "hide all the dots" — without it every dot would drop, since the
- * needle callouts are anchored on the ring's outer edge.
+ * There is no exception for the mark a callout names. There used to be one,
+ * to keep the delta's dot on the bracket it annotated — but the bracket is a
+ * brace now, and a brace's CUSP is already a terminal, so a dot on top of it
+ * is a second terminal on the same leader. Peter's words: remove the ball.
+ *
+ * Every anchor on today's dial therefore lands on a mark, so no dot is drawn.
+ * That is the rule's answer, not a hardcoded `false`: move an anchor clear of
+ * the ring and its dot comes back.
  */
 const dotIsClear = (
   radius: number,
@@ -480,7 +521,7 @@ const dotIsClear = (
 const markBands = (angles: {
   baseline: number;
   value: number;
-}): { readonly ring: MarkBand; readonly cap: MarkBand; readonly bracket: MarkBand } => ({
+}): { readonly ring: MarkBand; readonly cap: MarkBand; readonly brace: MarkBand } => ({
   ring: { inner: RING_INNER, outer: RING_OUTER, from: -QUARTER_TURN, to: QUARTER_TURN },
   cap: {
     inner: VALUE_NEEDLE_RADIUS - CAP_STROKE_HALF,
@@ -488,9 +529,9 @@ const markBands = (angles: {
     from: angles.value - CAP_ARC_HALF_SPAN,
     to: angles.value + CAP_ARC_HALF_SPAN,
   },
-  bracket: {
-    inner: BRACKET_RADIUS - BRACKET_CAP_HALF,
-    outer: BRACKET_RADIUS + BRACKET_CAP_HALF,
+  brace: {
+    inner: BRACKET_RADIUS - BRACE_END_CURL,
+    outer: BRACKET_RADIUS + BRACE_CUSP_DEPTH,
     from: angles.baseline,
     to: angles.value,
   },
@@ -588,19 +629,22 @@ const leaderPoints = (
 const placeCallouts = (
   angles: { zero: number; baseline: number; value: number },
   collapsed: boolean,
-  hasBracket: boolean,
+  hasBrace: boolean,
 ): readonly Callout[] => {
   const unplaced: readonly Unplaced[] = collapsed
     ? [{ id: "valueAndBaseline", angle: angles.value, radius: RING_OUTER }]
     : [
         { id: "value", angle: angles.value, radius: RING_OUTER },
         { id: "baseline", angle: angles.baseline, radius: RING_OUTER },
-        ...(hasBracket
+        ...(hasBrace
           ? [
               {
                 id: "delta" as LabelId,
                 angle: (angles.baseline + angles.value) / 2,
-                radius: BRACKET_RADIUS,
+                // The cusp's tip, not the brace circle: the leader has to leave
+                // from the point the brace makes, or the brace reads as a mark
+                // the label happens to pass over.
+                radius: BRACKET_RADIUS + BRACE_CUSP_DEPTH,
               },
             ]
           : []),
@@ -629,13 +673,7 @@ const placeCallouts = (
   return map((callout: Unplaced, index: number) => {
     const anchor = anchors[index];
     const points = leaderPoints(anchor, turns[index], rows[index]);
-    // Every mark except the one this callout names. The delta names the
-    // bracket, so a dot on the bracket is its terminal rather than a blemish;
-    // every other callout is anchored on the ring, which it does NOT name.
-    const others =
-      callout.id === "delta"
-        ? [bands.ring, bands.cap]
-        : [bands.ring, bands.cap, bands.bracket];
+    const others = [bands.ring, bands.cap, bands.brace];
     const neighbours = filter((_: Point, i: number) => i !== index, anchors);
     return {
       id: callout.id,
@@ -668,7 +706,13 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
   const valueAngle = angleFor(input.domain, input.value);
   const zoneEnd = pointAt(CENTER, RING_OUTER, zero);
   const collapsed = drawn === drawnBaseline;
-  const bracket = bracketPath(CENTER, BRACKET_RADIUS, baselineAngle, valueAngle);
+  const brace = bracePath(
+    CENTER,
+    BRACKET_RADIUS,
+    baselineAngle,
+    valueAngle,
+    BRACE_CUSP_DEPTH,
+  );
   return {
     drawnValue: drawn,
     drawnBaseline: drawnBaseline,
@@ -680,7 +724,7 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
     positiveRing: ringArcPath(CENTER, RING_INNER, RING_OUTER, zero, QUARTER_TURN),
     negativeRing: ringArcPath(CENTER, RING_INNER, RING_OUTER, -QUARTER_TURN, zero),
     deltaSector: sectorPath(CENTER, SECTOR_RADIUS, baselineAngle, valueAngle),
-    bracket,
+    brace,
     zeroLine: { x2: zoneEnd.x, y2: zoneEnd.y },
     baselineTip: needleEndpoint(
       CENTER,
@@ -697,7 +741,7 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
     callouts: placeCallouts(
       { zero, baseline: baselineAngle, value: valueAngle },
       collapsed,
-      bracket !== "",
+      brace !== "",
     ),
   };
 };

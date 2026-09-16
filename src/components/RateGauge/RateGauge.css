@@ -74,6 +74,11 @@
 
 /* ---- The needles ---- */
 
+/* The brace is a stroke, never a filled shape. */
+.sui-rate-gauge__brace {
+  stroke-linejoin: round;
+}
+
 /* The cap is an ARC concentric with the ring, so it must not fill. */
 .sui-rate-gauge__needle-cap {
   fill: none;
@@ -98,19 +103,19 @@
 
 .sui-rate-gauge__needle--value,
 .sui-rate-gauge__needle-cap,
-.sui-rate-gauge__bracket {
+.sui-rate-gauge__brace {
   stroke: var(--sui-text-secondary);
 }
 
 .sui-rate-gauge--positive .sui-rate-gauge__needle--value,
 .sui-rate-gauge--positive .sui-rate-gauge__needle-cap,
-.sui-rate-gauge--positive .sui-rate-gauge__bracket {
+.sui-rate-gauge--positive .sui-rate-gauge__brace {
   stroke: var(--sui-success);
 }
 
 .sui-rate-gauge--negative .sui-rate-gauge__needle--value,
 .sui-rate-gauge--negative .sui-rate-gauge__needle-cap,
-.sui-rate-gauge--negative .sui-rate-gauge__bracket {
+.sui-rate-gauge--negative .sui-rate-gauge__brace {
   stroke: var(--sui-danger);
 }
 
@@ -118,7 +123,7 @@
   stroke-width: 2.5;
 }
 
-.sui-rate-gauge__bracket {
+.sui-rate-gauge__brace {
   fill: none;
   stroke-width: 1.25;
   stroke-linecap: round;

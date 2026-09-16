@@ -24,7 +24,7 @@ describe("RateGauge", () => {
         domain={DOMAIN}
         baseline={5000}
         value={23000}
-        label="Foo"
+        label="Scenario A"
         format={money}
       />
     ));
@@ -32,7 +32,7 @@ describe("RateGauge", () => {
     expect(meter.getAttribute("aria-valuenow")).toBe("23000");
     expect(meter.getAttribute("aria-valuemin")).toBe("-30000");
     expect(meter.getAttribute("aria-valuemax")).toBe("30000");
-    expect(meter.getAttribute("aria-valuetext")).toContain("Foo");
+    expect(meter.getAttribute("aria-valuetext")).toContain("Scenario A");
     expect(meter.getAttribute("aria-valuetext")).toContain("5000");
     expect(meter.getAttribute("aria-valuetext")).toContain("+$18,000/mo");
   });
@@ -44,7 +44,7 @@ describe("RateGauge", () => {
         domain={DOMAIN}
         baseline={5000}
         value={value()}
-        label="Foo"
+        label="Scenario A"
         format={money}
       />
     ));
@@ -69,16 +69,16 @@ describe("RateGauge", () => {
         domain={DOMAIN}
         baseline={5000}
         value={value()}
-        label="Foo"
+        label="Scenario A"
         format={money}
       />
     ));
     const labels = () => [
       ...container.querySelectorAll(".sui-rate-gauge__row"),
     ].map((node) => node.textContent);
-    expect(labels()).toEqual(["Foo", "+$18,000/mo", "Baseline"]);
+    expect(labels()).toEqual(["Scenario A", "+$18,000/mo", "Baseline"]);
     setValue(-8833);
-    expect(labels()).toEqual(["Baseline", "−$13,833/mo", "Foo"]);
+    expect(labels()).toEqual(["Baseline", "−$13,833/mo", "Scenario A"]);
   });
 
   it("drops the bracket and the delta row when the value sits on the baseline", () => {
@@ -87,7 +87,7 @@ describe("RateGauge", () => {
         domain={DOMAIN}
         baseline={5000}
         value={5000}
-        label="Foo"
+        label="Scenario A"
         format={money}
       />
     ));
@@ -95,7 +95,7 @@ describe("RateGauge", () => {
     // ONE row, naming both, rather than two rows pointing at the same dot.
     const rows = container.querySelectorAll(".sui-rate-gauge__row");
     expect(rows).toHaveLength(1);
-    expect(rows[0].textContent).toBe("Foo = Baseline");
+    expect(rows[0].textContent).toBe("Scenario A = Baseline");
   });
 
   it("ellipsizes the consumer's own name and offers it whole in a tooltip", () => {
@@ -122,7 +122,7 @@ describe("RateGauge", () => {
         domain={DOMAIN}
         baseline={0}
         value={1200}
-        label="Foo"
+        label="Scenario A"
         format={money}
         baselineLabel="Today"
       />
@@ -136,7 +136,7 @@ describe("RateGauge", () => {
         domain={DOMAIN}
         baseline={5000}
         value={999999}
-        label="Foo"
+        label="Scenario A"
         format={money}
       />
     ));
@@ -152,7 +152,7 @@ describe("RateGauge", () => {
         domain={DOMAIN}
         baseline={5000}
         value={999999}
-        label="Foo"
+        label="Scenario A"
         format={money}
       />
     ));

@@ -17,7 +17,8 @@ import {
   RING_INNER,
   VALUE_NEEDLE_RADIUS,
   VIEW_HEIGHT,
-  bracketPath,
+  bracePath,
+  BRACE_CUSP_DEPTH,
   CALLOUT_PITCH,
   CENTER as CENTER_FOR_TEST,
   capArc,
@@ -197,9 +198,23 @@ describe("terminal dots", () => {
 
   // The delta's anchor IS the middle of the bracket, so its dot is that
   // bracket's terminal rather than damage to it.
-  it("keeps the dot on the mark its own callout names", () => {
-    expect(dots(5000, 23000).delta).toBe(true);
-    expect(dots(5000, -8833).delta).toBe(true);
+  // The delta's dot went when the bracket became a brace: a brace's CUSP is
+  // already a terminal, so a dot on it is a second terminal on one leader.
+  it("drops the delta's dot too — the brace's cusp is its terminal", () => {
+    expect(dots(5000, 23000).delta).toBe(false);
+    expect(dots(5000, -8833).delta).toBe(false);
+  });
+
+  it("anchors the delta's leader on the cusp's tip", () => {
+    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 23000 });
+    const delta = g.callouts.find((c) => c.id === "delta");
+    const apex = pointAt(
+      CENTER_FOR_TEST,
+      BRACKET_RADIUS + BRACE_CUSP_DEPTH,
+      (g.baselineAngle + g.valueAngle) / 2,
+    );
+    expect(delta?.anchor).toEqual(apex);
+    expect(g.brace).toContain(`${apex.x} ${apex.y}`);
   });
 
   it("drops a dot that would land on another callout's dot", () => {
@@ -223,9 +238,9 @@ describe("the cap clears the baseline needle", () => {
     );
   });
 
-  it("cannot reach the bracket either — they live at different radii", () => {
+  it("cannot reach the brace either — they live at different radii", () => {
     const near = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 5500 });
-    // Every cap point is at the value needle's radius; the bracket is outside
+    // Every cap point is at the value needle's radius; the brace is outside
     // the ring. The two can never meet, whatever the delta.
     expect(VALUE_NEEDLE_RADIUS).toBeLessThan(BRACKET_RADIUS);
     expect(near.valueTip.capArc).not.toBe("");
@@ -271,16 +286,55 @@ describe("the delta sector", () => {
   });
 });
 
-describe("bracketPath", () => {
-  it("spans the angular difference outside the ring with end caps", () => {
-    const bracket = bracketPath({ cx: 0, cy: 0 }, 60, 10, 40);
-    expect(bracket).not.toMatch(/NaN/);
-    // Two radial end caps plus the arc between them.
-    expect((bracket.match(/M /g) ?? []).length).toBe(3);
+describe("bracePath", () => {
+  const center = { cx: 0, cy: 0 };
+
+  it("is ONE stroke: curl, arc, cusp, arc, curl", () => {
+    const brace = bracePath(center, 60, 10, 40, BRACE_CUSP_DEPTH);
+    expect(brace).not.toMatch(/NaN/);
+    // One move-to — a brace is a single continuous stroke, unlike the bracket
+    // it replaced, which was an arc plus two detached end caps.
+    expect((brace.match(/M /g) ?? []).length).toBe(1);
+    // Two arcs either side of two cubics that meet at the cusp.
+    expect((brace.match(/ A /g) ?? []).length).toBe(2);
+    expect((brace.match(/ C /g) ?? []).length).toBe(2);
+  });
+
+  it("puts the cusp's apex one cusp-depth beyond the radius, at the midpoint", () => {
+    const brace = bracePath(center, 60, 10, 40, BRACE_CUSP_DEPTH);
+    const apex = pointAt(center, 60 + BRACE_CUSP_DEPTH, 25);
+    expect(brace).toContain(`${apex.x} ${apex.y}`);
+    expect(round(Math.hypot(apex.x, apex.y))).toBe(60 + BRACE_CUSP_DEPTH);
+  });
+
+  it("starts and ends on the curls, which turn back toward the ring", () => {
+    const brace = bracePath(center, 60, 10, 40, BRACE_CUSP_DEPTH);
+    const curlStart = pointAt(center, 60 - 4, 10);
+    const curlEnd = pointAt(center, 60 - 4, 40);
+    expect(brace.startsWith(`M ${curlStart.x} ${curlStart.y}`)).toBe(true);
+    expect(brace.endsWith(`${curlEnd.x} ${curlEnd.y}`)).toBe(true);
+  });
+
+  it("collapses to the cusp alone when the delta is tiny", () => {
+    // ~1.2 degrees, the near-baseline fixture. There is no arc left to sweep.
+    const brace = bracePath(center, 60, 24.4, 25.6, BRACE_CUSP_DEPTH);
+    expect(brace).not.toBe("");
+    expect(brace).not.toMatch(/NaN/);
+    expect(brace).not.toMatch(/ A /);
+    expect((brace.match(/ C /g) ?? []).length).toBe(2);
+    // Still points outward by the full depth, so the label still routes.
+    const apex = pointAt(center, 60 + BRACE_CUSP_DEPTH, 25);
+    expect(brace).toContain(`${apex.x} ${apex.y}`);
+  });
+
+  it("sweeps the other way below the baseline without inverting the cusp", () => {
+    const brace = bracePath(center, 60, 40, 10, BRACE_CUSP_DEPTH);
+    const apex = pointAt(center, 60 + BRACE_CUSP_DEPTH, 25);
+    expect(brace).toContain(`${apex.x} ${apex.y}`);
   });
 
   it("emits nothing when the two needles coincide", () => {
-    expect(bracketPath({ cx: 0, cy: 0 }, 60, 25, 25)).toBe("");
+    expect(bracePath(center, 60, 25, 25, BRACE_CUSP_DEPTH)).toBe("");
   });
 });
 
@@ -459,7 +513,7 @@ describe("gaugeGeometry — the printed table", () => {
       "delta",
       "baseline",
     ]);
-    expect(above.bracket).not.toBe("");
+    expect(above.brace).not.toBe("");
     expect(above.deltaSector).not.toBe("");
 
     const below = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: -8833 });
@@ -486,7 +540,7 @@ describe("gaugeGeometry — the printed table", () => {
   it("degenerates safely when the value sits on the baseline", () => {
     const flat = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 5000 });
     expect(flat.delta).toBe(0);
-    expect(flat.bracket).toBe("");
+    expect(flat.brace).toBe("");
     expect(flat.callouts.map((c) => c.id)).toEqual(["valueAndBaseline"]);
     expect(JSON.stringify(flat)).not.toMatch(/null|NaN/);
   });

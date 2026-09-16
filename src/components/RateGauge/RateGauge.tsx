@@ -12,10 +12,11 @@
 //   • a dashed grey needle at the BASELINE;
 //   • a solid needle in the active tone at the CURRENT value, capped at the tip
 //     with a short arc concentric with the ring;
-//   • a bracket outside the ring spanning the angular difference, labelled with
+//   • a curly BRACE outside the ring spanning the angular difference, labelled with
 //     the signed delta — formatted by the CONSUMER, never here — and the faint
 //     sector between the two needles, which is that same difference drawn as an
-//     area in the active tone.
+//     area in the active tone. The brace is a `}` bent around the ring, and its
+//     cusp is the terminal its label's leader leaves from.
 //
 // Each mark carries a HUD CALLOUT: a terminal on the dial, a leader that runs
 // radially out, turns, and levels off into a shared column, and a label on the
@@ -178,9 +179,11 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
           y2={geometry().baselineTip.y}
         />
 
-        {/* The delta bracket, outside the ring, in the active tone. */}
-        <Show when={geometry().bracket}>
-          <path class="sui-rate-gauge__bracket" d={geometry().bracket} />
+        {/* The delta brace, outside the ring, in the active tone. Its cusp is
+            where the delta's leader starts — which is why that callout carries
+            no dot. */}
+        <Show when={geometry().brace}>
+          <path class="sui-rate-gauge__brace" d={geometry().brace} />
         </Show>
 
         {/* The current needle, capped with an arc concentric with the ring so

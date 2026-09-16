@@ -109,12 +109,12 @@ const ScrubbedCard: Component = () => {
             domain={DOMAIN}
             baseline={baseline}
             value={value()}
-            label="Foo"
+            label="Scenario A"
             format={perMonth}
           />
         </ConstrainedBox>
         <Slider
-          label="Foo's rate"
+          label="Scenario A's rate"
           value={value()}
           onChange={setValue}
           min={-40000}
@@ -154,7 +154,7 @@ const RateGaugeBench: Component = () => (
           note="Above baseline — the needle is in the positive zone, so the ring's upper half lights and the delta reads green."
           baseline={5000}
           value={23000}
-          label="Foo"
+          label="Scenario A"
         />
         {/* The brief's values, exactly as given: baseline +5,000, needle at
             −8,833, so the delta prints −$13,833/mo. Note that the brief's
@@ -169,7 +169,7 @@ const RateGaugeBench: Component = () => (
           note="Below zero — the lower half lights, the bracket sweeps back past the baseline, and the delta carries a real minus sign."
           baseline={5000}
           value={-8833}
-          label="Foo"
+          label="Scenario A"
         />
       </WrapRow>
 

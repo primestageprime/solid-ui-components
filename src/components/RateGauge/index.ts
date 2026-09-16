@@ -12,6 +12,7 @@ export { RateGauge } from "./RateGauge";
 export type { RateGaugeProps } from "./RateGauge";
 export {
   angleFor,
+  bracePath,
   capArc,
   clampedValue,
   gaugeGeometry,
