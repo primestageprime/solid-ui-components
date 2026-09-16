@@ -90,9 +90,14 @@ describe("LevelsTimeline — rails", () => {
       const d = rail.getAttribute("d") ?? "";
       expect(d.startsWith("M ")).toBe(true);
       expect(d.endsWith("Z")).toBe(true);
-      expect(d).toContain("C ");
       expect(d).not.toContain("NaN");
     }
+    // A band only CURVES where its own count changes. L6 steps 4 → 2, so it
+    // must; a rail that never changes is a straight bar and should stay one.
+    const curved = [...rails].filter((rail) =>
+      (rail.getAttribute("d") ?? "").includes("C "),
+    );
+    expect(curved.length).toBeGreaterThan(0);
   });
 
   it("carries no stroke-width — a rail's thickness is its SHAPE now", () => {
@@ -291,15 +296,25 @@ describe("LevelsTimeline — departures and hires", () => {
     ).toHaveLength(1);
   });
 
-  it("fades an open-ended flow through a mask, and leaves a move solid", () => {
+  it("graduates every flow from its source's tone to its destination's", () => {
     const { container } = renderOpen();
-    const maskOf = (kind: string) =>
-      container
+    const stopsOf = (kind: string) => {
+      const fill = container
         .querySelector(`.sui-levels-timeline__ribbon--${kind}`)
-        ?.getAttribute("mask");
-    expect(maskOf("departure")).toContain("url(#");
-    expect(maskOf("hire")).toContain("url(#");
-    expect(maskOf("move")).toBeNull();
+        ?.getAttribute("fill");
+      const id = (fill ?? "").replace(/^url\(#/, "").replace(/\)$/, "");
+      return map(
+        (stop: Element) => stop.getAttribute("stop-color"),
+        [...(container.querySelector(`#${CSS.escape(id)}`)?.children ?? [])],
+      );
+    };
+    // A move carries both tones; a one-ended flow graduates to nothing.
+    expect(stopsOf("move")).toEqual([
+      "var(--sui-series-2)",
+      "var(--sui-series-3)",
+    ]);
+    expect(stopsOf("departure")[1]).toBe("transparent");
+    expect(stopsOf("hire")[0]).toBe("transparent");
   });
 
   it("gives every instance its own mask ids, so stacked charts don't collide", () => {

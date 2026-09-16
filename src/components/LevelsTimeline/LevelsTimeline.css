@@ -129,7 +129,7 @@
   stroke: none;
 }
 
-/* The level's own short code, riding just above its rail's left end. */
+/* The level's own short code. Above a band too thin to hold it… */
 .sui-levels-timeline__rail-label {
   fill: var(--sui-text-muted);
   stroke: none;
@@ -137,22 +137,21 @@
   font-weight: 600;
 }
 
-/* ---- The flows ----
+/* …and inside one that is tall enough, in ink that reads on the band's own
+   colour rather than on the page behind it. */
+.sui-levels-timeline__rail-label--inside {
+  fill: var(--sui-bg-elevated);
+}
 
-   A ribbon wears its SOURCE's tone at reduced alpha: it is a quantity leaving
-   one rail, and it must read as subordinate to the two solid rails it joins
-   rather than as a third rail standing on end. */
+/* ---- The flows ---- */
 
 .sui-levels-timeline__ribbon {
   stroke: none;
-  opacity: 0.45;
-}
-
-/* An open-ended flow is already fading through its mask, so it starts a little
-   more solid — otherwise the visible half of it disappears entirely. */
-.sui-levels-timeline__ribbon--departure,
-.sui-levels-timeline__ribbon--hire {
-  opacity: 0.7;
+  /* Translucent so the rails it joins stay the solid thing on the page, and
+     so two ribbons crossing read as two rather than as a third shape. Its
+     COLOUR comes from a per-flow gradient set on the element, not from here —
+     a ribbon graduates from its source's tone to its destination's. */
+  opacity: 0.5;
 }
 
 /* ---- The numbered flags ---- */

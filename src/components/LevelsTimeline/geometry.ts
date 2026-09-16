@@ -7,34 +7,47 @@
 // register as a new component owing its own depth header and its own showcase.
 //
 // EVERY number the chart paints is decided in this file, so the whole shape is
-// readable as a table without a browser (geometry.test.ts prints one: the value
-// domain, the per-span widths, the ribbon extents and the change-x list). The
-// component does nothing but hand these strings and points to the DOM.
+// readable as a table without a browser (geometry.test.ts prints one: the
+// stack at each change, the per-span widths, the flow roots and the change-x
+// list). The component does nothing but hand these strings and points to the
+// DOM.
+//
+// ── WIDE BANDS ON A PROPORTIONAL AXIS ───────────────────────────────────────
+//
+// A level sits at its own pay — y is proportional to `value`, as an axis
+// should be — and the band drawn there is as THICK as the headcount holding
+// it. Those two facts fight each other, and the fight is resolved here rather
+// than left to the consumer.
+//
+// Thickness wants to be generous: the whole point of the picture is that you
+// can see a level fatten and thin, and a hairline cannot say that. But two pay
+// levels close together have very little room between them, and bands that
+// overlap turn the chart into a smear.
+//
+// So `perPersonWidth` is the SMALLER of two answers: the width that would fill
+// a good fraction of the plot at the busiest moment, and the width at which the
+// tightest pair of adjacent levels still clears a margin. The second is what
+// stops a $9k and a $9.5k rail from merging; the first is what stops a sparse
+// chart from being drawn in hairlines. Neither alone is right.
 //
 // Conventions, fixed here once so nothing downstream re-decides them:
 //
 //   • The chart does NO arithmetic on the consumer's counts beyond the width
-//     scale. It never sums a level, never derives a headcount from the
-//     transfers, and never reconciles the two against each other. If a
-//     transfer says two people moved and the counts disagree, it draws both —
-//     the disagreement is the consumer's to see, not this file's to hide.
+//     scale and the stack. It never sums a level, never derives a headcount
+//     from the transfers, and never reconciles the two against each other. If
+//     a transfer says two people moved and the counts disagree, it draws both
+//     — the disagreement is the consumer's to see, not this file's to hide.
 //   • A count point is "from `at`, hold `count`". BEFORE a level's first
 //     point, NOTHING is drawn: the chart will not invent a headcount it was
 //     not given, so a level that appears mid-domain simply begins mid-plot.
-//   • A LEVEL IS KEYED BY ITS `value`, and `value` IS ITS y. Two levels with
-//     the same value are therefore drawn on top of each other. That is the
-//     consumer's constraint to satisfy — either one chart per group, as the
-//     bench does with its three tracks, or values that are already distinct
-//     across the whole chart. There is no group dimension in this API; see the
-//     /promote questions for whether there should be.
 //   • Times outside the domain are CLAMPED to it rather than painted
-//     off-canvas, and every degenerate input (a zero-width time domain, a
-//     flat value domain, no levels at all, a level with no points) resolves to
-//     a finite number rather than NaN.
+//     off-canvas, and every degenerate input (a zero-width time domain, no
+//     levels at all, a level with no points) resolves to a finite number
+//     rather than NaN.
 // ============================================
 import { clamp } from "../../internal/math/clamp";
 import { monthlyCells } from "../DateAxis/cells";
-import { filter, find, flatMap, join, map, sortBy } from "../../fn";
+import { filter, find, join, map, sortBy, sum } from "../../fn";
 
 /** A moment, as the consumer prefers to express it. */
 export type TimeValue = Date | number;
@@ -104,14 +117,6 @@ export const PLOT_BOTTOM = 190;
 export const AXIS_TICK_LENGTH = 4;
 export const AXIS_LABEL_Y = PLOT_BOTTOM + 20;
 
-/**
- * How much headroom the y-domain gets above and below the extremes, as a
- * fraction of their span — so no line is painted along the frame itself.
- */
-export const Y_PAD_FRACTION = 0.12;
-/** The half-height a FLAT chart is opened up to, where a fraction gives zero. */
-export const FLAT_Y_PAD = 1;
-
 /** Milliseconds for either spelling of a moment. */
 export const timeOf = (at: TimeValue): number =>
   typeof at === "number" ? at : at.getTime();
@@ -129,18 +134,6 @@ export const xScaleFor = (domain: TimeDomain): ((at: TimeValue) => number) => {
     const fraction = (timeOf(at) - start) / span;
     return PLOT_LEFT + clamp(fraction, 0, 1) * (PLOT_RIGHT - PLOT_LEFT);
   };
-};
-
-/** Level → y, inverted (the domain top sits at the plot top). */
-export const yScaleFor = (
-  yDomain: readonly [number, number],
-): ((level: number) => number) => {
-  const [lo, hi] = yDomain;
-  const span = hi - lo;
-  const middle = (PLOT_TOP + PLOT_BOTTOM) / 2;
-  if (span <= 0) return () => middle;
-  return (level: number): number =>
-    PLOT_BOTTOM - clamp((level - lo) / span, 0, 1) * (PLOT_BOTTOM - PLOT_TOP);
 };
 
 /** The numbered flags and their rules, in time order. */
@@ -207,28 +200,27 @@ const placeFlag = (mutation: Mutation, x: number): Flag => {
 };
 
 // ============================================================================
-// The RAIL model (Peter, 2026-09-16) — a line is a pay LEVEL, not a person.
+// The RAIL model — a line is a pay LEVEL, and the chart is a Sankey.
 //
-// This REPLACED a stepped model in which y moved and thickness was constant —
-// a person's pay stepping up. That path was carried alongside this one until
-// its last consumer (scenario-board) migrated, then deleted in one commit.
-// The difference was in what VARIES along a line: there, y; here, thickness.
-// A pay level does not go anywhere; what changes is how many people hold it.
+// A rail is a filled band whose THICKNESS is the headcount holding that level.
+// The bands are STACKED, ordered by pay with the highest on top, separated by
+// a fixed gap, and the stack is recomputed at every change — so a band's
+// vertical position drifts as the ones around it thicken and thin, the way a
+// stream chart's do. People moving between levels are FLOWS: wide translucent
+// ribbons that leave one band's edge and arrive at another's, graduating from
+// the source's colour to the destination's along the way.
 //
-// So a rail has no risers at all. It is a run of horizontal SPANS at one y,
-// each as thick as the headcount holding that level over that stretch. People
-// moving between levels are not a step in either line — they are a FLOW, drawn
-// as a ribbon from the source rail to the destination rail at the moment of
-// the move, on the same width scale, so the lower rail visibly thins and the
-// upper one thickens across that x.
+// WIDTH CONSERVATION is exact and unconditional. The width scale is purely
+// proportional — `count × perPerson`, with no floor — so
 //
-// Thickness is a PROPORTION of the chart's own maximum, never an absolute
-// count, so the picture reads the same for a team of six and a company of six
-// hundred. The chart does no arithmetic on the consumer's counts beyond that
-// one scale: it never sums a level, never derives a headcount from the
-// transfers, and never reconciles the two against each other. If a transfer
-// says two people moved and the counts disagree, the chart draws both — the
-// disagreement is the consumer's to see, not this file's to paper over.
+//     bandWidth(a) − bandWidth(c) === bandWidth(a − c)
+//
+// for every a and c, including a rail emptying to nothing. (An earlier version
+// had an affine scale with a MIN_STROKE floor so that one person stayed
+// visible on a hundred-person chart. That floor could not be conserved — it
+// would be counted once per band — and it is no longer needed: `perPerson` is
+// now sized so the whole stack fills most of the plot, which makes one person
+// visibly wide by construction.)
 // ============================================================================
 
 /** "From `at`, hold `count` people at this level." */
@@ -237,11 +229,11 @@ export interface CountPoint {
   readonly count: number;
 }
 
-/** One pay level: a rail at a fixed y, thickening and thinning over time. */
+/** One pay level: a band in the stack, thickening and thinning over time. */
 export interface Level {
   readonly id: string;
   readonly label: string;
-  /** The rail's y, in the consumer's own units — a pay figure or a rank. */
+  /** The pay. Decides RANK in the stack — highest on top — and the label. */
   readonly value: number;
   readonly points: readonly CountPoint[];
 }
@@ -253,15 +245,15 @@ export interface Level {
  *
  *   • `from` and `to`  — a move between two levels. A raise.
  *   • `from` only      — a DEPARTURE: they left the system. The ribbon runs
- *                        outward, below the source rail, and fades out.
- *   • `to` only        — a HIRE: they joined from outside. The ribbon arrives
- *                        from above the destination rail, fading in.
+ *                        out of the band's end and fades to nothing.
+ *   • `to` only        — a HIRE: they joined from outside. The ribbon fades in
+ *                        and arrives at the band's start.
  *   • neither          — nothing to draw; dropped.
  *
- * Modelling both ends as optional is what lets headcount be CONSERVED across a
- * transfer set: every change in a level's count has a matching flow, so a
- * reader never sees a rail thin with nothing leaving it. A silent count drop
- * is the one thing this chart must not show, because it reads as a mistake.
+ * Optional ends are what let headcount be CONSERVED: every change in a band's
+ * thickness has a matching flow, so a reader never sees a band thin with
+ * nothing leaving it. A silent count drop is the one thing this chart must not
+ * show, because it reads as a mistake.
  */
 export interface Transfer {
   readonly at: TimeValue;
@@ -275,34 +267,37 @@ export interface Transfer {
 /** What a flow means, decided by which of its two ends are present. */
 export type FlowKind = "move" | "departure" | "hire";
 
-/** One stretch of a rail: a horizontal run at `y`, `width` thick. */
+/** One stretch of a band: a horizontal run at `y`, `width` thick. */
 export interface RailSpan {
   readonly levelId: string;
   readonly x1: number;
   readonly x2: number;
-  readonly y: number;
   readonly count: number;
   readonly width: number;
+  /** The level's own y. Fixed: a level does not move, its thickness does. */
+  readonly y: number;
 }
 
-/** A rail: one level, placed, with its spans. */
+/** The top and bottom edges of a span. */
+export const spanTop = (span: RailSpan): number => span.y - span.width / 2;
+export const spanBottom = (span: RailSpan): number => span.y + span.width / 2;
+
+/** A rail: one level, stacked, with its bands. */
 export interface Rail {
   readonly id: string;
   readonly label: string;
   readonly value: number;
+  /** Where the level sits — proportional to `value`. */
   readonly y: number;
   /** 1-based position in the CONSUMER's order — the `--sui-series-N` index. */
   readonly seriesIndex: number;
   readonly spans: readonly RailSpan[];
   /** The closed bands this rail paints as — one per contiguous stretch. */
   readonly runs: readonly BandRun[];
-  /**
-   * Where the level's own short label sits: just above the rail's LEFT END,
-   * wherever that is. A level that appears mid-chart carries its label in with
-   * it rather than announcing itself at an edge it does not reach.
-   * `undefined` when nobody ever holds the level, so there is nothing to name.
-   */
+  /** Where the level's own short label sits. `undefined` if nobody holds it. */
   readonly labelAt?: Point;
+  /** True when the first band is tall enough to carry its label INSIDE it. */
+  readonly labelInside: boolean;
 }
 
 /** A thin rule at a change no numbered flag already marks. */
@@ -313,8 +308,10 @@ export interface Dropline {
 
 export interface LevelsRailGeometry {
   readonly yDomain: readonly [number, number];
-  /** The largest headcount anywhere — the denominator of every width. */
-  readonly maxCount: number;
+  /** The largest TOTAL headcount at any one moment — one half of the width scale. */
+  readonly peak: number;
+  /** Thickness per person, after both caps. */
+  readonly perPerson: number;
   readonly rails: readonly Rail[];
   readonly flows: readonly FlowBand[];
   readonly droplines: readonly Dropline[];
@@ -322,147 +319,97 @@ export interface LevelsRailGeometry {
   readonly ticks: readonly MonthTick[];
 }
 
-/** The thinnest a rail anybody holds is ever drawn. One person must be visible. */
-export const MIN_STROKE = 1.5;
-/** The thickest — reached by whoever holds the chart's own maximum. */
-export const MAX_STROKE = 10;
+/** How much of the plot's height the bands fill at the busiest moment. */
+export const FILL_FRACTION = 0.6;
+/** Clear air left between two adjacent levels' bands at their fattest. */
+export const BAND_MARGIN = 4;
+/** Headroom above and below the outermost levels, as a fraction of their span. */
+export const Y_PAD_FRACTION = 0.12;
+/** The half-height a FLAT chart is opened up to, where a fraction gives zero. */
+export const FLAT_Y_PAD = 1;
+
+/** The plot's height — the space the stack is laid out in. */
+export const PLOT_HEIGHT = PLOT_BOTTOM - PLOT_TOP;
 
 /**
- * How far a one-ended flow runs past its rail, into the space where the rest
- * of the world is. Short: it is an exit, not a journey, and a long stub would
- * read as a move to a level the chart forgot to draw.
+ * The width that fills a good fraction of the plot at the busiest moment.
+ * Sized from the PEAK TOTAL headcount rather than the biggest single level: it
+ * is all the bands together that occupy the plot.
+ */
+export const fillWidth = (peak: number): number =>
+  peak <= 0 ? 0 : (PLOT_HEIGHT * FILL_FRACTION) / peak;
+
+/**
+ * The width at which the TIGHTEST pair of adjacent levels still clears
+ * `BAND_MARGIN` between them, at their own fattest.
  *
- * It is CLAMPED to the plot, and it has to be. The padding leaves a fixed
- * headroom above the highest rail — `(1 + PAD) / (1 + 2·PAD)` of the plot
- * height, which for a 12% pad over a 154-unit plot is 14.9 units, whatever
- * the data says — so an unclamped 16-unit stub would draw a hire into the top
- * level ABOVE `PLOT_TOP`, and a departure from the bottom level down into the
- * axis ticks. `overflow: visible` on the canvas means it would be drawn, not
- * cropped. Clamping rather than shrinking the constant, so this survives
- * somebody retuning the padding.
+ * Adjacent means next to each other in pay, which is the only pair that can
+ * collide — a level two rungs up is behind a nearer one already. Each pair is
+ * asked for the width at which half of each band, plus the margin, fits in the
+ * gap between their two y's. `Infinity` when there is only one level: nothing
+ * to collide with, so the fill width wins uncontested.
  */
-export const OPEN_FLOW_STUB = 16;
-
-/**
- * Width for a headcount, as a proportion of the chart's maximum.
- *
- * Zero people is drawn as NOTHING rather than as a hairline: an empty level is
- * an absence, and a hairline would read as "one person, roughly".
- */
-export const strokeFor = (count: number, maxCount: number): number => {
-  if (count <= 0) return 0;
-  if (maxCount <= 0) return MIN_STROKE;
-  const fraction = clamp(count / maxCount, 0, 1);
-  return MIN_STROKE + fraction * (MAX_STROKE - MIN_STROKE);
-};
-
-/** The largest headcount anywhere on the chart, standing or moving. */
-export const maxCountOf = (
+export const adjacencyWidth = (
   levels: readonly Level[],
-  transfers: readonly Transfer[],
-): number => {
-  const counts = allCounts(levels, transfers);
-  return counts.length === 0 ? 0 : Math.max(...counts);
-};
-
-/** Every level's value, padded. Never zero-height, never NaN. */
-export const valueDomainOf = (
-  levels: readonly Level[],
-): readonly [number, number] => {
-  if (levels.length === 0) return [0, 1];
-  const values = map((level: Level) => level.value, levels);
-  const lo = Math.min(...values);
-  const hi = Math.max(...values);
-  const span = hi - lo;
-  const pad = span === 0 ? FLAT_Y_PAD : span * Y_PAD_FRACTION;
-  return [lo - pad, hi + pad];
-};
-
-/**
- * One span per count point, each running to the next change (or the domain
- * end). A span nobody holds is omitted entirely, which is what lets a level
- * empty out for a stretch and come back without a line across the gap.
- */
-export const railSpans = (
-  level: Level,
-  xScale: (at: TimeValue) => number,
   yScale: (value: number) => number,
-  domainEnd: TimeValue,
-  maxCount: number,
-): readonly RailSpan[] => {
-  if (level.points.length === 0) return [];
-  const ordered = sortBy((point: CountPoint) => timeOf(point.at), level.points);
-  const y = yScale(level.value);
-  const spans: RailSpan[] = [];
-  for (const [index, point] of ordered.entries()) {
-    if (point.count <= 0) continue;
-    const next = ordered[index + 1];
-    spans.push({
-      levelId: level.id,
-      x1: xScale(point.at),
-      x2: xScale(next === undefined ? domainEnd : next.at),
-      y,
-      count: point.count,
-      width: strokeFor(point.count, maxCount),
-    });
+): number => {
+  const byValue = sortBy((level: Level) => level.value, levels);
+  const limits: number[] = [];
+  for (const [index, level] of byValue.entries()) {
+    const next = byValue[index + 1];
+    if (next === undefined) continue;
+    const gap = Math.abs(yScale(level.value) - yScale(next.value));
+    const room = gap - BAND_MARGIN;
+    const halves = (maxCountIn(level) + maxCountIn(next)) / 2;
+    if (halves <= 0) continue;
+    limits.push(Math.max(0, room) / halves);
   }
-  return spans;
+  return limits.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...limits);
 };
 
-/**
- * Where a flow's two ends sit, and what it is. A one-ended flow gets a stub
- * into the outside: a departure runs DOWN from its source and a hire comes
- * DOWN INTO its destination from above, so the two sit on opposite sides of
- * their rail and can never be read for each other.
- *
- * A flow naming a level the chart does not have is dropped rather than drawn
- * to nowhere — "nowhere" is what an absent end already means, and drawing a
- * typo the same way as a departure would hide it.
- */
-/** Keep a stub's open end inside the plot. See OPEN_FLOW_STUB for why. */
-const intoPlot = (y: number): number => clamp(y, PLOT_TOP, PLOT_BOTTOM);
+/** The most anybody ever holds this one level. */
+export const maxCountIn = (level: Level): number =>
+  level.points.length === 0
+    ? 0
+    : Math.max(0, ...map((point: CountPoint) => point.count, level.points));
 
-const placeFlow = (
-  transfer: Transfer,
-  yOf: (id: string) => number | undefined,
-  indexById: ReadonlyMap<string, number>,
-):
-  | { kind: FlowKind; y1: number; y2: number; seriesIndex: number }
-  | undefined => {
-  const fromY = transfer.from === undefined ? undefined : yOf(transfer.from);
-  const toY = transfer.to === undefined ? undefined : yOf(transfer.to);
-  const indexOf = (id: string | undefined): number =>
-    (id === undefined ? undefined : indexById.get(id)) ?? 0;
-  if (transfer.from !== undefined && transfer.to !== undefined) {
-    if (fromY === undefined || toY === undefined) return undefined;
-    // A move wears its SOURCE's tone: the reader is watching a quantity leave.
-    return {
-      kind: "move",
-      y1: fromY,
-      y2: toY,
-      seriesIndex: indexOf(transfer.from) + 1,
-    };
+/**
+ * Thickness per person: the smaller of the two answers. See the header — the
+ * fill width alone would smear close levels together, and the adjacency width
+ * alone would draw a sparse chart in hairlines.
+ */
+export const perPersonWidth = (
+  levels: readonly Level[],
+  yScale: (value: number) => number,
+  peak: number,
+): number => Math.min(fillWidth(peak), adjacencyWidth(levels, yScale));
+
+/** A band's thickness. Purely proportional, so conservation is exact. */
+export const bandWidth = (count: number, perPerson: number): number =>
+  Math.max(0, count) * perPerson;
+
+/** The largest total headcount at any one moment. */
+export const peakHeadcount = (levels: readonly Level[]): number => {
+  const moments = changeTimes(levels, []);
+  if (moments.length === 0) return 0;
+  const totals = map(
+    (time: number) => sum(map((level: Level) => countAt(level, time), levels)),
+    moments,
+  );
+  return Math.max(0, ...totals);
+};
+
+/** What a level holds at `time` — zero before its first point. */
+export const countAt = (level: Level, time: number): number => {
+  let current = 0;
+  for (const point of sortBy(
+    (one: CountPoint) => timeOf(one.at),
+    level.points,
+  )) {
+    if (timeOf(point.at) > time) break;
+    current = point.count;
   }
-  if (transfer.from !== undefined) {
-    if (fromY === undefined) return undefined;
-    return {
-      kind: "departure",
-      y1: fromY,
-      y2: intoPlot(fromY + OPEN_FLOW_STUB),
-      seriesIndex: indexOf(transfer.from) + 1,
-    };
-  }
-  if (transfer.to !== undefined) {
-    if (toY === undefined) return undefined;
-    // A hire wears its DESTINATION's tone — that is the rail it thickens.
-    return {
-      kind: "hire",
-      y1: intoPlot(toY - OPEN_FLOW_STUB),
-      y2: toY,
-      seriesIndex: indexOf(transfer.to) + 1,
-    };
-  }
-  return undefined;
+  return Math.max(0, current);
 };
 
 /** Every moment anything changes — a count point or a transfer — deduped. */
@@ -483,9 +430,9 @@ export const changeTimes = (
  *
  * Two omissions, both deliberate. The domain's own left edge is the frame, not
  * an event — everything starts somewhere, and ruling that tells the reader
- * nothing. And where a change coincides with a mutation, the flag's own rule is
- * drawn instead, so the reader never sees two rules in one column and wonders
- * what the second one means.
+ * nothing. And where a change coincides with a mutation, the flag's own rule
+ * is drawn instead, so the reader never sees two rules in one column and
+ * wonders what the second one means.
  */
 export const droplinePositions = (
   levels: readonly Level[],
@@ -508,128 +455,14 @@ export const droplinePositions = (
   );
 };
 
-/**
- * Longest span, in months, that still gets a tick per month. Past this the
- * axis switches to one tick per YEAR: sixty-one month labels in the width of a
- * card is not an axis, it is a grey stripe. The threshold is the component's
- * own legibility decision about its own axis — it is not derived from, and
- * cannot be overridden by, the consumer's data.
- */
-export const MONTHLY_TICK_LIMIT = 18;
+// ── curves and bands ─────────────────────────────────────────────────────────
 
-/** One tick per January in the domain, labelled with the year. */
-export const yearTicks = (
-  domain: TimeDomain,
-  xScale: (at: TimeValue) => number,
-): readonly MonthTick[] =>
-  map(
-    (cell: { start: Date }) => ({
-      key: cell.start.toISOString(),
-      label: String(cell.start.getUTCFullYear()),
-      x: xScale(cell.start),
-    }),
-    filter(
-      (cell: { start: Date }) => cell.start.getUTCMonth() === 0,
-      monthlyCells(asDate(domain[0]), asDate(domain[1])),
-    ),
-  );
-
-/**
- * Month ticks for a short domain, year ticks for a long one. The cadence is
- * chosen from the span alone, so the same chart stays readable whether it is
- * shown a quarter or a decade.
- */
-export const axisTicks = (
-  domain: TimeDomain,
-  xScale: (at: TimeValue) => number,
-): readonly MonthTick[] =>
-  monthlyCells(asDate(domain[0]), asDate(domain[1])).length > MONTHLY_TICK_LIMIT
-    ? yearTicks(domain, xScale)
-    : monthTicks(domain, xScale);
-
-/** Clearance between a rail's top edge and the baseline of its label. */
-export const RAIL_LABEL_GAP = 4;
-
-/** Just above the left end of the first span anybody holds. */
-const railLabelAt = (spans: readonly RailSpan[]): Point | undefined => {
-  const first = spans[0];
-  if (first === undefined) return undefined;
-  return { x: first.x1 + 2, y: first.y - first.width / 2 - RAIL_LABEL_GAP };
-};
-
-/** One level, placed: its spans, the bands they paint as, and its label spot. */
-const railFor = (
-  level: Level,
-  index: number,
-  spans: readonly RailSpan[],
-  yScale: (value: number) => number,
-): Rail => {
-  const rail: Rail = {
-    id: level.id,
-    label: level.label,
-    value: level.value,
-    y: yScale(level.value),
-    seriesIndex: index + 1,
-    spans,
-    runs: [],
-    labelAt: railLabelAt(spans),
-  };
-  // `railRuns` reads only `spans`, so the two-step is safe and keeps the
-  // band-building in one place rather than duplicated into this constructor.
-  return { ...rail, runs: railRuns(rail) };
-};
-
-const allCounts = (
-  levels: readonly Level[],
-  transfers: readonly Transfer[],
-): readonly number[] => {
-  const counts: number[] = [];
-  for (const level of levels) {
-    for (const point of level.points) counts.push(point.count);
-  }
-  for (const transfer of transfers) counts.push(transfer.count);
-  return counts;
-};
-
-// ============================================================================
-// The SANKEY pass (Peter, 2026-09-16: "accurate, but clunky. I want the
-// corners to curve and blend into each other in a smooth way").
-//
-// Nothing about the MODEL changes here — same levels, same transfers, same
-// props. What changes is that the chart stops being drawn with strokes and
-// starts being drawn with BANDS, so a width change is a taper rather than a
-// step and a flow grows out of a rail's own edge rather than crossing it.
-//
-//   • A rail is a closed filled band. Its top and bottom edges are straight
-//     runs joined by short cubics at every count change.
-//   • A flow is a closed band too, bounded by two cubics with HORIZONTAL
-//     tangents at both ends, so it leaves and arrives flush with the rails.
-//   • Every transition — a count change, a rail starting, a rail emptying, a
-//     flow's root — happens over the SAME transition width, centred on the
-//     change x. That shared constant is what makes the pieces blend rather
-//     than merely touch.
-//
-// WIDTH CONSERVATION is exact, and it is why `flowWidth` exists beside
-// `strokeFor`. `strokeFor` is AFFINE — `MIN_STROKE + count·k` — because one
-// person must stay visible on a chart whose maximum is a hundred. An affine
-// scale cannot conserve: the floor would be counted once per band. So a FLOW
-// is measured on the proportional part alone, `count·k`, which is exactly the
-// difference between two rail widths:
-//
-//     strokeFor(a) − flowWidth(c) === strokeFor(a − c)      exactly, not nearly
-//
-// The one place it does not hold is a rail emptying to nothing: the
-// `MIN_STROKE` floor has to go somewhere, and it is absorbed by the taper to
-// zero. That is a legibility allowance, not a modelling claim, and it is
-// confined to a band already on its way out.
-// ============================================================================
-
-/** The transition width, as a fraction of the plot. Sankey-ish, not fussy. */
-export const TRANSITION_FRACTION = 0.05;
+/** The transition width, as a fraction of the plot. Generous: the S is the point. */
+export const TRANSITION_FRACTION = 0.11;
 /** Narrow enough to stay a join rather than a journey… */
-export const MIN_TRANSITION = 10;
-/** …and wide enough that the curve reads as a curve. */
-export const MAX_TRANSITION = 28;
+export const MIN_TRANSITION = 16;
+/** …and wide enough that the S reads as an S. */
+export const MAX_TRANSITION = 72;
 
 /** How wide every blend is, for this plot. One number, shared by everything. */
 export const transitionWidth = (): number =>
@@ -639,16 +472,7 @@ export const transitionWidth = (): number =>
     MAX_TRANSITION,
   );
 
-/** Thickness per person — the PROPORTIONAL part of the rail width scale. */
-export const perPersonWidth = (maxCount: number): number =>
-  maxCount <= 0 ? 0 : (MAX_STROKE - MIN_STROKE) / maxCount;
-
-/**
- * A flow's thickness: exactly the difference it makes to a rail's width.
- * See the conservation note above for why this is not `strokeFor`.
- */
-export const flowWidth = (count: number, maxCount: number): number =>
-  Math.max(0, count) * perPersonWidth(maxCount);
+const CONTIGUITY_EPSILON = 0.001;
 
 /** Round to 3dp — a path string is read by humans in tests, not just parsers. */
 const round3 = (n: number): number => Math.round(n * 1000) / 1000;
@@ -714,10 +538,11 @@ const reverseEdge = (points: readonly EdgePoint[]): string => {
 };
 
 /**
- * Close a band from its two edges: down the top, across, back along the
- * bottom, across again. Both crossings are single lines — at a flush end they
- * are the vertical cap, and at a tapered end the two edges have converged on
- * one point and the line is a no-op.
+ * Close a band from its two edges: along the top, down the far cap, back along
+ * the bottom, up the near cap. Both caps are BLUNT — a rail that starts or
+ * empties ends square at the change x, because it is the ribbon that carries
+ * the change, not the rail's shape. A rail tapering to a point would say the
+ * headcount dwindled when it did not.
  */
 export const bandPath = (
   top: readonly EdgePoint[],
@@ -747,12 +572,7 @@ export interface Taper {
 export interface BandRun {
   readonly path: string;
   readonly tapers: readonly Taper[];
-  /** True where the run begins/ends mid-plot, and so tapers out of nothing. */
-  readonly startsOpen: boolean;
-  readonly endsOpen: boolean;
 }
-
-const CONTIGUITY_EPSILON = 0.001;
 
 /**
  * Split a rail's spans into contiguous runs. A level that empties and comes
@@ -779,29 +599,18 @@ const contiguousRuns = (
 };
 
 /**
- * Half-widths for every x a run has to blend at, shortened wherever two
- * changes sit closer together than a full transition apart. Without this, two
- * nearby count changes would each claim the same stretch of x and the band
- * would fold over itself — and a consumer with a busy month is not doing
- * anything wrong.
- *
- * A FLUSH end (one that reaches the plot edge) gets a half of zero: it is a
- * straight vertical cap, not a blend, because the level did not start there —
- * the chart simply stops looking.
+ * Half-widths for a run's INTERNAL changes, shortened wherever two sit closer
+ * together than a full transition apart. Without this, two nearby changes
+ * would each claim the same stretch of x and the band would fold over itself —
+ * and a consumer with a busy month is not doing anything wrong.
  */
-export const taperHalves = (
-  run: readonly RailSpan[],
-  startsOpen: boolean,
-  endsOpen: boolean,
-): readonly number[] => {
+export const taperHalves = (run: readonly RailSpan[]): readonly number[] => {
   const base = transitionWidth() / 2;
-  const inner = map((span: RailSpan) => span.x2, run.slice(0, run.length - 1));
-  const stops = [run[0].x1, ...inner, run[run.length - 1].x2];
+  const stops = map((span: RailSpan) => span.x2, run.slice(0, run.length - 1));
+  const edges = [run[0].x1, ...stops, run[run.length - 1].x2];
   return map((x: number, index: number) => {
-    if (index === 0 && !startsOpen) return 0;
-    if (index === stops.length - 1 && !endsOpen) return 0;
-    const previous = stops[index - 1];
-    const next = stops[index + 1];
+    const previous = edges[index];
+    const next = edges[index + 2];
     const room = [
       base,
       ...(previous === undefined ? [] : [(x - previous) / 2]),
@@ -811,110 +620,82 @@ export const taperHalves = (
   }, stops);
 };
 
-/**
- * A rail as closed bands: one per contiguous run. Where a run starts or ends
- * mid-plot it tapers out of (and into) zero width rather than stopping at a
- * hard cap, which is what removes the last right angles from the picture.
- */
-export const railRuns = (rail: Rail): readonly BandRun[] =>
-  map(
-    (run: readonly RailSpan[]) => bandRunFor(run),
-    contiguousRuns(rail.spans),
-  );
+/** A rail as closed bands, one per contiguous run, with blunt ends. */
+export const railRuns = (spans: readonly RailSpan[]): readonly BandRun[] =>
+  map(bandRunFor, contiguousRuns(spans));
 
 const bandRunFor = (run: readonly RailSpan[]): BandRun => {
-  const startsOpen = run[0].x1 > PLOT_LEFT + CONTIGUITY_EPSILON;
-  const endsOpen = run[run.length - 1].x2 < PLOT_RIGHT - CONTIGUITY_EPSILON;
-  const halves = taperHalves(run, startsOpen, endsOpen);
-  const y = run[0].y;
+  const halves = taperHalves(run);
   const tapers = map(
     (span: RailSpan, index: number) => ({
       x: span.x2,
-      half: halves[index + 1],
+      half: halves[index],
       widthBefore: span.width,
       widthAfter: run[index + 1].width,
     }),
     run.slice(0, run.length - 1),
   );
 
-  /** `sign` is −1 for the top edge, +1 for the bottom one. */
-  const edgeFor = (sign: number): readonly EdgePoint[] => {
-    const at = (width: number): number => y + (sign * width) / 2;
-    const points: EdgePoint[] = [];
-    const startHalf = halves[0];
-    if (startHalf > 0) {
-      points.push({ x: run[0].x1 - startHalf, y, curved: false });
+  /** `edge` picks top or bottom; both are walked left to right. */
+  const edgeFor = (pick: (span: RailSpan) => number): readonly EdgePoint[] => {
+    const points: EdgePoint[] = [
+      { x: run[0].x1, y: pick(run[0]), curved: false },
+    ];
+    for (const [index, span] of run.slice(0, run.length - 1).entries()) {
+      const half = halves[index];
+      points.push({ x: span.x2 - half, y: pick(span), curved: false });
       points.push({
-        x: run[0].x1 + startHalf,
-        y: at(run[0].width),
-        curved: true,
-      });
-    } else {
-      points.push({ x: run[0].x1, y: at(run[0].width), curved: false });
-    }
-    for (const taper of tapers) {
-      points.push({
-        x: taper.x - taper.half,
-        y: at(taper.widthBefore),
-        curved: false,
-      });
-      points.push({
-        x: taper.x + taper.half,
-        y: at(taper.widthAfter),
+        x: span.x2 + half,
+        y: pick(run[index + 1]),
         curved: true,
       });
     }
     const last = run[run.length - 1];
-    const endHalf = halves[halves.length - 1];
-    if (endHalf > 0) {
-      points.push({ x: last.x2 - endHalf, y: at(last.width), curved: false });
-      points.push({ x: last.x2 + endHalf, y, curved: true });
-    } else {
-      points.push({ x: last.x2, y: at(last.width), curved: false });
-    }
+    points.push({ x: last.x2, y: pick(last), curved: false });
     return points;
   };
 
   return {
-    path: bandPath(edgeFor(-1), edgeFor(1)),
+    path: bandPath(edgeFor(spanTop), edgeFor(spanBottom)),
     tapers,
-    startsOpen,
-    endsOpen,
   };
 };
 
-/** A flow, as a closed band rooted in the edges of the rails it joins. */
+// ── flows ────────────────────────────────────────────────────────────────────
+
+/** A flow, as a closed band rooted in the edges of the bands it joins. */
 export interface FlowBand {
   readonly key: string;
   readonly kind: FlowKind;
   readonly count: number;
-  readonly seriesIndex: number;
   /** The transition this flow spans. */
   readonly x0: number;
   readonly x1: number;
-  /** The root on the source rail's edge — or the open end, for a hire. */
   readonly srcTop: number;
   readonly srcBottom: number;
-  /** The root on the destination rail's edge — or the open end, for a departure. */
   readonly dstTop: number;
   readonly dstBottom: number;
   readonly path: string;
+  /** Token index of the source level — the left end of the gradient. */
+  readonly fromSeriesIndex?: number;
+  /** Token index of the destination level — the right end of the gradient. */
+  readonly toSeriesIndex?: number;
 }
+
+/** A root slice on a band's edge: [top, bottom]. */
+type Root = readonly [number, number];
 
 const sameX = (a: number, b: number): boolean =>
   Math.abs(a - b) < CONTIGUITY_EPSILON;
 
-/** A root slice on a rail's edge: [top, bottom]. */
-type Root = readonly [number, number];
-
 /**
- * Allocate contiguous root slices along one edge of a rail.
+ * Allocate contiguous root slices along one edge of a band.
  *
- * This is the Sankey trick, and the reason Track C's four-way fan does not
- * tangle: slices are laid down in the order of the OTHER end's y. Flows
- * heading up stack downwards from the top edge, topmost destination first;
- * flows heading down stack upwards from the bottom edge. Two flows leaving one
- * rail at one moment therefore cannot cross on the way out.
+ * This is the Sankey trick, and the reason a four-way fan does not tangle:
+ * slices are laid down in the order of the OTHER end's position. Flows heading
+ * up stack downwards from the top edge, topmost destination first; flows
+ * heading down stack upwards from the bottom edge. Two flows leaving one band
+ * at one moment therefore cannot cross on the way out.
  */
 const allocate = (
   from: number,
@@ -944,43 +725,33 @@ const flowPath = (x0: number, x1: number, src: Root, dst: Root): string =>
     ],
   );
 
-/** Slide a root slice wholly inside the plot, keeping its width. */
-const rootIntoPlot = (root: Root): Root => {
-  const height = root[1] - root[0];
-  const top = clamp(root[0], PLOT_TOP, PLOT_BOTTOM - height);
-  return [top, top + height] as const;
-};
-
 /**
- * Every flow as a band. Roots are taken from the rails' own edges, so a flow's
+ * Every flow as a band. Roots are taken from the bands' own edges, so a flow's
  * width at each end is exactly the width its rail loses or gains there — the
  * two shapes share their boundary points rather than being computed apart and
  * hoped to line up.
+ *
+ * A flow with an open end is a level stub: same width along its whole length,
+ * running out of the band that is ending or into the one that is starting. It
+ * is the GRADIENT that says which — fading out for a departure, in for a hire
+ * — because the shape alone cannot, and a stub that wandered off somewhere
+ * would imply a destination the chart does not have.
  */
 export const flowBands = (
   transfers: readonly Transfer[],
   rails: readonly Rail[],
   xScale: (at: TimeValue) => number,
-  maxCount: number,
+  perPerson: number,
 ): readonly FlowBand[] => {
   const railById = new Map(
     map((rail: Rail) => [rail.id, rail] as const, rails),
-  );
-  const tapersById = new Map(
-    map(
-      (rail: Rail) =>
-        [
-          rail.id,
-          flatMap((run: BandRun) => [...run.tapers], railRuns(rail)),
-        ] as const,
-      rails,
-    ),
   );
   const ordered = sortBy((one: Transfer) => timeOf(one.at), transfers);
   const moments = sortBy(
     (time: number) => time,
     [...new Set(map((one: Transfer) => timeOf(one.at), ordered))],
   );
+  const half = transitionWidth() / 2;
   const bands: FlowBand[] = [];
 
   for (const moment of moments) {
@@ -988,131 +759,221 @@ export const flowBands = (
     const here = filter((one: Transfer) => timeOf(one.at) === moment, ordered);
     const srcRoot = new Map<number, Root>();
     const dstRoot = new Map<number, Root>();
-    let half = transitionWidth() / 2;
+
+    /** Where a band sits just before / just after this x. */
+    const endingAt = (rail: Rail) =>
+      find((span: RailSpan) => sameX(span.x2, x), rail.spans);
+    const startingAt = (rail: Rail) =>
+      find((span: RailSpan) => sameX(span.x1, x), rail.spans);
+    const centreOf = (id: string | undefined, fallback: number): number => {
+      const rail = id === undefined ? undefined : railById.get(id);
+      return rail === undefined ? fallback : rail.y;
+    };
 
     for (const rail of rails) {
-      const ending = find((span: RailSpan) => sameX(span.x2, x), rail.spans);
-      const starting = find((span: RailSpan) => sameX(span.x1, x), rail.spans);
-      const widthBefore = ending?.width ?? 0;
-      const widthAfter = starting?.width ?? 0;
-      const taper = find(
-        (one: Taper) => sameX(one.x, x),
-        tapersById.get(rail.id) ?? [],
-      );
-      if (taper !== undefined) half = Math.min(half, taper.half);
-
-      /** Where the other end of this flow sits — an open end is just outside. */
-      const otherY = (one: Transfer, leaving: boolean): number => {
-        const otherId = leaving ? one.to : one.from;
-        if (otherId === undefined) {
-          return leaving ? rail.y + OPEN_FLOW_STUB : rail.y - OPEN_FLOW_STUB;
-        }
-        return railById.get(otherId)?.y ?? rail.y;
-      };
-      const widthOf = (index: number): number =>
-        flowWidth(here[index].count, maxCount);
+      const before = endingAt(rail);
+      const after = startingAt(rail);
+      const mine = (index: number, side: "from" | "to"): boolean =>
+        here[index][side] === rail.id;
       const indices = map((_one: Transfer, index: number) => index, here);
-      const leavingHere = filter(
-        (index: number) => here[index].from === rail.id,
-        indices,
-      );
-      const arrivingHere = filter(
-        (index: number) => here[index].to === rail.id,
-        indices,
-      );
+      const myCentre = rail.y;
+      /** An open end has no band to aim at, so it keeps its own side. */
+      const otherCentre = (index: number, leaving: boolean): number =>
+        centreOf(
+          leaving ? here[index].to : here[index].from,
+          leaving ? myCentre + 1 : myCentre - 1,
+        );
+      const widthOf = (index: number): number =>
+        bandWidth(here[index].count, perPerson);
 
-      const up = (index: number): boolean => otherY(here[index], true) < rail.y;
+      const leaving = filter((i: number) => mine(i, "from"), indices);
+      const arriving = filter((i: number) => mine(i, "to"), indices);
       const outUp = sortBy(
-        (i: number) => otherY(here[i], true),
-        filter(up, leavingHere),
+        (i: number) => otherCentre(i, true),
+        filter((i: number) => otherCentre(i, true) < myCentre, leaving),
       );
       const outDown = sortBy(
-        (i: number) => -otherY(here[i], true),
-        filter((i: number) => !up(i), leavingHere),
+        (i: number) => -otherCentre(i, true),
+        filter((i: number) => otherCentre(i, true) >= myCentre, leaving),
       );
-      const fromAbove = (index: number): boolean =>
-        otherY(here[index], false) < rail.y;
       const inTop = sortBy(
-        (i: number) => otherY(here[i], false),
-        filter(fromAbove, arrivingHere),
+        (i: number) => otherCentre(i, false),
+        filter((i: number) => otherCentre(i, false) < myCentre, arriving),
       );
       const inBottom = sortBy(
-        (i: number) => -otherY(here[i], false),
-        filter((i: number) => !fromAbove(i), arrivingHere),
+        (i: number) => -otherCentre(i, false),
+        filter((i: number) => otherCentre(i, false) >= myCentre, arriving),
       );
 
-      const writeAll = (
+      const write = (
         target: Map<number, Root>,
         order: readonly number[],
         roots: readonly Root[],
       ): void => {
-        for (const [slot, index] of order.entries()) {
+        for (const [slot, index] of order.entries())
           target.set(index, roots[slot]);
-        }
       };
-      writeAll(
+      write(
         srcRoot,
         outUp,
-        allocate(rail.y - widthBefore / 2, 1, map(widthOf, outUp)),
+        allocate(
+          before === undefined ? myCentre : spanTop(before),
+          1,
+          map(widthOf, outUp),
+        ),
       );
-      writeAll(
+      write(
         srcRoot,
         outDown,
-        allocate(rail.y + widthBefore / 2, -1, map(widthOf, outDown)),
+        allocate(
+          before === undefined ? myCentre : spanBottom(before),
+          -1,
+          map(widthOf, outDown),
+        ),
       );
-      writeAll(
+      write(
         dstRoot,
         inTop,
-        allocate(rail.y - widthAfter / 2, 1, map(widthOf, inTop)),
+        allocate(
+          after === undefined ? myCentre : spanTop(after),
+          1,
+          map(widthOf, inTop),
+        ),
       );
-      writeAll(
+      write(
         dstRoot,
         inBottom,
-        allocate(rail.y + widthAfter / 2, -1, map(widthOf, inBottom)),
+        allocate(
+          after === undefined ? myCentre : spanBottom(after),
+          -1,
+          map(widthOf, inBottom),
+        ),
       );
     }
 
-    const x0 = x - half;
-    const x1 = x + half;
     for (const [index, one] of here.entries()) {
-      const placed = placeFlow(
-        one,
-        (id: string) => railById.get(id)?.y,
-        new Map(map((rail: Rail, i: number) => [rail.id, i] as const, rails)),
-      );
-      if (placed === undefined) continue;
-      const width = flowWidth(one.count, maxCount);
-      const src =
-        srcRoot.get(index) ??
-        rootIntoPlot([
-          (dstRoot.get(index)?.[0] ?? placed.y2) - OPEN_FLOW_STUB,
-          (dstRoot.get(index)?.[1] ?? placed.y2 + width) - OPEN_FLOW_STUB,
-        ]);
-      const dst =
-        dstRoot.get(index) ??
-        rootIntoPlot([
-          (srcRoot.get(index)?.[0] ?? placed.y1) + OPEN_FLOW_STUB,
-          (srcRoot.get(index)?.[1] ?? placed.y1 + width) + OPEN_FLOW_STUB,
-        ]);
+      const hasFrom = one.from !== undefined && railById.has(one.from);
+      const hasTo = one.to !== undefined && railById.has(one.to);
+      if (!hasFrom && !hasTo) continue;
+      const kind: FlowKind =
+        hasFrom && hasTo ? "move" : hasFrom ? "departure" : "hire";
+      // A stub keeps the width and the height of the end it does have.
+      const src = srcRoot.get(index) ?? dstRoot.get(index);
+      const dst = dstRoot.get(index) ?? srcRoot.get(index);
+      if (src === undefined || dst === undefined) continue;
       bands.push({
         key: `${one.from ?? "out"}-${one.to ?? "out"}-${moment}`,
-        kind: placed.kind,
+        kind,
         count: one.count,
-        seriesIndex: placed.seriesIndex,
-        x0,
-        x1,
+        x0: x - half,
+        x1: x + half,
         srcTop: src[0],
         srcBottom: src[1],
         dstTop: dst[0],
         dstBottom: dst[1],
-        path: flowPath(x0, x1, src, dst),
+        path: flowPath(x - half, x + half, src, dst),
+        fromSeriesIndex: hasFrom
+          ? railById.get(one.from as string)?.seriesIndex
+          : undefined,
+        toSeriesIndex: hasTo
+          ? railById.get(one.to as string)?.seriesIndex
+          : undefined,
       });
     }
   }
   return bands;
 };
 
-/** The whole rail observation: scales resolved, rails, flows, rules, flags. */
+// ── placing the levels ───────────────────────────────────────────────────────
+
+/** Every level's value, padded. Never zero-height, never NaN. */
+export const valueDomainOf = (
+  levels: readonly Level[],
+): readonly [number, number] => {
+  if (levels.length === 0) return [0, 1];
+  const values = map((level: Level) => level.value, levels);
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const span = hi - lo;
+  const pad = span === 0 ? FLAT_Y_PAD : span * Y_PAD_FRACTION;
+  return [lo - pad, hi + pad];
+};
+
+/** Value → y, inverted (the domain top sits at the plot top). */
+export const yScaleFor = (
+  yDomain: readonly [number, number],
+): ((value: number) => number) => {
+  const [lo, hi] = yDomain;
+  const span = hi - lo;
+  const middle = (PLOT_TOP + PLOT_BOTTOM) / 2;
+  if (span <= 0) return () => middle;
+  return (value: number): number =>
+    PLOT_BOTTOM - clamp((value - lo) / span, 0, 1) * PLOT_HEIGHT;
+};
+
+/**
+ * One span per count point, each running to the next change (or the domain
+ * end). A span nobody holds is omitted entirely, which is what lets a level
+ * empty out for a stretch and come back without a band across the gap.
+ */
+export const railSpans = (
+  level: Level,
+  xScale: (at: TimeValue) => number,
+  yScale: (value: number) => number,
+  domainEnd: TimeValue,
+  perPerson: number,
+): readonly RailSpan[] => {
+  if (level.points.length === 0) return [];
+  const ordered = sortBy((point: CountPoint) => timeOf(point.at), level.points);
+  const y = yScale(level.value);
+  const spans: RailSpan[] = [];
+  for (const [index, point] of ordered.entries()) {
+    if (point.count <= 0) continue;
+    const next = ordered[index + 1];
+    spans.push({
+      levelId: level.id,
+      x1: xScale(point.at),
+      x2: xScale(next === undefined ? domainEnd : next.at),
+      y,
+      count: point.count,
+      width: bandWidth(point.count, perPerson),
+    });
+  }
+  return spans;
+};
+
+/** A band this tall can carry its label inside it and still be legible. */
+export const RAIL_LABEL_MIN_HEIGHT = 13;
+/** Clearance between a band's top edge and a label sitting above it. */
+export const RAIL_LABEL_GAP = 4;
+/** How far in from a band's left end its label starts. */
+export const RAIL_LABEL_INSET = 4;
+
+/**
+ * Where a level's own short label goes.
+ *
+ * Inside the band when the band is tall enough to hold it, and just above the
+ * band when it is not. A fat band with its label floating above it reads as a
+ * label for the gap; a thin band with its label inside it is illegible. The
+ * threshold is the band's height, so the same chart can do both at once —
+ * which it does, because that is exactly what varying thickness means.
+ */
+const railLabelAt = (
+  spans: readonly RailSpan[],
+): { at: Point; inside: boolean } | undefined => {
+  const first = spans[0];
+  if (first === undefined) return undefined;
+  const inside = first.width >= RAIL_LABEL_MIN_HEIGHT;
+  return {
+    at: {
+      x: first.x1 + RAIL_LABEL_INSET,
+      y: inside ? first.y : spanTop(first) - RAIL_LABEL_GAP,
+    },
+    inside,
+  };
+};
+
+/** The whole rail observation: scales resolved, bands, flows, rules, flags. */
 export const levelsRailGeometry = (input: {
   readonly levels: readonly Level[];
   readonly transfers: readonly Transfer[];
@@ -1122,19 +983,29 @@ export const levelsRailGeometry = (input: {
   const xScale = xScaleFor(input.domain);
   const yDomain = valueDomainOf(input.levels);
   const yScale = yScaleFor(yDomain);
-  const maxCount = maxCountOf(input.levels, input.transfers);
-  const spansOf = (level: Level): readonly RailSpan[] =>
-    railSpans(level, xScale, yScale, input.domain[1], maxCount);
-  const rails = map(
-    (level: Level, index: number) =>
-      railFor(level, index, spansOf(level), yScale),
-    input.levels,
-  );
+  const peak = peakHeadcount(input.levels);
+  const perPerson = perPersonWidth(input.levels, yScale, peak);
+  const rails = map((level: Level, index: number) => {
+    const spans = railSpans(level, xScale, yScale, input.domain[1], perPerson);
+    const label = railLabelAt(spans);
+    return {
+      id: level.id,
+      label: level.label,
+      value: level.value,
+      y: yScale(level.value),
+      seriesIndex: index + 1,
+      spans,
+      runs: railRuns(spans),
+      labelAt: label?.at,
+      labelInside: label?.inside ?? false,
+    };
+  }, input.levels);
   return {
     yDomain,
-    maxCount,
+    peak,
+    perPerson,
     rails,
-    flows: flowBands(input.transfers, rails, xScale, maxCount),
+    flows: flowBands(input.transfers, rails, xScale, perPerson),
     droplines: droplinePositions(
       input.levels,
       input.transfers,
@@ -1146,3 +1017,42 @@ export const levelsRailGeometry = (input: {
     ticks: axisTicks(input.domain, xScale),
   };
 };
+
+// ── the axis ─────────────────────────────────────────────────────────────────
+
+/**
+ * Longest span, in months, that still gets a tick per month. Past this the
+ * axis switches to one tick per YEAR: sixty-one month labels in the width of a
+ * card is not an axis, it is a grey stripe.
+ */
+export const MONTHLY_TICK_LIMIT = 18;
+
+/** One tick per January in the domain, labelled with the year. */
+export const yearTicks = (
+  domain: TimeDomain,
+  xScale: (at: TimeValue) => number,
+): readonly MonthTick[] =>
+  map(
+    (cell: { start: Date }) => ({
+      key: cell.start.toISOString(),
+      label: String(cell.start.getUTCFullYear()),
+      x: xScale(cell.start),
+    }),
+    filter(
+      (cell: { start: Date }) => cell.start.getUTCMonth() === 0,
+      monthlyCells(asDate(domain[0]), asDate(domain[1])),
+    ),
+  );
+
+/**
+ * Month ticks for a short domain, year ticks for a long one. The cadence is
+ * chosen from the span alone, so the same chart stays readable whether it is
+ * shown a quarter or a decade.
+ */
+export const axisTicks = (
+  domain: TimeDomain,
+  xScale: (at: TimeValue) => number,
+): readonly MonthTick[] =>
+  monthlyCells(asDate(domain[0]), asDate(domain[1])).length > MONTHLY_TICK_LIMIT
+    ? yearTicks(domain, xScale)
+    : monthTicks(domain, xScale);

@@ -181,24 +181,22 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
     join(" ", [
       "sui-levels-timeline__ribbon",
       `sui-levels-timeline__ribbon--${flow.kind}`,
-      `sui-levels-timeline__tone-${tokenOf(flow.seriesIndex)}`,
     ]);
 
   /**
-   * A one-ended flow fades into the outside, and a gradient mask is the only
-   * way to fade a fill in SVG. The ids must be unique per INSTANCE: three
-   * charts on one page (the bench stacks a track each) would otherwise share
-   * one set of ids, and the first one mounted would silently own them all.
+   * A flow is painted with its own horizontal gradient, running from the
+   * source level's tone to the destination's — which is what makes a ribbon
+   * read as belonging to both ends rather than being stolen from one of them.
+   * A one-ended flow graduates to TRANSPARENT instead, so a departure fades
+   * out of the picture and a hire fades into it; that fade is the only thing
+   * distinguishing the two, since both are the same shape.
    */
+  const gradientId = (flow: FlowBand): string => `${maskId}-${flow.key}`;
+  const toneVar = (index: number | undefined): string =>
+    index === undefined ? "transparent" : `var(--sui-series-${tokenOf(index)})`;
+
+  /** Per-INSTANCE id prefix for this chart's gradients. */
   const maskId = createUniqueId();
-  const departureMask = `${maskId}-departure`;
-  const hireMask = `${maskId}-hire`;
-  /** Only the open-ended flows are masked; a move is solid at both ends. */
-  const flowMask = (flow: FlowBand): string | undefined => {
-    if (flow.kind === "departure") return `url(#${departureMask})`;
-    if (flow.kind === "hire") return `url(#${hireMask})`;
-    return undefined;
-  };
 
   const flagClass = (flag: Flag, block: string): string =>
     join(" ", [
@@ -242,48 +240,24 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
       >
         <title>{description()}</title>
-        {/* Two fades, opaque at the rail and transparent at the open end, so
-            a departure dissolves outward and a hire condenses inward.
-
-            `white` here is a MASK LUMINANCE, not a colour: a mask reads the
-            brightness of what is painted into it, so "white" means "keep this
-            pixel" and has no theme to come from. It is spelt as the keyword
-            rather than as a hex triplet because the bareHexTsx ratchet counts
-            hex literals in .tsx and cannot tell a mask stop from a hardcoded
-            brand colour — and it is right not to try. */}
+        {/* One gradient per flow. The ids are per-INSTANCE (createUniqueId)
+            because three charts on one page — which the bench stacks — would
+            otherwise share one set and the first mounted would own them all. */}
         <defs>
-          <linearGradient
-            id={`${departureMask}-ramp`}
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-            <stop offset="0%" stop-color="white" stop-opacity="1" />
-            <stop offset="100%" stop-color="white" stop-opacity="0" />
-          </linearGradient>
-          <linearGradient id={`${hireMask}-ramp`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="white" stop-opacity="0" />
-            <stop offset="100%" stop-color="white" stop-opacity="1" />
-          </linearGradient>
-          <mask id={departureMask} maskContentUnits="objectBoundingBox">
-            <rect
-              x="0"
-              y="0"
-              width="1"
-              height="1"
-              fill={`url(#${departureMask}-ramp)`}
-            />
-          </mask>
-          <mask id={hireMask} maskContentUnits="objectBoundingBox">
-            <rect
-              x="0"
-              y="0"
-              width="1"
-              height="1"
-              fill={`url(#${hireMask}-ramp)`}
-            />
-          </mask>
+          <For each={geometry().flows}>
+            {(flow) => (
+              <linearGradient
+                id={gradientId(flow)}
+                x1="0"
+                y1="0"
+                x2="1"
+                y2="0"
+              >
+                <stop offset="0%" stop-color={toneVar(flow.fromSeriesIndex)} />
+                <stop offset="100%" stop-color={toneVar(flow.toSeriesIndex)} />
+              </linearGradient>
+            )}
+          </For>
         </defs>
         <g>
           <line
@@ -353,7 +327,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
               <path
                 class={flowClass(flow)}
                 d={flow.path}
-                mask={flowMask(flow)}
+                fill={`url(#${gradientId(flow)})`}
               />
             )}
           </For>
