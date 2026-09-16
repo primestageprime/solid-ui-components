@@ -34,7 +34,7 @@
  * derives rails FROM, not something it draws. The Total went with the change —
  * headcount-weighted rails say what it used to say, and better.
  */
-import { createSignal, onMount, type Component } from "solid-js";
+import { Show, createSignal, onMount, type Component } from "solid-js";
 import {
   filter,
   find,
@@ -113,7 +113,11 @@ import {
   MajorPaneBox,
 } from "../../../src/components/Layout";
 import { FillCardSurface } from "../../../src/components/Surface";
-import { SectionTitle, TextTitle } from "../../../src/components/Text";
+import {
+  NoteText,
+  SectionTitle,
+  TextTitle,
+} from "../../../src/components/Text";
 
 export const meta = { label: "Scenario Board" };
 
@@ -132,72 +136,54 @@ const DOMAIN_END = new Date("2026-01-01");
 const TIME_DOMAIN: TimeDomain = [DOMAIN_START, DOMAIN_END];
 
 /**
- * The three numbered events. These Date objects are the ONLY ones used for a
- * mutation moment anywhere on the board: `LevelsTimeline` ties a riser to a
- * flag by exact timestamp equality (`geometry.timeOf`), so a series point
- * built from a differently-constructed Date would draw the step and light no
- * flag.
+ * NO MUTATIONS (Peter, 2026-09-16). The board opens on the scenario as it
+ * stands — two engineers, both on $80k, nothing proposed — and the reader adds
+ * the first change by CLICKING A DATE on the pay-levels chart.
+ *
+ * That empty opening is a state the whole board has to hold, not a special
+ * case for the dials: with no mutation there is no `old` and no `new`, so the
+ * gauge reads the baseline, the projection is one straight line at the
+ * baseline rate, and the as-of control has nothing to offer and says so. Every
+ * one of those is derived from this empty array rather than switched on a
+ * flag — see `dialsFor`, `nowIndex` and the Changes header.
+ *
+ * Any mutation the reader adds is built by `addMutation` from a date the chart
+ * snapped to a month boundary, which is the only way a flag's moment is ever
+ * constructed: `LevelsTimeline` ties a riser to a flag by exact timestamp
+ * equality, so a differently-built Date would draw the step and light no flag.
  */
-const SEED_MUTATIONS: readonly Mutation[] = [
-  { id: "spring", at: new Date("2025-04-01"), label: "1" },
-  { id: "summer", at: new Date("2025-07-01"), label: "2" },
-  { id: "autumn", at: new Date("2025-10-01"), label: "3" },
-];
+const SEED_MUTATIONS: readonly Mutation[] = [];
 
 /**
- * The people. Everyone holds a ROLE, and the role's band is the shaded box on
- * their dial and the clamp on both their amounts — see `scenario-board-people`
- * for the roles themselves, the pay-history walk and the hire.
+ * The people (Peter, 2026-09-16): TWO, both Software Engineers, both on $80k,
+ * and neither of them has been given anything yet.
  *
- * The three anonymous bands A/B/C this fixture used to carry are gone: they
- * mapped one-for-one onto roles the moment Peter asked the `+` for a role
- * picker, and A→Support, B→Designer, C→Manager keeps every pay figure below
- * inside its new band, so no amount had to move. The roles OVERLAP where the
- * bands could not; the header of `scenario-board-people` states exactly what
- * that costs and why this fixture does not pay it yet.
+ * Both hold the SAME role at the SAME pay on purpose, and that is the story
+ * the timeline is meant to tell from the first frame: one rail, drawn at two
+ * heads' thickness, which is what the levels model says and what six people
+ * across three bands never showed plainly. It also sidesteps the overlap the
+ * roles now permit — a CFO and an engineer share a band exactly, so putting
+ * one of each at $80k would draw two rails at one height (see the header of
+ * `scenario-board-people`). That collision is worth having a fixture for; it
+ * is not worth having in the fixture that opens the board.
+ *
+ * `changes: {}` is the whole of "no raises": an absent key already means
+ * unchanged, so an empty map is a person with a history and nothing in it.
  */
 const PEOPLE: readonly Person[] = [
   {
     id: "peter",
     label: "Peter",
-    roleId: "support",
-    base: 46_000,
-    changes: { spring: 52_000 },
-  },
-  {
-    id: "joe",
-    label: "Joe",
-    roleId: "support",
-    base: 46_000,
-    changes: { spring: null },
-  },
-  {
-    id: "elaina",
-    label: "Elaina",
-    roleId: "designer",
-    base: 62_000,
-    changes: { spring: 68_000 },
-  },
-  {
-    id: "reilly",
-    label: "Reilly",
-    roleId: "designer",
-    base: 62_000,
-    changes: { autumn: 68_000 },
+    roleId: "engineer",
+    base: 80_000,
+    changes: {},
   },
   {
     id: "adlai",
     label: "Adlai",
-    roleId: "manager",
-    base: 90_000,
-    changes: { summer: 95_000 },
-  },
-  {
-    id: "flynn",
-    label: "Flynn",
-    roleId: "manager",
-    base: 90_000,
-    changes: { autumn: 104_000 },
+    roleId: "engineer",
+    base: 80_000,
+    changes: {},
   },
 ];
 
@@ -522,6 +508,31 @@ export const entitiesForMutation = (
     filter((dial: Dial) => isPresentAt(dial.old, dial.value)),
   );
 
+/**
+ * The dials when there is NO mutation yet: everyone on the pay they are
+ * already on, `old` and `value` the same number.
+ *
+ * A separate function rather than a nullable `mutationId` threaded through
+ * `payBefore`/`payFrom`, because the question is genuinely different. With a
+ * mutation the dials show a CHANGE — what was, against what will be. With no
+ * mutation there is no change to show, and saying so with `old === value` is
+ * what makes every reading downstream fall out without a special case: the
+ * delta is zero, so the dial draws no coloured line and prints no figure, the
+ * pay change sums to zero, and the gauge reads exactly the baseline.
+ */
+export const dialsWithoutMutation = (people: readonly Person[]): Dial[] =>
+  pipe(
+    people,
+    map((person: Person) => ({
+      id: person.id,
+      label: person.label,
+      old: person.base,
+      value: person.base,
+      range: roleForPerson(person).range,
+    })),
+    filter((dial: Dial) => isPresentAt(dial.old, dial.value)),
+  );
+
 /** Running balance, month by month, in dollars. */
 export const runningBalances = (
   flows: readonly number[],
@@ -814,19 +825,45 @@ const ScenarioBoardBench: Component = () => {
   // WHICH MUTATION THE DIALS ARE EDITING. One signal for both the timeline's
   // lit flag and the as-of control's selected segment — the lossy two-signal
   // mapping is gone, because the segments ARE the mutations.
-  const [editing, setEditing] = createSignal(SEED_MUTATIONS[1].id);
+  // WHICH MUTATION THE DIALS ARE EDITING, or `null` when there is none to
+  // edit — the state the board OPENS in. `null` is not "none selected by
+  // accident": it is the honest answer while the scenario has no proposed
+  // change at all, and every reading below asks for it rather than assuming a
+  // mutation exists.
+  const [editing, setEditing] = createSignal<string | null>(null);
   // The hire form: whether it is open, and what it holds. Both are the BOARD'S
   // — the modal is a view of this draft, so Cancel throws away a signal rather
   // than reaching into a component to clear it.
   const [hiring, setHiring] = createSignal(false);
   const [draft, setDraft] = createSignal<HireDraft>(EMPTY_HIRE);
 
-  const dials = () => entitiesForMutation(people(), editing(), mutations());
+  /**
+   * The segment the as-of control is showing, or `undefined` when the board has
+   * no mutation to select. `Show` renders its fallback on `undefined`, so this
+   * one accessor decides both what the control reads and whether there is a
+   * control at all.
+   */
+  const selectedSegment = (): string | undefined => editing() ?? undefined;
+
+  const dials = () => {
+    const at = editing();
+    return at === null
+      ? dialsWithoutMutation(people())
+      : entitiesForMutation(people(), at, mutations());
+  };
   const rate = () => rateOf(dials());
 
-  /** The month the projection pivots on: the mutation being edited. */
+  /**
+   * The month the projection pivots on: the mutation being edited.
+   *
+   * With NO mutation the pivot is month zero, so the whole line is projection
+   * and it runs dead straight at the baseline rate — there is no committed
+   * stretch to draw, because nothing has been decided yet.
+   */
   const nowIndex = () => {
-    const chosen = find((m: Mutation) => m.id === editing(), mutations());
+    const at = editing();
+    const chosen =
+      at === null ? undefined : find((m: Mutation) => m.id === at, mutations());
     return chosen === undefined ? 0 : monthIndexOf(chosen.at);
   };
 
@@ -849,17 +886,30 @@ const ScenarioBoardBench: Component = () => {
    */
 
   onMount(() => {
-    if (DEBUG) printTables(people(), mutations(), editing());
+    const at = editing();
+    if (DEBUG && at !== null) printTables(people(), mutations(), at);
   });
 
-  /** A drag edits the SELECTED mutation only. */
+  /**
+   * A drag edits the SELECTED mutation only.
+   *
+   * With no mutation selected there is nowhere to record a change, so this
+   * does nothing — and because the dials are CONTROLLED by `people()`, doing
+   * nothing is what makes them inert: the thumb has no state of its own to
+   * drift into. That is the whole of "dragging is disabled before a date is
+   * picked"; the header says why in words.
+   */
   const setPay = (id: string, value: number): void => {
-    setPeople((current) => withChange(current, id, editing(), value));
+    const at = editing();
+    if (at === null) return;
+    setPeople((current) => withChange(current, id, at, value));
   };
 
   /** ⊗ Terminate: this person is gone from the selected mutation onward. */
   const terminate = (id: string): void => {
-    setPeople((current) => withChange(current, id, editing(), null));
+    const at = editing();
+    if (at === null) return;
+    setPeople((current) => withChange(current, id, at, null));
   };
 
   /**
@@ -868,7 +918,9 @@ const ScenarioBoardBench: Component = () => {
    * the pay they were hired at, exactly, and for anyone else their prior pay.
    */
   const restore = (id: string): void => {
-    setPeople((current) => withoutChange(current, id, editing()));
+    const at = editing();
+    if (at === null) return;
+    setPeople((current) => withoutChange(current, id, at));
   };
 
   /**
@@ -900,8 +952,9 @@ const ScenarioBoardBench: Component = () => {
    */
   const confirmHire = (): void => {
     const current = draft();
-    if (!canHire(current)) return;
-    setPeople((people) => hire(people, current, editing()).people);
+    const at = editing();
+    if (at === null || !canHire(current)) return;
+    setPeople((people) => hire(people, current, at).people);
     setHiring(false);
   };
 
@@ -923,7 +976,7 @@ const ScenarioBoardBench: Component = () => {
   const reset = (): void => {
     setPeople(PEOPLE);
     setMutations(SEED_MUTATIONS);
-    setEditing(SEED_MUTATIONS[1].id);
+    setEditing(null);
   };
 
   return (
@@ -964,13 +1017,16 @@ const ScenarioBoardBench: Component = () => {
           <HalfFillColumn>
             <FillCardSurface>
               <TextTitle>Pay levels through the year</TextTitle>
+              {/* `undefined` is the chart's "nothing selected" and the board
+                  says `null`; `selectedSegment` is the one place the two
+                  vocabularies meet. */}
               <GrowFillBox>
                 <LevelsTimeline
                   levels={levelsOf(people(), mutations())}
                   transfers={transfersOf(people(), mutations())}
                   mutations={mutations()}
                   domain={TIME_DOMAIN}
-                  selectedMutationId={editing()}
+                  selectedMutationId={selectedSegment()}
                   onSelectMutation={setEditing}
                   onPick={pick}
                   formatValue={formatMoney}
@@ -999,23 +1055,46 @@ const ScenarioBoardBench: Component = () => {
                       that edit it. */}
                 <SpreadRow>
                   <TextTitle>Changes</TextTitle>
-                  <SegmentedControl
-                    options={segmentOptionsOf(mutations())}
-                    value={editing()}
-                    onValueChange={setEditing}
-                    aria-label="Change being edited"
-                  />
+                  {/* The as-of control has NOTHING TO OFFER until a date has
+                      been picked, and an empty segmented bar would be a
+                      control that cannot be operated. The hint takes its place
+                      — same slot, same row — and says the one thing the reader
+                      needs to know to get out of the empty state. */}
+                  <Show
+                    when={selectedSegment()}
+                    fallback={
+                      <NoteText>
+                        add a date on the chart to make changes
+                      </NoteText>
+                    }
+                  >
+                    {(selected) => (
+                      <SegmentedControl
+                        options={segmentOptionsOf(mutations())}
+                        value={selected()}
+                        onValueChange={setEditing}
+                        aria-label="Change being edited"
+                      />
+                    )}
+                  </Show>
                   <GhostButton onClick={reset}>Reset</GhostButton>
                 </SpreadRow>
+                {/* Terminating, restoring and hiring all WRITE to a mutation,
+                    so before one exists those callbacks are omitted and the
+                    dial draws neither ⊗ nor +: a control that cannot do
+                    anything is worse than no control. `onChange` stays wired
+                    only because `MutationSliders` requires it, and it is a
+                    no-op for the same reason — which is what makes the dials
+                    inert rather than disabled-looking. */}
                 <GrowFillBox>
                   <MutationSliders
                     entities={dials()}
                     domain={PAY_DOMAIN}
                     snap={1_000}
                     onChange={setPay}
-                    onRemove={terminate}
-                    onRestore={restore}
-                    onAdd={openHire}
+                    onRemove={editing() === null ? undefined : terminate}
+                    onRestore={editing() === null ? undefined : restore}
+                    onAdd={editing() === null ? undefined : openHire}
                     format={formatMoney}
                   />
                 </GrowFillBox>

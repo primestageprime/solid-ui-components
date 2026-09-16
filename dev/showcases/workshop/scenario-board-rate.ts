@@ -8,35 +8,40 @@
  *
  * ── THE CALIBRATION ────────────────────────────────────────────────────────
  *
- * Peter's requirement (2026-09-16): the board opens near the baseline with a
- * single small raise showing green; raising THREE people drives the rate into
- * the yellow band; raising EVERYONE drives it red, below zero.
+ * Peter's requirement (2026-09-16, RE-SOLVED for the two-engineer board): the
+ * board opens AT the baseline and reads green, because it opens with no change
+ * at all; raising BOTH engineers by a plausible ~$20k each drops it into the
+ * yellow band; putting both on their role's CEILING drives it red, below zero.
  *
  * Pay is an OUTFLOW, so a raise LOWERS the company's rate:
  *
  *     rate = BASELINE − total pay increase
  *
- * With BASELINE = 24,000, COMFORTABLE = 12,000 and a raise of $5,000/yr,
- * every one of those four readings falls out of the same line:
+ * With BASELINE = 60,000, COMFORTABLE = 30,000, a raise of $20,000/yr and a
+ * role that runs $80k→$200k, every one of those readings falls out of one line:
  *
- *     raises   pay change     rate      band     why
- *     ------   ----------   --------   ------    ------------------------------
- *        0             0     24,000    green     at the baseline
- *        1         5,000     19,000    green     ≥ 12,000, just below baseline
- *        3        15,000      9,000    yellow    0 < 9,000 < 12,000
- *        6        30,000     −6,000    red       below zero
+ *     raises   pay change     rate       band     why
+ *     ------   ----------   ---------   ------    -----------------------------
+ *        0             0      60,000    green     the board as it opens
+ *        1        20,000      40,000    green     ≥ 30,000, one raise is fine
+ *        2        40,000      20,000    yellow    0 < 20,000 < 30,000
+ *     both
+ *  at ceiling    240,000    −180,000    red       2 × (200k − 80k) crosses zero
  *
- * The three constants are not independent — they are the solution to four
+ * The constants are not independent — they are the solution to four
  * inequalities, which is why they are derived here and not picked:
  *
- *     BASELINE − 1×5,000 ≥ COMFORTABLE      one raise must stay green
- *     BASELINE − 3×5,000 <  COMFORTABLE     three must fall under it
- *     BASELINE − 3×5,000 >  0               …but not all the way to red
- *     BASELINE − 6×5,000 <  0               everyone must cross zero
+ *     BASELINE                  ≥ COMFORTABLE   an unchanged board is green
+ *     BASELINE − 1×20,000       ≥ COMFORTABLE   one raise must stay green
+ *     BASELINE − 2×20,000       <  COMFORTABLE  both must fall under it
+ *     BASELINE − 2×20,000       >  0            …but not all the way to red
+ *     BASELINE − 2×120,000      <  0            both at the ceiling crosses zero
  *
- * which give 15,000 < BASELINE < 30,000 and BASELINE − 15,000 < COMFORTABLE ≤
- * BASELINE − 5,000. 24,000 and 12,000 sit in the middle of both ranges, so the
- * readings are not balanced on a knife edge — every band has room either side.
+ * The last one is free for any positive BASELINE below 240,000, so what binds
+ * is the middle pair: 40,000 < BASELINE and BASELINE − 40,000 < COMFORTABLE ≤
+ * BASELINE − 20,000. 60,000 and 30,000 sit inside both with room either side —
+ * COMFORTABLE could be anywhere in (20,000, 40,000] and the four readings would
+ * not move band — so nothing here is balanced on a knife edge.
  * `rateBandTable()` prints exactly the table above, and the test asserts it.
  */
 
@@ -48,17 +53,17 @@
  * domain. One unit throughout means no conversion can be got wrong, and it is
  * the unit a salary is quoted in.
  */
-export const RATE_BASELINE = 24_000;
+export const RATE_BASELINE = 60_000;
 
 /**
  * The comfortable gain. The gauge splits its gain half here: at or above it
  * the band lights green, below it yellow. Below ZERO is red, and that split is
  * the gauge's own, not ours.
  */
-export const COMFORTABLE = 12_000;
+export const COMFORTABLE = 30_000;
 
 /** The gauge's domain. Wide enough to hold every reading in the table above. */
-export const RATE_DOMAIN: readonly [number, number] = [-30_000, 30_000];
+export const RATE_DOMAIN: readonly [number, number] = [-240_000, 120_000];
 
 /**
  * The size of a "plausible raise" the calibration is solved around, in $/yr.
@@ -68,7 +73,7 @@ export const RATE_DOMAIN: readonly [number, number] = [-30_000, 30_000];
  * readings below are computed at, so that "three raises" names a definite
  * point on the dial rather than an arbitrary one.
  */
-export const RAISE_STEP = 5_000;
+export const RAISE_STEP = 20_000;
 
 /** Which band a rate falls in. The gauge draws this; we name it for the table. */
 export type RateBand = "red" | "yellow" | "green";
@@ -102,20 +107,44 @@ export interface RateRow {
 }
 
 /** How many people the board's fixture starts with. */
-export const HEADCOUNT = 6;
+export const HEADCOUNT = 2;
 
 /**
- * The calibration, as data: no raises, the one the board opens with, the three
- * that should reach yellow, and everyone. Printed by the bench's DEBUG table
- * and asserted by the test, so the numbers are checkable without a browser.
+ * What ONE person moving from their role's floor to its ceiling costs, in
+ * $/yr — `200,000 − 80,000` for the engineers the board opens with.
+ *
+ * The red reading is the only one that is not a multiple of `RAISE_STEP`, and
+ * that is the point of naming it: "both at the ceiling" is a place on the dial
+ * a reader can actually drag to, not a number of notional raises.
  */
-export const rateBandTable = (): RateRow[] =>
-  [0, 1, 3, HEADCOUNT].map((raises) => ({
+export const CEILING_RAISE = 120_000;
+
+/**
+ * The calibration, as data: the board as it opens, one raise, both raised, and
+ * both dragged to their ceiling. Printed by the bench's DEBUG table and
+ * asserted by the test, so the numbers are checkable without a browser.
+ */
+export const rateBandTable = (): RateRow[] => {
+  const rows = [0, 1, HEADCOUNT].map((raises) => ({
     raises,
     payChange: raises * RAISE_STEP,
     rate: rateForRaises(raises),
     band: bandOfRate(rateForRaises(raises)),
   }));
+  // The last row is not a count of raises but a POSITION: everybody dragged to
+  // the top of their band. `raises` carries the headcount so the row still
+  // reads as "both of them", and `payChange` is what that actually costs.
+  const ceiling = HEADCOUNT * CEILING_RAISE;
+  return [
+    ...rows,
+    {
+      raises: HEADCOUNT,
+      payChange: ceiling,
+      rate: rateFromPayChange(ceiling),
+      band: bandOfRate(rateFromPayChange(ceiling)),
+    },
+  ];
+};
 
 /**
  * MONTHS IN A YEAR. Every figure on this board is $/yr, and the balance chart

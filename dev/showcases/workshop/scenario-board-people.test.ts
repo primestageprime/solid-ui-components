@@ -26,19 +26,19 @@ const MUTATIONS: readonly Mutation[] = [
   { id: "autumn", at: new Date("2025-10-01"), label: "3" },
 ];
 
-const ELAINA: Person = {
-  id: "elaina",
-  label: "Elaina",
-  roleId: "designer",
-  base: 62_000,
-  changes: { spring: 68_000 },
+const ADLAI: Person = {
+  id: "adlai",
+  label: "Adlai",
+  roleId: "engineer",
+  base: 80_000,
+  changes: { spring: 100_000 },
 };
 
 const money = (amount: number): string => `$${Math.round(amount / 1000)}k`;
 
 describe("roles", () => {
-  it("offers five roles with a floor below every ceiling", () => {
-    expect(ROLES).toHaveLength(5);
+  it("offers three roles with a floor below every ceiling", () => {
+    expect(ROLES).toHaveLength(3);
     for (const role of ROLES) {
       expect(role.range[0]).toBeLessThan(role.range[1]);
     }
@@ -49,13 +49,11 @@ describe("roles", () => {
   // with what it draws.
   it("contains every fixture pay inside its role's band", () => {
     const pays: ReadonlyArray<readonly [string, number]> = [
-      ["support", 46_000],
-      ["support", 52_000],
-      ["designer", 62_000],
-      ["designer", 68_000],
-      ["manager", 90_000],
-      ["manager", 95_000],
-      ["manager", 104_000],
+      ["engineer", 80_000],
+      ["engineer", 200_000],
+      ["cfo", 80_000],
+      ["intern", 1_000],
+      ["intern", 5_000],
     ];
     for (const [roleId, pay] of pays) {
       const role = roleOf(roleId);
@@ -73,7 +71,7 @@ describe("roles", () => {
     const engineer = roleOf("engineer");
     expect(engineer).toBeDefined();
     expect(roleOptionLabel(engineer as (typeof ROLES)[number], money)).toBe(
-      "Software Engineer · $60k–$200k",
+      "Software Engineer · $80k–$200k",
     );
   });
 
@@ -85,7 +83,7 @@ describe("roles", () => {
   // The pinned track has to hold every band it may be asked to draw — a role
   // added with a higher ceiling must widen it, not overflow it.
   it("spans every role's band, floor to ceiling", () => {
-    expect(payDomainOf()).toEqual([30_000, 200_000]);
+    expect(payDomainOf()).toEqual([1_000, 200_000]);
     expect(payDomainOf([{ id: "x", label: "X", range: [10, 20] }])).toEqual([
       10, 20,
     ]);
@@ -98,8 +96,8 @@ describe("the hire form", () => {
   });
 
   it("refuses a name that is only whitespace", () => {
-    expect(canHire({ name: "   ", roleId: "designer" })).toBe(false);
-    expect(hireName({ name: "  Sam  ", roleId: "designer" })).toBe("Sam");
+    expect(canHire({ name: "   ", roleId: "intern" })).toBe(false);
+    expect(hireName({ name: "  Sam  ", roleId: "intern" })).toBe("Sam");
   });
 
   it("refuses a hire with no role picked", () => {
@@ -111,7 +109,7 @@ describe("the hire form", () => {
   });
 
   it("accepts a trimmed name and a real role", () => {
-    expect(canHire({ name: " Sam ", roleId: "designer" })).toBe(true);
+    expect(canHire({ name: " Sam ", roleId: "intern" })).toBe(true);
   });
 
   it("keeps two people of the same name apart", () => {
@@ -124,12 +122,12 @@ describe("the hire form", () => {
 });
 
 describe("hiring at a mutation", () => {
-  const hired = hire([ELAINA], { name: " Sam ", roleId: "designer" }, "summer");
+  const hired = hire([ADLAI], { name: " Sam ", roleId: "intern" }, "summer");
   const sam = hired.people[hired.people.length - 1] as Person;
 
   it("adds one person and leaves everyone else alone", () => {
     expect(hired.people).toHaveLength(2);
-    expect(hired.people[0]).toBe(ELAINA);
+    expect(hired.people[0]).toBe(ADLAI);
     expect(sam.label).toBe("Sam");
     expect(sam.id).toBe("sam");
     expect(hired.id).toBe("sam");
@@ -137,7 +135,7 @@ describe("hiring at a mutation", () => {
 
   it("starts them at their role's floor, with no prior pay", () => {
     expect(sam.base).toBeNull();
-    expect(payFrom(sam, "summer", MUTATIONS)).toBe(55_000);
+    expect(payFrom(sam, "summer", MUTATIONS)).toBe(1_000);
     expect(payBefore(sam, "summer", MUTATIONS)).toBeNull();
   });
 
@@ -171,12 +169,8 @@ describe("hiring at a mutation", () => {
   it("is on no rail before the moment they were hired", () => {
     expect(payAt(sam, new Date("2025-01-01").getTime(), MUTATIONS)).toBeNull();
     expect(payAt(sam, new Date("2025-06-30").getTime(), MUTATIONS)).toBeNull();
-    expect(payAt(sam, new Date("2025-07-01").getTime(), MUTATIONS)).toBe(
-      55_000,
-    );
-    expect(payAt(sam, new Date("2025-12-31").getTime(), MUTATIONS)).toBe(
-      55_000,
-    );
+    expect(payAt(sam, new Date("2025-07-01").getTime(), MUTATIONS)).toBe(1_000);
+    expect(payAt(sam, new Date("2025-12-31").getTime(), MUTATIONS)).toBe(1_000);
   });
 
   it("needs no entry at the mutations after the hire", () => {

@@ -54,15 +54,16 @@ export interface Role {
 }
 
 /**
- * The roles the board hires into. Five, with distinct dollar bands, and
- * deliberately OVERLAPPING — see the header note on what that costs.
+ * The roles the board hires into (Peter, 2026-09-16). Three, and two of them
+ * share a band EXACTLY — a CFO and an engineer are both worth $80k to $200k on
+ * this board, which is the overlap the header note is about, at its most
+ * extreme. The intern's band is two orders of magnitude smaller, which is the
+ * other thing this fixture is for: one track has to hold both.
  */
 export const ROLES: readonly Role[] = [
-  { id: "engineer", label: "Software Engineer", range: [60_000, 200_000] },
-  { id: "designer", label: "Designer", range: [55_000, 140_000] },
-  { id: "support", label: "Support", range: [40_000, 80_000] },
-  { id: "manager", label: "Manager", range: [90_000, 180_000] },
-  { id: "intern", label: "Intern", range: [30_000, 45_000] },
+  { id: "engineer", label: "Software Engineer", range: [80_000, 200_000] },
+  { id: "cfo", label: "CFO", range: [80_000, 200_000] },
+  { id: "intern", label: "Intern", range: [1_000, 5_000] },
 ];
 
 /**
