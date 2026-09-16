@@ -8,10 +8,11 @@
    ramp (ADR 0003) by its index in the consumer's own order.
 
    ORDER MATTERS in this file. The `__tone-N` classes set BOTH `stroke` and
-   `fill`, because a rail is stroked and a flow ribbon is filled from the same
-   token. Everything that must NOT be filled therefore declares `fill: none`
-   AFTER the tone block — same specificity, later wins. Move `.__rail` above
-   the tone block and every rail silently fills itself in. */
+   `fill` from one token, because everything that carries a level's colour is
+   now a filled band. Anything that must NOT be stroked therefore declares
+   `stroke: none` AFTER the tone block — same specificity, later wins. Move
+   `.__rail` above the tone block and every band gains an outline in its own
+   colour. */
 
 .sui-levels-timeline {
   display: block;
@@ -116,17 +117,16 @@
   fill: var(--sui-series-8);
 }
 
-/* ---- The rails (the current model) ----
+/* ---- The rails ----
 
-   A rail is a run of horizontal strokes at one y whose WIDTH is the headcount.
-   `stroke-width` is set per span from geometry, so nothing here may declare one
-   — a CSS width would silently win over the data. `butt` caps matter too: a
-   round cap on a 10-unit rail would overhang its span by 5 units and make a
-   level look as though it was held before it was. */
+   A rail is a closed BAND, not a stroked line: its thickness is the outline
+   geometry.ts built, so the shape is filled and nothing here may declare a
+   stroke-width. A CSS width would be a second, contradicting source of truth
+   for the same number — and `fill: none` here (which is what the stroked
+   version wanted) silently turns every band into a hollow outline. */
 
 .sui-levels-timeline__rail {
-  fill: none;
-  stroke-linecap: butt;
+  stroke: none;
 }
 
 /* The level's own short code, riding just above its rail's left end. */
