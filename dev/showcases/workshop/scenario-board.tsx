@@ -50,6 +50,15 @@ import {
 import { CashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import { monthlyCells } from "../../../src/components/DateAxis";
+import {
+  COMFORTABLE,
+  DOLLARS_PER_LEVEL,
+  RATE_BASELINE,
+  RATE_DOMAIN,
+  bandOfRate,
+  rateBandTable,
+  rateFromPayChange,
+} from "./scenario-board-rate";
 import { LevelsTimeline, timeOf } from "../../../src/components/LevelsTimeline";
 import type {
   CountPoint,
@@ -187,40 +196,21 @@ const PEOPLE: readonly Person[] = [
     label: "Elaina",
     band: "B",
     base: 4,
-    changes: { spring: 6 },
+    changes: { spring: 5 },
   },
   {
     id: "reilly",
     label: "Reilly",
     band: "B",
     base: 4,
-    changes: { autumn: 6 },
+    changes: { autumn: 5 },
   },
   { id: "adlai", label: "Adlai", band: "C", base: 7, changes: { summer: 8 } },
-  { id: "flynn", label: "Flynn", band: "C", base: 7, changes: { summer: 10 } },
+  { id: "flynn", label: "Flynn", band: "C", base: 7, changes: { autumn: 8 } },
 ];
 
 /** The dial domain, in the consumer's own levels. */
 const LEVEL_DOMAIN: readonly [number, number] = [0, 10];
-
-/** What one level is worth per month. The board's only unit conversion. */
-const DOLLARS_PER_LEVEL = 1000;
-
-/** The gauge's domain and its fixed reference, both the consumer's. */
-const RATE_DOMAIN: readonly [number, number] = [-30000, 30000];
-/**
- * What the company nets per month BEFORE this scenario's changes. The gauge's
- * dashed needle sits here and the solid one at `rateOf`, so the sector between
- * them is what the scenario costs.
- *
- * Non-zero on purpose. With a baseline of 0 every scenario that pays anybody
- * anything drew below zero and the needle lived in the loss half, which made
- * the gauge a cost meter rather than a rate meter. At +$20k the default
- * fixture's $7k of raises lands the needle at +$13k — inside the domain, on
- * the gain side, and visibly short of the baseline, which is the reading the
- * card is for.
- */
-const RATE_BASELINE = 20000;
 
 /**
  * The chart fixture: thirteen months of net monthly flow in dollars, opening
@@ -285,20 +275,19 @@ export const payChangeOf = (entities: readonly Amounts[]): number =>
 /**
  * The COMPANY'S net rate under the scenario, which is what the gauge shows.
  *
- * The sign is the whole point and it was inverted until 2026-09-16 (Peter:
- * "paying people more means less money in the company"). Pay is an OUTFLOW, so
- * the cost is SUBTRACTED from the rate the company was running at:
- *
- *     rate = baseline − Σ(new − old) × dollars-per-level
+ * Pay is an OUTFLOW, so the cost is SUBTRACTED from the rate the company was
+ * running at. The arithmetic and the three constants it balances live in
+ * `scenario-board-rate.ts`, where they are asserted without a browser — see
+ * the calibration table in its header.
  *
  * The two absences fall out of that without a special case, which is the sign
- * that the reading is right rather than patched: a HIRE has no old amount, so
- * its whole new pay is a cost and the rate drops by all of it; a DEPARTURE has
+ * the reading is right rather than patched: a HIRE has no old amount, so its
+ * whole new pay is a cost and the rate drops by all of it; a TERMINATION has
  * no new amount, so its delta is negative, the subtraction flips, and the rate
  * RISES by what they were paid.
  */
 export const rateOf = (entities: readonly Amounts[]): number =>
-  RATE_BASELINE - payChangeOf(entities);
+  rateFromPayChange(payChangeOf(entities));
 
 /**
  * The segment label for a mutation — its month.
@@ -739,6 +728,9 @@ const printTables = (
       transfersOf(people, mutations),
     ),
   );
+  // The calibration, so the four readings Peter specified are checkable from a
+  // terminal and not only from the dial.
+  console.table(rateBandTable());
   const dials = entitiesForMutation(people, mutationId, mutations);
   console.log(
     "baseline",
@@ -925,6 +917,7 @@ const ScenarioBoardBench: Component = () => {
                   <RateGauge
                     domain={RATE_DOMAIN}
                     baseline={RATE_BASELINE}
+                    comfortable={COMFORTABLE}
                     value={rate()}
                     label="Scenario"
                     format={perMonth}
