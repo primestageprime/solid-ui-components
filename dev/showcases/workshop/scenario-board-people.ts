@@ -41,7 +41,14 @@ import { filter, find, map, sortBy } from "../../../src/fn";
 // The TIME helpers come from the timeline's geometry module DIRECTLY rather
 // than through its barrel: the barrel pulls the Solid component in with them,
 // and the whole point of this file is that its test is arithmetic only.
-import { timeOf } from "../../../src/components/LevelsTimeline/geometry";
+// `quarterLabelOf` is the AXIS's own formatter, extracted for this call site
+// (levels-timeline, 4f0dd9d) rather than copied: the chips exist to agree with
+// the axis above them, and two definitions of one format is how a chart and
+// the chips beside it drift into reading as different clocks.
+import {
+  quarterLabelOf,
+  timeOf,
+} from "../../../src/components/LevelsTimeline/geometry";
 import type {
   Mutation,
   TimeValue,
@@ -365,21 +372,6 @@ export const peopleOnRole = (
 
 // ── Mutation labels ──────────────────────────────────────────────────────────
 
-/**
- * The quarter a moment falls in — `2025-Q3`. UTC, as every date here is.
- *
- * The AXIS above the chips formats a quarter the same way, and deliberately so
- * — the chips exist to agree with it. The rule is a duplicate for now because
- * the timeline inlines it inside `quarterTicks` rather than exporting it; if
- * that formatter is ever extracted (`quarterLabelOf`), this should call it and
- * the agreement stops being a convention the two sides have to keep.
- */
-export const quarterLabel = (at: TimeValue): string => {
-  const when = new Date(timeOf(at));
-  const quarter = Math.floor(when.getUTCMonth() / 3) + 1;
-  return `${when.getUTCFullYear()}-Q${quarter}`;
-};
-
 /** The month, exactly — `2025-08`. What the chip's label is an abbreviation OF. */
 export const monthLabel = (at: TimeValue): string =>
   new Date(timeOf(at)).toISOString().slice(0, 7);
@@ -444,11 +436,11 @@ export const segmentLabelsOf = (
   const ordered = orderedMutations(mutations);
   const crowd = new Map<string, number>();
   for (const mutation of ordered) {
-    const quarter = quarterLabel(mutation.at);
+    const quarter = quarterLabelOf(mutation.at);
     crowd.set(quarter, (crowd.get(quarter) ?? 0) + 1);
   }
   return map((mutation: Mutation) => {
-    const quarter = quarterLabel(mutation.at);
+    const quarter = quarterLabelOf(mutation.at);
     const shared = (crowd.get(quarter) ?? 0) > 1;
     return {
       id: mutation.id,

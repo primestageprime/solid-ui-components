@@ -11,14 +11,16 @@ import {
   payBefore,
   payFrom,
   payDomainOf,
-  quarterLabel,
   roleOf,
   roleOptionLabel,
   segmentLabelsOf,
   uniqueId,
   type Person,
 } from "./scenario-board-people";
-import type { Mutation } from "../../../src/components/LevelsTimeline/geometry";
+import {
+  type Mutation,
+  quarterLabelOf,
+} from "../../../src/components/LevelsTimeline/geometry";
 
 // The bench's own three flags, rebuilt here rather than imported: a test that
 // shares the bench's fixture stops being able to say what the FUNCTION does
@@ -197,14 +199,18 @@ describe("the as-of chips", () => {
     label: "",
   });
 
+  // The formatter is the AXIS's, not ours (`quarterLabelOf`), so these rows
+  // assert the contract the chips depend on rather than a local copy of it —
+  // if the axis ever changed its mind about quarter boundaries, the chips
+  // would follow and this test would say so.
   it("labels each quarter of the year", () => {
-    expect(quarterLabel(new Date("2025-01-01"))).toBe("2025-Q1");
-    expect(quarterLabel(new Date("2025-03-31"))).toBe("2025-Q1");
-    expect(quarterLabel(new Date("2025-04-01"))).toBe("2025-Q2");
-    expect(quarterLabel(new Date("2025-07-01"))).toBe("2025-Q3");
-    expect(quarterLabel(new Date("2025-10-01"))).toBe("2025-Q4");
-    expect(quarterLabel(new Date("2025-12-31"))).toBe("2025-Q4");
-    expect(quarterLabel(new Date("2026-01-01"))).toBe("2026-Q1");
+    expect(quarterLabelOf(new Date("2025-01-01"))).toBe("2025-Q1");
+    expect(quarterLabelOf(new Date("2025-03-31"))).toBe("2025-Q1");
+    expect(quarterLabelOf(new Date("2025-04-01"))).toBe("2025-Q2");
+    expect(quarterLabelOf(new Date("2025-07-01"))).toBe("2025-Q3");
+    expect(quarterLabelOf(new Date("2025-10-01"))).toBe("2025-Q4");
+    expect(quarterLabelOf(new Date("2025-12-31"))).toBe("2025-Q4");
+    expect(quarterLabelOf(new Date("2026-01-01"))).toBe("2026-Q1");
   });
 
   it("reads as the bare quarter when a quarter holds one change", () => {
