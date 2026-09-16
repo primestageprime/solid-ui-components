@@ -453,7 +453,7 @@ export const FillColumnFlush: Component<StackDataProps> = createStack({
  *
  *  A variant rather than a call-site prop because `fill` is a Stack OVERRIDE,
  *  locked at variant-definition time. Put proportional children
- *  (`MinorFillColumn` / `MajorFillColumn`) inside it. */
+ *  (`HalfFillColumn`) inside it. */
 export const ViewportColumn: Component<StackDataProps> = createStack({
   gap: "sm",
   fill: true,
@@ -488,27 +488,6 @@ export const GrowFillBox: Component<BoxDataProps> = createBox({
 export const HalfFillColumn: Component<StackDataProps> = createStack({
   gap: "xs",
   style: { flex: "1 1 0", "min-height": "0" },
-});
-
-/** MinorFillColumn — the SMALLER share of a proportional vertical split
- *  (`flex:30; min-height:0`), paired with `MajorFillColumn`.
- *
- *  The numbers are flex GROW factors, not percentages, and that is the point: a
- *  percentage height needs a definite height on every ancestor between it and
- *  the frame and resolves to `auto` in silence when one link is missing, while
- *  grow factors divide whatever height the parent has. A third sibling that
- *  should keep only its intrinsic height (a toolbar, a control row) takes
- *  neither variant. For the overview band of a dashboard above its detail. */
-export const MinorFillColumn: Component<StackDataProps> = createStack({
-  gap: "xs",
-  style: { flex: "30", "min-height": "0" },
-});
-
-/** MajorFillColumn — the LARGER share of that same split (`flex:70;
- *  min-height:0`). Pair it with `MinorFillColumn`. */
-export const MajorFillColumn: Component<StackDataProps> = createStack({
-  gap: "sm",
-  style: { flex: "70", "min-height": "0" },
 });
 
 /** MajorPaneBox — a flex child pinned to 60% of its row, beside a companion

@@ -108,8 +108,6 @@ import {
   NarrowStack,
   HalfFillColumn,
   FillWrapRow,
-  MajorFillColumn,
-  MinorFillColumn,
   SpreadRow,
   ViewportColumn,
   MajorPaneBox,
@@ -943,7 +941,7 @@ const ScenarioBoardBench: Component = () => {
             everything left. Both charts now ABSORB that box: the balance chart
             through `chartHeight="fill"`, the timeline by measuring the height
             it is given. Nothing clips and nothing is sized in pixels here. */}
-        <MinorFillColumn>
+        <HalfFillColumn>
           <HalfFillColumn>
             <FillCardSurface>
               <TextTitle>Running balance</TextTitle>
@@ -980,9 +978,9 @@ const ScenarioBoardBench: Component = () => {
               </GrowFillBox>
             </FillCardSurface>
           </HalfFillColumn>
-        </MinorFillColumn>
+        </HalfFillColumn>
 
-        <MajorFillColumn>
+        <HalfFillColumn>
           <FillWrapRow>
             <MajorPaneBox>
               <FillCardSurface>
@@ -1051,7 +1049,7 @@ const ScenarioBoardBench: Component = () => {
               </FillCardSurface>
             </GrowFillBox>
           </FillWrapRow>
-        </MajorFillColumn>
+        </HalfFillColumn>
       </ViewportColumn>
 
       {/* The hire form. Rendered here rather than beside the dials because it
