@@ -14,7 +14,6 @@ import { describe, expect, it } from "vitest";
 import { map } from "../../fn";
 import {
   ARROW_HEIGHT,
-  type Direction,
   type Domain,
   type Entity,
   TRACK_BOTTOM,

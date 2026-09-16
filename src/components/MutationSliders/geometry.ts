@@ -178,10 +178,7 @@ export const arrowPath = (
 };
 
 /** Everything one dial draws, from one entity. */
-export const dialGeometry = (
-  domain: Domain,
-  entity: Entity,
-): DialGeometry => {
+export const dialGeometry = (domain: Domain, entity: Entity): DialGeometry => {
   const direction = directionOf(entity.old, entity.value);
   const value = entity.value;
   return {
