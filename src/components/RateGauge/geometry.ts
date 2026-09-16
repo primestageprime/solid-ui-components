@@ -99,6 +99,14 @@ export interface Callout {
   readonly points: readonly Point[];
   /** `d` for the leader, built from `points`. */
   readonly leader: string;
+  /** How many lines of text this callout carries. */
+  readonly lines: number;
+  /**
+   * The text baseline of each line, stacked so the block is centred on the
+   * row — which is what keeps the leader pointing at the middle of the words
+   * rather than at the first of them.
+   */
+  readonly lineY: readonly number[];
   /**
    * Whether to draw the terminal dot. False when the dot would sit on top of
    * a mark it does not name — see `dotIsClear`.
@@ -498,14 +506,31 @@ export const TEXT_X = LABEL_X + TEXT_GAP;
  * share an angle.
  */
 
+/** One line of label text, and the air between one row and the next. */
+export const LABEL_LINE_HEIGHT = 13;
+const CALLOUT_ROW_GAP = 7;
 /**
- * Minimum distance between two label rows: a line's height plus a gap.
+ * How many lines a callout carries.
+ *
+ * Every callout names something AND says where it stands relative to
+ * break-even, on a second line — except the brace, whose one line already IS a
+ * relative figure. This is structure, not text: geometry needs the count to
+ * space the rows, and the words themselves stay the component's business.
+ */
+export const linesFor = (id: LabelId): number => (id === "delta" ? 1 : 2);
+const MAX_CALLOUT_LINES = 2;
+
+/**
+ * Minimum distance between two label rows: a full row of lines plus a gap.
  *
  * This is the whole spacing heuristic's unit. Rows want to sit at their
  * anchor's height and are pushed apart only as far as this, so the stack stays
- * as close to the picture as legibility allows.
+ * as close to the picture as legibility allows. It is DERIVED from the line
+ * count rather than chosen, so adding a line to a callout opens the stack by
+ * exactly one line rather than by a number somebody has to remember to update.
  */
-export const CALLOUT_PITCH = 18;
+export const CALLOUT_PITCH =
+  MAX_CALLOUT_LINES * LABEL_LINE_HEIGHT + CALLOUT_ROW_GAP;
 /**
  * Rows stay this far inside the viewBox, top and bottom — enough to hold half
  * a line of 11px label text clear of the edge, and no more. It was 12 against
@@ -1210,8 +1235,15 @@ const placeCallouts = (
     const points = leaderPoints(anchor, turns[index], rows[index], metrics);
     const others = [bands.ring, bands.cap, bands.brace];
     const neighbours = filter((_: Point, i: number) => i !== index, anchors);
+    const lines = linesFor(callout.id);
+    const top = rows[index] - ((lines - 1) * LABEL_LINE_HEIGHT) / 2;
     return {
       id: callout.id,
+      lines,
+      lineY: map(
+        (_: unknown, line: number) => top + line * LABEL_LINE_HEIGHT,
+        Array.from({ length: lines }),
+      ),
       showDot: dotIsClear(
         metrics.center,
         callout.radius,

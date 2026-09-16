@@ -44,6 +44,7 @@
 // ============================================
 import {
   For,
+  Index,
   type Component,
   createMemo,
   createSignal,
@@ -78,6 +79,18 @@ export interface RateGaugeProps {
   label: string;
   /** The consumer's formatter for the signed delta, e.g. `+$23,000/mo`. */
   format: (delta: number) => string;
+  /**
+   * The consumer's formatter for a MAGNITUDE — an absolute amount, never
+   * signed. It fills the second line of each callout, where the component
+   * supplies the words around it ("… over breakeven", "… to payroll").
+   *
+   * Separate from `format` because the two answer different questions and
+   * carry their signs differently: `format` prints a signed CHANGE, this
+   * prints a bare quantity whose direction the sentence already gives. A
+   * consumer that passed its signed formatter here would print "+$7k/mo over
+   * breakeven", saying the same thing twice.
+   */
+  formatMagnitude?: (magnitude: number) => string;
   /** Name for the baseline needle. */
   baselineLabel?: string;
   /**
@@ -92,6 +105,16 @@ export interface RateGaugeProps {
 }
 
 const DEFAULT_BASELINE_LABEL = "Baseline";
+
+/**
+ * The fallback magnitude formatter: a bare grouped number, no units, no sign.
+ *
+ * Deliberately plain. A consumer that cares about units passes its own, and
+ * one that has not got to it yet gets a figure that is at least not WRONG —
+ * which reusing `format` here would be, since that one prints a sign.
+ */
+const plainMagnitude = (magnitude: number): string =>
+  Math.round(magnitude).toLocaleString();
 
 /** Height of a callout's label box, and half of it — one 11px line. */
 const LABEL_BOX_HEIGHT = 14;
@@ -155,16 +178,50 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
 
   const baselineLabel = () => props.baselineLabel ?? DEFAULT_BASELINE_LABEL;
 
+  /**
+   * Where an amount stands against break-even, in words.
+   *
+   * The phrase is the COMPONENT's and the number is the consumer's, which is
+   * the split that keeps this consistent: every gauge says "over"/"below
+   * breakeven" the same way, while the units and the rounding stay whoever's
+   * domain they are. Zero gets its own sentence rather than "0 over
+   * breakeven", which reads as a rounding error.
+   */
+  const againstBreakeven = (amount: number): string => {
+    if (amount === 0) return "at breakeven";
+    const magnitude = (props.formatMagnitude ?? plainMagnitude)(Math.abs(amount));
+    return `${magnitude} ${amount > 0 ? "over" : "below"} breakeven`;
+  };
+
+  /**
+   * The delta as a PAYROLL change, which is the sign flipped.
+   *
+   * A rate that falls is payroll that rises: the money has to come from
+   * somewhere. "to" and "off" carry that direction on their own, so there is
+   * deliberately no +/- prefix as well — a sign here would be the OPPOSITE of
+   * the one on the rate's own delta, and printing both invites exactly the
+   * misreading the words avoid.
+   */
+  const asPayroll = (delta: number): string => {
+    const magnitude = (props.formatMagnitude ?? plainMagnitude)(Math.abs(delta));
+    return `${magnitude} ${delta < 0 ? "to" : "off"} payroll`;
+  };
+
   /** Exactly the strings the callouts will carry, for sizing the column. */
   const columnTexts = (): readonly string[] => {
     const drawnValue = clampedValue(props.domain, props.value);
     const drawnBaseline = clampedValue(props.domain, props.baseline);
+    const relative = [
+      againstBreakeven(drawnValue),
+      againstBreakeven(drawnBaseline),
+    ];
     return drawnValue === drawnBaseline
-      ? [`${props.label} = ${baselineLabel()}`]
+      ? [`${props.label} = ${baselineLabel()}`, ...relative]
       : [
           props.label,
-          props.format(drawnValue - drawnBaseline),
+          asPayroll(drawnValue - drawnBaseline),
           baselineLabel(),
+          ...relative,
         ];
   };
 
@@ -187,13 +244,16 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
   const tone = () => geometry().tone;
 
   /** The words each callout carries. The delta row is the only formatted one. */
-  const textFor = (callout: Callout): string => {
-    if (callout.id === "value") return props.label;
-    if (callout.id === "baseline") return baselineLabel();
-    if (callout.id === "valueAndBaseline") {
-      return `${props.label} = ${baselineLabel()}`;
+  const textFor = (callout: Callout): readonly string[] => {
+    if (callout.id === "delta") return [asPayroll(geometry().delta)];
+    if (callout.id === "baseline") {
+      return [baselineLabel(), againstBreakeven(geometry().drawnBaseline)];
     }
-    return props.format(geometry().delta);
+    const name =
+      callout.id === "valueAndBaseline"
+        ? `${props.label} = ${baselineLabel()}`
+        : props.label;
+    return [name, againstBreakeven(geometry().drawnValue)];
   };
 
   // One sentence, same disposition as BandRail: the announcement has to carry
@@ -217,10 +277,12 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
       : " Below the comfortable gain.";
   };
 
+  // The same phrases the callouts carry, in the same words — a screen reader
+  // and a sighted reader should be able to quote the gauge to each other.
   const valueText = () =>
-    `${props.label}: ${geometry().drawnValue}. ${baselineLabel()}: ${
-      geometry().drawnBaseline
-    }. ${props.format(geometry().delta)} against ${baselineLabel().toLowerCase()}.${bandPhrase()}`;
+    `${props.label}: ${againstBreakeven(geometry().drawnValue)}. ${baselineLabel()}: ${againstBreakeven(
+      geometry().drawnBaseline,
+    )}. ${asPayroll(geometry().delta)}.${bandPhrase()}`;
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA meter; a native <meter> is a replaced element with its own UA bar rendering and cannot host the SVG dial that IS this readout.
@@ -324,38 +386,44 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
                 y1={callout.y - COLUMN_TICK_HALF}
                 y2={callout.y + COLUMN_TICK_HALF}
               />
-              <Show
-                when={isConsumerText(callout)}
-                fallback={
-                  <text
-                    class="sui-rate-gauge__label"
-                    x={callout.textX}
-                    y={callout.y}
-                    dominant-baseline="middle"
+              {/* Line one names the thing; line two says where it stands
+                  against break-even. Only the NAME can be any length — it is
+                  the consumer's — so only it needs a <foreignObject> to
+                  ellipsize in and a Tooltip to hand the whole of itself back.
+                  The relative figure is a phrase this component built to fit,
+                  so it stays SVG text. */}
+              <Index each={textFor(callout)}>
+                {(line, index) => (
+                  <Show
+                    when={index === 0 && isConsumerText(callout)}
+                    fallback={
+                      <text
+                        class={`sui-rate-gauge__label${
+                          index === 0 ? "" : " sui-rate-gauge__label--relative"
+                        }`}
+                        x={callout.textX}
+                        y={callout.lineY[index]}
+                        dominant-baseline="middle"
+                      >
+                        {line()}
+                      </text>
+                    }
                   >
-                    {textFor(callout)}
-                  </text>
-                }
-              >
-                {/* The consumer's own words: they can be any length, so they
-                    ellipsize inside the column and hand the full value to a
-                    Tooltip. HTML needs a <foreignObject> to have any layout at
-                    all inside an <svg>. */}
-                <foreignObject
-                  x={callout.textX}
-                  y={callout.y - LABEL_BOX_HEIGHT / 2}
-                  width={geometry().labelWidth}
-                  height={LABEL_BOX_HEIGHT}
-                >
-                  <div class="sui-rate-gauge__label-box">
-                    <Tooltip content={textFor(callout)} triggerAs="span">
-                      <EllipsizedHudCaption>
-                        {textFor(callout)}
-                      </EllipsizedHudCaption>
-                    </Tooltip>
-                  </div>
-                </foreignObject>
-              </Show>
+                    <foreignObject
+                      x={callout.textX}
+                      y={callout.lineY[index] - LABEL_BOX_HEIGHT / 2}
+                      width={geometry().labelWidth}
+                      height={LABEL_BOX_HEIGHT}
+                    >
+                      <div class="sui-rate-gauge__label-box">
+                        <Tooltip content={line()} triggerAs="span">
+                          <EllipsizedHudCaption>{line()}</EllipsizedHudCaption>
+                        </Tooltip>
+                      </div>
+                    </foreignObject>
+                  </Show>
+                )}
+              </Index>
             </g>
           )}
         </For>

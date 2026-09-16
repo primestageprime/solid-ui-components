@@ -289,3 +289,19 @@
   fill: var(--sui-warning);
   stroke: var(--sui-warning);
 }
+
+/* The second line — where the figure stands against break-even.
+
+   Muted and unshouted beneath a line one in the callout's own tone: it is the
+   detail you read AFTER the name has told you which mark you are looking at,
+   so it must not compete with it. Sentence case, because it is a sentence.
+
+   LAST in the file, and matched through the row, so it outranks the per-tone
+   rules above that paint `__label` — those are about which callout you are
+   reading, and this line's whole point is that it is the quiet half of one. */
+.sui-rate-gauge .sui-rate-gauge__row .sui-rate-gauge__label--relative {
+  fill: var(--sui-text-muted);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}

@@ -17,6 +17,10 @@ const DOMAIN: readonly [number, number] = [-30000, 30000];
 const money = (delta: number): string =>
   `${delta < 0 ? "−" : "+"}$${Math.abs(delta).toLocaleString("en-US")}/mo`;
 
+/** The consumer's magnitude formatter: an amount, never a sign. */
+const magnitude = (amount: number): string =>
+  `$${amount.toLocaleString("en-US")}/mo`;
+
 describe("RateGauge", () => {
   it("announces the value, the baseline and the delta on one meter", () => {
     const { getByRole } = render(() => (
@@ -26,15 +30,20 @@ describe("RateGauge", () => {
         value={23000}
         label="Scenario A"
         format={money}
+        formatMagnitude={magnitude}
       />
     ));
     const meter = getByRole("meter");
     expect(meter.getAttribute("aria-valuenow")).toBe("23000");
     expect(meter.getAttribute("aria-valuemin")).toBe("-30000");
     expect(meter.getAttribute("aria-valuemax")).toBe("30000");
-    expect(meter.getAttribute("aria-valuetext")).toContain("Scenario A");
-    expect(meter.getAttribute("aria-valuetext")).toContain("5000");
-    expect(meter.getAttribute("aria-valuetext")).toContain("+$18,000/mo");
+    // The announcement quotes the callouts word for word, so a screen reader
+    // and a sighted reader can quote the gauge to each other.
+    const said = meter.getAttribute("aria-valuetext") ?? "";
+    expect(said).toContain("Scenario A");
+    expect(said).toContain("$23,000/mo over breakeven");
+    expect(said).toContain("$5,000/mo over breakeven");
+    expect(said).toContain("$18,000/mo off payroll");
   });
 
   // The fill-height contract (Peter, 2026-09-16: charts absorb their
@@ -180,9 +189,62 @@ describe("RateGauge", () => {
     const labels = () => [
       ...container.querySelectorAll(".sui-rate-gauge__row"),
     ].map((node) => node.textContent);
-    expect(labels()).toEqual(["Scenario A", "+$18,000/mo", "Baseline"]);
+    // Each callout is now two lines — a name and where it stands against
+    // break-even — except the brace's, whose one line is already relative.
+    expect(labels()).toEqual([
+      "Scenario A23,000 over breakeven",
+      "18,000 off payroll",
+      "Baseline5,000 over breakeven",
+    ]);
     setValue(-8833);
-    expect(labels()).toEqual(["Baseline", "−$13,833/mo", "Scenario A"]);
+    expect(labels()).toEqual([
+      "Baseline5,000 over breakeven",
+      "13,833 to payroll",
+      "Scenario A8,833 below breakeven",
+    ]);
+  });
+
+  // The brace's line is the delta as a PAYROLL change, which is the sign
+  // flipped: a rate that falls is payroll that rises. "to" and "off" carry
+  // that on their own, so there is no +/- as well — a sign here would be the
+  // opposite of the one on the rate's own delta.
+  it("says the delta as a payroll change, flipped and unsigned", () => {
+    const [value, setValue] = createSignal(23000);
+    const { container } = render(() => (
+      <RateGauge
+        domain={DOMAIN}
+        baseline={5000}
+        value={value()}
+        label="Scenario A"
+        format={money}
+        formatMagnitude={magnitude}
+      />
+    ));
+    const delta = () =>
+      container.querySelector(".sui-rate-gauge__row--delta")?.textContent;
+    // The rate is UP against the baseline, so that money comes off payroll.
+    expect(delta()).toBe("$18,000/mo off payroll");
+    setValue(-8833);
+    // The rate is DOWN, so payroll has to carry the difference.
+    expect(delta()).toBe("$13,833/mo to payroll");
+    expect(delta()).not.toContain("+");
+    expect(delta()).not.toContain("−");
+  });
+
+  it("gives zero its own sentence rather than '0 over breakeven'", () => {
+    const { container } = render(() => (
+      <RateGauge
+        domain={DOMAIN}
+        baseline={0}
+        value={12000}
+        label="Scenario A"
+        format={money}
+        formatMagnitude={magnitude}
+      />
+    ));
+    expect(
+      container.querySelector(".sui-rate-gauge__row--baseline")?.textContent,
+    ).toBe("Baselineat breakeven");
   });
 
   it("drops the bracket and the delta row when the value sits on the baseline", () => {
@@ -199,7 +261,10 @@ describe("RateGauge", () => {
     // ONE row, naming both, rather than two rows pointing at the same dot.
     const rows = container.querySelectorAll(".sui-rate-gauge__row");
     expect(rows).toHaveLength(1);
-    expect(rows[0].textContent).toBe("Scenario A = Baseline");
+    // Still two lines: the collapsed pair, and where that pair stands. This is
+    // the case a consumer flagged as confusing — "SCENARIO = BASELINE" alone
+    // says the two agree but never says what they agree ON.
+    expect(rows[0].textContent).toBe("Scenario A = Baseline5,000 over breakeven");
   });
 
   it("ellipsizes the consumer's own name and offers it whole in a tooltip", () => {
@@ -278,11 +343,17 @@ describe("RateGauge", () => {
         value={999999}
         label="Scenario A"
         format={money}
+        formatMagnitude={magnitude}
       />
     ));
     const meter = getByRole("meter");
     expect(meter.getAttribute("aria-valuenow")).toBe("30000");
     expect(meter.getAttribute("aria-valuetext")).not.toContain("999999");
-    expect(meter.getAttribute("aria-valuetext")).toContain("+$25,000/mo");
+    expect(meter.getAttribute("aria-valuetext")).toContain(
+      "$30,000/mo over breakeven",
+    );
+    expect(meter.getAttribute("aria-valuetext")).toContain(
+      "$25,000/mo off payroll",
+    );
   });
 });

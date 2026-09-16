@@ -90,6 +90,7 @@ const RateCard: Component<{
         label={props.label}
         comfortable={props.comfortable}
         format={perMonth}
+        formatMagnitude={amountPerMonth}
       />
     </TightStack>
   </CardSurface>
@@ -162,6 +163,7 @@ const ScrubbedCard: Component = () => {
             comfortable={comfortable()}
             label="Scenario A"
             format={perMonth}
+            formatMagnitude={amountPerMonth}
           />
         </ConstrainedBox>
         <Slider

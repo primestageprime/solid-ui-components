@@ -761,7 +761,10 @@ describe("callout placement", () => {
   });
 
   it("stays centred on its anchors — the mean displacement is ~0", () => {
-    const rows = place(5000, 23000);
+    // A spread that does not hit the viewBox's edges: the group is shifted
+    // back by exactly the mean push, so it sits on the marks it names. The
+    // clamped case is the next test's business, not this one's.
+    const rows = place(5000, 12000);
     const displacement = rows.reduce((sum, c) => sum + (c.y - c.naturalY), 0);
     expect(Math.abs(displacement / rows.length)).toBeLessThan(0.001);
   });
