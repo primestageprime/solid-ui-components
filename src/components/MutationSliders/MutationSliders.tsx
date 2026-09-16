@@ -92,6 +92,18 @@
 // serves a card with a height and a content-sized column alike, with no `fill`
 // prop and no branch — the trick RateGauge uses (41135a3).
 //
+// ONE OPERATIONAL NOTE on that measurement, because it will waste somebody's
+// afternoon otherwise. `observeSize` defers its callback through
+// `requestAnimationFrame` (its documented defence against ResizeObserver
+// loops), and a browser SUSPENDS rAF for a document that is not visible. So in
+// a hidden or backgrounded tab the dial's CSS box stretches — that is plain
+// layout — while the viewBox stays at its last measured height, and the
+// drawing looks stretched. Nothing is wrong: no frame is being presented to
+// anyone, and the first frame after the tab becomes visible delivers the size
+// and corrects it. If you are measuring `viewBox` from an automation harness,
+// check `document.visibilityState` FIRST — a hidden window makes a working
+// component indistinguishable from a broken one.
+//
 // What the dial does NOT do is stretch a fixed viewBox to fit. The overlay is
 // `preserveAspectRatio="none"`, which scales TEXT along with geometry, so a
 // stretched viewBox would magnify the 11px delta labels into something
