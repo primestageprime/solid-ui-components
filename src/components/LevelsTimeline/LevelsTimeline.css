@@ -1,0 +1,138 @@
+/* LevelsTimeline — Atomic (Depth 1). Owns this file; composes nothing.
+
+   The host carries the group role and the announcement; the <svg> inside it is
+   the canvas. No box-model geometry here — the SVG coordinate system is this
+   component's layout engine (Layout Purity exemption 2: svg/canvas rendering).
+
+   Every colour is a theme token. Series lines take the `--sui-series-*` ramp
+   (ADR 0003) by index; the primary series takes the primary ink instead, so it
+   reads as the total rather than as a ninth colour. */
+
+.sui-levels-timeline {
+  display: block;
+  width: 100%;
+}
+
+.sui-levels-timeline__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ---- The frame ---- */
+
+.sui-levels-timeline__baseline {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+
+.sui-levels-timeline__tick line {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+
+.sui-levels-timeline__tick-label {
+  fill: var(--sui-text-muted);
+  font-size: 9px;
+}
+
+/* ---- The rules ----
+
+   Thin, and under the lines: a rule locates a step, it does not compete with
+   one. Selection lights its rule in the accent and mutes the others, so the
+   reader's eye is pulled to one column of risers. */
+
+.sui-levels-timeline__rule {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.sui-levels-timeline__rule--selected {
+  stroke: var(--sui-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: none;
+}
+
+.sui-levels-timeline__rule--muted {
+  opacity: 0.45;
+}
+
+/* ---- The stepped lines ---- */
+
+.sui-levels-timeline__line {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linejoin: miter;
+  stroke-linecap: butt;
+}
+
+.sui-levels-timeline__line--series-1 {
+  stroke: var(--sui-series-1);
+}
+.sui-levels-timeline__line--series-2 {
+  stroke: var(--sui-series-2);
+}
+.sui-levels-timeline__line--series-3 {
+  stroke: var(--sui-series-3);
+}
+.sui-levels-timeline__line--series-4 {
+  stroke: var(--sui-series-4);
+}
+.sui-levels-timeline__line--series-5 {
+  stroke: var(--sui-series-5);
+}
+.sui-levels-timeline__line--series-6 {
+  stroke: var(--sui-series-6);
+}
+.sui-levels-timeline__line--series-7 {
+  stroke: var(--sui-series-7);
+}
+.sui-levels-timeline__line--series-8 {
+  stroke: var(--sui-series-8);
+}
+
+/* The primary series wins the ink AND the weight — the two channels together,
+   so it still reads as the heavy line in a monochrome print. */
+.sui-levels-timeline__line--primary {
+  stroke: var(--sui-text-primary);
+  stroke-width: 2.5;
+}
+
+/* ---- The numbered flags ---- */
+
+.sui-levels-timeline__flag-box {
+  fill: var(--sui-bg-elevated);
+  stroke: var(--sui-text-muted);
+  stroke-width: 1;
+}
+
+.sui-levels-timeline__flag-label {
+  fill: var(--sui-text-primary);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.sui-levels-timeline__flag--selected .sui-levels-timeline__flag-box {
+  fill: var(--sui-accent);
+  stroke: var(--sui-accent);
+}
+
+.sui-levels-timeline__flag--selected .sui-levels-timeline__flag-label {
+  fill: var(--sui-on-accent);
+}
+
+.sui-levels-timeline__flag--muted {
+  opacity: 0.55;
+}
+
+/* Only an interactive flag advertises itself as one. */
+.sui-levels-timeline__flag[role="button"] {
+  cursor: pointer;
+}
+
+.sui-levels-timeline__flag[role="button"]:focus-visible {
+  outline: 2px solid var(--sui-border-focus);
+  outline-offset: 2px;
+}
