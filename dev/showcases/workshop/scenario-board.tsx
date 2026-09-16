@@ -68,6 +68,12 @@ import {
   withoutChange,
 } from "./scenario-board-people";
 
+import {
+  abbreviateDollars,
+  dollarsPerYear,
+  signedDollarsPerYear,
+} from "./scenario-board-money";
+
 import { CashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import { monthlyCells } from "../../../src/components/DateAxis";
@@ -644,19 +650,27 @@ const fanSeries = (id: string, sign: number, nowIndex: number) => ({
 });
 
 /**
- * Money, short. `$104k` on a dial, `$95.5k` when the drag lands between —
- * continuous amounts need a format that does not pretend to be exact, and the
- * dial is read at a glance rather than audited.
+ * Money, short — `$104k` on a dial, `$95.5k` when the drag lands between.
+ *
+ * ONE formatter for every surface (Peter, 2026-09-16), and it is the library's
+ * own compact scaler underneath rather than a private rounding policy — see
+ * `scenario-board-money`. The name stays `formatMoney` because that is what a
+ * component's `format` prop is asking for.
  */
-export const formatMoney = (amount: number): string => {
-  const k = amount / 1000;
-  const rounded = Math.round(k * 10) / 10;
-  return `$${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}k`;
-};
+export const formatMoney = abbreviateDollars;
 
-/** The consumer's money formatter — a real minus sign, as the gauge bench uses. */
-const perYear = (delta: number): string =>
-  `${delta < 0 ? "−" : "+"}$${Math.abs(Math.round(delta)).toLocaleString("en-US")}/yr`;
+/** The consumer's SIGNED rate — `+$20k/yr`, `−$40k/yr`. */
+const perYear = signedDollarsPerYear;
+
+/**
+ * The gauge's MAGNITUDE formatter — `$60k/yr`, never signed.
+ *
+ * `RateGauge` supplies the words around it ("$60k/yr over breakeven", "$20k/yr
+ * to payroll"), and those words carry the direction, so a sign here would say
+ * it twice and sometimes say it the other way round: the brace states the
+ * delta as a PAYROLL change, and payroll rises exactly when the rate falls.
+ */
+const perYearMagnitude = dollarsPerYear;
 
 /** The board, read as tables, with no browser in the room. */
 /**
@@ -1087,8 +1101,8 @@ const ScenarioBoardBench: Component = () => {
                     when={selectedSegment()}
                     fallback={
                       <NoteText>
-                        To change payroll click the pay levels chart to
-                        indicate when
+                        To change payroll click the pay levels chart to indicate
+                        when
                       </NoteText>
                     }
                   >
@@ -1147,6 +1161,7 @@ const ScenarioBoardBench: Component = () => {
                     value={rate()}
                     label="Scenario"
                     format={perYear}
+                    formatMagnitude={perYearMagnitude}
                   />
                 </GrowCenterColumn>
               </FillCardSurface>
