@@ -227,11 +227,14 @@ describe("MutationSliders", () => {
       expect(onChange).toHaveBeenCalledWith("over", 55_000);
     });
 
-    it("falls back to the whole domain for an entity with no band", () => {
-      // ADDITIVE: a consumer that has not adopted `range` is untouched.
+    it("can still band an entity across the whole domain, explicitly", () => {
+      // The domain-wide fallback is gone (phase 3), but a role that genuinely
+      // permits the whole scale just says so.
       const { getByLabelText } = render(() => (
         <MutationSliders
-          entities={[{ id: "n", label: "Nora", old: 6, value: 7 }]}
+          entities={[
+            { id: "n", label: "Nora", old: 6, value: 7, range: [0, 10] },
+          ]}
           domain={[0, 10]}
           onChange={() => {}}
         />

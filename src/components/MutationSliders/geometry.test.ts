@@ -138,14 +138,6 @@ describe("rangeOf", () => {
     expect(rangeOf(DOMAIN, FIXTURE[0])).toEqual([70_000, 110_000]);
   });
 
-  // ADDITIVE: an entity without a band behaves exactly as it did before the
-  // band existed, so a consumer that has not adopted `range` is untouched.
-  it("falls back to the whole shared domain when the entity has none", () => {
-    expect(rangeOf(DOMAIN, { id: "x", label: "X", old: 1, value: 2 })).toEqual(
-      DOMAIN,
-    );
-  });
-
   it("clamps a band that overflows the domain, so no box draws off-track", () => {
     expect(
       rangeOf(DOMAIN, {
@@ -447,9 +439,11 @@ describe("niceStep", () => {
     }
   });
 
+  // LOAD-BEARING for scenario-board, which confirmed it in the browser on
+  // 2026-09-16: its domain is [0, 10] integer LEVELS and it keys rails BY
+  // level, so a step of 0.1 would not merely round oddly — it would hand the
+  // board level 6.3 and shatter one rail into a rail per fractional pay.
   it("never goes below 1 on a domain counted in whole numbers", () => {
-    // A levels domain of 0–10 steps by 1, not by 0.1 — its ends say the unit
-    // is a whole level, and emitting level 6.3 would corrupt the caller.
     expect(niceStep([0, 10])).toBe(1);
     expect(niceStep([0, 5])).toBe(1);
   });

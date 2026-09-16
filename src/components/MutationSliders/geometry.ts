@@ -84,18 +84,14 @@ export interface Entity {
    * units. The shaded box on the dial is this, and both amounts are clamped
    * into it.
    *
-   * OPTIONAL, and it defaults to the whole shared `domain`. A caller who has
-   * no notion of a role band gets exactly the behaviour they had before bands
-   * existed: one box covering the track and no clamping beyond the domain's
-   * own. That is what makes this an additive field rather than a breaking one.
-   *
-   * TODO(phase 3): make this REQUIRED and delete the domain fallback, in the
-   * same commit that retires LevelsTimeline's `series` path — once
-   * scenario-board has migrated. The optionality is the deprecate phase, not
-   * the destination; leaving both paths alive forever is how a codebase ends
-   * up with two ways to do everything.
+   * REQUIRED, as of phase 3 (2026-09-16). It shipped optional, defaulting to
+   * the whole shared domain, so that it could be added without breaking a
+   * consumer that had never heard of bands; both consumers now pass it on
+   * every entity, so the fallback is gone rather than left alive forever.
+   * A band is the thing this dial is FOR — an entity without one was always
+   * a caller who had not finished thinking, not a case worth supporting.
    */
-  readonly range?: Domain;
+  readonly range: Domain;
 }
 
 /** A rectangle on the track, in canvas units. */
@@ -195,12 +191,13 @@ export const yFor = (domain: Domain, value: number): number => {
 };
 
 /**
- * The entity's role band, resolved: its own if it has one, otherwise the whole
- * shared domain — then ordered, and clamped into the domain so no box can draw
- * off the track.
+ * The entity's role band, ordered and clamped into the domain so no box can
+ * draw off the track.
+ *
+ * There is no longer a fallback for a missing band: `range` is required, and
+ * the domain-wide default that stood in for it during the migration is gone.
  */
 export const rangeOf = (domain: Domain, entity: Entity): Domain => {
-  if (!entity.range) return domain;
   const [a, b] = entity.range;
   const [low, high] = a <= b ? [a, b] : [b, a];
   return [
