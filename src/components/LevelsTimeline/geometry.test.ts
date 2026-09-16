@@ -1415,7 +1415,6 @@ describe("frameForBox — one unit is one CSS pixel", () => {
   it("refuses a box too narrow to hold a chart at all", () => {
     expect(frameForBox({ width: 100, height: 300 }).viewWidth).toBe(
       MIN_VIEW_WIDTH,
-  SOLO_BAND_FRACTION,
     );
   });
 
