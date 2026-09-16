@@ -40,6 +40,7 @@
 // ============================================
 import {
   For,
+  Index,
   Show,
   type Component,
   createEffect,
@@ -280,10 +281,21 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           `sui-levels-timeline__ribbon--${flow.kind}`,
         ]);
 
-  const gradientId = (flow: FlowBand): string => `${maskId}-${flow.key}`;
-
-  /** Per-INSTANCE id prefix for this chart's gradients. */
+  /** Per-INSTANCE id prefix, so several charts on one page cannot collide. */
   const maskId = createUniqueId();
+
+  /**
+   * There are exactly TWO gradients in this chart, and neither depends on the
+   * data: a fade OUT for a departure and a fade IN for a hire, both in
+   * `currentColor`. Giving every flow its own `<linearGradient>` keyed by the
+   * flow meant the whole `<defs>` block was rebuilt on every update — and on
+   * the board, where a rail's id follows its pay, that happened on every step
+   * of a drag. Two static defs cannot churn.
+   */
+  const fadeOutId = `${maskId}-fade-out`;
+  const fadeInId = `${maskId}-fade-in`;
+  const gradientId = (flow: FlowBand): string =>
+    flow.kind === "hire" ? fadeInId : fadeOutId;
 
   const flagClass = (flag: Flag, block: string): string =>
     join(" ", [
@@ -404,22 +416,14 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             stacks, would otherwise share one set and the first mounted would
             own them all. */}
         <defs>
-          <For each={filter(isOpen, geometry().flows)}>
-            {(flow) => (
-              <linearGradient id={gradientId(flow)} x1="0" y1="0" x2="1" y2="0">
-                <stop
-                  offset="0%"
-                  stop-color="currentColor"
-                  stop-opacity={flow.kind === "hire" ? 0 : 1}
-                />
-                <stop
-                  offset="100%"
-                  stop-color="currentColor"
-                  stop-opacity={flow.kind === "hire" ? 1 : 0}
-                />
-              </linearGradient>
-            )}
-          </For>
+          <linearGradient id={fadeOutId} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="currentColor" stop-opacity={1} />
+            <stop offset="100%" stop-color="currentColor" stop-opacity={0} />
+          </linearGradient>
+          <linearGradient id={fadeInId} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="currentColor" stop-opacity={0} />
+            <stop offset="100%" stop-color="currentColor" stop-opacity={1} />
+          </linearGradient>
         </defs>
         <g>
           <line
@@ -432,82 +436,82 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
           {/* The month axis. Built from DateAxis's own calendar (geometry.ts),
               so the chart and the axis component agree on where a month is. */}
-          <For each={geometry().ticks}>
+          <Index each={geometry().ticks}>
             {(tick) => (
               <g class="sui-levels-timeline__tick">
                 <line
-                  x1={tick.x}
-                  x2={tick.x}
+                  x1={tick().x}
+                  x2={tick().x}
                   y1={frame().plotBottom}
                   y2={frame().plotBottom + AXIS_TICK_LENGTH}
                 />
                 {/* Every boundary gets a tick; in compact chrome only every
                     third gets a LABEL, because a full month row does not fit
                     and overlapping text is worse than none. */}
-                <Show when={tick.showLabel}>
+                <Show when={tick().showLabel}>
                   <text
                     class="sui-levels-timeline__tick-label"
-                    x={tick.x}
+                    x={tick().x}
                     y={frame().axisLabelY}
                     text-anchor="middle"
                   >
-                    {tick.label}
+                    {tick().label}
                   </text>
                 </Show>
               </g>
             )}
-          </For>
+          </Index>
 
           {/* The un-numbered changes. Thinner and fainter than a flag's rule,
               because they carry no name — they only say "something happened
               here", which is precisely what a lone hire needs. */}
-          <For each={geometry().droplines}>
+          <Index each={geometry().droplines}>
             {(dropline) => (
               <line
                 class="sui-levels-timeline__dropline"
-                x1={dropline.x}
-                x2={dropline.x}
+                x1={dropline().x}
+                x2={dropline().x}
                 y1={FLAG_RULE_TOP}
                 y2={frame().plotBottom}
               />
             )}
-          </For>
+          </Index>
 
           {/* The flags' rules, under everything: a rule locates a change, it
               does not compete with one. */}
-          <For each={geometry().flags}>
+          <Index each={geometry().flags}>
             {(flag) => (
               <line
-                class={flagClass(flag, "rule")}
-                x1={flag.x}
-                x2={flag.x}
-                y1={flag.ruleTop}
-                y2={flag.ruleBottom}
+                class={flagClass(flag(), "rule")}
+                x1={flag().x}
+                x2={flag().x}
+                y1={flag().ruleTop}
+                y2={flag().ruleBottom}
               />
             )}
-          </For>
+          </Index>
 
           {/* Flows first, UNDER the rails they join, so a flow reads as
               growing out from beneath both ends rather than crossing them. */}
-          <For each={geometry().flows}>
+          <Index each={geometry().flows}>
             {(flow) => (
               <path
-                class={flowClass(flow)}
-                d={flow.path}
-                fill={isOpen(flow) ? `url(#${gradientId(flow)})` : undefined}
+                class={flowClass(flow())}
+                d={flow().path}
+                fill={isOpen(flow()) ? `url(#${gradientId(flow())})` : undefined}
               />
             )}
-          </For>
+          </Index>
 
-          <For each={geometry().rails}>
+          <Index each={geometry().rails}>
             {(rail) => (
               <g class="sui-levels-timeline__rail-group">
-                <For each={rail.runs}>
-                  {(run) => <path class={RAIL_CLASS} d={run.path} />}
-                </For>
+                <Index each={rail().runs}>
+                  {(run) => <path class={RAIL_CLASS} d={run().path} />}
+                </Index>
               </g>
             )}
-          </For>
+          </Index>
         </g>
 
         {/* The hover surface. It covers the PLOT only, so it can never
@@ -594,42 +598,42 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         {/* The flags. Buttons when the consumer wants selection, plain marks
             otherwise — a chart nobody can drive should not advertise a
             control, and an unreachable one should not exist. */}
-        <For each={geometry().flags}>
+        <Index each={geometry().flags}>
           {(flag) => (
             // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role="button", tabindex and Enter/Space keyboard parity are wired exactly when onSelectMutation is provided (interactive()); the analyzer cannot see through that runtime guard.
             <g
-              class={flagClass(flag, "flag")}
+              class={flagClass(flag(), "flag")}
               role={interactive() ? "button" : undefined}
               tabindex={interactive() ? 0 : undefined}
-              aria-label={interactive() ? flagLabel(flag) : undefined}
-              data-selected={isSelected(flag) ? "true" : undefined}
-              onClick={interactive() ? () => select(flag) : undefined}
+              aria-label={interactive() ? flagLabel(flag()) : undefined}
+              data-selected={isSelected(flag()) ? "true" : undefined}
+              onClick={interactive() ? () => select(flag()) : undefined}
               onKeyDown={
                 interactive()
-                  ? (event: KeyboardEvent) => onFlagKeyDown(event, flag)
+                  ? (event: KeyboardEvent) => onFlagKeyDown(event, flag())
                   : undefined
               }
             >
               <rect
                 class="sui-levels-timeline__flag-box"
-                x={flag.boxX}
-                y={flag.boxY}
-                width={flag.boxWidth}
-                height={flag.boxHeight}
+                x={flag().boxX}
+                y={flag().boxY}
+                width={flag().boxWidth}
+                height={flag().boxHeight}
                 rx="3"
               />
               <text
                 class="sui-levels-timeline__flag-label"
-                x={flag.textX}
-                y={flag.textY}
+                x={flag().textX}
+                y={flag().textY}
                 text-anchor="middle"
                 dominant-baseline="central"
               >
-                {flag.label}
+                {flag().label}
               </text>
             </g>
           )}
-        </For>
+        </Index>
       </svg>
     </div>
   );

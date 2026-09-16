@@ -962,3 +962,115 @@ describe("LevelsTimeline — a zero box must never latch", () => {
     expect(viewBoxOf(container)).toBe("0 0 2218 134");
   });
 })
+
+describe("LevelsTimeline — updates must not recreate the DOM", () => {
+  /** A level set whose pay MOVES, as a drag on the board moves it. */
+  const movingLevels = (step: number): readonly Level[] => [
+    {
+      id: "a",
+      label: "A",
+      value: 5000,
+      points: [{ at: new Date("2025-01-01"), count: 2 }],
+    },
+    {
+      id: "b",
+      label: "B",
+      value: 7000 + step * 100,
+      points: [{ at: new Date("2025-01-01"), count: 1 }],
+    },
+    {
+      id: "c",
+      label: "C",
+      value: 10000,
+      points: [
+        { at: new Date("2025-01-01"), count: 1 },
+        { at: new Date("2025-07-01"), count: 2 },
+      ],
+    },
+  ];
+
+  const railsIn = (container: HTMLElement) => [
+    ...container.querySelectorAll(
+      ".sui-levels-timeline__rail-group .sui-levels-timeline__rail",
+    ),
+  ];
+  const defIdsIn = (container: HTMLElement) =>
+    map(
+      (el: Element) => el.getAttribute("id"),
+      [...container.querySelectorAll("linearGradient")],
+    );
+
+  it("keeps the SAME rail nodes across ten moving updates", () => {
+    // The flicker: every update rebuilt the geometry into fresh objects, and a
+    // keyed `For` treats fresh objects as new rows — so every band and every
+    // ribbon was unmounted and remounted on each drag step, which is a flash.
+    const [levels, setLevels] = createSignal(movingLevels(0));
+    const { container } = render(() => (
+      <LevelsTimeline
+        levels={levels()}
+        transfers={TRANSFERS}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+      />
+    ));
+    const before = railsIn(container);
+    expect(before.length).toBeGreaterThan(0);
+    for (let step = 1; step <= 10; step += 1) setLevels(movingLevels(step));
+    const after = railsIn(container);
+    expect(after).toHaveLength(before.length);
+    for (const [index, node] of after.entries()) {
+      expect(node).toBe(before[index]);
+    }
+  });
+
+  it("updates the rail's `d` in place — the shape moves, the node does not", () => {
+    const [levels, setLevels] = createSignal(movingLevels(0));
+    const { container } = render(() => (
+      <LevelsTimeline levels={levels()} mutations={MUTATIONS} domain={DOMAIN} />
+    ));
+    // The SECOND rail group is level "b", the one whose pay moves. Indexing
+    // the flat rail list would land on level "a", which does not move —
+    // every rail is split at every change, so the flat list interleaves.
+    const groupOf = (index: number) =>
+      container.querySelectorAll(".sui-levels-timeline__rail-group")[index];
+    const node = groupOf(1).querySelector(".sui-levels-timeline__rail");
+    const before = node?.getAttribute("d");
+    setLevels(movingLevels(9));
+    expect(groupOf(1).querySelector(".sui-levels-timeline__rail")).toBe(node);
+    expect(node?.getAttribute("d")).not.toBe(before);
+  });
+
+  it("keeps the gradient ids stable, so defs do not churn", () => {
+    const [levels, setLevels] = createSignal(movingLevels(0));
+    const { container } = render(() => (
+      <LevelsTimeline
+        levels={levels()}
+        transfers={[
+          { at: new Date("2025-07-01"), from: "a", to: "c", count: 1 },
+          { at: new Date("2025-07-01"), from: "b", count: 1 },
+        ]}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+      />
+    ));
+    const before = defIdsIn(container);
+    expect(before.length).toBeGreaterThan(0);
+    for (let step = 1; step <= 10; step += 1) setLevels(movingLevels(step));
+    expect(defIdsIn(container)).toEqual(before);
+  });
+
+  it("keeps the flag nodes across updates too", () => {
+    const [levels, setLevels] = createSignal(movingLevels(0));
+    const { container } = render(() => (
+      <LevelsTimeline levels={levels()} mutations={MUTATIONS} domain={DOMAIN} />
+    ));
+    const before = [
+      ...container.querySelectorAll(".sui-levels-timeline__flag"),
+    ];
+    for (let step = 1; step <= 10; step += 1) setLevels(movingLevels(step));
+    const after = [...container.querySelectorAll(".sui-levels-timeline__flag")];
+    for (const [index, node] of after.entries()) {
+      expect(node).toBe(before[index]);
+    }
+  });
+});
