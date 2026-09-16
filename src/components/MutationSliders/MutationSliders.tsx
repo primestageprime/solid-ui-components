@@ -34,6 +34,11 @@
 // removal, and the two are deliberately different shapes rather than one
 // nullable "missing" flag.
 //
+// TERMINATE AND RESTORE SHARE ONE SLOT under each dial: an active person
+// offers ⊗, a terminated one offers ↺. A disabled ⊗ was the wrong shape —
+// it said "you did this and there is nothing more to do", when what the
+// reader wants is the way back.
+//
 // THE BAND IS THE CLAMP. Both amounts are pulled onto the role's band before
 // they are drawn, the dial announces the CLAMPED figure, and `onChange` never
 // emits outside it — so the thumb stops dead at a band edge. The raw figures
@@ -80,6 +85,21 @@
 // The values are in the CONSUMER'S OWN UNITS. The component formats nothing
 // itself — `format` is the caller's, exactly as on Slider.
 //
+// IT ABSORBS ITS CONTAINER, in both directions (Peter, 2026-09-16: "I want the
+// charts to naturally absorb the height and width of their containers"). The
+// WIDTH drives paging, below. The HEIGHT lengthens the track: `height: 100%`
+// computes to `auto` against a parent of indefinite height, so ONE declaration
+// serves a card with a height and a content-sized column alike, with no `fill`
+// prop and no branch — the trick RateGauge uses (41135a3).
+//
+// What the dial does NOT do is stretch a fixed viewBox to fit. The overlay is
+// `preserveAspectRatio="none"`, which scales TEXT along with geometry, so a
+// stretched viewBox would magnify the 11px delta labels into something
+// distorted. Instead the viewBox GROWS with the box and every y is computed
+// against the measured height, so the track lengthens while the arrowheads and
+// the figures stay exactly the size they were. Below `MIN_DIAL_HEIGHT` the dial
+// stops shrinking: the labels collide before anything else does.
+//
 // WHEN IT DOES NOT ALL FIT, the row pages. It MEASURES ITSELF — how much room
 // a row of dials has is a fact about the page it was dropped into, not
 // something a consumer should have to re-measure and re-pass on every layout
@@ -95,7 +115,7 @@
 // vocabulary — the same disposition as Slider's notches.
 //
 // No override props and no factory: `entities`, `domain`, `onChange`,
-// `onRemove`, `onAdd` and `format` are all DATA. There is no size, no variant
+// `onRemove`, `onRestore`, `onAdd` and `format` are all DATA. There is no size, no variant
 // and no tone to curry.
 // ============================================
 import { Slider as KobalteSlider } from "@kobalte/core/slider";
@@ -111,7 +131,7 @@ import { clamp } from "../../internal/math/clamp";
 import { observeSize } from "../../internal/dom/observeSize";
 import { SmallGhostButton } from "../Button";
 import { Icon } from "../Icon";
-import { ClusterRow, TightCenteredColumn } from "../Layout";
+import { CenteredStack, StretchRow, TightCenteredColumn } from "../Layout";
 import { MonoMeta, MonoValue, NowrapLabel } from "../Text";
 import {
   BAND_HALF,
@@ -120,18 +140,18 @@ import {
   type DialGeometry,
   type Domain,
   type Entity,
-  TRACK_PATH,
   TRACK_X,
-  VIEW_HEIGHT,
   VIEW_WIDTH,
   clampToRange,
   deltaLabelOf,
+  dialHeightFor,
   dragStep,
   dialGeometry,
   niceStep,
   type RowLayout,
   rowLayout,
   trackDomainOf,
+  trackPath,
   windowLabel,
 } from "./geometry";
 import "./MutationSliders.css";
@@ -167,6 +187,18 @@ export interface MutationSlidersProps {
    * and a removed entity still reads as removed by its struck-through name.
    */
   onRemove?: (id: string) => void;
+  /**
+   * Called when the ↺ under a TERMINATED entity is pressed. Omitted, no ↺ is
+   * drawn and a terminated entity has no way back — which is the right shape
+   * for a consumer whose scenarios are append-only.
+   *
+   * What "restore" MEANS is the consumer's: this component holds no memory of
+   * what the entity was worth before it was terminated, and inventing one
+   * would put a second, stale copy of the truth inside the widget. The obvious
+   * reading is `value = old` — put them back on the amount they came in at —
+   * and the band floor for someone who never had an `old` at all.
+   */
+  onRestore?: (id: string) => void;
   /** Called by the `+` at the end of the row. Omitted, no `+` is drawn. */
   onAdd?: () => void;
   /**
@@ -203,8 +235,13 @@ const NO_VALUE = "—";
 /** The new hire's readout: there is no prior amount to compare against. */
 const NEW_HIRE = "new";
 
-/** The remove affordance. The sketch's own notation, kept verbatim. */
-const REMOVE_MARK = "⊗";
+/**
+ * The terminate affordance. Peter's sketch draws a circled cross, and this is
+ * that character rather than an `Icon`: the closest glyph in the set is
+ * `error`, whose NAME would misdescribe the action everywhere it was read.
+ * Restore beside it IS an Icon (`undo`), because one exists that means it.
+ */
+const TERMINATE_MARK = "⊗";
 
 /**
  * One dial's painted marks, drawn back to front: the scale, the role band, the
@@ -218,14 +255,24 @@ const DialMarks: Component<{
   dial: DialGeometry;
   /** The signed delta, already formatted, or `null` when there is none. */
   deltaLabel: string | null;
+  /** The dial's drawn height in px — the viewBox is 1:1 with it. */
+  height: number;
 }> = (props) => (
   <svg
     class="sui-mutation-sliders__marks"
-    viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+    // The viewBox grows with the BOX rather than the box stretching a fixed
+    // viewBox. `preserveAspectRatio="none"` scales TEXT as well as geometry,
+    // so a stretched viewBox would magnify the 11px delta labels vertically
+    // into something distorted and unreadable. Keeping the two 1:1 means the
+    // track lengthens while every label and arrowhead stays the size it was.
+    viewBox={`0 0 ${VIEW_WIDTH} ${props.height}`}
     preserveAspectRatio="none"
     aria-hidden="true"
   >
-    <path class="sui-mutation-sliders__track-line" d={TRACK_PATH} />
+    <path
+      class="sui-mutation-sliders__track-line"
+      d={trackPath(props.height)}
+    />
     {/* The role band, under everything: it is the span a role permits, not a
         mark that hides the scale it sits on. */}
     <rect
@@ -315,6 +362,12 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   // was MEASURED and found too small.
   const [width, setWidth] = createSignal(0);
   const [offset, setOffset] = createSignal(0);
+  // Every dial in a row is the same height, so ONE signal serves them all —
+  // whichever reports first, and they agree thereafter.
+  const [measuredDialHeight, setMeasuredDialHeight] = createSignal(0);
+
+  /** The height to DRAW at: the container's, floored, or the fixed default. */
+  const dialHeight = (): number => dialHeightFor(measuredDialHeight());
 
   const measure = (el: HTMLDivElement): void => {
     setWidth(el.clientWidth);
@@ -397,7 +450,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   };
 
   return (
-    <ClusterRow
+    <StretchRow
       ref={measure}
       class="sui-mutation-sliders"
       // A group rather than a bare div, so the window is ANNOUNCED. Without
@@ -413,14 +466,19 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
       {/* The chevrons exist only when the row pages. A permanently-present
           pair, greyed out on a row that fits, would be two controls promising
           something the row cannot do. */}
+      {/* The row STRETCHES its children now, so each button sits in a column
+          that centres it — otherwise a chevron would be drawn as tall as the
+          dial beside it. */}
       <Show when={layout().paging}>
-        <SmallGhostButton
-          aria-label="Previous dial"
-          disabled={atStart()}
-          onClick={() => page(-1)}
-        >
-          <Icon name="chevron-left" size="sm" />
-        </SmallGhostButton>
+        <CenteredStack>
+          <SmallGhostButton
+            aria-label="Previous dial"
+            disabled={atStart()}
+            onClick={() => page(-1)}
+          >
+            <Icon name="chevron-left" size="sm" />
+          </SmallGhostButton>
+        </CenteredStack>
       </Show>
       {/* `Index`, not `For`. The row is POSITIONAL and its entities change
           value in place, so keying by item identity would replace the whole
@@ -455,7 +513,11 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
            * Home and End are deliberately left to Kobalte: they run to the
            * domain's ends, and `handleChange` clamps them onto the band.
            */
-          const bindKeys = (el: HTMLElement): void => {
+          const bindDial = (el: HTMLElement): void => {
+            setMeasuredDialHeight(el.clientHeight);
+            onCleanup(
+              observeSize(el, (size) => setMeasuredDialHeight(size.height)),
+            );
             const onKeyDown = (event: KeyboardEvent): void => {
               const direction = ARROW_DIRECTION[event.key] ?? 0;
               const paging = PAGE_DIRECTION[event.key] ?? 0;
@@ -500,7 +562,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                 {entity().label}
               </NowrapLabel>
               <KobalteSlider
-                ref={bindKeys}
+                ref={bindDial}
                 class="sui-mutation-sliders__dial"
                 orientation="vertical"
                 value={[dial().clampedValue ?? dial().range[0]]}
@@ -515,6 +577,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                 <DialMarks
                   dial={dial()}
                   deltaLabel={deltaLabelOf(format, dial().delta)}
+                  height={dialHeight()}
                 />
                 <KobalteSlider.Track class="sui-mutation-sliders__track">
                   <Show when={!dial().removed}>
@@ -542,44 +605,62 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
               <Show when={priorReadout(dial())}>
                 {(prior) => <MonoMeta>{prior()}</MonoMeta>}
               </Show>
-              <Show when={props.onRemove}>
-                {(onRemove) => (
-                  <SmallGhostButton
-                    aria-label={
-                      dial().removed
-                        ? `${entity().label} removed`
-                        : `Remove ${entity().label}`
-                    }
-                    disabled={dial().removed}
-                    onClick={() => onRemove()(entity().id)}
-                  >
-                    {REMOVE_MARK}
-                  </SmallGhostButton>
-                )}
+              {/* ONE slot, two states (Peter's sketch, 2026-09-16). An active
+                  person offers ⊗ Terminate; a terminated one offers ↺ Restore
+                  in the same place. A disabled ⊗ was the wrong shape: it said
+                  "you did this and there is nothing more to do", when what the
+                  reader wants is the way back. */}
+              <Show when={!dial().removed}>
+                <Show when={props.onRemove}>
+                  {(onRemove) => (
+                    <SmallGhostButton
+                      aria-label={`Terminate ${entity().label}`}
+                      onClick={() => onRemove()(entity().id)}
+                    >
+                      {TERMINATE_MARK}
+                    </SmallGhostButton>
+                  )}
+                </Show>
+              </Show>
+              <Show when={dial().removed}>
+                <Show when={props.onRestore}>
+                  {(onRestore) => (
+                    <SmallGhostButton
+                      aria-label={`Restore ${entity().label}`}
+                      onClick={() => onRestore()(entity().id)}
+                    >
+                      <Icon name="undo" size="sm" />
+                    </SmallGhostButton>
+                  )}
+                </Show>
               </Show>
             </TightCenteredColumn>
           );
         }}
       </Index>
       <Show when={layout().paging}>
-        <SmallGhostButton
-          aria-label="Next dial"
-          disabled={atEnd()}
-          onClick={() => page(1)}
-        >
-          <Icon name="chevron-right" size="sm" />
-        </SmallGhostButton>
+        <CenteredStack>
+          <SmallGhostButton
+            aria-label="Next dial"
+            disabled={atEnd()}
+            onClick={() => page(1)}
+          >
+            <Icon name="chevron-right" size="sm" />
+          </SmallGhostButton>
+        </CenteredStack>
       </Show>
       {/* The `+` stays past the last page ON PURPOSE: hiding the only way to
           add someone whenever the row happens to be scrolled is a dead end the
           reader has to guess their way out of. */}
       <Show when={props.onAdd}>
         {(onAdd) => (
-          <SmallGhostButton aria-label="Add entity" onClick={() => onAdd()()}>
-            +
-          </SmallGhostButton>
+          <CenteredStack>
+            <SmallGhostButton aria-label="Add entity" onClick={() => onAdd()()}>
+              +
+            </SmallGhostButton>
+          </CenteredStack>
         )}
       </Show>
-    </ClusterRow>
+    </StretchRow>
   );
 };

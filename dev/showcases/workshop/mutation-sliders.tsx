@@ -113,6 +113,27 @@ const MutationSlidersBench: Component = () => {
     setEntities((current) => withValue(current, id, null));
   };
 
+  /**
+   * What RESTORE means here — the component holds no memory of it, and asking
+   * it to would put a second, stale copy of the truth inside the widget.
+   *
+   * The reading this bench takes: put them back on the amount they came in at.
+   * Someone who never had an `old` at all — a hire who was terminated before
+   * they started — goes to their band's floor, because there is nothing else
+   * honest to choose.
+   */
+  const restore = (id: string): void => {
+    setEntities((current) =>
+      map(
+        (entity: Entity) =>
+          entity.id === id
+            ? { ...entity, value: entity.old ?? entity.range[0] }
+            : entity,
+        current,
+      ),
+    );
+  };
+
   const hire = (): void => {
     setHired((count) => count + 1);
     setEntities((current) => [...current, newHire(hired())]);
@@ -139,6 +160,7 @@ const MutationSlidersBench: Component = () => {
             entities={entities()}
             onChange={setPay}
             onRemove={letGo}
+            onRestore={restore}
             onAdd={hire}
             format={formatPay}
           />
@@ -154,6 +176,7 @@ const MutationSlidersBench: Component = () => {
               entities={entities()}
               onChange={setPay}
               onRemove={letGo}
+              onRestore={restore}
               onAdd={hire}
               format={formatPay}
             />

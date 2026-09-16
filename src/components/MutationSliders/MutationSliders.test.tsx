@@ -28,7 +28,14 @@ import {
   rectOf,
 } from "../../test-utils";
 import { MutationSliders } from "./MutationSliders";
-import { ADD_SLOT, ARROW_SLOT, DIAL_SLOT, type Entity } from "./geometry";
+import {
+  ADD_SLOT,
+  ARROW_SLOT,
+  DIAL_SLOT,
+  MIN_DIAL_HEIGHT,
+  VIEW_HEIGHT,
+  type Entity,
+} from "./geometry";
 
 // Kobalte's Slider measures its track through ResizeObserver; jsdom lacks it.
 let sizer: FakeSizer;
@@ -472,18 +479,20 @@ describe("MutationSliders", () => {
       expect(container.querySelectorAll("[data-removed]").length).toBe(1);
     });
 
-    it("draws the ⊗ marker, disabled — there is nothing left to remove", () => {
-      const { getByLabelText } = render(() => (
+    it("offers RESTORE in the terminate slot, not a dead ⊗", () => {
+      // A disabled ⊗ said "you did this and there is nothing more to do".
+      // What the reader wants in that slot is the way back.
+      const { getByLabelText, queryByLabelText } = render(() => (
         <MutationSliders
           entities={FIXTURE}
           domain={DOMAIN}
           onChange={() => {}}
           onRemove={() => {}}
+          onRestore={() => {}}
         />
       ));
-      expect(
-        (getByLabelText("Joe removed") as HTMLButtonElement).disabled,
-      ).toBe(true);
+      expect(getByLabelText("Restore Joe")).toBeTruthy();
+      expect(queryByLabelText("Terminate Joe")).toBeNull();
     });
   });
 
@@ -577,7 +586,7 @@ describe("MutationSliders", () => {
         onRemove={onRemove}
       />
     ));
-    fireEvent.click(getByLabelText("Remove Flynn"));
+    fireEvent.click(getByLabelText("Terminate Flynn"));
     expect(onRemove).toHaveBeenCalledWith("flynn");
   });
 
@@ -585,7 +594,86 @@ describe("MutationSliders", () => {
     const { queryByLabelText } = render(() => (
       <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
     ));
-    expect(queryByLabelText("Remove Flynn")).toBeNull();
+    expect(queryByLabelText("Terminate Flynn")).toBeNull();
+  });
+
+  describe("terminate and restore share one slot", () => {
+    const withRestore = (extra?: Record<string, unknown>) =>
+      render(() => (
+        <MutationSliders
+          entities={FIXTURE}
+          domain={DOMAIN}
+          onChange={() => {}}
+          onRemove={() => {}}
+          onRestore={() => {}}
+          {...extra}
+        />
+      ));
+
+    it("offers TERMINATE on an active person and RESTORE on a terminated one", () => {
+      const { getByLabelText, queryByLabelText } = withRestore();
+      expect(getByLabelText("Terminate Peter")).toBeTruthy();
+      expect(queryByLabelText("Restore Peter")).toBeNull();
+      expect(getByLabelText("Restore Joe")).toBeTruthy();
+      expect(queryByLabelText("Terminate Joe")).toBeNull();
+    });
+
+    it("lifts onRestore with the terminated entity's id", () => {
+      const onRestore = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders
+          entities={FIXTURE}
+          domain={DOMAIN}
+          onChange={() => {}}
+          onRemove={() => {}}
+          onRestore={onRestore}
+        />
+      ));
+      fireEvent.click(getByLabelText("Restore Joe"));
+      expect(onRestore).toHaveBeenCalledWith("joe");
+    });
+
+    it("draws NO restore at all when the consumer cannot restore", () => {
+      // An append-only scenario has no way back, and a button that does
+      // nothing is worse than no button.
+      const { queryByLabelText } = render(() => (
+        <MutationSliders
+          entities={FIXTURE}
+          domain={DOMAIN}
+          onChange={() => {}}
+          onRemove={() => {}}
+        />
+      ));
+      expect(queryByLabelText("Restore Joe")).toBeNull();
+      expect(queryByLabelText("Joe removed")).toBeNull();
+    });
+
+    it("cycles as the caller moves the value in and out of null", () => {
+      const [value, setValue] = createSignal<number | null>(52_000);
+      const { getByLabelText, queryByLabelText } = render(() => (
+        <MutationSliders
+          entities={[
+            {
+              id: "a",
+              label: "Ana",
+              old: 44_000,
+              value: value(),
+              range: [40_000, 60_000],
+            },
+          ]}
+          domain={DOMAIN}
+          onChange={() => {}}
+          onRemove={() => {}}
+          onRestore={() => {}}
+        />
+      ));
+      expect(getByLabelText("Terminate Ana")).toBeTruthy();
+      setValue(null);
+      expect(getByLabelText("Restore Ana")).toBeTruthy();
+      expect(queryByLabelText("Terminate Ana")).toBeNull();
+      setValue(44_000);
+      expect(getByLabelText("Terminate Ana")).toBeTruthy();
+    });
   });
 
   it("calls onAdd from the + at the end of the row", () => {
@@ -734,6 +822,73 @@ describe("MutationSliders", () => {
       fireEvent.focus(thumb);
       fireEvent.keyDown(thumb, { key: "End" });
       expect(onChange).toHaveBeenLastCalledWith("ana", BAND[1]);
+    });
+  });
+
+  describe("absorbing the container's height", () => {
+    const SOLO: readonly Entity[] = [
+      {
+        id: "ana",
+        label: "Ana",
+        old: 90_000,
+        value: 104_000,
+        range: [70_000, 110_000],
+      },
+    ];
+
+    /** The viewBox's height is the dial's drawn height, 1:1. */
+    const drawnHeight = (container: HTMLElement): number => {
+      const svg = container.querySelector(
+        ".sui-mutation-sliders__marks",
+      ) as SVGSVGElement;
+      return Number(svg.getAttribute("viewBox")?.split(" ")[3]);
+    };
+
+    // The two halves of the contract fail in OPPOSITE directions, so each
+    // would pass the other's assertion on its own: a regression to a hard
+    // pixel height breaks the fill, and a regression that always fills breaks
+    // the content-sized case. Both are pinned.
+    it("keeps the OLD fixed height when no height is imposed", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={SOLO} onChange={() => {}} />
+      ));
+      await sizer.resizeAll({ width: 900, height: 0 });
+      expect(drawnHeight(container)).toBe(VIEW_HEIGHT);
+    });
+
+    it("lengthens the track to the height it is given", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={SOLO} onChange={() => {}} />
+      ));
+      // An 800x600 box: the row measures its own height, and the dial takes
+      // what is left after the name and the readout rows.
+      await sizer.resizeAll({ width: 800, height: 520 });
+      expect(drawnHeight(container)).toBe(520);
+    });
+
+    it("does not shrink past the floor where the labels collide", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={SOLO} onChange={() => {}} />
+      ));
+      await sizer.resizeAll({ width: 800, height: 60 });
+      expect(drawnHeight(container)).toBe(MIN_DIAL_HEIGHT);
+    });
+
+    it("keeps the delta label's size fixed while the track grows", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={SOLO} onChange={() => {}} format={asK} />
+      ));
+      const label = () =>
+        container.querySelector(
+          ".sui-mutation-sliders__delta",
+        ) as SVGTextElement;
+      await sizer.resizeAll({ width: 800, height: 520 });
+      const tallX = label().getAttribute("x");
+      await sizer.resizeAll({ width: 800, height: 260 });
+      // The label's own metrics are CSS (11px), and its x never moves — only
+      // its y follows the line it names. A stretched viewBox would have
+      // scaled the glyphs instead.
+      expect(label().getAttribute("x")).toBe(tallX);
     });
   });
 

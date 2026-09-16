@@ -34,6 +34,7 @@
      the signed delta label lives on the canvas to the right of it. */
   --sui-mutation-dial-height: 260px;
   --sui-mutation-dial-width: 88px;
+  --sui-mutation-dial-min-height: 180px;
   --sui-mutation-track-inset: 12px;
   /* The drag surface is wider than any drawn mark, so a press anywhere on the
      dial starts a drag — Kobalte slides from the TRACK, not only from the
@@ -53,10 +54,18 @@
 /* ── The dial ────────────────────────────────────────────────────────────
    The Kobalte root. It is the SVG's canvas as well as the slider's box, and
    the two are the same px, so no scale factor exists anywhere. */
+/* The dial takes the height left over in its column after the name and the
+   readouts, with the OLD fixed height as its flex basis — so an unconstrained
+   column resolves to exactly the 260px it drew before, a taller one lengthens
+   the track, and a shorter one shrinks only as far as the floor.
+   `--sui-mutation-dial-min-height` mirrors `MIN_DIAL_HEIGHT` in geometry.ts;
+   below it the 11px delta labels collide, which is the one part of the dial
+   that cannot survive being short. */
 .sui-mutation-sliders__dial {
   position: relative;
   width: var(--sui-mutation-dial-width);
-  height: var(--sui-mutation-dial-height);
+  flex: 1 1 var(--sui-mutation-dial-height);
+  min-height: var(--sui-mutation-dial-min-height);
 }
 
 /* A removed entity keeps its band and its prior arrow and loses the future
