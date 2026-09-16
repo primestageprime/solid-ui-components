@@ -1365,9 +1365,7 @@ export const quarterTicks = (
   map(
     (cell: { start: Date }) => ({
       key: cell.start.toISOString(),
-      label: `${cell.start.getUTCFullYear()}-Q${
-        Math.floor(cell.start.getUTCMonth() / 3) + 1
-      }`,
+      label: quarterLabelOf(cell.start),
       x: xScale(cell.start),
       // A quarter row is already sparse; thinning it would leave gaps of
       // nothing, so every quarter keeps its label even in compact chrome.
@@ -1488,9 +1486,22 @@ export const snapToMonth = (time: number): number => {
 };
 
 /** `Jul 2025` — the readout's own header. Short, and month-precise like the snap. */
-export const monthLabelOf = (time: number): string => {
-  const at = new Date(time);
-  return `${MONTH_LABELS[at.getUTCMonth()]} ${at.getUTCFullYear()}`;
+export const monthLabelOf = (at: TimeValue): string => {
+  const on = new Date(timeOf(at));
+  return `${MONTH_LABELS[on.getUTCMonth()]} ${on.getUTCFullYear()}`;
+};
+
+/**
+ * `2025-Q3` — the axis's quarter label, and the only place this format lives.
+ *
+ * Exported because a consumer showing dates BESIDE this chart has to agree
+ * with its axis or the two read as different clocks: the scenario board's
+ * as-of chips say `2025-Q3 · Jul`, and were reimplementing this format from
+ * the inside of `quarterTicks` because there was nothing to call.
+ */
+export const quarterLabelOf = (at: TimeValue): string => {
+  const on = new Date(timeOf(at));
+  return `${on.getUTCFullYear()}-Q${Math.floor(on.getUTCMonth() / 3) + 1}`;
 };
 
 /** Everything the hover readout needs, from one pointer x. */

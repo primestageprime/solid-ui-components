@@ -50,6 +50,7 @@ export {
   hoverAt,
   levelsAt,
   monthLabelOf,
+  quarterLabelOf,
   snapToMonth,
   timeAtX,
   perPersonWidth,

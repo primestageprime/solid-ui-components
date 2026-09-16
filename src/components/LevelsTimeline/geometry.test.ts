@@ -62,6 +62,7 @@ import {
   monthTicks,
   peakHeadcount,
   perPersonWidth,
+  quarterLabelOf,
   quarterTicks,
   railRuns,
   railSpans,
@@ -1534,5 +1535,29 @@ describe("a lone rail must read as a rail, not a slab", () => {
     expect(soloWidth(withGhosts, frame)).toBeLessThan(
       Number.POSITIVE_INFINITY,
     );
+  });
+});
+
+describe("quarterLabelOf", () => {
+  it("names the quarter a moment falls in", () => {
+    expect(quarterLabelOf(utc("2025-01-01"))).toBe("2025-Q1");
+    expect(quarterLabelOf(utc("2025-02-14"))).toBe("2025-Q1");
+    expect(quarterLabelOf(utc("2025-04-01"))).toBe("2025-Q2");
+    expect(quarterLabelOf(utc("2025-09-30"))).toBe("2025-Q3");
+    expect(quarterLabelOf(utc("2025-12-31"))).toBe("2025-Q4");
+  });
+
+  it("takes a Date or a raw timestamp, like everything else here", () => {
+    expect(quarterLabelOf(timeOf(utc("2026-07-05")))).toBe("2026-Q3");
+    expect(quarterLabelOf(utc("2026-07-05"))).toBe("2026-Q3");
+  });
+
+  it("is the SAME format the axis paints — one definition, not two", () => {
+    // The board reimplemented this because there was nothing to call. If the
+    // two ever drift, the chart and the chips beside it read as different
+    // clocks.
+    const ticks = quarterTicks(DOMAIN, (at) => timeOf(at) / 1e12);
+    expect(ticks[0].label).toBe(quarterLabelOf(DOMAIN[0]));
+    expect(ticks[2].label).toBe(quarterLabelOf(utc("2025-07-01")));
   });
 });
