@@ -107,16 +107,46 @@ export interface Callout {
 }
 
 // ── the canvas ───────────────────────────────────────────────────────────────
-// ONE size, deliberately (SUI: start with one, expand only on demand). A
-// consumer scales the gauge by sizing its box; the viewBox does the rest.
+// The viewBox is CUT TO THE CONTENT, not the other way round.
+//
+// It used to be a generous fixed rectangle with the dial parked inside it, and
+// with `xMidYMid meet` every unit of that padding was a unit the dial did not
+// get: a 540×850 card spent its width on empty margin and drew a small ring in
+// the middle of it. Every edge below is now derived from something actually
+// drawn, so scaling the gauge to a box scales the DIAL to that box.
+//
+// The radii are unchanged — they are the instrument's proportions, and the
+// callout, brace and dot rules all key off them rather than off the viewBox.
 
-export const VIEW_WIDTH = 300;
-export const VIEW_HEIGHT = 190;
-/** The pivot. Left of centre, because the ring opens to the left. */
-export const CENTER: Center = { cx: 66, cy: 95 };
-/** Ring radii — the annulus the two zones are painted into. */
+/** Breathing room outside the drawn content, on every edge. */
+const CANVAS_MARGIN = 4;
+/** How far left of the label column every leader levels out. */
+const ELBOW_INSET = 10;
+
+/**
+ * The DIAL scales with its box; the ANNOTATION does not.
+ *
+ * Two families of number live in this file and they behave differently under
+ * resizing. The dial's radii are the instrument — the ring, the needles, the
+ * sector, the brace circle — and they are proportions, so they scale together
+ * and the gauge keeps its shape at any size. Everything laid ON the dial to
+ * explain it — label text, stroke widths, terminal dots, the stub a leader
+ * runs out along, the row pitch, the cusp's depth — is annotation, measured in
+ * something close to CSS pixels, and it must NOT scale: a gauge four times the
+ * size wants the same 11px labels, not 44px ones.
+ *
+ * That split is the whole reason the viewBox is set to the host's box at one
+ * unit per pixel when a size is imposed. A single fixed viewBox scaled to fit
+ * would magnify the annotation along with the dial, which is exactly the
+ * complaint this answers.
+ *
+ * `RING_OUTER` and its siblings below are the DEFAULT sizes — the dial a gauge
+ * draws when nothing imposes a size on it. `metricsFor` scales them.
+ */
 export const RING_INNER = 48;
 export const RING_OUTER = 64;
+/** The smallest dial worth drawing; a box tighter than this gets it anyway. */
+const MIN_RING_OUTER = 18;
 /**
  * The live needle stops well short of the ring's inner edge, and the gap is
  * the point: a clock hand that touches its own dial reads as stuck to it.
@@ -124,6 +154,14 @@ export const RING_OUTER = 64;
  * for in that order, and clearance wins.
  */
 export const VALUE_NEEDLE_RADIUS = RING_INNER - 6;
+/** Every dial radius as a fraction of the ring's outer radius. */
+const RATIO = {
+  inner: RING_INNER / RING_OUTER,
+  value: (RING_INNER - 6) / RING_OUTER,
+  baseline: (RING_INNER - 10) / RING_OUTER,
+  sector: (RING_INNER - 10) / RING_OUTER,
+  brace: (RING_OUTER + 10) / RING_OUTER,
+} as const;
 /**
  * The baseline needle stops SHORTER, and not only because it is the secondary
  * mark. It is what keeps the value's cap arc off it: the cap lives on the
@@ -142,12 +180,6 @@ export const SECTOR_RADIUS = RING_INNER - 10;
 /** The delta brace rides outside the ring; its cusp reaches further still. */
 export const BRACKET_RADIUS = RING_OUTER + 10;
 /**
- * Radius of the brace's end curls — about twice the stroke's own width, which
- * is what makes them read as the tight serifs of a typographic `{` rather than
- * as loose hooks. Each is a quarter-turn back toward the ring.
- */
-export const BRACE_END_CURL = 2.25;
-/**
  * How far the brace's cusp points OUTWARD from the ring at its midpoint.
  *
  * The cusp is the brace's terminal — the delta's leader leaves from its tip —
@@ -155,6 +187,37 @@ export const BRACE_END_CURL = 2.25;
  * point rather than a bulge, shallow enough not to crowd the label column.
  */
 export const BRACE_CUSP_DEPTH = 6;
+
+/**
+ * How far a stub runs radially past its anchor before the leader turns.
+ *
+ * Fixed, so every stub reads as the same gesture — it is the needle's own
+ * angle continued outward, which is what ties a row to its mark.
+ */
+export const CALLOUT_STUB = 12;
+
+/**
+ * The furthest anything reaches from the pivot, and so what the canvas is cut
+ * to.
+ *
+ * The TURN CIRCLE, not the ring and not even the brace's cusp: the leaders
+ * carry further out than any mark they point at, and a canvas cut to the marks
+ * alone would slice the tops off the leaders at the poles. That is not
+ * hypothetical — cutting to the cusp first put the turn circle six units
+ * outside the box and the crossing test failed immediately, because rows
+ * clamped inside a box their own leaders had left.
+ */
+export const OUTER_EXTENT = Math.max(
+  RING_OUTER,
+  BRACKET_RADIUS + BRACE_CUSP_DEPTH,
+  BRACKET_RADIUS + CALLOUT_STUB,
+);
+/**
+ * Radius of the brace's end curls — about twice the stroke's own width, which
+ * is what makes them read as the tight serifs of a typographic `{` rather than
+ * as loose hooks. Each is a quarter-turn back toward the ring.
+ */
+export const BRACE_END_CURL = 2.25;
 /**
  * Angular half-width of the cusp, and the floor it collapses to.
  *
@@ -211,16 +274,168 @@ export const PIVOT_RADIUS = 4;
  */
 export const CAP_ARC_HALF_SPAN = 5;
 
+/** Gap between the dial's outermost mark and the label column. */
+const LABEL_GAP = 9;
+
+/**
+ * The pivot. Hard against the left edge, because the ring opens to the left —
+ * the D's leftmost point IS the pivot, so nothing but the margin sits left of
+ * it. The dial is vertically centred on its own extent.
+ */
+export const CENTER: Center = {
+  cx: CANVAS_MARGIN,
+  cy: OUTER_EXTENT + CANVAS_MARGIN,
+};
+
+/** The canvas is exactly as tall as the dial plus its margins. */
+export const VIEW_HEIGHT = (OUTER_EXTENT + CANVAS_MARGIN) * 2;
+
+/** A host's measured box, in CSS pixels. */
+export interface Box {
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * Every length one reading needs, resolved against the box it is drawn in.
+ *
+ * The dial's radii scale; the annotation lengths are module constants and do
+ * not appear here at all. Nothing downstream reads a radius from module scope,
+ * which is what lets one component draw at 64 units and another at 350 with no
+ * second code path.
+ */
+export interface Metrics {
+  readonly center: Center;
+  readonly ringInner: number;
+  readonly ringOuter: number;
+  readonly valueNeedle: number;
+  readonly baselineNeedle: number;
+  readonly sector: number;
+  readonly brace: number;
+  /** The circle every leader turns on: the brace plus one fixed stub. */
+  readonly turn: number;
+  readonly outerExtent: number;
+  readonly labelX: number;
+  readonly textX: number;
+  readonly elbowX: number;
+  readonly turnX: number;
+  readonly labelWidth: number;
+  readonly viewWidth: number;
+  readonly viewHeight: number;
+}
+
+/** What a dial of this outer radius reaches, including its leaders' turn. */
+const extentOf = (ringOuter: number): number =>
+  Math.max(
+    ringOuter,
+    ringOuter * RATIO.brace + BRACE_CUSP_DEPTH,
+    ringOuter * RATIO.brace + CALLOUT_STUB,
+  );
+
+/**
+ * The largest dial the box can hold, or the default when no box is imposed.
+ *
+ * Two budgets, and the tighter one wins — the same rule `xMidYMid meet` would
+ * apply, except applied to the DIAL rather than to the dial-plus-annotation.
+ * Vertically the dial is centred and needs half the height; horizontally it
+ * has to leave the label column and the gaps around it standing, because those
+ * are fixed and cannot shrink to make room.
+ */
+const ringOuterFor = (box: Box | undefined, labelWidth: number): number => {
+  if (box === undefined) return RING_OUTER;
+  const annotation = CANVAS_MARGIN * 2 + LABEL_GAP + TEXT_GAP + labelWidth;
+  const perExtent = (limit: number) =>
+    (limit - CALLOUT_STUB) / RATIO.brace;
+  const byWidth = perExtent(box.width - annotation);
+  const byHeight = perExtent(box.height / 2 - CANVAS_MARGIN);
+  return Math.max(MIN_RING_OUTER, Math.min(byWidth, byHeight));
+};
+
+/**
+ * Resolve one reading's lengths.
+ *
+ * With a box, the viewBox IS that box at one unit per CSS pixel, so every
+ * fixed length below lands at its own size on screen — an 11px label is 11px
+ * whatever the dial is doing. Without one, this reproduces the tight canvas
+ * exactly: the same numbers the module constants carry, so an unmeasured gauge
+ * draws what it always drew.
+ */
+export const metricsFor = (
+  box: Box | undefined,
+  labels: readonly string[],
+): Metrics => {
+  const labelWidth = labelColumnWidth(labels);
+  const ringOuter = ringOuterFor(box, labelWidth);
+  const brace = ringOuter * RATIO.brace;
+  const outerExtent = extentOf(ringOuter);
+  const center = {
+    cx: CANVAS_MARGIN,
+    cy: box === undefined ? outerExtent + CANVAS_MARGIN : box.height / 2,
+  };
+  const labelX = center.cx + outerExtent + LABEL_GAP;
+  return {
+    center,
+    ringInner: ringOuter * RATIO.inner,
+    ringOuter,
+    valueNeedle: ringOuter * RATIO.value,
+    baselineNeedle: ringOuter * RATIO.baseline,
+    sector: ringOuter * RATIO.sector,
+    brace,
+    turn: brace + CALLOUT_STUB,
+    outerExtent,
+    labelX,
+    textX: labelX + TEXT_GAP,
+    elbowX: labelX - ELBOW_INSET,
+    turnX: center.cx + brace + CALLOUT_STUB,
+    labelWidth,
+    viewWidth: box?.width ?? labelX + TEXT_GAP + labelWidth + CANVAS_MARGIN,
+    viewHeight: box?.height ?? (outerExtent + CANVAS_MARGIN) * 2,
+  };
+};
+
 /**
  * The label column: every leader's horizontal run ends here, and every label
  * starts just past the tick that marks it. One column is what makes the stack
  * read as a HUD callout set rather than as three unrelated pointers.
+ *
+ * Derived, not chosen: one gap past the dial's outermost mark.
  */
-export const LABEL_X = 186;
+export const LABEL_X = CENTER.cx + OUTER_EXTENT + LABEL_GAP;
 /** Half-height of the vertical tick that terminates a run at the column. */
 export const COLUMN_TICK_HALF = 4;
 /** Gap between the column tick and the first letter of the label. */
 const TEXT_GAP = 6;
+
+/**
+ * Advance width of one character of label text, in viewBox units.
+ *
+ * The labels are 11px uppercase semibold with 0.5px of tracking, all of it
+ * fixed by `RateGauge.css`, so an estimate is honest here in a way it would
+ * not be for arbitrary copy — and it keeps the canvas a pure function of its
+ * inputs, which is what lets `gaugeGeometry` stay testable without a DOM.
+ */
+const LABEL_CHAR_WIDTH = 7.3;
+/**
+ * The column's floor and ceiling.
+ *
+ * The floor keeps a gauge whose labels are all short from cutting the column
+ * to a stub the eye reads as clipped. The ceiling matters more: the scenario's
+ * name is the consumer's and can be any length, and it ELLIPSIZES into this
+ * column — so a name allowed to set the width without limit would both stretch
+ * the dial thin and defeat the truncation it is supposed to trigger. Past the
+ * ceiling the name gives way, not the dial.
+ */
+const MIN_LABEL_WIDTH = 56;
+const MAX_LABEL_WIDTH = 124;
+
+/** How wide a label column has to be to hold these strings. */
+export const labelColumnWidth = (texts: readonly string[]): number => {
+  const widest = Math.max(
+    MIN_LABEL_WIDTH,
+    ...map((text: string) => text.length * LABEL_CHAR_WIDTH, texts),
+  );
+  return Math.min(MAX_LABEL_WIDTH, widest);
+};
 
 /**
  * Where every leader finishes turning and becomes horizontal.
@@ -231,15 +446,9 @@ const TEXT_GAP = 6;
  * levelled out — which is exactly the crossing the fixed-pitch stack used to
  * produce. It sits clear of the longest possible stub end.
  */
-const ELBOW_X = LABEL_X - 10;
+/** Where a label's first letter sits on the DEFAULT canvas. */
+export const TEXT_X = LABEL_X + TEXT_GAP;
 
-/**
- * How far a stub runs radially past its anchor before the leader turns.
- *
- * Fixed, so every stub reads as the same gesture — it is the needle's own
- * angle continued outward, which is what ties a row to its mark.
- */
-export const CALLOUT_STUB = 12;
 /**
  * Where every leader stops being radial and turns: the vertical gutter at the
  * rightmost point of the turn circle.
@@ -272,8 +481,13 @@ export const CALLOUT_STUB = 12;
  * as close to the picture as legibility allows.
  */
 export const CALLOUT_PITCH = 18;
-/** Rows stay this far inside the viewBox, top and bottom. */
-const CALLOUT_MARGIN = 12;
+/**
+ * Rows stay this far inside the viewBox, top and bottom — enough to hold half
+ * a line of 11px label text clear of the edge, and no more. It was 12 against
+ * a canvas with slack to spare; against one cut to its content, every unit of
+ * it is a row pushed off the anchor it names.
+ */
+const CALLOUT_MARGIN = 8;
 
 const DEGREES_PER_HALF_TURN = 180;
 const QUARTER_TURN = 90;
@@ -283,17 +497,27 @@ const radians = (degrees: number): number => (degrees * Math.PI) / DEGREES_PER_H
 /**
  * Where a value sits on the dial, in degrees.
  *
- * Linear across the domain onto [−90°, +90°], clamped at both ends: a value
- * past either end parks at the pole rather than sweeping into the other half,
- * which would read as the opposite sign. A zero-width domain reads as the
- * centre rather than as NaN.
+ * PIECEWISE about zero, because break-even is always the horizontal: the gain
+ * half spreads [0, domainMax] over [0°, +90°] and the loss half spreads
+ * [domainMin, 0] over [−90°, 0°]. Each half is linear within itself, so half
+ * of the maximum is 45° whatever the minimum happens to be — but the two
+ * halves need not share a scale, and on an asymmetric domain they do not.
+ *
+ * Clamped at both ends: a value past either end parks at its pole rather than
+ * sweeping into the other half, which would read as the opposite sign.
+ *
+ * A half that does not exist — a domain entirely on one side of zero — is
+ * treated as zero-length, so every value on that side reads as break-even
+ * rather than as NaN or as a pole it never reaches. So does a zero-width
+ * domain, which has no scale at all.
  */
 export const angleFor = (domain: Domain, value: number): number => {
   const [low, high] = domain;
-  const span = high - low;
-  if (span === 0) return 0;
-  const fraction = clamp((value - low) / span, 0, 1);
-  return fraction * DEGREES_PER_HALF_TURN - QUARTER_TURN;
+  if (high - low === 0) return 0;
+  if (value >= 0) {
+    return high <= 0 ? 0 : clamp(value / high, 0, 1) * QUARTER_TURN;
+  }
+  return low >= 0 ? 0 : -clamp(value / low, 0, 1) * QUARTER_TURN;
 };
 
 /**
@@ -674,6 +898,24 @@ export interface GaugeInput {
   readonly value: number;
   /** A gain the consumer considers comfortable; splits the gain half. */
   readonly comfortable?: number;
+  /**
+   * The words the callouts will carry, so the canvas can be cut to them.
+   *
+   * Geometry does not render them and does not care which is which — it only
+   * needs their lengths to decide how wide the label column has to be. Omit
+   * them and the column takes its floor width.
+   */
+  readonly labels?: readonly string[];
+  /**
+   * The host's measured box, in CSS pixels.
+   *
+   * With one, the canvas IS that box at one unit per pixel and the dial grows
+   * to fill it while the annotation keeps its own size. Without one, the gauge
+   * draws its default dial on a canvas cut tight to it — which is what the
+   * bench's content-sized cards get, and what they looked like before any of
+   * this existed.
+   */
+  readonly box?: Box;
 }
 
 /** Everything the component paints. Nothing is decided after this. */
@@ -701,6 +943,13 @@ export interface GaugeGeometry {
   readonly valueTip: NeedleTip;
   /** The HUD callouts, in anchor order, already placed and elbowed. */
   readonly callouts: readonly Callout[];
+  /** Every length this reading was drawn with. */
+  readonly metrics: Metrics;
+  /** The canvas, cut to this reading's content. */
+  readonly viewWidth: number;
+  readonly viewBox: string;
+  /** How much room a label has before it must truncate. */
+  readonly labelWidth: number;
 }
 
 /**
@@ -751,13 +1000,14 @@ export const dotsCollide = (a: Point, b: Point): boolean =>
  * the ring and its dot comes back.
  */
 const dotIsClear = (
+  center: Center,
   radius: number,
   angle: number,
   /** Every mark EXCEPT the one this callout names — the caller drops that one. */
   marks: readonly MarkBand[],
   otherAnchors: readonly Point[],
 ): boolean => {
-  const anchor = pointAt(CENTER, radius, angle);
+  const anchor = pointAt(center, radius, angle);
   for (const other of otherAnchors) {
     if (dotsCollide(anchor, other)) return false;
   }
@@ -768,20 +1018,25 @@ const dotIsClear = (
 };
 
 /** The marks a dot can land on, for one reading of the dial. */
-const markBands = (angles: {
-  baseline: number;
-  value: number;
-}): { readonly ring: MarkBand; readonly cap: MarkBand; readonly brace: MarkBand } => ({
-  ring: { inner: RING_INNER, outer: RING_OUTER, from: -QUARTER_TURN, to: QUARTER_TURN },
+const markBands = (
+  angles: { baseline: number; value: number },
+  metrics: Metrics,
+): { readonly ring: MarkBand; readonly cap: MarkBand; readonly brace: MarkBand } => ({
+  ring: {
+    inner: metrics.ringInner,
+    outer: metrics.ringOuter,
+    from: -QUARTER_TURN,
+    to: QUARTER_TURN,
+  },
   cap: {
-    inner: VALUE_NEEDLE_RADIUS - CAP_STROKE_HALF,
-    outer: VALUE_NEEDLE_RADIUS + CAP_STROKE_HALF,
+    inner: metrics.valueNeedle - CAP_STROKE_HALF,
+    outer: metrics.valueNeedle + CAP_STROKE_HALF,
     from: angles.value - CAP_ARC_HALF_SPAN,
     to: angles.value + CAP_ARC_HALF_SPAN,
   },
   brace: {
-    inner: BRACKET_RADIUS - BRACE_END_CURL,
-    outer: BRACKET_RADIUS + BRACE_CUSP_DEPTH,
+    inner: metrics.brace - BRACE_END_CURL,
+    outer: metrics.brace + BRACE_CUSP_DEPTH,
     from: angles.baseline,
     to: angles.value,
   },
@@ -805,8 +1060,6 @@ interface Unplaced {
  * instead; that separated the elbows but let a long stub cut clean across a
  * neighbour's leader, which the crossing test caught.
  */
-const TURN_RADIUS = BRACKET_RADIUS + CALLOUT_STUB;
-const TURN_X = CENTER.cx + TURN_RADIUS;
 
 /**
  * The spacing heuristic, and the reason the leaders cannot cross.
@@ -824,7 +1077,10 @@ const TURN_X = CENTER.cx + TURN_RADIUS;
  * is a rigid shift, so it cannot reintroduce a crossing. A final clamp keeps
  * the block inside the viewBox — again as one rigid shift.
  */
-const placeRows = (naturals: readonly number[]): readonly number[] => {
+const placeRows = (
+  naturals: readonly number[],
+  metrics: Metrics,
+): readonly number[] => {
   if (naturals.length === 0) return [];
   const pushed: number[] = [];
   for (const natural of naturals) {
@@ -837,8 +1093,8 @@ const placeRows = (naturals: readonly number[]): readonly number[] => {
   const top = pushed[0] + shift;
   const bottom = pushed[pushed.length - 1] + shift;
   if (top < CALLOUT_MARGIN) shift += CALLOUT_MARGIN - top;
-  else if (bottom > VIEW_HEIGHT - CALLOUT_MARGIN) {
-    shift -= bottom - (VIEW_HEIGHT - CALLOUT_MARGIN);
+  else if (bottom > metrics.viewHeight - CALLOUT_MARGIN) {
+    shift -= bottom - (metrics.viewHeight - CALLOUT_MARGIN);
   }
   return map((y: number) => y + shift, pushed);
 };
@@ -855,15 +1111,16 @@ const leaderPoints = (
   anchor: Point,
   turn: Point,
   rowY: number,
+  metrics: Metrics,
 ): readonly Point[] => {
-  const gutter = { x: TURN_X, y: turn.y };
-  const elbow = { x: ELBOW_X, y: rowY };
-  const runEnd = { x: LABEL_X, y: rowY };
+  const gutter = { x: metrics.turnX, y: turn.y };
+  const elbow = { x: metrics.elbowX, y: rowY };
+  const runEnd = { x: metrics.labelX, y: rowY };
   // A turn point already ON the gutter (the 3 o'clock callout) needs no
   // horizontal approach, and a row that landed at its natural height needs no
   // dogleg. Emitting either as a zero-length segment would draw a visible
   // stutter at the joint.
-  const approach = turn.x === TURN_X ? [] : [gutter];
+  const approach = turn.x === metrics.turnX ? [] : [gutter];
   const dogleg = turn.y === rowY ? [] : [elbow];
   return [anchor, turn, ...approach, ...dogleg, runEnd];
 };
@@ -881,12 +1138,13 @@ const placeCallouts = (
   collapsed: boolean,
   hasDelta: boolean,
   cuspDepth: number,
+  metrics: Metrics,
 ): readonly Callout[] => {
   const unplaced: readonly Unplaced[] = collapsed
-    ? [{ id: "valueAndBaseline", angle: angles.value, radius: RING_OUTER }]
+    ? [{ id: "valueAndBaseline", angle: angles.value, radius: metrics.ringOuter }]
     : [
-        { id: "value", angle: angles.value, radius: RING_OUTER },
-        { id: "baseline", angle: angles.baseline, radius: RING_OUTER },
+        { id: "value", angle: angles.value, radius: metrics.ringOuter },
+        { id: "baseline", angle: angles.baseline, radius: metrics.ringOuter },
         ...(hasDelta
           ? [
               {
@@ -896,7 +1154,7 @@ const placeCallouts = (
                 // from the point the brace makes, or the brace reads as a mark
                 // the label happens to pass over. With no brace drawn, the
                 // leader starts on the brace circle itself and is just a line.
-                radius: BRACKET_RADIUS + cuspDepth,
+                radius: metrics.brace + cuspDepth,
               },
             ]
           : []),
@@ -908,35 +1166,41 @@ const placeCallouts = (
   // value's while both turn at the same circle in the other order. Ordering
   // rows against their own exit heights is what makes leaders cross.
   const exits = map((callout: Unplaced) => {
-    const turn = pointAt(CENTER, TURN_RADIUS, callout.angle);
-    return { callout, turn, stub: TURN_RADIUS - callout.radius, naturalY: turn.y };
+    const turn = pointAt(metrics.center, metrics.turn, callout.angle);
+    return { callout, turn, stub: metrics.turn - callout.radius, naturalY: turn.y };
   }, unplaced);
   const sorted = sortBy((e: { naturalY: number }) => e.naturalY, exits);
   const ordered = map((e: { callout: Unplaced }) => e.callout, sorted);
   const stubs = map((e: { stub: number }) => e.stub, sorted);
   const naturals = map((e: { naturalY: number }) => e.naturalY, sorted);
   const turns = map((e: { turn: Point }) => e.turn, sorted);
-  const rows = placeRows(naturals);
-  const bands = markBands(angles);
+  const rows = placeRows(naturals, metrics);
+  const bands = markBands(angles, metrics);
   const anchors = map(
-    (callout: Unplaced) => pointAt(CENTER, callout.radius, callout.angle),
+    (callout: Unplaced) => pointAt(metrics.center, callout.radius, callout.angle),
     ordered,
   );
   return map((callout: Unplaced, index: number) => {
     const anchor = anchors[index];
-    const points = leaderPoints(anchor, turns[index], rows[index]);
+    const points = leaderPoints(anchor, turns[index], rows[index], metrics);
     const others = [bands.ring, bands.cap, bands.brace];
     const neighbours = filter((_: Point, i: number) => i !== index, anchors);
     return {
       id: callout.id,
-      showDot: dotIsClear(callout.radius, callout.angle, others, neighbours),
+      showDot: dotIsClear(
+        metrics.center,
+        callout.radius,
+        callout.angle,
+        others,
+        neighbours,
+      ),
       anchor,
       angle: callout.angle,
       stub: stubs[index],
       naturalY: naturals[index],
       y: rows[index],
-      labelX: LABEL_X,
-      textX: LABEL_X + TEXT_GAP,
+      labelX: metrics.labelX,
+      textX: metrics.textX,
       points,
       leader: join(
         " ",
@@ -956,12 +1220,13 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
   const zero = angleFor(input.domain, 0);
   const baselineAngle = angleFor(input.domain, input.baseline);
   const valueAngle = angleFor(input.domain, input.value);
-  const zoneEnd = pointAt(CENTER, RING_OUTER, zero);
+  const metrics = metricsFor(input.box, input.labels ?? []);
+  const zoneEnd = pointAt(metrics.center, metrics.ringOuter, zero);
   const collapsed = drawn === drawnBaseline;
   const tone = bandAt(input.domain, input.value, input.comfortable);
   const brace = bracePath(
-    CENTER,
-    BRACKET_RADIUS,
+    metrics.center,
+    metrics.brace,
     baselineAngle,
     valueAngle,
     BRACE_CUSP_DEPTH,
@@ -980,7 +1245,13 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
         tone: range.tone,
         from: range.from,
         to: range.to,
-        path: ringArcPath(CENTER, RING_INNER, RING_OUTER, range.from, range.to),
+        path: ringArcPath(
+          metrics.center,
+          metrics.ringInner,
+          metrics.ringOuter,
+          range.from,
+          range.to,
+        ),
         lit: range.tone === tone,
       }),
       bandRanges(input.domain, input.comfortable),
@@ -990,26 +1261,36 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
       input.comfortable !== undefined && input.comfortable > 0
         ? clampedValue(input.domain, input.comfortable)
         : undefined,
-    deltaSector: sectorPath(CENTER, SECTOR_RADIUS, baselineAngle, valueAngle),
+    deltaSector: sectorPath(
+      metrics.center,
+      metrics.sector,
+      baselineAngle,
+      valueAngle,
+    ),
     brace,
     zeroLine: { x2: zoneEnd.x, y2: zoneEnd.y },
     baselineTip: needleEndpoint(
-      CENTER,
-      BASELINE_NEEDLE_RADIUS,
+      metrics.center,
+      metrics.baselineNeedle,
       input.domain,
       input.baseline,
     ),
     valueTip: needleEndpoint(
-      CENTER,
-      VALUE_NEEDLE_RADIUS,
+      metrics.center,
+      metrics.valueNeedle,
       input.domain,
       input.value,
     ),
+    metrics,
+    viewWidth: metrics.viewWidth,
+    viewBox: `0 0 ${metrics.viewWidth} ${metrics.viewHeight}`,
+    labelWidth: metrics.labelWidth,
     callouts: placeCallouts(
       { zero, baseline: baselineAngle, value: valueAngle },
       collapsed,
       !collapsed,
       brace === "" ? 0 : BRACE_CUSP_DEPTH,
+      metrics,
     ),
   };
 };

@@ -42,21 +42,29 @@
 // `format` and `baselineLabel` are all DATA, and there is nothing static left
 // to curry. One size, one geometry — expand only when a caller demands it.
 // ============================================
-import { For, type Component, createMemo, Show } from "solid-js";
+import {
+  For,
+  type Component,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import {
   type Band,
+  type Box,
   type Callout,
-  CENTER,
+  clampedValue,
   COLUMN_TICK_HALF,
   gaugeGeometry,
   PIVOT_RADIUS,
   TERMINAL_RADIUS,
-  VIEW_HEIGHT,
-  VIEW_WIDTH,
   type Domain,
 } from "./geometry";
 import { EllipsizedHudCaption } from "../Text";
 import { Tooltip } from "../Tooltip";
+import { observeSize } from "../../internal/dom/observeSize";
 import "./RateGauge.css";
 
 export interface RateGaugeProps {
@@ -87,8 +95,6 @@ const DEFAULT_BASELINE_LABEL = "Baseline";
 
 /** Height of a callout's label box, and half of it — one 11px line. */
 const LABEL_BOX_HEIGHT = 14;
-/** Right-hand breathing room, so a truncating label never touches the edge. */
-const LABEL_BOX_MARGIN = 4;
 /**
  * A band carries its own tone and whether it is lit. The dimming is the primary
  * channel for the answer — the reader watches which band the needle stands
@@ -110,12 +116,60 @@ const isConsumerText = (callout: Callout): boolean =>
   callout.id === "value" || callout.id === "valueAndBaseline";
 
 export const RateGauge: Component<RateGaugeProps> = (props) => {
+  // The host's own box, once it has one.
+  //
+  // With it, the canvas is that box at ONE UNIT PER CSS PIXEL: the dial grows
+  // to fill the card while the labels, strokes and dots keep their own size.
+  // Without it — a card that sizes to its content, which is most of the
+  // bench — the gauge draws its default dial on a canvas cut tight to it, and
+  // the whole thing scales together as it always did. That fallback is why
+  // this is a signal starting `undefined` rather than a measurement the first
+  // render has to wait for: an unmeasured gauge is a correct gauge, not a
+  // blank one.
+  const [box, setBox] = createSignal<Box | undefined>(undefined);
+  let host: HTMLDivElement | undefined;
+
+  const measureHost = (): void => {
+    if (host === undefined) return;
+    const rect = host.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      setBox({ width: rect.width, height: rect.height });
+    }
+  };
+
+  onMount(() => {
+    if (host === undefined) return;
+    // Synchronously first, so the first paint is already at the right size.
+    measureHost();
+    const stop = observeSize(host, (measured) => {
+      if (measured.width > 0 && measured.height > 0) {
+        setBox(measured);
+        return;
+      }
+      // Not laid out yet. Look again once this frame's layout has settled
+      // rather than recording a zero as though it were the answer.
+      queueMicrotask(measureHost);
+    });
+    onCleanup(stop);
+  });
+
   const geometry = createMemo(() =>
     gaugeGeometry({
       domain: props.domain,
       baseline: props.baseline,
       value: props.value,
       comfortable: props.comfortable,
+      // The canvas is cut to the words as well as to the dial, so geometry is
+      // handed the strings that will end up in the column.
+      labels: [
+        props.label,
+        props.format(
+          clampedValue(props.domain, props.value) -
+            clampedValue(props.domain, props.baseline),
+        ),
+        props.baselineLabel ?? DEFAULT_BASELINE_LABEL,
+      ],
+      box: box(),
     }),
   );
   const baselineLabel = () => props.baselineLabel ?? DEFAULT_BASELINE_LABEL;
@@ -160,6 +214,7 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
   return (
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA meter; a native <meter> is a replaced element with its own UA bar rendering and cannot host the SVG dial that IS this readout.
     <div
+      ref={host}
       class={`sui-rate-gauge sui-rate-gauge--${tone()}`}
       role="meter"
       aria-label={props.label}
@@ -170,7 +225,7 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
     >
       <svg
         class="sui-rate-gauge__canvas"
-        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+        viewBox={geometry().viewBox}
         aria-hidden="true"
       >
         {/* The ring's bands. Only the one holding the needle is lit — two of
@@ -189,8 +244,8 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
         </Show>
         <line
           class="sui-rate-gauge__zero"
-          x1={CENTER.cx}
-          y1={CENTER.cy}
+          x1={geometry().metrics.center.cx}
+          y1={geometry().metrics.center.cy}
           x2={geometry().zeroLine.x2}
           y2={geometry().zeroLine.y2}
         />
@@ -199,8 +254,8 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
             not the reading. No tip cap — the cap marks where you ARE. */}
         <line
           class="sui-rate-gauge__needle sui-rate-gauge__needle--baseline"
-          x1={CENTER.cx}
-          y1={CENTER.cy}
+          x1={geometry().metrics.center.cx}
+          y1={geometry().metrics.center.cy}
           x2={geometry().baselineTip.x}
           y2={geometry().baselineTip.y}
         />
@@ -216,8 +271,8 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
             the cap reads as a segment of the instrument's own edge. */}
         <line
           class="sui-rate-gauge__needle sui-rate-gauge__needle--value"
-          x1={CENTER.cx}
-          y1={CENTER.cy}
+          x1={geometry().metrics.center.cx}
+          y1={geometry().metrics.center.cy}
           x2={geometry().valueTip.x}
           y2={geometry().valueTip.y}
         />
@@ -228,8 +283,8 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
 
         <circle
           class="sui-rate-gauge__pivot"
-          cx={CENTER.cx}
-          cy={CENTER.cy}
+          cx={geometry().metrics.center.cx}
+          cy={geometry().metrics.center.cy}
           r={PIVOT_RADIUS}
         />
 
@@ -278,7 +333,7 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
                 <foreignObject
                   x={callout.textX}
                   y={callout.y - LABEL_BOX_HEIGHT / 2}
-                  width={VIEW_WIDTH - callout.textX - LABEL_BOX_MARGIN}
+                  width={geometry().labelWidth}
                   height={LABEL_BOX_HEIGHT}
                 >
                   <div class="sui-rate-gauge__label-box">

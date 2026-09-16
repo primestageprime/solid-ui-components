@@ -68,10 +68,38 @@ describe("angleFor", () => {
     expect(angleFor([5, 5], 9)).toBe(0);
   });
 
-  it("does not assume the domain is symmetric", () => {
-    // [-10000, 30000]: zero sits a quarter of the way up, not at 3 o'clock.
-    expect(angleFor([-10000, 30000], 0)).toBe(-45);
+  // Peter's rule, 2026-09-16: break-even is ALWAYS the horizontal. The two
+  // halves therefore carry different scales on an asymmetric domain, which is
+  // the honest trade — one linear scale across the whole domain would put
+  // break-even at an angle and make a tilted needle mean nothing in particular.
+  it("puts zero at the horizontal on an asymmetric domain too", () => {
+    expect(angleFor([-10000, 30000], 0)).toBe(0);
     expect(angleFor([-10000, 30000], 30000)).toBe(90);
+    expect(angleFor([-10000, 30000], -10000)).toBe(-90);
+  });
+
+  it("gives each half its own scale", () => {
+    // Half of the maximum is 45° whatever the minimum is...
+    expect(angleFor([-10000, 30000], 15000)).toBe(45);
+    expect(angleFor([-90000, 30000], 15000)).toBe(45);
+    // ...and half of the minimum is −45° whatever the maximum is.
+    expect(angleFor([-10000, 30000], -5000)).toBe(-45);
+    expect(angleFor([-10000, 90000], -5000)).toBe(-45);
+  });
+
+  // The two halves are independent: the maximum alone scales the gain half and
+  // the minimum alone scales the loss half. A domain that does not cross zero
+  // therefore has one real half and one that nothing can reach.
+  it("treats a missing half as zero-length rather than as a scale", () => {
+    // Entirely above zero: nothing can be a loss, so nothing points down —
+    // while the gain half is still scaled by the maximum, minimum or no.
+    expect(angleFor([1000, 30000], -500)).toBe(0);
+    expect(angleFor([1000, 30000], 15000)).toBe(45);
+    expect(angleFor([1000, 30000], 30000)).toBe(90);
+    // Entirely below zero: the mirror.
+    expect(angleFor([-30000, -1000], 500)).toBe(0);
+    expect(angleFor([-30000, -1000], -15000)).toBe(-45);
+    expect(angleFor([-30000, -1000], -30000)).toBe(-90);
   });
 });
 
@@ -756,7 +784,14 @@ describe("callout placement", () => {
     const rows = place(5000, 5400);
     const turnRadii = rows.map((row) => {
       const turn = row.points[1];
-      return Math.round(Math.hypot(turn.x - 66, turn.y - 95) * 1000) / 1000;
+      return (
+        Math.round(
+          Math.hypot(
+            turn.x - CENTER_FOR_TEST.cx,
+            turn.y - CENTER_FOR_TEST.cy,
+          ) * 1000,
+        ) / 1000
+      );
     });
     expect(new Set(turnRadii).size).toBe(1);
     // The bracket's anchor is further out than the needle tips, so its stub is
@@ -784,6 +819,101 @@ describe("callout placement", () => {
       const last = row.points[row.points.length - 1];
       expect(last.y).toBe(row.y);
     }
+  });
+});
+
+describe("the canvas", () => {
+  const read = (box?: { width: number; height: number }) =>
+    gaugeGeometry({
+      domain: DOMAIN,
+      baseline: 5000,
+      value: 23000,
+      labels: ["SCENARIO A", "+$18,000/MO", "BASELINE"],
+      box,
+    });
+
+  it("cuts tight to the content when nothing imposes a size", () => {
+    const g = read();
+    // Left edge: the pivot is the D's leftmost point, so only the margin.
+    expect(g.metrics.center.cx).toBe(4);
+    // Vertically the dial is centred on its own extent, top and bottom equal.
+    expect(g.metrics.center.cy).toBe(g.metrics.outerExtent + 4);
+    expect(g.metrics.viewHeight).toBe((g.metrics.outerExtent + 4) * 2);
+    // Right edge: the label column, its text, and the margin. Nothing spare.
+    expect(g.metrics.viewWidth).toBe(
+      g.metrics.textX + g.metrics.labelWidth + 4,
+    );
+    expect(g.metrics.ringOuter).toBe(64);
+  });
+
+  it("takes the box it is given, at one unit per pixel", () => {
+    const g = read({ width: 540, height: 850 });
+    expect(g.viewBox).toBe("0 0 540 850");
+    expect(g.metrics.viewWidth).toBe(540);
+    expect(g.metrics.viewHeight).toBe(850);
+  });
+
+  // The point of the exercise: a 540×850 card should draw a BIG dial, not a
+  // default-sized one floating in the middle of a scaled-up canvas.
+  it("grows the dial to the box's limiting dimension", () => {
+    const g = read({ width: 540, height: 850 });
+    expect(g.metrics.ringOuter).toBeGreaterThan(64 * 3);
+    // Whichever budget bound it, the content still fits inside the box.
+    expect(g.metrics.center.cy + g.metrics.outerExtent).toBeLessThanOrEqual(850);
+    expect(g.metrics.textX + g.metrics.labelWidth).toBeLessThanOrEqual(540);
+  });
+
+  it("keeps the ANNOTATION fixed while the dial grows", () => {
+    const small = read();
+    const large = read({ width: 540, height: 850 });
+    // The gap from the outermost mark to the label column, and the column's
+    // own width, are the same number of units at both sizes — so at one unit
+    // per pixel they are the same size on screen.
+    expect(large.metrics.labelX - large.metrics.outerExtent).toBe(
+      small.metrics.labelX - small.metrics.outerExtent,
+    );
+    expect(large.metrics.labelWidth).toBe(small.metrics.labelWidth);
+    expect(large.metrics.textX - large.metrics.labelX).toBe(
+      small.metrics.textX - small.metrics.labelX,
+    );
+    // The stub a leader runs out along is fixed too.
+    expect(large.metrics.turn - large.metrics.brace).toBe(
+      small.metrics.turn - small.metrics.brace,
+    );
+  });
+
+  it("keeps the dial's own proportions while it grows", () => {
+    const small = read();
+    const large = read({ width: 540, height: 850 });
+    const ratio = (m: typeof small.metrics) => m.ringInner / m.ringOuter;
+    expect(ratio(large.metrics)).toBeCloseTo(ratio(small.metrics), 9);
+  });
+
+  it("lets a narrow box bind on width and a short one on height", () => {
+    const wide = read({ width: 1200, height: 300 });
+    const tall = read({ width: 300, height: 1200 });
+    expect(wide.metrics.center.cy + wide.metrics.outerExtent).toBeLessThanOrEqual(300);
+    expect(tall.metrics.textX + tall.metrics.labelWidth).toBeLessThanOrEqual(300);
+  });
+
+  it("never lets a label run past the right edge", () => {
+    for (const box of [undefined, { width: 540, height: 850 }, { width: 300, height: 300 }]) {
+      const g = read(box);
+      for (const callout of g.callouts) {
+        expect(callout.textX + g.metrics.labelWidth).toBeLessThanOrEqual(
+          g.metrics.viewWidth,
+        );
+      }
+    }
+  });
+
+  it("still routes all three brace regimes inside a measured box", () => {
+    const box = { width: 540, height: 850 };
+    const at = (value: number) =>
+      gaugeGeometry({ domain: DOMAIN, baseline: 5000, value, box });
+    expect(at(23000).brace).not.toBe("");
+    expect(at(5500).brace).toBe("");
+    expect(at(5000).callouts.map((c) => c.id)).toEqual(["valueAndBaseline"]);
   });
 });
 
