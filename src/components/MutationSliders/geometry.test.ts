@@ -22,6 +22,7 @@ import {
   VIEW_HEIGHT,
   arrowPath,
   bandFor,
+  niceStep,
   changeLineFor,
   clampToRange,
   dialGeometry,
@@ -85,6 +86,14 @@ const FIXTURE: readonly Entity[] = [
     label: "Joe",
     old: 48_000,
     value: null,
+    range: [40_000, 60_000],
+  },
+  // A NEW HIRE: no prior amount at all. The mirror image of Joe.
+  {
+    id: "nadia",
+    label: "Nadia",
+    old: null,
+    value: 45_000,
     range: [40_000, 60_000],
   },
 ];
@@ -347,30 +356,32 @@ describe("mutationGeometry — the sketch as a table", () => {
         (row) => ({
           id: row.id,
           range: `${row.range[0]}–${row.range[1]}`,
-          old: row.old,
-          clampedOld: row.clampedOld,
+          old: row.old ?? "—",
+          clampedOld: row.clampedOld ?? "—",
           value: row.value ?? "—",
           clampedValue: row.clampedValue ?? "—",
           changeTone: row.changeTone,
           bandY: row.band.y,
           bandH: row.band.height,
-          oldY: row.oldY,
+          oldY: row.oldY ?? "—",
           valueY: row.valueY ?? "—",
+          isNew: row.isNew,
           removed: row.removed,
         }),
         rows,
       ),
     );
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(7);
   });
 
-  it("reads three raises, two cuts and one removal", () => {
+  it("reads three raises, two cuts, one removal and one arrival", () => {
     expect(map((row) => row.changeTone, rows)).toEqual([
       "raise",
       "raise",
       "raise",
       "cut",
       "cut",
+      "none",
       "none",
     ]);
   });
@@ -384,8 +395,10 @@ describe("mutationGeometry — the sketch as a table", () => {
     for (const row of rows) {
       const top = row.band.y;
       const bottom = row.band.y + row.band.height;
-      expect(row.oldY).toBeGreaterThanOrEqual(top);
-      expect(row.oldY).toBeLessThanOrEqual(bottom);
+      if (row.oldY !== null) {
+        expect(row.oldY).toBeGreaterThanOrEqual(top);
+        expect(row.oldY).toBeLessThanOrEqual(bottom);
+      }
       if (row.valueY !== null) {
         expect(row.valueY).toBeGreaterThanOrEqual(top);
         expect(row.valueY).toBeLessThanOrEqual(bottom);
@@ -395,6 +408,120 @@ describe("mutationGeometry — the sketch as a table", () => {
 
   it("keeps the row in the order it was given", () => {
     expect(map((row) => row.id, rows)).toEqual(map((e) => e.id, FIXTURE));
+  });
+});
+
+describe("niceStep", () => {
+  it("steps a salary scale by a thousand, not by a pound", () => {
+    // The defect this replaced: a hardcoded step of 1 meant a hundred
+    // thousand arrow presses to cross this domain.
+    expect(niceStep([30_000, 130_000])).toBe(1_000);
+  });
+
+  it("crosses any domain in about a hundred presses", () => {
+    for (const domain of [
+      [0, 10],
+      [30_000, 130_000],
+      [0, 1_000_000],
+      [-500, 500],
+      [100, 200],
+    ] as const) {
+      const presses = Math.abs(domain[1] - domain[0]) / niceStep(domain);
+      expect(presses).toBeLessThanOrEqual(100);
+      expect(presses).toBeGreaterThanOrEqual(10);
+    }
+  });
+
+  it("only ever lands on 1, 2 or 5 times a power of ten", () => {
+    for (const domain of [
+      [0, 3],
+      [0, 37],
+      [0, 370],
+      [0, 3_700],
+      [0, 88_000],
+      [30_000, 130_000],
+    ] as const) {
+      const step = niceStep(domain);
+      const mantissa = step / 10 ** Math.floor(Math.log10(step));
+      expect([1, 2, 5]).toContain(Math.round(mantissa));
+    }
+  });
+
+  it("never goes below 1 on a domain counted in whole numbers", () => {
+    // A levels domain of 0–10 steps by 1, not by 0.1 — its ends say the unit
+    // is a whole level, and emitting level 6.3 would corrupt the caller.
+    expect(niceStep([0, 10])).toBe(1);
+    expect(niceStep([0, 5])).toBe(1);
+  });
+
+  it("keeps a fractional step on a domain whose ends are fractional", () => {
+    // A ratio in [0, 1] genuinely wants a sub-unit step.
+    expect(niceStep([0, 1.5])).toBeLessThan(1);
+  });
+
+  it("survives a zero-width domain rather than dividing by it", () => {
+    expect(niceStep([5, 5])).toBe(1);
+  });
+});
+
+describe("a new hire — no prior amount at all", () => {
+  const HIRE: Entity = {
+    id: "new",
+    label: "New",
+    old: null,
+    value: 45_000,
+    range: [40_000, 60_000],
+  };
+
+  it("draws the band and the future arrow and nothing else", () => {
+    const dial = dialGeometry(DOMAIN, HIRE);
+    expect(dial.isNew).toBe(true);
+    expect(dial.band).not.toBeNull();
+    expect(dial.futureArrow).toBeTruthy();
+    expect(dial.priorArrow).toBeNull();
+    expect(dial.oldY).toBeNull();
+    expect(dial.clampedOld).toBeNull();
+  });
+
+  it("has no change to colour — an arrival is not a raise from zero", () => {
+    const dial = dialGeometry(DOMAIN, HIRE);
+    expect(dial.changeTone).toBe("none");
+    expect(dial.changeLine).toBeNull();
+  });
+
+  it("still clamps its future amount onto the band", () => {
+    const dial = dialGeometry(DOMAIN, { ...HIRE, value: 99_000 });
+    expect(dial.clampedValue).toBe(60_000);
+  });
+
+  it("is not the same thing as an unchanged entity", () => {
+    const still = dialGeometry(DOMAIN, {
+      id: "s",
+      label: "S",
+      old: 45_000,
+      value: 45_000,
+      range: [40_000, 60_000],
+    });
+    expect(still.isNew).toBe(false);
+    expect(still.priorArrow).toBeTruthy();
+  });
+
+  it("survives being removed as well — an arrival that never landed", () => {
+    const dial = dialGeometry(DOMAIN, { ...HIRE, value: null });
+    expect(dial.isNew).toBe(true);
+    expect(dial.removed).toBe(true);
+    expect(dial.priorArrow).toBeNull();
+    expect(dial.futureArrow).toBeNull();
+  });
+});
+
+describe("toneOf with a missing end", () => {
+  it("reads a new hire as no tone", () => {
+    expect(toneOf(null, 50_000)).toBe("none");
+  });
+
+  it("reads an entity that both arrived and left as no tone", () => {
+    expect(toneOf(null, null)).toBe("none");
   });
 });
 

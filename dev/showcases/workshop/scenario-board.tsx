@@ -158,9 +158,20 @@ const MONTHLY_NET: readonly number[] = [
  */
 export const newLevelOf = (entity: Entity): number => entity.value ?? 0;
 
-/** How far one dial moved. Negative for a cut, and fully negative for a removal. */
+/**
+ * The level an entity held in the OLD scenario. A NEW HIRE (`old: null`) reads
+ * as level 0 — they were not in the old scenario at all, so there is nothing
+ * to subtract. Same shape as `newLevelOf` above: the consumer states what an
+ * absence MEANS rather than doing arithmetic on it.
+ */
+export const oldLevelOf = (entity: Entity): number => entity.old ?? 0;
+
+/**
+ * How far one dial moved. Negative for a cut, fully negative for a removal,
+ * and for a hire the delta IS the new cost — there is no prior to subtract.
+ */
 export const deltaOf = (entity: Entity): number =>
-  newLevelOf(entity) - entity.old;
+  newLevelOf(entity) - oldLevelOf(entity);
 
 /** The naive rate: every dial's change, priced, added up. $/month. */
 export const rateOf = (entities: readonly Entity[]): number =>
@@ -221,10 +232,7 @@ const stepMomentOf = (entityId: string): Mutation | undefined => {
 
 /** The entities that appear on the timeline, in sketch order. */
 const timelinedEntities = (entities: readonly Entity[]): Entity[] =>
-  filter(
-    (entity: Entity) => stepMomentOf(entity.id) !== undefined,
-    entities,
-  );
+  filter((entity: Entity) => stepMomentOf(entity.id) !== undefined, entities);
 
 /**
  * One person's stepped line, in $/month: they hold their OLD level from the
@@ -233,6 +241,14 @@ const timelinedEntities = (entities: readonly Entity[]): Entity[] =>
  */
 export const pointsFor = (entity: Entity): LevelPoint[] => {
   const moment = stepMomentOf(entity.id);
+  // A NEW HIRE (`old: null`) gets NO opening point: they were not in the old
+  // scenario, so there is no level for them to hold from the domain's left
+  // edge. They enter at their own mutation date, or not at all.
+  if (entity.old === null) {
+    return moment === undefined
+      ? []
+      : [{ at: moment.at, level: newLevelOf(entity) * DOLLARS_PER_LEVEL }];
+  }
   const opening: LevelPoint = {
     at: DOMAIN_START,
     level: entity.old * DOLLARS_PER_LEVEL,
@@ -248,7 +264,8 @@ export const pointsFor = (entity: Entity): LevelPoint[] => {
 const levelAt = (entity: Entity, at: TimeValue): number => {
   const moment = stepMomentOf(entity.id);
   const stepped = moment !== undefined && timeOf(moment.at) <= timeOf(at);
-  const level = stepped ? newLevelOf(entity) : entity.old;
+  // Before their own step a hire is worth nothing: they have not arrived yet.
+  const level = stepped ? newLevelOf(entity) : oldLevelOf(entity);
   return level * DOLLARS_PER_LEVEL;
 };
 
@@ -279,7 +296,12 @@ export const levelsSeriesOf = (entities: readonly Entity[]): Series[] => {
   );
   return [
     ...people,
-    { id: "total", label: "Total", primary: true, points: totalPoints(entities) },
+    {
+      id: "total",
+      label: "Total",
+      primary: true,
+      points: totalPoints(entities),
+    },
   ];
 };
 
@@ -453,8 +475,7 @@ const ScenarioBoardBench: Component = () => {
   };
 
   const rate = () => rateOf(entities());
-  const summary = () =>
-    pipe(entities(), map(describeEntity), join("  ·  "));
+  const summary = () => pipe(entities(), map(describeEntity), join("  ·  "));
 
   return (
     <div class="component-section component-section--full">
@@ -527,10 +548,8 @@ const ScenarioBoardBench: Component = () => {
               Showing flag{" "}
               {selectedMutation() === undefined
                 ? "—"
-                : (find(
-                    (m: Mutation) => m.id === selectedMutation(),
-                    MUTATIONS,
-                  )?.label ?? "—")}
+                : (find((m: Mutation) => m.id === selectedMutation(), MUTATIONS)
+                    ?.label ?? "—")}
               . 2026-01 has no mutation at or after it, so it lights no flag;
               flags 2 and 3 both fall in 2025-06, so the round trip is lossy.
             </CaptionLabel>

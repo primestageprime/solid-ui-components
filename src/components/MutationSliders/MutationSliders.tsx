@@ -21,7 +21,14 @@
 //     same thing by position, so the colourblind theme loses only the
 //     reinforcement.
 //   • Under the dial, the future amount through the caller's `format`, with
-//     the prior→future pair muted beneath it.
+//     `was <prior>` muted beneath it — and nothing beneath it at all when the
+//     amount did not move, so the figure is never printed twice.
+//
+// A NEW HIRE is `old: null` — someone who was not in the old scenario. Their
+// dial draws the band and the future arrow and no prior arrow, there is no
+// change to colour, and the readout says `new`. It is the mirror image of a
+// removal, and the two are deliberately different shapes rather than one
+// nullable "missing" flag.
 //
 // THE BAND IS THE CLAMP. Both amounts are pulled onto the role's band before
 // they are drawn, the dial announces the CLAMPED figure, and `onChange` never
@@ -84,6 +91,7 @@ import {
   VIEW_WIDTH,
   clampToRange,
   dialGeometry,
+  niceStep,
 } from "./geometry";
 import "./MutationSliders.css";
 
@@ -104,6 +112,7 @@ export interface MutationSlidersProps {
    * never emits a figure the band does not permit.
    */
   onChange: (id: string, value: number) => void;
+  // NOTE: there is deliberately no `step` prop. See `niceStep` in geometry.ts.
   /**
    * Called when the ⊗ under a dial is pressed. Omitted, no ⊗ is drawn at all
    * and a removed entity still reads as removed by its struck-through name.
@@ -122,11 +131,11 @@ export interface MutationSlidersProps {
   format?: (value: number) => string;
 }
 
-/** Arrow keys and drags move by one unit of the consumer's domain. */
-const STEP = 1;
-
-/** The removed entity's readout, and the missing half of a `format` pair. */
+/** The removed entity's readout: there is no future amount to print. */
 const NO_VALUE = "—";
+
+/** The new hire's readout: there is no prior amount to compare against. */
+const NEW_HIRE = "new";
 
 /** The remove affordance. The sketch's own notation, kept verbatim. */
 const REMOVE_MARK = "⊗";
@@ -170,10 +179,14 @@ const DialMarks: Component<{ dial: DialGeometry }> = (props) => (
         />
       )}
     </Show>
-    <path
-      class="sui-mutation-sliders__arrow--prior"
-      d={props.dial.priorArrow}
-    />
+    {/* A NEW HIRE has no prior amount, so there is no prior arrow to draw —
+        not one parked at the band floor, which would point at a salary nobody
+        was ever paid. */}
+    <Show when={props.dial.priorArrow}>
+      {(arrow) => (
+        <path class="sui-mutation-sliders__arrow--prior" d={arrow()} />
+      )}
+    </Show>
     <Show when={props.dial.futureArrow}>
       {(arrow) => (
         <path class="sui-mutation-sliders__arrow--future" d={arrow()} />
@@ -198,13 +211,33 @@ const DialMarks: Component<{ dial: DialGeometry }> = (props) => (
 export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   const format = (value: number): string => (props.format ?? String)(value);
 
+  /**
+   * Arrow keys and drags move by a step DERIVED from the domain — see
+   * `niceStep`. There is no `step` prop because nobody was configuring one,
+   * and a step is a property of the scale, which is already here. Kobalte
+   * derives its own `pageSize` as a tenth of the span snapped to this, so
+   * Shift+Arrow and PageUp move ten steps with nothing asked of the caller.
+   */
+  const step = (): number => niceStep(props.domain);
+
   /** The required line: what this person will be paid. */
   const futureReadout = (dial: DialGeometry): string =>
     dial.clampedValue === null ? NO_VALUE : format(dial.clampedValue);
 
-  /** The muted line beneath it: where they came from. */
-  const pairReadout = (dial: DialGeometry): string =>
-    `${format(dial.clampedOld)} → ${futureReadout(dial)}`;
+  /**
+   * The muted line beneath it: where they came from — and ONLY that, so the
+   * future amount is not printed twice.
+   *
+   * Empty when there is nothing to say: a new hire has no prior amount (it
+   * says `new` instead), and an entity that did not move has a prior amount
+   * identical to the line above.
+   */
+  const priorReadout = (dial: DialGeometry): string => {
+    if (dial.isNew) return NEW_HIRE;
+    if (dial.clampedOld === null) return "";
+    if (dial.clampedOld === dial.clampedValue) return "";
+    return `was ${format(dial.clampedOld)}`;
+  };
 
   return (
     <ClusterRow class="sui-mutation-sliders">
@@ -250,7 +283,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                 onChange={handleChange}
                 minValue={props.domain[0]}
                 maxValue={props.domain[1]}
-                step={STEP}
+                step={step()}
                 disabled={dial().removed}
                 data-removed={dial().removed ? "" : undefined}
                 getValueLabel={(params) => format(params.values[0])}
@@ -277,9 +310,11 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                   </Show>
                 </KobalteSlider.Track>
               </KobalteSlider>
-              {/* The required line, then where they came from. */}
+              {/* The required line, then where they came from — if anywhere. */}
               <MonoValue>{futureReadout(dial())}</MonoValue>
-              <MonoMeta>{pairReadout(dial())}</MonoMeta>
+              <Show when={priorReadout(dial())}>
+                {(prior) => <MonoMeta>{prior()}</MonoMeta>}
+              </Show>
               <Show when={props.onRemove}>
                 {(onRemove) => (
                   <SmallGhostButton

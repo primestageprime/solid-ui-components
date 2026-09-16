@@ -43,7 +43,7 @@
 //     and that clamp. It never formats (`format` is the consumer's).
 // ============================================
 import { clamp } from "../../internal/math/clamp";
-import { map } from "../../fn";
+import { find, map } from "../../fn";
 
 /** A value domain, `[min, max]`, mapped linearly onto the track. */
 export type Domain = readonly [number, number];
@@ -68,8 +68,15 @@ export type ArrowSide = "prior" | "future";
 export interface Entity {
   readonly id: string;
   readonly label: string;
-  /** The amount in the OLD scenario. Always present; a removal still had one. */
-  readonly old: number;
+  /**
+   * The amount in the OLD scenario, or `null` for someone who was not in it
+   * at all — a NEW HIRE. A removal still has one; an arrival does not.
+   *
+   * `null` here is not zero and not "unknown": it means there is no prior
+   * amount to point at, so the dial draws no prior arrow and no change line,
+   * and the readout says `new` rather than inventing a figure nobody was paid.
+   */
+  readonly old: number | null;
   /** The amount in the NEW scenario, or `null` when the entity is removed. */
   readonly value: number | null;
   /**
@@ -81,6 +88,12 @@ export interface Entity {
    * no notion of a role band gets exactly the behaviour they had before bands
    * existed: one box covering the track and no clamping beyond the domain's
    * own. That is what makes this an additive field rather than a breaking one.
+   *
+   * TODO(phase 3): make this REQUIRED and delete the domain fallback, in the
+   * same commit that retires LevelsTimeline's `series` path — once
+   * scenario-board has migrated. The optionality is the deprecate phase, not
+   * the destination; leaving both paths alive forever is how a codebase ends
+   * up with two ways to do everything.
    */
   readonly range?: Domain;
 }
@@ -97,17 +110,22 @@ export interface DialGeometry {
   readonly label: string;
   /** The role band, resolved and clamped into the domain. */
   readonly range: Domain;
-  /** The prior amount as the caller gave it. */
-  readonly old: number;
-  /** The prior amount, pulled onto the band. This is what is drawn and said. */
-  readonly clampedOld: number;
+  /** The prior amount as the caller gave it, or `null` for a new hire. */
+  readonly old: number | null;
+  /**
+   * The prior amount, pulled onto the band, or `null` for a new hire. This is
+   * what is drawn and said.
+   */
+  readonly clampedOld: number | null;
+  /** Whether this entity had no prior amount at all. */
+  readonly isNew: boolean;
   /** The future amount as the caller gave it, or `null` when removed. */
   readonly value: number | null;
   /** The future amount, pulled onto the band, or `null` when removed. */
   readonly clampedValue: number | null;
   readonly removed: boolean;
-  /** y of the PRIOR arrow. A removed entity still has one. */
-  readonly oldY: number;
+  /** y of the PRIOR arrow, or `null` for a new hire. A removal still has one. */
+  readonly oldY: number | null;
   /** y of the FUTURE arrow, or `null` when removed. */
   readonly valueY: number | null;
   /** The shaded role band. Always drawn — a removed entity still had a role. */
@@ -115,8 +133,8 @@ export interface DialGeometry {
   /** The coloured line between the two arrows, or `null` when nothing moved. */
   readonly changeLine: Box | null;
   readonly changeTone: ChangeTone;
-  /** `d` for the muted prior arrowhead. */
-  readonly priorArrow: string;
+  /** `d` for the muted prior arrowhead, or `null` for a new hire. */
+  readonly priorArrow: string | null;
   /** `d` for the accent future arrowhead, or `null` when removed. */
   readonly futureArrow: string | null;
 }
@@ -209,10 +227,11 @@ export const bandFor = (domain: Domain, range: Domain): Box => {
  * green line of zero length on the track.
  */
 export const toneOf = (
-  clampedOld: number,
+  clampedOld: number | null,
   clampedValue: number | null,
 ): ChangeTone => {
-  if (clampedValue === null || clampedValue === clampedOld) return "none";
+  if (clampedOld === null || clampedValue === null) return "none";
+  if (clampedValue === clampedOld) return "none";
   return clampedValue > clampedOld ? "raise" : "cut";
 };
 
@@ -223,10 +242,11 @@ export const toneOf = (
  */
 export const changeLineFor = (
   domain: Domain,
-  clampedOld: number,
+  clampedOld: number | null,
   clampedValue: number | null,
 ): Box | null => {
-  if (clampedValue === null || clampedValue === clampedOld) return null;
+  if (clampedOld === null || clampedValue === null) return null;
+  if (clampedValue === clampedOld) return null;
   const a = yFor(domain, clampedOld);
   const b = yFor(domain, clampedValue);
   return { y: Math.min(a, b), height: Math.abs(a - b) };
@@ -257,10 +277,50 @@ export const arrowPath = (
   ].join(" ");
 };
 
+/** The mantissas a "nice" step is allowed to take, smallest first. */
+const NICE_MANTISSAS = [1, 2, 5, 10] as const;
+
+/**
+ * The step a dial moves by, DERIVED from the domain rather than configured.
+ *
+ * There is no `step` prop, because nobody was configuring one: the old
+ * hardcoded `1` was right for a domain of levels 0–10 and absurd for a domain
+ * of salaries, where it meant a hundred thousand arrow presses to cross the
+ * track. A step is a property of the SCALE, and the scale is already here.
+ *
+ * It is a hundredth of the span, rounded UP to 1, 2 or 5 times a power of ten
+ * — so `[30_000, 130_000]` steps by 1,000 and a reader crosses the dial in a
+ * hundred presses. Up rather than to-nearest, so the step is never FINER than
+ * a hundredth and the press count has a ceiling. Kobalte derives its own `pageSize` as a TENTH
+ * of the span snapped to this step, so Shift+Arrow and PageUp move ten steps
+ * without anything here asking for it.
+ *
+ * ONE FLOOR, and it is not arbitrary: a domain whose two ends are whole
+ * numbers is counted in whole numbers, so its step never goes below 1. Without
+ * it a `[0, 10]` domain of integer LEVELS would step by 0.1 and start emitting
+ * level 6.3 to a caller whose levels are integers. A fractional domain (a
+ * ratio in `[0, 1]`) keeps its fractional step, because its ends say so.
+ */
+export const niceStep = (domain: Domain): number => {
+  const span = Math.abs(domain[1] - domain[0]);
+  if (span === 0 || !Number.isFinite(span)) return 1;
+  const raw = span / 100;
+  const exponent = Math.floor(Math.log10(raw));
+  const power = 10 ** exponent;
+  const mantissa = raw / power;
+  const nice =
+    (find((candidate: number) => mantissa <= candidate, NICE_MANTISSAS) ?? 10) *
+    power;
+  const wholeDomain =
+    Number.isInteger(domain[0]) && Number.isInteger(domain[1]);
+  return wholeDomain ? Math.max(nice, 1) : nice;
+};
+
 /** Everything one dial draws, from one entity. */
 export const dialGeometry = (domain: Domain, entity: Entity): DialGeometry => {
   const range = rangeOf(domain, entity);
-  const clampedOld = clampToRange(range, entity.old);
+  const clampedOld =
+    entity.old === null ? null : clampToRange(range, entity.old);
   const clampedValue =
     entity.value === null ? null : clampToRange(range, entity.value);
   return {
@@ -269,15 +329,17 @@ export const dialGeometry = (domain: Domain, entity: Entity): DialGeometry => {
     range,
     old: entity.old,
     clampedOld,
+    isNew: entity.old === null,
     value: entity.value,
     clampedValue,
     removed: entity.value === null,
-    oldY: yFor(domain, clampedOld),
+    oldY: clampedOld === null ? null : yFor(domain, clampedOld),
     valueY: clampedValue === null ? null : yFor(domain, clampedValue),
     band: bandFor(domain, range),
     changeLine: changeLineFor(domain, clampedOld, clampedValue),
     changeTone: toneOf(clampedOld, clampedValue),
-    priorArrow: arrowPath(domain, clampedOld, "prior"),
+    priorArrow:
+      clampedOld === null ? null : arrowPath(domain, clampedOld, "prior"),
     futureArrow:
       clampedValue === null ? null : arrowPath(domain, clampedValue, "future"),
   };

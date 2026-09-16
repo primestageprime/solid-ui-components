@@ -67,16 +67,15 @@ const formatPay = (value: number): string => `$${Math.round(value / 1000)}k`;
 /**
  * The person the `+` appends: a new hire on the junior band.
  *
- * Note what the bench has to decide here and the component does not: a new
- * hire has no PRIOR amount, and `Entity.old` is required — so the bench pins
- * them to their band's floor, which draws a prior arrow at a salary they were
- * never paid. Whether `old: null` should join `value: null` in the type is an
- * open question for Peter.
+ * `old: null` — they were not in the old scenario at all, so there is no prior
+ * amount to point at. Their dial draws the band and the future arrow, nothing
+ * is coloured, and the readout says `new`. It is the exact mirror of Joe, who
+ * has a prior amount and no future one.
  */
 const newHire = (count: number): Entity => ({
   id: `flynn-${count + 1}`,
   label: `Flynn ${count + 1}`,
-  old: JUNIOR[0],
+  old: null,
   value: 45_000,
   range: JUNIOR,
 });
@@ -97,9 +96,10 @@ const describeEntity = (entity: Entity): string => {
   const band = entity.range
     ? ` [${formatPay(entity.range[0])}–${formatPay(entity.range[1])}]`
     : "";
-  return entity.value === null
-    ? `${entity.label} let go${band}`
-    : `${entity.label} ${formatPay(entity.old)}→${formatPay(entity.value)}${band}`;
+  if (entity.value === null) return `${entity.label} let go${band}`;
+  if (entity.old === null)
+    return `${entity.label} hired at ${formatPay(entity.value)}${band}`;
+  return `${entity.label} ${formatPay(entity.old)}\u2192${formatPay(entity.value)}${band}`;
 };
 
 export const meta = { label: "Mutation Sliders" };
@@ -141,13 +141,13 @@ const MutationSlidersBench: Component = () => {
         what they will be; the line between them is green for a raise and red
         for a cut. Drag a thumb past a band edge and it stops: the band is the
         clamp, and the readout follows. A struck-through name is someone who is
-        gone in the new scenario — their band and their prior arrow stay.
+        gone in the new scenario — their band and their prior arrow stay. The
+        `+` hires someone, which is the mirror image: a band and a future arrow,
+        no prior arrow, and a readout that says `new`.
       </MutedBody>
       <SpacedStack>
         <SpreadRow>
-          <MonoMeta>
-            scale $30k–$130k · drag, or arrow keys on a focused dial
-          </MonoMeta>
+          <MonoMeta>scale $30k–$130k · step $1k, Shift+arrow for $10k</MonoMeta>
           <ClusterRow>
             <GhostButton onClick={reset}>Reset</GhostButton>
           </ClusterRow>

@@ -248,8 +248,10 @@ describe("MutationSliders", () => {
     const { getByLabelText } = render(() => (
       <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={onChange} />
     ));
+    // The step is DERIVED from the domain — a $200k span steps by $2k, not by
+    // the pound the hardcoded `step: 1` used to move.
     fireEvent.keyDown(getByLabelText("Reilly"), { key: "ArrowUp" });
-    expect(onChange).toHaveBeenCalledWith("reilly", 74_001);
+    expect(onChange).toHaveBeenCalledWith("reilly", 76_000);
   });
 
   // The same trap Slider pins: a dial that emitted at mount would write its
@@ -299,8 +301,8 @@ describe("MutationSliders", () => {
       expect(getByText("$104k")).toBeTruthy();
     });
 
-    it("prints the prior→future pair beneath it", () => {
-      const { getByText } = render(() => (
+    it("prints `was <prior>` beneath it, NOT the pair", () => {
+      const { getByText, queryByText } = render(() => (
         <MutationSliders
           entities={FIXTURE}
           domain={DOMAIN}
@@ -308,11 +310,14 @@ describe("MutationSliders", () => {
           format={asK}
         />
       ));
-      expect(getByText("$90k → $104k")).toBeTruthy();
+      // The future amount is on the line above; repeating it here said the
+      // same figure twice.
+      expect(getByText("was $90k")).toBeTruthy();
+      expect(queryByText("$90k → $104k")).toBeNull();
     });
 
     it("says nothing numeric for a removed entity's future amount", () => {
-      const { getByText } = render(() => (
+      const { getByText, getAllByText } = render(() => (
         <MutationSliders
           entities={FIXTURE}
           domain={DOMAIN}
@@ -320,7 +325,29 @@ describe("MutationSliders", () => {
           format={asK}
         />
       ));
-      expect(getByText("$48k → —")).toBeTruthy();
+      expect(getAllByText("—").length).toBeGreaterThan(0);
+      // A removal still has a prior amount, and that is worth saying.
+      expect(getByText("was $48k")).toBeTruthy();
+    });
+
+    it("says nothing beneath an entity that did not move", () => {
+      const { queryByText } = render(() => (
+        <MutationSliders
+          entities={[
+            {
+              id: "s",
+              label: "Sam",
+              old: 50_000,
+              value: 50_000,
+              range: [40_000, 60_000],
+            },
+          ]}
+          domain={DOMAIN}
+          onChange={() => {}}
+          format={asK}
+        />
+      ));
+      expect(queryByText("was $50k")).toBeNull();
     });
   });
 
@@ -351,6 +378,86 @@ describe("MutationSliders", () => {
       expect(
         (getByLabelText("Joe removed") as HTMLButtonElement).disabled,
       ).toBe(true);
+    });
+  });
+
+  describe("a new hire", () => {
+    const HIRE: Entity = {
+      id: "nadia",
+      label: "Nadia",
+      old: null,
+      value: 45_000,
+      range: [40_000, 60_000],
+    };
+
+    it("draws a future arrow and NO prior arrow", () => {
+      const { container } = render(() => (
+        <MutationSliders
+          entities={[HIRE]}
+          domain={DOMAIN}
+          onChange={() => {}}
+        />
+      ));
+      expect(
+        container.querySelectorAll(".sui-mutation-sliders__arrow--future"),
+      ).toHaveLength(1);
+      expect(
+        container.querySelectorAll(".sui-mutation-sliders__arrow--prior"),
+      ).toHaveLength(0);
+    });
+
+    it("keeps its role band — an arrival has a role too", () => {
+      const { container } = render(() => (
+        <MutationSliders
+          entities={[HIRE]}
+          domain={DOMAIN}
+          onChange={() => {}}
+        />
+      ));
+      expect(
+        container.querySelectorAll(".sui-mutation-sliders__band"),
+      ).toHaveLength(1);
+    });
+
+    it("colours nothing — an arrival is not a raise from zero", () => {
+      const { container } = render(() => (
+        <MutationSliders
+          entities={[HIRE]}
+          domain={DOMAIN}
+          onChange={() => {}}
+        />
+      ));
+      expect(
+        container.querySelectorAll(".sui-mutation-sliders__change"),
+      ).toHaveLength(0);
+    });
+
+    it("announces itself as new instead of comparing to a prior amount", () => {
+      const { getByText } = render(() => (
+        <MutationSliders
+          entities={[HIRE]}
+          domain={DOMAIN}
+          onChange={() => {}}
+          format={asK}
+        />
+      ));
+      expect(getByText("$45k")).toBeTruthy();
+      expect(getByText("new")).toBeTruthy();
+    });
+
+    it("is still draggable, and still clamped to its band", () => {
+      const onChange = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders
+          entities={[{ ...HIRE, value: 60_000 }]}
+          domain={DOMAIN}
+          onChange={onChange}
+        />
+      ));
+      const thumb = getByLabelText("Nadia");
+      fireEvent.focus(thumb);
+      fireEvent.keyDown(thumb, { key: "End" });
+      expect(onChange).toHaveBeenCalledWith("nadia", 60_000);
     });
   });
 
