@@ -399,15 +399,34 @@ export interface Level {
   readonly points: readonly CountPoint[];
 }
 
-/** People moving between two levels at one moment. A raise, drawn as a flow. */
+/**
+ * People moving at one moment, drawn as a flow.
+ *
+ * Both ends are OPTIONAL, and which ones are present is what the flow means:
+ *
+ *   • `from` and `to`  — a move between two levels. A raise.
+ *   • `from` only      — a DEPARTURE: they left the system. The ribbon runs
+ *                        outward, below the source rail, and fades out.
+ *   • `to` only        — a HIRE: they joined from outside. The ribbon arrives
+ *                        from above the destination rail, fading in.
+ *   • neither          — nothing to draw; dropped.
+ *
+ * Modelling both ends as optional is what lets headcount be CONSERVED across a
+ * transfer set: every change in a level's count has a matching flow, so a
+ * reader never sees a rail thin with nothing leaving it. A silent count drop
+ * is the one thing this chart must not show, because it reads as a mistake.
+ */
 export interface Transfer {
   readonly at: TimeValue;
-  /** Source level id. */
-  readonly from: string;
-  /** Destination level id. */
-  readonly to: string;
+  /** Source level id. Absent means they joined from outside the system. */
+  readonly from?: string;
+  /** Destination level id. Absent means they left the system. */
+  readonly to?: string;
   readonly count: number;
 }
+
+/** What a flow means, decided by which of its two ends are present. */
+export type FlowKind = "move" | "departure" | "hire";
 
 /** One stretch of a rail: a horizontal run at `y`, `width` thick. */
 export interface RailSpan {
@@ -440,8 +459,9 @@ export interface Rail {
 /** A flow between two rails: a vertical ribbon at one x. */
 export interface Ribbon {
   readonly key: string;
-  readonly fromId: string;
-  readonly toId: string;
+  readonly kind: FlowKind;
+  readonly fromId?: string;
+  readonly toId?: string;
   readonly count: number;
   readonly x: number;
   /** The source rail's y. */
@@ -474,6 +494,13 @@ export interface LevelsRailGeometry {
 export const MIN_STROKE = 1.5;
 /** The thickest — reached by whoever holds the chart's own maximum. */
 export const MAX_STROKE = 10;
+
+/**
+ * How far a one-ended flow runs past its rail, into the space where the rest
+ * of the world is. Short: it is an exit, not a journey, and a long stub would
+ * read as a move to a level the chart forgot to draw.
+ */
+export const OPEN_FLOW_STUB = 16;
 
 /**
  * Width for a headcount, as a proportion of the chart's maximum.
@@ -557,28 +584,87 @@ export const transferRibbons = (
   const indexById = new Map(
     map((level: Level, index: number) => [level.id, index] as const, levels),
   );
+  const yOf = (id: string): number | undefined => {
+    const index = indexById.get(id);
+    return index === undefined ? undefined : yScale(levels[index].value);
+  };
   const ordered = sortBy(
     (transfer: Transfer) => timeOf(transfer.at),
     transfers,
   );
   const ribbons: Ribbon[] = [];
   for (const transfer of ordered) {
-    const fromIndex = indexById.get(transfer.from);
-    const toIndex = indexById.get(transfer.to);
-    if (fromIndex === undefined || toIndex === undefined) continue;
+    const placed = placeFlow(transfer, yOf, indexById);
+    if (placed === undefined) continue;
     ribbons.push({
-      key: `${transfer.from}-${transfer.to}-${timeOf(transfer.at)}`,
+      key: `${transfer.from ?? "out"}-${transfer.to ?? "out"}-${timeOf(
+        transfer.at,
+      )}`,
+      kind: placed.kind,
       fromId: transfer.from,
       toId: transfer.to,
       count: transfer.count,
       x: xScale(transfer.at),
-      y1: yScale(levels[fromIndex].value),
-      y2: yScale(levels[toIndex].value),
+      y1: placed.y1,
+      y2: placed.y2,
       width: strokeFor(transfer.count, maxCount),
-      seriesIndex: fromIndex + 1,
+      seriesIndex: placed.seriesIndex,
     });
   }
   return ribbons;
+};
+
+/**
+ * Where a flow's two ends sit, and what it is. A one-ended flow gets a stub
+ * into the outside: a departure runs DOWN from its source and a hire comes
+ * DOWN INTO its destination from above, so the two sit on opposite sides of
+ * their rail and can never be read for each other.
+ *
+ * A flow naming a level the chart does not have is dropped rather than drawn
+ * to nowhere — "nowhere" is what an absent end already means, and drawing a
+ * typo the same way as a departure would hide it.
+ */
+const placeFlow = (
+  transfer: Transfer,
+  yOf: (id: string) => number | undefined,
+  indexById: ReadonlyMap<string, number>,
+):
+  | { kind: FlowKind; y1: number; y2: number; seriesIndex: number }
+  | undefined => {
+  const fromY = transfer.from === undefined ? undefined : yOf(transfer.from);
+  const toY = transfer.to === undefined ? undefined : yOf(transfer.to);
+  const indexOf = (id: string | undefined): number =>
+    (id === undefined ? undefined : indexById.get(id)) ?? 0;
+  if (transfer.from !== undefined && transfer.to !== undefined) {
+    if (fromY === undefined || toY === undefined) return undefined;
+    // A move wears its SOURCE's tone: the reader is watching a quantity leave.
+    return {
+      kind: "move",
+      y1: fromY,
+      y2: toY,
+      seriesIndex: indexOf(transfer.from) + 1,
+    };
+  }
+  if (transfer.from !== undefined) {
+    if (fromY === undefined) return undefined;
+    return {
+      kind: "departure",
+      y1: fromY,
+      y2: fromY + OPEN_FLOW_STUB,
+      seriesIndex: indexOf(transfer.from) + 1,
+    };
+  }
+  if (transfer.to !== undefined) {
+    if (toY === undefined) return undefined;
+    // A hire wears its DESTINATION's tone — that is the rail it thickens.
+    return {
+      kind: "hire",
+      y1: toY - OPEN_FLOW_STUB,
+      y2: toY,
+      seriesIndex: indexOf(transfer.to) + 1,
+    };
+  }
+  return undefined;
 };
 
 /** Every moment anything changes — a count point or a transfer — deduped. */

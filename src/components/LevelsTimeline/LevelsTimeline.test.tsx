@@ -371,3 +371,66 @@ describe("LevelsTimeline — rails", () => {
     ).toHaveLength(0);
   });
 });
+
+describe("LevelsTimeline — departures and hires", () => {
+  const OPEN: readonly Transfer[] = [
+    { at: new Date("2025-04-01"), from: "l6", to: "l7", count: 2 },
+    { at: new Date("2025-07-01"), from: "l7", count: 1 },
+    { at: new Date("2025-07-01"), to: "l8", count: 1 },
+  ];
+
+  const renderOpen = () =>
+    render(() => (
+      <LevelsTimeline
+        levels={LEVELS}
+        transfers={OPEN}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+      />
+    ));
+
+  it("draws all three flow kinds, each marked as what it is", () => {
+    const { container } = renderOpen();
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__ribbon--move"),
+    ).toHaveLength(1);
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__ribbon--departure"),
+    ).toHaveLength(1);
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__ribbon--hire"),
+    ).toHaveLength(1);
+  });
+
+  it("fades an open-ended flow through a mask, and leaves a move solid", () => {
+    const { container } = renderOpen();
+    const maskOf = (kind: string) =>
+      container
+        .querySelector(`.sui-levels-timeline__ribbon--${kind}`)
+        ?.getAttribute("mask");
+    expect(maskOf("departure")).toContain("url(#");
+    expect(maskOf("hire")).toContain("url(#");
+    expect(maskOf("move")).toBeNull();
+  });
+
+  it("gives every instance its own mask ids, so stacked charts don't collide", () => {
+    const { container } = render(() => (
+      <>
+        <LevelsTimeline levels={LEVELS} transfers={OPEN} mutations={[]} domain={DOMAIN} />
+        <LevelsTimeline levels={LEVELS} transfers={OPEN} mutations={[]} domain={DOMAIN} />
+      </>
+    ));
+    const ids = map(
+      (mask: Element) => mask.getAttribute("id"),
+      [...container.querySelectorAll("mask")],
+    );
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("announces a departure and a hire as what they are", () => {
+    const { container } = renderOpen();
+    const label = container.querySelector("title")?.textContent ?? "";
+    expect(label).toContain("1 left from L7");
+    expect(label).toContain("1 joined at L8");
+  });
+});

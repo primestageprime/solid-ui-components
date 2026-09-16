@@ -18,6 +18,7 @@ import {
   FLAG_RULE_TOP,
   MAX_STROKE,
   MIN_STROKE,
+  OPEN_FLOW_STUB,
   type Level,
   type Transfer,
   axisTicks,
@@ -673,5 +674,95 @@ describe("axisTicks", () => {
   it("puts the first year tick on the plot's left edge", () => {
     const long: TimeDomain = [utc("2025-01-01"), utc("2030-01-01")];
     expect(axisTicks(long, xScaleFor(long))[0].x).toBe(PLOT_LEFT);
+  });
+});
+
+describe("one-ended flows — departures and hires", () => {
+  const x = xScaleFor(DOMAIN);
+  const y = yScaleFor(valueDomainOf(LEVELS));
+  const maxCount = maxCountOf(LEVELS, TRANSFERS);
+  const ribbonsFor = (transfers: readonly Transfer[]) =>
+    transferRibbons(transfers, LEVELS, x, y, maxCount);
+
+  it("runs a departure OUTWARD from its source, below the rail", () => {
+    const [leaving] = ribbonsFor([
+      { at: utc("2025-07-01"), from: "l6", count: 1 },
+    ]);
+    expect(leaving.kind).toBe("departure");
+    expect(leaving.y1).toBe(y(6500));
+    expect(leaving.y2).toBe(y(6500) + OPEN_FLOW_STUB);
+    expect(leaving.toId).toBeUndefined();
+  });
+
+  it("brings a hire DOWN INTO its destination, from above", () => {
+    const [joining] = ribbonsFor([
+      { at: utc("2025-07-01"), to: "l7", count: 1 },
+    ]);
+    expect(joining.kind).toBe("hire");
+    expect(joining.y2).toBe(y(8000));
+    expect(joining.y1).toBe(y(8000) - OPEN_FLOW_STUB);
+    expect(joining.fromId).toBeUndefined();
+  });
+
+  it("puts the two on OPPOSITE sides of their rail, never to be confused", () => {
+    const [leaving] = ribbonsFor([{ at: 0, from: "l7", count: 1 }]);
+    const [joining] = ribbonsFor([{ at: 0, to: "l7", count: 1 }]);
+    expect(leaving.y2).toBeGreaterThan(y(8000));
+    expect(joining.y1).toBeLessThan(y(8000));
+  });
+
+  it("tones a hire by its DESTINATION — that is the rail it thickens", () => {
+    const [joining] = ribbonsFor([{ at: 0, to: "l8", count: 1 }]);
+    expect(joining.seriesIndex).toBe(4);
+  });
+
+  it("widths a one-ended flow on the same scale as everything else", () => {
+    const [leaving] = ribbonsFor([{ at: 0, from: "l5", count: 3 }]);
+    expect(leaving.width).toBe(strokeFor(3, maxCount));
+  });
+
+  it("drops a flow with neither end — there is nothing to draw", () => {
+    expect(ribbonsFor([{ at: 0, count: 2 }])).toEqual([]);
+  });
+
+  it("drops a typo rather than drawing it as a departure", () => {
+    // An absent end already MEANS the outside; a misspelt one must not look
+    // the same, or a typo hides as a legitimate exit.
+    expect(ribbonsFor([{ at: 0, from: "nope", to: "also-nope", count: 1 }])).toEqual(
+      [],
+    );
+    expect(ribbonsFor([{ at: 0, from: "nope", count: 1 }])).toEqual([]);
+  });
+
+  it("stacks two flows leaving one level at one moment rather than merging", () => {
+    // scenario-board's case: somebody is raised and somebody else leaves, both
+    // at the same flag, out of the same rail.
+    const both = ribbonsFor([
+      { at: utc("2025-04-01"), from: "l6", to: "l7", count: 1 },
+      { at: utc("2025-04-01"), from: "l6", count: 1 },
+    ]);
+    expect(both).toHaveLength(2);
+    expect(map((ribbon) => ribbon.kind, both)).toEqual(["move", "departure"]);
+    expect(both[0].x).toBe(both[1].x);
+    // Distinct keys, so a keyed <For> renders both rather than one.
+    expect(both[0].key).not.toBe(both[1].key);
+  });
+
+  it("empties a rail completely when everyone leaves it at once", () => {
+    // The other half of scenario-board's case: the level's own count point
+    // going to zero is what ends the rail. A zero span is never drawn, so
+    // there is no hairline left behind.
+    const emptied: Level = {
+      id: "l6",
+      label: "L6",
+      value: 6500,
+      points: [
+        { at: utc("2025-01-01"), count: 2 },
+        { at: utc("2025-04-01"), count: 0 },
+      ],
+    };
+    const spans = railSpans(emptied, x, y, DOMAIN[1], maxCount);
+    expect(spans).toHaveLength(1);
+    expect(spans[0].x2).toBe(x(utc("2025-04-01")));
   });
 });

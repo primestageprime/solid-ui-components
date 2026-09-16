@@ -148,6 +148,13 @@
   opacity: 0.45;
 }
 
+/* An open-ended flow is already fading through its mask, so it starts a little
+   more solid — otherwise the visible half of it disappears entirely. */
+.sui-levels-timeline__ribbon--departure,
+.sui-levels-timeline__ribbon--hire {
+  opacity: 0.7;
+}
+
 /* ---- The stepped lines (DEPRECATED model) ----
 
    Still shipped while scenario-board consumes `series`. Deleted in phase 3. */

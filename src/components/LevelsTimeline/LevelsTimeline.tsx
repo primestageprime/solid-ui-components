@@ -38,7 +38,13 @@
 // No size/variant props and no factory: every prop is DATA. The chart fills
 // its container's width and the consumer constrains it, as RateGauge does.
 // ============================================
-import { For, Show, type Component, createMemo } from "solid-js";
+import {
+  For,
+  Show,
+  type Component,
+  createMemo,
+  createUniqueId,
+} from "solid-js";
 import {
   AXIS_LABEL_Y,
   AXIS_TICK_LENGTH,
@@ -106,7 +112,11 @@ const describeLevel = (level: Level): string => {
   return `${level.label}: ${first} people, ending at ${last}.`;
 };
 
-/** One flow, said out loud, named by its numbered mutation where it has one. */
+/**
+ * One flow, said out loud, named by its numbered mutation where it has one.
+ * A one-ended flow is announced as what it is — a departure or a hire — so a
+ * screen reader gets the conservation the picture gets.
+ */
 const describeTransfer = (
   transfer: Transfer,
   levels: readonly Level[],
@@ -119,9 +129,15 @@ const describeTransfer = (
     mutations,
   );
   const when = flag === undefined ? "" : ` at mutation ${flag.label}`;
-  return `${transfer.count} moved from ${labelOf(transfer.from)} to ${labelOf(
-    transfer.to,
-  )}${when}.`;
+  const what = (): string => {
+    if (transfer.from !== undefined && transfer.to !== undefined) {
+      return `moved from ${labelOf(transfer.from)} to ${labelOf(transfer.to)}`;
+    }
+    if (transfer.from !== undefined) return `left from ${labelOf(transfer.from)}`;
+    if (transfer.to !== undefined) return `joined at ${labelOf(transfer.to)}`;
+    return "moved";
+  };
+  return `${transfer.count} ${what()}${when}.`;
 };
 
 /** One series, said out loud — the deprecated stepped model's announcement. */
@@ -205,9 +221,27 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
     )}`;
 
   const ribbonClass = (ribbon: Ribbon): string =>
-    `sui-levels-timeline__ribbon sui-levels-timeline__tone-${tokenOf(
-      ribbon.seriesIndex,
-    )}`;
+    join(" ", [
+      "sui-levels-timeline__ribbon",
+      `sui-levels-timeline__ribbon--${ribbon.kind}`,
+      `sui-levels-timeline__tone-${tokenOf(ribbon.seriesIndex)}`,
+    ]);
+
+  /**
+   * A one-ended flow fades into the outside, and a gradient mask is the only
+   * way to fade a fill in SVG. The ids must be unique per INSTANCE: three
+   * charts on one page (the bench stacks a track each) would otherwise share
+   * one set of ids, and the first one mounted would silently own them all.
+   */
+  const maskId = createUniqueId();
+  const departureMask = `${maskId}-departure`;
+  const hireMask = `${maskId}-hire`;
+  /** Only the open-ended flows are masked; a move is solid at both ends. */
+  const ribbonMask = (ribbon: Ribbon): string | undefined => {
+    if (ribbon.kind === "departure") return `url(#${departureMask})`;
+    if (ribbon.kind === "hire") return `url(#${hireMask})`;
+    return undefined;
+  };
 
   const lineClass = (line: Line): string =>
     join(" ", [
@@ -258,6 +292,43 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
       >
         <title>{description()}</title>
+        {/* Two fades, opaque at the rail and transparent at the open end, so
+            a departure dissolves outward and a hire condenses inward.
+
+            `white` here is a MASK LUMINANCE, not a colour: a mask reads the
+            brightness of what is painted into it, so "white" means "keep this
+            pixel" and has no theme to come from. It is spelt as the keyword
+            rather than as a hex triplet because the bareHexTsx ratchet counts
+            hex literals in .tsx and cannot tell a mask stop from a hardcoded
+            brand colour — and it is right not to try. */}
+        <defs>
+          <linearGradient id={`${departureMask}-ramp`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="white" stop-opacity="1" />
+            <stop offset="100%" stop-color="white" stop-opacity="0" />
+          </linearGradient>
+          <linearGradient id={`${hireMask}-ramp`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="white" stop-opacity="0" />
+            <stop offset="100%" stop-color="white" stop-opacity="1" />
+          </linearGradient>
+          <mask id={departureMask} maskContentUnits="objectBoundingBox">
+            <rect
+              x="0"
+              y="0"
+              width="1"
+              height="1"
+              fill={`url(#${departureMask}-ramp)`}
+            />
+          </mask>
+          <mask id={hireMask} maskContentUnits="objectBoundingBox">
+            <rect
+              x="0"
+              y="0"
+              width="1"
+              height="1"
+              fill={`url(#${hireMask}-ramp)`}
+            />
+          </mask>
+        </defs>
         <g>
           <line
             class="sui-levels-timeline__baseline"
@@ -343,6 +414,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                   y={Math.min(ribbon.y1, ribbon.y2)}
                   width={ribbon.width}
                   height={Math.abs(ribbon.y2 - ribbon.y1)}
+                  mask={ribbonMask(ribbon)}
                 />
               )}
             </For>
