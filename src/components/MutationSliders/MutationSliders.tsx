@@ -1,37 +1,61 @@
 // ============================================
 // MutationSliders — Composite (Depth 2)
 // Owns CSS (MutationSliders.css). Composes Layout (ClusterRow,
-// TightCenteredColumn) + Text (NowrapLabel, MonoMeta) + Button
+// TightCenteredColumn) + Text (MonoMeta, MonoValue, NowrapLabel) + Button
 // (SmallGhostButton). Kobalte-backed (@kobalte/core/slider), matching the
 // Slider / Combobox / Select / Toast wrapping pattern.
 //
-// A row of VERTICAL dials, one per named entity, each answering one question:
-// where was this entity, where is it now, and how big is the move? The old
-// level is a fixed TICK, the new level is the draggable THUMB, a translucent
-// BOX spans the two so the size of the change reads at a glance, and an
-// ARROWHEAD on the thumb carries the sign.
+// A row of VERTICAL dials, one per named entity. Each dial answers: what does
+// this person's ROLE permit, where were they in it, and where are they going?
 //
-// A removed entity is `value: null` — NOT a fall to the bottom of the domain.
-// Its name is struck through, its dial keeps the track and the old tick and
-// loses the thumb, and a ⊗ under it says so a second time for anyone who
-// cannot see the strike. Reading a removal as a drop would draw a change that
-// never happened, which is why the null is in the type rather than a sentinel
-// number the caller has to remember.
+//   • The track runs the whole shared `domain`, so every dial in the row is on
+//     ONE scale and two people are comparable at a glance.
+//   • The shaded box is that entity's ROLE BAND — its min→max. It is NOT the
+//     size of the change: two people on the same role draw the same box
+//     however far each of them moved.
+//   • A muted PRIOR arrowhead marks what they were paid; an accent FUTURE
+//     arrowhead marks what they will be. Both point AT the track from opposite
+//     sides, so a pair at the same amount meets nose to nose.
+//   • Between them, a wider line, GREEN for a raise and RED for a cut (Peter,
+//     2026-09-16). Hue is never the only cue — future-above-prior says the
+//     same thing by position, so the colourblind theme loses only the
+//     reinforcement.
+//   • Under the dial, the future amount through the caller's `format`, with
+//     the prior→future pair muted beneath it.
+//
+// THE BAND IS THE CLAMP. Both amounts are pulled onto the role's band before
+// they are drawn, the dial announces the CLAMPED figure, and `onChange` never
+// emits outside it — so the thumb stops dead at a band edge. The raw figures
+// survive in the geometry beside the clamped ones, because a value outside its
+// band is usually a fact about the data rather than a rounding error.
+//
+// A removed entity is `value: null` — NOT a fall to the bottom of the band.
+// Its name is struck through, its dial keeps the band and the prior arrow and
+// loses the future one, and a ⊗ under it says so a second time for anyone who
+// cannot see the strike.
 //
 // It reuses Kobalte's slider root rather than reinventing the drag: keyboard
 // stepping, pointer capture, `role="slider"` and the aria value triple all
-// come from there, with `orientation="vertical"` doing the rest. The one thing
-// Kobalte's own Fill cannot express is the box — Fill runs min→value, and this
-// bar runs old→new — so the box, the tick, the track line and the arrowhead
-// are drawn in a single SVG overlay lying exactly on the dial.
+// come from there, with `orientation="vertical"` doing the rest. Kobalte's own
+// Fill expresses none of these four marks — Fill runs min→value, while the
+// band runs role-min→role-max and the change line runs prior→future — so every
+// mark is drawn in a single SVG overlay lying exactly on the dial, and the
+// Kobalte thumb is an INVISIBLE grab handle over the future arrowhead. One
+// arrow shape, drawn once, from one geometry function: the two arrowheads
+// cannot drift apart.
+//
+// Kobalte's own min/max stay the DOMAIN, not the band, so the track element
+// keeps the fixed inset geometry.ts maps onto and nothing needs a per-entity
+// inline style. The band is enforced in `handleChange` instead, and the band's
+// edges are announced by overriding `aria-valuemin`/`aria-valuemax` on the
+// thumb.
 //
 // Everything positional lives in geometry.ts, which is pure and prints as a
 // table (geometry.test.ts). This file only paints what that returns: there is
 // nowhere in this module for a number to be decided.
 //
-// The values are in the CONSUMER'S OWN UNITS. The component runs no arithmetic
-// on them beyond Kobalte's step snapping and formats nothing itself — `format`
-// is the caller's, exactly as on Slider.
+// The values are in the CONSUMER'S OWN UNITS. The component formats nothing
+// itself — `format` is the caller's, exactly as on Slider.
 //
 // LAYOUT PURITY — the ROW, each entity's COLUMN and the readout are composed
 // from Layout and Text variants. The only geometry this component owns is the
@@ -41,38 +65,44 @@
 //
 // No override props and no factory: `entities`, `domain`, `onChange`,
 // `onRemove`, `onAdd` and `format` are all DATA. There is no size, no variant
-// and no tone to curry. The box and the arrowhead are painted in `--sui-accent`
-// ONLY: the arrowhead already carries the direction, so tinting the box by
-// direction as well would be a second, redundant encoding — and a hue-only
-// one, which is what `src/themes/colorblind.css` exists to avoid.
+// and no tone to curry.
 // ============================================
 import { Slider as KobalteSlider } from "@kobalte/core/slider";
 import { type Component, Index, Show } from "solid-js";
 import { SmallGhostButton } from "../Button";
 import { ClusterRow, TightCenteredColumn } from "../Layout";
-import { MonoMeta, NowrapLabel } from "../Text";
+import { MonoMeta, MonoValue, NowrapLabel } from "../Text";
 import {
-  BOX_HALF,
+  BAND_HALF,
+  CHANGE_HALF,
   type DialGeometry,
   type Domain,
   type Entity,
-  OLD_TICK_HALF,
   TRACK_PATH,
   TRACK_X,
   VIEW_HEIGHT,
   VIEW_WIDTH,
+  clampToRange,
   dialGeometry,
 } from "./geometry";
 import "./MutationSliders.css";
 
-export type { Domain, Entity } from "./geometry";
+export type { ChangeTone, Domain, Entity } from "./geometry";
 
 export interface MutationSlidersProps {
   /** One dial per entity, drawn in the order given — that order is the reading order. */
   entities: readonly Entity[];
-  /** The shared `[min, max]` every dial maps onto, in the consumer's own units. */
+  /**
+   * The shared `[min, max]` the TRACK runs, in the consumer's own units. Every
+   * dial in the row uses it, which is what makes two dials comparable. An
+   * entity's own role band (`Entity.range`) is a sub-span of this.
+   */
   domain: Domain;
-  /** Called when a drag or a thumb-moving key changes one entity's new level. */
+  /**
+   * Called when a drag or a thumb-moving key changes one entity's future
+   * amount. The value is already clamped into that entity's role band — this
+   * never emits a figure the band does not permit.
+   */
   onChange: (id: string, value: number) => void;
   /**
    * Called when the ⊗ under a dial is pressed. Omitted, no ⊗ is drawn at all
@@ -82,11 +112,12 @@ export interface MutationSlidersProps {
   /** Called by the `+` at the end of the row. Omitted, no `+` is drawn. */
   onAdd?: () => void;
   /**
-   * Renders the readout under each dial, and the `aria-valuetext` a screen
+   * Renders the amount under each dial, and the `aria-valuetext` a screen
    * reader announces. Default `String`.
    *
    * Without it Kobalte reads the value as a percentage of the domain's top,
-   * which is wrong for any domain that does not start at zero.
+   * which is wrong for any domain that does not start at zero — and wrong for
+   * money in every case.
    */
   format?: (value: number) => string;
 }
@@ -101,11 +132,12 @@ const NO_VALUE = "—";
 const REMOVE_MARK = "⊗";
 
 /**
- * One dial: the painted marks, then the drag surface over them.
+ * One dial's painted marks, drawn back to front: the scale, the role band, the
+ * coloured change, then the two arrowheads on top of all of it.
  *
  * The overlay is `aria-hidden`: every mark on it restates something the thumb
  * already announces through `aria-valuenow` and the readout prints in words, so
- * putting the drawing in the accessibility tree would say each value twice.
+ * putting the drawing in the accessibility tree would say each amount twice.
  */
 const DialMarks: Component<{ dial: DialGeometry }> = (props) => (
   <svg
@@ -115,50 +147,64 @@ const DialMarks: Component<{ dial: DialGeometry }> = (props) => (
     aria-hidden="true"
   >
     <path class="sui-mutation-sliders__track-line" d={TRACK_PATH} />
-    {/* The box sits UNDER the ticks: it is the span between two marks, not a
-        third mark that hides them. */}
-    <Show when={props.dial.box}>
-      {(box) => (
+    {/* The role band, under everything: it is the span a role permits, not a
+        mark that hides the scale it sits on. */}
+    <rect
+      class="sui-mutation-sliders__band"
+      x={TRACK_X - BAND_HALF}
+      y={props.dial.band.y}
+      width={BAND_HALF * 2}
+      height={props.dial.band.height}
+    />
+    <Show when={props.dial.changeLine}>
+      {(line) => (
         <rect
-          class="sui-mutation-sliders__box"
-          x={TRACK_X - BOX_HALF}
-          y={box().y}
-          width={BOX_HALF * 2}
-          height={box().height}
+          class="sui-mutation-sliders__change"
+          classList={{
+            [`sui-mutation-sliders__change--${props.dial.changeTone}`]: true,
+          }}
+          x={TRACK_X - CHANGE_HALF}
+          y={line().y}
+          width={CHANGE_HALF * 2}
+          height={line().height}
         />
       )}
     </Show>
-    <line
-      class="sui-mutation-sliders__old-tick"
-      x1={TRACK_X - OLD_TICK_HALF}
-      x2={TRACK_X + OLD_TICK_HALF}
-      y1={props.dial.oldY}
-      y2={props.dial.oldY}
+    <path
+      class="sui-mutation-sliders__arrow--prior"
+      d={props.dial.priorArrow}
     />
-    <Show when={props.dial.arrow}>
-      {(arrow) => <path class="sui-mutation-sliders__arrow" d={arrow()} />}
+    <Show when={props.dial.futureArrow}>
+      {(arrow) => (
+        <path class="sui-mutation-sliders__arrow--future" d={arrow()} />
+      )}
     </Show>
   </svg>
 );
 
 /**
- * A row of old-vs-new dials, one per named entity.
+ * A row of role-banded prior-vs-future dials, one per named entity.
  *
  * @example
  *   <MutationSliders
- *     entities={people()}
- *     domain={[0, 10]}
- *     onChange={(id, value) => setLevel(id, value)}
- *     onRemove={(id) => setLevel(id, null)}
- *     onAdd={addPerson}
- *     format={(n) => `L${n}`}
+ *     entities={people()}          // each with `range: [bandMin, bandMax]`
+ *     domain={[0, 200_000]}
+ *     onChange={(id, value) => setPay(id, value)}
+ *     onRemove={(id) => setPay(id, null)}
+ *     onAdd={hire}
+ *     format={(n) => `$${(n / 1000).toFixed(0)}k`}
  *   />
  */
 export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   const format = (value: number): string => (props.format ?? String)(value);
 
-  const readout = (dial: DialGeometry): string =>
-    `${format(dial.old)} → ${dial.value === null ? NO_VALUE : format(dial.value)}`;
+  /** The required line: what this person will be paid. */
+  const futureReadout = (dial: DialGeometry): string =>
+    dial.clampedValue === null ? NO_VALUE : format(dial.clampedValue);
+
+  /** The muted line beneath it: where they came from. */
+  const pairReadout = (dial: DialGeometry): string =>
+    `${format(dial.clampedOld)} → ${futureReadout(dial)}`;
 
   return (
     <ClusterRow class="sui-mutation-sliders">
@@ -170,13 +216,21 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
       <Index each={props.entities}>
         {(entity) => {
           const dial = (): DialGeometry => dialGeometry(props.domain, entity());
+
           // Kobalte models every slider as multi-thumb. This dial is
           // single-thumb by contract, so the array is an implementation detail
-          // the consumer never sees: one value in, `values[0]` out. A removed
-          // entity parks the root at the domain's floor and draws no thumb, so
-          // nothing reads that number.
-          const handleChange = (values: number[]): void =>
-            props.onChange(entity().id, values[0]);
+          // the consumer never sees: one value in, `values[0]` out.
+          //
+          // THE CLAMP LIVES HERE. Kobalte's own min/max are the DOMAIN, which
+          // is what keeps the track's inset fixed and this component free of
+          // per-entity inline styles — so the ROLE BAND is enforced on the way
+          // out instead. The component is controlled, so an emitted value that
+          // the caller writes straight back leaves the thumb parked on the band
+          // edge, which is exactly the "stops dead at the edge" behaviour.
+          const handleChange = (values: number[]): void => {
+            const current = dial();
+            props.onChange(entity().id, clampToRange(current.range, values[0]));
+          };
 
           return (
             <TightCenteredColumn>
@@ -192,7 +246,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
               <KobalteSlider
                 class="sui-mutation-sliders__dial"
                 orientation="vertical"
-                value={[entity().value ?? props.domain[0]]}
+                value={[dial().clampedValue ?? dial().range[0]]}
                 onChange={handleChange}
                 minValue={props.domain[0]}
                 maxValue={props.domain[1]}
@@ -207,17 +261,25 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                     <KobalteSlider.Thumb
                       class="sui-mutation-sliders__thumb"
                       aria-label={entity().label}
+                      // The BAND is what a reader can reach, so the band is
+                      // what the thumb announces — Kobalte would otherwise
+                      // read out the shared domain, which is the track's
+                      // extent rather than this person's.
+                      aria-valuemin={dial().range[0]}
+                      aria-valuemax={dial().range[1]}
                       // Kobalte's own `aria-valuetext` comes from its internal
                       // number formatter, NOT from `getValueLabel` — that only
                       // feeds its ValueLabel, which this dial does not draw.
-                      aria-valuetext={format(entity().value ?? props.domain[0])}
+                      aria-valuetext={futureReadout(dial())}
                     >
                       <KobalteSlider.Input />
                     </KobalteSlider.Thumb>
                   </Show>
                 </KobalteSlider.Track>
               </KobalteSlider>
-              <MonoMeta>{readout(dial())}</MonoMeta>
+              {/* The required line, then where they came from. */}
+              <MonoValue>{futureReadout(dial())}</MonoValue>
+              <MonoMeta>{pairReadout(dial())}</MonoMeta>
               <Show when={props.onRemove}>
                 {(onRemove) => (
                   <SmallGhostButton

@@ -15,10 +15,20 @@ export type { MutationSlidersProps } from "./MutationSliders";
 // drawings of one number end up disagreeing.
 export {
   arrowPath,
-  boxFor,
+  bandFor,
+  changeLineFor,
+  clampToRange,
   dialGeometry,
-  directionOf,
   mutationGeometry,
+  rangeOf,
+  toneOf,
   yFor,
 } from "./geometry";
-export type { Box, DialGeometry, Direction, Domain, Entity } from "./geometry";
+export type {
+  ArrowSide,
+  Box,
+  ChangeTone,
+  DialGeometry,
+  Domain,
+  Entity,
+} from "./geometry";

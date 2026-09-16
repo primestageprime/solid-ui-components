@@ -3,9 +3,9 @@
 //
 // Every number the dial's SVG paints is decided in geometry.ts, so a whole row
 // of mutations reads as a TABLE without a browser. These tests print that
-// table as well as asserting on it: an old-vs-new bar is one of those shapes
-// where an inverted axis looks perfectly plausible until you see two rows
-// disagree about which way "up" is.
+// table as well as asserting on it: an old-vs-new dial is one of those shapes
+// where an inverted axis or an unclamped value looks perfectly plausible until
+// you see two rows disagree about which way "up" is.
 // ============================================
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { map } from "../../fn";
 import {
-  ARROW_HEIGHT,
+  ARROW_HALF,
   type Domain,
   type Entity,
   TRACK_BOTTOM,
@@ -21,23 +21,72 @@ import {
   TRACK_X,
   VIEW_HEIGHT,
   arrowPath,
-  boxFor,
+  bandFor,
+  changeLineFor,
+  clampToRange,
   dialGeometry,
-  directionOf,
   mutationGeometry,
+  rangeOf,
+  toneOf,
   yFor,
 } from "./geometry";
 
-const DOMAIN: Domain = [0, 10];
+/** The shared track: every dial's line runs the whole of this. */
+const DOMAIN: Domain = [0, 200_000];
 
-/** The sketch, as data: three raised a little, two lowered a lot, Joe removed. */
+/**
+ * The sketch as data, in salary. Each person carries their ROLE's pay band;
+ * the dial's shaded box is that band, not the size of the change.
+ */
 const FIXTURE: readonly Entity[] = [
-  { id: "peter", label: "Peter", old: 6, value: 7 },
-  { id: "adlai", label: "Adlai", old: 5, value: 6 },
-  { id: "elaina", label: "Elaina", old: 7, value: 8 },
-  { id: "reilly", label: "Reilly", old: 7, value: 2 },
-  { id: "flynn", label: "Flynn", old: 8, value: 1 },
-  { id: "joe", label: "Joe", old: 5, value: null },
+  // Raised inside a senior band.
+  {
+    id: "peter",
+    label: "Peter",
+    old: 90_000,
+    value: 104_000,
+    range: [70_000, 110_000],
+  },
+  // Raised inside a junior band.
+  {
+    id: "adlai",
+    label: "Adlai",
+    old: 44_000,
+    value: 52_000,
+    range: [40_000, 60_000],
+  },
+  // Raised to the very top of a mid band.
+  {
+    id: "elaina",
+    label: "Elaina",
+    old: 62_000,
+    value: 80_000,
+    range: [55_000, 80_000],
+  },
+  // Cut, hard, inside a senior band.
+  {
+    id: "reilly",
+    label: "Reilly",
+    old: 105_000,
+    value: 74_000,
+    range: [70_000, 110_000],
+  },
+  // Cut to the floor of a mid band.
+  {
+    id: "flynn",
+    label: "Flynn",
+    old: 78_000,
+    value: 55_000,
+    range: [55_000, 80_000],
+  },
+  // Removed in the new scenario: no future amount at all.
+  {
+    id: "joe",
+    label: "Joe",
+    old: 48_000,
+    value: null,
+    range: [40_000, 60_000],
+  },
 ];
 
 /** Every `x y` pair in a path, so a test reads points rather than substrings. */
@@ -51,18 +100,17 @@ describe("yFor", () => {
   it("puts the domain MAX at the top of the track and the MIN at the bottom", () => {
     // The screen's y grows downward while the domain grows upward, so the
     // inversion lives here and nowhere else.
-    expect(yFor(DOMAIN, 10)).toBe(TRACK_TOP);
+    expect(yFor(DOMAIN, 200_000)).toBe(TRACK_TOP);
     expect(yFor(DOMAIN, 0)).toBe(TRACK_BOTTOM);
   });
 
   it("is linear between the ends", () => {
-    expect(yFor(DOMAIN, 5)).toBe((TRACK_TOP + TRACK_BOTTOM) / 2);
-    expect(yFor([0, 4], 3)).toBe(TRACK_TOP + (TRACK_BOTTOM - TRACK_TOP) * 0.25);
+    expect(yFor(DOMAIN, 100_000)).toBe((TRACK_TOP + TRACK_BOTTOM) / 2);
   });
 
   it("clamps outside the domain rather than drawing off the track", () => {
-    expect(yFor(DOMAIN, 999)).toBe(TRACK_TOP);
-    expect(yFor(DOMAIN, -999)).toBe(TRACK_BOTTOM);
+    expect(yFor(DOMAIN, 9_999_999)).toBe(TRACK_TOP);
+    expect(yFor(DOMAIN, -9_999_999)).toBe(TRACK_BOTTOM);
   });
 
   it("reads a zero-width domain as the middle instead of NaN", () => {
@@ -76,104 +124,217 @@ describe("yFor", () => {
   });
 });
 
-describe("directionOf", () => {
-  it("names which way the level moved", () => {
-    expect(directionOf(3, 7)).toBe("up");
-    expect(directionOf(7, 3)).toBe("down");
-    expect(directionOf(4, 4)).toBe("none");
+describe("rangeOf", () => {
+  it("is the entity's own role band when it carries one", () => {
+    expect(rangeOf(DOMAIN, FIXTURE[0])).toEqual([70_000, 110_000]);
   });
 
-  it("reads a removed entity as no direction, not as a fall to zero", () => {
-    // A removed entity has no NEW level at all. Calling that a drop would
-    // draw an arrow for a change that never happened.
-    expect(directionOf(9, null)).toBe("none");
+  // ADDITIVE: an entity without a band behaves exactly as it did before the
+  // band existed, so a consumer that has not adopted `range` is untouched.
+  it("falls back to the whole shared domain when the entity has none", () => {
+    expect(rangeOf(DOMAIN, { id: "x", label: "X", old: 1, value: 2 })).toEqual(
+      DOMAIN,
+    );
+  });
+
+  it("clamps a band that overflows the domain, so no box draws off-track", () => {
+    expect(
+      rangeOf(DOMAIN, {
+        id: "x",
+        label: "X",
+        old: 1,
+        value: 2,
+        range: [-50_000, 900_000],
+      }),
+    ).toEqual(DOMAIN);
+  });
+
+  it("orders a band given backwards rather than drawing a negative box", () => {
+    expect(
+      rangeOf(DOMAIN, {
+        id: "x",
+        label: "X",
+        old: 1,
+        value: 2,
+        range: [90_000, 40_000],
+      }),
+    ).toEqual([40_000, 90_000]);
   });
 });
 
-describe("boxFor", () => {
-  it("spans old→new whichever way round they are", () => {
-    const raised = boxFor(DOMAIN, 4, 6);
-    const lowered = boxFor(DOMAIN, 6, 4);
-    expect(raised).toEqual(lowered);
-    expect(raised?.y).toBe(yFor(DOMAIN, 6));
-    expect(raised?.height).toBe(yFor(DOMAIN, 4) - yFor(DOMAIN, 6));
+describe("clampToRange", () => {
+  it("pulls a value onto the band from either side", () => {
+    expect(clampToRange([40_000, 60_000], 15_000)).toBe(40_000);
+    expect(clampToRange([40_000, 60_000], 99_000)).toBe(60_000);
   });
 
-  it("is null when nothing changed, so no zero-height bar is drawn", () => {
-    expect(boxFor(DOMAIN, 5, 5)).toBeNull();
+  it("leaves a value already inside the band alone", () => {
+    expect(clampToRange([40_000, 60_000], 52_000)).toBe(52_000);
+  });
+});
+
+describe("bandFor", () => {
+  it("spans the role's min→max on the track", () => {
+    const band = bandFor(DOMAIN, [70_000, 110_000]);
+    expect(band.y).toBe(yFor(DOMAIN, 110_000));
+    expect(band.height).toBe(yFor(DOMAIN, 70_000) - yFor(DOMAIN, 110_000));
+  });
+
+  it("is the role's band, NOT the size of the change", () => {
+    // Two people on the same band draw the same box however far each moved.
+    expect(bandFor(DOMAIN, rangeOf(DOMAIN, FIXTURE[0]))).toEqual(
+      bandFor(DOMAIN, rangeOf(DOMAIN, FIXTURE[3])),
+    );
+  });
+
+  it("is a wide band for a wide role and a narrow one for a narrow role", () => {
+    expect(bandFor(DOMAIN, [40_000, 60_000]).height).toBeLessThan(
+      bandFor(DOMAIN, [70_000, 110_000]).height,
+    );
+  });
+});
+
+describe("toneOf", () => {
+  it("names a raise, a cut, and no move at all", () => {
+    expect(toneOf(50_000, 60_000)).toBe("raise");
+    expect(toneOf(60_000, 50_000)).toBe("cut");
+    expect(toneOf(50_000, 50_000)).toBe("none");
+  });
+
+  it("reads a removed entity as no tone, not as a cut to nothing", () => {
+    expect(toneOf(50_000, null)).toBe("none");
+  });
+});
+
+describe("changeLineFor", () => {
+  it("runs between the two arrows, whichever way round they are", () => {
+    const up = changeLineFor(DOMAIN, 50_000, 70_000);
+    const down = changeLineFor(DOMAIN, 70_000, 50_000);
+    expect(up).toEqual(down);
+    expect(up?.y).toBe(yFor(DOMAIN, 70_000));
+    expect(up?.height).toBe(yFor(DOMAIN, 50_000) - yFor(DOMAIN, 70_000));
+  });
+
+  it("is null when nothing moved, so no zero-height line is drawn", () => {
+    expect(changeLineFor(DOMAIN, 50_000, 50_000)).toBeNull();
   });
 
   it("is null for a removed entity", () => {
-    expect(boxFor(DOMAIN, 5, null)).toBeNull();
-  });
-
-  it("grows with the size of the change", () => {
-    const small = boxFor(DOMAIN, 5, 6);
-    const large = boxFor(DOMAIN, 8, 2);
-    expect(large?.height).toBeGreaterThan(small?.height ?? 0);
+    expect(changeLineFor(DOMAIN, 50_000, null)).toBeNull();
   });
 });
 
 describe("arrowPath", () => {
-  it("points up for a raise and down for a drop, from the same value", () => {
-    const up = arrowPath(DOMAIN, 5, "up");
-    const down = arrowPath(DOMAIN, 5, "down");
-    expect(up).not.toBeNull();
-    expect(down).not.toBeNull();
-    expect(up).not.toBe(down);
+  it("draws the prior arrow left of the track and the future arrow right", () => {
+    const prior = pointsOf(arrowPath(DOMAIN, 100_000, "prior"));
+    const future = pointsOf(arrowPath(DOMAIN, 100_000, "future"));
+    for (const [x] of prior) expect(x).toBeLessThan(TRACK_X);
+    for (const [x] of future) expect(x).toBeGreaterThan(TRACK_X);
   });
 
-  it("puts the apex ahead of the thumb, in the direction of travel", () => {
-    const mid = yFor(DOMAIN, 5);
-    // The apex is the path's first point — `M x y`.
-    expect(pointsOf(arrowPath(DOMAIN, 5, "up") as string)[0][1]).toBeLessThan(
-      mid,
+  it("points BOTH arrowheads at the track, so the pair converges on it", () => {
+    // The apex is the path's first point; on each side it is the point
+    // nearest the centre line.
+    const apexX = (side: "prior" | "future") =>
+      pointsOf(arrowPath(DOMAIN, 100_000, side))[0][0];
+    const nearest = (side: "prior" | "future") =>
+      Math.min(
+        ...map(
+          ([x]) => Math.abs(x - TRACK_X),
+          pointsOf(arrowPath(DOMAIN, 100_000, side)),
+        ),
+      );
+    expect(Math.abs(apexX("prior") - TRACK_X)).toBe(nearest("prior"));
+    expect(Math.abs(apexX("future") - TRACK_X)).toBe(nearest("future"));
+  });
+
+  it("is the SAME shape on both sides, mirrored — so the eye pairs them", () => {
+    const mirror = map(
+      ([x, y]) => [TRACK_X * 2 - x, y] as [number, number],
+      pointsOf(arrowPath(DOMAIN, 100_000, "future")),
     );
-    expect(
-      pointsOf(arrowPath(DOMAIN, 5, "down") as string)[0][1],
-    ).toBeGreaterThan(mid);
+    expect(mirror).toEqual(pointsOf(arrowPath(DOMAIN, 100_000, "prior")));
   });
 
-  it("draws nothing when the level did not move", () => {
-    expect(arrowPath(DOMAIN, 5, "none")).toBeNull();
+  it("sits at the same height when prior and future are equal", () => {
+    const at = (side: "prior" | "future") =>
+      map(([, y]) => y, pointsOf(arrowPath(DOMAIN, 80_000, side)));
+    expect(at("prior")).toEqual(at("future"));
   });
 
   it("stays inside the canvas at either end of the domain", () => {
-    const atTop = pointsOf(arrowPath(DOMAIN, 10, "up") as string);
-    const atBottom = pointsOf(arrowPath(DOMAIN, 0, "down") as string);
-    for (const [, y] of atTop) expect(y).toBeGreaterThanOrEqual(0);
-    for (const [, y] of atBottom) expect(y).toBeLessThanOrEqual(VIEW_HEIGHT);
+    for (const value of [0, 200_000]) {
+      for (const side of ["prior", "future"] as const) {
+        for (const [x, y] of pointsOf(arrowPath(DOMAIN, value, side))) {
+          expect(y).toBeGreaterThanOrEqual(0);
+          expect(y).toBeLessThanOrEqual(VIEW_HEIGHT);
+          expect(x).toBeGreaterThanOrEqual(0);
+        }
+      }
+    }
   });
 });
 
 describe("dialGeometry", () => {
-  it("keeps the OLD tick for a removed entity and drops the thumb", () => {
+  it("clamps BOTH amounts onto the role's band before placing them", () => {
+    // Elaina's fixture value sits ON her ceiling; push it past and the dial
+    // must draw at the ceiling and report the clamped figure, not the raw one.
+    const over = dialGeometry(DOMAIN, {
+      id: "over",
+      label: "Over",
+      old: 120_000,
+      value: 150_000,
+      range: [55_000, 80_000],
+    });
+    expect(over.clampedOld).toBe(80_000);
+    expect(over.clampedValue).toBe(80_000);
+    expect(over.valueY).toBe(yFor(DOMAIN, 80_000));
+    // Clamped to the same place, so there is no change to colour.
+    expect(over.changeTone).toBe("none");
+    expect(over.changeLine).toBeNull();
+  });
+
+  it("clamps a value below the band up to the floor", () => {
+    const under = dialGeometry(DOMAIN, {
+      id: "under",
+      label: "Under",
+      old: 58_000,
+      value: 10_000,
+      range: [55_000, 80_000],
+    });
+    expect(under.clampedValue).toBe(55_000);
+    expect(under.changeTone).toBe("cut");
+  });
+
+  it("keeps the raw amounts beside the clamped ones, so nothing is lost", () => {
+    const over = dialGeometry(DOMAIN, {
+      id: "over",
+      label: "Over",
+      old: 120_000,
+      value: 150_000,
+      range: [55_000, 80_000],
+    });
+    expect(over.old).toBe(120_000);
+    expect(over.value).toBe(150_000);
+  });
+
+  it("keeps the band and the prior arrow for a removed entity", () => {
     const joe = dialGeometry(DOMAIN, FIXTURE[5]);
     expect(joe.removed).toBe(true);
-    expect(joe.oldY).toBe(yFor(DOMAIN, 5));
-    expect(joe.valueY).toBeNull();
-    expect(joe.box).toBeNull();
-    expect(joe.arrow).toBeNull();
+    expect(joe.band).not.toBeNull();
+    expect(joe.priorArrow).toBeTruthy();
+    expect(joe.clampedValue).toBeNull();
+    expect(joe.futureArrow).toBeNull();
+    expect(joe.changeLine).toBeNull();
+    expect(joe.changeTone).toBe("none");
   });
 
-  it("carries a box and an arrow for a changed entity", () => {
+  it("draws both arrows and a coloured line for a changed entity", () => {
     const peter = dialGeometry(DOMAIN, FIXTURE[0]);
-    expect(peter.removed).toBe(false);
-    expect(peter.direction).toBe("up");
-    expect(peter.box).not.toBeNull();
-    expect(peter.arrow).not.toBeNull();
-  });
-
-  it("carries neither for an unchanged entity", () => {
-    const still = dialGeometry(DOMAIN, {
-      id: "still",
-      label: "Still",
-      old: 4,
-      value: 4,
-    });
-    expect(still.direction).toBe("none");
-    expect(still.box).toBeNull();
-    expect(still.arrow).toBeNull();
+    expect(peter.priorArrow).toBeTruthy();
+    expect(peter.futureArrow).toBeTruthy();
+    expect(peter.changeTone).toBe("raise");
+    expect(peter.changeLine).not.toBeNull();
   });
 });
 
@@ -185,13 +346,16 @@ describe("mutationGeometry — the sketch as a table", () => {
       map(
         (row) => ({
           id: row.id,
+          range: `${row.range[0]}–${row.range[1]}`,
           old: row.old,
-          new: row.value ?? "—",
-          direction: row.direction,
+          clampedOld: row.clampedOld,
+          value: row.value ?? "—",
+          clampedValue: row.clampedValue ?? "—",
+          changeTone: row.changeTone,
+          bandY: row.band.y,
+          bandH: row.band.height,
           oldY: row.oldY,
           valueY: row.valueY ?? "—",
-          boxY: row.box?.y ?? "—",
-          boxH: row.box?.height ?? "—",
           removed: row.removed,
         }),
         rows,
@@ -200,33 +364,33 @@ describe("mutationGeometry — the sketch as a table", () => {
     expect(rows).toHaveLength(6);
   });
 
-  it("reads three raises, two drops and one removal", () => {
-    const dirs = map((row) => row.direction, rows);
-    expect(dirs).toEqual(["up", "up", "up", "down", "down", "none"]);
-    expect(map((row) => row.removed, rows)).toEqual([
-      false,
-      false,
-      false,
-      false,
-      false,
-      true,
+  it("reads three raises, two cuts and one removal", () => {
+    expect(map((row) => row.changeTone, rows)).toEqual([
+      "raise",
+      "raise",
+      "raise",
+      "cut",
+      "cut",
+      "none",
     ]);
   });
 
-  it("draws the two drops as visibly bigger boxes than the three raises", () => {
-    // The sketch's whole point: the SIZE of the change reads at a glance.
-    const heightOf = (i: number) => rows[i].box?.height ?? 0;
-    expect(Math.min(heightOf(3), heightOf(4))).toBeGreaterThan(
-      Math.max(heightOf(0), heightOf(1), heightOf(2)),
-    );
+  it("gives the two people on one role the identical band box", () => {
+    // Peter and Reilly are both senior. Their moves differ; their band does not.
+    expect(rows[0].band).toEqual(rows[3].band);
   });
 
-  it("puts every raised box in the top half and every dropped box lower", () => {
-    const middle = (i: number) =>
-      (rows[i].box?.y ?? 0) + (rows[i].box?.height ?? 0) / 2;
-    const centre = (TRACK_TOP + TRACK_BOTTOM) / 2;
-    for (const i of [0, 1, 2]) expect(middle(i)).toBeLessThan(centre);
-    for (const i of [3, 4]) expect(middle(i)).toBeGreaterThan(centre);
+  it("keeps every arrow inside its own role band", () => {
+    for (const row of rows) {
+      const top = row.band.y;
+      const bottom = row.band.y + row.band.height;
+      expect(row.oldY).toBeGreaterThanOrEqual(top);
+      expect(row.oldY).toBeLessThanOrEqual(bottom);
+      if (row.valueY !== null) {
+        expect(row.valueY).toBeGreaterThanOrEqual(top);
+        expect(row.valueY).toBeLessThanOrEqual(bottom);
+      }
+    }
   });
 
   it("keeps the row in the order it was given", () => {
@@ -256,7 +420,14 @@ describe("the CSS mirrors the canvas", () => {
     expect(css).toContain(`--sui-mutation-dial-width: ${TRACK_X * 2}px`);
   });
 
-  it("leaves room above the top of the track for a raised arrowhead", () => {
-    expect(TRACK_TOP).toBeGreaterThanOrEqual(ARROW_HEIGHT);
+  it("leaves room above the top of the track for an arrowhead", () => {
+    expect(TRACK_TOP).toBeGreaterThanOrEqual(ARROW_HALF);
+  });
+
+  it("paints the change line with the success and danger tokens", () => {
+    // Peter asked for the colour explicitly (2026-09-16), superseding the
+    // accent-only ruling. The arrows stay as the non-hue cue beside it.
+    expect(css).toContain("--sui-success");
+    expect(css).toContain("--sui-danger");
   });
 });

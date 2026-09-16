@@ -1,11 +1,16 @@
 /**
- * Mutation Sliders bench — Peter's pencil sketch of 2026-09-16.
+ * Mutation Sliders bench — Peter's pencil sketch of 2026-09-16, reworked after
+ * his review the same day.
  *
- * Six named entities on one domain: three raised a little, two lowered a lot,
- * and Joe struck through because he is gone in the new scenario. The bench
- * plays the CONSUMER — it owns the entity list, decides what "add" and
- * "remove" mean, and supplies the unit through `format`. The component holds
- * no state at all.
+ * Six people on one pay scale. Each carries their ROLE's band — Junior 40–60k,
+ * Mid 55–80k, Senior 70–110k — and the shaded box on each dial is that band,
+ * not the size of the change. The muted arrowhead is what they were paid, the
+ * accent one is what they will be, and the coloured line between them is green
+ * for a raise and red for a cut.
+ *
+ * The bench plays the CONSUMER: it owns the people, decides what "hire" and
+ * "let go" mean, and supplies the unit through `format`. The component holds
+ * no state and invents no unit.
  */
 import { type Component, createSignal } from "solid-js";
 import { join, map, pipe } from "../../../src/fn";
@@ -24,39 +29,59 @@ import {
   SectionTitle,
 } from "../../../src/components/Text";
 
-/** Levels 0–10, the consumer's own units. */
-const DOMAIN: readonly [number, number] = [0, 10];
+/**
+ * The shared scale every dial's track runs.
+ *
+ * NOT `[0, 200_000]`, which was the first guess: with bands of 20–40k it
+ * squeezed every box into the lower fifth of the track and the row read as
+ * marks huddled near the floor. The scale a pay comparison wants is one that
+ * brackets the bands in play with a little air, not one that starts at zero
+ * because money does.
+ */
+const DOMAIN: readonly [number, number] = [30_000, 130_000];
 
-/** The sketch, as data. Three raised a little, two lowered a lot, Joe gone. */
+/** The role bands. A band is a property of the ROLE, not of the person. */
+const JUNIOR: readonly [number, number] = [40_000, 60_000];
+const MID: readonly [number, number] = [55_000, 80_000];
+const SENIOR: readonly [number, number] = [70_000, 110_000];
+
+/**
+ * The sketch, as data. Three raises, two cuts, Joe gone.
+ *
+ * Elaina is deliberately AT her ceiling and Flynn AT his floor, so the bench
+ * shows a thumb that will not move further the moment you drag it — the clamp
+ * is visible without having to construct a bad value.
+ */
 const SKETCH: readonly Entity[] = [
-  { id: "peter", label: "Peter", old: 6, value: 7 },
-  { id: "adlai", label: "Adlai", old: 5, value: 6 },
-  { id: "elaina", label: "Elaina", old: 7, value: 8 },
-  { id: "reilly", label: "Reilly", old: 7, value: 2 },
-  { id: "flynn", label: "Flynn", old: 8, value: 1 },
-  { id: "joe", label: "Joe", old: 5, value: null },
+  { id: "peter", label: "Peter", old: 90_000, value: 104_000, range: SENIOR },
+  { id: "adlai", label: "Adlai", old: 44_000, value: 52_000, range: JUNIOR },
+  { id: "elaina", label: "Elaina", old: 62_000, value: 80_000, range: MID },
+  { id: "reilly", label: "Reilly", old: 105_000, value: 74_000, range: SENIOR },
+  { id: "flynn", label: "Flynn", old: 78_000, value: 55_000, range: MID },
+  { id: "joe", label: "Joe", old: 48_000, value: null, range: JUNIOR },
 ];
 
 /** The consumer's unit. The component never invents one. */
-const formatLevel = (value: number): string => `L${value}`;
+const formatPay = (value: number): string => `$${Math.round(value / 1000)}k`;
 
 /**
- * The entity the `+` appends.
+ * The person the `+` appends: a new hire on the junior band.
  *
- * Note what the bench has to decide here and the component does not: an ADDED
- * entity has no OLD level, and `Entity.old` is required — so the bench pins it
- * to the domain floor, which draws the newcomer as a rise from nothing. That
- * reads acceptably but it is a consumer's invention, not a fact. Whether
- * `old: null` should join `value: null` in the type is an open question.
+ * Note what the bench has to decide here and the component does not: a new
+ * hire has no PRIOR amount, and `Entity.old` is required — so the bench pins
+ * them to their band's floor, which draws a prior arrow at a salary they were
+ * never paid. Whether `old: null` should join `value: null` in the type is an
+ * open question for Peter.
  */
-const addedEntity = (count: number): Entity => ({
+const newHire = (count: number): Entity => ({
   id: `flynn-${count + 1}`,
   label: `Flynn ${count + 1}`,
-  old: DOMAIN[0],
-  value: 5,
+  old: JUNIOR[0],
+  value: 45_000,
+  range: JUNIOR,
 });
 
-/** Replace one entity's new level, leaving every other row untouched. */
+/** Replace one person's future amount, leaving every other row untouched. */
 const withValue = (
   entities: readonly Entity[],
   id: string,
@@ -67,33 +92,37 @@ const withValue = (
     entities,
   );
 
-/** One entity, as the row reads out loud. */
-const describeEntity = (entity: Entity): string =>
-  entity.value === null
-    ? `${entity.label} removed`
-    : `${entity.label} ${entity.old}→${entity.value}`;
+/** One person, as the row reads out loud — bands included. */
+const describeEntity = (entity: Entity): string => {
+  const band = entity.range
+    ? ` [${formatPay(entity.range[0])}–${formatPay(entity.range[1])}]`
+    : "";
+  return entity.value === null
+    ? `${entity.label} let go${band}`
+    : `${entity.label} ${formatPay(entity.old)}→${formatPay(entity.value)}${band}`;
+};
 
 export const meta = { label: "Mutation Sliders" };
 
 const MutationSlidersBench: Component = () => {
   const [entities, setEntities] = createSignal<readonly Entity[]>(SKETCH);
-  const [added, setAdded] = createSignal(0);
+  const [hired, setHired] = createSignal(0);
 
-  const setLevel = (id: string, value: number): void => {
+  const setPay = (id: string, value: number): void => {
     setEntities((current) => withValue(current, id, value));
   };
 
-  const remove = (id: string): void => {
+  const letGo = (id: string): void => {
     setEntities((current) => withValue(current, id, null));
   };
 
-  const append = (): void => {
-    setAdded((count) => count + 1);
-    setEntities((current) => [...current, addedEntity(added())]);
+  const hire = (): void => {
+    setHired((count) => count + 1);
+    setEntities((current) => [...current, newHire(hired())]);
   };
 
   const reset = (): void => {
-    setAdded(0);
+    setHired(0);
     setEntities(SKETCH);
   };
 
@@ -105,15 +134,20 @@ const MutationSlidersBench: Component = () => {
     <div class="component-section component-section--full">
       <SectionTitle>Mutation Sliders</SectionTitle>
       <MutedBody>
-        One vertical dial per entity. The fixed tick is where they WERE, the
-        thumb is where they are now, and the translucent box between the two is
-        the size of the change — drag a thumb and watch the box and the
-        arrowhead follow. A struck-through name is an entity that is gone in the
-        new scenario: it keeps its old tick and loses its thumb.
+        One dial per person, all on one pay scale. The shaded box is that
+        person's ROLE BAND — Junior $40–60k, Mid $55–80k, Senior $70–110k — so
+        two people on the same role draw the same box however far each of them
+        moved. The muted arrowhead is what they were paid and the accent one is
+        what they will be; the line between them is green for a raise and red
+        for a cut. Drag a thumb past a band edge and it stops: the band is the
+        clamp, and the readout follows. A struck-through name is someone who is
+        gone in the new scenario — their band and their prior arrow stay.
       </MutedBody>
       <SpacedStack>
         <SpreadRow>
-          <MonoMeta>domain L0–L10 · arrow keys move a focused thumb</MonoMeta>
+          <MonoMeta>
+            scale $30k–$130k · drag, or arrow keys on a focused dial
+          </MonoMeta>
           <ClusterRow>
             <GhostButton onClick={reset}>Reset</GhostButton>
           </ClusterRow>
@@ -122,10 +156,10 @@ const MutationSlidersBench: Component = () => {
           <MutationSliders
             entities={entities()}
             domain={DOMAIN}
-            onChange={setLevel}
-            onRemove={remove}
-            onAdd={append}
-            format={formatLevel}
+            onChange={setPay}
+            onRemove={letGo}
+            onAdd={hire}
+            format={formatPay}
           />
         </CardSurface>
         <MonoMeta>{summary()}</MonoMeta>
