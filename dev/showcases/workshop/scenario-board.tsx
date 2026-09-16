@@ -156,8 +156,17 @@ const BANDS: readonly Band[] = [
  * `old: null` is a HIRE (no prior pay) and `value: null` is a DEPARTURE (no
  * new pay); both come straight from `Entity`, so the dials and the rails read
  * the same absence the same way.
+ *
+ * `range` is OMITTED from the inherited surface on purpose. A person has a
+ * BAND; the range is what `entitiesOf` derives from that band when it builds
+ * the dial. Carrying both would let a fixture row state a range that disagrees
+ * with its own band — exactly the duplication the derivation step exists to
+ * prevent — so the type refuses to represent it. Omitting it is also what
+ * keeps this fixture honest when `Entity.range` becomes REQUIRED in phase 3:
+ * the requirement lands on the dials, which always have one, rather than on
+ * six literals that would have to repeat their band's numbers to satisfy it.
  */
-interface Person extends Entity {
+interface Person extends Omit<Entity, "range"> {
   readonly band: BandId;
   readonly stepAt: string;
 }
@@ -213,12 +222,25 @@ const MONTHLY_NET: readonly number[] = [
 // ── Pure derivations ─────────────────────────────────────────────────────────
 
 /**
+ * The two amounts every money reading on this board is computed from.
+ *
+ * The rate functions below take THIS rather than a whole `Entity`, because
+ * `old` and `value` are all they read. That is not fastidiousness: a `Person`
+ * deliberately has no `range` (see `Person`), so once `Entity.range` becomes
+ * required in phase 3 a `Person` stops being assignable to an `Entity` and
+ * every one of these call sites would break on a field none of them touch.
+ * Asking for the narrowest shape that answers the question keeps them working
+ * for people and dials alike. Verified by simulating the tightening locally.
+ */
+type Amounts = Pick<Entity, "old" | "value">;
+
+/**
  * The level an entity holds in the NEW scenario. A removed entity (`value:
  * null`) reads as level 0 — the sketch strikes Joe's name through, which says
  * his contribution is gone, not that it is unknown. `null − old` would be
  * arithmetic on an absence; this is the consumer stating what removal MEANS.
  */
-export const newLevelOf = (entity: Entity): number => entity.value ?? 0;
+export const newLevelOf = (entity: Amounts): number => entity.value ?? 0;
 
 /**
  * The level an entity held in the OLD scenario. A NEW HIRE (`old: null`) reads
@@ -226,20 +248,20 @@ export const newLevelOf = (entity: Entity): number => entity.value ?? 0;
  * to subtract. Same shape as `newLevelOf` above: the consumer states what an
  * absence MEANS rather than doing arithmetic on it.
  */
-export const oldLevelOf = (entity: Entity): number => entity.old ?? 0;
+export const oldLevelOf = (entity: Amounts): number => entity.old ?? 0;
 
 /**
  * How far one dial moved. Negative for a cut, fully negative for a removal,
  * and for a hire the delta IS the new cost — there is no prior to subtract.
  */
-export const deltaOf = (entity: Entity): number =>
+export const deltaOf = (entity: Amounts): number =>
   newLevelOf(entity) - oldLevelOf(entity);
 
 /** The naive rate: every dial's change, priced, added up. $/month. */
-export const rateOf = (entities: readonly Entity[]): number =>
+export const rateOf = (entities: readonly Amounts[]): number =>
   pipe(
     entities,
-    map((entity: Entity) => deltaOf(entity) * DOLLARS_PER_LEVEL),
+    map((entity: Amounts) => deltaOf(entity) * DOLLARS_PER_LEVEL),
     sum,
   );
 
@@ -414,8 +436,39 @@ export const transfersOf = (people: readonly Person[]): Transfer[] => {
   ]);
 };
 
+/**
+ * A dial: an `Entity` whose `range` is CERTAIN.
+ *
+ * `Entity.range` is optional today and becomes required in phase 3. Narrowing
+ * the return type here rather than saying `Entity[]` makes `entitiesOf` prove
+ * at compile time that it sets one on every row — so the phase-3 tightening
+ * cannot quietly break this board, and if someone ever adds a path through
+ * this function that omits a range, it fails here instead of in a consumer.
+ */
+type Dial = Entity & { readonly range: NonNullable<Entity["range"]> };
+
+/**
+ * PHASE-3 GUARDS. `Entity.range` becomes required once every consumer has
+ * moved, and these two aliases are this board's proof that it has. They are
+ * types, so they cost nothing at runtime and fail the build if either claim
+ * stops holding.
+ *
+ * They exist because simulating the tightening locally caught three call sites
+ * that a reading of the code had missed: `Person` deliberately has no `range`,
+ * so the moment the field is required a `Person` stops being assignable to an
+ * `Entity`, and every function typed to take an `Entity` breaks on a field it
+ * never touches. Narrowing those functions to `Amounts` was the fix; these
+ * pin it.
+ */
+type _DialCarriesARange = Dial extends { range: NonNullable<Entity["range"]> }
+  ? true
+  : never;
+type _RateReadsPeopleDirectly = readonly Person[] extends readonly Amounts[]
+  ? true
+  : never;
+
 /** The dials, as `MutationSliders` wants them: a person plus their band's box. */
-export const entitiesOf = (people: readonly Person[]): Entity[] =>
+export const entitiesOf = (people: readonly Person[]): Dial[] =>
   map(
     (person: Person) => ({
       id: person.id,
@@ -476,7 +529,7 @@ const perMonth = (delta: number): string =>
   `${delta < 0 ? "−" : "+"}$${Math.abs(delta).toLocaleString("en-US")}/mo`;
 
 /** One dial's reading, as a line of text. Absence reads as absence at both ends. */
-const describeEntity = (entity: Entity): string => {
+const describeEntity = (entity: Amounts & Pick<Entity, "label">): string => {
   if (entity.value === null) return `${entity.label} left L${entity.old}`;
   if (entity.old === null) return `${entity.label} hired onto L${entity.value}`;
   return `${entity.label} L${entity.old}→L${entity.value}`;
