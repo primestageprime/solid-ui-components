@@ -58,6 +58,10 @@ describe("RateGauge", () => {
     ).toHaveLength(1);
   });
 
+  // The rows are read off the DOM in document order, which is the order
+  // geometry placed them in — top of the stack first. The value's own row is
+  // an HTML caption in a <foreignObject>, the other two are SVG text, so this
+  // reads whole rows rather than one kind of node.
   it("stacks three labels above the baseline and reverses them below", () => {
     const [value, setValue] = createSignal(23000);
     const { container } = render(() => (
@@ -70,7 +74,7 @@ describe("RateGauge", () => {
       />
     ));
     const labels = () => [
-      ...container.querySelectorAll(".sui-rate-gauge__label"),
+      ...container.querySelectorAll(".sui-rate-gauge__row"),
     ].map((node) => node.textContent);
     expect(labels()).toEqual(["Foo", "+$18,000/mo", "Baseline"]);
     setValue(-8833);
@@ -88,7 +92,28 @@ describe("RateGauge", () => {
       />
     ));
     expect(container.querySelectorAll(".sui-rate-gauge__bracket")).toHaveLength(0);
-    expect(container.querySelectorAll(".sui-rate-gauge__label")).toHaveLength(2);
+    // ONE row, naming both, rather than two rows pointing at the same dot.
+    const rows = container.querySelectorAll(".sui-rate-gauge__row");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].textContent).toBe("Foo = Baseline");
+  });
+
+  it("ellipsizes the consumer's own name and offers it whole in a tooltip", () => {
+    const long = "Bookkeeping retainer · Northern";
+    const { container } = render(() => (
+      <RateGauge
+        domain={DOMAIN}
+        baseline={5000}
+        value={23000}
+        label={long}
+        format={money}
+      />
+    ));
+    // The name gets real HTML — only a <foreignObject> can lay that out inside
+    // an <svg> — so it can truncate; the delta stays SVG text.
+    const box = container.querySelector(".sui-rate-gauge__label-box");
+    expect(box?.textContent).toBe(long);
+    expect(container.querySelector("foreignObject")).not.toBeNull();
   });
 
   it("takes the consumer's name for the baseline needle", () => {

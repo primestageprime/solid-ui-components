@@ -1688,6 +1688,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
   - **InfoTitle / WarningTitle / SuccessTitle / DangerTitle** — Status-colored titles. Use for: section headings with semantic color.
   - **ChipLabel** — Small bold key text (11px / 600, `<span>`). Use for: pivot cell keys, legend swatch labels, chip titles. Pairs with **CountText** inside **TightSpreadRow**.
   - **EllipsizedChipLabel** — Single-line truncating `ChipLabel` (11px / 600 + nowrap + ellipsis + min-width:0). Use for: chip keys inside flex parents that may overflow.
+  - **EllipsizedHudCaption** — Single-line truncating uppercase/tracked HUD caption (11px / 600 + 0.5px tracking + nowrap + ellipsis). Use for: the label at the end of a leader line in an SVG instrument, inside a `<foreignObject>` sized to the callout column, paired with a `Tooltip` carrying the untruncated text.
   - **CountText** — Small muted count/meta text (10px, muted color, `<span>`). Use for: trailing counts beside a `ChipLabel`, compact metadata.
 
 ## ThreePanelLayout

@@ -24,7 +24,7 @@
 //     "zero" line that is not at zero.
 // ============================================
 import { clamp } from "../../internal/math/clamp";
-import { map } from "../../fn";
+import { join, map, sortBy, sum } from "../../fn";
 
 /** A value domain, mapped linearly onto [−90°, +90°]. */
 export type Domain = readonly [number, number];
@@ -32,8 +32,12 @@ export type Domain = readonly [number, number];
 /** Which half of the ring a value falls in. `positive` includes zero itself. */
 export type Zone = "positive" | "negative";
 
-/** The three things the gauge labels, in stacking order top to bottom. */
-export type LabelId = "value" | "delta" | "baseline";
+/**
+ * What a callout names. `valueAndBaseline` is the collapsed row used when the
+ * two needles coincide: one anchor cannot carry two leaders, and two rows
+ * pointing at the same dot read as a mistake rather than as a coincidence.
+ */
+export type LabelId = "value" | "delta" | "baseline" | "valueAndBaseline";
 
 export interface Point {
   readonly x: number;
@@ -46,26 +50,35 @@ export interface Center {
   readonly cy: number;
 }
 
-/** A needle's tip plus the short perpendicular cap drawn across it. */
+/** A needle's tip plus the cap arc drawn across it. */
 export interface NeedleTip extends Point {
-  readonly cap: {
-    readonly x1: number;
-    readonly y1: number;
-    readonly x2: number;
-    readonly y2: number;
-  };
+  /** `d` for a short arc concentric with the ring, centred on the needle. */
+  readonly capArc: string;
 }
 
-/** One label's row: where it sits, what it points at, and the leader between. */
-export interface LabelRow {
+/**
+ * One HUD callout: a terminal on the dial, an elbowed leader out to a shared
+ * label column, and the row the label sits on.
+ */
+export interface Callout {
   readonly id: LabelId;
-  /** Left edge of the label text. */
-  readonly x: number;
-  /** Text baseline for the label, in viewBox units. */
-  readonly y: number;
-  /** The point on the ring (or on the bracket) this row is about. */
+  /** The point on the dial the callout names. Carries the terminal mark. */
   readonly anchor: Point;
-  /** `d` for the leader line from the anchor to the label. */
+  /** Angle of the anchor, in math degrees — the stub runs out along it. */
+  readonly angle: number;
+  /** How far past the anchor the radial stub runs. */
+  readonly stub: number;
+  /** Where the row WANTED to sit: the stub's end, before any spacing. */
+  readonly naturalY: number;
+  /** Where the row actually sits, after the spacing pass. */
+  readonly y: number;
+  /** x of the shared label column — where the horizontal run ends. */
+  readonly labelX: number;
+  /** Where the label text starts, just past the column's tick. */
+  readonly textX: number;
+  /** The leader's corners, anchor first. Tests read these; the path is built from them. */
+  readonly points: readonly Point[];
+  /** `d` for the leader, built from `points`. */
   readonly leader: string;
 }
 
@@ -76,16 +89,16 @@ export interface LabelRow {
 export const VIEW_WIDTH = 300;
 export const VIEW_HEIGHT = 190;
 /** The pivot. Left of centre, because the ring opens to the left. */
-export const CENTER: Center = { cx: 78, cy: 95 };
+export const CENTER: Center = { cx: 66, cy: 95 };
 /** Ring radii — the annulus the two zones are painted into. */
-export const RING_INNER = 58;
-export const RING_OUTER = 76;
+export const RING_INNER = 48;
+export const RING_OUTER = 64;
 /** A needle stops just short of the ring's inner edge. */
 export const NEEDLE_RADIUS = RING_INNER - 3;
 /** The baseline's sweep wedge is a short sector near the pivot. */
-export const WEDGE_RADIUS = 40;
+export const WEDGE_RADIUS = 34;
 /** The delta bracket rides outside the ring. */
-export const BRACKET_RADIUS = RING_OUTER + 11;
+export const BRACKET_RADIUS = RING_OUTER + 10;
 /** Half-length of the cap drawn across a needle's tip. */
 export const NEEDLE_CAP_HALF = 6;
 /** Half-length of a bracket end cap, measured radially. */
@@ -93,11 +106,72 @@ export const BRACKET_CAP_HALF = 4;
 /** The pivot dot. */
 export const PIVOT_RADIUS = 4;
 
-/** Left edge of the label column, and where its leaders turn horizontal. */
-export const LABEL_X = 218;
-const LEADER_ELBOW_X = LABEL_X - 14;
-/** Vertical pitch between stacked label rows. */
-const LABEL_PITCH = 34;
+/** Half-span of the needle's cap arc, in degrees either side of the needle. */
+export const CAP_ARC_HALF_SPAN = 5;
+
+/**
+ * The label column: every leader's horizontal run ends here, and every label
+ * starts just past the tick that marks it. One column is what makes the stack
+ * read as a HUD callout set rather than as three unrelated pointers.
+ */
+export const LABEL_X = 186;
+/** Half-height of the vertical tick that terminates a run at the column. */
+export const COLUMN_TICK_HALF = 4;
+/** Gap between the column tick and the first letter of the label. */
+const TEXT_GAP = 6;
+
+/**
+ * Where every leader finishes turning and becomes horizontal.
+ *
+ * This shared gutter is what makes the crossing argument hold. Diagonals live
+ * strictly LEFT of it and horizontal runs strictly right of it, so a leader
+ * that is still descending can never cut across a run that has already
+ * levelled out — which is exactly the crossing the fixed-pitch stack used to
+ * produce. It sits clear of the longest possible stub end.
+ */
+const ELBOW_X = LABEL_X - 10;
+
+/**
+ * How far a stub runs radially past its anchor before the leader turns.
+ *
+ * Fixed, so every stub reads as the same gesture — it is the needle's own
+ * angle continued outward, which is what ties a row to its mark.
+ */
+export const CALLOUT_STUB = 12;
+/**
+ * Where every leader stops being radial and turns: the vertical gutter at the
+ * rightmost point of the turn circle.
+ *
+ * Together with `ELBOW_X` this is what makes "leaders never cross" a property
+ * of the routing rather than a hope. Each leader is radial out to a COMMON
+ * turn circle, horizontal to this gutter, diagonal to `ELBOW_X`, then
+ * horizontal to the column — and each of those four bands is disjoint from the
+ * others in x, so a segment of one kind can only ever meet a segment of the
+ * same kind:
+ *
+ *   • radial stubs share a centre, so they cannot cross each other;
+ *   • the horizontals are at distinct heights, so they cannot cross each other;
+ *   • the diagonals all start on one vertical and end on another, with their
+ *     heights in the same order at both ends, so they are nested.
+ *
+ * The one case that could have defeated this — a stub crossing another
+ * leader's horizontal — cannot happen either: a stub at angle θ only reaches
+ * as high as the turn circle at θ, and a horizontal at angle φ only reaches as
+ * far left as the turn circle at φ, so an overlap in x forces φ ≥ θ while an
+ * overlap in y forces φ ≤ θ. Only φ = θ satisfies both, and two callouts never
+ * share an angle.
+ */
+
+/**
+ * Minimum distance between two label rows: a line's height plus a gap.
+ *
+ * This is the whole spacing heuristic's unit. Rows want to sit at their
+ * anchor's height and are pushed apart only as far as this, so the stack stays
+ * as close to the picture as legibility allows.
+ */
+export const CALLOUT_PITCH = 18;
+/** Rows stay this far inside the viewBox, top and bottom. */
+const CALLOUT_MARGIN = 12;
 
 const DEGREES_PER_HALF_TURN = 180;
 const QUARTER_TURN = 90;
@@ -183,10 +257,30 @@ export const ringArcPath = (
 };
 
 /**
- * A needle's tip at a value's angle, with the perpendicular cap across it.
+ * The cap across a needle's tip: a short arc CONCENTRIC with the ring, not a
+ * straight chord.
  *
- * The cap is radial-perpendicular — it lies along the tangent — so it reads as
- * a crosshair on the dial however far round the needle has swung.
+ * A straight cap is a tangent, and a tangent visibly leaves the circle at both
+ * ends — at this radius the error is small but the eye reads it as a mark that
+ * does not belong to the dial. An arc at the needle's own radius is a segment
+ * of the ring's own edge, so the cap reads as part of the instrument.
+ */
+export const capArc = (
+  center: Center,
+  radius: number,
+  degrees: number,
+  halfSpan: number,
+): string => {
+  if (halfSpan === 0) return "";
+  const from = degrees + halfSpan;
+  const to = degrees - halfSpan;
+  const start = pointAt(center, radius, from);
+  const end = pointAt(center, radius, to);
+  return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${arcFlags(from, to)} ${end.x} ${end.y}`;
+};
+
+/**
+ * A needle's tip at a value's angle, with the cap arc across it.
  */
 export const needleEndpoint = (
   center: Center,
@@ -196,19 +290,10 @@ export const needleEndpoint = (
 ): NeedleTip => {
   const degrees = angleFor(domain, value);
   const tip = pointAt(center, radius, degrees);
-  const tangent = {
-    x: -Math.sin(radians(degrees)),
-    y: -Math.cos(radians(degrees)),
-  };
   return {
     x: tip.x,
     y: tip.y,
-    cap: {
-      x1: tip.x - tangent.x * NEEDLE_CAP_HALF,
-      y1: tip.y - tangent.y * NEEDLE_CAP_HALF,
-      x2: tip.x + tangent.x * NEEDLE_CAP_HALF,
-      y2: tip.y + tangent.y * NEEDLE_CAP_HALF,
-    },
+    capArc: capArc(center, radius, degrees, CAP_ARC_HALF_SPAN),
   };
 };
 
@@ -266,21 +351,6 @@ export const bracketPath = (
   return [arc, ...caps].join(" ");
 };
 
-/**
- * Which label sits where in the right-hand stack, top to bottom.
- *
- * Tied to value-vs-baseline, NOT to the zone: the stack mirrors the picture,
- * so the row order matches the order the two needles appear on the dial and
- * the leader lines never cross. A value sitting on its baseline has no delta
- * to announce, so that row is absent rather than empty.
- */
-export const labelOrder = (baseline: number, value: number): readonly LabelId[] => {
-  if (value === baseline) return ["value", "baseline"];
-  return value > baseline
-    ? ["value", "delta", "baseline"]
-    : ["baseline", "delta", "value"];
-};
-
 /** What `gaugeGeometry` is asked about. */
 export interface GaugeInput {
   readonly domain: Domain;
@@ -307,43 +377,154 @@ export interface GaugeGeometry {
   readonly zeroLine: { readonly x2: number; readonly y2: number };
   readonly baselineTip: NeedleTip;
   readonly valueTip: NeedleTip;
-  readonly labels: readonly LabelId[];
-  readonly rows: readonly LabelRow[];
+  /** The HUD callouts, in anchor order, already placed and elbowed. */
+  readonly callouts: readonly Callout[];
 }
 
-/** Where a label row's leader starts on the dial. */
-const anchorFor = (
-  id: LabelId,
-  angles: { zero: number; baseline: number; value: number },
-): Point => {
-  if (id === "baseline") return pointAt(CENTER, RING_OUTER, angles.baseline);
-  if (id === "value") return pointAt(CENTER, RING_OUTER, angles.value);
-  return pointAt(CENTER, BRACKET_RADIUS, (angles.baseline + angles.value) / 2);
+/** One callout before the spacing pass has decided where its row sits. */
+interface Unplaced {
+  readonly id: LabelId;
+  readonly angle: number;
+  readonly radius: number;
+}
+
+/**
+ * The circle every leader turns on: one stub past the outermost anchor.
+ *
+ * A COMMON circle, not a common stub length, and that is the whole trick. It
+ * means a callout's stub is longer the further inside the dial its anchor
+ * sits — the needle tips reach further than the bracket's midpoint — and it is
+ * what puts every turn point in the same angular order as its anchor. An
+ * earlier draft lengthened individual stubs to relieve crowded anchors
+ * instead; that separated the elbows but let a long stub cut clean across a
+ * neighbour's leader, which the crossing test caught.
+ */
+const TURN_RADIUS = BRACKET_RADIUS + CALLOUT_STUB;
+const TURN_X = CENTER.cx + TURN_RADIUS;
+
+/**
+ * The spacing heuristic, and the reason the leaders cannot cross.
+ *
+ * Each row wants to sit at its own stub's height. Walking top to bottom, a row
+ * is pushed down only as far as one PITCH below the row above it — never
+ * further — so the stack stays as close to the picture as legibility allows
+ * and the rows stay in anchor order. Because the rows keep that order and
+ * every leader runs monotonically right to the same column, no two leaders can
+ * meet.
+ *
+ * The pushes are all downwards, which would drag the block off its anchors, so
+ * the whole group is then shifted back up by the MEAN displacement. That keeps
+ * the stack centred on the marks it names without disturbing the pitch, and it
+ * is a rigid shift, so it cannot reintroduce a crossing. A final clamp keeps
+ * the block inside the viewBox — again as one rigid shift.
+ */
+const placeRows = (naturals: readonly number[]): readonly number[] => {
+  if (naturals.length === 0) return [];
+  const pushed: number[] = [];
+  for (const natural of naturals) {
+    const floor =
+      pushed.length === 0 ? natural : Math.max(natural, pushed[pushed.length - 1] + CALLOUT_PITCH);
+    pushed.push(floor);
+  }
+  const displacement = sum(map((y: number, index: number) => y - naturals[index], pushed));
+  let shift = -displacement / pushed.length;
+  const top = pushed[0] + shift;
+  const bottom = pushed[pushed.length - 1] + shift;
+  if (top < CALLOUT_MARGIN) shift += CALLOUT_MARGIN - top;
+  else if (bottom > VIEW_HEIGHT - CALLOUT_MARGIN) {
+    shift -= bottom - (VIEW_HEIGHT - CALLOUT_MARGIN);
+  }
+  return map((y: number) => y + shift, pushed);
 };
 
 /**
- * Stack the rows around the pivot's height at a fixed pitch, in the order
- * `labelOrder` gave. Fixed pitch rather than "wherever the anchor happens to
- * be" is the whole point: two needles a degree apart would otherwise stack
- * their labels on top of each other, which is the collision the component
- * exists to absorb.
+ * Build one callout's leader: radial stub to the turn circle, horizontal to
+ * the gutter, a dogleg to the row's height, then the run to the label column.
+ *
+ * The dogleg exists only because the spacing pass moved the row off the height
+ * its anchor asked for; it is the only segment that is neither radial nor
+ * horizontal.
  */
-const labelRows = (
-  ids: readonly LabelId[],
+const leaderPoints = (
+  anchor: Point,
+  turn: Point,
+  rowY: number,
+): readonly Point[] => {
+  const gutter = { x: TURN_X, y: turn.y };
+  const elbow = { x: ELBOW_X, y: rowY };
+  const runEnd = { x: LABEL_X, y: rowY };
+  // A turn point already ON the gutter (the 3 o'clock callout) needs no
+  // horizontal approach, and a row that landed at its natural height needs no
+  // dogleg. Emitting either as a zero-length segment would draw a visible
+  // stutter at the joint.
+  const approach = turn.x === TURN_X ? [] : [gutter];
+  const dogleg = turn.y === rowY ? [] : [elbow];
+  return [anchor, turn, ...approach, ...dogleg, runEnd];
+};
+
+/**
+ * Every callout for one reading, in anchor order, placed and elbowed.
+ *
+ * The order is not prescribed anywhere: it FALLS OUT of sorting the anchors by
+ * height. Above the baseline that reads name / delta / Baseline, below it the
+ * reverse — the same orders the fixed table used to hardcode, but now they are
+ * a consequence of the picture instead of a second place for it to be wrong.
+ */
+const placeCallouts = (
   angles: { zero: number; baseline: number; value: number },
-): readonly LabelRow[] => {
-  const top = CENTER.cy - (LABEL_PITCH * (ids.length - 1)) / 2;
-  return map((id: LabelId, index: number) => {
-    const y = top + index * LABEL_PITCH;
-    const anchor = anchorFor(id, angles);
+  collapsed: boolean,
+  hasBracket: boolean,
+): readonly Callout[] => {
+  const unplaced: readonly Unplaced[] = collapsed
+    ? [{ id: "valueAndBaseline", angle: angles.value, radius: RING_OUTER }]
+    : [
+        { id: "value", angle: angles.value, radius: RING_OUTER },
+        { id: "baseline", angle: angles.baseline, radius: RING_OUTER },
+        ...(hasBracket
+          ? [
+              {
+                id: "delta" as LabelId,
+                angle: (angles.baseline + angles.value) / 2,
+                radius: BRACKET_RADIUS,
+              },
+            ]
+          : []),
+      ];
+  // Sort by where each leader LEAVES the dial — its turn point, not its
+  // anchor. Sorting by the anchor is the subtly wrong choice: the delta's
+  // anchor sits on the bracket, further out than the needle tips, so a value
+  // only just above its baseline puts the delta's anchor HIGHER than the
+  // value's while both turn at the same circle in the other order. Ordering
+  // rows against their own exit heights is what makes leaders cross.
+  const exits = map((callout: Unplaced) => {
+    const turn = pointAt(CENTER, TURN_RADIUS, callout.angle);
+    return { callout, turn, stub: TURN_RADIUS - callout.radius, naturalY: turn.y };
+  }, unplaced);
+  const sorted = sortBy((e: { naturalY: number }) => e.naturalY, exits);
+  const ordered = map((e: { callout: Unplaced }) => e.callout, sorted);
+  const stubs = map((e: { stub: number }) => e.stub, sorted);
+  const naturals = map((e: { naturalY: number }) => e.naturalY, sorted);
+  const turns = map((e: { turn: Point }) => e.turn, sorted);
+  const rows = placeRows(naturals);
+  return map((callout: Unplaced, index: number) => {
+    const anchor = pointAt(CENTER, callout.radius, callout.angle);
+    const points = leaderPoints(anchor, turns[index], rows[index]);
     return {
-      id,
-      x: LABEL_X,
-      y,
+      id: callout.id,
       anchor,
-      leader: `M ${anchor.x} ${anchor.y} L ${LEADER_ELBOW_X} ${y} L ${LABEL_X - 5} ${y}`,
+      angle: callout.angle,
+      stub: stubs[index],
+      naturalY: naturals[index],
+      y: rows[index],
+      labelX: LABEL_X,
+      textX: LABEL_X + TEXT_GAP,
+      points,
+      leader: join(
+        " ",
+        map((p: Point, i: number) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`, points),
+      ),
     };
-  }, ids);
+  }, ordered);
 };
 
 /**
@@ -357,7 +538,8 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
   const baselineAngle = angleFor(input.domain, input.baseline);
   const valueAngle = angleFor(input.domain, input.value);
   const zoneEnd = pointAt(CENTER, RING_OUTER, zero);
-  const ids = labelOrder(drawnBaseline, drawn);
+  const collapsed = drawn === drawnBaseline;
+  const bracket = bracketPath(CENTER, BRACKET_RADIUS, baselineAngle, valueAngle);
   return {
     drawnValue: drawn,
     drawnBaseline: drawnBaseline,
@@ -369,11 +551,14 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
     positiveRing: ringArcPath(CENTER, RING_INNER, RING_OUTER, zero, QUARTER_TURN),
     negativeRing: ringArcPath(CENTER, RING_INNER, RING_OUTER, -QUARTER_TURN, zero),
     wedge: wedgePath(CENTER, WEDGE_RADIUS, zero, baselineAngle),
-    bracket: bracketPath(CENTER, BRACKET_RADIUS, baselineAngle, valueAngle),
+    bracket,
     zeroLine: { x2: zoneEnd.x, y2: zoneEnd.y },
     baselineTip: needleEndpoint(CENTER, NEEDLE_RADIUS, input.domain, input.baseline),
     valueTip: needleEndpoint(CENTER, NEEDLE_RADIUS, input.domain, input.value),
-    labels: ids,
-    rows: labelRows(ids, { zero, baseline: baselineAngle, value: valueAngle }),
+    callouts: placeCallouts(
+      { zero, baseline: baselineAngle, value: valueAngle },
+      collapsed,
+      bracket !== "",
+    ),
   };
 };

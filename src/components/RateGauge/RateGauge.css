@@ -1,4 +1,4 @@
-/* RateGauge — Atomic (Depth 1). Owns this file, imports no component.
+/* RateGauge — Composite (Depth 2). Owns this file; composes Text + Tooltip.
 
    The host carries the meter role and the announcement; the <svg> inside it is
    the canvas and is aria-hidden. No box-model geometry here — the SVG
@@ -15,6 +15,8 @@
   width: 100%;
   height: auto;
   overflow: visible;
+  /* The floor every callout inherits from, before its row's tone applies. */
+  color: var(--sui-text-secondary);
 }
 
 /* ---- The two zones ----
@@ -60,6 +62,11 @@
 
 /* ---- The needles ---- */
 
+/* The cap is an ARC concentric with the ring, so it must not fill. */
+.sui-rate-gauge__needle-cap {
+  fill: none;
+}
+
 .sui-rate-gauge__needle {
   stroke-width: 2;
   stroke-linecap: round;
@@ -100,32 +107,107 @@
   stroke-linecap: round;
 }
 
-/* ---- The label stack ---- */
+/* ---- The HUD callouts ---- */
 
+/* The leader: one hairline from the terminal on the dial to the label column.
+   1px at the gauge's own scale, so it reads as an instrument's annotation
+   rather than as another mark on the dial. */
 .sui-rate-gauge__leader {
   fill: none;
   stroke: var(--sui-text-muted);
   stroke-width: 0.75;
+  stroke-linejoin: round;
+}
+
+/* The terminal dot, and the tick where the run meets the column. Both take the
+   row's own tone, so a callout is one object from the dial to its last letter. */
+.sui-rate-gauge__terminal,
+.sui-rate-gauge__column-tick {
+  fill: var(--sui-text-secondary);
+  stroke: var(--sui-text-secondary);
+  stroke-width: 1;
+}
+
+/* The baseline's terminal is an OPEN ring, not a filled dot — the same
+   secondary/reference distinction its dashed needle already makes. */
+.sui-rate-gauge__row--baseline .sui-rate-gauge__terminal {
+  fill: none;
 }
 
 .sui-rate-gauge__label {
   fill: var(--sui-text-secondary);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* The delta is the figure the card exists to report, so it takes the active
-   tone and the weight; the two names stay quiet beside it. */
+/* The box a <foreignObject> label lives in.
+
+   It sets NO colour of its own on purpose. `color` inherits across the
+   foreignObject boundary from the row's <g>, and a declaration here would win
+   over that inheritance however specific the row's rule was — which is exactly
+   what kept the value's name white while the rest of its callout was toned. */
+.sui-rate-gauge__label-box {
+  line-height: 14px;
+}
+
+/* The row carrying the current value takes the active tone throughout — dot,
+   tick, leader end and words — because it is the reading. */
+.sui-rate-gauge--positive .sui-rate-gauge__row--value,
+.sui-rate-gauge--positive .sui-rate-gauge__row--valueAndBaseline,
+.sui-rate-gauge--positive .sui-rate-gauge__row--delta {
+  color: var(--sui-success);
+}
+
+.sui-rate-gauge--negative .sui-rate-gauge__row--value,
+.sui-rate-gauge--negative .sui-rate-gauge__row--valueAndBaseline,
+.sui-rate-gauge--negative .sui-rate-gauge__row--delta {
+  color: var(--sui-danger);
+}
+
+.sui-rate-gauge--positive .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
+.sui-rate-gauge--positive .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
+.sui-rate-gauge--positive .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
+.sui-rate-gauge--positive .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
 .sui-rate-gauge--positive .sui-rate-gauge__row--delta .sui-rate-gauge__label {
   fill: var(--sui-success);
-  font-weight: 600;
+  stroke: var(--sui-success);
 }
 
+.sui-rate-gauge--negative .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
+.sui-rate-gauge--negative .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
+.sui-rate-gauge--negative .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
+.sui-rate-gauge--negative .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
 .sui-rate-gauge--negative .sui-rate-gauge__row--delta .sui-rate-gauge__label {
   fill: var(--sui-danger);
-  font-weight: 600;
+  stroke: var(--sui-danger);
 }
 
-.sui-rate-gauge__row--value .sui-rate-gauge__label {
-  fill: var(--sui-text-primary);
+/* The delta is the figure the card exists to report, so it carries the weight
+   as well as the tone; the two names stay quiet beside it. */
+.sui-rate-gauge__row--delta .sui-rate-gauge__label {
+  font-weight: 700;
+}
+
+/* "Baseline" is the reference, so it stays muted whatever the active tone. */
+.sui-rate-gauge__row--baseline .sui-rate-gauge__label,
+.sui-rate-gauge__row--baseline .sui-rate-gauge__terminal,
+.sui-rate-gauge__row--baseline .sui-rate-gauge__column-tick {
+  fill: var(--sui-text-muted);
+  stroke: var(--sui-text-muted);
+}
+
+/* The Tooltip's trigger is a bare span here: it must not paint a button's
+   affordances over a chart annotation. The full text is reachable on hover,
+   and the meter's own aria-valuetext already carries it for a screen reader. */
+.sui-rate-gauge__label-box .sui-tooltip__trigger {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
 }

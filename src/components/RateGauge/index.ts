@@ -12,9 +12,9 @@ export { RateGauge } from "./RateGauge";
 export type { RateGaugeProps } from "./RateGauge";
 export {
   angleFor,
+  capArc,
   clampedValue,
   gaugeGeometry,
-  labelOrder,
   zoneOf,
 } from "./geometry";
-export type { Domain, GaugeGeometry, LabelId, Zone } from "./geometry";
+export type { Callout, Domain, GaugeGeometry, LabelId, Zone } from "./geometry";

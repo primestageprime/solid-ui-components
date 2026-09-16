@@ -204,6 +204,33 @@ export const CaptionLabel = createText({
   },
 });
 
+// Uppercase HUD callout caption — the label at the end of a leader line in an
+// SVG instrument (RateGauge). Ellipsizes, because the text is consumer-supplied
+// and non-enumerated (a scenario can be called "Bookkeeping retainer ·
+// Northern"), so the call site pairs it with a Tooltip carrying the full value.
+// The HUD treatment is curried here, not at the call site: a caption in a
+// callout column is one visual decision, and it belongs in one place.
+export const EllipsizedHudCaption = createText({
+  variant: "label",
+  as: "span",
+  // `inherit`, not a token: a callout caption takes the tone of the callout it
+  // belongs to, which its SVG parent already carries. Without this the
+  // `label` variant's own `color` would paint over that inheritance.
+  color: "inherit",
+  style: {
+    "font-size": "11px",
+    "font-weight": "600",
+    "line-height": "1.2",
+    "text-transform": "uppercase",
+    "letter-spacing": "0.5px",
+    display: "block",
+    "min-width": "0",
+    overflow: "hidden",
+    "white-space": "nowrap",
+    "text-overflow": "ellipsis",
+  },
+});
+
 // Uppercase accent caption — settings-style column headings.
 export const AccentCaptionLabel = createText({
   variant: "label",

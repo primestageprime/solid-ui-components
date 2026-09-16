@@ -20,16 +20,19 @@ import { Slider } from "../../../src/components/Slider";
 import { CardSurface } from "../../../src/components/Surface";
 import {
   CaptionLabel,
+  EllipsizedHudCaption,
   MutedBody,
   SectionTitle,
   TextTitle,
 } from "../../../src/components/Text";
+import { Tooltip } from "../../../src/components/Tooltip";
 import {
   ConstrainedBox,
   SpacedStack,
   TightStack,
   WrapRow,
 } from "../../../src/components/Layout";
+import { CompactSurface } from "../../../src/components/Surface";
 
 export const meta = { label: "Rate Gauge" };
 
@@ -70,6 +73,27 @@ const RateCard: Component<{
       <CaptionLabel>{props.note}</CaptionLabel>
     </TightStack>
   </CardSurface>
+);
+
+/**
+ * The callout caption on its own, at the width the gauge's label column gives
+ * it. A scenario name is consumer-supplied and non-enumerated, so it has to
+ * truncate and hand the full string to a Tooltip — this is that variant in
+ * isolation, which is easier to judge than the same text on a curve.
+ */
+const CaptionSpecimen: Component = () => (
+  <CompactSurface>
+    <TightStack>
+      <CaptionLabel>Callout caption — hover for the full name</CaptionLabel>
+      <ConstrainedBox>
+        <Tooltip content="Bookkeeping retainer · Northern" triggerAs="span">
+          <EllipsizedHudCaption>
+            Bookkeeping retainer · Northern
+          </EllipsizedHudCaption>
+        </Tooltip>
+      </ConstrainedBox>
+    </TightStack>
+  </CompactSurface>
 );
 
 /** The scrubbable one. The slider is the consumer's control, not the gauge's. */
@@ -146,6 +170,20 @@ const RateGaugeBench: Component = () => (
           value={-8833}
           label="Foo"
         />
+      </WrapRow>
+
+      <WrapRow>
+        {/* A name long enough to truncate in the callout column, so the
+            ellipsis and its tooltip can be judged in situ rather than only in
+            the specimen below. */}
+        <RateCard
+          title="Rate, right now"
+          note="A long scenario name truncates in the callout column and offers the whole of itself on hover."
+          baseline={5000}
+          value={16500}
+          label="Bookkeeping retainer · Northern"
+        />
+        <CaptionSpecimen />
       </WrapRow>
 
       <ScrubbedCard />

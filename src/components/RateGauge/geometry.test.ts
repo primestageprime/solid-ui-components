@@ -9,11 +9,14 @@
 import { describe, expect, it } from "vitest";
 import {
   angleFor,
+  VIEW_HEIGHT,
   bracketPath,
+  CALLOUT_PITCH,
+  capArc,
   clampedValue,
   gaugeGeometry,
-  labelOrder,
   needleEndpoint,
+  type Point,
   pointAt,
   ringArcPath,
   wedgePath,
@@ -107,11 +110,34 @@ describe("needleEndpoint", () => {
     expect(round(tip.y)).toBe(60);
   });
 
-  it("gives the tip cap a segment perpendicular to the needle", () => {
-    const cap = needleEndpoint({ cx: 0, cy: 0 }, 40, DOMAIN, 0).cap;
-    // At 3 o'clock the needle is horizontal, so its cap is vertical.
-    expect(round(cap.x1)).toBe(round(cap.x2));
-    expect(round(cap.y1)).not.toBe(round(cap.y2));
+  it("caps the tip with an arc concentric with the ring, not a straight line", () => {
+    const tip = needleEndpoint({ cx: 0, cy: 0 }, 40, DOMAIN, 0);
+    // The cap is an arc command at the needle's own radius.
+    expect(tip.capArc).toMatch(/^M .* A 40 40 /);
+  });
+});
+
+describe("capArc", () => {
+  it("spans halfSpan degrees either side of the needle's angle, on the circle", () => {
+    const center = { cx: 0, cy: 0 };
+    const path = capArc(center, 40, 0, 6);
+    const start = pointAt(center, 40, 6);
+    const end = pointAt(center, 40, -6);
+    // Starts at the counter-clockwise end and sweeps clockwise to the other.
+    expect(path).toContain(`M ${start.x} ${start.y}`);
+    expect(path).toContain(`${end.x} ${end.y}`);
+    // Both endpoints are ON the circle of that radius.
+    expect(round(Math.hypot(start.x, start.y))).toBe(40);
+    expect(round(Math.hypot(end.x, end.y))).toBe(40);
+  });
+
+  it("sweeps the short way round, in the screen-clockwise direction", () => {
+    // arcFlags: large-arc 0, sweep 1 (decreasing angle = clockwise on screen).
+    expect(capArc({ cx: 0, cy: 0 }, 40, 0, 6)).toMatch(/A 40 40 0 0 1 /);
+  });
+
+  it("emits nothing for a zero span", () => {
+    expect(capArc({ cx: 0, cy: 0 }, 40, 0, 0)).toBe("");
   });
 });
 
@@ -140,17 +166,135 @@ describe("bracketPath", () => {
   });
 });
 
-describe("labelOrder", () => {
-  it("stacks name, delta, baseline downwards when the value is above", () => {
-    expect(labelOrder(5000, 23000)).toEqual(["value", "delta", "baseline"]);
+/** Do two segments [a,b] and [c,d] properly cross? */
+const segmentsCross = (a: Point, b: Point, c: Point, d: Point): boolean => {
+  const side = (p: Point, q: Point, r: Point) =>
+    (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+  const d1 = side(a, b, c);
+  const d2 = side(a, b, d);
+  const d3 = side(c, d, a);
+  const d4 = side(c, d, b);
+  return d1 * d2 < 0 && d3 * d4 < 0;
+};
+
+/** Every segment of every leader, paired against every other leader's. */
+const anyLeadersCross = (
+  leaders: readonly (readonly Point[])[],
+): boolean => {
+  for (let i = 0; i < leaders.length; i += 1) {
+    for (let j = i + 1; j < leaders.length; j += 1) {
+      for (let m = 0; m + 1 < leaders[i].length; m += 1) {
+        for (let n = 0; n + 1 < leaders[j].length; n += 1) {
+          const crossed = segmentsCross(
+            leaders[i][m],
+            leaders[i][m + 1],
+            leaders[j][n],
+            leaders[j][n + 1],
+          );
+          if (crossed) return true;
+        }
+      }
+    }
+  }
+  return false;
+};
+
+describe("callout placement", () => {
+  const place = (baseline: number, value: number) =>
+    gaugeGeometry({ domain: DOMAIN, baseline, value }).callouts;
+
+  it("orders the rows by their anchors, top to bottom", () => {
+    expect(place(5000, 23000).map((c) => c.id)).toEqual([
+      "value",
+      "delta",
+      "baseline",
+    ]);
+    expect(place(5000, -8833).map((c) => c.id)).toEqual([
+      "baseline",
+      "delta",
+      "value",
+    ]);
   });
 
-  it("stacks baseline, delta, name downwards when the value is below", () => {
-    expect(labelOrder(5000, -8833)).toEqual(["baseline", "delta", "value"]);
+  it("keeps every pair of rows at least one pitch apart", () => {
+    // Needles a whisker apart: the anchors nearly coincide, the rows must not.
+    const rows = place(5000, 5400);
+    for (let i = 1; i < rows.length; i += 1) {
+      expect(rows[i].y - rows[i - 1].y).toBeGreaterThanOrEqual(
+        CALLOUT_PITCH - 0.001,
+      );
+    }
   });
 
-  it("drops the delta row when the value sits on the baseline", () => {
-    expect(labelOrder(5000, 5000)).toEqual(["value", "baseline"]);
+  it("never lets two leaders cross, however close the needles are", () => {
+    const situations: readonly (readonly [number, number])[] = [
+      [5000, 23000],
+      [5000, -8833],
+      [5000, 5400],
+      [5000, 4600],
+      [5000, 30000],
+      [5000, -30000],
+      [0, 12000],
+      [-20000, 25000],
+    ];
+    for (const [baseline, value] of situations) {
+      const leaders = place(baseline, value).map((c) => c.points);
+      expect(anyLeadersCross(leaders)).toBe(false);
+    }
+  });
+
+  it("stays centred on its anchors — the mean displacement is ~0", () => {
+    const rows = place(5000, 23000);
+    const displacement = rows.reduce((sum, c) => sum + (c.y - c.naturalY), 0);
+    expect(Math.abs(displacement / rows.length)).toBeLessThan(0.001);
+  });
+
+  it("keeps every row inside the viewBox even when the anchors are extreme", () => {
+    for (const rows of [place(5000, 30000), place(5000, -30000)]) {
+      for (const row of rows) {
+        expect(row.y).toBeGreaterThan(0);
+        expect(row.y).toBeLessThan(VIEW_HEIGHT);
+      }
+    }
+  });
+
+  // The crowding relief this replaced (lengthening one stub when two anchors
+  // nearly coincide) separated the elbows but let a long stub cut across a
+  // neighbour's leader. A common turn circle separates them by construction:
+  // every leader stops being radial at the same radius, so the turn points
+  // keep the anchors' angular order however close the needles get.
+  it("turns every leader on ONE circle, so the stub varies with the anchor", () => {
+    const rows = place(5000, 5400);
+    const turnRadii = rows.map((row) => {
+      const turn = row.points[1];
+      return Math.round(Math.hypot(turn.x - 66, turn.y - 95) * 1000) / 1000;
+    });
+    expect(new Set(turnRadii).size).toBe(1);
+    // The bracket's anchor is further out than the needle tips, so its stub is
+    // the short one — the lengths differ because the anchors do.
+    const delta = rows.find((row) => row.id === "delta");
+    const value = rows.find((row) => row.id === "value");
+    expect(delta?.stub).toBeLessThan(value?.stub ?? 0);
+  });
+
+  it("keeps the turn points in the anchors' own angular order", () => {
+    const rows = place(5000, 23000);
+    for (let i = 1; i < rows.length; i += 1) {
+      expect(rows[i].angle).toBeLessThan(rows[i - 1].angle);
+    }
+  });
+
+  it("collapses to ONE row naming both when the value sits on the baseline", () => {
+    const rows = place(5000, 5000);
+    expect(rows.map((c) => c.id)).toEqual(["valueAndBaseline"]);
+  });
+
+  it("runs every leader out to the same label column", () => {
+    for (const row of place(5000, 23000)) {
+      expect(row.labelX).toBe(place(5000, 23000)[0].labelX);
+      const last = row.points[row.points.length - 1];
+      expect(last.y).toBe(row.y);
+    }
   });
 });
 
@@ -178,7 +322,8 @@ describe("gaugeGeometry — the printed table", () => {
         zeroAngle: round(g.zeroAngle),
         zone: g.zone,
         delta: g.delta,
-        labels: g.labels.join(" > "),
+        labels: g.callouts.map((c) => `${c.id}@${round(c.y)}`).join(" > "),
+        stubs: g.callouts.map((c) => round(c.stub)).join(","),
       };
     });
     // eslint-disable-next-line no-console
@@ -191,7 +336,11 @@ describe("gaugeGeometry — the printed table", () => {
     expect(above.zone).toBe("positive");
     expect(above.delta).toBe(18000);
     expect(above.valueAngle).toBeGreaterThan(above.baselineAngle);
-    expect(above.labels).toEqual(["value", "delta", "baseline"]);
+    expect(above.callouts.map((c) => c.id)).toEqual([
+      "value",
+      "delta",
+      "baseline",
+    ]);
     expect(above.bracket).not.toBe("");
     expect(above.wedge).not.toBe("");
 
@@ -199,7 +348,11 @@ describe("gaugeGeometry — the printed table", () => {
     expect(below.zone).toBe("negative");
     expect(below.delta).toBe(-13833);
     expect(below.valueAngle).toBeLessThan(below.baselineAngle);
-    expect(below.labels).toEqual(["baseline", "delta", "value"]);
+    expect(below.callouts.map((c) => c.id)).toEqual([
+      "baseline",
+      "delta",
+      "value",
+    ]);
   });
 
   it("reports the delta against the value the gauge DREW, so a clamp cannot lie", () => {
@@ -216,7 +369,7 @@ describe("gaugeGeometry — the printed table", () => {
     const flat = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 5000 });
     expect(flat.delta).toBe(0);
     expect(flat.bracket).toBe("");
-    expect(flat.labels).toEqual(["value", "baseline"]);
+    expect(flat.callouts.map((c) => c.id)).toEqual(["valueAndBaseline"]);
     expect(JSON.stringify(flat)).not.toMatch(/null|NaN/);
   });
 
