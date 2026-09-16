@@ -584,7 +584,14 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
           each dial's node and updates only what it draws. */}
       <Index each={visible()}>
         {(entity) => {
-          const dial = (): DialGeometry => dialGeometry(domain(), entity());
+          // ONE height feeds everything: the viewBox, the track path, AND
+          // every value→y mapping behind the band, the arrows, the change
+          // line and the delta label. Omitting it here left those five at the
+          // 260px default while the track and the viewBox were at the
+          // measured height, so the bands and arrows bunched into the top
+          // third of a tall dial and the pointer disagreed with all of them.
+          const dial = (): DialGeometry =>
+            dialGeometry(domain(), entity(), dialHeight());
 
           // Kobalte models every slider as multi-thumb. This dial is
           // single-thumb by contract, so the array is an implementation detail
@@ -627,9 +634,15 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
             // the real height with NO animation frame in between. That also
             // makes the dial correct in a hidden tab, where the browser
             // suspends rAF and `observeSize`'s deferred delivery never runs.
-            onMount(() =>
-              setMeasuredDialHeight(el.getBoundingClientRect().height),
-            );
+            onMount(() => {
+              const measured = el.getBoundingClientRect().height;
+              // A ZERO height is no information, not a measurement — the same
+              // rule the signal itself uses. Writing it would CLOBBER a real
+              // size the observer had already delivered, which is exactly what
+              // happens under jsdom, where nothing lays out and every rect is
+              // zero.
+              if (measured > 0) setMeasuredDialHeight(measured);
+            });
             onCleanup(
               observeSize(el, (size) => setMeasuredDialHeight(size.height)),
             );

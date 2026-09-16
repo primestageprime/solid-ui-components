@@ -33,8 +33,10 @@ import {
   ARROW_SLOT,
   DIAL_SLOT,
   MIN_DIAL_HEIGHT,
+  TRACK_TOP,
   VIEW_HEIGHT,
   type Entity,
+  trackBottomOf,
 } from "./geometry";
 
 // Kobalte's Slider measures its track through ResizeObserver; jsdom lacks it.
@@ -1120,6 +1122,98 @@ describe("MutationSliders", () => {
       expect(container.querySelectorAll("button")).toHaveLength(1);
       setValue(null);
       expect(container.querySelectorAll("button")).toHaveLength(1);
+    });
+  });
+
+  describe("ONE height feeds the drawing, the pointer and the marks", () => {
+    // The bug this exists to prevent, reported by Peter twice: the track
+    // lines spanned the full card while every band, arrow and change line sat
+    // in the TOP THIRD, because `dialGeometry` was called without the
+    // measured height and quietly used the 260px default. The viewBox and the
+    // track path had it; the value→y mappings did not. Everything below asks
+    // the same question — is this mark placed at the MEASURED scale?
+    const TALL = 750;
+    const BAND: readonly [number, number] = [70_000, 110_000];
+    const SOLO: readonly Entity[] = [
+      { id: "ana", label: "Ana", old: 70_000, value: 110_000, range: BAND },
+    ];
+
+    const tall = async () => {
+      const view = render(() => (
+        <MutationSliders entities={SOLO} onChange={() => {}} />
+      ));
+      const dial = view.container.querySelector(
+        ".sui-mutation-sliders__dial",
+      ) as HTMLElement;
+      await sizer.resize(dial, { width: 88, height: TALL });
+      return view;
+    };
+
+    /** Every `x y` pair in a path attribute. */
+    const pointsOf = (d: string) =>
+      map(
+        (p: RegExpMatchArray) => ({ x: Number(p[1]), y: Number(p[2]) }),
+        [...d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)],
+      );
+
+    it("puts the FUTURE arrow at the track top for the band's max", async () => {
+      // value === range.max, so its arrow must sit on the track's top inset —
+      // not at 260-scale, which would be roughly a third of the way down.
+      const { container } = await tall();
+      const arrow = container.querySelector(
+        ".sui-mutation-sliders__arrow--future",
+      ) as SVGPathElement;
+      const ys = map((p) => p.y, pointsOf(arrow.getAttribute("d") as string));
+      expect(Math.min(...ys)).toBeLessThanOrEqual(TRACK_TOP);
+      expect(Math.max(...ys)).toBeGreaterThanOrEqual(TRACK_TOP);
+    });
+
+    it("puts the PRIOR arrow at the track bottom for the band's min", async () => {
+      const { container } = await tall();
+      const arrow = container.querySelector(
+        ".sui-mutation-sliders__arrow--prior",
+      ) as SVGPathElement;
+      const ys = map((p) => p.y, pointsOf(arrow.getAttribute("d") as string));
+      const bottom = trackBottomOf(TALL);
+      expect(Math.min(...ys)).toBeLessThanOrEqual(bottom);
+      expect(Math.max(...ys)).toBeGreaterThanOrEqual(bottom);
+      // And emphatically NOT where the 260px default would have put it.
+      expect(bottom).toBeGreaterThan(VIEW_HEIGHT);
+    });
+
+    it("spans the BAND box across the whole track at the measured height", async () => {
+      const { container } = await tall();
+      const band = container.querySelector(
+        ".sui-mutation-sliders__band",
+      ) as SVGRectElement;
+      // The band IS the whole domain here, so it must run the whole track.
+      expect(Number(band.getAttribute("y"))).toBe(TRACK_TOP);
+      expect(Number(band.getAttribute("height"))).toBe(
+        trackBottomOf(TALL) - TRACK_TOP,
+      );
+    });
+
+    it("runs the CHANGE LINE the whole track too, not a third of it", async () => {
+      const { container } = await tall();
+      const line = container.querySelector(
+        ".sui-mutation-sliders__change",
+      ) as SVGRectElement;
+      expect(Number(line.getAttribute("height"))).toBe(
+        trackBottomOf(TALL) - TRACK_TOP,
+      );
+    });
+
+    it("keeps the drawn track and the pointer's track the same extent", async () => {
+      // jsdom cannot lay out, so the CSS side is pinned in geometry.test.ts.
+      // What is checked here is that the DRAWING uses the measured height,
+      // which is the half that broke.
+      const { container } = await tall();
+      const d = container
+        .querySelector(".sui-mutation-sliders__track-line")
+        ?.getAttribute("d") as string;
+      const ys = map((p) => p.y, pointsOf(d));
+      expect(Math.min(...ys)).toBe(TRACK_TOP);
+      expect(Math.max(...ys)).toBe(trackBottomOf(TALL));
     });
   });
 
