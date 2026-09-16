@@ -38,7 +38,6 @@ import { createSignal, onMount, type Component } from "solid-js";
 import {
   filter,
   find,
-  findLast,
   flatMap,
   join,
   map,
@@ -46,6 +45,26 @@ import {
   sortBy,
   sum,
 } from "../../../src/fn";
+import {
+  EMPTY_HIRE,
+  type HireDraft,
+  type Person,
+  ROLES,
+  type Role,
+  canHire,
+  hire,
+  orderedMutations,
+  payAt,
+  payBefore,
+  payDomainOf,
+  payFrom,
+  peopleOnRole,
+  roleForPerson,
+  roleOf,
+  roleOptionLabel,
+  withChange,
+  withoutChange,
+} from "./scenario-board-people";
 
 import { CashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
@@ -77,16 +96,21 @@ import { RateGauge } from "../../../src/components/RateGauge";
 import { SegmentedControl } from "../../../src/components/SegmentedControl";
 import type { SegmentOption } from "../../../src/components/SegmentedControl";
 
-import { GhostButton } from "../../../src/components/Button";
+import { GhostButton, PrimaryButton } from "../../../src/components/Button";
+import { ThemedInput } from "../../../src/components/Inputs";
+import { Modal } from "../../../src/components/Modal";
+import { Select } from "../../../src/components/Select";
+import type { SelectOption } from "../../../src/components/Select";
 import {
+  EndWrapRow,
   GrowCenterColumn,
   GrowFillBox,
+  NarrowStack,
   HalfFillColumn,
   FillWrapRow,
   MajorFillColumn,
   MinorFillColumn,
   SpreadRow,
-  TightStack,
   ViewportColumn,
   MajorPaneBox,
 } from "../../../src/components/Layout";
@@ -123,116 +147,68 @@ const SEED_MUTATIONS: readonly Mutation[] = [
 ];
 
 /**
- * The three ROLE BANDS. A band is a range of pay a role permits; it is the
- * shaded box on each dial and it is the clamp on both amounts.
+ * The people. Everyone holds a ROLE, and the role's band is the shaded box on
+ * their dial and the clamp on both their amounts — see `scenario-board-people`
+ * for the roles themselves, the pay-history walk and the hire.
  *
- * The bands do not OVERLAP, and that is a rendering constraint rather than a
- * domain truth. `Level.value` is a pay figure and the board draws all three
- * bands on ONE timeline, so two bands sharing a pay would put two rails at the
- * same y and overdraw. The reference bench dodges this by drawing one chart per
- * track; the sketch gives the board a single chart, so the fixture keeps the
- * bands in disjoint strata instead. A real consumer with overlapping bands
- * needs either a chart per band or a level key that is not the bare pay.
+ * The three anonymous bands A/B/C this fixture used to carry are gone: they
+ * mapped one-for-one onto roles the moment Peter asked the `+` for a role
+ * picker, and A→Support, B→Designer, C→Manager keeps every pay figure below
+ * inside its new band, so no amount had to move. The roles OVERLAP where the
+ * bands could not; the header of `scenario-board-people` states exactly what
+ * that costs and why this fixture does not pay it yet.
  */
-interface Band {
-  readonly id: BandId;
-  readonly label: string;
-  readonly range: readonly [number, number];
-}
-
-type BandId = "A" | "B" | "C";
-
-const BANDS: readonly Band[] = [
-  { id: "A", label: "Junior", range: [40_000, 60_000] },
-  { id: "B", label: "Mid", range: [55_000, 80_000] },
-  { id: "C", label: "Senior", range: [70_000, 110_000] },
-];
-
-/**
- * A person: a dial's worth of data plus the two things the dial does not carry
- * — which band they are in, and which mutation they move at.
- *
- * `old: null` is a HIRE (no prior pay) and `value: null` is a DEPARTURE (no
- * new pay); both come straight from `Entity`, so the dials and the rails read
- * the same absence the same way.
- *
- * `range` is OMITTED from the inherited surface on purpose. A person has a
- * BAND; the range is what `entitiesOf` derives from that band when it builds
- * the dial. Carrying both would let a fixture row state a range that disagrees
- * with its own band — exactly the duplication the derivation step exists to
- * prevent — so the type refuses to represent it. Omitting it is also what
- * keeps this fixture honest when `Entity.range` becomes REQUIRED in phase 3:
- * the requirement lands on the dials, which always have one, rather than on
- * six literals that would have to repeat their band's numbers to satisfy it.
- */
-interface Person {
-  readonly id: string;
-  readonly label: string;
-  readonly band: BandId;
-  /** Pay before the FIRST mutation. `null` = not on the payroll yet. */
-  readonly base: number | null;
-  /**
-   * What CHANGED, keyed by mutation id. An ABSENT key means this person did
-   * not move at that mutation — not that they were paid nothing.
-   *
-   * That absence is the whole reason the history is a map rather than a list
-   * of points: adding a new mutation needs NO change to anybody's history,
-   * because "unchanged at the new date" is what an absent key already says.
-   * Peter asked for a `historyWithMutation(person, at)` and the honest answer
-   * is that this model makes it the identity function, so there is none.
-   *
-   * A `null` VALUE is a termination at that mutation.
-   */
-  readonly changes: Readonly<Record<string, number | null>>;
-}
-
 const PEOPLE: readonly Person[] = [
   {
     id: "peter",
     label: "Peter",
-    band: "A",
+    roleId: "support",
     base: 46_000,
     changes: { spring: 52_000 },
   },
   {
     id: "joe",
     label: "Joe",
-    band: "A",
+    roleId: "support",
     base: 46_000,
     changes: { spring: null },
   },
   {
     id: "elaina",
     label: "Elaina",
-    band: "B",
+    roleId: "designer",
     base: 62_000,
     changes: { spring: 68_000 },
   },
   {
     id: "reilly",
     label: "Reilly",
-    band: "B",
+    roleId: "designer",
     base: 62_000,
     changes: { autumn: 68_000 },
   },
   {
     id: "adlai",
     label: "Adlai",
-    band: "C",
+    roleId: "manager",
     base: 90_000,
     changes: { summer: 95_000 },
   },
   {
     id: "flynn",
     label: "Flynn",
-    band: "C",
+    roleId: "manager",
     base: 90_000,
     changes: { autumn: 104_000 },
   },
 ];
 
-/** The dial domain, in $/yr. Spans every band, so one scale serves all six. */
-const PAY_DOMAIN: readonly [number, number] = [40_000, 110_000];
+/**
+ * The dial domain, in $/yr. DERIVED from every role's band — the lowest floor
+ * to the highest ceiling — so a hire into a role nobody holds yet still draws
+ * its whole band on a track that did not move to accommodate it.
+ */
+const PAY_DOMAIN: readonly [number, number] = payDomainOf();
 
 /**
  * The chart fixture: thirteen months of net monthly flow in dollars, opening
@@ -337,91 +313,28 @@ export const segmentOptionsOf = (
     orderedMutations(mutations),
   );
 
-/** Mutations in time order. Every walk below depends on this ordering. */
-export const orderedMutations = (mutations: readonly Mutation[]): Mutation[] =>
-  sortBy((mutation: Mutation) => timeOf(mutation.at), mutations);
-
-/** The band a person is in. Their dial's box and their rails' keyspace. */
-const bandOf = (bandId: BandId): Band =>
-  find((band: Band) => band.id === bandId, BANDS) ?? BANDS[0];
-
 /**
  * A level's id. EVERY id the board emits — on a level and on both ends of a
  * transfer — comes through this one function, and that is load-bearing: the
  * chart DROPS a transfer naming a level it does not have rather than drawing it
  * as an open-ended flow, so an id built two ways would make a ribbon vanish in
  * silence instead of failing loudly.
- */
-const levelIdFor = (bandId: BandId, pay: number): string =>
-  `${bandId}-${Math.round(pay)}`;
-
-/**
- * A rail's caption. Deliberately SHORT and enumerated — `A · L2` — because the
- * chart paints it above the rail's left end the way an axis paints a tick, with
- * no ellipsize and no tooltip behind it.
- */
-const payLabel = (bandId: BandId, pay: number): string =>
-  `${bandId} · ${formatMoney(pay)}`;
-
-/** The people in one band, in fixture order. */
-const peopleIn = (people: readonly Person[], bandId: BandId): Person[] =>
-  filter((person: Person) => person.band === bandId, people);
-
-/**
- * What a person is paid from a mutation onward: their change at it if they
- * moved, otherwise whatever they were already on.
- */
-export const payFrom = (
-  person: Person,
-  mutationId: string,
-  mutations: readonly Mutation[],
-): number | null => {
-  const own = person.changes[mutationId];
-  if (own !== undefined) return own;
-  return payBefore(person, mutationId, mutations);
-};
-
-/**
- * What a person was paid JUST BEFORE a mutation: the last change they made at
- * any earlier mutation, or their base if they made none.
  *
- * This is the `old` the dial draws its fixed tick at, which is why it walks the
- * mutations in time order rather than reading one key — a person raised at
- * mutation 1 and untouched at mutation 2 has an `old` of their mutation-1 pay
- * when the reader is editing mutation 2, not their base.
+ * It keys on the ROLE as well as the pay, which is what lets the roles overlap:
+ * two roles whose people sit on the same figure still name two distinct levels,
+ * so no ribbon is ever dropped for want of an end. What overlap still costs is
+ * the DRAWING — see the header of `scenario-board-people`.
  */
-export const payBefore = (
-  person: Person,
-  mutationId: string,
-  mutations: readonly Mutation[],
-): number | null => {
-  let carried = person.base;
-  for (const mutation of orderedMutations(mutations)) {
-    if (mutation.id === mutationId) return carried;
-    const own = person.changes[mutation.id];
-    if (own !== undefined) carried = own;
-  }
-  return carried;
-};
+const levelIdFor = (roleId: string, pay: number): string =>
+  `${roleId}-${Math.round(pay)}`;
 
 /**
- * What a person was paid at a MOMENT in time, or `null` when they are not on
- * the payroll then — before a hire, after a termination. `null` is absence, not
- * zero: somebody on no pay would still be a head on a rail.
+ * A rail's caption. Deliberately SHORT — `Designer · $62k` — because the chart
+ * paints it above the rail's left end the way an axis paints a tick, with no
+ * ellipsize and no tooltip behind it.
  */
-const payAt = (
-  person: Person,
-  time: number,
-  mutations: readonly Mutation[],
-): number | null => {
-  let carried = person.base;
-  for (const mutation of orderedMutations(mutations)) {
-    if (timeOf(mutation.at) > time) break;
-    const own = person.changes[mutation.id];
-    if (own !== undefined) carried = own;
-  }
-  return carried;
-};
+const payLabel = (roleId: string, pay: number): string =>
+  `${roleOf(roleId)?.label ?? roleId} · ${formatMoney(pay)}`;
 
 /** Every moment the board can change at: the domain's left edge and each flag. */
 const momentsOf = (mutations: readonly Mutation[]): number[] =>
@@ -433,14 +346,14 @@ const momentsOf = (mutations: readonly Mutation[]): number[] =>
     ],
   );
 
-/** The distinct pay figures a band's people ever hold, ascending. */
+/** The distinct pay figures a role's people ever hold, ascending. */
 const paysIn = (
   people: readonly Person[],
-  bandId: BandId,
+  roleId: string,
   mutations: readonly Mutation[],
 ): number[] => {
   const pays = new Set<number>();
-  for (const person of peopleIn(people, bandId)) {
+  for (const person of peopleOnRole(people, roleId)) {
     if (person.base !== null) pays.add(person.base);
     for (const mutation of mutations) {
       const own = person.changes[mutation.id];
@@ -459,11 +372,11 @@ const paysIn = (
  */
 export const countPointsFor = (
   people: readonly Person[],
-  bandId: BandId,
+  roleId: string,
   pay: number,
   mutations: readonly Mutation[],
 ): CountPoint[] => {
-  const members = peopleIn(people, bandId);
+  const members = peopleOnRole(people, roleId);
   const points: CountPoint[] = [];
   let previous = 0;
   for (const time of momentsOf(mutations)) {
@@ -478,23 +391,23 @@ export const countPointsFor = (
   return points;
 };
 
-/** Every band's rails. One level per pay figure the band's people touch. */
+/** Every role's rails. One level per pay figure the role's people touch. */
 export const levelsOf = (
   people: readonly Person[],
   mutations: readonly Mutation[],
 ): Level[] =>
   flatMap(
-    (band: Band) =>
+    (role: Role) =>
       map(
         (pay: number) => ({
-          id: levelIdFor(band.id, pay),
-          label: payLabel(band.id, pay),
+          id: levelIdFor(role.id, pay),
+          label: payLabel(role.id, pay),
           value: pay,
-          points: countPointsFor(people, band.id, pay, mutations),
+          points: countPointsFor(people, role.id, pay, mutations),
         }),
-        paysIn(people, band.id, mutations),
+        paysIn(people, role.id, mutations),
       ),
-    BANDS,
+    ROLES,
   );
 
 /**
@@ -516,9 +429,9 @@ export const transfersOf = (
       if (own === undefined) continue;
       const was = payBefore(person, mutation.id, mutations);
       if (was === own) continue;
-      const band = person.band;
-      const from = was === null ? undefined : levelIdFor(band, was);
-      const to = own === null ? undefined : levelIdFor(band, own);
+      const role = person.roleId;
+      const from = was === null ? undefined : levelIdFor(role, was);
+      const to = own === null ? undefined : levelIdFor(role, own);
       if (from === to) continue;
       const at = new Date(timeOf(mutation.at));
       const key = `${at.getTime()}|${from ?? "out"}|${to ?? "out"}`;
@@ -603,7 +516,7 @@ export const entitiesForMutation = (
       label: person.label,
       old: payBefore(person, mutationId, mutations),
       value: payFrom(person, mutationId, mutations),
-      range: bandOf(person.band).range,
+      range: roleForPerson(person).range,
     })),
     // Anyone with NO pay either side of this mutation is not on the payroll
     // then — terminated at an earlier one, or not hired until a later one. See
@@ -684,11 +597,11 @@ export const fanAt = (index: number, nowIndex: number): number => {
  * extremes, so dragging a dial moves the LINE and never the axis under it.
  */
 const BAND_FLOORS: readonly number[] = map(
-  (person: Person) => bandOf(person.band).range[0],
+  (person: Person) => roleForPerson(person).range[0],
   PEOPLE,
 );
 const COMMITTED_PAY: readonly number[] = map(
-  (person: Person) => person.base ?? bandOf(person.band).range[0],
+  (person: Person) => person.base ?? roleForPerson(person).range[0],
   PEOPLE,
 );
 export const PINNED_CEILING = pinnedCeiling(
@@ -735,42 +648,6 @@ export const formatMoney = (amount: number): string => {
 /** The consumer's money formatter — a real minus sign, as the gauge bench uses. */
 const perYear = (delta: number): string =>
   `${delta < 0 ? "−" : "+"}$${Math.abs(Math.round(delta)).toLocaleString("en-US")}/yr`;
-
-/**
- * Set one person's pay AT ONE MUTATION, leaving every other person and every
- * other mutation untouched. A drag edits the selected mutation only, which is
- * what makes the as-of control a position selector rather than a filter.
- */
-export const withChange = (
-  people: readonly Person[],
-  id: string,
-  mutationId: string,
-  value: number | null,
-): Person[] =>
-  map(
-    (person: Person) =>
-      person.id === id
-        ? { ...person, changes: { ...person.changes, [mutationId]: value } }
-        : person,
-    people,
-  );
-
-/**
- * Undo a person's change at one mutation — the ↺ Restore the dial offers a
- * terminated row. DELETING the key is the honest inverse of setting it: it
- * returns them to "unchanged at this mutation", so they carry whatever the
- * previous mutation left them on rather than a figure this function invented.
- */
-export const withoutChange = (
-  people: readonly Person[],
-  id: string,
-  mutationId: string,
-): Person[] =>
-  map((person: Person) => {
-    if (person.id !== id) return person;
-    const { [mutationId]: _dropped, ...rest } = person.changes;
-    return { ...person, changes: rest };
-  }, people);
 
 /** The board, read as tables, with no browser in the room. */
 const printTables = (
@@ -848,6 +725,85 @@ const printTables = (
   /* eslint-enable no-console */
 };
 
+// ── The hire form ────────────────────────────────────────────────────────────
+
+/**
+ * The role picker's options, built ONCE: the roles are a constant, so rebuilding
+ * this list per render would only give `Select` a new array to diff.
+ */
+const ROLE_OPTIONS: SelectOption[] = map(
+  (role: Role) => ({
+    value: role.id,
+    label: roleOptionLabel(role, formatMoney),
+  }),
+  ROLES,
+);
+
+/** The option a draft has picked, or `null` — `Select`'s own empty. */
+const roleOptionOf = (roleId: string | null): SelectOption | null =>
+  roleId === null
+    ? null
+    : (find((option: SelectOption) => option.value === roleId, ROLE_OPTIONS) ??
+      null);
+
+/**
+ * The body of the Hire modal.
+ *
+ * It is a COMPONENT rather than a block of JSX inside the board because of the
+ * focus: `Modal` has no initial-focus mechanism of its own, its children are
+ * created lazily inside its `Show`, and so an `onMount` in here fires on every
+ * OPEN — which is exactly when the name field wants the caret. An `onMount` in
+ * the board would have fired once, at page load, while the form did not exist.
+ *
+ * ENTER SUBMITS from the name field, explicitly rather than through a `<form>`.
+ * The confirm button lives in the modal's FOOTER, outside whatever element the
+ * fields sit in, so a form element here would have no submit button in it and
+ * would be relying on the browser's implicit-submission rule — which is
+ * conditional on how many fields block it, and the role picker's own hidden
+ * input is enough to make that a coin toss.
+ */
+const HireForm: Component<{
+  draft: HireDraft;
+  onDraft: (draft: HireDraft) => void;
+  onSubmit: () => void;
+}> = (props) => {
+  let nameField: HTMLInputElement | undefined;
+  onMount(() => nameField?.focus());
+
+  const pickRole = (option: SelectOption | null): void =>
+    props.onDraft({
+      ...props.draft,
+      roleId: option === null ? null : String(option.value),
+    });
+
+  const typeName = (name: string): void =>
+    props.onDraft({ ...props.draft, name });
+
+  return (
+    <NarrowStack>
+      <Select
+        label="Role"
+        placeholder="Pick a role"
+        options={() => ROLE_OPTIONS}
+        value={() => roleOptionOf(props.draft.roleId)}
+        onChange={pickRole}
+      />
+      <ThemedInput
+        ref={nameField}
+        label="Name"
+        placeholder="Who are you hiring?"
+        value={props.draft.name}
+        onInput={(event) => typeName(event.currentTarget.value)}
+        onKeyDown={(event: KeyboardEvent) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          props.onSubmit();
+        }}
+      />
+    </NarrowStack>
+  );
+};
+
 // ── The board ────────────────────────────────────────────────────────────────
 
 const ScenarioBoardBench: Component = () => {
@@ -861,6 +817,11 @@ const ScenarioBoardBench: Component = () => {
   // lit flag and the as-of control's selected segment — the lossy two-signal
   // mapping is gone, because the segments ARE the mutations.
   const [editing, setEditing] = createSignal(SEED_MUTATIONS[1].id);
+  // The hire form: whether it is open, and what it holds. Both are the BOARD'S
+  // — the modal is a view of this draft, so Cancel throws away a signal rather
+  // than reaching into a component to clear it.
+  const [hiring, setHiring] = createSignal(false);
+  const [draft, setDraft] = createSignal<HireDraft>(EMPTY_HIRE);
 
   const dials = () => entitiesForMutation(people(), editing(), mutations());
   const rate = () => rateOf(dials());
@@ -912,18 +873,38 @@ const ScenarioBoardBench: Component = () => {
     setPeople((current) => withoutChange(current, id, editing()));
   };
 
-  /** A HIRE, at the mutation being edited: no base pay, so no prior arrow. */
-  const hire = (): void => {
-    setPeople((current) => [
-      ...current,
-      {
-        id: `hire-${current.length}`,
-        label: `Hire ${current.length - PEOPLE.length + 1}`,
-        band: "C",
-        base: null,
-        changes: { [editing()]: 78_000 },
-      },
-    ]);
+  /**
+   * A HIRE is a FORM now, not a stub (Peter, 2026-09-16: "When I click + on the
+   * Changes, show me a modal form that lets me choose a role … and a text input
+   * for a name"). The `+` opens it; nothing changes until Hire is pressed.
+   *
+   * The draft is RESET on open rather than on close, so a cancelled form cannot
+   * leave a half-typed name waiting inside the next one, and every path out of
+   * the modal — Cancel, Escape, the overlay, the ×— is the same single line.
+   */
+  const openHire = (): void => {
+    setDraft(EMPTY_HIRE);
+    setHiring(true);
+  };
+
+  const closeHire = (): void => {
+    setHiring(false);
+  };
+
+  /**
+   * Confirm. The person is added at the mutation being EDITED, so a hire lands
+   * where the reader is looking — and `hire` is the same pure function the test
+   * asserts, so what the board does and what the test checks cannot drift.
+   *
+   * The guard is not redundant beside the disabled button: Enter in the name
+   * field reaches here too, and a keyboard path that skipped the check would be
+   * a second, weaker rule.
+   */
+  const confirmHire = (): void => {
+    const current = draft();
+    if (!canHire(current)) return;
+    setPeople((people) => hire(people, current, editing()).people);
+    setHiring(false);
   };
 
   /**
@@ -1036,7 +1017,7 @@ const ScenarioBoardBench: Component = () => {
                     onChange={setPay}
                     onRemove={terminate}
                     onRestore={restore}
-                    onAdd={hire}
+                    onAdd={openHire}
                     format={formatMoney}
                   />
                 </GrowFillBox>
@@ -1072,6 +1053,28 @@ const ScenarioBoardBench: Component = () => {
           </FillWrapRow>
         </MajorFillColumn>
       </ViewportColumn>
+
+      {/* The hire form. Rendered here rather than beside the dials because it
+          PORTALS — where it sits in this tree decides nothing about where it
+          draws, and the state it edits is the board's. Escape, the overlay and
+          the × all land on `onClose`, which is the same `closeHire` as Cancel:
+          one way out, and none of them change anything. */}
+      <Modal
+        open={hiring()}
+        onClose={closeHire}
+        title="Hire"
+        subtitle="They join at the change being edited, on their role's floor."
+        footer={
+          <EndWrapRow>
+            <GhostButton onClick={closeHire}>Cancel</GhostButton>
+            <PrimaryButton disabled={!canHire(draft())} onClick={confirmHire}>
+              Hire
+            </PrimaryButton>
+          </EndWrapRow>
+        }
+      >
+        <HireForm draft={draft()} onDraft={setDraft} onSubmit={confirmHire} />
+      </Modal>
     </div>
   );
 };
