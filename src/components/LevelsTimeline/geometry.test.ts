@@ -61,6 +61,7 @@ import {
   monthTicks,
   peakHeadcount,
   perPersonWidth,
+  quarterTicks,
   railRuns,
   railSpans,
   spanBottom,
@@ -203,10 +204,38 @@ describe("flagPositions", () => {
 });
 
 describe("axisTicks", () => {
-  it("keeps a month cadence for a domain short enough to read", () => {
-    const ticks = axisTicks(DOMAIN, (at) => timeOf(at) / 1e12);
-    expect(ticks).toHaveLength(13);
+  it("keeps a month cadence under a year", () => {
+    const short: TimeDomain = [utc("2025-01-01"), utc("2025-07-01")];
+    const ticks = axisTicks(short, (at) => timeOf(at) / 1e12);
+    expect(ticks).toHaveLength(7);
     expect(ticks[0].label).toBe("Jan");
+  });
+
+  it("switches to QUARTERS from one year — month labels stop fitting", () => {
+    // Twelve `Jan`-width labels fit; twelve `2026-Q1`-width ones do not, and
+    // quarters are what a reader of a pay timeline thinks in anyway.
+    const ticks = axisTicks(DOMAIN, (at) => timeOf(at) / 1e12);
+    expect(map((tick) => tick.label, ticks)).toEqual([
+      "2025-Q1",
+      "2025-Q2",
+      "2025-Q3",
+      "2025-Q4",
+      "2026-Q1",
+    ]);
+  });
+
+  it("labels every quarter even in compact chrome — the row is sparse already", () => {
+    const ticks = axisTicks(DOMAIN, (at) => timeOf(at) / 1e12, frameFor(140));
+    expect(filter((tick) => tick.showLabel, ticks)).toHaveLength(ticks.length);
+  });
+
+  it("puts each quarter tick on its own boundary", () => {
+    const x = xScaleFor(DOMAIN);
+    const ticks = axisTicks(DOMAIN, x);
+    expect(ticks[0].x).toBe(x(utc("2025-01-01")));
+    expect(ticks[1].x).toBe(x(utc("2025-04-01")));
+    expect(ticks[2].x).toBe(x(utc("2025-07-01")));
+    expect(ticks[3].x).toBe(x(utc("2025-10-01")));
   });
 
   it("switches to a year cadence rather than printing a grey stripe", () => {
@@ -222,8 +251,11 @@ describe("axisTicks", () => {
     ]);
   });
 
-  it("still exposes the month cadence on its own", () => {
+  it("still exposes each cadence on its own, for a caller that wants one", () => {
+    // There is no consumer-facing cadence option — the span picks it. These
+    // stay reachable because the bench and the tests need to name one.
     expect(monthTicks(DOMAIN, () => PLOT_LEFT)).toHaveLength(13);
+    expect(quarterTicks(DOMAIN, () => PLOT_LEFT)).toHaveLength(5);
   });
 });
 
@@ -1293,17 +1325,18 @@ describe("compact chrome — the board's short cell", () => {
     }
   });
 
-  it("thins the axis labels rather than overlapping them", () => {
+  it("thins MONTH labels rather than overlapping them", () => {
+    // A sub-year domain, so the cadence is months and thinning applies.
+    const short: TimeDomain = [utc("2025-01-01"), utc("2025-09-01")];
     const geometry = levelsRailGeometry({
       levels: BOARD,
       transfers: [],
       mutations: MUTATIONS,
-      domain: DOMAIN,
+      domain: short,
       box: { width: 800, height: 156 },
     });
     const labelled = filter((tick) => tick.showLabel, geometry.ticks);
-    // Every boundary keeps its tick; only every third keeps its label.
-    expect(geometry.ticks).toHaveLength(13);
+    expect(geometry.ticks).toHaveLength(9);
     expect(labelled.length).toBeLessThan(geometry.ticks.length);
     expect(labelled.length).toBeGreaterThan(2);
   });
@@ -1318,7 +1351,8 @@ describe("compact chrome — the board's short cell", () => {
     });
     expect(geometry.frame.compact).toBe(false);
     expect(geometry.frame.plotTop).toBe(PLOT_TOP);
-    expect(filter((tick) => tick.showLabel, geometry.ticks)).toHaveLength(13);
+    // A one-year domain is quarters: Q1..Q4 plus the closing Q1.
+    expect(filter((tick) => tick.showLabel, geometry.ticks)).toHaveLength(5);
   });
 });
 

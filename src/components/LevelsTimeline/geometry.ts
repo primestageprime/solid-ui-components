@@ -1302,11 +1302,45 @@ export const levelsRailGeometry = (input: {
 // ── the axis ─────────────────────────────────────────────────────────────────
 
 /**
- * Longest span, in months, that still gets a tick per month. Past this the
- * axis switches to one tick per YEAR: sixty-one month labels in the width of a
- * card is not an axis, it is a grey stripe.
+ * The axis has three cadences, and the span picks one. Each threshold is the
+ * point at which the previous cadence's LABELS stop fitting, which is a
+ * different question from whether its ticks do.
+ *
+ *   • under a year        — a tick and a label per month.
+ *   • one to three years  — per QUARTER. Twelve `Jan`-width labels fit; twelve
+ *                           `2026-Q1`-width ones do not, and quarters are the
+ *                           cadence a reader of a pay timeline thinks in
+ *                           anyway.
+ *   • over three years    — per year.
  */
-export const MONTHLY_TICK_LIMIT = 18;
+export const QUARTERLY_FROM_MONTHS = 12;
+export const YEARLY_FROM_MONTHS = 36;
+
+/** Quarter boundaries are the Januarys, Aprils, Julys and Octobers. */
+const QUARTER_MONTHS = [0, 3, 6, 9];
+
+/** One tick per quarter boundary, labelled `2026-Q3`. */
+export const quarterTicks = (
+  domain: TimeDomain,
+  xScale: (at: TimeValue) => number,
+): readonly MonthTick[] =>
+  map(
+    (cell: { start: Date }) => ({
+      key: cell.start.toISOString(),
+      label: `${cell.start.getUTCFullYear()}-Q${
+        Math.floor(cell.start.getUTCMonth() / 3) + 1
+      }`,
+      x: xScale(cell.start),
+      // A quarter row is already sparse; thinning it would leave gaps of
+      // nothing, so every quarter keeps its label even in compact chrome.
+      showLabel: true,
+    }),
+    filter(
+      (cell: { start: Date }) =>
+        QUARTER_MONTHS.includes(cell.start.getUTCMonth()),
+      monthlyCells(asDate(domain[0]), asDate(domain[1])),
+    ),
+  );
 
 /** One tick per January in the domain, labelled with the year. */
 export const yearTicks = (
@@ -1336,10 +1370,14 @@ export const axisTicks = (
   domain: TimeDomain,
   xScale: (at: TimeValue) => number,
   frame: Frame = DEFAULT_FRAME,
-): readonly MonthTick[] =>
-  monthlyCells(asDate(domain[0]), asDate(domain[1])).length > MONTHLY_TICK_LIMIT
-    ? yearTicks(domain, xScale)
-    : monthTicks(domain, xScale, frame.labelEvery);
+): readonly MonthTick[] => {
+  // Cells INCLUDE both ends, so a one-year domain is thirteen of them and
+  // twelve months of span. The span is what the cadence is chosen from.
+  const months = monthlyCells(asDate(domain[0]), asDate(domain[1])).length - 1;
+  if (months >= YEARLY_FROM_MONTHS) return yearTicks(domain, xScale);
+  if (months >= QUARTERLY_FROM_MONTHS) return quarterTicks(domain, xScale);
+  return monthTicks(domain, xScale, frame.labelEvery);
+};
 
 // ── hover and pick ───────────────────────────────────────────────────────────
 

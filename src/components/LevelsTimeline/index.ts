@@ -12,7 +12,8 @@
 export { LevelsTimeline } from "./LevelsTimeline";
 export type { LevelsTimelineProps } from "./LevelsTimeline";
 export {
-  MONTHLY_TICK_LIMIT,
+  QUARTERLY_FROM_MONTHS,
+  YEARLY_FROM_MONTHS,
   axisTicks,
   changeTimes,
   droplinePositions,
@@ -50,6 +51,7 @@ export {
   snapToMonth,
   timeAtX,
   perPersonWidth,
+  quarterTicks,
   railRuns,
   taperHalves,
   transitionWidth,

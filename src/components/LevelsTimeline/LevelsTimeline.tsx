@@ -109,12 +109,20 @@ export interface LevelsTimelineProps {
 
 const EMPTY_TRANSFERS: readonly Transfer[] = [];
 
+/**
+ * The graphic's NAME, and it has to stay short: browsers paint an SVG
+ * `<title>` as a native tooltip. Anything longer belongs in `<desc>`.
+ */
+const SVG_TITLE = "Pay levels timeline";
+
 /** The hover readout's own box. Fixed in viewBox units, like all the chrome. */
 const PANEL_PADDING = 5;
 const PANEL_ROW_HEIGHT = 11;
 const PANEL_HEADER_HEIGHT = 15;
 const PANEL_OFFSET = 10;
 const PANEL_MIN_WIDTH = 74;
+/** Clear air between the pay column and the headcount column. */
+const PANEL_COLUMN_GAP = 12;
 /** Enough room for a pay figure plus a headcount, before measurement. */
 
 /** `1 person`, `3 people`. The announcement is prose; it has to read as prose. */
@@ -353,22 +361,48 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   };
 
   /**
-   * Measure the readout before placing it — `placeTooltipX` takes a MEASURED
-   * width, and its own header says measuring is the adapter's job, since the
-   * adapter is the side that owns a DOM node. Re-measured whenever the rows
-   * change, deferred a microtask so the new text is in the DOM first.
+   * The readout's width, from the TEXT ALONE.
    *
-   * `getBBox` is absent in jsdom, so the fallback is the minimum width. That
-   * is correct rather than merely safe: a panel narrower than its content
-   * would be placed slightly wrong, never drawn wrong.
+   * This measured the panel GROUP, which contains the background `<rect>`
+   * whose width IS this value — so every measurement returned the current
+   * width and set it to that plus the padding. The panel grew by ten units on
+   * every pointer move until it ran off the screen. A measurement that
+   * includes the thing being measured is a feedback loop, not a measurement.
+   *
+   * So only the `<text>` nodes are measured, and only their INTRINSIC widths:
+   * `getComputedTextLength` is unaffected by where the text was placed or how
+   * wide the panel is. Width is then a pure function of the rows — the widest
+   * pay figure, plus the widest headcount, plus the gap between the columns —
+   * and placement is a pure function of that width and the anchor.
+   *
+   * `getComputedTextLength` is absent in jsdom, where every row measures zero
+   * and the minimum width stands. That is correct rather than merely safe: a
+   * panel narrower than its content is placed slightly wrong, never drawn
+   * wrong.
    */
+  const widthOfTexts = (selector: string): number => {
+    if (panel === undefined) return 0;
+    const nodes = [...panel.querySelectorAll<SVGTextElement>(selector)];
+    const widths = map(
+      (node: SVGTextElement) => node.getComputedTextLength?.() ?? 0,
+      nodes,
+    );
+    return widths.length === 0 ? 0 : Math.max(...widths);
+  };
+
   const measurePanel = (): void => {
     if (panel === undefined) return;
-    const width = panel.getBBox?.().width ?? 0;
-    setPanelWidth(Math.max(PANEL_MIN_WIDTH, width + PANEL_PADDING * 2));
+    const pay = widthOfTexts(
+      ".sui-levels-timeline__panel-cell:not(.sui-levels-timeline__panel-cell--count)",
+    );
+    const count = widthOfTexts(".sui-levels-timeline__panel-cell--count");
+    const header = widthOfTexts(".sui-levels-timeline__panel-date");
+    const content = Math.max(header, pay + PANEL_COLUMN_GAP + count);
+    setPanelWidth(Math.max(PANEL_MIN_WIDTH, content + PANEL_PADDING * 2));
   };
   createEffect(() => {
-    hover();
+    // Re-measure when the ROWS change — not when the placement does.
+    hover()?.rows;
     queueMicrotask(measurePanel);
   });
 
@@ -400,16 +434,25 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       class="sui-levels-timeline"
       data-selected-mutation={props.selectedMutationId}
     >
-      {/* The announcement lives on the canvas's own <title> rather than on a
-          wrapper with role="img": role="img" would make the whole canvas
-          presentational and take the flags — which are real buttons when
-          selection is wired — out of the accessibility tree with it. A <title>
-          names the graphic and leaves its contents reachable. */}
+      {/* The <title> is the graphic's NAME and must stay short: a browser
+          paints it as a NATIVE tooltip on hover, and the whole announcement
+          was appearing as a paragraph-long OS tooltip over the chart. The
+          announcement lives in <desc> instead — the SVG element for exactly
+          this, read by assistive technology and never painted.
+
+          Neither goes on a wrapper with role="img", which would make the
+          canvas presentational and take the flags — real buttons when
+          selection is wired — out of the accessibility tree with it.
+
+          NOTE: <title> must be the FIRST child of <svg>. A JSX comment here
+          counts as a child and biome's noSvgWithoutTitle stops seeing it,
+          which is why this comment sits outside the element. */}
       <svg
         class="sui-levels-timeline__canvas"
         viewBox={`0 0 ${frame().viewWidth} ${frame().viewHeight}`}
       >
-        <title>{description()}</title>
+        <title>{SVG_TITLE}</title>
+        <desc>{description()}</desc>
         {/* One opacity gradient per OPEN-ended flow — nothing else needs one
             now that the chart is a single colour. The ids are per-INSTANCE
             (createUniqueId) because three charts on one page, which the bench

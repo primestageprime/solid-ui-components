@@ -75,7 +75,7 @@ const renderRails = () =>
 describe("LevelsTimeline — rails", () => {
   it("announces the headcounts and who moved where", () => {
     const { container } = renderRails();
-    const label = container.querySelector("title")?.textContent ?? "";
+    const label = container.querySelector("desc")?.textContent ?? "";
     expect(label).toContain("Headcount by pay level");
     expect(label).toContain("L6: 4 people, ending at 2.");
     expect(label).toContain("2 people moved from L6 to L7 at mutation 1.");
@@ -389,7 +389,7 @@ describe("LevelsTimeline — departures and hires", () => {
 
   it("announces a departure and a hire as what they are", () => {
     const { container } = renderOpen();
-    const label = container.querySelector("title")?.textContent ?? "";
+    const label = container.querySelector("desc")?.textContent ?? "";
     expect(label).toContain("1 person left from L7");
     expect(label).toContain("1 person joined at L8");
   });
@@ -691,20 +691,19 @@ describe("LevelsTimeline — compact chrome in a short box", () => {
     expect(Number(surface?.getAttribute("width"))).toBe(w - 14 * 2);
   });
 
-  it("keeps full chrome, and every axis label, when the box is tall enough", async () => {
+  it("labels the quarters — a one-year domain is Q1..Q4 plus the next Q1", async () => {
     const container = await renderIn({ width: 800, height: 320 });
-    expect(
-      container.querySelectorAll(".sui-levels-timeline__tick-label"),
-    ).toHaveLength(13);
-  });
-
-  it("thins the axis labels in the short box", async () => {
-    const container = await renderIn({ width: 800, height: 156 });
-    const labels = container.querySelectorAll(
-      ".sui-levels-timeline__tick-label",
+    const labels = map(
+      (el: Element) => el.textContent,
+      [...container.querySelectorAll(".sui-levels-timeline__tick-label")],
     );
-    expect(labels.length).toBeGreaterThan(2);
-    expect(labels.length).toBeLessThan(13);
+    expect(labels).toEqual([
+      "2025-Q1",
+      "2025-Q2",
+      "2025-Q3",
+      "2025-Q4",
+      "2026-Q1",
+    ]);
   });
 });
 
@@ -772,10 +771,10 @@ describe("LevelsTimeline — the board's wide short cell", () => {
       height: 260,
     });
     expect([width, height]).toEqual([718, 260]);
-    // Tall enough for full chrome, so every axis label survives.
+    // Tall enough for full chrome, so every quarter label survives.
     expect(
       container.querySelectorAll(".sui-levels-timeline__tick-label"),
-    ).toHaveLength(13);
+    ).toHaveLength(5);
     expect(
       container.querySelectorAll(
         ".sui-levels-timeline__rail-group .sui-levels-timeline__rail",
@@ -1142,5 +1141,139 @@ describe("LevelsTimeline — the first frame must already be right", () => {
     } finally {
       Element.prototype.getBoundingClientRect = originalRect;
     }
+  });
+});
+
+describe("LevelsTimeline — the hover readout must not grow", () => {
+  const withTextMetrics = async (run: () => Promise<void> | void) => {
+    const proto = globalThis.SVGElement?.prototype as unknown as {
+      getComputedTextLength?: () => number;
+    };
+    const original = proto?.getComputedTextLength;
+    // Give every text a width proportional to its content, as a browser would.
+    if (proto !== undefined) {
+      proto.getComputedTextLength = function length(this: Element) {
+        return (this.textContent ?? "").length * 5;
+      };
+    }
+    const originalRect = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function rect(this: Element) {
+      return this.tagName.toLowerCase() === "svg"
+        ? ({ left: 0, top: 0, width: 640, height: 232 } as DOMRect)
+        : ({ left: 0, top: 0, width: 0, height: 0 } as DOMRect);
+    };
+    // A browser's getBBox on the panel GROUP returns the union of its
+    // children, so it includes the background rect whose width is the value
+    // being computed. Without this the feedback loop cannot be reproduced —
+    // jsdom has no getBBox at all, so the buggy code silently measured zero.
+    const originalBBox = (
+      proto as unknown as { getBBox?: () => { width: number } }
+    )?.getBBox;
+    if (proto !== undefined) {
+      (proto as unknown as { getBBox: () => DOMRect }).getBBox =
+        function bbox(this: Element) {
+          const widths = [
+            ...this.querySelectorAll<Element>("rect, text"),
+          ].map((child) =>
+            child.tagName.toLowerCase() === "rect"
+              ? Number(child.getAttribute("width") ?? 0)
+              : (child.textContent ?? "").length * 5,
+          );
+          return {
+            x: 0,
+            y: 0,
+            width: widths.length === 0 ? 0 : Math.max(...widths),
+            height: 0,
+          } as DOMRect;
+        };
+    }
+    try {
+      // Awaited INSIDE the stubbed window: the measurement is deferred a
+      // microtask, and flushing it after the stubs came down was why this
+      // harness could not reproduce the growth it exists to catch.
+      await run();
+    } finally {
+      if (proto !== undefined) {
+        proto.getComputedTextLength = original;
+        (proto as unknown as { getBBox?: unknown }).getBBox = originalBBox;
+      }
+      Element.prototype.getBoundingClientRect = originalRect;
+    }
+  };
+
+  const panelWidthIn = (container: HTMLElement) =>
+    container.querySelector(".sui-levels-timeline__panel-box")
+      ?.getAttribute("width");
+
+  it("holds ONE width across twenty hovers at the same x", async () => {
+    // Peter: "the tooltip widens until it's off the screen". The panel used to
+    // measure its own GROUP, which contains the background rect whose width is
+    // the value being set — so each move added the padding again.
+    let container!: HTMLElement;
+    let first: string | null | undefined;
+    await withTextMetrics(async () => {
+      container = render(() => (
+        <LevelsTimeline
+          levels={LEVELS}
+          transfers={TRANSFERS}
+          mutations={MUTATIONS}
+          domain={DOMAIN}
+          formatValue={(value) => `$${value / 1000}k`}
+        />
+      )).container;
+      const surface = container.querySelector(
+        ".sui-levels-timeline__surface",
+      ) as Element;
+      const hover = async () => {
+        fireEvent.pointerMove(surface, { clientX: 300, clientY: 100 });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      };
+      await hover();
+      first = panelWidthIn(container);
+      for (let move = 0; move < 20; move += 1) await hover();
+      expect(panelWidthIn(container)).toBe(first);
+    });
+  });
+
+  it("keeps the panel inside the plot when hovering near the right edge", async () => {
+    let container!: HTMLElement;
+    await withTextMetrics(async () => {
+      container = render(() => (
+        <LevelsTimeline
+          levels={LEVELS}
+          transfers={TRANSFERS}
+          mutations={MUTATIONS}
+          domain={DOMAIN}
+          formatValue={(value) => `$${value / 1000}k`}
+        />
+      )).container;
+      const surface = container.querySelector(
+        ".sui-levels-timeline__surface",
+      ) as Element;
+      fireEvent.pointerMove(surface, { clientX: 636, clientY: 100 });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    const panel = container.querySelector(".sui-levels-timeline__panel");
+    const transform = panel?.getAttribute("transform") ?? "";
+    const left = Number(/translate\(([-\d.]+)/.exec(transform)?.[1]);
+    const width = Number(panelWidthIn(container));
+    // Flipped to the left of the anchor, and its right edge inside the plot.
+    expect(left + width).toBeLessThanOrEqual(640 - 14 + 0.001);
+  });
+});
+
+describe("LevelsTimeline — the SVG title is a name, not a paragraph", () => {
+  it("keeps <title> short — a browser paints it as a native tooltip", () => {
+    const { container } = renderRails();
+    const title = container.querySelector("title")?.textContent ?? "";
+    expect(title.length).toBeLessThan(40);
+    expect(title).not.toContain("Headcount by pay level");
+  });
+
+  it("puts the announcement in <desc>, which is never painted", () => {
+    const { container } = renderRails();
+    const desc = container.querySelector("desc")?.textContent ?? "";
+    expect(desc).toContain("Headcount by pay level");
+    expect(desc.length).toBeGreaterThan(40);
   });
 });
