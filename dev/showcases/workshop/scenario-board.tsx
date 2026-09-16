@@ -872,27 +872,22 @@ const ScenarioBoardBench: Component = () => {
   };
 
   /**
-   * The people the TIMELINE draws, which lag the dials by one gesture.
+   * The timeline draws the LIVE people, same as the gauge and the balance.
    *
-   * Pay is continuous, so a drag passes through every intermediate dollar on
-   * its way — and the timeline keys a rail by pay AMOUNT, so following the
-   * live value would spawn a rail per pixel of travel and throw them all away
-   * again. The gauge and the balance chart follow the drag live, because a
-   * number and a line can move continuously; the rails wait for it to stop.
+   * It used to lag by a gesture, on the reasoning that a rail is keyed by pay
+   * amount so a continuous drag would spawn a rail per pixel of travel. Peter
+   * ruled that out and he is right: the levels are DERIVED from current state
+   * on every read, so nothing accumulates — a rail moves, it does not breed.
+   * The concern was about accumulation, and a derived model has none. With
+   * `snap={1_000}` the intermediate values are whole thousands anyway, and six
+   * people across three mutations is nothing to recompute.
    *
-   * The split is `onChange` → the signal the dials read, every dollar;
-   * `onChangeEnd` → rebuild the rails, once per gesture. Feeding `onChange`
-   * back into state is REQUIRED even though only `onChangeEnd` is acted on: a
-   * drag's `onChangeEnd` reports the CONTROLLED prop value, so a consumer that
-   * stopped updating on `onChange` would be handed back the value it supplied
-   * and the rails would never move. That is the only honest answer a
-   * controlled component can give, and it is easy to get wrong in the other
-   * direction.
+   * `onChangeEnd` is gone with it rather than kept "just in case": there is
+   * nothing commit-only on this board today, and a second code path that
+   * nothing needs is how two ways to do everything start. If a future chart
+   * here is genuinely too expensive to recompute mid-drag, that is the moment
+   * to measure the jank and bring the split back for it alone.
    */
-  const [committed, setCommitted] = createSignal<readonly Person[]>(PEOPLE);
-  const commit = (): void => {
-    setCommitted(people());
-  };
 
   onMount(() => {
     if (DEBUG) printTables(people(), mutations(), editing());
@@ -906,7 +901,6 @@ const ScenarioBoardBench: Component = () => {
   /** ⊗ Terminate: this person is gone from the selected mutation onward. */
   const terminate = (id: string): void => {
     setPeople((current) => withChange(current, id, editing(), null));
-    commit();
   };
 
   /**
@@ -916,7 +910,6 @@ const ScenarioBoardBench: Component = () => {
    */
   const restore = (id: string): void => {
     setPeople((current) => withoutChange(current, id, editing()));
-    commit();
   };
 
   /** A HIRE, at the mutation being edited: no base pay, so no prior arrow. */
@@ -931,7 +924,6 @@ const ScenarioBoardBench: Component = () => {
         changes: { [editing()]: 78_000 },
       },
     ]);
-    commit();
   };
 
   /**
@@ -951,7 +943,6 @@ const ScenarioBoardBench: Component = () => {
 
   const reset = (): void => {
     setPeople(PEOPLE);
-    setCommitted(PEOPLE);
     setMutations(SEED_MUTATIONS);
     setEditing(SEED_MUTATIONS[1].id);
   };
@@ -996,8 +987,8 @@ const ScenarioBoardBench: Component = () => {
               <TextTitle>Pay levels through the year</TextTitle>
               <GrowFillBox>
                 <LevelsTimeline
-                  levels={levelsOf(committed(), mutations())}
-                  transfers={transfersOf(committed(), mutations())}
+                  levels={levelsOf(people(), mutations())}
+                  transfers={transfersOf(people(), mutations())}
                   mutations={mutations()}
                   domain={TIME_DOMAIN}
                   selectedMutationId={editing()}
@@ -1043,7 +1034,6 @@ const ScenarioBoardBench: Component = () => {
                     domain={PAY_DOMAIN}
                     snap={1_000}
                     onChange={setPay}
-                    onChangeEnd={commit}
                     onRemove={terminate}
                     onRestore={restore}
                     onAdd={hire}
