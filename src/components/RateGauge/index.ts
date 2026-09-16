@@ -17,6 +17,7 @@ export {
   capArc,
   clampedValue,
   gaugeGeometry,
+  yellowDegrees,
   zoneOf,
 } from "./geometry";
 export type { Callout, Domain, GaugeGeometry, LabelId, Zone } from "./geometry";

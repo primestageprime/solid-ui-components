@@ -24,7 +24,7 @@
 //     "zero" line that is not at zero.
 // ============================================
 import { clamp } from "../../internal/math/clamp";
-import { filter, join, map, sortBy, sum } from "../../fn";
+import { filter, find, join, map, sortBy, sum } from "../../fn";
 
 /** A value domain, mapped linearly onto [−90°, +90°]. */
 export type Domain = readonly [number, number];
@@ -361,6 +361,25 @@ export const bandRanges = (
   return split >= QUARTER_TURN
     ? ranges
     : [...ranges, { tone: "success" as BandTone, from: split, to: QUARTER_TURN }];
+};
+
+/**
+ * How many degrees of ring the comfortable band covers — the figure to quote
+ * when deciding whether a threshold is legible at a given size.
+ *
+ * A band's visibility is a property of the ANGLE it subtends, not of the rate
+ * it represents: +$250/mo is a wide band on a ±$1k dial and a hairline on a
+ * ±$30k one. This is the one number that answers "will anyone see it", so it
+ * is worth being able to ask for directly rather than deriving at each call.
+ *
+ * Zero when there is no comfortable band at all.
+ */
+export const yellowDegrees = (domain: Domain, comfortable?: number): number => {
+  const warning = find(
+    (range: { tone: BandTone }) => range.tone === "warning",
+    bandRanges(domain, comfortable),
+  );
+  return warning === undefined ? 0 : warning.to - warning.from;
 };
 
 /**

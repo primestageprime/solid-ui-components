@@ -14,7 +14,7 @@
  * static cards below it pin the two situations from the mockups.
  */
 import { createSignal, type Component } from "solid-js";
-import { RateGauge } from "../../../src/components/RateGauge";
+import { RateGauge, yellowDegrees } from "../../../src/components/RateGauge";
 import { Slider } from "../../../src/components/Slider";
 import { CardSurface } from "../../../src/components/Surface";
 import {
@@ -39,11 +39,24 @@ export const meta = { label: "Rate Gauge" };
 const DOMAIN: readonly [number, number] = [-30000, 30000];
 
 /**
- * What the consumer here calls a comfortable gain: 5% of the baseline. On a
- * baseline of +$5,000/mo that is +$250/mo — three quarters of a degree on this
- * dial, so the yellow is a sliver just above the zero line rather than a slab.
+ * The comfortable gain that puts exactly TEN DEGREES of ring in the yellow.
+ *
+ * Visibility is a property of the angle, not of the rate, so the fixture is
+ * specified in degrees and converted here — the gauge only ever sees the
+ * absolute rate. The gain half maps [0, domainMax] onto 90°, so ten degrees is
+ * that fraction of the top of the domain: on this ±$30k dial, +$3,333/mo.
  */
-const COMFORTABLE_PERCENT = 5;
+const YELLOW_DEGREES = 10;
+
+const comfortableForDegrees = (
+  domain: readonly [number, number],
+  degrees: number,
+): number => (domain[1] * degrees) / 90;
+
+const COMFORTABLE = comfortableForDegrees(DOMAIN, YELLOW_DEGREES);
+
+/** The same threshold said as a share of the scrubbed card's baseline. */
+const COMFORTABLE_PERCENT = (COMFORTABLE / 5000) * 100;
 
 /**
  * The consumer's formatter. A real minus sign (U+2212), not a hyphen — it is a
@@ -170,12 +183,14 @@ const ScrubbedCard: Component = () => {
           value={percent()}
           onChange={setPercent}
           min={0}
-          max={25}
-          step={0.5}
+          max={120}
+          step={0.1}
           format={(v) =>
             v === 0
               ? "none"
-              : `${v}% — ${perMonth(comfortableGain(baseline, v))}`
+              : `${v.toFixed(1)}% — ${perMonth(
+                  Math.round(comfortableGain(baseline, v)),
+                )} — ${yellowDegrees(DOMAIN, comfortableGain(baseline, v)).toFixed(1)}° of ring`
           }
         />
         <CaptionLabel>
@@ -185,7 +200,8 @@ const ScrubbedCard: Component = () => {
           baseline and the brace runs out of room: the curls go first, then the
           arms, and at the narrowest the delta's leader is a plain line. Drag
           the comfortable gain to zero and the yellow band disappears
-          altogether.
+          altogether; the slider reads out the band's width in degrees, which
+          is the figure that decides whether anyone can see it.
         </CaptionLabel>
       </TightStack>
     </CardSurface>
@@ -211,10 +227,11 @@ const RateGaugeBench: Component = () => (
           The gain half of the ring splits again at the consumer's{" "}
           <strong>comfortable</strong> gain: below it the band is yellow, at or
           above it green. The assumption baked in here is that yellow means
-          "not yet comfortable" — say the word and it flips. This consumer's
-          rule is 5% of the baseline, so the yellow is usually a sliver rather
-          than a slab; the gauge never sees the percentage, only the absolute
-          rate it works out to.
+          "not yet comfortable" — say the word and it flips. Whether that band
+          is legible is a question about the ANGLE it subtends, not about the
+          rate, so every static card below is set so the yellow spans exactly
+          10° of the ring — on this ±$30k dial, +$3,333/mo. The gauge itself
+          only ever sees the absolute rate.
         </MutedBody>
       </TightStack>
 
@@ -227,26 +244,26 @@ const RateGaugeBench: Component = () => (
         <WrapRow>
           <SmallCard
             title="Green · baseline above"
-            note="Comfortable is 5% of the baseline (+$1,200/mo). The scenario clears it, so the green lights — but it is still well short of the baseline, so the delta is negative. Tone follows the BAND, not the delta's sign."
+            note="Yellow = 10°. The scenario clears the comfortable gain, so the green lights — but it is still well short of the baseline, so the delta is negative. Tone follows the BAND, not the delta's sign."
             baseline={24000}
             value={12000}
-            comfortable={comfortableGain(24000, COMFORTABLE_PERCENT)}
+            comfortable={COMFORTABLE}
             label="Scenario A"
           />
           <SmallCard
             title="Yellow · baseline above"
-            note="Comfortable is +$400/mo and the scenario sits at +$200/mo — inside the sliver, so the yellow lights. The baseline is far above it."
-            baseline={8000}
-            value={200}
-            comfortable={comfortableGain(8000, COMFORTABLE_PERCENT)}
+            note="Yellow = 10°. The scenario sits inside the comfortable band, so the yellow lights; the baseline is far above it."
+            baseline={20000}
+            value={1500}
+            comfortable={COMFORTABLE}
             label="Scenario A"
           />
           <SmallCard
             title="Red · baseline above"
-            note="Below zero, so the loss half lights and both gain bands dim — including the sliver, which is still drawn."
+            note="Yellow = 10°. Below zero, so the loss half lights and both gain bands dim — including the yellow, which is still drawn."
             baseline={6000}
             value={-9000}
-            comfortable={comfortableGain(6000, COMFORTABLE_PERCENT)}
+            comfortable={COMFORTABLE}
             label="Scenario A"
           />
         </WrapRow>
@@ -261,10 +278,10 @@ const RateGaugeBench: Component = () => (
               truncates in the callout column and offers itself whole on hover. */}
           <SmallCard
             title="Green · baseline below"
-            note="Past a +$200/mo comfortable gain and past the baseline. Also the long-name case — the name truncates in the callout column, full value on hover."
+            note="Yellow = 10°. Past both the comfortable gain and the baseline. Also the long-name case — the name truncates in the callout column, full value on hover."
             baseline={4000}
             value={18000}
-            comfortable={comfortableGain(4000, COMFORTABLE_PERCENT)}
+            comfortable={COMFORTABLE}
             label="Bookkeeping retainer · Northern"
           />
           {/* A percentage-of-baseline rule CANNOT produce this combination: if
@@ -274,18 +291,18 @@ const RateGaugeBench: Component = () => (
               absolute rate rather than a percentage. */}
           <SmallCard
             title="Yellow · baseline below"
-            note="A FLAT comfortable gain of +$400/mo, not a percentage — a 5%-of-baseline rule cannot put the baseline below a scenario that is inside its own sliver."
-            baseline={20}
-            value={200}
-            comfortable={400}
+            note="Yellow = 10°. Inside the comfortable band with the baseline below it. Note a percentage-OF-BASELINE rule could not reach this card: a scenario inside a band worth 5% of its baseline is by definition far below that baseline. The threshold here is a flat rate, which is why the prop is absolute."
+            baseline={600}
+            value={2400}
+            comfortable={COMFORTABLE}
             label="Scenario A"
           />
           <SmallCard
             title="Red · baseline below"
-            note="Losing, but by less than the baseline was — a positive delta in the red band. Flat comfortable gain again, since 5% of a negative baseline is not a threshold."
+            note="Yellow = 10°. Losing, but by less than the baseline was — a positive delta inside the red band."
             baseline={-18000}
             value={-6000}
-            comfortable={1500}
+            comfortable={COMFORTABLE}
             label="Scenario A"
           />
         </WrapRow>

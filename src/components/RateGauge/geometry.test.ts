@@ -11,6 +11,7 @@ import {
   angleFor,
   bandAt,
   bandRanges,
+  yellowDegrees,
   BASELINE_NEEDLE_RADIUS,
   BRACKET_RADIUS,
   CAP_ARC_HALF_SPAN,
@@ -198,6 +199,32 @@ describe("a thin comfortable band", () => {
     // ...and only just: a hair above the threshold is already the green.
     const past = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 251, comfortable: THIN });
     expect(past.tone).toBe("success");
+  });
+});
+
+describe("yellowDegrees", () => {
+  // The figure Peter asked to be able to set directly: a comfortable gain of
+  // domainMax × 10/90 puts exactly ten degrees of ring in the warning tone.
+  it("reads exactly ten degrees for the ten-degree fixture", () => {
+    const tenDegrees = (DOMAIN[1] * 10) / 90;
+    expect(yellowDegrees(DOMAIN, tenDegrees)).toBeCloseTo(10, 9);
+  });
+
+  it("is zero when there is no comfortable band", () => {
+    expect(yellowDegrees(DOMAIN)).toBe(0);
+    expect(yellowDegrees(DOMAIN, 0)).toBe(0);
+    expect(yellowDegrees(DOMAIN, -100)).toBe(0);
+  });
+
+  it("scales with the DOMAIN, not with the rate", () => {
+    // The same rate is a hairline on a wide dial and a slab on a narrow one,
+    // which is the whole reason this question is worth asking in degrees.
+    expect(yellowDegrees([-30000, 30000], 250)).toBeCloseTo(0.75, 9);
+    expect(yellowDegrees([-1000, 1000], 250)).toBeCloseTo(22.5, 9);
+  });
+
+  it("tops out at the whole gain half", () => {
+    expect(yellowDegrees(DOMAIN, 99999)).toBe(90);
   });
 });
 
