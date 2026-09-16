@@ -66,12 +66,15 @@ import type { SegmentOption } from "../../../src/components/SegmentedControl";
 
 import { GhostButton } from "../../../src/components/Button";
 import {
-  ConstrainedBox,
-  GrowBox,
-  SpacedStack,
+  ClipFillColumn,
+  LooseWrapRow,
+  MajorFillColumn,
+  MinorFillColumn,
+  ActionSlot,
   SpreadRow,
-  StretchRow,
   TightStack,
+  ViewportColumn,
+  WidePaneBox,
 } from "../../../src/components/Layout";
 import { CardSurface } from "../../../src/components/Surface";
 import { SectionTitle, TextTitle } from "../../../src/components/Text";
@@ -234,6 +237,15 @@ const LEVEL_DOMAIN: readonly [number, number] = [0, 10];
 const DOLLARS_PER_LEVEL = 1000;
 
 /** The gauge's domain and its fixed reference, both the consumer's. */
+/**
+ * The running-balance chart's height, in PIXELS.
+ *
+ * `CashflowScrubChart.chartHeight` is a number of pixels with no fill mode, so
+ * the board cannot tell it "half the top band" — it can only name a number.
+ * Sized to sit inside half the band at the gallery's usual height.
+ */
+const CHART_HEIGHT = 110;
+
 const RATE_DOMAIN: readonly [number, number] = [-30000, 30000];
 /**
  * What the company nets per month BEFORE this scenario's changes. The gauge's
@@ -742,40 +754,50 @@ const ScenarioBoardBench: Component = () => {
   const rate = () => rateOf(dials());
 
   return (
-    <div class="component-section component-section--full">
-      <SpacedStack>
+    <div class="component-section component-section--full scenario-board-frame">
+      <ViewportColumn>
         <SectionTitle>Scenario Board</SectionTitle>
 
-        <CardSurface>
-          <TightStack>
-            <TextTitle>Running balance</TextTitle>
-            <CashflowScrubChart
-              cells={balanceCells()}
-              scrub={false}
-              chartHeight={220}
-              showGridlines
-              lineLabel="Committed"
-              balanceSeries={[
-                fanSeries("optimistic", 1),
-                fanSeries("pessimistic", -1),
-              ]}
-            />
-          </TightStack>
-        </CardSurface>
+        {/* The two charts share the top 30% equally. Each sits in a
+            ClipFillColumn — it takes half the band AND clips — because a chart
+            that cannot fill a shorter box would otherwise paint straight over
+            the controls beneath it. See the header note on which charts fill. */}
+        <MinorFillColumn>
+          <ClipFillColumn>
+            <CardSurface>
+              <TightStack>
+                <TextTitle>Running balance</TextTitle>
+                <CashflowScrubChart
+                  cells={balanceCells()}
+                  scrub={false}
+                  chartHeight={CHART_HEIGHT}
+                  showGridlines
+                  lineLabel="Committed"
+                  balanceSeries={[
+                    fanSeries("optimistic", 1),
+                    fanSeries("pessimistic", -1),
+                  ]}
+                />
+              </TightStack>
+            </CardSurface>
+          </ClipFillColumn>
 
-        <CardSurface>
-          <TightStack>
-            <TextTitle>Pay levels through the year</TextTitle>
-            <LevelsTimeline
-              levels={levelsOf(people())}
-              transfers={transfersOf(people())}
-              mutations={MUTATIONS}
-              domain={TIME_DOMAIN}
-              selectedMutationId={selectedMutation()}
-              onSelectMutation={selectMutation}
-            />
-          </TightStack>
-        </CardSurface>
+          <ClipFillColumn>
+            <CardSurface>
+              <TightStack>
+                <TextTitle>Pay levels through the year</TextTitle>
+                <LevelsTimeline
+                  levels={levelsOf(people())}
+                  transfers={transfersOf(people())}
+                  mutations={MUTATIONS}
+                  domain={TIME_DOMAIN}
+                  selectedMutationId={selectedMutation()}
+                  onSelectMutation={selectMutation}
+                />
+              </TightStack>
+            </CardSurface>
+          </ClipFillColumn>
+        </MinorFillColumn>
 
         <CardSurface>
           <TightStack>
@@ -789,46 +811,48 @@ const ScenarioBoardBench: Component = () => {
           </TightStack>
         </CardSurface>
 
-        <StretchRow>
-          <GrowBox>
-            <CardSurface>
-              <TightStack>
-                <SpreadRow>
-                  <TextTitle>Mutations</TextTitle>
-                  <GhostButton onClick={reset}>Reset</GhostButton>
-                </SpreadRow>
-                <MutationSliders
-                  entities={dials()}
-                  domain={LEVEL_DOMAIN}
-                  onChange={setLevel}
-                  onRemove={removeEntity}
-                  onAdd={addEntity}
-                  format={(value) => `L${value}`}
-                />
-              </TightStack>
-            </CardSurface>
-          </GrowBox>
+        <MajorFillColumn>
+          <LooseWrapRow>
+            <WidePaneBox>
+              <CardSurface>
+                <TightStack>
+                  <SpreadRow>
+                    <TextTitle>Mutations</TextTitle>
+                    <GhostButton onClick={reset}>Reset</GhostButton>
+                  </SpreadRow>
+                  <MutationSliders
+                    entities={dials()}
+                    domain={LEVEL_DOMAIN}
+                    onChange={setLevel}
+                    onRemove={removeEntity}
+                    onAdd={addEntity}
+                    format={(value) => `L${value}`}
+                  />
+                </TightStack>
+              </CardSurface>
+            </WidePaneBox>
 
-          {/* The narrow column. ConstrainedBox caps the CARD at 400px rather
+            {/* The narrow column. ConstrainedBox caps the CARD at 400px rather
               than only the dial inside it: a NoShrinkColumn took its width
               from the caption's max-content and swallowed the row, which is
               the opposite of the sketch's wide-left / narrow-right split. */}
-          <ConstrainedBox>
-            <CardSurface>
-              <TightStack>
-                <TextTitle>Rate, right now</TextTitle>
-                <RateGauge
-                  domain={RATE_DOMAIN}
-                  baseline={RATE_BASELINE}
-                  value={rate()}
-                  label="Scenario"
-                  format={perMonth}
-                />
-              </TightStack>
-            </CardSurface>
-          </ConstrainedBox>
-        </StretchRow>
-      </SpacedStack>
+            <ActionSlot>
+              <CardSurface>
+                <TightStack>
+                  <TextTitle>Rate, right now</TextTitle>
+                  <RateGauge
+                    domain={RATE_DOMAIN}
+                    baseline={RATE_BASELINE}
+                    value={rate()}
+                    label="Scenario"
+                    format={perMonth}
+                  />
+                </TightStack>
+              </CardSurface>
+            </ActionSlot>
+          </LooseWrapRow>
+        </MajorFillColumn>
+      </ViewportColumn>
     </div>
   );
 };

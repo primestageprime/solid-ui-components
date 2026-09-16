@@ -34,6 +34,10 @@ import {
   NoShrinkColumn,
   ClipColumn,
   ClipFillColumn,
+  MajorFillColumn,
+  MinorFillColumn,
+  ViewportColumn,
+  WidePaneBox,
   ClipFillColumnFlush,
   ScrollFillColumn,
   // boxes
@@ -113,9 +117,13 @@ const COLUMNS: VariantSpec[] = [
   { name: "ClipFillColumn", note: "fills the height it is given, clips the rest", Variant: ClipFillColumn, kind: "tall", bounded: true },
   { name: "ClipFillColumnFlush", note: "the same with no gap between children", Variant: ClipFillColumnFlush, kind: "tall", bounded: true },
   { name: "ScrollFillColumn", note: "fills its height and scrolls its own overflow", Variant: ScrollFillColumn, kind: "tall", bounded: true },
+  { name: "ViewportColumn", note: "fills a parent of DEFINITE height (height:100%) — the bridge from a CSS-sized block frame into Layout; FillColumn's flex:1 does nothing in a block parent", Variant: ViewportColumn, kind: "tall", bounded: true },
+  { name: "MinorFillColumn", note: "the smaller share (flex:30) of a proportional vertical split — grow factors, not percentages, so no ancestor needs a definite height", Variant: MinorFillColumn, kind: "tall", bounded: true },
+  { name: "MajorFillColumn", note: "the larger share (flex:70) of that same split", Variant: MajorFillColumn, kind: "tall", bounded: true },
 ];
 
 const BOXES: VariantSpec[] = [
+  { name: "WidePaneBox", note: "80% of its row beside a companion taking the rest — DEFINITE, because a max-content box whose child measures itself to decide its content oscillates", Variant: WidePaneBox },
   { name: "ClipBox", note: "a plain box that clips overflow", Variant: ClipBox, kind: "tall", bounded: true },
   { name: "ClipFillBox", note: "grows into its parent and clips", Variant: ClipFillBox, kind: "tall", bounded: true },
   { name: "ScrollBox", note: "scrolls both axes", Variant: ScrollBox, kind: "tall", bounded: true },

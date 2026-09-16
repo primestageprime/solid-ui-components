@@ -2798,3 +2798,13 @@ th:has(.tf-th-center) .hud-table__header-content {
   stroke-opacity: 0.28;
   stroke-dasharray: 5 4;
 }
+
+/* Scenario Board bench — the board fills the gallery's viewport.
+   MEASURED, not guessed: the gallery's scroll container is
+   `main.showcase__content`, which is exactly 100vh with 32px of padding top
+   and bottom and holds the section as its only child with no margins of its
+   own. 64px is that padding, so the board ends flush with the viewport.
+   HEIGHT ONLY — every row and column inside is a Layout variant. */
+.scenario-board-frame {
+  height: calc(100vh - 64px);
+}

@@ -441,6 +441,61 @@ export const FillColumnFlush: Component<StackDataProps> = createStack({
   style: { flex: "1", "min-height": "0" },
 });
 
+/** ViewportColumn — a flex column that fills a parent of DEFINITE height
+ *  (`fill` → `height:100%; min-height:0`).
+ *
+ *  The BRIDGE between a plain block container whose height is set in CSS — a
+ *  page frame, a bench frame, anything sized with `calc(100vh - N)` — and the
+ *  Layout vocabulary. `FillColumn` is NOT interchangeable with it: that one
+ *  bakes `flex:1`, which does nothing at all inside a BLOCK parent, so a column
+ *  that looks right in a flex page silently grows to its content in a block
+ *  one. This variant resolves against the block's own height instead.
+ *
+ *  A variant rather than a call-site prop because `fill` is a Stack OVERRIDE,
+ *  locked at variant-definition time. Put proportional children
+ *  (`MinorFillColumn` / `MajorFillColumn`) inside it. */
+export const ViewportColumn: Component<StackDataProps> = createStack({
+  gap: "sm",
+  fill: true,
+});
+
+/** MinorFillColumn — the SMALLER share of a proportional vertical split
+ *  (`flex:30; min-height:0`), paired with `MajorFillColumn`.
+ *
+ *  The numbers are flex GROW factors, not percentages, and that is the point: a
+ *  percentage height needs a definite height on every ancestor between it and
+ *  the frame and resolves to `auto` in silence when one link is missing, while
+ *  grow factors divide whatever height the parent has. A third sibling that
+ *  should keep only its intrinsic height (a toolbar, a control row) takes
+ *  neither variant. For the overview band of a dashboard above its detail. */
+export const MinorFillColumn: Component<StackDataProps> = createStack({
+  gap: "sm",
+  style: { flex: "30", "min-height": "0" },
+});
+
+/** MajorFillColumn — the LARGER share of that same split (`flex:70;
+ *  min-height:0`). Pair it with `MinorFillColumn`. */
+export const MajorFillColumn: Component<StackDataProps> = createStack({
+  gap: "sm",
+  style: { flex: "70", "min-height": "0" },
+});
+
+/** WidePaneBox — a flex child pinned to 80% of its row, beside a companion
+ *  that takes the rest (`width:80%; flex-shrink:0; min-width:0`).
+ *
+ *  DEFINITE on purpose. The obvious spelling for "as wide as its content needs,
+ *  capped" is `width:max-content; max-width:80%`, and it is unsafe for any
+ *  child that MEASURES ITSELF to decide how much content to render: the
+ *  measurement changes the content, the content changes the `max-content` box,
+ *  and the box changes the measurement. It does not always spin — it can settle
+ *  one item lower and oscillate between two widths depending on which frame the
+ *  resize arrived in, which reads as a rendering bug and does not reproduce on
+ *  demand. A definite share breaks the cycle. */
+export const WidePaneBox: Component<BoxDataProps> = createBox({
+  shrink: false,
+  style: { width: "80%", "min-width": "0" },
+});
+
 /** NoShrinkScrollBox — a fixed-size box that refuses to shrink in a flex parent
  *  and scrolls its own vertical overflow (`flex-shrink:0; overflow-y:auto;
  *  min-height:0`). For a fixed-width sidebar/rail beside a growing pane: it keeps
