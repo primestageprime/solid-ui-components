@@ -499,6 +499,15 @@ export const MAX_STROKE = 10;
  * How far a one-ended flow runs past its rail, into the space where the rest
  * of the world is. Short: it is an exit, not a journey, and a long stub would
  * read as a move to a level the chart forgot to draw.
+ *
+ * It is CLAMPED to the plot, and it has to be. The padding leaves a fixed
+ * headroom above the highest rail — `(1 + PAD) / (1 + 2·PAD)` of the plot
+ * height, which for a 12% pad over a 154-unit plot is 14.9 units, whatever
+ * the data says — so an unclamped 16-unit stub would draw a hire into the top
+ * level ABOVE `PLOT_TOP`, and a departure from the bottom level down into the
+ * axis ticks. `overflow: visible` on the canvas means it would be drawn, not
+ * cropped. Clamping rather than shrinking the constant, so this survives
+ * somebody retuning the padding.
  */
 export const OPEN_FLOW_STUB = 16;
 
@@ -624,6 +633,9 @@ export const transferRibbons = (
  * to nowhere — "nowhere" is what an absent end already means, and drawing a
  * typo the same way as a departure would hide it.
  */
+/** Keep a stub's open end inside the plot. See OPEN_FLOW_STUB for why. */
+const intoPlot = (y: number): number => clamp(y, PLOT_TOP, PLOT_BOTTOM);
+
 const placeFlow = (
   transfer: Transfer,
   yOf: (id: string) => number | undefined,
@@ -650,7 +662,7 @@ const placeFlow = (
     return {
       kind: "departure",
       y1: fromY,
-      y2: fromY + OPEN_FLOW_STUB,
+      y2: intoPlot(fromY + OPEN_FLOW_STUB),
       seriesIndex: indexOf(transfer.from) + 1,
     };
   }
@@ -659,7 +671,7 @@ const placeFlow = (
     // A hire wears its DESTINATION's tone — that is the rail it thickens.
     return {
       kind: "hire",
-      y1: toY - OPEN_FLOW_STUB,
+      y1: intoPlot(toY - OPEN_FLOW_STUB),
       y2: toY,
       seriesIndex: indexOf(transfer.to) + 1,
     };

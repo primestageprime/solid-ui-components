@@ -766,3 +766,49 @@ describe("one-ended flows — departures and hires", () => {
     expect(spans[0].x2).toBe(x(utc("2025-04-01")));
   });
 });
+
+describe("one-ended flows stay inside the plot", () => {
+  // The padding leaves a FIXED headroom above the highest rail — 14.9 units
+  // for a 12% pad over this plot, whatever the data says — which is less than
+  // OPEN_FLOW_STUB. Without clamping, a hire into the top level draws above
+  // PLOT_TOP and a departure from the bottom one draws into the axis ticks,
+  // and `overflow: visible` means both would be SEEN.
+  const x = xScaleFor(DOMAIN);
+  const y = yScaleFor(valueDomainOf(LEVELS));
+  const maxCount = maxCountOf(LEVELS, TRANSFERS);
+
+  it("never lifts a hire into the highest level above the plot top", () => {
+    const [joining] = transferRibbons(
+      [{ at: 0, to: "l8", count: 1 }],
+      LEVELS,
+      x,
+      y,
+      maxCount,
+    );
+    expect(joining.y1).toBeGreaterThanOrEqual(PLOT_TOP);
+    expect(joining.y1).toBeLessThan(joining.y2);
+  });
+
+  it("never drops a departure from the lowest level into the axis", () => {
+    const [leaving] = transferRibbons(
+      [{ at: 0, from: "l5", count: 1 }],
+      LEVELS,
+      x,
+      y,
+      maxCount,
+    );
+    expect(leaving.y2).toBeLessThanOrEqual(PLOT_BOTTOM);
+    expect(leaving.y2).toBeGreaterThan(leaving.y1);
+  });
+
+  it("still runs the full stub where there is room for it", () => {
+    const [leaving] = transferRibbons(
+      [{ at: 0, from: "l7", count: 1 }],
+      LEVELS,
+      x,
+      y,
+      maxCount,
+    );
+    expect(leaving.y2 - leaving.y1).toBe(OPEN_FLOW_STUB);
+  });
+});

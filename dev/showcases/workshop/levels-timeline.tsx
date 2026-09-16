@@ -40,12 +40,13 @@
  *
  * Flip `DEBUG` to read the derived model as tables, without a browser.
  */
-import { createSignal, type Component } from "solid-js";
+import { For, createSignal, type Component } from "solid-js";
 import {
   LevelsTimeline,
   timeOf,
 } from "../../../src/components/LevelsTimeline";
 import type {
+  CountPoint,
   Level,
   Mutation,
   TimeDomain,
@@ -59,7 +60,7 @@ import {
   TextTitle,
 } from "../../../src/components/Text";
 import { SpacedStack, TightStack } from "../../../src/components/Layout";
-import { filter, map, sortBy } from "../../../src/fn";
+import { filter, flatMap, map, sortBy } from "../../../src/fn";
 
 export const meta = { label: "Levels Timeline" };
 
@@ -174,6 +175,12 @@ const PEOPLE: readonly Person[] = [
   },
 
   // ── Track C: four people fanning out by different amounts each year ──────
+  //
+  // Each person's four bumps are a PERMUTATION of +500/+1000/+1500/+2000, so
+  // nobody repeats an amount. The permutations are chosen to share their
+  // intermediate figures, which keeps the whole track to eight distinct levels
+  // — one per theme tone, and thin enough to read — while still fanning to
+  // four different destinations out of $6k on the very first bump.
   {
     name: "Hal",
     track: "C",
@@ -181,8 +188,8 @@ const PEOPLE: readonly Person[] = [
       { at: on("2025-01-01"), pay: 6000 },
       { at: on("2026-04-01"), pay: 6500 },
       { at: on("2027-04-01"), pay: 7500 },
-      { at: on("2028-04-01"), pay: 8000 },
-      { at: on("2029-04-01"), pay: 9000 },
+      { at: on("2028-04-01"), pay: 9000 },
+      { at: on("2029-04-01"), pay: 11000 },
     ],
   },
   {
@@ -192,8 +199,8 @@ const PEOPLE: readonly Person[] = [
       { at: on("2025-01-01"), pay: 6000 },
       { at: on("2026-04-01"), pay: 7000 },
       { at: on("2027-04-01"), pay: 7500 },
-      { at: on("2028-04-01"), pay: 8500 },
-      { at: on("2029-04-01"), pay: 9000 },
+      { at: on("2028-04-01"), pay: 9000 },
+      { at: on("2029-04-01"), pay: 11000 },
     ],
   },
   {
@@ -201,10 +208,10 @@ const PEOPLE: readonly Person[] = [
     track: "C",
     history: [
       { at: on("2025-01-01"), pay: 6000 },
-      { at: on("2026-04-01"), pay: 6500 },
+      { at: on("2026-04-01"), pay: 7500 },
       { at: on("2027-04-01"), pay: 8000 },
-      { at: on("2028-04-01"), pay: 8500 },
-      { at: on("2029-04-01"), pay: 9500 },
+      { at: on("2028-04-01"), pay: 9000 },
+      { at: on("2029-04-01"), pay: 11000 },
     ],
   },
   {
@@ -212,10 +219,10 @@ const PEOPLE: readonly Person[] = [
     track: "C",
     history: [
       { at: on("2025-01-01"), pay: 6000 },
-      { at: on("2026-04-01"), pay: 7500 },
-      { at: on("2027-04-01"), pay: 8000 },
-      { at: on("2028-04-01"), pay: 9000 },
-      { at: on("2029-04-01"), pay: 9500 },
+      { at: on("2026-04-01"), pay: 8000 },
+      { at: on("2027-04-01"), pay: 9000 },
+      { at: on("2028-04-01"), pay: 9500 },
+      { at: on("2029-04-01"), pay: 11000 },
     ],
   },
 ];
@@ -402,7 +409,7 @@ const TRACKS: readonly Track[] = [
   trackOf(
     "C",
     "Track C — four people fanning out",
-    "Everyone bumps every April, but by different amounts, so one rail sheds flows to several destinations on the same date. By 2029 the four have spread across the top of the ladder.",
+    "Everyone bumps every April, and each person's four bumps are a permutation of +$500/+$1k/+$1.5k/+$2k — nobody repeats an amount. So $6k sheds four flows to four DIFFERENT destinations on the same date, the four paths cross and re-cross as the amounts reorder, and they converge on $11k at the end.",
   ),
 ];
 
@@ -415,24 +422,32 @@ const logModel = (): void => {
   if (!DEBUG) return;
   for (const track of TRACKS) {
     console.table(
-      track.levels.flatMap((level) =>
-        level.points.map((point) => ({
-          track: track.id,
-          level: level.label,
-          value: level.value,
-          at: isoDay(point.at),
-          count: point.count,
-        })),
+      flatMap(
+        (level: Level) =>
+          map(
+            (point: CountPoint) => ({
+              track: track.id,
+              level: level.label,
+              value: level.value,
+              at: isoDay(point.at),
+              count: point.count,
+            }),
+            level.points,
+          ),
+        track.levels,
       ),
     );
     console.table(
-      track.transfers.map((transfer) => ({
-        track: track.id,
-        at: isoDay(transfer.at),
-        from: transfer.from ?? "(hired)",
-        to: transfer.to ?? "(left)",
-        count: transfer.count,
-      })),
+      map(
+        (transfer: Transfer) => ({
+          track: track.id,
+          at: isoDay(transfer.at),
+          from: transfer.from ?? "(hired)",
+          to: transfer.to ?? "(left)",
+          count: transfer.count,
+        }),
+        track.transfers,
+      ),
     );
   }
 };
@@ -482,13 +497,15 @@ const LevelsTimelineBench: Component = () => {
         </TightStack>
         <CardSurface>
           <SpacedStack>
-            {TRACKS.map((track) => (
-              <TrackChart
-                track={track}
-                selected={selected()}
-                onSelect={setSelected}
-              />
-            ))}
+            <For each={TRACKS}>
+              {(track) => (
+                <TrackChart
+                  track={track}
+                  selected={selected()}
+                  onSelect={setSelected}
+                />
+              )}
+            </For>
           </SpacedStack>
         </CardSurface>
       </SpacedStack>
