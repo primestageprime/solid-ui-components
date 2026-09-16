@@ -22,6 +22,7 @@ import {
   MIN_PLOT_FRACTION,
   MIN_VIEW_HEIGHT,
   MIN_VIEW_WIDTH,
+  SOLO_BAND_FRACTION,
   frameFor,
   frameForBox,
   viewHeightFor,
@@ -64,6 +65,7 @@ import {
   quarterTicks,
   railRuns,
   railSpans,
+  soloWidth,
   spanBottom,
   spanTop,
   taperHalves,
@@ -1413,10 +1415,125 @@ describe("frameForBox — one unit is one CSS pixel", () => {
   it("refuses a box too narrow to hold a chart at all", () => {
     expect(frameForBox({ width: 100, height: 300 }).viewWidth).toBe(
       MIN_VIEW_WIDTH,
+  SOLO_BAND_FRACTION,
     );
   });
 
   it("falls back to the default before the box has been laid out", () => {
     expect(frameForBox({ width: 0, height: 0 })).toBe(DEFAULT_FRAME);
+  });
+});
+
+describe("a lone rail must read as a rail, not a slab", () => {
+  // The board's opening frame: two engineers on the same pay is ONE level,
+  // and it is the case the levels model is meant to show best.
+  const SOLO: readonly Level[] = [
+    {
+      id: "engineer-80000",
+      label: "$80k",
+      value: 80000,
+      points: [{ at: utc("2025-01-01"), count: 2 }],
+    },
+  ];
+  const BOX = { width: 1329, height: 188 };
+
+  it("does not let one level absorb the whole fill allowance", () => {
+    // Before: `fillWidth` grants the PEAK 60% of the plot, and with a single
+    // level that one band took all of it — 103 units in a 172-unit plot.
+    const geometry = levelsRailGeometry({
+      levels: SOLO,
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+      box: BOX,
+    });
+    const span = geometry.rails[0].spans[0];
+    const share = span.width / geometry.frame.plotHeight;
+    expect(share).toBeLessThanOrEqual(SOLO_BAND_FRACTION + 0.001);
+    expect(share).toBeGreaterThan(0.1);
+  });
+
+  it("leaves air above and below it", () => {
+    const geometry = levelsRailGeometry({
+      levels: SOLO,
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+      box: BOX,
+    });
+    const span = geometry.rails[0].spans[0];
+    const frame = geometry.frame;
+    expect(spanTop(span) - frame.plotTop).toBeGreaterThan(20);
+    expect(frame.plotBottom - spanBottom(span)).toBeGreaterThan(20);
+  });
+
+  it("still thickens in proportion as the level fills up", () => {
+    // The cap divides by the same peak, so relative thickness over time is
+    // untouched: two of a five-person peak is still two fifths of the band.
+    const growing: readonly Level[] = [
+      {
+        id: "one",
+        label: "One",
+        value: 80000,
+        points: [
+          { at: utc("2025-01-01"), count: 2 },
+          { at: utc("2025-07-01"), count: 5 },
+        ],
+      },
+    ];
+    const geometry = levelsRailGeometry({
+      levels: growing,
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+      box: BOX,
+    });
+    const [first, last] = geometry.rails[0].spans;
+    expect(round(last.width / first.width)).toBe(round(5 / 2));
+  });
+
+  it("CANNOT touch a chart that has a stack — it is Infinity there", () => {
+    // The guard that makes this safe: every layout that already looked right
+    // is unaffected, because the cap does not exist for them.
+    const frame = frameForBox(BOX);
+    expect(soloWidth(LEVELS, frame)).toBe(Number.POSITIVE_INFINITY);
+    expect(soloWidth(SOLO, frame)).toBeLessThan(Number.POSITIVE_INFINITY);
+  });
+
+  it("leaves FOUR evenly-spread levels exactly as they were", () => {
+    // The proof that this cannot regress a chart that already looked right:
+    // the same levels, laid out with the cap in play and with it forced out
+    // of the way, give byte-identical spans.
+    const four: readonly Level[] = map(
+      (pay: number) => ({
+        id: `p${pay}`,
+        label: `$${pay / 1000}k`,
+        value: pay,
+        points: [{ at: utc("2025-01-01"), count: 2 }],
+      }),
+      [60000, 70000, 80000, 90000],
+    );
+    const frame = frameForBox(BOX);
+    const yScale = yScaleFor(valueDomainOf(four), frame);
+    expect(soloWidth(four, frame)).toBe(Number.POSITIVE_INFINITY);
+    // …so the chosen width is whatever the other three caps said, untouched.
+    expect(perPersonWidth(four, yScale, peakHeadcount(four), frame)).toBe(
+      Math.min(
+        fillWidth(peakHeadcount(four), frame),
+        adjacencyWidth(four, yScale),
+        edgeWidth(four, yScale, frame),
+      ),
+    );
+  });
+
+  it("counts only levels anybody HOLDS — empties do not make a stack", () => {
+    const frame = frameForBox(BOX);
+    const withGhosts: readonly Level[] = [
+      ...SOLO,
+      { id: "ghost", label: "Ghost", value: 90000, points: [] },
+    ];
+    expect(soloWidth(withGhosts, frame)).toBeLessThan(
+      Number.POSITIVE_INFINITY,
+    );
   });
 });

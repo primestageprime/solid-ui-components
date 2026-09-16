@@ -523,6 +523,22 @@ export interface LevelsRailGeometry {
 
 /** How much of the plot's height the bands fill at the busiest moment. */
 export const FILL_FRACTION = 0.6;
+/**
+ * …but a LONE rail gets this much and no more.
+ *
+ * `FILL_FRACTION` is an allowance for the STACK, and a stack of one is not a
+ * stack: with a single level the one band absorbs the whole 60% and draws as
+ * a slab across the middle of the plot rather than as a rail. That is the
+ * board's opening frame — two engineers on the same pay is one level, and it
+ * is the case the levels model is supposed to show BEST.
+ *
+ * So a chart with one live level caps its band at a quarter of the plot,
+ * which leaves air above and below and reads as a rail two heads thick.
+ * Thickness stays proportional over time, because the cap divides by the same
+ * peak: a level going from two people to five still thickens by the same
+ * ratio it would have.
+ */
+export const SOLO_BAND_FRACTION = 0.25;
 /** Clear air left between two adjacent levels' bands at their fattest. */
 export const BAND_MARGIN = 4;
 /**
@@ -612,9 +628,30 @@ export const edgeWidth = (
 };
 
 /**
- * Thickness per person: the smallest of three answers. See the header — the
+ * The width a LONE rail is held to, or `Infinity` where there is more than one
+ * level to share the plot with.
+ *
+ * Returning `Infinity` in the ordinary case is the point: this cap cannot
+ * affect a chart that has a stack, so it cannot change any layout that already
+ * looked right. It exists for the degenerate one only.
+ */
+export const soloWidth = (
+  levels: readonly Level[],
+  frame: Frame,
+): number => {
+  const live = filter((level: Level) => maxCountIn(level) > 0, levels);
+  if (live.length !== 1) return Number.POSITIVE_INFINITY;
+  const most = maxCountIn(live[0]);
+  return most <= 0
+    ? Number.POSITIVE_INFINITY
+    : (frame.plotHeight * SOLO_BAND_FRACTION) / most;
+};
+
+/**
+ * Thickness per person: the smallest of the answers. See the header — the
  * fill width alone would smear close levels together and overrun the frame,
- * and either cap alone would draw a sparse chart in hairlines.
+ * any cap alone would draw a sparse chart in hairlines, and without the solo
+ * cap a single level fills the plot with one slab.
  */
 /**
  * The thinnest a band is ever drawn, whatever the caps say.
@@ -640,6 +677,7 @@ export const perPersonWidth = (
           fillWidth(peak, frame),
           adjacencyWidth(levels, yScale),
           edgeWidth(levels, yScale, frame),
+          soloWidth(levels, frame),
         ),
       );
 
