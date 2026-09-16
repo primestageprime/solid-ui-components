@@ -30,6 +30,8 @@ import {
   DIAL_SLOT,
   arrowPath,
   bandFor,
+  moveTogether,
+  pinTo,
   rowLayout,
   visibleWindow,
   windowLabel,
@@ -898,6 +900,106 @@ describe("filling the container's height", () => {
     expect(dialGeometry(DOMAIN, FIXTURE[0])).toEqual(
       dialGeometry(DOMAIN, FIXTURE[0], VIEW_HEIGHT),
     );
+  });
+});
+
+describe("pinTo — a selection levels up", () => {
+  const JUNIOR: readonly [number, number] = [40_000, 60_000];
+  const MID: readonly [number, number] = [55_000, 80_000];
+  const SENIOR: readonly [number, number] = [70_000, 110_000];
+  const PEOPLE: readonly Entity[] = [
+    { id: "a", label: "A", old: 44_000, value: 46_000, range: JUNIOR },
+    { id: "b", label: "B", old: 60_000, value: 72_000, range: MID },
+    { id: "c", label: "C", old: 90_000, value: 95_000, range: SENIOR },
+    { id: "d", label: "D", old: 50_000, value: 52_000, range: JUNIOR },
+    { id: "gone", label: "Gone", old: 50_000, value: null, range: JUNIOR },
+  ];
+  const valueOf = (
+    moved: readonly { id: string; value: number }[],
+    id: string,
+  ) => moved.find((m) => m.id === id)?.value;
+
+  it("snaps every selected entity to the HIGHEST among them", () => {
+    // b is 72_000, a is 46_000 — a comes UP, b does not move.
+    const moved = pinTo(PEOPLE, ["a", "b"]);
+    expect(valueOf(moved, "a")).toBe(60_000);
+    expect(valueOf(moved, "b")).toBeUndefined();
+  });
+
+  it("clamps each one to its OWN band rather than dropping it", () => {
+    // Target is c's 95_000. A junior's ceiling is 60_000, so A follows as far
+    // as a junior can and stays pinned at the top of their band.
+    expect(valueOf(pinTo(PEOPLE, ["a", "c"]), "a")).toBe(60_000);
+  });
+
+  it("levels UP, never down — the expensive mistake is a mis-click that cuts", () => {
+    const moved = pinTo(PEOPLE, ["b", "d"]);
+    // d rises to b's 72_000, clamped to the junior ceiling of 60_000...
+    expect(valueOf(moved, "d")).toBe(60_000);
+    // ...and b, the highest, is untouched.
+    expect(valueOf(moved, "b")).toBeUndefined();
+  });
+
+  it("skips a terminated entity entirely, in both directions", () => {
+    const moved = pinTo(PEOPLE, ["a", "gone"]);
+    // It contributes no maximum and receives no amount.
+    expect(valueOf(moved, "gone")).toBeUndefined();
+    expect(moved).toHaveLength(0);
+  });
+
+  it("leaves unselected entities alone", () => {
+    const ids = map((m) => m.id, pinTo(PEOPLE, ["a", "b"]));
+    expect(ids).not.toContain("c");
+    expect(ids).not.toContain("d");
+  });
+
+  it("reports nothing when a lone entity is selected", () => {
+    expect(pinTo(PEOPLE, ["a"])).toEqual([]);
+    expect(pinTo(PEOPLE, [])).toEqual([]);
+  });
+});
+
+describe("moveTogether — a pinned group drags as one", () => {
+  const JUNIOR: readonly [number, number] = [40_000, 60_000];
+  const SENIOR: readonly [number, number] = [70_000, 110_000];
+  const PEOPLE: readonly Entity[] = [
+    { id: "a", label: "A", old: 44_000, value: 50_000, range: JUNIOR },
+    { id: "b", label: "B", old: 90_000, value: 90_000, range: SENIOR },
+    { id: "gone", label: "Gone", old: 50_000, value: null, range: JUNIOR },
+  ];
+  const valueOf = (
+    moved: readonly { id: string; value: number }[],
+    id: string,
+  ) => moved.find((m) => m.id === id)?.value;
+
+  it("applies the SAME delta to every selected entity", () => {
+    const moved = moveTogether(PEOPLE, ["a", "b"], 5_000);
+    expect(valueOf(moved, "a")).toBe(55_000);
+    expect(valueOf(moved, "b")).toBe(95_000);
+  });
+
+  it("clamps each to its own band, so one hitting a ceiling stops there", () => {
+    const moved = moveTogether(PEOPLE, ["a", "b"], 30_000);
+    expect(valueOf(moved, "a")).toBe(60_000); // junior ceiling
+    expect(valueOf(moved, "b")).toBe(110_000); // senior ceiling
+  });
+
+  it("moves downward just as well", () => {
+    expect(valueOf(moveTogether(PEOPLE, ["a", "b"], -5_000), "a")).toBe(45_000);
+  });
+
+  it("applies the delta to each OWN value, so a split group keeps its shape", () => {
+    // If it applied the delta to a shared figure, these two would collapse
+    // onto one another the moment the group was nudged.
+    const moved = moveTogether(PEOPLE, ["a", "b"], 1_000);
+    expect(
+      (valueOf(moved, "b") as number) - (valueOf(moved, "a") as number),
+    ).toBe(40_000);
+  });
+
+  it("never moves a terminated entity or an unselected one", () => {
+    const moved = moveTogether(PEOPLE, ["a", "gone"], 1_000);
+    expect(map((m) => m.id, moved)).toEqual(["a"]);
   });
 });
 

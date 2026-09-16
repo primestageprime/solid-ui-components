@@ -141,6 +141,7 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
+import { filter } from "../../fn";
 import { clamp } from "../../internal/math/clamp";
 import { observeSize } from "../../internal/dom/observeSize";
 import { SmallGhostButton } from "../Button";
@@ -158,6 +159,8 @@ import {
   VIEW_WIDTH,
   clampToRange,
   deltaLabelOf,
+  moveTogether,
+  pinTo,
   settle,
   dialHeightFor,
   dragStep,
@@ -244,6 +247,22 @@ export interface MutationSlidersProps {
    * and the band floor for someone who never had an `old` at all.
    */
   onRestore?: (id: string) => void;
+  /**
+   * Which entities are SELECTED, by id. Controlled when supplied.
+   *
+   * Omitted, the component keeps the selection itself — a consumer who only
+   * wants the pinning behaviour should not have to hold state to get it. Pass
+   * it when the selection means something ELSEWHERE too: a board that
+   * highlights the same people on a chart beside the dials needs to be the one
+   * holding the list.
+   */
+  selected?: readonly string[];
+  /**
+   * Called when a name is clicked, with the WHOLE new selection rather than
+   * the id that changed — a caller storing a list should not have to
+   * reimplement the toggle to keep up with it.
+   */
+  onSelectionChange?: (ids: readonly string[]) => void;
   /** Called by the `+` at the end of the row. Omitted, no `+` is drawn. */
   onAdd?: () => void;
   /**
@@ -422,9 +441,48 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   // Every dial in a row is the same height, so ONE signal serves them all —
   // whichever reports first, and they agree thereafter.
   const [measuredDialHeight, setMeasuredDialHeight] = createSignal(0);
+  /**
+   * The selection, when the caller does not hold it. CONTROLLED wins: if
+   * `selected` is supplied it is the truth and this is never read, so the two
+   * can never drift apart.
+   */
+  const [ownSelection, setOwnSelection] = createSignal<readonly string[]>([]);
+  const selection = (): readonly string[] => props.selected ?? ownSelection();
+  const isSelected = (id: string): boolean => selection().includes(id);
+  /** Pinning needs TWO or more — one selected dial still drags alone. */
+  const isPinned = (id: string): boolean =>
+    selection().length > 1 && isSelected(id);
 
   /** The height to DRAW at: the container's, floored, or the fixed default. */
   const dialHeight = (): number => dialHeightFor(measuredDialHeight());
+
+  /** Emit one change per entity a pin or a group move actually moved. */
+  const emitAll = (
+    moved: readonly { id: string; value: number }[],
+    commit: boolean,
+  ): void => {
+    for (const { id, value } of moved) {
+      props.onChange(id, value);
+      if (commit) props.onChangeEnd?.(id, value);
+    }
+  };
+
+  /**
+   * Toggle a name. When the toggle FORMS a group of two or more, every member
+   * snaps to the highest amount among them straight away — that is the moment
+   * the pin means something, and waiting for a drag would leave the reader
+   * looking at a group that says it is pinned and is not.
+   */
+  const toggleSelection = (id: string): void => {
+    const next = isSelected(id)
+      ? filter((other: string) => other !== id, selection())
+      : [...selection(), id];
+    if (props.selected === undefined) setOwnSelection(next);
+    props.onSelectionChange?.(next);
+    if (next.length > 1 && next.includes(id)) {
+      emitAll(pinTo(props.entities, next), true);
+    }
+  };
 
   const measure = (el: HTMLDivElement): void => {
     setWidth(el.clientWidth);
@@ -670,6 +728,17 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                 props.snap,
               );
               if (next !== current.clampedValue) {
+                if (isPinned(entity().id)) {
+                  emitAll(
+                    moveTogether(
+                      props.entities,
+                      selection(),
+                      next - (current.clampedValue ?? next),
+                    ),
+                    true,
+                  );
+                  return;
+                }
                 props.onChange(entity().id, next);
                 // Fired right after the step rather than on keyup: a held
                 // arrow key repeats keydown without an intervening keyup, so
@@ -693,31 +762,67 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
            */
           const handleChangeEnd = (values: number[]): void => {
             const current = dial();
-            props.onChangeEnd?.(
-              entity().id,
-              settle(current.range, values[0], props.snap),
-            );
+            const next = settle(current.range, values[0], props.snap);
+            if (isPinned(entity().id)) {
+              const delta = next - (current.clampedValue ?? next);
+              emitAll(moveTogether(props.entities, selection(), delta), true);
+              return;
+            }
+            props.onChangeEnd?.(entity().id, next);
           };
 
           const handleChange = (values: number[]): void => {
             const current = dial();
-            props.onChange(entity().id, clampToRange(current.range, values[0]));
+            // `settle`, not a bare clamp: the grid is this component's promise
+            // too, not only Kobalte's. Kobalte snaps to its OWN min-relative
+            // grid, which is not the same grid when a band floor is not a
+            // multiple of `snap`.
+            const next = settle(current.range, values[0], props.snap);
+            if (isPinned(entity().id)) {
+              // The delta THIS dial travelled, applied to every pinned peer —
+              // each clamped to its own band, so one hitting a ceiling stops
+              // there while the rest carry on.
+              const delta = next - (current.clampedValue ?? next);
+              if (delta !== 0) {
+                emitAll(
+                  moveTogether(props.entities, selection(), delta),
+                  false,
+                );
+              }
+              return;
+            }
+            props.onChange(entity().id, next);
           };
 
           return (
             <TightCenteredColumn>
-              <NowrapLabel
-                class={
-                  dial().removed
-                    ? "sui-mutation-sliders__name--removed"
-                    : undefined
-                }
+              {/* The name is the SELECT control. A real <button>, so Tab and
+                  Enter work without this component inventing key handling, and
+                  `aria-pressed` because it is a toggle rather than a command —
+                  a screen reader then says "Peter, pressed" instead of leaving
+                  the state to the colour. */}
+              <button
+                type="button"
+                class="sui-mutation-sliders__name"
+                classList={{
+                  "sui-mutation-sliders__name--removed": dial().removed,
+                  "sui-mutation-sliders__name--selected": isSelected(
+                    entity().id,
+                  ),
+                }}
+                aria-pressed={isSelected(entity().id)}
+                onClick={() => toggleSelection(entity().id)}
               >
-                {entity().label}
-              </NowrapLabel>
+                <NowrapLabel>{entity().label}</NowrapLabel>
+              </button>
               <KobalteSlider
                 ref={bindDial}
                 class="sui-mutation-sliders__dial"
+                classList={{
+                  "sui-mutation-sliders__dial--selected": isSelected(
+                    entity().id,
+                  ),
+                }}
                 orientation="vertical"
                 value={[dial().clampedValue ?? dial().range[0]]}
                 onChange={handleChange}

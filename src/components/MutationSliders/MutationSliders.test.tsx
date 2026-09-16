@@ -481,9 +481,10 @@ describe("MutationSliders", () => {
           onChange={() => {}}
         />
       ));
-      expect(getByText("Joe").className).toContain(
-        "sui-mutation-sliders__name--removed",
-      );
+      // The strike now lives on the NAME BUTTON, which wraps the label.
+      expect(
+        (getByText("Joe").closest("button") as HTMLElement).className,
+      ).toContain("sui-mutation-sliders__name--removed");
       expect(container.querySelectorAll("[data-removed]").length).toBe(1);
     });
 
@@ -1015,6 +1016,185 @@ describe("MutationSliders", () => {
     });
   });
 
+  describe("selecting names, and pinning what is selected", () => {
+    const JUNIOR: readonly [number, number] = [40_000, 60_000];
+    const SENIOR: readonly [number, number] = [70_000, 110_000];
+    const THREE: readonly Entity[] = [
+      { id: "a", label: "Ana", old: 44_000, value: 46_000, range: JUNIOR },
+      { id: "b", label: "Bo", old: 90_000, value: 95_000, range: SENIOR },
+      { id: "c", label: "Cal", old: 50_000, value: 52_000, range: JUNIOR },
+    ];
+    const nameButton = (container: HTMLElement, label: string) =>
+      [...container.querySelectorAll(".sui-mutation-sliders__name")].find(
+        (b) => b.textContent === label,
+      ) as HTMLButtonElement;
+
+    it("makes each name a real toggle button, not a div with a handler", () => {
+      const { container } = render(() => (
+        <MutationSliders entities={THREE} onChange={() => {}} />
+      ));
+      const ana = nameButton(container, "Ana");
+      expect(ana.tagName).toBe("BUTTON");
+      expect(ana.getAttribute("aria-pressed")).toBe("false");
+    });
+
+    it("toggles selection on click, and says so through aria-pressed", () => {
+      const { container } = render(() => (
+        <MutationSliders entities={THREE} onChange={() => {}} />
+      ));
+      const ana = () => nameButton(container, "Ana");
+      fireEvent.click(ana());
+      expect(ana().getAttribute("aria-pressed")).toBe("true");
+      fireEvent.click(ana());
+      expect(ana().getAttribute("aria-pressed")).toBe("false");
+    });
+
+    it("marks the selected entity's DIAL as well as its name", () => {
+      // The name alone is easy to miss in a row of nine.
+      const { container } = render(() => (
+        <MutationSliders entities={THREE} onChange={() => {}} />
+      ));
+      fireEvent.click(nameButton(container, "Ana"));
+      expect(
+        container.querySelectorAll(".sui-mutation-sliders__dial--selected"),
+      ).toHaveLength(1);
+    });
+
+    it("keeps its own selection when the caller does not supply one", () => {
+      const onSelectionChange = vi.fn();
+      const { container } = render(() => (
+        <MutationSliders
+          entities={THREE}
+          onChange={() => {}}
+          onSelectionChange={onSelectionChange}
+        />
+      ));
+      fireEvent.click(nameButton(container, "Ana"));
+      fireEvent.click(nameButton(container, "Bo"));
+      expect(onSelectionChange).toHaveBeenLastCalledWith(["a", "b"]);
+      expect(nameButton(container, "Bo").getAttribute("aria-pressed")).toBe(
+        "true",
+      );
+    });
+
+    it("is CONTROLLED when `selected` is supplied — the prop wins", () => {
+      const onSelectionChange = vi.fn();
+      const { container } = render(() => (
+        <MutationSliders
+          entities={THREE}
+          onChange={() => {}}
+          selected={["c"]}
+          onSelectionChange={onSelectionChange}
+        />
+      ));
+      expect(nameButton(container, "Cal").getAttribute("aria-pressed")).toBe(
+        "true",
+      );
+      fireEvent.click(nameButton(container, "Ana"));
+      // It reports the new list but does NOT move on its own, so the caller's
+      // prop and the rendering can never disagree.
+      expect(onSelectionChange).toHaveBeenCalledWith(["c", "a"]);
+      expect(nameButton(container, "Ana").getAttribute("aria-pressed")).toBe(
+        "false",
+      );
+    });
+
+    describe("pinning", () => {
+      it("does NOTHING on the first selection — one dial still drags alone", () => {
+        const onChange = vi.fn();
+        const { container } = render(() => (
+          <MutationSliders entities={THREE} onChange={onChange} />
+        ));
+        fireEvent.click(nameButton(container, "Ana"));
+        expect(onChange).not.toHaveBeenCalled();
+      });
+
+      it("snaps everyone to the HIGHEST the moment the group forms", () => {
+        const onChange = vi.fn();
+        const { container } = render(() => (
+          <MutationSliders entities={THREE} onChange={onChange} />
+        ));
+        fireEvent.click(nameButton(container, "Ana")); // 46_000
+        fireEvent.click(nameButton(container, "Bo")); // 95_000, the highest
+        // Ana rises, clamped to her junior ceiling; Bo is already highest.
+        expect(onChange).toHaveBeenCalledWith("a", 60_000);
+        expect(onChange).not.toHaveBeenCalledWith("b", expect.anything());
+      });
+
+      it("commits the snap, so a board keyed on committed values follows", () => {
+        const onChangeEnd = vi.fn();
+        const { container } = render(() => (
+          <MutationSliders
+            entities={THREE}
+            onChange={() => {}}
+            onChangeEnd={onChangeEnd}
+          />
+        ));
+        fireEvent.click(nameButton(container, "Ana"));
+        fireEvent.click(nameButton(container, "Bo"));
+        expect(onChangeEnd).toHaveBeenCalledWith("a", 60_000);
+      });
+
+      it("moves every pinned entity when ONE is dragged by a key", () => {
+        const onChange = vi.fn();
+        const { container, getByLabelText } = render(() => (
+          <MutationSliders
+            entities={[
+              {
+                id: "a",
+                label: "Ana",
+                old: 44_000,
+                value: 50_000,
+                range: JUNIOR,
+              },
+              {
+                id: "b",
+                label: "Bo",
+                old: 90_000,
+                value: 90_000,
+                range: SENIOR,
+              },
+            ]}
+            onChange={onChange}
+          />
+        ));
+        fireEvent.click(nameButton(container, "Ana"));
+        fireEvent.click(nameButton(container, "Bo"));
+        onChange.mockClear();
+        fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+        // niceStep across a [40k,110k] derived domain is 1_000.
+        expect(onChange).toHaveBeenCalledWith("a", 51_000);
+        expect(onChange).toHaveBeenCalledWith("b", 91_000);
+      });
+
+      it("leaves UNSELECTED entities completely alone", () => {
+        const onChange = vi.fn();
+        const { container, getByLabelText } = render(() => (
+          <MutationSliders entities={THREE} onChange={onChange} />
+        ));
+        fireEvent.click(nameButton(container, "Ana"));
+        fireEvent.click(nameButton(container, "Bo"));
+        onChange.mockClear();
+        fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+        expect(onChange).not.toHaveBeenCalledWith("c", expect.anything());
+      });
+
+      it("UNPINS when the group drops back to one", () => {
+        const onChange = vi.fn();
+        const { container, getByLabelText } = render(() => (
+          <MutationSliders entities={THREE} onChange={onChange} />
+        ));
+        fireEvent.click(nameButton(container, "Ana"));
+        fireEvent.click(nameButton(container, "Bo"));
+        fireEvent.click(nameButton(container, "Bo")); // deselect
+        onChange.mockClear();
+        fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange.mock.calls[0][0]).toBe("a");
+      });
+    });
+  });
+
   describe("every slot holds its space", () => {
     // Peter, 2026-09-16: "You have elements that become invisible (was L7) but
     // they don't hold their space. That means the control moves around when
@@ -1024,10 +1204,25 @@ describe("MutationSliders", () => {
     // CAN be pinned is the thing that causes the shift: a node that exists in
     // one state and not the other. Every assertion below is "the same nodes,
     // in the same order, in both states".
+    /**
+     * The column's shape as a COUNT PER SLOT rather than a walk over DOM
+     * children — nesting has changed twice under this test (the name became a
+     * button, the label moved inside it) and each time the walk broke while
+     * the property it was checking held. What the test means is "the same
+     * nodes are present in both states", so that is what it now says.
+     */
+    const SLOTS = [
+      ".sui-mutation-sliders__name",
+      ".sui-mutation-sliders__dial",
+      ".sui-mutation-sliders__figure",
+      ".sui-mutation-sliders__prior",
+      ".sui-mutation-sliders__footer",
+    ] as const;
     const shapeOf = (container: HTMLElement): string[] =>
       map(
-        (el: Element) => el.className.toString().split(" ")[0] || el.tagName,
-        [...(container.querySelector(".text")?.parentElement?.children ?? [])],
+        (selector: string) =>
+          `${selector}:${container.querySelectorAll(selector).length}`,
+        [...SLOTS],
       );
 
     const one = (value: number | null, old: number | null = 44_000) =>
@@ -1048,9 +1243,9 @@ describe("MutationSliders", () => {
       // `was …` row, jumping the figure and the button up under the pointer.
       const changed = shapeOf(one(52_000).container);
       const unchanged = shapeOf(one(44_000).container);
-      // Guard against the selector silently matching nothing, which would
-      // make this assertion vacuously true — it did, once.
-      expect(changed.length).toBeGreaterThan(3);
+      // Guard against a vacuous pass: every slot must actually be FOUND, not
+      // merely equal-and-absent. This has caught two bad selectors already.
+      expect(changed).toEqual(map((sel: string) => `${sel}:1`, [...SLOTS]));
       expect(unchanged).toEqual(changed);
     });
 
@@ -1090,7 +1285,9 @@ describe("MutationSliders", () => {
           onRemove={() => {}}
         />
       ));
-      const button = container.querySelector("button") as HTMLButtonElement;
+      const button = container.querySelector(
+        ".sui-mutation-sliders__footer",
+      ) as HTMLButtonElement;
       expect(button).toBeTruthy();
       expect(button.disabled).toBe(true);
       expect(button.getAttribute("class")).toContain(
@@ -1119,9 +1316,11 @@ describe("MutationSliders", () => {
           onRestore={() => {}}
         />
       ));
-      expect(container.querySelectorAll("button")).toHaveLength(1);
+      const footers = () =>
+        container.querySelectorAll(".sui-mutation-sliders__footer");
+      expect(footers()).toHaveLength(1);
       setValue(null);
-      expect(container.querySelectorAll("button")).toHaveLength(1);
+      expect(footers()).toHaveLength(1);
     });
   });
 

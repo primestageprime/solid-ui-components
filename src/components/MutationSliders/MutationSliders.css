@@ -272,6 +272,47 @@
   line-height: 1;
 }
 
+/* ── The name, which is also the select control ─────────────────────────
+   A real <button> stripped back to its text, so Tab and Enter work and the
+   toggle state is `aria-pressed` rather than a colour a screen reader cannot
+   see. It is `display: block` with no padding of its own: the column centres
+   it, and any padding here would move the name off the axis the dial sits on.
+
+   SELECTED reads twice over — the name takes the accent, and the dial behind
+   it gets a tinted ring. Neither alone is enough: the name alone is easy to
+   miss in a row of nine, and a ring alone does not say WHICH of the two marks
+   inside it is the selected thing. */
+.sui-mutation-sliders__name {
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.sui-mutation-sliders__name:focus-visible {
+  outline: 2px solid var(--sui-border-focus);
+  outline-offset: 2px;
+}
+
+.sui-mutation-sliders__name--selected {
+  color: var(--sui-accent);
+  font-weight: 600;
+}
+
+/* The ring is drawn OUTSIDE the dial's box, so it cannot change the height the
+   geometry was measured at — an inset ring would shrink the track by two
+   pixels and put the drawing and the pointer back out of step. */
+.sui-mutation-sliders__dial--selected {
+  outline: 1px solid rgba(var(--sui-accent-rgb), 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+  background: rgba(var(--sui-accent-rgb), 0.07);
+}
+
 /* ── The name ────────────────────────────────────────────────────────────
    A struck-through name is the sketch's own notation for "removed in the new
    scenario", and it is the first thing read — so it stays text, struck, rather

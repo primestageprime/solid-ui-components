@@ -139,6 +139,21 @@ const MutationSlidersBench: Component = () => {
     setEntities((current) => [...current, newHire(hired())]);
   };
 
+  /**
+   * A second, smaller row for the PINNING demonstration — deliberately three
+   * people across two bands, so selecting a junior and a senior shows the
+   * junior rising to their ceiling and stopping there rather than dropping
+   * out of the group.
+   */
+  const [pinned, setPinned] = createSignal<readonly Entity[]>([
+    { id: "p1", label: "Ana", old: 44_000, value: 46_000, range: JUNIOR },
+    { id: "p2", label: "Bo", old: 90_000, value: 95_000, range: SENIOR },
+    { id: "p3", label: "Cal", old: 50_000, value: 52_000, range: JUNIOR },
+  ]);
+  const setPinnedPay = (id: string, value: number): void => {
+    setPinned((current) => withValue(current, id, value));
+  };
+
   const reset = (): void => {
     setHired(0);
     setEntities(SKETCH);
@@ -162,6 +177,16 @@ const MutationSlidersBench: Component = () => {
             onRemove={letGo}
             onRestore={restore}
             onAdd={hire}
+            format={formatPay}
+            snap={1_000}
+          />
+        </CardSurface>
+        {/* Click two names: they snap to the higher of the two and then drag
+            together, each stopping at its own band's ceiling. */}
+        <CardSurface>
+          <MutationSliders
+            entities={pinned()}
+            onChange={setPinnedPay}
             format={formatPay}
             snap={1_000}
           />

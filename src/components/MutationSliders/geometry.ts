@@ -48,7 +48,7 @@
 //     and that clamp. It never formats (`format` is the consumer's).
 // ============================================
 import { clamp } from "../../internal/math/clamp";
-import { find, map } from "../../fn";
+import { filter, find, map } from "../../fn";
 
 /** A value domain, `[min, max]`, mapped linearly onto the track. */
 export type Domain = readonly [number, number];
@@ -614,6 +614,99 @@ export const niceStep = (domain: Domain): number => {
     Number.isInteger(domain[0]) && Number.isInteger(domain[1]);
   return wholeDomain ? Math.max(nice, 1) : nice;
 };
+
+/** One entity's new amount, as a pin or a group move computes it. */
+export interface PinnedValue {
+  readonly id: string;
+  readonly value: number;
+}
+
+/** An entity's own band, ordered — the only limit a pinned move respects. */
+const ownBand = (entity: Entity): Domain =>
+  entity.range[0] <= entity.range[1]
+    ? entity.range
+    : [entity.range[1], entity.range[0]];
+
+/** The selected entities that actually have an amount to move. */
+const movable = (
+  entities: readonly Entity[],
+  ids: readonly string[],
+): readonly Entity[] =>
+  filter(
+    (entity: Entity) => ids.includes(entity.id) && entity.value !== null,
+    entities,
+  );
+
+/** Only the entities whose amount would actually change. */
+const changedOnly = (
+  moved: readonly PinnedValue[],
+  from: readonly Entity[],
+): readonly PinnedValue[] =>
+  filter(
+    (pinned: PinnedValue) =>
+      pinned.value !== find((e: Entity) => e.id === pinned.id, from)?.value,
+    moved,
+  );
+
+/**
+ * The amounts a SELECTION takes when it forms: every selected entity snaps to
+ * the HIGHEST amount currently among them (Peter, 2026-09-16).
+ *
+ * Highest, not lowest and not the one you clicked. Pinning people together is
+ * something you do to LEVEL THEM UP, and levelling somebody DOWN by accident
+ * is the expensive mistake — a mis-click that cuts pay is much worse than one
+ * that raises it, and the raise is visible in the readout before anything is
+ * committed.
+ *
+ * Each lands on its OWN band, so someone whose ceiling cannot reach the target
+ * stops there and is pinned as far as they can go rather than being dropped
+ * from the group. A TERMINATED entity is skipped entirely: it has no amount to
+ * raise and none to contribute to the maximum.
+ *
+ * Returns only what MOVES, so a caller emits one change per entity that
+ * changed and none for the rest.
+ */
+export const pinTo = (
+  entities: readonly Entity[],
+  ids: readonly string[],
+): readonly PinnedValue[] => {
+  const chosen = movable(entities, ids);
+  if (chosen.length === 0) return [];
+  const highest = Math.max(
+    ...map((entity: Entity) => entity.value as number, chosen),
+  );
+  return changedOnly(
+    map(
+      (entity: Entity) => ({
+        id: entity.id,
+        value: clampToRange(ownBand(entity), highest),
+      }),
+      chosen,
+    ),
+    chosen,
+  );
+};
+
+/**
+ * The amounts a selection takes when ONE of them is dragged by `delta`: every
+ * selected entity moves by the same amount, each clamped to its own band.
+ *
+ * The delta is applied to each entity's OWN current value rather than to a
+ * shared figure, so a group that has already been split by different ceilings
+ * keeps its shape instead of collapsing back together on the first nudge.
+ */
+export const moveTogether = (
+  entities: readonly Entity[],
+  ids: readonly string[],
+  delta: number,
+): readonly PinnedValue[] =>
+  map(
+    (entity: Entity) => ({
+      id: entity.id,
+      value: clampToRange(ownBand(entity), (entity.value as number) + delta),
+    }),
+    movable(entities, ids),
+  );
 
 /** Everything one dial draws, from one entity. */
 export const dialGeometry = (
