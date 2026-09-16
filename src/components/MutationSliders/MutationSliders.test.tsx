@@ -246,6 +246,89 @@ describe("MutationSliders", () => {
     });
   });
 
+  describe("the track domain", () => {
+    it("is derived from the bands when the caller gives none", () => {
+      // Lowest floor $40k, highest ceiling $110k — so the bands fill the dial.
+      const { getByLabelText } = render(() => (
+        <MutationSliders entities={FIXTURE} onChange={() => {}} />
+      ));
+      // The thumb still announces its own BAND, not the derived track...
+      expect(getByLabelText("Peter").getAttribute("aria-valuemin")).toBe(
+        "70000",
+      );
+      // ...and the derived track is what the step is sized from: a $70k span
+      // steps by $1k, where the old hand-picked $200k domain stepped by $2k.
+      const onChange = vi.fn();
+      const { getByLabelText: get2 } = render(() => (
+        <MutationSliders entities={FIXTURE} onChange={onChange} />
+      ));
+      fireEvent.keyDown(get2("Reilly"), { key: "ArrowUp" });
+      expect(onChange).toHaveBeenCalledWith("reilly", 75_000);
+    });
+
+    it("still takes an explicit domain, to hold the scale still", () => {
+      const onChange = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders
+          entities={FIXTURE}
+          domain={DOMAIN}
+          onChange={onChange}
+        />
+      ));
+      fireEvent.keyDown(getByLabelText("Reilly"), { key: "ArrowUp" });
+      expect(onChange).toHaveBeenCalledWith("reilly", 76_000);
+    });
+  });
+
+  describe("the signed delta label", () => {
+    it("names the change beside the line, in the line's own tone", () => {
+      const { container } = render(() => (
+        <MutationSliders entities={FIXTURE} onChange={() => {}} format={asK} />
+      ));
+      expect(
+        container.querySelectorAll(".sui-mutation-sliders__delta--raise"),
+      ).toHaveLength(3);
+      expect(
+        container.querySelectorAll(".sui-mutation-sliders__delta--cut"),
+      ).toHaveLength(2);
+    });
+
+    it("is omitted for a hire, a departure, and an unchanged amount", () => {
+      const { container } = render(() => (
+        <MutationSliders
+          entities={[
+            {
+              id: "h",
+              label: "H",
+              old: null,
+              value: 45_000,
+              range: [40_000, 60_000],
+            },
+            {
+              id: "g",
+              label: "G",
+              old: 48_000,
+              value: null,
+              range: [40_000, 60_000],
+            },
+            {
+              id: "s",
+              label: "S",
+              old: 50_000,
+              value: 50_000,
+              range: [40_000, 60_000],
+            },
+          ]}
+          onChange={() => {}}
+          format={asK}
+        />
+      ));
+      expect(
+        container.querySelectorAll(".sui-mutation-sliders__delta"),
+      ).toHaveLength(0);
+    });
+  });
+
   it("lifts onChange with the entity's OWN id on a thumb-moving key", () => {
     const onChange = vi.fn();
     const { getByLabelText } = render(() => (

@@ -20,6 +20,10 @@
 //     2026-09-16). Hue is never the only cue — future-above-prior says the
 //     same thing by position, so the colourblind theme loses only the
 //     reinforcement.
+//   • Beside that line, the SIGNED delta as a figure — `+$2.5k` in the same
+//     tone, level with the line's midpoint. Peter's note of 2026-09-16 was
+//     that "the levels are very close"; at close quarters an area is hard to
+//     read and a number never is.
 //   • Under the dial, the future amount through the caller's `format`, with
 //     `was <prior>` muted beneath it — and nothing beneath it at all when the
 //     amount did not move, so the figure is never printed twice.
@@ -50,6 +54,11 @@
 // Kobalte thumb is an INVISIBLE grab handle over the future arrowhead. One
 // arrow shape, drawn once, from one geometry function: the two arrowheads
 // cannot drift apart.
+//
+// The TRACK's domain is DERIVED from the entities by default — lowest band
+// floor to highest band ceiling — so the bands fill the dial's full height
+// rather than huddling in a corner of a caller-chosen scale. `domain` stays as
+// an optional override for a track that must hold still.
 //
 // Kobalte's own min/max stay the DOMAIN, not the band, so the track element
 // keeps the fixed inset geometry.ts maps onto and nothing needs a per-entity
@@ -82,6 +91,7 @@ import { MonoMeta, MonoValue, NowrapLabel } from "../Text";
 import {
   BAND_HALF,
   CHANGE_HALF,
+  DELTA_X,
   type DialGeometry,
   type Domain,
   type Entity,
@@ -90,8 +100,10 @@ import {
   VIEW_HEIGHT,
   VIEW_WIDTH,
   clampToRange,
+  deltaLabelOf,
   dialGeometry,
   niceStep,
+  trackDomainOf,
 } from "./geometry";
 import "./MutationSliders.css";
 
@@ -102,10 +114,18 @@ export interface MutationSlidersProps {
   entities: readonly Entity[];
   /**
    * The shared `[min, max]` the TRACK runs, in the consumer's own units. Every
-   * dial in the row uses it, which is what makes two dials comparable. An
-   * entity's own role band (`Entity.range`) is a sub-span of this.
+   * dial in the row uses it, which is what makes two dials comparable.
+   *
+   * OPTIONAL. Left out, it is DERIVED from the entities — the lowest band
+   * floor to the highest band ceiling — so the bands fill the dial's full
+   * height instead of huddling in part of it. That is nearly always what you
+   * want: a caller-chosen domain is usually too generous at one end, and the
+   * entities already state the interesting range.
+   *
+   * Pass one only to hold the track STILL: a scale that must not move as
+   * entities come and go, or two rows that have to be read against each other.
    */
-  domain: Domain;
+  domain?: Domain;
   /**
    * Called when a drag or a thumb-moving key changes one entity's future
    * amount. The value is already clamped into that entity's role band — this
@@ -148,7 +168,11 @@ const REMOVE_MARK = "⊗";
  * already announces through `aria-valuenow` and the readout prints in words, so
  * putting the drawing in the accessibility tree would say each amount twice.
  */
-const DialMarks: Component<{ dial: DialGeometry }> = (props) => (
+const DialMarks: Component<{
+  dial: DialGeometry;
+  /** The signed delta, already formatted, or `null` when there is none. */
+  deltaLabel: string | null;
+}> = (props) => (
   <svg
     class="sui-mutation-sliders__marks"
     viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
@@ -192,6 +216,23 @@ const DialMarks: Component<{ dial: DialGeometry }> = (props) => (
         <path class="sui-mutation-sliders__arrow--future" d={arrow()} />
       )}
     </Show>
+    {/* The figure, level with the middle of the line it names. It is SVG text
+        rather than a DOM node because its y is decided by the data, and a DOM
+        node would need an inline style to sit there. */}
+    <Show when={props.deltaLabel}>
+      {(label) => (
+        <text
+          class="sui-mutation-sliders__delta"
+          classList={{
+            [`sui-mutation-sliders__delta--${props.dial.changeTone}`]: true,
+          }}
+          x={DELTA_X}
+          y={props.dial.deltaY ?? 0}
+        >
+          {label()}
+        </text>
+      )}
+    </Show>
   </svg>
 );
 
@@ -218,7 +259,13 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
    * derives its own `pageSize` as a tenth of the span snapped to this, so
    * Shift+Arrow and PageUp move ten steps with nothing asked of the caller.
    */
-  const step = (): number => niceStep(props.domain);
+  /**
+   * The track every dial shares. The caller's if they gave one, otherwise the
+   * span the entities themselves bracket.
+   */
+  const domain = (): Domain => props.domain ?? trackDomainOf(props.entities);
+
+  const step = (): number => niceStep(domain());
 
   /** The required line: what this person will be paid. */
   const futureReadout = (dial: DialGeometry): string =>
@@ -248,7 +295,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
           each dial's node and updates only what it draws. */}
       <Index each={props.entities}>
         {(entity) => {
-          const dial = (): DialGeometry => dialGeometry(props.domain, entity());
+          const dial = (): DialGeometry => dialGeometry(domain(), entity());
 
           // Kobalte models every slider as multi-thumb. This dial is
           // single-thumb by contract, so the array is an implementation detail
@@ -281,14 +328,17 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                 orientation="vertical"
                 value={[dial().clampedValue ?? dial().range[0]]}
                 onChange={handleChange}
-                minValue={props.domain[0]}
-                maxValue={props.domain[1]}
+                minValue={domain()[0]}
+                maxValue={domain()[1]}
                 step={step()}
                 disabled={dial().removed}
                 data-removed={dial().removed ? "" : undefined}
                 getValueLabel={(params) => format(params.values[0])}
               >
-                <DialMarks dial={dial()} />
+                <DialMarks
+                  dial={dial()}
+                  deltaLabel={deltaLabelOf(format, dial().delta)}
+                />
                 <KobalteSlider.Track class="sui-mutation-sliders__track">
                   <Show when={!dial().removed}>
                     <KobalteSlider.Thumb

@@ -29,16 +29,11 @@ import {
   SectionTitle,
 } from "../../../src/components/Text";
 
-/**
- * The shared scale every dial's track runs.
- *
- * NOT `[0, 200_000]`, which was the first guess: with bands of 20–40k it
- * squeezed every box into the lower fifth of the track and the row read as
- * marks huddled near the floor. The scale a pay comparison wants is one that
- * brackets the bands in play with a little air, not one that starts at zero
- * because money does.
- */
-const DOMAIN: readonly [number, number] = [30_000, 130_000];
+// NO `domain` here ON PURPOSE. The component derives the track from the
+// entities' own bands — lowest floor to highest ceiling — so the bands fill
+// the full height. This bench used to hand it `[30_000, 130_000]`, chosen by
+// eye; the derived span is [$40k, $110k] and every guess in between was wasted
+// track. A consumer passes one only to hold the scale STILL.
 
 /** The role bands. A band is a property of the ROLE, not of the person. */
 const JUNIOR: readonly [number, number] = [40_000, 60_000];
@@ -54,15 +49,26 @@ const SENIOR: readonly [number, number] = [70_000, 110_000];
  */
 const SKETCH: readonly Entity[] = [
   { id: "peter", label: "Peter", old: 90_000, value: 104_000, range: SENIOR },
-  { id: "adlai", label: "Adlai", old: 44_000, value: 52_000, range: JUNIOR },
+  // A deliberately SMALL move: two arrows this close are exactly the case
+  // Peter flagged, and the only thing that reads them apart is the figure.
+  { id: "adlai", label: "Adlai", old: 44_000, value: 46_500, range: JUNIOR },
   { id: "elaina", label: "Elaina", old: 62_000, value: 80_000, range: MID },
   { id: "reilly", label: "Reilly", old: 105_000, value: 74_000, range: SENIOR },
   { id: "flynn", label: "Flynn", old: 78_000, value: 55_000, range: MID },
   { id: "joe", label: "Joe", old: 48_000, value: null, range: JUNIOR },
 ];
 
-/** The consumer's unit. The component never invents one. */
-const formatPay = (value: number): string => `$${Math.round(value / 1000)}k`;
+/**
+ * The consumer's unit. The component never invents one.
+ *
+ * One decimal, dropped when it is zero, so a small delta reads as `+$2.5k`
+ * rather than being rounded into `+$3k` — which is the whole reason the delta
+ * label exists.
+ */
+const formatPay = (value: number): string => {
+  const thousands = Math.round(value / 100) / 10;
+  return `$${thousands}k`;
+};
 
 /**
  * The person the `+` appends: a new hire on the junior band.
@@ -140,10 +146,13 @@ const MutationSlidersBench: Component = () => {
         moved. The muted arrowhead is what they were paid and the accent one is
         what they will be; the line between them is green for a raise and red
         for a cut. Drag a thumb past a band edge and it stops: the band is the
-        clamp, and the readout follows. A struck-through name is someone who is
-        gone in the new scenario — their band and their prior arrow stay. The
-        `+` hires someone, which is the mirror image: a band and a future arrow,
-        no prior arrow, and a readout that says `new`.
+        clamp, and the readout follows. The figure beside each line is the
+        signed change, so two arrows a couple of thousand apart still say how
+        far apart they are. A struck-through name is someone who is gone in the
+        new scenario — their band and their prior arrow stay. The `+` hires
+        someone, which is the mirror image: a band and a future arrow, no prior
+        arrow, and a readout that says `new`. The track is not chosen here: the
+        component derives it from the bands themselves, so they fill the height.
       </MutedBody>
       <SpacedStack>
         <SpreadRow>
@@ -155,7 +164,6 @@ const MutationSlidersBench: Component = () => {
         <CardSurface>
           <MutationSliders
             entities={entities()}
-            domain={DOMAIN}
             onChange={setPay}
             onRemove={letGo}
             onAdd={hire}

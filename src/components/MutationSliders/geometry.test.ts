@@ -20,9 +20,15 @@ import {
   TRACK_TOP,
   TRACK_X,
   VIEW_HEIGHT,
+  VIEW_WIDTH,
+  DELTA_X,
+  MINUS,
   arrowPath,
   bandFor,
+  deltaLabelOf,
+  deltaOf,
   niceStep,
+  trackDomainOf,
   changeLineFor,
   clampToRange,
   dialGeometry,
@@ -341,8 +347,10 @@ describe("dialGeometry", () => {
 
 describe("mutationGeometry — the sketch as a table", () => {
   const rows = mutationGeometry(DOMAIN, FIXTURE);
+  const asK = (n: number) => `$${Math.round(n / 100) / 10}k`;
 
   it("prints the whole row so it can be read without a browser", () => {
+    console.log("trackDomain (derived):", trackDomainOf(FIXTURE));
     console.table(
       map(
         (row) => ({
@@ -353,6 +361,7 @@ describe("mutationGeometry — the sketch as a table", () => {
           value: row.value ?? "—",
           clampedValue: row.clampedValue ?? "—",
           changeTone: row.changeTone,
+          deltaLabel: deltaLabelOf(asK, row.delta) ?? "—",
           bandY: row.band.y,
           bandH: row.band.height,
           oldY: row.oldY ?? "—",
@@ -519,6 +528,102 @@ describe("toneOf with a missing end", () => {
   });
 });
 
+describe("trackDomainOf", () => {
+  it("runs from the lowest band floor to the highest band ceiling", () => {
+    // Peter, 2026-09-16: "use the full vertical space — go from the lowest
+    // min range to the highest high range".
+    expect(trackDomainOf(FIXTURE)).toEqual([40_000, 110_000]);
+  });
+
+  it("makes the lowest floor the BOTTOM of the track and the highest the TOP", () => {
+    const derived = trackDomainOf(FIXTURE);
+    const bands = map(
+      (e: Entity) => bandFor(derived, rangeOf(derived, e)),
+      FIXTURE,
+    );
+    const tops = map((b: { y: number }) => b.y, bands);
+    const bottoms = map(
+      (b: { y: number; height: number }) => b.y + b.height,
+      bands,
+    );
+    expect(Math.min(...tops)).toBe(TRACK_TOP);
+    expect(Math.max(...bottoms)).toBe(TRACK_BOTTOM);
+  });
+
+  it("ignores where the amounts sit — only the BANDS bracket the track", () => {
+    // Two people far inside their bands must not shrink the scale.
+    const tight: readonly Entity[] = [
+      {
+        id: "a",
+        label: "A",
+        old: 50_000,
+        value: 51_000,
+        range: [40_000, 60_000],
+      },
+    ];
+    expect(trackDomainOf(tight)).toEqual([40_000, 60_000]);
+  });
+
+  it("gives an empty row a unit domain rather than an infinite one", () => {
+    expect(trackDomainOf([])).toEqual([0, 1]);
+  });
+});
+
+describe("deltaOf and its label", () => {
+  it("is signed: positive for a raise, negative for a cut", () => {
+    expect(deltaOf(50_000, 52_500)).toBe(2_500);
+    expect(deltaOf(50_000, 48_800)).toBe(-1_200);
+  });
+
+  it("is null when nothing moved, for a hire, and for a departure", () => {
+    expect(deltaOf(50_000, 50_000)).toBeNull();
+    expect(deltaOf(null, 50_000)).toBeNull();
+    expect(deltaOf(50_000, null)).toBeNull();
+  });
+
+  it("labels the magnitude through the consumer's format, sign prefixed", () => {
+    // Peter's own two examples, 2026-09-16.
+    const asK = (n: number) => `$${n / 1000}k`;
+    expect(deltaLabelOf(asK, 2_500)).toBe("+$2.5k");
+    expect(deltaLabelOf(asK, -1_200)).toBe(`${MINUS}$1.2k`);
+  });
+
+  it("uses a REAL minus sign, not a hyphen", () => {
+    const label = deltaLabelOf((n) => `${n}`, -5) as string;
+    expect(label.startsWith(MINUS)).toBe(true);
+    expect(label.startsWith("-")).toBe(false);
+  });
+
+  it("never asks the consumer's format to render a sign", () => {
+    // The formatter only ever sees a positive magnitude, so a caller writing
+    // one for amounts does not have to think about differences at all.
+    const seen: number[] = [];
+    deltaLabelOf((n) => {
+      seen.push(n);
+      return `${n}`;
+    }, -1_200);
+    expect(seen).toEqual([1_200]);
+  });
+
+  it("draws no label at all when there is nothing to name", () => {
+    expect(deltaLabelOf(String, null)).toBeNull();
+  });
+});
+
+describe("the delta label's place on the dial", () => {
+  it("sits level with the middle of the line it names", () => {
+    const peter = dialGeometry(trackDomainOf(FIXTURE), FIXTURE[0]);
+    const line = peter.changeLine as { y: number; height: number };
+    expect(peter.deltaY).toBe(line.y + line.height / 2);
+  });
+
+  it("has no place when there is no line", () => {
+    const joe = dialGeometry(trackDomainOf(FIXTURE), FIXTURE[5]);
+    expect(joe.delta).toBeNull();
+    expect(joe.deltaY).toBeNull();
+  });
+});
+
 describe("the CSS mirrors the canvas", () => {
   // The dial's SVG overlay covers the Kobalte root exactly, and the Kobalte
   // TRACK is inset inside it by TRACK_TOP — that inset is what makes a thumb
@@ -537,8 +642,19 @@ describe("the CSS mirrors the canvas", () => {
     expect(VIEW_HEIGHT - TRACK_BOTTOM).toBe(TRACK_TOP);
   });
 
-  it("declares the dial width its centre line sits in the middle of", () => {
-    expect(css).toContain(`--sui-mutation-dial-width: ${TRACK_X * 2}px`);
+  it("declares the dial width the canvas draws into", () => {
+    expect(css).toContain(`--sui-mutation-dial-width: ${VIEW_WIDTH}px`);
+  });
+
+  it("declares where the track's centre line sits", () => {
+    // The track is NOT the canvas centre: the delta label takes the right of
+    // the dial, so the Kobalte track has to be told the same x this file uses.
+    expect(css).toContain(`--sui-mutation-track-x: ${TRACK_X}px`);
+  });
+
+  it("leaves the delta label room to the right of the future arrow", () => {
+    expect(DELTA_X).toBeGreaterThan(TRACK_X);
+    expect(DELTA_X).toBeLessThan(VIEW_WIDTH);
   });
 
   it("leaves room above the top of the track for an arrowhead", () => {

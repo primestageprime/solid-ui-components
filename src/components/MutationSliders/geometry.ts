@@ -128,6 +128,10 @@ export interface DialGeometry {
   readonly band: Box;
   /** The coloured line between the two arrows, or `null` when nothing moved. */
   readonly changeLine: Box | null;
+  /** The SIGNED change, or `null` when there is no change to name. */
+  readonly delta: number | null;
+  /** y of the delta label — the change line's midpoint. `null` with no delta. */
+  readonly deltaY: number | null;
   readonly changeTone: ChangeTone;
   /** `d` for the muted prior arrowhead, or `null` for a new hire. */
   readonly priorArrow: string | null;
@@ -139,10 +143,22 @@ export interface DialGeometry {
 // ONE size, deliberately (SUI: start with one, expand only on demand). These
 // are px, and MutationSliders.css gives the dial box exactly these px.
 
-export const VIEW_WIDTH = 34;
-export const VIEW_HEIGHT = 160;
-/** The centre line. Everything on the dial is symmetric about it. */
-export const TRACK_X = VIEW_WIDTH / 2;
+/**
+ * The canvas is WIDER than the track it draws, because the signed delta label
+ * lives on it, to the right of the change line. The track therefore sits
+ * left-of-centre rather than in the middle: the dial's balance point is the
+ * track PLUS its label, which is what the reader's eye takes in as one unit.
+ */
+export const VIEW_WIDTH = 88;
+/**
+ * Tall, and deliberately so. It was 160 when the domain was ten integer
+ * levels; a pay scale puts several bands on one track and Peter's note of
+ * 2026-09-16 was that "the levels are very close". Height is the only thing
+ * that separates two arrows a thousand pounds apart.
+ */
+export const VIEW_HEIGHT = 260;
+/** The centre line of the TRACK — not of the canvas. */
+export const TRACK_X = 22;
 /**
  * The track's inset at BOTH ends. It is the room an arrowhead needs beside the
  * domain's own extremes, so an amount sitting on `max` still draws its arrow
@@ -167,6 +183,15 @@ export const ARROW_LENGTH = 7;
 /** Half-height of an arrowhead's base. */
 export const ARROW_HALF = 5;
 
+/**
+ * Where the signed delta label starts, just clear of the future arrowhead's
+ * base. Everything right of here on the canvas is the label's room.
+ */
+export const DELTA_X = TRACK_X + ARROW_GAP + ARROW_LENGTH + 5;
+
+/** A REAL minus sign (U+2212), not a hyphen — this is a number, not a dash. */
+export const MINUS = "\u2212";
+
 /** `d` for the track: one vertical line with a short cap at each end. */
 export const TRACK_PATH = [
   `M ${TRACK_X} ${TRACK_TOP} L ${TRACK_X} ${TRACK_BOTTOM}`,
@@ -188,6 +213,26 @@ export const yFor = (domain: Domain, value: number): number => {
   if (span === 0) return (TRACK_TOP + TRACK_BOTTOM) / 2;
   const fraction = (clamp(value, min, max) - min) / span;
   return TRACK_BOTTOM - fraction * (TRACK_BOTTOM - TRACK_TOP);
+};
+
+/**
+ * The track every dial shares, derived from the ENTITIES rather than asked of
+ * the caller: the lowest band floor to the highest band ceiling.
+ *
+ * This is what makes the bands fill the dial. A caller-chosen domain is almost
+ * always too generous at one end — a pay scale asked to start at zero spends
+ * its bottom third on salaries nobody is paid — and the dial then wastes the
+ * only dimension it has. The entities already state the interesting range;
+ * nobody should have to restate it.
+ *
+ * An empty row has no bands to bracket, so it gets a unit domain rather than
+ * `[Infinity, -Infinity]`.
+ */
+export const trackDomainOf = (entities: readonly Entity[]): Domain => {
+  if (entities.length === 0) return [0, 1];
+  const lows = map((entity: Entity) => entity.range[0], entities);
+  const highs = map((entity: Entity) => entity.range[1], entities);
+  return [Math.min(...lows), Math.max(...highs)];
 };
 
 /**
@@ -274,6 +319,40 @@ export const arrowPath = (
   ].join(" ");
 };
 
+/**
+ * The SIGNED change, or `null` when there is no change to name.
+ *
+ * `null` covers all three silences deliberately: an amount that did not move,
+ * a hire with no prior to measure from, and a departure with no future one.
+ * The readout row under the dial already says `new` and `—` for the last two,
+ * and a delta label beside them would be a second voice saying less.
+ */
+export const deltaOf = (
+  clampedOld: number | null,
+  clampedValue: number | null,
+): number | null => {
+  if (clampedOld === null || clampedValue === null) return null;
+  const delta = clampedValue - clampedOld;
+  return delta === 0 ? null : delta;
+};
+
+/**
+ * The delta as the reader sees it: the CONSUMER'S `format` applied to the
+ * magnitude, with the sign put in front by this component.
+ *
+ * The sign is prefixed here rather than passed through `format` because a
+ * consumer's formatter is written for an AMOUNT ("$104k"), and asking it to
+ * also render a signed difference would make every caller reimplement the same
+ * two characters — and get the minus wrong.
+ */
+export const deltaLabelOf = (
+  format: (value: number) => string,
+  delta: number | null,
+): string | null =>
+  delta === null
+    ? null
+    : `${delta > 0 ? "+" : MINUS}${format(Math.abs(delta))}`;
+
 /** The mantissas a "nice" step is allowed to take, smallest first. */
 const NICE_MANTISSAS = [1, 2, 5, 10] as const;
 
@@ -320,6 +399,8 @@ export const dialGeometry = (domain: Domain, entity: Entity): DialGeometry => {
     entity.old === null ? null : clampToRange(range, entity.old);
   const clampedValue =
     entity.value === null ? null : clampToRange(range, entity.value);
+  const line = changeLineFor(domain, clampedOld, clampedValue);
+  const delta = deltaOf(clampedOld, clampedValue);
   return {
     id: entity.id,
     label: entity.label,
@@ -333,7 +414,9 @@ export const dialGeometry = (domain: Domain, entity: Entity): DialGeometry => {
     oldY: clampedOld === null ? null : yFor(domain, clampedOld),
     valueY: clampedValue === null ? null : yFor(domain, clampedValue),
     band: bandFor(domain, range),
-    changeLine: changeLineFor(domain, clampedOld, clampedValue),
+    changeLine: line,
+    delta,
+    deltaY: line === null ? null : line.y + line.height / 2,
     changeTone: toneOf(clampedOld, clampedValue),
     priorArrow:
       clampedOld === null ? null : arrowPath(domain, clampedOld, "prior"),
