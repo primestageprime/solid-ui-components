@@ -18,9 +18,13 @@ import {
   VALUE_NEEDLE_RADIUS,
   VIEW_HEIGHT,
   bracePath,
+  braceCusp,
+  braceRegime,
   BRACE_CUSP_DEPTH,
+  BRACE_END_CURL,
   CALLOUT_PITCH,
   CENTER as CENTER_FOR_TEST,
+  type Center,
   capArc,
   clampedValue,
   gaugeGeometry,
@@ -307,12 +311,18 @@ describe("bracePath", () => {
     expect(round(Math.hypot(apex.x, apex.y))).toBe(60 + BRACE_CUSP_DEPTH);
   });
 
-  it("starts and ends on the curls, which turn back toward the ring", () => {
+  // Tight quarter-turns, the serifs of a typographic brace — not radial ticks.
+  it("starts and ends on curls that carry past the arm and hook inside it", () => {
     const brace = bracePath(center, 60, 10, 40, BRACE_CUSP_DEPTH);
-    const curlStart = pointAt(center, 60 - 4, 10);
-    const curlEnd = pointAt(center, 60 - 4, 40);
-    expect(brace.startsWith(`M ${curlStart.x} ${curlStart.y}`)).toBe(true);
-    expect(brace.endsWith(`${curlEnd.x} ${curlEnd.y}`)).toBe(true);
+    const [, startX, startY] = /^M (\S+) (\S+)/.exec(brace) ?? [];
+    const tipRadius = Math.hypot(Number(startX), Number(startY));
+    // The tip finishes INSIDE the brace circle, by about the curl's diameter.
+    expect(tipRadius).toBeLessThan(60);
+    expect(60 - tipRadius).toBeGreaterThan(BRACE_END_CURL);
+    expect(60 - tipRadius).toBeLessThan(BRACE_END_CURL * 2.5);
+    // A curl is a curve, so each end is a quadratic rather than a line.
+    expect((brace.match(/ Q /g) ?? []).length).toBe(2);
+    expect(brace).not.toMatch(/ L /);
   });
 
   it("collapses to the cusp alone when the delta is tiny", () => {
@@ -335,6 +345,149 @@ describe("bracePath", () => {
 
   it("emits nothing when the two needles coincide", () => {
     expect(bracePath(center, 60, 25, 25, BRACE_CUSP_DEPTH)).toBe("");
+  });
+});
+
+// Every point the brace draws has to lie BETWEEN the two needles. The curls
+// used to poke out past them, which read as the brace belonging to something
+// wider than the delta it measures. The budget is spent from the outside in:
+// curls first to go, then arms, and the cusp last — without it there is no
+// brace at all.
+describe("the brace stays inside the needles", () => {
+  const center = { cx: 0, cy: 0 };
+  const RADIUS = 60;
+
+  /**
+   * Every point a path command lands on or is steered by, as an angle in math
+   * degrees. Parsed per command rather than by scraping number pairs: an arc's
+   * `A rx ry rot large sweep x y` would otherwise read its two RADII as a
+   * coordinate, which is how this test first "failed" against a correct path.
+   */
+  const anglesOf = (d: string, about: Center = { cx: 0, cy: 0 }): number[] => {
+    const out: number[] = [];
+    const push = (x: number, y: number) =>
+      out.push((Math.atan2(-(y - about.cy), x - about.cx) * 180) / Math.PI);
+    for (const part of d.matchAll(/([MLQCA])((?:\s+-?[\d.e-]+)+)/g)) {
+      const nums = part[2].trim().split(/\s+/).map(Number);
+      if (part[1] === "A") push(nums[5], nums[6]);
+      else for (let i = 0; i + 1 < nums.length; i += 2) push(nums[i], nums[i + 1]);
+    }
+    return out;
+  };
+
+  const staysInside = (from: number, to: number) => {
+    const low = Math.min(from, to);
+    const high = Math.max(from, to);
+    for (const angle of anglesOf(bracePath(center, RADIUS, from, to, BRACE_CUSP_DEPTH))) {
+      expect(angle).toBeGreaterThanOrEqual(low - 0.001);
+      expect(angle).toBeLessThanOrEqual(high + 0.001);
+    }
+  };
+
+  it("picks the full brace when the span can pay for curls, arms and cusp", () => {
+    expect(braceRegime(RADIUS, 10, 64)).toBe("full");
+    staysInside(10, 64);
+    staysInside(64, 10);
+  });
+
+  it("drops the curls first when the span cannot pay for them", () => {
+    // 16° of span: arms and cusp fit, curls do not.
+    expect(braceRegime(RADIUS, 17, 33)).toBe("arms");
+    const brace = bracePath(center, RADIUS, 17, 33, BRACE_CUSP_DEPTH);
+    expect(brace).not.toMatch(/ Q /);
+    expect((brace.match(/ A /g) ?? []).length).toBe(2);
+    staysInside(17, 33);
+    staysInside(33, 17);
+  });
+
+  it("falls back to the cusp alone when there is no arm left either", () => {
+    expect(braceRegime(RADIUS, 24.4, 25.6)).toBe("cusp");
+    const brace = bracePath(center, RADIUS, 24.4, 25.6, BRACE_CUSP_DEPTH);
+    expect(brace).not.toMatch(/ A /);
+    expect(brace).not.toMatch(/ Q /);
+  });
+
+  it("spends the budget from the outside in as the span closes", () => {
+    const regimes = [54, 22, 16, 12, 1.2].map((span) =>
+      braceRegime(RADIUS, 25 - span / 2, 25 + span / 2),
+    );
+    expect(regimes).toEqual(["full", "full", "arms", "cusp", "cusp"]);
+  });
+
+  it("holds for the real dial, above and below the baseline", () => {
+    for (const value of [23000, -8833, 9000]) {
+      const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value });
+      const low = Math.min(g.baselineAngle, g.valueAngle);
+      const high = Math.max(g.baselineAngle, g.valueAngle);
+      for (const angle of anglesOf(g.brace, CENTER_FOR_TEST)) {
+        expect(angle).toBeGreaterThanOrEqual(low - 0.001);
+        expect(angle).toBeLessThanOrEqual(high + 0.001);
+      }
+    }
+  });
+
+  // The sharpness, measured rather than eyeballed. Each half has to arrive at
+  // the tip travelling nearly straight out along the apex's own radial line —
+  // from opposite sides — or the meeting point is a rounded lobe instead of a
+  // spike. This is the assertion that would fail if the control points drifted
+  // back out toward the apex's shoulders.
+  it("arrives at the apex within a few degrees of radial, from both sides", () => {
+    const cusp = braceCusp(center, 60, 10, 40, BRACE_CUSP_DEPTH);
+    const outward = pointAt(center, 1, cusp.mid);
+    const angleTo = (from: Point) => {
+      const dx = cusp.apex.x - from.x;
+      const dy = cusp.apex.y - from.y;
+      const dot = (dx * outward.x + dy * outward.y) / Math.hypot(dx, dy);
+      return (Math.acos(Math.min(1, Math.max(-1, dot))) * 180) / Math.PI;
+    };
+    // Not zero: a control exactly on the midline would give a needle with
+    // straight flanks. A small angle keeps the flanks concave and the tip
+    // sharp — the two tangents close on roughly a 25° V.
+    expect(angleTo(cusp.liftA)).toBeLessThan(20);
+    expect(angleTo(cusp.liftB)).toBeLessThan(20);
+    expect(angleTo(cusp.liftA) + angleTo(cusp.liftB)).toBeLessThan(30);
+    // ...and from OPPOSITE sides, so the tangents nearly reverse at the tip.
+    const sideOf = (p: Point) =>
+      Math.sign((cusp.apex.x - p.x) * outward.y - (cusp.apex.y - p.y) * outward.x);
+    expect(sideOf(cusp.liftA)).not.toBe(sideOf(cusp.liftB));
+  });
+
+  it("keeps the controls inside the apex, so the flanks stay concave", () => {
+    const cusp = braceCusp(center, 60, 10, 40, BRACE_CUSP_DEPTH);
+    const liftRadius = Math.hypot(cusp.liftA.x, cusp.liftA.y);
+    expect(liftRadius).toBeGreaterThan(60);
+    expect(liftRadius).toBeLessThan(60 + BRACE_CUSP_DEPTH * 0.7);
+  });
+
+  // Concavity, measured: each flank's midpoint has to fall on the ARC side of
+  // the straight line from its shoulder to the apex. A flank that bulged the
+  // other way would be the rounded lobe this shape exists not to be.
+  it("bows each flank toward the arc rather than away from it", () => {
+    const cusp = braceCusp(center, 60, 10, 40, BRACE_CUSP_DEPTH);
+    const midOfCubic = (p0: Point, p1: Point, p2: Point, p3: Point) => ({
+      x: (p0.x + 3 * p1.x + 3 * p2.x + p3.x) / 8,
+      y: (p0.y + 3 * p1.y + 3 * p2.y + p3.y) / 8,
+    });
+    for (const flank of [
+      [cusp.baseA, cusp.shoulderA, cusp.liftA, cusp.apex],
+      [cusp.baseB, cusp.shoulderB, cusp.liftB, cusp.apex],
+    ] as const) {
+      const belly = midOfCubic(flank[0], flank[1], flank[2], flank[3]);
+      const chordMid = {
+        x: (flank[0].x + flank[3].x) / 2,
+        y: (flank[0].y + flank[3].y) / 2,
+      };
+      // Closer to the centre than the straight chord would be = bowed inward.
+      expect(Math.hypot(belly.x, belly.y)).toBeLessThan(
+        Math.hypot(chordMid.x, chordMid.y),
+      );
+    }
+  });
+
+  it("keeps the cusp narrow against the arms it joins", () => {
+    const cusp = braceCusp(center, 60, 10, 40, BRACE_CUSP_DEPTH);
+    // The arms sweep 15 degrees each; the cusp takes a third of one.
+    expect(cusp.halfSpan).toBeLessThan(15 / 2);
   });
 });
 

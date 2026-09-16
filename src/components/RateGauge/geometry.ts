@@ -122,8 +122,12 @@ export const BASELINE_NEEDLE_RADIUS = RING_INNER - 10;
 export const SECTOR_RADIUS = RING_INNER - 10;
 /** The delta brace rides outside the ring; its cusp reaches further still. */
 export const BRACKET_RADIUS = RING_OUTER + 10;
-/** How far the brace's end curls turn back toward the ring. */
-export const BRACE_END_CURL = 4;
+/**
+ * Radius of the brace's end curls — about twice the stroke's own width, which
+ * is what makes them read as the tight serifs of a typographic `{` rather than
+ * as loose hooks. Each is a quarter-turn back toward the ring.
+ */
+export const BRACE_END_CURL = 2.25;
 /**
  * How far the brace's cusp points OUTWARD from the ring at its midpoint.
  *
@@ -132,9 +136,44 @@ export const BRACE_END_CURL = 4;
  * point rather than a bulge, shallow enough not to crowd the label column.
  */
 export const BRACE_CUSP_DEPTH = 6;
-/** Angular half-width of the cusp, and the floor it collapses to. */
-const BRACE_CUSP_HALF_SPAN = 9;
-const BRACE_MIN_CUSP_HALF_SPAN = 3.5;
+/**
+ * Angular half-width of the cusp, and the floor it collapses to.
+ *
+ * Narrow relative to the arms, so the brace reads as two long sweeps meeting
+ * at a POINT rather than as a lobe with two tails.
+ */
+const BRACE_CUSP_HALF_SPAN = 4.5;
+const BRACE_MIN_CUSP_HALF_SPAN = 3;
+/**
+ * The second control point of each cusp cubic, as a fraction of the cusp's
+ * depth and of its angular half-width.
+ *
+ * These two numbers are the tip. Each control sits well inside the apex and
+ * stays on its OWN side of the apex's radial line — never across it. Staying
+ * inside is what bows each side toward the arc, giving the concave flanks a
+ * typographic brace has; staying on its own side is what leaves the two halves
+ * arriving from opposite directions, so they meet at a point instead of
+ * rolling through a lobe.
+ *
+ * Pushed further out, the flanks straighten and the tip blunts; pushed onto
+ * the midline, the tip sharpens into a needle and the flanks lose their
+ * concavity. These are the values that hold both.
+ */
+const CUSP_LIFT_DEPTH_FRACTION = 0.55;
+const CUSP_LIFT_ANGLE_FRACTION = 0.12;
+/** The shoulders stay on the brace circle, so each half leaves the arc flush. */
+const CUSP_SHOULDER_ANGLE_FRACTION = 0.45;
+
+/**
+ * How far inside the two needles the brace's outermost point must stay.
+ *
+ * The brace annotates the span between the needles, so nothing of it may poke
+ * out past them — the curls used to, which read as the brace belonging to
+ * something wider than the delta it measures.
+ */
+const BRACE_END_MARGIN = 1;
+/** The least visible arc, in degrees, worth calling an arm. */
+const BRACE_MIN_ARM = 2;
 /** Half the cap arc's stroke, so its radial footprint can be reasoned about. */
 export const CAP_STROKE_HALF = 1.25;
 /** Radius of the filled terminal dot on a callout's anchor. */
@@ -387,6 +426,76 @@ export const sectorPath = (
  * sweep: the brace collapses to its cusp alone, which is the honest picture of
  * a difference too small to span.
  */
+/**
+ * One end curl: the tight quarter-turn a typographic brace finishes with.
+ *
+ * The control sits ON the brace circle just past the arm's end, so the stroke
+ * carries straight on before it turns; the tip then drops inside the circle.
+ * A straight radial tick — what this replaced — reads as a tick mark on a
+ * scale, which is the wrong family of shape entirely.
+ *
+ * `away` is the direction the curl continues in, i.e. away from the cusp.
+ */
+const endCurl = (
+  center: Center,
+  radius: number,
+  at: number,
+  away: number,
+): { readonly control: Point; readonly tip: Point } => {
+  const step = ((BRACE_END_CURL / radius) * 180) / Math.PI;
+  return {
+    control: pointAt(center, radius, at + away * step),
+    tip: pointAt(center, radius - BRACE_END_CURL * 1.7, at + away * step * 0.85),
+  };
+};
+
+/**
+ * The points that shape the cusp, separated out so the sharpness can be
+ * measured rather than eyeballed: `braceCusp.test` asserts that each half
+ * arrives at the apex within a few degrees of radial.
+ */
+export interface BraceCusp {
+  readonly mid: number;
+  readonly halfSpan: number;
+  readonly apex: Point;
+  readonly baseA: Point;
+  readonly baseB: Point;
+  readonly shoulderA: Point;
+  readonly shoulderB: Point;
+  readonly liftA: Point;
+  readonly liftB: Point;
+}
+
+export const braceCusp = (
+  center: Center,
+  radius: number,
+  from: number,
+  to: number,
+  cuspDepth: number,
+): BraceCusp => {
+  const mid = (from + to) / 2;
+  const direction = to > from ? 1 : -1;
+  const half = Math.abs(to - from) / 2;
+  const halfSpan = Math.max(
+    BRACE_MIN_CUSP_HALF_SPAN,
+    Math.min(BRACE_CUSP_HALF_SPAN, half * 0.6),
+  );
+  const liftRadius = radius + cuspDepth * CUSP_LIFT_DEPTH_FRACTION;
+  const liftAngle = halfSpan * CUSP_LIFT_ANGLE_FRACTION;
+  const shoulderAngle = halfSpan * CUSP_SHOULDER_ANGLE_FRACTION;
+  return {
+    mid,
+    halfSpan,
+    apex: pointAt(center, radius + cuspDepth, mid),
+    baseA: pointAt(center, radius, mid - direction * halfSpan),
+    baseB: pointAt(center, radius, mid + direction * halfSpan),
+    shoulderA: pointAt(center, radius, mid - direction * shoulderAngle),
+    shoulderB: pointAt(center, radius, mid + direction * shoulderAngle),
+    liftA: pointAt(center, liftRadius, mid - direction * liftAngle),
+    liftB: pointAt(center, liftRadius, mid + direction * liftAngle),
+  };
+};
+
 export const bracePath = (
   center: Center,
   radius: number,
@@ -395,37 +504,73 @@ export const bracePath = (
   cuspDepth: number,
 ): string => {
   if (from === to) return "";
-  const mid = (from + to) / 2;
   const direction = to > from ? 1 : -1;
+  const half = Math.abs(to - from) / 2;
+  const { mid, halfSpan: cusp, apex, baseA, baseB, shoulderA, shoulderB, liftA, liftB } =
+    braceCusp(center, radius, from, to, cuspDepth);
+  const peak = [
+    `C ${shoulderA.x} ${shoulderA.y} ${liftA.x} ${liftA.y} ${apex.x} ${apex.y}`,
+    `C ${liftB.x} ${liftB.y} ${shoulderB.x} ${shoulderB.y} ${baseB.x} ${baseB.y}`,
+  ].join(" ");
+  // ── the three regimes ─────────────────────────────────────────────────────
+  // Everything the brace draws has to lie between the two needles, so the
+  // angular budget is spent from the outside in: first the curls, then the
+  // arms, and the cusp last because without it there is no brace at all.
+  const curlStep = ((BRACE_END_CURL / radius) * 180) / Math.PI;
+  const withCurlsArm = half - curlStep - BRACE_END_MARGIN;
+  const bareArm = half - BRACE_END_MARGIN;
+  const fits = (arm: number) => arm - cusp >= BRACE_MIN_ARM;
+
+  // CUSP ONLY — no room for arms either way. Below the cusp's own floor this
+  // is all there is, and it is the one shape allowed to reach the needles:
+  // a cusp narrowed to a sub-degree delta would be a needle, not a brace.
+  if (cusp >= half || !fits(bareArm)) {
+    return `M ${baseA.x} ${baseA.y} ${peak}`;
+  }
+
+  const curled = fits(withCurlsArm);
+  const arm = curled ? withCurlsArm : bareArm;
+  const armFrom = mid - direction * arm;
+  const armTo = mid + direction * arm;
+  const endA = pointAt(center, radius, armFrom);
+  const endB = pointAt(center, radius, armTo);
+  const sweepIn = `A ${radius} ${radius} 0 ${arcFlags(armFrom, mid - direction * cusp)} ${baseA.x} ${baseA.y}`;
+  const sweepOut = `A ${radius} ${radius} 0 ${arcFlags(mid + direction * cusp, armTo)} ${endB.x} ${endB.y}`;
+
+  // ARMS ONLY — the span is too tight to spend on curls, so they go first.
+  if (!curled) {
+    return [`M ${endA.x} ${endA.y}`, sweepIn, peak, sweepOut].join(" ");
+  }
+
+  // FULL BRACE — curls, arms, cusp, all inside the needles by the margin.
+  const startCurl = endCurl(center, radius, armFrom, -direction);
+  const finishCurl = endCurl(center, radius, armTo, direction);
+  return [
+    `M ${startCurl.tip.x} ${startCurl.tip.y}`,
+    `Q ${startCurl.control.x} ${startCurl.control.y} ${endA.x} ${endA.y}`,
+    sweepIn,
+    peak,
+    sweepOut,
+    `Q ${finishCurl.control.x} ${finishCurl.control.y} ${finishCurl.tip.x} ${finishCurl.tip.y}`,
+  ].join(" ");
+};
+
+/** Which shape `bracePath` will draw for a span — the same budget, named. */
+export type BraceRegime = "full" | "arms" | "cusp";
+
+export const braceRegime = (
+  radius: number,
+  from: number,
+  to: number,
+): BraceRegime => {
   const half = Math.abs(to - from) / 2;
   const cusp = Math.max(
     BRACE_MIN_CUSP_HALF_SPAN,
     Math.min(BRACE_CUSP_HALF_SPAN, half * 0.6),
   );
-  const apex = pointAt(center, radius + cuspDepth, mid);
-  const baseA = pointAt(center, radius, mid - direction * cusp);
-  const baseB = pointAt(center, radius, mid + direction * cusp);
-  const shoulderA = pointAt(center, radius, mid - direction * cusp * 0.45);
-  const liftA = pointAt(center, radius + cuspDepth * 0.85, mid - direction * cusp * 0.12);
-  const liftB = pointAt(center, radius + cuspDepth * 0.85, mid + direction * cusp * 0.12);
-  const shoulderB = pointAt(center, radius, mid + direction * cusp * 0.45);
-  const peak = [
-    `C ${shoulderA.x} ${shoulderA.y} ${liftA.x} ${liftA.y} ${apex.x} ${apex.y}`,
-    `C ${liftB.x} ${liftB.y} ${shoulderB.x} ${shoulderB.y} ${baseB.x} ${baseB.y}`,
-  ].join(" ");
-  if (cusp >= half) return `M ${baseA.x} ${baseA.y} ${peak}`;
-  const endA = pointAt(center, radius, from);
-  const endB = pointAt(center, radius, to);
-  const curlA = pointAt(center, radius - BRACE_END_CURL, from);
-  const curlB = pointAt(center, radius - BRACE_END_CURL, to);
-  return [
-    `M ${curlA.x} ${curlA.y}`,
-    `L ${endA.x} ${endA.y}`,
-    `A ${radius} ${radius} 0 ${arcFlags(from, mid - direction * cusp)} ${baseA.x} ${baseA.y}`,
-    peak,
-    `A ${radius} ${radius} 0 ${arcFlags(mid + direction * cusp, to)} ${endB.x} ${endB.y}`,
-    `L ${curlB.x} ${curlB.y}`,
-  ].join(" ");
+  const curlStep = ((BRACE_END_CURL / radius) * 180) / Math.PI;
+  if (cusp >= half || half - BRACE_END_MARGIN - cusp < BRACE_MIN_ARM) return "cusp";
+  return half - curlStep - BRACE_END_MARGIN - cusp >= BRACE_MIN_ARM ? "full" : "arms";
 };
 
 /** What `gaugeGeometry` is asked about. */

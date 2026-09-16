@@ -74,9 +74,16 @@
 
 /* ---- The needles ---- */
 
-/* The brace is a stroke, never a filled shape. */
+/* The brace is a stroke, never a filled shape.
+
+   MITER at the joins, not round: the apex is a curve-to-curve join, and a
+   round linejoin would put a radius on exactly the point the whole shape is
+   for. The miter limit is generous because the two halves meet at a very
+   narrow angle — the default 4 would clip the tip back to a bevel, which is
+   the same rounding by another name. */
 .sui-rate-gauge__brace {
-  stroke-linejoin: round;
+  stroke-linejoin: miter;
+  stroke-miterlimit: 12;
 }
 
 /* The cap is an ARC concentric with the ring, so it must not fill. */
