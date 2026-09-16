@@ -659,10 +659,19 @@ const perYear = (delta: number): string =>
   `${delta < 0 ? "−" : "+"}$${Math.abs(Math.round(delta)).toLocaleString("en-US")}/yr`;
 
 /** The board, read as tables, with no browser in the room. */
+/**
+ * The board, read as tables, with no browser in the room — INCLUDING the state
+ * it opens in.
+ *
+ * `mutationId` is nullable for the same reason the board's own signal is: the
+ * opening frame has no mutation, and a headless observation that could not
+ * describe the default state would leave the one screen Peter always sees as
+ * the one screen with no terminal representation.
+ */
 const printTables = (
   people: readonly Person[],
   mutations: readonly Mutation[],
-  mutationId: string,
+  mutationId: string | null,
 ): void => {
   /* eslint-disable no-console */
   console.table(
@@ -675,7 +684,9 @@ const printTables = (
         costs: deltaOf(dial),
         rateEffect: -deltaOf(dial),
       }),
-      entitiesForMutation(people, mutationId, mutations),
+      mutationId === null
+        ? dialsWithoutMutation(people)
+        : entitiesForMutation(people, mutationId, mutations),
     ),
   );
   console.table(
@@ -722,7 +733,10 @@ const printTables = (
   // The calibration, so the four readings Peter specified are checkable from a
   // terminal and not only from the dial.
   console.table(rateBandTable());
-  const dials = entitiesForMutation(people, mutationId, mutations);
+  const dials =
+    mutationId === null
+      ? dialsWithoutMutation(people)
+      : entitiesForMutation(people, mutationId, mutations);
   console.log(
     "baseline",
     perYear(RATE_BASELINE),
@@ -886,8 +900,7 @@ const ScenarioBoardBench: Component = () => {
    */
 
   onMount(() => {
-    const at = editing();
-    if (DEBUG && at !== null) printTables(people(), mutations(), at);
+    if (DEBUG) printTables(people(), mutations(), editing());
   });
 
   /**
