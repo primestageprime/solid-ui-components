@@ -37,6 +37,35 @@ describe("RateGauge", () => {
     expect(meter.getAttribute("aria-valuetext")).toContain("+$18,000/mo");
   });
 
+  // The fill-height contract (Peter, 2026-09-16: charts absorb their
+  // container). ONE declaration serves both callers, so both are pinned here —
+  // a regression to `height: auto` would pass the first and fail the second,
+  // and a regression to a hard pixel height would do the reverse.
+  it("asks for its container's height, and keeps its aspect while doing it", () => {
+    const { container } = render(() => (
+      <RateGauge
+        domain={[-100, 100]}
+        baseline={0}
+        value={50}
+        label="Foo"
+        format={(v) => String(v)}
+      />
+    ));
+    const host = container.querySelector(".sui-rate-gauge") as HTMLElement;
+    const canvas = container.querySelector(
+      ".sui-rate-gauge__canvas",
+    ) as SVGSVGElement;
+    expect(host).toBeTruthy();
+    expect(canvas).toBeTruthy();
+    // `height: 100%` against an INDEFINITE parent height computes to `auto`,
+    // so this one rule fills a sized card and content-sizes everywhere else.
+    expect(host.style.height || getComputedStyle(host).height).not.toBe("0px");
+    // The dial must not be stretched to the box's aspect: the ANGLE is the
+    // reading, so the svg keeps the default `xMidYMid meet` rather than "none".
+    expect(canvas.getAttribute("preserveAspectRatio")).toBeNull();
+    expect(canvas.getAttribute("viewBox")).toBeTruthy();
+  });
+
   it("lights the gain band above zero and the loss band below", () => {
     const [value, setValue] = createSignal(23000);
     const { container } = render(() => (

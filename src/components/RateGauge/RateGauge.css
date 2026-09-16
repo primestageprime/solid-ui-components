@@ -8,12 +8,24 @@
 .sui-rate-gauge {
   display: block;
   width: 100%;
+  /* FILL THE HEIGHT IT IS GIVEN, and no more. `height: 100%` against a parent
+     of INDEFINITE height computes to `auto` by the CSS sizing rules, so this
+     one declaration serves both callers: drop the gauge in a card that has a
+     height and it takes it; drop it in a content-sized column and it sizes
+     from its width exactly as it always did. That is why there is no `fill`
+     prop — there is nothing for a caller to choose between. */
+  height: 100%;
 }
 
 .sui-rate-gauge__canvas {
   display: block;
   width: 100%;
-  height: auto;
+  /* Matches the host, for the same reason. The svg keeps its DEFAULT
+     `preserveAspectRatio` (`xMidYMid meet`) rather than taking `none`: a dial
+     stretched to a box's aspect stops being a circle, and the angle IS the
+     reading. So the ring scales to whichever dimension is tighter and centres
+     in the other — it absorbs the box without distorting the instrument. */
+  height: 100%;
   overflow: visible;
   /* The floor every callout inherits from, before its row's tone applies. */
   color: var(--sui-text-secondary);
