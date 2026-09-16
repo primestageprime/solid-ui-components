@@ -99,6 +99,49 @@ describe("ScrubChart composition", () => {
     ).toBeTruthy();
   });
 
+  // The DISCRIMINATING case for the fill height, and the reason it is written
+  // with no observer delivery at all: `observeSize` defers through
+  // `requestAnimationFrame`, and a browser SUSPENDS rAF for a document that is
+  // not visible. A height that arrives only through the observer is therefore
+  // frozen at its fallback in a hidden or backgrounded tab — and wrong for the
+  // first frame even in a visible one. So the only way to pass this is to
+  // measure the element synchronously on mount.
+  //
+  // Verified by mutation: removing the synchronous height read leaves the
+  // viewBox at the 200px default and this fails, while every other test in the
+  // file still passes.
+  it("takes its fill height from the element on mount, with no observer", () => {
+    const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    const FRAME_HEIGHT = 340;
+    const restore = installRects((el) =>
+      (el as HTMLElement).classList?.contains("sui-scrub-chart__frame")
+        ? rectOf({ left: 0, top: 0, width: 900, height: FRAME_HEIGHT })
+        : null,
+    );
+    try {
+      const { container } = render(() => (
+        <ScrubChart
+          cells={cells}
+          selected={15}
+          onScrub={() => {}}
+          chartHeight="fill"
+          renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+          renderChart={() => <svg data-testid="chart" />}
+        />
+      ));
+      // Whichever layers this configuration renders, every one of them states
+      // the SAME viewBox in chart units — so its height IS the measured frame
+      // height, not the 200px default it would keep without the read.
+      const boxes = [
+        ...container.querySelectorAll(".sui-scrub-chart__frame svg[viewBox]"),
+      ].map((el) => el.getAttribute("viewBox"));
+      expect(boxes.length).toBeGreaterThan(0);
+      for (const box of boxes) expect(box).toBe(`0 0 900 ${FRAME_HEIGHT}`);
+    } finally {
+      restore();
+    }
+  });
+
   it("renders no expand chevron in fill mode — the container owns the height", () => {
     const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
     // `chartHeightExpanded` is the chevron's master switch, so this is the

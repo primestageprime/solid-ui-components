@@ -202,8 +202,21 @@ export const ScrubChart = <C extends Cell>(
     // one synchronous read puts the real width on the first frame. A zero
     // width means the frame has no layout box yet (display: none, a detached
     // host, jsdom); the seed stays until the observer reports a real size.
-    const width = Math.round(frameEl.getBoundingClientRect().width);
+    const box = frameEl.getBoundingClientRect();
+    const width = Math.round(box.width);
     if (width > 0) setChartWidth(width);
+    // The HEIGHT needs the same synchronous first read, and for a second
+    // reason on top of the first-frame one. `observeSize` defers through
+    // `requestAnimationFrame`, and a browser SUSPENDS rAF for a document that
+    // is not visible — so in a hidden or backgrounded tab the frame's CSS box
+    // stretches (plain layout) while a height that arrived only through the
+    // observer stays at its fallback forever. The drawing then reads as
+    // stretched, and nothing corrects it until the tab is shown. Measuring
+    // here removes the dependency: the observer handles only CHANGES.
+    if (filling()) {
+      const height = Math.round(box.height);
+      if (height > 0) setMeasuredHeight(height);
+    }
     // observeSize change-guards and rAF-defers the write. Setting chartWidth
     // synchronously inside the observer dispatch re-rendered the chart (and the
     // page around it) mid-delivery, which re-queued this same observer and made
