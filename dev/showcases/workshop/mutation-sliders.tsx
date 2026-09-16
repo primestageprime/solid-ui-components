@@ -143,6 +143,22 @@ const MutationSlidersBench: Component = () => {
             format={formatPay}
           />
         </CardSurface>
+        {/* The same row, in a card too narrow for a single whole dial. It
+            carries no caption on purpose (Peter, 2026-09-16: "Remove all of
+            the explanatory text") — a 400px card beside a full-width one is
+            self-evident, and the point is to SEE the paging rather than read
+            about it. */}
+        <ConstrainedBox>
+          <CardSurface>
+            <MutationSliders
+              entities={entities()}
+              onChange={setPay}
+              onRemove={letGo}
+              onAdd={hire}
+              format={formatPay}
+            />
+          </CardSurface>
+        </ConstrainedBox>
       </SpacedStack>
     </div>
   );
