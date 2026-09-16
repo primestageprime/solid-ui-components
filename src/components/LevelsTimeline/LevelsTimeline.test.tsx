@@ -10,7 +10,15 @@ import { fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
 import { LevelsTimeline } from "./LevelsTimeline";
-import type { Mutation, Series, TimeDomain } from "./geometry";
+import {
+  type Level,
+  type Mutation,
+  type Series,
+  type TimeDomain,
+  type Transfer,
+  levelsRailGeometry,
+} from "./geometry";
+import { map } from "../../fn";
 
 const DOMAIN: TimeDomain = [new Date("2025-01-01"), new Date("2026-01-01")];
 
@@ -160,5 +168,206 @@ describe("LevelsTimeline", () => {
     expect(container.querySelectorAll(".sui-levels-timeline__line")).toHaveLength(
       0,
     );
+  });
+});
+
+// ============================================
+// The RAIL model. The old stepped tests above stay green on purpose: `series`
+// is deprecated but still shipped while scenario-board consumes it, so a
+// regression there is a broken consumer, not a stale test.
+// ============================================
+
+const LEVELS: readonly Level[] = [
+  {
+    id: "l5",
+    label: "L5",
+    value: 5000,
+    points: [
+      { at: new Date("2025-01-01"), count: 3 },
+      { at: new Date("2025-07-01"), count: 4 },
+      { at: new Date("2025-11-15"), count: 5 },
+    ],
+  },
+  {
+    id: "l6",
+    label: "L6",
+    value: 6500,
+    points: [
+      { at: new Date("2025-01-01"), count: 4 },
+      { at: new Date("2025-04-01"), count: 2 },
+    ],
+  },
+  {
+    id: "l7",
+    label: "L7",
+    value: 8000,
+    points: [
+      { at: new Date("2025-01-01"), count: 2 },
+      { at: new Date("2025-04-01"), count: 4 },
+    ],
+  },
+  {
+    id: "l8",
+    label: "L8",
+    value: 10000,
+    points: [{ at: new Date("2025-07-01"), count: 1 }],
+  },
+];
+
+const TRANSFERS: readonly Transfer[] = [
+  { at: new Date("2025-04-01"), from: "l6", to: "l7", count: 2 },
+];
+
+const renderRails = () =>
+  render(() => (
+    <LevelsTimeline
+      levels={LEVELS}
+      transfers={TRANSFERS}
+      mutations={MUTATIONS}
+      domain={DOMAIN}
+    />
+  ));
+
+describe("LevelsTimeline — rails", () => {
+  it("announces the headcounts and who moved where", () => {
+    const { container } = renderRails();
+    const label = container.querySelector("title")?.textContent ?? "";
+    expect(label).toContain("Headcount by pay level");
+    expect(label).toContain("L6: 4 people, ending at 2.");
+    expect(label).toContain("2 moved from L6 to L7 at mutation 1.");
+  });
+
+  it("draws one stroke per held span, each as thick as its headcount", () => {
+    const { container } = renderRails();
+    const rails = container.querySelectorAll(".sui-levels-timeline__rail");
+    // 3 + 2 + 2 + 1 spans.
+    expect(rails).toHaveLength(8);
+    const widths = map(
+      (rail: Element) => Number(rail.getAttribute("stroke-width")),
+      [...rails],
+    );
+    for (const width of widths) expect(width).toBeGreaterThan(0);
+  });
+
+  it("thins the source rail and thickens the destination across a raise", () => {
+    const { container } = renderRails();
+    const widthsAt = (y: number) =>
+      map(
+        (rail: Element) => Number(rail.getAttribute("stroke-width")),
+        [
+          ...container.querySelectorAll(
+            `.sui-levels-timeline__rail[y1="${y}"]`,
+          ),
+        ],
+      );
+    const geometry = levelsRailGeometry({
+      levels: LEVELS,
+      transfers: TRANSFERS,
+      mutations: MUTATIONS,
+      domain: DOMAIN,
+    });
+    const [l6Before, l6After] = widthsAt(geometry.rails[1].y);
+    expect(l6After).toBeLessThan(l6Before);
+    const [l7Before, l7After] = widthsAt(geometry.rails[2].y);
+    expect(l7After).toBeGreaterThan(l7Before);
+  });
+
+  it("runs a flow ribbon between the two rails at the moment of the move", () => {
+    const { container } = renderRails();
+    const ribbons = container.querySelectorAll(".sui-levels-timeline__ribbon");
+    expect(ribbons).toHaveLength(1);
+    expect(Number(ribbons[0].getAttribute("height"))).toBeGreaterThan(0);
+    expect(Number(ribbons[0].getAttribute("width"))).toBeGreaterThan(0);
+  });
+
+  it("names each rail with the level's own short code", () => {
+    const { getByText } = renderRails();
+    expect(getByText("L5")).toBeTruthy();
+    expect(getByText("L8")).toBeTruthy();
+  });
+
+  it("drops a rule at the lone hire that carries no flag", () => {
+    const { container } = renderRails();
+    const droplines = container.querySelectorAll(
+      ".sui-levels-timeline__dropline",
+    );
+    // 2025-11-15 only: the domain start is the frame, and 04/07 wear flags.
+    expect(droplines).toHaveLength(1);
+  });
+
+  it("draws no dropline where a numbered flag already rules the column", () => {
+    const { container } = renderRails();
+    const ruleXs = new Set(
+      map(
+        (rule: Element) => rule.getAttribute("x1"),
+        [...container.querySelectorAll(".sui-levels-timeline__rule")],
+      ),
+    );
+    for (const dropline of container.querySelectorAll(
+      ".sui-levels-timeline__dropline",
+    )) {
+      expect(ruleXs.has(dropline.getAttribute("x1"))).toBe(false);
+    }
+  });
+
+  it("draws nothing across a stretch nobody holds", () => {
+    const emptied: readonly Level[] = [
+      {
+        id: "gone",
+        label: "Gone",
+        value: 7000,
+        points: [
+          { at: new Date("2025-01-01"), count: 2 },
+          { at: new Date("2025-06-01"), count: 0 },
+        ],
+      },
+    ];
+    const { container } = render(() => (
+      <LevelsTimeline levels={emptied} mutations={[]} domain={DOMAIN} />
+    ));
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__rail"),
+    ).toHaveLength(1);
+  });
+
+  it("keeps the flags selectable in the rail model too", () => {
+    const onSelect = vi.fn();
+    const { getAllByRole } = render(() => (
+      <LevelsTimeline
+        levels={LEVELS}
+        transfers={TRANSFERS}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+        onSelectMutation={onSelect}
+      />
+    ));
+    fireEvent.click(getAllByRole("button")[2]);
+    expect(onSelect).toHaveBeenCalledWith("m3");
+  });
+
+  it("prefers levels over the deprecated series when both are passed", () => {
+    const { container } = render(() => (
+      <LevelsTimeline
+        levels={LEVELS}
+        series={SERIES}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+      />
+    ));
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__line"),
+    ).toHaveLength(0);
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__rail").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders an empty rail chart rather than throwing", () => {
+    const { container } = render(() => (
+      <LevelsTimeline levels={[]} transfers={[]} mutations={[]} domain={DOMAIN} />
+    ));
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__rail"),
+    ).toHaveLength(0);
   });
 });

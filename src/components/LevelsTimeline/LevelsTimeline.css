@@ -1,12 +1,17 @@
 /* LevelsTimeline — Atomic (Depth 1). Owns this file; composes nothing.
 
-   The host carries the group role and the announcement; the <svg> inside it is
-   the canvas. No box-model geometry here — the SVG coordinate system is this
-   component's layout engine (Layout Purity exemption 2: svg/canvas rendering).
+   The host carries the canvas; the <svg> inside it is the drawing surface. No
+   box-model geometry here — the SVG coordinate system is this component's
+   layout engine (Layout Purity exemption 2: svg/canvas rendering).
 
-   Every colour is a theme token. Series lines take the `--sui-series-*` ramp
-   (ADR 0003) by index; the primary series takes the primary ink instead, so it
-   reads as the total rather than as a ninth colour. */
+   Every colour is a theme token. A level's tone comes from the `--sui-series-*`
+   ramp (ADR 0003) by its index in the consumer's own order.
+
+   ORDER MATTERS in this file. The `__tone-N` classes set BOTH `stroke` and
+   `fill`, because a rail is stroked and a flow ribbon is filled from the same
+   token. Everything that must NOT be filled therefore declares `fill: none`
+   AFTER the tone block — same specificity, later wins. Move the tone block down
+   and every stepped path silently fills in. */
 
 .sui-levels-timeline {
   display: block;
@@ -34,14 +39,15 @@
 
 .sui-levels-timeline__tick-label {
   fill: var(--sui-text-muted);
+  stroke: none;
   font-size: 9px;
 }
 
-/* ---- The rules ----
+/* ---- The flags' rules ----
 
-   Thin, and under the lines: a rule locates a step, it does not compete with
-   one. Selection lights its rule in the accent and mutes the others, so the
-   reader's eye is pulled to one column of risers. */
+   Under everything: a rule locates a change, it does not compete with one.
+   Selection lights its rule in the accent and mutes the others, so the
+   reader's eye is pulled to one column. */
 
 .sui-levels-timeline__rule {
   stroke: var(--sui-border);
@@ -59,38 +65,98 @@
   opacity: 0.45;
 }
 
-/* ---- The stepped lines ---- */
+/* ---- The un-numbered changes ----
+
+   Thinner and fainter than a flag's rule, because a dropline carries no name.
+   It says only "something happened here", which is exactly what a lone hire on
+   no particular date needs. */
+
+.sui-levels-timeline__dropline {
+  stroke: var(--sui-text-muted);
+  stroke-width: 0.5;
+  stroke-dasharray: 1 4;
+  opacity: 0.6;
+}
+
+/* ---- The series ramp ----
+
+   One class drives both channels: a rail is STROKED with its tone, a flow
+   ribbon is FILLED with it. See the ordering note at the top of this file. */
+
+.sui-levels-timeline__tone-1 {
+  stroke: var(--sui-series-1);
+  fill: var(--sui-series-1);
+}
+.sui-levels-timeline__tone-2 {
+  stroke: var(--sui-series-2);
+  fill: var(--sui-series-2);
+}
+.sui-levels-timeline__tone-3 {
+  stroke: var(--sui-series-3);
+  fill: var(--sui-series-3);
+}
+.sui-levels-timeline__tone-4 {
+  stroke: var(--sui-series-4);
+  fill: var(--sui-series-4);
+}
+.sui-levels-timeline__tone-5 {
+  stroke: var(--sui-series-5);
+  fill: var(--sui-series-5);
+}
+.sui-levels-timeline__tone-6 {
+  stroke: var(--sui-series-6);
+  fill: var(--sui-series-6);
+}
+.sui-levels-timeline__tone-7 {
+  stroke: var(--sui-series-7);
+  fill: var(--sui-series-7);
+}
+.sui-levels-timeline__tone-8 {
+  stroke: var(--sui-series-8);
+  fill: var(--sui-series-8);
+}
+
+/* ---- The rails (the current model) ----
+
+   A rail is a run of horizontal strokes at one y whose WIDTH is the headcount.
+   `stroke-width` is set per span from geometry, so nothing here may declare one
+   — a CSS width would silently win over the data. `butt` caps matter too: a
+   round cap on a 10-unit rail would overhang its span by 5 units and make a
+   level look as though it was held before it was. */
+
+.sui-levels-timeline__rail {
+  fill: none;
+  stroke-linecap: butt;
+}
+
+/* The level's own short code, riding just above its rail's left end. */
+.sui-levels-timeline__rail-label {
+  fill: var(--sui-text-muted);
+  stroke: none;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+/* ---- The flows ----
+
+   A ribbon wears its SOURCE's tone at reduced alpha: it is a quantity leaving
+   one rail, and it must read as subordinate to the two solid rails it joins
+   rather than as a third rail standing on end. */
+
+.sui-levels-timeline__ribbon {
+  stroke: none;
+  opacity: 0.45;
+}
+
+/* ---- The stepped lines (DEPRECATED model) ----
+
+   Still shipped while scenario-board consumes `series`. Deleted in phase 3. */
 
 .sui-levels-timeline__line {
   fill: none;
   stroke-width: 1.5;
   stroke-linejoin: miter;
   stroke-linecap: butt;
-}
-
-.sui-levels-timeline__line--series-1 {
-  stroke: var(--sui-series-1);
-}
-.sui-levels-timeline__line--series-2 {
-  stroke: var(--sui-series-2);
-}
-.sui-levels-timeline__line--series-3 {
-  stroke: var(--sui-series-3);
-}
-.sui-levels-timeline__line--series-4 {
-  stroke: var(--sui-series-4);
-}
-.sui-levels-timeline__line--series-5 {
-  stroke: var(--sui-series-5);
-}
-.sui-levels-timeline__line--series-6 {
-  stroke: var(--sui-series-6);
-}
-.sui-levels-timeline__line--series-7 {
-  stroke: var(--sui-series-7);
-}
-.sui-levels-timeline__line--series-8 {
-  stroke: var(--sui-series-8);
 }
 
 /* The primary series wins the ink AND the weight — the two channels together,
@@ -110,6 +176,7 @@
 
 .sui-levels-timeline__flag-label {
   fill: var(--sui-text-primary);
+  stroke: none;
   font-size: 10px;
   font-weight: 600;
 }
