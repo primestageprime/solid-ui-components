@@ -115,7 +115,7 @@
 // vocabulary — the same disposition as Slider's notches.
 //
 // No override props and no factory: `entities`, `domain`, `onChange`,
-// `onRemove`, `onRestore`, `onAdd` and `format` are all DATA. There is no size, no variant
+// `onRemove`, `onRestore`, `onAdd`, `onChangeEnd` and `format` are all DATA. There is no size, no variant
 // and no tone to curry.
 // ============================================
 import { Slider as KobalteSlider } from "@kobalte/core/slider";
@@ -182,6 +182,19 @@ export interface MutationSlidersProps {
    * never emits a figure the band does not permit.
    */
   onChange: (id: string, value: number) => void;
+  /**
+   * Called ONCE when a gesture COMMITS — the pointer is released, or an arrow
+   * key has finished its step. The value is clamped into the band, exactly as
+   * `onChange` is.
+   *
+   * `onChange` fires on every intermediate dollar of a drag, which is what a
+   * readout wants and what anything EXPENSIVE does not: the scenario board
+   * keys timeline rails by pay amount, so following `onChange` would rebuild
+   * its rails hundreds of times across one drag and key them by amounts the
+   * reader never chose. Take this one for persistence, derived state, or
+   * anything that recomputes.
+   */
+  onChangeEnd?: (id: string, value: number) => void;
   // NOTE: there is deliberately no `step` prop. See `niceStep` in geometry.ts.
   /**
    * Called when the ⊗ under a dial is pressed. Omitted, no ⊗ is drawn at all
@@ -585,6 +598,12 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
               const next = clampToRange(current.range, from + sign * magnitude);
               if (next !== current.clampedValue) {
                 props.onChange(entity().id, next);
+                // Fired right after the step rather than on keyup: a held
+                // arrow key repeats keydown without an intervening keyup, so
+                // waiting for one would commit once at the END of a long
+                // press instead of once per step. Each step IS a completed
+                // gesture for the keyboard.
+                props.onChangeEnd?.(entity().id, next);
               }
             };
             el.addEventListener("keydown", onKeyDown, true);
@@ -593,6 +612,19 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
 
           const footer = () =>
             footerAction(dial(), entity().id, entity().label);
+
+          /**
+           * The drag's COMMIT. Kobalte fires this once on pointer release; it
+           * does not fire for the arrow keys, because those are intercepted
+           * above before Kobalte sees them, so that path emits its own.
+           */
+          const handleChangeEnd = (values: number[]): void => {
+            const current = dial();
+            props.onChangeEnd?.(
+              entity().id,
+              clampToRange(current.range, values[0]),
+            );
+          };
 
           const handleChange = (values: number[]): void => {
             const current = dial();
@@ -616,6 +648,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                 orientation="vertical"
                 value={[dial().clampedValue ?? dial().range[0]]}
                 onChange={handleChange}
+                onChangeEnd={handleChangeEnd}
                 minValue={domain()[0]}
                 maxValue={domain()[1]}
                 step={step()}
@@ -656,13 +689,15 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                   around when you change it"). Dragging a value onto its prior
                   amount used to delete this row, which jumped the big figure
                   and the button up under the pointer mid-gesture. */}
-              <MonoValue>{futureReadout(dial())}</MonoValue>
+              <MonoValue class="sui-mutation-sliders__figure">
+                {futureReadout(dial())}
+              </MonoValue>
               <MonoMeta
-                class={
+                class={`sui-mutation-sliders__prior${
                   priorReadout(dial()) === ""
-                    ? "sui-mutation-sliders__reserved"
-                    : undefined
-                }
+                    ? " sui-mutation-sliders__reserved"
+                    : ""
+                }`}
               >
                 {priorReadout(dial()) || NBSP}
               </MonoMeta>
@@ -673,7 +708,9 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                   "you did this and there is nothing more to do", when what the
                   reader wants is the way back. */}
               <SmallGhostButton
-                class={footer() ? undefined : "sui-mutation-sliders__reserved"}
+                class={`sui-mutation-sliders__footer${
+                  footer() ? "" : " sui-mutation-sliders__reserved"
+                }`}
                 aria-label={footer()?.label}
                 aria-hidden={footer() ? undefined : "true"}
                 disabled={!footer()}

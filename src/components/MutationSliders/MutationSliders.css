@@ -35,6 +35,7 @@
   --sui-mutation-dial-height: 260px;
   --sui-mutation-dial-width: 88px;
   --sui-mutation-dial-min-height: 180px;
+  --sui-mutation-footer-height: 24px;
   --sui-mutation-track-inset: 12px;
   /* The drag surface is wider than any drawn mark, so a press anywhere on the
      dial starts a drag — Kobalte slides from the TRACK, not only from the
@@ -224,6 +225,32 @@
    out of the tab order, so a reserved button is not a focus trap. */
 .sui-mutation-sliders__reserved {
   visibility: hidden;
+}
+
+/* An EXPLICIT line box on both readout rows, so their height comes from the
+   rule rather than from whichever glyphs happen to be in them. Measured in the
+   browser: without this, a terminated dial's em-dash gave a line box 1px
+   shorter than "$104k", which moved that column's figure and button by a pixel
+   against its neighbours. One pixel is not a bug anybody would report, but
+   "identical" is a promise that survives a font change and "within a pixel" is
+   not. */
+.sui-mutation-sliders__figure {
+  line-height: 1.25;
+}
+
+.sui-mutation-sliders__prior {
+  line-height: 1.35;
+}
+
+/* The footer button's box is PINNED, because its three states do not carry the
+   same content: ⊗ is a text glyph and ↺ is an `Icon` span, and measured in the
+   browser those gave button heights 1px apart. That pixel moved the whole
+   column — dial included — the moment you terminated somebody, which is
+   precisely the shift Peter reported. Fixing the box makes the three states
+   interchangeable by construction rather than by coincidence of font metrics. */
+.sui-mutation-sliders__footer {
+  height: var(--sui-mutation-footer-height);
+  line-height: 1;
 }
 
 /* ── The name ────────────────────────────────────────────────────────────

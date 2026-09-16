@@ -831,6 +831,88 @@ describe("MutationSliders", () => {
     });
   });
 
+  describe("onChangeEnd — once per committed gesture", () => {
+    const BAND: readonly [number, number] = [70_000, 110_000];
+    const SOLO: readonly Entity[] = [
+      { id: "ana", label: "Ana", old: 90_000, value: 90_000, range: BAND },
+    ];
+
+    it("fires ONCE for one arrow press, with the clamped value", () => {
+      const onChangeEnd = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders
+          entities={SOLO}
+          onChange={() => {}}
+          onChangeEnd={onChangeEnd}
+        />
+      ));
+      fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+      expect(onChangeEnd).toHaveBeenCalledTimes(1);
+      // niceStep([70k,110k]) is 500.
+      expect(onChangeEnd).toHaveBeenCalledWith("ana", 90_500);
+    });
+
+    it("does not fire when the step would leave the value where it is", () => {
+      // Already on the ceiling: no change, so nothing committed.
+      const onChangeEnd = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders
+          entities={[{ ...SOLO[0], value: BAND[1] }]}
+          onChange={() => {}}
+          onChangeEnd={onChangeEnd}
+        />
+      ));
+      fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+      expect(onChangeEnd).not.toHaveBeenCalled();
+    });
+
+    it("is optional — nothing breaks without it", () => {
+      const onChange = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders entities={SOLO} onChange={onChange} />
+      ));
+      fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+      expect(onChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("fires on a pointer release, clamped to the band", () => {
+      // CONTROLLED, the way a real consumer wires it: `onChange` feeds the
+      // value back. Without that the component's value never moves, so
+      // `onChangeEnd` can only honestly report the value it was given — which
+      // is what it did on the first writing of this test, and was right.
+      const [pay, setPay] = createSignal(90_000);
+      const onChangeEnd = vi.fn();
+      const onChange = vi.fn((_id: string, value: number) => setPay(value));
+      const restoreRects = installRects((el) =>
+        el.classList?.contains("sui-mutation-sliders__track")
+          ? rectOf({ left: 0, top: 0, width: 22, height: 200 })
+          : null,
+      );
+      const { container } = render(() => (
+        <MutationSliders
+          entities={[{ ...SOLO[0], value: pay() }]}
+          onChange={onChange}
+          onChangeEnd={onChangeEnd}
+        />
+      ));
+      const track = container.querySelector(
+        ".sui-mutation-sliders__track",
+      ) as HTMLElement;
+      const capture = installPointerCapture(track);
+      fireEvent.pointerDown(track, { clientY: 300, pointerId: 1, button: 0 });
+      fireEvent.pointerUp(track, { clientY: 300, pointerId: 1, button: 0 });
+      capture.restore();
+      restoreRects();
+      // Past the bottom of the track, so the band's floor.
+      expect(onChangeEnd).toHaveBeenCalledWith("ana", BAND[0]);
+      expect(onChangeEnd).toHaveBeenCalledTimes(1);
+      // And the drag itself reported more often than the commit did.
+      expect(onChange.mock.calls.length).toBeGreaterThanOrEqual(
+        onChangeEnd.mock.calls.length,
+      );
+    });
+  });
+
   describe("every slot holds its space", () => {
     // Peter, 2026-09-16: "You have elements that become invisible (was L7) but
     // they don't hold their space. That means the control moves around when
