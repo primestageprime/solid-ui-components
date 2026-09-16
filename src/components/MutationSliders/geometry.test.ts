@@ -36,6 +36,8 @@ import {
   deltaOf,
   dialHeightFor,
   dragStep,
+  settle,
+  snapTo,
   trackBottomOf,
   trackPath,
   niceStep,
@@ -475,6 +477,41 @@ describe("niceStep", () => {
 
   it("survives a zero-width domain rather than dividing by it", () => {
     expect(niceStep([5, 5])).toBe(1);
+  });
+});
+
+describe("snapTo and settle", () => {
+  it("rounds onto the grid, both ways", () => {
+    expect(snapTo(90_400, 1_000)).toBe(90_000);
+    expect(snapTo(90_600, 1_000)).toBe(91_000);
+    expect(snapTo(90_500, 1_000)).toBe(91_000);
+  });
+
+  it("passes the value through when there is no grid", () => {
+    expect(snapTo(90_437, undefined)).toBe(90_437);
+    expect(snapTo(90_437, 0)).toBe(90_437);
+    expect(snapTo(90_437, -5)).toBe(90_437);
+    expect(snapTo(90_437, Number.NaN)).toBe(90_437);
+  });
+
+  it("snaps a settled value onto the grid inside the band", () => {
+    expect(settle([70_000, 110_000], 90_437, 1_000)).toBe(90_000);
+  });
+
+  // The order matters, and this is the case that decides it.
+  it("lets the BAND win at an edge that is not on the grid", () => {
+    // A ceiling of 110_500 against a 1_000 grid snaps UP to 111_000 — above a
+    // limit the component promises never to cross. The clamp comes second and
+    // pulls it back to the ceiling exactly as it stands.
+    expect(snapTo(110_500, 1_000)).toBe(111_000);
+    expect(settle([70_000, 110_500], 110_500, 1_000)).toBe(110_500);
+    // And the same at the floor: 70_200 snaps DOWN to 70_000, below it.
+    expect(snapTo(70_200, 1_000)).toBe(70_000);
+    expect(settle([70_200, 110_000], 70_200, 1_000)).toBe(70_200);
+  });
+
+  it("still clamps with no grid at all", () => {
+    expect(settle([70_000, 110_000], 999_999)).toBe(110_000);
   });
 });
 

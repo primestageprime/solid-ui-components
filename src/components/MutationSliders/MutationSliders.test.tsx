@@ -831,6 +831,106 @@ describe("MutationSliders", () => {
     });
   });
 
+  describe("snap — pay lands on whole thousands", () => {
+    const BAND: readonly [number, number] = [70_000, 110_000];
+    const dragTo = (container: HTMLElement, clientY: number) => {
+      const track = container.querySelector(
+        ".sui-mutation-sliders__track",
+      ) as HTMLElement;
+      const capture = installPointerCapture(track);
+      fireEvent.pointerDown(track, { clientY, pointerId: 1, button: 0 });
+      capture.restore();
+    };
+
+    let restoreRects: () => void;
+    beforeEach(() => {
+      restoreRects = installRects((el) =>
+        el.classList?.contains("sui-mutation-sliders__track")
+          ? rectOf({ left: 0, top: 0, width: 22, height: 200 })
+          : null,
+      );
+    });
+    afterEach(() => restoreRects());
+
+    const one = (snap?: number, range: readonly [number, number] = BAND) => {
+      const onChange = vi.fn();
+      const view = render(() => (
+        <MutationSliders
+          entities={[
+            { id: "ana", label: "Ana", old: 90_000, value: 90_000, range },
+          ]}
+          onChange={onChange}
+          snap={snap}
+        />
+      ));
+      return { onChange, ...view };
+    };
+
+    it("emits MULTIPLES of snap on a drag", () => {
+      const { onChange, container } = one(1_000);
+      dragTo(container, 63);
+      dragTo(container, 111);
+      for (const call of onChange.mock.calls) {
+        expect((call[1] as number) % 1_000).toBe(0);
+      }
+      expect(onChange.mock.calls.length).toBeGreaterThan(0);
+    });
+
+    it("is off by default — the drag stays continuous", () => {
+      const { onChange, container } = one(undefined);
+      dragTo(container, 63);
+      expect((onChange.mock.calls[0][1] as number) % 1_000).not.toBe(0);
+    });
+
+    it("never emits outside a band whose edges are not on the grid", () => {
+      // The promise the component cannot break is the BAND; the grid is only
+      // a convenience. Dragging past either end must land inside, whatever the
+      // rounding would prefer. (Kobalte snaps to its own min-relative grid
+      // before this code sees the value, so the exact figure is its business —
+      // what is asserted here is the invariant, not the arithmetic.)
+      const { onChange, container } = one(1_000, [70_200, 110_500]);
+      dragTo(container, -400);
+      dragTo(container, 900);
+      expect(onChange.mock.calls.length).toBeGreaterThan(0);
+      for (const call of onChange.mock.calls) {
+        const value = call[1] as number;
+        expect(value).toBeGreaterThanOrEqual(70_200);
+        expect(value).toBeLessThanOrEqual(110_500);
+      }
+    });
+
+    it("leaves the arrow keys moving by the nice step", () => {
+      // niceStep([70k,110k]) is 500 and snap is 1000, so snap is COARSER and
+      // raises the key step — otherwise the keyboard could land between the
+      // rungs a drag is confined to.
+      const { onChange, getByLabelText } = one(1_000);
+      fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+      expect(onChange).toHaveBeenCalledWith("ana", 91_000);
+    });
+
+    it("does not change the keys when snap is FINER than the nice step", () => {
+      const onChange = vi.fn();
+      const { getByLabelText } = render(() => (
+        <MutationSliders
+          entities={[
+            {
+              id: "ana",
+              label: "Ana",
+              old: 90_000,
+              value: 90_000,
+              range: BAND,
+            },
+          ]}
+          onChange={onChange}
+          snap={100}
+        />
+      ));
+      // niceStep wins at 500; snap only governs which values exist.
+      fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
+      expect(onChange).toHaveBeenCalledWith("ana", 90_500);
+    });
+  });
+
   describe("onChangeEnd — once per committed gesture", () => {
     const BAND: readonly [number, number] = [70_000, 110_000];
     const SOLO: readonly Entity[] = [

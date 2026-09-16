@@ -145,6 +145,7 @@ import {
   VIEW_WIDTH,
   clampToRange,
   deltaLabelOf,
+  settle,
   dialHeightFor,
   dragStep,
   dialGeometry,
@@ -195,7 +196,24 @@ export interface MutationSlidersProps {
    * anything that recomputes.
    */
   onChangeEnd?: (id: string, value: number) => void;
-  // NOTE: there is deliberately no `step` prop. See `niceStep` in geometry.ts.
+  /**
+   * Round every emitted amount onto a grid of this size — `1000` to land pay
+   * on whole thousands (Peter, 2026-09-16: "Do have the pay amount snap to
+   * whole $k numbers").
+   *
+   * OPTIONAL, and omitted the drag stays continuous to the finest unit the
+   * domain can express. This is NOT the `step` prop I declined earlier: that
+   * one would have set how far a KEY moves, which is a property of the scale
+   * and is derived. This sets which values EXIST, which is a property of the
+   * consumer's domain — dollars come in whole thousands on a pay review even
+   * though the arithmetic does not care.
+   *
+   * The band still wins at the edges: a ceiling that is not a multiple of
+   * `snap` is emitted exactly as it stands rather than rounded past itself.
+   * It also raises the arrow-key step when it is coarser, so the keyboard
+   * cannot land between the rungs a drag is confined to.
+   */
+  snap?: number;
   /**
    * Called when the ⊗ under a dial is pressed. Omitted, no ⊗ is drawn at all
    * and a removed entity still reads as removed by its struck-through name.
@@ -451,10 +469,17 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
    * `step` governs the drag as well as the keyboard, which is why this is not
    * `niceStep` — see `dragStep` in geometry.ts.
    */
-  const step = (): number => dragStep(domain());
+  const step = (): number => props.snap ?? dragStep(domain());
 
-  /** What an ARROW KEY moves by. Ten of these for a page key. */
-  const keyStep = (): number => niceStep(domain());
+  /**
+   * What an ARROW KEY moves by. Ten of these for a page key.
+   *
+   * `snap` raises it when it is coarser: a grid of whole thousands with a
+   * finer key step would let the keyboard land between the rungs a drag is
+   * confined to, so two ways of moving the same thumb would disagree about
+   * which values exist.
+   */
+  const keyStep = (): number => Math.max(niceStep(domain()), props.snap ?? 0);
 
   /** The required line: what this person will be paid. */
   const futureReadout = (dial: DialGeometry): string =>
@@ -595,7 +620,11 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                   : keyStep();
               const sign = paging !== 0 ? paging : direction;
               const from = current.clampedValue ?? current.range[0];
-              const next = clampToRange(current.range, from + sign * magnitude);
+              const next = settle(
+                current.range,
+                from + sign * magnitude,
+                props.snap,
+              );
               if (next !== current.clampedValue) {
                 props.onChange(entity().id, next);
                 // Fired right after the step rather than on keyup: a held
@@ -622,7 +651,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
             const current = dial();
             props.onChangeEnd?.(
               entity().id,
-              clampToRange(current.range, values[0]),
+              settle(current.range, values[0], props.snap),
             );
           };
 

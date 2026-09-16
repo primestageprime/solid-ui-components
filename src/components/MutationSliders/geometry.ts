@@ -312,6 +312,29 @@ export const rangeOf = (domain: Domain, entity: Entity): Domain => {
 export const clampToRange = (range: Domain, value: number): number =>
   clamp(value, range[0], range[1]);
 
+/**
+ * Round a value onto a grid of `snap`. A non-positive or non-finite `snap`
+ * means no grid, and the value passes through.
+ */
+export const snapTo = (value: number, snap: number | undefined): number =>
+  snap !== undefined && snap > 0 && Number.isFinite(snap)
+    ? Math.round(value / snap) * snap
+    : value;
+
+/**
+ * Where a dragged value actually lands: on the grid, then on the band.
+ *
+ * THE ORDER MATTERS AND THE CLAMP WINS. A band whose edges are not multiples
+ * of `snap` — a ceiling of $110,500 against a $1,000 grid — would otherwise
+ * snap to $111,000 and be emitted ABOVE a limit the component promises never
+ * to cross. Snapping first and clamping second means the edge is emitted
+ * exactly as it stands: a value the band permits beats a value the grid
+ * prefers, because the band is a rule about what is allowed and the grid is
+ * only a convenience about what is tidy.
+ */
+export const settle = (range: Domain, value: number, snap?: number): number =>
+  clampToRange(range, snapTo(value, snap));
+
 /** The shaded box for a role band: its min→max on the track. */
 export const bandFor = (
   domain: Domain,

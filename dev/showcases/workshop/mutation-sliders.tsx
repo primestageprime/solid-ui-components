@@ -163,6 +163,7 @@ const MutationSlidersBench: Component = () => {
             onRestore={restore}
             onAdd={hire}
             format={formatPay}
+            snap={1_000}
           />
         </CardSurface>
         {/* The same row, in a card too narrow for a single whole dial. It
@@ -179,6 +180,7 @@ const MutationSlidersBench: Component = () => {
               onRestore={restore}
               onAdd={hire}
               format={formatPay}
+              snap={1_000}
             />
           </CardSurface>
         </ConstrainedBox>
