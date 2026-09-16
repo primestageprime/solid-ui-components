@@ -28,6 +28,25 @@
    All visual values come from `--sui-*` tokens.
    ============================================ */
 .sui-mutation-sliders {
+  /* CLAIM THE HEIGHT THE PARENT GIVES US. This is the TOP of the fill chain
+     and it was missing: `flex: 1 1 var(--sui-mutation-dial-height)` on the
+     dial distributes height WITHIN a column that already has one, which is
+     correct as far as it goes and does nothing if the root never claimed any.
+     Measured on the scenario board at 1400×1300: the cell offered 759px and
+     this root took 363px of content.
+
+     `height: 100%` against a parent of INDEFINITE height computes to `auto`
+     by the CSS sizing rules, so an unconstrained bench is unaffected — that
+     property is what makes this one declaration serve both callers, with no
+     `fill` prop and no branch. `min-height: 0` lets it SHRINK inside a flex
+     cell instead of pushing the card open.
+
+     geometry.test.ts asserts both declarations are present, because no
+     mounting test can: jsdom performs no layout, and a fill test that hands
+     the row a height directly passes whether or not the root would ever have
+     claimed one from a parent. */
+  height: 100%;
+  min-height: 0;
   /* Mirrors VIEW_HEIGHT / VIEW_WIDTH in geometry.ts — geometry.test.ts pins
      the pair. Tall, because the only thing that separates two arrows a
      thousand pounds apart is vertical room; and wider than the track, because

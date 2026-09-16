@@ -906,7 +906,20 @@ describe("the CSS mirrors the canvas", () => {
   // numbers live in two languages, so this test pins them together rather
   // than leaving a comment nobody re-reads.
   const here = dirname(fileURLToPath(import.meta.url));
-  const css = readFileSync(join(here, "MutationSliders.css"), "utf8");
+  /**
+   * The stylesheet with every COMMENT stripped.
+   *
+   * Asserting against the raw file is a trap I fell into twice: this file's
+   * comments quote the very declarations they explain — "`height: 100%`
+   * against a parent of INDEFINITE height..." — so a `toContain` matched the
+   * PROSE and passed with the rule deleted. A test that cannot fail is worse
+   * than no test, because it reads as a guarantee. Strip the commentary and
+   * only the CSS is left to match.
+   */
+  const css = readFileSync(join(here, "MutationSliders.css"), "utf8").replace(
+    /\/\*[\s\S]*?\*\//g,
+    "",
+  );
 
   it("declares the dial height this file draws into", () => {
     expect(css).toContain(`--sui-mutation-dial-height: ${VIEW_HEIGHT}px`);
@@ -915,6 +928,27 @@ describe("the CSS mirrors the canvas", () => {
   it("declares the track inset this file maps the domain onto", () => {
     expect(css).toContain(`--sui-mutation-track-inset: ${TRACK_TOP}px`);
     expect(VIEW_HEIGHT - TRACK_BOTTOM).toBe(TRACK_TOP);
+  });
+
+  // THE FILL CHAIN, asserted in CSS because nothing else can assert it.
+  //
+  // jsdom performs no layout, so no mounting test can tell whether the root
+  // claims height from its parent — and the fill tests that DO exist hand the
+  // row a height directly, so they pass either way. That blind spot shipped a
+  // component whose root had no height rule at all for two commits, while a
+  // commit message described the rule as present. These four lines are the
+  // only thing standing between that and happening again.
+  it("makes the ROOT claim the height its parent gives it", () => {
+    const root = css.slice(css.indexOf(".sui-mutation-sliders {"));
+    const rootRule = root.slice(0, root.indexOf("}"));
+    // Matched as DECLARATIONS — leading whitespace and trailing semicolon —
+    // so nothing but a real rule can satisfy them.
+    expect(rootRule).toMatch(/\n\s*height:\s*100%;/);
+    expect(rootRule).toMatch(/\n\s*min-height:\s*0;/);
+  });
+
+  it("lets the DIAL take the leftover height inside its column", () => {
+    expect(css).toContain("flex: 1 1 var(--sui-mutation-dial-height)");
   });
 
   it("declares the floor that geometry stops shrinking at", () => {
