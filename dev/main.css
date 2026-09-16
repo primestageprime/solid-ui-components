@@ -2821,3 +2821,16 @@ th:has(.tf-th-center) .hud-table__header-content {
 .scenario-board-frame {
   height: var(--sui-bench-viewport);
 }
+
+/* Scenario Board — the gauge's cell. It GROWS and shrinks with the row rather
+   than keeping its intrinsic width, so the bottom row stays side by side at
+   the widths Peter reviewed (1090px and up) instead of wrapping the gauge
+   underneath the sliders.
+   The min-width is what still allows a wrap, and it is the only number here:
+   the panel beside it is a definite 80%, so the row runs out of room exactly
+   when 20% of it drops below this — 200px at 20% is a 1000px row. Below that
+   the gauge would be narrower than its own callout column can read, and
+   wrapping is better than an illegible dial. */
+.scenario-board-gauge {
+  min-width: 200px;
+}

@@ -486,7 +486,7 @@ export const GrowFillBox: Component<BoxDataProps> = createBox({
  *  before content is consulted. For two stacked charts that must get the same
  *  room whatever they contain. */
 export const HalfFillColumn: Component<StackDataProps> = createStack({
-  gap: "sm",
+  gap: "xs",
   style: { flex: "1 1 0", "min-height": "0" },
 });
 
@@ -500,7 +500,7 @@ export const HalfFillColumn: Component<StackDataProps> = createStack({
  *  should keep only its intrinsic height (a toolbar, a control row) takes
  *  neither variant. For the overview band of a dashboard above its detail. */
 export const MinorFillColumn: Component<StackDataProps> = createStack({
-  gap: "sm",
+  gap: "xs",
   style: { flex: "30", "min-height": "0" },
 });
 

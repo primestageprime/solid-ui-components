@@ -18,7 +18,7 @@ export const CardSurface = createSurface({ padding: "md", radius: "md" });
  *  around the chart takes everything left. The chain a full-height chart card
  *  needs, in one variant rather than three wrappers at the call site. */
 export const FillCardSurface = createSurface({
-  padding: "md",
+  padding: "sm",
   radius: "md",
   direction: "column",
   gap: "xs",

@@ -56,6 +56,7 @@ import type {
   Level,
   Mutation,
   TimeDomain,
+  TimeValue,
   Transfer,
 } from "../../../src/components/LevelsTimeline";
 import { MutationSliders } from "../../../src/components/MutationSliders";
@@ -71,13 +72,12 @@ import {
   LooseWrapRow,
   MajorFillColumn,
   MinorFillColumn,
-  ActionSlot,
   SpreadRow,
   TightStack,
   ViewportColumn,
   WidePaneBox,
 } from "../../../src/components/Layout";
-import { CardSurface, FillCardSurface } from "../../../src/components/Surface";
+import { FillCardSurface } from "../../../src/components/Surface";
 import { SectionTitle, TextTitle } from "../../../src/components/Text";
 
 export const meta = { label: "Scenario Board" };
@@ -103,23 +103,11 @@ const TIME_DOMAIN: TimeDomain = [DOMAIN_START, DOMAIN_END];
  * built from a differently-constructed Date would draw the step and light no
  * flag.
  */
-const MUTATIONS: readonly Mutation[] = [
+const SEED_MUTATIONS: readonly Mutation[] = [
   { id: "spring", at: new Date("2025-04-01"), label: "1" },
   { id: "summer", at: new Date("2025-07-01"), label: "2" },
   { id: "autumn", at: new Date("2025-10-01"), label: "3" },
 ];
-
-/** The as-of points from the sketch's split button. The middle one starts selected. */
-const SEGMENTS: readonly { value: string; at: Date }[] = [
-  { value: "2025-01", at: new Date("2025-01-01") },
-  { value: "2025-06", at: new Date("2025-06-01") },
-  { value: "2026-01", at: new Date("2026-01-01") },
-];
-
-const SEGMENT_OPTIONS: readonly SegmentOption[] = map(
-  (segment: { value: string }) => ({ value: segment.value }),
-  SEGMENTS,
-);
 
 /**
  * The three ROLE BANDS. A band is a range of pay a role permits; it is the
@@ -164,71 +152,52 @@ const BANDS: readonly Band[] = [
  * the requirement lands on the dials, which always have one, rather than on
  * six literals that would have to repeat their band's numbers to satisfy it.
  */
-interface Person extends Omit<Entity, "range"> {
+interface Person {
+  readonly id: string;
+  readonly label: string;
   readonly band: BandId;
-  readonly stepAt: string;
+  /** Pay before the FIRST mutation. `null` = not on the payroll yet. */
+  readonly base: number | null;
+  /**
+   * What CHANGED, keyed by mutation id. An ABSENT key means this person did
+   * not move at that mutation — not that they were paid nothing.
+   *
+   * That absence is the whole reason the history is a map rather than a list
+   * of points: adding a new mutation needs NO change to anybody's history,
+   * because "unchanged at the new date" is what an absent key already says.
+   * Peter asked for a `historyWithMutation(person, at)` and the honest answer
+   * is that this model makes it the identity function, so there is none.
+   *
+   * A `null` VALUE is a termination at that mutation.
+   */
+  readonly changes: Readonly<Record<string, number | null>>;
 }
 
-/**
- * The board's fixture, mirroring the levels-timeline bench's three tracks at
- * six people instead of eleven (coordinator, 2026-09-16).
- *
- * The character of each track is preserved; the SIZE is not, and could not be.
- * Track A wants "several start equal" (three or more) and track C wants
- * "different-sized bumps" (two, to contrast), which needs seven people against
- * the sketch's six. B and C are therefore exact and A is degraded to two, since
- * "two start equal, one raises, one stays" still shows the equal-start-then-
- * diverge shape that is the point of it.
- *
- *   A — Peter and Joe both start on L2. Peter is raised off it at flag 1 and
- *       Joe LEAVES at the same flag, so A's L2 rail empties completely: two
- *       flows out of one level at one moment, and a rail that ends.
- *   B — Elaina and Reilly take the SAME step, L4 → L6, two flags apart.
- *   C — Adlai and Flynn bump on the SAME flag by different amounts, +1 and +3,
- *       so the two ribbon widths can be compared side by side.
- */
 const PEOPLE: readonly Person[] = [
   {
     id: "peter",
     label: "Peter",
     band: "A",
-    stepAt: "spring",
-    old: 2,
-    value: 3,
+    base: 2,
+    changes: { spring: 3 },
   },
-  { id: "joe", label: "Joe", band: "A", stepAt: "spring", old: 2, value: null },
+  { id: "joe", label: "Joe", band: "A", base: 2, changes: { spring: null } },
   {
     id: "elaina",
     label: "Elaina",
     band: "B",
-    stepAt: "spring",
-    old: 4,
-    value: 6,
+    base: 4,
+    changes: { spring: 6 },
   },
   {
     id: "reilly",
     label: "Reilly",
     band: "B",
-    stepAt: "autumn",
-    old: 4,
-    value: 6,
+    base: 4,
+    changes: { autumn: 6 },
   },
-  {
-    id: "adlai",
-    label: "Adlai",
-    band: "C",
-    stepAt: "summer",
-    old: 7,
-    value: 8,
-  },
-  {
-    id: "flynn",
-    label: "Flynn",
-    band: "C",
-    stepAt: "summer",
-    old: 7,
-    value: 10,
-  },
+  { id: "adlai", label: "Adlai", band: "C", base: 7, changes: { summer: 8 } },
+  { id: "flynn", label: "Flynn", band: "C", base: 7, changes: { summer: 10 } },
 ];
 
 /** The dial domain, in the consumer's own levels. */
@@ -332,51 +301,38 @@ export const rateOf = (entities: readonly Amounts[]): number =>
   RATE_BASELINE - payChangeOf(entities);
 
 /**
- * The as-of segment a mutation falls in: the last segment at or before it.
+ * The segment label for a mutation — its month.
  *
- * GAP, and worth stating plainly rather than hiding: the sketch's two date
- * rows do not correspond. The flags sit at 2025-04 / 2025-07 / 2025-10 and the
- * split button offers 2025-01 / 2025-06 / 2026-01, so there is no bijection —
- * mutations 2 AND 3 both land in the 2025-06 segment, and the 2026-01 segment
- * contains no mutation at all. Clicking flag 3 therefore selects 2025-06, and
- * clicking 2025-06 selects flag 2: the round trip is LOSSY by construction.
- * Renumbering one row to match the other would make the wiring look tidy and
- * would be an invention; the sketch is what it is.
+ * THE LOSSY MAPPING IS GONE. Until Peter merged the as-of control into the
+ * Mutations card, the flags sat at three dates and the split button offered
+ * three DIFFERENT ones, so two flags collapsed onto one segment and the round
+ * trip lost information. The segments ARE the mutations now — the control
+ * selects which mutation the dials are editing — so flag→segment→flag is the
+ * identity and there is nothing left to lose. The two functions that used to
+ * paper over the gap are deleted rather than kept as pass-throughs.
  */
-export const segmentForMutation = (mutationId: string): string | undefined => {
-  const mutation = find((m: Mutation) => m.id === mutationId, MUTATIONS);
-  if (mutation === undefined) return undefined;
-  const landed = findLast(
-    (segment: { value: string; at: Date }) =>
-      segment.at.getTime() <= timeOf(mutation.at),
-    SEGMENTS,
-  );
-  return landed?.value;
-};
+const segmentLabelOf = (mutation: Mutation): string =>
+  new Date(timeOf(mutation.at)).toISOString().slice(0, 7);
 
-/** The first mutation at or after a segment. `undefined` where none follows. */
-export const mutationForSegment = (
-  segmentValue: string,
-): string | undefined => {
-  const segment = find(
-    (s: { value: string }) => s.value === segmentValue,
-    SEGMENTS,
+/** The as-of control's options: one per mutation, in time order. */
+export const segmentOptionsOf = (
+  mutations: readonly Mutation[],
+): SegmentOption[] =>
+  map(
+    (mutation: Mutation) => ({
+      value: mutation.id,
+      label: segmentLabelOf(mutation),
+    }),
+    orderedMutations(mutations),
   );
-  if (segment === undefined) return undefined;
-  const next = find(
-    (m: Mutation) => timeOf(m.at) >= segment.at.getTime(),
-    MUTATIONS,
-  );
-  return next?.id;
-};
+
+/** Mutations in time order. Every walk below depends on this ordering. */
+export const orderedMutations = (mutations: readonly Mutation[]): Mutation[] =>
+  sortBy((mutation: Mutation) => timeOf(mutation.at), mutations);
 
 /** The band a person is in. Their dial's box and their rails' keyspace. */
 const bandOf = (bandId: BandId): Band =>
   find((band: Band) => band.id === bandId, BANDS) ?? BANDS[0];
-
-/** The mutation a person moves at, or `undefined` for one pinned to nothing. */
-const momentOf = (person: Person): Mutation | undefined =>
-  find((mutation: Mutation) => mutation.id === person.stepAt, MUTATIONS);
 
 /**
  * A level's id. EVERY id the board emits — on a level and on both ends of a
@@ -390,9 +346,7 @@ const levelIdFor = (bandId: BandId, pay: number): string => `${bandId}-L${pay}`;
 /**
  * A rail's caption. Deliberately SHORT and enumerated — `A · L2` — because the
  * chart paints it above the rail's left end the way an axis paints a tick, with
- * no ellipsize and no tooltip behind it. A consumer wanting a person's name
- * here would be asking the component to grow a text-truncation treatment it
- * does not have.
+ * no ellipsize and no tooltip behind it.
  */
 const payLabel = (bandId: BandId, pay: number): string => `${bandId} · L${pay}`;
 
@@ -401,31 +355,84 @@ const peopleIn = (people: readonly Person[], bandId: BandId): Person[] =>
   filter((person: Person) => person.band === bandId, people);
 
 /**
- * What a person was paid at a moment, or `null` when they are not there at all
- * — before a hire arrives, or after a departure leaves. `null` is absence, not
+ * What a person is paid from a mutation onward: their change at it if they
+ * moved, otherwise whatever they were already on.
+ */
+export const payFrom = (
+  person: Person,
+  mutationId: string,
+  mutations: readonly Mutation[],
+): number | null => {
+  const own = person.changes[mutationId];
+  if (own !== undefined) return own;
+  return payBefore(person, mutationId, mutations);
+};
+
+/**
+ * What a person was paid JUST BEFORE a mutation: the last change they made at
+ * any earlier mutation, or their base if they made none.
+ *
+ * This is the `old` the dial draws its fixed tick at, which is why it walks the
+ * mutations in time order rather than reading one key — a person raised at
+ * mutation 1 and untouched at mutation 2 has an `old` of their mutation-1 pay
+ * when the reader is editing mutation 2, not their base.
+ */
+export const payBefore = (
+  person: Person,
+  mutationId: string,
+  mutations: readonly Mutation[],
+): number | null => {
+  let carried = person.base;
+  for (const mutation of orderedMutations(mutations)) {
+    if (mutation.id === mutationId) return carried;
+    const own = person.changes[mutation.id];
+    if (own !== undefined) carried = own;
+  }
+  return carried;
+};
+
+/**
+ * What a person was paid at a MOMENT in time, or `null` when they are not on
+ * the payroll then — before a hire, after a termination. `null` is absence, not
  * zero: somebody on no pay would still be a head on a rail.
  */
-const payAt = (person: Person, time: number): number | null => {
-  const moment = momentOf(person);
-  if (moment === undefined) return person.value;
-  return timeOf(moment.at) <= time ? person.value : person.old;
+const payAt = (
+  person: Person,
+  time: number,
+  mutations: readonly Mutation[],
+): number | null => {
+  let carried = person.base;
+  for (const mutation of orderedMutations(mutations)) {
+    if (timeOf(mutation.at) > time) break;
+    const own = person.changes[mutation.id];
+    if (own !== undefined) carried = own;
+  }
+  return carried;
 };
 
 /** Every moment the board can change at: the domain's left edge and each flag. */
-const MOMENTS: readonly number[] = sortBy(
-  (time: number) => time,
-  [
-    DOMAIN_START.getTime(),
-    ...map((mutation: Mutation) => timeOf(mutation.at), MUTATIONS),
-  ],
-);
+const momentsOf = (mutations: readonly Mutation[]): number[] =>
+  sortBy(
+    (time: number) => time,
+    [
+      DOMAIN_START.getTime(),
+      ...map((mutation: Mutation) => timeOf(mutation.at), mutations),
+    ],
+  );
 
-/** The distinct pay figures a band's people touch, old and new alike, ascending. */
-const paysIn = (people: readonly Person[], bandId: BandId): number[] => {
+/** The distinct pay figures a band's people ever hold, ascending. */
+const paysIn = (
+  people: readonly Person[],
+  bandId: BandId,
+  mutations: readonly Mutation[],
+): number[] => {
   const pays = new Set<number>();
   for (const person of peopleIn(people, bandId)) {
-    if (person.old !== null) pays.add(person.old);
-    if (person.value !== null) pays.add(person.value);
+    if (person.base !== null) pays.add(person.base);
+    for (const mutation of mutations) {
+      const own = person.changes[mutation.id];
+      if (own !== undefined && own !== null) pays.add(own);
+    }
   }
   return sortBy((pay: number) => pay, [...pays]);
 };
@@ -441,13 +448,14 @@ export const countPointsFor = (
   people: readonly Person[],
   bandId: BandId,
   pay: number,
+  mutations: readonly Mutation[],
 ): CountPoint[] => {
   const members = peopleIn(people, bandId);
   const points: CountPoint[] = [];
   let previous = 0;
-  for (const time of MOMENTS) {
+  for (const time of momentsOf(mutations)) {
     const holders = filter(
-      (person: Person) => payAt(person, time) === pay,
+      (person: Person) => payAt(person, time, mutations) === pay,
       members,
     );
     if (holders.length === previous) continue;
@@ -458,7 +466,10 @@ export const countPointsFor = (
 };
 
 /** Every band's rails. One level per pay figure the band's people touch. */
-export const levelsOf = (people: readonly Person[]): Level[] =>
+export const levelsOf = (
+  people: readonly Person[],
+  mutations: readonly Mutation[],
+): Level[] =>
   flatMap(
     (band: Band) =>
       map(
@@ -466,38 +477,41 @@ export const levelsOf = (people: readonly Person[]): Level[] =>
           id: levelIdFor(band.id, pay),
           label: payLabel(band.id, pay),
           value: pay,
-          points: countPointsFor(people, band.id, pay),
+          points: countPointsFor(people, band.id, pay, mutations),
         }),
-        paysIn(people, band.id),
+        paysIn(people, band.id, mutations),
       ),
     BANDS,
   );
 
 /**
  * Every move, as a flow. Which ends are present is what the flow MEANS:
- * both = a raise or a cut, `from` only = a DEPARTURE out of the system,
- * `to` only = a HIRE into it.
+ * both = a raise or a cut, `from` only = a TERMINATION, `to` only = a HIRE.
  *
  * Two people making the identical move at the identical moment merge into ONE
  * ribbon of width two — the chart does no arithmetic on counts, so a caller
- * that wants them merged merges them, and this board does. Two DIFFERENT moves
- * at one moment (Peter's raise and Joe's departure at flag 1) stay two ribbons.
+ * that wants them merged merges them, and this board does.
  */
-export const transfersOf = (people: readonly Person[]): Transfer[] => {
+export const transfersOf = (
+  people: readonly Person[],
+  mutations: readonly Mutation[],
+): Transfer[] => {
   const merged = new Map<string, Transfer>();
-  for (const person of people) {
-    const moment = momentOf(person);
-    if (moment === undefined) continue;
-    const band = person.band;
-    const from = person.old === null ? undefined : levelIdFor(band, person.old);
-    const to =
-      person.value === null ? undefined : levelIdFor(band, person.value);
-    // Nobody moved: same pay before and after, or a record with neither end.
-    if (from === to) continue;
-    const at = new Date(timeOf(moment.at));
-    const key = `${at.getTime()}|${from ?? "out"}|${to ?? "out"}`;
-    const existing = merged.get(key);
-    merged.set(key, { at, from, to, count: (existing?.count ?? 0) + 1 });
+  for (const mutation of orderedMutations(mutations)) {
+    for (const person of people) {
+      const own = person.changes[mutation.id];
+      if (own === undefined) continue;
+      const was = payBefore(person, mutation.id, mutations);
+      if (was === own) continue;
+      const band = person.band;
+      const from = was === null ? undefined : levelIdFor(band, was);
+      const to = own === null ? undefined : levelIdFor(band, own);
+      if (from === to) continue;
+      const at = new Date(timeOf(mutation.at));
+      const key = `${at.getTime()}|${from ?? "out"}|${to ?? "out"}`;
+      const existing = merged.get(key);
+      merged.set(key, { at, from, to, count: (existing?.count ?? 0) + 1 });
+    }
   }
   return sortBy(
     (transfer: Transfer) => timeOf(transfer.at),
@@ -506,44 +520,75 @@ export const transfersOf = (people: readonly Person[]): Transfer[] => {
 };
 
 /**
+ * Add a mutation at a picked date, or SELECT the one already there.
+ *
+ * The timeline snaps a click to a month boundary, so "already there" is an
+ * exact timestamp match — no tolerance window to tune. Returns the mutation
+ * list and the id to select, so the caller does one thing with both outcomes
+ * rather than branching on whether anything was added.
+ */
+export const addMutation = (
+  mutations: readonly Mutation[],
+  at: Date,
+): { mutations: Mutation[]; selected: string } => {
+  const existing = find(
+    (mutation: Mutation) => timeOf(mutation.at) === at.getTime(),
+    mutations,
+  );
+  if (existing !== undefined) {
+    return { mutations: [...mutations], selected: existing.id };
+  }
+  const id = `picked-${at.getTime()}`;
+  const added = orderedMutations([...mutations, { id, at, label: "" }]);
+  // The flags are numbered by POSITION, so every label is restamped: inserting
+  // a mutation in the middle renumbers the ones after it, which is what a
+  // reader expects of "mutation 2".
+  const numbered = map(
+    (mutation: Mutation, index: number) => ({
+      ...mutation,
+      label: String(index + 1),
+    }),
+    added,
+  );
+  return { mutations: numbered, selected: id };
+};
+
+/**
  * A dial: an `Entity` whose `range` is CERTAIN.
  *
  * `Entity.range` is optional today and becomes required in phase 3. Narrowing
- * the return type here rather than saying `Entity[]` makes `entitiesOf` prove
- * at compile time that it sets one on every row — so the phase-3 tightening
- * cannot quietly break this board, and if someone ever adds a path through
- * this function that omits a range, it fails here instead of in a consumer.
+ * the return type rather than saying `Entity[]` makes the builder below prove
+ * at compile time that it sets one on every row.
+ *
+ * The two type-level guards that used to sit here are gone with the model
+ * change, and for a good reason rather than an oversight: a `Person` no longer
+ * has `old` or `value` at all — those are DERIVED for a chosen mutation — so
+ * there is no longer any assignability between `Person` and `Entity` for a
+ * guard to pin. `payBefore`/`payFrom` are the only bridge, and they are
+ * ordinary functions the compiler checks directly.
  */
 type Dial = Entity & { readonly range: NonNullable<Entity["range"]> };
 
 /**
- * PHASE-3 GUARDS. `Entity.range` becomes required once every consumer has
- * moved, and these two aliases are this board's proof that it has. They are
- * types, so they cost nothing at runtime and fail the build if either claim
- * stops holding.
+ * The dials for ONE mutation: each person's pay just before it against their
+ * pay from it onward.
  *
- * They exist because simulating the tightening locally caught three call sites
- * that a reading of the code had missed: `Person` deliberately has no `range`,
- * so the moment the field is required a `Person` stops being assignable to an
- * `Entity`, and every function typed to take an `Entity` breaks on a field it
- * never touches. Narrowing those functions to `Amounts` was the fix; these
- * pin it.
+ * This is what the as-of control selects. The dials are a view of one moment
+ * in the history, not the history itself, so switching mutation changes the
+ * NUMBERS on the same six faces rather than the people — which is why the
+ * paging row can keep its offset by position across the switch.
  */
-type _DialCarriesARange = Dial extends { range: NonNullable<Entity["range"]> }
-  ? true
-  : never;
-type _RateReadsPeopleDirectly = readonly Person[] extends readonly Amounts[]
-  ? true
-  : never;
-
-/** The dials, as `MutationSliders` wants them: a person plus their band's box. */
-export const entitiesOf = (people: readonly Person[]): Dial[] =>
+export const entitiesForMutation = (
+  people: readonly Person[],
+  mutationId: string,
+  mutations: readonly Mutation[],
+): Dial[] =>
   map(
     (person: Person) => ({
       id: person.id,
       label: person.label,
-      old: person.old,
-      value: person.value,
+      old: payBefore(person, mutationId, mutations),
+      value: payFrom(person, mutationId, mutations),
       range: bandOf(person.band).range,
     }),
     people,
@@ -597,32 +642,60 @@ const fanSeries = (id: string, sign: number) => ({
 const perMonth = (delta: number): string =>
   `${delta < 0 ? "−" : "+"}$${Math.abs(delta).toLocaleString("en-US")}/mo`;
 
-/** Replace one person's new pay, leaving every other row untouched. */
-const withValue = (
+/**
+ * Set one person's pay AT ONE MUTATION, leaving every other person and every
+ * other mutation untouched. A drag edits the selected mutation only, which is
+ * what makes the as-of control a position selector rather than a filter.
+ */
+export const withChange = (
   people: readonly Person[],
   id: string,
+  mutationId: string,
   value: number | null,
 ): Person[] =>
   map(
-    (person: Person) => (person.id === id ? { ...person, value } : person),
+    (person: Person) =>
+      person.id === id
+        ? { ...person, changes: { ...person.changes, [mutationId]: value } }
+        : person,
     people,
   );
 
+/**
+ * Undo a person's change at one mutation — the ↺ Restore the dial offers a
+ * terminated row. DELETING the key is the honest inverse of setting it: it
+ * returns them to "unchanged at this mutation", so they carry whatever the
+ * previous mutation left them on rather than a figure this function invented.
+ */
+export const withoutChange = (
+  people: readonly Person[],
+  id: string,
+  mutationId: string,
+): Person[] =>
+  map((person: Person) => {
+    if (person.id !== id) return person;
+    const { [mutationId]: _dropped, ...rest } = person.changes;
+    return { ...person, changes: rest };
+  }, people);
+
 /** The board, read as tables, with no browser in the room. */
-const printTables = (people: readonly Person[]): void => {
+const printTables = (
+  people: readonly Person[],
+  mutations: readonly Mutation[],
+  mutationId: string,
+): void => {
   /* eslint-disable no-console */
   console.table(
     map(
-      (person: Person) => ({
-        person: person.label,
-        band: person.band,
-        old: person.old ?? "— (hire)",
-        new: person.value ?? "— (departure)",
-        delta: deltaOf(person),
-        costs: deltaOf(person) * DOLLARS_PER_LEVEL,
-        rateEffect: -deltaOf(person) * DOLLARS_PER_LEVEL,
+      (dial: Dial) => ({
+        person: dial.label,
+        old: dial.old ?? "— (not yet hired)",
+        new: dial.value ?? "— (terminated)",
+        delta: deltaOf(dial),
+        costs: deltaOf(dial) * DOLLARS_PER_LEVEL,
+        rateEffect: -deltaOf(dial) * DOLLARS_PER_LEVEL,
       }),
-      people,
+      entitiesForMutation(people, mutationId, mutations),
     ),
   );
   console.table(
@@ -630,25 +703,18 @@ const printTables = (people: readonly Person[]): void => {
       (mutation: Mutation) => ({
         flag: mutation.label,
         at: new Date(timeOf(mutation.at)).toISOString().slice(0, 10),
-        segment: segmentForMutation(mutation.id) ?? "—",
+        // The segment IS the mutation now, so this column is a label rather
+        // than a mapping that can lose anything.
+        segment: segmentLabelOf(mutation),
+        editing: mutation.id === mutationId ? "◀ editing" : "",
       }),
-      MUTATIONS,
-    ),
-  );
-  console.table(
-    map(
-      (segment: { value: string }) => ({
-        segment: segment.value,
-        flag: mutationForSegment(segment.value) ?? "—",
-      }),
-      SEGMENTS,
+      orderedMutations(mutations),
     ),
   );
   console.table(
     map(
       (level: Level) => ({
         level: level.id,
-        label: level.label,
         pay: level.value,
         counts: pipe(
           level.points,
@@ -659,7 +725,7 @@ const printTables = (people: readonly Person[]): void => {
           join(" "),
         ),
       }),
-      levelsOf(people),
+      levelsOf(people, mutations),
     ),
   );
   console.table(
@@ -667,19 +733,20 @@ const printTables = (people: readonly Person[]): void => {
       (transfer: Transfer) => ({
         at: new Date(timeOf(transfer.at)).toISOString().slice(0, 10),
         from: transfer.from ?? "— (hire)",
-        to: transfer.to ?? "— (departure)",
+        to: transfer.to ?? "— (termination)",
         count: transfer.count,
       }),
-      transfersOf(people),
+      transfersOf(people, mutations),
     ),
   );
+  const dials = entitiesForMutation(people, mutationId, mutations);
   console.log(
     "baseline",
     perMonth(RATE_BASELINE),
     "· pay change",
-    perMonth(payChangeOf(people)),
+    perMonth(payChangeOf(dials)),
     "· rate",
-    perMonth(rateOf(people)),
+    perMonth(rateOf(dials)),
   );
   /* eslint-enable no-console */
 };
@@ -688,62 +755,76 @@ const printTables = (people: readonly Person[]): void => {
 
 const ScenarioBoardBench: Component = () => {
   const [people, setPeople] = createSignal<readonly Person[]>(PEOPLE);
-  const [asOf, setAsOf] = createSignal("2025-06");
-  const [selectedMutation, setSelectedMutation] = createSignal<
-    string | undefined
-  >(mutationForSegment("2025-06"));
+  // The mutations are STATE now, not a constant: a click on the timeline adds
+  // one. The as-of control's options derive from this list, so a new flag and
+  // a new segment are the same event.
+  const [mutations, setMutations] =
+    createSignal<readonly Mutation[]>(SEED_MUTATIONS);
+  // WHICH MUTATION THE DIALS ARE EDITING. One signal for both the timeline's
+  // lit flag and the as-of control's selected segment — the lossy two-signal
+  // mapping is gone, because the segments ARE the mutations.
+  const [editing, setEditing] = createSignal(SEED_MUTATIONS[1].id);
+
+  const dials = () => entitiesForMutation(people(), editing(), mutations());
+  const rate = () => rateOf(dials());
 
   onMount(() => {
-    if (DEBUG) printTables(people());
+    if (DEBUG) printTables(people(), mutations(), editing());
   });
 
-  /** A flag click moves the as-of segment with it. */
-  const selectMutation = (id: string): void => {
-    setSelectedMutation(id);
-    const segment = segmentForMutation(id);
-    if (segment !== undefined) setAsOf(segment);
+  /** A drag edits the SELECTED mutation only. */
+  const setPay = (id: string, value: number): void => {
+    setPeople((current) => withChange(current, id, editing(), value));
   };
 
-  /** A segment click moves the lit flag with it — where a mapping exists. */
-  const selectSegment = (value: string): void => {
-    setAsOf(value);
-    setSelectedMutation(mutationForSegment(value));
-  };
-
-  const setLevel = (id: string, value: number): void => {
-    setPeople((current) => withValue(current, id, value));
-  };
-
-  const removeEntity = (id: string): void => {
-    setPeople((current) => withValue(current, id, null));
+  /** ⊗ Terminate: this person is gone from the selected mutation onward. */
+  const terminate = (id: string): void => {
+    setPeople((current) => withChange(current, id, editing(), null));
   };
 
   /**
-   * A HIRE. `old: null` — not the domain floor, which is what this bench used
-   * to invent before `Entity.old` could be absent. They enter band C at the
-   * last flag, which is where the board can show a from-less ribbon arriving.
+   * ↺ Restore: drop the change entirely rather than inventing a figure. They
+   * carry whatever the previous mutation left them on — which for a hire is
+   * the pay they were hired at, exactly, and for anyone else their prior pay.
    */
-  const addEntity = (): void => {
+  const restore = (id: string): void => {
+    setPeople((current) => withoutChange(current, id, editing()));
+  };
+
+  /** A HIRE, at the mutation being edited: no base pay, so no prior arrow. */
+  const hire = (): void => {
     setPeople((current) => [
       ...current,
       {
         id: `hire-${current.length}`,
         label: `Hire ${current.length - PEOPLE.length + 1}`,
         band: "C",
-        stepAt: "autumn",
-        old: null,
-        value: 9,
+        base: null,
+        changes: { [editing()]: 9 },
       },
     ]);
   };
 
-  const reset = (): void => {
-    setPeople(PEOPLE);
+  /**
+   * A click on the plot. The chart snaps the date to a month boundary, so
+   * "there is already a mutation here" is an exact timestamp match and a click
+   * on an existing flag's month SELECTS it instead of duplicating it.
+   *
+   * Nobody's history needs extending: an absent key already means "unchanged
+   * at this mutation", so every person starts the new mutation with
+   * `old === value` for free.
+   */
+  const pick = (at: TimeValue): void => {
+    const picked = addMutation(mutations(), new Date(timeOf(at)));
+    setMutations(picked.mutations);
+    setEditing(picked.selected);
   };
 
-  /** The dials, derived once: a person plus their band's box. */
-  const dials = () => entitiesOf(people());
-  const rate = () => rateOf(dials());
+  const reset = (): void => {
+    setPeople(PEOPLE);
+    setMutations(SEED_MUTATIONS);
+    setEditing(SEED_MUTATIONS[1].id);
+  };
 
   return (
     <div class="component-section component-section--full scenario-board-frame">
@@ -785,57 +866,60 @@ const ScenarioBoardBench: Component = () => {
               <TextTitle>Pay levels through the year</TextTitle>
               <GrowFillBox>
                 <LevelsTimeline
-                  levels={levelsOf(people())}
-                  transfers={transfersOf(people())}
-                  mutations={MUTATIONS}
+                  levels={levelsOf(people(), mutations())}
+                  transfers={transfersOf(people(), mutations())}
+                  mutations={mutations()}
                   domain={TIME_DOMAIN}
-                  selectedMutationId={selectedMutation()}
-                  onSelectMutation={selectMutation}
+                  selectedMutationId={editing()}
+                  onSelectMutation={setEditing}
+                  onPick={pick}
+                  formatValue={(pay) => `L${pay}`}
                 />
               </GrowFillBox>
             </FillCardSurface>
           </HalfFillColumn>
         </MinorFillColumn>
 
-        <CardSurface>
-          <TightStack>
-            <TextTitle>As of</TextTitle>
-            <SegmentedControl
-              options={[...SEGMENT_OPTIONS]}
-              value={asOf()}
-              onValueChange={selectSegment}
-              aria-label="As-of point"
-            />
-          </TightStack>
-        </CardSurface>
-
         <MajorFillColumn>
           <LooseWrapRow>
             <WidePaneBox>
-              <CardSurface>
+              <FillCardSurface>
                 <TightStack>
+                  {/* The as-of control lives HERE, in the card's header, not
+                      in a strip of its own (Peter: "merge the As Of with the
+                      mutations — it's a selector for which position we're
+                      mutating"). Title left, selector in the middle, Reset
+                      right: the thing being edited is named beside the dials
+                      that edit it. */}
                   <SpreadRow>
                     <TextTitle>Mutations</TextTitle>
+                    <SegmentedControl
+                      options={segmentOptionsOf(mutations())}
+                      value={editing()}
+                      onValueChange={setEditing}
+                      aria-label="Mutation being edited"
+                    />
                     <GhostButton onClick={reset}>Reset</GhostButton>
                   </SpreadRow>
                   <MutationSliders
                     entities={dials()}
                     domain={LEVEL_DOMAIN}
-                    onChange={setLevel}
-                    onRemove={removeEntity}
-                    onAdd={addEntity}
+                    onChange={setPay}
+                    onRemove={terminate}
+                    onRestore={restore}
+                    onAdd={hire}
                     format={(value) => `L${value}`}
                   />
                 </TightStack>
-              </CardSurface>
+              </FillCardSurface>
             </WidePaneBox>
 
             {/* The narrow column. ConstrainedBox caps the CARD at 400px rather
               than only the dial inside it: a NoShrinkColumn took its width
               from the caption's max-content and swallowed the row, which is
               the opposite of the sketch's wide-left / narrow-right split. */}
-            <ActionSlot>
-              <CardSurface>
+            <GrowFillBox class="scenario-board-gauge">
+              <FillCardSurface>
                 <TightStack>
                   <TextTitle>Rate, right now</TextTitle>
                   <RateGauge
@@ -846,8 +930,8 @@ const ScenarioBoardBench: Component = () => {
                     format={perMonth}
                   />
                 </TightStack>
-              </CardSurface>
-            </ActionSlot>
+              </FillCardSurface>
+            </GrowFillBox>
           </LooseWrapRow>
         </MajorFillColumn>
       </ViewportColumn>
