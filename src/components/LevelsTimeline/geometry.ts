@@ -7,50 +7,40 @@
 // register as a new component owing its own depth header and its own showcase.
 //
 // EVERY number the chart paints is decided in this file, so the whole shape is
-// readable as a table without a browser (geometry.test.ts prints one, y-domain
-// and flag positions included). The component does nothing but hand these
-// strings and points to the DOM.
+// readable as a table without a browser (geometry.test.ts prints one: the value
+// domain, the per-span widths, the ribbon extents and the change-x list). The
+// component does nothing but hand these strings and points to the DOM.
 //
 // Conventions, fixed here once so nothing downstream re-decides them:
 //
-//   • The chart does NO arithmetic on the consumer's values beyond the two
-//     scales. It never derives a level, never totals a series, never formats.
-//     A "total" series is the consumer's own pre-computed series like any
-//     other; it is merely drawn heavier.
-//   • A point is "from `at`, hold `level`" — step-AFTER. Horizontal runs joined
-//     by vertical risers, and the last level runs out to the domain end.
-//   • BEFORE a series' first point, NOTHING is drawn. The chart will not invent
-//     a level it was not given, so a series that starts mid-domain simply
-//     begins mid-plot. (The alternative — extending the first level back to the
-//     domain start — is a consumer-visible choice and is on the /promote list
-//     for Peter, not decided here.)
+//   • The chart does NO arithmetic on the consumer's counts beyond the width
+//     scale. It never sums a level, never derives a headcount from the
+//     transfers, and never reconciles the two against each other. If a
+//     transfer says two people moved and the counts disagree, it draws both —
+//     the disagreement is the consumer's to see, not this file's to hide.
+//   • A count point is "from `at`, hold `count`". BEFORE a level's first
+//     point, NOTHING is drawn: the chart will not invent a headcount it was
+//     not given, so a level that appears mid-domain simply begins mid-plot.
+//   • A LEVEL IS KEYED BY ITS `value`, and `value` IS ITS y. Two levels with
+//     the same value are therefore drawn on top of each other. That is the
+//     consumer's constraint to satisfy — either one chart per group, as the
+//     bench does with its three tracks, or values that are already distinct
+//     across the whole chart. There is no group dimension in this API; see the
+//     /promote questions for whether there should be.
 //   • Times outside the domain are CLAMPED to it rather than painted
-//     off-canvas, and every degenerate domain (zero-width in x, zero-height in
-//     y, no series at all) resolves to a finite number rather than NaN.
+//     off-canvas, and every degenerate input (a zero-width time domain, a
+//     flat value domain, no levels at all, a level with no points) resolves to
+//     a finite number rather than NaN.
 // ============================================
 import { clamp } from "../../internal/math/clamp";
 import { monthlyCells } from "../DateAxis/cells";
-import { filter, join, map, sortBy } from "../../fn";
+import { filter, map, sortBy } from "../../fn";
 
 /** A moment, as the consumer prefers to express it. */
 export type TimeValue = Date | number;
 
 /** The visible time span. The consumer's, never derived from the data. */
 export type TimeDomain = readonly [TimeValue, TimeValue];
-
-/** "From `at`, hold `level`" — one step in a series. */
-export interface LevelPoint {
-  readonly at: TimeValue;
-  readonly level: number;
-}
-
-/** One stepped line. `primary` draws heavier, in the primary ink. */
-export interface Series {
-  readonly id: string;
-  readonly label: string;
-  readonly primary?: boolean;
-  readonly points: readonly LevelPoint[];
-}
 
 /** A numbered event: a flag above the plot and a rule dropped through it. */
 export interface Mutation {
@@ -88,25 +78,6 @@ export interface MonthTick {
   readonly key: string;
   readonly label: string;
   readonly x: number;
-}
-
-/** A series, drawn. `vertices` is what the table prints; `path` is what paints. */
-export interface Line {
-  readonly id: string;
-  readonly label: string;
-  readonly primary: boolean;
-  /** 1-based position in the CONSUMER's order — the `--sui-series-N` index. */
-  readonly seriesIndex: number;
-  readonly vertices: readonly Point[];
-  readonly path: string;
-}
-
-export interface LevelsTimelineGeometry {
-  readonly yDomain: readonly [number, number];
-  /** Paint order: every other series first, the primary one last, on top. */
-  readonly lines: readonly Line[];
-  readonly flags: readonly Flag[];
-  readonly ticks: readonly MonthTick[];
 }
 
 // ── the canvas ───────────────────────────────────────────────────────────────
@@ -160,19 +131,6 @@ export const xScaleFor = (domain: TimeDomain): ((at: TimeValue) => number) => {
   };
 };
 
-/** Every level across every series, padded. Never zero-height, never NaN. */
-export const yDomainOf = (
-  series: readonly Series[],
-): readonly [number, number] => {
-  const levels = allLevels(series);
-  if (levels.length === 0) return [0, 1];
-  const lo = Math.min(...levels);
-  const hi = Math.max(...levels);
-  const span = hi - lo;
-  const pad = span === 0 ? FLAT_Y_PAD : span * Y_PAD_FRACTION;
-  return [lo - pad, hi + pad];
-};
-
 /** Level → y, inverted (the domain top sits at the plot top). */
 export const yScaleFor = (
   yDomain: readonly [number, number],
@@ -184,47 +142,6 @@ export const yScaleFor = (
   return (level: number): number =>
     PLOT_BOTTOM - clamp((level - lo) / span, 0, 1) * (PLOT_BOTTOM - PLOT_TOP);
 };
-
-/**
- * The step-after corners, in paint order: the first point, then a horizontal
- * run and a vertical riser per later point, then the last level run out to
- * `domainEnd`. Points are sorted, so unordered consumer data still steps
- * forwards.
- */
-export const stepVertices = (
-  points: readonly LevelPoint[],
-  xScale: (at: TimeValue) => number,
-  yScale: (level: number) => number,
-  domainEnd: TimeValue,
-): readonly Point[] => {
-  if (points.length === 0) return [];
-  const ordered = sortBy((point: LevelPoint) => timeOf(point.at), points);
-  const corners: Point[] = [];
-  const pushPoint = (point: Point): void => {
-    const last = corners[corners.length - 1];
-    if (last && last.x === point.x && last.y === point.y) return;
-    corners.push(point);
-  };
-  let previousY = yScale(ordered[0].level);
-  pushPoint({ x: xScale(ordered[0].at), y: previousY });
-  for (const point of ordered.slice(1)) {
-    const x = xScale(point.at);
-    const y = yScale(point.level);
-    pushPoint({ x, y: previousY });
-    pushPoint({ x, y });
-    previousY = y;
-  }
-  pushPoint({ x: xScale(domainEnd), y: previousY });
-  return corners;
-};
-
-/** The same corners as an SVG `d`. Empty — never `"M NaN"` — for no points. */
-export const stepPath = (
-  points: readonly LevelPoint[],
-  xScale: (at: TimeValue) => number,
-  yScale: (level: number) => number,
-  domainEnd: TimeValue,
-): string => pathFrom(stepVertices(points, xScale, yScale, domainEnd));
 
 /** The numbered flags and their rules, in time order. */
 export const flagPositions = (
@@ -254,32 +171,6 @@ export const monthTicks = (
     monthlyCells(asDate(domain[0]), asDate(domain[1])),
   );
 
-/** The whole observation: scales resolved, every series stepped, flags placed. */
-export const levelsTimelineGeometry = (input: {
-  readonly series: readonly Series[];
-  readonly mutations: readonly Mutation[];
-  readonly domain: TimeDomain;
-}): LevelsTimelineGeometry => {
-  const xScale = xScaleFor(input.domain);
-  const yDomain = yDomainOf(input.series);
-  const yScale = yScaleFor(yDomain);
-  const lines = map(
-    (series: Series, index: number) =>
-      lineFor(series, index, xScale, yScale, input.domain[1]),
-    input.series,
-  );
-  return {
-    yDomain,
-    // The primary series paints last so it sits on top of the others; its
-    // token index still comes from the consumer's own order.
-    lines: sortBy((line: Line) => (line.primary ? 1 : 0), lines),
-    flags: flagPositions(input.mutations, xScale),
-    ticks: monthTicks(input.domain, xScale),
-  };
-};
-
-// ── internals ────────────────────────────────────────────────────────────────
-
 const MONTH_LABELS = [
   "Jan",
   "Feb",
@@ -297,24 +188,6 @@ const MONTH_LABELS = [
 
 const asDate = (at: TimeValue): Date =>
   typeof at === "number" ? new Date(at) : at;
-
-const allLevels = (series: readonly Series[]): readonly number[] => {
-  const levels: number[] = [];
-  for (const one of series) {
-    for (const point of one.points) levels.push(point.level);
-  }
-  return levels;
-};
-
-const pathFrom = (vertices: readonly Point[]): string => {
-  if (vertices.length === 0) return "";
-  const commands = map(
-    (vertex: Point, index: number) =>
-      `${index === 0 ? "M" : "L"} ${vertex.x} ${vertex.y}`,
-    vertices,
-  );
-  return join(" ", commands);
-};
 
 const placeFlag = (mutation: Mutation, x: number): Flag => {
   const boxX = clamp(
@@ -337,36 +210,14 @@ const placeFlag = (mutation: Mutation, x: number): Flag => {
   };
 };
 
-const lineFor = (
-  series: Series,
-  index: number,
-  xScale: (at: TimeValue) => number,
-  yScale: (level: number) => number,
-  domainEnd: TimeValue,
-): Line => {
-  const vertices = stepVertices(series.points, xScale, yScale, domainEnd);
-  return {
-    id: series.id,
-    label: series.label,
-    primary: series.primary === true,
-    seriesIndex: index + 1,
-    vertices,
-    path: pathFrom(vertices),
-  };
-};
-
 // ============================================================================
 // The RAIL model (Peter, 2026-09-16) — a line is a pay LEVEL, not a person.
 //
-// The stepped model above is DEPRECATED but still shipped: scenario-board
-// consumes it today, so it is moved off at its own pace and deleted only once
-// nothing reads it. Everything below is the addition, standing beside it.
-//
-// The two models differ in what VARIES along a line:
-//
-//   • stepped  — y moves, thickness is constant. A person's pay steps up.
-//   • rail     — y is FIXED, thickness moves. A pay level does not go
-//                anywhere; what changes is how many people hold it.
+// This REPLACED a stepped model in which y moved and thickness was constant —
+// a person's pay stepping up. That path was carried alongside this one until
+// its last consumer (scenario-board) migrated, then deleted in one commit.
+// The difference was in what VARIES along a line: there, y; here, thickness.
+// A pay level does not go anywhere; what changes is how many people hold it.
 //
 // So a rail has no risers at all. It is a run of horizontal SPANS at one y,
 // each as thick as the headcount holding that level over that stretch. People

@@ -10,8 +10,8 @@
    ORDER MATTERS in this file. The `__tone-N` classes set BOTH `stroke` and
    `fill`, because a rail is stroked and a flow ribbon is filled from the same
    token. Everything that must NOT be filled therefore declares `fill: none`
-   AFTER the tone block — same specificity, later wins. Move the tone block down
-   and every stepped path silently fills in. */
+   AFTER the tone block — same specificity, later wins. Move `.__rail` above
+   the tone block and every rail silently fills itself in. */
 
 .sui-levels-timeline {
   display: block;
@@ -153,24 +153,6 @@
 .sui-levels-timeline__ribbon--departure,
 .sui-levels-timeline__ribbon--hire {
   opacity: 0.7;
-}
-
-/* ---- The stepped lines (DEPRECATED model) ----
-
-   Still shipped while scenario-board consumes `series`. Deleted in phase 3. */
-
-.sui-levels-timeline__line {
-  fill: none;
-  stroke-width: 1.5;
-  stroke-linejoin: miter;
-  stroke-linecap: butt;
-}
-
-/* The primary series wins the ink AND the weight — the two channels together,
-   so it still reads as the heavy line in a monochrome print. */
-.sui-levels-timeline__line--primary {
-  stroke: var(--sui-text-primary);
-  stroke-width: 2.5;
 }
 
 /* ---- The numbered flags ---- */

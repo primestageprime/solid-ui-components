@@ -17,12 +17,11 @@
 // starting — gets a thin muted dropline instead, so a lone hire on no
 // particular date is still visible as an event.
 //
-// DEPRECATED, still shipped: the original STEPPED model, in which y moved and
-// thickness was constant — a person's pay stepping up. `series` still renders
-// exactly as it did, because scenario-board consumes it today. Per the
-// add/deprecate/delete commandment the new path went in beside it rather than
-// over it; phase 3 deletes `series` once nothing reads it. Pass `levels` for
-// the rail model, `series` for the stepped one; `levels` wins if both arrive.
+// This REPLACED a stepped model in which y moved and thickness was constant.
+// Per the add/deprecate/delete commandment the rail path went in BESIDE it,
+// its one consumer (scenario-board) moved over at its own pace, and only then
+// was `series` deleted — one breaking change at the end rather than a broken
+// consumer at the start.
 //
 // Everything positional lives in geometry.ts, which is pure and prints as a
 // table (geometry.test.ts); this file only paints what that returns. It is the
@@ -56,31 +55,27 @@ import {
   VIEW_WIDTH,
   type Flag,
   type Level,
-  type Line,
   type Mutation,
   type Rail,
   type Ribbon,
-  type Series,
   type TimeDomain,
   type Transfer,
   levelsRailGeometry,
-  levelsTimelineGeometry,
   timeOf,
 } from "./geometry";
-import { filter, find, join, map, sortBy } from "../../fn";
+import { find, join, map, sortBy } from "../../fn";
 import "./LevelsTimeline.css";
 
 export interface LevelsTimelineProps {
-  /** The pay levels, as rails. The current model. */
-  levels?: readonly Level[];
-  /** People moving between levels. Drawn as flows. Meaningless without `levels`. */
-  transfers?: readonly Transfer[];
   /**
-   * @deprecated The stepped model — y moves, thickness is constant. Kept so
-   * scenario-board keeps rendering while it migrates to `levels`. Ignored when
-   * `levels` is supplied.
+   * The pay levels, as rails. A level is keyed by its `value`, and `value` IS
+   * its y — so two levels sharing a value are drawn on top of each other. A
+   * consumer whose groups can share a figure wants one chart per group, as the
+   * bench does with its three tracks.
    */
-  series?: readonly Series[];
+  levels: readonly Level[];
+  /** People moving between levels. Drawn as flows. */
+  transfers?: readonly Transfer[];
   /** The numbered events. Each gets a flag above the plot and a rule through it. */
   mutations: readonly Mutation[];
   /** The visible span. The consumer's, never derived from the data. */
@@ -98,9 +93,7 @@ const SERIES_TOKEN_COUNT = 8;
 const tokenOf = (seriesIndex: number): number =>
   ((seriesIndex - 1) % SERIES_TOKEN_COUNT) + 1;
 
-const EMPTY_LEVELS: readonly Level[] = [];
 const EMPTY_TRANSFERS: readonly Transfer[] = [];
-const EMPTY_SERIES: readonly Series[] = [];
 
 /** `1 person`, `3 people`. The announcement is prose; it has to read as prose. */
 const headcount = (count: number): string =>
@@ -145,51 +138,17 @@ const describeTransfer = (
   return `${headcount(transfer.count)} ${what()}${when}.`;
 };
 
-/** One series, said out loud — the deprecated stepped model's announcement. */
-const describeSeries = (
-  series: Series,
-  mutations: readonly Mutation[],
-): string => {
-  if (series.points.length === 0) return `${series.label}: no levels.`;
-  const ordered = sortBy((point) => timeOf(point.at), series.points);
-  const moments = new Set(map((point) => timeOf(point.at), series.points));
-  const marks = map(
-    (mutation: Mutation) => mutation.label,
-    filter(
-      (mutation: Mutation) => moments.has(timeOf(mutation.at)),
-      sortBy((mutation: Mutation) => timeOf(mutation.at), mutations),
-    ),
-  );
-  const first = ordered[0].level;
-  const last = ordered[ordered.length - 1].level;
-  if (marks.length === 0) return `${series.label}: ${first}, holding.`;
-  return `${series.label}: ${first}, stepping at ${join(", ", marks)} to ${last}.`;
-};
-
 export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
-  const levels = () => props.levels ?? EMPTY_LEVELS;
   const transfers = () => props.transfers ?? EMPTY_TRANSFERS;
-  const series = () => props.series ?? EMPTY_SERIES;
-  /** `levels` wins: the rail model is the current one. */
-  const isRails = () => props.levels !== undefined;
 
-  const railGeometry = createMemo(() =>
+  const geometry = createMemo(() =>
     levelsRailGeometry({
-      levels: levels(),
+      levels: props.levels,
       transfers: transfers(),
       mutations: props.mutations,
       domain: props.domain,
     }),
   );
-  const stepGeometry = createMemo(() =>
-    levelsTimelineGeometry({
-      series: series(),
-      mutations: props.mutations,
-      domain: props.domain,
-    }),
-  );
-  /** Flags and ticks are the same question in either model. */
-  const frame = () => (isRails() ? railGeometry() : stepGeometry());
 
   const interactive = () => props.onSelectMutation !== undefined;
   const isSelected = (flag: Flag): boolean =>
@@ -202,23 +161,15 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   // hold each level, and who moved where — or the reading is thickness-only,
   // which is exactly the channel a screen reader cannot see.
   const description = () =>
-    isRails()
-      ? join(" ", [
-          `Headcount by pay level, ${props.mutations.length} marked mutations.`,
-          ...map(describeLevel, levels()),
-          ...map(
-            (transfer: Transfer) =>
-              describeTransfer(transfer, levels(), props.mutations),
-            sortBy((transfer: Transfer) => timeOf(transfer.at), transfers()),
-          ),
-        ])
-      : join(" ", [
-          `Levels over time, ${props.mutations.length} marked mutations.`,
-          ...map(
-            (one: Series) => describeSeries(one, props.mutations),
-            series(),
-          ),
-        ]);
+    join(" ", [
+      `Headcount by pay level, ${props.mutations.length} marked mutations.`,
+      ...map(describeLevel, props.levels),
+      ...map(
+        (transfer: Transfer) =>
+          describeTransfer(transfer, props.levels, props.mutations),
+        sortBy((transfer: Transfer) => timeOf(transfer.at), transfers()),
+      ),
+    ]);
 
   const railClass = (rail: Rail): string =>
     `sui-levels-timeline__rail sui-levels-timeline__tone-${tokenOf(
@@ -247,13 +198,6 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
     if (ribbon.kind === "hire") return `url(#${hireMask})`;
     return undefined;
   };
-
-  const lineClass = (line: Line): string =>
-    join(" ", [
-      "sui-levels-timeline__line",
-      `sui-levels-timeline__tone-${tokenOf(line.seriesIndex)}`,
-      line.primary ? "sui-levels-timeline__line--primary" : "",
-    ]);
 
   const flagClass = (flag: Flag, block: string): string =>
     join(" ", [
@@ -345,7 +289,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
           {/* The month axis. Built from DateAxis's own calendar (geometry.ts),
               so the chart and the axis component agree on where a month is. */}
-          <For each={frame().ticks}>
+          <For each={geometry().ticks}>
             {(tick) => (
               <g class="sui-levels-timeline__tick">
                 <line
@@ -369,8 +313,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           {/* The un-numbered changes. Thinner and fainter than a flag's rule,
               because they carry no name — they only say "something happened
               here", which is precisely what a lone hire needs. */}
-          <Show when={isRails()}>
-            <For each={railGeometry().droplines}>
+          <For each={geometry().droplines}>
               {(dropline) => (
                 <line
                   class="sui-levels-timeline__dropline"
@@ -380,12 +323,11 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                   y2={PLOT_BOTTOM}
                 />
               )}
-            </For>
-          </Show>
+          </For>
 
           {/* The flags' rules, under everything: a rule locates a change, it
               does not compete with one. */}
-          <For each={frame().flags}>
+          <For each={geometry().flags}>
             {(flag) => (
               <line
                 class={flagClass(flag, "rule")}
@@ -397,22 +339,10 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             )}
           </For>
 
-          <Show
-            when={isRails()}
-            fallback={
-              <For each={stepGeometry().lines}>
-                {(line) => (
-                  <Show when={line.path !== ""}>
-                    <path class={lineClass(line)} d={line.path} />
-                  </Show>
-                )}
-              </For>
-            }
-          >
-            {/* Flows first, under the rails they join, so a ribbon reads as
+          {/* Flows first, under the rails they join, so a ribbon reads as
                 tucking beneath both ends rather than crossing them. */}
-            <For each={railGeometry().ribbons}>
-              {(ribbon) => (
+          <For each={geometry().ribbons}>
+            {(ribbon) => (
                 <rect
                   class={ribbonClass(ribbon)}
                   x={ribbon.x - ribbon.width / 2}
@@ -424,8 +354,8 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
               )}
             </For>
 
-            <For each={railGeometry().rails}>
-              {(rail) => (
+          <For each={geometry().rails}>
+            {(rail) => (
                 <g class="sui-levels-timeline__rail-group">
                   <For each={rail.spans}>
                     {(span) => (
@@ -452,14 +382,13 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                   </Show>
                 </g>
               )}
-            </For>
-          </Show>
+          </For>
         </g>
 
         {/* The flags. Buttons when the consumer wants selection, plain marks
             otherwise — a chart nobody can drive should not advertise a
             control, and an unreachable one should not exist. */}
-        <For each={frame().flags}>
+        <For each={geometry().flags}>
           {(flag) => (
             // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role="button", tabindex and Enter/Space keyboard parity are wired exactly when onSelectMutation is provided (interactive()); the analyzer cannot see through that runtime guard.
             <g

@@ -3,14 +3,13 @@
 //
 // Every number the SVG paints is decided in geometry.ts, so the whole chart is
 // readable as a table without a browser. These tests PRINT that table as well
-// as asserting on it: a stepped chart is one of those shapes where a wrong
-// riser looks plausible in isolation and obviously wrong beside its neighbours,
-// and a collapsed y-domain draws a perfectly straight, perfectly wrong line.
+// as asserting on it: a rail chart is one of those shapes where a wrong width
+// looks plausible in isolation and obviously wrong beside its neighbours, and
+// a collapsed value domain draws a perfectly straight, perfectly wrong line.
 //
-// The printed observation carries three things, not just the vertices: the
-// y-domain (a collapsed one is invisible in a vertex list), the flag x
-// positions (which is what ties a numbered mutation to the risers under it),
-// and the step vertices themselves.
+// The printed observation carries four things: the value domain (a collapsed
+// one is invisible in a span list), the per-span widths, the ribbon extents,
+// and the change-x list that decides where the droplines fall.
 // ============================================
 import { describe, expect, it } from "vitest";
 import { map } from "../../fn";
@@ -36,16 +35,11 @@ import {
   PLOT_TOP,
   VIEW_WIDTH,
   type Mutation,
-  type Series,
   type TimeDomain,
   flagPositions,
-  levelsTimelineGeometry,
   monthTicks,
-  stepPath,
-  stepVertices,
   timeOf,
   xScaleFor,
-  yDomainOf,
   yScaleFor,
 } from "./geometry";
 
@@ -58,37 +52,6 @@ const MUTATIONS: readonly Mutation[] = [
   { id: "m1", at: utc("2025-04-01"), label: "1" },
   { id: "m2", at: utc("2025-07-01"), label: "2" },
   { id: "m3", at: utc("2025-10-01"), label: "3" },
-];
-
-const SERIES: readonly Series[] = [
-  {
-    id: "peter",
-    label: "Peter",
-    points: [
-      { at: utc("2025-01-01"), level: 12000 },
-      { at: utc("2025-04-01"), level: 15000 },
-      { at: utc("2025-10-01"), level: 14000 },
-    ],
-  },
-  {
-    id: "adlai",
-    label: "Adlai",
-    points: [
-      { at: utc("2025-01-01"), level: 8000 },
-      { at: utc("2025-07-01"), level: 9500 },
-    ],
-  },
-  {
-    id: "total",
-    label: "Total",
-    primary: true,
-    points: [
-      { at: utc("2025-01-01"), level: 20000 },
-      { at: utc("2025-04-01"), level: 23000 },
-      { at: utc("2025-07-01"), level: 24500 },
-      { at: utc("2025-10-01"), level: 23500 },
-    ],
-  },
 ];
 
 /** Round to 3dp so a table prints without float noise. */
@@ -126,37 +89,6 @@ describe("xScaleFor", () => {
   });
 });
 
-describe("yDomainOf", () => {
-  it("spans every series' levels, padded so no line rides the frame", () => {
-    const [lo, hi] = yDomainOf(SERIES);
-    expect(lo).toBeLessThan(8000);
-    expect(hi).toBeGreaterThan(24500);
-  });
-
-  it("opens a flat chart up rather than collapsing to a zero-height band", () => {
-    const flat: readonly Series[] = [
-      { id: "f", label: "Flat", points: [{ at: 0, level: 15000 }] },
-    ];
-    const [lo, hi] = yDomainOf(flat);
-    expect(hi).toBeGreaterThan(lo);
-    expect(yScaleFor([lo, hi])(15000)).not.toBeNaN();
-  });
-
-  it("survives no series at all", () => {
-    const [lo, hi] = yDomainOf([]);
-    expect(hi).toBeGreaterThan(lo);
-  });
-
-  it("ignores a series with no points", () => {
-    const [lo, hi] = yDomainOf([
-      { id: "a", label: "A", points: [{ at: 0, level: 10 }] },
-      { id: "b", label: "B", points: [] },
-    ]);
-    expect(Number.isNaN(lo)).toBe(false);
-    expect(Number.isNaN(hi)).toBe(false);
-  });
-});
-
 describe("yScaleFor", () => {
   it("inverts: the domain top sits at the plot top", () => {
     const y = yScaleFor([0, 100]);
@@ -167,65 +99,6 @@ describe("yScaleFor", () => {
   it("reads a zero-height domain as the plot's middle instead of NaN", () => {
     const y = yScaleFor([7, 7]);
     expect(y(7)).toBe((PLOT_TOP + PLOT_BOTTOM) / 2);
-  });
-});
-
-describe("stepVertices", () => {
-  const x = xScaleFor(DOMAIN);
-  const y = yScaleFor(yDomainOf(SERIES));
-
-  it("holds a level, then risers: horizontal run, vertical step, repeat", () => {
-    const vertices = stepVertices(SERIES[0].points, x, y, DOMAIN[1]);
-    // 3 points → start + (run, riser) × 2 + the final run to the domain end.
-    expect(vertices).toHaveLength(6);
-    // The riser pairs share an x; the run pairs share a y.
-    expect(vertices[1].x).toBe(vertices[2].x);
-    expect(vertices[0].y).toBe(vertices[1].y);
-    expect(vertices[2].y).toBe(vertices[3].y);
-  });
-
-  it("starts at the first point, not at the domain start", () => {
-    const late: readonly { at: Date; level: number }[] = [
-      { at: utc("2025-07-01"), level: 100 },
-    ];
-    const vertices = stepVertices(late, x, y, DOMAIN[1]);
-    expect(vertices[0].x).toBeGreaterThan(PLOT_LEFT);
-  });
-
-  it("runs the last level out to the domain end", () => {
-    const vertices = stepVertices(SERIES[0].points, x, y, DOMAIN[1]);
-    expect(vertices[vertices.length - 1].x).toBe(PLOT_RIGHT);
-  });
-
-  it("orders unsorted points rather than drawing a zig-zag", () => {
-    const unsorted = [
-      { at: utc("2025-10-01"), level: 14000 },
-      { at: utc("2025-01-01"), level: 12000 },
-      { at: utc("2025-04-01"), level: 15000 },
-    ];
-    expect(stepVertices(unsorted, x, y, DOMAIN[1])).toEqual(
-      stepVertices(SERIES[0].points, x, y, DOMAIN[1]),
-    );
-  });
-
-  it("draws nothing for a series with no points", () => {
-    expect(stepVertices([], x, y, DOMAIN[1])).toEqual([]);
-  });
-});
-
-describe("stepPath", () => {
-  const x = xScaleFor(DOMAIN);
-  const y = yScaleFor(yDomainOf(SERIES));
-
-  it("is a moveto followed by linetos, never a NaN", () => {
-    const d = stepPath(SERIES[0].points, x, y, DOMAIN[1]);
-    expect(d.startsWith("M ")).toBe(true);
-    expect(d).toContain("L ");
-    expect(d).not.toContain("NaN");
-  });
-
-  it("is empty — not 'M NaN' — for a series with no points", () => {
-    expect(stepPath([], x, y, DOMAIN[1])).toBe("");
   });
 });
 
@@ -263,64 +136,6 @@ describe("monthTicks", () => {
   });
 });
 
-describe("levelsTimelineGeometry — the whole observation", () => {
-  const geometry = levelsTimelineGeometry({
-    series: SERIES,
-    mutations: MUTATIONS,
-    domain: DOMAIN,
-  });
-
-  it("carries one line per series, primary last so it paints on top", () => {
-    expect(geometry.lines).toHaveLength(3);
-    expect(geometry.lines[geometry.lines.length - 1].primary).toBe(true);
-  });
-
-  it("assigns each series a stable series-token index from its own order", () => {
-    // `total` is painted last but keeps the token index of its input position.
-    const total = geometry.lines.find((line) => line.id === "total");
-    expect(total?.seriesIndex).toBe(3);
-  });
-
-  it("prints the table a reader checks the shape against", () => {
-    const [lo, hi] = geometry.yDomain;
-    console.table([
-      { field: "yDomain.lo", value: round(lo) },
-      { field: "yDomain.hi", value: round(hi) },
-      { field: "plot", value: `${PLOT_LEFT}..${PLOT_RIGHT} x ${PLOT_TOP}..${PLOT_BOTTOM}` },
-    ]);
-    console.table(
-      geometry.flags.map((flag) => ({
-        id: flag.id,
-        label: flag.label,
-        x: round(flag.x),
-        boxX: round(flag.boxX),
-      })),
-    );
-    for (const line of geometry.lines) {
-      console.table(
-        line.vertices.map((vertex, index) => ({
-          series: line.id,
-          i: index,
-          x: round(vertex.x),
-          y: round(vertex.y),
-        })),
-      );
-    }
-    expect(geometry.flags).toHaveLength(3);
-  });
-});
-
-// ============================================
-// The RAIL model (Peter, 2026-09-16) — a line is a pay LEVEL, not a person.
-//
-// A level sits at a fixed y and never moves; what varies along it is its
-// THICKNESS, which is proportional to the headcount holding that level. A
-// raise is a FLOW between two rails, and every x at which anything changes
-// carries a dropline.
-//
-// The old stepped model above is still tested, and still shipped, because a
-// consumer bench (scenario-board) is still on it.
-// ============================================
 
 const LEVELS: readonly Level[] = [
   {
