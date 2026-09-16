@@ -17,27 +17,46 @@
  *
  * The wiring, stated once:
  *
- *   sliders ──deltaOf──▶ rateOf ──▶ RateGauge.value
- *   sliders ──levelsSeriesOf──▶ LevelsTimeline.series
+ *   people ──deltaOf──▶ rateOf ──▶ RateGauge.value
+ *   people ──levelsOf──▶ LevelsTimeline.levels      (rails, thickness = headcount)
+ *   people ──transfersOf──▶ LevelsTimeline.transfers (ribbons, one per move)
  *   flag click ──segmentForMutation──▶ SegmentedControl.value
  *   segment click ──mutationForSegment──▶ LevelsTimeline.selectedMutationId
  *
  * The last two are NOT inverses, and that is a finding rather than a bug — see
  * `segmentForMutation` for why the sketch's own two date rows cannot round-trip.
+ *
+ * MIGRATED 2026-09-16 from the `series` model (one thin line per person plus a
+ * consumer-computed Total) to `levels` + `transfers`. The board's unit of
+ * drawing is no longer a person: it is a PAY LEVEL inside a ROLE BAND, drawn as
+ * a rail whose thickness is how many people sit on it, and a raise is a ribbon
+ * carrying heads from one rail to another. A person is now something the board
+ * derives rails FROM, not something it draws. The Total went with the change —
+ * headcount-weighted rails say what it used to say, and better.
  */
 import { createSignal, onMount, type Component } from "solid-js";
-import { filter, find, findLast, join, map, pipe, sum } from "../../../src/fn";
+import {
+  filter,
+  find,
+  findLast,
+  flatMap,
+  join,
+  map,
+  pipe,
+  sortBy,
+  sum,
+} from "../../../src/fn";
 
 import { CashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import { monthlyCells } from "../../../src/components/DateAxis";
 import { LevelsTimeline, timeOf } from "../../../src/components/LevelsTimeline";
 import type {
-  LevelPoint,
+  CountPoint,
+  Level,
   Mutation,
-  Series,
   TimeDomain,
-  TimeValue,
+  Transfer,
 } from "../../../src/components/LevelsTimeline";
 import { MutationSliders } from "../../../src/components/MutationSliders";
 import type { Entity } from "../../../src/components/MutationSliders";
@@ -104,14 +123,70 @@ const SEGMENT_OPTIONS: readonly SegmentOption[] = map(
   SEGMENTS,
 );
 
-/** The six dials from the sketch. Joe is struck through: he is gone. */
-const SKETCH: readonly Entity[] = [
-  { id: "peter", label: "Peter", old: 6, value: 7 },
-  { id: "adlai", label: "Adlai", old: 5, value: 6 },
-  { id: "elaina", label: "Elaina", old: 7, value: 8 },
-  { id: "reilly", label: "Reilly", old: 7, value: 2 },
-  { id: "flynn", label: "Flynn", old: 8, value: 1 },
-  { id: "joe", label: "Joe", old: 5, value: null },
+/**
+ * The three ROLE BANDS. A band is a range of pay a role permits; it is the
+ * shaded box on each dial and it is the clamp on both amounts.
+ *
+ * The bands do not OVERLAP, and that is a rendering constraint rather than a
+ * domain truth. `Level.value` is a pay figure and the board draws all three
+ * bands on ONE timeline, so two bands sharing a pay would put two rails at the
+ * same y and overdraw. The reference bench dodges this by drawing one chart per
+ * track; the sketch gives the board a single chart, so the fixture keeps the
+ * bands in disjoint strata instead. A real consumer with overlapping bands
+ * needs either a chart per band or a level key that is not the bare pay.
+ */
+interface Band {
+  readonly id: BandId;
+  readonly label: string;
+  readonly range: readonly [number, number];
+}
+
+type BandId = "A" | "B" | "C";
+
+const BANDS: readonly Band[] = [
+  { id: "A", label: "Support", range: [1, 3] },
+  { id: "B", label: "Delivery", range: [4, 6] },
+  { id: "C", label: "Platform", range: [7, 10] },
+];
+
+/**
+ * A person: a dial's worth of data plus the two things the dial does not carry
+ * — which band they are in, and which mutation they move at.
+ *
+ * `old: null` is a HIRE (no prior pay) and `value: null` is a DEPARTURE (no
+ * new pay); both come straight from `Entity`, so the dials and the rails read
+ * the same absence the same way.
+ */
+interface Person extends Entity {
+  readonly band: BandId;
+  readonly stepAt: string;
+}
+
+/**
+ * The board's fixture, mirroring the levels-timeline bench's three tracks at
+ * six people instead of eleven (coordinator, 2026-09-16).
+ *
+ * The character of each track is preserved; the SIZE is not, and could not be.
+ * Track A wants "several start equal" (three or more) and track C wants
+ * "different-sized bumps" (two, to contrast), which needs seven people against
+ * the sketch's six. B and C are therefore exact and A is degraded to two, since
+ * "two start equal, one raises, one stays" still shows the equal-start-then-
+ * diverge shape that is the point of it.
+ *
+ *   A — Peter and Joe both start on L2. Peter is raised off it at flag 1 and
+ *       Joe LEAVES at the same flag, so A's L2 rail empties completely: two
+ *       flows out of one level at one moment, and a rail that ends.
+ *   B — Elaina and Reilly take the SAME step, L4 → L6, two flags apart.
+ *   C — Adlai and Flynn bump on the SAME flag by different amounts, +1 and +3,
+ *       so the two ribbon widths can be compared side by side.
+ */
+const PEOPLE: readonly Person[] = [
+  { id: "peter", label: "Peter", band: "A", stepAt: "spring", old: 2, value: 3 },
+  { id: "joe", label: "Joe", band: "A", stepAt: "spring", old: 2, value: null },
+  { id: "elaina", label: "Elaina", band: "B", stepAt: "spring", old: 4, value: 6 },
+  { id: "reilly", label: "Reilly", band: "B", stepAt: "autumn", old: 4, value: 6 },
+  { id: "adlai", label: "Adlai", band: "C", stepAt: "summer", old: 7, value: 8 },
+  { id: "flynn", label: "Flynn", band: "C", stepAt: "summer", old: 7, value: 10 },
 ];
 
 /** The dial domain, in the consumer's own levels. */
@@ -119,19 +194,6 @@ const LEVEL_DOMAIN: readonly [number, number] = [0, 10];
 
 /** What one level is worth per month. The board's only unit conversion. */
 const DOLLARS_PER_LEVEL = 1000;
-
-/**
- * Which mutation each timelined person steps at. Four of the six dials appear
- * on the timeline — the sketch draws four thin lines plus a heavy Total, not
- * six — and each is pinned to a flag so every numbered rule has at least one
- * riser under it to read down to.
- */
-const STEPS_AT: readonly { entityId: string; mutationId: string }[] = [
-  { entityId: "peter", mutationId: "spring" },
-  { entityId: "reilly", mutationId: "spring" },
-  { entityId: "adlai", mutationId: "summer" },
-  { entityId: "elaina", mutationId: "autumn" },
-];
 
 /** The gauge's domain and its fixed reference, both the consumer's. */
 const RATE_DOMAIN: readonly [number, number] = [-30000, 30000];
@@ -220,90 +282,150 @@ export const mutationForSegment = (
   return next?.id;
 };
 
-/** The mutation moment an entity steps at, or `undefined` if it is not timelined. */
-const stepMomentOf = (entityId: string): Mutation | undefined => {
-  const pinned = find(
-    (row: { entityId: string }) => row.entityId === entityId,
-    STEPS_AT,
-  );
-  if (pinned === undefined) return undefined;
-  return find((m: Mutation) => m.id === pinned.mutationId, MUTATIONS);
-};
+/** The band a person is in. Their dial's box and their rails' keyspace. */
+const bandOf = (bandId: BandId): Band =>
+  find((band: Band) => band.id === bandId, BANDS) ?? BANDS[0];
 
-/** The entities that appear on the timeline, in sketch order. */
-const timelinedEntities = (entities: readonly Entity[]): Entity[] =>
-  filter((entity: Entity) => stepMomentOf(entity.id) !== undefined, entities);
+/** The mutation a person moves at, or `undefined` for one pinned to nothing. */
+const momentOf = (person: Person): Mutation | undefined =>
+  find((mutation: Mutation) => mutation.id === person.stepAt, MUTATIONS);
 
 /**
- * One person's stepped line, in $/month: they hold their OLD level from the
- * domain's left edge, then step to their NEW level at their own mutation and
- * hold it. Two points is the whole story — the chart draws the riser.
+ * A level's id. EVERY id the board emits — on a level and on both ends of a
+ * transfer — comes through this one function, and that is load-bearing: the
+ * chart DROPS a transfer naming a level it does not have rather than drawing it
+ * as an open-ended flow, so an id built two ways would make a ribbon vanish in
+ * silence instead of failing loudly.
  */
-export const pointsFor = (entity: Entity): LevelPoint[] => {
-  const moment = stepMomentOf(entity.id);
-  // A NEW HIRE (`old: null`) gets NO opening point: they were not in the old
-  // scenario, so there is no level for them to hold from the domain's left
-  // edge. They enter at their own mutation date, or not at all.
-  if (entity.old === null) {
-    return moment === undefined
-      ? []
-      : [{ at: moment.at, level: newLevelOf(entity) * DOLLARS_PER_LEVEL }];
+const levelIdFor = (bandId: BandId, pay: number): string => `${bandId}-L${pay}`;
+
+/**
+ * A rail's caption. Deliberately SHORT and enumerated — `A · L2` — because the
+ * chart paints it above the rail's left end the way an axis paints a tick, with
+ * no ellipsize and no tooltip behind it. A consumer wanting a person's name
+ * here would be asking the component to grow a text-truncation treatment it
+ * does not have.
+ */
+const payLabel = (bandId: BandId, pay: number): string => `${bandId} · L${pay}`;
+
+/** The people in one band, in fixture order. */
+const peopleIn = (people: readonly Person[], bandId: BandId): Person[] =>
+  filter((person: Person) => person.band === bandId, people);
+
+/**
+ * What a person was paid at a moment, or `null` when they are not there at all
+ * — before a hire arrives, or after a departure leaves. `null` is absence, not
+ * zero: somebody on no pay would still be a head on a rail.
+ */
+const payAt = (person: Person, time: number): number | null => {
+  const moment = momentOf(person);
+  if (moment === undefined) return person.value;
+  return timeOf(moment.at) <= time ? person.value : person.old;
+};
+
+/** Every moment the board can change at: the domain's left edge and each flag. */
+const MOMENTS: readonly number[] = sortBy((time: number) => time, [
+  DOMAIN_START.getTime(),
+  ...map((mutation: Mutation) => timeOf(mutation.at), MUTATIONS),
+]);
+
+/** The distinct pay figures a band's people touch, old and new alike, ascending. */
+const paysIn = (people: readonly Person[], bandId: BandId): number[] => {
+  const pays = new Set<number>();
+  for (const person of peopleIn(people, bandId)) {
+    if (person.old !== null) pays.add(person.old);
+    if (person.value !== null) pays.add(person.value);
   }
-  const opening: LevelPoint = {
-    at: DOMAIN_START,
-    level: entity.old * DOLLARS_PER_LEVEL,
-  };
-  if (moment === undefined) return [opening];
-  return [
-    opening,
-    { at: moment.at, level: newLevelOf(entity) * DOLLARS_PER_LEVEL },
-  ];
+  return sortBy((pay: number) => pay, [...pays]);
 };
 
-/** What an entity is worth at a moment: its new level once it has stepped. */
-const levelAt = (entity: Entity, at: TimeValue): number => {
-  const moment = stepMomentOf(entity.id);
-  const stepped = moment !== undefined && timeOf(moment.at) <= timeOf(at);
-  // Before their own step a hire is worth nothing: they have not arrived yet.
-  const level = stepped ? newLevelOf(entity) : oldLevelOf(entity);
-  return level * DOLLARS_PER_LEVEL;
+/**
+ * The headcount on one pay figure over time.
+ *
+ * Only CHANGES are emitted. A point saying "still two people" would put a
+ * dropline where nothing happened; dropping to ZERO is a change and IS emitted,
+ * because that is what ends a rail's span.
+ */
+export const countPointsFor = (
+  people: readonly Person[],
+  bandId: BandId,
+  pay: number,
+): CountPoint[] => {
+  const members = peopleIn(people, bandId);
+  const points: CountPoint[] = [];
+  let previous = 0;
+  for (const time of MOMENTS) {
+    const holders = filter(
+      (person: Person) => payAt(person, time) === pay,
+      members,
+    );
+    if (holders.length === previous) continue;
+    points.push({ at: new Date(time), count: holders.length });
+    previous = holders.length;
+  }
+  return points;
 };
 
-/** The Total line — the consumer's own arithmetic, done once, here. */
-export const totalPoints = (entities: readonly Entity[]): LevelPoint[] => {
-  const people = timelinedEntities(entities);
-  const totalAt = (at: TimeValue): LevelPoint => ({
-    at,
-    level: pipe(
-      people,
-      map((entity: Entity) => levelAt(entity, at)),
-      sum,
-    ),
-  });
-  const moments = map((mutation: Mutation) => totalAt(mutation.at), MUTATIONS);
-  return [totalAt(DOMAIN_START), ...moments];
-};
-
-/** Four people plus the heavier Total, as `LevelsTimeline` wants them. */
-export const levelsSeriesOf = (entities: readonly Entity[]): Series[] => {
-  const people = map(
-    (entity: Entity) => ({
-      id: entity.id,
-      label: entity.label,
-      points: pointsFor(entity),
-    }),
-    timelinedEntities(entities),
+/** Every band's rails. One level per pay figure the band's people touch. */
+export const levelsOf = (people: readonly Person[]): Level[] =>
+  flatMap(
+    (band: Band) =>
+      map(
+        (pay: number) => ({
+          id: levelIdFor(band.id, pay),
+          label: payLabel(band.id, pay),
+          value: pay,
+          points: countPointsFor(people, band.id, pay),
+        }),
+        paysIn(people, band.id),
+      ),
+    BANDS,
   );
-  return [
-    ...people,
-    {
-      id: "total",
-      label: "Total",
-      primary: true,
-      points: totalPoints(entities),
-    },
-  ];
+
+/**
+ * Every move, as a flow. Which ends are present is what the flow MEANS:
+ * both = a raise or a cut, `from` only = a DEPARTURE out of the system,
+ * `to` only = a HIRE into it.
+ *
+ * Two people making the identical move at the identical moment merge into ONE
+ * ribbon of width two — the chart does no arithmetic on counts, so a caller
+ * that wants them merged merges them, and this board does. Two DIFFERENT moves
+ * at one moment (Peter's raise and Joe's departure at flag 1) stay two ribbons.
+ */
+export const transfersOf = (people: readonly Person[]): Transfer[] => {
+  const merged = new Map<string, Transfer>();
+  for (const person of people) {
+    const moment = momentOf(person);
+    if (moment === undefined) continue;
+    const band = person.band;
+    const from =
+      person.old === null ? undefined : levelIdFor(band, person.old);
+    const to =
+      person.value === null ? undefined : levelIdFor(band, person.value);
+    // Nobody moved: same pay before and after, or a record with neither end.
+    if (from === to) continue;
+    const at = new Date(timeOf(moment.at));
+    const key = `${at.getTime()}|${from ?? "out"}|${to ?? "out"}`;
+    const existing = merged.get(key);
+    merged.set(key, { at, from, to, count: (existing?.count ?? 0) + 1 });
+  }
+  return sortBy((transfer: Transfer) => timeOf(transfer.at), [
+    ...merged.values(),
+  ]);
 };
+
+/** The dials, as `MutationSliders` wants them: a person plus their band's box. */
+export const entitiesOf = (people: readonly Person[]): Entity[] =>
+  map(
+    (person: Person) => ({
+      id: person.id,
+      label: person.label,
+      old: person.old,
+      value: person.value,
+      range: bandOf(person.band).range,
+    }),
+    people,
+  );
 
 /** Running balance, month by month, in dollars. */
 export const runningBalances = (
@@ -353,36 +475,38 @@ const fanSeries = (id: string, sign: number) => ({
 const perMonth = (delta: number): string =>
   `${delta < 0 ? "−" : "+"}$${Math.abs(delta).toLocaleString("en-US")}/mo`;
 
-/** One dial's reading, as a line of text. */
-const describeEntity = (entity: Entity): string =>
-  entity.value === null
-    ? `${entity.label} removed (was L${entity.old})`
-    : `${entity.label} L${entity.old}→L${entity.value}`;
+/** One dial's reading, as a line of text. Absence reads as absence at both ends. */
+const describeEntity = (entity: Entity): string => {
+  if (entity.value === null) return `${entity.label} left L${entity.old}`;
+  if (entity.old === null) return `${entity.label} hired onto L${entity.value}`;
+  return `${entity.label} L${entity.old}→L${entity.value}`;
+};
 
-/** Replace one dial's new level, leaving every other row untouched. */
+/** Replace one person's new pay, leaving every other row untouched. */
 const withValue = (
-  entities: readonly Entity[],
+  people: readonly Person[],
   id: string,
   value: number | null,
-): Entity[] =>
+): Person[] =>
   map(
-    (entity: Entity) => (entity.id === id ? { ...entity, value } : entity),
-    entities,
+    (person: Person) => (person.id === id ? { ...person, value } : person),
+    people,
   );
 
 /** The board, read as tables, with no browser in the room. */
-const printTables = (entities: readonly Entity[]): void => {
+const printTables = (people: readonly Person[]): void => {
   /* eslint-disable no-console */
   console.table(
     map(
-      (entity: Entity) => ({
-        entity: entity.label,
-        old: entity.old,
-        new: newLevelOf(entity),
-        delta: deltaOf(entity),
-        dollars: deltaOf(entity) * DOLLARS_PER_LEVEL,
+      (person: Person) => ({
+        person: person.label,
+        band: person.band,
+        old: person.old ?? "— (hire)",
+        new: person.value ?? "— (departure)",
+        delta: deltaOf(person),
+        dollars: deltaOf(person) * DOLLARS_PER_LEVEL,
       }),
-      entities,
+      people,
     ),
   );
   console.table(
@@ -406,35 +530,48 @@ const printTables = (entities: readonly Entity[]): void => {
   );
   console.table(
     map(
-      (series: Series) => ({
-        series: series.label,
-        points: pipe(
-          series.points,
+      (level: Level) => ({
+        level: level.id,
+        label: level.label,
+        pay: level.value,
+        counts: pipe(
+          level.points,
           map(
-            (point: LevelPoint) =>
-              `${new Date(timeOf(point.at)).toISOString().slice(0, 10)}=${point.level}`,
+            (point: CountPoint) =>
+              `${new Date(timeOf(point.at)).toISOString().slice(0, 10)}=${point.count}`,
           ),
           join(" "),
         ),
       }),
-      levelsSeriesOf(entities),
+      levelsOf(people),
     ),
   );
-  console.log("rate", perMonth(rateOf(entities)));
+  console.table(
+    map(
+      (transfer: Transfer) => ({
+        at: new Date(timeOf(transfer.at)).toISOString().slice(0, 10),
+        from: transfer.from ?? "— (hire)",
+        to: transfer.to ?? "— (departure)",
+        count: transfer.count,
+      }),
+      transfersOf(people),
+    ),
+  );
+  console.log("rate", perMonth(rateOf(people)));
   /* eslint-enable no-console */
 };
 
 // ── The board ────────────────────────────────────────────────────────────────
 
 const ScenarioBoardBench: Component = () => {
-  const [entities, setEntities] = createSignal<readonly Entity[]>(SKETCH);
+  const [people, setPeople] = createSignal<readonly Person[]>(PEOPLE);
   const [asOf, setAsOf] = createSignal("2025-06");
   const [selectedMutation, setSelectedMutation] = createSignal<
     string | undefined
   >(mutationForSegment("2025-06"));
 
   onMount(() => {
-    if (DEBUG) printTables(entities());
+    if (DEBUG) printTables(people());
   });
 
   /** A flag click moves the as-of segment with it. */
@@ -451,31 +588,40 @@ const ScenarioBoardBench: Component = () => {
   };
 
   const setLevel = (id: string, value: number): void => {
-    setEntities((current) => withValue(current, id, value));
+    setPeople((current) => withValue(current, id, value));
   };
 
   const removeEntity = (id: string): void => {
-    setEntities((current) => withValue(current, id, null));
+    setPeople((current) => withValue(current, id, null));
   };
 
+  /**
+   * A HIRE. `old: null` — not the domain floor, which is what this bench used
+   * to invent before `Entity.old` could be absent. They enter band C at the
+   * last flag, which is where the board can show a from-less ribbon arriving.
+   */
   const addEntity = (): void => {
-    setEntities((current) => [
+    setPeople((current) => [
       ...current,
       {
-        id: `flynn-${current.length}`,
-        label: `Flynn ${current.length}`,
-        old: LEVEL_DOMAIN[0],
-        value: 5,
+        id: `hire-${current.length}`,
+        label: `Hire ${current.length - PEOPLE.length + 1}`,
+        band: "C",
+        stepAt: "autumn",
+        old: null,
+        value: 9,
       },
     ]);
   };
 
   const reset = (): void => {
-    setEntities(SKETCH);
+    setPeople(PEOPLE);
   };
 
-  const rate = () => rateOf(entities());
-  const summary = () => pipe(entities(), map(describeEntity), join("  ·  "));
+  /** The dials, derived once: a person plus their band's box. */
+  const dials = () => entitiesOf(people());
+  const rate = () => rateOf(dials());
+  const summary = () => pipe(dials(), map(describeEntity), join("  ·  "));
 
   return (
     <div class="component-section component-section--full">
@@ -518,19 +664,23 @@ const ScenarioBoardBench: Component = () => {
 
         <CardSurface>
           <TightStack>
-            <TextTitle>Levels through the year</TextTitle>
+            <TextTitle>Pay levels through the year</TextTitle>
             <LevelsTimeline
-              series={levelsSeriesOf(entities())}
+              levels={levelsOf(people())}
+              transfers={transfersOf(people())}
               mutations={MUTATIONS}
               domain={TIME_DOMAIN}
               selectedMutationId={selectedMutation()}
               onSelectMutation={selectMutation}
             />
             <CaptionLabel>
-              Four of the dials below, each holding its old level until its own
-              numbered mutation, plus the heavier Total this bench adds up
-              itself. Click a flag to light its rule — the split button below
-              moves to the matching as-of point.
+              One rail per pay level inside each of the three role bands, as
+              thick as the number of people standing on it, and one ribbon per
+              move. Watch band A's L2: Peter is raised off it and Joe leaves it
+              at the same flag, so it empties and its rail ends — two flows out
+              of one level at one moment, not one thick one. Click a flag to
+              light its rule; the split button below moves to the matching
+              as-of point.
             </CaptionLabel>
           </TightStack>
         </CardSurface>
@@ -565,7 +715,7 @@ const ScenarioBoardBench: Component = () => {
                   <GhostButton onClick={reset}>Reset</GhostButton>
                 </SpreadRow>
                 <MutationSliders
-                  entities={entities()}
+                  entities={dials()}
                   domain={LEVEL_DOMAIN}
                   onChange={setLevel}
                   onRemove={removeEntity}
