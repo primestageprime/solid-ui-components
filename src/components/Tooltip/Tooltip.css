@@ -47,7 +47,14 @@
 }
 
 .sui-tooltip__content {
-  z-index: 50;
+  /* ABOVE THE MODAL (1000 in Modal.css), not merely above the page. Kobalte
+     portals this popover to `document.body`, so it is a SIBLING of the modal
+     overlay rather than a child: at 50 it rendered, took focus and announced
+     itself while painting UNDERNEATH the dialog that opened it. That is the
+     bug Peter hit on Select (2026-09-16); this is the same latent one, fixed
+     before it had a consumer rather than after. Below Toast (9999), which
+     must outrank both. */
+  z-index: 1100;
   max-width: min(calc(100vw - 32px), 600px);
   border: 1px solid var(--sui-border, hsl(240 5% 84%));
   border-radius: var(--sui-radius-sm, 6px);
