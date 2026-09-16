@@ -2743,15 +2743,6 @@ th:has(.tf-th-center) .hud-table__header-content {
 /* Bench frames — a showcase's demo geometry belongs in a class, not an inline
    style, so the teaching surface models what the rule asks of src. */
 
-/* split-queue: a definite-height flex context, so the fill-parent bar has a
-   height to fill. */
-.split-queue-frame {
-  max-width: 460px;
-  margin-top: 12px;
-  height: calc(100vh - 220px);
-  display: flex;
-}
-
 /* Slider — the draw dial's input column is a fixed 290px, so the showcase
    renders every slider inside that exact width. A control that only reads
    well at full page width would pass a demo and fail the consumer. */
