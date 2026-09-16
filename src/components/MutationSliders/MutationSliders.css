@@ -1,0 +1,146 @@
+/* ============================================
+   MutationSliders — Structural
+
+   One dial per entity: a thin vertical line with a short cap at each end, a
+   fixed OLD tick on it, a translucent box spanning old→new, and a draggable
+   NEW thumb with an arrowhead.
+
+   Everything positional in the SVG overlay is decided in geometry.ts. The only
+   numbers repeated HERE are the three that the Kobalte track must agree with —
+   the dial's box and the track's inset — because Kobalte places the thumb as a
+   percentage of the TRACK element, so the track has to occupy exactly the span
+   `geometry.ts` maps the domain onto. `geometry.test.ts` pins the two files
+   together, so a change to one fails until the other follows.
+
+   LAYOUT PURITY — AUDITED INTRINSIC. The dial's parts are this widget's OWN
+   marks, not caller children, and they place themselves against a data-driven
+   percentage the same way Slider's notches do. There is no flex, no grid and
+   no gap in this file: the ROW of dials, the name above each one and the
+   readout below are composed from Layout and Text variants in the TSX.
+
+   All visual values come from `--sui-*` tokens.
+   ============================================ */
+.sui-mutation-sliders {
+  --sui-mutation-dial-height: 160px;
+  --sui-mutation-dial-width: 28px;
+  --sui-mutation-track-inset: 12px;
+  /* The drag surface is wider than the drawn line, so the thumb is catchable
+     without the line being thick enough to blur the old-vs-new comparison. */
+  --sui-mutation-grip-width: 16px;
+  --sui-mutation-thumb-height: 10px;
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+}
+
+/* ── The dial ────────────────────────────────────────────────────────────
+   The Kobalte root. It is the SVG's canvas as well as the slider's box, and
+   the two are the same px, so no scale factor exists anywhere. */
+.sui-mutation-sliders__dial {
+  position: relative;
+  width: var(--sui-mutation-dial-width);
+  height: var(--sui-mutation-dial-height);
+}
+
+/* A removed entity keeps its track and its old tick and loses everything
+   else. Dimming says "this is still the same person, they are just not in the
+   new scenario" — hiding the dial would lose the comparison entirely. */
+.sui-mutation-sliders__dial[data-removed] {
+  opacity: 0.4;
+}
+
+/* ── The painted marks ───────────────────────────────────────────────────
+   One overlay, lying exactly on the dial box. It takes no pointer events: the
+   track under it is the drag surface, and a mark that swallowed the press
+   would make the dial dead at exactly the places a reader aims for. */
+.sui-mutation-sliders__marks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sui-mutation-sliders__track-line {
+  stroke: var(--sui-border);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  fill: none;
+}
+
+/* The OLD level. A tick, not a thumb: it is where the entity WAS, and nothing
+   the reader can drag. */
+.sui-mutation-sliders__old-tick {
+  stroke: var(--sui-text-secondary);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* The change, as an area. Translucent so the track and the old tick read
+   THROUGH it — the bar is a span between two marks, not a third mark that
+   hides them. */
+.sui-mutation-sliders__box {
+  fill: var(--sui-accent);
+  fill-opacity: 0.25;
+  stroke: none;
+}
+
+.sui-mutation-sliders__arrow {
+  fill: var(--sui-accent);
+}
+
+/* ── The drag surface ────────────────────────────────────────────────────
+   Kobalte places the thumb at `bottom: N%` of THIS element, so its inset is
+   the one number that has to agree with geometry.ts. It draws nothing: the
+   overlay above already drew the line. */
+.sui-mutation-sliders__track {
+  position: absolute;
+  top: var(--sui-mutation-track-inset);
+  bottom: var(--sui-mutation-track-inset);
+  left: calc(50% - var(--sui-mutation-grip-width) / 2);
+  width: var(--sui-mutation-grip-width);
+  background: transparent;
+  cursor: pointer;
+}
+
+.sui-mutation-sliders__dial[data-disabled] .sui-mutation-sliders__track {
+  cursor: not-allowed;
+}
+
+/* Kobalte writes `position`, `bottom` and `transform: translateY(50%)` as
+   INLINE styles on the thumb, and an inline transform beats this file — so the
+   horizontal placement is a `left`/`width` pair rather than the other half of
+   a two-axis transform, which would be silently dropped. */
+.sui-mutation-sliders__thumb {
+  left: 0;
+  width: 100%;
+  height: var(--sui-mutation-thumb-height);
+  background: var(--sui-accent);
+  border-radius: 2px;
+  cursor: grab;
+  outline: none;
+  transition:
+    box-shadow 120ms ease,
+    background 120ms ease;
+}
+
+.sui-mutation-sliders__thumb:hover:not([data-disabled]) {
+  box-shadow: 0 0 0 4px rgba(var(--sui-accent-rgb), 0.2);
+}
+
+.sui-mutation-sliders__thumb:active:not([data-disabled]) {
+  cursor: grabbing;
+}
+
+/* A keyboard user has to see which thumb the arrow keys move. */
+.sui-mutation-sliders__thumb:focus-visible {
+  box-shadow: 0 0 0 3px rgba(var(--sui-accent-rgb), 0.5);
+}
+
+/* ── The name ────────────────────────────────────────────────────────────
+   A struck-through name is the sketch's own notation for "removed in the new
+   scenario", and it is the first thing read — so it stays text, struck, rather
+   than becoming a badge beside the name. */
+.sui-mutation-sliders__name--removed {
+  text-decoration: line-through;
+}
