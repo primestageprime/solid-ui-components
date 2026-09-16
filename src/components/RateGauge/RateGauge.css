@@ -1,0 +1,131 @@
+/* RateGauge — Atomic (Depth 1). Owns this file, imports no component.
+
+   The host carries the meter role and the announcement; the <svg> inside it is
+   the canvas and is aria-hidden. No box-model geometry here — the SVG
+   coordinate system is this component's layout engine (Layout Purity
+   exemption 2: svg/canvas rendering). */
+
+.sui-rate-gauge {
+  display: block;
+  width: 100%;
+}
+
+.sui-rate-gauge__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ---- The two zones ----
+
+   Dimming is the PRIMARY channel for the above/below answer: the reader
+   watches which half lights up, so the tones are redundant encoding rather
+   than the only signal. A dimmed zone stays visible — it is the half the
+   value could swing into, and hiding it would lose the scale. */
+
+.sui-rate-gauge__zone-positive--lit {
+  fill: rgba(var(--sui-success-rgb), 0.85);
+}
+
+.sui-rate-gauge__zone-positive--dim {
+  fill: rgba(var(--sui-success-rgb), 0.14);
+}
+
+.sui-rate-gauge__zone-negative--lit {
+  fill: rgba(var(--sui-danger-rgb), 0.85);
+}
+
+.sui-rate-gauge__zone-negative--dim {
+  fill: rgba(var(--sui-danger-rgb), 0.14);
+}
+
+/* ---- The reference marks ---- */
+
+/* The baseline's swept sector: a hint of where the reference sits relative to
+   zero, deliberately faint enough never to compete with a zone. */
+.sui-rate-gauge__wedge {
+  fill: var(--sui-text-muted);
+  fill-opacity: 0.18;
+}
+
+.sui-rate-gauge__zero {
+  stroke: var(--sui-text-muted);
+  stroke-width: 1;
+}
+
+.sui-rate-gauge__pivot {
+  fill: var(--sui-text-secondary);
+}
+
+/* ---- The needles ---- */
+
+.sui-rate-gauge__needle {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Dashed and grey: the reference is a memory of a rate, not a live reading. */
+.sui-rate-gauge__needle--baseline {
+  stroke: var(--sui-text-muted);
+  stroke-dasharray: 4 3;
+}
+
+.sui-rate-gauge__needle--value,
+.sui-rate-gauge__needle-cap,
+.sui-rate-gauge__bracket {
+  stroke: var(--sui-text-secondary);
+}
+
+.sui-rate-gauge--positive .sui-rate-gauge__needle--value,
+.sui-rate-gauge--positive .sui-rate-gauge__needle-cap,
+.sui-rate-gauge--positive .sui-rate-gauge__bracket {
+  stroke: var(--sui-success);
+}
+
+.sui-rate-gauge--negative .sui-rate-gauge__needle--value,
+.sui-rate-gauge--negative .sui-rate-gauge__needle-cap,
+.sui-rate-gauge--negative .sui-rate-gauge__bracket {
+  stroke: var(--sui-danger);
+}
+
+.sui-rate-gauge__needle-cap {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.sui-rate-gauge__bracket {
+  fill: none;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+/* ---- The label stack ---- */
+
+.sui-rate-gauge__leader {
+  fill: none;
+  stroke: var(--sui-text-muted);
+  stroke-width: 0.75;
+}
+
+.sui-rate-gauge__label {
+  fill: var(--sui-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* The delta is the figure the card exists to report, so it takes the active
+   tone and the weight; the two names stay quiet beside it. */
+.sui-rate-gauge--positive .sui-rate-gauge__row--delta .sui-rate-gauge__label {
+  fill: var(--sui-success);
+  font-weight: 600;
+}
+
+.sui-rate-gauge--negative .sui-rate-gauge__row--delta .sui-rate-gauge__label {
+  fill: var(--sui-danger);
+  font-weight: 600;
+}
+
+.sui-rate-gauge__row--value .sui-rate-gauge__label {
+  fill: var(--sui-text-primary);
+}
