@@ -63,6 +63,55 @@ describe("ScrubChart composition", () => {
     expect(container.querySelector('[data-testid="chart"]')).toBeTruthy();
   });
 
+  // The fill-height contract (Peter, 2026-09-16). BOTH paths are pinned,
+  // because they fail in opposite directions: losing the fill leaves a pixel
+  // height behind, and losing the numeric path leaves `100%` behind, and each
+  // regression would satisfy the other's assertion.
+  it("takes the container's height in fill mode and a pixel height otherwise", () => {
+    const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    const chart = (height: number | "fill") => (
+      <ScrubChart
+        cells={cells}
+        selected={15}
+        onScrub={() => {}}
+        chartHeight={height}
+        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+        renderChart={() => <svg data-testid="chart" />}
+      />
+    );
+
+    const numeric = render(() => chart(260));
+    const numericFrame = numeric.container.querySelector(
+      ".sui-scrub-chart__frame",
+    ) as HTMLElement;
+    expect(numericFrame.style.height).toBe("260px");
+
+    const filled = render(() => chart("fill"));
+    const filledFrame = filled.container.querySelector(
+      ".sui-scrub-chart__frame",
+    ) as HTMLElement;
+    expect(filledFrame.style.height).toBe("100%");
+  });
+
+  it("renders no expand chevron in fill mode — the container owns the height", () => {
+    const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    // `chartHeightExpanded` is the chevron's master switch, so this is the
+    // case that would regress if fill mode forgot to suppress it: moving the
+    // frame between two PIXEL heights says nothing when the parent owns it.
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells}
+        selected={15}
+        onScrub={() => {}}
+        chartHeight="fill"
+        chartHeightExpanded={400}
+        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+        renderChart={() => <svg data-testid="chart" />}
+      />
+    ));
+    expect(container.querySelector(".sui-scrub-chart__expand-btn")).toBeNull();
+  });
+
   it("passes a linear cellToX + cellBounds to renderChart", () => {
     let seen: ScrubChartContext<Cell> | null = null;
     const cells = dailyCells(d("2026-05-01"), d("2026-05-31"));

@@ -85,6 +85,8 @@ export type {
 export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   props,
 ) => {
+  // `"fill"` passes straight through to ScrubChart, which owns the measuring;
+  // only the numeric path needs the local default.
   const chartHeight = () => props.chartHeight ?? 200;
   const cellWidth = () => props.cellWidth ?? 60;
   // Source for the PRIMARY balance line + its dots/markers. Defaults to the

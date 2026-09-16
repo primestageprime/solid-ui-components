@@ -107,8 +107,24 @@ export const ScrubChart = <C extends Cell>(
   // ── Frame height + the expand control ────────────────────────────────
   // `chartHeightExpanded` is the master switch. Without it the frame simply
   // takes `chartHeight`, the chevron never renders, and the tween never runs.
-  const collapsedHeight = () => props.chartHeight ?? DEFAULT_CHART_HEIGHT;
-  const expandable = () => props.chartHeightExpanded !== undefined;
+  // FILL MODE: the container owns the height, so the frame measures itself and
+  // every span derives from that instead of from a number. The measurement
+  // cannot feed back into the box — the frame is `height:100%` of its parent
+  // and the svg inside is `height:100%` of the frame, so nothing the viewBox
+  // says can change the height it was measured from. (Contrast the WIDTH of a
+  // `max-content` box, where exactly that cycle closes.)
+  const filling = () => props.chartHeight === "fill";
+  const [measuredHeight, setMeasuredHeight] = createSignal(0);
+  const collapsedHeight = () => {
+    if (!filling()) return (props.chartHeight as number) ?? DEFAULT_CHART_HEIGHT;
+    // Until the first ResizeObserver callback lands there is no measurement to
+    // use, and a frame of 0 would divide by zero downstream.
+    return measuredHeight() > 0 ? measuredHeight() : DEFAULT_CHART_HEIGHT;
+  };
+  // The chevron moves the frame between two PIXEL heights, which says nothing
+  // when the container owns the height.
+  const expandable = () =>
+    !filling() && props.chartHeightExpanded !== undefined;
   const [ownedExpanded, setOwnedExpanded] = createSignal(false);
   // Controlled when the caller passes `expanded`; owned otherwise — the same
   // split `yScaleMode` takes.
@@ -193,7 +209,14 @@ export const ScrubChart = <C extends Cell>(
     // page around it) mid-delivery, which re-queued this same observer and made
     // the browser emit "ResizeObserver loop completed with undelivered
     // notifications" during a window drag. See internal/dom/observeSize.
-    onCleanup(observeSize(frameEl, (size) => setChartWidth(size.width)));
+    onCleanup(
+      observeSize(frameEl, (size) => {
+        setChartWidth(size.width);
+        // Only in fill mode: in the numeric path the height is the caller's and
+        // measuring it would be a second, contradicting source of truth.
+        if (filling()) setMeasuredHeight(size.height);
+      }),
+    );
   });
 
   // Vertical plot region — independent of y-axis width.
@@ -621,7 +644,7 @@ export const ScrubChart = <C extends Cell>(
     <div class="sui-scrub-chart">
       <div
         class="sui-scrub-chart__frame"
-        style={{ height: `${chartHeight()}px` }}
+        style={filling() ? { height: "100%" } : { height: `${chartHeight()}px` }}
         ref={(el) => (frameEl = el)}
         onPointerMove={handleHoverMove}
         onPointerLeave={handleHoverLeave}

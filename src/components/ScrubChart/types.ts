@@ -224,10 +224,31 @@ export interface ScrubChartProps<C extends Cell> {
    */
   scrub?: boolean;
 
-  /** Chart drawing-area height in px. Default 200. Includes any reserved
-   *  x-axis margin. With `chartHeightExpanded` set this is the COLLAPSED
-   *  height. */
-  chartHeight?: number;
+  /**
+   * Chart drawing-area height in px. Default 200. Includes any reserved
+   * x-axis margin. With `chartHeightExpanded` set this is the COLLAPSED
+   * height.
+   *
+   * `"fill"` instead of a number makes the frame take its CONTAINER's height
+   * (Peter, 2026-09-16: a chart should absorb the height and width of its
+   * container). The chart measures its own frame and drives the plot span, the
+   * axis rows and the `viewBox` from that, exactly as it does from a number.
+   *
+   * ADDITIVE: the numeric path is untouched, so every existing caller renders
+   * identically. Two things to know before reaching for it:
+   *
+   *   • **The container must HAVE a height.** The frame becomes `height:100%`,
+   *     and against an indefinite parent that computes to `auto` — the svg
+   *     inside is itself `height:100%`, so the frame would collapse to nothing.
+   *     A grid track, a flex child with a definite basis, or anything with a
+   *     set height works; ordinary flow does not. This is why `"fill"` is opt-in
+   *     rather than the default.
+   *   • **`chartHeightExpanded` is ignored.** The expand chevron moves the frame
+   *     between two pixel heights, which is meaningless when the container owns
+   *     the height — so in fill mode the chevron does not render and the tween
+   *     never runs.
+   */
+  chartHeight?: number | "fill";
   /**
    * Height the chart grows to when the reader expands it, in px.
    *
