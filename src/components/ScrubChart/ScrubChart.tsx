@@ -227,7 +227,12 @@ export const ScrubChart = <C extends Cell>(
         setChartWidth(size.width);
         // Only in fill mode: in the numeric path the height is the caller's and
         // measuring it would be a second, contradicting source of truth.
-        if (filling()) setMeasuredHeight(size.height);
+        //
+        // A ZERO IS NOT A MEASUREMENT — it is the layout saying "not yet", or
+        // "this is inside `display: none`". Storing it would throw away a good
+        // height the moment a card is hidden, and the chart would come back at
+        // the fallback rather than at the size it had. Keep the last real one.
+        if (filling() && size.height > 0) setMeasuredHeight(size.height);
       }),
     );
   });

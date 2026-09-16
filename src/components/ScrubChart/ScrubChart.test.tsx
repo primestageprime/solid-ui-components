@@ -26,7 +26,12 @@ import {
 } from "./helpers";
 import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
 import { dailyCells, type Cell } from "../DateAxis";
-import { installRects, pointer, rectOf } from "../../test-utils";
+import {
+  installFakeSizer,
+  installRects,
+  pointer,
+  rectOf,
+} from "../../test-utils";
 
 // `cellAtClientX` reads exactly one field of this box — `left`, to convert a
 // client coordinate into a plot-relative one. The 1200 that sets dayPitch does
@@ -139,6 +144,47 @@ describe("ScrubChart composition", () => {
       for (const box of boxes) expect(box).toBe(`0 0 900 ${FRAME_HEIGHT}`);
     } finally {
       restore();
+    }
+  });
+
+  it("keeps the last real fill height when the box goes to zero", async () => {
+    const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    const sizer = installFakeSizer();
+    const restore = installRects((el) =>
+      (el as HTMLElement).classList?.contains("sui-scrub-chart__frame")
+        ? rectOf({ left: 0, top: 0, width: 900, height: 340 })
+        : null,
+    );
+    try {
+      const { container } = render(() => (
+        <ScrubChart
+          cells={cells}
+          selected={15}
+          onScrub={() => {}}
+          chartHeight="fill"
+          renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+          renderChart={() => <svg data-testid="chart" />}
+        />
+      ));
+      const frame = container.querySelector(
+        ".sui-scrub-chart__frame",
+      ) as HTMLElement;
+      const boxOf = () =>
+        container
+          .querySelector(".sui-scrub-chart__frame svg[viewBox]")
+          ?.getAttribute("viewBox");
+
+      await sizer.resize(frame, { width: 900, height: 420 });
+      expect(boxOf()).toBe("0 0 900 420");
+
+      // Hiding the card (a tab, an accordion, `display: none`) delivers a ZERO.
+      // That is the layout saying "not yet", not a new size — storing it would
+      // bring the chart back at the fallback instead of the height it had.
+      await sizer.resize(frame, { width: 900, height: 0 });
+      expect(boxOf()).toBe("0 0 900 420");
+    } finally {
+      restore();
+      sizer.uninstall?.();
     }
   });
 
