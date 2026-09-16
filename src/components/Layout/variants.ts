@@ -511,20 +511,23 @@ export const MajorFillColumn: Component<StackDataProps> = createStack({
   style: { flex: "70", "min-height": "0" },
 });
 
-/** WidePaneBox — a flex child pinned to 80% of its row, beside a companion
- *  that takes the rest (`width:80%; flex-shrink:0; min-width:0`).
+/** MajorPaneBox — a flex child pinned to 60% of its row, beside a companion
+ *  that fills the remaining 40% (`width:60%; flex-shrink:0; min-width:0`).
  *
  *  DEFINITE on purpose. The obvious spelling for "as wide as its content needs,
- *  capped" is `width:max-content; max-width:80%`, and it is unsafe for any
+ *  capped" is `width:max-content; max-width:<n>%`, and it is unsafe for any
  *  child that MEASURES ITSELF to decide how much content to render: the
  *  measurement changes the content, the content changes the `max-content` box,
  *  and the box changes the measurement. It does not always spin — it can settle
  *  one item lower and oscillate between two widths depending on which frame the
  *  resize arrived in, which reads as a rendering bug and does not reproduce on
- *  demand. A definite share breaks the cycle. */
-export const WidePaneBox: Component<BoxDataProps> = createBox({
+ *  demand. A definite share breaks the cycle.
+ *
+ *  60/40 rather than the 80/20 this shipped as: an instrument in the minor
+ *  share needs enough width to stay legible, and a fifth of a row is not it. */
+export const MajorPaneBox: Component<BoxDataProps> = createBox({
   shrink: false,
-  style: { width: "80%", "min-width": "0" },
+  style: { width: "60%", "min-width": "0" },
 });
 
 /** NoShrinkScrollBox — a fixed-size box that refuses to shrink in a flex parent

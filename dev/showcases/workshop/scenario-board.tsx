@@ -75,7 +75,7 @@ import {
   SpreadRow,
   TightStack,
   ViewportColumn,
-  WidePaneBox,
+  MajorPaneBox,
 } from "../../../src/components/Layout";
 import { FillCardSurface } from "../../../src/components/Surface";
 import { SectionTitle, TextTitle } from "../../../src/components/Text";
@@ -882,7 +882,7 @@ const ScenarioBoardBench: Component = () => {
 
         <MajorFillColumn>
           <LooseWrapRow>
-            <WidePaneBox>
+            <MajorPaneBox>
               <FillCardSurface>
                 <TightStack>
                   {/* The as-of control lives HERE, in the card's header, not
@@ -912,7 +912,7 @@ const ScenarioBoardBench: Component = () => {
                   />
                 </TightStack>
               </FillCardSurface>
-            </WidePaneBox>
+            </MajorPaneBox>
 
             {/* The narrow column. ConstrainedBox caps the CARD at 400px rather
               than only the dial inside it: a NoShrinkColumn took its width

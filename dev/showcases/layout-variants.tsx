@@ -37,7 +37,7 @@ import {
   MajorFillColumn,
   MinorFillColumn,
   ViewportColumn,
-  WidePaneBox,
+  MajorPaneBox,
   ClipFillColumnFlush,
   ScrollFillColumn,
   // boxes
@@ -123,7 +123,7 @@ const COLUMNS: VariantSpec[] = [
 ];
 
 const BOXES: VariantSpec[] = [
-  { name: "WidePaneBox", note: "80% of its row beside a companion taking the rest — DEFINITE, because a max-content box whose child measures itself to decide its content oscillates", Variant: WidePaneBox },
+  { name: "MajorPaneBox", note: "60% of its row beside a companion filling the other 40% — DEFINITE, because a max-content box whose child measures itself to decide its content oscillates", Variant: MajorPaneBox },
   { name: "ClipBox", note: "a plain box that clips overflow", Variant: ClipBox, kind: "tall", bounded: true },
   { name: "ClipFillBox", note: "grows into its parent and clips", Variant: ClipFillBox, kind: "tall", bounded: true },
   { name: "ScrollBox", note: "scrolls both axes", Variant: ScrollBox, kind: "tall", bounded: true },
