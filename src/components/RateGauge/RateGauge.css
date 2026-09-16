@@ -19,26 +19,35 @@
   color: var(--sui-text-secondary);
 }
 
-/* ---- The two zones ----
+/* ---- The ring's bands ----
 
-   Dimming is the PRIMARY channel for the above/below answer: the reader
-   watches which half lights up, so the tones are redundant encoding rather
-   than the only signal. A dimmed zone stays visible — it is the half the
-   value could swing into, and hiding it would lose the scale. */
+   Dimming is the PRIMARY channel for the answer: the reader watches which band
+   lights up, so the tones are redundant encoding rather than the only signal.
+   That is also what lets a third band arrive without the gauge becoming
+   colour-dependent. A dimmed band stays visible — it is where the value could
+   swing to, and hiding it would lose the scale. */
 
-.sui-rate-gauge__zone-positive--lit {
+.sui-rate-gauge__band--success.sui-rate-gauge__band--lit {
   fill: rgba(var(--sui-success-rgb), 0.85);
 }
 
-.sui-rate-gauge__zone-positive--dim {
+.sui-rate-gauge__band--success.sui-rate-gauge__band--dim {
   fill: rgba(var(--sui-success-rgb), 0.14);
 }
 
-.sui-rate-gauge__zone-negative--lit {
+.sui-rate-gauge__band--warning.sui-rate-gauge__band--lit {
+  fill: rgba(var(--sui-warning-rgb), 0.85);
+}
+
+.sui-rate-gauge__band--warning.sui-rate-gauge__band--dim {
+  fill: rgba(var(--sui-warning-rgb), 0.14);
+}
+
+.sui-rate-gauge__band--danger.sui-rate-gauge__band--lit {
   fill: rgba(var(--sui-danger-rgb), 0.85);
 }
 
-.sui-rate-gauge__zone-negative--dim {
+.sui-rate-gauge__band--danger.sui-rate-gauge__band--dim {
   fill: rgba(var(--sui-danger-rgb), 0.14);
 }
 
@@ -53,12 +62,12 @@
   fill-opacity: 0.18;
 }
 
-.sui-rate-gauge--positive .sui-rate-gauge__delta-sector {
+.sui-rate-gauge--success .sui-rate-gauge__delta-sector {
   fill: var(--sui-success);
   fill-opacity: 0.22;
 }
 
-.sui-rate-gauge--negative .sui-rate-gauge__delta-sector {
+.sui-rate-gauge--danger .sui-rate-gauge__delta-sector {
   fill: var(--sui-danger);
   fill-opacity: 0.22;
 }
@@ -114,15 +123,15 @@
   stroke: var(--sui-text-secondary);
 }
 
-.sui-rate-gauge--positive .sui-rate-gauge__needle--value,
-.sui-rate-gauge--positive .sui-rate-gauge__needle-cap,
-.sui-rate-gauge--positive .sui-rate-gauge__brace {
+.sui-rate-gauge--success .sui-rate-gauge__needle--value,
+.sui-rate-gauge--success .sui-rate-gauge__needle-cap,
+.sui-rate-gauge--success .sui-rate-gauge__brace {
   stroke: var(--sui-success);
 }
 
-.sui-rate-gauge--negative .sui-rate-gauge__needle--value,
-.sui-rate-gauge--negative .sui-rate-gauge__needle-cap,
-.sui-rate-gauge--negative .sui-rate-gauge__brace {
+.sui-rate-gauge--danger .sui-rate-gauge__needle--value,
+.sui-rate-gauge--danger .sui-rate-gauge__needle-cap,
+.sui-rate-gauge--danger .sui-rate-gauge__brace {
   stroke: var(--sui-danger);
 }
 
@@ -183,32 +192,32 @@
 
 /* The row carrying the current value takes the active tone throughout — dot,
    tick, leader end and words — because it is the reading. */
-.sui-rate-gauge--positive .sui-rate-gauge__row--value,
-.sui-rate-gauge--positive .sui-rate-gauge__row--valueAndBaseline,
-.sui-rate-gauge--positive .sui-rate-gauge__row--delta {
+.sui-rate-gauge--success .sui-rate-gauge__row--value,
+.sui-rate-gauge--success .sui-rate-gauge__row--valueAndBaseline,
+.sui-rate-gauge--success .sui-rate-gauge__row--delta {
   color: var(--sui-success);
 }
 
-.sui-rate-gauge--negative .sui-rate-gauge__row--value,
-.sui-rate-gauge--negative .sui-rate-gauge__row--valueAndBaseline,
-.sui-rate-gauge--negative .sui-rate-gauge__row--delta {
+.sui-rate-gauge--danger .sui-rate-gauge__row--value,
+.sui-rate-gauge--danger .sui-rate-gauge__row--valueAndBaseline,
+.sui-rate-gauge--danger .sui-rate-gauge__row--delta {
   color: var(--sui-danger);
 }
 
-.sui-rate-gauge--positive .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
-.sui-rate-gauge--positive .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
-.sui-rate-gauge--positive .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
-.sui-rate-gauge--positive .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
-.sui-rate-gauge--positive .sui-rate-gauge__row--delta .sui-rate-gauge__label {
+.sui-rate-gauge--success .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
+.sui-rate-gauge--success .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
+.sui-rate-gauge--success .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
+.sui-rate-gauge--success .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
+.sui-rate-gauge--success .sui-rate-gauge__row--delta .sui-rate-gauge__label {
   fill: var(--sui-success);
   stroke: var(--sui-success);
 }
 
-.sui-rate-gauge--negative .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
-.sui-rate-gauge--negative .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
-.sui-rate-gauge--negative .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
-.sui-rate-gauge--negative .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
-.sui-rate-gauge--negative .sui-rate-gauge__row--delta .sui-rate-gauge__label {
+.sui-rate-gauge--danger .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
+.sui-rate-gauge--danger .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
+.sui-rate-gauge--danger .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
+.sui-rate-gauge--danger .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
+.sui-rate-gauge--danger .sui-rate-gauge__row--delta .sui-rate-gauge__label {
   fill: var(--sui-danger);
   stroke: var(--sui-danger);
 }
@@ -239,4 +248,32 @@
   color: inherit;
   font: inherit;
   text-align: left;
+}
+
+/* The warning tone, for a gain that is not yet comfortable. Mirrors the
+   success rules exactly — the band's meaning changes, its treatment does not. */
+.sui-rate-gauge--warning .sui-rate-gauge__delta-sector {
+  fill: var(--sui-warning);
+  fill-opacity: 0.22;
+}
+
+.sui-rate-gauge--warning .sui-rate-gauge__needle--value,
+.sui-rate-gauge--warning .sui-rate-gauge__needle-cap,
+.sui-rate-gauge--warning .sui-rate-gauge__brace {
+  stroke: var(--sui-warning);
+}
+
+.sui-rate-gauge--warning .sui-rate-gauge__row--value,
+.sui-rate-gauge--warning .sui-rate-gauge__row--valueAndBaseline,
+.sui-rate-gauge--warning .sui-rate-gauge__row--delta {
+  color: var(--sui-warning);
+}
+
+.sui-rate-gauge--warning .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
+.sui-rate-gauge--warning .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
+.sui-rate-gauge--warning .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
+.sui-rate-gauge--warning .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
+.sui-rate-gauge--warning .sui-rate-gauge__row--delta .sui-rate-gauge__label {
+  fill: var(--sui-warning);
+  stroke: var(--sui-warning);
 }

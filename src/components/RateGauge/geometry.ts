@@ -33,6 +33,25 @@ export type Domain = readonly [number, number];
 export type Zone = "positive" | "negative";
 
 /**
+ * The tone a band of the ring carries. `warning` appears only when the
+ * consumer names a `comfortable` gain — the yellow between zero and it.
+ */
+export type BandTone = "success" | "warning" | "danger";
+
+/** One painted band of the ring: an angular range with a tone. */
+export interface Band {
+  readonly id: BandTone;
+  readonly tone: BandTone;
+  /** Angular extent, in math degrees, low end first. */
+  readonly from: number;
+  readonly to: number;
+  /** `d` for the annular band. */
+  readonly path: string;
+  /** Whether the value's needle stands in this band. */
+  readonly lit: boolean;
+}
+
+/**
  * What a callout names. `valueAndBaseline` is the collapsed row used when the
  * two needles coincide: one anchor cannot carry two leaders, and two rows
  * pointing at the same dot read as a mistake rather than as a coincidence.
@@ -308,6 +327,63 @@ export const zoneOf = (domain: Domain, value: number): Zone =>
   angleFor(domain, value) >= angleFor(domain, 0) ? "positive" : "negative";
 
 /**
+ * The ring's bands, in order from the bottom pole to the top.
+ *
+ * Without a `comfortable` gain there are two, split at zero: loss below, gain
+ * above. With one, the gain half splits again — the stretch from zero up to
+ * that amount is a gain the consumer has said is not yet comfortable, and it
+ * takes the warning tone. This is the dial's only opinion about the numbers,
+ * and it is the CONSUMER's opinion: the gauge just paints where it is told to
+ * split.
+ *
+ * `comfortable` is ignored when it is absent, zero, or negative — a
+ * non-positive "comfortable gain" is not a threshold, it is a mistake, and
+ * drawing a yellow band below zero would contradict the loss half. It is
+ * clamped to the domain like any other value, so a threshold past the top of
+ * the scale paints the whole gain half yellow rather than drawing a band
+ * nobody can reach.
+ */
+export const bandRanges = (
+  domain: Domain,
+  comfortable?: number,
+): readonly { readonly tone: BandTone; readonly from: number; readonly to: number }[] => {
+  const zero = angleFor(domain, 0);
+  const loss = { tone: "danger" as BandTone, from: -QUARTER_TURN, to: zero };
+  if (comfortable === undefined || comfortable <= 0) {
+    return [loss, { tone: "success", from: zero, to: QUARTER_TURN }];
+  }
+  const split = angleFor(domain, comfortable);
+  if (split <= zero) return [loss, { tone: "success", from: zero, to: QUARTER_TURN }];
+  const ranges = [loss, { tone: "warning" as BandTone, from: zero, to: split }];
+  // A threshold at or past the top leaves no green to draw. Emitting it anyway
+  // would put a zero-length path in the DOM and a band in the announcement
+  // that the reader cannot see.
+  return split >= QUARTER_TURN
+    ? ranges
+    : [...ranges, { tone: "success" as BandTone, from: split, to: QUARTER_TURN }];
+};
+
+/**
+ * Which band a value's needle stands in.
+ *
+ * The bands are half-open upward — a value exactly ON the comfortable gain is
+ * comfortable, the same way a value exactly on zero is a gain rather than a
+ * loss. The topmost band catches the top pole.
+ */
+export const bandAt = (
+  domain: Domain,
+  value: number,
+  comfortable?: number,
+): BandTone => {
+  const at = angleFor(domain, value);
+  const ranges = bandRanges(domain, comfortable);
+  for (let i = ranges.length - 1; i >= 0; i -= 1) {
+    if (at >= ranges[i].from) return ranges[i].tone;
+  }
+  return ranges[0].tone;
+};
+
+/**
  * SVG arc flags for a sweep from `from` to `to` in math degrees.
  *
  * `pointAt` has already flipped y, so the picture runs in standard maths
@@ -577,6 +653,8 @@ export interface GaugeInput {
   readonly domain: Domain;
   readonly baseline: number;
   readonly value: number;
+  /** A gain the consumer considers comfortable; splits the gain half. */
+  readonly comfortable?: number;
 }
 
 /** Everything the component paints. Nothing is decided after this. */
@@ -589,10 +667,14 @@ export interface GaugeGeometry {
   readonly baselineAngle: number;
   readonly valueAngle: number;
   readonly zone: Zone;
+  /** The comfortable gain the consumer named, clamped, or undefined. */
+  readonly comfortable: number | undefined;
   /** The drawn value less the baseline — the number `format` is handed. */
   readonly delta: number;
-  readonly positiveRing: string;
-  readonly negativeRing: string;
+  /** The ring's painted bands, bottom pole to top. */
+  readonly bands: readonly Band[];
+  /** The tone of the band the needle stands in — what the gauge reads as. */
+  readonly tone: BandTone;
   readonly deltaSector: string;
   readonly brace: string;
   readonly zeroLine: { readonly x2: number; readonly y2: number };
@@ -857,6 +939,7 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
   const valueAngle = angleFor(input.domain, input.value);
   const zoneEnd = pointAt(CENTER, RING_OUTER, zero);
   const collapsed = drawn === drawnBaseline;
+  const tone = bandAt(input.domain, input.value, input.comfortable);
   const brace = bracePath(
     CENTER,
     BRACKET_RADIUS,
@@ -872,8 +955,22 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
     valueAngle,
     zone: zoneOf(input.domain, input.value),
     delta: drawn - drawnBaseline,
-    positiveRing: ringArcPath(CENTER, RING_INNER, RING_OUTER, zero, QUARTER_TURN),
-    negativeRing: ringArcPath(CENTER, RING_INNER, RING_OUTER, -QUARTER_TURN, zero),
+    bands: map(
+      (range: { tone: BandTone; from: number; to: number }) => ({
+        id: range.tone,
+        tone: range.tone,
+        from: range.from,
+        to: range.to,
+        path: ringArcPath(CENTER, RING_INNER, RING_OUTER, range.from, range.to),
+        lit: range.tone === tone,
+      }),
+      bandRanges(input.domain, input.comfortable),
+    ),
+    tone,
+    comfortable:
+      input.comfortable !== undefined && input.comfortable > 0
+        ? clampedValue(input.domain, input.comfortable)
+        : undefined,
     deltaSector: sectorPath(CENTER, SECTOR_RADIUS, baselineAngle, valueAngle),
     brace,
     zeroLine: { x2: zoneEnd.x, y2: zoneEnd.y },

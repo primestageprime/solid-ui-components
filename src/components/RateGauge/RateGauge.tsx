@@ -44,6 +44,7 @@
 // ============================================
 import { For, type Component, createMemo, Show } from "solid-js";
 import {
+  type Band,
   type Callout,
   CENTER,
   COLUMN_TICK_HALF,
@@ -71,6 +72,15 @@ export interface RateGaugeProps {
   format: (delta: number) => string;
   /** Name for the baseline needle. */
   baselineLabel?: string;
+  /**
+   * A gain the consumer considers comfortable, in their own units.
+   *
+   * When given, the ring's gain half splits at it: below is the warning tone
+   * (a gain, but not yet a comfortable one), at or above is the success tone.
+   * Ignored when zero or negative — a non-positive comfortable gain is not a
+   * threshold.
+   */
+  comfortable?: number;
 }
 
 const DEFAULT_BASELINE_LABEL = "Baseline";
@@ -79,9 +89,15 @@ const DEFAULT_BASELINE_LABEL = "Baseline";
 const LABEL_BOX_HEIGHT = 14;
 /** Right-hand breathing room, so a truncating label never touches the edge. */
 const LABEL_BOX_MARGIN = 4;
-/** `sui-rate-gauge__<block>--lit` where the zone holds the needle, else `--dim`. */
-const zoneClass = (block: string, lit: boolean): string =>
-  `sui-rate-gauge__${block} sui-rate-gauge__${block}--${lit ? "lit" : "dim"}`;
+/**
+ * A band carries its own tone and whether it is lit. The dimming is the primary
+ * channel for the answer — the reader watches which band the needle stands
+ * in — so the tone is redundant encoding rather than the only signal.
+ */
+const bandClass = (band: Band): string =>
+  `sui-rate-gauge__band sui-rate-gauge__band--${band.tone} sui-rate-gauge__band--${
+    band.lit ? "lit" : "dim"
+  }`;
 
 /**
  * Which callouts carry the consumer's own words, and so must ellipsize.
@@ -99,10 +115,11 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
       domain: props.domain,
       baseline: props.baseline,
       value: props.value,
+      comfortable: props.comfortable,
     }),
   );
   const baselineLabel = () => props.baselineLabel ?? DEFAULT_BASELINE_LABEL;
-  const tone = () => (geometry().zone === "positive" ? "positive" : "negative");
+  const tone = () => geometry().tone;
 
   /** The words each callout carries. The delta row is the only formatted one. */
   const textFor = (callout: Callout): string => {
@@ -122,10 +139,23 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
   // delta is computed against them: a needle parked at a pole must not read out
   // a number the dial contradicts. A screen-reader user gets the picture, and
   // the picture is clamped.
+  /**
+   * What band the needle stands in, said in words. Only when the consumer has
+   * named a comfortable gain — without one there are just two halves, and the
+   * delta's own sign already carries which.
+   */
+  const bandPhrase = () => {
+    if (geometry().comfortable === undefined) return "";
+    if (geometry().tone === "danger") return " Below the baseline's own zero.";
+    return geometry().tone === "success"
+      ? " In the comfortable range."
+      : " Below the comfortable gain.";
+  };
+
   const valueText = () =>
     `${props.label}: ${geometry().drawnValue}. ${baselineLabel()}: ${
       geometry().drawnBaseline
-    }. ${props.format(geometry().delta)} against ${baselineLabel().toLowerCase()}.`;
+    }. ${props.format(geometry().delta)} against ${baselineLabel().toLowerCase()}.${bandPhrase()}`;
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: intentional ARIA meter; a native <meter> is a replaced element with its own UA bar rendering and cannot host the SVG dial that IS this readout.
@@ -143,15 +173,11 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
         viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
         aria-hidden="true"
       >
-        {/* The two zones. Only the one holding the needle is lit. */}
-        <path
-          class={zoneClass("zone-positive", geometry().zone === "positive")}
-          d={geometry().positiveRing}
-        />
-        <path
-          class={zoneClass("zone-negative", geometry().zone === "negative")}
-          d={geometry().negativeRing}
-        />
+        {/* The ring's bands. Only the one holding the needle is lit — two of
+            them normally, three once a comfortable gain splits the gain half. */}
+        <For each={geometry().bands}>
+          {(band) => <path class={bandClass(band)} d={band.path} />}
+        </For>
 
         {/* The delta as an AREA: the sector the two needles enclose, in the
             active tone at low alpha. Then the zero reference line. */}

@@ -9,6 +9,8 @@
 import { describe, expect, it } from "vitest";
 import {
   angleFor,
+  bandAt,
+  bandRanges,
   BASELINE_NEEDLE_RADIUS,
   BRACKET_RADIUS,
   CAP_ARC_HALF_SPAN,
@@ -102,6 +104,119 @@ describe("zoneOf", () => {
     // An asymmetric domain moves the split with the zero line.
     expect(zoneOf([-10000, 30000], -5000)).toBe("negative");
     expect(zoneOf([-10000, 30000], 5000)).toBe("positive");
+  });
+});
+
+describe("bandRanges", () => {
+  it("splits the ring in two at zero when no comfortable gain is named", () => {
+    const ranges = bandRanges(DOMAIN);
+    expect(ranges.map((r) => r.tone)).toEqual(["danger", "success"]);
+    expect(ranges[0].from).toBe(-90);
+    expect(ranges[1].to).toBe(90);
+    expect(ranges[0].to).toBe(ranges[1].from);
+  });
+
+  it("splits the gain half again at the comfortable gain", () => {
+    const ranges = bandRanges(DOMAIN, 12000);
+    expect(ranges.map((r) => r.tone)).toEqual(["danger", "warning", "success"]);
+    expect(ranges[1].from).toBe(angleFor(DOMAIN, 0));
+    expect(ranges[1].to).toBe(angleFor(DOMAIN, 12000));
+    expect(ranges[2].from).toBe(angleFor(DOMAIN, 12000));
+  });
+
+  it("leaves no gaps and no overlaps, whatever the threshold", () => {
+    for (const comfortable of [undefined, 1, 12000, 29999, 30000, 99999]) {
+      const ranges = bandRanges(DOMAIN, comfortable);
+      expect(ranges[0].from).toBe(-90);
+      expect(ranges[ranges.length - 1].to).toBe(90);
+      for (let i = 1; i < ranges.length; i += 1) {
+        expect(ranges[i].from).toBe(ranges[i - 1].to);
+      }
+    }
+  });
+
+  it("ignores a comfortable gain that is not a gain", () => {
+    expect(bandRanges(DOMAIN, 0).map((r) => r.tone)).toEqual([
+      "danger",
+      "success",
+    ]);
+    expect(bandRanges(DOMAIN, -5000).map((r) => r.tone)).toEqual([
+      "danger",
+      "success",
+    ]);
+  });
+
+  // A threshold past the top of the scale paints the whole gain half yellow
+  // rather than emitting a green band nobody can reach.
+  it("clamps a threshold past the domain and drops the empty band", () => {
+    expect(bandRanges(DOMAIN, 99999).map((r) => r.tone)).toEqual([
+      "danger",
+      "warning",
+    ]);
+    expect(bandRanges(DOMAIN, 30000).map((r) => r.tone)).toEqual([
+      "danger",
+      "warning",
+    ]);
+  });
+});
+
+// A comfortable gain is often a SMALL one — 5% of a baseline of +$5,000/mo is
+// +$250/mo, which on a ±$30k dial is three quarters of a degree. The band is
+// drawn at whatever width it truly is: widening a thin one to make it visible
+// would misreport the threshold, which is the one number this band exists to
+// show.
+describe("a thin comfortable band", () => {
+  const THIN = 250;
+
+  it("gets exactly the angle it is owed, with no minimum", () => {
+    const ranges = bandRanges(DOMAIN, THIN);
+    const sliver = ranges[1];
+    expect(sliver.tone).toBe("warning");
+    expect(sliver.to - sliver.from).toBeCloseTo(0.75, 6);
+    expect(sliver.to).toBe(angleFor(DOMAIN, THIN));
+  });
+
+  it("still closes exactly onto the green above it", () => {
+    const ranges = bandRanges(DOMAIN, THIN);
+    expect(ranges[1].to).toBe(ranges[2].from);
+    expect(ranges[2].to).toBe(90);
+  });
+
+  it("paints as a real sector rather than a degenerate path", () => {
+    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 150, comfortable: THIN });
+    const sliver = g.bands.find((b) => b.tone === "warning");
+    expect(sliver?.path).not.toBe("");
+    expect(sliver?.path).not.toMatch(/NaN/);
+    // Four corners and a close: a sliver is the same shape as a wide band.
+    expect(sliver?.path).toMatch(/^M .* A .* L .* A .* Z$/);
+  });
+
+  it("lights when the needle is parked inside it", () => {
+    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 150, comfortable: THIN });
+    expect(g.tone).toBe("warning");
+    expect(g.bands.filter((b) => b.lit).map((b) => b.tone)).toEqual(["warning"]);
+    // ...and only just: a hair above the threshold is already the green.
+    const past = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 251, comfortable: THIN });
+    expect(past.tone).toBe("success");
+  });
+});
+
+describe("bandAt", () => {
+  it("reads the band the needle stands in", () => {
+    expect(bandAt(DOMAIN, 4000, 12000)).toBe("warning");
+    expect(bandAt(DOMAIN, 20000, 12000)).toBe("success");
+    expect(bandAt(DOMAIN, -1, 12000)).toBe("danger");
+  });
+
+  it("is half-open upward: exactly comfortable IS comfortable", () => {
+    expect(bandAt(DOMAIN, 12000, 12000)).toBe("success");
+    expect(bandAt(DOMAIN, 0, 12000)).toBe("warning");
+    expect(bandAt(DOMAIN, 0)).toBe("success");
+  });
+
+  it("catches both poles", () => {
+    expect(bandAt(DOMAIN, 999999, 12000)).toBe("success");
+    expect(bandAt(DOMAIN, -999999, 12000)).toBe("danger");
   });
 });
 

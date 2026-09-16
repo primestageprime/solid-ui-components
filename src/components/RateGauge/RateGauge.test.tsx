@@ -37,7 +37,7 @@ describe("RateGauge", () => {
     expect(meter.getAttribute("aria-valuetext")).toContain("+$18,000/mo");
   });
 
-  it("lights the positive zone above the baseline and the negative zone below", () => {
+  it("lights the gain band above zero and the loss band below", () => {
     const [value, setValue] = createSignal(23000);
     const { container } = render(() => (
       <RateGauge
@@ -48,14 +48,89 @@ describe("RateGauge", () => {
         format={money}
       />
     ));
-    const lit = () =>
-      container.querySelectorAll(".sui-rate-gauge__zone-positive--lit").length;
-    expect(lit()).toBe(1);
+    const litTone = () =>
+      [...container.querySelectorAll(".sui-rate-gauge__band--lit")].map(
+        (node) =>
+          [...node.classList].find((c) =>
+            /--(success|warning|danger)$/.test(c),
+          ),
+      );
+    expect(litTone()).toEqual(["sui-rate-gauge__band--success"]);
     setValue(-8833);
-    expect(lit()).toBe(0);
+    expect(litTone()).toEqual(["sui-rate-gauge__band--danger"]);
+  });
+
+  // The consumer's own opinion about the numbers: a gain below `comfortable`
+  // is a gain, but not yet a comfortable one, so it takes the warning tone.
+  it("splits the gain band at the comfortable gain and lights the one it is in", () => {
+    const [value, setValue] = createSignal(4000);
+    const { container } = render(() => (
+      <RateGauge
+        domain={DOMAIN}
+        baseline={0}
+        value={value()}
+        comfortable={12000}
+        label="Scenario A"
+        format={money}
+      />
+    ));
+    const bands = () => container.querySelectorAll(".sui-rate-gauge__band");
+    const lit = () =>
+      [...container.querySelectorAll(".sui-rate-gauge__band--lit")].map(
+        (node) =>
+          [...node.classList].find((c) =>
+            /--(success|warning|danger)$/.test(c),
+          ),
+      );
+    expect(bands()).toHaveLength(3);
+    expect(lit()).toEqual(["sui-rate-gauge__band--warning"]);
+    setValue(20000);
+    expect(lit()).toEqual(["sui-rate-gauge__band--success"]);
+    setValue(-500);
+    expect(lit()).toEqual(["sui-rate-gauge__band--danger"]);
+  });
+
+  it("names the band in the announcement, but only when there is one to name", () => {
+    const { getByRole, unmount } = render(() => (
+      <RateGauge
+        domain={DOMAIN}
+        baseline={0}
+        value={4000}
+        comfortable={12000}
+        label="Scenario A"
+        format={money}
+      />
+    ));
+    expect(getByRole("meter").getAttribute("aria-valuetext")).toContain(
+      "Below the comfortable gain",
+    );
+    unmount();
+    const plain = render(() => (
+      <RateGauge
+        domain={DOMAIN}
+        baseline={0}
+        value={4000}
+        label="Scenario A"
+        format={money}
+      />
+    ));
     expect(
-      container.querySelectorAll(".sui-rate-gauge__zone-negative--lit"),
-    ).toHaveLength(1);
+      plain.getByRole("meter").getAttribute("aria-valuetext"),
+    ).not.toContain("comfortable");
+  });
+
+  it("ignores a comfortable gain that is not a gain", () => {
+    const { container } = render(() => (
+      <RateGauge
+        domain={DOMAIN}
+        baseline={0}
+        value={4000}
+        comfortable={-5000}
+        label="Scenario A"
+        format={money}
+      />
+    ));
+    expect(container.querySelectorAll(".sui-rate-gauge__band")).toHaveLength(2);
   });
 
   // The rows are read off the DOM in document order, which is the order
