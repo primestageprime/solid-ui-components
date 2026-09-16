@@ -112,10 +112,84 @@ export const PLOT_LEFT = 14;
 export const PLOT_RIGHT = VIEW_WIDTH - 14;
 export const PLOT_TOP = 36;
 export const PLOT_BOTTOM = 190;
+/**
+ * The band below the plot that the axis lives in. Fixed in viewBox units, so
+ * tick text stays the same size whatever height the chart is given.
+ */
+export const AXIS_BAND = VIEW_HEIGHT - PLOT_BOTTOM;
+/** Below this there is no plot left to speak of, only chrome. */
+export const MIN_VIEW_HEIGHT = 120;
 
 /** The month axis, below the plot. */
 export const AXIS_TICK_LENGTH = 4;
 export const AXIS_LABEL_Y = PLOT_BOTTOM + 20;
+
+/**
+ * Headroom kept at the top and bottom of the plot, as a fraction of its
+ * height, for the outermost bands to grow into.
+ *
+ * This is a fraction of the PLOT, not of the value span, and that is the whole
+ * point. Padding the value domain — the obvious thing, and what this did at
+ * first — reserves an amount of y that depends on the consumer's pay figures,
+ * so a chart whose levels happen to sit close together gets almost no headroom
+ * and its outermost band hangs off the axis. Reserving plot space instead
+ * guarantees the room is there whatever the numbers say.
+ */
+export const BAND_INSET_FRACTION = 0.18;
+
+/**
+ * The vertical layout, for one view height.
+ *
+ * The chart is normally sized by its WIDTH — `height: auto`, aspect fixed by
+ * the viewBox — but a consumer that puts it in a box of definite height needs
+ * it to use exactly that height instead, or it paints over whatever is below.
+ * So every vertical position below the flag band is derived from a view
+ * height rather than fixed.
+ *
+ * What does NOT scale: the flag band at the top, the axis band at the bottom,
+ * and every font size. Those are chrome, and chrome that grew with the box
+ * would make a tall chart look like a zoomed screenshot. Only the PLOT
+ * stretches, which is the part that carries data.
+ */
+export interface Frame {
+  readonly viewHeight: number;
+  readonly plotBottom: number;
+  readonly plotHeight: number;
+  readonly axisLabelY: number;
+  readonly bandInset: number;
+}
+
+export const frameFor = (viewHeight: number): Frame => {
+  const height = Math.max(MIN_VIEW_HEIGHT, viewHeight);
+  const plotBottom = height - AXIS_BAND;
+  const plotHeight = plotBottom - PLOT_TOP;
+  return {
+    viewHeight: height,
+    plotBottom,
+    plotHeight,
+    axisLabelY: plotBottom + 20,
+    bandInset: plotHeight * BAND_INSET_FRACTION,
+  };
+};
+
+/** The width-driven layout: what the chart uses when it is given no height. */
+export const DEFAULT_FRAME: Frame = frameFor(VIEW_HEIGHT);
+
+/**
+ * The view height that makes the viewBox match a measured box's aspect, so the
+ * drawing fills it exactly with no stretching and no letterboxing.
+ *
+ * A box with no height of its own reports the height the chart's own aspect
+ * gave it, so this returns the default and nothing moves — the width-driven
+ * behaviour is the same code path, not a special case.
+ */
+export const viewHeightFor = (box: {
+  readonly width: number;
+  readonly height: number;
+}): number =>
+  box.width <= 0 || box.height <= 0
+    ? VIEW_HEIGHT
+    : Math.max(MIN_VIEW_HEIGHT, (VIEW_WIDTH * box.height) / box.width);
 
 /** Milliseconds for either spelling of a moment. */
 export const timeOf = (at: TimeValue): number =>
@@ -140,9 +214,10 @@ export const xScaleFor = (domain: TimeDomain): ((at: TimeValue) => number) => {
 export const flagPositions = (
   mutations: readonly Mutation[],
   xScale: (at: TimeValue) => number,
+  frame: Frame = DEFAULT_FRAME,
 ): readonly Flag[] =>
   map(
-    (mutation: Mutation) => placeFlag(mutation, xScale(mutation.at)),
+    (mutation: Mutation) => placeFlag(mutation, xScale(mutation.at), frame),
     sortBy((mutation: Mutation) => timeOf(mutation.at), mutations),
   );
 
@@ -182,14 +257,14 @@ const MONTH_LABELS = [
 const asDate = (at: TimeValue): Date =>
   typeof at === "number" ? new Date(at) : at;
 
-const placeFlag = (mutation: Mutation, x: number): Flag => {
+const placeFlag = (mutation: Mutation, x: number, frame: Frame): Flag => {
   const boxX = clamp(x - FLAG_BOX_WIDTH / 2, 0, VIEW_WIDTH - FLAG_BOX_WIDTH);
   return {
     id: mutation.id,
     label: mutation.label,
     x,
     ruleTop: FLAG_RULE_TOP,
-    ruleBottom: PLOT_BOTTOM,
+    ruleBottom: frame.plotBottom,
     boxX,
     boxY: FLAG_BOX_TOP,
     boxWidth: FLAG_BOX_WIDTH,
@@ -319,6 +394,8 @@ export interface Dropline {
 }
 
 export interface LevelsRailGeometry {
+  /** The vertical layout this was built in — what the component paints into. */
+  readonly frame: Frame;
   readonly yDomain: readonly [number, number];
   /** The largest TOTAL headcount at any one moment — one half of the width scale. */
   readonly peak: number;
@@ -335,29 +412,17 @@ export interface LevelsRailGeometry {
 export const FILL_FRACTION = 0.6;
 /** Clear air left between two adjacent levels' bands at their fattest. */
 export const BAND_MARGIN = 4;
-/**
- * Headroom kept at the top and bottom of the plot, as a fraction of its
- * height, for the outermost bands to grow into.
- *
- * This is a fraction of the PLOT, not of the value span, and that is the whole
- * point. Padding the value domain — the obvious thing, and what this did at
- * first — reserves an amount of y that depends on the consumer's pay figures,
- * so a chart whose levels happen to sit close together gets almost no headroom
- * and its outermost band hangs off the axis. Reserving plot space instead
- * guarantees the room is there whatever the numbers say.
- */
-export const BAND_INSET_FRACTION = 0.18;
 
 /** The plot's height — the space the stack is laid out in. */
-export const PLOT_HEIGHT = PLOT_BOTTOM - PLOT_TOP;
+
 
 /**
  * The width that fills a good fraction of the plot at the busiest moment.
  * Sized from the PEAK TOTAL headcount rather than the biggest single level: it
  * is all the bands together that occupy the plot.
  */
-export const fillWidth = (peak: number): number =>
-  peak <= 0 ? 0 : (PLOT_HEIGHT * FILL_FRACTION) / peak;
+export const fillWidth = (peak: number, frame: Frame): number =>
+  peak <= 0 ? 0 : (frame.plotHeight * FILL_FRACTION) / peak;
 
 /**
  * The width at which the TIGHTEST pair of adjacent levels still clears
@@ -404,13 +469,14 @@ export const maxCountIn = (level: Level): number =>
 export const edgeWidth = (
   levels: readonly Level[],
   yScale: (value: number) => number,
+  frame: Frame,
 ): number => {
   const limits: number[] = [];
   for (const level of levels) {
     const most = maxCountIn(level);
     if (most <= 0) continue;
     const y = yScale(level.value);
-    const room = Math.min(y - PLOT_TOP, PLOT_BOTTOM - y) - BAND_MARGIN;
+    const room = Math.min(y - PLOT_TOP, frame.plotBottom - y) - BAND_MARGIN;
     limits.push((2 * Math.max(0, room)) / most);
   }
   return limits.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...limits);
@@ -425,11 +491,12 @@ export const perPersonWidth = (
   levels: readonly Level[],
   yScale: (value: number) => number,
   peak: number,
+  frame: Frame,
 ): number =>
   Math.min(
-    fillWidth(peak),
+    fillWidth(peak, frame),
     adjacencyWidth(levels, yScale),
-    edgeWidth(levels, yScale),
+    edgeWidth(levels, yScale, frame),
   );
 
 /** A band's thickness. Purely proportional, so conservation is exact. */
@@ -754,6 +821,7 @@ export const flowBands = (
   half: number,
   /** Every moment anything changes — a band stops and restarts at each. */
   moments: readonly number[],
+  frame: Frame = DEFAULT_FRAME,
 ): readonly FlowBand[] => {
   const railById = new Map(map((rail: Rail) => [rail.id, rail] as const, rails));
   const ordered = sortBy((one: Transfer) => timeOf(one.at), transfers);
@@ -801,7 +869,7 @@ export const flowBands = (
           (i: number) => ({
             index: i,
             width: widthOf(i),
-            towards: otherY(i, true, rail.y + PLOT_HEIGHT),
+            towards: otherY(i, true, rail.y + frame.plotHeight),
           }),
           out,
         );
@@ -829,7 +897,7 @@ export const flowBands = (
           (i: number) => ({
             index: i,
             width: widthOf(i),
-            towards: otherY(i, false, rail.y - PLOT_HEIGHT),
+            towards: otherY(i, false, rail.y - frame.plotHeight),
           }),
           into,
         );
@@ -901,7 +969,7 @@ export const flowBands = (
 // ── placing the levels ───────────────────────────────────────────────────────
 
 /** The room reserved at each end of the plot for the outermost bands. */
-export const BAND_INSET = PLOT_HEIGHT * BAND_INSET_FRACTION;
+
 
 /** The levels' own range. No padding — the inset does that job now. */
 export const valueDomainOf = (
@@ -921,11 +989,12 @@ export const valueDomainOf = (
  */
 export const yScaleFor = (
   yDomain: readonly [number, number],
+  frame: Frame = DEFAULT_FRAME,
 ): ((value: number) => number) => {
   const [lo, hi] = yDomain;
   const span = hi - lo;
-  const top = PLOT_TOP + BAND_INSET;
-  const bottom = PLOT_BOTTOM - BAND_INSET;
+  const top = PLOT_TOP + frame.bandInset;
+  const bottom = frame.plotBottom - frame.bandInset;
   const middle = (top + bottom) / 2;
   if (span <= 0) return () => middle;
   return (value: number): number =>
@@ -1016,12 +1085,15 @@ export const levelsRailGeometry = (input: {
   readonly transfers: readonly Transfer[];
   readonly mutations: readonly Mutation[];
   readonly domain: TimeDomain;
+  /** The viewBox height to lay out in. Omitted = the width-driven default. */
+  readonly viewHeight?: number;
 }): LevelsRailGeometry => {
+  const frame = frameFor(input.viewHeight ?? VIEW_HEIGHT);
   const xScale = xScaleFor(input.domain);
   const yDomain = valueDomainOf(input.levels);
-  const yScale = yScaleFor(yDomain);
+  const yScale = yScaleFor(yDomain, frame);
   const peak = peakHeadcount(input.levels);
-  const perPerson = perPersonWidth(input.levels, yScale, peak);
+  const perPerson = perPersonWidth(input.levels, yScale, peak, frame);
   const moments = changeTimes(input.levels, input.transfers);
   const half = transitionHalf(map((time: number) => xScale(time), moments));
   const rails = map((level: Level) => {
@@ -1044,11 +1116,20 @@ export const levelsRailGeometry = (input: {
     };
   }, input.levels);
   return {
+    frame,
     yDomain,
     peak,
     perPerson,
     rails,
-    flows: flowBands(input.transfers, rails, xScale, perPerson, half, moments),
+    flows: flowBands(
+      input.transfers,
+      rails,
+      xScale,
+      perPerson,
+      half,
+      moments,
+      frame,
+    ),
     droplines: droplinePositions(
       input.levels,
       input.transfers,
@@ -1056,7 +1137,7 @@ export const levelsRailGeometry = (input: {
       input.domain,
       xScale,
     ),
-    flags: flagPositions(input.mutations, xScale),
+    flags: flagPositions(input.mutations, xScale, frame),
     ticks: axisTicks(input.domain, xScale),
   };
 };

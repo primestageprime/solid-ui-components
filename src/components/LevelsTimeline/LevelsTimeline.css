@@ -11,15 +11,30 @@
    `currentColor`, which is also what lets the open-flow gradients fade a stop
    to transparent without naming a colour at all. */
 
+/* FILL-HEIGHT, and the whole of how it works.
+   `aspect-ratio` applies ONLY while the height is indeterminate, so in an
+   ordinary flow the host takes its height from its width and the chart keeps
+   the shape it has always had. Put it in a box that HAS a height — a grid
+   track, a flex child, anything with a definite size — and `height: 100%`
+   wins, the aspect-ratio stops applying, and the component measures the box it
+   was actually given and rebuilds its viewBox to match. One code path, no
+   feedback loop: the height either came from the consumer or came from this
+   ratio. `min-height: 0` is what lets it SHRINK inside a flex parent, which is
+   the case it was reported failing in. */
 .sui-levels-timeline {
   display: block;
   width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: 640 / 232;
 }
 
 .sui-levels-timeline__canvas {
   display: block;
   width: 100%;
-  height: auto;
+  /* 100%, not auto: the host has already resolved to the right height and the
+     viewBox already matches its aspect, so filling it stretches nothing. */
+  height: 100%;
   overflow: visible;
   /* The one colour, set once. Everything below inherits it. */
   color: var(--sui-accent);

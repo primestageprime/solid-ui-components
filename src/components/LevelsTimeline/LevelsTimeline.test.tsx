@@ -11,7 +11,7 @@ import { createSignal } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
 import { LevelsTimeline } from "./LevelsTimeline";
 import type { Level, Mutation, TimeDomain, Transfer } from "./geometry";
-import { map } from "../../fn";
+import { filter, flatMap, map } from "../../fn";
 
 const DOMAIN: TimeDomain = [new Date("2025-01-01"), new Date("2026-01-01")];
 
@@ -392,5 +392,95 @@ describe("LevelsTimeline — departures and hires", () => {
     const label = container.querySelector("title")?.textContent ?? "";
     expect(label).toContain("1 person left from L7");
     expect(label).toContain("1 person joined at L8");
+  });
+});
+
+describe("LevelsTimeline — fill-height", () => {
+  /**
+   * jsdom has no layout and no ResizeObserver, so the only way to exercise the
+   * measuring path is to supply one. This stub reports the box it is told
+   * about, synchronously, which is enough — `observeSize` defers with rAF only
+   * when rAF exists, and vitest's environment provides it.
+   */
+  const withObservedBox = async (
+    box: { width: number; height: number },
+    run: () => void,
+  ) => {
+    const original = globalThis.ResizeObserver;
+    class Stub {
+      constructor(private readonly cb: ResizeObserverCallback) {}
+      observe(target: Element) {
+        this.cb(
+          [
+            {
+              target,
+              contentRect: box,
+              borderBoxSize: [],
+              contentBoxSize: [],
+              devicePixelContentBoxSize: [],
+            } as unknown as ResizeObserverEntry,
+          ],
+          this as unknown as ResizeObserver,
+        );
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    globalThis.ResizeObserver = Stub as unknown as typeof ResizeObserver;
+    try {
+      run();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    } finally {
+      globalThis.ResizeObserver = original;
+    }
+  };
+
+  it("keeps the old aspect when nothing measures it", () => {
+    const { container } = renderRails();
+    expect(container.querySelector("svg")?.getAttribute("viewBox")).toBe(
+      "0 0 640 232",
+    );
+  });
+
+  it("rebuilds its viewBox to the aspect of a box that HAS a height", async () => {
+    let container!: HTMLElement;
+    await withObservedBox({ width: 800, height: 320 }, () => {
+      container = renderRails().container;
+    });
+    // 800x320 is 2.5:1, so a 640-wide viewBox wants to be 256 tall.
+    expect(container.querySelector("svg")?.getAttribute("viewBox")).toBe(
+      "0 0 640 256",
+    );
+  });
+
+  it("keeps every rail and the axis inside the height it was given", async () => {
+    let container!: HTMLElement;
+    await withObservedBox({ width: 800, height: 320 }, () => {
+      container = renderRails().container;
+    });
+    const viewHeight = 256;
+    // Every command in these paths takes x,y PAIRS (M and L one, C three), so
+    // the y values are the odd-indexed numbers. Taking all of them would sweep
+    // in the x's, which legitimately run to 626 and would fail this.
+    //
+    // Guarded below: an empty `ys` would make the loop vacuous and this test
+    // would pass while asserting nothing.
+    const ys = flatMap((el: Element) => {
+      const numbers = map(
+        (m: RegExpMatchArray) => Number(m[0]),
+        [...((el.getAttribute("d") ?? "").matchAll(/-?\d+(?:\.\d+)?/g))],
+      );
+      return filter((_n: number, i: number) => i % 2 === 1, numbers);
+    }, [...container.querySelectorAll(".sui-levels-timeline__rail")]);
+    expect(ys.length).toBeGreaterThan(0);
+    // Every coordinate a band paints is inside the viewBox, top and bottom.
+    for (const y of ys) {
+      expect(y).toBeLessThanOrEqual(viewHeight);
+      expect(y).toBeGreaterThanOrEqual(0);
+    }
+    const axisLabel = container.querySelector(
+      ".sui-levels-timeline__tick-label",
+    );
+    expect(Number(axisLabel?.getAttribute("y"))).toBeLessThanOrEqual(viewHeight);
   });
 });

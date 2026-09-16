@@ -42,17 +42,19 @@ import {
   For,
   type Component,
   createMemo,
+  createSignal,
   createUniqueId,
+  onCleanup,
+  onMount,
 } from "solid-js";
 import {
-  AXIS_LABEL_Y,
   AXIS_TICK_LENGTH,
   FLAG_RULE_TOP,
-  PLOT_BOTTOM,
   PLOT_LEFT,
   PLOT_RIGHT,
   VIEW_HEIGHT,
   VIEW_WIDTH,
+  viewHeightFor,
   type Flag,
   type Level,
   type Mutation,
@@ -63,6 +65,7 @@ import {
   timeOf,
 } from "./geometry";
 import { filter, find, join, map, sortBy } from "../../fn";
+import { observeSize } from "../../internal/dom/observeSize";
 import "./LevelsTimeline.css";
 
 export interface LevelsTimelineProps {
@@ -134,14 +137,37 @@ const describeTransfer = (
 export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   const transfers = () => props.transfers ?? EMPTY_TRANSFERS;
 
+  /**
+   * FILL-HEIGHT. The chart is normally sized by its width — the CSS gives the
+   * host an `aspect-ratio`, which applies only while its height is
+   * indeterminate. Drop it in a box that HAS a height and the aspect-ratio
+   * stops applying, the host fills that height instead, and what we measure is
+   * the box the consumer actually gave us.
+   *
+   * That is what makes this one code path rather than two: a box with no
+   * height of its own reports exactly the height our own aspect gave it, so
+   * `viewHeightFor` returns the default and nothing moves. There is no
+   * "definite height?" branch to get wrong, and no feedback loop — the measured
+   * height either came from the consumer or came from our own fixed ratio.
+   */
+  const [viewHeight, setViewHeight] = createSignal(VIEW_HEIGHT);
+  let host: HTMLDivElement | undefined;
+  onMount(() => {
+    if (host === undefined) return;
+    const stop = observeSize(host, (box) => setViewHeight(viewHeightFor(box)));
+    onCleanup(stop);
+  });
+
   const geometry = createMemo(() =>
     levelsRailGeometry({
       levels: props.levels,
       transfers: transfers(),
       mutations: props.mutations,
       domain: props.domain,
+      viewHeight: viewHeight(),
     }),
   );
+  const frame = () => geometry().frame;
 
   const interactive = () => props.onSelectMutation !== undefined;
   const isSelected = (flag: Flag): boolean =>
@@ -228,6 +254,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
   return (
     <div
+      ref={host}
       class="sui-levels-timeline"
       data-selected-mutation={props.selectedMutationId}
     >
@@ -238,7 +265,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           names the graphic and leaves its contents reachable. */}
       <svg
         class="sui-levels-timeline__canvas"
-        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+        viewBox={`0 0 ${VIEW_WIDTH} ${frame().viewHeight}`}
       >
         <title>{description()}</title>
         {/* One opacity gradient per OPEN-ended flow — nothing else needs one
@@ -269,8 +296,8 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             class="sui-levels-timeline__baseline"
             x1={PLOT_LEFT}
             x2={PLOT_RIGHT}
-            y1={PLOT_BOTTOM}
-            y2={PLOT_BOTTOM}
+            y1={frame().plotBottom}
+            y2={frame().plotBottom}
           />
 
           {/* The month axis. Built from DateAxis's own calendar (geometry.ts),
@@ -281,13 +308,13 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                 <line
                   x1={tick.x}
                   x2={tick.x}
-                  y1={PLOT_BOTTOM}
-                  y2={PLOT_BOTTOM + AXIS_TICK_LENGTH}
+                  y1={frame().plotBottom}
+                  y2={frame().plotBottom + AXIS_TICK_LENGTH}
                 />
                 <text
                   class="sui-levels-timeline__tick-label"
                   x={tick.x}
-                  y={AXIS_LABEL_Y}
+                  y={frame().axisLabelY}
                   text-anchor="middle"
                 >
                   {tick.label}
@@ -306,7 +333,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                 x1={dropline.x}
                 x2={dropline.x}
                 y1={FLAG_RULE_TOP}
-                y2={PLOT_BOTTOM}
+                y2={frame().plotBottom}
               />
             )}
           </For>

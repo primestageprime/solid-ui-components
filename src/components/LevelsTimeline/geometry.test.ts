@@ -13,12 +13,15 @@
 import { describe, expect, it } from "vitest";
 import { filter, find, flatMap, map, sortBy, sum } from "../../fn";
 import {
-  BAND_INSET,
+  DEFAULT_FRAME,
   BAND_MARGIN,
   FILL_FRACTION,
   MAX_TRANSITION,
   PLOT_BOTTOM,
-  PLOT_HEIGHT,
+  MIN_VIEW_HEIGHT,
+  frameFor,
+  viewHeightFor,
+  VIEW_HEIGHT,
   PLOT_LEFT,
   PLOT_RIGHT,
   PLOT_TOP,
@@ -162,8 +165,8 @@ describe("valueDomainOf and yScaleFor", () => {
     // headroom is there whatever the consumer's pay figures happen to be.
     const [lo, hi] = valueDomainOf(LEVELS);
     expect([lo, hi]).toEqual([5000, 10000]);
-    expect(yScaleFor([lo, hi])(hi)).toBeCloseTo(PLOT_TOP + BAND_INSET, 6);
-    expect(yScaleFor([lo, hi])(lo)).toBeCloseTo(PLOT_BOTTOM - BAND_INSET, 6);
+    expect(yScaleFor([lo, hi])(hi)).toBeCloseTo(PLOT_TOP + DEFAULT_FRAME.bandInset, 6);
+    expect(yScaleFor([lo, hi])(lo)).toBeCloseTo(DEFAULT_FRAME.plotBottom - DEFAULT_FRAME.bandInset, 6);
   });
 
   it("opens a flat chart up rather than collapsing it", () => {
@@ -247,7 +250,7 @@ describe("perPersonWidth — the smaller of two answers", () => {
   const yScale = yScaleFor(valueDomainOf(LEVELS));
 
   it("fills a good fraction of the plot at the busiest moment", () => {
-    expect(round(fillWidth(12))).toBe(round((PLOT_HEIGHT * FILL_FRACTION) / 12));
+    expect(round(fillWidth(12, DEFAULT_FRAME))).toBe(round((DEFAULT_FRAME.plotHeight * FILL_FRACTION) / 12));
   });
 
   it("keeps the TIGHTEST adjacent pair clear of each other", () => {
@@ -266,8 +269,8 @@ describe("perPersonWidth — the smaller of two answers", () => {
       { id: "b", label: "B", value: 9500, points: [{ at: 0, count: 2 }] },
     ];
     const scale = yScaleFor(valueDomainOf(two));
-    expect(edgeWidth(two, scale)).toBeLessThan(fillWidth(2));
-    const perPerson = perPersonWidth(two, scale, 2);
+    expect(edgeWidth(two, scale, DEFAULT_FRAME)).toBeLessThan(fillWidth(2, DEFAULT_FRAME));
+    const perPerson = perPersonWidth(two, scale, 2, DEFAULT_FRAME);
     for (const level of two) {
       const half = bandWidth(2, perPerson) / 2;
       expect(scale(level.value) - half).toBeGreaterThanOrEqual(PLOT_TOP);
@@ -276,12 +279,12 @@ describe("perPersonWidth — the smaller of two answers", () => {
   });
 
   it("takes whichever of the three caps binds", () => {
-    const perPerson = perPersonWidth(LEVELS, yScale, 12);
+    const perPerson = perPersonWidth(LEVELS, yScale, 12, DEFAULT_FRAME);
     expect(perPerson).toBe(
       Math.min(
-        fillWidth(12),
+        fillWidth(12, DEFAULT_FRAME),
         adjacencyWidth(LEVELS, yScale),
-        edgeWidth(LEVELS, yScale),
+        edgeWidth(LEVELS, yScale, DEFAULT_FRAME),
       ),
     );
   });
@@ -765,7 +768,7 @@ describe("levelsRailGeometry — the whole observation", () => {
     const yScale = yScaleFor(geometry.yDomain);
     console.table([
       { field: "peak headcount", value: geometry.peak },
-      { field: "fill width", value: round(fillWidth(geometry.peak)) },
+      { field: "fill width", value: round(fillWidth(geometry.peak, geometry.frame)) },
       { field: "adjacency width", value: round(adjacencyWidth(LEVELS, yScale)) },
       { field: "perPerson (the smaller)", value: round(geometry.perPerson) },
       { field: "transition", value: transitionWidth() },
@@ -1030,5 +1033,83 @@ describe("continuations — a rail nothing happened to must not read as dashed",
     )) {
       expect(flow.fromId).toBe(flow.toId);
     }
+  });
+});
+
+describe("fill-height", () => {
+  it("keeps the width-driven layout when the box has no height of its own", () => {
+    // A box with no height reports exactly the height our own aspect gave it,
+    // so the default comes back and nothing moves. One code path, not two.
+    expect(viewHeightFor({ width: 640, height: 232 })).toBe(VIEW_HEIGHT);
+    expect(viewHeightFor({ width: 1280, height: 464 })).toBe(VIEW_HEIGHT);
+  });
+
+  it("matches the viewBox to a box that DOES have a height", () => {
+    // 800x320 is 2.5:1, so 640 wide wants 256 tall.
+    expect(viewHeightFor({ width: 800, height: 320 })).toBe(256);
+  });
+
+  it("survives a box that has not been laid out yet", () => {
+    expect(viewHeightFor({ width: 0, height: 0 })).toBe(VIEW_HEIGHT);
+    expect(viewHeightFor({ width: 800, height: 0 })).toBe(VIEW_HEIGHT);
+  });
+
+  it("refuses to shrink past the point where there is any plot left", () => {
+    expect(viewHeightFor({ width: 2000, height: 10 })).toBe(MIN_VIEW_HEIGHT);
+    expect(frameFor(10).plotHeight).toBeGreaterThan(0);
+  });
+
+  it("stretches ONLY the plot — the flag band and the axis band are fixed", () => {
+    const tall = frameFor(400);
+    expect(PLOT_TOP).toBe(36);
+    expect(tall.viewHeight - tall.plotBottom).toBe(
+      DEFAULT_FRAME.viewHeight - DEFAULT_FRAME.plotBottom,
+    );
+    expect(tall.plotHeight).toBeGreaterThan(DEFAULT_FRAME.plotHeight);
+  });
+
+  it("lays the whole chart out inside whatever height it is given", () => {
+    for (const viewHeight of [160, 232, 320, 480]) {
+      const geometry = levelsRailGeometry({
+        levels: LEVELS,
+        transfers: TRANSFERS,
+        mutations: MUTATIONS,
+        domain: DOMAIN,
+        viewHeight,
+      });
+      const frame = geometry.frame;
+      expect(frame.viewHeight).toBe(viewHeight);
+      for (const rail of geometry.rails) {
+        for (const span of rail.spans) {
+          expect(spanTop(span)).toBeGreaterThanOrEqual(PLOT_TOP);
+          expect(spanBottom(span)).toBeLessThanOrEqual(frame.plotBottom);
+        }
+      }
+      // The axis and the flags' rules stay inside the viewBox too.
+      expect(frame.axisLabelY).toBeLessThanOrEqual(frame.viewHeight);
+      for (const flag of geometry.flags) {
+        expect(flag.ruleBottom).toBe(frame.plotBottom);
+      }
+    }
+  });
+
+  it("still fits the bands when the box is squashed", () => {
+    const geometry = levelsRailGeometry({
+      levels: LEVELS,
+      transfers: TRANSFERS,
+      mutations: MUTATIONS,
+      domain: DOMAIN,
+      viewHeight: MIN_VIEW_HEIGHT,
+    });
+    expect(geometry.perPerson).toBeGreaterThan(0);
+    expect(geometry.perPerson).toBeLessThan(
+      levelsRailGeometry({
+        levels: LEVELS,
+        transfers: TRANSFERS,
+        mutations: MUTATIONS,
+        domain: DOMAIN,
+        viewHeight: 480,
+      }).perPerson,
+    );
   });
 });
