@@ -866,6 +866,37 @@ describe("MutationSliders", () => {
       expect(drawnHeight(container)).toBe(520);
     });
 
+    // `resizeAll` delivers to EVERY observer, so it cannot tell whether the
+    // DIAL's own observer is wired or whether the row's happened to carry the
+    // height. This one targets the dial element alone, which is the only
+    // assertion that actually pins the wiring.
+    it("measures the DIAL element itself, not merely the row", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={SOLO} onChange={() => {}} />
+      ));
+      const dial = container.querySelector(
+        ".sui-mutation-sliders__dial",
+      ) as HTMLElement;
+      expect(sizer.observed()).toContain(dial);
+      await sizer.resize(dial, { width: 88, height: 470 });
+      expect(drawnHeight(container)).toBe(470);
+    });
+
+    it("lengthens the TRACK's own path, not just the viewBox", async () => {
+      const { container } = render(() => (
+        <MutationSliders entities={SOLO} onChange={() => {}} />
+      ));
+      const dial = container.querySelector(
+        ".sui-mutation-sliders__dial",
+      ) as HTMLElement;
+      await sizer.resize(dial, { width: 88, height: 470 });
+      const d = container
+        .querySelector(".sui-mutation-sliders__track-line")
+        ?.getAttribute("d");
+      // 470 - TRACK_TOP(12) = 458 is where the bottom cap must sit.
+      expect(d).toContain("458");
+    });
+
     it("does not shrink past the floor where the labels collide", async () => {
       const { container } = render(() => (
         <MutationSliders entities={SOLO} onChange={() => {}} />
