@@ -68,7 +68,7 @@ import {
   timeOf,
 } from "./geometry";
 import { placeTooltipX } from "../Chart/tooltipPlacement";
-import { filter, find, join, map, sortBy } from "../../fn";
+import { find, join, map, sortBy } from "../../fn";
 import { observeSize } from "../../internal/dom/observeSize";
 import "./LevelsTimeline.css";
 
