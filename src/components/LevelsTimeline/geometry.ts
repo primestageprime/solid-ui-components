@@ -265,7 +265,25 @@ export interface Transfer {
 }
 
 /** What a flow means, decided by which of its two ends are present. */
-export type FlowKind = "move" | "departure" | "hire" | "carry";
+/**
+ * What a flow is. The last two are both "the people who did not move", split
+ * apart because they must be PAINTED differently:
+ *
+ *   • `carry`        — the rail's width changed at this cap (some left, some
+ *                      arrived), so the carry is narrower than the band it
+ *                      came from and reads as traffic, like any other ribbon.
+ *   • `continuation` — NOTHING happened to this rail here. It is only split at
+ *                      all because something happened elsewhere on the chart,
+ *                      and it must be painted exactly like the band so the
+ *                      join is invisible. A rail with no change that read as
+ *                      dashed would be inventing an event.
+ */
+export type FlowKind =
+  | "move"
+  | "departure"
+  | "hire"
+  | "carry"
+  | "continuation";
 
 /** One stretch of a band: a horizontal run at `y`, `width` thick. */
 export interface RailSpan {
@@ -756,7 +774,13 @@ export const flowBands = (
 
     const srcRoot = new Map<number, Root>();
     const dstRoot = new Map<number, Root>();
-    const carries: { rail: Rail; from?: Root; to?: Root }[] = [];
+    const carries: {
+      rail: Rail;
+      from?: Root;
+      to?: Root;
+      /** True when nothing left and nothing arrived — an invisible join. */
+      untouched: boolean;
+    }[] = [];
 
     for (const rail of rails) {
       const leavingBand = before(rail);
@@ -794,7 +818,11 @@ export const flowBands = (
           if (root !== undefined) srcRoot.set(i, root);
         }
         if (carry > 0 && arrivingBand !== undefined) {
-          carries.push({ rail, from: roots.get("carry") });
+          carries.push({
+            rail,
+            from: roots.get("carry"),
+            untouched: out.length === 0 && into.length === 0,
+          });
         }
       }
 
@@ -859,7 +887,7 @@ export const flowBands = (
       if (carry.from === undefined || carry.to === undefined) continue;
       bands.push({
         key: `carry-${carry.rail.id}-${moment}`,
-        kind: "carry",
+        kind: carry.untouched ? "continuation" : "carry",
         count: 0,
         x0,
         x1,

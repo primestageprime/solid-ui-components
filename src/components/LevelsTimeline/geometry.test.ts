@@ -11,7 +11,7 @@
 // decides where the droplines fall.
 // ============================================
 import { describe, expect, it } from "vitest";
-import { filter, flatMap, map, sortBy, sum } from "../../fn";
+import { filter, find, flatMap, map, sortBy, sum } from "../../fn";
 import {
   BAND_INSET,
   BAND_MARGIN,
@@ -595,7 +595,8 @@ describe("one-ended flows — departures and hires", () => {
   /** Transfers only — the carry is tested in its own suite. */
   const flowsFor = (transfers: readonly Transfer[]) =>
     filter(
-      (flow: FlowBand) => flow.kind !== "carry",
+      (flow: FlowBand) =>
+        flow.kind !== "carry" && flow.kind !== "continuation",
       geometryOf(LEVELS, transfers).flows,
     );
 
@@ -753,7 +754,11 @@ describe("levelsRailGeometry — the whole observation", () => {
 
   it("carries the flows, the flags and the un-numbered dropline", () => {
     expect(
-      filter((flow: FlowBand) => flow.kind !== "carry", geometry.flows),
+      filter(
+        (flow: FlowBand) =>
+          flow.kind !== "carry" && flow.kind !== "continuation",
+        geometry.flows,
+      ),
     ).toHaveLength(2);
     expect(geometry.flags).toHaveLength(3);
     expect(geometry.droplines).toHaveLength(1);
@@ -971,7 +976,7 @@ describe("flush joins", () => {
   it("bridges an untouched rail with a carry of equal width at both ends", () => {
     const geometry = geometryOf();
     const carries = filter(
-      (flow: FlowBand) => flow.kind === "carry",
+      (flow: FlowBand) => flow.kind === "carry" || flow.kind === "continuation",
       geometry.flows,
     );
     expect(carries.length).toBeGreaterThan(0);
@@ -983,5 +988,50 @@ describe("flush joins", () => {
       carries,
     );
     expect(straight.length).toBeGreaterThan(0);
+  });
+});
+
+describe("continuations — a rail nothing happened to must not read as dashed", () => {
+  const geometry = geometryOf();
+
+  it("marks a cap where nothing left and nothing arrived as a CONTINUATION", () => {
+    // l5 holds 3 people across the 2025-04 change, which belongs to l6 and l7.
+    // It is split there only because the chart splits every rail at every
+    // change; nothing happened to IT.
+    const at = changeXs()[1];
+    const continuation = find(
+      (flow: FlowBand) =>
+        flow.kind === "continuation" &&
+        Math.abs((flow.x0 + flow.x1) / 2 - at) < 0.001 &&
+        flow.fromSeriesIndex === 1,
+      geometry.flows,
+    );
+    expect(continuation).toBeDefined();
+    // Same width both ends, so the join is geometrically invisible too.
+    expect(round(continuation?.srcBottom ?? 0) - round(continuation?.srcTop ?? 0)).toBe(
+      round(continuation?.dstBottom ?? 0) - round(continuation?.dstTop ?? 0),
+    );
+  });
+
+  it("keeps a CARRY where the rail's width really did change", () => {
+    // l7 gains two at 2025-04, so its carry is narrower than the band after it.
+    const at = changeXs()[1];
+    const carry = find(
+      (flow: FlowBand) =>
+        flow.kind === "carry" &&
+        Math.abs((flow.x0 + flow.x1) / 2 - at) < 0.001 &&
+        flow.fromSeriesIndex === 3,
+      geometry.flows,
+    );
+    expect(carry).toBeDefined();
+  });
+
+  it("wears the rail's own tone at both ends either way", () => {
+    for (const flow of filter(
+      (one: FlowBand) => one.kind === "carry" || one.kind === "continuation",
+      geometry.flows,
+    )) {
+      expect(flow.fromSeriesIndex).toBe(flow.toSeriesIndex);
+    }
   });
 });

@@ -83,7 +83,11 @@ describe("LevelsTimeline — rails", () => {
 
   it("draws each rail as blunt closed BANDS, one per span", () => {
     const { container } = renderRails();
-    const rails = container.querySelectorAll(".sui-levels-timeline__rail");
+    // Scoped to the rail group: a CONTINUATION also carries the rail class,
+    // deliberately, and it IS a curve — that is the next test.
+    const rails = container.querySelectorAll(
+      ".sui-levels-timeline__rail-group .sui-levels-timeline__rail",
+    );
     expect(rails.length).toBeGreaterThan(4);
     for (const rail of rails) {
       const d = rail.getAttribute("d") ?? "";
@@ -118,7 +122,30 @@ describe("LevelsTimeline — rails", () => {
     }
   });
 
-  it("bridges each unchanged rail with a carry, so no rail looks broken", () => {
+  it("paints an unchanged rail's join with the BAND's own class", () => {
+    // The regression this guards: a rail nothing happened to read as dashed —
+    // bright band, dim carry, bright band — because the join was painted at
+    // ribbon alpha. A continuation must be indistinguishable from the band.
+    const { container } = renderRails();
+    const band = container.querySelector(
+      ".sui-levels-timeline__rail-group .sui-levels-timeline__rail",
+    );
+    const bandClass = band?.getAttribute("class") ?? "";
+    const continuations = [
+      ...container.querySelectorAll(".sui-levels-timeline__rail"),
+    ].filter((el) => el.closest(".sui-levels-timeline__rail-group") === null);
+    expect(continuations.length).toBeGreaterThan(0);
+    // Same classes as a band, and no gradient fill to tint it.
+    expect(continuations.some((el) => el.getAttribute("class") === bandClass)).toBe(
+      true,
+    );
+    for (const one of continuations) {
+      expect(one.getAttribute("fill")).toBeNull();
+      expect(one.getAttribute("class")).not.toContain("__ribbon");
+    }
+  });
+
+  it("still marks a carry across a REAL width change as a ribbon", () => {
     const { container } = renderRails();
     expect(
       container.querySelectorAll(".sui-levels-timeline__ribbon--carry").length,

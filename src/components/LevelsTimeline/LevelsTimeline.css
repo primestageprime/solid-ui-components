@@ -131,13 +131,6 @@
 
 /* ---- The flows ---- */
 
-/* The carry: the people who did NOT move, drawn as the flow they are so a rail
-   reads as continuous across a change. It wears its rail's own colour at both
-   ends, so it should read as rail rather than as traffic. */
-.sui-levels-timeline__ribbon--carry {
-  opacity: 0.9;
-}
-
 .sui-levels-timeline__ribbon {
   stroke: none;
   /* Translucent so the rails it joins stay the solid thing on the page, and
@@ -145,6 +138,18 @@
      COLOUR comes from a per-flow gradient set on the element, not from here —
      a ribbon graduates from its source's tone to its destination's. */
   opacity: 0.5;
+}
+
+/* The carry: the people who did NOT move across a cap where the rail's width
+   DID change. Nearly solid, because it is rail rather than traffic — but still
+   a ribbon, because the rail really did narrow here.
+
+   AFTER `.__ribbon` deliberately: same specificity, later wins. Put it above
+   and every carry silently drops back to ribbon alpha, which is what made
+   unchanged rails read as dashed. A continuation is not styled here at all —
+   it carries the RAIL's classes, so there is nothing to override. */
+.sui-levels-timeline__ribbon--carry {
+  opacity: 0.85;
 }
 
 /* ---- The numbered flags ---- */

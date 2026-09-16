@@ -62,7 +62,7 @@ import {
   levelsRailGeometry,
   timeOf,
 } from "./geometry";
-import { find, join, map, sortBy } from "../../fn";
+import { filter, find, join, map, sortBy } from "../../fn";
 import "./LevelsTimeline.css";
 
 export interface LevelsTimelineProps {
@@ -171,16 +171,31 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       ),
     ]);
 
-  const railClass = (rail: Rail): string =>
-    `sui-levels-timeline__rail sui-levels-timeline__tone-${tokenOf(
-      rail.seriesIndex,
+  /** `sui-levels-timeline__<block> sui-levels-timeline__tone-N`. */
+  const toneClass = (block: string, seriesIndex: number | undefined): string =>
+    `sui-levels-timeline__${block} sui-levels-timeline__tone-${tokenOf(
+      seriesIndex ?? 1,
     )}`;
 
+  const railClass = (rail: Rail): string => toneClass("rail", rail.seriesIndex);
+
+  /**
+   * A CONTINUATION is painted exactly as the band is — same classes, same
+   * tone, full opacity — because nothing happened to that rail here and the
+   * join must be invisible. It is only split at all because something happened
+   * elsewhere on the chart, and a rail that read as dashed would be inventing
+   * an event it did not have.
+   */
+  const isContinuation = (flow: FlowBand): boolean =>
+    flow.kind === "continuation";
+
   const flowClass = (flow: FlowBand): string =>
-    join(" ", [
-      "sui-levels-timeline__ribbon",
-      `sui-levels-timeline__ribbon--${flow.kind}`,
-    ]);
+    isContinuation(flow)
+      ? toneClass("rail", flow.fromSeriesIndex)
+      : join(" ", [
+          "sui-levels-timeline__ribbon",
+          `sui-levels-timeline__ribbon--${flow.kind}`,
+        ]);
 
   /**
    * A flow is painted with its own horizontal gradient, running from the
@@ -243,7 +258,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             because three charts on one page — which the bench stacks — would
             otherwise share one set and the first mounted would own them all. */}
         <defs>
-          <For each={geometry().flows}>
+          <For each={filter((flow: FlowBand) => !isContinuation(flow), geometry().flows)}>
             {(flow) => (
               <linearGradient id={gradientId(flow)} x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stop-color={toneVar(flow.fromSeriesIndex)} />
@@ -320,7 +335,11 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
               <path
                 class={flowClass(flow)}
                 d={flow.path}
-                fill={`url(#${gradientId(flow)})`}
+                fill={
+                  isContinuation(flow)
+                    ? undefined
+                    : `url(#${gradientId(flow)})`
+                }
               />
             )}
           </For>
