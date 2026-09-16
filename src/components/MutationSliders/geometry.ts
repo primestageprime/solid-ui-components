@@ -21,9 +21,14 @@
 //
 // Conventions, fixed here once so nothing downstream re-decides them:
 //
-//   • The canvas is one dial: `VIEW_WIDTH` × `VIEW_HEIGHT`, in the SAME px the
+//   • The canvas is one dial: `VIEW_WIDTH` × its HEIGHT, in the SAME px the
 //     CSS gives the dial box, so the SVG overlay sits 1:1 on it and no scale
-//     factor exists anywhere.
+//     factor exists anywhere. `VIEW_HEIGHT` is the default, used when nothing
+//     imposes one; every y function takes an optional `height` so a dial can
+//     FILL a taller container without the arrows, the labels or the readouts
+//     scaling with it. That is the whole reason the height is a parameter
+//     rather than a `preserveAspectRatio` stretch: stretching the viewBox
+//     would magnify the 11px figures along with the track.
 //   • The domain grows UPWARD and the screen's y grows downward. That
 //     inversion happens in exactly ONE place, `yFor`.
 //   • The Kobalte track is inset by `TRACK_TOP` at both ends, so a thumb at
@@ -167,6 +172,34 @@ export const TRACK_X = 22;
 export const TRACK_TOP = 12;
 export const TRACK_BOTTOM = VIEW_HEIGHT - TRACK_TOP;
 
+/**
+ * The shortest dial worth drawing, in px.
+ *
+ * MEASURED, not chosen: below roughly this height the two arrowheads for a
+ * small change land within a few px of each other and their 11px delta labels
+ * overlap. The band, the track and the arrows survive much shorter — it is the
+ * FIGURES that go first, and a dial whose numbers cannot be read has lost the
+ * thing it exists to show. A consumer who gives the row less height than this
+ * gets a dial that stops shrinking and overflows, which is visible and
+ * fixable, rather than one that silently becomes illegible.
+ */
+export const MIN_DIAL_HEIGHT = 180;
+
+/** The bottom of the track on a dial of `height` px. */
+export const trackBottomOf = (height: number): number => height - TRACK_TOP;
+
+/**
+ * The height to DRAW at, from the height the container actually gave us.
+ *
+ * `0` means nothing was measured — no ResizeObserver, or not yet — and that
+ * falls back to the fixed `VIEW_HEIGHT` the dial had before it could fill.
+ * Unknown is not short, exactly as unknown is not narrow in `rowLayout`.
+ */
+export const dialHeightFor = (measured: number): number => {
+  if (!Number.isFinite(measured) || measured <= 0) return VIEW_HEIGHT;
+  return Math.max(Math.round(measured), MIN_DIAL_HEIGHT);
+};
+
 /** Half-width of the short caps that mark the shared domain's two ends. */
 export const CAP_HALF = 6;
 /** Half-width of the shaded role band — the widest mark on the dial. */
@@ -206,11 +239,17 @@ export const ARROW_SLOT = 32;
 export const ADD_SLOT = 32;
 
 /** `d` for the track: one vertical line with a short cap at each end. */
-export const TRACK_PATH = [
-  `M ${TRACK_X} ${TRACK_TOP} L ${TRACK_X} ${TRACK_BOTTOM}`,
-  `M ${TRACK_X - CAP_HALF} ${TRACK_TOP} L ${TRACK_X + CAP_HALF} ${TRACK_TOP}`,
-  `M ${TRACK_X - CAP_HALF} ${TRACK_BOTTOM} L ${TRACK_X + CAP_HALF} ${TRACK_BOTTOM}`,
-].join(" ");
+export const trackPath = (height: number = VIEW_HEIGHT): string => {
+  const bottom = trackBottomOf(height);
+  return [
+    `M ${TRACK_X} ${TRACK_TOP} L ${TRACK_X} ${bottom}`,
+    `M ${TRACK_X - CAP_HALF} ${TRACK_TOP} L ${TRACK_X + CAP_HALF} ${TRACK_TOP}`,
+    `M ${TRACK_X - CAP_HALF} ${bottom} L ${TRACK_X + CAP_HALF} ${bottom}`,
+  ].join(" ");
+};
+
+/** The track at the default height, kept so existing callers need no change. */
+export const TRACK_PATH = trackPath();
 
 /**
  * Where a value sits on the track, in canvas y.
@@ -220,12 +259,17 @@ export const TRACK_PATH = [
  * rather than dividing by zero — one entity at one amount is a legitimate
  * scenario, and NaN would take the whole row down with it.
  */
-export const yFor = (domain: Domain, value: number): number => {
+export const yFor = (
+  domain: Domain,
+  value: number,
+  height: number = VIEW_HEIGHT,
+): number => {
+  const bottom = trackBottomOf(height);
   const [min, max] = domain;
   const span = max - min;
-  if (span === 0) return (TRACK_TOP + TRACK_BOTTOM) / 2;
+  if (span === 0) return (TRACK_TOP + bottom) / 2;
   const fraction = (clamp(value, min, max) - min) / span;
-  return TRACK_BOTTOM - fraction * (TRACK_BOTTOM - TRACK_TOP);
+  return bottom - fraction * (bottom - TRACK_TOP);
 };
 
 /**
@@ -269,9 +313,13 @@ export const clampToRange = (range: Domain, value: number): number =>
   clamp(value, range[0], range[1]);
 
 /** The shaded box for a role band: its min→max on the track. */
-export const bandFor = (domain: Domain, range: Domain): Box => {
-  const top = yFor(domain, range[1]);
-  return { y: top, height: yFor(domain, range[0]) - top };
+export const bandFor = (
+  domain: Domain,
+  range: Domain,
+  height: number = VIEW_HEIGHT,
+): Box => {
+  const top = yFor(domain, range[1], height);
+  return { y: top, height: yFor(domain, range[0], height) - top };
 };
 
 /**
@@ -299,11 +347,12 @@ export const changeLineFor = (
   domain: Domain,
   clampedOld: number | null,
   clampedValue: number | null,
+  height: number = VIEW_HEIGHT,
 ): Box | null => {
   if (clampedOld === null || clampedValue === null) return null;
   if (clampedValue === clampedOld) return null;
-  const a = yFor(domain, clampedOld);
-  const b = yFor(domain, clampedValue);
+  const a = yFor(domain, clampedOld, height);
+  const b = yFor(domain, clampedValue, height);
   return { y: Math.min(a, b), height: Math.abs(a - b) };
 };
 
@@ -319,8 +368,9 @@ export const arrowPath = (
   domain: Domain,
   value: number,
   side: ArrowSide,
+  height: number = VIEW_HEIGHT,
 ): string => {
-  const y = yFor(domain, value);
+  const y = yFor(domain, value, height);
   const direction = side === "prior" ? -1 : 1;
   const apexX = TRACK_X + direction * ARROW_GAP;
   const baseX = apexX + direction * ARROW_LENGTH;
@@ -525,13 +575,17 @@ export const niceStep = (domain: Domain): number => {
 };
 
 /** Everything one dial draws, from one entity. */
-export const dialGeometry = (domain: Domain, entity: Entity): DialGeometry => {
+export const dialGeometry = (
+  domain: Domain,
+  entity: Entity,
+  height: number = VIEW_HEIGHT,
+): DialGeometry => {
   const range = rangeOf(domain, entity);
   const clampedOld =
     entity.old === null ? null : clampToRange(range, entity.old);
   const clampedValue =
     entity.value === null ? null : clampToRange(range, entity.value);
-  const line = changeLineFor(domain, clampedOld, clampedValue);
+  const line = changeLineFor(domain, clampedOld, clampedValue, height);
   const delta = deltaOf(clampedOld, clampedValue);
   return {
     id: entity.id,
@@ -543,17 +597,21 @@ export const dialGeometry = (domain: Domain, entity: Entity): DialGeometry => {
     value: entity.value,
     clampedValue,
     removed: entity.value === null,
-    oldY: clampedOld === null ? null : yFor(domain, clampedOld),
-    valueY: clampedValue === null ? null : yFor(domain, clampedValue),
-    band: bandFor(domain, range),
+    oldY: clampedOld === null ? null : yFor(domain, clampedOld, height),
+    valueY: clampedValue === null ? null : yFor(domain, clampedValue, height),
+    band: bandFor(domain, range, height),
     changeLine: line,
     delta,
     deltaY: line === null ? null : line.y + line.height / 2,
     changeTone: toneOf(clampedOld, clampedValue),
     priorArrow:
-      clampedOld === null ? null : arrowPath(domain, clampedOld, "prior"),
+      clampedOld === null
+        ? null
+        : arrowPath(domain, clampedOld, "prior", height),
     futureArrow:
-      clampedValue === null ? null : arrowPath(domain, clampedValue, "future"),
+      clampedValue === null
+        ? null
+        : arrowPath(domain, clampedValue, "future", height),
   };
 };
 
@@ -564,5 +622,6 @@ export const dialGeometry = (domain: Domain, entity: Entity): DialGeometry => {
 export const mutationGeometry = (
   domain: Domain,
   entities: readonly Entity[],
+  height: number = VIEW_HEIGHT,
 ): readonly DialGeometry[] =>
-  map((entity: Entity) => dialGeometry(domain, entity), entities);
+  map((entity: Entity) => dialGeometry(domain, entity, height), entities);

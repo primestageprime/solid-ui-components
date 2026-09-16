@@ -31,9 +31,13 @@ import {
   rowLayout,
   visibleWindow,
   windowLabel,
+  MIN_DIAL_HEIGHT,
   deltaLabelOf,
   deltaOf,
+  dialHeightFor,
   dragStep,
+  trackBottomOf,
+  trackPath,
   niceStep,
   trackDomainOf,
   changeLineFor,
@@ -789,6 +793,75 @@ describe("windowLabel", () => {
   });
 });
 
+describe("filling the container's height", () => {
+  it("draws at the fixed default when nothing was measured", () => {
+    // Unknown is not short — the same rule as `rowLayout`'s width.
+    expect(dialHeightFor(0)).toBe(VIEW_HEIGHT);
+    expect(dialHeightFor(-50)).toBe(VIEW_HEIGHT);
+    expect(dialHeightFor(Number.NaN)).toBe(VIEW_HEIGHT);
+  });
+
+  it("takes the height it was given when that is more", () => {
+    expect(dialHeightFor(520)).toBe(520);
+  });
+
+  it("stops shrinking at the floor, where the labels would collide", () => {
+    expect(dialHeightFor(90)).toBe(MIN_DIAL_HEIGHT);
+    expect(dialHeightFor(MIN_DIAL_HEIGHT - 1)).toBe(MIN_DIAL_HEIGHT);
+  });
+
+  it("lengthens the TRACK with the height", () => {
+    expect(trackBottomOf(260)).toBe(248);
+    expect(trackBottomOf(600)).toBe(588);
+    // The inset at each end is fixed, so the track grows by the whole gain.
+    expect(trackBottomOf(600) - trackBottomOf(260)).toBe(340);
+  });
+
+  it("still puts the domain's ends at the ends of the longer track", () => {
+    const tall = 600;
+    expect(yFor(DOMAIN, DOMAIN[1], tall)).toBe(TRACK_TOP);
+    expect(yFor(DOMAIN, DOMAIN[0], tall)).toBe(trackBottomOf(tall));
+  });
+
+  it("spreads the same band over more pixels, so close levels separate", () => {
+    // This is the whole point of the change: "the levels are very close".
+    const short = bandFor(DOMAIN, [55_000, 80_000], 260);
+    const tall = bandFor(DOMAIN, [55_000, 80_000], 600);
+    expect(tall.height).toBeGreaterThan(short.height * 2);
+  });
+
+  it("keeps the ARROWHEAD the same size at any height", () => {
+    // The arrows and the labels must not scale — only the track lengthens.
+    const heightOf = (h: number) => {
+      const ys = map(
+        ([, y]) => y,
+        pointsOf(arrowPath(DOMAIN, 100_000, "prior", h)),
+      );
+      return Math.max(...ys) - Math.min(...ys);
+    };
+    expect(heightOf(600)).toBe(heightOf(260));
+    expect(heightOf(600)).toBe(ARROW_HALF * 2);
+  });
+
+  it("draws the end caps at the ends, whatever the height", () => {
+    const d = trackPath(600);
+    expect(d).toContain(`${TRACK_TOP}`);
+    expect(d).toContain(`${trackBottomOf(600)}`);
+  });
+
+  it("defaults every y function to the fixed height, so old callers are untouched", () => {
+    // ADDITIVE: `height` is a trailing optional on every one of them.
+    expect(yFor(DOMAIN, 100_000)).toBe(yFor(DOMAIN, 100_000, VIEW_HEIGHT));
+    expect(bandFor(DOMAIN, [55_000, 80_000])).toEqual(
+      bandFor(DOMAIN, [55_000, 80_000], VIEW_HEIGHT),
+    );
+    expect(trackPath()).toBe(trackPath(VIEW_HEIGHT));
+    expect(dialGeometry(DOMAIN, FIXTURE[0])).toEqual(
+      dialGeometry(DOMAIN, FIXTURE[0], VIEW_HEIGHT),
+    );
+  });
+});
+
 describe("the CSS mirrors the canvas", () => {
   // The dial's SVG overlay covers the Kobalte root exactly, and the Kobalte
   // TRACK is inset inside it by TRACK_TOP — that inset is what makes a thumb
@@ -805,6 +878,12 @@ describe("the CSS mirrors the canvas", () => {
   it("declares the track inset this file maps the domain onto", () => {
     expect(css).toContain(`--sui-mutation-track-inset: ${TRACK_TOP}px`);
     expect(VIEW_HEIGHT - TRACK_BOTTOM).toBe(TRACK_TOP);
+  });
+
+  it("declares the floor that geometry stops shrinking at", () => {
+    expect(css).toContain(
+      `--sui-mutation-dial-min-height: ${MIN_DIAL_HEIGHT}px`,
+    );
   });
 
   it("declares the dial width the canvas draws into", () => {
