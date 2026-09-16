@@ -57,7 +57,7 @@ import {
   type Level,
   type Mutation,
   type Rail,
-  type Ribbon,
+  type FlowBand,
   type TimeDomain,
   type Transfer,
   levelsRailGeometry,
@@ -131,7 +131,8 @@ const describeTransfer = (
     if (transfer.from !== undefined && transfer.to !== undefined) {
       return `moved from ${labelOf(transfer.from)} to ${labelOf(transfer.to)}`;
     }
-    if (transfer.from !== undefined) return `left from ${labelOf(transfer.from)}`;
+    if (transfer.from !== undefined)
+      return `left from ${labelOf(transfer.from)}`;
     if (transfer.to !== undefined) return `joined at ${labelOf(transfer.to)}`;
     return "moved";
   };
@@ -176,11 +177,11 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       rail.seriesIndex,
     )}`;
 
-  const ribbonClass = (ribbon: Ribbon): string =>
+  const flowClass = (flow: FlowBand): string =>
     join(" ", [
       "sui-levels-timeline__ribbon",
-      `sui-levels-timeline__ribbon--${ribbon.kind}`,
-      `sui-levels-timeline__tone-${tokenOf(ribbon.seriesIndex)}`,
+      `sui-levels-timeline__ribbon--${flow.kind}`,
+      `sui-levels-timeline__tone-${tokenOf(flow.seriesIndex)}`,
     ]);
 
   /**
@@ -193,9 +194,9 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   const departureMask = `${maskId}-departure`;
   const hireMask = `${maskId}-hire`;
   /** Only the open-ended flows are masked; a move is solid at both ends. */
-  const ribbonMask = (ribbon: Ribbon): string | undefined => {
-    if (ribbon.kind === "departure") return `url(#${departureMask})`;
-    if (ribbon.kind === "hire") return `url(#${hireMask})`;
+  const flowMask = (flow: FlowBand): string | undefined => {
+    if (flow.kind === "departure") return `url(#${departureMask})`;
+    if (flow.kind === "hire") return `url(#${hireMask})`;
     return undefined;
   };
 
@@ -251,7 +252,13 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             hex literals in .tsx and cannot tell a mask stop from a hardcoded
             brand colour — and it is right not to try. */}
         <defs>
-          <linearGradient id={`${departureMask}-ramp`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient
+            id={`${departureMask}-ramp`}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
             <stop offset="0%" stop-color="white" stop-opacity="1" />
             <stop offset="100%" stop-color="white" stop-opacity="0" />
           </linearGradient>
@@ -314,15 +321,15 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
               because they carry no name — they only say "something happened
               here", which is precisely what a lone hire needs. */}
           <For each={geometry().droplines}>
-              {(dropline) => (
-                <line
-                  class="sui-levels-timeline__dropline"
-                  x1={dropline.x}
-                  x2={dropline.x}
-                  y1={FLAG_RULE_TOP}
-                  y2={PLOT_BOTTOM}
-                />
-              )}
+            {(dropline) => (
+              <line
+                class="sui-levels-timeline__dropline"
+                x1={dropline.x}
+                x2={dropline.x}
+                y1={FLAG_RULE_TOP}
+                y2={PLOT_BOTTOM}
+              />
+            )}
           </For>
 
           {/* The flags' rules, under everything: a rule locates a change, it
@@ -339,49 +346,37 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             )}
           </For>
 
-          {/* Flows first, under the rails they join, so a ribbon reads as
-                tucking beneath both ends rather than crossing them. */}
-          <For each={geometry().ribbons}>
-            {(ribbon) => (
-                <rect
-                  class={ribbonClass(ribbon)}
-                  x={ribbon.x - ribbon.width / 2}
-                  y={Math.min(ribbon.y1, ribbon.y2)}
-                  width={ribbon.width}
-                  height={Math.abs(ribbon.y2 - ribbon.y1)}
-                  mask={ribbonMask(ribbon)}
-                />
-              )}
-            </For>
+          {/* Flows first, UNDER the rails they join, so a flow reads as
+              growing out from beneath both ends rather than crossing them. */}
+          <For each={geometry().flows}>
+            {(flow) => (
+              <path
+                class={flowClass(flow)}
+                d={flow.path}
+                mask={flowMask(flow)}
+              />
+            )}
+          </For>
 
           <For each={geometry().rails}>
             {(rail) => (
-                <g class="sui-levels-timeline__rail-group">
-                  <For each={rail.spans}>
-                    {(span) => (
-                      <line
-                        class={railClass(rail)}
-                        x1={span.x1}
-                        x2={span.x2}
-                        y1={span.y}
-                        y2={span.y}
-                        stroke-width={span.width}
-                      />
-                    )}
-                  </For>
-                  <Show when={rail.labelAt}>
-                    {(at) => (
-                      <text
-                        class="sui-levels-timeline__rail-label"
-                        x={at().x}
-                        y={at().y}
-                      >
-                        {rail.label}
-                      </text>
-                    )}
-                  </Show>
-                </g>
-              )}
+              <g class="sui-levels-timeline__rail-group">
+                <For each={rail.runs}>
+                  {(run) => <path class={railClass(rail)} d={run.path} />}
+                </For>
+                <Show when={rail.labelAt}>
+                  {(at) => (
+                    <text
+                      class="sui-levels-timeline__rail-label"
+                      x={at().x}
+                      y={at().y}
+                    >
+                      {rail.label}
+                    </text>
+                  )}
+                </Show>
+              </g>
+            )}
           </For>
         </g>
 

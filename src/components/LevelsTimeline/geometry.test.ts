@@ -12,13 +12,16 @@
 // and the change-x list that decides where the droplines fall.
 // ============================================
 import { describe, expect, it } from "vitest";
-import { map } from "../../fn";
+import { flatMap, map, sortBy } from "../../fn";
 import {
   FLAG_RULE_TOP,
   MAX_STROKE,
   MIN_STROKE,
-  OPEN_FLOW_STUB,
+  type BandRun,
+  type FlowBand,
   type Level,
+  type Rail,
+  type Taper,
   type Transfer,
   axisTicks,
   changeTimes,
@@ -27,7 +30,14 @@ import {
   maxCountOf,
   railSpans,
   strokeFor,
-  transferRibbons,
+  bandPath,
+  hCurve,
+  flowWidth,
+  perPersonWidth,
+  taperHalves,
+  transitionWidth,
+  TRANSITION_FRACTION,
+  MAX_TRANSITION,
   valueDomainOf,
   PLOT_BOTTOM,
   PLOT_LEFT,
@@ -135,7 +145,6 @@ describe("monthTicks", () => {
     expect(ticks[0].x).toBe(PLOT_LEFT);
   });
 });
-
 
 const LEVELS: readonly Level[] = [
   {
@@ -296,35 +305,42 @@ describe("railSpans", () => {
   });
 });
 
-describe("transferRibbons", () => {
+describe("flowBands", () => {
   const x = xScaleFor(DOMAIN);
-  const y = yScaleFor(valueDomainOf(LEVELS));
-  const maxCount = maxCountOf(LEVELS, TRANSFERS);
-
-  it("runs from the source rail to the destination rail at the change x", () => {
-    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, maxCount);
-    expect(first.x).toBe(x(utc("2025-04-01")));
-    expect(first.y1).toBe(y(6500));
-    expect(first.y2).toBe(y(8000));
-    expect(first.fromId).toBe("l6");
-    expect(first.toId).toBe("l7");
+  const geometry = levelsRailGeometry({
+    levels: LEVELS,
+    transfers: TRANSFERS,
+    mutations: MUTATIONS,
+    domain: DOMAIN,
   });
 
-  it("is as wide as the moving count on the SAME scale as the rails", () => {
-    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, maxCount);
-    expect(first.width).toBe(strokeFor(2, maxCount));
+  it("spans a transition centred on the change, not a bare vertical", () => {
+    const [first] = geometry.flows;
+    const centre = x(utc("2025-04-01"));
+    expect(first.x0).toBeLessThan(centre);
+    expect(first.x1).toBeGreaterThan(centre);
+    expect(round((first.x0 + first.x1) / 2)).toBe(round(centre));
   });
 
-  it("points upward for a raise — y2 is above y1 on the screen", () => {
-    const [first] = transferRibbons(TRANSFERS, LEVELS, x, y, maxCount);
-    expect(first.y2).toBeLessThan(first.y1);
+  it("roots in the rails it joins, source above destination for a raise", () => {
+    const [first] = geometry.flows;
+    expect(first.srcTop).toBeGreaterThan(first.dstTop);
+    expect(first.kind).toBe("move");
   });
 
-  it("skips a transfer naming a level the chart does not have", () => {
-    const orphan: readonly Transfer[] = [
-      { at: utc("2025-04-01"), from: "l6", to: "nowhere", count: 1 },
-    ];
-    expect(transferRibbons(orphan, LEVELS, x, y, maxCount)).toEqual([]);
+  it("is as wide at each end as the width its rail loses or gains", () => {
+    const [first] = geometry.flows;
+    const expected = flowWidth(2, geometry.maxCount);
+    expect(round(first.srcBottom - first.srcTop)).toBe(round(expected));
+    expect(round(first.dstBottom - first.dstTop)).toBe(round(expected));
+  });
+
+  it("closes its band and never emits a NaN", () => {
+    for (const flow of geometry.flows) {
+      expect(flow.path.startsWith("M ")).toBe(true);
+      expect(flow.path.endsWith("Z")).toBe(true);
+      expect(flow.path).not.toContain("NaN");
+    }
   });
 });
 
@@ -392,8 +408,8 @@ describe("levelsRailGeometry — the whole observation", () => {
     expect(geometry.rails[0].seriesIndex).toBe(1);
   });
 
-  it("carries the ribbons, the flags and the un-numbered dropline", () => {
-    expect(geometry.ribbons).toHaveLength(2);
+  it("carries the flows, the flags and the un-numbered dropline", () => {
+    expect(geometry.flows).toHaveLength(2);
     expect(geometry.flags).toHaveLength(3);
     expect(geometry.droplines).toHaveLength(1);
   });
@@ -419,15 +435,36 @@ describe("levelsRailGeometry — the whole observation", () => {
       ),
     );
     console.table(
-      geometry.ribbons.map((ribbon) => ({
-        from: ribbon.fromId,
-        to: ribbon.toId,
-        count: ribbon.count,
-        x: round(ribbon.x),
-        y1: round(ribbon.y1),
-        y2: round(ribbon.y2),
-        width: round(ribbon.width),
-      })),
+      map(
+        (flow: FlowBand) => ({
+          flow: flow.key,
+          kind: flow.kind,
+          count: flow.count,
+          x0: round(flow.x0),
+          x1: round(flow.x1),
+          srcTop: round(flow.srcTop),
+          srcBottom: round(flow.srcBottom),
+          dstTop: round(flow.dstTop),
+          dstBottom: round(flow.dstBottom),
+        }),
+        geometry.flows,
+      ),
+    );
+    console.table(
+      flatMap(
+        (rail: Rail) =>
+          map(
+            (taper: Taper) => ({
+              level: rail.label,
+              x: round(taper.x),
+              half: round(taper.half),
+              widthBefore: round(taper.widthBefore),
+              widthAfter: round(taper.widthAfter),
+            }),
+            flatMap((run: BandRun) => [...run.tapers], rail.runs),
+          ),
+        geometry.rails,
+      ),
     );
     console.table(
       geometry.droplines.map((line) => ({ key: line.key, x: round(line.x) })),
@@ -494,79 +531,69 @@ describe("axisTicks", () => {
 
 describe("one-ended flows — departures and hires", () => {
   const x = xScaleFor(DOMAIN);
-  const y = yScaleFor(valueDomainOf(LEVELS));
-  const maxCount = maxCountOf(LEVELS, TRANSFERS);
-  const ribbonsFor = (transfers: readonly Transfer[]) =>
-    transferRibbons(transfers, LEVELS, x, y, maxCount);
+  const flowsFor = (transfers: readonly Transfer[]) => {
+    const geometry = levelsRailGeometry({
+      levels: LEVELS,
+      transfers,
+      mutations: [],
+      domain: DOMAIN,
+    });
+    return geometry.flows;
+  };
 
-  it("runs a departure OUTWARD from its source, below the rail", () => {
-    const [leaving] = ribbonsFor([
+  it("runs a departure OUTWARD and DOWN from its source", () => {
+    const [leaving] = flowsFor([
       { at: utc("2025-07-01"), from: "l6", count: 1 },
     ]);
     expect(leaving.kind).toBe("departure");
-    expect(leaving.y1).toBe(y(6500));
-    expect(leaving.y2).toBe(y(6500) + OPEN_FLOW_STUB);
-    expect(leaving.toId).toBeUndefined();
+    expect(leaving.dstTop).toBeGreaterThan(leaving.srcTop);
   });
 
   it("brings a hire DOWN INTO its destination, from above", () => {
-    const [joining] = ribbonsFor([
-      { at: utc("2025-07-01"), to: "l7", count: 1 },
-    ]);
+    const [joining] = flowsFor([{ at: utc("2025-07-01"), to: "l7", count: 1 }]);
     expect(joining.kind).toBe("hire");
-    expect(joining.y2).toBe(y(8000));
-    expect(joining.y1).toBe(y(8000) - OPEN_FLOW_STUB);
-    expect(joining.fromId).toBeUndefined();
+    expect(joining.srcTop).toBeLessThan(joining.dstTop);
   });
 
-  it("puts the two on OPPOSITE sides of their rail, never to be confused", () => {
-    const [leaving] = ribbonsFor([{ at: 0, from: "l7", count: 1 }]);
-    const [joining] = ribbonsFor([{ at: 0, to: "l7", count: 1 }]);
-    expect(leaving.y2).toBeGreaterThan(y(8000));
-    expect(joining.y1).toBeLessThan(y(8000));
+  it("keeps a one-ended flow the same width along its whole length", () => {
+    const [leaving] = flowsFor([
+      { at: utc("2025-07-01"), from: "l6", count: 2 },
+    ]);
+    expect(round(leaving.srcBottom - leaving.srcTop)).toBe(
+      round(leaving.dstBottom - leaving.dstTop),
+    );
   });
 
   it("tones a hire by its DESTINATION — that is the rail it thickens", () => {
-    const [joining] = ribbonsFor([{ at: 0, to: "l8", count: 1 }]);
+    const [joining] = flowsFor([{ at: utc("2025-07-01"), to: "l8", count: 1 }]);
     expect(joining.seriesIndex).toBe(4);
   });
 
-  it("widths a one-ended flow on the same scale as everything else", () => {
-    const [leaving] = ribbonsFor([{ at: 0, from: "l5", count: 3 }]);
-    expect(leaving.width).toBe(strokeFor(3, maxCount));
-  });
-
   it("drops a flow with neither end — there is nothing to draw", () => {
-    expect(ribbonsFor([{ at: 0, count: 2 }])).toEqual([]);
+    expect(flowsFor([{ at: utc("2025-07-01"), count: 2 }])).toEqual([]);
   });
 
   it("drops a typo rather than drawing it as a departure", () => {
-    // An absent end already MEANS the outside; a misspelt one must not look
-    // the same, or a typo hides as a legitimate exit.
-    expect(ribbonsFor([{ at: 0, from: "nope", to: "also-nope", count: 1 }])).toEqual(
-      [],
-    );
-    expect(ribbonsFor([{ at: 0, from: "nope", count: 1 }])).toEqual([]);
+    expect(
+      flowsFor([{ at: utc("2025-07-01"), from: "nope", count: 1 }]),
+    ).toEqual([]);
   });
 
   it("stacks two flows leaving one level at one moment rather than merging", () => {
-    // scenario-board's case: somebody is raised and somebody else leaves, both
-    // at the same flag, out of the same rail.
-    const both = ribbonsFor([
+    const both = flowsFor([
       { at: utc("2025-04-01"), from: "l6", to: "l7", count: 1 },
       { at: utc("2025-04-01"), from: "l6", count: 1 },
     ]);
     expect(both).toHaveLength(2);
-    expect(map((ribbon) => ribbon.kind, both)).toEqual(["move", "departure"]);
-    expect(both[0].x).toBe(both[1].x);
-    // Distinct keys, so a keyed <For> renders both rather than one.
-    expect(both[0].key).not.toBe(both[1].key);
+    expect(new Set(map((flow) => flow.key, both)).size).toBe(2);
+    // The raise roots on the TOP edge, the departure on the BOTTOM one, so the
+    // two cannot overlap however wide they get.
+    const move = both.find((flow) => flow.kind === "move");
+    const gone = both.find((flow) => flow.kind === "departure");
+    expect(move?.srcBottom).toBeLessThanOrEqual((gone?.srcTop ?? 0) + 0.001);
   });
 
   it("empties a rail completely when everyone leaves it at once", () => {
-    // The other half of scenario-board's case: the level's own count point
-    // going to zero is what ends the rail. A zero span is never drawn, so
-    // there is no hairline left behind.
     const emptied: Level = {
       id: "l6",
       label: "L6",
@@ -576,7 +603,8 @@ describe("one-ended flows — departures and hires", () => {
         { at: utc("2025-04-01"), count: 0 },
       ],
     };
-    const spans = railSpans(emptied, x, y, DOMAIN[1], maxCount);
+    const y = yScaleFor(valueDomainOf(LEVELS));
+    const spans = railSpans(emptied, x, y, DOMAIN[1], 5);
     expect(spans).toHaveLength(1);
     expect(spans[0].x2).toBe(x(utc("2025-04-01")));
   });
@@ -588,42 +616,442 @@ describe("one-ended flows stay inside the plot", () => {
   // OPEN_FLOW_STUB. Without clamping, a hire into the top level draws above
   // PLOT_TOP and a departure from the bottom one draws into the axis ticks,
   // and `overflow: visible` means both would be SEEN.
-  const x = xScaleFor(DOMAIN);
-  const y = yScaleFor(valueDomainOf(LEVELS));
-  const maxCount = maxCountOf(LEVELS, TRANSFERS);
+  const flowsFor = (transfers: readonly Transfer[]) =>
+    levelsRailGeometry({
+      levels: LEVELS,
+      transfers,
+      mutations: [],
+      domain: DOMAIN,
+    }).flows;
 
   it("never lifts a hire into the highest level above the plot top", () => {
-    const [joining] = transferRibbons(
-      [{ at: 0, to: "l8", count: 1 }],
-      LEVELS,
-      x,
-      y,
-      maxCount,
-    );
-    expect(joining.y1).toBeGreaterThanOrEqual(PLOT_TOP);
-    expect(joining.y1).toBeLessThan(joining.y2);
+    const [joining] = flowsFor([{ at: utc("2025-07-01"), to: "l8", count: 1 }]);
+    expect(joining.srcTop).toBeGreaterThanOrEqual(PLOT_TOP);
   });
 
   it("never drops a departure from the lowest level into the axis", () => {
-    const [leaving] = transferRibbons(
-      [{ at: 0, from: "l5", count: 1 }],
-      LEVELS,
-      x,
-      y,
-      maxCount,
-    );
-    expect(leaving.y2).toBeLessThanOrEqual(PLOT_BOTTOM);
-    expect(leaving.y2).toBeGreaterThan(leaving.y1);
+    const [leaving] = flowsFor([
+      { at: utc("2025-07-01"), from: "l5", count: 1 },
+    ]);
+    expect(leaving.dstBottom).toBeLessThanOrEqual(PLOT_BOTTOM);
+  });
+});
+
+describe("rail labels", () => {
+  const geometry = levelsRailGeometry({
+    levels: LEVELS,
+    transfers: TRANSFERS,
+    mutations: MUTATIONS,
+    domain: DOMAIN,
   });
 
-  it("still runs the full stub where there is room for it", () => {
-    const [leaving] = transferRibbons(
-      [{ at: 0, from: "l7", count: 1 }],
-      LEVELS,
-      x,
-      y,
-      maxCount,
+  it("sits just above the rail's left end, clear of its thickness", () => {
+    const l5 = geometry.rails[0];
+    expect(l5.labelAt?.x).toBe(PLOT_LEFT + 2);
+    expect(l5.labelAt?.y).toBeLessThan(l5.spans[0].y - l5.spans[0].width / 2);
+  });
+
+  it("travels in with a level that appears mid-chart", () => {
+    const l8 = geometry.rails[3];
+    expect(l8.labelAt?.x).toBeGreaterThan(PLOT_LEFT + 2);
+  });
+
+  it("is absent for a level nobody ever holds — nothing to name", () => {
+    const [rail] = levelsRailGeometry({
+      levels: [{ id: "e", label: "E", value: 1, points: [] }],
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+    }).rails;
+    expect(rail.labelAt).toBeUndefined();
+  });
+});
+
+describe("axisTicks", () => {
+  it("keeps a month cadence for a domain short enough to read", () => {
+    const ticks = axisTicks(DOMAIN, xScaleFor(DOMAIN));
+    expect(ticks).toHaveLength(13);
+    expect(ticks[0].label).toBe("Jan");
+  });
+
+  it("switches to a year cadence rather than printing a grey stripe", () => {
+    const long: TimeDomain = [utc("2025-01-01"), utc("2030-01-01")];
+    const ticks = axisTicks(long, xScaleFor(long));
+    expect(map((tick) => tick.label, ticks)).toEqual([
+      "2025",
+      "2026",
+      "2027",
+      "2028",
+      "2029",
+      "2030",
+    ]);
+  });
+
+  it("puts the first year tick on the plot's left edge", () => {
+    const long: TimeDomain = [utc("2025-01-01"), utc("2030-01-01")];
+    expect(axisTicks(long, xScaleFor(long))[0].x).toBe(PLOT_LEFT);
+  });
+});
+
+describe("one-ended flows — departures and hires", () => {
+  const x = xScaleFor(DOMAIN);
+  const flowsFor = (transfers: readonly Transfer[]) => {
+    const geometry = levelsRailGeometry({
+      levels: LEVELS,
+      transfers,
+      mutations: [],
+      domain: DOMAIN,
+    });
+    return geometry.flows;
+  };
+
+  it("runs a departure OUTWARD and DOWN from its source", () => {
+    const [leaving] = flowsFor([
+      { at: utc("2025-07-01"), from: "l6", count: 1 },
+    ]);
+    expect(leaving.kind).toBe("departure");
+    expect(leaving.dstTop).toBeGreaterThan(leaving.srcTop);
+  });
+
+  it("brings a hire DOWN INTO its destination, from above", () => {
+    const [joining] = flowsFor([{ at: utc("2025-07-01"), to: "l7", count: 1 }]);
+    expect(joining.kind).toBe("hire");
+    expect(joining.srcTop).toBeLessThan(joining.dstTop);
+  });
+
+  it("keeps a one-ended flow the same width along its whole length", () => {
+    const [leaving] = flowsFor([
+      { at: utc("2025-07-01"), from: "l6", count: 2 },
+    ]);
+    expect(round(leaving.srcBottom - leaving.srcTop)).toBe(
+      round(leaving.dstBottom - leaving.dstTop),
     );
-    expect(leaving.y2 - leaving.y1).toBe(OPEN_FLOW_STUB);
+  });
+
+  it("tones a hire by its DESTINATION — that is the rail it thickens", () => {
+    const [joining] = flowsFor([{ at: utc("2025-07-01"), to: "l8", count: 1 }]);
+    expect(joining.seriesIndex).toBe(4);
+  });
+
+  it("drops a flow with neither end — there is nothing to draw", () => {
+    expect(flowsFor([{ at: utc("2025-07-01"), count: 2 }])).toEqual([]);
+  });
+
+  it("drops a typo rather than drawing it as a departure", () => {
+    expect(
+      flowsFor([{ at: utc("2025-07-01"), from: "nope", count: 1 }]),
+    ).toEqual([]);
+  });
+
+  it("stacks two flows leaving one level at one moment rather than merging", () => {
+    const both = flowsFor([
+      { at: utc("2025-04-01"), from: "l6", to: "l7", count: 1 },
+      { at: utc("2025-04-01"), from: "l6", count: 1 },
+    ]);
+    expect(both).toHaveLength(2);
+    expect(new Set(map((flow) => flow.key, both)).size).toBe(2);
+    // The raise roots on the TOP edge, the departure on the BOTTOM one, so the
+    // two cannot overlap however wide they get.
+    const move = both.find((flow) => flow.kind === "move");
+    const gone = both.find((flow) => flow.kind === "departure");
+    expect(move?.srcBottom).toBeLessThanOrEqual((gone?.srcTop ?? 0) + 0.001);
+  });
+
+  it("empties a rail completely when everyone leaves it at once", () => {
+    const emptied: Level = {
+      id: "l6",
+      label: "L6",
+      value: 6500,
+      points: [
+        { at: utc("2025-01-01"), count: 2 },
+        { at: utc("2025-04-01"), count: 0 },
+      ],
+    };
+    const y = yScaleFor(valueDomainOf(LEVELS));
+    const spans = railSpans(emptied, x, y, DOMAIN[1], 5);
+    expect(spans).toHaveLength(1);
+    expect(spans[0].x2).toBe(x(utc("2025-04-01")));
+  });
+});
+
+// ============================================
+// The SANKEY pass — curves, bands, and the arithmetic that makes them blend.
+// ============================================
+
+describe("transitionWidth", () => {
+  it("is a fraction of the plot, clamped so it stays a join", () => {
+    const raw = (PLOT_RIGHT - PLOT_LEFT) * TRANSITION_FRACTION;
+    expect(raw).toBeGreaterThan(MAX_TRANSITION);
+    expect(transitionWidth()).toBe(MAX_TRANSITION);
+  });
+});
+
+describe("hCurve", () => {
+  it("gives both ends HORIZONTAL tangents — the whole Sankey look", () => {
+    // Control points sit at their OWN endpoint's y, so the curve leaves and
+    // arrives flat and blends into a horizontal rail.
+    expect(hCurve(0, 10, 20, 30)).toBe("C 10 10, 10 30, 20 30");
+  });
+
+  it("puts both control points at the midpoint in x", () => {
+    expect(hCurve(100, 5, 140, 5)).toBe("C 120 5, 120 5, 140 5");
+  });
+
+  it("is symmetric, so an edge can be walked backwards to close a band", () => {
+    // Same two points the other way round describes the mirror-image curve.
+    expect(hCurve(20, 30, 0, 10)).toBe("C 10 30, 10 10, 0 10");
+  });
+});
+
+describe("bandPath", () => {
+  const top = [
+    { x: 0, y: 0, curved: false },
+    { x: 10, y: 2, curved: true },
+  ];
+  const bottom = [
+    { x: 0, y: 5, curved: false },
+    { x: 10, y: 8, curved: true },
+  ];
+
+  it("closes: down the top, across, back along the bottom, across again", () => {
+    const path = bandPath(top, bottom);
+    expect(path.startsWith("M 0 0")).toBe(true);
+    expect(path.endsWith("Z")).toBe(true);
+    expect(path).toContain("L 10 8");
+  });
+
+  it("is empty for an empty edge rather than a lone moveto", () => {
+    expect(bandPath([], bottom)).toBe("");
+    expect(bandPath(top, [])).toBe("");
+  });
+});
+
+describe("flowWidth — the conservation identity", () => {
+  it("is EXACTLY the difference a flow makes to a rail's width", () => {
+    // This is why flowWidth exists beside strokeFor: strokeFor is affine, so
+    // measuring a flow with it would count the MIN_STROKE floor twice.
+    for (const [before, moving] of [
+      [5, 3],
+      [4, 1],
+      [10, 7],
+      [9, 8],
+    ]) {
+      expect(round(strokeFor(before, 10) - flowWidth(moving, 10))).toBe(
+        round(strokeFor(before - moving, 10)),
+      );
+    }
+  });
+
+  it("has exactly ONE exception, at a rail emptying to nothing", () => {
+    // strokeFor(0) is 0, not MIN_STROKE, because an empty level is an absence
+    // rather than a thin one. So the floor has nowhere to go and is absorbed
+    // by the taper to zero. This is the documented limit of conservation, and
+    // it is confined to a band already on its way out.
+    expect(strokeFor(2, 10) - flowWidth(2, 10)).toBeCloseTo(MIN_STROKE, 9);
+    expect(strokeFor(0, 10)).toBe(0);
+  });
+
+  it("is the proportional slope per person, with no floor in it", () => {
+    expect(flowWidth(1, 10)).toBe(perPersonWidth(10));
+    expect(perPersonWidth(10)).toBe((MAX_STROKE - MIN_STROKE) / 10);
+  });
+
+  it("reads an empty chart as zero rather than NaN", () => {
+    expect(flowWidth(3, 0)).toBe(0);
+    expect(perPersonWidth(0)).toBe(0);
+  });
+
+  it("never goes negative on a nonsense count", () => {
+    expect(flowWidth(-4, 10)).toBe(0);
+  });
+});
+
+describe("taperHalves", () => {
+  const x = xScaleFor(DOMAIN);
+  const y = yScaleFor(valueDomainOf(LEVELS));
+
+  it("gives a flush end no blend at all — it is a cap, not a change", () => {
+    const spans = railSpans(LEVELS[1], x, y, DOMAIN[1], 5);
+    const halves = taperHalves(spans, false, false);
+    expect(halves[0]).toBe(0);
+    expect(halves[halves.length - 1]).toBe(0);
+  });
+
+  it("shortens a blend when two changes sit closer than a transition apart", () => {
+    // A busy month is not a consumer error; the band must not fold over itself.
+    const crowded: Level = {
+      id: "busy",
+      label: "Busy",
+      value: 6000,
+      points: [
+        { at: utc("2025-01-01"), count: 1 },
+        { at: utc("2025-01-05"), count: 2 },
+        { at: utc("2025-01-09"), count: 3 },
+      ],
+    };
+    const spans = railSpans(crowded, x, y, DOMAIN[1], 5);
+    const halves = taperHalves(spans, false, true);
+    const gap = spans[1].x1 - spans[0].x1;
+    expect(halves[1]).toBeLessThanOrEqual(gap / 2);
+    expect(halves[1]).toBeLessThan(transitionWidth() / 2);
+  });
+});
+
+describe("railRuns", () => {
+  const geometry = levelsRailGeometry({
+    levels: LEVELS,
+    transfers: TRANSFERS,
+    mutations: MUTATIONS,
+    domain: DOMAIN,
+  });
+
+  it("closes every band and never emits a NaN", () => {
+    for (const rail of geometry.rails) {
+      for (const run of rail.runs) {
+        expect(run.path.startsWith("M ")).toBe(true);
+        expect(run.path.endsWith("Z")).toBe(true);
+        expect(run.path).not.toContain("NaN");
+      }
+    }
+  });
+
+  it("carries a taper for every count change on the rail", () => {
+    // l7 steps 2 → 4 → 3, so two changes and two tapers.
+    const l7 = geometry.rails[2];
+    expect(flatMap((run: BandRun) => [...run.tapers], l7.runs)).toHaveLength(2);
+  });
+
+  it("splits a level that empties and comes back into TWO bands", () => {
+    // Drawing one band across the gap would invent a headcount nobody held.
+    const returning: Level = {
+      id: "back",
+      label: "Back",
+      value: 7000,
+      points: [
+        { at: utc("2025-01-01"), count: 2 },
+        { at: utc("2025-05-01"), count: 0 },
+        { at: utc("2025-09-01"), count: 1 },
+      ],
+    };
+    const [rail] = levelsRailGeometry({
+      levels: [returning],
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+    }).rails;
+    expect(rail.runs).toHaveLength(2);
+    expect(rail.runs[0].endsOpen).toBe(true);
+    expect(rail.runs[1].startsOpen).toBe(true);
+  });
+
+  it("tapers a level that appears mid-plot in, and leaves a flush edge flush", () => {
+    const l8 = geometry.rails[3];
+    expect(l8.runs[0].startsOpen).toBe(true);
+    const l5 = geometry.rails[0];
+    expect(l5.runs[0].startsOpen).toBe(false);
+  });
+
+  it("draws nothing at all for a level nobody ever holds", () => {
+    const [rail] = levelsRailGeometry({
+      levels: [{ id: "e", label: "E", value: 1, points: [] }],
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+    }).rails;
+    expect(rail.runs).toHaveLength(0);
+  });
+});
+
+describe("the fan — several flows out of one rail at one moment", () => {
+  // Track C's stress case: four people leaving one level for four different
+  // destinations on one date. The roots must tile the rail's edge in
+  // destination order, or the bands cross each other at the root.
+  const SOURCE = 6000;
+  const fanLevels: readonly Level[] = [
+    {
+      id: "c6",
+      label: "$6k",
+      value: SOURCE,
+      points: [
+        { at: utc("2025-01-01"), count: 4 },
+        { at: utc("2026-04-01"), count: 0 },
+      ],
+    },
+    ...map(
+      (pay: number) => ({
+        id: `c${pay}`,
+        label: `$${pay / 1000}k`,
+        value: pay,
+        points: [{ at: utc("2026-04-01"), count: 1 }],
+      }),
+      [6500, 7000, 7500, 8000],
+    ),
+  ];
+  const fanTransfers: readonly Transfer[] = map(
+    (pay: number) => ({
+      at: utc("2026-04-01"),
+      from: "c6",
+      to: `c${pay}`,
+      count: 1,
+    }),
+    [6500, 7000, 7500, 8000],
+  );
+  const LONG: TimeDomain = [utc("2025-01-01"), utc("2030-01-01")];
+  const geometry = levelsRailGeometry({
+    levels: fanLevels,
+    transfers: fanTransfers,
+    mutations: [],
+    domain: LONG,
+  });
+
+  it("gives every flow its own root slice — none overlap", () => {
+    const roots = sortBy((flow: FlowBand) => flow.srcTop, [...geometry.flows]);
+    expect(roots).toHaveLength(4);
+    for (const [index, flow] of roots.entries()) {
+      if (index === 0) continue;
+      // Touching is right — the slices tile the edge. Overlapping is not.
+      expect(flow.srcTop).toBeGreaterThanOrEqual(
+        roots[index - 1].srcBottom - 0.001,
+      );
+    }
+  });
+
+  it("orders the roots by DESTINATION — the standard Sankey trick", () => {
+    // Topmost destination gets the topmost slice, so no two bands cross.
+    const byRoot = sortBy((flow: FlowBand) => flow.srcTop, [...geometry.flows]);
+    const destinations = map((flow: FlowBand) => flow.dstTop, byRoot);
+    expect(destinations).toEqual([...destinations].sort((a, b) => a - b));
+  });
+
+  it("tiles the whole of the emptying rail's edge, top to bottom", () => {
+    const byRoot = sortBy((flow: FlowBand) => flow.srcTop, [...geometry.flows]);
+    const first = byRoot[0];
+    const last = byRoot[byRoot.length - 1];
+    const railY = geometry.rails[0].y;
+    const width = geometry.rails[0].spans[0].width;
+    // Four people leaving a four-person rail: the roots span the proportional
+    // part of its width. The MIN_STROKE floor is what is left over, and it is
+    // absorbed by the taper to zero.
+    expect(round(last.srcBottom - first.srcTop)).toBe(
+      round(flowWidth(4, geometry.maxCount)),
+    );
+    expect(first.srcTop).toBeGreaterThanOrEqual(railY - width / 2 - 0.001);
+  });
+});
+
+describe("width conservation at a transition", () => {
+  it("rail before − flows out + flows in === rail after, within epsilon", () => {
+    const geometry = levelsRailGeometry({
+      levels: LEVELS,
+      transfers: TRANSFERS,
+      mutations: MUTATIONS,
+      domain: DOMAIN,
+    });
+    const l6 = geometry.rails[1];
+    const taper = flatMap((run: BandRun) => [...run.tapers], l6.runs)[0];
+    const leaving = flowWidth(2, geometry.maxCount);
+    expect(
+      Math.abs(taper.widthBefore - leaving - taper.widthAfter),
+    ).toBeLessThan(0.001);
   });
 });

@@ -10,13 +10,7 @@ import { fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
 import { LevelsTimeline } from "./LevelsTimeline";
-import {
-  type Level,
-  type Mutation,
-  type TimeDomain,
-  type Transfer,
-  levelsRailGeometry,
-} from "./geometry";
+import type { Level, Mutation, TimeDomain, Transfer } from "./geometry";
 import { map } from "../../fn";
 
 const DOMAIN: TimeDomain = [new Date("2025-01-01"), new Date("2026-01-01")];
@@ -26,7 +20,6 @@ const MUTATIONS: readonly Mutation[] = [
   { id: "m2", at: new Date("2025-07-01"), label: "2" },
   { id: "m3", at: new Date("2025-10-01"), label: "3" },
 ];
-
 
 const LEVELS: readonly Level[] = [
   {
@@ -88,47 +81,39 @@ describe("LevelsTimeline — rails", () => {
     expect(label).toContain("2 people moved from L6 to L7 at mutation 1.");
   });
 
-  it("draws one stroke per held span, each as thick as its headcount", () => {
+  it("draws each rail as a closed BAND, one per contiguous stretch", () => {
     const { container } = renderRails();
     const rails = container.querySelectorAll(".sui-levels-timeline__rail");
-    // 3 + 2 + 2 + 1 spans.
-    expect(rails).toHaveLength(8);
-    const widths = map(
-      (rail: Element) => Number(rail.getAttribute("stroke-width")),
-      [...rails],
-    );
-    for (const width of widths) expect(width).toBeGreaterThan(0);
+    // Four levels, none of them broken by an empty stretch — one band each.
+    expect(rails).toHaveLength(4);
+    for (const rail of rails) {
+      const d = rail.getAttribute("d") ?? "";
+      expect(d.startsWith("M ")).toBe(true);
+      expect(d.endsWith("Z")).toBe(true);
+      expect(d).toContain("C ");
+      expect(d).not.toContain("NaN");
+    }
   });
 
-  it("thins the source rail and thickens the destination across a raise", () => {
+  it("carries no stroke-width — a rail's thickness is its SHAPE now", () => {
+    // The width lives in the band's own outline. A stroke-width here would be
+    // a second, contradicting source of truth for the same number.
     const { container } = renderRails();
-    const widthsAt = (y: number) =>
-      map(
-        (rail: Element) => Number(rail.getAttribute("stroke-width")),
-        [
-          ...container.querySelectorAll(
-            `.sui-levels-timeline__rail[y1="${y}"]`,
-          ),
-        ],
-      );
-    const geometry = levelsRailGeometry({
-      levels: LEVELS,
-      transfers: TRANSFERS,
-      mutations: MUTATIONS,
-      domain: DOMAIN,
-    });
-    const [l6Before, l6After] = widthsAt(geometry.rails[1].y);
-    expect(l6After).toBeLessThan(l6Before);
-    const [l7Before, l7After] = widthsAt(geometry.rails[2].y);
-    expect(l7After).toBeGreaterThan(l7Before);
+    for (const rail of container.querySelectorAll(
+      ".sui-levels-timeline__rail",
+    )) {
+      expect(rail.getAttribute("stroke-width")).toBeNull();
+    }
   });
 
-  it("runs a flow ribbon between the two rails at the moment of the move", () => {
+  it("curves each flow instead of dropping a bare vertical", () => {
     const { container } = renderRails();
-    const ribbons = container.querySelectorAll(".sui-levels-timeline__ribbon");
-    expect(ribbons).toHaveLength(1);
-    expect(Number(ribbons[0].getAttribute("height"))).toBeGreaterThan(0);
-    expect(Number(ribbons[0].getAttribute("width"))).toBeGreaterThan(0);
+    const flows = container.querySelectorAll(".sui-levels-timeline__ribbon");
+    expect(flows).toHaveLength(1);
+    const d = flows[0].getAttribute("d") ?? "";
+    expect(d).toContain("C ");
+    expect(d.endsWith("Z")).toBe(true);
+    expect(d).not.toContain("NaN");
   });
 
   it("names each rail with the level's own short code", () => {
@@ -263,7 +248,12 @@ describe("LevelsTimeline — rails", () => {
 
   it("renders an empty rail chart rather than throwing", () => {
     const { container } = render(() => (
-      <LevelsTimeline levels={[]} transfers={[]} mutations={[]} domain={DOMAIN} />
+      <LevelsTimeline
+        levels={[]}
+        transfers={[]}
+        mutations={[]}
+        domain={DOMAIN}
+      />
     ));
     expect(
       container.querySelectorAll(".sui-levels-timeline__rail"),
@@ -315,8 +305,18 @@ describe("LevelsTimeline — departures and hires", () => {
   it("gives every instance its own mask ids, so stacked charts don't collide", () => {
     const { container } = render(() => (
       <>
-        <LevelsTimeline levels={LEVELS} transfers={OPEN} mutations={[]} domain={DOMAIN} />
-        <LevelsTimeline levels={LEVELS} transfers={OPEN} mutations={[]} domain={DOMAIN} />
+        <LevelsTimeline
+          levels={LEVELS}
+          transfers={OPEN}
+          mutations={[]}
+          domain={DOMAIN}
+        />
+        <LevelsTimeline
+          levels={LEVELS}
+          transfers={OPEN}
+          mutations={[]}
+          domain={DOMAIN}
+        />
       </>
     ));
     const ids = map(

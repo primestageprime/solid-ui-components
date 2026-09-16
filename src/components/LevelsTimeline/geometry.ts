@@ -34,7 +34,7 @@
 // ============================================
 import { clamp } from "../../internal/math/clamp";
 import { monthlyCells } from "../DateAxis/cells";
-import { filter, map, sortBy } from "../../fn";
+import { filter, find, flatMap, join, map, sortBy } from "../../fn";
 
 /** A moment, as the consumer prefers to express it. */
 export type TimeValue = Date | number;
@@ -190,11 +190,7 @@ const asDate = (at: TimeValue): Date =>
   typeof at === "number" ? new Date(at) : at;
 
 const placeFlag = (mutation: Mutation, x: number): Flag => {
-  const boxX = clamp(
-    x - FLAG_BOX_WIDTH / 2,
-    0,
-    VIEW_WIDTH - FLAG_BOX_WIDTH,
-  );
+  const boxX = clamp(x - FLAG_BOX_WIDTH / 2, 0, VIEW_WIDTH - FLAG_BOX_WIDTH);
   return {
     id: mutation.id,
     label: mutation.label,
@@ -298,6 +294,8 @@ export interface Rail {
   /** 1-based position in the CONSUMER's order — the `--sui-series-N` index. */
   readonly seriesIndex: number;
   readonly spans: readonly RailSpan[];
+  /** The closed bands this rail paints as — one per contiguous stretch. */
+  readonly runs: readonly BandRun[];
   /**
    * Where the level's own short label sits: just above the rail's LEFT END,
    * wherever that is. A level that appears mid-chart carries its label in with
@@ -305,23 +303,6 @@ export interface Rail {
    * `undefined` when nobody ever holds the level, so there is nothing to name.
    */
   readonly labelAt?: Point;
-}
-
-/** A flow between two rails: a vertical ribbon at one x. */
-export interface Ribbon {
-  readonly key: string;
-  readonly kind: FlowKind;
-  readonly fromId?: string;
-  readonly toId?: string;
-  readonly count: number;
-  readonly x: number;
-  /** The source rail's y. */
-  readonly y1: number;
-  /** The destination rail's y. */
-  readonly y2: number;
-  readonly width: number;
-  /** The source level's 1-based token index — a flow wears its ORIGIN's tone. */
-  readonly seriesIndex: number;
 }
 
 /** A thin rule at a change no numbered flag already marks. */
@@ -335,7 +316,7 @@ export interface LevelsRailGeometry {
   /** The largest headcount anywhere — the denominator of every width. */
   readonly maxCount: number;
   readonly rails: readonly Rail[];
-  readonly ribbons: readonly Ribbon[];
+  readonly flows: readonly FlowBand[];
   readonly droplines: readonly Dropline[];
   readonly flags: readonly Flag[];
   readonly ticks: readonly MonthTick[];
@@ -426,52 +407,6 @@ export const railSpans = (
     });
   }
   return spans;
-};
-
-/**
- * The flows. A ribbon wears its SOURCE's tone: the reader is watching a
- * quantity leave one rail, and it is the departure that needs explaining.
- * A transfer naming a level the chart does not have is dropped rather than
- * drawn to nowhere.
- */
-export const transferRibbons = (
-  transfers: readonly Transfer[],
-  levels: readonly Level[],
-  xScale: (at: TimeValue) => number,
-  yScale: (value: number) => number,
-  maxCount: number,
-): readonly Ribbon[] => {
-  const indexById = new Map(
-    map((level: Level, index: number) => [level.id, index] as const, levels),
-  );
-  const yOf = (id: string): number | undefined => {
-    const index = indexById.get(id);
-    return index === undefined ? undefined : yScale(levels[index].value);
-  };
-  const ordered = sortBy(
-    (transfer: Transfer) => timeOf(transfer.at),
-    transfers,
-  );
-  const ribbons: Ribbon[] = [];
-  for (const transfer of ordered) {
-    const placed = placeFlow(transfer, yOf, indexById);
-    if (placed === undefined) continue;
-    ribbons.push({
-      key: `${transfer.from ?? "out"}-${transfer.to ?? "out"}-${timeOf(
-        transfer.at,
-      )}`,
-      kind: placed.kind,
-      fromId: transfer.from,
-      toId: transfer.to,
-      count: transfer.count,
-      x: xScale(transfer.at),
-      y1: placed.y1,
-      y2: placed.y2,
-      width: strokeFor(transfer.count, maxCount),
-      seriesIndex: placed.seriesIndex,
-    });
-  }
-  return ribbons;
 };
 
 /**
@@ -608,8 +543,7 @@ export const axisTicks = (
   domain: TimeDomain,
   xScale: (at: TimeValue) => number,
 ): readonly MonthTick[] =>
-  monthlyCells(asDate(domain[0]), asDate(domain[1])).length >
-  MONTHLY_TICK_LIMIT
+  monthlyCells(asDate(domain[0]), asDate(domain[1])).length > MONTHLY_TICK_LIMIT
     ? yearTicks(domain, xScale)
     : monthTicks(domain, xScale);
 
@@ -621,6 +555,561 @@ const railLabelAt = (spans: readonly RailSpan[]): Point | undefined => {
   const first = spans[0];
   if (first === undefined) return undefined;
   return { x: first.x1 + 2, y: first.y - first.width / 2 - RAIL_LABEL_GAP };
+};
+
+/** One level, placed: its spans, the bands they paint as, and its label spot. */
+const railFor = (
+  level: Level,
+  index: number,
+  spans: readonly RailSpan[],
+  yScale: (value: number) => number,
+): Rail => {
+  const rail: Rail = {
+    id: level.id,
+    label: level.label,
+    value: level.value,
+    y: yScale(level.value),
+    seriesIndex: index + 1,
+    spans,
+    runs: [],
+    labelAt: railLabelAt(spans),
+  };
+  // `railRuns` reads only `spans`, so the two-step is safe and keeps the
+  // band-building in one place rather than duplicated into this constructor.
+  return { ...rail, runs: railRuns(rail) };
+};
+
+const allCounts = (
+  levels: readonly Level[],
+  transfers: readonly Transfer[],
+): readonly number[] => {
+  const counts: number[] = [];
+  for (const level of levels) {
+    for (const point of level.points) counts.push(point.count);
+  }
+  for (const transfer of transfers) counts.push(transfer.count);
+  return counts;
+};
+
+// ============================================================================
+// The SANKEY pass (Peter, 2026-09-16: "accurate, but clunky. I want the
+// corners to curve and blend into each other in a smooth way").
+//
+// Nothing about the MODEL changes here — same levels, same transfers, same
+// props. What changes is that the chart stops being drawn with strokes and
+// starts being drawn with BANDS, so a width change is a taper rather than a
+// step and a flow grows out of a rail's own edge rather than crossing it.
+//
+//   • A rail is a closed filled band. Its top and bottom edges are straight
+//     runs joined by short cubics at every count change.
+//   • A flow is a closed band too, bounded by two cubics with HORIZONTAL
+//     tangents at both ends, so it leaves and arrives flush with the rails.
+//   • Every transition — a count change, a rail starting, a rail emptying, a
+//     flow's root — happens over the SAME transition width, centred on the
+//     change x. That shared constant is what makes the pieces blend rather
+//     than merely touch.
+//
+// WIDTH CONSERVATION is exact, and it is why `flowWidth` exists beside
+// `strokeFor`. `strokeFor` is AFFINE — `MIN_STROKE + count·k` — because one
+// person must stay visible on a chart whose maximum is a hundred. An affine
+// scale cannot conserve: the floor would be counted once per band. So a FLOW
+// is measured on the proportional part alone, `count·k`, which is exactly the
+// difference between two rail widths:
+//
+//     strokeFor(a) − flowWidth(c) === strokeFor(a − c)      exactly, not nearly
+//
+// The one place it does not hold is a rail emptying to nothing: the
+// `MIN_STROKE` floor has to go somewhere, and it is absorbed by the taper to
+// zero. That is a legibility allowance, not a modelling claim, and it is
+// confined to a band already on its way out.
+// ============================================================================
+
+/** The transition width, as a fraction of the plot. Sankey-ish, not fussy. */
+export const TRANSITION_FRACTION = 0.05;
+/** Narrow enough to stay a join rather than a journey… */
+export const MIN_TRANSITION = 10;
+/** …and wide enough that the curve reads as a curve. */
+export const MAX_TRANSITION = 28;
+
+/** How wide every blend is, for this plot. One number, shared by everything. */
+export const transitionWidth = (): number =>
+  clamp(
+    (PLOT_RIGHT - PLOT_LEFT) * TRANSITION_FRACTION,
+    MIN_TRANSITION,
+    MAX_TRANSITION,
+  );
+
+/** Thickness per person — the PROPORTIONAL part of the rail width scale. */
+export const perPersonWidth = (maxCount: number): number =>
+  maxCount <= 0 ? 0 : (MAX_STROKE - MIN_STROKE) / maxCount;
+
+/**
+ * A flow's thickness: exactly the difference it makes to a rail's width.
+ * See the conservation note above for why this is not `strokeFor`.
+ */
+export const flowWidth = (count: number, maxCount: number): number =>
+  Math.max(0, count) * perPersonWidth(maxCount);
+
+/** Round to 3dp — a path string is read by humans in tests, not just parsers. */
+const round3 = (n: number): number => Math.round(n * 1000) / 1000;
+
+/**
+ * One point on a band's edge. `curved` means it is reached from the previous
+ * point by a cubic with horizontal tangents rather than by a straight line.
+ */
+export interface EdgePoint {
+  readonly x: number;
+  readonly y: number;
+  readonly curved: boolean;
+}
+
+/**
+ * A cubic with HORIZONTAL tangents at both ends: both control points sit at
+ * their own endpoint's y, half the span apart in x. That is the whole of the
+ * Sankey look — a band leaves flat and arrives flat, so it blends into a
+ * horizontal rail instead of meeting it at an angle.
+ *
+ * Because the construction is symmetric, the same two points traversed the
+ * other way give the mirror-image curve — which is what lets a band's bottom
+ * edge be walked backwards to close the shape.
+ */
+export const hCurve = (
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): string => {
+  const mid = (x0 + x1) / 2;
+  return `C ${round3(mid)} ${round3(y0)}, ${round3(mid)} ${round3(y1)}, ${round3(x1)} ${round3(y1)}`;
+};
+
+/** An edge walked forwards, without its opening `M`. */
+const forwardEdge = (points: readonly EdgePoint[]): string => {
+  const parts: string[] = [];
+  for (const [index, point] of points.entries()) {
+    if (index === 0) continue;
+    const previous = points[index - 1];
+    parts.push(
+      point.curved
+        ? hCurve(previous.x, previous.y, point.x, point.y)
+        : `L ${round3(point.x)} ${round3(point.y)}`,
+    );
+  }
+  return join(" ", parts);
+};
+
+/** The same edge walked backwards. A segment keeps the curvedness of its END. */
+const reverseEdge = (points: readonly EdgePoint[]): string => {
+  const parts: string[] = [];
+  for (let index = points.length - 1; index > 0; index -= 1) {
+    const from = points[index];
+    const to = points[index - 1];
+    parts.push(
+      from.curved
+        ? hCurve(from.x, from.y, to.x, to.y)
+        : `L ${round3(to.x)} ${round3(to.y)}`,
+    );
+  }
+  return join(" ", parts);
+};
+
+/**
+ * Close a band from its two edges: down the top, across, back along the
+ * bottom, across again. Both crossings are single lines — at a flush end they
+ * are the vertical cap, and at a tapered end the two edges have converged on
+ * one point and the line is a no-op.
+ */
+export const bandPath = (
+  top: readonly EdgePoint[],
+  bottom: readonly EdgePoint[],
+): string => {
+  if (top.length === 0 || bottom.length === 0) return "";
+  const last = bottom[bottom.length - 1];
+  return join(" ", [
+    `M ${round3(top[0].x)} ${round3(top[0].y)}`,
+    forwardEdge(top),
+    `L ${round3(last.x)} ${round3(last.y)}`,
+    reverseEdge(bottom),
+    "Z",
+  ]);
+};
+
+/** One blend on a rail: where it is, how wide, and the two widths it joins. */
+export interface Taper {
+  readonly x: number;
+  /** Half the transition, already shortened if a neighbouring change is close. */
+  readonly half: number;
+  readonly widthBefore: number;
+  readonly widthAfter: number;
+}
+
+/** A contiguous stretch of a rail, as one closed band. */
+export interface BandRun {
+  readonly path: string;
+  readonly tapers: readonly Taper[];
+  /** True where the run begins/ends mid-plot, and so tapers out of nothing. */
+  readonly startsOpen: boolean;
+  readonly endsOpen: boolean;
+}
+
+const CONTIGUITY_EPSILON = 0.001;
+
+/**
+ * Split a rail's spans into contiguous runs. A level that empties and comes
+ * back is two separate bands, not one band with a pinch — the gap is real, and
+ * drawing across it would invent a headcount nobody held.
+ */
+const contiguousRuns = (
+  spans: readonly RailSpan[],
+): readonly (readonly RailSpan[])[] => {
+  const runs: RailSpan[][] = [];
+  for (const span of spans) {
+    const current = runs[runs.length - 1];
+    const previous = current?.[current.length - 1];
+    if (
+      previous !== undefined &&
+      Math.abs(previous.x2 - span.x1) < CONTIGUITY_EPSILON
+    ) {
+      current.push(span);
+      continue;
+    }
+    runs.push([span]);
+  }
+  return runs;
+};
+
+/**
+ * Half-widths for every x a run has to blend at, shortened wherever two
+ * changes sit closer together than a full transition apart. Without this, two
+ * nearby count changes would each claim the same stretch of x and the band
+ * would fold over itself — and a consumer with a busy month is not doing
+ * anything wrong.
+ *
+ * A FLUSH end (one that reaches the plot edge) gets a half of zero: it is a
+ * straight vertical cap, not a blend, because the level did not start there —
+ * the chart simply stops looking.
+ */
+export const taperHalves = (
+  run: readonly RailSpan[],
+  startsOpen: boolean,
+  endsOpen: boolean,
+): readonly number[] => {
+  const base = transitionWidth() / 2;
+  const inner = map((span: RailSpan) => span.x2, run.slice(0, run.length - 1));
+  const stops = [run[0].x1, ...inner, run[run.length - 1].x2];
+  return map((x: number, index: number) => {
+    if (index === 0 && !startsOpen) return 0;
+    if (index === stops.length - 1 && !endsOpen) return 0;
+    const previous = stops[index - 1];
+    const next = stops[index + 1];
+    const room = [
+      base,
+      ...(previous === undefined ? [] : [(x - previous) / 2]),
+      ...(next === undefined ? [] : [(next - x) / 2]),
+    ];
+    return Math.max(0, Math.min(...room));
+  }, stops);
+};
+
+/**
+ * A rail as closed bands: one per contiguous run. Where a run starts or ends
+ * mid-plot it tapers out of (and into) zero width rather than stopping at a
+ * hard cap, which is what removes the last right angles from the picture.
+ */
+export const railRuns = (rail: Rail): readonly BandRun[] =>
+  map(
+    (run: readonly RailSpan[]) => bandRunFor(run),
+    contiguousRuns(rail.spans),
+  );
+
+const bandRunFor = (run: readonly RailSpan[]): BandRun => {
+  const startsOpen = run[0].x1 > PLOT_LEFT + CONTIGUITY_EPSILON;
+  const endsOpen = run[run.length - 1].x2 < PLOT_RIGHT - CONTIGUITY_EPSILON;
+  const halves = taperHalves(run, startsOpen, endsOpen);
+  const y = run[0].y;
+  const tapers = map(
+    (span: RailSpan, index: number) => ({
+      x: span.x2,
+      half: halves[index + 1],
+      widthBefore: span.width,
+      widthAfter: run[index + 1].width,
+    }),
+    run.slice(0, run.length - 1),
+  );
+
+  /** `sign` is −1 for the top edge, +1 for the bottom one. */
+  const edgeFor = (sign: number): readonly EdgePoint[] => {
+    const at = (width: number): number => y + (sign * width) / 2;
+    const points: EdgePoint[] = [];
+    const startHalf = halves[0];
+    if (startHalf > 0) {
+      points.push({ x: run[0].x1 - startHalf, y, curved: false });
+      points.push({
+        x: run[0].x1 + startHalf,
+        y: at(run[0].width),
+        curved: true,
+      });
+    } else {
+      points.push({ x: run[0].x1, y: at(run[0].width), curved: false });
+    }
+    for (const taper of tapers) {
+      points.push({
+        x: taper.x - taper.half,
+        y: at(taper.widthBefore),
+        curved: false,
+      });
+      points.push({
+        x: taper.x + taper.half,
+        y: at(taper.widthAfter),
+        curved: true,
+      });
+    }
+    const last = run[run.length - 1];
+    const endHalf = halves[halves.length - 1];
+    if (endHalf > 0) {
+      points.push({ x: last.x2 - endHalf, y: at(last.width), curved: false });
+      points.push({ x: last.x2 + endHalf, y, curved: true });
+    } else {
+      points.push({ x: last.x2, y: at(last.width), curved: false });
+    }
+    return points;
+  };
+
+  return {
+    path: bandPath(edgeFor(-1), edgeFor(1)),
+    tapers,
+    startsOpen,
+    endsOpen,
+  };
+};
+
+/** A flow, as a closed band rooted in the edges of the rails it joins. */
+export interface FlowBand {
+  readonly key: string;
+  readonly kind: FlowKind;
+  readonly count: number;
+  readonly seriesIndex: number;
+  /** The transition this flow spans. */
+  readonly x0: number;
+  readonly x1: number;
+  /** The root on the source rail's edge — or the open end, for a hire. */
+  readonly srcTop: number;
+  readonly srcBottom: number;
+  /** The root on the destination rail's edge — or the open end, for a departure. */
+  readonly dstTop: number;
+  readonly dstBottom: number;
+  readonly path: string;
+}
+
+const sameX = (a: number, b: number): boolean =>
+  Math.abs(a - b) < CONTIGUITY_EPSILON;
+
+/** A root slice on a rail's edge: [top, bottom]. */
+type Root = readonly [number, number];
+
+/**
+ * Allocate contiguous root slices along one edge of a rail.
+ *
+ * This is the Sankey trick, and the reason Track C's four-way fan does not
+ * tangle: slices are laid down in the order of the OTHER end's y. Flows
+ * heading up stack downwards from the top edge, topmost destination first;
+ * flows heading down stack upwards from the bottom edge. Two flows leaving one
+ * rail at one moment therefore cannot cross on the way out.
+ */
+const allocate = (
+  from: number,
+  direction: 1 | -1,
+  widths: readonly number[],
+): readonly Root[] => {
+  const roots: Root[] = [];
+  let cursor = from;
+  for (const width of widths) {
+    const next = cursor + direction * width;
+    roots.push(direction === 1 ? [cursor, next] : [next, cursor]);
+    cursor = next;
+  }
+  return roots;
+};
+
+/** Two-point edges make the simplest possible band: one cubic each way. */
+const flowPath = (x0: number, x1: number, src: Root, dst: Root): string =>
+  bandPath(
+    [
+      { x: x0, y: src[0], curved: false },
+      { x: x1, y: dst[0], curved: true },
+    ],
+    [
+      { x: x0, y: src[1], curved: false },
+      { x: x1, y: dst[1], curved: true },
+    ],
+  );
+
+/** Slide a root slice wholly inside the plot, keeping its width. */
+const rootIntoPlot = (root: Root): Root => {
+  const height = root[1] - root[0];
+  const top = clamp(root[0], PLOT_TOP, PLOT_BOTTOM - height);
+  return [top, top + height] as const;
+};
+
+/**
+ * Every flow as a band. Roots are taken from the rails' own edges, so a flow's
+ * width at each end is exactly the width its rail loses or gains there — the
+ * two shapes share their boundary points rather than being computed apart and
+ * hoped to line up.
+ */
+export const flowBands = (
+  transfers: readonly Transfer[],
+  rails: readonly Rail[],
+  xScale: (at: TimeValue) => number,
+  maxCount: number,
+): readonly FlowBand[] => {
+  const railById = new Map(
+    map((rail: Rail) => [rail.id, rail] as const, rails),
+  );
+  const tapersById = new Map(
+    map(
+      (rail: Rail) =>
+        [
+          rail.id,
+          flatMap((run: BandRun) => [...run.tapers], railRuns(rail)),
+        ] as const,
+      rails,
+    ),
+  );
+  const ordered = sortBy((one: Transfer) => timeOf(one.at), transfers);
+  const moments = sortBy(
+    (time: number) => time,
+    [...new Set(map((one: Transfer) => timeOf(one.at), ordered))],
+  );
+  const bands: FlowBand[] = [];
+
+  for (const moment of moments) {
+    const x = xScale(moment);
+    const here = filter((one: Transfer) => timeOf(one.at) === moment, ordered);
+    const srcRoot = new Map<number, Root>();
+    const dstRoot = new Map<number, Root>();
+    let half = transitionWidth() / 2;
+
+    for (const rail of rails) {
+      const ending = find((span: RailSpan) => sameX(span.x2, x), rail.spans);
+      const starting = find((span: RailSpan) => sameX(span.x1, x), rail.spans);
+      const widthBefore = ending?.width ?? 0;
+      const widthAfter = starting?.width ?? 0;
+      const taper = find(
+        (one: Taper) => sameX(one.x, x),
+        tapersById.get(rail.id) ?? [],
+      );
+      if (taper !== undefined) half = Math.min(half, taper.half);
+
+      /** Where the other end of this flow sits — an open end is just outside. */
+      const otherY = (one: Transfer, leaving: boolean): number => {
+        const otherId = leaving ? one.to : one.from;
+        if (otherId === undefined) {
+          return leaving ? rail.y + OPEN_FLOW_STUB : rail.y - OPEN_FLOW_STUB;
+        }
+        return railById.get(otherId)?.y ?? rail.y;
+      };
+      const widthOf = (index: number): number =>
+        flowWidth(here[index].count, maxCount);
+      const indices = map((_one: Transfer, index: number) => index, here);
+      const leavingHere = filter(
+        (index: number) => here[index].from === rail.id,
+        indices,
+      );
+      const arrivingHere = filter(
+        (index: number) => here[index].to === rail.id,
+        indices,
+      );
+
+      const up = (index: number): boolean => otherY(here[index], true) < rail.y;
+      const outUp = sortBy(
+        (i: number) => otherY(here[i], true),
+        filter(up, leavingHere),
+      );
+      const outDown = sortBy(
+        (i: number) => -otherY(here[i], true),
+        filter((i: number) => !up(i), leavingHere),
+      );
+      const fromAbove = (index: number): boolean =>
+        otherY(here[index], false) < rail.y;
+      const inTop = sortBy(
+        (i: number) => otherY(here[i], false),
+        filter(fromAbove, arrivingHere),
+      );
+      const inBottom = sortBy(
+        (i: number) => -otherY(here[i], false),
+        filter((i: number) => !fromAbove(i), arrivingHere),
+      );
+
+      const writeAll = (
+        target: Map<number, Root>,
+        order: readonly number[],
+        roots: readonly Root[],
+      ): void => {
+        for (const [slot, index] of order.entries()) {
+          target.set(index, roots[slot]);
+        }
+      };
+      writeAll(
+        srcRoot,
+        outUp,
+        allocate(rail.y - widthBefore / 2, 1, map(widthOf, outUp)),
+      );
+      writeAll(
+        srcRoot,
+        outDown,
+        allocate(rail.y + widthBefore / 2, -1, map(widthOf, outDown)),
+      );
+      writeAll(
+        dstRoot,
+        inTop,
+        allocate(rail.y - widthAfter / 2, 1, map(widthOf, inTop)),
+      );
+      writeAll(
+        dstRoot,
+        inBottom,
+        allocate(rail.y + widthAfter / 2, -1, map(widthOf, inBottom)),
+      );
+    }
+
+    const x0 = x - half;
+    const x1 = x + half;
+    for (const [index, one] of here.entries()) {
+      const placed = placeFlow(
+        one,
+        (id: string) => railById.get(id)?.y,
+        new Map(map((rail: Rail, i: number) => [rail.id, i] as const, rails)),
+      );
+      if (placed === undefined) continue;
+      const width = flowWidth(one.count, maxCount);
+      const src =
+        srcRoot.get(index) ??
+        rootIntoPlot([
+          (dstRoot.get(index)?.[0] ?? placed.y2) - OPEN_FLOW_STUB,
+          (dstRoot.get(index)?.[1] ?? placed.y2 + width) - OPEN_FLOW_STUB,
+        ]);
+      const dst =
+        dstRoot.get(index) ??
+        rootIntoPlot([
+          (srcRoot.get(index)?.[0] ?? placed.y1) + OPEN_FLOW_STUB,
+          (srcRoot.get(index)?.[1] ?? placed.y1 + width) + OPEN_FLOW_STUB,
+        ]);
+      bands.push({
+        key: `${one.from ?? "out"}-${one.to ?? "out"}-${moment}`,
+        kind: placed.kind,
+        count: one.count,
+        seriesIndex: placed.seriesIndex,
+        x0,
+        x1,
+        srcTop: src[0],
+        srcBottom: src[1],
+        dstTop: dst[0],
+        dstBottom: dst[1],
+        path: flowPath(x0, x1, src, dst),
+      });
+    }
+  }
+  return bands;
 };
 
 /** The whole rail observation: scales resolved, rails, flows, rules, flags. */
@@ -636,28 +1125,16 @@ export const levelsRailGeometry = (input: {
   const maxCount = maxCountOf(input.levels, input.transfers);
   const spansOf = (level: Level): readonly RailSpan[] =>
     railSpans(level, xScale, yScale, input.domain[1], maxCount);
+  const rails = map(
+    (level: Level, index: number) =>
+      railFor(level, index, spansOf(level), yScale),
+    input.levels,
+  );
   return {
     yDomain,
     maxCount,
-    rails: map(
-      (level: Level, index: number) => ({
-        id: level.id,
-        label: level.label,
-        value: level.value,
-        y: yScale(level.value),
-        seriesIndex: index + 1,
-        spans: spansOf(level),
-        labelAt: railLabelAt(spansOf(level)),
-      }),
-      input.levels,
-    ),
-    ribbons: transferRibbons(
-      input.transfers,
-      input.levels,
-      xScale,
-      yScale,
-      maxCount,
-    ),
+    rails,
+    flows: flowBands(input.transfers, rails, xScale, maxCount),
     droplines: droplinePositions(
       input.levels,
       input.transfers,
@@ -668,16 +1145,4 @@ export const levelsRailGeometry = (input: {
     flags: flagPositions(input.mutations, xScale),
     ticks: axisTicks(input.domain, xScale),
   };
-};
-
-const allCounts = (
-  levels: readonly Level[],
-  transfers: readonly Transfer[],
-): readonly number[] => {
-  const counts: number[] = [];
-  for (const level of levels) {
-    for (const point of level.points) counts.push(point.count);
-  }
-  for (const transfer of transfers) counts.push(transfer.count);
-  return counts;
 };
