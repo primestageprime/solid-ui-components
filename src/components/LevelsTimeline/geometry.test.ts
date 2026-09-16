@@ -30,6 +30,7 @@ import {
   type BandRun,
   type FlowBand,
   type Level,
+  type LevelRow,
   type Mutation,
   type Rail,
   type RailSpan,
@@ -47,7 +48,11 @@ import {
   fillWidth,
   flagPositions,
   hCurve,
+  hoverAt,
+  levelsAt,
   levelsRailGeometry,
+  snapToMonth,
+  timeAtX,
   maxCountIn,
   monthTicks,
   peakHeadcount,
@@ -61,6 +66,7 @@ import {
   transitionHalf,
   transitionWidth,
   valueDomainOf,
+  xScaleFor,
   yScaleFor,
 } from "./geometry";
 
@@ -1111,5 +1117,101 @@ describe("fill-height", () => {
         viewHeight: 480,
       }).perPerson,
     );
+  });
+});
+
+describe("levelsAt — the hover readout's rows", () => {
+  it("is every level holding anybody, highest pay first", () => {
+    const rows = levelsAt(LEVELS, utc("2025-08-01"));
+    expect(map((row: LevelRow) => row.label, rows)).toEqual([
+      "L8",
+      "L7",
+      "L6",
+      "L5",
+    ]);
+    expect(map((row: LevelRow) => row.count, rows)).toEqual([1, 4, 2, 4]);
+  });
+
+  it("leaves out a level nobody holds — a row of zero is noise", () => {
+    // L8 has nobody before 2025-07.
+    const rows = levelsAt(LEVELS, utc("2025-02-01"));
+    expect(map((row: LevelRow) => row.label, rows)).not.toContain("L8");
+  });
+
+  it("carries the pay through unformatted — that is the consumer's", () => {
+    const [top] = levelsAt(LEVELS, utc("2025-08-01"));
+    expect(top.value).toBe(10000);
+  });
+
+  it("is empty before anything starts, rather than throwing", () => {
+    expect(levelsAt(LEVELS, utc("2024-01-01"))).toEqual([]);
+    expect(levelsAt([], utc("2025-08-01"))).toEqual([]);
+  });
+});
+
+describe("timeAtX — the inverse scale", () => {
+  it("round-trips the domain ends", () => {
+    expect(timeAtX(DOMAIN, PLOT_LEFT)).toBe(timeOf(DOMAIN[0]));
+    expect(timeAtX(DOMAIN, PLOT_RIGHT)).toBe(timeOf(DOMAIN[1]));
+  });
+
+  it("round-trips a date through both scales", () => {
+    const x = xScaleFor(DOMAIN);
+    const at = timeOf(utc("2025-07-01"));
+    expect(Math.round(timeAtX(DOMAIN, x(at)) / 1000)).toBe(Math.round(at / 1000));
+  });
+
+  it("clamps outside the plot rather than extrapolating", () => {
+    expect(timeAtX(DOMAIN, -500)).toBe(timeOf(DOMAIN[0]));
+    expect(timeAtX(DOMAIN, 9999)).toBe(timeOf(DOMAIN[1]));
+  });
+
+  it("reads a zero-width domain as its start instead of NaN", () => {
+    expect(timeAtX([5, 5], 300)).toBe(5);
+  });
+});
+
+describe("snapToMonth", () => {
+  const day = (time: number) => new Date(time).toISOString().slice(0, 10);
+
+  it("snaps back to the month it is in when that is nearer", () => {
+    expect(day(snapToMonth(timeOf(utc("2025-07-05"))))).toBe("2025-07-01");
+  });
+
+  it("snaps forward to the next month when THAT is nearer", () => {
+    expect(day(snapToMonth(timeOf(utc("2025-07-28"))))).toBe("2025-08-01");
+  });
+
+  it("leaves a boundary exactly where it is", () => {
+    expect(day(snapToMonth(timeOf(utc("2025-07-01"))))).toBe("2025-07-01");
+  });
+
+  it("crosses a year boundary the same way", () => {
+    expect(day(snapToMonth(timeOf(utc("2025-12-28"))))).toBe("2026-01-01");
+  });
+});
+
+describe("hoverAt", () => {
+  const x = xScaleFor(DOMAIN);
+
+  it("puts the crosshair on the SNAPPED date, not under the pointer", () => {
+    // A rule landing between two months would invite the reader to believe
+    // the table describes the gap.
+    const pointer = x(utc("2025-07-05"));
+    const hover = hoverAt(LEVELS, DOMAIN, pointer);
+    expect(hover.x).toBe(x(utc("2025-07-01")));
+    expect(hover.x).not.toBe(pointer);
+  });
+
+  it("reports the rows for the snapped date", () => {
+    const hover = hoverAt(LEVELS, DOMAIN, x(utc("2025-08-10")));
+    expect(new Date(hover.at).toISOString().slice(0, 10)).toBe("2025-08-01");
+    expect(hover.rows).toHaveLength(4);
+  });
+
+  it("never leaves the domain, even snapping past its end", () => {
+    const hover = hoverAt(LEVELS, DOMAIN, PLOT_RIGHT);
+    expect(hover.at).toBeLessThanOrEqual(timeOf(DOMAIN[1]));
+    expect(hover.x).toBeLessThanOrEqual(PLOT_RIGHT);
   });
 });

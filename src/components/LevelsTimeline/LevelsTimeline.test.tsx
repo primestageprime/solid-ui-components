@@ -484,3 +484,118 @@ describe("LevelsTimeline — fill-height", () => {
     expect(Number(axisLabel?.getAttribute("y"))).toBeLessThanOrEqual(viewHeight);
   });
 });
+
+describe("LevelsTimeline — hover and pick", () => {
+  /** jsdom gives every element a zero-size box, so fake the one we measure. */
+  const withPlotBox = (run: () => void) => {
+    const original = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function rect(this: Element) {
+      return this.tagName.toLowerCase() === "svg"
+        ? ({ left: 0, top: 0, width: 640, height: 232 } as DOMRect)
+        : ({ left: 0, top: 0, width: 0, height: 0 } as DOMRect);
+    };
+    try {
+      run();
+    } finally {
+      Element.prototype.getBoundingClientRect = original;
+    }
+  };
+
+  const surfaceOf = (container: HTMLElement) =>
+    container.querySelector(".sui-levels-timeline__surface") as Element;
+
+  it("offers no pick cursor when the consumer cannot pick", () => {
+    const { container } = renderRails();
+    expect(surfaceOf(container).getAttribute("class")).not.toContain(
+      "--pickable",
+    );
+  });
+
+  it("fires onPick with the SNAPPED date, not the raw pointer date", () => {
+    const onPick = vi.fn();
+    let container!: HTMLElement;
+    withPlotBox(() => {
+      container = render(() => (
+        <LevelsTimeline
+          levels={LEVELS}
+          transfers={TRANSFERS}
+          mutations={MUTATIONS}
+          domain={DOMAIN}
+          onPick={onPick}
+        />
+      )).container;
+      // Half way across a one-year domain lands in early July.
+      fireEvent.click(surfaceOf(container), { clientX: 320, clientY: 100 });
+    });
+    expect(onPick).toHaveBeenCalledTimes(1);
+    const at = onPick.mock.calls[0][0] as number;
+    expect(new Date(at).toISOString().slice(0, 10)).toBe("2025-07-01");
+    expect(surfaceOf(container).getAttribute("class")).toContain("--pickable");
+  });
+
+  it("does not fire onPick when a flag is clicked — that is selection", () => {
+    const onPick = vi.fn();
+    const onSelect = vi.fn();
+    const { getAllByRole } = render(() => (
+      <LevelsTimeline
+        levels={LEVELS}
+        transfers={TRANSFERS}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+        onPick={onPick}
+        onSelectMutation={onSelect}
+      />
+    ));
+    fireEvent.click(getAllByRole("button")[0]);
+    expect(onSelect).toHaveBeenCalledWith("m1");
+    expect(onPick).not.toHaveBeenCalled();
+  });
+
+  it("shows a crosshair and a table of pay against headcount on hover", () => {
+    let container!: HTMLElement;
+    withPlotBox(() => {
+      container = render(() => (
+        <LevelsTimeline
+          levels={LEVELS}
+          transfers={TRANSFERS}
+          mutations={MUTATIONS}
+          domain={DOMAIN}
+          formatValue={(value) => `$${value / 1000}k`}
+        />
+      )).container;
+      fireEvent.pointerMove(surfaceOf(container), {
+        clientX: 400,
+        clientY: 100,
+      });
+    });
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__crosshair"),
+    ).toHaveLength(1);
+    const cells = map(
+      (el: Element) => el.textContent,
+      [...container.querySelectorAll(".sui-levels-timeline__panel-cell")],
+    );
+    // Highest pay first, and the consumer's formatter used for the pay column.
+    expect(cells[0]).toBe("$10k");
+    // x=400 of 640 is ~63% across a one-year domain — late August, which
+    // snaps FORWARD to September because that boundary is nearer.
+    expect(
+      container.querySelector(".sui-levels-timeline__panel-date")?.textContent,
+    ).toBe("Sep 2025");
+  });
+
+  it("clears the readout when the pointer leaves the plot", () => {
+    let container!: HTMLElement;
+    withPlotBox(() => {
+      container = renderRails().container;
+      fireEvent.pointerMove(surfaceOf(container), {
+        clientX: 400,
+        clientY: 100,
+      });
+      fireEvent.pointerLeave(surfaceOf(container));
+    });
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__crosshair"),
+    ).toHaveLength(0);
+  });
+});

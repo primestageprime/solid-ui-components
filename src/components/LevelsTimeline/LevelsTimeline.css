@@ -169,3 +169,61 @@
   outline: 2px solid var(--sui-border-focus);
   outline-offset: 2px;
 }
+
+/* ---- Hover and pick ----
+
+   The surface covers the PLOT only, never the flag band, so it cannot swallow
+   a flag click. It is transparent rather than absent because an SVG shape with
+   no fill takes no pointer events at all. */
+
+.sui-levels-timeline__surface {
+  fill: transparent;
+  stroke: none;
+}
+
+/* Only a chart that can be picked says so. A crosshair cursor on a readout
+   nobody can click is a promise the component does not keep. */
+.sui-levels-timeline__surface--pickable {
+  cursor: crosshair;
+}
+
+/* The crosshair. A dropline that follows the pointer — same vocabulary, so it
+   reads as "here" rather than as a fifth kind of mark. Brighter than a
+   dropline because it is live, and it must never swallow the pointer. */
+.sui-levels-timeline__crosshair {
+  stroke: var(--sui-text-primary);
+  stroke-width: 1;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.sui-levels-timeline__hover {
+  pointer-events: none;
+}
+
+.sui-levels-timeline__panel-box {
+  fill: var(--sui-bg-elevated);
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+
+.sui-levels-timeline__panel-date {
+  fill: var(--sui-text-muted);
+  stroke: none;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.sui-levels-timeline__panel-cell {
+  fill: var(--sui-text-primary);
+  stroke: none;
+  font-size: 9px;
+}
+
+/* The headcount column is the one the eye scans down, so it is the emphatic
+   one; the pay figure identifies the row. */
+.sui-levels-timeline__panel-cell--count {
+  font-weight: 700;
+  text-anchor: end;
+}

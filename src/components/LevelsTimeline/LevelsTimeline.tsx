@@ -40,7 +40,9 @@
 // ============================================
 import {
   For,
+  Show,
   type Component,
+  createEffect,
   createMemo,
   createSignal,
   createUniqueId,
@@ -51,6 +53,7 @@ import {
   AXIS_TICK_LENGTH,
   FLAG_RULE_TOP,
   PLOT_LEFT,
+  PLOT_TOP,
   PLOT_RIGHT,
   VIEW_HEIGHT,
   VIEW_WIDTH,
@@ -58,12 +61,17 @@ import {
   type Flag,
   type Level,
   type Mutation,
+  type TimeValue,
   type FlowBand,
+  type Hover,
   type TimeDomain,
   type Transfer,
+  hoverAt,
   levelsRailGeometry,
+  monthLabelOf,
   timeOf,
 } from "./geometry";
+import { placeTooltipX } from "../Chart/tooltipPlacement";
 import { filter, find, join, map, sortBy } from "../../fn";
 import { observeSize } from "../../internal/dom/observeSize";
 import "./LevelsTimeline.css";
@@ -86,9 +94,32 @@ export interface LevelsTimelineProps {
   selectedMutationId?: string;
   /** Provided => the flags become buttons. Omitted => the chart is a readout. */
   onSelectMutation?: (id: string) => void;
+  /**
+   * Formatter for the pay figure in the hover readout. The chart never invents
+   * a format — without this the raw number is shown, which is honest but
+   * rarely what a consumer wants.
+   */
+  formatValue?: (value: number) => string;
+  /**
+   * Provided => clicking the plot reports the date under the pointer, snapped
+   * to the nearest month. The chart does nothing else with it: adding a
+   * mutation, moving an as-of, or ignoring it is the consumer's business.
+   *
+   * NOT fired by a flag click — those are `onSelectMutation`, and the flags sit
+   * above the plot so the two never compete for the same pixel.
+   */
+  onPick?: (at: TimeValue) => void;
 }
 
 const EMPTY_TRANSFERS: readonly Transfer[] = [];
+
+/** The hover readout's own box. Fixed in viewBox units, like all the chrome. */
+const PANEL_PADDING = 5;
+const PANEL_ROW_HEIGHT = 11;
+const PANEL_HEADER_HEIGHT = 15;
+const PANEL_OFFSET = 10;
+const PANEL_MIN_WIDTH = 74;
+/** Enough room for a pay figure plus a headcount, before measurement. */
 
 /** `1 person`, `3 people`. The announcement is prose; it has to read as prose. */
 const headcount = (count: number): string =>
@@ -246,6 +277,76 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
   const select = (flag: Flag): void => props.onSelectMutation?.(flag.id);
 
+  // ── hover and pick ─────────────────────────────────────────────────────────
+  //
+  // The Chart package's `Crosshair` and `ChartTooltip` slots both call
+  // `useChart()`, and this component is not inside a `<Chart>` — so per ADR
+  // 0010 the answer is the CORE plus an adapter here, which is what this is.
+  // `tooltipPlacement` is reused verbatim; `crosshairMark` is not, because its
+  // value is the DOT list and this crosshair is a bare rule with no dots.
+  //
+  // The SUI `Tooltip` is the wrong shape too: it wraps a trigger ELEMENT, and
+  // the trigger here is a moving pointer position inside an SVG.
+  const [hover, setHover] = createSignal<Hover | undefined>();
+  const [panelWidth, setPanelWidth] = createSignal(PANEL_MIN_WIDTH);
+  let panel: SVGGElement | undefined;
+
+  const pointerX = (event: PointerEvent | MouseEvent): number | undefined => {
+    const svg = (event.currentTarget as SVGGraphicsElement).ownerSVGElement;
+    const box = svg?.getBoundingClientRect();
+    if (box === undefined || box.width === 0) return undefined;
+    return ((event.clientX - box.left) / box.width) * VIEW_WIDTH;
+  };
+
+  const onPlotMove = (event: PointerEvent): void => {
+    const x = pointerX(event);
+    if (x === undefined) return;
+    setHover(hoverAt(props.levels, props.domain, x));
+  };
+
+  const onPlotClick = (event: MouseEvent): void => {
+    if (props.onPick === undefined) return;
+    const x = pointerX(event);
+    if (x === undefined) return;
+    props.onPick(hoverAt(props.levels, props.domain, x).at);
+  };
+
+  /**
+   * Measure the readout before placing it — `placeTooltipX` takes a MEASURED
+   * width, and its own header says measuring is the adapter's job, since the
+   * adapter is the side that owns a DOM node. Re-measured whenever the rows
+   * change, deferred a microtask so the new text is in the DOM first.
+   *
+   * `getBBox` is absent in jsdom, so the fallback is the minimum width. That
+   * is correct rather than merely safe: a panel narrower than its content
+   * would be placed slightly wrong, never drawn wrong.
+   */
+  const measurePanel = (): void => {
+    if (panel === undefined) return;
+    const width = panel.getBBox?.().width ?? 0;
+    setPanelWidth(Math.max(PANEL_MIN_WIDTH, width + PANEL_PADDING * 2));
+  };
+  createEffect(() => {
+    hover();
+    queueMicrotask(measurePanel);
+  });
+
+  const panelX = (at: Hover): number =>
+    placeTooltipX({
+      anchorX: at.x,
+      tipWidth: panelWidth(),
+      offsetX: PANEL_OFFSET,
+      boundsLeft: PLOT_LEFT,
+      boundsRight: PLOT_RIGHT,
+    });
+
+  const formatValue = (value: number): string =>
+    props.formatValue?.(value) ?? String(value);
+
+  /** `1 person` / `3 people`, reused from the announcement. */
+  const panelHeight = (rows: number): number =>
+    PANEL_HEADER_HEIGHT + rows * PANEL_ROW_HEIGHT + PANEL_PADDING;
+
   const onFlagKeyDown = (event: KeyboardEvent, flag: Flag): void => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
@@ -374,6 +475,87 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             )}
           </For>
         </g>
+
+        {/* The hover surface. It covers the PLOT only, so it can never
+            swallow a flag click — the flags sit above `PLOT_TOP`. Transparent
+            rather than absent, because an SVG with no fill takes no pointer
+            events at all. */}
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: hover readout and an optional date pick on a data surface; the keyboard path to the same information is the flags, which are real buttons, and the announcement, which carries every headcount. */}
+        <rect
+          class={join(" ", [
+            "sui-levels-timeline__surface",
+            props.onPick === undefined
+              ? ""
+              : "sui-levels-timeline__surface--pickable",
+          ])}
+          x={PLOT_LEFT}
+          y={PLOT_TOP}
+          width={PLOT_RIGHT - PLOT_LEFT}
+          height={frame().plotBottom - PLOT_TOP}
+          onPointerMove={onPlotMove}
+          onPointerLeave={() => setHover(undefined)}
+          onClick={onPlotClick}
+        />
+
+        <Show when={hover()}>
+          {(at) => (
+            <g class="sui-levels-timeline__hover">
+              {/* The crosshair. Crisp like a dropline, but following the
+                  pointer — and sitting on the SNAPPED date, not under the
+                  pointer, so it never lands between two months. */}
+              <line
+                class="sui-levels-timeline__crosshair"
+                x1={at().x}
+                x2={at().x}
+                y1={FLAG_RULE_TOP}
+                y2={frame().plotBottom}
+              />
+              <Show when={at().rows.length > 0}>
+                <g
+                  ref={panel}
+                  class="sui-levels-timeline__panel"
+                  transform={`translate(${panelX(at())} ${PLOT_TOP})`}
+                >
+                  <rect
+                    class="sui-levels-timeline__panel-box"
+                    x={0}
+                    y={0}
+                    width={panelWidth()}
+                    height={panelHeight(at().rows.length)}
+                    rx="3"
+                  />
+                  <text
+                    class="sui-levels-timeline__panel-date"
+                    x={PANEL_PADDING}
+                    y={PANEL_PADDING + 7}
+                  >
+                    {monthLabelOf(at().at)}
+                  </text>
+                  <For each={at().rows}>
+                    {(row, index) => (
+                      <>
+                        <text
+                          class="sui-levels-timeline__panel-cell"
+                          x={PANEL_PADDING}
+                          y={PANEL_HEADER_HEIGHT + index() * PANEL_ROW_HEIGHT + 7}
+                        >
+                          {formatValue(row.value)}
+                        </text>
+                        <text
+                          class="sui-levels-timeline__panel-cell sui-levels-timeline__panel-cell--count"
+                          x={panelWidth() - PANEL_PADDING}
+                          y={PANEL_HEADER_HEIGHT + index() * PANEL_ROW_HEIGHT + 7}
+                        >
+                          {row.count}
+                        </text>
+                      </>
+                    )}
+                  </For>
+                </g>
+              </Show>
+            </g>
+          )}
+        </Show>
 
         {/* The flags. Buttons when the consumer wants selection, plain marks
             otherwise — a chart nobody can drive should not advertise a

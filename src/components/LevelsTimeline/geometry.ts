@@ -1180,3 +1180,102 @@ export const axisTicks = (
   monthlyCells(asDate(domain[0]), asDate(domain[1])).length > MONTHLY_TICK_LIMIT
     ? yearTicks(domain, xScale)
     : monthTicks(domain, xScale);
+
+// ── hover and pick ───────────────────────────────────────────────────────────
+
+/** One row of the hover readout: what a level held at the hovered date. */
+export interface LevelRow {
+  readonly levelId: string;
+  readonly label: string;
+  readonly value: number;
+  readonly count: number;
+}
+
+/**
+ * What every level held at one moment, highest pay first, empties omitted.
+ *
+ * Ordered by pay rather than by the consumer's own order because the reader is
+ * looking at a vertical stack and expects the table to read the same way down.
+ * A level nobody holds is left out entirely — a table of zeroes is noise, and
+ * the picture does not draw them either.
+ */
+export const levelsAt = (
+  levels: readonly Level[],
+  at: TimeValue,
+): readonly LevelRow[] => {
+  const time = timeOf(at);
+  const rows = map(
+    (level: Level) => ({
+      levelId: level.id,
+      label: level.label,
+      value: level.value,
+      count: countAt(level, time),
+    }),
+    sortBy((level: Level) => -level.value, levels),
+  );
+  return filter((row: LevelRow) => row.count > 0, rows);
+};
+
+/** x → time. The inverse of `xScaleFor`, clamped to the domain. */
+export const timeAtX = (domain: TimeDomain, x: number): number => {
+  const start = timeOf(domain[0]);
+  const end = timeOf(domain[1]);
+  const span = end - start;
+  if (span <= 0) return start;
+  const fraction = clamp(
+    (x - PLOT_LEFT) / (PLOT_RIGHT - PLOT_LEFT),
+    0,
+    1,
+  );
+  return start + fraction * span;
+};
+
+/**
+ * The month boundary nearest `time`.
+ *
+ * MONTH precision, deliberately: the chart's own axis is months or years, the
+ * levels change on month boundaries in every fixture anybody has shown it, and
+ * a readout that said "14 March" while the picture only resolves months would
+ * be claiming precision the chart has not got. It also makes the hover land on
+ * the same dates a consumer would create a mutation at, which is the point of
+ * `onPick`.
+ */
+export const snapToMonth = (time: number): number => {
+  const at = new Date(time);
+  const start = Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), 1);
+  const next = Date.UTC(at.getUTCFullYear(), at.getUTCMonth() + 1, 1);
+  return time - start <= next - time ? start : next;
+};
+
+/** `Jul 2025` — the readout's own header. Short, and month-precise like the snap. */
+export const monthLabelOf = (time: number): string => {
+  const at = new Date(time);
+  return `${MONTH_LABELS[at.getUTCMonth()]} ${at.getUTCFullYear()}`;
+};
+
+/** Everything the hover readout needs, from one pointer x. */
+export interface Hover {
+  /** The snapped date. This is also what `onPick` reports. */
+  readonly at: number;
+  /** Where the crosshair is drawn — the snapped date's own x, not the pointer's. */
+  readonly x: number;
+  readonly rows: readonly LevelRow[];
+}
+
+/**
+ * Resolve a pointer x into a hover. The crosshair sits at the SNAPPED date's
+ * x, not under the pointer: a rule that lands between two months would invite
+ * the reader to believe the table describes the gap.
+ */
+export const hoverAt = (
+  levels: readonly Level[],
+  domain: TimeDomain,
+  x: number,
+): Hover => {
+  const at = clamp(
+    snapToMonth(timeAtX(domain, x)),
+    timeOf(domain[0]),
+    timeOf(domain[1]),
+  );
+  return { at, x: xScaleFor(domain)(at), rows: levelsAt(levels, at) };
+};

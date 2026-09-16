@@ -52,6 +52,7 @@ import type {
   Level,
   Mutation,
   TimeDomain,
+  TimeValue,
   Transfer,
 } from "../../../src/components/LevelsTimeline";
 import { CardSurface } from "../../../src/components/Surface";
@@ -440,24 +441,49 @@ logModel();
 /** One track's chart, with the shared flags and the shared span. */
 const TrackChart: Component<{
   track: Track;
+  mutations: readonly Mutation[];
   selected: string | undefined;
   onSelect: (id: string) => void;
+  onPick: (at: TimeValue) => void;
 }> = (props) => (
   <TightStack>
     <TextTitle>{props.track.title}</TextTitle>
     <LevelsTimeline
       levels={props.track.levels}
       transfers={props.track.transfers}
-      mutations={MUTATIONS}
+      mutations={props.mutations}
       domain={DOMAIN}
       selectedMutationId={props.selected}
       onSelectMutation={props.onSelect}
+      formatValue={payLabel}
+      onPick={props.onPick}
     />
   </TightStack>
 );
 
 const LevelsTimelineBench: Component = () => {
   const [selected, setSelected] = createSignal<string | undefined>("a-first");
+  /**
+   * Flags the reader added by clicking the plot. The chart reports a date and
+   * does nothing else with it — turning that into a numbered flag is the
+   * CONSUMER's decision, and this is the smallest honest version of it.
+   * Numbering continues from the three named mutations.
+   */
+  const [picked, setPicked] = createSignal<readonly Mutation[]>([]);
+  const mutations = (): readonly Mutation[] => [...MUTATIONS, ...picked()];
+  const pick = (at: TimeValue): void => {
+    const time = timeOf(at);
+    // One flag per date: clicking the same month twice is not two events.
+    if (mutations().some((one) => timeOf(one.at) === time)) return;
+    setPicked((before) => [
+      ...before,
+      {
+        id: `picked-${time}`,
+        at,
+        label: String(MUTATIONS.length + before.length + 1),
+      },
+    ]);
+  };
   return (
     <div class="component-section component-section--full">
       <SpacedStack>
@@ -468,8 +494,10 @@ const LevelsTimelineBench: Component = () => {
               {(track) => (
                 <TrackChart
                   track={track}
+                  mutations={mutations()}
                   selected={selected()}
                   onSelect={setSelected}
+                  onPick={pick}
                 />
               )}
             </For>
