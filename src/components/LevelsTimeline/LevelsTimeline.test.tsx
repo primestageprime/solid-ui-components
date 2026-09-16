@@ -234,7 +234,7 @@ describe("LevelsTimeline — rails", () => {
     const label = container.querySelector("title")?.textContent ?? "";
     expect(label).toContain("Headcount by pay level");
     expect(label).toContain("L6: 4 people, ending at 2.");
-    expect(label).toContain("2 moved from L6 to L7 at mutation 1.");
+    expect(label).toContain("2 people moved from L6 to L7 at mutation 1.");
   });
 
   it("draws one stroke per held span, each as thick as its headcount", () => {
@@ -430,7 +430,7 @@ describe("LevelsTimeline — departures and hires", () => {
   it("announces a departure and a hire as what they are", () => {
     const { container } = renderOpen();
     const label = container.querySelector("title")?.textContent ?? "";
-    expect(label).toContain("1 left from L7");
-    expect(label).toContain("1 joined at L8");
+    expect(label).toContain("1 person left from L7");
+    expect(label).toContain("1 person joined at L8");
   });
 });

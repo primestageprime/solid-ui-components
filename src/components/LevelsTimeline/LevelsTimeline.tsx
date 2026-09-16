@@ -102,14 +102,19 @@ const EMPTY_LEVELS: readonly Level[] = [];
 const EMPTY_TRANSFERS: readonly Transfer[] = [];
 const EMPTY_SERIES: readonly Series[] = [];
 
+/** `1 person`, `3 people`. The announcement is prose; it has to read as prose. */
+const headcount = (count: number): string =>
+  count === 1 ? "1 person" : `${count} people`;
+
 /** One level, said out loud: what it starts holding and what it ends holding. */
 const describeLevel = (level: Level): string => {
   if (level.points.length === 0) return `${level.label}: nobody.`;
   const ordered = sortBy((point) => timeOf(point.at), level.points);
   const first = ordered[0].count;
   const last = ordered[ordered.length - 1].count;
-  if (first === last) return `${level.label}: ${first} people throughout.`;
-  return `${level.label}: ${first} people, ending at ${last}.`;
+  if (first === last) return `${level.label}: ${headcount(first)} throughout.`;
+  if (last === 0) return `${level.label}: ${headcount(first)}, ending empty.`;
+  return `${level.label}: ${headcount(first)}, ending at ${last}.`;
 };
 
 /**
@@ -137,7 +142,7 @@ const describeTransfer = (
     if (transfer.to !== undefined) return `joined at ${labelOf(transfer.to)}`;
     return "moved";
   };
-  return `${transfer.count} ${what()}${when}.`;
+  return `${headcount(transfer.count)} ${what()}${when}.`;
 };
 
 /** One series, said out loud — the deprecated stepped model's announcement. */
