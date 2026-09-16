@@ -38,7 +38,9 @@
  *       fan out: several flows leaving one rail on one date for different
  *       destinations.
  *
- * Flip `DEBUG` to read the derived model as tables, without a browser.
+ * Flip `DEBUG` to read the derived model as tables, without a browser. The
+ * bench itself carries no prose — vertical space is at a premium and the
+ * charts have to earn it; what a reader needs to know is in this comment.
  */
 import { For, createSignal, type Component } from "solid-js";
 import {
@@ -53,12 +55,7 @@ import type {
   Transfer,
 } from "../../../src/components/LevelsTimeline";
 import { CardSurface } from "../../../src/components/Surface";
-import {
-  CaptionLabel,
-  MutedBody,
-  SectionTitle,
-  TextTitle,
-} from "../../../src/components/Text";
+import { SectionTitle, TextTitle } from "../../../src/components/Text";
 import { SpacedStack, TightStack } from "../../../src/components/Layout";
 import { filter, flatMap, map, sortBy } from "../../../src/fn";
 
@@ -382,35 +379,21 @@ const transfersFor = (track: TrackId, domain: TimeDomain): Transfer[] => {
 interface Track {
   readonly id: TrackId;
   readonly title: string;
-  readonly note: string;
   readonly levels: readonly Level[];
   readonly transfers: readonly Transfer[];
 }
 
-const trackOf = (id: TrackId, title: string, note: string): Track => ({
+const trackOf = (id: TrackId, title: string): Track => ({
   id,
   title,
-  note,
   levels: levelsFor(id),
   transfers: transfersFor(id, DOMAIN),
 });
 
 const TRACKS: readonly Track[] = [
-  trackOf(
-    "A",
-    "Track A — one starting level, five rates",
-    "Five people all start on $8k. Three are raised off it at mutation 1 (one thick ribbon, not three thin ones) and Cal a year later, leaving Eve alone on it. Fin is HIRED onto $8k in 2027 — a ribbon arriving from above with no source — and Dee DEPARTS from $9k in 2028, a ribbon leaving downward with no destination. Every change in a rail's thickness has a flow to account for it.",
-  ),
-  trackOf(
-    "B",
-    "Track B — the same raise, a year apart",
-    "Two people, one ladder step. Fay takes it at mutation 2 and Gus takes exactly the same step twelve months later — two identical ribbons with a year of daylight, and Gus's has no flag, so it shows as a dropline.",
-  ),
-  trackOf(
-    "C",
-    "Track C — four people fanning out",
-    "Everyone bumps every April, and each person's four bumps are a permutation of +$500/+$1k/+$1.5k/+$2k — nobody repeats an amount. So $6k sheds four flows to four DIFFERENT destinations on the same date, the four paths cross and re-cross as the amounts reorder, and they converge on $11k at the end.",
-  ),
+  trackOf("A", "Track A — one starting level, five rates"),
+  trackOf("B", "Track B — the same raise, a year apart"),
+  trackOf("C", "Track C — four people fanning out"),
 ];
 
 /** `2027-04-01`, whichever way the moment happens to be spelt. */
@@ -470,7 +453,6 @@ const TrackChart: Component<{
       selectedMutationId={props.selected}
       onSelectMutation={props.onSelect}
     />
-    <CaptionLabel>{props.track.note}</CaptionLabel>
   </TightStack>
 );
 
@@ -479,22 +461,7 @@ const LevelsTimelineBench: Component = () => {
   return (
     <div class="component-section component-section--full">
       <SpacedStack>
-        <TightStack>
-          <SectionTitle>Levels Timeline</SectionTitle>
-          <MutedBody>
-            Three pay tracks over five years. A line is a pay LEVEL, not a
-            person: its thickness is the headcount holding it, and a raise is a
-            flow ribbon from one level to another, so the lower rail thins as
-            the upper one thickens. Numbered flags mark the events the consumer
-            named; every other change gets a thin dropline. The three charts
-            share one x-domain and one set of flags, so a column reads straight
-            down the stack. Every number is decided in geometry.ts and printed
-            as a table by its tests — run{" "}
-            <code>npx vitest run src/components/LevelsTimeline</code> to read
-            the shape without a browser, or flip <code>DEBUG</code> in this file
-            to print the consumer-side model.
-          </MutedBody>
-        </TightStack>
+        <SectionTitle>Levels Timeline</SectionTitle>
         <CardSurface>
           <SpacedStack>
             <For each={TRACKS}>
