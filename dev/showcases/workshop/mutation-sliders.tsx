@@ -13,7 +13,7 @@
  * no state and invents no unit.
  */
 import { type Component, createSignal } from "solid-js";
-import { join, map, pipe } from "../../../src/fn";
+import { map } from "../../../src/fn";
 import { MutationSliders } from "../../../src/components/MutationSliders";
 import type { Entity } from "../../../src/components/MutationSliders";
 import { GhostButton } from "../../../src/components/Button";
@@ -23,11 +23,7 @@ import {
   SpacedStack,
   SpreadRow,
 } from "../../../src/components/Layout";
-import {
-  MonoMeta,
-  MutedBody,
-  SectionTitle,
-} from "../../../src/components/Text";
+import { SectionTitle } from "../../../src/components/Text";
 
 // NO `domain` here ON PURPOSE. The component derives the track from the
 // entities' own bands — lowest floor to highest ceiling — so the bands fill
@@ -97,17 +93,6 @@ const withValue = (
     entities,
   );
 
-/** One person, as the row reads out loud — bands included. */
-const describeEntity = (entity: Entity): string => {
-  const band = entity.range
-    ? ` [${formatPay(entity.range[0])}–${formatPay(entity.range[1])}]`
-    : "";
-  if (entity.value === null) return `${entity.label} let go${band}`;
-  if (entity.old === null)
-    return `${entity.label} hired at ${formatPay(entity.value)}${band}`;
-  return `${entity.label} ${formatPay(entity.old)}\u2192${formatPay(entity.value)}${band}`;
-};
-
 export const meta = { label: "Mutation Sliders" };
 
 const MutationSlidersBench: Component = () => {
@@ -133,35 +118,12 @@ const MutationSlidersBench: Component = () => {
   };
 
   /** The headless reading of the row, printed beside the drawing. */
-  const summary = (): string =>
-    pipe(entities(), map(describeEntity), join("  ·  "));
 
   return (
     <div class="component-section component-section--full">
       <SectionTitle>Mutation Sliders</SectionTitle>
-      <MutedBody>
-        One dial per person, all on one pay scale. The shaded box is that
-        person's ROLE BAND — Junior $40–60k, Mid $55–80k, Senior $70–110k — so
-        two people on the same role draw the same box however far each of them
-        moved. The muted arrowhead is what they were paid and the accent one is
-        what they will be; the line between them is green for a raise and red
-        for a cut. Drag a thumb past a band edge and it stops: the band is the
-        clamp, and the readout follows. The figure beside each line is the
-        signed change, so two arrows a couple of thousand apart still say how
-        far apart they are. A struck-through name is someone who is gone in the
-        new scenario — their band and their prior arrow stay. The `+` hires
-        someone, which is the mirror image: a band and a future arrow, no prior
-        arrow, and a readout that says `new`. The track is not chosen here: the
-        component derives it from the bands themselves, so they fill the height.
-      </MutedBody>
       <SpacedStack>
         <SpreadRow>
-          {/* No scale is quoted here on purpose: the component derives the
-              track from the bands, so a number written into this line would
-              be stale the moment an entity is hired or let go. */}
-          <MonoMeta>
-            track derived from the bands · Shift+arrow jumps a tenth of it
-          </MonoMeta>
           <ClusterRow>
             <GhostButton onClick={reset}>Reset</GhostButton>
           </ClusterRow>
@@ -175,7 +137,6 @@ const MutationSlidersBench: Component = () => {
             format={formatPay}
           />
         </CardSurface>
-        <MonoMeta>{summary()}</MonoMeta>
       </SpacedStack>
     </div>
   );

@@ -20,7 +20,6 @@ import { CardSurface } from "../../../src/components/Surface";
 import {
   CaptionLabel,
   EllipsizedHudCaption,
-  MutedBody,
   SectionTitle,
   TextTitle,
 } from "../../../src/components/Text";
@@ -76,7 +75,6 @@ const perMonth = (delta: number): string =>
  */
 const RateCard: Component<{
   title: string;
-  note: string;
   baseline: number;
   value: number;
   label: string;
@@ -93,7 +91,6 @@ const RateCard: Component<{
         comfortable={props.comfortable}
         format={perMonth}
       />
-      <CaptionLabel>{props.note}</CaptionLabel>
     </TightStack>
   </CardSurface>
 );
@@ -101,7 +98,6 @@ const RateCard: Component<{
 /** A static card at a third of the gallery's width. */
 const SmallCard: Component<{
   title: string;
-  note: string;
   baseline: number;
   value: number;
   label: string;
@@ -110,7 +106,6 @@ const SmallCard: Component<{
   <ConstrainedBox>
     <RateCard
       title={props.title}
-      note={props.note}
       baseline={props.baseline}
       value={props.value}
       label={props.label}
@@ -128,7 +123,7 @@ const SmallCard: Component<{
 const CaptionSpecimen: Component = () => (
   <CompactSurface>
     <TightStack>
-      <CaptionLabel>Callout caption — hover for the full name</CaptionLabel>
+      <CaptionLabel>Callout caption</CaptionLabel>
       <ConstrainedBox>
         <Tooltip content="Bookkeeping retainer · Northern" triggerAs="span">
           <EllipsizedHudCaption>
@@ -179,7 +174,7 @@ const ScrubbedCard: Component = () => {
           format={(v) => perMonth(v)}
         />
         <Slider
-          label="Comfortable gain, as a % of the baseline"
+          label="Comfortable gain"
           value={percent()}
           onChange={setPercent}
           min={0}
@@ -193,16 +188,6 @@ const ScrubbedCard: Component = () => {
                 )} — ${yellowDegrees(DOMAIN, comfortableGain(baseline, v)).toFixed(1)}° of ring`
           }
         />
-        <CaptionLabel>
-          Baseline is fixed at {perMonth(baseline)}. The slider runs past both
-          ends of the gauge's domain, so the needle parks at a pole and the
-          delta reports the value the gauge actually DREW. Close in on the
-          baseline and the brace runs out of room: the curls go first, then the
-          arms, and at the narrowest the delta's leader is a plain line. Drag
-          the comfortable gain to zero and the yellow band disappears
-          altogether; the slider reads out the band's width in degrees, which
-          is the figure that decides whether anyone can see it.
-        </CaptionLabel>
       </TightStack>
     </CardSurface>
   );
@@ -213,38 +198,15 @@ const RateGaugeBench: Component = () => (
     <SpacedStack>
       <TightStack>
         <SectionTitle>Rate Gauge</SectionTitle>
-        <MutedBody>
-          A right-facing half ring split at zero: the upper half is the positive
-          zone, the lower half the negative one, and the half the needle is not
-          in is dimmed so the live one reads as lit. The dashed needle is the
-          baseline and the solid, capped needle is the rate right now; the
-          faint sector between them is the change drawn as an area, and the
-          curly brace outside the ring spans that same angle and carries the
-          signed delta on a leader from its cusp. Scrub the slider first — the
-          brace sheds its curls, then its arms, as the difference narrows.
-        </MutedBody>
-        <MutedBody>
-          The gain half of the ring splits again at the consumer's{" "}
-          <strong>comfortable</strong> gain: below it the band is yellow, at or
-          above it green. The assumption baked in here is that yellow means
-          "not yet comfortable" — say the word and it flips. Whether that band
-          is legible is a question about the ANGLE it subtends, not about the
-          rate, so every static card below is set so the yellow spans exactly
-          10° of the ring — on this ±$30k dial, +$3,333/mo. The gauge itself
-          only ever sees the absolute rate.
-        </MutedBody>
       </TightStack>
 
       <ScrubbedCard />
 
       <TightStack>
-        <CaptionLabel>
-          Baseline ABOVE the scenario — every delta negative
-        </CaptionLabel>
+        <CaptionLabel>Baseline above · yellow = 10°</CaptionLabel>
         <WrapRow>
           <SmallCard
             title="Green · baseline above"
-            note="Yellow = 10°. The scenario clears the comfortable gain, so the green lights — but it is still well short of the baseline, so the delta is negative. Tone follows the BAND, not the delta's sign."
             baseline={24000}
             value={12000}
             comfortable={COMFORTABLE}
@@ -252,7 +214,6 @@ const RateGaugeBench: Component = () => (
           />
           <SmallCard
             title="Yellow · baseline above"
-            note="Yellow = 10°. The scenario sits inside the comfortable band, so the yellow lights; the baseline is far above it."
             baseline={20000}
             value={1500}
             comfortable={COMFORTABLE}
@@ -260,7 +221,6 @@ const RateGaugeBench: Component = () => (
           />
           <SmallCard
             title="Red · baseline above"
-            note="Yellow = 10°. Below zero, so the loss half lights and both gain bands dim — including the yellow, which is still drawn."
             baseline={6000}
             value={-9000}
             comfortable={COMFORTABLE}
@@ -270,15 +230,12 @@ const RateGaugeBench: Component = () => (
       </TightStack>
 
       <TightStack>
-        <CaptionLabel>
-          Baseline BELOW the scenario — every delta positive
-        </CaptionLabel>
+        <CaptionLabel>Baseline below · yellow = 10°</CaptionLabel>
         <WrapRow>
           {/* This one also carries the long-name case: the scenario's name
               truncates in the callout column and offers itself whole on hover. */}
           <SmallCard
             title="Green · baseline below"
-            note="Yellow = 10°. Past both the comfortable gain and the baseline. Also the long-name case — the name truncates in the callout column, full value on hover."
             baseline={4000}
             value={18000}
             comfortable={COMFORTABLE}
@@ -291,7 +248,6 @@ const RateGaugeBench: Component = () => (
               absolute rate rather than a percentage. */}
           <SmallCard
             title="Yellow · baseline below"
-            note="Yellow = 10°. Inside the comfortable band with the baseline below it. Note a percentage-OF-BASELINE rule could not reach this card: a scenario inside a band worth 5% of its baseline is by definition far below that baseline. The threshold here is a flat rate, which is why the prop is absolute."
             baseline={600}
             value={2400}
             comfortable={COMFORTABLE}
@@ -299,7 +255,6 @@ const RateGaugeBench: Component = () => (
           />
           <SmallCard
             title="Red · baseline below"
-            note="Yellow = 10°. Losing, but by less than the baseline was — a positive delta inside the red band."
             baseline={-18000}
             value={-6000}
             comfortable={COMFORTABLE}
@@ -311,7 +266,6 @@ const RateGaugeBench: Component = () => (
       <WrapRow>
         <CaptionSpecimen />
       </WrapRow>
-
     </SpacedStack>
   </div>
 );

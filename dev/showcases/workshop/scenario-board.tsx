@@ -74,13 +74,7 @@ import {
   TightStack,
 } from "../../../src/components/Layout";
 import { CardSurface } from "../../../src/components/Surface";
-import {
-  CaptionLabel,
-  MonoMeta,
-  MutedBody,
-  SectionTitle,
-  TextTitle,
-} from "../../../src/components/Text";
+import { SectionTitle, TextTitle } from "../../../src/components/Text";
 
 export const meta = { label: "Scenario Board" };
 
@@ -190,12 +184,47 @@ interface Person extends Omit<Entity, "range"> {
  *       so the two ribbon widths can be compared side by side.
  */
 const PEOPLE: readonly Person[] = [
-  { id: "peter", label: "Peter", band: "A", stepAt: "spring", old: 2, value: 3 },
+  {
+    id: "peter",
+    label: "Peter",
+    band: "A",
+    stepAt: "spring",
+    old: 2,
+    value: 3,
+  },
   { id: "joe", label: "Joe", band: "A", stepAt: "spring", old: 2, value: null },
-  { id: "elaina", label: "Elaina", band: "B", stepAt: "spring", old: 4, value: 6 },
-  { id: "reilly", label: "Reilly", band: "B", stepAt: "autumn", old: 4, value: 6 },
-  { id: "adlai", label: "Adlai", band: "C", stepAt: "summer", old: 7, value: 8 },
-  { id: "flynn", label: "Flynn", band: "C", stepAt: "summer", old: 7, value: 10 },
+  {
+    id: "elaina",
+    label: "Elaina",
+    band: "B",
+    stepAt: "spring",
+    old: 4,
+    value: 6,
+  },
+  {
+    id: "reilly",
+    label: "Reilly",
+    band: "B",
+    stepAt: "autumn",
+    old: 4,
+    value: 6,
+  },
+  {
+    id: "adlai",
+    label: "Adlai",
+    band: "C",
+    stepAt: "summer",
+    old: 7,
+    value: 8,
+  },
+  {
+    id: "flynn",
+    label: "Flynn",
+    band: "C",
+    stepAt: "summer",
+    old: 7,
+    value: 10,
+  },
 ];
 
 /** The dial domain, in the consumer's own levels. */
@@ -346,10 +375,13 @@ const payAt = (person: Person, time: number): number | null => {
 };
 
 /** Every moment the board can change at: the domain's left edge and each flag. */
-const MOMENTS: readonly number[] = sortBy((time: number) => time, [
-  DOMAIN_START.getTime(),
-  ...map((mutation: Mutation) => timeOf(mutation.at), MUTATIONS),
-]);
+const MOMENTS: readonly number[] = sortBy(
+  (time: number) => time,
+  [
+    DOMAIN_START.getTime(),
+    ...map((mutation: Mutation) => timeOf(mutation.at), MUTATIONS),
+  ],
+);
 
 /** The distinct pay figures a band's people touch, old and new alike, ascending. */
 const paysIn = (people: readonly Person[], bandId: BandId): number[] => {
@@ -420,8 +452,7 @@ export const transfersOf = (people: readonly Person[]): Transfer[] => {
     const moment = momentOf(person);
     if (moment === undefined) continue;
     const band = person.band;
-    const from =
-      person.old === null ? undefined : levelIdFor(band, person.old);
+    const from = person.old === null ? undefined : levelIdFor(band, person.old);
     const to =
       person.value === null ? undefined : levelIdFor(band, person.value);
     // Nobody moved: same pay before and after, or a record with neither end.
@@ -431,9 +462,10 @@ export const transfersOf = (people: readonly Person[]): Transfer[] => {
     const existing = merged.get(key);
     merged.set(key, { at, from, to, count: (existing?.count ?? 0) + 1 });
   }
-  return sortBy((transfer: Transfer) => timeOf(transfer.at), [
-    ...merged.values(),
-  ]);
+  return sortBy(
+    (transfer: Transfer) => timeOf(transfer.at),
+    [...merged.values()],
+  );
 };
 
 /**
@@ -527,13 +559,6 @@ const fanSeries = (id: string, sign: number) => ({
 /** The consumer's money formatter — a real minus sign, as the gauge bench uses. */
 const perMonth = (delta: number): string =>
   `${delta < 0 ? "−" : "+"}$${Math.abs(delta).toLocaleString("en-US")}/mo`;
-
-/** One dial's reading, as a line of text. Absence reads as absence at both ends. */
-const describeEntity = (entity: Amounts & Pick<Entity, "label">): string => {
-  if (entity.value === null) return `${entity.label} left L${entity.old}`;
-  if (entity.old === null) return `${entity.label} hired onto L${entity.value}`;
-  return `${entity.label} L${entity.old}→L${entity.value}`;
-};
 
 /** Replace one person's new pay, leaving every other row untouched. */
 const withValue = (
@@ -674,23 +699,11 @@ const ScenarioBoardBench: Component = () => {
   /** The dials, derived once: a person plus their band's box. */
   const dials = () => entitiesOf(people());
   const rate = () => rateOf(dials());
-  const summary = () => pipe(dials(), map(describeEntity), join("  ·  "));
 
   return (
     <div class="component-section component-section--full">
       <SpacedStack>
-        <TightStack>
-          <SectionTitle>Scenario Board</SectionTitle>
-          <MutedBody>
-            Four existing tools on one scenario, arranged as Peter's sketch of
-            2026-09-16 arranges them. Nothing is built here and no engine runs:
-            drag a dial and the timeline's risers, the Total and the gauge all
-            move off the same pure functions at the top of this file. Click a
-            numbered flag and the split button follows it; click the split
-            button and the flag follows back, as far as the sketch's two date
-            rows allow.
-          </MutedBody>
-        </TightStack>
+        <SectionTitle>Scenario Board</SectionTitle>
 
         <CardSurface>
           <TightStack>
@@ -706,12 +719,6 @@ const ScenarioBoardBench: Component = () => {
                 fanSeries("pessimistic", -1),
               ]}
             />
-            <CaptionLabel>
-              Thirteen months of monthly balance, the committed line solid and
-              two faint alternatives fanning away from it — the spread widens
-              with the square of the month, because a forecast is surer about
-              next month than about next year.
-            </CaptionLabel>
           </TightStack>
         </CardSurface>
 
@@ -726,15 +733,6 @@ const ScenarioBoardBench: Component = () => {
               selectedMutationId={selectedMutation()}
               onSelectMutation={selectMutation}
             />
-            <CaptionLabel>
-              One rail per pay level inside each of the three role bands, as
-              thick as the number of people standing on it, and one ribbon per
-              move. Watch band A's L2: Peter is raised off it and Joe leaves it
-              at the same flag, so it empties and its rail ends — two flows out
-              of one level at one moment, not one thick one. Click a flag to
-              light its rule; the split button below moves to the matching
-              as-of point.
-            </CaptionLabel>
           </TightStack>
         </CardSurface>
 
@@ -747,15 +745,6 @@ const ScenarioBoardBench: Component = () => {
               onValueChange={selectSegment}
               aria-label="As-of point"
             />
-            <CaptionLabel>
-              Showing flag{" "}
-              {selectedMutation() === undefined
-                ? "—"
-                : (find((m: Mutation) => m.id === selectedMutation(), MUTATIONS)
-                    ?.label ?? "—")}
-              . 2026-01 has no mutation at or after it, so it lights no flag;
-              flags 2 and 3 both fall in 2025-06, so the round trip is lossy.
-            </CaptionLabel>
           </TightStack>
         </CardSurface>
 
@@ -775,7 +764,6 @@ const ScenarioBoardBench: Component = () => {
                   onAdd={addEntity}
                   format={(value) => `L${value}`}
                 />
-                <MonoMeta>{summary()}</MonoMeta>
               </TightStack>
             </CardSurface>
           </GrowBox>
@@ -795,12 +783,6 @@ const ScenarioBoardBench: Component = () => {
                   label="Scenario"
                   format={perMonth}
                 />
-                <CaptionLabel>
-                  Every dial's change, priced at ${DOLLARS_PER_LEVEL} a level a
-                  month and added up: {perMonth(rate())} against a fixed
-                  baseline of {perMonth(RATE_BASELINE)}. A removed entity reads
-                  as level 0, so striking a name through is a full cut.
-                </CaptionLabel>
               </TightStack>
             </CardSurface>
           </ConstrainedBox>
