@@ -139,6 +139,7 @@ import {
   createMemo,
   createSignal,
   onCleanup,
+  onMount,
 } from "solid-js";
 import { clamp } from "../../internal/math/clamp";
 import { observeSize } from "../../internal/dom/observeSize";
@@ -610,7 +611,25 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
            * domain's ends, and `handleChange` clamps them onto the band.
            */
           const bindDial = (el: HTMLElement): void => {
-            setMeasuredDialHeight(el.clientHeight);
+            // FIRST MEASUREMENT, SYNCHRONOUSLY, on mount.
+            //
+            // The ref runs before the element is in the document, so
+            // `clientHeight` here is 0 and the dial would paint its first
+            // frame at the fallback height while the box is already tall. That
+            // frame is not cosmetic: the drawn track and Kobalte's track
+            // element only line up when the viewBox height EQUALS the dial's
+            // pixel height, so until the measurement lands, a pointer maps
+            // over one extent while the reader aims at another — which is
+            // exactly "my mouse appears to be changing proportionate to the
+            // whole slider rather than dragging the handle".
+            //
+            // `onMount` + `getBoundingClientRect` forces layout and returns
+            // the real height with NO animation frame in between. That also
+            // makes the dial correct in a hidden tab, where the browser
+            // suspends rAF and `observeSize`'s deferred delivery never runs.
+            onMount(() =>
+              setMeasuredDialHeight(el.getBoundingClientRect().height),
+            );
             onCleanup(
               observeSize(el, (size) => setMeasuredDialHeight(size.height)),
             );

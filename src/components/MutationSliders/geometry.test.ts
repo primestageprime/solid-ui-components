@@ -938,6 +938,47 @@ describe("the CSS mirrors the canvas", () => {
   // component whose root had no height rule at all for two commits, while a
   // commit message described the rule as present. These four lines are the
   // only thing standing between that and happening again.
+  /**
+   * THE POINTER INVARIANT, and the one that produced a real bug report.
+   *
+   * Kobalte maps pointer-y → value over the TRACK ELEMENT's box, which the
+   * stylesheet insets from the dial by `--sui-mutation-track-inset`. The SVG
+   * draws its track between `TRACK_TOP` and `trackBottomOf(height)` in viewBox
+   * units that are 1:1 with px. If those two extents ever differ, the reader
+   * aims at one line and drags along another — Peter, 2026-09-16: "my mouse
+   * appears to be changing proportionate to the whole slider rather than
+   * dragging the handle".
+   *
+   * They agree only while BOTH hold: the inset constant equals the CSS var,
+   * and the viewBox height equals the dial's pixel height. The second is the
+   * component's job (measure, then draw at what was measured); this pins the
+   * first, at every height rather than at the one the dial happened to have.
+   */
+  it("draws the track exactly where the CSS puts the pointer's track", () => {
+    const inset = Number(
+      /--sui-mutation-track-inset:\s*(\d+)px/.exec(css)?.[1],
+    );
+    expect(inset).toBe(TRACK_TOP);
+    for (const height of [MIN_DIAL_HEIGHT, 260, 600, 1000]) {
+      // Where the drawing starts and ends...
+      expect(TRACK_TOP).toBe(inset);
+      expect(trackBottomOf(height)).toBe(height - inset);
+      // ...and how long both therefore are.
+      expect(trackBottomOf(height) - TRACK_TOP).toBe(height - 2 * inset);
+    }
+  });
+
+  it("floors the drawing at the same height the CSS floors the box", () => {
+    // If geometry stopped shrinking at a different height from the BOX, a
+    // short dial would draw a track longer than the one the pointer uses —
+    // the same mismatch from the other direction.
+    const cssFloor = Number(
+      /--sui-mutation-dial-min-height:\s*(\d+)px/.exec(css)?.[1],
+    );
+    expect(cssFloor).toBe(MIN_DIAL_HEIGHT);
+    expect(dialHeightFor(50)).toBe(cssFloor);
+  });
+
   it("makes the ROOT claim the height its parent gives it", () => {
     const root = css.slice(css.indexOf(".sui-mutation-sliders {"));
     const rootRule = root.slice(0, root.indexOf("}"));
