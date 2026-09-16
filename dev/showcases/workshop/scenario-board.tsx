@@ -34,7 +34,7 @@
  * derives rails FROM, not something it draws. The Total went with the change —
  * headcount-weighted rails say what it used to say, and better.
  */
-import { createSignal, onCleanup, onMount, type Component } from "solid-js";
+import { createSignal, onMount, type Component } from "solid-js";
 import {
   filter,
   find,
@@ -853,23 +853,19 @@ const ScenarioBoardBench: Component = () => {
    * again. The gauge and the balance chart follow the drag live, because a
    * number and a line can move continuously; the rails wait for it to stop.
    *
-   * INTERIM: `MutationSliders` exposes `onChange` and no `onChangeEnd`, so the
-   * gesture's end is detected here on `pointerup`/`keyup`. That belongs in the
-   * component — its agent has been asked for `onChangeEnd?` — and this whole
-   * block collapses to one prop when it lands.
+   * The split is `onChange` → the signal the dials read, every dollar;
+   * `onChangeEnd` → rebuild the rails, once per gesture. Feeding `onChange`
+   * back into state is REQUIRED even though only `onChangeEnd` is acted on: a
+   * drag's `onChangeEnd` reports the CONTROLLED prop value, so a consumer that
+   * stopped updating on `onChange` would be handed back the value it supplied
+   * and the rails would never move. That is the only honest answer a
+   * controlled component can give, and it is easy to get wrong in the other
+   * direction.
    */
   const [committed, setCommitted] = createSignal<readonly Person[]>(PEOPLE);
   const commit = (): void => {
     setCommitted(people());
   };
-  onMount(() => {
-    window.addEventListener("pointerup", commit);
-    window.addEventListener("keyup", commit);
-    onCleanup(() => {
-      window.removeEventListener("pointerup", commit);
-      window.removeEventListener("keyup", commit);
-    });
-  });
 
   onMount(() => {
     if (DEBUG) printTables(people(), mutations(), editing());
@@ -1012,6 +1008,7 @@ const ScenarioBoardBench: Component = () => {
                     entities={dials()}
                     domain={PAY_DOMAIN}
                     onChange={setPay}
+                    onChangeEnd={commit}
                     onRemove={terminate}
                     onRestore={restore}
                     onAdd={hire}
