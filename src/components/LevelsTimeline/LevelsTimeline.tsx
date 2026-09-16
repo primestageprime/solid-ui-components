@@ -39,7 +39,6 @@
 // ============================================
 import {
   For,
-  Show,
   type Component,
   createMemo,
   createUniqueId,
@@ -246,13 +245,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         <defs>
           <For each={geometry().flows}>
             {(flow) => (
-              <linearGradient
-                id={gradientId(flow)}
-                x1="0"
-                y1="0"
-                x2="1"
-                y2="0"
-              >
+              <linearGradient id={gradientId(flow)} x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stop-color={toneVar(flow.fromSeriesIndex)} />
                 <stop offset="100%" stop-color={toneVar(flow.toSeriesIndex)} />
               </linearGradient>
@@ -338,17 +331,6 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                 <For each={rail.runs}>
                   {(run) => <path class={railClass(rail)} d={run.path} />}
                 </For>
-                <Show when={rail.labelAt}>
-                  {(at) => (
-                    <text
-                      class="sui-levels-timeline__rail-label"
-                      x={at().x}
-                      y={at().y}
-                    >
-                      {rail.label}
-                    </text>
-                  )}
-                </Show>
               </g>
             )}
           </For>

@@ -129,21 +129,14 @@
   stroke: none;
 }
 
-/* The level's own short code. Above a band too thin to hold it… */
-.sui-levels-timeline__rail-label {
-  fill: var(--sui-text-muted);
-  stroke: none;
-  font-size: 9px;
-  font-weight: 600;
-}
-
-/* …and inside one that is tall enough, in ink that reads on the band's own
-   colour rather than on the page behind it. */
-.sui-levels-timeline__rail-label--inside {
-  fill: var(--sui-bg-elevated);
-}
-
 /* ---- The flows ---- */
+
+/* The carry: the people who did NOT move, drawn as the flow they are so a rail
+   reads as continuous across a change. It wears its rail's own colour at both
+   ends, so it should read as rail rather than as traffic. */
+.sui-levels-timeline__ribbon--carry {
+  opacity: 0.9;
+}
 
 .sui-levels-timeline__ribbon {
   stroke: none;

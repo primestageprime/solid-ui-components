@@ -11,7 +11,7 @@
 // decides where the droplines fall.
 // ============================================
 import { describe, expect, it } from "vitest";
-import { flatMap, map, sortBy } from "../../fn";
+import { filter, flatMap, map, sortBy, sum } from "../../fn";
 import {
   BAND_INSET,
   BAND_MARGIN,
@@ -22,7 +22,6 @@ import {
   PLOT_LEFT,
   PLOT_RIGHT,
   PLOT_TOP,
-  RAIL_LABEL_MIN_HEIGHT,
   TRANSITION_FRACTION,
   VIEW_WIDTH,
   type BandRun,
@@ -56,6 +55,7 @@ import {
   spanTop,
   taperHalves,
   timeOf,
+  transitionHalf,
   transitionWidth,
   valueDomainOf,
   yScaleFor,
@@ -121,6 +121,15 @@ const TRANSFERS: readonly Transfer[] = [
 /** Round to 3dp so a table prints without float noise. */
 const round = (n: number): number => Math.round(n * 1000) / 1000;
 
+/** The change xs this fixture produces — what the transition half is sized from. */
+const changeXs = (): readonly number[] => {
+  const x = (time: number) =>
+    PLOT_LEFT +
+    ((time - timeOf(DOMAIN[0])) / (timeOf(DOMAIN[1]) - timeOf(DOMAIN[0]))) *
+      (PLOT_RIGHT - PLOT_LEFT);
+  return map(x, changeTimes(LEVELS, TRANSFERS));
+};
+
 const geometryOf = (
   levels: readonly Level[] = LEVELS,
   transfers: readonly Transfer[] = TRANSFERS,
@@ -140,8 +149,9 @@ describe("xScaleFor", () => {
   const x = levelsRailGeometry;
   it("puts the domain ends on the plot edges and clamps outside it", () => {
     const geometry = geometryOf();
-    expect(geometry.rails[0].spans[0].x1).toBe(PLOT_LEFT);
-    expect(geometry.rails[0].spans[2].x2).toBe(PLOT_RIGHT);
+    const spans = geometry.rails[0].spans;
+    expect(spans[0].x1).toBe(PLOT_LEFT);
+    expect(spans[spans.length - 1].x2).toBe(PLOT_RIGHT);
     expect(typeof x).toBe("function");
   });
 });
@@ -316,11 +326,20 @@ describe("bandWidth — conservation is exact and unconditional", () => {
 describe("railSpans", () => {
   const geometry = geometryOf();
 
-  it("holds one span per count point, out to the next change", () => {
+  it("stops SHORT of every change, leaving the transition to the ribbons", () => {
+    // The node/link split: a band ends at x0 and the next begins at x1, and
+    // the gap between them is exactly one transition, filled by ribbons.
     const l6 = geometry.rails[1];
-    expect(l6.spans).toHaveLength(2);
-    expect(l6.spans[0].x2).toBe(l6.spans[1].x1);
-    expect(l6.spans[1].x2).toBe(PLOT_RIGHT);
+    // Five change moments, and l6 is alive through all of them.
+    expect(l6.spans).toHaveLength(5);
+    const gap = l6.spans[1].x1 - l6.spans[0].x2;
+    expect(round(gap)).toBe(round(2 * transitionHalf(changeXs())));
+  });
+
+  it("runs flush to the plot edges, which are not changes", () => {
+    const spans = geometry.rails[1].spans;
+    expect(spans[0].x1).toBe(PLOT_LEFT);
+    expect(spans[spans.length - 1].x2).toBe(PLOT_RIGHT);
   });
 
   it("keeps a rail at ONE y — a level does not move, its thickness does", () => {
@@ -350,13 +369,17 @@ describe("railSpans", () => {
         { at: utc("2025-09-01"), count: 1 },
       ],
     };
+    const moments = changeTimes([emptied], []);
     const spans = railSpans(
       emptied,
       (at) => timeOf(at) / 1e10,
       () => 100,
       DOMAIN[1],
       7.391,
+      0,
+      moments,
     );
+    // Alive for the first stretch and the last, absent for the middle one.
     expect(spans).toHaveLength(2);
   });
 
@@ -368,6 +391,8 @@ describe("railSpans", () => {
         () => 0,
         DOMAIN[1],
         7.391,
+        0,
+        [0],
       ),
     ).toEqual([]);
   });
@@ -493,9 +518,15 @@ describe("railRuns", () => {
     expect(d).toContain(`${Math.round(spanTop(start) * 1000) / 1000}`);
   });
 
-  it("carries a taper for every count change on the rail", () => {
+  it("is one blunt rectangle per span — nothing in a rail bends", () => {
+    // All the curvature belongs to the ribbons now. A band that bent would be
+    // a second way of saying what a ribbon already says.
     const l7 = geometry.rails[2];
-    expect(flatMap((run: BandRun) => [...run.tapers], l7.runs)).toHaveLength(2);
+    expect(l7.runs).toHaveLength(l7.spans.length);
+    for (const run of l7.runs) {
+      expect(run.path).not.toContain("C ");
+      expect(run.tapers).toHaveLength(0);
+    }
   });
 
   it("splits a level that empties and comes back into TWO bands", () => {
@@ -520,7 +551,8 @@ describe("railRuns", () => {
   });
 
   it("is reachable on its own, for a caller that already has spans", () => {
-    expect(railRuns(geometryOf().rails[1].spans)).toHaveLength(1);
+    const spans = geometryOf().rails[1].spans;
+    expect(railRuns(spans)).toHaveLength(spans.length);
   });
 });
 
@@ -528,21 +560,23 @@ describe("railRuns", () => {
 
 describe("flowBands", () => {
   const geometry = geometryOf();
+  const moves = () =>
+    filter((flow: FlowBand) => flow.kind === "move", geometry.flows);
 
   it("spans a transition centred on the change, not a bare vertical", () => {
-    const [first] = geometry.flows;
-    expect(first.x1 - first.x0).toBeCloseTo(transitionWidth(), 9);
+    const [first] = moves();
+    expect(first.x1 - first.x0).toBeCloseTo(2 * transitionHalf(changeXs()), 9);
   });
 
   it("roots in the bands it joins, and is as wide as what moved", () => {
-    const [first] = geometry.flows;
+    const [first] = moves();
     const expected = bandWidth(2, geometry.perPerson);
     expect(round(first.srcBottom - first.srcTop)).toBe(round(expected));
     expect(round(first.dstBottom - first.dstTop)).toBe(round(expected));
   });
 
   it("carries BOTH tones, so the ribbon can graduate along its length", () => {
-    const [first] = geometry.flows;
+    const [first] = moves();
     expect(first.fromSeriesIndex).toBe(2);
     expect(first.toSeriesIndex).toBe(3);
     expect(first.kind).toBe("move");
@@ -558,8 +592,12 @@ describe("flowBands", () => {
 });
 
 describe("one-ended flows — departures and hires", () => {
+  /** Transfers only — the carry is tested in its own suite. */
   const flowsFor = (transfers: readonly Transfer[]) =>
-    geometryOf(LEVELS, transfers).flows;
+    filter(
+      (flow: FlowBand) => flow.kind !== "carry",
+      geometryOf(LEVELS, transfers).flows,
+    );
 
   it("runs a departure out of its source with only the source's tone", () => {
     const [leaving] = flowsFor([{ at: utc("2025-07-01"), from: "l6", count: 1 }]);
@@ -698,37 +736,6 @@ describe("changeTimes and droplinePositions", () => {
   });
 });
 
-describe("rail labels", () => {
-  const geometry = geometryOf();
-
-  it("sits INSIDE a band tall enough to hold it", () => {
-    // l6 opens at 4 people — comfortably taller than the threshold.
-    const l6 = geometry.rails[1];
-    expect(l6.spans[0].width).toBeGreaterThanOrEqual(RAIL_LABEL_MIN_HEIGHT);
-    expect(l6.labelInside).toBe(true);
-    expect(l6.labelAt?.y).toBe(l6.y);
-  });
-
-  it("sits just ABOVE a band too thin to hold it", () => {
-    // l8 opens at one person, which at this scale is under the threshold.
-    const l8 = geometry.rails[3];
-    expect(l8.spans[0].width).toBeLessThan(RAIL_LABEL_MIN_HEIGHT);
-    expect(l8.labelInside).toBe(false);
-    expect(l8.labelAt?.y).toBeLessThan(spanTop(l8.spans[0]));
-  });
-
-  it("travels in with a level that appears mid-chart", () => {
-    expect(geometry.rails[3].labelAt?.x).toBeGreaterThan(PLOT_LEFT);
-  });
-
-  it("is absent for a level nobody ever holds — nothing to name", () => {
-    expect(
-      geometryOf([{ id: "e", label: "E", value: 1, points: [] }], []).rails[0]
-        .labelAt,
-    ).toBeUndefined();
-  });
-});
-
 // ── the printed observation ──────────────────────────────────────────────────
 
 describe("levelsRailGeometry — the whole observation", () => {
@@ -745,7 +752,9 @@ describe("levelsRailGeometry — the whole observation", () => {
   });
 
   it("carries the flows, the flags and the un-numbered dropline", () => {
-    expect(geometry.flows).toHaveLength(2);
+    expect(
+      filter((flow: FlowBand) => flow.kind !== "carry", geometry.flows),
+    ).toHaveLength(2);
     expect(geometry.flags).toHaveLength(3);
     expect(geometry.droplines).toHaveLength(1);
   });
@@ -770,7 +779,6 @@ describe("levelsRailGeometry — the whole observation", () => {
               x2: round(span.x2),
               count: span.count,
               width: round(span.width),
-              label: rail.labelInside ? "inside" : "above",
             }),
             rail.spans,
           ),
@@ -809,5 +817,171 @@ describe("levelsRailGeometry — the whole observation", () => {
       ),
     );
     expect(geometry.rails).toHaveLength(4);
+  });
+});
+
+// ============================================
+// FLUSH JOINS — Peter, looking at the board: "these look terrible! the
+// transitions don't connect to the horizontal lines."
+//
+// The guarantee this suite exists to hold: every ribbon corner is a point on a
+// band's cap at the same x. Not close to one — the same number. Nothing in the
+// picture may float.
+// ============================================
+
+/** The board's shape: one person per level, so whole bands move. */
+const BOARD_LEVELS: readonly Level[] = [
+  {
+    id: "L2",
+    label: "A · L2",
+    value: 2000,
+    points: [
+      { at: utc("2025-01-01"), count: 1 },
+      { at: utc("2025-04-01"), count: 0 },
+    ],
+  },
+  {
+    id: "L3",
+    label: "A · L3",
+    value: 3000,
+    points: [{ at: utc("2025-04-01"), count: 1 }],
+  },
+  {
+    id: "L4",
+    label: "B · L4",
+    value: 4000,
+    points: [
+      { at: utc("2025-01-01"), count: 2 },
+      { at: utc("2025-07-01"), count: 1 },
+    ],
+  },
+  {
+    id: "L6",
+    label: "B · L6",
+    value: 6000,
+    points: [{ at: utc("2025-07-01"), count: 1 }],
+  },
+];
+
+const BOARD_TRANSFERS: readonly Transfer[] = [
+  { at: utc("2025-04-01"), from: "L2", to: "L3", count: 1 },
+  { at: utc("2025-07-01"), from: "L4", to: "L6", count: 1 },
+];
+
+const capsAt = (rails: readonly Rail[], x: number, side: "x1" | "x2") =>
+  flatMap(
+    (rail: Rail) =>
+      map(
+        (span: RailSpan) => ({ top: spanTop(span), bottom: spanBottom(span) }),
+        filter((span: RailSpan) => Math.abs(span[side] - x) < 0.001, rail.spans),
+      ),
+    rails,
+  );
+
+const lands = (
+  edge: number,
+  caps: readonly { top: number; bottom: number }[],
+): boolean =>
+  caps.some(
+    (cap) => edge >= cap.top - 0.001 && edge <= cap.bottom + 0.001,
+  );
+
+describe("flush joins", () => {
+  for (const [name, levels, transfers] of [
+    ["the three-track shape", LEVELS, TRANSFERS],
+    ["the board's shape — whole bands move", BOARD_LEVELS, BOARD_TRANSFERS],
+  ] as const) {
+    describe(name, () => {
+      const geometry = levelsRailGeometry({
+        levels,
+        transfers,
+        mutations: [],
+        domain: DOMAIN,
+      });
+
+      it("roots all four corners of every ribbon on a band's cap", () => {
+        expect(geometry.flows.length).toBeGreaterThan(0);
+        for (const flow of geometry.flows) {
+          const left = capsAt(geometry.rails, flow.x0, "x2");
+          const right = capsAt(geometry.rails, flow.x1, "x1");
+          expect(lands(flow.srcTop, left)).toBe(true);
+          expect(lands(flow.srcBottom, left)).toBe(true);
+          expect(lands(flow.dstTop, right)).toBe(true);
+          expect(lands(flow.dstBottom, right)).toBe(true);
+        }
+      });
+
+      it("leaves no gap and no overlap — the S owns exactly [x0, x1]", () => {
+        for (const flow of geometry.flows) {
+          for (const rail of geometry.rails) {
+            for (const span of rail.spans) {
+              // No band may intrude into a transition.
+              const intrudes =
+                span.x1 < flow.x1 - 0.001 && span.x2 > flow.x0 + 0.001;
+              expect(intrudes).toBe(false);
+            }
+          }
+        }
+      });
+
+      it("conserves width across every cap", () => {
+        // What leaves a cap plus what carries on equals the band that ended.
+        for (const rail of geometry.rails) {
+          for (const span of rail.spans) {
+            const leaving = filter(
+              (flow: FlowBand) =>
+                Math.abs(flow.x0 - span.x2) < 0.001 &&
+                lands(flow.srcTop, [
+                  { top: spanTop(span), bottom: spanBottom(span) },
+                ]),
+              geometry.flows,
+            );
+            if (leaving.length === 0) continue;
+            const used = sum(
+              map((flow: FlowBand) => flow.srcBottom - flow.srcTop, leaving),
+            );
+            expect(used).toBeLessThanOrEqual(span.width + 0.001);
+          }
+        }
+      });
+    });
+  }
+
+  it("makes a whole band that moves the SAME SHAPE as its ribbon's root", () => {
+    // The board's common case, and where it failed visibly: one person on the
+    // level, so the band does not thin — it ends, and the ribbon IS its
+    // continuation. Root and cap must be the same two numbers.
+    const geometry = levelsRailGeometry({
+      levels: BOARD_LEVELS,
+      transfers: BOARD_TRANSFERS,
+      mutations: [],
+      domain: DOMAIN,
+    });
+    const move = geometry.flows.find(
+      (flow) => flow.kind === "move" && flow.fromSeriesIndex === 1,
+    );
+    const source = geometry.rails[0];
+    const ending = source.spans[source.spans.length - 1];
+    expect(move).toBeDefined();
+    expect(round(move?.srcTop ?? -1)).toBe(round(spanTop(ending)));
+    expect(round(move?.srcBottom ?? -1)).toBe(round(spanBottom(ending)));
+    expect(round(move?.x0 ?? -1)).toBe(round(ending.x2));
+  });
+
+  it("bridges an untouched rail with a carry of equal width at both ends", () => {
+    const geometry = geometryOf();
+    const carries = filter(
+      (flow: FlowBand) => flow.kind === "carry",
+      geometry.flows,
+    );
+    expect(carries.length).toBeGreaterThan(0);
+    const straight = filter(
+      (flow: FlowBand) =>
+        Math.abs(
+          flow.srcBottom - flow.srcTop - (flow.dstBottom - flow.dstTop),
+        ) < 0.001,
+      carries,
+    );
+    expect(straight.length).toBeGreaterThan(0);
   });
 });

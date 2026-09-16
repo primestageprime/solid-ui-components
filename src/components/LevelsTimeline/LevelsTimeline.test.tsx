@@ -81,23 +81,18 @@ describe("LevelsTimeline — rails", () => {
     expect(label).toContain("2 people moved from L6 to L7 at mutation 1.");
   });
 
-  it("draws each rail as a closed BAND, one per contiguous stretch", () => {
+  it("draws each rail as blunt closed BANDS, one per span", () => {
     const { container } = renderRails();
     const rails = container.querySelectorAll(".sui-levels-timeline__rail");
-    // Four levels, none of them broken by an empty stretch — one band each.
-    expect(rails).toHaveLength(4);
+    expect(rails.length).toBeGreaterThan(4);
     for (const rail of rails) {
       const d = rail.getAttribute("d") ?? "";
       expect(d.startsWith("M ")).toBe(true);
       expect(d.endsWith("Z")).toBe(true);
       expect(d).not.toContain("NaN");
+      // Nothing in a rail bends. All the curvature belongs to the ribbons.
+      expect(d).not.toContain("C ");
     }
-    // A band only CURVES where its own count changes. L6 steps 4 → 2, so it
-    // must; a rail that never changes is a straight bar and should stay one.
-    const curved = [...rails].filter((rail) =>
-      (rail.getAttribute("d") ?? "").includes("C "),
-    );
-    expect(curved.length).toBeGreaterThan(0);
   });
 
   it("carries no stroke-width — a rail's thickness is its SHAPE now", () => {
@@ -111,20 +106,34 @@ describe("LevelsTimeline — rails", () => {
     }
   });
 
-  it("curves each flow instead of dropping a bare vertical", () => {
+  it("curves every flow, carries included, instead of dropping a vertical", () => {
     const { container } = renderRails();
     const flows = container.querySelectorAll(".sui-levels-timeline__ribbon");
-    expect(flows).toHaveLength(1);
-    const d = flows[0].getAttribute("d") ?? "";
-    expect(d).toContain("C ");
-    expect(d.endsWith("Z")).toBe(true);
-    expect(d).not.toContain("NaN");
+    expect(flows.length).toBeGreaterThan(0);
+    for (const flow of flows) {
+      const d = flow.getAttribute("d") ?? "";
+      expect(d).toContain("C ");
+      expect(d.endsWith("Z")).toBe(true);
+      expect(d).not.toContain("NaN");
+    }
   });
 
-  it("names each rail with the level's own short code", () => {
-    const { getByText } = renderRails();
-    expect(getByText("L5")).toBeTruthy();
-    expect(getByText("L8")).toBeTruthy();
+  it("bridges each unchanged rail with a carry, so no rail looks broken", () => {
+    const { container } = renderRails();
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__ribbon--carry").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("puts NO series text on the plot — only ticks and flags", () => {
+    // Peter: "don't label the series directly on the plot." Identity is
+    // carried by colour and by the announcement, not by ink in the plot area.
+    const { container, queryByText } = renderRails();
+    expect(queryByText("L5")).toBeNull();
+    expect(queryByText("L8")).toBeNull();
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__rail-label"),
+    ).toHaveLength(0);
   });
 
   it("drops a rule at the lone hire that carries no flag", () => {
