@@ -320,7 +320,7 @@ describe("MutationSliders", () => {
       ).toHaveLength(2);
     });
 
-    it("is omitted for a hire, a departure, and an unchanged amount", () => {
+    it("is HIDDEN, not removed, for a hire, a departure and no change", () => {
       const { container } = render(() => (
         <MutationSliders
           entities={[
@@ -350,9 +350,15 @@ describe("MutationSliders", () => {
           format={asK}
         />
       ));
-      expect(
-        container.querySelectorAll(".sui-mutation-sliders__delta"),
-      ).toHaveLength(0);
+      // The node stays so every dial has the same shape in every state; the
+      // reserved class hides it. A removed node is what shifts a layout.
+      const labels = container.querySelectorAll(".sui-mutation-sliders__delta");
+      expect(labels).toHaveLength(3);
+      for (const label of labels) {
+        expect(label.getAttribute("class")).toContain(
+          "sui-mutation-sliders__reserved",
+        );
+      }
     });
   });
 
@@ -822,6 +828,116 @@ describe("MutationSliders", () => {
       fireEvent.focus(thumb);
       fireEvent.keyDown(thumb, { key: "End" });
       expect(onChange).toHaveBeenLastCalledWith("ana", BAND[1]);
+    });
+  });
+
+  describe("every slot holds its space", () => {
+    // Peter, 2026-09-16: "You have elements that become invisible (was L7) but
+    // they don't hold their space. That means the control moves around when
+    // you change it, which is really bad UX."
+    //
+    // jsdom performs no layout, so y positions cannot be compared here. What
+    // CAN be pinned is the thing that causes the shift: a node that exists in
+    // one state and not the other. Every assertion below is "the same nodes,
+    // in the same order, in both states".
+    const shapeOf = (container: HTMLElement): string[] =>
+      map(
+        (el: Element) => el.className.toString().split(" ")[0] || el.tagName,
+        [...(container.querySelector(".text")?.parentElement?.children ?? [])],
+      );
+
+    const one = (value: number | null, old: number | null = 44_000) =>
+      render(() => (
+        <MutationSliders
+          entities={[
+            { id: "a", label: "Ana", old, value, range: [40_000, 60_000] },
+          ]}
+          onChange={() => {}}
+          onRemove={() => {}}
+          onRestore={() => {}}
+          format={asK}
+        />
+      ));
+
+    it("keeps the same column shape whether or not the value moved", () => {
+      // 52k is a change; 44k matches the prior exactly and used to DELETE the
+      // `was …` row, jumping the figure and the button up under the pointer.
+      const changed = shapeOf(one(52_000).container);
+      const unchanged = shapeOf(one(44_000).container);
+      // Guard against the selector silently matching nothing, which would
+      // make this assertion vacuously true — it did, once.
+      expect(changed.length).toBeGreaterThan(3);
+      expect(unchanged).toEqual(changed);
+    });
+
+    it("keeps the `was …` row present, merely hidden, when it is empty", () => {
+      const { container } = one(44_000);
+      const rows = container.querySelectorAll(".text");
+      const hidden = [...rows].filter((r) =>
+        r.className.toString().includes("sui-mutation-sliders__reserved"),
+      );
+      expect(hidden).toHaveLength(1);
+      // A non-breaking space, not an empty string: an empty inline box
+      // collapses to zero height and takes the row with it.
+      expect(hidden[0].textContent).toBe("\u00a0");
+    });
+
+    it("keeps the same column shape for a hire and for a termination", () => {
+      const active = shapeOf(one(52_000).container);
+      expect(shapeOf(one(null).container)).toEqual(active);
+      expect(shapeOf(one(45_000, null).container)).toEqual(active);
+    });
+
+    it("keeps the footer button present even with no callback to run", () => {
+      // Terminated with no `onRestore`: there is nothing to do, but removing
+      // the button would shorten the column and move every dial beside it.
+      const { container } = render(() => (
+        <MutationSliders
+          entities={[
+            {
+              id: "a",
+              label: "Ana",
+              old: 44_000,
+              value: null,
+              range: [40_000, 60_000],
+            },
+          ]}
+          onChange={() => {}}
+          onRemove={() => {}}
+        />
+      ));
+      const button = container.querySelector("button") as HTMLButtonElement;
+      expect(button).toBeTruthy();
+      expect(button.disabled).toBe(true);
+      expect(button.getAttribute("class")).toContain(
+        "sui-mutation-sliders__reserved",
+      );
+      // Hidden, so it is out of the tab order and out of the a11y tree.
+      expect(button.getAttribute("aria-hidden")).toBe("true");
+      expect(button.getAttribute("aria-label")).toBeNull();
+    });
+
+    it("keeps ONE footer button across terminate and restore", () => {
+      const [value, setValue] = createSignal<number | null>(52_000);
+      const { container } = render(() => (
+        <MutationSliders
+          entities={[
+            {
+              id: "a",
+              label: "Ana",
+              old: 44_000,
+              value: value(),
+              range: [40_000, 60_000],
+            },
+          ]}
+          onChange={() => {}}
+          onRemove={() => {}}
+          onRestore={() => {}}
+        />
+      ));
+      expect(container.querySelectorAll("button")).toHaveLength(1);
+      setValue(null);
+      expect(container.querySelectorAll("button")).toHaveLength(1);
     });
   });
 

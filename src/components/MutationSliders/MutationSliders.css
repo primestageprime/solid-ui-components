@@ -208,6 +208,24 @@
   box-shadow: 0 0 0 3px rgba(var(--sui-accent-rgb), 0.6);
 }
 
+/* ── Slots that hold their space ─────────────────────────────────────────
+   Peter, 2026-09-16: "You have elements that become invisible (was L7) but
+   they don't hold their space. That means the control moves around when you
+   change it, which is really bad UX."
+
+   `visibility: hidden` rather than removing the node, so the row keeps its
+   height and the big figure, the footer button and the dial above it stay
+   exactly where they were. The difference matters most mid-DRAG: pulling a
+   value onto its prior amount used to delete the `was …` line and jump
+   everything below it up, under the pointer, at the moment of least tolerance
+   for movement.
+
+   `visibility: hidden` also takes the node out of the accessibility tree and
+   out of the tab order, so a reserved button is not a focus trap. */
+.sui-mutation-sliders__reserved {
+  visibility: hidden;
+}
+
 /* ── The name ────────────────────────────────────────────────────────────
    A struck-through name is the sketch's own notation for "removed in the new
    scenario", and it is the first thing read — so it stays text, struck, rather

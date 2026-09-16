@@ -122,6 +122,7 @@ import { Slider as KobalteSlider } from "@kobalte/core/slider";
 import {
   type Component,
   Index,
+  type JSX,
   Show,
   createMemo,
   createSignal,
@@ -229,6 +230,15 @@ const PAGE_DIRECTION: Record<string, number> = {
 /** A page key, and Shift+arrow, move ten arrow steps. */
 const PAGE_MULTIPLE = 10;
 
+/**
+ * The placeholder an empty text slot carries.
+ *
+ * A non-breaking space, not an empty string: an empty inline box collapses to
+ * zero height and takes the row with it, which is the shift this exists to
+ * prevent. The `--reserved` class hides it; the character keeps the line.
+ */
+const NBSP = "\u00a0";
+
 /** The removed entity's readout: there is no future amount to print. */
 const NO_VALUE = "—";
 
@@ -312,20 +322,23 @@ const DialMarks: Component<{
     {/* The figure, level with the middle of the line it names. It is SVG text
         rather than a DOM node because its y is decided by the data, and a DOM
         node would need an inline style to sit there. */}
-    <Show when={props.deltaLabel}>
-      {(label) => (
-        <text
-          class="sui-mutation-sliders__delta"
-          classList={{
-            [`sui-mutation-sliders__delta--${props.dial.changeTone}`]: true,
-          }}
-          x={DELTA_X}
-          y={props.dial.deltaY ?? 0}
-        >
-          {label()}
-        </text>
-      )}
-    </Show>
+    {/* ALWAYS RENDERED, hidden when there is nothing to name. An SVG text node
+        cannot shift its siblings, but keeping the node means every dial has
+        the same shape in every state — which is what the no-shift tests
+        assert, and what stops a future edit reintroducing a conditional row
+        somewhere it DOES matter. */}
+    <text
+      class="sui-mutation-sliders__delta"
+      classList={{
+        [`sui-mutation-sliders__delta--${props.dial.changeTone}`]: true,
+        "sui-mutation-sliders__reserved": props.deltaLabel === null,
+      }}
+      x={DELTA_X}
+      y={props.dial.deltaY ?? 0}
+      aria-hidden="true"
+    >
+      {props.deltaLabel ?? NBSP}
+    </text>
   </svg>
 );
 
@@ -449,6 +462,39 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
     return `was ${format(dial.clampedOld)}`;
   };
 
+  /**
+   * What the one footer slot does right now, or `null` when the consumer has
+   * given it nothing to do.
+   *
+   * Resolved in ONE place so the label, the glyph, the disabled state and the
+   * click can never disagree about which state the button is in — the failure
+   * that shape prevents is a ⊗ that says Terminate and calls restore.
+   */
+  const footerAction = (
+    dial: DialGeometry,
+    id: string,
+    label: string,
+  ): { label: string; glyph: JSX.Element; act: () => void } | null => {
+    if (dial.removed) {
+      const onRestore = props.onRestore;
+      return onRestore
+        ? {
+            label: `Restore ${label}`,
+            glyph: <Icon name="undo" size="sm" />,
+            act: () => onRestore(id),
+          }
+        : null;
+    }
+    const onRemove = props.onRemove;
+    return onRemove
+      ? {
+          label: `Terminate ${label}`,
+          glyph: TERMINATE_MARK,
+          act: () => onRemove(id),
+        }
+      : null;
+  };
+
   return (
     <StretchRow
       ref={measure}
@@ -545,6 +591,9 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
             onCleanup(() => el.removeEventListener("keydown", onKeyDown, true));
           };
 
+          const footer = () =>
+            footerAction(dial(), entity().id, entity().label);
+
           const handleChange = (values: number[]): void => {
             const current = dial();
             props.onChange(entity().id, clampToRange(current.range, values[0]));
@@ -600,40 +649,38 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
                   </Show>
                 </KobalteSlider.Track>
               </KobalteSlider>
-              {/* The required line, then where they came from — if anywhere. */}
+              {/* The required line, then where they came from — if anywhere.
+                  The second line is ALWAYS RENDERED and merely hidden when it
+                  has nothing to say (Peter, 2026-09-16: "elements that become
+                  invisible but don't hold their space ... the control moves
+                  around when you change it"). Dragging a value onto its prior
+                  amount used to delete this row, which jumped the big figure
+                  and the button up under the pointer mid-gesture. */}
               <MonoValue>{futureReadout(dial())}</MonoValue>
-              <Show when={priorReadout(dial())}>
-                {(prior) => <MonoMeta>{prior()}</MonoMeta>}
-              </Show>
-              {/* ONE slot, two states (Peter's sketch, 2026-09-16). An active
-                  person offers ⊗ Terminate; a terminated one offers ↺ Restore
-                  in the same place. A disabled ⊗ was the wrong shape: it said
+              <MonoMeta
+                class={
+                  priorReadout(dial()) === ""
+                    ? "sui-mutation-sliders__reserved"
+                    : undefined
+                }
+              >
+                {priorReadout(dial()) || NBSP}
+              </MonoMeta>
+              {/* ONE slot, three states. An active person offers ⊗ Terminate; a
+                  terminated one offers ↺ Restore in the same place; and where
+                  the consumer supplies neither callback the button still holds
+                  its space, hidden. A disabled ⊗ was the wrong shape: it said
                   "you did this and there is nothing more to do", when what the
                   reader wants is the way back. */}
-              <Show when={!dial().removed}>
-                <Show when={props.onRemove}>
-                  {(onRemove) => (
-                    <SmallGhostButton
-                      aria-label={`Terminate ${entity().label}`}
-                      onClick={() => onRemove()(entity().id)}
-                    >
-                      {TERMINATE_MARK}
-                    </SmallGhostButton>
-                  )}
-                </Show>
-              </Show>
-              <Show when={dial().removed}>
-                <Show when={props.onRestore}>
-                  {(onRestore) => (
-                    <SmallGhostButton
-                      aria-label={`Restore ${entity().label}`}
-                      onClick={() => onRestore()(entity().id)}
-                    >
-                      <Icon name="undo" size="sm" />
-                    </SmallGhostButton>
-                  )}
-                </Show>
-              </Show>
+              <SmallGhostButton
+                class={footer() ? undefined : "sui-mutation-sliders__reserved"}
+                aria-label={footer()?.label}
+                aria-hidden={footer() ? undefined : "true"}
+                disabled={!footer()}
+                onClick={() => footer()?.act()}
+              >
+                {footer()?.glyph ?? TERMINATE_MARK}
+              </SmallGhostButton>
             </TightCenteredColumn>
           );
         }}
