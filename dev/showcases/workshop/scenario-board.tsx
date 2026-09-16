@@ -58,6 +58,8 @@ import {
   payBefore,
   payDomainOf,
   payFrom,
+  type SegmentLabel,
+  segmentLabelsOf,
   peopleOnRole,
   roleForPerson,
   roleOf,
@@ -272,29 +274,27 @@ export const rateOf = (entities: readonly Amounts[]): number =>
   rateFromPayChange(payChangeOf(entities));
 
 /**
- * The segment label for a mutation — its month.
+ * The as-of control's options: one per mutation, in time order, labelled by
+ * QUARTER to match the axis above them (`2025-Q3`).
  *
  * THE LOSSY MAPPING IS GONE. Until Peter merged the as-of control into the
  * Mutations card, the flags sat at three dates and the split button offered
  * three DIFFERENT ones, so two flags collapsed onto one segment and the round
  * trip lost information. The segments ARE the mutations now — the control
  * selects which mutation the dials are editing — so flag→segment→flag is the
- * identity and there is nothing left to lose. The two functions that used to
- * paper over the gap are deleted rather than kept as pass-throughs.
+ * identity whatever the chips READ, which is what makes it safe for the label
+ * to be an abbreviation. `segmentLabelsOf` owns the abbreviating, including
+ * what to do when two mutations land in one quarter.
  */
-const segmentLabelOf = (mutation: Mutation): string =>
-  new Date(timeOf(mutation.at)).toISOString().slice(0, 7);
-
-/** The as-of control's options: one per mutation, in time order. */
 export const segmentOptionsOf = (
   mutations: readonly Mutation[],
 ): SegmentOption[] =>
   map(
-    (mutation: Mutation) => ({
-      value: mutation.id,
-      label: segmentLabelOf(mutation),
+    (segment: SegmentLabel) => ({
+      value: segment.id,
+      label: segment.label,
     }),
-    orderedMutations(mutations),
+    segmentLabelsOf(mutations),
   );
 
 /**
@@ -691,15 +691,16 @@ const printTables = (
   );
   console.table(
     map(
-      (mutation: Mutation) => ({
-        flag: mutation.label,
-        at: new Date(timeOf(mutation.at)).toISOString().slice(0, 10),
-        // The segment IS the mutation now, so this column is a label rather
-        // than a mapping that can lose anything.
-        segment: segmentLabelOf(mutation),
-        editing: mutation.id === mutationId ? "◀ editing" : "",
+      (segment: SegmentLabel) => ({
+        flag:
+          find((m: Mutation) => m.id === segment.id, mutations)?.label ?? "",
+        // The chip READS by quarter; the exact month is the column beside it,
+        // which is where the abbreviation gets spent rather than lost.
+        segment: segment.label,
+        month: segment.month,
+        editing: segment.id === mutationId ? "◀ editing" : "",
       }),
-      orderedMutations(mutations),
+      segmentLabelsOf(mutations),
     ),
   );
   console.table(

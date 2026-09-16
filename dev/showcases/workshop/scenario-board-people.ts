@@ -14,6 +14,10 @@
  *      and from it onward, which is the pair a dial draws.
  *   3. The STATE TRANSITIONS — raise, terminate, restore and HIRE. Each one
  *      takes the people and returns new people; none of them mutate.
+ *   4. The MUTATION LABELS — how a change reads on the as-of control. They
+ *      live beside the pay walk because both are functions of the mutation
+ *      list in time order, and the disambiguation rule can only be decided by
+ *      looking at the WHOLE list.
  *
  * ── ROLES REPLACED BANDS (Peter, 2026-09-16) ───────────────────────────────
  *
@@ -38,7 +42,10 @@ import { filter, find, map, sortBy } from "../../../src/fn";
 // than through its barrel: the barrel pulls the Solid component in with them,
 // and the whole point of this file is that its test is arithmetic only.
 import { timeOf } from "../../../src/components/LevelsTimeline/geometry";
-import type { Mutation } from "../../../src/components/LevelsTimeline/geometry";
+import type {
+  Mutation,
+  TimeValue,
+} from "../../../src/components/LevelsTimeline/geometry";
 
 /**
  * A role: a name a person would recognise and the pay it permits.
@@ -355,3 +362,98 @@ export const peopleOnRole = (
   people: readonly Person[],
   roleId: string,
 ): Person[] => filter((person: Person) => person.roleId === roleId, people);
+
+// ── Mutation labels ──────────────────────────────────────────────────────────
+
+/**
+ * The quarter a moment falls in — `2025-Q3`. UTC, as every date here is.
+ *
+ * The AXIS above the chips formats a quarter the same way, and deliberately so
+ * — the chips exist to agree with it. The rule is a duplicate for now because
+ * the timeline inlines it inside `quarterTicks` rather than exporting it; if
+ * that formatter is ever extracted (`quarterLabelOf`), this should call it and
+ * the agreement stops being a convention the two sides have to keep.
+ */
+export const quarterLabel = (at: TimeValue): string => {
+  const when = new Date(timeOf(at));
+  const quarter = Math.floor(when.getUTCMonth() / 3) + 1;
+  return `${when.getUTCFullYear()}-Q${quarter}`;
+};
+
+/** The month, exactly — `2025-08`. What the chip's label is an abbreviation OF. */
+export const monthLabel = (at: TimeValue): string =>
+  new Date(timeOf(at)).toISOString().slice(0, 7);
+
+const MONTH_NAMES: readonly string[] = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/** The month, short — `Aug`. Only ever used to tell two chips in one quarter apart. */
+export const monthAbbrev = (at: TimeValue): string =>
+  MONTH_NAMES[new Date(timeOf(at)).getUTCMonth()] ?? "";
+
+/** One chip on the as-of control. */
+export interface SegmentLabel {
+  readonly id: string;
+  /** What the chip READS — `2025-Q3`, or `2025-Q3 · Aug` when it has company. */
+  readonly label: string;
+  /** The exact month the mutation is at — `2025-08`. */
+  readonly month: string;
+}
+
+/**
+ * The as-of chips, labelled to match the AXIS.
+ *
+ * The timeline's axis labels a one-year span by quarter (`2025-Q3`), so a chip
+ * that said `2025-07` made the reader translate between two vocabularies for
+ * the same instant. The chip reads the quarter.
+ *
+ * TWO MUTATIONS CAN SHARE A QUARTER — a click in July and another in August
+ * are both `2025-Q3` — and two chips with one label is a control that cannot
+ * be operated. So the rule is stated over the whole list rather than per
+ * mutation: a quarter holding more than one mutation labels ALL of its chips
+ * `2025-Q3 · Aug`. Both of them gain the month, not just the second one,
+ * because a reader comparing two chips needs them to differ in the same place.
+ *
+ * That suffix is always enough. A mutation's moment is snapped to a month
+ * boundary and `addMutation` refuses a second one at an existing timestamp, so
+ * no two mutations can share a month, and the pair (quarter, month) is unique
+ * by construction.
+ *
+ * The exact month rides along in `month` rather than only in the label,
+ * because the chip is an abbreviation and the table, the tooltip and anything
+ * else that wants the unabridged figure should not have to re-derive it.
+ * `SegmentedControl` has no per-segment title or aria today, so the board
+ * currently spends it on the DEBUG table; giving the control one is a change
+ * to a published component and belongs to whoever needs it next.
+ */
+export const segmentLabelsOf = (
+  mutations: readonly Mutation[],
+): SegmentLabel[] => {
+  const ordered = orderedMutations(mutations);
+  const crowd = new Map<string, number>();
+  for (const mutation of ordered) {
+    const quarter = quarterLabel(mutation.at);
+    crowd.set(quarter, (crowd.get(quarter) ?? 0) + 1);
+  }
+  return map((mutation: Mutation) => {
+    const quarter = quarterLabel(mutation.at);
+    const shared = (crowd.get(quarter) ?? 0) > 1;
+    return {
+      id: mutation.id,
+      label: shared ? `${quarter} \u00b7 ${monthAbbrev(mutation.at)}` : quarter,
+      month: monthLabel(mutation.at),
+    };
+  }, ordered);
+};

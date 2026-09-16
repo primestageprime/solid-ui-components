@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { map } from "../../../src/fn";
 import { isPresentAt } from "./scenario-board-rate";
 import {
   EMPTY_HIRE,
@@ -10,8 +11,10 @@ import {
   payBefore,
   payFrom,
   payDomainOf,
+  quarterLabel,
   roleOf,
   roleOptionLabel,
+  segmentLabelsOf,
   uniqueId,
   type Person,
 } from "./scenario-board-people";
@@ -181,5 +184,72 @@ describe("hiring at a mutation", () => {
 
   it("refuses to hire into a role nobody offers", () => {
     expect(() => hire([], { name: "Sam", roleId: "ceo" }, "summer")).toThrow();
+  });
+});
+
+// The chips sit directly under an axis that labels a one-year span by quarter,
+// so they read by quarter too — and the interesting half is what happens when
+// two changes land in the same one.
+describe("the as-of chips", () => {
+  const at = (iso: string): Mutation => ({
+    id: iso,
+    at: new Date(iso),
+    label: "",
+  });
+
+  it("labels each quarter of the year", () => {
+    expect(quarterLabel(new Date("2025-01-01"))).toBe("2025-Q1");
+    expect(quarterLabel(new Date("2025-03-31"))).toBe("2025-Q1");
+    expect(quarterLabel(new Date("2025-04-01"))).toBe("2025-Q2");
+    expect(quarterLabel(new Date("2025-07-01"))).toBe("2025-Q3");
+    expect(quarterLabel(new Date("2025-10-01"))).toBe("2025-Q4");
+    expect(quarterLabel(new Date("2025-12-31"))).toBe("2025-Q4");
+    expect(quarterLabel(new Date("2026-01-01"))).toBe("2026-Q1");
+  });
+
+  it("reads as the bare quarter when a quarter holds one change", () => {
+    expect(
+      map(
+        (segment) => segment.label,
+        segmentLabelsOf([at("2025-04-01"), at("2025-07-01")]),
+      ),
+    ).toEqual(["2025-Q2", "2025-Q3"]);
+  });
+
+  // BOTH chips gain the month, not just the second one: a reader comparing two
+  // chips needs them to differ in the same place.
+  it("adds the month to EVERY chip in a crowded quarter", () => {
+    expect(
+      map(
+        (segment) => segment.label,
+        segmentLabelsOf([at("2025-07-01"), at("2025-08-01"), at("2025-10-01")]),
+      ),
+    ).toEqual(["2025-Q3 · Jul", "2025-Q3 · Aug", "2025-Q4"]);
+  });
+
+  // The suffix is always enough, and this is why: a mutation's moment is
+  // snapped to a month boundary and no two may share a timestamp, so no two
+  // can share a month — which makes (quarter, month) unique by construction.
+  it("gives every chip in a year a distinct label", () => {
+    const months = map(
+      (index: number) => at(`2025-${String(index + 1).padStart(2, "0")}-01`),
+      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    );
+    const labels = map((segment) => segment.label, segmentLabelsOf(months));
+    expect(new Set(labels).size).toBe(12);
+  });
+
+  it("carries the exact month beside the abbreviation", () => {
+    const [segment] = segmentLabelsOf([at("2025-08-01")]);
+    expect(segment?.month).toBe("2025-08");
+  });
+
+  it("orders the chips in time, whatever order it is given", () => {
+    expect(
+      map(
+        (segment) => segment.id,
+        segmentLabelsOf([at("2025-10-01"), at("2025-04-01")]),
+      ),
+    ).toEqual(["2025-04-01", "2025-10-01"]);
   });
 });
