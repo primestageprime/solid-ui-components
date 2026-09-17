@@ -157,7 +157,6 @@ import {
   type Entity,
   TRACK_X,
   VIEW_WIDTH,
-  clampToRange,
   deltaLabelOf,
   moveTogether,
   pinTo,
@@ -385,7 +384,12 @@ const DialMarks: Component<{
     {/* The figure, level with the middle of the line it names. It is SVG text
         rather than a DOM node because its y is decided by the data, and a DOM
         node would need an inline style to sit there. */}
-    {/* ALWAYS RENDERED, hidden when there is nothing to name. An SVG text node
+    {/* ALWAYS RENDERED, hidden when there is nothing to name. It carries no
+        `aria-hidden` of its own: the whole overlay above is already
+        `aria-hidden`, so repeating it here said nothing and tripped
+        `noAriaHiddenOnFocusable`, which reads an SVG `<text>` as focusable.
+        Deleting the redundant attribute is a better answer than suppressing
+        the rule. An SVG text node
         cannot shift its siblings, but keeping the node means every dial has
         the same shape in every state — which is what the no-shift tests
         assert, and what stops a future edit reintroducing a conditional row
@@ -398,7 +402,6 @@ const DialMarks: Component<{
       }}
       x={DELTA_X}
       y={props.dial.deltaY ?? 0}
-      aria-hidden="true"
     >
       {props.deltaLabel ?? NBSP}
     </text>

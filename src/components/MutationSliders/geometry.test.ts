@@ -914,7 +914,7 @@ describe("pinTo — a selection levels up", () => {
     { id: "d", label: "D", old: 50_000, value: 52_000, range: JUNIOR },
     { id: "gone", label: "Gone", old: 50_000, value: null, range: JUNIOR },
   ];
-  const valueOf = (
+  const amountOf = (
     moved: readonly { id: string; value: number }[],
     id: string,
   ) => moved.find((m) => m.id === id)?.value;
@@ -922,28 +922,28 @@ describe("pinTo — a selection levels up", () => {
   it("snaps every selected entity to the HIGHEST among them", () => {
     // b is 72_000, a is 46_000 — a comes UP, b does not move.
     const moved = pinTo(PEOPLE, ["a", "b"]);
-    expect(valueOf(moved, "a")).toBe(60_000);
-    expect(valueOf(moved, "b")).toBeUndefined();
+    expect(amountOf(moved, "a")).toBe(60_000);
+    expect(amountOf(moved, "b")).toBeUndefined();
   });
 
   it("clamps each one to its OWN band rather than dropping it", () => {
     // Target is c's 95_000. A junior's ceiling is 60_000, so A follows as far
     // as a junior can and stays pinned at the top of their band.
-    expect(valueOf(pinTo(PEOPLE, ["a", "c"]), "a")).toBe(60_000);
+    expect(amountOf(pinTo(PEOPLE, ["a", "c"]), "a")).toBe(60_000);
   });
 
   it("levels UP, never down — the expensive mistake is a mis-click that cuts", () => {
     const moved = pinTo(PEOPLE, ["b", "d"]);
     // d rises to b's 72_000, clamped to the junior ceiling of 60_000...
-    expect(valueOf(moved, "d")).toBe(60_000);
+    expect(amountOf(moved, "d")).toBe(60_000);
     // ...and b, the highest, is untouched.
-    expect(valueOf(moved, "b")).toBeUndefined();
+    expect(amountOf(moved, "b")).toBeUndefined();
   });
 
   it("skips a terminated entity entirely, in both directions", () => {
     const moved = pinTo(PEOPLE, ["a", "gone"]);
     // It contributes no maximum and receives no amount.
-    expect(valueOf(moved, "gone")).toBeUndefined();
+    expect(amountOf(moved, "gone")).toBeUndefined();
     expect(moved).toHaveLength(0);
   });
 
@@ -967,25 +967,27 @@ describe("moveTogether — a pinned group drags as one", () => {
     { id: "b", label: "B", old: 90_000, value: 90_000, range: SENIOR },
     { id: "gone", label: "Gone", old: 50_000, value: null, range: JUNIOR },
   ];
-  const valueOf = (
+  const amountOf = (
     moved: readonly { id: string; value: number }[],
     id: string,
   ) => moved.find((m) => m.id === id)?.value;
 
   it("applies the SAME delta to every selected entity", () => {
     const moved = moveTogether(PEOPLE, ["a", "b"], 5_000);
-    expect(valueOf(moved, "a")).toBe(55_000);
-    expect(valueOf(moved, "b")).toBe(95_000);
+    expect(amountOf(moved, "a")).toBe(55_000);
+    expect(amountOf(moved, "b")).toBe(95_000);
   });
 
   it("clamps each to its own band, so one hitting a ceiling stops there", () => {
     const moved = moveTogether(PEOPLE, ["a", "b"], 30_000);
-    expect(valueOf(moved, "a")).toBe(60_000); // junior ceiling
-    expect(valueOf(moved, "b")).toBe(110_000); // senior ceiling
+    expect(amountOf(moved, "a")).toBe(60_000); // junior ceiling
+    expect(amountOf(moved, "b")).toBe(110_000); // senior ceiling
   });
 
   it("moves downward just as well", () => {
-    expect(valueOf(moveTogether(PEOPLE, ["a", "b"], -5_000), "a")).toBe(45_000);
+    expect(amountOf(moveTogether(PEOPLE, ["a", "b"], -5_000), "a")).toBe(
+      45_000,
+    );
   });
 
   it("applies the delta to each OWN value, so a split group keeps its shape", () => {
@@ -993,7 +995,7 @@ describe("moveTogether — a pinned group drags as one", () => {
     // onto one another the moment the group was nudged.
     const moved = moveTogether(PEOPLE, ["a", "b"], 1_000);
     expect(
-      (valueOf(moved, "b") as number) - (valueOf(moved, "a") as number),
+      (amountOf(moved, "b") as number) - (amountOf(moved, "a") as number),
     ).toBe(40_000);
   });
 
