@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.170.1
+
 ### Fixed
 - **`ScrubChart` gridlines and highlight bands paint UNDER the data again.**
   The component renders both chrome layers before `renderChart` to put them
