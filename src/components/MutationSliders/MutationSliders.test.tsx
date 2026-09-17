@@ -30,15 +30,13 @@ import {
 import { MutationSliders, createMutationSliders } from "./MutationSliders";
 import { NumberMutationSliders } from "./variants";
 import {
-  ADD_SLOT,
-  ARROW_SLOT,
-  DIAL_SLOT,
   MIN_DIAL_HEIGHT,
   TRACK_TOP,
   VIEW_HEIGHT,
   type Entity,
   trackBottomOf,
-} from "./geometry";
+} from "../MarkedSlider/geometry";
+import { ADD_SLOT, ARROW_SLOT, DIAL_SLOT } from "./rows";
 
 // Kobalte's Slider measures its track through ResizeObserver; jsdom lacks it.
 let sizer: FakeSizer;
@@ -119,7 +117,7 @@ describe("MutationSliders", () => {
       <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
     ));
     expect(
-      container.querySelectorAll(".sui-mutation-sliders__band"),
+      container.querySelectorAll(".sui-marked-slider__band"),
     ).toHaveLength(6);
   });
 
@@ -128,10 +126,10 @@ describe("MutationSliders", () => {
       <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
     ));
     expect(
-      container.querySelectorAll(".sui-mutation-sliders__arrow--prior"),
+      container.querySelectorAll(".sui-marked-slider__arrow--prior"),
     ).toHaveLength(6);
     expect(
-      container.querySelectorAll(".sui-mutation-sliders__arrow--future"),
+      container.querySelectorAll(".sui-marked-slider__arrow--future"),
     ).toHaveLength(5);
   });
 
@@ -145,10 +143,10 @@ describe("MutationSliders", () => {
         />
       ));
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__change--raise"),
+        container.querySelectorAll(".sui-marked-slider__change--raise"),
       ).toHaveLength(3);
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__change--cut"),
+        container.querySelectorAll(".sui-marked-slider__change--cut"),
       ).toHaveLength(2);
     });
 
@@ -169,7 +167,7 @@ describe("MutationSliders", () => {
         />
       ));
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__change"),
+        container.querySelectorAll(".sui-marked-slider__change"),
       ).toHaveLength(0);
     });
   });
@@ -316,10 +314,10 @@ describe("MutationSliders", () => {
         <MutationSliders entities={FIXTURE} onChange={() => {}} format={asK} />
       ));
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__delta--raise"),
+        container.querySelectorAll(".sui-marked-slider__delta--raise"),
       ).toHaveLength(3);
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__delta--cut"),
+        container.querySelectorAll(".sui-marked-slider__delta--cut"),
       ).toHaveLength(2);
     });
 
@@ -355,11 +353,11 @@ describe("MutationSliders", () => {
       ));
       // The node stays so every dial has the same shape in every state; the
       // reserved class hides it. A removed node is what shifts a layout.
-      const labels = container.querySelectorAll(".sui-mutation-sliders__delta");
+      const labels = container.querySelectorAll(".sui-marked-slider__delta");
       expect(labels).toHaveLength(3);
       for (const label of labels) {
         expect(label.getAttribute("class")).toContain(
-          "sui-mutation-sliders__reserved",
+          "sui-marked-slider__reserved",
         );
       }
     });
@@ -482,10 +480,13 @@ describe("MutationSliders", () => {
           onChange={() => {}}
         />
       ));
-      // The strike now lives on the NAME BUTTON, which wraps the label.
+      // The strike lives on the NAME BUTTON, which wraps the label —
+      // `PressableLabelButton` strikes whatever carries `data-struck`.
       expect(
-        (getByText("Joe").closest("button") as HTMLElement).className,
-      ).toContain("sui-mutation-sliders__name--removed");
+        (getByText("Joe").closest("button") as HTMLElement).hasAttribute(
+          "data-struck",
+        ),
+      ).toBe(true);
       expect(container.querySelectorAll("[data-removed]").length).toBe(1);
     });
 
@@ -524,10 +525,10 @@ describe("MutationSliders", () => {
         />
       ));
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__arrow--future"),
+        container.querySelectorAll(".sui-marked-slider__arrow--future"),
       ).toHaveLength(1);
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__arrow--prior"),
+        container.querySelectorAll(".sui-marked-slider__arrow--prior"),
       ).toHaveLength(0);
     });
 
@@ -540,7 +541,7 @@ describe("MutationSliders", () => {
         />
       ));
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__band"),
+        container.querySelectorAll(".sui-marked-slider__band"),
       ).toHaveLength(1);
     });
 
@@ -553,7 +554,7 @@ describe("MutationSliders", () => {
         />
       ));
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__change"),
+        container.querySelectorAll(".sui-marked-slider__change"),
       ).toHaveLength(0);
     });
 
@@ -721,7 +722,7 @@ describe("MutationSliders", () => {
     /** Press the track at `clientY`, which is how kobalte starts a slide. */
     const dragTo = (container: HTMLElement, clientY: number) => {
       const track = container.querySelector(
-        ".sui-mutation-sliders__track",
+        ".sui-marked-slider__track",
       ) as HTMLElement;
       // kobalte captures the pointer on the track; jsdom has no such method.
       const capture = installPointerCapture(track);
@@ -732,7 +733,7 @@ describe("MutationSliders", () => {
     let restoreRects: () => void;
     beforeEach(() => {
       restoreRects = installRects((el) =>
-        el.classList?.contains("sui-mutation-sliders__track")
+        el.classList?.contains("sui-marked-slider__track")
           ? rectOf({
               left: 0,
               top: TRACK_TOP_PX,
@@ -839,7 +840,7 @@ describe("MutationSliders", () => {
     const BAND: readonly [number, number] = [70_000, 110_000];
     const dragTo = (container: HTMLElement, clientY: number) => {
       const track = container.querySelector(
-        ".sui-mutation-sliders__track",
+        ".sui-marked-slider__track",
       ) as HTMLElement;
       const capture = installPointerCapture(track);
       fireEvent.pointerDown(track, { clientY, pointerId: 1, button: 0 });
@@ -849,7 +850,7 @@ describe("MutationSliders", () => {
     let restoreRects: () => void;
     beforeEach(() => {
       restoreRects = installRects((el) =>
-        el.classList?.contains("sui-mutation-sliders__track")
+        el.classList?.contains("sui-marked-slider__track")
           ? rectOf({ left: 0, top: 0, width: 22, height: 200 })
           : null,
       );
@@ -988,7 +989,7 @@ describe("MutationSliders", () => {
       const onChangeEnd = vi.fn();
       const onChange = vi.fn((_id: string, value: number) => setPay(value));
       const restoreRects = installRects((el) =>
-        el.classList?.contains("sui-mutation-sliders__track")
+        el.classList?.contains("sui-marked-slider__track")
           ? rectOf({ left: 0, top: 0, width: 22, height: 200 })
           : null,
       );
@@ -1000,7 +1001,7 @@ describe("MutationSliders", () => {
         />
       ));
       const track = container.querySelector(
-        ".sui-mutation-sliders__track",
+        ".sui-marked-slider__track",
       ) as HTMLElement;
       const capture = installPointerCapture(track);
       fireEvent.pointerDown(track, { clientY: 300, pointerId: 1, button: 0 });
@@ -1026,7 +1027,7 @@ describe("MutationSliders", () => {
       { id: "c", label: "Cal", old: 50_000, value: 52_000, range: JUNIOR },
     ];
     const nameButton = (container: HTMLElement, label: string) =>
-      [...container.querySelectorAll(".sui-mutation-sliders__name")].find(
+      [...container.querySelectorAll(".sui-btn--plain-label")].find(
         (b) => b.textContent === label,
       ) as HTMLButtonElement;
 
@@ -1057,7 +1058,7 @@ describe("MutationSliders", () => {
       ));
       fireEvent.click(nameButton(container, "Ana"));
       expect(
-        container.querySelectorAll(".sui-mutation-sliders__dial--selected"),
+        container.querySelectorAll(".sui-marked-slider--active"),
       ).toHaveLength(1);
     });
 
@@ -1212,12 +1213,17 @@ describe("MutationSliders", () => {
      * the property it was checking held. What the test means is "the same
      * nodes are present in both states", so that is what it now says.
      */
+    // Named by the VARIANT that renders each slot, since the column owns no
+    // classes of its own any more: the name is a `PressableLabelButton`, the
+    // dial is the `MarkedSlider` Primitive, the two readouts are the `value`
+    // and `sublabel` Text variants, and the footer is the one ghost button in
+    // a single-entity row.
     const SLOTS = [
-      ".sui-mutation-sliders__name",
-      ".sui-mutation-sliders__dial",
-      ".sui-mutation-sliders__figure",
-      ".sui-mutation-sliders__prior",
-      ".sui-mutation-sliders__footer",
+      ".sui-btn--plain-label",
+      ".sui-marked-slider",
+      ".text--value",
+      ".text--sublabel",
+      ".sui-btn--ghost",
     ] as const;
     const shapeOf = (container: HTMLElement): string[] =>
       map(
@@ -1253,8 +1259,8 @@ describe("MutationSliders", () => {
     it("keeps the `was …` row present, merely hidden, when it is empty", () => {
       const { container } = one(44_000);
       const rows = container.querySelectorAll(".text");
-      const hidden = [...rows].filter((r) =>
-        r.className.toString().includes("sui-mutation-sliders__reserved"),
+      const hidden = [...rows].filter(
+        (r) => (r as HTMLElement).style.visibility === "hidden",
       );
       expect(hidden).toHaveLength(1);
       // A non-breaking space, not an empty string: an empty inline box
@@ -1287,13 +1293,11 @@ describe("MutationSliders", () => {
         />
       ));
       const button = container.querySelector(
-        ".sui-mutation-sliders__footer",
+        ".sui-btn--ghost",
       ) as HTMLButtonElement;
       expect(button).toBeTruthy();
       expect(button.disabled).toBe(true);
-      expect(button.getAttribute("class")).toContain(
-        "sui-mutation-sliders__reserved",
-      );
+      expect(button.style.visibility).toBe("hidden");
       // Hidden, so it is out of the tab order and out of the a11y tree.
       expect(button.getAttribute("aria-hidden")).toBe("true");
       expect(button.getAttribute("aria-label")).toBeNull();
@@ -1318,7 +1322,7 @@ describe("MutationSliders", () => {
         />
       ));
       const footers = () =>
-        container.querySelectorAll(".sui-mutation-sliders__footer");
+        container.querySelectorAll(".sui-btn--ghost");
       expect(footers()).toHaveLength(1);
       setValue(null);
       expect(footers()).toHaveLength(1);
@@ -1343,7 +1347,7 @@ describe("MutationSliders", () => {
         <MutationSliders entities={SOLO} onChange={() => {}} />
       ));
       const dial = view.container.querySelector(
-        ".sui-mutation-sliders__dial",
+        ".sui-marked-slider",
       ) as HTMLElement;
       await sizer.resize(dial, { width: 88, height: TALL });
       return view;
@@ -1361,7 +1365,7 @@ describe("MutationSliders", () => {
       // not at 260-scale, which would be roughly a third of the way down.
       const { container } = await tall();
       const arrow = container.querySelector(
-        ".sui-mutation-sliders__arrow--future",
+        ".sui-marked-slider__arrow--future",
       ) as SVGPathElement;
       const ys = map((p) => p.y, pointsOf(arrow.getAttribute("d") as string));
       expect(Math.min(...ys)).toBeLessThanOrEqual(TRACK_TOP);
@@ -1371,7 +1375,7 @@ describe("MutationSliders", () => {
     it("puts the PRIOR arrow at the track bottom for the band's min", async () => {
       const { container } = await tall();
       const arrow = container.querySelector(
-        ".sui-mutation-sliders__arrow--prior",
+        ".sui-marked-slider__arrow--prior",
       ) as SVGPathElement;
       const ys = map((p) => p.y, pointsOf(arrow.getAttribute("d") as string));
       const bottom = trackBottomOf(TALL);
@@ -1384,7 +1388,7 @@ describe("MutationSliders", () => {
     it("spans the BAND box across the whole track at the measured height", async () => {
       const { container } = await tall();
       const band = container.querySelector(
-        ".sui-mutation-sliders__band",
+        ".sui-marked-slider__band",
       ) as SVGRectElement;
       // The band IS the whole domain here, so it must run the whole track.
       expect(Number(band.getAttribute("y"))).toBe(TRACK_TOP);
@@ -1396,7 +1400,7 @@ describe("MutationSliders", () => {
     it("runs the CHANGE LINE the whole track too, not a third of it", async () => {
       const { container } = await tall();
       const line = container.querySelector(
-        ".sui-mutation-sliders__change",
+        ".sui-marked-slider__change",
       ) as SVGRectElement;
       expect(Number(line.getAttribute("height"))).toBe(
         trackBottomOf(TALL) - TRACK_TOP,
@@ -1409,7 +1413,7 @@ describe("MutationSliders", () => {
       // which is the half that broke.
       const { container } = await tall();
       const d = container
-        .querySelector(".sui-mutation-sliders__track-line")
+        .querySelector(".sui-marked-slider__track-line")
         ?.getAttribute("d") as string;
       const ys = map((p) => p.y, pointsOf(d));
       expect(Math.min(...ys)).toBe(TRACK_TOP);
@@ -1431,7 +1435,7 @@ describe("MutationSliders", () => {
     /** The viewBox's height is the dial's drawn height, 1:1. */
     const drawnHeight = (container: HTMLElement): number => {
       const svg = container.querySelector(
-        ".sui-mutation-sliders__marks",
+        ".sui-marked-slider__marks",
       ) as SVGSVGElement;
       return Number(svg.getAttribute("viewBox")?.split(" ")[3]);
     };
@@ -1467,7 +1471,7 @@ describe("MutationSliders", () => {
         <MutationSliders entities={SOLO} onChange={() => {}} />
       ));
       const dial = container.querySelector(
-        ".sui-mutation-sliders__dial",
+        ".sui-marked-slider",
       ) as HTMLElement;
       expect(sizer.observed()).toContain(dial);
       await sizer.resize(dial, { width: 88, height: 470 });
@@ -1479,11 +1483,11 @@ describe("MutationSliders", () => {
         <MutationSliders entities={SOLO} onChange={() => {}} />
       ));
       const dial = container.querySelector(
-        ".sui-mutation-sliders__dial",
+        ".sui-marked-slider",
       ) as HTMLElement;
       await sizer.resize(dial, { width: 88, height: 470 });
       const d = container
-        .querySelector(".sui-mutation-sliders__track-line")
+        .querySelector(".sui-marked-slider__track-line")
         ?.getAttribute("d");
       // 470 - TRACK_TOP(12) = 458 is where the bottom cap must sit.
       expect(d).toContain("458");
@@ -1503,7 +1507,7 @@ describe("MutationSliders", () => {
       ));
       const label = () =>
         container.querySelector(
-          ".sui-mutation-sliders__delta",
+          ".sui-marked-slider__delta",
         ) as SVGTextElement;
       await sizer.resizeAll({ width: 800, height: 520 });
       const tallX = label().getAttribute("x");

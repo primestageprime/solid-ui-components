@@ -108,6 +108,7 @@ import { DistributionSparklineShowcase } from "./showcases/distribution-sparklin
 import { RateGaugeShowcase } from "./showcases/rate-gauge";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { BandRailShowcase } from "./showcases/band-rail";
+import { MarkedSliderShowcase } from "./showcases/marked-slider";
 import { MutationSlidersShowcase } from "./showcases/mutation-sliders";
 import { SliderShowcase } from "./showcases/slider";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
@@ -674,10 +675,16 @@ const items: Item[] = [
     tags: ["depth:1", "chart", "form", "data"],
   },
   {
+    id: "marked-slider",
+    label: "MarkedSlider",
+    component: MarkedSliderShowcase,
+    tags: ["depth:1", "form", "data"],
+  },
+  {
     id: "mutation-sliders",
     label: "MutationSliders",
     component: MutationSlidersShowcase,
-    tags: ["depth:2", "form", "data"],
+    tags: ["depth:3", "form", "data"],
   },
   {
     id: "slider",

@@ -83,3 +83,52 @@
     transform: rotate(360deg);
   }
 }
+
+/* ── A toggleable LABEL ──────────────────────────────────────────────────
+   The button stripped back to its own text: no box, no padding, no colour of
+   its own. For a name that is ALSO the select control — a real <button>, so
+   Tab and Enter work without a composite inventing key handling, and
+   `aria-pressed` at the call site so a screen reader says "Ana, pressed"
+   instead of leaving the state to the colour.
+
+   `display: block` with no padding ON PURPOSE: the column centres it, and any
+   padding here would move the name off the axis the instrument under it sits
+   on. Specificity is lifted to (0,2,0) the way `.sui-btn.sui-btn--pill` is,
+   because `.sui-btn`'s own padding and the theme's variant colours sit at
+   (0,1,0) and the theme is injected into <head> after this file.
+
+   SELECTED reads as the accent plus weight, and NOT as `--active`'s tinted
+   box: there is no box here to tint, and a filled rectangle behind a bare name
+   in a row of nine reads as a different control rather than as the same one,
+   chosen. */
+.sui-btn.sui-btn--plain-label {
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.sui-btn.sui-btn--plain-label:focus-visible {
+  outline: 2px solid var(--sui-border-focus);
+  outline-offset: 2px;
+}
+
+.sui-btn.sui-btn--plain-label.sui-btn--active {
+  background: none;
+  border-color: transparent;
+  color: var(--sui-accent);
+  font-weight: 600;
+}
+
+/* A STRUCK label is the caller's notation for "this one is out". It stays the
+   NAME, struck, rather than becoming a badge beside the name: it is the first
+   thing read, and the strike is the whole message. Driven by a data attribute
+   rather than a second variant, so it composes with `--active` — a name can be
+   both struck and selected. */
+.sui-btn.sui-btn--plain-label[data-struck] {
+  text-decoration: line-through;
+}

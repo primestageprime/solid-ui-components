@@ -140,7 +140,7 @@ export const MutationSlidersShowcase: Component = () => {
 
   return (
     <div class="component-section component-section--full">
-      <h2>MutationSliders — Composite (Depth 2)</h2>
+      <h2>MutationSliders — Composite (Depth 3)</h2>
 
       <div class="example-group">
         <h3>Six entities — a rise, a fall, a removal and an arrival</h3>

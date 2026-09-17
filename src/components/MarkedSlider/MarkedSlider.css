@@ -1,0 +1,237 @@
+/* ============================================
+   MarkedSlider — Atomic Primitive (Depth 1), structural
+
+   ONE vertical slider, marked: a thin line running the whole shared `domain`,
+   a shaded ALLOWED RANGE box on it, a muted PRIOR arrowhead and an accent
+   VALUE arrowhead pointing at the track from opposite sides, a wider coloured
+   line between them, and a small figure beside that line.
+
+   Everything positional in the SVG overlay is decided in geometry.ts. The only
+   numbers repeated HERE are the ones the Kobalte track must agree with — the
+   slider's box and the track's inset — because Kobalte places the thumb as a
+   percentage of the TRACK element, so the track has to occupy exactly the span
+   `geometry.ts` maps the domain onto. `geometry.test.ts` pins the two files
+   together, so a change to one fails until the other follows.
+
+   COLOUR. The change line is green for a rise and red for a fall (Peter,
+   2026-09-16, superseding the earlier accent-only ruling). Hue is never the
+   ONLY cue: the two arrowheads carry the same reading by POSITION — the value
+   above the prior is a rise, below it is a fall — so the colourblind theme
+   loses nothing but the reinforcement.
+
+   LAYOUT PURITY — AUDITED INTRINSIC. Every part styled here is this
+   Primitive's OWN mark, not a caller's child, and each one places itself
+   against a data-driven percentage the same way Slider's notches do. There is
+   no flex, no grid and no gap in this file. Nothing outside this component's
+   own DOM is styled here: the column a consumer stands it in, the name above
+   it and the readouts below are the CONSUMER'S composition, and
+   `MutationSliders` builds them from Layout, Text and Button variants.
+
+   All visual values come from `--sui-*` tokens.
+   ============================================ */
+
+/* ── The slider ──────────────────────────────────────────────────────────
+   The Kobalte root. It is the SVG's canvas as well as the slider's box, and
+   the two are the same px, so no scale factor exists anywhere.
+
+   It takes the height left over in the column a consumer stands it in, with
+   the fixed default as its flex basis — so an unconstrained column resolves to
+   exactly the 260px it drew before, a taller one lengthens the track, and a
+   shorter one shrinks only as far as the floor.
+   `--sui-marked-slider-min-height` mirrors `MIN_DIAL_HEIGHT` in geometry.ts;
+   below it the 11px delta labels collide, which is the one part of the drawing
+   that cannot survive being short. */
+.sui-marked-slider {
+  /* Mirrors VIEW_HEIGHT / VIEW_WIDTH in geometry.ts — geometry.test.ts pins
+     the pair. Tall, because the only thing that separates two arrows a
+     thousandth of the span apart is vertical room; and wider than the track,
+     because the signed delta label lives on the canvas to the right of it. */
+  --sui-marked-slider-height: 260px;
+  --sui-marked-slider-width: 88px;
+  --sui-marked-slider-min-height: 180px;
+  --sui-marked-slider-track-inset: 12px;
+  /* The drag surface is wider than any drawn mark, so a press anywhere on the
+     slider starts a drag — Kobalte slides from the TRACK, not only from the
+     thumb, which is what lets the value arrowhead stay small. */
+  --sui-marked-slider-grip-width: 22px;
+  /* The track's centre line, mirroring TRACK_X. */
+  --sui-marked-slider-track-x: 44px;
+  /* The grab handle over the value arrowhead. It draws nothing: the SVG
+     already drew the arrow, so both arrowheads come from one geometry
+     function and cannot drift apart in shape. */
+  --sui-marked-slider-thumb-width: 12px;
+  --sui-marked-slider-thumb-height: 12px;
+  position: relative;
+  width: var(--sui-marked-slider-width);
+  flex: 1 1 var(--sui-marked-slider-height);
+  min-height: var(--sui-marked-slider-min-height);
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+}
+
+/* A slider with no value keeps its range box and its prior arrow and loses the
+   value one. Dimming says "this is still the same thing, it just has no value
+   in this state" — hiding the drawing would lose the comparison entirely. */
+.sui-marked-slider[data-removed] {
+  opacity: 0.4;
+}
+
+/* The ring is drawn OUTSIDE the box, so it cannot change the height the
+   geometry was measured at — an inset ring would shrink the track by two
+   pixels and put the drawing and the pointer back out of step. */
+.sui-marked-slider--active {
+  outline: 1px solid rgba(var(--sui-accent-rgb), 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+  background: rgba(var(--sui-accent-rgb), 0.07);
+}
+
+/* ── The painted marks ───────────────────────────────────────────────────
+   One overlay, lying exactly on the slider's box. It takes no pointer events:
+   the track under it is the drag surface, and a mark that swallowed the press
+   would make the slider dead at exactly the places a reader aims for. */
+.sui-marked-slider__marks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sui-marked-slider__track-line {
+  stroke: var(--sui-border);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  fill: none;
+}
+
+/* The ALLOWED RANGE. Translucent so the track line reads THROUGH it — the box
+   is the span the value is permitted, not a mark that hides the scale it sits
+   on. */
+.sui-marked-slider__band {
+  fill: var(--sui-text-secondary);
+  /* Measured in the browser, not guessed: at 0.14 the band was invisible on a
+     dark surface and the slider read as marks floating on a bare line. */
+  fill-opacity: 0.28;
+  stroke: none;
+}
+
+/* ── The change, in colour ───────────────────────────────────────────────
+   Green up, red down, nothing when the value did not move. The tone is
+   written as a modifier rather than an inline fill, so the theme owns the two
+   hues and a new theme can change them without touching this component. */
+.sui-marked-slider__change {
+  stroke: none;
+}
+
+.sui-marked-slider__change--raise {
+  fill: var(--sui-success);
+}
+
+.sui-marked-slider__change--cut {
+  fill: var(--sui-danger);
+}
+
+/* ── The signed delta label ──────────────────────────────────────────────
+   `+2.5k` beside the change line, level with its midpoint (Peter,
+   2026-09-16). It restates in a FIGURE what the coloured line says as an
+   area — "the levels are very close" was the note, and at close quarters an
+   area is hard to read and a number never is.
+
+   Toned to match its line, and that is the one place hue is load-bearing —
+   so the sign character carries the same reading for anyone who cannot see
+   the difference. */
+.sui-marked-slider__delta {
+  font-family: var(--sui-font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  dominant-baseline: middle;
+}
+
+.sui-marked-slider__delta--raise {
+  fill: var(--sui-success);
+}
+
+.sui-marked-slider__delta--cut {
+  fill: var(--sui-danger);
+}
+
+/* ── The two arrowheads ──────────────────────────────────────────────────
+   Same shape, mirrored, pointing at the track from opposite sides. The PRIOR
+   one is read-only and recedes; the VALUE one is the thing being dragged and
+   carries the accent. */
+.sui-marked-slider__arrow--prior {
+  fill: var(--sui-text-secondary);
+  fill-opacity: 0.7;
+}
+
+.sui-marked-slider__arrow--future {
+  fill: var(--sui-accent);
+}
+
+/* ── The drag surface ────────────────────────────────────────────────────
+   Kobalte places the thumb at `bottom: N%` of THIS element, so its inset is
+   the one number that has to agree with geometry.ts. It draws nothing: the
+   overlay above already drew every mark. */
+.sui-marked-slider__track {
+  position: absolute;
+  top: var(--sui-marked-slider-track-inset);
+  bottom: var(--sui-marked-slider-track-inset);
+  left: calc(
+    var(--sui-marked-slider-track-x) - var(--sui-marked-slider-grip-width) / 2
+  );
+  width: var(--sui-marked-slider-grip-width);
+  background: transparent;
+  cursor: pointer;
+}
+
+.sui-marked-slider[data-disabled] .sui-marked-slider__track {
+  cursor: not-allowed;
+}
+
+/* The grab handle, sitting over the value arrowhead the SVG drew. It is
+   invisible ON PURPOSE — one arrow shape, drawn once, from geometry.
+   Kobalte writes `position`, `bottom` and `transform: translateY(50%)` as
+   INLINE styles here, and an inline transform beats this file, so the
+   horizontal placement is a `left`/`width` pair rather than the other half of
+   a two-axis transform, which would be silently dropped. */
+.sui-marked-slider__thumb {
+  left: calc(
+    var(--sui-marked-slider-grip-width) - var(--sui-marked-slider-thumb-width)
+  );
+  width: var(--sui-marked-slider-thumb-width);
+  height: var(--sui-marked-slider-thumb-height);
+  background: transparent;
+  border-radius: 2px;
+  cursor: grab;
+  outline: none;
+  transition: box-shadow 120ms ease;
+}
+
+.sui-marked-slider__thumb:hover:not([data-disabled]) {
+  box-shadow: 0 0 0 3px rgba(var(--sui-accent-rgb), 0.2);
+}
+
+.sui-marked-slider__thumb:active:not([data-disabled]) {
+  cursor: grabbing;
+}
+
+/* A keyboard user has to see which slider the arrow keys move. The ring is the
+   ONLY thing this element ever paints. */
+.sui-marked-slider__thumb:focus-visible {
+  box-shadow: 0 0 0 3px rgba(var(--sui-accent-rgb), 0.6);
+}
+
+/* ── A mark that holds its space ─────────────────────────────────────────
+   Peter, 2026-09-16: "You have elements that become invisible (was L7) but
+   they don't hold their space. That means the control moves around when you
+   change it, which is really bad UX."
+
+   The delta label is ALWAYS rendered and merely hidden when there is no change
+   to name, so every slider has the same shape in every state — which is what
+   the no-shift tests assert, and what stops a future edit reintroducing a
+   conditional node somewhere it DOES matter. */
+.sui-marked-slider__reserved {
+  visibility: hidden;
+}
