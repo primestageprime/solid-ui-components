@@ -98,30 +98,36 @@ import {
   rateBandTable,
   rateFromPayChange,
 } from "./scenario-board-rate";
+// THE PACKAGE BARREL, for everything that has been promoted — the three
+// components this board is the first real consumer of came out of the workshop
+// today, so it imports them the way a client would rather than reaching into
+// their folders. Every name here was probed through `src/index.ts` before the
+// move: `export *` can swallow a name silently on a collision, and a deep
+// import that still works is a comfortable place to hide from that.
+//
+// They come as FACTORIES, not bases. Promotion split each surface: the money
+// format, the snap grid, the staffing verbs, the rails' captions and the
+// gauge's two callout sentences are all Overrides, and this board is the
+// consumer that owns those decisions — so it curries them once, below, and its
+// call sites pass data and callbacks only.
+//
+// `Entity` is published as `MutationEntity`: too generic a word to put on a
+// shared barrel unqualified.
 import {
   createLevelsTimeline,
+  createMutationSliders,
+  createRateGauge,
   timeOf,
-} from "../../../src/components/LevelsTimeline";
+} from "../../../src";
 import type {
   CountPoint,
   Level,
   Mutation,
+  MutationEntity,
   TimeDomain,
   TimeValue,
   Transfer,
-} from "../../../src/components/LevelsTimeline";
-// The two PROMOTED components come through their factories, not their bases.
-// Promotion split both surfaces: the money format, the snap grid, the staffing
-// verbs and the callout sentences are all OVERRIDES now, and this board is the
-// consumer that owns those decisions — so it curries them once, below, and its
-// call sites pass data and callbacks only.
-//
-// `Entity` is published as `MutationEntity`, because `Entity` is too generic a
-// word for the root barrel. The type comes from the component's own folder
-// rather than the root: an ambiguous `export *` resolves to nothing there.
-import { createMutationSliders } from "../../../src/components/MutationSliders";
-import type { MutationEntity } from "../../../src/components/MutationSliders";
-import { createRateGauge } from "../../../src/components/RateGauge";
+} from "../../../src";
 import { SegmentedControl } from "../../../src/components/SegmentedControl";
 import type { SegmentOption } from "../../../src/components/SegmentedControl";
 
