@@ -1,23 +1,22 @@
-// Barrel — WORKSHOP PROTOTYPE, deliberately NOT re-exported from src/index.ts.
+// Barrel — the PUBLIC surface, re-exported from src/index.ts.
 //
-// The bench (dev/showcases/workshop/rate-gauge.tsx) reaches this folder
-// directly while the API is still being settled. Promotion (`/promote`) is
-// what adds the package export, the dedicated showcase, the COMPONENTS.md
-// entry and whatever curried variants the first real caller turns out to need.
+// Deliberately narrow. `geometry.ts` is a private module: it is pure, it prints
+// as a table, and every one of its ~20 exports exists so `geometry.test.ts` can
+// read the dial without a browser — not so a consumer can. Publishing them
+// would make each one API the manifest owes an entry for and the next agent
+// owes a deprecation to. `Domain` is the exception, because a call site has to
+// be able to name the type of the `domain` prop it passes — exported under a
+// qualified name, because `Domain` is a word more than one component in this
+// library wants and an ambiguous `export *` resolves to nothing at all.
 //
-// No factory here on purpose: every prop is data (`domain`, `baseline`,
-// `value`, `label`, `format`, `baselineLabel`), so there is nothing static to
-// curry, and `createRateGauge({})` would be an unconfigured surface.
-export { RateGauge } from "./RateGauge";
-export type { RateGaugeProps } from "./RateGauge";
-export {
-  angleFor,
-  braceCusp,
-  bracePath,
-  capArc,
-  clampedValue,
-  gaugeGeometry,
-  yellowDegrees,
-  zoneOf,
-} from "./geometry";
-export type { Callout, Domain, GaugeGeometry, LabelId, Zone } from "./geometry";
+// Clients import `RateDial` (or curry their own units once with
+// `createRateGauge`); `RateGauge` itself is exported for the case where every
+// override is already being passed explicitly.
+export { RateGauge, createRateGauge } from "./RateGauge";
+export type {
+  RateGaugeProps,
+  RateGaugeOverrides,
+  RateGaugeDataProps,
+} from "./RateGauge";
+export { RateDial } from "./variants";
+export type { Domain as RateGaugeDomain } from "./geometry";

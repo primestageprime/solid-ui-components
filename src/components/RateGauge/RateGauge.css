@@ -262,8 +262,9 @@
   text-align: left;
 }
 
-/* The warning tone, for a gain that is not yet comfortable. Mirrors the
-   success rules exactly — the band's meaning changes, its treatment does not. */
+/* The warning tone, for a positive value below the caution threshold. Mirrors
+   the success rules exactly — the band's meaning changes, its treatment does
+   not. */
 .sui-rate-gauge--warning .sui-rate-gauge__delta-sector {
   fill: var(--sui-warning);
   fill-opacity: 0.22;
@@ -306,11 +307,11 @@
   letter-spacing: 0;
 }
 
-/* The brace's line is a SENTENCE, not a name — "$18,000/mo off payroll" reads
-   as shouting in caps, and it is the one line one that describes rather than
-   labels. It keeps its callout's tone and its weight, because it is still the
-   figure the card exists to report. */
-.sui-rate-gauge .sui-rate-gauge__row .sui-rate-gauge__label--payroll {
+/* The brace's line is a SENTENCE the consumer wrote, not a name — a phrase
+   like "18,000 off payroll" reads as shouting in caps, and it is the one line
+   that describes rather than labels. It keeps its callout's tone and its
+   weight, because it is still the figure the card exists to report. */
+.sui-rate-gauge .sui-rate-gauge__row .sui-rate-gauge__label--delta {
   text-transform: none;
   letter-spacing: 0;
 }

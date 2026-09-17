@@ -2,6 +2,71 @@
 
 ## Unreleased
 
+### Added
+- **`MutationSliders` promoted from the workshop bench to the catalog.** A row
+  of vertical prior-vs-future dials, one per named entity: the shaded allowed
+  range on a shared track, a muted prior arrowhead and an accent future one
+  meeting nose to nose, a toned change line between them and the signed delta
+  as a figure. Three presences — present, removed (`value: null`) and new
+  (`old: null`) — each with its own shape rather than one nullable flag. The
+  range is the clamp: nothing is drawn, announced or emitted outside it. It
+  measures itself in both directions, paging by one dial and never below one
+  when the row is too narrow, and lengthening the track to fill a sized card.
+  Clicking two names pins them: they level up to the highest among them and
+  then drag together, each stopping at its own ceiling. Now exports from the
+  barrel with a dedicated showcase, a `COMPONENTS.md` entry and the curried
+  variant `NumberMutationSliders` (plain locale-grouped numbers, neutral
+  verbs, no grid). Factory: `createMutationSliders({ format, labels, snap })` —
+  the unit, the vocabulary and the grid are properties of the consumer's
+  world; `entities`, `domain`, the selection and every callback stay data at
+  the call site. Exported types: `MutationSlidersProps`,
+  `MutationSlidersOverrides`, `MutationSlidersDataProps`,
+  `MutationSliderLabels`, `MutationEntity`, `MutationSlidersDomain`.
+- **`MutationSliders` takes the consumer's own vocabulary through `labels`.**
+  `labels.remove`, `labels.restore` and `labels.new` default to `"Remove"` /
+  `"Restore"` / `"New"`, and a partial object fills only the gaps it leaves —
+  so a consumer whose entities are people passes
+  `{ remove: "Terminate", new: "new hire" }` and the component itself stays
+  free of any domain's words. Additive: the defaults are what the component
+  said before in substance, and no existing prop changed shape.
+- **`RateGauge` promoted from the workshop bench to the catalog.** The
+  right-facing half-ring dial — zoned ring, dashed reference needle, capped
+  value needle, delta brace and sector, and elbow-leader HUD callouts — now
+  exports from the barrel with a dedicated showcase, a `COMPONENTS.md` entry
+  and the curried variant `RateDial` (plain numbers against zero). Zero is
+  always the horizontal and the tone follows the band the needle stands in.
+  Factory: `createRateGauge({ baselineLabel, formatAgainst, formatDelta })` —
+  the wording is presentational and curries once at the consumer's layer;
+  `domain`, `baseline`, `value`, `label` and `caution` stay data at the call
+  site.
+
+### Changed
+- **`MutationSliders` says nothing domain-specific of its own, and is split at
+  the seam.** Every "pay", "salary", "hire", "terminate" and currency is gone
+  from the component, its geometry and its CSS: the model is entities with a
+  prior amount, a future amount, an allowed range and a presence, and the
+  three words that carry a consumer's meaning moved to the `labels` prop. One
+  entity's column is now a private `MutationDial` (`dial.tsx`) reporting where
+  its thumb went in three phases (`drag` / `commit` / `step`), so the row owns
+  paging, selection and the pin fan-out and the dial owns one column's DOM and
+  its own measurement. Behaviour and the public prop names are unchanged; the
+  folder's ~30 `geometry.ts` exports are now private, and `Entity` and
+  `Domain` publish as `MutationEntity` and `MutationSlidersDomain` because an
+  ambiguous `export *` resolves to nothing at all.
+- **`RateGauge` says nothing domain-specific of its own.** The component
+  shipped with "breakeven", "payroll" and a currency baked into the sentences
+  it built around the consumer's numbers. `format` (which nothing read) and
+  `formatMagnitude` are replaced by `formatAgainst(value)` and
+  `formatDelta(delta)`, which return the WHOLE second line of a callout and
+  the WHOLE brace line respectively — so a consumer's "$60k/yr over breakeven"
+  and "$20k/yr to payroll" are theirs, and the generic defaults print a plain
+  grouped number ("at zero" for zero). `comfortable` is renamed `caution`
+  ("positive values below this read as caution"), `baselineLabel` now defaults
+  to `"Reference"`, and the announcement's band phrases name the bands rather
+  than a comfort level. The folder's ~20 `geometry.ts` exports stay private;
+  the barrel publishes `RateGauge`, `createRateGauge`, `RateDial`, the
+  props/Overrides/DataProps types and `RateGaugeDomain`.
+
 ## 0.170.0
 
 ### Fixed

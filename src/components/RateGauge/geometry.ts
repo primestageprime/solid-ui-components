@@ -16,8 +16,8 @@
 //     counter-clockwise (up the screen), negative clockwise (down). The
 //     y-inversion SVG needs happens in exactly ONE place, `pointAt`.
 //   • The gauge does NO arithmetic on the consumer's values beyond geometry
-//     and the delta it is asked to announce. It never formats (`format` is
-//     the consumer's) and it never snaps a value to anything.
+//     and the delta it is asked to announce. It never formats (every
+//     formatter is the consumer's) and it never snaps a value to anything.
 //   • The zone split is the angle of ZERO, derived via `angleFor(domain, 0)`,
 //     not a hardcoded horizontal. For a symmetric domain those are the same
 //     number; for an asymmetric one a hardcoded horizontal would draw a
@@ -34,7 +34,7 @@ export type Zone = "positive" | "negative";
 
 /**
  * The tone a band of the ring carries. `warning` appears only when the
- * consumer names a `comfortable` gain — the yellow between zero and it.
+ * consumer names a `caution` threshold — the stretch between zero and it.
  */
 export type BandTone = "success" | "warning" | "danger";
 
@@ -444,7 +444,7 @@ const LABEL_CHAR_WIDTH = 7.3;
  * The column's floor and ceiling.
  *
  * The floor keeps a gauge whose labels are all short from cutting the column
- * to a stub the eye reads as clipped. The ceiling matters more: the scenario's
+ * to a stub the eye reads as clipped. The ceiling matters more: the value's
  * name is the consumer's and can be any length, and it ELLIPSIZES into this
  * column — so a name allowed to set the width without limit would both stretch
  * the dial thin and defeat the truncation it is supposed to trigger. Past the
@@ -463,8 +463,8 @@ const wantedColumnWidth = (texts: readonly string[]): number =>
 /**
  * How wide a label column has to be to hold these strings.
  *
- * Capped, because the dial is sized around this figure and a long scenario
- * name would otherwise squeeze the instrument to make room for words that are
+ * Capped, because the dial is sized around this figure and a long label
+ * would otherwise squeeze the instrument to make room for words that are
  * going to ellipsize anyway.
  */
 export const labelColumnWidth = (texts: readonly string[]): number =>
@@ -603,30 +603,30 @@ export const zoneOf = (domain: Domain, value: number): Zone =>
 /**
  * The ring's bands, in order from the bottom pole to the top.
  *
- * Without a `comfortable` gain there are two, split at zero: loss below, gain
- * above. With one, the gain half splits again — the stretch from zero up to
- * that amount is a gain the consumer has said is not yet comfortable, and it
- * takes the warning tone. This is the dial's only opinion about the numbers,
- * and it is the CONSUMER's opinion: the gauge just paints where it is told to
- * split.
+ * Without a `caution` threshold there are two, split at zero: negative below,
+ * positive above. With one, the positive half splits again — the stretch from
+ * zero up to that amount is positive but below what the consumer counts as
+ * settled, and it takes the warning tone. This is the dial's only opinion
+ * about the numbers, and it is the CONSUMER's opinion: the gauge just paints
+ * where it is told to split.
  *
- * `comfortable` is ignored when it is absent, zero, or negative — a
- * non-positive "comfortable gain" is not a threshold, it is a mistake, and
- * drawing a yellow band below zero would contradict the loss half. It is
- * clamped to the domain like any other value, so a threshold past the top of
- * the scale paints the whole gain half yellow rather than drawing a band
- * nobody can reach.
+ * `caution` is ignored when it is absent, zero, or negative — a non-positive
+ * caution threshold is not a threshold, it is a mistake, and drawing a warning
+ * band below zero would contradict the negative half. It is clamped to the
+ * domain like any other value, so a threshold past the top of the scale paints
+ * the whole positive half as caution rather than drawing a band nobody can
+ * reach.
  */
 export const bandRanges = (
   domain: Domain,
-  comfortable?: number,
+  caution?: number,
 ): readonly { readonly tone: BandTone; readonly from: number; readonly to: number }[] => {
   const zero = angleFor(domain, 0);
   const loss = { tone: "danger" as BandTone, from: -QUARTER_TURN, to: zero };
-  if (comfortable === undefined || comfortable <= 0) {
+  if (caution === undefined || caution <= 0) {
     return [loss, { tone: "success", from: zero, to: QUARTER_TURN }];
   }
-  const split = angleFor(domain, comfortable);
+  const split = angleFor(domain, caution);
   if (split <= zero) return [loss, { tone: "success", from: zero, to: QUARTER_TURN }];
   const ranges = [loss, { tone: "warning" as BandTone, from: zero, to: split }];
   // A threshold at or past the top leaves no green to draw. Emitting it anyway
@@ -638,20 +638,20 @@ export const bandRanges = (
 };
 
 /**
- * How many degrees of ring the comfortable band covers — the figure to quote
+ * How many degrees of ring the caution band covers — the figure to quote
  * when deciding whether a threshold is legible at a given size.
  *
- * A band's visibility is a property of the ANGLE it subtends, not of the rate
- * it represents: +$250/mo is a wide band on a ±$1k dial and a hairline on a
- * ±$30k one. This is the one number that answers "will anyone see it", so it
+ * A band's visibility is a property of the ANGLE it subtends, not of the value
+ * it represents: 250 is a wide band on a ±1,000 dial and a hairline on a
+ * ±30,000 one. This is the one number that answers "will anyone see it", so it
  * is worth being able to ask for directly rather than deriving at each call.
  *
- * Zero when there is no comfortable band at all.
+ * Zero when there is no caution band at all.
  */
-export const yellowDegrees = (domain: Domain, comfortable?: number): number => {
+export const cautionDegrees = (domain: Domain, caution?: number): number => {
   const warning = find(
     (range: { tone: BandTone }) => range.tone === "warning",
-    bandRanges(domain, comfortable),
+    bandRanges(domain, caution),
   );
   return warning === undefined ? 0 : warning.to - warning.from;
 };
@@ -659,17 +659,17 @@ export const yellowDegrees = (domain: Domain, comfortable?: number): number => {
 /**
  * Which band a value's needle stands in.
  *
- * The bands are half-open upward — a value exactly ON the comfortable gain is
- * comfortable, the same way a value exactly on zero is a gain rather than a
- * loss. The topmost band catches the top pole.
+ * The bands are half-open upward — a value exactly ON the caution threshold
+ * is out of caution, the same way a value exactly on zero is positive rather
+ * than negative. The topmost band catches the top pole.
  */
 export const bandAt = (
   domain: Domain,
   value: number,
-  comfortable?: number,
+  caution?: number,
 ): BandTone => {
   const at = angleFor(domain, value);
-  const ranges = bandRanges(domain, comfortable);
+  const ranges = bandRanges(domain, caution);
   for (let i = ranges.length - 1; i >= 0; i -= 1) {
     if (at >= ranges[i].from) return ranges[i].tone;
   }
@@ -946,8 +946,8 @@ export interface GaugeInput {
   readonly domain: Domain;
   readonly baseline: number;
   readonly value: number;
-  /** A gain the consumer considers comfortable; splits the gain half. */
-  readonly comfortable?: number;
+  /** The consumer's caution threshold; splits the positive half. */
+  readonly caution?: number;
   /**
    * The words the callouts will carry, so the canvas can be cut to them.
    *
@@ -978,8 +978,8 @@ export interface GaugeGeometry {
   readonly baselineAngle: number;
   readonly valueAngle: number;
   readonly zone: Zone;
-  /** The comfortable gain the consumer named, clamped, or undefined. */
-  readonly comfortable: number | undefined;
+  /** The caution threshold the consumer named, clamped, or undefined. */
+  readonly caution: number | undefined;
   /** The drawn value less the baseline — the number `format` is handed. */
   readonly delta: number;
   /** The ring's painted bands, bottom pole to top. */
@@ -1280,7 +1280,7 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
   const metrics = metricsFor(input.box, input.labels ?? []);
   const zoneEnd = pointAt(metrics.center, metrics.ringOuter, zero);
   const collapsed = drawn === drawnBaseline;
-  const tone = bandAt(input.domain, input.value, input.comfortable);
+  const tone = bandAt(input.domain, input.value, input.caution);
   const brace = bracePath(
     metrics.center,
     metrics.brace,
@@ -1311,12 +1311,12 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
         ),
         lit: range.tone === tone,
       }),
-      bandRanges(input.domain, input.comfortable),
+      bandRanges(input.domain, input.caution),
     ),
     tone,
-    comfortable:
-      input.comfortable !== undefined && input.comfortable > 0
-        ? clampedValue(input.domain, input.comfortable)
+    caution:
+      input.caution !== undefined && input.caution > 0
+        ? clampedValue(input.domain, input.caution)
         : undefined,
     deltaSector: sectorPath(
       metrics.center,

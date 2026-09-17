@@ -11,7 +11,7 @@ import {
   angleFor,
   bandAt,
   bandRanges,
-  yellowDegrees,
+  cautionDegrees,
   BASELINE_NEEDLE_RADIUS,
   BRACKET_RADIUS,
   CAP_ARC_HALF_SPAN,
@@ -137,7 +137,7 @@ describe("zoneOf", () => {
 });
 
 describe("bandRanges", () => {
-  it("splits the ring in two at zero when no comfortable gain is named", () => {
+  it("splits the ring in two at zero when no caution gain is named", () => {
     const ranges = bandRanges(DOMAIN);
     expect(ranges.map((r) => r.tone)).toEqual(["danger", "success"]);
     expect(ranges[0].from).toBe(-90);
@@ -145,7 +145,7 @@ describe("bandRanges", () => {
     expect(ranges[0].to).toBe(ranges[1].from);
   });
 
-  it("splits the gain half again at the comfortable gain", () => {
+  it("splits the gain half again at the caution gain", () => {
     const ranges = bandRanges(DOMAIN, 12000);
     expect(ranges.map((r) => r.tone)).toEqual(["danger", "warning", "success"]);
     expect(ranges[1].from).toBe(angleFor(DOMAIN, 0));
@@ -154,8 +154,8 @@ describe("bandRanges", () => {
   });
 
   it("leaves no gaps and no overlaps, whatever the threshold", () => {
-    for (const comfortable of [undefined, 1, 12000, 29999, 30000, 99999]) {
-      const ranges = bandRanges(DOMAIN, comfortable);
+    for (const caution of [undefined, 1, 12000, 29999, 30000, 99999]) {
+      const ranges = bandRanges(DOMAIN, caution);
       expect(ranges[0].from).toBe(-90);
       expect(ranges[ranges.length - 1].to).toBe(90);
       for (let i = 1; i < ranges.length; i += 1) {
@@ -164,7 +164,7 @@ describe("bandRanges", () => {
     }
   });
 
-  it("ignores a comfortable gain that is not a gain", () => {
+  it("ignores a caution gain that is not a gain", () => {
     expect(bandRanges(DOMAIN, 0).map((r) => r.tone)).toEqual([
       "danger",
       "success",
@@ -189,12 +189,12 @@ describe("bandRanges", () => {
   });
 });
 
-// A comfortable gain is often a SMALL one — 5% of a baseline of +$5,000/mo is
+// A caution gain is often a SMALL one — 5% of a baseline of +$5,000/mo is
 // +$250/mo, which on a ±$30k dial is three quarters of a degree. The band is
 // drawn at whatever width it truly is: widening a thin one to make it visible
 // would misreport the threshold, which is the one number this band exists to
 // show.
-describe("a thin comfortable band", () => {
+describe("a thin caution band", () => {
   const THIN = 250;
 
   it("gets exactly the angle it is owed, with no minimum", () => {
@@ -212,7 +212,7 @@ describe("a thin comfortable band", () => {
   });
 
   it("paints as a real sector rather than a degenerate path", () => {
-    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 150, comfortable: THIN });
+    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 150, caution: THIN });
     const sliver = g.bands.find((b) => b.tone === "warning");
     expect(sliver?.path).not.toBe("");
     expect(sliver?.path).not.toMatch(/NaN/);
@@ -221,38 +221,38 @@ describe("a thin comfortable band", () => {
   });
 
   it("lights when the needle is parked inside it", () => {
-    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 150, comfortable: THIN });
+    const g = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 150, caution: THIN });
     expect(g.tone).toBe("warning");
     expect(g.bands.filter((b) => b.lit).map((b) => b.tone)).toEqual(["warning"]);
     // ...and only just: a hair above the threshold is already the green.
-    const past = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 251, comfortable: THIN });
+    const past = gaugeGeometry({ domain: DOMAIN, baseline: 5000, value: 251, caution: THIN });
     expect(past.tone).toBe("success");
   });
 });
 
-describe("yellowDegrees", () => {
-  // The figure Peter asked to be able to set directly: a comfortable gain of
+describe("cautionDegrees", () => {
+  // The figure Peter asked to be able to set directly: a caution gain of
   // domainMax × 10/90 puts exactly ten degrees of ring in the warning tone.
   it("reads exactly ten degrees for the ten-degree fixture", () => {
     const tenDegrees = (DOMAIN[1] * 10) / 90;
-    expect(yellowDegrees(DOMAIN, tenDegrees)).toBeCloseTo(10, 9);
+    expect(cautionDegrees(DOMAIN, tenDegrees)).toBeCloseTo(10, 9);
   });
 
-  it("is zero when there is no comfortable band", () => {
-    expect(yellowDegrees(DOMAIN)).toBe(0);
-    expect(yellowDegrees(DOMAIN, 0)).toBe(0);
-    expect(yellowDegrees(DOMAIN, -100)).toBe(0);
+  it("is zero when there is no caution band", () => {
+    expect(cautionDegrees(DOMAIN)).toBe(0);
+    expect(cautionDegrees(DOMAIN, 0)).toBe(0);
+    expect(cautionDegrees(DOMAIN, -100)).toBe(0);
   });
 
   it("scales with the DOMAIN, not with the rate", () => {
     // The same rate is a hairline on a wide dial and a slab on a narrow one,
     // which is the whole reason this question is worth asking in degrees.
-    expect(yellowDegrees([-30000, 30000], 250)).toBeCloseTo(0.75, 9);
-    expect(yellowDegrees([-1000, 1000], 250)).toBeCloseTo(22.5, 9);
+    expect(cautionDegrees([-30000, 30000], 250)).toBeCloseTo(0.75, 9);
+    expect(cautionDegrees([-1000, 1000], 250)).toBeCloseTo(22.5, 9);
   });
 
   it("tops out at the whole gain half", () => {
-    expect(yellowDegrees(DOMAIN, 99999)).toBe(90);
+    expect(cautionDegrees(DOMAIN, 99999)).toBe(90);
   });
 });
 
@@ -263,7 +263,7 @@ describe("bandAt", () => {
     expect(bandAt(DOMAIN, -1, 12000)).toBe("danger");
   });
 
-  it("is half-open upward: exactly comfortable IS comfortable", () => {
+  it("is half-open upward: exactly caution IS caution", () => {
     expect(bandAt(DOMAIN, 12000, 12000)).toBe("success");
     expect(bandAt(DOMAIN, 0, 12000)).toBe("warning");
     expect(bandAt(DOMAIN, 0)).toBe("success");

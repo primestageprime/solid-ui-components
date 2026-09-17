@@ -105,6 +105,7 @@ import { ChartHeaderShowcase } from "./showcases/chart-header";
 import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
+import { RateGaugeShowcase } from "./showcases/rate-gauge";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { BandRailShowcase } from "./showcases/band-rail";
 import { SliderShowcase } from "./showcases/slider";
@@ -609,6 +610,12 @@ const items: Item[] = [
     label: "DistributionSparkline",
     component: DistributionSparklineShowcase,
     tags: ["depth:1", "chart", "indicator", "data"],
+  },
+  {
+    id: "rate-gauge",
+    label: "RateGauge",
+    component: RateGaugeShowcase,
+    tags: ["depth:2", "chart", "indicator"],
   },
   {
     id: "sprint-selector",

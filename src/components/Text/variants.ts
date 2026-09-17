@@ -210,6 +210,13 @@ export const CaptionLabel = createText({
 // Northern"), so the call site pairs it with a Tooltip carrying the full value.
 // The HUD treatment is curried here, not at the call site: a caption in a
 // callout column is one visual decision, and it belongs in one place.
+//
+// TODO (RateGauge promotion, 2026-09-16): merge with `EllipsizedNodeLabel` from
+// PR #138 (`fix(tree-diff-chart): labels that never overflow…`) once that lands
+// on main — it was still OPEN and unmerged when RateGauge was promoted, so the
+// two ellipsizing SVG-label variants could not be reconciled here. They differ
+// only in their type scale as far as anyone has established; if that holds, one
+// variant serves both and the other becomes a deprecated alias.
 export const EllipsizedHudCaption = createText({
   variant: "label",
   as: "span",
