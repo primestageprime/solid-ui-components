@@ -1,4 +1,9 @@
-/* RateGauge — Composite (Depth 2). Owns this file; composes Text + Tooltip.
+/* RateGaugeCanvas — Structural Primitive (Depth 1). Owns this file.
+
+   It belongs to the CANVAS, not to the RateGauge Composite that composes it:
+   a Composite owns no CSS, so the stroke widths, dash patterns, band fills and
+   foreignObject clipping — none of which any atomic variant can express —
+   live here, with the Primitive that draws them.
 
    The host carries the meter role and the announcement; the <svg> inside it is
    the canvas and is aria-hidden. No box-model geometry here — the SVG
