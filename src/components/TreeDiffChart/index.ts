@@ -1,4 +1,9 @@
-export { TreeDiffChart } from "./TreeDiffChart";
+export { TreeDiffChart, createTreeDiffChart } from "./TreeDiffChart";
+export type {
+  TreeDiffChartOverrides,
+  TreeDiffChartDataProps,
+} from "./TreeDiffChart";
+export * from "./variants";
 export type {
   TreeDiffChartProps,
   TreeDiffBand,

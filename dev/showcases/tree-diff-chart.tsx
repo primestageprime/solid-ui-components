@@ -6,7 +6,10 @@
  * scenario that removes a line and adds one.
  */
 import { type Component, createSignal } from "solid-js";
-import { TreeDiffChart } from "../../src/components/TreeDiffChart";
+import {
+  ScenarioTreeDiff,
+  TreeDiffChart,
+} from "../../src/components/TreeDiffChart";
 import type {
   TreeDiffBand,
   TreeDiffEntry,
@@ -139,6 +142,7 @@ const LINE_REMOVED_LINE_ADDED: TreeDiffBand[] = [
 
 export const TreeDiffChartShowcase: Component = () => {
   const [selected, setSelected] = createSignal<string | undefined>();
+  const [curried, setCurried] = createSignal<string | undefined>();
   const toggle = (id: string) =>
     setSelected((cur) => (cur === id ? undefined : id));
 
@@ -228,6 +232,32 @@ export const TreeDiffChartShowcase: Component = () => {
           compare={BAR}
           bands={LINE_REMOVED_LINE_ADDED}
         />
+      </div>
+
+      <div class="example-group">
+        <h3>Curried variant — ScenarioTreeDiff</h3>
+        <p class="text-meta">
+          The drop-in form: data and callbacks only, no presentational props at
+          the call site. Almost every prop this chart takes is data, so the one
+          thing the factory bakes is <code>legend</code> —{" "}
+          <code>ScenarioTreeDiff</code> leaves it at the chart's data-derived
+          default, and a consumer that keys the colours in its own chrome
+          curries <code>createTreeDiffChart({"{ legend: false }"})</code> once
+          in their own layer instead. Same data as the example above, and the
+          click handler below proves the drop-in is wired.
+        </p>
+        <SpacedStack>
+          <ScenarioTreeDiff
+            baseline={BASELINE}
+            compare={BAR}
+            bands={LINE_REMOVED_LINE_ADDED}
+            selectedId={curried() ?? undefined}
+            onNodeClick={setCurried}
+          />
+          <MonoMeta>
+            {curried() ? `selected ${curried()}` : "nothing selected"}
+          </MonoMeta>
+        </SpacedStack>
       </div>
 
       <div class="example-group">
