@@ -2834,3 +2834,14 @@ th:has(.tf-th-center) .hud-table__header-content {
 .scenario-board-gauge {
   min-width: 200px;
 }
+
+/* MutationSliders — a sized frame so the "absorbs its container's height"
+   card has a definite height to absorb. `height: 100%` on the dial computes
+   to `auto` against an indefinite parent, so without a frame like this the
+   card would only ever show the fixed 260px default and the showcase would
+   prove nothing. */
+.mutation-sliders-demo__tall-frame {
+  display: flex;
+  flex-direction: column;
+  height: 420px;
+}

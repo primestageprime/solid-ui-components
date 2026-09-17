@@ -12,10 +12,10 @@
 // DOM.
 //
 // THE DIAL, IN ONE PARAGRAPH. The track runs the whole shared `domain`, so
-// every dial in a row is on one scale and two people are comparable at a
-// glance. On it sits the entity's ROLE BAND — the shaded box, spanning that
-// role's min→max — and the two amounts live INSIDE that band: a muted PRIOR
-// arrow at what they were paid, an accent FUTURE arrow at what they will be,
+// every dial in a row is on one scale and two entities are comparable at a
+// glance. On it sits the entity's ALLOWED RANGE — the shaded box, spanning
+// that entity's min→max — and the two amounts live INSIDE it: a muted PRIOR
+// arrow at where it was, an accent FUTURE arrow at where it will be,
 // both arrowheads pointing at the track from opposite sides so the eye pairs
 // them. Between the two, a wider line coloured by direction.
 //
@@ -36,12 +36,12 @@
 //     on `TRACK_TOP` — the same two numbers this file maps the domain onto.
 //     MutationSliders.css declares that inset, and geometry.test.ts pins the
 //     two together rather than trusting a comment.
-//   • THE BAND IS THE CLAMP. Both amounts are pulled onto the role's band
+//   • THE RANGE IS THE CLAMP. Both amounts are pulled onto the allowed range
 //     before they are placed, and the clamped figures are what the dial draws
 //     AND what it announces. The raw figures are carried through beside them
 //     so nothing is silently lost — a value outside its band is usually a fact
 //     about the data, not a rounding error, and the caller may want to say so.
-//   • The band itself is clamped into the domain, so a role whose ceiling is
+//   • The range itself is clamped into the domain, so an entity whose ceiling is
 //     off the top of the shared scale draws a box that stops at the top rather
 //     than one that runs off the dial.
 //   • This file does NO arithmetic on the consumer's values beyond geometry
@@ -75,17 +75,18 @@ export interface Entity {
   readonly label: string;
   /**
    * The amount in the OLD scenario, or `null` for someone who was not in it
-   * at all — a NEW HIRE. A removal still has one; an arrival does not.
+   * at all — a NEW entity. A removal still has one; an arrival does not.
    *
    * `null` here is not zero and not "unknown": it means there is no prior
    * amount to point at, so the dial draws no prior arrow and no change line,
-   * and the readout says `new` rather than inventing a figure nobody was paid.
+   * and the readout says the consumer's `labels.new` rather than inventing a
+   * figure that was never true.
    */
   readonly old: number | null;
   /** The amount in the NEW scenario, or `null` when the entity is removed. */
   readonly value: number | null;
   /**
-   * The entity's ROLE BAND — the min and max its role permits, in the same
+   * The entity's ALLOWED RANGE — the min and max it is permitted, in the same
    * units. The shaded box on the dial is this, and both amounts are clamped
    * into it.
    *
@@ -93,7 +94,7 @@ export interface Entity {
    * the whole shared domain, so that it could be added without breaking a
    * consumer that had never heard of bands; both consumers now pass it on
    * every entity, so the fallback is gone rather than left alive forever.
-   * A band is the thing this dial is FOR — an entity without one was always
+   * A range is the thing this dial is FOR — an entity without one was always
    * a caller who had not finished thinking, not a case worth supporting.
    */
   readonly range: Domain;
@@ -109,12 +110,12 @@ export interface Box {
 export interface DialGeometry {
   readonly id: string;
   readonly label: string;
-  /** The role band, resolved and clamped into the domain. */
+  /** The allowed range, resolved and clamped into the domain. */
   readonly range: Domain;
-  /** The prior amount as the caller gave it, or `null` for a new hire. */
+  /** The prior amount as the caller gave it, or `null` for a new entity. */
   readonly old: number | null;
   /**
-   * The prior amount, pulled onto the band, or `null` for a new hire. This is
+   * The prior amount, pulled onto the range, or `null` for a new entity. This is
    * what is drawn and said.
    */
   readonly clampedOld: number | null;
@@ -122,14 +123,14 @@ export interface DialGeometry {
   readonly isNew: boolean;
   /** The future amount as the caller gave it, or `null` when removed. */
   readonly value: number | null;
-  /** The future amount, pulled onto the band, or `null` when removed. */
+  /** The future amount, pulled onto the range, or `null` when removed. */
   readonly clampedValue: number | null;
   readonly removed: boolean;
-  /** y of the PRIOR arrow, or `null` for a new hire. A removal still has one. */
+  /** y of the PRIOR arrow, or `null` for a new entity. A removal still has one. */
   readonly oldY: number | null;
   /** y of the FUTURE arrow, or `null` when removed. */
   readonly valueY: number | null;
-  /** The shaded role band. Always drawn — a removed entity still had a role. */
+  /** The shaded allowed range. Always drawn — a removed entity still had one. */
   readonly band: Box;
   /** The coloured line between the two arrows, or `null` when nothing moved. */
   readonly changeLine: Box | null;
@@ -138,7 +139,7 @@ export interface DialGeometry {
   /** y of the delta label — the change line's midpoint. `null` with no delta. */
   readonly deltaY: number | null;
   readonly changeTone: ChangeTone;
-  /** `d` for the muted prior arrowhead, or `null` for a new hire. */
+  /** `d` for the muted prior arrowhead, or `null` for a new entity. */
   readonly priorArrow: string | null;
   /** `d` for the accent future arrowhead, or `null` when removed. */
   readonly futureArrow: string | null;
@@ -157,9 +158,9 @@ export interface DialGeometry {
 export const VIEW_WIDTH = 88;
 /**
  * Tall, and deliberately so. It was 160 when the domain was ten integer
- * levels; a pay scale puts several bands on one track and Peter's note of
+ * levels; a wide scale puts several ranges on one track and Peter's note of
  * 2026-09-16 was that "the levels are very close". Height is the only thing
- * that separates two arrows a thousand pounds apart.
+ * that separates two arrows a thousandth of the span apart.
  */
 export const VIEW_HEIGHT = 260;
 /**
@@ -220,11 +221,11 @@ export const dialHeightFor = (measured: number): number => {
 
 /** Half-width of the short caps that mark the shared domain's two ends. */
 export const CAP_HALF = 6;
-/** Half-width of the shaded role band — the widest mark on the dial. */
+/** Half-width of the shaded allowed range — the widest mark on the dial. */
 export const BAND_HALF = 5;
 /**
  * Half-width of the coloured change line. Wider than the track line it covers,
- * narrower than the band it sits inside, so the three read as three marks.
+ * narrower than the range box it sits inside, so the three read as three marks.
  */
 export const CHANGE_HALF = 3;
 /** How far an arrow's apex stops short of the centre line. */
@@ -272,8 +273,8 @@ export const TRACK_PATH = trackPath();
 /**
  * Where a value sits on the track, in canvas y.
  *
- * `max` is at the TOP and `min` at the bottom, because an amount people call
- * "higher" has to be drawn higher. A zero-width domain reads as the middle
+ * `max` is at the TOP and `min` at the bottom, because an amount a reader
+ * calls "higher" has to be drawn higher. A zero-width domain reads as the middle
  * rather than dividing by zero — one entity at one amount is a legitimate
  * scenario, and NaN would take the whole row down with it.
  */
@@ -292,15 +293,15 @@ export const yFor = (
 
 /**
  * The track every dial shares, derived from the ENTITIES rather than asked of
- * the caller: the lowest band floor to the highest band ceiling.
+ * the caller: the lowest range floor to the highest range ceiling.
  *
- * This is what makes the bands fill the dial. A caller-chosen domain is almost
- * always too generous at one end — a pay scale asked to start at zero spends
- * its bottom third on salaries nobody is paid — and the dial then wastes the
- * only dimension it has. The entities already state the interesting range;
+ * This is what makes the ranges fill the dial. A caller-chosen domain is almost
+ * always too generous at one end — a scale asked to start at zero spends its
+ * bottom third on values nothing ever takes — and the dial then wastes the
+ * only dimension it has. The entities already state the interesting span;
  * nobody should have to restate it.
  *
- * An empty row has no bands to bracket, so it gets a unit domain rather than
+ * An empty row has no ranges to bracket, so it gets a unit domain rather than
  * `[Infinity, -Infinity]`.
  */
 export const trackDomainOf = (entities: readonly Entity[]): Domain => {
@@ -311,10 +312,10 @@ export const trackDomainOf = (entities: readonly Entity[]): Domain => {
 };
 
 /**
- * The entity's role band, ordered and clamped into the domain so no box can
- * draw off the track.
+ * The entity's allowed range, ordered and clamped into the domain so no box
+ * can draw off the track.
  *
- * There is no longer a fallback for a missing band: `range` is required, and
+ * There is no longer a fallback for a missing range: `range` is required, and
  * the domain-wide default that stood in for it during the migration is gone.
  */
 export const rangeOf = (domain: Domain, entity: Entity): Domain => {
@@ -326,7 +327,7 @@ export const rangeOf = (domain: Domain, entity: Entity): Domain => {
   ] as const;
 };
 
-/** Pull an amount onto the role's band. */
+/** Pull an amount onto the entity's allowed range. */
 export const clampToRange = (range: Domain, value: number): number =>
   clamp(value, range[0], range[1]);
 
@@ -342,18 +343,18 @@ export const snapTo = (value: number, snap: number | undefined): number =>
 /**
  * Where a dragged value actually lands: on the grid, then on the band.
  *
- * THE ORDER MATTERS AND THE CLAMP WINS. A band whose edges are not multiples
- * of `snap` — a ceiling of $110,500 against a $1,000 grid — would otherwise
- * snap to $111,000 and be emitted ABOVE a limit the component promises never
- * to cross. Snapping first and clamping second means the edge is emitted
- * exactly as it stands: a value the band permits beats a value the grid
- * prefers, because the band is a rule about what is allowed and the grid is
- * only a convenience about what is tidy.
+ * THE ORDER MATTERS AND THE CLAMP WINS. A range whose edges are not multiples
+ * of `snap` — a ceiling of 110,500 against a 1,000 grid — would otherwise snap
+ * to 111,000 and be emitted ABOVE a limit the component promises never to
+ * cross. Snapping first and clamping second means the edge is emitted exactly
+ * as it stands: a value the range permits beats a value the grid prefers,
+ * because the range is a rule about what is allowed and the grid is only a
+ * convenience about what is tidy.
  */
 export const settle = (range: Domain, value: number, snap?: number): number =>
   clampToRange(range, snapTo(value, snap));
 
-/** The shaded box for a role band: its min→max on the track. */
+/** The shaded box for an allowed range: its min→max on the track. */
 export const bandFor = (
   domain: Domain,
   range: Domain,
@@ -364,7 +365,7 @@ export const bandFor = (
 };
 
 /**
- * Which way the amount moved, AFTER both ends are clamped onto the band.
+ * Which way the amount moved, AFTER both ends are clamped onto the range.
  *
  * Clamped, because two amounts that both sit past the same ceiling have not
  * moved anywhere the dial can draw, and colouring that as a raise would put a
@@ -427,8 +428,8 @@ export const arrowPath = (
  * The SIGNED change, or `null` when there is no change to name.
  *
  * `null` covers all three silences deliberately: an amount that did not move,
- * a hire with no prior to measure from, and a departure with no future one.
- * The readout row under the dial already says `new` and `—` for the last two,
+ * an arrival with no prior to measure from, and a removal with no future one.
+ * The readout row under the dial already names both of those in words,
  * and a delta label beside them would be a second voice saying less.
  */
 export const deltaOf = (
@@ -556,8 +557,8 @@ const NICE_MANTISSAS = [1, 2, 5, 10] as const;
  *
  * There is no `step` prop, because nobody was configuring one: the old
  * hardcoded `1` was right for a domain of levels 0–10 and absurd for a domain
- * of salaries, where it meant a hundred thousand arrow presses to cross the
- * track. A step is a property of the SCALE, and the scale is already here.
+ * of six-figure amounts, where it meant a hundred thousand arrow presses to
+ * cross the track. A step is a property of the SCALE, and the scale is already here.
  *
  * This governs the KEYBOARD only. A pointer drag is continuous — see
  * `dragStep` above for why the two cannot be the same number.
@@ -586,7 +587,7 @@ const NICE_MANTISSAS = [1, 2, 5, 10] as const;
  *
  * So the two are separated. A drag moves by the smallest unit the domain can
  * meaningfully express — one whole unit where the domain's ends are whole
- * numbers (a salary moves by the pound, not by the thousand), and a
+ * numbers (a counted quantity moves by one, not by the thousand), and a
  * thousandth of the span where they are fractional, which is finer than any
  * display could distinguish. `niceStep` now applies to arrow keys ONLY.
  *
@@ -621,7 +622,7 @@ export interface PinnedValue {
   readonly value: number;
 }
 
-/** An entity's own band, ordered — the only limit a pinned move respects. */
+/** An entity's own range, ordered — the only limit a pinned move respects. */
 const ownBand = (entity: Entity): Domain =>
   entity.range[0] <= entity.range[1]
     ? entity.range
@@ -652,16 +653,16 @@ const changedOnly = (
  * The amounts a SELECTION takes when it forms: every selected entity snaps to
  * the HIGHEST amount currently among them (Peter, 2026-09-16).
  *
- * Highest, not lowest and not the one you clicked. Pinning people together is
- * something you do to LEVEL THEM UP, and levelling somebody DOWN by accident
- * is the expensive mistake — a mis-click that cuts pay is much worse than one
+ * Highest, not lowest and not the one you clicked. Pinning entities together
+ * is something you do to LEVEL THEM UP, and levelling one DOWN by accident is
+ * the expensive mistake — a mis-click that cuts a value is much worse than one
  * that raises it, and the raise is visible in the readout before anything is
  * committed.
  *
- * Each lands on its OWN band, so someone whose ceiling cannot reach the target
- * stops there and is pinned as far as they can go rather than being dropped
- * from the group. A TERMINATED entity is skipped entirely: it has no amount to
- * raise and none to contribute to the maximum.
+ * Each lands on its OWN range, so one whose ceiling cannot reach the target
+ * stops there and is pinned as far as it can go rather than being dropped from
+ * the group. A REMOVED entity is skipped entirely: it has no amount to raise
+ * and none to contribute to the maximum.
  *
  * Returns only what MOVES, so a caller emits one change per entity that
  * changed and none for the rest.
@@ -689,7 +690,7 @@ export const pinTo = (
 
 /**
  * The amounts a selection takes when ONE of them is dragged by `delta`: every
- * selected entity moves by the same amount, each clamped to its own band.
+ * selected entity moves by the same amount, each clamped to its own range.
  *
  * The delta is applied to each entity's OWN current value rather than to a
  * shared figure, so a group that has already been split by different ceilings

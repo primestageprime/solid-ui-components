@@ -2,7 +2,7 @@
    MutationSliders — Structural
 
    One dial per entity: a thin vertical line running the whole shared domain,
-   the entity's shaded ROLE BAND on it, a muted PRIOR arrowhead and an accent
+   the entity's shaded ALLOWED RANGE on it, a muted PRIOR arrowhead and an accent
    FUTURE arrowhead pointing at the track from opposite sides, and a wider
    coloured line between them.
 
@@ -49,7 +49,7 @@
   min-height: 0;
   /* Mirrors VIEW_HEIGHT / VIEW_WIDTH in geometry.ts — geometry.test.ts pins
      the pair. Tall, because the only thing that separates two arrows a
-     thousand pounds apart is vertical room; and wider than the track, because
+     thousandth of the span apart is vertical room; and wider than the track, because
      the signed delta label lives on the canvas to the right of it. */
   --sui-mutation-dial-height: 260px;
   --sui-mutation-dial-width: 88px;
@@ -88,9 +88,9 @@
   min-height: var(--sui-mutation-dial-min-height);
 }
 
-/* A removed entity keeps its band and its prior arrow and loses the future
-   one. Dimming says "this is still the same person, they are just not in the
-   new scenario" — hiding the dial would lose the comparison entirely. */
+/* A removed entity keeps its range box and its prior arrow and loses the
+   future one. Dimming says "this is still the same entity, it is just not in
+   the new scenario" — hiding the dial would lose the comparison entirely. */
 .sui-mutation-sliders__dial[data-removed] {
   opacity: 0.4;
 }
@@ -116,8 +116,9 @@
   fill: none;
 }
 
-/* The ROLE BAND. Translucent so the track line reads THROUGH it — the box is
-   the span a role permits, not a mark that hides the scale it sits on. */
+/* The ALLOWED RANGE. Translucent so the track line reads THROUGH it — the box
+   is the span the entity is permitted, not a mark that hides the scale it sits
+   on. */
 .sui-mutation-sliders__band {
   fill: var(--sui-text-secondary);
   /* Measured in the browser, not guessed: at 0.14 the band was invisible on a
@@ -248,8 +249,8 @@
 
 /* An EXPLICIT line box on both readout rows, so their height comes from the
    rule rather than from whichever glyphs happen to be in them. Measured in the
-   browser: without this, a terminated dial's em-dash gave a line box 1px
-   shorter than "$104k", which moved that column's figure and button by a pixel
+   browser: without this, a removed dial's em-dash gave a line box 1px
+   shorter than a five-character figure, which moved that column's figure and button by a pixel
    against its neighbours. One pixel is not a bug anybody would report, but
    "identical" is a promise that survives a font change and "within a pixel" is
    not. */
@@ -264,7 +265,7 @@
 /* The footer button's box is PINNED, because its three states do not carry the
    same content: ⊗ is a text glyph and ↺ is an `Icon` span, and measured in the
    browser those gave button heights 1px apart. That pixel moved the whole
-   column — dial included — the moment you terminated somebody, which is
+   column — dial included — the moment you removed an entity, which is
    precisely the shift Peter reported. Fixing the box makes the three states
    interchangeable by construction rather than by coincidence of font metrics. */
 .sui-mutation-sliders__footer {

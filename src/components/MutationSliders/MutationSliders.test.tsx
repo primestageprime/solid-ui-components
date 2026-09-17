@@ -27,7 +27,8 @@ import {
   installRects,
   rectOf,
 } from "../../test-utils";
-import { MutationSliders } from "./MutationSliders";
+import { MutationSliders, createMutationSliders } from "./MutationSliders";
+import { NumberMutationSliders } from "./variants";
 import {
   ADD_SLOT,
   ARROW_SLOT,
@@ -488,7 +489,7 @@ describe("MutationSliders", () => {
       expect(container.querySelectorAll("[data-removed]").length).toBe(1);
     });
 
-    it("offers RESTORE in the terminate slot, not a dead ⊗", () => {
+    it("offers RESTORE in the remove slot, not a dead ⊗", () => {
       // A disabled ⊗ said "you did this and there is nothing more to do".
       // What the reader wants in that slot is the way back.
       const { getByLabelText, queryByLabelText } = render(() => (
@@ -501,7 +502,7 @@ describe("MutationSliders", () => {
         />
       ));
       expect(getByLabelText("Restore Joe")).toBeTruthy();
-      expect(queryByLabelText("Terminate Joe")).toBeNull();
+      expect(queryByLabelText("Remove Joe")).toBeNull();
     });
   });
 
@@ -566,7 +567,7 @@ describe("MutationSliders", () => {
         />
       ));
       expect(getByText("$45k")).toBeTruthy();
-      expect(getByText("new")).toBeTruthy();
+      expect(getByText("New")).toBeTruthy();
     });
 
     it("is still draggable, and still clamped to its band", () => {
@@ -595,7 +596,7 @@ describe("MutationSliders", () => {
         onRemove={onRemove}
       />
     ));
-    fireEvent.click(getByLabelText("Terminate Flynn"));
+    fireEvent.click(getByLabelText("Remove Flynn"));
     expect(onRemove).toHaveBeenCalledWith("flynn");
   });
 
@@ -603,10 +604,10 @@ describe("MutationSliders", () => {
     const { queryByLabelText } = render(() => (
       <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
     ));
-    expect(queryByLabelText("Terminate Flynn")).toBeNull();
+    expect(queryByLabelText("Remove Flynn")).toBeNull();
   });
 
-  describe("terminate and restore share one slot", () => {
+  describe("remove and restore share one slot", () => {
     const withRestore = (extra?: Record<string, unknown>) =>
       render(() => (
         <MutationSliders
@@ -619,15 +620,15 @@ describe("MutationSliders", () => {
         />
       ));
 
-    it("offers TERMINATE on an active person and RESTORE on a terminated one", () => {
+    it("offers REMOVE on a present entity and RESTORE on a removed one", () => {
       const { getByLabelText, queryByLabelText } = withRestore();
-      expect(getByLabelText("Terminate Peter")).toBeTruthy();
+      expect(getByLabelText("Remove Peter")).toBeTruthy();
       expect(queryByLabelText("Restore Peter")).toBeNull();
       expect(getByLabelText("Restore Joe")).toBeTruthy();
-      expect(queryByLabelText("Terminate Joe")).toBeNull();
+      expect(queryByLabelText("Remove Joe")).toBeNull();
     });
 
-    it("lifts onRestore with the terminated entity's id", () => {
+    it("lifts onRestore with the removed entity's id", () => {
       const onRestore = vi.fn();
       const { getByLabelText } = render(() => (
         <MutationSliders
@@ -676,12 +677,12 @@ describe("MutationSliders", () => {
           onRestore={() => {}}
         />
       ));
-      expect(getByLabelText("Terminate Ana")).toBeTruthy();
+      expect(getByLabelText("Remove Ana")).toBeTruthy();
       setValue(null);
       expect(getByLabelText("Restore Ana")).toBeTruthy();
-      expect(queryByLabelText("Terminate Ana")).toBeNull();
+      expect(queryByLabelText("Remove Ana")).toBeNull();
       setValue(44_000);
-      expect(getByLabelText("Terminate Ana")).toBeTruthy();
+      expect(getByLabelText("Remove Ana")).toBeTruthy();
     });
   });
 
@@ -1261,14 +1262,14 @@ describe("MutationSliders", () => {
       expect(hidden[0].textContent).toBe("\u00a0");
     });
 
-    it("keeps the same column shape for a hire and for a termination", () => {
+    it("keeps the same column shape for a new entity and for a removal", () => {
       const active = shapeOf(one(52_000).container);
       expect(shapeOf(one(null).container)).toEqual(active);
       expect(shapeOf(one(45_000, null).container)).toEqual(active);
     });
 
     it("keeps the footer button present even with no callback to run", () => {
-      // Terminated with no `onRestore`: there is nothing to do, but removing
+      // Removed with no `onRestore`: there is nothing to do, but removing
       // the button would shorten the column and move every dial beside it.
       const { container } = render(() => (
         <MutationSliders
@@ -1298,7 +1299,7 @@ describe("MutationSliders", () => {
       expect(button.getAttribute("aria-label")).toBeNull();
     });
 
-    it("keeps ONE footer button across terminate and restore", () => {
+    it("keeps ONE footer button across remove and restore", () => {
       const [value, setValue] = createSignal<number | null>(52_000);
       const { container } = render(() => (
         <MutationSliders
@@ -1667,5 +1668,161 @@ describe("MutationSliders", () => {
       <MutationSliders entities={[]} domain={DOMAIN} onChange={() => {}} />
     ));
     expect(container.querySelectorAll('[role="slider"]')).toHaveLength(0);
+  });
+});
+
+// ── wording, and the curried surface ────────────────────────────────────────
+// The component is GENERIC: entities with a prior amount, a future amount, an
+// allowed range and a presence. The three words that carry a CONSUMER'S
+// meaning are props, so these prove the defaults are neutral and that a
+// consumer's own vocabulary reaches the DOM.
+describe("labels", () => {
+  const ONE: readonly Entity[] = [
+    {
+      id: "a",
+      label: "Ana",
+      old: 44_000,
+      value: 46_000,
+      range: [40_000, 60_000],
+    },
+  ];
+  const GONE: readonly Entity[] = [
+    {
+      id: "a",
+      label: "Ana",
+      old: 44_000,
+      value: null,
+      range: [40_000, 60_000],
+    },
+  ];
+  const NEW: readonly Entity[] = [
+    {
+      id: "a",
+      label: "Ana",
+      old: null,
+      value: 46_000,
+      range: [40_000, 60_000],
+    },
+  ];
+
+  it("defaults to neutral verbs, with no domain vocabulary in them", () => {
+    const { getByLabelText } = render(() => (
+      <MutationSliders
+        entities={ONE}
+        onChange={() => {}}
+        onRemove={() => {}}
+        onRestore={() => {}}
+      />
+    ));
+    expect(getByLabelText("Remove Ana")).toBeTruthy();
+  });
+
+  it("defaults the restore verb too", () => {
+    const { getByLabelText } = render(() => (
+      <MutationSliders
+        entities={GONE}
+        onChange={() => {}}
+        onRemove={() => {}}
+        onRestore={() => {}}
+      />
+    ));
+    expect(getByLabelText("Restore Ana")).toBeTruthy();
+  });
+
+  it("takes the consumer's own verbs for both footer states", () => {
+    const labels = { remove: "Terminate", restore: "Reinstate" };
+    const present = render(() => (
+      <MutationSliders
+        entities={ONE}
+        labels={labels}
+        onChange={() => {}}
+        onRemove={() => {}}
+        onRestore={() => {}}
+      />
+    ));
+    expect(present.getByLabelText("Terminate Ana")).toBeTruthy();
+    expect(present.queryByLabelText("Remove Ana")).toBeNull();
+
+    const removed = render(() => (
+      <MutationSliders
+        entities={GONE}
+        labels={labels}
+        onChange={() => {}}
+        onRemove={() => {}}
+        onRestore={() => {}}
+      />
+    ));
+    expect(removed.getByLabelText("Reinstate Ana")).toBeTruthy();
+  });
+
+  it("takes the consumer's word for an entity with no prior amount", () => {
+    const { getByText, queryByText } = render(() => (
+      <MutationSliders
+        entities={NEW}
+        labels={{ new: "new hire" }}
+        onChange={() => {}}
+        format={asK}
+      />
+    ));
+    expect(getByText("new hire")).toBeTruthy();
+    expect(queryByText("New")).toBeNull();
+  });
+
+  it("fills only the gaps a partial labels object leaves", () => {
+    const { getByLabelText, getByText } = render(() => (
+      <MutationSliders
+        entities={NEW}
+        labels={{ remove: "Drop" }}
+        onChange={() => {}}
+        onRemove={() => {}}
+        format={asK}
+      />
+    ));
+    expect(getByLabelText("Drop Ana")).toBeTruthy();
+    expect(getByText("New")).toBeTruthy();
+  });
+});
+
+describe("createMutationSliders", () => {
+  const ONE: readonly Entity[] = [
+    {
+      id: "a",
+      label: "Ana",
+      old: 44_000,
+      value: 46_000,
+      range: [40_000, 60_000],
+    },
+  ];
+
+  it("locks the unit, the vocabulary and the grid at definition time", () => {
+    const Curried = createMutationSliders({
+      format: asK,
+      labels: { remove: "Terminate" },
+      snap: 1_000,
+    });
+    const { getByLabelText, getByText } = render(() => (
+      <Curried entities={ONE} onChange={() => {}} onRemove={() => {}} />
+    ));
+    // The call site passed neither `format` nor `labels`.
+    expect(getByText("$46k")).toBeTruthy();
+    expect(getByLabelText("Terminate Ana")).toBeTruthy();
+  });
+
+  it("still emits onto the curried grid", () => {
+    const onChange = vi.fn();
+    const Curried = createMutationSliders({ snap: 5_000 });
+    const { container } = render(() => (
+      <Curried entities={ONE} onChange={onChange} />
+    ));
+    const thumb = container.querySelector('[aria-label="Ana"]') as HTMLElement;
+    fireEvent.keyDown(thumb, { key: "ArrowUp" });
+    expect(onChange).toHaveBeenCalledWith("a", 50_000);
+  });
+
+  it("ships one drop-in variant that needs no configuration", () => {
+    const { getByText } = render(() => (
+      <NumberMutationSliders entities={ONE} onChange={() => {}} />
+    ));
+    expect(getByText((46_000).toLocaleString())).toBeTruthy();
   });
 });

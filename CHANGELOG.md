@@ -21,7 +21,8 @@
   world; `entities`, `domain`, the selection and every callback stay data at
   the call site. Exported types: `MutationSlidersProps`,
   `MutationSlidersOverrides`, `MutationSlidersDataProps`,
-  `MutationSliderLabels`, `MutationEntity`, `MutationSlidersDomain`.
+  `MutationSliderLabels`, `Entity`, `Domain`, `ChangeTone`, plus the qualified
+  aliases `MutationEntity` and `MutationSlidersDomain`.
 - **`MutationSliders` takes the consumer's own vocabulary through `labels`.**
   `labels.remove`, `labels.restore` and `labels.new` default to `"Remove"` /
   `"Restore"` / `"New"`, and a partial object fills only the gaps it leaves —
@@ -50,9 +51,11 @@
   its thumb went in three phases (`drag` / `commit` / `step`), so the row owns
   paging, selection and the pin fan-out and the dial owns one column's DOM and
   its own measurement. Behaviour and the public prop names are unchanged; the
-  folder's ~30 `geometry.ts` exports are now private, and `Entity` and
-  `Domain` publish as `MutationEntity` and `MutationSlidersDomain` because an
-  ambiguous `export *` resolves to nothing at all.
+  folder's ~30 `geometry.ts` FUNCTIONS are now private; its three types stay
+  public under their plain names (`Entity`, `Domain`, `ChangeTone`), with
+  `MutationEntity` and `MutationSlidersDomain` alongside as aliases. Verified
+  that none of the three collides with another barrel, because an ambiguous
+  `export *` resolves to nothing at all.
 - **`RateGauge` says nothing domain-specific of its own.** The component
   shipped with "breakeven", "payroll" and a currency baked into the sentences
   it built around the consumer's numbers. `format` (which nothing read) and
