@@ -1,0 +1,317 @@
+/* RateGauge — Composite (Depth 2). Owns this file; composes Text + Tooltip.
+
+   The host carries the meter role and the announcement; the <svg> inside it is
+   the canvas and is aria-hidden. No box-model geometry here — the SVG
+   coordinate system is this component's layout engine (Layout Purity
+   exemption 2: svg/canvas rendering). */
+
+.sui-rate-gauge {
+  display: block;
+  width: 100%;
+  /* FILL THE HEIGHT IT IS GIVEN, and no more. `height: 100%` against a parent
+     of INDEFINITE height computes to `auto` by the CSS sizing rules, so this
+     one declaration serves both callers: drop the gauge in a card that has a
+     height and it takes it; drop it in a content-sized column and it sizes
+     from its width exactly as it always did. That is why there is no `fill`
+     prop — there is nothing for a caller to choose between. */
+  height: 100%;
+}
+
+.sui-rate-gauge__canvas {
+  display: block;
+  width: 100%;
+  /* Matches the host, for the same reason. The svg keeps its DEFAULT
+     `preserveAspectRatio` (`xMidYMid meet`) rather than taking `none`: a dial
+     stretched to a box's aspect stops being a circle, and the angle IS the
+     reading. So the ring scales to whichever dimension is tighter and centres
+     in the other — it absorbs the box without distorting the instrument. */
+  height: 100%;
+  overflow: visible;
+  /* The floor every callout inherits from, before its row's tone applies. */
+  color: var(--sui-text-secondary);
+}
+
+/* ---- The ring's bands ----
+
+   Dimming is the PRIMARY channel for the answer: the reader watches which band
+   lights up, so the tones are redundant encoding rather than the only signal.
+   That is also what lets a third band arrive without the gauge becoming
+   colour-dependent. A dimmed band stays visible — it is where the value could
+   swing to, and hiding it would lose the scale. */
+
+.sui-rate-gauge__band--success.sui-rate-gauge__band--lit {
+  fill: rgba(var(--sui-success-rgb), 0.85);
+}
+
+.sui-rate-gauge__band--success.sui-rate-gauge__band--dim {
+  fill: rgba(var(--sui-success-rgb), 0.14);
+}
+
+.sui-rate-gauge__band--warning.sui-rate-gauge__band--lit {
+  fill: rgba(var(--sui-warning-rgb), 0.85);
+}
+
+.sui-rate-gauge__band--warning.sui-rate-gauge__band--dim {
+  fill: rgba(var(--sui-warning-rgb), 0.14);
+}
+
+.sui-rate-gauge__band--danger.sui-rate-gauge__band--lit {
+  fill: rgba(var(--sui-danger-rgb), 0.85);
+}
+
+.sui-rate-gauge__band--danger.sui-rate-gauge__band--dim {
+  fill: rgba(var(--sui-danger-rgb), 0.14);
+}
+
+/* ---- The reference marks ---- */
+
+/* The delta, drawn as an area: the sector the baseline and value needles
+   enclose. It takes the ACTIVE tone, because it is the change the card exists
+   to report — but at low alpha, so it never competes with the lit zone behind
+   it or with the needles that bound it. */
+.sui-rate-gauge__delta-sector {
+  fill: var(--sui-text-muted);
+  fill-opacity: 0.18;
+}
+
+.sui-rate-gauge--success .sui-rate-gauge__delta-sector {
+  fill: var(--sui-success);
+  fill-opacity: 0.22;
+}
+
+.sui-rate-gauge--danger .sui-rate-gauge__delta-sector {
+  fill: var(--sui-danger);
+  fill-opacity: 0.22;
+}
+
+.sui-rate-gauge__zero {
+  stroke: var(--sui-text-muted);
+  stroke-width: 1;
+}
+
+.sui-rate-gauge__pivot {
+  fill: var(--sui-text-secondary);
+}
+
+/* ---- The needles ---- */
+
+/* The brace is a stroke, never a filled shape.
+
+   MITER at the joins, not round: the apex is a curve-to-curve join, and a
+   round linejoin would put a radius on exactly the point the whole shape is
+   for. The miter limit is generous because the two halves meet at a very
+   narrow angle — the default 4 would clip the tip back to a bevel, which is
+   the same rounding by another name. */
+.sui-rate-gauge__brace {
+  stroke-linejoin: miter;
+  stroke-miterlimit: 12;
+}
+
+/* The cap is an ARC concentric with the ring, so it must not fill. */
+.sui-rate-gauge__needle-cap {
+  fill: none;
+}
+
+/* Rounded ends, so the cap reads as a clock hand's tip mark rather than as a
+   cut-off band. Same weight as the needle it belongs to. */
+.sui-rate-gauge__needle-cap {
+  stroke-linecap: round;
+}
+
+.sui-rate-gauge__needle {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Dashed and grey: the reference is a memory of a rate, not a live reading. */
+.sui-rate-gauge__needle--baseline {
+  stroke: var(--sui-text-muted);
+  stroke-dasharray: 4 3;
+}
+
+.sui-rate-gauge__needle--value,
+.sui-rate-gauge__needle-cap,
+.sui-rate-gauge__brace {
+  stroke: var(--sui-text-secondary);
+}
+
+.sui-rate-gauge--success .sui-rate-gauge__needle--value,
+.sui-rate-gauge--success .sui-rate-gauge__needle-cap,
+.sui-rate-gauge--success .sui-rate-gauge__brace {
+  stroke: var(--sui-success);
+}
+
+.sui-rate-gauge--danger .sui-rate-gauge__needle--value,
+.sui-rate-gauge--danger .sui-rate-gauge__needle-cap,
+.sui-rate-gauge--danger .sui-rate-gauge__brace {
+  stroke: var(--sui-danger);
+}
+
+.sui-rate-gauge__needle-cap {
+  stroke-width: 2.5;
+}
+
+.sui-rate-gauge__brace {
+  fill: none;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+
+/* ---- The HUD callouts ---- */
+
+/* The leader: one hairline from the terminal on the dial to the label column.
+   1px at the gauge's own scale, so it reads as an instrument's annotation
+   rather than as another mark on the dial. */
+.sui-rate-gauge__leader {
+  fill: none;
+  stroke: var(--sui-text-muted);
+  stroke-width: 0.75;
+  stroke-linejoin: round;
+}
+
+/* The terminal dot, and the tick where the run meets the column. Both take the
+   row's own tone, so a callout is one object from the dial to its last letter. */
+.sui-rate-gauge__terminal,
+.sui-rate-gauge__column-tick {
+  fill: var(--sui-text-secondary);
+  stroke: var(--sui-text-secondary);
+  stroke-width: 1;
+}
+
+/* The baseline's terminal is an OPEN ring, not a filled dot — the same
+   secondary/reference distinction its dashed needle already makes. */
+.sui-rate-gauge__row--baseline .sui-rate-gauge__terminal {
+  fill: none;
+}
+
+.sui-rate-gauge__label {
+  fill: var(--sui-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* The box a <foreignObject> label lives in.
+
+   It sets NO colour of its own on purpose. `color` inherits across the
+   foreignObject boundary from the row's <g>, and a declaration here would win
+   over that inheritance however specific the row's rule was — which is exactly
+   what kept the value's name white while the rest of its callout was toned. */
+.sui-rate-gauge__label-box {
+  line-height: 14px;
+}
+
+/* The row carrying the current value takes the active tone throughout — dot,
+   tick, leader end and words — because it is the reading. */
+.sui-rate-gauge--success .sui-rate-gauge__row--value,
+.sui-rate-gauge--success .sui-rate-gauge__row--valueAndBaseline,
+.sui-rate-gauge--success .sui-rate-gauge__row--delta {
+  color: var(--sui-success);
+}
+
+.sui-rate-gauge--danger .sui-rate-gauge__row--value,
+.sui-rate-gauge--danger .sui-rate-gauge__row--valueAndBaseline,
+.sui-rate-gauge--danger .sui-rate-gauge__row--delta {
+  color: var(--sui-danger);
+}
+
+.sui-rate-gauge--success .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
+.sui-rate-gauge--success .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
+.sui-rate-gauge--success .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
+.sui-rate-gauge--success .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
+.sui-rate-gauge--success .sui-rate-gauge__row--delta .sui-rate-gauge__label {
+  fill: var(--sui-success);
+  stroke: var(--sui-success);
+}
+
+.sui-rate-gauge--danger .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
+.sui-rate-gauge--danger .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
+.sui-rate-gauge--danger .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
+.sui-rate-gauge--danger .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
+.sui-rate-gauge--danger .sui-rate-gauge__row--delta .sui-rate-gauge__label {
+  fill: var(--sui-danger);
+  stroke: var(--sui-danger);
+}
+
+/* The delta is the figure the card exists to report, so it carries the weight
+   as well as the tone; the two names stay quiet beside it. */
+.sui-rate-gauge__row--delta .sui-rate-gauge__label {
+  font-weight: 700;
+}
+
+/* "Baseline" is the reference, so it stays muted whatever the active tone. */
+.sui-rate-gauge__row--baseline .sui-rate-gauge__label,
+.sui-rate-gauge__row--baseline .sui-rate-gauge__terminal,
+.sui-rate-gauge__row--baseline .sui-rate-gauge__column-tick {
+  fill: var(--sui-text-muted);
+  stroke: var(--sui-text-muted);
+}
+
+/* The Tooltip's trigger is a bare span here: it must not paint a button's
+   affordances over a chart annotation. The full text is reachable on hover,
+   and the meter's own aria-valuetext already carries it for a screen reader. */
+.sui-rate-gauge__label-box .sui-tooltip__trigger {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+/* The warning tone, for a positive value below the caution threshold. Mirrors
+   the success rules exactly — the band's meaning changes, its treatment does
+   not. */
+.sui-rate-gauge--warning .sui-rate-gauge__delta-sector {
+  fill: var(--sui-warning);
+  fill-opacity: 0.22;
+}
+
+.sui-rate-gauge--warning .sui-rate-gauge__needle--value,
+.sui-rate-gauge--warning .sui-rate-gauge__needle-cap,
+.sui-rate-gauge--warning .sui-rate-gauge__brace {
+  stroke: var(--sui-warning);
+}
+
+.sui-rate-gauge--warning .sui-rate-gauge__row--value,
+.sui-rate-gauge--warning .sui-rate-gauge__row--valueAndBaseline,
+.sui-rate-gauge--warning .sui-rate-gauge__row--delta {
+  color: var(--sui-warning);
+}
+
+.sui-rate-gauge--warning .sui-rate-gauge__row--value .sui-rate-gauge__terminal,
+.sui-rate-gauge--warning .sui-rate-gauge__row--delta .sui-rate-gauge__terminal,
+.sui-rate-gauge--warning .sui-rate-gauge__row--value .sui-rate-gauge__column-tick,
+.sui-rate-gauge--warning .sui-rate-gauge__row--delta .sui-rate-gauge__column-tick,
+.sui-rate-gauge--warning .sui-rate-gauge__row--delta .sui-rate-gauge__label {
+  fill: var(--sui-warning);
+  stroke: var(--sui-warning);
+}
+
+/* The second line — where the figure stands against break-even.
+
+   Muted and unshouted beneath a line one in the callout's own tone: it is the
+   detail you read AFTER the name has told you which mark you are looking at,
+   so it must not compete with it. Sentence case, because it is a sentence.
+
+   LAST in the file, and matched through the row, so it outranks the per-tone
+   rules above that paint `__label` — those are about which callout you are
+   reading, and this line's whole point is that it is the quiet half of one. */
+.sui-rate-gauge .sui-rate-gauge__row .sui-rate-gauge__label--relative {
+  fill: var(--sui-text-muted);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* The brace's line is a SENTENCE the consumer wrote, not a name — a phrase
+   like "18,000 off payroll" reads as shouting in caps, and it is the one line
+   that describes rather than labels. It keeps its callout's tone and its
+   weight, because it is still the figure the card exists to report. */
+.sui-rate-gauge .sui-rate-gauge__row .sui-rate-gauge__label--delta {
+  text-transform: none;
+  letter-spacing: 0;
+}

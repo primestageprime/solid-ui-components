@@ -107,8 +107,24 @@ export const ScrubChart = <C extends Cell>(
   // ── Frame height + the expand control ────────────────────────────────
   // `chartHeightExpanded` is the master switch. Without it the frame simply
   // takes `chartHeight`, the chevron never renders, and the tween never runs.
-  const collapsedHeight = () => props.chartHeight ?? DEFAULT_CHART_HEIGHT;
-  const expandable = () => props.chartHeightExpanded !== undefined;
+  // FILL MODE: the container owns the height, so the frame measures itself and
+  // every span derives from that instead of from a number. The measurement
+  // cannot feed back into the box — the frame is `height:100%` of its parent
+  // and the svg inside is `height:100%` of the frame, so nothing the viewBox
+  // says can change the height it was measured from. (Contrast the WIDTH of a
+  // `max-content` box, where exactly that cycle closes.)
+  const filling = () => props.chartHeight === "fill";
+  const [measuredHeight, setMeasuredHeight] = createSignal(0);
+  const collapsedHeight = () => {
+    if (!filling()) return (props.chartHeight as number) ?? DEFAULT_CHART_HEIGHT;
+    // Until the first ResizeObserver callback lands there is no measurement to
+    // use, and a frame of 0 would divide by zero downstream.
+    return measuredHeight() > 0 ? measuredHeight() : DEFAULT_CHART_HEIGHT;
+  };
+  // The chevron moves the frame between two PIXEL heights, which says nothing
+  // when the container owns the height.
+  const expandable = () =>
+    !filling() && props.chartHeightExpanded !== undefined;
   const [ownedExpanded, setOwnedExpanded] = createSignal(false);
   // Controlled when the caller passes `expanded`; owned otherwise — the same
   // split `yScaleMode` takes.
@@ -186,14 +202,39 @@ export const ScrubChart = <C extends Cell>(
     // one synchronous read puts the real width on the first frame. A zero
     // width means the frame has no layout box yet (display: none, a detached
     // host, jsdom); the seed stays until the observer reports a real size.
-    const width = Math.round(frameEl.getBoundingClientRect().width);
+    const box = frameEl.getBoundingClientRect();
+    const width = Math.round(box.width);
     if (width > 0) setChartWidth(width);
+    // The HEIGHT needs the same synchronous first read, and for a second
+    // reason on top of the first-frame one. `observeSize` defers through
+    // `requestAnimationFrame`, and a browser SUSPENDS rAF for a document that
+    // is not visible — so in a hidden or backgrounded tab the frame's CSS box
+    // stretches (plain layout) while a height that arrived only through the
+    // observer stays at its fallback forever. The drawing then reads as
+    // stretched, and nothing corrects it until the tab is shown. Measuring
+    // here removes the dependency: the observer handles only CHANGES.
+    if (filling()) {
+      const height = Math.round(box.height);
+      if (height > 0) setMeasuredHeight(height);
+    }
     // observeSize change-guards and rAF-defers the write. Setting chartWidth
     // synchronously inside the observer dispatch re-rendered the chart (and the
     // page around it) mid-delivery, which re-queued this same observer and made
     // the browser emit "ResizeObserver loop completed with undelivered
     // notifications" during a window drag. See internal/dom/observeSize.
-    onCleanup(observeSize(frameEl, (size) => setChartWidth(size.width)));
+    onCleanup(
+      observeSize(frameEl, (size) => {
+        setChartWidth(size.width);
+        // Only in fill mode: in the numeric path the height is the caller's and
+        // measuring it would be a second, contradicting source of truth.
+        //
+        // A ZERO IS NOT A MEASUREMENT — it is the layout saying "not yet", or
+        // "this is inside `display: none`". Storing it would throw away a good
+        // height the moment a card is hidden, and the chart would come back at
+        // the fallback rather than at the size it had. Keep the last real one.
+        if (filling() && size.height > 0) setMeasuredHeight(size.height);
+      }),
+    );
   });
 
   // Vertical plot region — independent of y-axis width.
@@ -618,17 +659,28 @@ export const ScrubChart = <C extends Cell>(
   };
 
   return (
-    <div class="sui-scrub-chart">
+    <div
+      class="sui-scrub-chart"
+      classList={{ "sui-scrub-chart--fill": filling() }}
+    >
       <div
         class="sui-scrub-chart__frame"
-        style={{ height: `${chartHeight()}px` }}
+        // In fill mode the HEIGHT IS THE STYLESHEET'S: the modifier gives the
+        // root a height and the frame `flex:1`, so the frame takes what the
+        // container has left after the ribbon. An inline `height:100%` here
+        // resolved against a root with no height of its own — computing to
+        // `auto`, sizing from content, and feeding the fallback straight back
+        // into the measurement.
+        style={filling() ? undefined : { height: `${chartHeight()}px` }}
         ref={(el) => (frameEl = el)}
         onPointerMove={handleHoverMove}
         onPointerLeave={handleHoverLeave}
       >
         {/* Highlight bands — opt-in shaded rects over cell ranges. The
             BOTTOM layer of the frame: the gridlines and the series both
-            paint over them, because a band is background. */}
+            paint over them, because a band is background. Its CSS states
+            `z-index: -1` to hold that place — see the note on
+            `.sui-scrub-chart__grid`. */}
         <Show when={chartWidth() > 0 && highlightBands().length > 0}>
           <ScrubChartHighlights
             chartWidth={chartWidth}
@@ -638,9 +690,12 @@ export const ScrubChart = <C extends Cell>(
             bands={highlightBands}
           />
         </Show>
-        {/* Gridlines — opt-in horizontal rules at the y-axis ticks. Drawn
-            BEFORE the series so the data paints over the chrome, unlike the
-            axes below (drawn after so the labels stay legible). */}
+        {/* Gridlines — opt-in horizontal rules at the y-axis ticks. They sit
+            BENEATH the series so the data paints over the chrome, unlike the
+            axes below (drawn after so the labels stay legible). Document
+            order does NOT settle that on its own: the consumer's chart <svg>
+            is static, so this absolute layer would paint over it. The CSS
+            states `z-index: -1` — read the note there before moving either. */}
         <Show
           when={props.showGridlines && chartWidth() > 0 && yScale() != null}
         >

@@ -10,6 +10,18 @@
 // Pure types only — no Solid reactivity, no DOM, no side effects.
 // ============================================
 
+/**
+ * How a node changed between the two sides. The chart NEVER infers this — it
+ * is data the consumer supplies, because only the consumer knows what
+ * "changed" means for its own trees. Omit it and the node paints by side
+ * exactly as it did before kinds existed.
+ *
+ * Fixed colour semantics, keyed to the legend and to `--sui-*` tone tokens:
+ * `unchanged` grey (muted), `changed` blue (accent), `added` green (success),
+ * `removed` red (danger).
+ */
+export type TreeDiffKind = "unchanged" | "changed" | "added" | "removed";
+
 /** One content-addressed tree node: a group or a leaf. */
 export type TreeDiffEntry = {
   /** Stable id. Two sides that resolve the SAME id draw one shared node. */
@@ -18,6 +30,12 @@ export type TreeDiffEntry = {
   label: string;
   /** Subtitle line of the node box, normally the short hash. */
   hash: string;
+  /**
+   * Optional change kind. Paints this node's outline and every edge pointing
+   * AT it, and puts its swatch in the legend. Consumer-supplied; the chart
+   * does not derive it. Absent = paint by side, as before.
+   */
+  kind?: TreeDiffKind;
 };
 
 /**
@@ -83,6 +101,12 @@ export type TreeDiffChartProps = {
   selectedId?: string;
   /** When set, group and leaf nodes are focusable and fire on click / Enter / Space. */
   onNodeClick?: (id: string) => void;
+  /**
+   * Show the change-kind legend. Defaults to ON whenever any entry carries a
+   * `kind`, and OFF otherwise — a chart with no kinds has nothing to key. Set
+   * it explicitly only to suppress a legend you would otherwise get.
+   */
+  legend?: boolean;
 };
 
 /** Synthetic ids the layout mints for the spine nodes and the pruned node. */

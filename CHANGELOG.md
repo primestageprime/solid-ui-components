@@ -2,6 +2,181 @@
 
 ## Unreleased
 
+## 0.171.0 — 2026-09-16
+
+### Added
+- **`TreeDiffChart` promoted from the workshop bench to the catalog.** The
+  two-sided diff of content-addressed scenario trees — baseline spine on the
+  left, comparison on the right, a band per root entry between them, pruned
+  `[SAME]` nodes, three width-driven layouts, paired highlight on
+  `selectedId`, ellipsized `foreignObject` labels with a `Tooltip`, and the
+  change-kind `Legend` — now exports from the barrel with a `COMPONENTS.md`
+  entry and the curried variant `ScenarioTreeDiff`. **No prop signature
+  changed**: `baseline`, `compare`, `bands`, `mode`, `selectedId`,
+  `onNodeClick` and `legend` are exactly what they were on the bench, because
+  thorcasting-ui is writing adapters against them. Factory:
+  `createTreeDiffChart({ legend })` — `legend` is the only presentational
+  prop the chart has, everything else being data or a callback, and
+  `ScenarioTreeDiff` leaves it at the chart's data-derived default rather
+  than pinning it (a pinned `true` would key an empty legend for entries
+  without a `kind`). The root barrel now carries `TreeDiffChart`,
+  `TreeDiffChartProps`, `TreeDiffRoot`, `TreeDiffBand`, `TreeDiffChild`,
+  `TreeDiffEntry`, `TreeDiffMode` (plus `TreeDiffSide`, `TreeDiffKind`, the
+  `kind` helpers and the synthetic spine ids), and
+  `TreeDiffChart/barrel.test.ts` pins that contract at the PACKAGE ROOT so an
+  ambiguous `export *` — which resolves to nothing, silently — fails a test
+  rather than a consumer's build. The bench `workshop:tree-diff-chart` is
+  removed now that the component ships.
+- **`TreeDiffChart` takes an optional per-entry `kind`.**
+  `TreeDiffEntry.kind` is `"unchanged"` | `"changed"` | `"added"` |
+  `"removed"`, supplied by the consumer and never inferred by the chart. It
+  paints the node outline, every edge pointing *at* that node, and that
+  edge's arrowhead, from `--sui-*` tone tokens (muted / accent / success /
+  danger), and emits `data-kind` alongside `sui-tree-diff__node--kind-*` and
+  `sui-tree-diff__edge--kind-*`. A `Legend` keyed to the same tokens renders
+  the kinds actually present — on by default whenever any entry carries a
+  `kind`, off otherwise, and suppressible with `legend={false}`. Entries
+  without `kind` render exactly as before. New exported type `TreeDiffKind`
+  and pure helpers `KINDS`, `kindColor`, `kindLabel`, `kindLegendItems`,
+  `presentKinds`.
+- **`EllipsizedNodeLabel` Text variant.** Single-line truncating label for a
+  fixed-width slot whose width comes from the parent rather than the text —
+  the diagram-node case. Unlike `EllipsizedTitle` it needs no flex parent,
+  and unlike `EllipsizedChipLabel` it is a block, so `text-overflow`
+  actually applies.
+- **`DagSvgEdge` takes an optional `dataKind`** (internal `dag-svg`), emitted
+  verbatim as `data-kind` so a chart painting edges by a caller-supplied
+  category can read it from the DOM instead of parsing the class string.
+- **`LevelsTimeline` promoted from the workshop bench to the catalog.** A time
+  chart of numeric LEVELS: a rail per `value` on a real value axis, as thick as
+  the count holding it, with Sankey flow ribbons wherever a count moves between
+  two of them — and one-ended flows (arrival, departure) so no rail ever thins
+  silently. Numbered flags above the plot for the consumer's mutations, a muted
+  dropline at every other change, a hover crosshair and readout, and an
+  optional `onPick` that reports the month under the pointer. Now with a
+  VISIBLE value axis in a left gutter (nice 1/2/5 ticks from `Chart/scales`,
+  labelled with the consumer's `formatValue`, the gutter sized from the longest
+  label), bands CENTRED on their value and capped at ten px, and
+  `valueDomain?` to pin the y range so rails hold still while one value moves.
+  The model is generic — the component holds no domain nouns, units or
+  currency. Exports from the barrel with a dedicated showcase, a
+  `COMPONENTS.md` entry and the curried variant `LevelsRailChart` (plain
+  numbers). Factory: `createLevelsTimeline({ formatValue })`; everything else
+  stays data at the call site. Exported types: `LevelsTimelineProps`,
+  `LevelsTimelineOverrides`, `LevelsTimelineDataProps`, the data types `Level`,
+  `CountPoint`, `Transfer`, `Mutation`, `TimeDomain`, `TimeValue`, and
+  `timeOf`.
+- **`MutationSliders` promoted from the workshop bench to the catalog.** A row
+  of vertical prior-vs-future dials, one per named entity: the shaded allowed
+  range on a shared track, a muted prior arrowhead and an accent future one
+  meeting nose to nose, a toned change line between them and the signed delta
+  as a figure. Three presences — present, removed (`value: null`) and new
+  (`old: null`) — each with its own shape rather than one nullable flag. The
+  range is the clamp: nothing is drawn, announced or emitted outside it. It
+  measures itself in both directions, paging by one dial and never below one
+  when the row is too narrow, and lengthening the track to fill a sized card.
+  Clicking two names pins them: they level up to the highest among them and
+  then drag together, each stopping at its own ceiling. Now exports from the
+  barrel with a dedicated showcase, a `COMPONENTS.md` entry and the curried
+  variant `NumberMutationSliders` (plain locale-grouped numbers, neutral
+  verbs, no grid). Factory: `createMutationSliders({ format, labels, snap })` —
+  the unit, the vocabulary and the grid are properties of the consumer's
+  world; `entities`, `domain`, the selection and every callback stay data at
+  the call site. Exported types: `MutationSlidersProps`,
+  `MutationSlidersOverrides`, `MutationSlidersDataProps`,
+  `MutationSliderLabels`, `Entity`, `Domain`, `ChangeTone`, plus the qualified
+  aliases `MutationEntity` and `MutationSlidersDomain`.
+- **`MutationSliders` takes the consumer's own vocabulary through `labels`.**
+  `labels.remove`, `labels.restore` and `labels.new` default to `"Remove"` /
+  `"Restore"` / `"New"`, and a partial object fills only the gaps it leaves —
+  so a consumer whose entities are people passes
+  `{ remove: "Terminate", new: "new hire" }` and the component itself stays
+  free of any domain's words. Additive: the defaults are what the component
+  said before in substance, and no existing prop changed shape.
+- **`RateGauge` promoted from the workshop bench to the catalog.** The
+  right-facing half-ring dial — zoned ring, dashed reference needle, capped
+  value needle, delta brace and sector, and elbow-leader HUD callouts — now
+  exports from the barrel with a dedicated showcase, a `COMPONENTS.md` entry
+  and the curried variant `RateDial` (plain numbers against zero). Zero is
+  always the horizontal and the tone follows the band the needle stands in.
+  Factory: `createRateGauge({ baselineLabel, formatAgainst, formatDelta })` —
+  the wording is presentational and curries once at the consumer's layer;
+  `domain`, `baseline`, `value`, `label` and `caution` stay data at the call
+  site.
+
+### Changed
+- **`EllipsizedHudCaption` and `EllipsizedNodeLabel` are two roles, not one
+  duplicate.** With PR #138 merged the two ellipsizing SVG-label Text variants
+  could finally be compared: the HUD caption is an uppercase, 0.5px-tracked
+  11px `<span>` taking `color: inherit` so it wears the tone of the callout it
+  hangs off (`RateGauge`), and the node label is a plain-case 12px `<div>` at
+  `width: 100%`, centred inside a node box and painting in the `label` colour
+  (`TreeDiffChart`). Uppercase plus tracking is a visible typographic role and
+  the colour inheritance is load-bearing, so unifying them would have changed
+  `RateGauge`'s render. Both keep their names, neither becomes an alias, the
+  merge TODO in `Text/variants.ts` is gone, and each variant's doc now says
+  what distinguishes it from the other so the question is not re-derived.
+- **`MutationSliders` says nothing domain-specific of its own, and is split at
+  the seam.** Every "pay", "salary", "hire", "terminate" and currency is gone
+  from the component, its geometry and its CSS: the model is entities with a
+  prior amount, a future amount, an allowed range and a presence, and the
+  three words that carry a consumer's meaning moved to the `labels` prop. One
+  entity's column is now a private `MutationDial` (`dial.tsx`) reporting where
+  its thumb went in three phases (`drag` / `commit` / `step`), so the row owns
+  paging, selection and the pin fan-out and the dial owns one column's DOM and
+  its own measurement. Behaviour and the public prop names are unchanged; the
+  folder's ~30 `geometry.ts` FUNCTIONS are now private; its three types stay
+  public under their plain names (`Entity`, `Domain`, `ChangeTone`), with
+  `MutationEntity` and `MutationSlidersDomain` alongside as aliases. Verified
+  that none of the three collides with another barrel, because an ambiguous
+  `export *` resolves to nothing at all.
+- **`RateGauge` says nothing domain-specific of its own.** The component
+  shipped with "breakeven", "payroll" and a currency baked into the sentences
+  it built around the consumer's numbers. `format` (which nothing read) and
+  `formatMagnitude` are replaced by `formatAgainst(value)` and
+  `formatDelta(delta)`, which return the WHOLE second line of a callout and
+  the WHOLE brace line respectively — so a consumer's "$60k/yr over breakeven"
+  and "$20k/yr to payroll" are theirs, and the generic defaults print a plain
+  grouped number ("at zero" for zero). `comfortable` is renamed `caution`
+  ("positive values below this read as caution"), `baselineLabel` now defaults
+  to `"Reference"`, and the announcement's band phrases name the bands rather
+  than a comfort level. The folder's ~20 `geometry.ts` exports stay private;
+  the barrel publishes `RateGauge`, `createRateGauge`, `RateDial`, the
+  props/Overrides/DataProps types and `RateGaugeDomain`.
+
+### Fixed
+- **A popover no longer paints UNDER a modal.** `Select`'s listbox, and the
+  same bug in `Combobox` and `Tooltip` before it bit a consumer: the portalled
+  overlay sat below a dialog it was opened from. All three now stack above it.
+- **`ScrubChart` measures itself honestly.** The fill height is measured on
+  mount rather than only when the resize observer next fires, a zero-sized box
+  is no longer treated as a measurement, and the test sizer tears down through
+  `restore()`.
+- **`TreeDiffChart` node labels no longer overflow the node box.** A label is
+  consumer data of unknown length, so a long one (`Bookkeeping retainer`)
+  spilled past the box edges as raw SVG `<text>`. Consumer-supplied labels
+  now render as HTML in a `<foreignObject>` clamped to the box, ellipsizing
+  at its edge with the full value in a `Tooltip`; boxes did not grow and all
+  three layout modes are unchanged. Labels the chart mints (`commit`,
+  `root tree`, `[SAME]`) and the fixed-width hash line stay SVG text. Every
+  CSS rule that tinted a label now sets `color` as well as `fill`, since
+  HTML text does not take `fill`.
+
+## 0.170.1
+
+### Fixed
+- **`ScrubChart` gridlines and highlight bands paint UNDER the data again.**
+  The component renders both chrome layers before `renderChart` to put them
+  below the plot, but document order never carried it: both layers are
+  `position: absolute` and every consumer's chart `<svg>` is `position:
+  static`, and CSS paints a positioned element above static in-flow content
+  whatever the document order. So every gridline cut every series line, on
+  every ScrubChart. Both layers now state `z-index: -1`. The frame already
+  isolates, so they paint above the frame's own background and below its
+  in-flow children, and a consumer needs no `position` rule of its own. A
+  gridline still reads THROUGH a translucent band fill, which is wanted; it
+  stops cutting the opaque lines (dside #49207).
+
 ## 0.170.0
 
 ### Fixed

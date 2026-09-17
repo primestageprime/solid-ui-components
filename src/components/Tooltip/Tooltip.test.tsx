@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { Tooltip } from "./Tooltip";
@@ -76,8 +78,37 @@ describe("Tooltip", () => {
         <span>t</span>
       </Tooltip>
     ));
-    expect(document.querySelector(".sui-tooltip__content")!.textContent).toContain(
-      "lazy",
+    expect(
+      document.querySelector(".sui-tooltip__content")!.textContent,
+    ).toContain("lazy");
+  });
+});
+
+// The same stacking rule Select needed, asserted the same way. Kobalte portals
+// this popover to `document.body`, where it is a SIBLING of a modal's overlay
+// rather than a child — so "above the page" is not enough, and jsdom applies
+// no stylesheet, which is why the numbers are read from the CSS files. It is a
+// real guard rather than a tautology: the two live in different files, and the
+// one that broke on Select was changed without the other ever being consulted.
+describe("Tooltip inside a Modal", () => {
+  it("paints above the modal overlay", () => {
+    const zIndexOf = (css: string, selector: string): number => {
+      const block = css.slice(css.indexOf(selector));
+      const match = block
+        .slice(0, block.indexOf("}"))
+        .match(/z-index:\s*(\d+)/);
+      return Number(match?.[1]);
+    };
+    const components = join(__dirname, "..");
+    const popover = zIndexOf(
+      readFileSync(join(components, "Tooltip/Tooltip.css"), "utf8"),
+      ".sui-tooltip__content {",
     );
+    const overlay = zIndexOf(
+      readFileSync(join(components, "Modal/Modal.css"), "utf8"),
+      ".sui-modal-overlay {",
+    );
+    expect(overlay).toBeGreaterThan(0);
+    expect(popover).toBeGreaterThan(overlay);
   });
 });

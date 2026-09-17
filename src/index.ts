@@ -34,6 +34,8 @@ export * from "./components/Sparkline";
 export * from "./components/HeartbeatSparkline";
 export * from "./components/TrendSparkline";
 export * from "./components/DistributionSparkline";
+export * from "./components/RateGauge";
+export * from "./components/MutationSliders";
 export * from "./components/LiveHeartbeatTrace";
 export * from "./components/ConnectionStatus";
 export * from "./components/ConversationTree";
@@ -117,6 +119,7 @@ export * from "./components/ProgressCheck";
 export * from "./components/BurndownChart";
 export * from "./components/SprintSelector";
 export * from "./components/DagChart";
+export * from "./components/TreeDiffChart";
 // SwimlaneChart public API: as of v0.40 the *animated* variant is the
 // public default. The underlying static implementation is still
 // re-exported as `SwimlaneChartStatic` (and via the
@@ -293,6 +296,7 @@ export const HUDSection = createSection({});
 export { createPanel as createHUDPanel } from "./components/Panel";
 export * from "./components/WorkerCard";
 export * from "./components/CompletionTimeline";
+export * from "./components/LevelsTimeline";
 export * from "./components/ThroughputChart";
 export * from "./components/BandRail";
 export * from "./components/RingChart";

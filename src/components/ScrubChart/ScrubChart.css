@@ -48,6 +48,9 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  /* See the note on `.sui-scrub-chart__grid` — the same `z-index: -1` keeps a
+     band under the consumer's plot instead of dimming it. */
+  z-index: -1;
   pointer-events: none;
 }
 
@@ -97,6 +100,17 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  /* `z-index: -1` and NOT document order alone. ScrubChart renders this layer
+     BEFORE `renderChart`, but the consumer supplies that <svg> and every
+     consumer so far leaves it STATIC. CSS paints a positioned element above
+     static in-flow content whatever the document order, so this absolute layer
+     was lifted over the plot and every gridline cut every series line.
+     A negative level puts both chrome layers back under the plot: the frame
+     isolates, so they paint above the frame's own background and below its
+     in-flow children, and the consumer needs no `position` of its own.
+     Keep `-1` on this layer and on `.sui-scrub-chart__highlights` together —
+     they hold their own order between them on document order. */
+  z-index: -1;
   pointer-events: none;
 }
 
@@ -268,4 +282,29 @@
 .sui-scrub-chart__corner-btn:focus-visible {
   outline: 2px solid var(--sui-accent);
   outline-offset: 0;
+}
+
+/* FILL MODE (`chartHeight="fill"`). The root takes the container's height and
+   the frame takes what is left of it after the axis ribbon.
+
+   The height lives HERE rather than in an inline style, and that is the whole
+   bug this rule fixes: an inline `height:100%` on the frame resolves against
+   the ROOT, and without the rule below the root has no height of its own — so
+   it computed to `auto`, sized from content, and fed the component's own
+   fallback height straight back into the measurement it was supposed to take.
+
+   `min-height: 0` on both is what lets them shrink inside a flex cell; without
+   it a flex item's automatic minimum size is its content and the cell loses.
+
+   Placed at the END of the file on purpose: `ScrubChart.test.tsx` scrapes this
+   stylesheet for the base `.sui-scrub-chart__frame` block by substring, and a
+   compound selector containing that text earlier in the file shadows it. */
+.sui-scrub-chart--fill {
+  height: 100%;
+  min-height: 0;
+}
+
+.sui-scrub-chart--fill .sui-scrub-chart__frame {
+  flex: 1 1 0;
+  min-height: 0;
 }

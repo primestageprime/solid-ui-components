@@ -109,7 +109,15 @@
 }
 
 .sui-select__content {
-  z-index: 50;
+  /* ABOVE THE MODAL (1000 in Modal.css), not merely above the page.
+     Kobalte portals this listbox to `document.body`, so it is a SIBLING of the
+     modal overlay rather than a child of it — at the old z-index of 50 a
+     Select opened from inside a modal rendered, took focus, reported its
+     options to a screen reader and was painted UNDER the modal panel, so the
+     reader saw an empty dropdown (Peter, 2026-09-16, on the scenario board's
+     hire form). A popover opened from inside a dialog must paint above that
+     dialog; it stays below Toast (9999), which must outrank both. */
+  z-index: 1100;
   min-width: var(--kb-select-trigger-width, 160px);
   max-width: min(calc(100vw - 32px), 480px);
   background: var(--sui-bg-primary);

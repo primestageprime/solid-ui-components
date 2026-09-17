@@ -441,6 +441,74 @@ export const FillColumnFlush: Component<StackDataProps> = createStack({
   style: { flex: "1", "min-height": "0" },
 });
 
+/** ViewportColumn — a flex column that fills a parent of DEFINITE height
+ *  (`fill` → `height:100%; min-height:0`).
+ *
+ *  The BRIDGE between a plain block container whose height is set in CSS — a
+ *  page frame, a bench frame, anything sized with `calc(100vh - N)` — and the
+ *  Layout vocabulary. `FillColumn` is NOT interchangeable with it: that one
+ *  bakes `flex:1`, which does nothing at all inside a BLOCK parent, so a column
+ *  that looks right in a flex page silently grows to its content in a block
+ *  one. This variant resolves against the block's own height instead.
+ *
+ *  A variant rather than a call-site prop because `fill` is a Stack OVERRIDE,
+ *  locked at variant-definition time. Put proportional children
+ *  (`HalfFillColumn`) inside it. */
+export const ViewportColumn: Component<StackDataProps> = createStack({
+  gap: "sm",
+  fill: true,
+});
+
+/** GrowFillBox — the COLUMN-context sibling of `GrowBox`: fills the space its
+ *  parent column has left and may shrink past its content
+ *  (`flex-grow:1; flex-basis:0%; min-height:0; min-width:0`).
+ *
+ *  `GrowBox` carries `min-width:0` and nothing for the other axis, because it
+ *  was written for a row. In a COLUMN that omission is decisive: a flex item's
+ *  automatic minimum size is its content, so a `GrowBox` holding a chart that
+ *  reports an 800px intrinsic height refuses to shrink into a 150px cell and
+ *  overflows it instead — silently, since the parent is the one with
+ *  `overflow` and the child is simply taller than its box. `min-height:0` is
+ *  what lets the cell win. For the growing region of a card whose header keeps
+ *  its own height. */
+export const GrowFillBox: Component<BoxDataProps> = createBox({
+  grow: true,
+  style: { "flex-basis": "0%", "min-height": "0", "min-width": "0" },
+});
+
+/** HalfFillColumn — an EQUAL share of a proportional split (`flex:1 1 0;
+ *  min-height:0`). Two of them halve their parent, three of them third it.
+ *
+ *  The `0` basis is the load-bearing part and the reason this is not
+ *  `ClipFillColumn`: a basis of `auto` measures each child's CONTENT first, so
+ *  a tall chart beside a short one takes the lion's share and "equal halves"
+ *  silently becomes "proportional to content". A zero basis divides the space
+ *  before content is consulted. For two stacked charts that must get the same
+ *  room whatever they contain. */
+export const HalfFillColumn: Component<StackDataProps> = createStack({
+  gap: "xs",
+  style: { flex: "1 1 0", "min-height": "0" },
+});
+
+/** MajorPaneBox — a flex child pinned to 60% of its row, beside a companion
+ *  that fills the remaining 40% (`width:60%; flex-shrink:0; min-width:0`).
+ *
+ *  DEFINITE on purpose. The obvious spelling for "as wide as its content needs,
+ *  capped" is `width:max-content; max-width:<n>%`, and it is unsafe for any
+ *  child that MEASURES ITSELF to decide how much content to render: the
+ *  measurement changes the content, the content changes the `max-content` box,
+ *  and the box changes the measurement. It does not always spin — it can settle
+ *  one item lower and oscillate between two widths depending on which frame the
+ *  resize arrived in, which reads as a rendering bug and does not reproduce on
+ *  demand. A definite share breaks the cycle.
+ *
+ *  60/40 rather than the 80/20 this shipped as: an instrument in the minor
+ *  share needs enough width to stay legible, and a fifth of a row is not it. */
+export const MajorPaneBox: Component<BoxDataProps> = createBox({
+  shrink: false,
+  style: { width: "60%", "min-width": "0" },
+});
+
 /** NoShrinkScrollBox — a fixed-size box that refuses to shrink in a flex parent
  *  and scrolls its own vertical overflow (`flex-shrink:0; overflow-y:auto;
  *  min-height:0`). For a fixed-width sidebar/rail beside a growing pane: it keeps
@@ -591,6 +659,38 @@ export const GrowWrapRow: Component<RowDataProps> = createRow({
   wrap: true,
   gap: "xs",
   style: { flex: "1", "min-width": "0" },
+});
+
+/** FillWrapRow — a wrapping row that FILLS its parent column's height and
+ *  stretches its cells to match (`flex:1; min-height:0; wrap; gap:sm`).
+ *
+ *  The gap the other wrapping rows leave: a flex ROW inside a flex COLUMN
+ *  takes its height from its CONTENT, because the column's `align-items:
+ *  stretch` governs the cross axis, which for a column is the WIDTH. So a row
+ *  of cards in a sized column sits at content height and leaves the rest of
+ *  the column empty — 227px of it, on the board this was written for.
+ *  `flex:1` claims the height and `min-height:0` lets it shrink again.
+ *
+ *  Not `GrowWrapRow`, which grows along a ROW (`flex:1; min-width:0`) and
+ *  centres its items, so cards would float in the middle at their own heights
+ *  rather than filling. Not `PaneRow`, which fills but does not wrap. */
+export const FillWrapRow: Component<RowDataProps> = createRow({
+  gap: "sm",
+  wrap: true,
+  style: { flex: "1", "min-height": "0" },
+});
+
+/** GrowCenterColumn — fills the height its parent column has left and CENTRES
+ *  its child in it (`flex:1 1 0; min-height:0; justify:center`).
+ *
+ *  The sibling of `GrowFillBox` for content that should not be stretched. A
+ *  chart that fills its box wants `GrowFillBox`; an INSTRUMENT that keeps its
+ *  own aspect — a dial, a gauge — grows until it is width-bound and then has
+ *  height to spare, and pinning it to the top of a tall card reads as a
+ *  mistake. This claims the same space and centres what sits in it. */
+export const GrowCenterColumn: Component<StackDataProps> = createStack({
+  justify: "center",
+  style: { flex: "1 1 0", "min-height": "0" },
 });
 
 /** GrowCenterRow — a growing, center-justified cluster: `flex:1; min-width:0;
