@@ -43,6 +43,7 @@ import {
   // boxes
   ClipBox,
   ClipFillBox,
+  FixedHeightBox,
   ScrollBox,
   ScrollXBox,
   ScrollYBox,
@@ -275,6 +276,13 @@ const BOXES: VariantSpec[] = [
     name: "ClipFillBox",
     note: "grows into its parent and clips",
     Variant: ClipFillBox,
+    kind: "tall",
+    bounded: true,
+  },
+  {
+    name: "FixedHeightBox",
+    note: "height STATED at the app chart height (200px), not left to a parent fill/flex context — a card that must match a sibling chart's height exactly",
+    Variant: FixedHeightBox,
     kind: "tall",
     bounded: true,
   },
