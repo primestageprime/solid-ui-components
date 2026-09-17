@@ -11,7 +11,10 @@ import {
   payBefore,
   payFrom,
   payDomainOf,
+  addMutation,
+  ensureMutation,
   hiredAt,
+  nextFreeSlot,
   nearestMutation,
   removeMutation,
   roleOf,
@@ -365,5 +368,107 @@ describe("removing a change", () => {
     const after = removeMutation(SCENARIO, "winter");
     expect(after.mutations).toHaveLength(3);
     expect(after.people).toHaveLength(3);
+  });
+});
+
+// Peter, 2026-09-16: dragging a dial with nothing selected should stop being a
+// no-op and make the change it obviously means.
+describe("the first interaction makes its own change", () => {
+  const START = new Date("2025-01-01").getTime();
+  const END = new Date("2026-01-01").getTime();
+  const atQuarter = (iso: string): Mutation => ({
+    id: iso,
+    at: new Date(iso),
+    label: "",
+  });
+
+  it("puts the first change on the first quarter of the span", () => {
+    expect(nextFreeSlot(START, END, [])).toBe(new Date("2025-01-01").getTime());
+  });
+
+  it("moves to the next quarter when one is taken", () => {
+    expect(nextFreeSlot(START, END, [atQuarter("2025-01-01")])).toBe(
+      new Date("2025-04-01").getTime(),
+    );
+    expect(
+      nextFreeSlot(START, END, [
+        atQuarter("2025-01-01"),
+        atQuarter("2025-04-01"),
+      ]),
+    ).toBe(new Date("2025-07-01").getTime());
+  });
+
+  it("steps over a taken quarter rather than stopping at it", () => {
+    // Q1 free, Q2 taken: the FIRST free one is still Q1.
+    expect(nextFreeSlot(START, END, [atQuarter("2025-04-01")])).toBe(
+      new Date("2025-01-01").getTime(),
+    );
+  });
+
+  it("has nowhere left to put one when every quarter is taken", () => {
+    const all = map(atQuarter, [
+      "2025-01-01",
+      "2025-04-01",
+      "2025-07-01",
+      "2025-10-01",
+    ]);
+    expect(nextFreeSlot(START, END, all)).toBeUndefined();
+  });
+
+  it("creates and selects a change when nothing is selected", () => {
+    const ensured = ensureMutation(
+      { mutations: [], selected: null },
+      START,
+      END,
+    );
+    expect(ensured.created).toBe(true);
+    expect(ensured.mutations).toHaveLength(1);
+    expect(ensured.selected).toBe(ensured.mutations[0]?.id);
+    expect(ensured.mutations[0]?.at).toEqual(new Date("2025-01-01"));
+    // Numbered like any other flag, because it IS one — `addMutation` does the
+    // creating, so there is no second way for a mutation to come into being.
+    expect(ensured.mutations[0]?.label).toBe("1");
+  });
+
+  it("leaves an existing selection exactly alone", () => {
+    const existing = [atQuarter("2025-07-01")];
+    const ensured = ensureMutation(
+      { mutations: existing, selected: "2025-07-01" },
+      START,
+      END,
+    );
+    expect(ensured.created).toBe(false);
+    expect(ensured.selected).toBe("2025-07-01");
+    expect(ensured.mutations).toHaveLength(1);
+  });
+
+  it("selects what is there rather than crowding a full span", () => {
+    const all = map(atQuarter, [
+      "2025-01-01",
+      "2025-04-01",
+      "2025-07-01",
+      "2025-10-01",
+    ]);
+    const ensured = ensureMutation(
+      { mutations: all, selected: null },
+      START,
+      END,
+    );
+    expect(ensured.created).toBe(false);
+    expect(ensured.mutations).toHaveLength(4);
+    expect(ensured.selected).toBe("2025-01-01");
+  });
+
+  // The two ways a mutation is born agree: a click on the chart and a first
+  // drag both go through `addMutation`, so both renumber the flags.
+  it("renumbers the flags, as a click on the chart does", () => {
+    const later = addMutation([], new Date("2025-10-01"));
+    const ensured = ensureMutation(
+      { mutations: later.mutations, selected: null },
+      START,
+      END,
+    );
+    expect(map((m) => m.label, ensured.mutations)).toEqual(["1", "2"]);
+    expect(ensured.selected).toBe(ensured.mutations[0]?.id);
   });
 });

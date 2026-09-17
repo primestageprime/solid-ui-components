@@ -48,6 +48,8 @@ import {
 } from "../../../src/fn";
 import {
   EMPTY_HIRE,
+  addMutation,
+  ensureMutation,
   type HireDraft,
   type Person,
   ROLES,
@@ -444,40 +446,6 @@ export const transfersOf = (
     (transfer: Transfer) => timeOf(transfer.at),
     [...merged.values()],
   );
-};
-
-/**
- * Add a mutation at a picked date, or SELECT the one already there.
- *
- * The timeline snaps a click to a month boundary, so "already there" is an
- * exact timestamp match — no tolerance window to tune. Returns the mutation
- * list and the id to select, so the caller does one thing with both outcomes
- * rather than branching on whether anything was added.
- */
-export const addMutation = (
-  mutations: readonly Mutation[],
-  at: Date,
-): { mutations: Mutation[]; selected: string } => {
-  const existing = find(
-    (mutation: Mutation) => timeOf(mutation.at) === at.getTime(),
-    mutations,
-  );
-  if (existing !== undefined) {
-    return { mutations: [...mutations], selected: existing.id };
-  }
-  const id = `picked-${at.getTime()}`;
-  const added = orderedMutations([...mutations, { id, at, label: "" }]);
-  // The flags are numbered by POSITION, so every label is restamped: inserting
-  // a mutation in the middle renumbers the ones after it, which is what a
-  // reader expects of "mutation 2".
-  const numbered = map(
-    (mutation: Mutation, index: number) => ({
-      ...mutation,
-      label: String(index + 1),
-    }),
-    added,
-  );
-  return { mutations: numbered, selected: id };
 };
 
 /**
@@ -971,23 +939,44 @@ const ScenarioBoardBench: Component = () => {
   });
 
   /**
-   * A drag edits the SELECTED mutation only.
+   * THE FIRST INTERACTION MAKES ITS OWN CHANGE (Peter, 2026-09-16).
    *
-   * With no mutation selected there is nowhere to record a change, so this
-   * does nothing — and because the dials are CONTROLLED by `people()`, doing
-   * nothing is what makes them inert: the thumb has no state of its own to
-   * drift into. That is the whole of "dragging is disabled before a date is
-   * picked"; the header says why in words.
+   * Dragging a dial with nothing selected used to be a no-op, which made the
+   * opening state a place the reader could get stuck: the one gesture they
+   * reach for did nothing, and the sentence beside the dials was the only way
+   * out. Now the gesture means what it obviously means — a change, at the
+   * `nextFreeSlot` — and the drag lands on it.
+   *
+   * Returns the id to edit, so every caller does one thing whether or not
+   * anything was created. `batch`, because the mutation list and the selection
+   * describe one scenario and a render between the two writes would draw a
+   * board disagreeing with itself.
    */
+  const editingOrFirst = (): string | null => {
+    const already = editing();
+    if (already !== null) return already;
+    const ensured = ensureMutation(
+      { mutations: mutations(), selected: null },
+      DOMAIN_START.getTime(),
+      DOMAIN_END.getTime(),
+    );
+    batch(() => {
+      setMutations(ensured.mutations);
+      setEditing(ensured.selected);
+    });
+    return ensured.selected;
+  };
+
+  /** A drag edits the SELECTED mutation — making one first if there is none. */
   const setPay = (id: string, value: number): void => {
-    const at = editing();
+    const at = editingOrFirst();
     if (at === null) return;
     setPeople((current) => withChange(current, id, at, value));
   };
 
   /** ⊗ Terminate: this person is gone from the selected mutation onward. */
   const terminate = (id: string): void => {
-    const at = editing();
+    const at = editingOrFirst();
     if (at === null) return;
     setPeople((current) => withChange(current, id, at, null));
   };
@@ -1003,6 +992,10 @@ const ScenarioBoardBench: Component = () => {
     setPeople((current) => withoutChange(current, id, at));
   };
 
+  // ↺ Restore does NOT make a change of its own: there is nothing to undo at a
+  // mutation that does not exist yet, and the button is only ever drawn for
+  // somebody already terminated — which takes a mutation to have happened.
+
   /**
    * A HIRE is a FORM now, not a stub (Peter, 2026-09-16: "When I click + on the
    * Changes, show me a modal form that lets me choose a role … and a text input
@@ -1013,6 +1006,7 @@ const ScenarioBoardBench: Component = () => {
    * the modal — Cancel, Escape, the overlay, the ×— is the same single line.
    */
   const openHire = (): void => {
+    editingOrFirst();
     setDraft(EMPTY_HIRE);
     setHiring(true);
   };
@@ -1205,22 +1199,21 @@ const ScenarioBoardBench: Component = () => {
                     <GhostButton onClick={reset}>Reset</GhostButton>
                   </ClusterRow>
                 </SpreadRow>
-                {/* Terminating, restoring and hiring all WRITE to a mutation,
-                    so before one exists those callbacks are omitted and the
-                    dial draws neither ⊗ nor +: a control that cannot do
-                    anything is worse than no control. `onChange` stays wired
-                    only because `MutationSliders` requires it, and it is a
-                    no-op for the same reason — which is what makes the dials
-                    inert rather than disabled-looking. */}
+                {/* Every control is live in the empty state now, because none
+                    of them is a no-op there any more: a drag, a ⊗ or a + makes
+                    the change it implies and applies itself to it. ↺ is the
+                    exception and needs no guard — it is only drawn for somebody
+                    already terminated, which takes a mutation to have
+                    happened. */}
                 <GrowFillBox>
                   <MutationSliders
                     entities={dials()}
                     domain={PAY_DOMAIN}
                     snap={1_000}
                     onChange={setPay}
-                    onRemove={editing() === null ? undefined : terminate}
-                    onRestore={editing() === null ? undefined : restore}
-                    onAdd={editing() === null ? undefined : openHire}
+                    onRemove={terminate}
+                    onRestore={restore}
+                    onAdd={openHire}
                     format={formatMoney}
                   />
                 </GrowFillBox>

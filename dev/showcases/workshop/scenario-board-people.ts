@@ -388,6 +388,132 @@ export const hire = (
   return { people: [...people, hired], id };
 };
 
+/**
+ * Add a mutation at a picked date, or SELECT the one already there.
+ *
+ * The timeline snaps a click to a month boundary, so "already there" is an
+ * exact timestamp match — no tolerance window to tune. Returns the mutation
+ * list and the id to select, so the caller does one thing with both outcomes
+ * rather than branching on whether anything was added.
+ */
+export const addMutation = (
+  mutations: readonly Mutation[],
+  at: Date,
+): { mutations: Mutation[]; selected: string } => {
+  const existing = find(
+    (mutation: Mutation) => timeOf(mutation.at) === at.getTime(),
+    mutations,
+  );
+  if (existing !== undefined) {
+    return { mutations: [...mutations], selected: existing.id };
+  }
+  const id = `picked-${at.getTime()}`;
+  const added = orderedMutations([...mutations, { id, at, label: "" }]);
+  // The flags are numbered by POSITION, so every label is restamped: inserting
+  // a mutation in the middle renumbers the ones after it, which is what a
+  // reader expects of "mutation 2".
+  const numbered = map(
+    (mutation: Mutation, index: number) => ({
+      ...mutation,
+      label: String(index + 1),
+    }),
+    added,
+  );
+  return { mutations: numbered, selected: id };
+};
+
+// ── Making the first change ──────────────────────────────────────────────────
+
+/** The month a quarter starts, as a UTC timestamp. */
+const quarterStartsIn = (start: number, end: number): number[] => {
+  const from = new Date(start);
+  const stops: number[] = [];
+  let year = from.getUTCFullYear();
+  let month = Math.floor(from.getUTCMonth() / 3) * 3;
+  for (;;) {
+    const at = Date.UTC(year, month, 1);
+    if (at >= end) break;
+    if (at >= start) stops.push(at);
+    month += 3;
+    if (month > 11) {
+      month -= 12;
+      year += 1;
+    }
+  }
+  return stops;
+};
+
+/**
+ * The slot a first interaction lands in: the earliest QUARTER BOUNDARY in the
+ * domain that has no mutation on it yet.
+ *
+ * Peter, 2026-09-16: dragging a dial with nothing selected should no longer be
+ * a no-op — it should make the change it so obviously means. The question is
+ * only WHERE, and his own answer is "the nearest possible slot", read as the
+ * first free quarter from the start of the span.
+ *
+ * I considered "nearest to the as-of or hover position" and did not take it:
+ * in the empty state there IS no as-of position — that is what empty means —
+ * and the pointer at the moment of a drag is over a DIAL, which says nothing
+ * about a date. A rule that depended on where a pointer had last been over a
+ * different chart would put the reader's first change somewhere they could not
+ * predict. The first free quarter is somewhere they can: it is the leftmost
+ * flag the timeline can hold, the reader sees it appear there, and moving it is
+ * a click on the chart away.
+ *
+ * Returns `undefined` when every quarter in the span is already taken, which
+ * the caller reads as "there is nowhere left to put one" rather than crowding
+ * two flags onto a month.
+ */
+export const nextFreeSlot = (
+  domainStart: number,
+  domainEnd: number,
+  mutations: readonly Mutation[],
+): number | undefined => {
+  const taken = new Set(
+    map((mutation: Mutation) => timeOf(mutation.at), mutations),
+  );
+  return quarterStartsIn(domainStart, domainEnd).find(
+    (at: number) => !taken.has(at),
+  );
+};
+
+/**
+ * The mutation a first interaction should apply to: the one already selected,
+ * or a NEW one at the next free slot.
+ *
+ * Returns the list and the id together — the caller does one thing whether or
+ * not anything was created, exactly as `addMutation` does for a click on the
+ * chart. `created` is there for a caller that wants to say something about it;
+ * nothing on the board does yet.
+ */
+export const ensureMutation = (
+  scenario: {
+    readonly mutations: readonly Mutation[];
+    readonly selected: string | null;
+  },
+  domainStart: number,
+  domainEnd: number,
+): { mutations: Mutation[]; selected: string | null; created: boolean } => {
+  if (scenario.selected !== null) {
+    return {
+      mutations: [...scenario.mutations],
+      selected: scenario.selected,
+      created: false,
+    };
+  }
+  const at = nextFreeSlot(domainStart, domainEnd, scenario.mutations);
+  if (at === undefined) {
+    return {
+      mutations: [...scenario.mutations],
+      selected: orderedMutations(scenario.mutations)[0]?.id ?? null,
+      created: false,
+    };
+  }
+  const added = addMutation(scenario.mutations, new Date(at));
+  return { ...added, created: true };
+};
+
 // ── Removing a change ────────────────────────────────────────────────────────
 
 /** The board's scenario, as much of it as removing a change has to touch. */
