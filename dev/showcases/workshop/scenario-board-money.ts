@@ -51,3 +51,35 @@ export const dollarsPerYear = (amount: number): string =>
  */
 export const signedDollarsPerYear = (amount: number): string =>
   `${amount < 0 ? "" : "+"}${dollarsPerYear(amount)}`;
+
+// ── The gauge's sentences ────────────────────────────────────────────────────
+//
+// `RateGauge` asks for WHOLE LINES now rather than formatted figures, and it
+// supplies no words of its own around them — so these two functions are the
+// board's wording, and they live here, beside the unit they are written in and
+// under test, rather than inline in the bench where nothing could check them.
+
+/**
+ * Where a rate stands against break-even — `$60k/yr over breakeven`.
+ *
+ * Zero gets its own sentence. `$0/yr over breakeven` is true and unreadable;
+ * "at breakeven" is what a person would say.
+ */
+export const againstBreakeven = (rate: number): string =>
+  rate === 0
+    ? "at breakeven"
+    : `${dollarsPerYear(Math.abs(rate))} ${rate > 0 ? "over" : "below"} breakeven`;
+
+/**
+ * What the difference between the two needles MEANS — `$20k/yr to payroll`.
+ *
+ * THE SIGN IS FLIPPED, deliberately: the gauge hands over `value − baseline`,
+ * a change in the RATE, and a rate that falls is payroll that rises. So a
+ * negative delta is money going TO payroll and a positive one is money coming
+ * OFF it. The words carry the direction, which is why there is no `+` or `−`
+ * here — a sign would say it twice and, on this line, say it backwards.
+ */
+export const payrollShift = (rateDelta: number): string =>
+  rateDelta === 0
+    ? "no change to payroll"
+    : `${dollarsPerYear(Math.abs(rateDelta))} ${rateDelta < 0 ? "to" : "off"} payroll`;

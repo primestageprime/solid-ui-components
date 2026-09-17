@@ -75,7 +75,8 @@ import {
 
 import {
   abbreviateDollars,
-  dollarsPerYear,
+  againstBreakeven,
+  payrollShift,
   signedDollarsPerYear,
 } from "./scenario-board-money";
 
@@ -97,7 +98,10 @@ import {
   rateBandTable,
   rateFromPayChange,
 } from "./scenario-board-rate";
-import { LevelsTimeline, timeOf } from "../../../src/components/LevelsTimeline";
+import {
+  createLevelsTimeline,
+  timeOf,
+} from "../../../src/components/LevelsTimeline";
 import type {
   CountPoint,
   Level,
@@ -106,9 +110,18 @@ import type {
   TimeValue,
   Transfer,
 } from "../../../src/components/LevelsTimeline";
-import { MutationSliders } from "../../../src/components/MutationSliders";
-import type { Entity } from "../../../src/components/MutationSliders";
-import { RateGauge } from "../../../src/components/RateGauge";
+// The two PROMOTED components come through their factories, not their bases.
+// Promotion split both surfaces: the money format, the snap grid, the staffing
+// verbs and the callout sentences are all OVERRIDES now, and this board is the
+// consumer that owns those decisions — so it curries them once, below, and its
+// call sites pass data and callbacks only.
+//
+// `Entity` is published as `MutationEntity`, because `Entity` is too generic a
+// word for the root barrel. The type comes from the component's own folder
+// rather than the root: an ambiguous `export *` resolves to nothing there.
+import { createMutationSliders } from "../../../src/components/MutationSliders";
+import type { MutationEntity } from "../../../src/components/MutationSliders";
+import { createRateGauge } from "../../../src/components/RateGauge";
 import { SegmentedControl } from "../../../src/components/SegmentedControl";
 import type { SegmentOption } from "../../../src/components/SegmentedControl";
 
@@ -232,15 +245,15 @@ const MONTHLY_NET: readonly number[] = [
 /**
  * The two amounts every money reading on this board is computed from.
  *
- * The rate functions below take THIS rather than a whole `Entity`, because
+ * The rate functions below take THIS rather than a whole `MutationEntity`, because
  * `old` and `value` are all they read. That is not fastidiousness: a `Person`
- * deliberately has no `range` (see `Person`), so once `Entity.range` becomes
- * required in phase 3 a `Person` stops being assignable to an `Entity` and
+ * deliberately has no `range` (see `Person`), so once `MutationEntity.range` becomes
+ * required in phase 3 a `Person` stops being assignable to an `MutationEntity` and
  * every one of these call sites would break on a field none of them touch.
  * Asking for the narrowest shape that answers the question keeps them working
  * for people and dials alike. Verified by simulating the tightening locally.
  */
-type Amounts = Pick<Entity, "old" | "value">;
+type Amounts = Pick<MutationEntity, "old" | "value">;
 
 /**
  * The level an entity holds in the NEW scenario. A removed entity (`value:
@@ -450,20 +463,22 @@ export const transfersOf = (
 };
 
 /**
- * A dial: an `Entity` whose `range` is CERTAIN.
+ * A dial: an `MutationEntity` whose `range` is CERTAIN.
  *
- * `Entity.range` is optional today and becomes required in phase 3. Narrowing
+ * `MutationEntity.range` is optional today and becomes required in phase 3. Narrowing
  * the return type rather than saying `Entity[]` makes the builder below prove
  * at compile time that it sets one on every row.
  *
  * The two type-level guards that used to sit here are gone with the model
  * change, and for a good reason rather than an oversight: a `Person` no longer
  * has `old` or `value` at all — those are DERIVED for a chosen mutation — so
- * there is no longer any assignability between `Person` and `Entity` for a
+ * there is no longer any assignability between `Person` and `MutationEntity` for a
  * guard to pin. `payBefore`/`payFrom` are the only bridge, and they are
  * ordinary functions the compiler checks directly.
  */
-type Dial = Entity & { readonly range: NonNullable<Entity["range"]> };
+type Dial = MutationEntity & {
+  readonly range: NonNullable<MutationEntity["range"]>;
+};
 
 /**
  * The dials for ONE mutation: each person's pay just before it against their
@@ -639,18 +654,54 @@ const fanSeries = (id: string, sign: number, nowIndex: number) => ({
  */
 export const formatMoney = abbreviateDollars;
 
-/** The consumer's SIGNED rate — `+$20k/yr`, `−$40k/yr`. */
-const perYear = signedDollarsPerYear;
+/**
+ * The domain's own vocabulary. `MutationSliders` is GENERIC — its defaults are
+ * "Remove" / "Restore" / "New" — so the staffing verbs live HERE, at the
+ * consumer, which is the whole point of its `labels` prop.
+ */
+const PAY_LABELS = {
+  remove: "Terminate",
+  restore: "Restore",
+  new: "new hire",
+} as const;
 
 /**
- * The gauge's MAGNITUDE formatter — `$60k/yr`, never signed.
+ * THE BOARD'S OWN DIALS, curried once.
  *
- * `RateGauge` supplies the words around it ("$60k/yr over breakeven", "$20k/yr
- * to payroll"), and those words carry the direction, so a sign here would say
- * it twice and sometimes say it the other way round: the brace states the
- * delta as a PAYROLL change, and payroll rises exactly when the rate falls.
+ * The unit, the grid and the vocabulary are properties of this BOARD rather
+ * than of any one render, which is exactly what an Override is for — and a
+ * `format` passed in the middle of a layout is a visual decision smuggled into
+ * a JSX tree. Peter's snap ("do have the pay amount snap to whole $k numbers")
+ * is locked here with them.
  */
-const perYearMagnitude = dollarsPerYear;
+const PayMutationSliders = createMutationSliders({
+  format: formatMoney,
+  snap: 1_000,
+  labels: PAY_LABELS,
+});
+
+/**
+ * THE BOARD'S OWN GAUGE, curried the same way.
+ *
+ * Both formatters are SENTENCE builders — the gauge supplies no words of its
+ * own around them — so what the callouts say is the board's wording, written
+ * and tested in `scenario-board-money` rather than inline here.
+ */
+/**
+ * THE BOARD'S OWN TIMELINE. `formatValue` is presentational and became an
+ * Override with the promotion, which is right: the rails' captions are money
+ * on this board and nothing else, in every render.
+ */
+const PayLevelsTimeline = createLevelsTimeline({ formatValue: formatMoney });
+
+const PayRateGauge = createRateGauge({
+  baselineLabel: "Baseline",
+  formatAgainst: againstBreakeven,
+  formatDelta: payrollShift,
+});
+
+/** The consumer's SIGNED rate — `+$20k/yr`, `−$40k/yr`. For the DEBUG tables. */
+const perYear = signedDollarsPerYear;
 
 /** The board, read as tables, with no browser in the room. */
 /**
@@ -1117,7 +1168,7 @@ const ScenarioBoardBench: Component = () => {
                   says `null`; `selectedSegment` is the one place the two
                   vocabularies meet. */}
               <GrowFillBox>
-                <LevelsTimeline
+                <PayLevelsTimeline
                   levels={levelsOf(people(), mutations())}
                   transfers={transfersOf(people(), mutations())}
                   mutations={mutations()}
@@ -1126,7 +1177,6 @@ const ScenarioBoardBench: Component = () => {
                   selectedMutationId={selectedSegment()}
                   onSelectMutation={setEditing}
                   onPick={pick}
-                  formatValue={formatMoney}
                 />
               </GrowFillBox>
             </FillCardSurface>
@@ -1208,15 +1258,13 @@ const ScenarioBoardBench: Component = () => {
                     already terminated, which takes a mutation to have
                     happened. */}
                 <GrowFillBox>
-                  <MutationSliders
+                  <PayMutationSliders
                     entities={dials()}
                     domain={PAY_DOMAIN}
-                    snap={1_000}
                     onChange={setPay}
                     onRemove={terminate}
                     onRestore={restore}
                     onAdd={openHire}
-                    format={formatMoney}
                   />
                 </GrowFillBox>
               </FillCardSurface>
@@ -1237,14 +1285,12 @@ const ScenarioBoardBench: Component = () => {
                     every pixel that is left. */}
                 <TextTitle>Rate, right now</TextTitle>
                 <GrowCenterColumn>
-                  <RateGauge
+                  <PayRateGauge
                     domain={RATE_DOMAIN}
                     baseline={RATE_BASELINE}
-                    comfortable={COMFORTABLE}
+                    caution={COMFORTABLE}
                     value={rate()}
                     label="Scenario"
-                    format={perYear}
-                    formatMagnitude={perYearMagnitude}
                   />
                 </GrowCenterColumn>
               </FillCardSurface>

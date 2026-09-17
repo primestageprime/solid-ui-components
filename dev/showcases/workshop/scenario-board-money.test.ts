@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   MINUS,
+  againstBreakeven,
+  payrollShift,
   abbreviateDollars,
   dollarsPerYear,
   signedDollarsPerYear,
@@ -57,5 +59,44 @@ describe("dollars as a rate", () => {
     expect(signedDollarsPerYear(-20_000)).toBe(`${MINUS}$20k/yr`);
     expect(signedDollarsPerYear(0)).toBe("+$0/yr");
     expect(dollarsPerYear(20_000)).toBe("$20k/yr");
+  });
+});
+
+// `RateGauge` supplies no words around these, so what the callouts SAY is the
+// board's own sentence and belongs under test.
+describe("the gauge's sentences", () => {
+  it("says where a rate stands against break-even", () => {
+    expect(againstBreakeven(60_000)).toBe("$60k/yr over breakeven");
+    expect(againstBreakeven(-180_000)).toBe("$180k/yr below breakeven");
+  });
+
+  it("gives zero its own sentence", () => {
+    // "$0/yr over breakeven" is true and unreadable.
+    expect(againstBreakeven(0)).toBe("at breakeven");
+  });
+
+  // The sign flips on purpose: the gauge hands over a change in the RATE, and
+  // a rate that falls is payroll that rises.
+  it("reads a rate drop as money going TO payroll", () => {
+    expect(payrollShift(-20_000)).toBe("$20k/yr to payroll");
+  });
+
+  it("reads a rate rise as money coming OFF payroll", () => {
+    expect(payrollShift(20_000)).toBe("$20k/yr off payroll");
+  });
+
+  it("never prints a sign, because the words carry the direction", () => {
+    expect(payrollShift(-20_000)).not.toContain(MINUS);
+    expect(payrollShift(20_000)).not.toContain("+");
+    expect(payrollShift(0)).toBe("no change to payroll");
+  });
+
+  // The four calibration readings, as the gauge will actually say them.
+  it("reads the calibration table in words", () => {
+    expect(againstBreakeven(60_000)).toBe("$60k/yr over breakeven");
+    expect(againstBreakeven(40_000)).toBe("$40k/yr over breakeven");
+    expect(againstBreakeven(20_000)).toBe("$20k/yr over breakeven");
+    expect(againstBreakeven(-180_000)).toBe("$180k/yr below breakeven");
+    expect(payrollShift(-240_000)).toBe("$240k/yr to payroll");
   });
 });
