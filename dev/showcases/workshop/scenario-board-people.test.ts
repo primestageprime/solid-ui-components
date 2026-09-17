@@ -10,6 +10,7 @@ import {
   payAt,
   payBefore,
   payFrom,
+  payDomainForPeople,
   payDomainOf,
   addMutation,
   ensureMutation,
@@ -470,5 +471,55 @@ describe("the first interaction makes its own change", () => {
     );
     expect(map((m) => m.label, ensured.mutations)).toEqual(["1", "2"]);
     expect(ensured.selected).toBe(ensured.mutations[0]?.id);
+  });
+});
+
+// Peter, 2026-09-16: pin the pay axis "so the scale doesn't shift as sliders
+// move". The property that matters is INDEPENDENCE from the current values, so
+// that is what is asserted — not the particular numbers, which are fixture.
+describe("the pinned pay axis", () => {
+  const engineer = (id: string, base: number, changes = {}): Person => ({
+    id,
+    label: id,
+    roleId: "engineer",
+    base,
+    changes,
+  });
+
+  it("spans the bands of the roles the roster holds", () => {
+    expect(payDomainForPeople([engineer("a", 80_000)])).toEqual([
+      80_000, 200_000,
+    ]);
+  });
+
+  it("does not move when the dials move", () => {
+    const atFloor = payDomainForPeople([
+      engineer("a", 80_000),
+      engineer("b", 80_000),
+    ]);
+    const dragged = payDomainForPeople([
+      engineer("a", 80_000, { spring: 195_000 }),
+      engineer("b", 80_000, { spring: 120_000 }),
+    ]);
+    // Same people, same roles, any pay at all: one domain.
+    expect(dragged).toEqual(atFloor);
+  });
+
+  it("widens for a hire into a wider band, because that is a real change", () => {
+    const withIntern = payDomainForPeople([
+      engineer("a", 80_000),
+      {
+        id: "sam",
+        label: "Sam",
+        roleId: "intern",
+        base: null,
+        changes: { spring: 1_000 },
+      },
+    ]);
+    expect(withIntern).toEqual([1_000, 200_000]);
+  });
+
+  it("falls back to every role when there is nobody", () => {
+    expect(payDomainForPeople([])).toEqual(payDomainOf());
   });
 });

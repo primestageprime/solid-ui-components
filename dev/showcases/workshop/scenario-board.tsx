@@ -59,6 +59,7 @@ import {
   orderedMutations,
   payAt,
   payBefore,
+  payDomainForPeople,
   payDomainOf,
   payFrom,
   removeMutation,
@@ -1121,6 +1122,7 @@ const ScenarioBoardBench: Component = () => {
                   transfers={transfersOf(people(), mutations())}
                   mutations={mutations()}
                   domain={TIME_DOMAIN}
+                  valueDomain={payDomainForPeople(people())}
                   selectedMutationId={selectedSegment()}
                   onSelectMutation={setEditing}
                   onPick={pick}

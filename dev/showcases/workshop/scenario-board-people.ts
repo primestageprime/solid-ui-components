@@ -143,6 +143,37 @@ export const payDomainOf = (
 ];
 
 /**
+ * The pay range the CURRENT ROSTER can occupy: the lowest floor and the highest
+ * ceiling among the roles these people hold.
+ *
+ * What it is for is the pay axis of the timeline (Peter, 2026-09-16: pin it,
+ * "so the scale doesn't shift as sliders move"). A domain derived from the
+ * LEVELS — which is what the chart does by default, and rightly — follows the
+ * data, so every drag rescales the plot and a rail that is standing still
+ * appears to move. Derived from the roles instead, it is a function of WHO IS
+ * EMPLOYED rather than of what they are paid, so no drag can touch it.
+ *
+ * It is the roster's roles rather than every role that exists, which is the
+ * one place this differs from the dials' own track: the track must hold still
+ * across a hire into a new role, because the dial for that new person appears
+ * beside the others and they have to be comparable. The chart has no such
+ * obligation — a hire genuinely changes what it has to draw — and spending
+ * four fifths of the plot on an intern band nobody occupies would make the
+ * rails unreadable to insure against an event that has not happened.
+ */
+export const payDomainForPeople = (
+  people: readonly Person[],
+  roles: readonly Role[] = ROLES,
+): readonly [number, number] => {
+  const bands = map((person: Person) => roleForPerson(person, roles), people);
+  if (bands.length === 0) return payDomainOf(roles);
+  return [
+    Math.min(...map((role: Role) => role.range[0], bands)),
+    Math.max(...map((role: Role) => role.range[1], bands)),
+  ];
+};
+
+/**
  * A person: a dial's worth of data plus the two things the dial does not carry
  * — which ROLE they hold, and what they were paid before anything changed.
  *
