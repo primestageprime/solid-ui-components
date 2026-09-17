@@ -17,7 +17,8 @@
  *
  * The wiring, stated once:
  *
- *   people ──deltaOf──▶ rateOf ──▶ RateGauge.value
+ *   people ──payChangeAt──▶ averageRate ──▶ RateGauge.value  (the WHOLE year)
+ *   people ──payChangeAt──▶ rateAt ──▶ the balance line's forward slope
  *   people ──levelsOf──▶ LevelsTimeline.levels      (rails, thickness = headcount)
  *   people ──transfersOf──▶ LevelsTimeline.transfers (ribbons, one per move)
  *   flag click ──segmentForMutation──▶ SegmentedControl.value
@@ -81,6 +82,9 @@ import {
   COMFORTABLE,
   RATE_BASELINE,
   RATE_DOMAIN,
+  averageRate,
+  rateAt,
+  weightFrom,
   bandOfRate,
   isPresentAt,
   maxRateFor,
@@ -752,13 +756,28 @@ const printTables = (
     mutationId === null
       ? dialsWithoutMutation(people)
       : entitiesForMutation(people, mutationId, mutations);
+  // What the gauge reads and what the balance line slopes at are DIFFERENT
+  // numbers now, so the table prints both beside the change that produced
+  // them — a reader comparing the dial to the chart should not have to work
+  // out which of the two they are looking at.
+  const at =
+    mutationId === null
+      ? DOMAIN_START.getTime()
+      : timeOf(
+          find((m: Mutation) => m.id === mutationId, mutations)?.at ??
+            DOMAIN_START,
+        );
   console.log(
     "baseline",
     perYear(RATE_BASELINE),
-    "· pay change",
+    "· this change",
     perYear(payChangeOf(dials)),
-    "· rate",
-    perYear(rateOf(dials)),
+    "· rate from here",
+    perYear(rateAt(at, mutations, people)),
+    "· gauge (year average)",
+    perYear(averageRate(TIME_DOMAIN, mutations, people)),
+    "· weight of this change",
+    weightFrom(DOMAIN_START.getTime(), DOMAIN_END.getTime(), at).toFixed(2),
   );
   /* eslint-enable no-console */
 };
@@ -874,13 +893,39 @@ const ScenarioBoardBench: Component = () => {
    */
   const selectedSegment = (): string | undefined => editing() ?? undefined;
 
+  /**
+   * THE GAUGE'S READING: the whole year, averaged.
+   *
+   * Not `rateOf(dials())`, which is the selected change's own rate and says a
+   * raise made in December costs the year what the same raise made in January
+   * does (Peter, 2026-09-16). Editing one change now moves the gauge by that
+   * change's share of the year.
+   */
+  const rate = () => averageRate(TIME_DOMAIN, mutations(), people());
+
+  /**
+   * THE PROJECTION'S SLOPE: the instantaneous rate from the moment being
+   * edited, which is a different question and wants a different answer — a
+   * line drawn forward from a point runs at the rate in force AT that point,
+   * not at the year's average.
+   */
+  const projectedRate = () => {
+    const at = editing();
+    const chosen =
+      at === null ? undefined : find((m: Mutation) => m.id === at, mutations());
+    return rateAt(
+      chosen === undefined ? DOMAIN_START.getTime() : timeOf(chosen.at),
+      mutations(),
+      people(),
+    );
+  };
+
   const dials = () => {
     const at = editing();
     return at === null
       ? dialsWithoutMutation(people())
       : entitiesForMutation(people(), at, mutations());
   };
-  const rate = () => rateOf(dials());
 
   /**
    * The month the projection pivots on: the mutation being edited.
@@ -1028,7 +1073,7 @@ const ScenarioBoardBench: Component = () => {
               <TextTitle>Running balance</TextTitle>
               <GrowFillBox>
                 <CashflowScrubChart
-                  cells={balanceCells(rate(), nowIndex())}
+                  cells={balanceCells(projectedRate(), nowIndex())}
                   scrub={false}
                   chartHeight="fill"
                   showGridlines

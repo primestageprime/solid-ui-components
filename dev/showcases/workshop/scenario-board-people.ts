@@ -37,7 +37,7 @@
  * first time a hire lands on a figure another role already occupies, and the
  * fix then is a chart per role rather than a fixture rule nobody can keep.
  */
-import { filter, find, map, sortBy } from "../../../src/fn";
+import { filter, find, map, sortBy, sum } from "../../../src/fn";
 // The TIME helpers come from the timeline's geometry module DIRECTLY rather
 // than through its barrel: the barrel pulls the Solid component in with them,
 // and the whole point of this file is that its test is arithmetic only.
@@ -266,6 +266,30 @@ export const withoutChange = (
     const { [mutationId]: _dropped, ...rest } = person.changes;
     return { ...person, changes: rest };
   }, people);
+
+/**
+ * What the scenario costs AT A MOMENT: everyone's pay then, against the pay
+ * they were committed to before anything was proposed.
+ *
+ * Both absences read as ZERO, and each says something different by saying the
+ * same thing: somebody not yet hired had no committed pay, so their whole new
+ * salary is the cost; somebody terminated has no pay now, so the whole of
+ * their old salary is the saving. Neither is arithmetic on an absence — it is
+ * the consumer stating what the absence MEANS, exactly as `newLevelOf` and
+ * `oldLevelOf` do for one dial.
+ */
+export const payChangeAt = (
+  people: readonly Person[],
+  time: number,
+  mutations: readonly Mutation[],
+): number =>
+  sum(
+    map(
+      (person: Person) =>
+        (payAt(person, time, mutations) ?? 0) - (person.base ?? 0),
+      people,
+    ),
+  );
 
 // ── Hiring ───────────────────────────────────────────────────────────────────
 

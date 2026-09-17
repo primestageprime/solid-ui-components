@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
+import type { Mutation } from "../../../src/components/LevelsTimeline/geometry";
+import type { Person } from "./scenario-board-people";
 import {
+  averageRate,
+  averageRateOver,
+  monthsBetween,
+  weightFrom,
+  weightToReachYellow,
   CEILING_RAISE,
   COMFORTABLE,
   MONTHS_PER_YEAR,
@@ -156,5 +163,184 @@ describe("scenario board rate calibration", () => {
       // through and both amounts are numbers again.
       expect(isPresentAt(60_000, 60_000)).toBe(true);
     });
+  });
+});
+
+// Peter, 2026-09-16: "the Rate gauge reads the COMPOSITE over the whole
+// represented period, not the selected change." A raise made in December costs
+// the year one month of itself; the same raise in January costs it twelve, and
+// a gauge that called those the same scenario would be the one thing a
+// scenario board must not do.
+describe("the composite rate", () => {
+  const YEAR_START = new Date("2025-01-01").getTime();
+  const YEAR_END = new Date("2026-01-01").getTime();
+  const MID_YEAR = new Date("2025-07-01").getTime();
+
+  // A step function of time: it costs nothing until `from`, and `amount`
+  // after. The shape every one-change scenario has.
+  const stepAt = (from: number, amount: number) => (time: number) =>
+    time >= from ? amount : 0;
+
+  // Months, not milliseconds: a calendar month is not a twelfth of a year, so
+  // weighting by elapsed time would make "half the year" mean 0.4959 of it and
+  // leave every figure below 80-odd dollars out.
+  it("counts the span in whole months", () => {
+    expect(monthsBetween(YEAR_START, YEAR_END)).toBe(12);
+    expect(monthsBetween(YEAR_START, MID_YEAR)).toBe(6);
+    expect(monthsBetween(MID_YEAR, YEAR_END)).toBe(6);
+    expect(monthsBetween(YEAR_END, YEAR_START)).toBe(-12);
+  });
+
+  it("reads the baseline when nothing is proposed", () => {
+    expect(averageRateOver(YEAR_START, YEAR_END, [], () => 0)).toBe(
+      RATE_BASELINE,
+    );
+  });
+
+  // Peter's own worked example: a change worth −$20k/yr made at mid-year
+  // averages to −$10k/yr over the year.
+  it("halves a change made at mid-year", () => {
+    expect(
+      averageRateOver(
+        YEAR_START,
+        YEAR_END,
+        [MID_YEAR],
+        stepAt(MID_YEAR, 20_000),
+      ),
+    ).toBe(RATE_BASELINE - 10_000);
+  });
+
+  it("charges a change made at the start for the whole year", () => {
+    expect(
+      averageRateOver(
+        YEAR_START,
+        YEAR_END,
+        [YEAR_START],
+        stepAt(YEAR_START, 20_000),
+      ),
+    ).toBe(RATE_BASELINE - 20_000);
+  });
+
+  it("weights two changes by their own spans", () => {
+    // +20k from the quarter mark (three quarters of the year) and another
+    // +20k from three-quarters through (one quarter):
+    //   0.75 × 20,000 + 0.25 × 20,000 = 20,000 … so 15,000 + 5,000.
+    const q1 = new Date("2025-04-01").getTime();
+    const q3 = new Date("2025-10-01").getTime();
+    const cost = (time: number) =>
+      (time >= q1 ? 20_000 : 0) + (time >= q3 ? 20_000 : 0);
+    expect(averageRateOver(YEAR_START, YEAR_END, [q1, q3], cost)).toBe(
+      RATE_BASELINE - 20_000,
+    );
+  });
+
+  it("ignores a moment outside the span rather than clamping it", () => {
+    // A change before the span is already in the cost at the span's start; one
+    // after it never happens inside the period being read.
+    const before = new Date("2024-06-01").getTime();
+    expect(
+      averageRateOver(YEAR_START, YEAR_END, [before], stepAt(before, 20_000)),
+    ).toBe(RATE_BASELINE - 20_000);
+    const after = new Date("2026-06-01").getTime();
+    expect(
+      averageRateOver(YEAR_START, YEAR_END, [after], stepAt(after, 20_000)),
+    ).toBe(RATE_BASELINE);
+  });
+
+  it("says what share of the year a change still has ahead of it", () => {
+    expect(weightFrom(YEAR_START, YEAR_END, YEAR_START)).toBe(1);
+    expect(weightFrom(YEAR_START, YEAR_END, MID_YEAR)).toBe(0.5);
+    expect(weightFrom(YEAR_START, YEAR_END, YEAR_END)).toBe(0);
+  });
+});
+
+// The calibration table is computed at the START of the year, where the weight
+// is 1. What a LATER change does is a different statement, and this is it.
+describe("the calibration under the composite reading", () => {
+  const YEAR_START = new Date("2025-01-01").getTime();
+  const YEAR_END = new Date("2026-01-01").getTime();
+
+  it("needs three quarters of the year for both raises to reach yellow", () => {
+    expect(weightToReachYellow(HEADCOUNT)).toBeCloseTo(0.75, 5);
+  });
+
+  it("reaches yellow from Q1 and not from Q4", () => {
+    const bothRaised = HEADCOUNT * RAISE_STEP;
+    const readAt = (iso: string): number => {
+      const at = new Date(iso).getTime();
+      return RATE_BASELINE - weightFrom(YEAR_START, YEAR_END, at) * bothRaised;
+    };
+    // The same two raises, made in three different months.
+    expect(bandOfRate(readAt("2025-01-01"))).toBe("yellow");
+    expect(bandOfRate(readAt("2025-03-01"))).toBe("yellow");
+    // A Q4 change is in force for a quarter of the year and costs the average
+    // a quarter as much, so the gauge stays green. That is the composite
+    // reading working, not a miscalibration.
+    expect(bandOfRate(readAt("2025-10-01"))).toBe("green");
+  });
+
+  it("still crosses zero when both go to their ceiling, from before October", () => {
+    const bothAtCeiling = HEADCOUNT * CEILING_RAISE;
+    const readAt = (iso: string): number =>
+      RATE_BASELINE -
+      weightFrom(YEAR_START, YEAR_END, new Date(iso).getTime()) * bothAtCeiling;
+    expect(bandOfRate(readAt("2025-01-01"))).toBe("red");
+    expect(bandOfRate(readAt("2025-07-01"))).toBe("red");
+    // At exactly three months left the ceiling case lands ON zero, which the
+    // gauge reads as the bottom of yellow rather than as a loss.
+    expect(readAt("2025-10-01")).toBe(0);
+  });
+});
+
+// The wrapper, against the board's own shapes — so a change to the people
+// model that broke the walk would fail here rather than only in a browser.
+describe("averageRate, from a scenario", () => {
+  const DOMAIN: readonly [Date, Date] = [
+    new Date("2025-01-01"),
+    new Date("2026-01-01"),
+  ];
+  const MID: readonly Mutation[] = [
+    { id: "mid", at: new Date("2025-07-01"), label: "1" },
+  ];
+  const PAIR: readonly Person[] = [
+    { id: "a", label: "A", roleId: "engineer", base: 80_000, changes: {} },
+    { id: "b", label: "B", roleId: "engineer", base: 80_000, changes: {} },
+  ];
+
+  it("reads the baseline when nobody moves", () => {
+    expect(averageRate(DOMAIN, MID, PAIR)).toBe(RATE_BASELINE);
+    expect(averageRate(DOMAIN, [], PAIR)).toBe(RATE_BASELINE);
+  });
+
+  it("halves a mid-year raise on both of them", () => {
+    const raised = PAIR.map((person) => ({
+      ...person,
+      changes: { mid: 100_000 },
+    }));
+    // +20k each from July: 40,000 in force for half the year → 20,000.
+    expect(averageRate(DOMAIN, MID, raised)).toBe(RATE_BASELINE - 20_000);
+  });
+
+  it("counts a hire's whole salary, from the moment they are hired", () => {
+    const hired = [
+      ...PAIR,
+      {
+        id: "sam",
+        label: "Sam",
+        roleId: "intern",
+        base: null,
+        changes: { mid: 4_000 },
+      },
+    ];
+    expect(averageRate(DOMAIN, MID, hired)).toBe(RATE_BASELINE - 2_000);
+  });
+
+  it("gives the rate BACK when somebody is terminated", () => {
+    const gone = [
+      { ...PAIR[0], changes: { mid: null } } as Person,
+      PAIR[1] as Person,
+    ];
+    // −80,000 for half the year raises the average by 40,000.
+    expect(averageRate(DOMAIN, MID, gone)).toBe(RATE_BASELINE + 40_000);
   });
 });
