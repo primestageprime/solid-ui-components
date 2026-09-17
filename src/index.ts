@@ -119,6 +119,7 @@ export * from "./components/ProgressCheck";
 export * from "./components/BurndownChart";
 export * from "./components/SprintSelector";
 export * from "./components/DagChart";
+export * from "./components/TreeDiffChart";
 // SwimlaneChart public API: as of v0.40 the *animated* variant is the
 // public default. The underlying static implementation is still
 // re-exported as `SwimlaneChartStatic` (and via the

@@ -26,9 +26,11 @@
  * render 1:1 until the wide cap, then scale up with the container.
  */
 import {
+  type Component,
   createMemo,
   createSignal,
   For,
+  mergeProps,
   onCleanup,
   onMount,
   Show,
@@ -377,4 +379,40 @@ export function TreeDiffChart(props: TreeDiffChartProps): JSX.Element {
       </TightStack>
     </div>
   );
+}
+
+// ── The curried seam ─────────────────────────────────────────────────────────
+// Almost nothing about this chart is presentational: `baseline`, `compare`,
+// `bands`, `mode`, `selectedId` and `onNodeClick` are all DATA or callbacks —
+// `mode` included, because "show me only the differences" is a question the
+// consumer's UI asks, not a look the design system picks. The chart mints no
+// label text of its own beyond an enumerated set (`commit`, `root tree`,
+// `[SAME]`), so there is no formatter to curry either.
+//
+// That leaves `legend`. It is the one prop that says how the chart LOOKS
+// rather than what it shows, and a consumer with its own key beside the chart
+// wants it off everywhere at once rather than per call site.
+
+/**
+ * The presentational half: what a design-system layer bakes once.
+ *
+ * Deliberately one prop — see the note above. A second override would have to
+ * be something the chart draws that the data does not decide.
+ */
+export type TreeDiffChartOverrides = Pick<TreeDiffChartProps, "legend">;
+
+/** The data half: what a call site still says, every time. */
+export type TreeDiffChartDataProps = Omit<
+  TreeDiffChartProps,
+  keyof TreeDiffChartOverrides
+>;
+
+/** Bake the legend decision into a named variant. */
+export function createTreeDiffChart(
+  defaults: TreeDiffChartOverrides,
+): Component<TreeDiffChartDataProps> {
+  return (props) => {
+    const merged = mergeProps(defaults, props);
+    return <TreeDiffChart {...merged} />;
+  };
 }

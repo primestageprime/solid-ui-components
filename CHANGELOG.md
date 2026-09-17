@@ -3,6 +3,48 @@
 ## Unreleased
 
 ### Added
+- **`TreeDiffChart` promoted from the workshop bench to the catalog.** The
+  two-sided diff of content-addressed scenario trees — baseline spine on the
+  left, comparison on the right, a band per root entry between them, pruned
+  `[SAME]` nodes, three width-driven layouts, paired highlight on
+  `selectedId`, ellipsized `foreignObject` labels with a `Tooltip`, and the
+  change-kind `Legend` — now exports from the barrel with a `COMPONENTS.md`
+  entry and the curried variant `ScenarioTreeDiff`. **No prop signature
+  changed**: `baseline`, `compare`, `bands`, `mode`, `selectedId`,
+  `onNodeClick` and `legend` are exactly what they were on the bench, because
+  thorcasting-ui is writing adapters against them. Factory:
+  `createTreeDiffChart({ legend })` — `legend` is the only presentational
+  prop the chart has, everything else being data or a callback, and
+  `ScenarioTreeDiff` leaves it at the chart's data-derived default rather
+  than pinning it (a pinned `true` would key an empty legend for entries
+  without a `kind`). The root barrel now carries `TreeDiffChart`,
+  `TreeDiffChartProps`, `TreeDiffRoot`, `TreeDiffBand`, `TreeDiffChild`,
+  `TreeDiffEntry`, `TreeDiffMode` (plus `TreeDiffSide`, `TreeDiffKind`, the
+  `kind` helpers and the synthetic spine ids), and
+  `TreeDiffChart/barrel.test.ts` pins that contract at the PACKAGE ROOT so an
+  ambiguous `export *` — which resolves to nothing, silently — fails a test
+  rather than a consumer's build. The bench `workshop:tree-diff-chart` is
+  removed now that the component ships.
+- **`TreeDiffChart` takes an optional per-entry `kind`.**
+  `TreeDiffEntry.kind` is `"unchanged"` | `"changed"` | `"added"` |
+  `"removed"`, supplied by the consumer and never inferred by the chart. It
+  paints the node outline, every edge pointing *at* that node, and that
+  edge's arrowhead, from `--sui-*` tone tokens (muted / accent / success /
+  danger), and emits `data-kind` alongside `sui-tree-diff__node--kind-*` and
+  `sui-tree-diff__edge--kind-*`. A `Legend` keyed to the same tokens renders
+  the kinds actually present — on by default whenever any entry carries a
+  `kind`, off otherwise, and suppressible with `legend={false}`. Entries
+  without `kind` render exactly as before. New exported type `TreeDiffKind`
+  and pure helpers `KINDS`, `kindColor`, `kindLabel`, `kindLegendItems`,
+  `presentKinds`.
+- **`EllipsizedNodeLabel` Text variant.** Single-line truncating label for a
+  fixed-width slot whose width comes from the parent rather than the text —
+  the diagram-node case. Unlike `EllipsizedTitle` it needs no flex parent,
+  and unlike `EllipsizedChipLabel` it is a block, so `text-overflow`
+  actually applies.
+- **`DagSvgEdge` takes an optional `dataKind`** (internal `dag-svg`), emitted
+  verbatim as `data-kind` so a chart painting edges by a caller-supplied
+  category can read it from the DOM instead of parsing the class string.
 - **`LevelsTimeline` promoted from the workshop bench to the catalog.** A time
   chart of numeric LEVELS: a rail per `value` on a real value axis, as thick as
   the count holding it, with Sankey flow ribbons wherever a count moves between
@@ -100,6 +142,17 @@
   the barrel publishes `RateGauge`, `createRateGauge`, `RateDial`, the
   props/Overrides/DataProps types and `RateGaugeDomain`.
 
+### Fixed
+- **`TreeDiffChart` node labels no longer overflow the node box.** A label is
+  consumer data of unknown length, so a long one (`Bookkeeping retainer`)
+  spilled past the box edges as raw SVG `<text>`. Consumer-supplied labels
+  now render as HTML in a `<foreignObject>` clamped to the box, ellipsizing
+  at its edge with the full value in a `Tooltip`; boxes did not grow and all
+  three layout modes are unchanged. Labels the chart mints (`commit`,
+  `root tree`, `[SAME]`) and the fixed-width hash line stay SVG text. Every
+  CSS rule that tinted a label now sets `color` as well as `fill`, since
+  HTML text does not take `fill`.
+
 ## 0.170.0
 
 ### Fixed
@@ -137,37 +190,6 @@
   chain to the spine, and what a selected group holds; the rest dims. Lives
   on bench `workshop:tree-diff-chart` and showcase `tree-diff-chart` until
   promotion (dside #49153).
-- **`TreeDiffChart` takes an optional per-entry `kind`.**
-  `TreeDiffEntry.kind` is `"unchanged"` | `"changed"` | `"added"` |
-  `"removed"`, supplied by the consumer and never inferred by the chart. It
-  paints the node outline, every edge pointing *at* that node, and that
-  edge's arrowhead, from `--sui-*` tone tokens (muted / accent / success /
-  danger), and emits `data-kind` alongside `sui-tree-diff__node--kind-*` and
-  `sui-tree-diff__edge--kind-*`. A `Legend` keyed to the same tokens renders
-  the kinds actually present — on by default whenever any entry carries a
-  `kind`, off otherwise, and suppressible with `legend={false}`. Entries
-  without `kind` render exactly as before. New exported type `TreeDiffKind`
-  and pure helpers `KINDS`, `kindColor`, `kindLabel`, `kindLegendItems`,
-  `presentKinds`.
-- **`EllipsizedNodeLabel` Text variant.** Single-line truncating label for a
-  fixed-width slot whose width comes from the parent rather than the text —
-  the diagram-node case. Unlike `EllipsizedTitle` it needs no flex parent,
-  and unlike `EllipsizedChipLabel` it is a block, so `text-overflow`
-  actually applies.
-- **`DagSvgEdge` takes an optional `dataKind`** (internal `dag-svg`), emitted
-  verbatim as `data-kind` so a chart painting edges by a caller-supplied
-  category can read it from the DOM instead of parsing the class string.
-
-### Fixed
-- **`TreeDiffChart` node labels no longer overflow the node box.** A label is
-  consumer data of unknown length, so a long one (`Bookkeeping retainer`)
-  spilled past the box edges as raw SVG `<text>`. Consumer-supplied labels
-  now render as HTML in a `<foreignObject>` clamped to the box, ellipsizing
-  at its edge with the full value in a `Tooltip`; boxes did not grow and all
-  three layout modes are unchanged. Labels the chart mints (`commit`,
-  `root tree`, `[SAME]`) and the fixed-width hash line stay SVG text. Every
-  CSS rule that tinted a label now sets `color` as well as `fill`, since
-  HTML text does not take `fill`.
 
 ## 0.169.0
 
