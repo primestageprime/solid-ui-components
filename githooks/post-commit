@@ -1,0 +1,23 @@
+#!/bin/sh
+# SUI adherence report — refreshes the per-component worklist after every
+# commit. Versioned in githooks/; wired via `git config core.hooksPath
+# githooks`, which the npm "prepare" script sets automatically on install —
+# the same mechanism as the pre-push health ratchet next door.
+#
+# This hook NEVER fails and never gates anything:
+#
+#   • a post-commit hook's exit code cannot abort the commit (it has already
+#     happened), so a failure here would only print noise, and
+#   • adherence is a REPORT, not a ratchet. Peter decides whether it ever
+#     becomes one (2026-09-17). The pre-push usage-manifest check next door is
+#     the cautionary tale: it blocked four consecutive unrelated pushes, all
+#     bypassed with --no-verify, and a gate that trains you to bypass it is
+#     worse than no gate.
+#
+# It rewrites two GIT-IGNORED files (docs/adherence/OPEN_ITEMS.md and
+# report.json), so a commit never carries a diff it did not ask for. That is
+# the deliberate difference from scripts/health-history.json, which IS tracked
+# and which AGENT_GUIDE therefore has to tell every agent to babysit in a
+# shared checkout. See docs/adherence/README.md.
+node scripts/adherence.mjs --quiet 2>/dev/null || true
+exit 0
