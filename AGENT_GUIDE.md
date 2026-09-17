@@ -171,6 +171,32 @@ real caller needs it. Create the variant to serve a shipping consumer — never 
 pre-stock the shelf. (See also *Variant Surface: keep it minimal* in
 `STYLE_GUIDE.md`.)
 
+### The push-back protocol — before you create anything
+
+**Before creating any component or variant, do one of two things.**
+
+**(a) Name the existing component or variant that covers it** — by name — and
+use it. Search on the *state model* rather than the name you imagined (the
+`sui-gap-analysis` route does exactly this); a component you could not find is
+usually a component that already exists.
+
+**(b) Write a three-line justification and get Peter's confirmation:**
+
+1. **What mark or behaviour no existing Primitive provides** — the specific
+   thing, not "a card like that one but nicer".
+2. **Who the real consumer is** — the shipping app and screen that will render
+   it. **Showcase or bench usage is not a consumer.**
+3. **Why a variant of an existing Primitive can't express it** — which
+   Primitive you tried and what it could not do.
+
+Then **wait for Peter's confirmation**. Pushing back is the expected
+behaviour, not friction: an agent that silently adds a component or variant has
+broken the rule even when the addition is good. This is the enforcement arm of
+the composition axiom — *no component above Depth 1 contains anything but
+existing SUI components* ([README › Design
+philosophy](README.md#design-philosophy)) — so "I need new markup here" is
+almost always "I have not yet found the Primitive that already draws this".
+
 ### This is why the scales are short
 
 This rule is already load-bearing in the library:
