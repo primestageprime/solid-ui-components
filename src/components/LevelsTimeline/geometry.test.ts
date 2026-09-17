@@ -1561,3 +1561,92 @@ describe("quarterLabelOf", () => {
     expect(ticks[2].label).toBe(quarterLabelOf(utc("2025-07-01")));
   });
 });
+
+describe("a pinned value domain holds the rails still", () => {
+  // A MIDDLE rail is what makes this test honest: the lowest level always
+  // sits at the bottom of the scale whatever the top is, so watching it prove
+  // nothing. The middle one moves iff the range moves.
+  const moving = (pay: number): readonly Level[] => [
+    {
+      id: "low",
+      label: "Low",
+      value: 60000,
+      points: [{ at: utc("2025-01-01"), count: 1 }],
+    },
+    {
+      id: "mid",
+      label: "Mid",
+      value: 80000,
+      points: [{ at: utc("2025-01-01"), count: 1 }],
+    },
+    {
+      id: "moves",
+      label: "Moves",
+      value: pay,
+      points: [{ at: utc("2025-01-01"), count: 1 }],
+    },
+  ];
+  const PINNED: readonly [number, number] = [50000, 120000];
+  const geometryFor = (pay: number, valueDomain?: readonly [number, number]) =>
+    levelsRailGeometry({
+      levels: moving(pay),
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+      valueDomain,
+    });
+
+  it("is byte-identical to today when the prop is omitted", () => {
+    const derived = geometryFor(100000);
+    expect(derived.yDomain).toEqual(valueDomainOf(moving(100000)));
+    expect(derived.rails[1].y).toBe(
+      yScaleFor(valueDomainOf(moving(100000)), derived.frame)(80000),
+    );
+  });
+
+  it("holds the OTHER rail still while one value moves", () => {
+    // Unpinned, raising one person slides everybody: the range they are all
+    // drawn against just changed.
+    const before = geometryFor(90000, PINNED);
+    const after = geometryFor(110000, PINNED);
+    expect(after.rails[1].y).toBe(before.rails[1].y);
+    // …and the one that moved has moved.
+    expect(after.rails[2].y).not.toBe(before.rails[2].y);
+  });
+
+  it("is exactly what the unpinned scale would NOT do", () => {
+    const loose = geometryFor(110000);
+    const tight = geometryFor(90000);
+    // Proof the test above is testing something: without pinning, the
+    // untouched MIDDLE rail moves too.
+    expect(loose.rails[1].y).not.toBe(tight.rails[1].y);
+  });
+
+  it("clamps a level outside the pin rather than widening it", () => {
+    // The consumer said where the axis runs; silently moving it would defeat
+    // pinning it.
+    const outside = geometryFor(400000, PINNED);
+    expect(outside.yDomain).toEqual(PINNED);
+    expect(outside.rails[2].y).toBe(
+      yScaleFor(PINNED, outside.frame)(PINNED[1]),
+    );
+  });
+
+  it("takes a reversed pin without turning the chart upside down", () => {
+    expect(
+      levelsRailGeometry({
+        levels: moving(80000),
+        transfers: [],
+        mutations: [],
+        domain: DOMAIN,
+        valueDomain: [120000, 50000],
+      }).yDomain,
+    ).toEqual(PINNED);
+  });
+
+  it("opens out a zero-height pin instead of dividing by zero", () => {
+    const flat = geometryFor(80000, [80000, 80000]);
+    expect(flat.yDomain[1]).toBeGreaterThan(flat.yDomain[0]);
+    for (const rail of flat.rails) expect(rail.y).not.toBeNaN();
+  });
+});

@@ -58,6 +58,7 @@ export {
   railRuns,
   taperHalves,
   transitionWidth,
+  valueDomainFor,
   valueDomainOf,
   yearTicks,
   monthTicks,

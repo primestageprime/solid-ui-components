@@ -1153,16 +1153,44 @@ export const flowBands = (
 /** The room reserved at each end of the plot for the outermost bands. */
 
 
+/** Open a range that has no height, so no scale built from it divides by zero. */
+const openOut = (
+  lo: number,
+  hi: number,
+): readonly [number, number] => (lo === hi ? [lo - 1, hi + 1] : [lo, hi]);
+
 /** The levels' own range. No padding — the inset does that job now. */
 export const valueDomainOf = (
   levels: readonly Level[],
 ): readonly [number, number] => {
   if (levels.length === 0) return [0, 1];
   const values = map((level: Level) => level.value, levels);
-  const lo = Math.min(...values);
-  const hi = Math.max(...values);
-  return lo === hi ? [lo - 1, hi + 1] : [lo, hi];
+  return openOut(Math.min(...values), Math.max(...values));
 };
+
+/**
+ * The y range to draw against: the consumer's, if it gave one, else the
+ * levels' own.
+ *
+ * A PINNED domain is what stops the rails reshuffling vertically while a value
+ * moves. Derived from the data, the scale follows it — raise one person and
+ * every OTHER rail slides, because the range they are all drawn against just
+ * changed. That is right for a chart read on its own and wrong for a board
+ * whose whole point is watching one rail move against a fixed scale.
+ *
+ * A pinned domain is normalised the same way the derived one is (a zero-height
+ * range is opened out) and is NOT widened to fit the data: a level outside it
+ * clamps to the edge, exactly as a date outside the time domain does. The
+ * consumer said where the axis runs; silently moving it would defeat pinning
+ * it.
+ */
+export const valueDomainFor = (
+  levels: readonly Level[],
+  pinned?: readonly [number, number],
+): readonly [number, number] =>
+  pinned === undefined
+    ? valueDomainOf(levels)
+    : openOut(Math.min(...pinned), Math.max(...pinned));
 
 /**
  * Value → y, inverted, mapped into the plot MINUS its inset at each end — so
@@ -1276,12 +1304,17 @@ export const levelsRailGeometry = (input: {
   readonly viewHeight?: number;
   /** The MEASURED box, which wins over `viewHeight` when both are given. */
   readonly box?: { readonly width: number; readonly height: number };
+  /**
+   * Pin the y range instead of deriving it from the levels, so the rails hold
+   * still while a value moves. Omitted, the levels' own range is used.
+   */
+  readonly valueDomain?: readonly [number, number];
 }): LevelsRailGeometry => {
   const frame = input.box === undefined
     ? frameFor(input.viewHeight ?? VIEW_HEIGHT)
     : frameForBox(input.box);
   const xScale = xScaleFor(input.domain, frame);
-  const yDomain = valueDomainOf(input.levels);
+  const yDomain = valueDomainFor(input.levels, input.valueDomain);
   const yScale = yScaleFor(yDomain, frame);
   const peak = peakHeadcount(input.levels);
   const perPerson = perPersonWidth(input.levels, yScale, peak, frame);

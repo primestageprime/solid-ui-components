@@ -86,6 +86,16 @@ export interface LevelsTimelineProps {
   mutations: readonly Mutation[];
   /** The visible span. The consumer's, never derived from the data. */
   domain: TimeDomain;
+  /**
+   * Pin the y range rather than letting it follow the levels.
+   *
+   * Without it the scale is derived from the values present, so raising one
+   * person slides every OTHER rail — the range they are all drawn against has
+   * changed. Pin it and a rail moves against a fixed axis, which is what a
+   * consumer watching one value move wants. A level outside the pinned range
+   * clamps to the edge rather than widening it.
+   */
+  valueDomain?: readonly [number, number];
   /** Which mutation is lit. Its flag and rule take the accent; the rest mute. */
   selectedMutationId?: string;
   /** Provided => the flags become buttons. Omitted => the chart is a readout. */
@@ -234,6 +244,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       mutations: props.mutations,
       domain: props.domain,
       box: box(),
+      valueDomain: props.valueDomain,
     }),
   );
   const frame = () => geometry().frame;
