@@ -500,6 +500,10 @@ other components that are invisible on their own benches — this board found th
 z-index bug, the flicker, three zero-measurement bugs and the pointer-capture
 one. Budget roughly the bench's own build estimate again for them.
 
+**Shared-checkout git discipline is not repeated here** — it lives with the
+staging bullet under *Other things that will bite* below, which is where you
+already go looking for it.
+
 ## The health ratchet will fail you — including for *improving* a metric
 
 `test`, `typecheck`, `build`, **`health`** and **`bundle-budget`** all gate
