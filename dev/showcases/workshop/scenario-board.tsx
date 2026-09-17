@@ -35,7 +35,7 @@
  * derives rails FROM, not something it draws. The Total went with the change —
  * headcount-weighted rails say what it used to say, and better.
  */
-import { Show, createSignal, onMount, type Component } from "solid-js";
+import { Show, batch, createSignal, onMount, type Component } from "solid-js";
 import {
   filter,
   find,
@@ -59,6 +59,7 @@ import {
   payBefore,
   payDomainOf,
   payFrom,
+  removeMutation,
   type SegmentLabel,
   segmentLabelsOf,
   peopleOnRole,
@@ -108,12 +109,18 @@ import { RateGauge } from "../../../src/components/RateGauge";
 import { SegmentedControl } from "../../../src/components/SegmentedControl";
 import type { SegmentOption } from "../../../src/components/SegmentedControl";
 
-import { GhostButton, PrimaryButton } from "../../../src/components/Button";
+import {
+  DangerButton,
+  GhostButton,
+  PrimaryButton,
+} from "../../../src/components/Button";
+import { Icon } from "../../../src/components/Icon";
 import { ThemedInput } from "../../../src/components/Inputs";
 import { Modal } from "../../../src/components/Modal";
 import { Select } from "../../../src/components/Select";
 import type { SelectOption } from "../../../src/components/Select";
 import {
+  ClusterRow,
   EndWrapRow,
   GrowCenterColumn,
   GrowFillBox,
@@ -1046,6 +1053,27 @@ const ScenarioBoardBench: Component = () => {
     setEditing(picked.selected);
   };
 
+  /**
+   * DELETE THE SELECTED CHANGE, and everything that only existed because of it
+   * — the flag, the chip, every person's entry at it, and anyone hired there.
+   *
+   * One call to one pure function that the test pins, and one `batch` so the
+   * three signals move together: the mutation list, the people and the
+   * selection describe one scenario, and a render between two of those writes
+   * would draw a board whose chips and dials disagreed.
+   */
+  const deleteChange = (id: string): void => {
+    const next = removeMutation(
+      { mutations: mutations(), people: people() },
+      id,
+    );
+    batch(() => {
+      setMutations(next.mutations);
+      setPeople(next.people);
+      setEditing(next.selected);
+    });
+  };
+
   const reset = (): void => {
     setPeople(PEOPLE);
     setMutations(SEED_MUTATIONS);
@@ -1160,7 +1188,22 @@ const ScenarioBoardBench: Component = () => {
                       />
                     )}
                   </Show>
-                  <GhostButton onClick={reset}>Reset</GhostButton>
+                  {/* Delete removes the SELECTED change, so it is only ever
+                      offered when there is one to remove — `Show` rather than
+                      a disabled button, because with no changes at all the
+                      sentence beside it already explains the whole state and a
+                      dead control would be the only thing in the row that
+                      could not be acted on. */}
+                  <ClusterRow>
+                    <Show when={editing()}>
+                      {(selected) => (
+                        <DangerButton onClick={() => deleteChange(selected())}>
+                          <Icon name="trash" size="sm" /> Delete
+                        </DangerButton>
+                      )}
+                    </Show>
+                    <GhostButton onClick={reset}>Reset</GhostButton>
+                  </ClusterRow>
                 </SpreadRow>
                 {/* Terminating, restoring and hiring all WRITE to a mutation,
                     so before one exists those callbacks are omitted and the

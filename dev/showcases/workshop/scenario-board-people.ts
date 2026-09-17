@@ -388,6 +388,101 @@ export const hire = (
   return { people: [...people, hired], id };
 };
 
+// ── Removing a change ────────────────────────────────────────────────────────
+
+/** The board's scenario, as much of it as removing a change has to touch. */
+export interface Scenario {
+  readonly mutations: readonly Mutation[];
+  readonly people: readonly Person[];
+}
+
+/**
+ * The mutation a person was HIRED at, or `undefined` for somebody who was
+ * already on the payroll.
+ *
+ * A hire is `base: null` plus a first change; their earliest change IS their
+ * hire, so the moment is derived rather than stored — there is no `hiredAt`
+ * field to fall out of step with the history.
+ */
+export const hiredAt = (
+  person: Person,
+  mutations: readonly Mutation[],
+): string | undefined => {
+  if (person.base !== null) return undefined;
+  const first = find(
+    (mutation: Mutation) => person.changes[mutation.id] !== undefined,
+    orderedMutations(mutations),
+  );
+  return first?.id;
+};
+
+/**
+ * The mutation to select once `id` is gone: the nearest one still standing,
+ * EARLIER for preference, otherwise later, and `null` when none remain.
+ *
+ * Earlier for preference because the changes after the deleted one now mean
+ * something different — they carry forward from a different figure — and the
+ * reader should land where the scenario still says what it said.
+ */
+export const nearestMutation = (
+  mutations: readonly Mutation[],
+  id: string,
+): string | null => {
+  const ordered = orderedMutations(mutations);
+  const index = ordered.findIndex((mutation: Mutation) => mutation.id === id);
+  if (index < 0) return ordered[0]?.id ?? null;
+  const earlier = ordered[index - 1];
+  const later = ordered[index + 1];
+  return earlier?.id ?? later?.id ?? null;
+};
+
+/**
+ * REMOVE A CHANGE, and everything that only existed because of it.
+ *
+ * Peter, 2026-09-16: "add a delete button next to RESET so that I can remove a
+ * change frame." Four things happen, and each is the inverse of a thing the
+ * board can do:
+ *
+ *   • the mutation leaves the list, so its flag leaves the timeline and its
+ *     chip leaves the control;
+ *   • every person drops their entry at it — which is `withoutChange`, so a
+ *     raise reverts to the previous interval's pay and a TERMINATION is
+ *     undone, both by the same deletion rather than by two special cases;
+ *   • anyone HIRED at it is removed outright, along with whatever they were
+ *     given later: a person whose existence began at the deleted change has no
+ *     history left to revert to, and keeping them would invent a hire the
+ *     reader never made;
+ *   • the selection moves to the nearest survivor, or to `null` when the
+ *     change being removed was the last one — which is the board's opening
+ *     state, so the empty-state sentence comes back on its own.
+ *
+ * NO CONFIRMATION, deliberately. This is a bench and every change on it is
+ * two clicks to re-make; a modal between the reader and an experiment is the
+ * expensive thing. A real payroll tool with a saved scenario is a different
+ * question and should ask.
+ */
+export const removeMutation = (
+  scenario: Scenario,
+  id: string,
+): { mutations: Mutation[]; people: Person[]; selected: string | null } => {
+  const selected = nearestMutation(scenario.mutations, id);
+  const survivors = filter(
+    (person: Person) => hiredAt(person, scenario.mutations) !== id,
+    scenario.people,
+  );
+  return {
+    mutations: filter(
+      (mutation: Mutation) => mutation.id !== id,
+      scenario.mutations,
+    ),
+    people: map((person: Person) => {
+      const { [id]: _dropped, ...rest } = person.changes;
+      return { ...person, changes: rest };
+    }, survivors),
+    selected,
+  };
+};
+
 /** The people on one role, in fixture order. */
 export const peopleOnRole = (
   people: readonly Person[],

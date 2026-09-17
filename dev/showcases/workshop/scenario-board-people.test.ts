@@ -11,6 +11,9 @@ import {
   payBefore,
   payFrom,
   payDomainOf,
+  hiredAt,
+  nearestMutation,
+  removeMutation,
   roleOf,
   roleOptionLabel,
   segmentLabelsOf,
@@ -257,5 +260,110 @@ describe("the as-of chips", () => {
         segmentLabelsOf([at("2025-10-01"), at("2025-04-01")]),
       ),
     ).toEqual(["2025-04-01", "2025-10-01"]);
+  });
+});
+
+// Peter, 2026-09-16: "add a delete button next to RESET so that I can remove a
+// change frame." Removing one has to undo everything that only existed because
+// of it — which is four different inverses, so they get four tests.
+describe("removing a change", () => {
+  const PETER: Person = {
+    id: "peter",
+    label: "Peter",
+    roleId: "engineer",
+    base: 80_000,
+    changes: { spring: 100_000, autumn: 120_000 },
+  };
+  const LEAVER: Person = {
+    id: "joe",
+    label: "Joe",
+    roleId: "engineer",
+    base: 80_000,
+    changes: { summer: null },
+  };
+  const NEW_HIRE: Person = {
+    id: "sam",
+    label: "Sam",
+    roleId: "intern",
+    base: null,
+    changes: { summer: 1_000, autumn: 4_000 },
+  };
+  const SCENARIO = {
+    mutations: MUTATIONS,
+    people: [PETER, LEAVER, NEW_HIRE],
+  };
+
+  it("takes the mutation itself out of the list", () => {
+    const after = removeMutation(SCENARIO, "summer");
+    expect(map((mutation) => mutation.id, after.mutations)).toEqual([
+      "spring",
+      "autumn",
+    ]);
+  });
+
+  it("reverts a raise to the previous interval's pay", () => {
+    const after = removeMutation(SCENARIO, "spring");
+    const peter = after.people[0] as Person;
+    expect(peter.changes.spring).toBeUndefined();
+    // Nothing invented: he simply carries his base until the autumn raise.
+    expect(payFrom(peter, "summer", after.mutations)).toBe(80_000);
+    expect(payFrom(peter, "autumn", after.mutations)).toBe(120_000);
+  });
+
+  it("undoes a termination made at it", () => {
+    const after = removeMutation(SCENARIO, "summer");
+    const joe = after.people[1] as Person;
+    expect(joe.changes.summer).toBeUndefined();
+    expect(payFrom(joe, "autumn", after.mutations)).toBe(80_000);
+    expect(isPresentAt(80_000, payFrom(joe, "autumn", after.mutations))).toBe(
+      true,
+    );
+  });
+
+  // Somebody whose existence BEGAN at the deleted change has no history to
+  // revert to, so they go — and their later raise goes with them, rather than
+  // leaving a hire the reader never made.
+  it("removes a person hired at it, and their later changes", () => {
+    const after = removeMutation(SCENARIO, "summer");
+    expect(map((person) => person.id, after.people)).toEqual(["peter", "joe"]);
+  });
+
+  it("keeps a hire whose own mutation survives", () => {
+    const after = removeMutation(SCENARIO, "autumn");
+    const sam = after.people[2] as Person;
+    expect(sam.id).toBe("sam");
+    expect(sam.changes).toEqual({ summer: 1_000 });
+  });
+
+  it("knows when a person was hired, and when they simply were there", () => {
+    expect(hiredAt(NEW_HIRE, MUTATIONS)).toBe("summer");
+    expect(hiredAt(PETER, MUTATIONS)).toBeUndefined();
+  });
+
+  describe("what gets selected next", () => {
+    it("falls back to the EARLIER change when there is one", () => {
+      expect(nearestMutation(MUTATIONS, "summer")).toBe("spring");
+      expect(removeMutation(SCENARIO, "autumn").selected).toBe("summer");
+    });
+
+    it("falls forward when the removed change was the first", () => {
+      expect(nearestMutation(MUTATIONS, "spring")).toBe("summer");
+    });
+
+    it("selects nothing once the last change is gone", () => {
+      const one = { mutations: [MUTATIONS[0] as Mutation], people: [PETER] };
+      const after = removeMutation(one, "spring");
+      expect(after.mutations).toEqual([]);
+      expect(after.selected).toBeNull();
+      // Back to the board's opening state: the empty-state sentence returns on
+      // its own, because it is a function of this list being empty.
+      expect(after.people[0]?.changes).toEqual({ autumn: 120_000 });
+    });
+  });
+
+  it("changes nothing for an id nobody has", () => {
+    const after = removeMutation(SCENARIO, "winter");
+    expect(after.mutations).toHaveLength(3);
+    expect(after.people).toHaveLength(3);
   });
 });
