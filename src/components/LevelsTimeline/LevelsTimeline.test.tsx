@@ -73,12 +73,12 @@ const renderRails = () =>
   ));
 
 describe("LevelsTimeline — rails", () => {
-  it("announces the headcounts and who moved where", () => {
+  it("announces what each level holds and what moved where", () => {
     const { container } = renderRails();
     const label = container.querySelector("desc")?.textContent ?? "";
-    expect(label).toContain("Headcount by pay level");
-    expect(label).toContain("L6: 4 people, ending at 2.");
-    expect(label).toContain("2 people moved from L6 to L7 at mutation 1.");
+    expect(label).toContain("Count by level");
+    expect(label).toContain("L6: 4, ending at 2.");
+    expect(label).toContain("2 moved from L6 to L7 at mutation 1.");
   });
 
   it("draws each rail as blunt closed BANDS, one per span", () => {
@@ -163,7 +163,7 @@ describe("LevelsTimeline — rails", () => {
     ).toHaveLength(0);
   });
 
-  it("drops a rule at the lone hire that carries no flag", () => {
+  it("drops a rule at the lone arrival that carries no flag", () => {
     const { container } = renderRails();
     const droplines = container.querySelectorAll(
       ".sui-levels-timeline__dropline",
@@ -302,7 +302,7 @@ describe("LevelsTimeline — rails", () => {
   });
 });
 
-describe("LevelsTimeline — departures and hires", () => {
+describe("LevelsTimeline — departures and arrivals", () => {
   const OPEN: readonly Transfer[] = [
     { at: new Date("2025-04-01"), from: "l6", to: "l7", count: 2 },
     { at: new Date("2025-07-01"), from: "l7", count: 1 },
@@ -328,12 +328,12 @@ describe("LevelsTimeline — departures and hires", () => {
       container.querySelectorAll(".sui-levels-timeline__ribbon--departure"),
     ).toHaveLength(1);
     expect(
-      container.querySelectorAll(".sui-levels-timeline__ribbon--hire"),
+      container.querySelectorAll(".sui-levels-timeline__ribbon--arrival"),
     ).toHaveLength(1);
   });
 
   it("fades ONLY the open-ended flows, and by opacity rather than colour", () => {
-    // The chart is one colour now, so a departure and a hire are the same
+    // The chart is one colour now, so a departure and an arrival are the same
     // shape in the same ink — the fade is the whole of what tells them apart.
     const { container } = renderOpen();
     const stopsOf = (kind: string) => {
@@ -347,7 +347,7 @@ describe("LevelsTimeline — departures and hires", () => {
       );
     };
     expect(stopsOf("departure")).toEqual(["1", "0"]);
-    expect(stopsOf("hire")).toEqual(["0", "1"]);
+    expect(stopsOf("arrival")).toEqual(["0", "1"]);
     // A move needs no gradient at all — it is solid, one colour end to end.
     expect(
       container
@@ -387,11 +387,11 @@ describe("LevelsTimeline — departures and hires", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("announces a departure and a hire as what they are", () => {
+  it("announces a departure and an arrival as what they are", () => {
     const { container } = renderOpen();
     const label = container.querySelector("desc")?.textContent ?? "";
-    expect(label).toContain("1 person left from L7");
-    expect(label).toContain("1 person joined at L8");
+    expect(label).toContain("1 left from L7");
+    expect(label).toContain("1 joined at L8");
   });
 });
 
@@ -550,7 +550,7 @@ describe("LevelsTimeline — hover and pick", () => {
     expect(onPick).not.toHaveBeenCalled();
   });
 
-  it("shows a crosshair and a table of pay against headcount on hover", () => {
+  it("shows a crosshair and a table of value against count on hover", () => {
     let container!: HTMLElement;
     withPlotBox(() => {
       container = render(() => (
@@ -574,13 +574,14 @@ describe("LevelsTimeline — hover and pick", () => {
       (el: Element) => el.textContent,
       [...container.querySelectorAll(".sui-levels-timeline__panel-cell")],
     );
-    // Highest pay first, and the consumer's formatter used for the pay column.
+    // Highest value first, and the consumer's formatter used for that column.
     expect(cells[0]).toBe("$10k");
-    // x=400 of 640 is ~63% across a one-year domain — late August, which
-    // snaps FORWARD to September because that boundary is nearer.
+    // x=400 of 640 is ~60% across the PLOT, whose left edge is now the value
+    // axis' gutter rather than the bare margin — mid-August, snapped back to
+    // the nearer month boundary.
     expect(
       container.querySelector(".sui-levels-timeline__panel-date")?.textContent,
-    ).toBe("Sep 2025");
+    ).toBe("Aug 2025");
   });
 
   it("clears the readout when the pointer leaves the plot", () => {
@@ -600,12 +601,12 @@ describe("LevelsTimeline — hover and pick", () => {
 });
 
 describe("LevelsTimeline — compact chrome in a short box", () => {
-  /** The board's shape: one person per level, seven levels, unevenly spaced. */
+  /** A count of one per level, seven levels, unevenly spaced. */
   const BOARD: readonly Level[] = map(
-    (pay: number) => ({
-      id: `L${pay}`,
-      label: `L${pay}`,
-      value: pay,
+    (figure: number) => ({
+      id: `L${figure}`,
+      label: `L${figure}`,
+      value: figure,
       points: [{ at: new Date("2025-01-01"), count: 1 }],
     }),
     [2000, 3000, 4000, 6000, 7000, 9000, 10000],
@@ -688,7 +689,11 @@ describe("LevelsTimeline — compact chrome in a short box", () => {
     const surface = container.querySelector(".sui-levels-timeline__surface");
     const viewBox = container.querySelector("svg")?.getAttribute("viewBox");
     const [, , w] = (viewBox ?? "").split(" ").map(Number);
-    expect(Number(surface?.getAttribute("width"))).toBe(w - 14 * 2);
+    // The right margin is still the bare one; the LEFT is the value axis'
+    // gutter, so the surface is the plot between them.
+    const plotLeft = Number(surface?.getAttribute("x"));
+    expect(plotLeft).toBeGreaterThan(14);
+    expect(Number(surface?.getAttribute("width"))).toBe(w - 14 - plotLeft);
   });
 
   it("labels the quarters — a one-year domain is Q1..Q4 plus the next Q1", async () => {
@@ -963,7 +968,7 @@ describe("LevelsTimeline — a zero box must never latch", () => {
 })
 
 describe("LevelsTimeline — updates must not recreate the DOM", () => {
-  /** A level set whose pay MOVES, as a drag on the board moves it. */
+  /** A level set whose VALUE moves, as a consumer's drag moves it. */
   const movingLevels = (step: number): readonly Level[] => [
     {
       id: "a",
@@ -1027,7 +1032,7 @@ describe("LevelsTimeline — updates must not recreate the DOM", () => {
     const { container } = render(() => (
       <LevelsTimeline levels={levels()} mutations={MUTATIONS} domain={DOMAIN} />
     ));
-    // The SECOND rail group is level "b", the one whose pay moves. Indexing
+    // The SECOND rail group is level "b", the one whose value moves. Indexing
     // the flat rail list would land on level "a", which does not move —
     // every rail is split at every change, so the flat list interleaves.
     const groupOf = (index: number) =>
@@ -1267,13 +1272,136 @@ describe("LevelsTimeline — the SVG title is a name, not a paragraph", () => {
     const { container } = renderRails();
     const title = container.querySelector("title")?.textContent ?? "";
     expect(title.length).toBeLessThan(40);
-    expect(title).not.toContain("Headcount by pay level");
+    expect(title).not.toContain("Count by level");
   });
 
   it("puts the announcement in <desc>, which is never painted", () => {
     const { container } = renderRails();
     const desc = container.querySelector("desc")?.textContent ?? "";
-    expect(desc).toContain("Headcount by pay level");
+    expect(desc).toContain("Count by level");
     expect(desc.length).toBeGreaterThan(40);
+  });
+});
+
+describe("LevelsTimeline — a consumer-PINNED value domain", () => {
+  /**
+   * Three levels, the TOP one climbing. Derived, the y range widens with it
+   * and the middle rail slides even though its own value never changed.
+   * Pinned, the middle rail holds still — which is the whole point of the
+   * prop for a consumer watching one value move against a fixed axis.
+   */
+  const climbingLevels = (top: number): readonly Level[] => [
+    {
+      id: "a",
+      label: "A",
+      value: 5000,
+      points: [{ at: new Date("2025-01-01"), count: 1 }],
+    },
+    {
+      id: "b",
+      label: "B",
+      value: 7000,
+      points: [{ at: new Date("2025-01-01"), count: 1 }],
+    },
+    {
+      id: "c",
+      label: "C",
+      value: top,
+      points: [{ at: new Date("2025-01-01"), count: 1 }],
+    },
+  ];
+
+  const middleRailPath = (container: HTMLElement): string | null | undefined =>
+    container
+      .querySelectorAll(".sui-levels-timeline__rail-group")[1]
+      ?.querySelector(".sui-levels-timeline__rail")
+      ?.getAttribute("d");
+
+  it("holds the other rails still while one value climbs", () => {
+    const [levels, setLevels] = createSignal(climbingLevels(10000));
+    const { container } = render(() => (
+      <LevelsTimeline
+        levels={levels()}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+        valueDomain={[0, 20000]}
+      />
+    ));
+    const before = middleRailPath(container);
+    expect(before).toBeTruthy();
+    setLevels(climbingLevels(16000));
+    expect(middleRailPath(container)).toBe(before);
+  });
+
+  it("without the pin, the same climb slides the rail that did not move", () => {
+    const [levels, setLevels] = createSignal(climbingLevels(10000));
+    const { container } = render(() => (
+      <LevelsTimeline levels={levels()} mutations={MUTATIONS} domain={DOMAIN} />
+    ));
+    const before = middleRailPath(container);
+    setLevels(climbingLevels(16000));
+    expect(middleRailPath(container)).not.toBe(before);
+  });
+
+  it("clamps a level outside the pinned range rather than widening it", () => {
+    const inside = render(() => (
+      <LevelsTimeline
+        levels={climbingLevels(9000)}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+        valueDomain={[5000, 9000]}
+      />
+    )).container;
+    const outside = render(() => (
+      <LevelsTimeline
+        levels={climbingLevels(30000)}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+        valueDomain={[5000, 9000]}
+      />
+    )).container;
+    // The middle rail is untouched by the level that ran off the top.
+    expect(middleRailPath(outside)).toBe(middleRailPath(inside));
+  });
+});
+
+describe("LevelsTimeline — the value axis is painted", () => {
+  const renderWithAxis = () =>
+    render(() => (
+      <LevelsTimeline
+        levels={LEVELS}
+        transfers={TRANSFERS}
+        mutations={MUTATIONS}
+        domain={DOMAIN}
+        valueDomain={[4000, 12000]}
+        formatValue={(value) => `$${value / 1000}k`}
+      />
+    )).container;
+
+  it("draws an axis line and a tick per nice value", () => {
+    const container = renderWithAxis();
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__y-axis-line"),
+    ).toHaveLength(1);
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__y-tick").length,
+    ).toBeGreaterThanOrEqual(2);
+  });
+
+  it("labels the ticks with the consumer's formatter", () => {
+    const container = renderWithAxis();
+    const labels = map(
+      (el: Element) => el.textContent,
+      [...container.querySelectorAll(".sui-levels-timeline__y-tick-label")],
+    );
+    expect(labels).toContain("$8k");
+    // …and every label is inside the gutter, to the LEFT of the plot.
+    const surface = container.querySelector(".sui-levels-timeline__surface");
+    const plotLeft = Number(surface?.getAttribute("x"));
+    const xs = map(
+      (el: Element) => Number(el.getAttribute("x")),
+      [...container.querySelectorAll(".sui-levels-timeline__y-tick-label")],
+    );
+    for (const x of xs) expect(x).toBeLessThan(plotLeft);
   });
 });

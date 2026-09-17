@@ -14,31 +14,31 @@
 //
 // ── WIDE BANDS ON A PROPORTIONAL AXIS ───────────────────────────────────────
 //
-// A level sits at its own pay — y is proportional to `value`, as an axis
-// should be — and the band drawn there is as THICK as the headcount holding
+// A level sits at its own VALUE — y is proportional to it, as an axis
+// should be — and the band drawn there is as THICK as the count holding
 // it. Those two facts fight each other, and the fight is resolved here rather
 // than left to the consumer.
 //
 // Thickness wants to be generous: the whole point of the picture is that you
-// can see a level fatten and thin, and a hairline cannot say that. But two pay
+// can see a level fatten and thin, and a hairline cannot say that. But two
 // levels close together have very little room between them, and bands that
 // overlap turn the chart into a smear.
 //
-// So `perPersonWidth` is the SMALLER of two answers: the width that would fill
+// So `perCountWidth` is the SMALLER of two answers: the width that would fill
 // a good fraction of the plot at the busiest moment, and the width at which the
 // tightest pair of adjacent levels still clears a margin. The second is what
-// stops a $9k and a $9.5k rail from merging; the first is what stops a sparse
-// chart from being drawn in hairlines. Neither alone is right.
+// stops two rails a hair apart in value from merging; the first is what stops
+// a sparse chart from being drawn in hairlines. Neither alone is right.
 //
 // Conventions, fixed here once so nothing downstream re-decides them:
 //
 //   • The chart does NO arithmetic on the consumer's counts beyond the width
-//     scale and the stack. It never sums a level, never derives a headcount
+//     scale and the stack. It never sums a level, never derives a count
 //     from the transfers, and never reconciles the two against each other. If
-//     a transfer says two people moved and the counts disagree, it draws both
+//     a transfer says two moved and the counts disagree, it draws both
 //     — the disagreement is the consumer's to see, not this file's to hide.
 //   • A count point is "from `at`, hold `count`". BEFORE a level's first
-//     point, NOTHING is drawn: the chart will not invent a headcount it was
+//     point, NOTHING is drawn: the chart will not invent a count it was
 //     not given, so a level that appears mid-domain simply begins mid-plot.
 //   • Times outside the domain are CLAMPED to it rather than painted
 //     off-canvas, and every degenerate input (a zero-width time domain, no
@@ -46,6 +46,7 @@
 //     rather than NaN.
 // ============================================
 import { clamp } from "../../internal/math/clamp";
+import { linearScale } from "../Chart/scales";
 import { monthlyCells } from "../DateAxis/cells";
 import { filter, find, join, map, sortBy, sum } from "../../fn";
 
@@ -84,6 +85,15 @@ export interface Flag {
   /** Where the number's text sits — the box's centre. */
   readonly textX: number;
   readonly textY: number;
+}
+
+/** One tick on the value axis: where it sits, and what it says. */
+export interface ValueTick {
+  readonly key: string;
+  /** The value itself, unformatted — the label is the formatted one. */
+  readonly value: number;
+  readonly y: number;
+  readonly label: string;
 }
 
 /** One month boundary on the bottom axis. */
@@ -140,6 +150,47 @@ export const COMPACT_LABEL_EVERY = 3;
 
 /** The month axis, below the plot. */
 export const AXIS_TICK_LENGTH = 4;
+
+// ── THE VALUE AXIS, in the left gutter ──────────────────────────────────────
+//
+// Peter, 2026-09-16: "Display the actual y-axis with ticks." A rail's height
+// IS its value, so without an axis the reader can see that one rail sits above
+// another and not what either of them is — the only figures on the chart were
+// in a hover readout nobody sees in a screenshot.
+//
+// The ticks are NICE ones (1/2/5 × 10^k), and the nicing comes from
+// `Chart/scales`' `linearScale().ticks()` rather than from a second
+// implementation here: ADR 0010's core-plus-adapter, the same disposition as
+// `monthlyCells` for the month axis. Two definitions of "a round number" is
+// how two charts in one app come to disagree about what a round number is.
+
+/** How many value ticks to aim for. d3-style nicing decides the actual count. */
+export const Y_TICK_TARGET = 5;
+/** …and in compact chrome, where a full ladder will not fit. */
+export const COMPACT_Y_TICK_TARGET = 3;
+/** The tick mark's own length, drawn to the LEFT of the axis line. */
+export const Y_TICK_LENGTH = 4;
+/** Clear air between a tick label and the axis line. */
+export const Y_LABEL_GAP = 3;
+/**
+ * The tick font, and the width one character of it takes.
+ *
+ * ESTIMATED, not measured, and deliberately: geometry.ts is pure and has no
+ * DOM to measure in, and the gutter has to be decided before anything is
+ * painted. An estimate that is slightly WIDE costs a few units of plot nobody
+ * notices; one that is narrow clips the consumer's labels, so this errs high.
+ */
+export const Y_LABEL_FONT_PX = 9;
+export const Y_LABEL_CHAR_PX = 5.4;
+/**
+ * …but the gutter may never eat more than this share of the canvas.
+ *
+ * `formatValue` is the CONSUMER's, so the longest label is not this file's to
+ * bound — a formatter returning twenty characters would otherwise collapse the
+ * plot to nothing, which is the same failure `MIN_PLOT_FRACTION` guards
+ * against vertically.
+ */
+export const MAX_GUTTER_FRACTION = 0.2;
 export const AXIS_LABEL_Y = PLOT_BOTTOM + 20;
 
 /**
@@ -148,7 +199,7 @@ export const AXIS_LABEL_Y = PLOT_BOTTOM + 20;
  *
  * This is a fraction of the PLOT, not of the value span, and that is the whole
  * point. Padding the value domain — the obvious thing, and what this did at
- * first — reserves an amount of y that depends on the consumer's pay figures,
+ * first — reserves an amount of y that depends on the consumer's own values,
  * so a chart whose levels happen to sit close together gets almost no headroom
  * and its outermost band hangs off the axis. Reserving plot space instead
  * guarantees the room is there whatever the numbers say.
@@ -215,6 +266,12 @@ export const COMPACT_BELOW =
 export const frameFor = (
   viewHeight: number,
   viewWidth: number = VIEW_WIDTH,
+  /**
+   * The value axis' gutter, from `gutterWidth`. Omitted (every test that only
+   * cares about vertical layout, and the default frame) leaves the plot where
+   * it has always started, so nothing that does not ask for an axis moves.
+   */
+  gutter: number = 0,
 ): Frame => {
   const height = Math.max(MIN_VIEW_HEIGHT, viewHeight);
   const width = Math.max(MIN_VIEW_WIDTH, viewWidth);
@@ -225,7 +282,7 @@ export const frameFor = (
   const plotHeight = plotBottom - plotTop;
   return {
     viewWidth: width,
-    plotLeft: PLOT_LEFT,
+    plotLeft: Math.max(PLOT_LEFT, Math.min(gutter, width * MAX_GUTTER_FRACTION)),
     plotRight: width - PLOT_LEFT,
     viewHeight: height,
     plotTop,
@@ -268,16 +325,19 @@ export const frameFor = (
  * up TOGETHER — both dimensions — so the aspect is still exactly the box's and
  * the chart merely draws at a smaller effective scale. It never letterboxes.
  */
-export const frameForBox = (box: {
-  readonly width: number;
-  readonly height: number;
-}): Frame => {
+export const frameForBox = (
+  box: {
+    readonly width: number;
+    readonly height: number;
+  },
+  gutter: number = 0,
+): Frame => {
   if (box.width <= 0 || box.height <= 0) return DEFAULT_FRAME;
   // Scaling BOTH dimensions is what keeps the aspect exact. Scaling one of
   // them was the letterbox.
   const scale =
     box.height < MIN_VIEW_HEIGHT ? MIN_VIEW_HEIGHT / box.height : 1;
-  return frameFor(box.height * scale, box.width * scale);
+  return frameFor(box.height * scale, box.width * scale, gutter);
 };
 
 /** The width-driven layout: what the chart uses when it is given no height. */
@@ -388,73 +448,73 @@ const placeFlag = (mutation: Mutation, x: number, frame: Frame): Flag => {
 };
 
 // ============================================================================
-// The RAIL model — a line is a pay LEVEL, and the chart is a Sankey.
+// The RAIL model — a line is a LEVEL, and the chart is a Sankey.
 //
-// A rail is a filled band whose THICKNESS is the headcount holding that level.
-// The bands are STACKED, ordered by pay with the highest on top, separated by
+// A rail is a filled band whose THICKNESS is the count holding that level.
+// The bands are STACKED, ordered by value with the highest on top, separated by
 // a fixed gap, and the stack is recomputed at every change — so a band's
 // vertical position drifts as the ones around it thicken and thin, the way a
-// stream chart's do. People moving between levels are FLOWS: wide translucent
+// stream chart's do. Movement between levels is a FLOW: wide translucent
 // ribbons that leave one band's edge and arrive at another's, graduating from
 // the source's colour to the destination's along the way.
 //
 // WIDTH CONSERVATION is exact and unconditional. The width scale is purely
-// proportional — `count × perPerson`, with no floor — so
+// proportional — `count × perCount`, with no floor — so
 //
 //     bandWidth(a) − bandWidth(c) === bandWidth(a − c)
 //
 // for every a and c, including a rail emptying to nothing. (An earlier version
-// had an affine scale with a MIN_STROKE floor so that one person stayed
-// visible on a hundred-person chart. That floor could not be conserved — it
-// would be counted once per band — and it is no longer needed: `perPerson` is
-// now sized so the whole stack fills most of the plot, which makes one person
-// visibly wide by construction.)
+// had an affine scale with a MIN_STROKE floor so that a count of one stayed
+// visible on a chart whose total ran to a hundred. That floor could not be
+// conserved — it would be counted once per band — and it is no longer needed:
+// `perCount` is now sized so the whole stack fills most of the plot, which
+// makes a count of one visibly wide by construction.)
 // ============================================================================
 
-/** "From `at`, hold `count` people at this level." */
+/** "From `at`, this level holds `count`." */
 export interface CountPoint {
   readonly at: TimeValue;
   readonly count: number;
 }
 
-/** One pay level: a band in the stack, thickening and thinning over time. */
+/** One level: a band in the stack, thickening and thinning over time. */
 export interface Level {
   readonly id: string;
   readonly label: string;
-  /** The pay. Decides RANK in the stack — highest on top — and the label. */
+  /** The level's own figure. Decides its y, and RANK in the stack. */
   readonly value: number;
   readonly points: readonly CountPoint[];
 }
 
 /**
- * People moving at one moment, drawn as a flow.
+ * A count moving between levels at one moment, drawn as a flow.
  *
  * Both ends are OPTIONAL, and which ones are present is what the flow means:
  *
- *   • `from` and `to`  — a move between two levels. A raise.
- *   • `from` only      — a DEPARTURE: they left the system. The ribbon runs
+ *   • `from` and `to`  — a move between two levels.
+ *   • `from` only      — a DEPARTURE: it left the system. The ribbon runs
  *                        out of the band's end and fades to nothing.
- *   • `to` only        — a HIRE: they joined from outside. The ribbon fades in
- *                        and arrives at the band's start.
+ *   • `to` only        — an ARRIVAL: it joined from outside. The ribbon fades
+ *                        in and arrives at the band's start.
  *   • neither          — nothing to draw; dropped.
  *
- * Optional ends are what let headcount be CONSERVED: every change in a band's
+ * Optional ends are what let the total be CONSERVED: every change in a band's
  * thickness has a matching flow, so a reader never sees a band thin with
  * nothing leaving it. A silent count drop is the one thing this chart must not
  * show, because it reads as a mistake.
  */
 export interface Transfer {
   readonly at: TimeValue;
-  /** Source level id. Absent means they joined from outside the system. */
+  /** Source level id. Absent means it joined from outside the system. */
   readonly from?: string;
-  /** Destination level id. Absent means they left the system. */
+  /** Destination level id. Absent means it left the system. */
   readonly to?: string;
   readonly count: number;
 }
 
 /** What a flow means, decided by which of its two ends are present. */
 /**
- * What a flow is. The last two are both "the people who did not move", split
+ * What a flow is. The last two are both "the count that did not move", split
  * apart because they must be PAINTED differently:
  *
  *   • `carry`        — the rail's width changed at this cap (some left, some
@@ -469,7 +529,7 @@ export interface Transfer {
 export type FlowKind =
   | "move"
   | "departure"
-  | "hire"
+  | "arrival"
   | "carry"
   | "continuation";
 
@@ -510,35 +570,21 @@ export interface LevelsRailGeometry {
   /** The vertical layout this was built in — what the component paints into. */
   readonly frame: Frame;
   readonly yDomain: readonly [number, number];
-  /** The largest TOTAL headcount at any one moment — one half of the width scale. */
+  /** The largest TOTAL at any one moment — one half of the width scale. */
   readonly peak: number;
-  /** Thickness per person, after both caps. */
-  readonly perPerson: number;
+  /** Thickness per unit of count, after both caps. */
+  readonly perCount: number;
   readonly rails: readonly Rail[];
   readonly flows: readonly FlowBand[];
   readonly droplines: readonly Dropline[];
   readonly flags: readonly Flag[];
   readonly ticks: readonly MonthTick[];
+  /** The value axis' ticks, in the left gutter. */
+  readonly yTicks: readonly ValueTick[];
 }
 
 /** How much of the plot's height the bands fill at the busiest moment. */
 export const FILL_FRACTION = 0.6;
-/**
- * …but a LONE rail gets this much and no more.
- *
- * `FILL_FRACTION` is an allowance for the STACK, and a stack of one is not a
- * stack: with a single level the one band absorbs the whole 60% and draws as
- * a slab across the middle of the plot rather than as a rail. That is the
- * board's opening frame — two engineers on the same pay is one level, and it
- * is the case the levels model is supposed to show BEST.
- *
- * So a chart with one live level caps its band at a quarter of the plot,
- * which leaves air above and below and reads as a rail two heads thick.
- * Thickness stays proportional over time, because the cap divides by the same
- * peak: a level going from two people to five still thickens by the same
- * ratio it would have.
- */
-export const SOLO_BAND_FRACTION = 0.25;
 /** Clear air left between two adjacent levels' bands at their fattest. */
 export const BAND_MARGIN = 4;
 /**
@@ -562,7 +608,7 @@ export const marginFor = (gap: number): number =>
 
 /**
  * The width that fills a good fraction of the plot at the busiest moment.
- * Sized from the PEAK TOTAL headcount rather than the biggest single level: it
+ * Sized from the PEAK TOTAL rather than the biggest single level: it
  * is all the bands together that occupy the plot.
  */
 export const fillWidth = (peak: number, frame: Frame): number =>
@@ -572,7 +618,7 @@ export const fillWidth = (peak: number, frame: Frame): number =>
  * The width at which the TIGHTEST pair of adjacent levels still clears
  * `BAND_MARGIN` between them, at their own fattest.
  *
- * Adjacent means next to each other in pay, which is the only pair that can
+ * Adjacent means next to each other in value, which is the only pair that can
  * collide — a level two rungs up is behind a nearer one already. Each pair is
  * asked for the width at which half of each band, plus the margin, fits in the
  * gap between their two y's. `Infinity` when there is only one level: nothing
@@ -628,30 +674,38 @@ export const edgeWidth = (
 };
 
 /**
- * The width a LONE rail is held to, or `Infinity` where there is more than one
- * level to share the plot with.
+ * The thickest a band may EVER be drawn (Peter, 2026-09-16: "The ribbons
+ * should be no more than 10 px in height").
  *
- * Returning `Infinity` in the ordinary case is the point: this cap cannot
- * affect a chart that has a stack, so it cannot change any layout that already
- * looked right. It exists for the degenerate one only.
+ * viewBox units are px here — the viewBox is 1u/px by construction — so this
+ * is the literal ten. It is an ABSOLUTE ceiling rather than one more
+ * proportional cap, and that is the point: a rail centred on its value reads
+ * as a rail at ten px whatever the axis behind it runs to, where a
+ * proportional band on a consumer-pinned axis spanning a whole roster's range
+ * drew as a slab.
+ *
+ * This REPLACED `soloWidth`, the fraction-of-the-plot cap that kept a lone
+ * rail from becoming a wall (b9fa493). It is strictly tighter: that cap was
+ * `plotHeight × 0.25 / most`, and the plot is never shorter than ~56 units
+ * (`MIN_VIEW_HEIGHT` less the compact chrome), so it never resolved below
+ * `14 / most`. A cap that can never bind is dead code, so it is gone rather
+ * than left to be maintained — the tests that pinned its BEHAVIOUR now pin
+ * this ceiling instead.
  */
-export const soloWidth = (
-  levels: readonly Level[],
-  frame: Frame,
-): number => {
-  const live = filter((level: Level) => maxCountIn(level) > 0, levels);
-  if (live.length !== 1) return Number.POSITIVE_INFINITY;
-  const most = maxCountIn(live[0]);
-  return most <= 0
-    ? Number.POSITIVE_INFINITY
-    : (frame.plotHeight * SOLO_BAND_FRACTION) / most;
+export const MAX_BAND_PX = 10;
+
+/** The width at which the fattest single band is exactly `MAX_BAND_PX`. */
+export const maxBandWidth = (levels: readonly Level[]): number => {
+  const counts = map((level: Level) => maxCountIn(level), levels);
+  const most = counts.length === 0 ? 0 : Math.max(0, ...counts);
+  return most <= 0 ? Number.POSITIVE_INFINITY : MAX_BAND_PX / most;
 };
 
 /**
- * Thickness per person: the smallest of the answers. See the header — the
- * fill width alone would smear close levels together and overrun the frame,
- * any cap alone would draw a sparse chart in hairlines, and without the solo
- * cap a single level fills the plot with one slab.
+ * Thickness per unit of count: the smallest of the answers. See the header —
+ * the fill width alone would smear close levels together and overrun the
+ * frame, any cap alone would draw a sparse chart in hairlines, and without
+ * the solo cap a single level fills the plot with one slab.
  */
 /**
  * The thinnest a band is ever drawn, whatever the caps say.
@@ -661,9 +715,9 @@ export const soloWidth = (
  * bands that touch merely look tight. So the caps floor here. Below the floor
  * adjacent bands may meet, which is a legible picture; zero is not a picture.
  */
-export const MIN_PER_PERSON = 1;
+export const MIN_PER_COUNT = 1;
 
-export const perPersonWidth = (
+export const perCountWidth = (
   levels: readonly Level[],
   yScale: (value: number) => number,
   peak: number,
@@ -671,22 +725,28 @@ export const perPersonWidth = (
 ): number =>
   peak <= 0
     ? 0
-    : Math.max(
-        MIN_PER_PERSON,
-        Math.min(
-          fillWidth(peak, frame),
-          adjacencyWidth(levels, yScale),
-          edgeWidth(levels, yScale, frame),
-          soloWidth(levels, frame),
+    : // The ceiling is applied OUTSIDE the floor, so it wins: a chart whose
+      // counts are high enough that ten px per band leaves less than a unit
+      // each draws thin bands rather than a band over its own ten-px
+      // promise. The floor's job is only that nothing resolves to zero.
+      Math.min(
+        maxBandWidth(levels),
+        Math.max(
+          MIN_PER_COUNT,
+          Math.min(
+            fillWidth(peak, frame),
+            adjacencyWidth(levels, yScale),
+            edgeWidth(levels, yScale, frame),
+          ),
         ),
       );
 
 /** A band's thickness. Purely proportional, so conservation is exact. */
-export const bandWidth = (count: number, perPerson: number): number =>
-  Math.max(0, count) * perPerson;
+export const bandWidth = (count: number, perCount: number): number =>
+  Math.max(0, count) * perCount;
 
-/** The largest total headcount at any one moment. */
-export const peakHeadcount = (levels: readonly Level[]): number => {
+/** The largest total across all levels at any one moment. */
+export const peakTotal = (levels: readonly Level[]): number => {
   const moments = changeTimes(levels, []);
   if (moments.length === 0) return 0;
   const totals = map(
@@ -839,7 +899,7 @@ const reverseEdge = (points: readonly EdgePoint[]): string => {
  * the bottom, up the near cap. Both caps are BLUNT — a rail that starts or
  * empties ends square at the change x, because it is the ribbon that carries
  * the change, not the rail's shape. A rail tapering to a point would say the
- * headcount dwindled when it did not.
+ * count dwindled when it did not.
  */
 export const bandPath = (
   top: readonly EdgePoint[],
@@ -935,7 +995,7 @@ export interface FlowBand {
   readonly dstTop: number;
   readonly dstBottom: number;
   readonly path: string;
-  /** Source level id. Absent on a hire. */
+  /** Source level id. Absent on an arrival. */
   readonly fromId?: string;
   /** Destination level id. Absent on a departure. */
   readonly toId?: string;
@@ -985,9 +1045,9 @@ const sliceRoots = (
  * continues across a change.
  *
  * The carry is what makes a rail look continuous while its bands stop short of
- * every change — it is the people who did not move, drawn as the flow they
- * are. Without it a rail with one person leaving out of four would show three
- * people vanishing into the gap and reappearing after it.
+ * every change — it is the count that did not move, drawn as the flow it
+ * is. Without it a rail losing one out of four would show the other three
+ * vanishing into the gap and reappearing after it.
  *
  * Every ribbon's four corners are slices of two bands' caps, so a join cannot
  * float: the same two numbers are the band's edge and the ribbon's edge. Where
@@ -999,7 +1059,7 @@ export const flowBands = (
   transfers: readonly Transfer[],
   rails: readonly Rail[],
   xScale: (at: TimeValue) => number,
-  perPerson: number,
+  perCount: number,
   half: number,
   /** Every moment anything changes — a band stops and restarts at each. */
   moments: readonly number[],
@@ -1037,7 +1097,7 @@ export const flowBands = (
       const indices = map((_one: Transfer, index: number) => index, here);
       const out = filter((i: number) => here[i].from === rail.id, indices);
       const into = filter((i: number) => here[i].to === rail.id, indices);
-      const widthOf = (i: number) => bandWidth(here[i].count, perPerson);
+      const widthOf = (i: number) => bandWidth(here[i].count, perCount);
       const otherY = (i: number, leaving: boolean, fallback: number): number => {
         const otherId = leaving ? here[i].to : here[i].from;
         const other = otherId === undefined ? undefined : railById.get(otherId);
@@ -1107,7 +1167,7 @@ export const flowBands = (
       const hasTo = one.to !== undefined && railById.has(one.to);
       if (!hasFrom && !hasTo) continue;
       const kind: FlowKind =
-        hasFrom && hasTo ? "move" : hasFrom ? "departure" : "hire";
+        hasFrom && hasTo ? "move" : hasFrom ? "departure" : "arrival";
       const src = srcRoot.get(index) ?? dstRoot.get(index);
       const dst = dstRoot.get(index) ?? srcRoot.get(index);
       if (src === undefined || dst === undefined) continue;
@@ -1173,7 +1233,7 @@ export const valueDomainOf = (
  * levels' own.
  *
  * A PINNED domain is what stops the rails reshuffling vertically while a value
- * moves. Derived from the data, the scale follows it — raise one person and
+ * moves. Derived from the data, the scale follows it — raise one level and
  * every OTHER rail slides, because the range they are all drawn against just
  * changed. That is right for a chart read on its own and wrong for a board
  * whose whole point is watching one rail move against a fixed scale.
@@ -1189,8 +1249,90 @@ export const valueDomainFor = (
   pinned?: readonly [number, number],
 ): readonly [number, number] =>
   pinned === undefined
-    ? valueDomainOf(levels)
+    ? niceValueDomain(valueDomainOf(levels))
     : openOut(Math.min(...pinned), Math.max(...pinned));
+
+/**
+ * The nice tick values inside a range, from `Chart/scales` (see the header).
+ *
+ * `linearScale().ticks()` starts at the first multiple of its step inside the
+ * range and stops at the last, so every tick returned is ON the axis — the
+ * caller never has to filter one back off the end.
+ */
+export const valueTicks = (
+  yDomain: readonly [number, number],
+  count: number = Y_TICK_TARGET,
+): readonly number[] => linearScale(yDomain, [0, 1]).ticks(count);
+
+/**
+ * Round a DERIVED range out to whole ticks, so the axis begins and ends on a
+ * labelled one.
+ *
+ * Only the derived range is nicened. A PINNED range is the consumer's
+ * statement about where the axis runs, and quietly widening it to the nearest
+ * round number is the same betrayal as widening it to fit the data.
+ *
+ * A range narrower than one step yields fewer than two ticks and there is no
+ * step to round to; it is returned untouched rather than collapsed.
+ */
+/** Trim the FP noise a divide-then-multiply leaves behind. */
+const trim = (value: number): number =>
+  Math.abs(value) < 1e-12 ? 0 : Math.round(value * 1e9) / 1e9;
+
+export const niceValueDomain = (
+  yDomain: readonly [number, number],
+  count: number = Y_TICK_TARGET,
+): readonly [number, number] => {
+  const ticks = valueTicks(yDomain, count);
+  if (ticks.length < 2) return yDomain;
+  const step = ticks[1] - ticks[0];
+  if (step <= 0) return yDomain;
+  const [lo, hi] = yDomain;
+  // Trimmed, because `floor(lo / step) * step` is a division followed by a
+  // multiplication and the round trip does not always land on the number it
+  // started from — an axis that drifts by a billionth per render is an axis
+  // whose ticks are never quite its ends.
+  return [trim(Math.floor(lo / step) * step), trim(Math.ceil(hi / step) * step)];
+};
+
+/**
+ * One value tick, placed and formatted.
+ *
+ * `format` is the CONSUMER's `formatValue`, and the axis uses the same one the
+ * hover readout does — an axis reading `9000` beside a readout reading `$9k`
+ * is two charts in one frame.
+ */
+export const valueTickMarks = (
+  yDomain: readonly [number, number],
+  yScale: (value: number) => number,
+  frame: Frame,
+  format: (value: number) => string = String,
+): readonly ValueTick[] =>
+  map(
+    (value: number) => ({
+      key: String(value),
+      value,
+      y: yScale(value),
+      label: format(value),
+    }),
+    valueTicks(yDomain, frame.compact ? COMPACT_Y_TICK_TARGET : Y_TICK_TARGET),
+  );
+
+/**
+ * The gutter the axis needs: its longest label, plus the tick and the gap.
+ *
+ * Estimated from the character count (see `Y_LABEL_CHAR_PX`) because this file
+ * is pure. The caller passes the ALREADY FORMATTED labels, so a consumer's
+ * format decides the gutter and this function never has to know what one
+ * looks like.
+ */
+export const gutterWidth = (labels: readonly string[]): number => {
+  const lengths = map((label: string) => label.length, labels);
+  const longest = lengths.length === 0 ? 0 : Math.max(0, ...lengths);
+  return longest === 0
+    ? PLOT_LEFT
+    : longest * Y_LABEL_CHAR_PX + Y_LABEL_GAP + Y_TICK_LENGTH;
+};
 
 /**
  * Value → y, inverted, mapped into the plot MINUS its inset at each end — so
@@ -1221,7 +1363,7 @@ export const railSpans = (
   xScale: (at: TimeValue) => number,
   yScale: (value: number) => number,
   domainEnd: TimeValue,
-  perPerson: number,
+  perCount: number,
   half: number,
   /** Every moment anything changes ANYWHERE on the chart. */
   moments: readonly number[],
@@ -1255,7 +1397,7 @@ export const railSpans = (
       x2: to >= frame.plotRight ? frame.plotRight : to - half,
       y,
       count,
-      width: bandWidth(count, perPerson),
+      width: bandWidth(count, perCount),
     });
   }
   return spans;
@@ -1291,8 +1433,8 @@ export const transitionHalf = (
 // Peter, 2026-09-16: "don't label the series directly on the plot." There is
 // no text inside the plot area at all now — only the axis ticks below it and
 // the numbered flags above. A level's identity is its COLOUR, the
-// announcement, and whatever the consumer puts outside the chart. The pay
-// figure is still in `Level.label`, unpainted, for a legend to use.
+// announcement, and whatever the consumer puts outside the chart. The level's
+// own text is still in `Level.label`, unpainted, for a legend to use.
 
 /** The whole rail observation: scales resolved, bands, flows, rules, flags. */
 export const levelsRailGeometry = (input: {
@@ -1309,15 +1451,37 @@ export const levelsRailGeometry = (input: {
    * still while a value moves. Omitted, the levels' own range is used.
    */
   readonly valueDomain?: readonly [number, number];
+  /**
+   * The consumer's own formatter, used for the VALUE AXIS' labels (and so for
+   * the gutter they are measured into). The component passes the same one it
+   * gives the hover readout.
+   */
+  readonly formatValue?: (value: number) => string;
 }): LevelsRailGeometry => {
-  const frame = input.box === undefined
+  // The gutter has to be known before the frame, because it IS the frame's
+  // left edge — so the range and its labels are decided first, against a
+  // provisional frame that only the tick COUNT is taken from.
+  const yDomain = valueDomainFor(input.levels, input.valueDomain);
+  const provisional = input.box === undefined
     ? frameFor(input.viewHeight ?? VIEW_HEIGHT)
     : frameForBox(input.box);
+  const format = input.formatValue ?? String;
+  const gutter = gutterWidth(
+    map(
+      (value: number) => format(value),
+      valueTicks(
+        yDomain,
+        provisional.compact ? COMPACT_Y_TICK_TARGET : Y_TICK_TARGET,
+      ),
+    ),
+  );
+  const frame = input.box === undefined
+    ? frameFor(input.viewHeight ?? VIEW_HEIGHT, VIEW_WIDTH, gutter)
+    : frameForBox(input.box, gutter);
   const xScale = xScaleFor(input.domain, frame);
-  const yDomain = valueDomainFor(input.levels, input.valueDomain);
   const yScale = yScaleFor(yDomain, frame);
-  const peak = peakHeadcount(input.levels);
-  const perPerson = perPersonWidth(input.levels, yScale, peak, frame);
+  const peak = peakTotal(input.levels);
+  const perCount = perCountWidth(input.levels, yScale, peak, frame);
   const moments = changeTimes(input.levels, input.transfers);
   const half = transitionHalf(
     map((time: number) => xScale(time), moments),
@@ -1329,7 +1493,7 @@ export const levelsRailGeometry = (input: {
       xScale,
       yScale,
       input.domain[1],
-      perPerson,
+      perCount,
       half,
       moments,
       frame,
@@ -1347,13 +1511,13 @@ export const levelsRailGeometry = (input: {
     frame,
     yDomain,
     peak,
-    perPerson,
+    perCount,
     rails,
     flows: flowBands(
       input.transfers,
       rails,
       xScale,
-      perPerson,
+      perCount,
       half,
       moments,
       frame,
@@ -1367,6 +1531,7 @@ export const levelsRailGeometry = (input: {
     ),
     flags: flagPositions(input.mutations, xScale, frame),
     ticks: axisTicks(input.domain, xScale, frame),
+    yTicks: valueTickMarks(yDomain, yScale, frame, format),
   };
 };
 
@@ -1380,9 +1545,18 @@ export const levelsRailGeometry = (input: {
  *   • under a year        — a tick and a label per month.
  *   • one to three years  — per QUARTER. Twelve `Jan`-width labels fit; twelve
  *                           `2026-Q1`-width ones do not, and quarters are the
- *                           cadence a reader of a pay timeline thinks in
+ *                           cadence a reader of a multi-year span thinks in
  *                           anyway.
  *   • over three years    — per year.
+ *
+ * Per ADR 0010 a mark is a CORE plus an adapter, and the core here is already
+ * shared: the calendar itself is `monthlyCells`, imported from DateAxis, so
+ * the chart and that component cannot disagree about where a month is. What
+ * is left — these two thresholds, and the decision to thin labels rather than
+ * drop ticks — is EDITORIAL, not mechanism: it is this chart's answer to how
+ * much axis a 640-unit viewBox can carry. No other chart can reuse a judgement
+ * about a viewBox it does not have, so it stays private here rather than
+ * moving to `src/internal/`.
  */
 export const QUARTERLY_FROM_MONTHS = 12;
 export const YEARLY_FROM_MONTHS = 36;
@@ -1459,9 +1633,9 @@ export interface LevelRow {
 }
 
 /**
- * What every level held at one moment, highest pay first, empties omitted.
+ * What every level held at one moment, highest value first, empties omitted.
  *
- * Ordered by pay rather than by the consumer's own order because the reader is
+ * Ordered by value rather than by the consumer's own order because the reader is
  * looking at a vertical stack and expects the table to read the same way down.
  * A level nobody holds is left out entirely — a table of zeroes is noise, and
  * the picture does not draw them either.

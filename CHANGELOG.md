@@ -3,6 +3,25 @@
 ## Unreleased
 
 ### Added
+- **`LevelsTimeline` promoted from the workshop bench to the catalog.** A time
+  chart of numeric LEVELS: a rail per `value` on a real value axis, as thick as
+  the count holding it, with Sankey flow ribbons wherever a count moves between
+  two of them — and one-ended flows (arrival, departure) so no rail ever thins
+  silently. Numbered flags above the plot for the consumer's mutations, a muted
+  dropline at every other change, a hover crosshair and readout, and an
+  optional `onPick` that reports the month under the pointer. Now with a
+  VISIBLE value axis in a left gutter (nice 1/2/5 ticks from `Chart/scales`,
+  labelled with the consumer's `formatValue`, the gutter sized from the longest
+  label), bands CENTRED on their value and capped at ten px, and
+  `valueDomain?` to pin the y range so rails hold still while one value moves.
+  The model is generic — the component holds no domain nouns, units or
+  currency. Exports from the barrel with a dedicated showcase, a
+  `COMPONENTS.md` entry and the curried variant `LevelsRailChart` (plain
+  numbers). Factory: `createLevelsTimeline({ formatValue })`; everything else
+  stays data at the call site. Exported types: `LevelsTimelineProps`,
+  `LevelsTimelineOverrides`, `LevelsTimelineDataProps`, the data types `Level`,
+  `CountPoint`, `Transfer`, `Mutation`, `TimeDomain`, `TimeValue`, and
+  `timeOf`.
 - **`MutationSliders` promoted from the workshop bench to the catalog.** A row
   of vertical prior-vs-future dials, one per named entity: the shaded allowed
   range on a shared track, a muted prior arrowhead and an accent future one

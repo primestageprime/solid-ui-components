@@ -1,90 +1,40 @@
-// Barrel — WORKSHOP PROTOTYPE, deliberately NOT re-exported from src/index.ts.
+// Barrel — the PUBLISHED surface, and deliberately small.
 //
-// The bench (dev/showcases/workshop/levels-timeline.tsx) reaches this folder
-// directly while the API is still being settled. Promotion (`/promote`) is
-// what adds the package export, the dedicated showcase, the COMPONENTS.md
-// entry and whatever curried variants the first real caller turns out to need.
+// What a client needs to draw a levels timeline:
 //
-// No factory here on purpose: every prop is data (`levels`, `transfers`,
-// `mutations`, `domain`, `selectedMutationId`, `onSelectMutation`), so there
-// is nothing static to curry, and `createLevelsTimeline({})` would be an
-// unconfigured surface.
-export { LevelsTimeline } from "./LevelsTimeline";
-export type { LevelsTimelineProps } from "./LevelsTimeline";
-export {
-  QUARTERLY_FROM_MONTHS,
-  YEARLY_FROM_MONTHS,
-  axisTicks,
-  changeTimes,
-  droplinePositions,
-  flagPositions,
-  levelsRailGeometry,
-  railSpans,
-  BAND_MARGIN,
-  FILL_FRACTION,
-  adjacencyWidth,
-  bandPath,
-  DEFAULT_FRAME,
-  MIN_VIEW_HEIGHT,
-  MIN_VIEW_WIDTH,
-  SOLO_BAND_FRACTION,
-  bandWidth,
-  COMPACT_BELOW,
-  MIN_PER_PERSON,
-  MIN_PLOT_FRACTION,
-  frameFor,
-  frameForBox,
-  marginFor,
-  viewHeightFor,
-  edgeWidth,
-  transitionHalf,
-  countAt,
-  fillWidth,
-  maxCountIn,
-  peakHeadcount,
-  soloWidth,
-  spanBottom,
-  spanTop,
-  flowBands,
-  hCurve,
-  hoverAt,
-  levelsAt,
-  monthLabelOf,
-  quarterLabelOf,
-  snapToMonth,
-  timeAtX,
-  perPersonWidth,
-  quarterTicks,
-  railRuns,
-  taperHalves,
-  transitionWidth,
-  valueDomainFor,
-  valueDomainOf,
-  yearTicks,
-  monthTicks,
-  timeOf,
-  xScaleFor,
-  yScaleFor,
-} from "./geometry";
+//   • `LevelsRailChart` — the zero-config CURRIED variant. Data and callbacks
+//     only; the format is baked. This is what a new call site should use.
+//   • `createLevelsTimeline` — bake your own `formatValue` into a variant.
+//   • `LevelsTimeline` + `LevelsTimelineProps` — the BASE component and its
+//     full props. Kept on the published surface because live consumers
+//     (thorcasting-ui, the scenario board) are written against them; a
+//     promotion is not the moment to break a consumer's signature.
+//   • the DATA types it has to construct, and `timeOf` to compare two
+//     `TimeValue`s — they are `Date | number`, so `.getTime()` does not
+//     typecheck on the union and a consumer that hand-rolled the
+//     normalisation would be a second definition of one number.
+//
+// Everything else geometry.ts exports — the frame, the scales, the band and
+// ribbon path builders, the tick cadences, the width caps — is INTERNAL. It
+// was all exported once, while the API was being settled on the bench, and
+// keeping that open would publish sixty names (`Point`, `Frame`, `Rail`,
+// `bandPath`, `hCurve`, …) into a package this size for no caller. The
+// geometry module still stands alone and still prints as a table; a dev
+// surface that wants it reaches `./geometry` directly, as the scenario board
+// does.
+export { LevelsTimeline, createLevelsTimeline } from "./LevelsTimeline";
+export type {
+  LevelsTimelineDataProps,
+  LevelsTimelineOverrides,
+  LevelsTimelineProps,
+} from "./LevelsTimeline";
+export * from "./variants";
+export { timeOf } from "./geometry";
 export type {
   CountPoint,
-  Dropline,
-  Flag,
   Level,
-  LevelsRailGeometry,
-  Rail,
-  RailSpan,
-  BandRun,
-  EdgePoint,
-  Frame,
-  Hover,
-  LevelRow,
-  FlowBand,
-  Taper,
-  Transfer,
-  MonthTick,
   Mutation,
-  Point,
   TimeDomain,
   TimeValue,
+  Transfer,
 } from "./geometry";

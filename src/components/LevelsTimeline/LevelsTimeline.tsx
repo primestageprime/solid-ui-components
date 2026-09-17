@@ -2,19 +2,19 @@
 // LevelsTimeline — Atomic (Depth 1).
 // Owns CSS (LevelsTimeline.css). Composes no other component.
 //
-// A horizontal time chart of pay LEVELS. Each level is a RAIL at a fixed y —
-// a level does not go anywhere — and what varies along it is its THICKNESS,
-// which is proportional to the headcount holding that level. People moving up
-// are not a step in either line: they are a FLOW, a ribbon running from the
-// source rail to the destination rail at the moment of the move, on the same
-// width scale, so the lower rail visibly thins and the upper one thickens
-// across that x. A level that appears mid-chart is a first hire; a level
-// nobody holds draws nothing at all.
+// A horizontal time chart of LEVELS. Each level is a RAIL at a fixed y — a
+// level does not go anywhere — and what varies along it is its THICKNESS,
+// which is proportional to the COUNT holding that level. A move between
+// levels is not a step in either line: it is a FLOW, a ribbon running from
+// the source rail to the destination rail at the moment of the move, on the
+// same width scale, so the lower rail visibly thins and the upper one
+// thickens across that x. A level that appears mid-chart is an arrival; a
+// level nobody holds draws nothing at all.
 //
 // Two vertical channels, and they never double up. Numbered FLAGS sit above
 // the plot for the CONSUMER's named mutations, each dropping a rule through
-// the whole plot. Every OTHER change — a headcount point, a transfer, a level
-// starting — gets a thin muted dropline instead, so a lone hire on no
+// the whole plot. Every OTHER change — a count point, a transfer, a level
+// starting — gets a thin muted dropline instead, so a lone arrival on no
 // particular date is still visible as an event.
 //
 // This REPLACED a stepped model in which y moved and thickness was constant.
@@ -32,11 +32,18 @@
 // flag number, which is enumerated and short by construction. Nothing else in
 // the plot carries ink — no series labels, no legend, no colour coding. A
 // level is told apart by WHERE IT SITS, and that is deliberate: a per-level
-// colour ramp reads as a ranking, as though one pay level were a better KIND
-// of thing than another, when the only difference between them is height.
+// colour ramp reads as a ranking, as though one level were a better KIND of
+// thing than another, when the only difference between them is height.
 //
-// No size/variant props and no factory: every prop is DATA. The chart fills
-// its container's width and the consumer constrains it, as RateGauge does.
+// No size or variant props: the only presentational prop is `formatValue`,
+// which a curried variant bakes (see `createLevelsTimeline` at the foot of
+// this file and ./variants), so a call site passes data and callbacks only.
+// The chart fills its container's box and the consumer constrains it.
+//
+// The MODEL IS GENERIC — levels with a numeric `value`, counts on each level,
+// and transfers between them. It knows nothing about what a level or a count
+// is a level or a count OF; naming that is the consumer's job, through
+// `Level.label`, `formatValue` and whatever it puts around the chart.
 // ============================================
 import {
   For,
@@ -47,12 +54,15 @@ import {
   createMemo,
   createSignal,
   createUniqueId,
+  mergeProps,
   onCleanup,
   onMount,
 } from "solid-js";
 import {
   AXIS_TICK_LENGTH,
   FLAG_RULE_TOP,
+  Y_LABEL_GAP,
+  Y_TICK_LENGTH,
 
   type Flag,
   type Level,
@@ -74,13 +84,13 @@ import "./LevelsTimeline.css";
 
 export interface LevelsTimelineProps {
   /**
-   * The pay levels, as rails. A level is keyed by its `value`, and `value` IS
-   * its y — so two levels sharing a value are drawn on top of each other. A
+   * The levels, as rails. A level is keyed by its `value`, and `value` IS its
+   * y — so two levels sharing a value are drawn on top of each other. A
    * consumer whose groups can share a figure wants one chart per group, as the
-   * bench does with its three tracks.
+   * showcase does with its three tracks.
    */
   levels: readonly Level[];
-  /** People moving between levels. Drawn as flows. */
+  /** Counts moving between levels. Drawn as flows. */
   transfers?: readonly Transfer[];
   /** The numbered events. Each gets a flag above the plot and a rule through it. */
   mutations: readonly Mutation[];
@@ -90,7 +100,7 @@ export interface LevelsTimelineProps {
    * Pin the y range rather than letting it follow the levels.
    *
    * Without it the scale is derived from the values present, so raising one
-   * person slides every OTHER rail — the range they are all drawn against has
+   * level slides every OTHER rail — the range they are all drawn against has
    * changed. Pin it and a rail moves against a fixed axis, which is what a
    * consumer watching one value move wants. A level outside the pinned range
    * clamps to the edge rather than widening it.
@@ -101,9 +111,9 @@ export interface LevelsTimelineProps {
   /** Provided => the flags become buttons. Omitted => the chart is a readout. */
   onSelectMutation?: (id: string) => void;
   /**
-   * Formatter for the pay figure in the hover readout. The chart never invents
-   * a format — without this the raw number is shown, which is honest but
-   * rarely what a consumer wants.
+   * Formatter for a level's value in the hover readout. The chart never
+   * invents a format — without this the raw number is shown, which is honest
+   * but rarely what a consumer wants.
    */
   formatValue?: (value: number) => string;
   /**
@@ -123,7 +133,7 @@ const EMPTY_TRANSFERS: readonly Transfer[] = [];
  * The graphic's NAME, and it has to stay short: browsers paint an SVG
  * `<title>` as a native tooltip. Anything longer belongs in `<desc>`.
  */
-const SVG_TITLE = "Pay levels timeline";
+const SVG_TITLE = "Levels timeline";
 
 /** The hover readout's own box. Fixed in viewBox units, like all the chrome. */
 const PANEL_PADDING = 5;
@@ -131,29 +141,24 @@ const PANEL_ROW_HEIGHT = 11;
 const PANEL_HEADER_HEIGHT = 15;
 const PANEL_OFFSET = 10;
 const PANEL_MIN_WIDTH = 74;
-/** Clear air between the pay column and the headcount column. */
+/** Clear air between the value column and the count column. */
 const PANEL_COLUMN_GAP = 12;
-/** Enough room for a pay figure plus a headcount, before measurement. */
-
-/** `1 person`, `3 people`. The announcement is prose; it has to read as prose. */
-const headcount = (count: number): string =>
-  count === 1 ? "1 person" : `${count} people`;
 
 /** One level, said out loud: what it starts holding and what it ends holding. */
 const describeLevel = (level: Level): string => {
-  if (level.points.length === 0) return `${level.label}: nobody.`;
+  if (level.points.length === 0) return `${level.label}: empty.`;
   const ordered = sortBy((point) => timeOf(point.at), level.points);
   const first = ordered[0].count;
   const last = ordered[ordered.length - 1].count;
-  if (first === last) return `${level.label}: ${headcount(first)} throughout.`;
-  if (last === 0) return `${level.label}: ${headcount(first)}, ending empty.`;
-  return `${level.label}: ${headcount(first)}, ending at ${last}.`;
+  if (first === last) return `${level.label}: ${first} throughout.`;
+  if (last === 0) return `${level.label}: ${first}, ending empty.`;
+  return `${level.label}: ${first}, ending at ${last}.`;
 };
 
 /**
  * One flow, said out loud, named by its numbered mutation where it has one.
- * A one-ended flow is announced as what it is — a departure or a hire — so a
- * screen reader gets the conservation the picture gets.
+ * A one-ended flow is announced as what it is — a departure or an arrival —
+ * so a screen reader gets the conservation the picture gets.
  */
 const describeTransfer = (
   transfer: Transfer,
@@ -176,7 +181,7 @@ const describeTransfer = (
     if (transfer.to !== undefined) return `joined at ${labelOf(transfer.to)}`;
     return "moved";
   };
-  return `${headcount(transfer.count)} ${what()}${when}.`;
+  return `${transfer.count} ${what()}${when}.`;
 };
 
 export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
@@ -245,6 +250,9 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       domain: props.domain,
       box: box(),
       valueDomain: props.valueDomain,
+      // The axis labels and the hover readout share one formatter, so the
+      // gutter is sized in the same units the reader is shown.
+      formatValue: props.formatValue,
     }),
   );
   const frame = () => geometry().frame;
@@ -256,12 +264,12 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   const isMuted = (flag: Flag): boolean =>
     props.selectedMutationId !== undefined && !isSelected(flag);
 
-  // The announcement has to carry what the picture carries — how many people
-  // hold each level, and who moved where — or the reading is thickness-only,
-  // which is exactly the channel a screen reader cannot see.
+  // The announcement has to carry what the picture carries — what each level
+  // holds, and what moved where — or the reading is thickness-only, which is
+  // exactly the channel a screen reader cannot see.
   const description = () =>
     join(" ", [
-      `Headcount by pay level, ${props.mutations.length} marked mutations.`,
+      `Count by level, ${props.mutations.length} marked mutations.`,
       ...map(describeLevel, props.levels),
       ...map(
         (transfer: Transfer) =>
@@ -285,12 +293,12 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   /**
    * A one-ended flow is the ONLY thing that still needs a gradient, and it is
    * an opacity gradient rather than a colour one: the chart is a single colour
-   * now, so a departure and a hire are the same shape in the same ink and the
-   * fade is all that tells them apart. A departure dissolves out of the
-   * picture, a hire condenses into it.
+   * now, so a departure and an arrival are the same shape in the same ink and
+   * the fade is all that tells them apart. A departure dissolves out of the
+   * picture, an arrival condenses into it.
    */
   const isOpen = (flow: FlowBand): boolean =>
-    flow.kind === "departure" || flow.kind === "hire";
+    flow.kind === "departure" || flow.kind === "arrival";
 
   const flowClass = (flow: FlowBand): string =>
     isContinuation(flow)
@@ -305,16 +313,16 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
   /**
    * There are exactly TWO gradients in this chart, and neither depends on the
-   * data: a fade OUT for a departure and a fade IN for a hire, both in
+   * data: a fade OUT for a departure and a fade IN for an arrival, both in
    * `currentColor`. Giving every flow its own `<linearGradient>` keyed by the
    * flow meant the whole `<defs>` block was rebuilt on every update — and on
-   * the board, where a rail's id follows its pay, that happened on every step
+   * the board, where a rail's id follows its value, that happened on every step
    * of a drag. Two static defs cannot churn.
    */
   const fadeOutId = `${maskId}-fade-out`;
   const fadeInId = `${maskId}-fade-in`;
   const gradientId = (flow: FlowBand): string =>
-    flow.kind === "hire" ? fadeInId : fadeOutId;
+    flow.kind === "arrival" ? fadeInId : fadeOutId;
 
   const flagClass = (flag: Flag, block: string): string =>
     join(" ", [
@@ -383,8 +391,8 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
    * So only the `<text>` nodes are measured, and only their INTRINSIC widths:
    * `getComputedTextLength` is unaffected by where the text was placed or how
    * wide the panel is. Width is then a pure function of the rows — the widest
-   * pay figure, plus the widest headcount, plus the gap between the columns —
-   * and placement is a pure function of that width and the anchor.
+   * value, plus the widest count, plus the gap between the columns — and
+   * placement is a pure function of that width and the anchor.
    *
    * `getComputedTextLength` is absent in jsdom, where every row measures zero
    * and the minimum width stands. That is correct rather than merely safe: a
@@ -403,12 +411,12 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
   const measurePanel = (): void => {
     if (panel === undefined) return;
-    const pay = widthOfTexts(
+    const value = widthOfTexts(
       ".sui-levels-timeline__panel-cell:not(.sui-levels-timeline__panel-cell--count)",
     );
     const count = widthOfTexts(".sui-levels-timeline__panel-cell--count");
     const header = widthOfTexts(".sui-levels-timeline__panel-date");
-    const content = Math.max(header, pay + PANEL_COLUMN_GAP + count);
+    const content = Math.max(header, value + PANEL_COLUMN_GAP + count);
     setPanelWidth(Math.max(PANEL_MIN_WIDTH, content + PANEL_PADDING * 2));
   };
   createEffect(() => {
@@ -429,7 +437,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   const formatValue = (value: number): string =>
     props.formatValue?.(value) ?? String(value);
 
-  /** `1 person` / `3 people`, reused from the announcement. */
+  /** The readout's height: header, one row per live level, and padding. */
   const panelHeight = (rows: number): number =>
     PANEL_HEADER_HEIGHT + rows * PANEL_ROW_HEIGHT + PANEL_PADDING;
 
@@ -480,6 +488,43 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           </linearGradient>
         </defs>
         <g>
+          {/* THE VALUE AXIS, in the left gutter. Its ticks are nice numbers
+              from the value domain and its labels are the consumer's own
+              format — a rail's height IS its value, so without this the
+              reader can see that one rail sits above another and not what
+              either of them is. The gutter's width came from these labels
+              (geometry.ts), which is why the plot starts where it does. */}
+          <g class="sui-levels-timeline__y-axis">
+            <line
+              class="sui-levels-timeline__y-axis-line"
+              x1={frame().plotLeft}
+              x2={frame().plotLeft}
+              y1={frame().plotTop}
+              y2={frame().plotBottom}
+            />
+            <Index each={geometry().yTicks}>
+              {(tick) => (
+                <g class="sui-levels-timeline__y-tick">
+                  <line
+                    x1={frame().plotLeft - Y_TICK_LENGTH}
+                    x2={frame().plotLeft}
+                    y1={tick().y}
+                    y2={tick().y}
+                  />
+                  <text
+                    class="sui-levels-timeline__y-tick-label"
+                    x={frame().plotLeft - Y_TICK_LENGTH - Y_LABEL_GAP}
+                    y={tick().y}
+                    text-anchor="end"
+                    dominant-baseline="central"
+                  >
+                    {tick().label}
+                  </text>
+                </g>
+              )}
+            </Index>
+          </g>
+
           <line
             class="sui-levels-timeline__baseline"
             x1={frame().plotLeft}
@@ -518,7 +563,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
           {/* The un-numbered changes. Thinner and fainter than a flag's rule,
               because they carry no name — they only say "something happened
-              here", which is precisely what a lone hire needs. */}
+              here", which is precisely what a lone arrival needs. */}
           <Index each={geometry().droplines}>
             {(dropline) => (
               <line
@@ -572,7 +617,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             swallow a flag click — the flags sit above `PLOT_TOP`. Transparent
             rather than absent, because an SVG with no fill takes no pointer
             events at all. */}
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: hover readout and an optional date pick on a data surface; the keyboard path to the same information is the flags, which are real buttons, and the announcement, which carries every headcount. */}
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: hover readout and an optional date pick on a data surface; the keyboard path to the same information is the flags, which are real buttons, and the announcement, which carries every count. */}
         <rect
           class={join(" ", [
             "sui-levels-timeline__surface",
@@ -690,5 +735,43 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         </Index>
       </svg>
     </div>
+  );
+};
+
+/**
+ * The one PRESENTATIONAL prop, and the reason there is a factory at all.
+ *
+ * A value's format is the chart's own editorial voice, not the consumer's
+ * data: it never varies between two renders of the same chart, so it is
+ * exactly the thing to bake once at definition time rather than repeat at
+ * every call site. Everything else the chart takes is data or a callback.
+ *
+ * `cadence` is NOT here on purpose. It is derived from the span (`axisTicks`)
+ * and no caller has ever wanted to contradict it, so it is not modelled as
+ * configurable at all — see `docs/adr/` and STYLE_GUIDE's minimal variant
+ * surface.
+ */
+export type LevelsTimelineOverrides = Pick<LevelsTimelineProps, "formatValue">;
+
+/** What a curried variant's call site still supplies: data and callbacks. */
+export type LevelsTimelineDataProps = Omit<
+  LevelsTimelineProps,
+  keyof LevelsTimelineOverrides
+>;
+
+/**
+ * Factory for a curried timeline. Call sites of the returned component pass
+ * data only — levels, transfers, mutations, the spans, selection and the two
+ * callbacks — and never a format.
+ *
+ * @example
+ * const MoneyLevelsTimeline = createLevelsTimeline({ formatValue: asDollars });
+ * // call site: <MoneyLevelsTimeline levels={levels} mutations={m} domain={d} />
+ */
+export const createLevelsTimeline = (
+  defaults: LevelsTimelineOverrides,
+): Component<LevelsTimelineDataProps> => {
+  return (props) => (
+    <LevelsTimeline {...(mergeProps(defaults, props) as LevelsTimelineProps)} />
   );
 };

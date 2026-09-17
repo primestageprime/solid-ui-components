@@ -543,6 +543,37 @@ State derivation:
     <CompletionTimeline completions={completions} windowHours={8} />
     ```
 
+## LevelsTimeline
+- **LevelsTimeline** — Atomic (Depth 1). Owns `LevelsTimeline.css`; composes no other component. A horizontal time chart of **levels**: each level is a RAIL at a fixed y — `value` IS its y, on a real value axis — and what varies along it is its THICKNESS, which is the COUNT holding that level. A count moving between two levels is not a step in either rail: it is a Sankey-style FLOW, a ribbon leaving one band's cap and arriving at another's on the same width scale, so the lower rail visibly thins as the upper one thickens. One-ended flows are conservation made visible — `from` only is a DEPARTURE (fades out), `to` only an ARRIVAL (fades in) — so no rail ever thins silently. A rail nothing happened to is bridged by a CONTINUATION painted exactly like the band, so a join the chart made for its own reasons never reads as an event.
+  - **The model is generic.** Levels with a numeric `value`, counts, and transfers between them: the component holds no domain nouns, no units and no currency. What a count is a count OF is named by the consumer, through `Level.label`, `formatValue` and whatever sits around the chart. The announcement is generic too ("Count by level, N marked mutations").
+  - **Two vertical channels, and they never double up.** Numbered FLAGS above the plot for the consumer's `mutations`, each dropping a rule through it; every OTHER change — a count point, a transfer, a level starting — gets a thin muted dropline, so a lone arrival on no particular date is still visible as an event. Provide `onSelectMutation` and the flags become real buttons (Enter/Space, focus ring); omit it and the chart is a readout that advertises no control.
+  - **A visible value axis**, in a left gutter: nice ticks (1/2/5 × 10^k) from the value domain, labelled with the consumer's own `formatValue`, and the gutter's width is derived from the longest of those labels — capped at a fifth of the canvas so a long format cannot collapse the plot. The nicing comes from `Chart/scales`' `linearScale().ticks()` rather than a second implementation (ADR 0010: one core, adapters per context), exactly as the month axis comes from `DateAxis`' `monthlyCells`. Compact chrome thins to fewer ticks.
+  - **A band is never thicker than 10px** (`MAX_BAND_PX`, viewBox units are px here) and is **centred on its value**: top and bottom are equidistant from `y(value)`, so a rail thickening never appears to move. Thickness stays exactly proportional below the ceiling — `count × perCount`, no floor — so `bandWidth(a) − bandWidth(c) === bandWidth(a − c)` for every a and c, which is what lets a ribbon's ends BE slices of the caps it joins.
+  - Key props: `levels` (`readonly Level[]` — `id`, `label`, `value`, `points`), `transfers?`, `mutations`, `domain` (`TimeDomain`, the consumer's visible span, never derived), `valueDomain?` (pin the y range instead of deriving it, so rails hold still while one value moves; a level outside it clamps rather than widening it — a DERIVED range is nicened out to whole ticks, a PINNED one is left exactly as given), `selectedMutationId?`, `onSelectMutation?`, `formatValue?`, `onPick?` (a click reports the month under the pointer; turning that into anything is the consumer's business, and a flag click never fires it).
+  - **Responsive with no size prop**: fills its container's box at one unit per CSS pixel, rebuilding its viewBox from the measured box; in ordinary flow the height comes from the width via `aspect-ratio`. Below the height at which full chrome would leave the plot unreadable it switches to COMPACT chrome — the axis collapses to one thinned tick row and the flags overlay the plot's top — rather than shrinking the plot.
+  - Factory: `createLevelsTimeline({ formatValue })` — the format is the one presentational prop and curries once at the consumer's design-system layer. Curried variant: **`LevelsRailChart`** — plain numbers, the form to reach for before units are decided. Exported: `LevelsTimeline` (the base component, kept published for live consumers), `LevelsTimelineProps`, `LevelsTimelineOverrides`, `LevelsTimelineDataProps`, the data types `Level`, `CountPoint`, `Transfer`, `Mutation`, `TimeDomain`, `TimeValue`, and `timeOf` (the only way to compare two `TimeValue`s, which are `Date | number`). `geometry.ts` is deliberately private: every number the chart paints is decided there, it is pure, and it prints as a table (`geometry.test.ts`) — headless observation before the GUI. Uses `--sui-accent`, `--sui-border`, `--sui-text-primary`, `--sui-text-muted`, `--sui-bg-elevated`. Use for: a ladder of numeric levels whose POPULATION moves over time — a pay ladder, a tier of accounts, a grade band. For one value's own trajectory use `CashflowScrubChart` or `BurndownChart`; for a value against a reference right now, `RateGauge`.
+  - Example:
+    ```tsx
+    import { createLevelsTimeline } from "solid-ui-components";
+
+    // Curry the format ONCE, at your design-system layer.
+    const MoneyLevelsTimeline = createLevelsTimeline({
+      formatValue: (value) => `$${value / 1000}k`,
+    });
+
+    // Every call site is data and callbacks only.
+    <MoneyLevelsTimeline
+      levels={levels()}
+      transfers={transfers()}
+      mutations={mutations()}
+      domain={[new Date("2025-01-01"), new Date("2030-01-01")]}
+      valueDomain={[0, 20000]}
+      selectedMutationId={selected()}
+      onSelectMutation={setSelected}
+      onPick={(at) => addFlagAt(at)}
+    />
+    ```
+
 ## Alarm
 - **Alarm** — Composite (Depth 2). A family of chart-overlay renderers plus a pure pipeline for turning raw time-series points into "alarm" overlays inside a `<Chart>`. Three layers: (1) pure helpers in `alarm.ts`, (2) base SVG renderers, (3) the curried `AlarmOverlay`. Core types: `Pt` (`{ x: number; y: number }`), `Range` (`{ start: number; end: number }`), `HotZone` (`Range & { count: number }`). Use for: marking regions of a chart where a signal crosses a threshold — smooth translucent bands for normal alarms, striped "barcode" blocks with `×N` badges for dense clusters, with per-series lane subdivision when multiple channels share a panel.
   - **AlarmOverlay** — curried one-call overlay. Props: `series` (`readonly AlarmSeries[]`, each `{ data: readonly Pt[]; threshold: number }`), `padFraction?` (fraction of x-domain to widen each range, default `0`), `depthThreshold?` (absolute concurrent-range count above which a region collapses to a striped block, default `5`), `patternId?`. Reads the chart x-domain from `useChart()` context; runs `detectRanges → padRanges → findHotZones → subtractZones → clampRanges` per series and emits `AlarmStripeDefs` + `AlarmBands` + `AlarmHotZones` in lanes. Exported types `AlarmOverlayProps`, `AlarmSeries`.

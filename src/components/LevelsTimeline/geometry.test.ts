@@ -18,11 +18,10 @@ import {
   FILL_FRACTION,
   MAX_TRANSITION,
   PLOT_BOTTOM,
-  MIN_PER_PERSON,
+  MIN_PER_COUNT,
   MIN_PLOT_FRACTION,
   MIN_VIEW_HEIGHT,
   MIN_VIEW_WIDTH,
-  SOLO_BAND_FRACTION,
   frameFor,
   frameForBox,
   viewHeightFor,
@@ -60,23 +59,31 @@ import {
   timeAtX,
   maxCountIn,
   monthTicks,
-  peakHeadcount,
-  perPersonWidth,
+  MAX_BAND_PX,
+  MAX_GUTTER_FRACTION,
+  COMPACT_Y_TICK_TARGET,
+  gutterWidth,
+  maxBandWidth,
+  niceValueDomain,
+  peakTotal,
+  perCountWidth,
   quarterLabelOf,
   quarterTicks,
   railRuns,
   railSpans,
-  soloWidth,
   spanBottom,
   spanTop,
   taperHalves,
   timeOf,
   transitionHalf,
   transitionWidth,
+  valueDomainFor,
   valueDomainOf,
+  valueTicks,
   xScaleFor,
   yScaleFor,
 } from "./geometry";
+import type { Frame, ValueTick } from "./geometry";
 
 const utc = (iso: string): Date => new Date(iso);
 
@@ -139,11 +146,11 @@ const TRANSFERS: readonly Transfer[] = [
 const round = (n: number): number => Math.round(n * 1000) / 1000;
 
 /** The change xs this fixture produces — what the transition half is sized from. */
-const changeXs = (): readonly number[] => {
+const changeXs = (frame: Frame = geometryOf().frame): readonly number[] => {
   const x = (time: number) =>
-    PLOT_LEFT +
+    frame.plotLeft +
     ((time - timeOf(DOMAIN[0])) / (timeOf(DOMAIN[1]) - timeOf(DOMAIN[0]))) *
-      (PLOT_RIGHT - PLOT_LEFT);
+      (frame.plotRight - frame.plotLeft);
   return map(x, changeTimes(LEVELS, TRANSFERS));
 };
 
@@ -167,8 +174,9 @@ describe("xScaleFor", () => {
   it("puts the domain ends on the plot edges and clamps outside it", () => {
     const geometry = geometryOf();
     const spans = geometry.rails[0].spans;
-    expect(spans[0].x1).toBe(PLOT_LEFT);
-    expect(spans[spans.length - 1].x2).toBe(PLOT_RIGHT);
+    // The plot's left edge is the value axis' gutter, not the bare margin.
+    expect(spans[0].x1).toBe(geometry.frame.plotLeft);
+    expect(spans[spans.length - 1].x2).toBe(geometry.frame.plotRight);
     expect(typeof x).toBe("function");
   });
 });
@@ -176,7 +184,7 @@ describe("xScaleFor", () => {
 describe("valueDomainOf and yScaleFor", () => {
   it("is the levels' own range, mapped into the plot MINUS its inset", () => {
     // The inset is a fraction of the PLOT, not of the value span, so the
-    // headroom is there whatever the consumer's pay figures happen to be.
+    // headroom is there whatever the consumer's values happen to be.
     const [lo, hi] = valueDomainOf(LEVELS);
     expect([lo, hi]).toEqual([5000, 10000]);
     expect(yScaleFor([lo, hi])(hi)).toBeCloseTo(PLOT_TOP + DEFAULT_FRAME.bandInset, 6);
@@ -216,7 +224,7 @@ describe("axisTicks", () => {
 
   it("switches to QUARTERS from one year — month labels stop fitting", () => {
     // Twelve `Jan`-width labels fit; twelve `2026-Q1`-width ones do not, and
-    // quarters are what a reader of a pay timeline thinks in anyway.
+    // quarters are what a reader of a multi-year span thinks in anyway.
     const ticks = axisTicks(DOMAIN, (at) => timeOf(at) / 1e12);
     expect(map((tick) => tick.label, ticks)).toEqual([
       "2025-Q1",
@@ -264,15 +272,15 @@ describe("axisTicks", () => {
 
 // ── the width scale, and its two caps ────────────────────────────────────────
 
-describe("peakHeadcount", () => {
-  it("is the largest TOTAL headcount at any one moment", () => {
+describe("peakTotal", () => {
+  it("is the largest TOTAL at any one moment", () => {
     // Not the biggest single level: it is all the bands together that occupy
     // the plot, so the peak is what the fill width is sized from.
-    expect(peakHeadcount(LEVELS)).toBe(12);
+    expect(peakTotal(LEVELS)).toBe(12);
   });
 
   it("is zero for an empty chart rather than -Infinity", () => {
-    expect(peakHeadcount([])).toBe(0);
+    expect(peakTotal([])).toBe(0);
   });
 });
 
@@ -291,7 +299,7 @@ describe("maxCountIn", () => {
   });
 });
 
-describe("perPersonWidth — the smaller of two answers", () => {
+describe("perCountWidth — the smallest of the caps", () => {
   const yScale = yScaleFor(valueDomainOf(LEVELS));
 
   it("fills a good fraction of the plot at the busiest moment", () => {
@@ -315,21 +323,46 @@ describe("perPersonWidth — the smaller of two answers", () => {
     ];
     const scale = yScaleFor(valueDomainOf(two));
     expect(edgeWidth(two, scale, DEFAULT_FRAME)).toBeLessThan(fillWidth(2, DEFAULT_FRAME));
-    const perPerson = perPersonWidth(two, scale, 2, DEFAULT_FRAME);
+    const perCount = perCountWidth(two, scale, 2, DEFAULT_FRAME);
     for (const level of two) {
-      const half = bandWidth(2, perPerson) / 2;
+      const half = bandWidth(2, perCount) / 2;
       expect(scale(level.value) - half).toBeGreaterThanOrEqual(PLOT_TOP);
       expect(scale(level.value) + half).toBeLessThanOrEqual(PLOT_BOTTOM);
     }
   });
 
-  it("takes whichever of the three caps binds", () => {
-    const perPerson = perPersonWidth(LEVELS, yScale, 12, DEFAULT_FRAME);
-    expect(perPerson).toBe(
+  it("takes whichever cap binds — here the ten-px ceiling", () => {
+    const perCount = perCountWidth(LEVELS, yScale, 12, DEFAULT_FRAME);
+    expect(perCount).toBe(
       Math.min(
+        maxBandWidth(LEVELS),
         fillWidth(12, DEFAULT_FRAME),
         adjacencyWidth(LEVELS, yScale),
         edgeWidth(LEVELS, yScale, DEFAULT_FRAME),
+      ),
+    );
+    expect(perCount).toBe(maxBandWidth(LEVELS));
+  });
+
+  it("lets a proportional cap bind when it is tighter than the ceiling", () => {
+    // Two levels a hair apart on a wide axis: the adjacency cap comes out
+    // well under `MAX_BAND_PX`, and it is the one that decides the width.
+    const tight: readonly Level[] = [
+      { id: "a", label: "A", value: 8000, points: [{ at: 0, count: 1 }] },
+      { id: "b", label: "B", value: 8060, points: [{ at: 0, count: 1 }] },
+      { id: "c", label: "C", value: 20000, points: [{ at: 0, count: 1 }] },
+    ];
+    const scale = yScaleFor(valueDomainOf(tight));
+    const perCount = perCountWidth(tight, scale, 3, DEFAULT_FRAME);
+    expect(perCount).toBeLessThan(maxBandWidth(tight));
+    expect(perCount).toBe(
+      Math.max(
+        MIN_PER_COUNT,
+        Math.min(
+          fillWidth(3, DEFAULT_FRAME),
+          adjacencyWidth(tight, scale),
+          edgeWidth(tight, scale, DEFAULT_FRAME),
+        ),
       ),
     );
   });
@@ -340,8 +373,8 @@ describe("perPersonWidth — the smaller of two answers", () => {
     );
   });
 
-  it("has NO floor — one person is wide because the scale is wide", () => {
-    // The old affine scale needed a MIN_STROKE so one person stayed visible.
+  it("has NO floor — a count of one is wide because the scale is wide", () => {
+    // The old affine scale needed a MIN_STROKE so a count of one stayed visible.
     // A floor cannot be conserved, and it is not needed now.
     expect(bandWidth(0, 7.391)).toBe(0);
     expect(bandWidth(1, 7.391)).toBe(7.391);
@@ -350,7 +383,7 @@ describe("perPersonWidth — the smaller of two answers", () => {
 
 describe("bandWidth — conservation is exact and unconditional", () => {
   it("holds for every pair, INCLUDING a rail emptying to nothing", () => {
-    const perPerson = 7.391;
+    const perCount = 7.391;
     for (const [before, moving] of [
       [5, 3],
       [4, 1],
@@ -358,8 +391,8 @@ describe("bandWidth — conservation is exact and unconditional", () => {
       [2, 2],
       [1, 1],
     ]) {
-      expect(round(bandWidth(before, perPerson) - bandWidth(moving, perPerson))).toBe(
-        round(bandWidth(before - moving, perPerson)),
+      expect(round(bandWidth(before, perCount) - bandWidth(moving, perCount))).toBe(
+        round(bandWidth(before - moving, perCount)),
       );
     }
   });
@@ -381,13 +414,15 @@ describe("railSpans", () => {
     // Five change moments, and l6 is alive through all of them.
     expect(l6.spans).toHaveLength(5);
     const gap = l6.spans[1].x1 - l6.spans[0].x2;
-    expect(round(gap)).toBe(round(2 * transitionHalf(changeXs())));
+    expect(round(gap)).toBe(
+      round(2 * transitionHalf(changeXs(geometry.frame), geometry.frame)),
+    );
   });
 
   it("runs flush to the plot edges, which are not changes", () => {
     const spans = geometry.rails[1].spans;
-    expect(spans[0].x1).toBe(PLOT_LEFT);
-    expect(spans[spans.length - 1].x2).toBe(PLOT_RIGHT);
+    expect(spans[0].x1).toBe(geometry.frame.plotLeft);
+    expect(spans[spans.length - 1].x2).toBe(geometry.frame.plotRight);
   });
 
   it("keeps a rail at ONE y — a level does not move, its thickness does", () => {
@@ -395,7 +430,7 @@ describe("railSpans", () => {
     expect(new Set(map((span: RailSpan) => span.y, l7.spans)).size).toBe(1);
   });
 
-  it("thins where people leave and thickens where they arrive", () => {
+  it("thins where counts leave and thickens where they arrive", () => {
     const [before, after] = geometry.rails[1].spans;
     expect(after.width).toBeLessThan(before.width);
     const l7 = geometry.rails[2].spans;
@@ -453,7 +488,7 @@ describe("adjacent bands never overlap", () => {
   const geometry = geometryOf();
 
   it("leaves clear air between every pair of bands at every change", () => {
-    // Straight at the invariant: at every moment, take each level's headcount,
+    // Straight at the invariant: at every moment, take each level's count,
     // give it the band it would be drawn with, and check that no two of them
     // touch. Nothing about spans or paths — just the widths and the y's.
     for (const time of changeTimes(LEVELS, TRANSFERS)) {
@@ -462,7 +497,7 @@ describe("adjacent bands never overlap", () => {
         map((rail: Rail) => {
           const level = find((one: Level) => one.id === rail.id, LEVELS);
           const half =
-            bandWidth(countAt(level as Level, time), geometry.perPerson) / 2;
+            bandWidth(countAt(level as Level, time), geometry.perCount) / 2;
           return { top: rail.y - half, bottom: rail.y + half };
         }, geometry.rails),
       );
@@ -554,7 +589,7 @@ describe("railRuns", () => {
 
   it("ends BLUNT — a rail that starts mid-plot does not taper to a point", () => {
     // It is the ribbon that carries the change, not the rail's shape. A rail
-    // tapering in would say the headcount grew when it did not.
+    // tapering in would say the count grew when it did not.
     const l8 = geometry.rails[3];
     const start = l8.spans[0];
     const d = l8.runs[0].path;
@@ -610,12 +645,16 @@ describe("flowBands", () => {
 
   it("spans a transition centred on the change, not a bare vertical", () => {
     const [first] = moves();
-    expect(first.x1 - first.x0).toBeCloseTo(2 * transitionHalf(changeXs()), 9);
+    const frame = geometryOf().frame;
+    expect(first.x1 - first.x0).toBeCloseTo(
+      2 * transitionHalf(changeXs(frame), frame),
+      9,
+    );
   });
 
   it("roots in the bands it joins, and is as wide as what moved", () => {
     const [first] = moves();
-    const expected = bandWidth(2, geometry.perPerson);
+    const expected = bandWidth(2, geometry.perCount);
     expect(round(first.srcBottom - first.srcTop)).toBe(round(expected));
     expect(round(first.dstBottom - first.dstTop)).toBe(round(expected));
   });
@@ -636,7 +675,7 @@ describe("flowBands", () => {
   });
 });
 
-describe("one-ended flows — departures and hires", () => {
+describe("one-ended flows — departures and arrivals", () => {
   /** Transfers only — the carry is tested in its own suite. */
   const flowsFor = (transfers: readonly Transfer[]) =>
     filter(
@@ -652,9 +691,9 @@ describe("one-ended flows — departures and hires", () => {
     expect(leaving.toId).toBeUndefined();
   });
 
-  it("runs a hire into its destination, with no source named", () => {
+  it("runs an arrival into its destination, with no source named", () => {
     const [joining] = flowsFor([{ at: utc("2025-07-01"), to: "l7", count: 1 }]);
-    expect(joining.kind).toBe("hire");
+    expect(joining.kind).toBe("arrival");
     expect(joining.fromId).toBeUndefined();
     expect(joining.toId).toBe("l7");
   });
@@ -687,7 +726,7 @@ describe("one-ended flows — departures and hires", () => {
 });
 
 describe("the fan — several flows out of one rail at one moment", () => {
-  // The stress case: four people leaving one level for four destinations on
+  // The stress case: a count of four leaving one level for four destinations on
   // one date. The roots must tile the band's edge in destination order, or the
   // ribbons cross each other at the root.
   const fanLevels: readonly Level[] = [
@@ -701,20 +740,20 @@ describe("the fan — several flows out of one rail at one moment", () => {
       ],
     },
     ...map(
-      (pay: number) => ({
-        id: `c${pay}`,
-        label: `$${pay / 1000}k`,
-        value: pay,
+      (figure: number) => ({
+        id: `c${figure}`,
+        label: `L${figure / 1000}`,
+        value: figure,
         points: [{ at: utc("2025-06-01"), count: 1 }],
       }),
       [6500, 7000, 7500, 8000],
     ),
   ];
   const fanTransfers: readonly Transfer[] = map(
-    (pay: number) => ({
+    (figure: number) => ({
       at: utc("2025-06-01"),
       from: "c6",
-      to: `c${pay}`,
+      to: `c${figure}`,
       count: 1,
     }),
     [6500, 7000, 7500, 8000],
@@ -749,7 +788,7 @@ describe("the fan — several flows out of one rail at one moment", () => {
     const first = byRoot[0];
     const last = byRoot[byRoot.length - 1];
     expect(round(last.srcBottom - first.srcTop)).toBe(
-      round(bandWidth(4, geometry.perPerson)),
+      round(bandWidth(4, geometry.perCount)),
     );
   });
 });
@@ -812,10 +851,10 @@ describe("levelsRailGeometry — the whole observation", () => {
   it("prints the table a reader checks the shape against", () => {
     const yScale = yScaleFor(geometry.yDomain);
     console.table([
-      { field: "peak headcount", value: geometry.peak },
+      { field: "peak total", value: geometry.peak },
       { field: "fill width", value: round(fillWidth(geometry.peak, geometry.frame)) },
       { field: "adjacency width", value: round(adjacencyWidth(LEVELS, yScale)) },
-      { field: "perPerson (the smaller)", value: round(geometry.perPerson) },
+      { field: "perCount (the smaller)", value: round(geometry.perCount) },
       { field: "transition", value: transitionWidth() },
     ]);
     console.table(
@@ -879,7 +918,7 @@ describe("levelsRailGeometry — the whole observation", () => {
 // picture may float.
 // ============================================
 
-/** The board's shape: one person per level, so whole bands move. */
+/** A count of one per level, so whole bands move. */
 const BOARD_LEVELS: readonly Level[] = [
   {
     id: "L2",
@@ -998,7 +1037,7 @@ describe("flush joins", () => {
   }
 
   it("makes a whole band that moves the SAME SHAPE as its ribbon's root", () => {
-    // The board's common case, and where it failed visibly: one person on the
+    // The tight case, and where it failed visibly: a count of one on the
     // level, so the band does not thin — it ends, and the ribbon IS its
     // continuation. Root and cap must be the same two numbers.
     const geometry = levelsRailGeometry({
@@ -1040,7 +1079,7 @@ describe("continuations — a rail nothing happened to must not read as dashed",
   const geometry = geometryOf();
 
   it("marks a cap where nothing left and nothing arrived as a CONTINUATION", () => {
-    // l5 holds 3 people across the 2025-04 change, which belongs to l6 and l7.
+    // l5 holds 3 across the 2025-04 change, which belongs to l6 and l7.
     // It is split there only because the chart splits every rail at every
     // change; nothing happened to IT.
     const at = changeXs()[1];
@@ -1156,21 +1195,21 @@ describe("fill-height", () => {
       domain: DOMAIN,
       viewHeight: MIN_VIEW_HEIGHT,
     });
-    expect(geometry.perPerson).toBeGreaterThan(0);
-    expect(geometry.perPerson).toBeLessThan(
+    expect(geometry.perCount).toBeGreaterThan(0);
+    expect(geometry.perCount).toBeLessThan(
       levelsRailGeometry({
         levels: LEVELS,
         transfers: TRANSFERS,
         mutations: MUTATIONS,
         domain: DOMAIN,
         viewHeight: 480,
-      }).perPerson,
+      }).perCount,
     );
   });
 });
 
 describe("levelsAt — the hover readout's rows", () => {
-  it("is every level holding anybody, highest pay first", () => {
+  it("is every level holding anything, highest value first", () => {
     const rows = levelsAt(LEVELS, utc("2025-08-01"));
     expect(map((row: LevelRow) => row.label, rows)).toEqual([
       "L8",
@@ -1187,7 +1226,7 @@ describe("levelsAt — the hover readout's rows", () => {
     expect(map((row: LevelRow) => row.label, rows)).not.toContain("L8");
   });
 
-  it("carries the pay through unformatted — that is the consumer's", () => {
+  it("carries the value through unformatted — that is the consumer's", () => {
     const [top] = levelsAt(LEVELS, utc("2025-08-01"));
     expect(top.value).toBe(10000);
   });
@@ -1266,12 +1305,12 @@ describe("hoverAt", () => {
 });
 
 describe("compact chrome — the board's short cell", () => {
-  /** The board's shape: seven levels across three bands, one person each. */
+  /** Seven levels across three bands, a count of one each. */
   const BOARD: readonly Level[] = map(
-    (pay: number) => ({
-      id: `L${pay}`,
-      label: `L${pay}`,
-      value: pay,
+    (figure: number) => ({
+      id: `L${figure}`,
+      label: `L${figure}`,
+      value: figure,
       points: [{ at: utc("2025-01-01"), count: 1 }],
     }),
     [2000, 3000, 4000, 6000, 7000, 9000, 10000],
@@ -1291,7 +1330,7 @@ describe("compact chrome — the board's short cell", () => {
       box: { width: 800, height: 156 },
     });
     expect(geometry.frame.compact).toBe(true);
-    expect(geometry.perPerson).toBeGreaterThan(0);
+    expect(geometry.perCount).toBeGreaterThan(0);
     expect(geometry.rails).toHaveLength(7);
     for (const rail of geometry.rails) {
       expect(rail.spans.length).toBeGreaterThan(0);
@@ -1307,10 +1346,10 @@ describe("compact chrome — the board's short cell", () => {
     // Tightly-stacked levels in a short plot: the caps may say there is no
     // room, and the answer is still a visible band, not an invisible one.
     const tight: readonly Level[] = map(
-      (pay: number) => ({
-        id: `t${pay}`,
-        label: `t${pay}`,
-        value: pay,
+      (figure: number) => ({
+        id: `t${figure}`,
+        label: `t${figure}`,
+        value: figure,
         points: [{ at: utc("2025-01-01"), count: 1 }],
       }),
       [1000, 1010, 1020, 1030, 1040, 1050],
@@ -1322,7 +1361,7 @@ describe("compact chrome — the board's short cell", () => {
       domain: DOMAIN,
       box: { width: 2202, height: 116 },
     });
-    expect(geometry.perPerson).toBeGreaterThanOrEqual(MIN_PER_PERSON);
+    expect(geometry.perCount).toBeGreaterThanOrEqual(MIN_PER_COUNT);
     for (const rail of geometry.rails) {
       for (const span of rail.spans) expect(span.width).toBeGreaterThan(0);
     }
@@ -1424,43 +1463,40 @@ describe("frameForBox — one unit is one CSS pixel", () => {
   });
 });
 
-describe("a lone rail must read as a rail, not a slab", () => {
-  // The board's opening frame: two engineers on the same pay is ONE level,
-  // and it is the case the levels model is meant to show best.
+describe("a band is never thicker than MAX_BAND_PX", () => {
+  // This describe was the SOLO cap's (b9fa493: "a lone rail is a rail, not a
+  // wall"). That cap was a fraction of the plot and could never bind below
+  // 14 units per head; the absolute ten-px ceiling replaced it, and these
+  // tests now pin the ceiling — which is the behaviour they always meant.
   const SOLO: readonly Level[] = [
     {
-      id: "engineer-80000",
-      label: "$80k",
+      id: "one",
+      label: "One",
       value: 80000,
       points: [{ at: utc("2025-01-01"), count: 2 }],
     },
   ];
   const BOX = { width: 1329, height: 188 };
 
+  const soloGeometry = (levels: readonly Level[] = SOLO) =>
+    levelsRailGeometry({
+      levels,
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+      box: BOX,
+    });
+
   it("does not let one level absorb the whole fill allowance", () => {
     // Before: `fillWidth` grants the PEAK 60% of the plot, and with a single
     // level that one band took all of it — 103 units in a 172-unit plot.
-    const geometry = levelsRailGeometry({
-      levels: SOLO,
-      transfers: [],
-      mutations: [],
-      domain: DOMAIN,
-      box: BOX,
-    });
-    const span = geometry.rails[0].spans[0];
-    const share = span.width / geometry.frame.plotHeight;
-    expect(share).toBeLessThanOrEqual(SOLO_BAND_FRACTION + 0.001);
-    expect(share).toBeGreaterThan(0.1);
+    const span = soloGeometry().rails[0].spans[0];
+    expect(span.width).toBeLessThanOrEqual(MAX_BAND_PX + 0.001);
+    expect(span.width).toBeGreaterThan(0);
   });
 
   it("leaves air above and below it", () => {
-    const geometry = levelsRailGeometry({
-      levels: SOLO,
-      transfers: [],
-      mutations: [],
-      domain: DOMAIN,
-      box: BOX,
-    });
+    const geometry = soloGeometry();
     const span = geometry.rails[0].spans[0];
     const frame = geometry.frame;
     expect(spanTop(span) - frame.plotTop).toBeGreaterThan(20);
@@ -1468,8 +1504,8 @@ describe("a lone rail must read as a rail, not a slab", () => {
   });
 
   it("still thickens in proportion as the level fills up", () => {
-    // The cap divides by the same peak, so relative thickness over time is
-    // untouched: two of a five-person peak is still two fifths of the band.
+    // The ceiling divides by the same peak count, so relative thickness over
+    // time is untouched: two of a peak of five is still two fifths.
     const growing: readonly Level[] = [
       {
         id: "one",
@@ -1481,60 +1517,181 @@ describe("a lone rail must read as a rail, not a slab", () => {
         ],
       },
     ];
-    const geometry = levelsRailGeometry({
-      levels: growing,
-      transfers: [],
-      mutations: [],
-      domain: DOMAIN,
-      box: BOX,
-    });
-    const [first, last] = geometry.rails[0].spans;
+    const [first, last] = soloGeometry(growing).rails[0].spans;
     expect(round(last.width / first.width)).toBe(round(5 / 2));
+    expect(last.width).toBeLessThanOrEqual(MAX_BAND_PX + 0.001);
   });
 
-  it("CANNOT touch a chart that has a stack — it is Infinity there", () => {
-    // The guard that makes this safe: every layout that already looked right
-    // is unaffected, because the cap does not exist for them.
-    const frame = frameForBox(BOX);
-    expect(soloWidth(LEVELS, frame)).toBe(Number.POSITIVE_INFINITY);
-    expect(soloWidth(SOLO, frame)).toBeLessThan(Number.POSITIVE_INFINITY);
-  });
-
-  it("leaves FOUR evenly-spread levels exactly as they were", () => {
-    // The proof that this cannot regress a chart that already looked right:
-    // the same levels, laid out with the cap in play and with it forced out
-    // of the way, give byte-identical spans.
-    const four: readonly Level[] = map(
-      (pay: number) => ({
-        id: `p${pay}`,
-        label: `$${pay / 1000}k`,
-        value: pay,
-        points: [{ at: utc("2025-01-01"), count: 2 }],
+  it("holds for a STACK, and for counts far too high to fit", () => {
+    // The ceiling is per BAND, so the fattest band on the chart is the one
+    // that touches it — whatever the rest of the stack is doing.
+    const crowded: readonly Level[] = map(
+      (figure: number) => ({
+        id: `p${figure}`,
+        label: `L${figure / 1000}`,
+        value: figure,
+        points: [{ at: utc("2025-01-01"), count: 40 }],
       }),
       [60000, 70000, 80000, 90000],
     );
+    const widths = flatMap(
+      (rail: { spans: readonly RailSpan[] }) =>
+        map((span: RailSpan) => span.width, rail.spans),
+      soloGeometry(crowded).rails,
+    );
+    expect(widths.length).toBeGreaterThan(0);
+    for (const width of widths) {
+      expect(width).toBeLessThanOrEqual(MAX_BAND_PX + 0.001);
+    }
+  });
+
+  it("is the cap that binds, not one of the proportional three", () => {
     const frame = frameForBox(BOX);
-    const yScale = yScaleFor(valueDomainOf(four), frame);
-    expect(soloWidth(four, frame)).toBe(Number.POSITIVE_INFINITY);
-    // …so the chosen width is whatever the other three caps said, untouched.
-    expect(perPersonWidth(four, yScale, peakHeadcount(four), frame)).toBe(
+    const yScale = yScaleFor(valueDomainOf(SOLO), frame);
+    expect(maxBandWidth(SOLO)).toBe(MAX_BAND_PX / 2);
+    expect(perCountWidth(SOLO, yScale, peakTotal(SOLO), frame)).toBe(
+      maxBandWidth(SOLO),
+    );
+    expect(maxBandWidth(SOLO)).toBeLessThan(
       Math.min(
-        fillWidth(peakHeadcount(four), frame),
-        adjacencyWidth(four, yScale),
-        edgeWidth(four, yScale, frame),
+        fillWidth(peakTotal(SOLO), frame),
+        adjacencyWidth(SOLO, yScale),
+        edgeWidth(SOLO, yScale, frame),
       ),
     );
   });
 
-  it("counts only levels anybody HOLDS — empties do not make a stack", () => {
-    const frame = frameForBox(BOX);
+  it("counts only levels anybody HOLDS — an empty level has no band", () => {
     const withGhosts: readonly Level[] = [
       ...SOLO,
       { id: "ghost", label: "Ghost", value: 90000, points: [] },
     ];
-    expect(soloWidth(withGhosts, frame)).toBeLessThan(
-      Number.POSITIVE_INFINITY,
+    expect(maxBandWidth(withGhosts)).toBe(maxBandWidth(SOLO));
+  });
+
+  it("centres every band on its own value", () => {
+    // Peter, 2026-09-16: "The ribbons should be centered on the correct
+    // amounts." A band's top and bottom are equidistant from y(value), so a
+    // rail thickening never appears to move.
+    const geometry = soloGeometry(LEVELS);
+    for (const rail of geometry.rails) {
+      for (const span of rail.spans) {
+        expect(round(rail.y - spanTop(span))).toBe(
+          round(spanBottom(span) - rail.y),
+        );
+        expect(round(span.y)).toBe(round(rail.y));
+      }
+    }
+  });
+});
+
+describe("the value axis", () => {
+  const BOX = { width: 1329, height: 188 };
+  const geometryWith = (
+    valueDomain?: readonly [number, number],
+    box: { width: number; height: number } = BOX,
+  ) =>
+    levelsRailGeometry({
+      levels: LEVELS,
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+      box,
+      valueDomain,
+      formatValue: (value: number) => `$${value / 1000}k`,
+    });
+
+  it("puts every tick inside the value domain, in order", () => {
+    const geometry = geometryWith();
+    const [lo, hi] = geometry.yDomain;
+    expect(geometry.yTicks.length).toBeGreaterThanOrEqual(2);
+    for (const tick of geometry.yTicks) {
+      expect(tick.value).toBeGreaterThanOrEqual(lo);
+      expect(tick.value).toBeLessThanOrEqual(hi);
+    }
+    const values = map((tick: ValueTick) => tick.value, geometry.yTicks);
+    expect(values).toEqual(sortBy((value: number) => value, values));
+  });
+
+  it("labels a tick with the CONSUMER's formatter", () => {
+    const geometry = geometryWith([60000, 100000]);
+    const labels = map((tick: ValueTick) => tick.label, geometry.yTicks);
+    expect(labels).toContain("$80k");
+  });
+
+  it("places a tick where the scale places its value", () => {
+    const geometry = geometryWith();
+    const yScale = yScaleFor(geometry.yDomain, geometry.frame);
+    for (const tick of geometry.yTicks) {
+      expect(round(tick.y)).toBe(round(yScale(tick.value)));
+    }
+  });
+
+  it("reserves a gutter for the labels, and the plot starts after it", () => {
+    const geometry = geometryWith([60000, 100000]);
+    const labels = map((tick: ValueTick) => tick.label, geometry.yTicks);
+    expect(geometry.frame.plotLeft).toBe(gutterWidth(labels));
+    expect(geometry.frame.plotLeft).toBeGreaterThan(PLOT_LEFT);
+    // …and nothing is drawn to the left of it.
+    const firstSpan = geometry.rails[0].spans[0];
+    expect(firstSpan.x1).toBeGreaterThanOrEqual(geometry.frame.plotLeft);
+  });
+
+  it("never lets the gutter eat the plot, however long a label is", () => {
+    const geometry = levelsRailGeometry({
+      levels: LEVELS,
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+      box: BOX,
+      formatValue: (value: number) => `a very long label indeed ${value}`,
+    });
+    expect(geometry.frame.plotLeft).toBeLessThanOrEqual(
+      geometry.frame.viewWidth * MAX_GUTTER_FRACTION,
     );
+    expect(geometry.frame.plotRight).toBeGreaterThan(geometry.frame.plotLeft);
+  });
+
+  it("thins to fewer ticks in compact chrome", () => {
+    const short = geometryWith(undefined, { width: 1329, height: 60 });
+    expect(short.frame.compact).toBe(true);
+    expect(short.yTicks.length).toBeLessThanOrEqual(COMPACT_Y_TICK_TARGET + 1);
+    expect(short.yTicks.length).toBeGreaterThan(0);
+  });
+
+  it("rounds a DERIVED domain out to whole ticks", () => {
+    // 5000..10000 is already round; a ragged one is what proves the nicing.
+    expect(niceValueDomain([4300, 9100])).toEqual([4000, 10000]);
+    const ragged: readonly Level[] = map(
+      (figure: number) => ({
+        id: `r${figure}`,
+        label: `L${figure}`,
+        value: figure,
+        points: [{ at: utc("2025-01-01"), count: 1 }],
+      }),
+      [4300, 9100],
+    );
+    expect(valueDomainFor(ragged)).toEqual([4000, 10000]);
+  });
+
+  it("leaves a PINNED domain exactly as the consumer gave it", () => {
+    // Widening a pin to the nearest round number is the same betrayal as
+    // widening it to fit the data.
+    expect(valueDomainFor(LEVELS, [4300, 9100])).toEqual([4300, 9100]);
+    expect(geometryWith([4300, 9100]).yDomain).toEqual([4300, 9100]);
+  });
+
+  it("returns a range too narrow for a step untouched", () => {
+    // One tick or none: there is no step to round to, so nothing is rounded.
+    expect(valueTicks([1.05, 1.15], 1)).toHaveLength(1);
+    expect(niceValueDomain([1.05, 1.15], 1)).toEqual([1.05, 1.15]);
+  });
+
+  it("does not drift a range that is ALREADY on whole ticks", () => {
+    // Floor/ceil on a step derived by division is where FP noise would
+    // creep in and widen an axis by a billionth on every render.
+    expect(niceValueDomain([5000, 10000])).toEqual([5000, 10000]);
+    expect(niceValueDomain([0, 1])).toEqual([0, 1]);
   });
 });
 
@@ -1566,7 +1723,7 @@ describe("a pinned value domain holds the rails still", () => {
   // A MIDDLE rail is what makes this test honest: the lowest level always
   // sits at the bottom of the scale whatever the top is, so watching it prove
   // nothing. The middle one moves iff the range moves.
-  const moving = (pay: number): readonly Level[] => [
+  const moving = (figure: number): readonly Level[] => [
     {
       id: "low",
       label: "Low",
@@ -1582,14 +1739,17 @@ describe("a pinned value domain holds the rails still", () => {
     {
       id: "moves",
       label: "Moves",
-      value: pay,
+      value: figure,
       points: [{ at: utc("2025-01-01"), count: 1 }],
     },
   ];
   const PINNED: readonly [number, number] = [50000, 120000];
-  const geometryFor = (pay: number, valueDomain?: readonly [number, number]) =>
+  const geometryFor = (
+    figure: number,
+    valueDomain?: readonly [number, number],
+  ) =>
     levelsRailGeometry({
-      levels: moving(pay),
+      levels: moving(figure),
       transfers: [],
       mutations: [],
       domain: DOMAIN,
@@ -1605,7 +1765,7 @@ describe("a pinned value domain holds the rails still", () => {
   });
 
   it("holds the OTHER rail still while one value moves", () => {
-    // Unpinned, raising one person slides everybody: the range they are all
+    // Unpinned, raising one level slides them all: the range they are all
     // drawn against just changed.
     const before = geometryFor(90000, PINNED);
     const after = geometryFor(110000, PINNED);

@@ -4,8 +4,9 @@
    box-model geometry here — the SVG coordinate system is this component's
    layout engine (Layout Purity exemption 2: svg/canvas rendering).
 
-   THE WHOLE CHART IS ONE COLOUR (Peter, 2026-09-16: "Don't colour-code the
-   pay levels. It seems to assign judgements."). Bands, carries and ribbons all
+   THE WHOLE CHART IS ONE COLOUR (Peter, 2026-09-16, of the chart's first
+   consumer: "Don't colour-code the pay levels. It seems to assign
+   judgements."). Bands, carries and ribbons all
    paint in `--sui-accent`; what tells two levels apart is where they sit, not
    what shade they are. The accent is set once on the canvas and inherited as
    `currentColor`, which is also what lets the open-flow gradients fade a stop
@@ -85,8 +86,8 @@
 /* ---- The un-numbered changes ----
 
    Thinner and fainter than a flag's rule, because a dropline carries no name.
-   It says only "something happened here", which is exactly what a lone hire on
-   no particular date needs. */
+   It says only "something happened here", which is exactly what a lone
+   arrival on no particular date needs. */
 
 .sui-levels-timeline__dropline {
   stroke: var(--sui-text-muted);
@@ -120,7 +121,7 @@
   opacity: 0.5;
 }
 
-/* The carry: the people who did NOT move across a cap where the rail's width
+/* The carry: the count that did NOT move across a cap where the rail's width
    DID change. Nearly solid, because it is rail rather than traffic — but still
    a ribbon, because the rail really did narrow here.
 
@@ -221,9 +222,32 @@
   font-size: 9px;
 }
 
-/* The headcount column is the one the eye scans down, so it is the emphatic
-   one; the pay figure identifies the row. */
+/* The count column is the one the eye scans down, so it is the emphatic
+   one; the value identifies the row. */
 .sui-levels-timeline__panel-cell--count {
   font-weight: 700;
   text-anchor: end;
+}
+
+/* ---- The value axis, in the left gutter ----
+
+   Peter, 2026-09-16: "Display the actual y-axis with ticks." The axis is
+   CHROME, so it is muted and its type does not scale with the box — the same
+   disposition as the month axis below the plot. The gutter it sits in was
+   sized from these labels in geometry.ts, so nothing here may set a width. */
+
+.sui-levels-timeline__y-axis-line {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+
+.sui-levels-timeline__y-tick line {
+  stroke: var(--sui-border);
+  stroke-width: 1;
+}
+
+.sui-levels-timeline__y-tick-label {
+  fill: var(--sui-text-muted);
+  stroke: none;
+  font-size: 9px;
 }
