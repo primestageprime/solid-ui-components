@@ -24,11 +24,14 @@
 // levels close together have very little room between them, and bands that
 // overlap turn the chart into a smear.
 //
-// So `perCountWidth` is the SMALLER of two answers: the width that would fill
-// a good fraction of the plot at the busiest moment, and the width at which the
-// tightest pair of adjacent levels still clears a margin. The second is what
-// stops two rails a hair apart in value from merging; the first is what stops
-// a sparse chart from being drawn in hairlines. Neither alone is right.
+// So `perCountWidth` is the SMALLEST of several answers: an absolute ceiling
+// of `MAX_BAND_PX` (Peter: a ribbon is no more than ten px thick), the width
+// that would fill a good fraction of the plot at the busiest moment, the width
+// at which the tightest pair of adjacent levels still clears a margin, and the
+// width at which no band hangs off the plot's own edge. The ceiling is what
+// makes a rail read as a rail on a wide consumer-pinned axis; the adjacency
+// cap is what stops two rails a hair apart in value from merging; the fill
+// width is what stops a sparse chart from being drawn in hairlines.
 //
 // Conventions, fixed here once so nothing downstream re-decides them:
 //
@@ -173,14 +176,19 @@ export const Y_TICK_LENGTH = 4;
 /** Clear air between a tick label and the axis line. */
 export const Y_LABEL_GAP = 3;
 /**
- * The tick font, and the width one character of it takes.
+ * The width one character of a tick label takes, at the 9px the CSS sets on
+ * `.sui-levels-timeline__y-tick-label`.
  *
  * ESTIMATED, not measured, and deliberately: geometry.ts is pure and has no
  * DOM to measure in, and the gutter has to be decided before anything is
  * painted. An estimate that is slightly WIDE costs a few units of plot nobody
  * notices; one that is narrow clips the consumer's labels, so this errs high.
+ *
+ * The font SIZE itself is not mirrored here. It lived as a `Y_LABEL_FONT_PX`
+ * constant for one commit and nothing could read it — CSS cannot — so it was
+ * a second definition of a number this file does not own. If the CSS font
+ * size changes, this estimate is what has to change with it.
  */
-export const Y_LABEL_FONT_PX = 9;
 export const Y_LABEL_CHAR_PX = 5.4;
 /**
  * …but the gutter may never eat more than this share of the canvas.
@@ -450,11 +458,14 @@ const placeFlag = (mutation: Mutation, x: number, frame: Frame): Flag => {
 // ============================================================================
 // The RAIL model — a line is a LEVEL, and the chart is a Sankey.
 //
-// A rail is a filled band whose THICKNESS is the count holding that level.
-// The bands are STACKED, ordered by value with the highest on top, separated by
-// a fixed gap, and the stack is recomputed at every change — so a band's
-// vertical position drifts as the ones around it thicken and thin, the way a
-// stream chart's do. Movement between levels is a FLOW: wide translucent
+// A rail is a filled band whose THICKNESS is the count holding that level and
+// whose position is its VALUE: the band is CENTRED on `y(value)`, top and
+// bottom equidistant from it, so a rail thickening never appears to move.
+// (An earlier reading of this file described the bands as a recomputed STACK
+// whose members drift as their neighbours thicken. They do not and never did
+// under the rail model — `spanTop`/`spanBottom` have always been `y ∓ w/2`.
+// The prose was left over from the stepped model this replaced.)
+// Movement between levels is a FLOW: wide translucent
 // ribbons that leave one band's edge and arrive at another's, graduating from
 // the source's colour to the destination's along the way.
 //

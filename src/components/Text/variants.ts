@@ -107,7 +107,13 @@ export const EllipsizedChipLabel = createText({
  *  geometry is the layout and a long label must ellipsize rather than spill
  *  past the box edge. Unlike `EllipsizedTitle` it needs no flex parent, and
  *  unlike `EllipsizedChipLabel` it is a block, so `text-overflow` actually
- *  applies. Pair it with a Tooltip carrying the full string. */
+ *  applies. Pair it with a Tooltip carrying the full string.
+ *
+ *  Distinct from `EllipsizedHudCaption`, the other ellipsizing SVG-label
+ *  variant: that one is uppercase and letter-spaced at 11px and inherits its
+ *  colour from the callout it hangs off; this one is plain-case 12px, centred
+ *  at full width inside a node box, and paints in the `label` colour. Both
+ *  roles are real — see the note above `EllipsizedHudCaption`. */
 export const EllipsizedNodeLabel = createText({
   variant: "label",
   as: "div",
@@ -234,12 +240,14 @@ export const CaptionLabel = createText({
 // The HUD treatment is curried here, not at the call site: a caption in a
 // callout column is one visual decision, and it belongs in one place.
 //
-// TODO (RateGauge promotion, 2026-09-16): merge with `EllipsizedNodeLabel` from
-// PR #138 (`fix(tree-diff-chart): labels that never overflow…`) once that lands
-// on main — it was still OPEN and unmerged when RateGauge was promoted, so the
-// two ellipsizing SVG-label variants could not be reconciled here. They differ
-// only in their type scale as far as anyone has established; if that holds, one
-// variant serves both and the other becomes a deprecated alias.
+// NOT the same role as `EllipsizedNodeLabel` (ruled 2026-09-16, when PR #138
+// landed and the two could finally be compared side by side). This one is an
+// uppercase, letter-spaced 11px `<span>` that takes `color: inherit` so it
+// picks up the tone of the callout it hangs off; that one is a plain-case 12px
+// `<div>` at `width: 100%` centred inside a node box, painting in the `label`
+// variant's own colour. Uppercase + tracking is a visible typographic role,
+// and the colour inheritance is load-bearing for SVG tone — unifying them
+// would change RateGauge's render. Both stay; neither is an alias.
 export const EllipsizedHudCaption = createText({
   variant: "label",
   as: "span",

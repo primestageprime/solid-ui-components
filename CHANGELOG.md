@@ -63,6 +63,17 @@
   site.
 
 ### Changed
+- **`EllipsizedHudCaption` and `EllipsizedNodeLabel` are two roles, not one
+  duplicate.** With PR #138 merged the two ellipsizing SVG-label Text variants
+  could finally be compared: the HUD caption is an uppercase, 0.5px-tracked
+  11px `<span>` taking `color: inherit` so it wears the tone of the callout it
+  hangs off (`RateGauge`), and the node label is a plain-case 12px `<div>` at
+  `width: 100%`, centred inside a node box and painting in the `label` colour
+  (`TreeDiffChart`). Uppercase plus tracking is a visible typographic role and
+  the colour inheritance is load-bearing, so unifying them would have changed
+  `RateGauge`'s render. Both keep their names, neither becomes an alias, the
+  merge TODO in `Text/variants.ts` is gone, and each variant's doc now says
+  what distinguishes it from the other so the question is not re-derived.
 - **`MutationSliders` says nothing domain-specific of its own, and is split at
   the seam.** Every "pay", "salary", "hire", "terminate" and currency is gone
   from the component, its geometry and its CSS: the model is entities with a
