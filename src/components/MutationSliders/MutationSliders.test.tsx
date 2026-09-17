@@ -1169,6 +1169,46 @@ describe("MutationSliders", () => {
         expect(onChange).toHaveBeenCalledWith("b", 91_000);
       });
 
+      it("commits each pinned peer exactly ONCE on a pointer release", () => {
+        // The release is the only gesture whose fan-out changed shape when the
+        // dial's three-phase seam became the Primitive's two callbacks: it now
+        // speaks through `onChangeEnd` alone, because Kobalte already sent the
+        // same value out through the drag. The values are identical; what this
+        // pins is that each peer is committed once and not twice.
+        const onChange = vi.fn();
+        const onChangeEnd = vi.fn();
+        const restoreRects = installRects((el) =>
+          el.classList?.contains("sui-marked-slider__track")
+            ? rectOf({ left: 0, top: 0, width: 22, height: 200 })
+            : null,
+        );
+        const { container } = render(() => (
+          <MutationSliders
+            entities={THREE}
+            onChange={onChange}
+            onChangeEnd={onChangeEnd}
+          />
+        ));
+        fireEvent.click(nameButton(container, "Ana"));
+        fireEvent.click(nameButton(container, "Bo"));
+        onChange.mockClear();
+        onChangeEnd.mockClear();
+        const track = container.querySelector(
+          ".sui-marked-slider__track",
+        ) as HTMLElement;
+        const capture = installPointerCapture(track);
+        fireEvent.pointerDown(track, { clientY: 40, pointerId: 1, button: 0 });
+        fireEvent.pointerUp(track, { clientY: 40, pointerId: 1, button: 0 });
+        capture.restore();
+        restoreRects();
+        const committed = map(
+          (call: unknown[]) => call[0] as string,
+          onChangeEnd.mock.calls,
+        );
+        // Both pinned peers, once each — and Cal, who is not selected, never.
+        expect(committed).toEqual(["a", "b"]);
+      });
+
       it("leaves UNSELECTED entities completely alone", () => {
         const onChange = vi.fn();
         const { container, getByLabelText } = render(() => (
@@ -1194,6 +1234,33 @@ describe("MutationSliders", () => {
         expect(onChange).toHaveBeenCalledTimes(1);
         expect(onChange.mock.calls[0][0]).toBe("a");
       });
+    });
+  });
+
+  describe("the ROW claims the height its parent gives it", () => {
+    // THE TOP OF THE FILL CHAIN, asserted on the RENDERED ROOT.
+    //
+    // It used to be a CSS rule in this folder's own stylesheet and was read
+    // out of the file, because jsdom performs no layout and the fill tests
+    // that DO exist hand the row a height directly, so they pass either way.
+    // That blind spot shipped a component whose root had no height rule at all
+    // for two commits, while a commit message described the rule as present.
+    //
+    // Now that the declarations ride on `FillStretchRow`'s locked `style`,
+    // they are on the element itself — so this is strictly stronger than the
+    // file read was: swapping the variant back to a plain `StretchRow` fails
+    // here, which a test that only read `Layout/variants.ts` would not.
+    it("renders the two declarations that make one rule serve both parents", () => {
+      const { container } = render(() => (
+        <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
+      ));
+      const root = container.querySelector('[role="group"]') as HTMLElement;
+      // `height: 100%` against a parent of INDEFINITE height computes to
+      // `auto`, so the same declaration serves a sized card and a
+      // content-sized column; `min-height: 0` lets it shrink inside a flex
+      // cell instead of pushing the card open.
+      expect(root.style.height).toBe("100%");
+      expect(root.style.minHeight).toBe("0px");
     });
   });
 
