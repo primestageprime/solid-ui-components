@@ -1873,13 +1873,12 @@ describe("ScrubChart corner control stacking", () => {
       "z-index: 2;",
     );
 
-    // Every layer the button may cover paints at the AUTO level. Each rule is
-    // in the file, so the assertion is about what the rule says, not about a
-    // selector that is missing.
+    // Every layer the button may cover paints at the AUTO level, except the
+    // two chrome layers BELOW the plot, which state -1 (see the paint-order
+    // test below). Each rule is in the file, so the assertion is about what
+    // the rule says, not about a selector that is missing.
     const css = chartCss();
     for (const layer of [
-      ".sui-scrub-chart__highlights",
-      ".sui-scrub-chart__grid",
       ".sui-scrub-chart__axes",
       ".sui-scrub-chart__window",
       ".sui-scrub-chart__overlay",
@@ -1902,6 +1901,45 @@ describe("ScrubChart corner control stacking", () => {
       expect(at(layer)).toBeLessThan(at(".sui-scrub-chart__y-fit"));
       expect(at(layer)).toBeLessThan(at(".sui-scrub-chart__expand"));
     }
+  });
+
+  // The gridlines and the highlight bands are CHROME. They belong under the
+  // consumer's plot, and ScrubChart renders them before `renderChart` to say
+  // so. Document order does not carry it: every consumer's chart <svg> is
+  // STATIC, and CSS paints a positioned element above static in-flow content
+  // whatever the document order. Both chrome layers are absolute, so both were
+  // lifted over the plot and every gridline cut every series line.
+  it("holds the gridlines and the bands BELOW the consumer's plot", () => {
+    const css = chartCss();
+
+    // The frame isolates (asserted below), so -1 paints these above the
+    // frame's own background and below its in-flow children. Drop either and
+    // that layer climbs back over the data.
+    for (const layer of [
+      ".sui-scrub-chart__grid",
+      ".sui-scrub-chart__highlights",
+    ]) {
+      expect(ruleBody(css, layer)).toContain("z-index: -1;");
+    }
+
+    // The two hold their own order between them on document order alone, so
+    // neither may take a level the other does not. A band is background; a
+    // gridline paints over it.
+    const { container } = bothCorners();
+    const order = [...container.querySelector(".sui-scrub-chart__frame")!
+      .children];
+    const at = (selector: string) =>
+      order.findIndex((el) => el.matches(selector));
+    expect(at(".sui-scrub-chart__highlights")).toBeLessThan(
+      at(".sui-scrub-chart__grid"),
+    );
+
+    // -1 only stays under the plot while the frame is the stacking root. The
+    // next test guards `isolation: isolate`; without it these two sink behind
+    // the host page's own background instead.
+    expect(ruleBody(css, ".sui-scrub-chart__frame")).toContain(
+      "isolation: isolate;",
+    );
   });
 
   it("keeps the corner level INSIDE the frame's stacking context", () => {

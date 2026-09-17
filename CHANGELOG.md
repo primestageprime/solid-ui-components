@@ -89,6 +89,21 @@
   the barrel publishes `RateGauge`, `createRateGauge`, `RateDial`, the
   props/Overrides/DataProps types and `RateGaugeDomain`.
 
+## 0.170.1
+
+### Fixed
+- **`ScrubChart` gridlines and highlight bands paint UNDER the data again.**
+  The component renders both chrome layers before `renderChart` to put them
+  below the plot, but document order never carried it: both layers are
+  `position: absolute` and every consumer's chart `<svg>` is `position:
+  static`, and CSS paints a positioned element above static in-flow content
+  whatever the document order. So every gridline cut every series line, on
+  every ScrubChart. Both layers now state `z-index: -1`. The frame already
+  isolates, so they paint above the frame's own background and below its
+  in-flow children, and a consumer needs no `position` rule of its own. A
+  gridline still reads THROUGH a translucent band fill, which is wanted; it
+  stops cutting the opaque lines (dside #49207).
+
 ## 0.170.0
 
 ### Fixed
