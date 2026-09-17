@@ -628,7 +628,9 @@ export const ScrubChart = <C extends Cell>(
       >
         {/* Highlight bands — opt-in shaded rects over cell ranges. The
             BOTTOM layer of the frame: the gridlines and the series both
-            paint over them, because a band is background. */}
+            paint over them, because a band is background. Its CSS states
+            `z-index: -1` to hold that place — see the note on
+            `.sui-scrub-chart__grid`. */}
         <Show when={chartWidth() > 0 && highlightBands().length > 0}>
           <ScrubChartHighlights
             chartWidth={chartWidth}
@@ -638,9 +640,12 @@ export const ScrubChart = <C extends Cell>(
             bands={highlightBands}
           />
         </Show>
-        {/* Gridlines — opt-in horizontal rules at the y-axis ticks. Drawn
-            BEFORE the series so the data paints over the chrome, unlike the
-            axes below (drawn after so the labels stay legible). */}
+        {/* Gridlines — opt-in horizontal rules at the y-axis ticks. They sit
+            BENEATH the series so the data paints over the chrome, unlike the
+            axes below (drawn after so the labels stay legible). Document
+            order does NOT settle that on its own: the consumer's chart <svg>
+            is static, so this absolute layer would paint over it. The CSS
+            states `z-index: -1` — read the note there before moving either. */}
         <Show
           when={props.showGridlines && chartWidth() > 0 && yScale() != null}
         >
