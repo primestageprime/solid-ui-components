@@ -133,6 +133,45 @@ describe("the unit is the module, not the folder", () => {
     expect(ruleIds(report)).toContain("ADH-ComposedTag-css");
   });
 
+  it("keeps two same-named units in different folders apart", () => {
+    // `Layout/Grid` and `Chart/Grid` are two different components sharing a
+    // name (render-coverage's header names this pair); so are Tooltip and
+    // EllipsisText. A basename map keyed without the folder drops one of each
+    // pair AND attaches Chart/Grid.css to Layout/Grid.tsx — the Badge defect
+    // one level up.
+    const report = analyse(
+      world({
+        "/src/components/Layout/Grid.tsx":
+          HEADER("Grid", "Primitive", 1) + `export const Grid = () => null;`,
+        "/src/components/Chart/Grid.tsx":
+          HEADER("Grid", "Composite", 2) + `export const Grid = () => null;`,
+        "/src/components/Chart/Grid.css": ".chart-grid {}",
+      }),
+    );
+    // The stylesheet is Chart's, and the Depth-1 Layout/Grid is not blamed.
+    expect(ruleIds(report)).toContain("ADH-Chart-Grid-css");
+    expect(ruleIds(report)).not.toContain("ADH-Layout-Grid-css");
+    // Both units survive: a global basename map would have kept only one.
+    expect(report.summary.components).toBe(2);
+  });
+
+  it("disambiguates only the colliding names, so stable ids do not churn", () => {
+    const report = analyse(
+      world({
+        "/src/components/Layout/Grid.tsx":
+          HEADER("Grid", "Composite", 2) + `export const Grid = () => null;`,
+        "/src/components/Layout/Grid.css": ".g {}",
+        "/src/components/Fab/Fab.tsx":
+          HEADER("Fab", "Composite", 2) + `export const Fab = () => null;`,
+        "/src/components/Fab/Fab.css": ".f {}",
+      }),
+    );
+    // `Grid` is unique here, so it keeps the short form — the longer
+    // `<Folder>-<Name>` id appears only when a name is genuinely ambiguous.
+    expect(ruleIds(report)).toContain("ADH-Grid-css");
+    expect(ruleIds(report)).toContain("ADH-Fab-css");
+  });
+
   it("selects PascalCase .tsx only, matching health's own component selector", () => {
     expect(isUnitPath("/src/components/A/A.tsx")).toBe(true);
     expect(isUnitPath("/src/components/A/dial.tsx")).toBe(false);

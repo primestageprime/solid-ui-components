@@ -427,8 +427,16 @@ export function analyse({
     );
   }
 
+  // Keyed by FOLDER AND basename, never by basename alone. `Layout/Grid` and
+  // `Chart/Grid` are two different components sharing a name (render-coverage's
+  // header names this pair), as are `Tooltip` and `EllipsisText`. A global
+  // basename map silently drops one of each pair and attaches `Chart/Grid.css`
+  // to `Layout/Grid.tsx` — the same defect as scoring Badge by folder, one
+  // level up.
   const attached = new Map(units.map((u) => [u, []]));
-  const byBasename = new Map(units.map((u) => [unitNameOf(u), u]));
+  const byBasename = new Map(
+    units.map((u) => [`${folderOf(u)}/${unitNameOf(u)}`, u]),
+  );
   for (const f of files) {
     if (isUnitPath(f)) continue;
     const folder = folderOf(f);
@@ -437,7 +445,7 @@ export function analyse({
     const isCode = isModulePath(f);
     if (!isCss && !isCode) continue;
     const base = f.split("/").pop().replace(/\.(tsx?|css)$/, "");
-    const owner = byBasename.get(base) ?? primaryOf.get(folder);
+    const owner = byBasename.get(`${folder}/${base}`) ?? primaryOf.get(folder);
     if (owner) attached.get(owner).push(f);
   }
 
@@ -453,9 +461,22 @@ export function analyse({
     return null;
   };
 
+  // Names carried by a unit in more than one folder. Their items are labelled
+  // `<Folder>-<Name>` so `ADH-Chart-Grid-css` and `ADH-Layout-Grid-css` are
+  // two ids rather than one ambiguous one — the refactor-pass skill's whole
+  // contract is that an id resolves to a file. Only the colliding names take
+  // the longer form, so the ids of the other 239 components do not churn.
+  const nameCounts = new Map();
+  for (const u of units) {
+    const n = unitNameOf(u);
+    nameCounts.set(n, (nameCounts.get(n) ?? 0) + 1);
+  }
+
   for (const unit of units) {
-    const name = unitNameOf(unit);
+    const bare = unitNameOf(unit);
     const folder = folderOf(unit);
+    const name =
+      nameCounts.get(bare) > 1 && folder !== bare ? `${folder}-${bare}` : bare;
     // Bound per unit so the rules below name only the rule and the finding —
     // the folder an exemption might be keyed by is already captured.
     const add = (component, rule, severity, title, detail) => {
