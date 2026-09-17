@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.171.0 — 2026-09-16
+
 ### Added
 - **`LevelsTimeline` promoted from the workshop bench to the catalog.** A time
   chart of numeric LEVELS: a rail per `value` on a real value axis, as thick as
@@ -88,6 +90,15 @@
   than a comfort level. The folder's ~20 `geometry.ts` exports stay private;
   the barrel publishes `RateGauge`, `createRateGauge`, `RateDial`, the
   props/Overrides/DataProps types and `RateGaugeDomain`.
+
+### Fixed
+- **A popover no longer paints UNDER a modal.** `Select`'s listbox, and the
+  same bug in `Combobox` and `Tooltip` before it bit a consumer: the portalled
+  overlay sat below a dialog it was opened from. All three now stack above it.
+- **`ScrubChart` measures itself honestly.** The fill height is measured on
+  mount rather than only when the resize observer next fires, a zero-sized box
+  is no longer treated as a measurement, and the test sizer tears down through
+  `restore()`.
 
 ## 0.170.1
 
