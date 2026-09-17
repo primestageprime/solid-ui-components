@@ -1,17 +1,25 @@
 // lastReviewedAt: 2026-09-15
 // lastReviewedBy: adlai.arnold
 /**
- * TreeDiffChart — Atomic Primitive (Depth 1).
+ * TreeDiffChart — Composite (Depth 2).
  *
  * Draws a pre-computed diff of two scenario trees as one SVG: the baseline
  * root on the left, the comparison root on the right, one band per root
  * entry between them, and a pruned [SAME] node for every identical entry.
  * Owns its own CSS and consumes the arrowhead marker from
- * `src/internal/dag-svg`, a utility module rather than a Primitive.
+ * `src/internal/dag-svg`, a utility module rather than a Primitive. It also
+ * composes Depth-1 atomics — Tooltip and Text for the ellipsized node
+ * labels, Legend for the change-kind key, Layout for the stack of the two —
+ * which is what makes it Depth 2 rather than the Primitive it began as.
  *
  * The consumer computes the diff. This component owns layout (`layout.ts`),
- * edge routing (`route.ts`) and paint. Nodes are plain SVG rect + text, so
- * the SVG coordinate system is the whole layout engine.
+ * edge routing (`route.ts`) and paint. Nodes are SVG rect + text, so the SVG
+ * coordinate system is the whole layout engine; the one exception is the
+ * title line of a consumer-supplied label, which is HTML in a
+ * `foreignObject` so it can ellipsize (see `NodeLabel`).
+ *
+ * Colour means SIDE by default and CHANGE when the consumer supplies a
+ * `kind` per entry (`kinds.ts`). The chart never infers a kind.
  *
  * Responsive: the host div is measured and the layout mode follows its
  * width (`frame.ts`). The SVG's viewBox is the measured width, so boxes
@@ -29,7 +37,12 @@ import {
 import { filter, join, map } from "../../fn";
 import { DagArrowMarker, DagSvgEdge } from "../../internal/dag-svg";
 import { observeSize } from "../../internal/dom/observeSize";
+import { TightStack } from "../Layout";
+import { Legend } from "../Legend/Legend";
+import { EllipsizedNodeLabel } from "../Text";
+import { Tooltip } from "../Tooltip";
 import { computeHighlight, edgeKey } from "./highlight";
+import { KINDS, kindLegendItems } from "./kinds";
 import { computeTreeDiffLayout } from "./layout";
 import type {
   LayoutEdge,
@@ -38,13 +51,14 @@ import type {
   TreeDiffLayout,
 } from "./layout-types";
 import { edgePath, trunkPath } from "./route";
-import type { TreeDiffChartProps, TreeDiffSide } from "./types";
+import type { TreeDiffChartProps, TreeDiffKind, TreeDiffSide } from "./types";
 import "./TreeDiffChart.css";
 
 export type { TreeDiffChartProps } from "./types";
 
 const SIDES: TreeDiffSide[] = ["baseline", "compare", "shared"];
 const markerId = (side: TreeDiffSide) => `sui-tree-diff-arrow-${side}`;
+const kindMarkerId = (kind: TreeDiffKind) => `sui-tree-diff-arrow-kind-${kind}`;
 const GUIDE_CLASS: Record<LayoutGuide["kind"], string> = {
   rule: "sui-tree-diff__band-rule",
   divider: "sui-tree-diff__divider",
@@ -52,6 +66,10 @@ const GUIDE_CLASS: Record<LayoutGuide["kind"], string> = {
 };
 const HEAD_RADIUS = 23;
 const BOX_RADIUS = 7;
+/** Breathing room between the box edge and the label slot, per side. */
+const LABEL_INSET = 8;
+/** Height of the label slot. Matches the old SVG text's line box. */
+const LABEL_H = 16;
 
 type NodeFlags = { selected: boolean; dim: boolean; clickable: boolean };
 
@@ -59,6 +77,7 @@ const nodeClass = (n: LayoutNode, flags: NodeFlags) => {
   const classes = [
     "sui-tree-diff__node",
     `sui-tree-diff__node--${n.side}`,
+    n.changeKind ? `sui-tree-diff__node--kind-${n.changeKind}` : "",
     n.kind === "same" ? "sui-tree-diff__node--same" : "",
     flags.selected ? "sui-tree-diff__node--selected" : "",
     flags.dim ? "sui-tree-diff__node--dim" : "",
@@ -70,7 +89,12 @@ const nodeClass = (n: LayoutNode, flags: NodeFlags) => {
   );
 };
 
-const edgeClass = (edge: LayoutEdge, hot: boolean, dim: boolean) =>
+const edgeClass = (
+  edge: LayoutEdge,
+  kind: TreeDiffKind | undefined,
+  hot: boolean,
+  dim: boolean,
+) =>
   join(
     " ",
     filter(
@@ -78,11 +102,58 @@ const edgeClass = (edge: LayoutEdge, hot: boolean, dim: boolean) =>
       [
         "sui-tree-diff__edge",
         `sui-tree-diff__edge--${edge.side}`,
+        kind ? `sui-tree-diff__edge--kind-${kind}` : "",
         hot ? "sui-tree-diff__edge--hot" : "",
         dim ? "sui-tree-diff__edge--dim" : "",
       ],
     ),
   );
+
+/**
+ * The title line. A label the CONSUMER supplied can be any length, so it
+ * lives in HTML inside a `foreignObject` clamped to the box: it ellipsizes
+ * at the box edge and a tooltip carries the complete value. The box width is
+ * the constraint — a long label never widens it. Labels the CHART mints
+ * ("commit", "root tree", "[SAME]") are a known, short, enumerated set and
+ * stay plain SVG text.
+ */
+function NodeLabel(props: { node: LayoutNode }): JSX.Element {
+  return (
+    <Show
+      when={props.node.labelFromData}
+      fallback={
+        <text
+          class="sui-tree-diff__label"
+          x={props.node.x}
+          y={props.node.y - 2}
+          text-anchor="middle"
+        >
+          {props.node.label}
+        </text>
+      }
+    >
+      <foreignObject
+        x={props.node.x - props.node.width / 2 + LABEL_INSET}
+        y={props.node.y - LABEL_H}
+        width={Math.max(0, props.node.width - LABEL_INSET * 2)}
+        height={LABEL_H}
+      >
+        {/* A span trigger, not the default button: the node <g> is already
+            role="button", and its aria-label already carries the full
+            label, so the keyboard path this costs is already covered. */}
+        <Tooltip
+          content={props.node.label}
+          triggerAs="span"
+          class="sui-tree-diff__label-trigger"
+        >
+          <EllipsizedNodeLabel class="sui-tree-diff__label">
+            {props.node.label}
+          </EllipsizedNodeLabel>
+        </Tooltip>
+      </foreignObject>
+    </Show>
+  );
+}
 
 /** The box and its two text lines. Shared by the static and the button node. */
 function NodeBody(props: { node: LayoutNode }): JSX.Element {
@@ -96,14 +167,7 @@ function NodeBody(props: { node: LayoutNode }): JSX.Element {
         height={props.node.height}
         rx={props.node.kind === "head" ? HEAD_RADIUS : BOX_RADIUS}
       />
-      <text
-        class="sui-tree-diff__label"
-        x={props.node.x}
-        y={props.node.y - 2}
-        text-anchor="middle"
-      >
-        {props.node.label}
-      </text>
+      <NodeLabel node={props.node} />
       <text
         class="sui-tree-diff__hash"
         x={props.node.x}
@@ -161,124 +225,156 @@ export function TreeDiffChart(props: TreeDiffChartProps): JSX.Element {
   const activate = (n: LayoutNode) => {
     if (clickable(n)) props.onNodeClick?.(n.id);
   };
+  // "An arrow takes the colour of the node it points at" — so an edge's kind
+  // is READ from its target, never plumbed through the layout. `side` already
+  // works this way.
+  const kindOfEdge = (edge: LayoutEdge): TreeDiffKind | undefined =>
+    boxes().get(edge.to)?.changeKind;
+  const legendItems = createMemo(() => kindLegendItems(layout().nodes));
+  // Default on whenever the data carries kinds; a chart with none has
+  // nothing to key, so it must not sprout an empty legend.
+  const showLegend = () => props.legend ?? legendItems().length > 0;
 
   return (
     <div ref={hostRef} class="sui-tree-diff__host">
-      <svg
-        class={`sui-tree-diff sui-tree-diff--${layout().mode}`}
-        viewBox={`0 0 ${layout().width} ${layout().height}`}
-        preserveAspectRatio="xMidYMin meet"
-        role="img"
-        aria-label={`Tree diff of ${props.baseline.label} against ${props.compare.label}`}
-      >
-        <defs>
-          <For each={SIDES}>
-            {(side) => (
-              <DagArrowMarker
-                id={markerId(side)}
-                pathClass={`sui-tree-diff__arrow--${side}`}
+      <TightStack>
+        <svg
+          class={`sui-tree-diff sui-tree-diff--${layout().mode}`}
+          viewBox={`0 0 ${layout().width} ${layout().height}`}
+          preserveAspectRatio="xMidYMin meet"
+          role="img"
+          aria-label={`Tree diff of ${props.baseline.label} against ${props.compare.label}`}
+        >
+          <defs>
+            <For each={SIDES}>
+              {(side) => (
+                <DagArrowMarker
+                  id={markerId(side)}
+                  pathClass={`sui-tree-diff__arrow--${side}`}
+                />
+              )}
+            </For>
+            {/* A kind-coloured line with a side-coloured arrowhead reads as a
+              bug, so every kind gets its own marker. */}
+            <For each={KINDS}>
+              {(kind) => (
+                <DagArrowMarker
+                  id={kindMarkerId(kind)}
+                  pathClass={`sui-tree-diff__arrow--kind-${kind}`}
+                />
+              )}
+            </For>
+          </defs>
+
+          <For each={layout().captions}>
+            {(c) => (
+              <text
+                class={`sui-tree-diff__spine-label sui-tree-diff__spine-label--${c.side}`}
+                x={c.x}
+                y={c.y}
+                text-anchor={c.anchor}
+              >
+                {c.text}
+              </text>
+            )}
+          </For>
+
+          <For each={layout().guides}>
+            {(g) => (
+              <line
+                class={GUIDE_CLASS[g.kind]}
+                x1={g.x1}
+                y1={g.y1}
+                x2={g.x2}
+                y2={g.y2}
               />
             )}
           </For>
-        </defs>
 
-        <For each={layout().captions}>
-          {(c) => (
-            <text
-              class={`sui-tree-diff__spine-label sui-tree-diff__spine-label--${c.side}`}
-              x={c.x}
-              y={c.y}
-              text-anchor={c.anchor}
-            >
-              {c.text}
-            </text>
-          )}
-        </For>
+          <For each={layout().bands}>
+            {(band) => (
+              <>
+                <text
+                  class="sui-tree-diff__band-label"
+                  x={band.labelX}
+                  y={band.labelY}
+                  text-anchor={band.labelAnchor}
+                >
+                  {band.name}
+                </text>
+                <text
+                  class="sui-tree-diff__band-note"
+                  x={band.noteX}
+                  y={band.labelY}
+                  text-anchor="end"
+                >
+                  {band.note}
+                </text>
+              </>
+            )}
+          </For>
 
-        <For each={layout().guides}>
-          {(g) => (
-            <line
-              class={GUIDE_CLASS[g.kind]}
-              x1={g.x1}
-              y1={g.y1}
-              x2={g.x2}
-              y2={g.y2}
-            />
-          )}
-        </For>
+          <For each={layout().edges}>
+            {(edge) => (
+              <DagSvgEdge
+                class={edgeClass(
+                  edge,
+                  kindOfEdge(edge),
+                  highlight().live.has(edgeKey(edge)),
+                  !!props.selectedId && !highlight().live.has(edgeKey(edge)),
+                )}
+                dataKind={kindOfEdge(edge)}
+                d={pathFor(edge)}
+                arrowMarkerId={
+                  kindOfEdge(edge)
+                    ? kindMarkerId(kindOfEdge(edge) as TreeDiffKind)
+                    : markerId(edge.side)
+                }
+              />
+            )}
+          </For>
 
-        <For each={layout().bands}>
-          {(band) => (
-            <>
-              <text
-                class="sui-tree-diff__band-label"
-                x={band.labelX}
-                y={band.labelY}
-                text-anchor={band.labelAnchor}
+          <For each={layout().nodes}>
+            {(n) => (
+              <Show
+                when={clickable(n)}
+                fallback={
+                  <g
+                    class={nodeClass(n, flagsFor(n, false))}
+                    data-node-id={n.id}
+                    data-kind={n.changeKind}
+                    aria-label={`${n.label} ${n.hash}`}
+                  >
+                    <NodeBody node={n} />
+                  </g>
+                }
               >
-                {band.name}
-              </text>
-              <text
-                class="sui-tree-diff__band-note"
-                x={band.noteX}
-                y={band.labelY}
-                text-anchor="end"
-              >
-                {band.note}
-              </text>
-            </>
-          )}
-        </For>
-
-        <For each={layout().edges}>
-          {(edge) => (
-            <DagSvgEdge
-              class={edgeClass(
-                edge,
-                highlight().live.has(edgeKey(edge)),
-                !!props.selectedId && !highlight().live.has(edgeKey(edge)),
-              )}
-              d={pathFor(edge)}
-              arrowMarkerId={markerId(edge.side)}
-            />
-          )}
-        </For>
-
-        <For each={layout().nodes}>
-          {(n) => (
-            <Show
-              when={clickable(n)}
-              fallback={
+                {/* biome-ignore lint/a11y/useSemanticElements: a native <button> is not valid inside SVG; role="button" on the <g> is the accessible affordance for an SVG hit target */}
                 <g
-                  class={nodeClass(n, flagsFor(n, false))}
+                  class={nodeClass(n, flagsFor(n, true))}
                   data-node-id={n.id}
+                  data-kind={n.changeKind}
+                  role="button"
+                  tabIndex={0}
                   aria-label={`${n.label} ${n.hash}`}
+                  onClick={() => activate(n)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      activate(n);
+                    }
+                  }}
                 >
                   <NodeBody node={n} />
                 </g>
-              }
-            >
-              {/* biome-ignore lint/a11y/useSemanticElements: a native <button> is not valid inside SVG; role="button" on the <g> is the accessible affordance for an SVG hit target */}
-              <g
-                class={nodeClass(n, flagsFor(n, true))}
-                data-node-id={n.id}
-                role="button"
-                tabIndex={0}
-                aria-label={`${n.label} ${n.hash}`}
-                onClick={() => activate(n)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    activate(n);
-                  }
-                }}
-              >
-                <NodeBody node={n} />
-              </g>
-            </Show>
-          )}
-        </For>
-      </svg>
+              </Show>
+            )}
+          </For>
+        </svg>
+        <Show when={showLegend()}>
+          <Legend items={legendItems()} />
+        </Show>
+      </TightStack>
     </div>
   );
 }

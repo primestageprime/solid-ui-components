@@ -102,6 +102,29 @@ export const EllipsizedChipLabel = createText({
   },
 });
 
+/** Single-line truncating label centred in a fixed-width slot whose width is
+ *  set by its parent, not by the text — the diagram-node case, where the box
+ *  geometry is the layout and a long label must ellipsize rather than spill
+ *  past the box edge. Unlike `EllipsizedTitle` it needs no flex parent, and
+ *  unlike `EllipsizedChipLabel` it is a block, so `text-overflow` actually
+ *  applies. Pair it with a Tooltip carrying the full string. */
+export const EllipsizedNodeLabel = createText({
+  variant: "label",
+  as: "div",
+  style: {
+    display: "block",
+    width: "100%",
+    "font-size": "12px",
+    "font-weight": "600",
+    "line-height": "1.2",
+    "text-align": "center",
+    "min-width": "0",
+    overflow: "hidden",
+    "white-space": "nowrap",
+    "text-overflow": "ellipsis",
+  },
+});
+
 /** Small muted count/meta text (10px) — the trailing-count companion to
  *  `ChipLabel`. */
 export const CountText = createText({

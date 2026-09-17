@@ -42,6 +42,8 @@ const boxNode = (
   y,
   width,
   height: BOX_HEIGHT,
+  changeKind: entry.kind,
+  labelFromData: true,
 });
 
 export type NarrowInput = {
