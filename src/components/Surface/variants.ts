@@ -8,6 +8,23 @@ import type { Component } from "solid-js";
 
 // Shape variants
 export const CardSurface = createSurface({ padding: "md", radius: "md" });
+/** FillCardSurface — a card that FILLS the cell it is given and lays its
+ *  children out as a column that fills it too.
+ *
+ *  A bare `Surface` is a plain block div with no height, so in a sized flex
+ *  cell it shrinks to its content and a chart inside it has no height to take.
+ *  This variant sets `height:100%` and `direction:"column"`, which gives the
+ *  inner Stack `fill` — so a title keeps its intrinsic height and a `GrowBox`
+ *  around the chart takes everything left. The chain a full-height chart card
+ *  needs, in one variant rather than three wrappers at the call site. */
+export const FillCardSurface = createSurface({
+  padding: "sm",
+  radius: "md",
+  direction: "column",
+  gap: "xs",
+  style: { height: "100%" },
+});
+
 export const CompactSurface = createSurface({ padding: "sm", radius: "sm" });
 
 // Interactive card surfaces (clickable with hover glow)

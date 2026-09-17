@@ -7,6 +7,14 @@ export type DagSvgEdgeProps = {
   class?: string;
   /** When set, applies marker-end={`url(#${arrowMarkerId})`} for an arrowhead. */
   arrowMarkerId?: string;
+  /**
+   * Optional classification token, emitted verbatim as `data-kind`. Charts
+   * that paint edges by a caller-supplied category (e.g. a diff's
+   * added/removed) use it so the category is readable from the DOM rather
+   * than parsed back out of the class string. Omit it and no attribute is
+   * written.
+   */
+  dataKind?: string;
 };
 
 /**
@@ -23,6 +31,7 @@ export function DagSvgEdge(props: DagSvgEdgeProps): JSX.Element {
       marker-end={
         props.arrowMarkerId ? `url(#${props.arrowMarkerId})` : undefined
       }
+      data-kind={props.dataKind}
       style={{ "pointer-events": "none" }}
     />
   );

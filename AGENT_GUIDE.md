@@ -394,6 +394,116 @@ Two related traps in the same family:
   and comparing their heights as if they shared one reports a phantom raggedness.
   Compare like with like, keyed on `getBoundingClientRect().top`.
 
+## Layout, measurement and the dev gallery — rules that cost an hour each (2026-09-16)
+
+From RateGauge, LevelsTimeline, MutationSliders and the scenario board bench.
+Each bullet cost an hour and names where the pattern now lives.
+
+**Fill-height needs no prop.** `height: 100%` against a parent of INDEFINITE
+height computes to `auto`, so one declaration serves both callers — a card with
+a height gives it, a content-sized column doesn't (`RateGauge.css`). There is
+nothing for a `fill` prop to choose between. Three companions:
+
+- `aspect-ratio` on the host applies ONLY while the height is indeterminate, so
+  it is a default shape, not a constraint fighting a definite box
+  (`LevelsTimeline.css`).
+- `min-height: 0` lets a chart child SHRINK in a flex column — a flex item's
+  automatic minimum is its content, so an 800px-intrinsic chart overflows a
+  150px cell in silence. `GrowFillBox` (`Layout/variants.ts`) bakes it in.
+- A flex ROW inside a flex COLUMN takes its height from CONTENT: the column's
+  `align-items: stretch` governs its CROSS axis, which for a column is the
+  WIDTH. Claim the height with `flex: 1 1 <basis>` or use `FillWrapRow` — this
+  left 227px of the board empty.
+
+**Deliver the FIRST size measurement synchronously in `onMount` via
+`getBoundingClientRect`.** A ref-time `clientHeight` is 0 (not in the document
+yet), and `observeSize` defers through rAF, so the observer's first delivery is
+a frame late — and a browser SUSPENDS rAF for a hidden document, so under
+automation it never arrives and the component sits at its fallback forever.
+`onMount` runs after insertion and before paint. See `MutationSliders.tsx`,
+`ScrubChart.tsx` (`chartHeight: "fill"`), `LevelsTimeline.tsx`. **A zero reading
+is not a measurement** — look again rather than storing it, or it clobbers a real
+size the observer already delivered (under jsdom every rect is zero).
+
+**SVG text scales with the viewBox, so `preserveAspectRatio` is a decision.**
+`none` is right for a chart canvas stated in chart units that compensates for
+the stretch (`ScrubChartAxes.tsx`, `MutationSliders.tsx:342`, which counter-
+scales its text on purpose). It is wrong for an INSTRUMENT whose angle IS the
+reading — a dial stretched to a box's aspect stops being a circle — so
+`RateGauge` keeps the default `xMidYMid meet` and `RateGauge.test.tsx` pins the
+attribute to `null`. Otherwise: set the viewBox to the MEASURED box at ~1 unit
+per CSS pixel and keep annotation in fixed units, so the drawing grows and the
+words don't (`LevelsTimeline.tsx`, `RateGauge/geometry.ts`).
+
+**`<For>` over freshly computed geometry remounts the whole SVG.** `For` keys by
+REFERENTIAL identity and a geometry memo builds new objects every recompute, so
+every band, tick and flag reads as a new row and the drawing is rebuilt — the
+flicker on every drag step. Use `<Index>` for positional lists: position IS the
+identity for values recomputed wholesale. Keep `<defs>` static for the same
+reason — per-datum gradient ids rebuilt the whole block (`LevelsTimeline.tsx`).
+
+**An SVG `<title>` paints as an OS tooltip.** It is the graphic's NAME; a
+paragraph-long announcement belongs in `<desc>`, which assistive technology
+reads and the browser never paints. `<title>` must also be the FIRST child of
+`<svg>` — a JSX comment in that slot makes biome's `noSvgWithoutTitle` stop
+seeing it, twice now (`LevelsTimeline.tsx`). And **a measurement that includes
+the thing being set is a feedback loop, not a measurement**: the hover panel
+measured its own group, whose background rect's width is the value, and grew ten
+units per pointer move until it ran off the edge. Measure the `<text>` nodes'
+intrinsic widths (`getComputedTextLength`) instead.
+
+**Kobalte slider, four traps** (`MutationSliders.tsx`):
+
+- `step` governs the POINTER as well as the keyboard, so a keyboard-sized step
+  makes the thumb jump between rungs under a drag. Give Kobalte the fine step
+  and intercept arrow keys in the CAPTURE phase — the thumb's own handler
+  ignores `defaultPrevented`, so stopping the event before it arrives is the
+  only way to replace the behaviour.
+- `onChangeEnd` reports the CONTROLLED prop value. A consumer that stops feeding
+  `onChange` back into state is handed back what it supplied, and nothing moves.
+- Kobalte CAPTURES the pointer during a drag, so a release outside the dial never
+  reaches a `pointerup` listener on the window. Use `onChangeEnd`, not a guess.
+- Popovers portal to `document.body` at z-index 50, which paints UNDER a Modal
+  (1000) while still taking focus and reporting to a screen reader. Select,
+  Combobox and Tooltip are **1100** now, below Toast (9999).
+
+**The dev gallery is ONE bundle.** `dev/main.tsx` statically imports every
+showcase, so one bench's runtime error or ghost export blanks EVERY bench. After
+adding, deleting or renaming an export, a stale-HMR ghost reads as *"does not
+provide an export named X"* or a fake TDZ error while every gate is green —
+`touch` the file, then open a BRAND-NEW tab, because the old tab's module graph
+stays poisoned. Ghost vs real: a module-resolution error a hard reload clears is
+the ghost; a thrown `Error` from consumer code surviving a reload is real.
+
+**The Claude Browser pane's tabs report `visibilityState === "hidden"`** — see
+*Verifying in a browser* above for the rAF half. Two additions: layout numbers
+are still fine, so a synchronous measurement is trustworthy while anything
+arriving through `observeSize` alone is frozen; and the tool's click coordinates
+are in the SCREENSHOT frame, not CSS pixels (0.6125 on this display), so clicking
+a thumb by coordinate silently misses. Focus the element and dispatch synthetic
+events from `getBoundingClientRect` — same handler chain, no coordinate space in
+the way.
+
+**Tests.** A regression test you have not WATCHED FAIL is not written — remove
+the fix and watch it go red; two of these passed against everything first try.
+When a dependency can produce the same outcome, assert something only your path
+can. File-content assertions must strip comments first. And after any scripted
+edit, READ THE FILE BACK: biome reflows what you wrote and a too-loose replace
+no-ops in silence — five times in one day.
+
+**Gates.** `npx tsc --noEmit` covers `src` only; a bench change type-checks only
+under `npm run typecheck:dev`. **Never pipe a gate** into `head` or `echo` — the
+exit status is the gate, and a pipe throws it away.
+
+**Budget for consumer integration.** A first-consumer bench surfaces faults in
+other components that are invisible on their own benches — this board found the
+z-index bug, the flicker, three zero-measurement bugs and the pointer-capture
+one. Budget roughly the bench's own build estimate again for them.
+
+**Shared-checkout git discipline is not repeated here** — it lives with the
+staging bullet under *Other things that will bite* below, which is where you
+already go looking for it.
+
 ## The health ratchet will fail you — including for *improving* a metric
 
 `test`, `typecheck`, `build`, **`health`** and **`bundle-budget`** all gate
@@ -562,7 +672,19 @@ bundle is ruined anyway. That is what this script is for.
   exports appear on neither side — so removing an export that production still
   imports passes cleanly. See dside `sui` 12565 for the gate that would catch
   it.
-- **Shared checkout.** Stage only files you touched; never `git add -A`.
+- **Shared checkout.** Several agents share one working tree and one index, so
+  every rule here follows from *HEAD and the index may not be yours*. Stage only
+  files you touched; never `git add -A`. Never `--amend` (HEAD may be another
+  agent's commit), never `reset --hard`, never `git stash` — it takes their
+  uncommitted work with yours. **Push immediately after each commit**, so the
+  window in which someone can build on an unpushed HEAD stays short. An
+  uncommitted export is a hazard in itself: it blanks the dev gallery for
+  everyone (see *Layout, measurement and the dev gallery* above) and the
+  `pre-push` health hook measures the **WORKING TREE**, so another agent's
+  in-progress files fail your push for reasons that are not in your commit. The
+  answer is never `--no-verify` — prove the commit itself green in isolation:
+  `git worktree add --detach <tmp> HEAD`, symlink `node_modules` into it, and
+  run the gates there.
 - **CI installs with `--ignore-scripts`, so there is no `dist/`.** Everything in
   the test/lint/typecheck/health jobs must work from source. See ADR 0007.
 - **Don't spawn subprocesses in the vitest suite.** Nine of them hung the `test`

@@ -105,12 +105,15 @@ import { ChartHeaderShowcase } from "./showcases/chart-header";
 import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
+import { RateGaugeShowcase } from "./showcases/rate-gauge";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { BandRailShowcase } from "./showcases/band-rail";
+import { MutationSlidersShowcase } from "./showcases/mutation-sliders";
 import { SliderShowcase } from "./showcases/slider";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
 import { BurndownChartShowcase } from "./showcases/burndown-chart";
 import { CompletionTimelineShowcase } from "./showcases/completion-timeline";
+import { LevelsTimelineShowcase } from "./showcases/levels-timeline";
 import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
 import { ToastShowcase } from "./showcases/toast";
 import { TooltipShowcase } from "./showcases/tooltip";
@@ -545,6 +548,12 @@ const items: Item[] = [
     tags: ["depth:1", "chart", "time", "data"],
   },
   {
+    id: "levels-timeline",
+    label: "LevelsTimeline",
+    component: LevelsTimelineShowcase,
+    tags: ["depth:1", "chart", "time"],
+  },
+  {
     id: "dropdown",
     label: "Dropdown",
     component: DropdownShowcase,
@@ -611,6 +620,12 @@ const items: Item[] = [
     tags: ["depth:1", "chart", "indicator", "data"],
   },
   {
+    id: "rate-gauge",
+    label: "RateGauge",
+    component: RateGaugeShowcase,
+    tags: ["depth:2", "chart", "indicator"],
+  },
+  {
     id: "sprint-selector",
     label: "SprintSelector",
     component: SprintSelectorShowcase,
@@ -657,6 +672,12 @@ const items: Item[] = [
     label: "BandRail",
     component: BandRailShowcase,
     tags: ["depth:1", "chart", "form", "data"],
+  },
+  {
+    id: "mutation-sliders",
+    label: "MutationSliders",
+    component: MutationSlidersShowcase,
+    tags: ["depth:2", "form", "data"],
   },
   {
     id: "slider",

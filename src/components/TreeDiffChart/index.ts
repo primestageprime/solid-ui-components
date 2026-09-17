@@ -1,4 +1,9 @@
-export { TreeDiffChart } from "./TreeDiffChart";
+export { TreeDiffChart, createTreeDiffChart } from "./TreeDiffChart";
+export type {
+  TreeDiffChartOverrides,
+  TreeDiffChartDataProps,
+} from "./TreeDiffChart";
+export * from "./variants";
 export type {
   TreeDiffChartProps,
   TreeDiffBand,
@@ -7,6 +12,7 @@ export type {
   TreeDiffRoot,
   TreeDiffMode,
   TreeDiffSide,
+  TreeDiffKind,
 } from "./types";
 export {
   ROOT_BASELINE_ID,
@@ -17,6 +23,7 @@ export {
   HEAD_COMPARE_ID,
   SAME_ID,
 } from "./types";
+export { KINDS, kindColor, kindLabel, kindLegendItems, presentKinds } from "./kinds";
 export { computeTreeDiffLayout } from "./layout";
 export type { TreeDiffLayoutInput } from "./layout";
 export type {

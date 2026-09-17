@@ -282,8 +282,13 @@ export interface CashflowScrubChartProps {
   /** Date used by the inner DateAxis for the today highlight. */
   today?: Date;
   /** Chart drawing-area height in px. Default 200. With
-   *  `chartHeightExpanded` set this is the COLLAPSED height. */
-  chartHeight?: number;
+   *  `chartHeightExpanded` set this is the COLLAPSED height.
+   *
+   *  `"fill"` takes the CONTAINER's height instead — forwarded to
+   *  `ScrubChart.chartHeight` unchanged, and its doc is the full contract: the
+   *  container must have a definite height, and `chartHeightExpanded` is
+   *  ignored in that mode. Additive; the numeric path is untouched. */
+  chartHeight?: ScrubChartProps<CashflowCell>["chartHeight"];
   /**
    * Height the chart grows to when the reader expands it, in px.
    *

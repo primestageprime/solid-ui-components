@@ -1127,8 +1127,21 @@
 /* ── Content ───────────────────────────────────────────── */
 
 .showcase__content {
+  /* The gallery's own padding, named ONCE so the two things that depend on it
+     cannot drift: the padding below, and the bench-viewport height derived
+     from it. */
+  --showcase-pad: 32px;
+  /* THE BENCH VIEWPORT — the height a full-height bench may occupy so its
+     bottom edge lands on the window's bottom edge and no scrollbar appears.
+     This element IS the scroll container and its padding IS the only chrome
+     above and below the bench (a bench's own title lives inside the bench),
+     so the subtraction is exactly that padding, doubled — derived here rather
+     than written as a number in each bench.
+     `dvh`, not `vh`: on mobile `vh` is the LARGEST viewport, so a visible
+     toolbar makes a `100vh` box overflow by the toolbar's height. */
+  --sui-bench-viewport: calc(100dvh - var(--showcase-pad) * 2);
   flex: 1;
-  padding: 32px;
+  padding: var(--showcase-pad);
   max-width: 1000px;
   overflow-y: auto;
 }
@@ -2743,15 +2756,6 @@ th:has(.tf-th-center) .hud-table__header-content {
 /* Bench frames — a showcase's demo geometry belongs in a class, not an inline
    style, so the teaching surface models what the rule asks of src. */
 
-/* split-queue: a definite-height flex context, so the fill-parent bar has a
-   height to fill. */
-.split-queue-frame {
-  max-width: 460px;
-  margin-top: 12px;
-  height: calc(100vh - 220px);
-  display: flex;
-}
-
 /* Slider — the draw dial's input column is a fixed 290px, so the showcase
    renders every slider inside that exact width. A control that only reads
    well at full page width would pass a demo and fail the consumer. */
@@ -2795,4 +2799,49 @@ th:has(.tf-th-center) .hud-table__header-content {
 .slider-discount-sep {
   color: var(--sui-text-muted);
   font-size: 0.875rem;
+}
+
+/* Scenario Board bench — the two faint alternatives fanning away from the
+   committed balance line. A consumer's own series class owns colour, dash and
+   opacity (CashflowBalanceSeries.class); the chart ships none, so without this
+   rule the fan would read as three equally-committed lines. */
+.scenario-board-demo__fan {
+  stroke: var(--sui-accent);
+  stroke-width: 1.4;
+  stroke-opacity: 0.28;
+  stroke-dasharray: 5 4;
+}
+
+/* Scenario Board bench — the board fills the gallery's viewport.
+   MEASURED, not guessed: the gallery's scroll container is
+   `main.showcase__content`, which is exactly 100vh with 32px of padding top
+   and bottom and holds the section as its only child with no margins of its
+   own. 64px is that padding, so the board ends flush with the viewport.
+   HEIGHT ONLY — every row and column inside is a Layout variant. */
+.scenario-board-frame {
+  height: var(--sui-bench-viewport);
+}
+
+/* Scenario Board — the gauge's cell. It GROWS and shrinks with the row rather
+   than keeping its intrinsic width, so the bottom row stays side by side at
+   the widths Peter reviewed (1090px and up) instead of wrapping the gauge
+   underneath the sliders.
+   The min-width is what still allows a wrap, and it is the only number here:
+   the panel beside it is a definite 80%, so the row runs out of room exactly
+   when 20% of it drops below this — 200px at 20% is a 1000px row. Below that
+   the gauge would be narrower than its own callout column can read, and
+   wrapping is better than an illegible dial. */
+.scenario-board-gauge {
+  min-width: 200px;
+}
+
+/* MutationSliders — a sized frame so the "absorbs its container's height"
+   card has a definite height to absorb. `height: 100%` on the dial computes
+   to `auto` against an indefinite parent, so without a frame like this the
+   card would only ever show the fixed 260px default and the showcase would
+   prove nothing. */
+.mutation-sliders-demo__tall-frame {
+  display: flex;
+  flex-direction: column;
+  height: 420px;
 }

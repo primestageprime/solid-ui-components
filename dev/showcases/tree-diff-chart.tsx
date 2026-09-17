@@ -6,10 +6,14 @@
  * scenario that removes a line and adds one.
  */
 import { type Component, createSignal } from "solid-js";
-import { TreeDiffChart } from "../../src/components/TreeDiffChart";
+import {
+  ScenarioTreeDiff,
+  TreeDiffChart,
+} from "../../src/components/TreeDiffChart";
 import type {
   TreeDiffBand,
   TreeDiffEntry,
+  TreeDiffKind,
 } from "../../src/components/TreeDiffChart";
 import { SpacedStack } from "../../src/components/Layout";
 import { MonoMeta } from "../../src/components/Text";
@@ -18,6 +22,12 @@ const e = (id: string, label: string, hash: string): TreeDiffEntry => ({
   id,
   label,
   hash,
+});
+
+/** The same entry, tagged with the change kind the CONSUMER computed. */
+const k = (entry: TreeDiffEntry, kind: TreeDiffKind): TreeDiffEntry => ({
+  ...entry,
+  kind,
 });
 
 // ─── Shared entries ───────────────────────────────────────────────────────
@@ -42,7 +52,9 @@ const L_ANA88 = e("l_ana88", "Salary · Ana", "73e0b5f");
 const L_BO = e("l_bo", "Salary · Bo", "2a6b39c");
 const L_RENT = e("l_rent", "Office rent", "5d0a9c1");
 const L_SAAS = e("l_saas", "SaaS stack", "9e1b7f3");
-const L_BOOK = e("l_book", "Bookkeeping retainer", "41c2e8a");
+// Deliberately longer than any node box: this is the label that used to
+// spill past the box edge, and is now the truncate-with-tooltip proof.
+const L_BOOK = e("l_book", "Bookkeeping retainer · Northern", "41c2e8a");
 
 /** Inputs the fold never opens: one identical group each, no children. */
 const INPUTS: TreeDiffBand[] = [
@@ -90,14 +102,25 @@ const ONE_VALUE_CHANGES: TreeDiffBand[] = [
 ];
 
 // ─── Situation 2: a line removed, a line added ───────────────────────────
+/**
+ * Situation 2 supplies a `kind` per entry, so the chart paints by CHANGE
+ * rather than by side and keys a legend to the same tokens. The consumer
+ * decides these: `bucket:opex` changed because its contents did, the rent
+ * line is untouched, the SaaS line is gone and the bookkeeping retainer is
+ * new. All four kinds appear, so the legend shows all four.
+ */
 const OPEX_FORKED: TreeDiffBand = {
   name: "bucket:opex",
-  baseline: G_OPEX,
-  compare: G_OPEX_C,
+  baseline: k(G_OPEX, "changed"),
+  compare: k(G_OPEX_C, "changed"),
   children: [
-    { name: "line:office-rent", baseline: L_RENT, compare: L_RENT },
-    { name: "line:saas", baseline: L_SAAS },
-    { name: "line:bookkeeping", compare: L_BOOK },
+    {
+      name: "line:office-rent",
+      baseline: k(L_RENT, "unchanged"),
+      compare: k(L_RENT, "unchanged"),
+    },
+    { name: "line:saas", baseline: k(L_SAAS, "removed") },
+    { name: "line:bookkeeping", compare: k(L_BOOK, "added") },
   ],
 };
 const PAYROLL_SAME: TreeDiffBand = {
@@ -119,12 +142,13 @@ const LINE_REMOVED_LINE_ADDED: TreeDiffBand[] = [
 
 export const TreeDiffChartShowcase: Component = () => {
   const [selected, setSelected] = createSignal<string | undefined>();
+  const [curried, setCurried] = createSignal<string | undefined>();
   const toggle = (id: string) =>
     setSelected((cur) => (cur === id ? undefined : id));
 
   return (
     <div class="component-section component-section--full">
-      <h2>TreeDiffChart — Primitive (Depth 0)</h2>
+      <h2>TreeDiffChart — Composite (Depth 2)</h2>
       <p class="text-meta">
         A pre-computed diff of two content-addressed scenario trees. The
         baseline root sits on the left, the comparison root on the right. Each
@@ -132,9 +156,17 @@ export const TreeDiffChartShowcase: Component = () => {
         row per child, a child both sides share draws once in the center, and in{" "}
         <code>differences</code> mode every identical root entry folds into one{" "}
         <code>[SAME]</code> node. The consumer computes the bands; the chart
-        owns layout, routing and paint. Three colours carry the picture:
-        baseline ink, accent for the comparison, dim dashes for what both sides
-        share.
+        owns layout, routing and paint. By default three colours carry the
+        picture by <em>side</em>: baseline ink, accent for the comparison, dim
+        dashes for what both sides share. Supply a <code>kind</code> per entry
+        and colour switches to meaning <em>change</em> instead, keyed to a
+        legend — see the third example.
+      </p>
+      <p class="text-meta">
+        Node labels are consumer data of unknown length, so they ellipsize at
+        the box edge and carry the complete value in a tooltip; a long label
+        never widens its box. Hover{" "}
+        <code>Bookkeeping retainer · Northern</code> in the third example.
       </p>
 
       <div class="example-group">
@@ -181,15 +213,51 @@ export const TreeDiffChartShowcase: Component = () => {
         <h3>A line removed, a line added</h3>
         <p class="text-meta">
           Situation 2: Bar drops the SaaS stack and adds a bookkeeping retainer.
-          A child missing on one side is drawn on the other side only, in that
-          side's colour. Children sort added, changed, removed, identical. The
-          note counts the lines that moved.
+          A child missing on one side is drawn on the other side only. Children
+          sort added, changed, removed, identical. The note counts the lines
+          that moved.
+        </p>
+        <p class="text-meta">
+          This is the only example that supplies a <code>kind</code> per entry,
+          so it paints by change rather than by side: grey{" "}
+          <code>unchanged</code>, blue <code>changed</code>, green{" "}
+          <code>added</code>, red <code>removed</code>. An arrow takes the
+          colour of the node it points at, and the legend shows only the kinds
+          the data actually uses. The chart never infers a kind — the consumer
+          supplies it. The two examples above pass none, which is why they show
+          no legend and keep the original side colours.
         </p>
         <TreeDiffChart
           baseline={BASELINE}
           compare={BAR}
           bands={LINE_REMOVED_LINE_ADDED}
         />
+      </div>
+
+      <div class="example-group">
+        <h3>Curried variant — ScenarioTreeDiff</h3>
+        <p class="text-meta">
+          The drop-in form: data and callbacks only, no presentational props at
+          the call site. Almost every prop this chart takes is data, so the one
+          thing the factory bakes is <code>legend</code> —{" "}
+          <code>ScenarioTreeDiff</code> leaves it at the chart's data-derived
+          default, and a consumer that keys the colours in its own chrome
+          curries <code>createTreeDiffChart({"{ legend: false }"})</code> once
+          in their own layer instead. Same data as the example above, and the
+          click handler below proves the drop-in is wired.
+        </p>
+        <SpacedStack>
+          <ScenarioTreeDiff
+            baseline={BASELINE}
+            compare={BAR}
+            bands={LINE_REMOVED_LINE_ADDED}
+            selectedId={curried() ?? undefined}
+            onNodeClick={setCurried}
+          />
+          <MonoMeta>
+            {curried() ? `selected ${curried()}` : "nothing selected"}
+          </MonoMeta>
+        </SpacedStack>
       </div>
 
       <div class="example-group">
@@ -204,6 +272,13 @@ export const TreeDiffChartShowcase: Component = () => {
           <code>SAME_ID</code>); those never reach <code>onNodeClick</code>. The
           SVG scales to its container width through its viewBox; a full tree
           grows taller, never denser.
+        </p>
+        <p class="text-meta">
+          <code>kind</code> is optional and purely additive: omit it and the
+          chart renders exactly as it did before kinds existed. The legend
+          defaults on whenever any entry carries a <code>kind</code> and off
+          otherwise; <code>legend={"{false}"}</code> suppresses it without
+          changing the paint.
         </p>
       </div>
     </div>

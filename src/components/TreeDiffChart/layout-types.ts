@@ -3,7 +3,12 @@
 // (`layout.ts`) and the narrow layout (`narrow.ts`). Pure types.
 // ============================================
 import type { TreeDiffLayoutMode } from "./frame";
-import type { TreeDiffBand, TreeDiffChild, TreeDiffSide } from "./types";
+import type {
+  TreeDiffBand,
+  TreeDiffChild,
+  TreeDiffKind,
+  TreeDiffSide,
+} from "./types";
 
 export type LayoutNodeKind =
   | "head"
@@ -25,6 +30,18 @@ export type LayoutNode = {
   y: number;
   width: number;
   height: number;
+  /**
+   * Consumer-supplied change kind, carried straight through from the entry.
+   * Undefined on nodes the chart mints (the spine, the pruned node) and on
+   * entries the consumer left unkinded — both paint by side.
+   */
+  changeKind?: TreeDiffKind;
+  /**
+   * True when `label` is a consumer-supplied string of unknown length, so it
+   * must ellipsize with a tooltip. False for the fixed strings the chart
+   * mints ("commit", "root tree", "[SAME]"), which stay plain SVG text.
+   */
+  labelFromData?: boolean;
 };
 
 export type LayoutEdge = {

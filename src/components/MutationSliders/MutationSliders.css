@@ -1,0 +1,323 @@
+/* ============================================
+   MutationSliders — Structural
+
+   One dial per entity: a thin vertical line running the whole shared domain,
+   the entity's shaded ALLOWED RANGE on it, a muted PRIOR arrowhead and an accent
+   FUTURE arrowhead pointing at the track from opposite sides, and a wider
+   coloured line between them.
+
+   Everything positional in the SVG overlay is decided in geometry.ts. The only
+   numbers repeated HERE are the three that the Kobalte track must agree with —
+   the dial's box and the track's inset — because Kobalte places the thumb as a
+   percentage of the TRACK element, so the track has to occupy exactly the span
+   `geometry.ts` maps the domain onto. `geometry.test.ts` pins the two files
+   together, so a change to one fails until the other follows.
+
+   COLOUR. The change line is green for a raise and red for a cut (Peter,
+   2026-09-16, superseding the earlier accent-only ruling). Hue is never the
+   ONLY cue: the two arrowheads carry the same reading by POSITION — future
+   above prior is a raise, below it is a cut — so the colourblind theme loses
+   nothing but the reinforcement.
+
+   LAYOUT PURITY — AUDITED INTRINSIC. The dial's parts are this widget's OWN
+   marks, not caller children, and they place themselves against a data-driven
+   percentage the same way Slider's notches do. There is no flex, no grid and
+   no gap in this file: the ROW of dials, the name above each one and the
+   readout below are composed from Layout and Text variants in the TSX.
+
+   All visual values come from `--sui-*` tokens.
+   ============================================ */
+.sui-mutation-sliders {
+  /* CLAIM THE HEIGHT THE PARENT GIVES US. This is the TOP of the fill chain
+     and it was missing: `flex: 1 1 var(--sui-mutation-dial-height)` on the
+     dial distributes height WITHIN a column that already has one, which is
+     correct as far as it goes and does nothing if the root never claimed any.
+     Measured on the scenario board at 1400×1300: the cell offered 759px and
+     this root took 363px of content.
+
+     `height: 100%` against a parent of INDEFINITE height computes to `auto`
+     by the CSS sizing rules, so an unconstrained bench is unaffected — that
+     property is what makes this one declaration serve both callers, with no
+     `fill` prop and no branch. `min-height: 0` lets it SHRINK inside a flex
+     cell instead of pushing the card open.
+
+     geometry.test.ts asserts both declarations are present, because no
+     mounting test can: jsdom performs no layout, and a fill test that hands
+     the row a height directly passes whether or not the root would ever have
+     claimed one from a parent. */
+  height: 100%;
+  min-height: 0;
+  /* Mirrors VIEW_HEIGHT / VIEW_WIDTH in geometry.ts — geometry.test.ts pins
+     the pair. Tall, because the only thing that separates two arrows a
+     thousandth of the span apart is vertical room; and wider than the track, because
+     the signed delta label lives on the canvas to the right of it. */
+  --sui-mutation-dial-height: 260px;
+  --sui-mutation-dial-width: 88px;
+  --sui-mutation-dial-min-height: 180px;
+  --sui-mutation-footer-height: 24px;
+  --sui-mutation-track-inset: 12px;
+  /* The drag surface is wider than any drawn mark, so a press anywhere on the
+     dial starts a drag — Kobalte slides from the TRACK, not only from the
+     thumb, which is what lets the future arrowhead stay small. */
+  --sui-mutation-grip-width: 22px;
+  /* The track's centre line, mirroring TRACK_X. It is NOT the canvas centre:
+     the delta label occupies the right of the dial. */
+  --sui-mutation-track-x: 44px;
+  /* The grab handle over the future arrowhead. It draws nothing: the SVG
+     already drew the arrow, so both arrowheads come from one geometry
+     function and cannot drift apart in shape. */
+  --sui-mutation-thumb-width: 12px;
+  --sui-mutation-thumb-height: 12px;
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+}
+
+/* ── The dial ────────────────────────────────────────────────────────────
+   The Kobalte root. It is the SVG's canvas as well as the slider's box, and
+   the two are the same px, so no scale factor exists anywhere. */
+/* The dial takes the height left over in its column after the name and the
+   readouts, with the OLD fixed height as its flex basis — so an unconstrained
+   column resolves to exactly the 260px it drew before, a taller one lengthens
+   the track, and a shorter one shrinks only as far as the floor.
+   `--sui-mutation-dial-min-height` mirrors `MIN_DIAL_HEIGHT` in geometry.ts;
+   below it the 11px delta labels collide, which is the one part of the dial
+   that cannot survive being short. */
+.sui-mutation-sliders__dial {
+  position: relative;
+  width: var(--sui-mutation-dial-width);
+  flex: 1 1 var(--sui-mutation-dial-height);
+  min-height: var(--sui-mutation-dial-min-height);
+}
+
+/* A removed entity keeps its range box and its prior arrow and loses the
+   future one. Dimming says "this is still the same entity, it is just not in
+   the new scenario" — hiding the dial would lose the comparison entirely. */
+.sui-mutation-sliders__dial[data-removed] {
+  opacity: 0.4;
+}
+
+/* ── The painted marks ───────────────────────────────────────────────────
+   One overlay, lying exactly on the dial box. It takes no pointer events: the
+   track under it is the drag surface, and a mark that swallowed the press
+   would make the dial dead at exactly the places a reader aims for. */
+.sui-mutation-sliders__marks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sui-mutation-sliders__track-line {
+  stroke: var(--sui-border);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  fill: none;
+}
+
+/* The ALLOWED RANGE. Translucent so the track line reads THROUGH it — the box
+   is the span the entity is permitted, not a mark that hides the scale it sits
+   on. */
+.sui-mutation-sliders__band {
+  fill: var(--sui-text-secondary);
+  /* Measured in the browser, not guessed: at 0.14 the band was invisible on a
+     dark surface and the dial read as marks floating on a bare line. */
+  fill-opacity: 0.28;
+  stroke: none;
+}
+
+/* ── The change, in colour ───────────────────────────────────────────────
+   Green up, red down, nothing when the amount did not move. The tone is
+   written as a modifier rather than an inline fill, so the theme owns the two
+   hues and a new theme can change them without touching this component. */
+.sui-mutation-sliders__change {
+  stroke: none;
+}
+
+.sui-mutation-sliders__change--raise {
+  fill: var(--sui-success);
+}
+
+.sui-mutation-sliders__change--cut {
+  fill: var(--sui-danger);
+}
+
+/* ── The signed delta label ──────────────────────────────────────────────
+   `+$2.5k` beside the change line, level with its midpoint (Peter,
+   2026-09-16). It restates in a FIGURE what the coloured line says as an
+   area — "the levels are very close" was the note, and at close quarters an
+   area is hard to read and a number never is.
+
+   Toned to match its line, and that is the one place hue is load-bearing —
+   so the sign character carries the same reading for anyone who cannot see
+   the difference. */
+.sui-mutation-sliders__delta {
+  font-family: var(--sui-font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  dominant-baseline: middle;
+}
+
+.sui-mutation-sliders__delta--raise {
+  fill: var(--sui-success);
+}
+
+.sui-mutation-sliders__delta--cut {
+  fill: var(--sui-danger);
+}
+
+/* ── The two arrowheads ──────────────────────────────────────────────────
+   Same shape, mirrored, pointing at the track from opposite sides. The PRIOR
+   one is read-only and recedes; the FUTURE one is the thing being dragged and
+   carries the accent. */
+.sui-mutation-sliders__arrow--prior {
+  fill: var(--sui-text-secondary);
+  fill-opacity: 0.7;
+}
+
+.sui-mutation-sliders__arrow--future {
+  fill: var(--sui-accent);
+}
+
+/* ── The drag surface ────────────────────────────────────────────────────
+   Kobalte places the thumb at `bottom: N%` of THIS element, so its inset is
+   the one number that has to agree with geometry.ts. It draws nothing: the
+   overlay above already drew every mark. */
+.sui-mutation-sliders__track {
+  position: absolute;
+  top: var(--sui-mutation-track-inset);
+  bottom: var(--sui-mutation-track-inset);
+  left: calc(var(--sui-mutation-track-x) - var(--sui-mutation-grip-width) / 2);
+  width: var(--sui-mutation-grip-width);
+  background: transparent;
+  cursor: pointer;
+}
+
+.sui-mutation-sliders__dial[data-disabled] .sui-mutation-sliders__track {
+  cursor: not-allowed;
+}
+
+/* The grab handle, sitting over the future arrowhead the SVG drew. It is
+   invisible ON PURPOSE — one arrow shape, drawn once, from geometry.
+   Kobalte writes `position`, `bottom` and `transform: translateY(50%)` as
+   INLINE styles here, and an inline transform beats this file, so the
+   horizontal placement is a `left`/`width` pair rather than the other half of
+   a two-axis transform, which would be silently dropped. */
+.sui-mutation-sliders__thumb {
+  left: calc(var(--sui-mutation-grip-width) - var(--sui-mutation-thumb-width));
+  width: var(--sui-mutation-thumb-width);
+  height: var(--sui-mutation-thumb-height);
+  background: transparent;
+  border-radius: 2px;
+  cursor: grab;
+  outline: none;
+  transition: box-shadow 120ms ease;
+}
+
+.sui-mutation-sliders__thumb:hover:not([data-disabled]) {
+  box-shadow: 0 0 0 3px rgba(var(--sui-accent-rgb), 0.2);
+}
+
+.sui-mutation-sliders__thumb:active:not([data-disabled]) {
+  cursor: grabbing;
+}
+
+/* A keyboard user has to see which dial the arrow keys move. The ring is the
+   ONLY thing this element ever paints. */
+.sui-mutation-sliders__thumb:focus-visible {
+  box-shadow: 0 0 0 3px rgba(var(--sui-accent-rgb), 0.6);
+}
+
+/* ── Slots that hold their space ─────────────────────────────────────────
+   Peter, 2026-09-16: "You have elements that become invisible (was L7) but
+   they don't hold their space. That means the control moves around when you
+   change it, which is really bad UX."
+
+   `visibility: hidden` rather than removing the node, so the row keeps its
+   height and the big figure, the footer button and the dial above it stay
+   exactly where they were. The difference matters most mid-DRAG: pulling a
+   value onto its prior amount used to delete the `was …` line and jump
+   everything below it up, under the pointer, at the moment of least tolerance
+   for movement.
+
+   `visibility: hidden` also takes the node out of the accessibility tree and
+   out of the tab order, so a reserved button is not a focus trap. */
+.sui-mutation-sliders__reserved {
+  visibility: hidden;
+}
+
+/* An EXPLICIT line box on both readout rows, so their height comes from the
+   rule rather than from whichever glyphs happen to be in them. Measured in the
+   browser: without this, a removed dial's em-dash gave a line box 1px
+   shorter than a five-character figure, which moved that column's figure and button by a pixel
+   against its neighbours. One pixel is not a bug anybody would report, but
+   "identical" is a promise that survives a font change and "within a pixel" is
+   not. */
+.sui-mutation-sliders__figure {
+  line-height: 1.25;
+}
+
+.sui-mutation-sliders__prior {
+  line-height: 1.35;
+}
+
+/* The footer button's box is PINNED, because its three states do not carry the
+   same content: ⊗ is a text glyph and ↺ is an `Icon` span, and measured in the
+   browser those gave button heights 1px apart. That pixel moved the whole
+   column — dial included — the moment you removed an entity, which is
+   precisely the shift Peter reported. Fixing the box makes the three states
+   interchangeable by construction rather than by coincidence of font metrics. */
+.sui-mutation-sliders__footer {
+  height: var(--sui-mutation-footer-height);
+  line-height: 1;
+}
+
+/* ── The name, which is also the select control ─────────────────────────
+   A real <button> stripped back to its text, so Tab and Enter work and the
+   toggle state is `aria-pressed` rather than a colour a screen reader cannot
+   see. It is `display: block` with no padding of its own: the column centres
+   it, and any padding here would move the name off the axis the dial sits on.
+
+   SELECTED reads twice over — the name takes the accent, and the dial behind
+   it gets a tinted ring. Neither alone is enough: the name alone is easy to
+   miss in a row of nine, and a ring alone does not say WHICH of the two marks
+   inside it is the selected thing. */
+.sui-mutation-sliders__name {
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.sui-mutation-sliders__name:focus-visible {
+  outline: 2px solid var(--sui-border-focus);
+  outline-offset: 2px;
+}
+
+.sui-mutation-sliders__name--selected {
+  color: var(--sui-accent);
+  font-weight: 600;
+}
+
+/* The ring is drawn OUTSIDE the dial's box, so it cannot change the height the
+   geometry was measured at — an inset ring would shrink the track by two
+   pixels and put the drawing and the pointer back out of step. */
+.sui-mutation-sliders__dial--selected {
+  outline: 1px solid rgba(var(--sui-accent-rgb), 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+  background: rgba(var(--sui-accent-rgb), 0.07);
+}
+
+/* ── The name ────────────────────────────────────────────────────────────
+   A struck-through name is the sketch's own notation for "removed in the new
+   scenario", and it is the first thing read — so it stays text, struck, rather
+   than becoming a badge beside the name. */
+.sui-mutation-sliders__name--removed {
+  text-decoration: line-through;
+}

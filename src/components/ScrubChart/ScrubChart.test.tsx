@@ -26,7 +26,12 @@ import {
 } from "./helpers";
 import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
 import { dailyCells, type Cell } from "../DateAxis";
-import { installRects, pointer, rectOf } from "../../test-utils";
+import {
+  installFakeSizer,
+  installRects,
+  pointer,
+  rectOf,
+} from "../../test-utils";
 
 // `cellAtClientX` reads exactly one field of this box — `left`, to convert a
 // client coordinate into a plot-relative one. The 1200 that sets dayPitch does
@@ -61,6 +66,145 @@ describe("ScrubChart composition", () => {
     expect(container.querySelector(".sui-scrub-chart__overlay")).toBeTruthy();
     expect(container.querySelector(".sui-date-axis")).toBeTruthy();
     expect(container.querySelector('[data-testid="chart"]')).toBeTruthy();
+  });
+
+  // The fill-height contract (Peter, 2026-09-16). BOTH paths are pinned,
+  // because they fail in opposite directions: losing the fill leaves a pixel
+  // height behind, and losing the numeric path leaves `100%` behind, and each
+  // regression would satisfy the other's assertion.
+  it("takes the container's height in fill mode and a pixel height otherwise", () => {
+    const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    const chart = (height: number | "fill") => (
+      <ScrubChart
+        cells={cells}
+        selected={15}
+        onScrub={() => {}}
+        chartHeight={height}
+        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+        renderChart={() => <svg data-testid="chart" />}
+      />
+    );
+
+    const numeric = render(() => chart(260));
+    const numericFrame = numeric.container.querySelector(
+      ".sui-scrub-chart__frame",
+    ) as HTMLElement;
+    expect(numericFrame.style.height).toBe("260px");
+
+    // In fill mode the height is the STYLESHEET's, not an inline style: the
+    // modifier gives the root a height and the frame `flex:1`. An inline
+    // `height:100%` here resolved against a root with no height of its own.
+    const filled = render(() => chart("fill"));
+    const filledFrame = filled.container.querySelector(
+      ".sui-scrub-chart__frame",
+    ) as HTMLElement;
+    expect(filledFrame.style.height).toBe("");
+    expect(
+      filled.container.querySelector(".sui-scrub-chart--fill"),
+    ).toBeTruthy();
+  });
+
+  // The DISCRIMINATING case for the fill height, and the reason it is written
+  // with no observer delivery at all: `observeSize` defers through
+  // `requestAnimationFrame`, and a browser SUSPENDS rAF for a document that is
+  // not visible. A height that arrives only through the observer is therefore
+  // frozen at its fallback in a hidden or backgrounded tab — and wrong for the
+  // first frame even in a visible one. So the only way to pass this is to
+  // measure the element synchronously on mount.
+  //
+  // Verified by mutation: removing the synchronous height read leaves the
+  // viewBox at the 200px default and this fails, while every other test in the
+  // file still passes.
+  it("takes its fill height from the element on mount, with no observer", () => {
+    const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    const FRAME_HEIGHT = 340;
+    const restore = installRects((el) =>
+      (el as HTMLElement).classList?.contains("sui-scrub-chart__frame")
+        ? rectOf({ left: 0, top: 0, width: 900, height: FRAME_HEIGHT })
+        : null,
+    );
+    try {
+      const { container } = render(() => (
+        <ScrubChart
+          cells={cells}
+          selected={15}
+          onScrub={() => {}}
+          chartHeight="fill"
+          renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+          renderChart={() => <svg data-testid="chart" />}
+        />
+      ));
+      // Whichever layers this configuration renders, every one of them states
+      // the SAME viewBox in chart units — so its height IS the measured frame
+      // height, not the 200px default it would keep without the read.
+      const boxes = [
+        ...container.querySelectorAll(".sui-scrub-chart__frame svg[viewBox]"),
+      ].map((el) => el.getAttribute("viewBox"));
+      expect(boxes.length).toBeGreaterThan(0);
+      for (const box of boxes) expect(box).toBe(`0 0 900 ${FRAME_HEIGHT}`);
+    } finally {
+      restore();
+    }
+  });
+
+  it("keeps the last real fill height when the box goes to zero", async () => {
+    const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    const sizer = installFakeSizer();
+    const restore = installRects((el) =>
+      (el as HTMLElement).classList?.contains("sui-scrub-chart__frame")
+        ? rectOf({ left: 0, top: 0, width: 900, height: 340 })
+        : null,
+    );
+    try {
+      const { container } = render(() => (
+        <ScrubChart
+          cells={cells}
+          selected={15}
+          onScrub={() => {}}
+          chartHeight="fill"
+          renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+          renderChart={() => <svg data-testid="chart" />}
+        />
+      ));
+      const frame = container.querySelector(
+        ".sui-scrub-chart__frame",
+      ) as HTMLElement;
+      const boxOf = () =>
+        container
+          .querySelector(".sui-scrub-chart__frame svg[viewBox]")
+          ?.getAttribute("viewBox");
+
+      await sizer.resize(frame, { width: 900, height: 420 });
+      expect(boxOf()).toBe("0 0 900 420");
+
+      // Hiding the card (a tab, an accordion, `display: none`) delivers a ZERO.
+      // That is the layout saying "not yet", not a new size — storing it would
+      // bring the chart back at the fallback instead of the height it had.
+      await sizer.resize(frame, { width: 900, height: 0 });
+      expect(boxOf()).toBe("0 0 900 420");
+    } finally {
+      restore();
+      sizer.restore();
+    }
+  });
+
+  it("renders no expand chevron in fill mode — the container owns the height", () => {
+    const cells: Cell[] = dailyCells(d("2026-05-01"), d("2026-05-31"));
+    // `chartHeightExpanded` is the chevron's master switch, so this is the
+    // case that would regress if fill mode forgot to suppress it: moving the
+    // frame between two PIXEL heights says nothing when the parent owns it.
+    const { container } = render(() => (
+      <ScrubChart
+        cells={cells}
+        selected={15}
+        onScrub={() => {}}
+        chartHeight="fill"
+        chartHeightExpanded={400}
+        renderCell={(cell) => <span>{cell.start.getUTCDate()}</span>}
+        renderChart={() => <svg data-testid="chart" />}
+      />
+    ));
+    expect(container.querySelector(".sui-scrub-chart__expand-btn")).toBeNull();
   });
 
   it("passes a linear cellToX + cellBounds to renderChart", () => {

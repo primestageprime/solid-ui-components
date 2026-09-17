@@ -1,6 +1,9 @@
 import { render, fireEvent } from "@solidjs/testing-library";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { createSignal } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
+import { Modal } from "../Modal/Modal";
 import { Select, type SelectOption } from "./Select";
 
 const OPTIONS: SelectOption[] = [
@@ -87,5 +90,49 @@ describe("Select (multiple)", () => {
     fireEvent.click(clear!);
     expect(onChange).toHaveBeenCalled();
     expect(onChange.mock.lastCall?.[0]).toEqual([]);
+  });
+});
+
+// Peter, 2026-09-16, on the scenario board's hire form: "I don't see any
+// options in the role selector." The listbox was there, focused and
+// announced — and painted underneath the modal, because Kobalte portals it to
+// `document.body`, where it is a SIBLING of the overlay rather than a child.
+//
+// Two tests, because the bug has two halves and each half can break alone: the
+// options have to RENDER inside a dialog, and the popover has to OUTRANK it.
+describe("Select inside a Modal", () => {
+  it("renders its options when it is opened from inside a dialog", () => {
+    render(() => (
+      <Modal open onClose={() => {}} title="Hire">
+        <Select options={opts} label="Fruit" defaultOpen />
+      </Modal>
+    ));
+    const options = [...document.querySelectorAll('[role="option"]')].map(
+      (option) => option.textContent,
+    );
+    expect(options).toEqual(["Apple", "Banana", "Cherry"]);
+  });
+
+  // jsdom applies no stylesheet, so the stacking rule is asserted against the
+  // CSS ITSELF. It is a real guard rather than a tautology: the two numbers
+  // live in different files, and the one that broke was changed without the
+  // other ever being consulted.
+  it("paints above the modal overlay", () => {
+    const zIndexOf = (css: string, selector: string): number => {
+      const block = css.slice(css.indexOf(selector));
+      const match = block.slice(0, block.indexOf("}")).match(/z-index:\s*(\d+)/);
+      return Number(match?.[1]);
+    };
+    const here = join(__dirname, "..");
+    const popover = zIndexOf(
+      readFileSync(join(here, "Select/Select.css"), "utf8"),
+      ".sui-select__content {",
+    );
+    const overlay = zIndexOf(
+      readFileSync(join(here, "Modal/Modal.css"), "utf8"),
+      ".sui-modal-overlay {",
+    );
+    expect(overlay).toBeGreaterThan(0);
+    expect(popover).toBeGreaterThan(overlay);
   });
 });
