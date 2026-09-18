@@ -28,6 +28,29 @@
   for so far is a consumer's own domain, and SUI does not guess which units.
   Ships with a showcase, a `COMPONENTS.md` entry, a pinned barrel contract test
   and mounting tests.
+- **`Chart` gains `StackedAreaSeries` — a stack of step-valued bands.** A new
+  Structural Primitive slot child, built as ADR 0010 says a mark is built: a
+  pure core (`Chart/stackedArea.ts`, which prints its stack as a table in its
+  own test) plus ONE thin adapter that reads `useChart()`. Each series is a
+  list of `{ at, value }` step points; band *k* is closed between the
+  cumulative top of the bands below it and its own value, so the top of the
+  stack is the total, two bands can never overlap, and a series at zero
+  collapses onto the shared edge without disturbing the bands above it — all
+  by construction, because the cumulative levels are built once and band *k*'s
+  top edge IS band *k+1*'s floor. Changes are crossed with the Sankey blend
+  (`hCurve`), over a transition of 5% of the plot clamped to [10, 28]px and
+  shortened where two changes crowd each other; `curve="linear"` lands each
+  change square instead. Three props — `series`, `curve`, `class` — and no
+  paint props at all: band *k* takes series-palette slot *k+1* (ADR 0003),
+  translucent fill plus a hairline edge, fixed in `Chart.css`. No factory and
+  no curried variant: nothing a consumer would lock down. Ships with a
+  showcase card (stacked over a dashed cap line, on a pinned y-domain), a
+  `COMPONENTS.md` entry and mounting tests.
+- **`hCurve` moved to `src/internal/geometry/hCurve.ts`.** The Sankey cubic
+  now has two call sites — `LevelsTimeline`'s geometry and `Chart`'s
+  stacked-area core — and the Primitive rule forbids cross-Primitive component
+  imports. `LevelsTimeline/geometry.ts` re-exports it, so nothing that read it
+  there has moved.
 - **`MarkedSlider` — a new Atomic Primitive (Depth 1), extracted from
   `MutationSliders`.** ONE vertical slider, marked: the track line, the shaded
   allowed-range box, the muted prior arrowhead and the accent value arrowhead

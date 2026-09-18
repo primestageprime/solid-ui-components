@@ -19,6 +19,8 @@ import {
   ChartLabels,
   Crosshair,
   ChartTooltip,
+  StackedAreaSeries,
+  type StackedAreaSeriesData,
   domainOf,
 } from "../../src/components/Chart";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -41,6 +43,45 @@ const seedSeries = (n: number, seed = 1): Pt[] => {
   }
   return out;
 };
+
+// ── Stacked-area fixture ────────────────────────────────────────────────
+// Three step-valued series over twelve months. The third drops to zero at
+// month 5 and returns at month 9, so the collapse case is visible in the
+// gallery and not only in stackedArea.test.ts (whose printed table is this
+// same fixture).
+const STACK: readonly StackedAreaSeriesData[] = [
+  {
+    id: "one",
+    label: "One",
+    points: [
+      { at: 0, value: 12 },
+      { at: 3, value: 18 },
+      { at: 8, value: 14 },
+    ],
+  },
+  {
+    id: "two",
+    label: "Two",
+    points: [
+      { at: 0, value: 8 },
+      { at: 8, value: 16 },
+    ],
+  },
+  {
+    id: "three",
+    label: "Three",
+    points: [
+      { at: 0, value: 6 },
+      { at: 5, value: 0 },
+      { at: 9, value: 9 },
+    ],
+  },
+];
+const STACK_CAP = 45;
+const STACK_CAP_LINE: Pt[] = [
+  { t: 0, v: 40 },
+  { t: 12, v: 40 },
+];
 
 export const ChartShowcase: Component = () => {
   // ── Live reactive demo: stream new points every second ──────────
@@ -367,6 +408,41 @@ export const ChartShowcase: Component = () => {
                 { data: b, x: (d) => d.t, y: (d) => d.v, stroke: "#7ad29c" },
                 { data: c, x: (d) => d.t, y: (d) => d.v, stroke: "#e0a14a" },
               ]}
+            />
+          </Chart>
+
+          <h3 class="showcase-heading-gap">Stacked areas</h3>
+          <p class="text-meta">
+            <code>&lt;StackedAreaSeries&gt;</code> — three step-valued series
+            stacked from the baseline over twelve months. Band <em>k</em> sits
+            on the cumulative top of the bands below it, so the top of the
+            stack is the total; each band takes one series-palette slot, and
+            a change is crossed with a Sankey blend rather than a wall. The
+            third series drops to zero at month 5 and returns at month 9 — its
+            band collapses onto the edge below and leaves the rest untouched.
+            The dashed <code>&lt;LineSeries&gt;</code> is a cap the stack is
+            read against, on a y-domain fixed at <code>[0, 45]</code> so the
+            cap holds its height whatever the stack does — the mark composes
+            with the grid, the axes and another series because it has no frame
+            of its own.
+          </p>
+          <Chart
+            width={640}
+            height={240}
+            xDomain={[0, 12]}
+            yDomain={[0, STACK_CAP]}
+          >
+            <Grid />
+            <YAxis />
+            <XAxis tickValues={[0, 3, 6, 9, 12]} />
+            <StackedAreaSeries series={STACK} />
+            <LineSeries
+              data={STACK_CAP_LINE}
+              x={(d) => d.t}
+              y={(d) => d.v}
+              stroke="var(--sui-text-secondary)"
+              strokeWidth={1.5}
+              strokeDasharray="6 4"
             />
           </Chart>
 
