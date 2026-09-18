@@ -129,17 +129,26 @@ export const rowLayout = (
  *
  * A single visible dial reads "dial 3 of 7" — an en-dash range with the same
  * number on both sides is a thing a screen reader says twice for no reason.
+ *
+ * `noun` is what ONE unit of the window is CALLED, and it is the last
+ * parameter and optional for the same reason `slot` is (2026-09-17, additive
+ * for `PairedMutationSliders`): every existing caller keeps "dial". A row
+ * whose unit is a PAIR of dials says "pairs 1\u20133 of 9", because on that row
+ * the count is ENTITIES and the dials on screen number twice it — announcing
+ * "dials" there would be a noun that contradicts the row's own "Next entity"
+ * controls and a number that means something else.
  */
 export const windowLabel = (
   start: number,
   end: number,
   count: number,
+  noun = "dial",
 ): string => {
-  if (count === 0) return "no dials";
+  if (count === 0) return `no ${noun}s`;
   const first = start + 1;
   return first === end
-    ? `dial ${first} of ${count}`
-    : `dials ${first}\u2013${end} of ${count}`;
+    ? `${noun} ${first} of ${count}`
+    : `${noun}s ${first}\u2013${end} of ${count}`;
 };
 
 /** One entity's new amount, as a pin or a group move computes it. */

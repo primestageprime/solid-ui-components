@@ -56,6 +56,12 @@
   #2-Rule expansion — flagged for Peter's confirmation.**
 
 ### Changed
+- **`windowLabel` (`MutationSliders/rows.ts`) takes the window's own NOUN as a
+  trailing, optional argument** (default `"dial"`, so every existing caller is
+  unchanged). A row whose unit is a PAIR of dials announces `pairs 1–3 of 9`:
+  its count is entities and the dials on screen number twice it, so the old
+  noun would have been both wrong and a contradiction of the row's own
+  "Next entity" control.
 - **`rowLayout` (`MutationSliders/rows.ts`) takes the entity SLOT WIDTH as a
   trailing, optional argument** (`rowLayout(width, count, offset, adding, slot
   = DIAL_SLOT)`). Additive: every existing caller and every one of the module's

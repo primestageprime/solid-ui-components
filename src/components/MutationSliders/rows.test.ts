@@ -179,6 +179,17 @@ describe("rowLayout", () => {
 });
 
 describe("windowLabel", () => {
+  // ── the noun parameter (additive, 2026-09-17) ────────────────────────────
+  it('defaults to "dial", so every existing caller is unchanged', () => {
+    expect(windowLabel(2, 5, 7)).toBe(windowLabel(2, 5, 7, "dial"));
+  });
+
+  it("takes the window's own noun, singular and plural and empty", () => {
+    expect(windowLabel(2, 5, 9, "pair")).toBe("pairs 3\u20135 of 9");
+    expect(windowLabel(2, 3, 9, "pair")).toBe("pair 3 of 9");
+    expect(windowLabel(0, 0, 0, "pair")).toBe("no pairs");
+  });
+
   it("names the window the way a reader counts, from one", () => {
     expect(windowLabel(2, 5, 7)).toBe("dials 3\u20135 of 7");
   });

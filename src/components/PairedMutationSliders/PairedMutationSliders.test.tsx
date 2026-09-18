@@ -387,6 +387,23 @@ describe("PairedMutationSliders", () => {
       expect(queryButton(container, "Next entity")).toBeTruthy();
     });
 
+    it("announces the window in PAIRS, agreeing with its own controls", async () => {
+      // The count is ENTITIES and the dials on screen number twice it, so
+      // "dials 1\u20133 of 9" would be both the wrong noun and the wrong number —
+      // and it would contradict the row's own "Next entity" button.
+      const { container } = render(() => (
+        <PairedMutationSliders
+          entities={NINE}
+          axes={AXES}
+          onChange={() => {}}
+        />
+      ));
+      await sizer.resizeAll({ width: widthFor(3), height: 300 });
+      expect(
+        container.querySelector('[role="group"]')?.getAttribute("aria-label"),
+      ).toBe("pairs 1\u20133 of 9");
+    });
+
     it("pages by ONE entity, so every neighbouring pair stays reachable", async () => {
       const { container, queryByText } = render(() => (
         <PairedMutationSliders

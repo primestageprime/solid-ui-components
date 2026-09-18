@@ -455,10 +455,14 @@ export const PairedMutationSliders: Component<PairedMutationSlidersProps> = (
       // a screen-reader user paging the row hears the names change and nothing
       // telling them where in the set they now are.
       role="group"
+      // "pairs 1\u20133 of 9", not "dials": the count is ENTITIES, and the dials
+      // on screen number twice it. `windowLabel`'s noun is the last, optional
+      // argument for exactly this (additive; every other caller keeps "dial").
       aria-label={windowLabel(
         layout().start,
         layout().end,
         props.entities.length,
+        "pair",
       )}
     >
       {/* The chevrons exist only when the row pages. A permanently-present
