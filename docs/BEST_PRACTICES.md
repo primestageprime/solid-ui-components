@@ -21,7 +21,9 @@ Every component is either a **Primitive** (Depth 1) or a **Composite**
 - A **Composite** owns **zero CSS files and zero inline `style={}`** (the
   one exception is `style={props.style}` passthrough). It composes curried
   variants of Primitives or lower-depth Composites, and expresses only
-  structure and data flow.
+  structure and data flow. It **renders no intrinsic (lowercase) elements and
+  no third-party primitives; if a Composite needs a mark no Primitive draws,
+  the answer is a new justified Primitive, not markup in the Composite.**
 
 Depth is `1 + max(depth of children)`. A module exporting several components
 inherits its highest export's depth. Composition only flows downward — a
@@ -29,6 +31,23 @@ Primitive never renders a Composite.
 
 **Expectation:** all visual styling lives in Primitives. If you're about to
 put a style rule anywhere else, you're about to break the architecture.
+
+**The axiom (Peter, 2026-09-17):** *no component above Depth 1 contains
+anything but existing SUI components.* The whole point of SUI is composition —
+exporting enough curried components that complex components assemble like lego
+blocks instead of being hand-built every time. The only carve-outs are the
+narrow ones already named here: `style={props.style}` passthrough, a
+data-driven inline `style={}` *inside* a Primitive (§3), and wrapping a
+headless third-party primitive — which is how you write a Primitive, never a
+Composite.
+
+**The precedent, honestly:** 31 components whose own header declares Depth 2+
+currently import their own CSS file (8 of those also draw SVG marks inline; 23
+are plain markup). That is history, not permission — the direction is to
+migrate that styling and markup down into Primitives. The `scripts/adherence`
+report (being built now) is the tracker and
+[`docs/adherence/OPEN_ITEMS.md`](./adherence/OPEN_ITEMS.md) is the list of open
+items. New components comply from the start.
 
 ## 2. Curried Variants, not inline overrides
 
@@ -85,7 +104,10 @@ must keep working forever; unused ones are pure cost.
   that renders the variant in product justifies it.
 - Expanding the set of variants, sizes, tokens, or props **requires
   confirming with Peter first** — why, and why it matters. This is a hard
-  gate. It's the reason `Stack`/`Row` gaps are just `xs`/`sm` and `Surface`
+  gate. Creating a whole new component or variant carries the same gate:
+  **name the existing component that covers it, or justify in three lines why
+  none can** — see the push-back protocol in
+  [`AGENT_GUIDE.md`](../AGENT_GUIDE.md#the-push-back-protocol--before-you-create-anything). It's the reason `Stack`/`Row` gaps are just `xs`/`sm` and `Surface`
   padding/radius is `none`/`sm`/`md`.
 
 ## 5. Tokens and theming
@@ -131,6 +153,16 @@ dependency; `d3-selection` (and, for now, `d3-shape`) are excluded because
 Solid is the single owner of every rendered element. Per-datum visuals flow
 as closed **Descriptor** objects (`{ color, shape, size? }`). See
 [ADR 0002](./adr/0002-charts-d3-scale-no-selection.md).
+
+**Slots that draw are Primitives, not an exception to §1.** A Slot returning
+`<rect>`/`<path>` owns its drawing, so it is Depth-1 render-primitive
+territory; the Depth-2+ chart Composite above it still draws nothing of its
+own and composes Slots. The chart composites that currently emit inline SVG
+are tracked precedent (see the count in §1 and
+[`docs/adherence/OPEN_ITEMS.md`](./adherence/OPEN_ITEMS.md)), not a standing
+exemption. The layout-purity *svg / canvas rendering* exemption in
+[`STYLE_GUIDE.md`](../STYLE_GUIDE.md#exemptions) is about **box-model
+geometry only** — it never licenses a Composite to render markup.
 
 ## 9. Solid idioms
 

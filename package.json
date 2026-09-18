@@ -88,6 +88,7 @@
     "audit:styles": "node scripts/audit-inline-styles.mjs",
     "audit:scales": "node scripts/scale-audit.mjs",
     "health": "node scripts/health.mjs",
+    "adherence": "node scripts/adherence.mjs",
     "bundle-budget": "node scripts/bundle-budget.mjs",
     "style-rubric": "node scripts/style-rubric.mjs",
     "render-coverage": "node scripts/render-coverage.mjs",
