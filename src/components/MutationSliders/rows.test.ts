@@ -140,6 +140,42 @@ describe("rowLayout", () => {
       paging: true,
     });
   });
+
+  // ── the slot parameter (additive, 2026-09-17) ────────────────────────────
+  // `PairedMutationSliders` puts TWO dials under one name, so its entity costs
+  // the row twice what a single dial does. The layout arithmetic is unchanged;
+  // only the number it divides by moves.
+
+  it("defaults to one dial's slot, so the four-argument form is unchanged", () => {
+    const width = DIAL_SLOT * 4 + ADD_SLOT;
+    expect(rowLayout(width, 9, 0, true)).toEqual(
+      rowLayout(width, 9, 0, true, DIAL_SLOT),
+    );
+  });
+
+  it("fits half as many entities when one entity is two dials wide", () => {
+    const width = DIAL_SLOT * 8 + ADD_SLOT;
+    expect(rowLayout(width, 9, 0, true, 2 * DIAL_SLOT).capacity).toBe(
+      Math.floor(rowLayout(width, 9, 0, true, DIAL_SLOT).capacity / 2),
+    );
+  });
+
+  it("still floors a wide slot at one entity, and still pages", () => {
+    expect(rowLayout(20, 9, 0, true, 2 * DIAL_SLOT)).toMatchObject({
+      start: 0,
+      end: 1,
+      capacity: 1,
+      paging: true,
+    });
+  });
+
+  it("does not page a wide-slot row that fits exactly", () => {
+    const exact = 2 * DIAL_SLOT * 3 + ADD_SLOT;
+    expect(rowLayout(exact, 3, 0, true, 2 * DIAL_SLOT)).toMatchObject({
+      capacity: 3,
+      paging: false,
+    });
+  });
 });
 
 describe("windowLabel", () => {
