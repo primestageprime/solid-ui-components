@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.173.0 — 2026-09-17
+
 ### Added
 
 - **Chart: `onPick`.** The chart root now reports a click inside its plot area as a data-space x — `onPick?: (x: number | Date, meta: { clientX; clientY; event }) => void` — using the same pointer-to-x mapping the crosshair and `hoverX` use, and reporting a `Date` when `xDomain` is date-based. Additive and opt-in: without `onPick` there is no click listener and no cursor change. The value is NOT snapped; snapping is the consumer's, which is what lets the Hourly workshop bench snap a pick to an ISO week while `LevelsTimeline` keeps snapping its own picks to a month.
