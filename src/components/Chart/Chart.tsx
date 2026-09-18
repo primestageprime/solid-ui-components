@@ -371,6 +371,15 @@ export const Chart: Component<ChartProps> = (props) => {
         <Show when={local.title}>
           <div class="sui-chart__title">{local.title}</div>
         </Show>
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: a picked x on a
+            continuous plot has no keyboard analogue at this altitude — there
+            is no discrete set of values to arrow between, and inventing one
+            would be inventing a grid, which is the thing `onPick`
+            deliberately leaves to the consumer. The pick is an ACCELERATOR
+            over controls the consumer already owns (the Hourly bench reaches
+            every change through its dials and its as-of chips, both real
+            focusable controls), not the only route to the action. A `Chart`
+            whose pick IS the only route owes its readers such a control. */}
         <svg
           ref={svgEl}
           class={`sui-chart__svg${local.responsive ? " sui-chart__svg--responsive" : ""}`}

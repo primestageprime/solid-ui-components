@@ -99,21 +99,64 @@ import type {
 // Anything that touches an ENTITY is written below against services.
 import {
   addMutation,
-  ensureMutation,
-  nextFreeSlot,
+  ensureMutation as ensureMutationOn,
+  nextFreeSlot as nextFreeSlotOn,
   orderedMutations,
   type SegmentLabel,
-  segmentLabelsOf,
+  segmentLabelsOf as segmentLabelsOn,
+  weekLabel,
+  weekSlotOf,
 } from "./scenario-board-people";
 
-export {
-  addMutation,
-  ensureMutation,
-  nextFreeSlot,
-  orderedMutations,
-  segmentLabelsOf,
-};
+export { addMutation, orderedMutations, weekLabel, weekSlotOf };
 export type { SegmentLabel };
+
+// ── This board's grain is the WEEK ───────────────────────────────────────────
+//
+// Peter, 2026-09-17: "You should still have clicks on the chart at a weekly
+// granularity. That allows for weekly seasonality in projections." A business
+// that sells HOURS A WEEK cannot say anything about week-to-week seasonality on
+// a quarterly grid, so this board's calendar runs a grain finer than the
+// Scenario Board's.
+//
+// The grain is bound HERE, once, rather than passed at each of the bench's call
+// sites. Both ways a change can be created — a click on the Work Mix plot and a
+// drag with nothing selected — have to land on the SAME grid, because
+// `addMutation` dedupes on an exact timestamp; a bench that had to remember to
+// say `"week"` in two places could forget it in one and put two flags five days
+// apart inside one week. `addMutation` itself needs no grain: the caller snaps,
+// and exact-timestamp dedupe is then per-week for free.
+
+/** The first free WEEK from the span's start. See `weekSlotOf` for the clamp
+ *  that keeps that first slot at the span's own start, and so at weight 1. */
+export const nextFreeSlot = (
+  domainStart: number,
+  domainEnd: number,
+  mutations: readonly Mutation[],
+): number | undefined =>
+  nextFreeSlotOn(domainStart, domainEnd, mutations, "week");
+
+/** The selected change, or a new one at the next free WEEK. */
+export const ensureMutation = (
+  scenario: {
+    readonly mutations: readonly Mutation[];
+    readonly selected: string | null;
+  },
+  domainStart: number,
+  domainEnd: number,
+): { mutations: Mutation[]; selected: string | null; created: boolean } =>
+  ensureMutationOn(scenario, domainStart, domainEnd, "week");
+
+/** The as-of chips, labelled by WEEK — `W27 · Jun 30`. */
+export const segmentLabelsOf = (
+  mutations: readonly Mutation[],
+): SegmentLabel[] => segmentLabelsOn(mutations, "week");
+
+/** The week slot a picked date belongs to, against THIS board's span. A click
+ *  on the Work Mix plot arrives unsnapped (`Chart.onPick` snaps nothing) and
+ *  goes through here. */
+export const weekOfPick = (at: Date | number): Date =>
+  new Date(weekSlotOf(typeof at === "number" ? at : at.getTime(), timeOf(DOMAIN_START)));
 
 // ── The span ─────────────────────────────────────────────────────────────────
 
@@ -719,6 +762,38 @@ const monthPosition = (time: number): number => {
 export const monthsBetween = (from: number, to: number): number =>
   monthPosition(to) - monthPosition(from);
 
+/** A week, in ms. Unlike a month, a week IS a fixed length. */
+export const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Weeks from one moment to another.
+ *
+ * Plain division, and the contrast with `monthsBetween` is the reason weeks are
+ * worth having: a calendar month is not 1/12 of a year, so month positions need
+ * a walk over each month's own length, while every week is seven days. On a
+ * board whose changes land on ISO weeks that makes the unit both exact and the
+ * one the reader is counting in.
+ */
+export const weeksBetween = (from: number, to: number): number =>
+  (to - from) / WEEK_MS;
+
+/**
+ * THE UNIT time is weighted in.
+ *
+ * `"month"` is what the composite reading was built in and stays the default,
+ * so nothing that does not ask changes. `"week"` is what this board asks for:
+ * its changes land on ISO weeks, so a weight quoted in months would round a
+ * reader's own grid away.
+ *
+ * The two barely disagree over a year — a change on 1 April is 0.75 of it in
+ * months and 0.7534 in weeks — and that is the point: the unit is a statement
+ * about what the reader is counting, not a correction to a wrong number.
+ */
+export type RateUnit = "month" | "week";
+
+const spanIn = (unit: RateUnit, from: number, to: number): number =>
+  unit === "week" ? weeksBetween(from, to) : monthsBetween(from, to);
+
 /**
  * The rate over a whole span, weighted by time.
  *
@@ -735,8 +810,9 @@ export const averageRateOver = (
   end: number,
   moments: readonly number[],
   revenue: (time: number) => number,
+  unit: RateUnit = "month",
 ): number => {
-  const span = monthsBetween(start, end);
+  const span = spanIn(unit, start, end);
   if (span <= 0) return rateFromRevenue(revenue(start));
   const inside = filter(
     (moment: number) => moment > start && moment < end,
@@ -747,34 +823,50 @@ export const averageRateOver = (
   for (let index = 0; index < edges.length - 1; index += 1) {
     const from = edges[index] ?? start;
     const to = edges[index + 1] ?? end;
-    weighted += monthsBetween(from, to) * revenue(from);
+    weighted += spanIn(unit, from, to) * revenue(from);
   }
   return rateFromRevenue(weighted / span);
 };
 
 /** The share of the span a change made at `at` is in force for. */
-export const weightFrom = (start: number, end: number, at: number): number => {
-  const span = monthsBetween(start, end);
+export const weightFrom = (
+  start: number,
+  end: number,
+  at: number,
+  unit: RateUnit = "month",
+): number => {
+  const span = spanIn(unit, start, end);
   if (span <= 0) return 0;
-  return Math.min(Math.max(monthsBetween(at, end) / span, 0), 1);
+  return Math.min(Math.max(spanIn(unit, at, end) / span, 0), 1);
 };
 
 /**
- * THE GAUGE'S READING: the scenario's rate averaged over the whole year.
+ * THE GAUGE'S READING: the scenario's rate averaged over the whole year, in
+ * WEEKS.
  *
  * Not the selected change's own rate, which would say a service dropped in
  * December costs the year what the same service dropped in January does.
+ *
+ * Weeks rather than months because every change on this board lands on an ISO
+ * week and every hours figure is quoted per week — the average samples the
+ * revenue at each change and weights it by the weeks it is in force for, so a
+ * scenario whose hours alternate WEEK TO WEEK reads differently from the flat
+ * one with the same mean. That is the seasonality Peter asked for, and it is
+ * why the unit is not a detail. `unit` is still a parameter, defaulting here
+ * to weeks, so a test can print both readings side by side.
  */
 export const averageRate = (
   domain: TimeDomain,
   mutations: readonly Mutation[],
   services: readonly Service[],
+  unit: RateUnit = "week",
 ): number =>
   averageRateOver(
     timeOf(domain[0]),
     timeOf(domain[1]),
     map((mutation: Mutation) => timeOf(mutation.at), mutations),
     (time: number) => revenueAt(services, time, mutations),
+    unit,
   );
 
 /**
