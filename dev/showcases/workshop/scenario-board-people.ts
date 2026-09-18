@@ -466,13 +466,19 @@ export const addMutation = (
  * quarterly grid, so the grain is a parameter of the calendar rather than a
  * second calendar.
  *
+ * `"month"` is the License Board's: a licence is billed by the MONTH, so a
+ * change to a product's seat count or its fee takes effect on a billing
+ * boundary and nowhere else. A quarterly grid would refuse the reader three
+ * quarters of the dates a subscription business actually changes on, and a
+ * weekly one would offer them a grain no invoice has.
+ *
  * It is not a free choice per call site: BOTH ways a change can be created —
  * a click on the chart and a drag with nothing selected — have to land on the
  * SAME grid, because `addMutation` dedupes on an exact timestamp. Two flags
  * five days apart would both be "this week" to a reader and two separate
  * changes to the model.
  */
-export type SnapGrain = "quarter" | "week";
+export type SnapGrain = "quarter" | "month" | "week";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * DAY_MS;
@@ -523,6 +529,40 @@ const weekStartsIn = (start: number, end: number): number[] => {
   return stops;
 };
 
+/** The first instant of the month at or before a moment, at UTC midnight. */
+const monthStartOf = (time: number): number => {
+  const at = new Date(time);
+  return Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), 1);
+};
+
+/**
+ * The MONTH SLOT a moment belongs to: the first of its month, or the span's own
+ * start when that first falls before it.
+ *
+ * The clamp is `weekSlotOf`'s, for `weekSlotOf`'s reason: a span that opens
+ * mid-month would otherwise have its first pickable slot weeks inside itself,
+ * and every reading that depends on "a change at the left edge is in force for
+ * the whole span" — the calibration table's whole claim — would be off by them.
+ * A span opening on the first of a month, which both boards' do, is the case
+ * where the clamp does nothing at all.
+ */
+export const monthSlotOf = (time: number, domainStart: number): number =>
+  Math.max(monthStartOf(time), domainStart);
+
+/** The month slots inside the span — the first one clamped to its start. */
+const monthStartsIn = (start: number, end: number): number[] => {
+  const from = new Date(start);
+  const stops: number[] = [];
+  for (let index = 0; ; index += 1) {
+    const at = Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + index, 1);
+    if (at >= end) break;
+    const clamped = Math.max(at, start);
+    if (clamped >= end) break;
+    stops.push(clamped);
+  }
+  return stops;
+};
+
 /** The month a quarter starts, as a UTC timestamp. */
 const quarterStartsIn = (start: number, end: number): number[] => {
   const from = new Date(start);
@@ -567,7 +607,9 @@ const quarterStartsIn = (start: number, end: number): number[] => {
  * `snap` chooses the grid, defaulting to the quarters the Scenario Board has
  * always used. On `"week"` the same argument holds a grain down: the first
  * free WEEK from the start of the span, which for a span opening mid-week is
- * that truncated first week (see `weekSlotOf`) and so is still weight 1.
+ * that truncated first week (see `weekSlotOf`) and so is still weight 1. On
+ * `"month"` it is the first free MONTH, which is the same argument again at
+ * the grain a subscription actually bills on.
  */
 export const nextFreeSlot = (
   domainStart: number,
@@ -581,7 +623,9 @@ export const nextFreeSlot = (
   const slots =
     snap === "week"
       ? weekStartsIn(domainStart, domainEnd)
-      : quarterStartsIn(domainStart, domainEnd);
+      : snap === "month"
+        ? monthStartsIn(domainStart, domainEnd)
+        : quarterStartsIn(domainStart, domainEnd);
   return slots.find((at: number) => !taken.has(at));
 };
 
@@ -803,6 +847,12 @@ export interface SegmentLabel {
  * quarter-ticked axis. The vocabularies differ on purpose, because the grain
  * does.
  *
+ * UNDER MONTH SNAP the quarter rule holds again, with the month always
+ * appended — `2025-Q3 · Aug`. A month chip needs no vocabulary of its own: it
+ * is the Scenario Board's crowded-quarter chip, which already names the quarter
+ * the axis is ticked by and the month that locates it inside one. See the
+ * branch for why "always" rather than "when crowded".
+ *
  * TWO MUTATIONS CAN SHARE A QUARTER — a click in July and another in August
  * are both `2025-Q3` — and two chips with one label is a control that cannot
  * be operated. So the rule is stated over the whole list rather than per
@@ -838,6 +888,31 @@ export const segmentLabelsOf = (
       (mutation: Mutation) => ({
         id: mutation.id,
         label: weekLabel(mutation.at),
+        month: monthLabel(mutation.at),
+      }),
+      ordered,
+    );
+  }
+  // MONTH SNAP NEEDS NO DISAMBIGUATION EITHER, and for the week branch's exact
+  // reason: one mutation per MONTH is unique by construction — the slot grid is
+  // monthly and `addMutation` refuses a second mutation at an existing
+  // timestamp. But unlike a week chip it is not given its OWN vocabulary,
+  // because it does not need one: `2025-Q3 · Aug` is already the Scenario
+  // Board's own crowded-quarter chip, it names the quarter the axis is ticked
+  // by, and the month beside it is what makes it locatable and unique. So the
+  // month branch is the quarter branch with the suffix ALWAYS on.
+  //
+  // Always-on is the whole point of it being a branch rather than a fall-through
+  // to the crowding rule below. That rule suffixes only a quarter holding more
+  // than one mutation, so a board that opens with no changes would give its
+  // reader `2025-Q1` for a first change, `2025-Q1 · Jan` and `2025-Q1 · Feb`
+  // once there are two in that quarter, and a bare `2025-Q2` for a third — one
+  // control, three chip formats, changing shape as they work.
+  if (snap === "month") {
+    return map(
+      (mutation: Mutation) => ({
+        id: mutation.id,
+        label: `${quarterLabelOf(mutation.at)} · ${monthAbbrev(mutation.at)}`,
         month: monthLabel(mutation.at),
       }),
       ordered,
