@@ -80,6 +80,21 @@
 .sui-chart__area {
   fill: var(--sui-accent);
 }
+/* A stacked band is translucent so the grid still reads through the stack,
+   and it carries a hairline of its own hue on its TOP edge — the edge is what
+   the eye follows from one segment to the next, and a fill alone loses it
+   where two neighbouring hues are close in lightness. Both numbers are fixed
+   here rather than exposed: the mark's claim is that band k sits on band k−1,
+   and a caller who could repaint one band could break that reading. */
+.sui-chart__stacked-area-band {
+  stroke: none;
+  fill-opacity: 0.28;
+}
+.sui-chart__stacked-area-edge {
+  fill: none;
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+}
 /* Data-point dots are pure visualization: emphasis is computed by the
    chart-root pointer listener (no per-dot handlers). Disabling pointer
    events lets hover pass through to highlight segments / timeline bars
