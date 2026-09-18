@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.174.0 — 2026-09-18
+
 ### Added
 
 - **`MutationToolbar`** — Composite (Depth 2). The title, as-of chips and Add / Reset / Save / Delete row of a "changes" panel, extracted from the Hourly Board bench (the Scenario Board bench and Thorcasting's payroll simulator hand-build the same row). Actions render only when their callback is passed; words curry through `createMutationToolbar({ labels })`.
