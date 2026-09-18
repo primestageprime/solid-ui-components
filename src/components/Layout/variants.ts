@@ -20,6 +20,8 @@ import type { RowDataProps } from "./Row";
 import type { BoxDataProps } from "./Box";
 import type { GridDataProps } from "./Grid";
 import type { Component } from "solid-js";
+// Data import (not a component import) — see FixedHeightBox docstring.
+import { DEFAULT_CHART_HEIGHT } from "../ScrubChart/helpers";
 
 // Plain flex column, no baked gap — a bare vertical stack whose children space
 // themselves (own margins) or sit flush. For a wrapper that just needs a flex
@@ -474,6 +476,36 @@ export const ViewportColumn: Component<StackDataProps> = createStack({
 export const GrowFillBox: Component<BoxDataProps> = createBox({
   grow: true,
   style: { "flex-basis": "0%", "min-height": "0", "min-width": "0" },
+});
+
+/** FixedHeightBox — a Box whose height is STATED rather than left to a parent
+ *  fill/flex context (`height:{DEFAULT_CHART_HEIGHT}px; min-height:0;
+ *  overflow:hidden`). `DEFAULT_CHART_HEIGHT` (200px) is `ScrubChart`'s own
+ *  fallback height — the closest thing this library has to an "app chart
+ *  height" token — reused here as a data import (not a component import) so
+ *  a card that sits BESIDE a chart can match it without a caller ever writing
+ *  `height` inline on a Box style.
+ *
+ *  `min-height:0` matters for the same reason it matters on `GrowFillBox`: a
+ *  flex item's automatic minimum size is its content, so without it a tall
+ *  child (an SVG chart with an intrinsic height) refuses to shrink into the
+ *  stated box and blows it out silently. `overflow:hidden` is what actually
+ *  enforces the bound once the child stops fighting it.
+ *
+ *  Use for: a card whose height must match a sibling chart's height exactly
+ *  — put a fill child (`GrowFillBox`, or a chart with `chartHeight="fill"`)
+ *  INSIDE this box to have it absorb the stated height. Use `GrowFillBox`
+ *  instead when the box should fill whatever space its OWN parent has left
+ *  rather than a fixed value; use `HalfFillColumn` for a proportional split.
+ *  Motivated 2026-09-17 by the thorcasting Payroll Simulator, which needed
+ *  two chart cards bounded to the app chart's height inside a
+ *  content-sized page. */
+export const FixedHeightBox: Component<BoxDataProps> = createBox({
+  style: {
+    height: `${DEFAULT_CHART_HEIGHT}px`,
+    "min-height": "0",
+    overflow: "hidden",
+  },
 });
 
 /** HalfFillColumn — an EQUAL share of a proportional split (`flex:1 1 0;
