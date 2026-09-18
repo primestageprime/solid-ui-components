@@ -12,6 +12,17 @@ npm run build        # Builds dist/ for the package
 npm run audit:styles # Reports inline `style={…}` repeats — candidates for variants
 ```
 
+## Design philosophy
+
+**The whole point of SUI is composition** — by exporting enough curried components
+we assemble complex components like lego blocks instead of writing custom UI every
+time. **Axiom: no component above Depth 1 contains anything but existing SUI
+components** — no raw HTML/SVG elements, no CSS file, no inline style, no
+third-party primitives; those live only in Depth-1 Primitives. So a **new component
+or variant requires justification** that no existing component can do the job:
+agents must push back rather than silently add variants. Full rules:
+[BEST_PRACTICES §1](docs/BEST_PRACTICES.md#1-two-layers-primitives-and-composites) and [§4](docs/BEST_PRACTICES.md#4-minimal-variant-surface--expansion-is-gated), [STYLE_GUIDE › Depth Rules](STYLE_GUIDE.md#depth-rules).
+
 ## Where each doc lives
 
 | Doc | What's in it | Read it when… |
