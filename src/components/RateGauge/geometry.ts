@@ -435,7 +435,7 @@ const TEXT_GAP = 6;
  * Advance width of one character of label text, in viewBox units.
  *
  * The labels are 11px uppercase semibold with 0.5px of tracking, all of it
- * fixed by `RateGauge.css`, so an estimate is honest here in a way it would
+ * fixed by `RateGaugeCanvas.css`, so an estimate is honest here in a way it would
  * not be for arbitrary copy — and it keeps the canvas a pure function of its
  * inputs, which is what lets `gaugeGeometry` stay testable without a DOM.
  */

@@ -427,7 +427,7 @@ Each bullet cost an hour and names where the pattern now lives.
 
 **Fill-height needs no prop.** `height: 100%` against a parent of INDEFINITE
 height computes to `auto`, so one declaration serves both callers — a card with
-a height gives it, a content-sized column doesn't (`RateGauge.css`). There is
+a height gives it, a content-sized column doesn't (`RateGaugeCanvas.css`). There is
 nothing for a `fill` prop to choose between. Three companions:
 
 - `aspect-ratio` on the host applies ONLY while the height is indeterminate, so
