@@ -687,6 +687,17 @@ bundle is ruined anyway. That is what this script is for.
 - **`scripts/health-history.json` is tracked and changes on every `npm run
   health` run.** Commit it alongside health-affecting work rather than leaving
   it dirty in a shared checkout.
+- **`npm run adherence` is a REPORT with no ceiling, and its two output files
+  are git-ignored.** `docs/adherence/OPEN_ITEMS.md` and `report.json` are
+  rewritten by a `post-commit` hook and by the SessionStart hook, and they never
+  appear in a diff — deliberately, so a post-commit hook does not leave an
+  unrelated dirty file in a shared checkout the way `health-history.json` does
+  (see the bullet above for what that costs). Do not commit them, and do not
+  "fix" a finding as a side effect of unrelated work: one item, one PR, via
+  `.claude/skills/refactor-pass/SKILL.md`, which pins the public API. The rules
+  and the document each one comes from are in `scripts/adherence.mjs`'s header;
+  exemptions with their reasons are in `scripts/adherence-exemptions.json`.
+  Whether it ever becomes a ratchet is Peter's call.
 - **`docs/usage-manifest.json` is a REPORT, not a gate — and it does not tell
   you your push is safe.** The `pre-push` check warns and never blocks (it
   blocked until 2026-08-05, by which point it had refused four consecutive
