@@ -110,6 +110,7 @@ import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { BandRailShowcase } from "./showcases/band-rail";
 import { MarkedSliderShowcase } from "./showcases/marked-slider";
 import { MutationSlidersShowcase } from "./showcases/mutation-sliders";
+import { PairedMutationSlidersShowcase } from "./showcases/paired-mutation-sliders";
 import { SliderShowcase } from "./showcases/slider";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
 import { BurndownChartShowcase } from "./showcases/burndown-chart";
@@ -684,6 +685,12 @@ const items: Item[] = [
     id: "mutation-sliders",
     label: "MutationSliders",
     component: MutationSlidersShowcase,
+    tags: ["depth:3", "form", "data"],
+  },
+  {
+    id: "paired-mutation-sliders",
+    label: "PairedMutationSliders",
+    component: PairedMutationSlidersShowcase,
     tags: ["depth:3", "form", "data"],
   },
   {

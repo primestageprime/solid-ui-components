@@ -140,9 +140,56 @@ describe("rowLayout", () => {
       paging: true,
     });
   });
+
+  // ── the slot parameter (additive, 2026-09-17) ────────────────────────────
+  // `PairedMutationSliders` puts TWO dials under one name, so its entity costs
+  // the row twice what a single dial does. The layout arithmetic is unchanged;
+  // only the number it divides by moves.
+
+  it("defaults to one dial's slot, so the four-argument form is unchanged", () => {
+    const width = DIAL_SLOT * 4 + ADD_SLOT;
+    expect(rowLayout(width, 9, 0, true)).toEqual(
+      rowLayout(width, 9, 0, true, DIAL_SLOT),
+    );
+  });
+
+  it("fits half as many entities when one entity is two dials wide", () => {
+    const width = DIAL_SLOT * 8 + ADD_SLOT;
+    expect(rowLayout(width, 9, 0, true, 2 * DIAL_SLOT).capacity).toBe(
+      Math.floor(rowLayout(width, 9, 0, true, DIAL_SLOT).capacity / 2),
+    );
+  });
+
+  it("still floors a wide slot at one entity, and still pages", () => {
+    expect(rowLayout(20, 9, 0, true, 2 * DIAL_SLOT)).toMatchObject({
+      start: 0,
+      end: 1,
+      capacity: 1,
+      paging: true,
+    });
+  });
+
+  it("does not page a wide-slot row that fits exactly", () => {
+    const exact = 2 * DIAL_SLOT * 3 + ADD_SLOT;
+    expect(rowLayout(exact, 3, 0, true, 2 * DIAL_SLOT)).toMatchObject({
+      capacity: 3,
+      paging: false,
+    });
+  });
 });
 
 describe("windowLabel", () => {
+  // ── the noun parameter (additive, 2026-09-17) ────────────────────────────
+  it('defaults to "dial", so every existing caller is unchanged', () => {
+    expect(windowLabel(2, 5, 7)).toBe(windowLabel(2, 5, 7, "dial"));
+  });
+
+  it("takes the window's own noun, singular and plural and empty", () => {
+    expect(windowLabel(2, 5, 9, "pair")).toBe("pairs 3\u20135 of 9");
+    expect(windowLabel(2, 3, 9, "pair")).toBe("pair 3 of 9");
+    expect(windowLabel(0, 0, 0, "pair")).toBe("no pairs");
+  });
+
   it("names the window the way a reader counts, from one", () => {
     expect(windowLabel(2, 5, 7)).toBe("dials 3\u20135 of 7");
   });

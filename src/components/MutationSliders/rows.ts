@@ -93,21 +93,30 @@ export interface RowLayout extends Window {
  *
  * The `+` is different: it is visible at every offset, including after the
  * last page, so its slot is reserved whether or not the row pages.
+ *
+ * `slot` is what ONE entity costs the row, and it is the last parameter and
+ * optional ON PURPOSE (2026-09-17, additive for `PairedMutationSliders`): every
+ * existing caller and every one of this module's tests calls the four-argument
+ * form and keeps `DIAL_SLOT`, which is exactly one dial plus its gap. A row
+ * whose entity is TWO dials wide passes `2 * DIAL_SLOT` and pages by whole
+ * entities rather than by half of one — the arithmetic is identical, and the
+ * only thing that was ever specific to a single dial is the number.
  */
 export const rowLayout = (
   width: number,
   count: number,
   offset: number,
   adding: boolean,
+  slot: number = DIAL_SLOT,
 ): RowLayout => {
   const forAdd = adding ? ADD_SLOT : 0;
-  const whole = visibleWindow(width - forAdd, DIAL_SLOT, count, offset);
+  const whole = visibleWindow(width - forAdd, slot, count, offset);
   if (whole.end - whole.start >= count) {
     return { ...whole, capacity: count, paging: false };
   }
   const paged = visibleWindow(
     width - forAdd - 2 * ARROW_SLOT,
-    DIAL_SLOT,
+    slot,
     count,
     offset,
   );
@@ -120,17 +129,26 @@ export const rowLayout = (
  *
  * A single visible dial reads "dial 3 of 7" — an en-dash range with the same
  * number on both sides is a thing a screen reader says twice for no reason.
+ *
+ * `noun` is what ONE unit of the window is CALLED, and it is the last
+ * parameter and optional for the same reason `slot` is (2026-09-17, additive
+ * for `PairedMutationSliders`): every existing caller keeps "dial". A row
+ * whose unit is a PAIR of dials says "pairs 1\u20133 of 9", because on that row
+ * the count is ENTITIES and the dials on screen number twice it — announcing
+ * "dials" there would be a noun that contradicts the row's own "Next entity"
+ * controls and a number that means something else.
  */
 export const windowLabel = (
   start: number,
   end: number,
   count: number,
+  noun = "dial",
 ): string => {
-  if (count === 0) return "no dials";
+  if (count === 0) return `no ${noun}s`;
   const first = start + 1;
   return first === end
-    ? `dial ${first} of ${count}`
-    : `dials ${first}\u2013${end} of ${count}`;
+    ? `${noun} ${first} of ${count}`
+    : `${noun}s ${first}\u2013${end} of ${count}`;
 };
 
 /** One entity's new amount, as a pin or a group move computes it. */

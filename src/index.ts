@@ -37,6 +37,7 @@ export * from "./components/DistributionSparkline";
 export * from "./components/RateGauge";
 export * from "./components/MarkedSlider";
 export * from "./components/MutationSliders";
+export * from "./components/PairedMutationSliders";
 export * from "./components/LiveHeartbeatTrace";
 export * from "./components/ConnectionStatus";
 export * from "./components/ConversationTree";
