@@ -1158,6 +1158,59 @@ describe("weekly seasonality is representable", () => {
     ).toBeGreaterThan(1);
   });
 
+  // WHICH INSTANT "NOW" IS, stated rather than implied — the one thing the
+  // exact-equality test above is structurally blind to, because under a FLAT
+  // rate any consistent window start gives the same span.
+  //
+  // The integral runs from the PIVOT CELL'S START, which is the window the
+  // scalar version used too (`committed[nowIndex]` already holds that month's
+  // net flow, and the old line added `rate/12 × 1` on top of it for the next
+  // cell). What CHANGED is the sampling inside that first month: the old line
+  // charged the whole of it at the post-change rate, and the integral splits it
+  // at the change's own moment. So a change made LATE in its month moves the
+  // first projected step less than it used to and every step after it exactly
+  // as much — which is the change being honest about a date it previously
+  // rounded, and it is the one visible difference for a flat scenario too.
+  it("runs its window from the PIVOT CELL'S START, splitting at the change", () => {
+    const W14: Mutation = { id: "w14", at: new Date("2025-03-31"), label: "1" };
+    const W27: Mutation = { id: "w27", at: new Date("2025-06-30"), label: "2" };
+    const twoWeeks = [W14, W27];
+    const services = withChange(
+      withChange(SERVICES, "service-a", W14.id, HOURS, 30, twoWeeks),
+      "service-a",
+      W27.id,
+      HOURS,
+      10,
+      twoWeeks,
+    );
+    const sampling: RateSampling = {
+      boundaries: BOUNDARIES,
+      rate: (time: number) => rateAt(time, twoWeeks, services),
+      moments: map((mutation: Mutation) => timeOf(mutation.at), twoWeeks),
+      unit: "week",
+    };
+    // March is the pivot cell — `W14` falls on its last day.
+    const projected = projectedBalances(committed, sampling, 2);
+    const marchStart = new Date("2025-03-01").getTime();
+    const changeAt = timeOf(W14.at);
+    const aprilStart = new Date("2025-04-01").getTime();
+    const before = rateAt(marchStart, twoWeeks, services);
+    const after = rateAt(changeAt, twoWeeks, services);
+    expect(after).toBeGreaterThan(before);
+    // The first projected step is the two stretches either side of the change,
+    // NOT one month at the new rate — thirty of March's thirty-one days still
+    // run at the old one.
+    const firstStep =
+      (weeksBetween(marchStart, changeAt) * before) / 52 +
+      (weeksBetween(changeAt, aprilStart) * after) / 52;
+    expect(projected[3]! - (committed[2] ?? 0)).toBeCloseTo(firstStep, 6);
+    // And it is strictly smaller than the step after it, which runs the whole
+    // month at the new rate. The old scalar line made the two equal.
+    expect(projected[3]! - (committed[2] ?? 0)).toBeLessThan(
+      projected[4]! - projected[3]!,
+    );
+  });
+
   it("prints the sampled rate per cell in the DEBUG table", () => {
     const rows = projectionTable(committed, samplingFor(alternating()), 0);
     expect(rows).toHaveLength(committed.length);

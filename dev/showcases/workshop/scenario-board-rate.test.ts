@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { Mutation } from "../../../src/components/LevelsTimeline/geometry";
 import type { Person } from "./scenario-board-people";
 import {
+  accruedOver,
   averageRate,
   averageRateOver,
   monthsBetween,
@@ -245,6 +246,54 @@ describe("the composite rate", () => {
     expect(
       averageRateOver(YEAR_START, YEAR_END, [after], stepAt(after, 20_000)),
     ).toBe(RATE_BASELINE);
+  });
+
+  // ── The projection's integral ────────────────────────────────────────────
+  //
+  // `accruedOver` is what the balance line projects with. The reason it is a
+  // SUM and not one multiplication is the two-mutation case below: the scalar
+  // version read the rate ONCE, at the pivot, and drew the rest of the span at
+  // it — so a raise landing in October was drawn as though it had been in force
+  // since the pivot.
+  it("accrues ONE constant stretch as the rate times the months over twelve", () => {
+    // With nothing changing inside the span the integral is the old scalar
+    // arithmetic exactly, which is why this board's line does not move.
+    expect(accruedOver(YEAR_START, YEAR_END, [], () => 120_000)).toBeCloseTo(
+      120_000,
+      6,
+    );
+    expect(accruedOver(YEAR_START, MID_YEAR, [], () => 120_000)).toBeCloseTo(
+      monthlyFrom(120_000) * 6,
+      6,
+    );
+    expect(accruedOver(YEAR_END, YEAR_START, [], () => 120_000)).toBe(0);
+  });
+
+  it("stops back-dating a LATER change to the pivot", () => {
+    // $120k/yr until mid-year and $240k/yr after it. The integral accrues six
+    // months of each; the scalar version read the pivot's rate and accrued
+    // twelve months of $120k, which is $60k short and a whole quarter's cash.
+    const stepped = (time: number) => (time >= MID_YEAR ? 240_000 : 120_000);
+    const integrated = accruedOver(YEAR_START, YEAR_END, [MID_YEAR], stepped);
+    expect(integrated).toBeCloseTo(
+      monthlyFrom(120_000) * 6 + monthlyFrom(240_000) * 6,
+      6,
+    );
+    expect(integrated).toBeCloseTo(180_000, 6);
+    // What the scalar version drew, for contrast.
+    expect(accruedOver(YEAR_START, YEAR_END, [], () => 120_000)).toBeCloseTo(
+      120_000,
+      6,
+    );
+  });
+
+  it("ignores a moment outside the projected stretch, as the average does", () => {
+    const before = new Date("2024-06-01").getTime();
+    const after = new Date("2026-06-01").getTime();
+    const flat = () => 120_000;
+    expect(
+      accruedOver(YEAR_START, YEAR_END, [before, after], flat),
+    ).toBeCloseTo(120_000, 6);
   });
 
   it("says what share of the year a change still has ahead of it", () => {
