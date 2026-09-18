@@ -831,6 +831,12 @@ describe("the first free WEEK", () => {
     expect(slots).toHaveLength(53);
     expect(slots[0]).toBe(START);
     expect(new Date(slots[52]!).toISOString().slice(0, 10)).toBe("2025-12-29");
+    // BOTH ENDS OF THE SPAN READ W01, and that is ISO-8601 rather than a bug:
+    // a week belongs to the year of its THURSDAY, and 2025-12-29's Thursday is
+    // 2026-01-01. The chips stay unique because the date differs, so the
+    // control stays operable — do NOT "fix" this into W53.
+    expect(weekLabel(new Date(slots[0]!))).toBe("W01 \u00b7 Jan 1");
+    expect(weekLabel(new Date(slots[52]!))).toBe("W01 \u00b7 Dec 29");
     expect(nextFreeSlot(START, END, taken)).toBeUndefined();
   });
 

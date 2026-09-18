@@ -564,7 +564,7 @@ const WorkMixPlot: Component<{
            `weekOfPick` is this board's grid: the ISO Monday at or before the
            pick, clamped to the span's start so a click in the truncated first
            week lands on the left edge rather than five days into the year. */
-        onPick={(at) => props.onPickWeek(weekOfPick(at as Date))}
+        onPick={(at) => props.onPickWeek(weekOfPick(at))}
       >
         <Grid />
         <YAxis tickFormat={formatHours} />
