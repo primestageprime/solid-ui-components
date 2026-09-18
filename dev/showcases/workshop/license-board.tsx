@@ -79,7 +79,6 @@ import { monthlyCells } from "../../../src/components/DateAxis";
 import {
   createHighWaterMark,
   createMutationToolbar,
-  createPairedMutationSliders,
   createRateGauge,
   createStackedTimelineChart,
   timeOf,
@@ -114,13 +113,23 @@ import {
   SectionTitle,
   TextTitle,
 } from "../../../src/components/Text";
-import type {
-  MeasureIndex,
-  PairedMutationEntity,
-} from "../../../src/components/PairedMutationSliders";
+// NOT ON THE PACKAGE BARREL YET. `GroupedMutationSliders` is still on its own
+// workshop bench, so it is imported by RELATIVE PATH rather than from
+// `../../../src` — which says "this is not published" at the call site, where a
+// barrel import would have said the opposite. `/promote` turns that around.
+import {
+  createGroupedMutationSliders,
+  type GroupedMeasureIndex,
+  type GroupedMutationEntity,
+} from "../../../src/components/GroupedMutationSliders";
 
 import {
-  ANNUAL_FIELDS,
+  FIELDS,
+  FIXTURE,
+  MONTHLY,
+  FEE,
+  ANNUAL,
+  PCT,
   BREAKEVEN_MRR,
   COMFORTABLE,
   COMMITTED_RATE,
@@ -132,7 +141,6 @@ import {
   FIXED_MONTHLY_COST,
   LICENSE_DOMAIN,
   MIN_MRR_CAP,
-  MONTHLY_FIELDS,
   MONTHLY_NET,
   OPENING_BALANCE,
   PCT_DOMAIN,
@@ -142,7 +150,7 @@ import {
   TIME_DOMAIN,
   addMutation,
   addProduct,
-  annualPairs,
+  annualPriceOfEntity,
   annualPriceOf,
   averageRate,
   bandOfRate,
@@ -159,7 +167,8 @@ import {
   monthRangeOf,
   monthStarts,
   monthlyOf,
-  monthlyPairs,
+  monthlyOfEntity,
+  entitiesFor,
   mrrAt,
   peakMonth,
   pinnedCeiling,
@@ -173,7 +182,6 @@ import {
   runningBalances,
   scenarioDigest,
   segmentLabelsOf,
-  shownPlanOf,
   stackOrderTable,
   licenseMixSeries,
   withChange,
@@ -205,42 +213,54 @@ const DEBUG = false;
 // ── The curried components ───────────────────────────────────────────────────
 
 /**
- * THE MONTHLY ROW'S DIALS, curried ONCE at module level.
+ * THE BOARD'S DIALS: ONE CARD PER PRODUCT, curried ONCE at module level.
+ *
+ * Peter, 2026-09-18: "N products with 2 variants (monthly and annual)". So each
+ * product is one `GroupedMutationSliders` card — its name the pressable header,
+ * four dials under it in two captioned groups.
  *
  * `axes` is mandatory at the curry and carries every per-measure presentational
- * decision there is — the unit, the name, the grid and the scale — and all four
- * are properties of THIS BOARD rather than of any one render. So the call site
- * passes data and callbacks only.
+ * decision there is — the unit, the name, the grid, the scale and the CAPTION —
+ * and all five are properties of THIS BOARD rather than of any one render. So
+ * the call site passes data and callbacks only.
  *
- * The labels are `#` and `$`, single characters, because the ROW is titled
- * "Monthly" and a dial under it labelled "Monthly licences" would say it twice
- * in a column the width of a dial.
- */
-const MonthlySliders = createPairedMutationSliders({
-  axes: [
-    { label: "#", domain: LICENSE_DOMAIN, snap: 1, format: formatLicenses },
-    { label: "$", domain: FEE_DOMAIN, snap: 1, format: formatFee },
-  ],
-  labels: {
-    remove: "Discontinue",
-    restore: "Relaunch",
-    new: "new product",
-  },
-});
-
-/**
- * THE ANNUAL ROW'S DIALS. The same two positions, a different pair of meanings:
- * `#` is annual licences and `%` is what an annual licence is sold for as a
- * percentage of twelve monthly ones.
+ * THE POSITIONS ARE THE MODEL'S `FIELDS`, in order: monthly count, fee, annual
+ * count, annual percentage. `setMeasure` below translates an index back into a
+ * plan field through that same tuple, so the two cannot drift.
+ *
+ * BOTH COUNT DIALS READ `#`, and only the caption tells them apart — which is
+ * exactly the load this component was added to carry. Two long labels would
+ * cost the column its width, and the caption already says `mo` or `yr` over the
+ * pair it belongs to. It is in each dial's accessible name too (`Starter yr #`).
  *
  * The percentage track runs 50–100 rather than 0–100 — see `PCT_DOMAIN` for
  * why — so the figures a business would actually offer get the whole length of
  * the dial instead of its top half.
  */
-const AnnualSliders = createPairedMutationSliders({
+const LicenseSliders = createGroupedMutationSliders({
   axes: [
-    { label: "#", domain: LICENSE_DOMAIN, snap: 1, format: formatLicenses },
-    { label: "%", domain: PCT_DOMAIN, snap: 1, format: (n) => `${n}%` },
+    {
+      label: "#",
+      group: "mo",
+      domain: LICENSE_DOMAIN,
+      snap: 1,
+      format: formatLicenses,
+    },
+    { label: "$", group: "mo", domain: FEE_DOMAIN, snap: 1, format: formatFee },
+    {
+      label: "#",
+      group: "yr",
+      domain: LICENSE_DOMAIN,
+      snap: 1,
+      format: formatLicenses,
+    },
+    {
+      label: "%",
+      group: "yr",
+      domain: PCT_DOMAIN,
+      snap: 1,
+      format: (value: number) => `${value}%`,
+    },
   ],
   labels: {
     remove: "Discontinue",
@@ -551,8 +571,8 @@ const LicenseBoardBench: Component = () => {
    *  slope once a change exists. */
   const sampling = () => samplingFor(mutations(), products());
 
-  const monthlyRow = () => monthlyPairs(products(), editing(), mutations());
-  const annualRow = () => annualPairs(products(), editing(), mutations());
+  /** ONE CARD PER PRODUCT on the books at the change being edited. */
+  const cards = () => entitiesFor(products(), editing(), mutations());
 
   /**
    * The month the projection pivots on. With NO change the pivot is month zero,
@@ -578,33 +598,30 @@ const LicenseBoardBench: Component = () => {
     peakBalanceCents(cells(), nowIndex()),
   );
 
-  /** The plan BOTH rows' summaries are computed from — all four numbers, looked
-   *  up by the entity's id. See `shownPlanOf` for why the entity itself cannot
-   *  answer it. */
-  const shown = (id: string): Plan | null =>
-    shownPlanOf(products(), id, editing(), mutations());
-
   /**
-   * The Monthly row's summary: what this product bills a month, ALL IN —
-   * monthly seats at the fee plus annual seats at the discounted fee. `$5.9k/mo`.
+   * THE LINE UNDER A CARD: what this product bills a month, ALL IN — monthly
+   * seats at the fee plus annual seats at the discounted fee — and, after it,
+   * what one annual licence costs a year.
    *
-   * It is the total and not the monthly half, because the total is the number
-   * every other region of the board is drawn from: it is this product's band in
-   * the stack and its share of the gauge. A line that showed only the monthly
+   * `$3.1k/mo · $529/yr each`. Two readings on one line rather than two lines,
+   * because `summary` is one line by contract and the annual price is the thing
+   * the `%` dial is actually setting: a card whose `%` moved with no figure
+   * naming the result would be a dial the reader cannot check.
+   *
+   * The MONTHLY figure is the total and not the monthly half, because the total
+   * is what every other region of the board is drawn from — this product's band
+   * in the stack and its share of the gauge. A line showing only the monthly
    * part would be the one figure on the board that agreed with nothing else.
+   *
+   * IT READS THE CARD, not a lookup. While the four measures were split across
+   * two paired rows this was impossible — a row's entity carried two of the four
+   * numbers — and the board had to find the product by id (`shownPlanOf`, now
+   * deleted). One card carries all four.
    */
-  const monthlySummary = (entity: PairedMutationEntity): string => {
-    const plan = shown(entity.id);
-    return plan === null ? "" : dollarsPerMonth(monthlyOf(plan));
-  };
-
-  /** The Annual row's summary: what ONE annual licence costs a year — the figure
-   *  on the invoice, which is the thing the `%` dial is actually setting. */
-  const annualSummary = (entity: PairedMutationEntity): string => {
-    const plan = shown(entity.id);
-    return plan === null
-      ? ""
-      : `${abbreviateDollars(annualPriceOf(plan))}/yr each`;
+  const cardSummary = (entity: GroupedMutationEntity): string => {
+    const annual = annualPriceOfEntity(entity);
+    if (annual === null) return "";
+    return `${dollarsPerMonth(monthlyOfEntity(entity))} · ${abbreviateDollars(annual)}/yr each`;
   };
 
   onMount(() => {
@@ -668,11 +685,23 @@ const LicenseBoardBench: Component = () => {
     );
   };
 
-  const setMonthly = (id: string, measure: MeasureIndex, value: number): void =>
-    setField(id, MONTHLY_FIELDS[measure], value);
-
-  const setAnnual = (id: string, measure: MeasureIndex, value: number): void =>
-    setField(id, ANNUAL_FIELDS[measure], value);
+  /**
+   * A dial moved. The measure index names ONE field of the plan — which is the
+   * gain of one card over two rows, where index 1 was a fee on one and a
+   * percentage on the other — and `FIELDS` is the single translation.
+   *
+   * A position the axes do not define cannot have been dragged, so an
+   * out-of-range index is ignored rather than guessed at.
+   */
+  const setMeasure = (
+    id: string,
+    measure: GroupedMeasureIndex,
+    value: number,
+  ): void => {
+    const field = FIELDS[measure];
+    if (field === undefined) return;
+    setField(id, field, value);
+  };
 
   /** ⊗ Discontinue: this product is off the books from the selected change on.
    *  ALL FOUR measures go at once, so it leaves BOTH rows together. */
@@ -769,112 +798,103 @@ const LicenseBoardBench: Component = () => {
       <ViewportColumn>
         <SectionTitle>License Board</SectionTitle>
 
-        {/* THE FRAME DIFFERS FROM THE OTHER TWO BOARDS, and the reason is
-            MEASURED rather than aesthetic.
+        {/* THE PLAIN 50/50 FRAME, restored. The first pass of this board had
+            to give the charts a stated height, because it drew TWO
+            `PairedMutationSliders` rows and a paired column has a hard minimum
+            (~325px — its `MarkedSlider` keeps its own 180px floor whatever the
+            container says), so two of them needed ~700px of a 1300px viewport
+            and the summary lines printed on top of the readouts.
 
-            Hourly and Scenario split the viewport in half — charts above,
-            controls below — because each has ONE row of dials, and one
-            `PairedMutationSliders` column has a hard minimum height: its
-            `MarkedSlider` draws at its own floor (180px measured) whatever the
-            container says, so a column is name(18) + dials(229) + summary(30) +
-            footer(24) ≈ 325px before it starts to overlap itself.
+            ONE grouped card row is ~325px, which fits a half band with room —
+            so the charts are back on `HalfFillColumn` and the License Mix chart
+            has its height back. The layout cost was the clearest argument for
+            the grouped control, and this is it being repaid.
 
-            THIS board has TWO rows, so the controls need ~700px — more than half
-            of 1300. Given a 50/50 band the dials row overflowed its box by 61px
-            and the summary line printed on top of the readouts. (Side by side
-            was the other candidate and is worse: a column is 184px wide, so two
-            rows in a 628px pane would page to one product each.)
-
-            So the charts take a STATED height (`FixedHeightBox`, the library's
-            own 200px) and the controls take everything left (`FillColumn`) —
-            which is the same trade the variant's own header describes, and it is
-            the honest one here: the charts are readable at 200px and the dials
-            are not readable at 233px.
-
-            This IS the argument for one grouped control: a single row of four
-            captioned dials is ~325px, which fits a plain half-band with room. */}
-        <FixedHeightBox>
-          <FillCardSurface>
-            <SpreadRow>
-              <TextTitle>Cash Flow</TextTitle>
-              <IconOnlyButton
-                onClick={ceiling.reset}
-                aria-label="Fit y-axis to current values"
-                title="Fit y-axis to current values"
-              >
-                <Icon name="shrink" size="sm" />
-              </IconOnlyButton>
-            </SpreadRow>
-            {/* THE CALL BOTH OTHER BOARDS MAKE, unchanged: `cells`,
+            The top half, halved again: two charts stacked. Each card is a
+            FillCardSurface — it takes its half of the band and lays out a
+            column that fills it — so the title keeps its own height and the
+            GrowFillBox hands the chart everything left. */}
+        <HalfFillColumn>
+          <HalfFillColumn>
+            <FillCardSurface>
+              <SpreadRow>
+                <TextTitle>Cash Flow</TextTitle>
+                <IconOnlyButton
+                  onClick={ceiling.reset}
+                  aria-label="Fit y-axis to current values"
+                  title="Fit y-axis to current values"
+                >
+                  <Icon name="shrink" size="sm" />
+                </IconOnlyButton>
+              </SpreadRow>
+              {/* THE CALL BOTH OTHER BOARDS MAKE, unchanged: `cells`,
                   `scrub={false}`, `chartHeight="fill"`, `showGridlines` and the
                   fan as two `balanceSeries`. The y-domain's top is the
                   high-water mark, not the all-dials-at-max `PINNED_CEILING` —
                   see that constant for why. */}
-            <GrowFillBox>
-              <CashflowScrubChart
-                cells={cells()}
-                yMax={ceiling.ceiling()}
-                scrub={false}
-                chartHeight="fill"
-                showGridlines
-                lineLabel="Committed"
-                balanceSeries={[
-                  fanSeries("optimistic", 1, nowIndex()),
-                  fanSeries("pessimistic", -1, nowIndex()),
-                ]}
-              />
-            </GrowFillBox>
-          </FillCardSurface>
-        </FixedHeightBox>
+              <GrowFillBox>
+                <CashflowScrubChart
+                  cells={cells()}
+                  yMax={ceiling.ceiling()}
+                  scrub={false}
+                  chartHeight="fill"
+                  showGridlines
+                  lineLabel="Committed"
+                  balanceSeries={[
+                    fanSeries("optimistic", 1, nowIndex()),
+                    fanSeries("pessimistic", -1, nowIndex()),
+                  ]}
+                />
+              </GrowFillBox>
+            </FillCardSurface>
+          </HalfFillColumn>
 
-        <FixedHeightBox>
-          <FillCardSurface>
-            {/* The cap lives in the card's HEADER rather than in a settings
+          <HalfFillColumn>
+            <FillCardSurface>
+              {/* The cap lives in the card's HEADER rather than in a settings
                   strip of its own: it is one number, it belongs to this chart
                   alone, and a row of its own would cost the two charts the
                   height that makes them readable. `min` is the breakeven rule —
                   a cap below it would put the rule off the plot. */}
-            <SpreadRow>
-              <TextTitle>License Mix</TextTitle>
-              <ClusterRow>
-                <NoteText>Cap</NoteText>
-                <ThemedNumberInput
-                  name="mrr-cap"
-                  label=""
-                  size="sm"
-                  min={MIN_MRR_CAP}
-                  max={DEFAULT_MRR_CAP * 4}
-                  step={1_000}
-                  value={cap}
-                  onChange={(next) => {
-                    setCap(next ?? DEFAULT_MRR_CAP);
-                  }}
-                />
-              </ClusterRow>
-            </SpreadRow>
-            {/* One band per PRODUCT, valued in $/mo, so the stack's top edge
+              <SpreadRow>
+                <TextTitle>License Mix</TextTitle>
+                <ClusterRow>
+                  <NoteText>Cap</NoteText>
+                  <ThemedNumberInput
+                    name="mrr-cap"
+                    label=""
+                    size="sm"
+                    min={MIN_MRR_CAP}
+                    max={DEFAULT_MRR_CAP * 4}
+                    step={1_000}
+                    value={cap}
+                    onChange={(next) => {
+                      setCap(next ?? DEFAULT_MRR_CAP);
+                    }}
+                  />
+                </ClusterRow>
+              </SpreadRow>
+              {/* One band per PRODUCT, valued in $/mo, so the stack's top edge
                   IS total MRR and the dashed rule at the fixed monthly cost is
                   literally the breakeven line. `onPick` reports the RAW date;
                   `monthOfPick` is this board's grid — the first of the month at
                   or before it, clamped to the span's start. */}
-            <LicenseMixChart
-              series={licenseMixSeries(products(), mutations())}
-              xDomain={[DOMAIN_START, DOMAIN_END]}
-              yDomain={[0, cap()]}
-              xTickValues={QUARTER_TICKS}
-              rule={{ value: BREAKEVEN_MRR, label: "breakeven" }}
-              events={mutations()}
-              hoverLabel={(at) => monthRangeOf(at).label}
-              onPick={(at) => pickMonth(monthOfPick(at))}
-            />
-          </FillCardSurface>
-        </FixedHeightBox>
+              <LicenseMixChart
+                series={licenseMixSeries(products(), mutations())}
+                xDomain={[DOMAIN_START, DOMAIN_END]}
+                yDomain={[0, cap()]}
+                xTickValues={QUARTER_TICKS}
+                rule={{ value: BREAKEVEN_MRR, label: "breakeven" }}
+                events={mutations()}
+                hoverLabel={(at) => monthRangeOf(at).label}
+                onPick={(at) => pickMonth(monthOfPick(at))}
+              />
+            </FillCardSurface>
+          </HalfFillColumn>
+        </HalfFillColumn>
 
-        {/* EVERYTHING LEFT goes to the controls: Changes wide-left, the gauge
-            narrow-right. `FillColumn` rather than `HalfFillColumn` because the
-            two charts above it are now definite rather than proportional — see
-            the note on the first chart for the measurement that forced it. */}
-        <FillColumn>
+        {/* The bottom half: Changes wide-left, the gauge narrow-right. */}
+        <HalfFillColumn>
           <FillWrapRow>
             <MajorPaneBox>
               <FillCardSurface>
@@ -894,42 +914,35 @@ const LicenseBoardBench: Component = () => {
                   saveDisabled={!dirty()}
                   onDelete={deleteChange}
                 />
-                {/* TWO ROWS, ONE PRODUCT LIST. Both halve the space left under
-                    the toolbar, so neither is the senior one — a licence
-                    business's annual book is not a footnote to its monthly one.
-                    The SELECTION is this board's signal, passed to both, which
-                    is the one thing that would otherwise let a product read as
-                    pinned above and unpinned below. */}
-                <HalfFillColumn>
-                  <NoteText>Monthly · # licences, $ per month</NoteText>
-                  <GrowFillBox>
-                    <MonthlySliders
-                      entities={monthlyRow()}
-                      summary={monthlySummary}
-                      selected={selected()}
-                      onSelectionChange={setSelected}
-                      onChange={setMonthly}
-                      onRemove={discontinue}
-                      onRestore={relaunch}
-                      onAdd={openAdd}
-                    />
-                  </GrowFillBox>
-                </HalfFillColumn>
-                <HalfFillColumn>
-                  <NoteText>Annual · # licences, % of twelve months</NoteText>
-                  <GrowFillBox>
-                    <AnnualSliders
-                      entities={annualRow()}
-                      summary={annualSummary}
-                      selected={selected()}
-                      onSelectionChange={setSelected}
-                      onChange={setAnnual}
-                      onRemove={discontinue}
-                      onRestore={relaunch}
-                      onAdd={openAdd}
-                    />
-                  </GrowFillBox>
-                </HalfFillColumn>
+                {/* ONE CARD PER PRODUCT — the product name as the card's
+                    pressable header, four dials under it in two captioned
+                    groups. `GrowFillBox` hands the row everything the toolbar
+                    left, which is the whole half band now that there is one row
+                    rather than two.
+
+                    PAGING IS THE COMPONENT'S, not this board's: when the cards
+                    do not fit it shows as many WHOLE cards as it can (never
+                    fewer than one) with ‹ › either side, because a page that
+                    split a card would put a product's monthly seats on screen
+                    and its annual ones off it — exactly the comparison the
+                    grouping exists to make. The slot is four dials wide.
+
+                    SELECTION is still this board's signal even with one row:
+                    the pin is a scenario-level idea (two products raised
+                    together), and holding it here keeps it alive across a
+                    Reset. */}
+                <GrowFillBox>
+                  <LicenseSliders
+                    entities={cards()}
+                    summary={cardSummary}
+                    selected={selected()}
+                    onSelectionChange={setSelected}
+                    onChange={setMeasure}
+                    onRemove={discontinue}
+                    onRestore={relaunch}
+                    onAdd={openAdd}
+                  />
+                </GrowFillBox>
               </FillCardSurface>
             </MajorPaneBox>
 
@@ -948,7 +961,7 @@ const LicenseBoardBench: Component = () => {
               </FillCardSurface>
             </GrowFillBox>
           </FillWrapRow>
-        </FillColumn>
+        </HalfFillColumn>
       </ViewportColumn>
 
       {/* The Add form. Rendered here rather than beside the dials because it
@@ -982,25 +995,26 @@ const printTables = (
   cap: number,
 ): void => {
   /* eslint-disable no-console */
-  // THE TWO ROWS, side by side — every product's four dials as one row of a
-  // table, which is the reading the two separate controls make hard.
-  const monthly = monthlyPairs(products, mutationId, mutations);
-  const annual = annualPairs(products, mutationId, mutations);
+  // THE CARDS — every product's four dials as ONE row of a table, which is now
+  // exactly what one card shows. While the board drew two rows this table had
+  // to stitch them back together by index to be readable at all.
+  const gone = "— (discontinued)";
   console.table(
-    map((pair: PairedMutationEntity, index: number) => {
-      const plan = shownPlanOf(products, pair.id, mutationId, mutations);
-      const yearly = annual[index];
-      return {
-        product: pair.label,
-        moLicences: pair.measures[0].value ?? "— (discontinued)",
-        fee: pair.measures[1].value ?? "— (discontinued)",
-        yrLicences: yearly?.measures[0].value ?? "— (discontinued)",
-        pct: yearly?.measures[1].value ?? "— (discontinued)",
-        annualPrice:
-          plan === null ? "" : abbreviateDollars(annualPriceOf(plan)),
-        mrr: plan === null ? "" : dollarsPerMonth(monthlyOf(plan)),
-      };
-    }, monthly),
+    map(
+      (card: GroupedMutationEntity) => {
+        const annual = annualPriceOfEntity(card);
+        return {
+          product: card.label,
+          moLicences: card.measures[MONTHLY]?.value ?? gone,
+          fee: card.measures[FEE]?.value ?? gone,
+          yrLicences: card.measures[ANNUAL]?.value ?? gone,
+          pct: card.measures[PCT]?.value ?? gone,
+          annualPrice: annual === null ? "" : abbreviateDollars(annual),
+          mrr: annual === null ? "" : dollarsPerMonth(monthlyOfEntity(card)),
+        };
+      },
+      entitiesFor(products, mutationId, mutations),
+    ),
   );
   // THE BILLING SCHEDULE, month by month. The stack above it is a picture of
   // these twelve rows, and a stepped history is exactly the kind of thing that
@@ -1051,7 +1065,9 @@ const printTables = (
       licenseMixSeries(products, mutations),
     ),
   );
-  console.table(rateBandTable(products));
+  // The calibration reads a whole FIXTURE, not a product list: a row's band
+  // depends on that catalogue's own fixed cost and comfortable gain.
+  console.table(rateBandTable(FIXTURE));
   // THE BALANCE LINE, per cell — the PROJECTED RATE the integral sampled for
   // each month alongside what it accrued.
   console.table(

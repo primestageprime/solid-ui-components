@@ -15,8 +15,7 @@
  *   products ──licenseMixSeries▶ StackedTimelineChart (one band per PRODUCT, $/mo)
  *   products ──mrrAt──────────▶ rateAt ──▶ the balance line's sampled slope
  *   products ──mrrAt──────────▶ averageRate ──▶ RateGauge.value (the WHOLE year)
- *   products ──monthlyPairs───▶ PairedMutationSliders.entities  (the `mo` row)
- *   products ──annualPairs────▶ PairedMutationSliders.entities  (the `yr` row)
+ *   products ──entitiesFor────▶ GroupedMutationSliders.entities (one CARD each)
  *   month pick ───────────────▶ which mutation the dials edit
  *
  * ── FOUR MEASURES, TWO GROUPS (Peter's sketch, 2026-09-18) ──────────────────
@@ -34,19 +33,26 @@
  *
  * So the `$` dial prices BOTH groups and the `%` dial is a discount on it.
  *
- * THE BENCH DRAWS THEM AS TWO `PairedMutationSliders` ROWS — a Monthly row and
- * an Annual one — because that component is a PAIR by type (`measures:
- * [PairedMeasure, PairedMeasure]`) and four dials under one name is not
- * expressible on it. The two rows list the SAME products by the SAME ids, and
- * this module's job is to make that a construction rather than an agreement:
- * `monthlyPairs` and `annualPairs` are two `map`s over ONE walk of the history,
- * so a product cannot be in one row and not the other, and the `$` dial in the
- * Monthly row is what the `%` dial in the Annual one is a percentage of.
+ * ONE PRODUCT IS ONE CARD (Peter, 2026-09-18: "rather than having one product
+ * with 6 variants, I want N products with 2 variants (monthly and annual)").
+ * The bench draws each product as a single `GroupedMutationSliders` card — the
+ * product name as its pressable header, four dials under it in the two captioned
+ * groups above — and pages by whole cards when they do not fit.
  *
- * (What this costs is a duplicated name button, footer slot and selection per
- * product — one product reading as two things on screen. A single control with
- * four dials in captioned groups is the follow-up; this bench is the version
- * built entirely from what already ships.)
+ * THAT DELETED A LOT OF THIS MODULE. The board's first pass drew two
+ * `PairedMutationSliders` rows, because that component is a PAIR by type
+ * (`measures: [PairedMeasure, PairedMeasure]`) and four dials under one name is
+ * not expressible on it. Keeping two rows honest cost six pieces here —
+ * `monthlyPairs`, `annualPairs`, a shared `soldAcross` walk, two per-row range
+ * helpers and a `shownPlanOf` lookup, the last because a summary needs all four
+ * numbers and a paired entity only ever carried two. One entity carries all
+ * four, so `entitiesFor` is one walk and `monthlyOfEntity` reads the card in
+ * front of it. All six are gone.
+ *
+ * It also cost the LAYOUT: two rows needed ~700px of a 1300px viewport, which is
+ * why that pass had to give the charts a stated height. One row is ~325px, so
+ * the board is back to the plain 50/50 frame the other two boards use and the
+ * License Mix chart has its height back.
  *
  * ── THE UNIT IS DOLLARS A MONTH ─────────────────────────────────────────────
  *
@@ -156,6 +162,14 @@
  *
  * `rateBandTable()` prints that table and the test asserts every cell of it.
  *
+ * THE CATALOGUE IS SWAPPABLE, and so is everything solved against it. The
+ * figures above are the TIERS fixture, which is the one `FIXTURE` currently
+ * points at; APPS (Amygdala and JTF) carries its own four rows and its own four
+ * constants, solved the same way, in its own header further down. Flipping that
+ * one const swaps the products, the fixed cost, the comfortable gain, the
+ * gauge's domain and the stack's cap together, and the test asserts BOTH tables
+ * so the inactive one cannot rot.
+ *
  * ── WHEN, NOT ONLY HOW MUCH ────────────────────────────────────────────────
  *
  * The gauge reads the COMPOSITE — the rate time-averaged over the whole span —
@@ -180,10 +194,15 @@ import type {
   TimeDomain,
   TimeValue,
 } from "../../../src";
+// NOT ON THE PACKAGE BARREL YET. `GroupedMutationSliders` is still on its own
+// workshop bench, so it is imported by RELATIVE PATH into `src/components/`
+// rather than from `../../../src` — which says "this is not published" at the
+// call site, where a barrel import would have said the opposite. `/promote`
+// turns that around in one step.
 import type {
-  MeasureIndex,
-  PairedMutationEntity,
-} from "../../../src/components/PairedMutationSliders";
+  GroupedMeasureIndex,
+  GroupedMutationEntity,
+} from "../../../src/components/GroupedMutationSliders";
 // The mutation calendar is REUSED, not re-derived. Every one of these is a pure
 // function of `Mutation[]` alone — it holds no product and no fee — so the
 // license board gets the same snapping, the same numbering and the same chips
@@ -243,7 +262,10 @@ export const segmentLabelsOf = (
  *  here. */
 export const monthOfPick = (at: Date | number): Date =>
   new Date(
-    monthSlotOf(typeof at === "number" ? at : at.getTime(), timeOf(DOMAIN_START)),
+    monthSlotOf(
+      typeof at === "number" ? at : at.getTime(),
+      timeOf(DOMAIN_START),
+    ),
   );
 
 // ── The span ─────────────────────────────────────────────────────────────────
@@ -271,7 +293,11 @@ export const MONTH_SLOTS: readonly number[] = ((): number[] => {
   const slots: number[] = [];
   const taken: Mutation[] = [];
   for (;;) {
-    const at = nextFreeSlot(DOMAIN_START.getTime(), DOMAIN_END.getTime(), taken);
+    const at = nextFreeSlot(
+      DOMAIN_START.getTime(),
+      DOMAIN_END.getTime(),
+      taken,
+    );
     if (at === undefined) break;
     slots.push(at);
     taken.push({ id: String(at), at: new Date(at), label: "" });
@@ -382,34 +408,45 @@ export const isLiveAt = (product: Product, time: number): boolean =>
   time >= product.start && (product.end === undefined || time < product.end);
 
 /**
- * THE FOUR DIALS ARE TWO PAIRED ROWS, and these are their positions.
+ * THE FOUR DIALS OF ONE CARD, and their positions.
  *
- * `PairedMutationSliders` is a PAIR by type — `measures: [PairedMeasure,
- * PairedMeasure]`, `MeasureIndex = 0 | 1` — so four dials under one product is
- * two rows of two, each listing the SAME products by the SAME ids:
+ * Peter, 2026-09-18: "rather than having one product with 6 variants, I want N
+ * products with 2 variants (monthly and annual)". So one product is ONE card —
+ * its name the pressable header, four dials under it in two captioned groups:
  *
- *     Monthly row   measure 0 = MONTHLY (#)   measure 1 = FEE (\$)
- *     Annual row    measure 0 = ANNUAL  (#)   measure 1 = PCT (%)
+ *     mo   measure 0 = MONTHLY (#)   measure 1 = FEE (\$)
+ *     yr   measure 2 = ANNUAL  (#)   measure 3 = PCT (%)
  *
- * So a row's measure index is MEANINGLESS on its own — index 1 is a fee on one
- * row and a percentage on the other — and every edit arrives through
- * `withMonthlyChange` or `withAnnualChange`, which say which row they came
- * from. `withChange` below takes a PLAN FIELD instead of an index, so nothing
- * downstream can confuse the two rows' ones.
+ * The index is now unambiguous — it names one field of one plan and nothing
+ * else — which is the difference from the two-row board this replaces, where
+ * measure 1 was a fee on one row and a percentage on the other.
+ *
+ * `withChange` still takes a PLAN FIELD rather than an index, and `FIELDS` is
+ * the single translation. Keeping the field is not ceremony now that the index
+ * is unambiguous: it is what makes a mis-ordered `axes` array a TYPE error at
+ * the bench rather than a percentage silently written into a fee.
  */
-export type PlanField = "monthlyLicenses" | "fee" | "annualLicenses" | "annualPct";
+export type PlanField =
+  "monthlyLicenses" | "fee" | "annualLicenses" | "annualPct";
 
-/** The Monthly row's two measures, in order. */
-export const MONTHLY_FIELDS: readonly [PlanField, PlanField] = [
+/** The card's four measures, in reading order. The ONLY place that order is
+ *  written down; `axes` at the bench is positioned against it. */
+export const FIELDS: readonly [PlanField, PlanField, PlanField, PlanField] = [
   "monthlyLicenses",
   "fee",
-];
-
-/** The Annual row's two measures, in order. */
-export const ANNUAL_FIELDS: readonly [PlanField, PlanField] = [
   "annualLicenses",
   "annualPct",
 ];
+
+/** The four positions, named so nothing below counts on its fingers. */
+export const MONTHLY: GroupedMeasureIndex = 0;
+export const FEE: GroupedMeasureIndex = 1;
+export const ANNUAL: GroupedMeasureIndex = 2;
+export const PCT: GroupedMeasureIndex = 3;
+
+/** The plan field one measure index writes, or `undefined` past the end. */
+export const fieldOf = (measure: GroupedMeasureIndex): PlanField | undefined =>
+  FIELDS[measure];
 
 /** The shared tracks. The whole row is drawn on them. */
 export const LICENSE_DOMAIN: readonly [number, number] = [0, 500];
@@ -427,65 +464,221 @@ export const FEE_DOMAIN: readonly [number, number] = [0, 600];
  */
 export const PCT_DOMAIN: readonly [number, number] = [50, 100];
 
+// -- THE FIXTURE, AND HOW TO SWAP IT -----------------------------------------
+//
+// Peter, 2026-09-18: "I could also just do Amygdala and JTF with mo/annual
+// billing." So there are TWO fixtures below and ONE const to flip between them
+// (`FIXTURE`, just after them). Everything the board reads -- the products, the
+// fixed cost, the comfortable gain, the gauge's domain and the stack's cap --
+// comes out of the chosen one, because every one of those five is solved
+// AGAINST a particular catalogue, and a fixture swapped without them would put
+// the gauge in the wrong band on the first frame.
+//
+// The calibration is solved the same way for both (see the header's four
+// inequalities), and `license-board-model.test.ts` asserts BOTH tables rather
+// than only the active one -- so flipping the const cannot land on a fixture
+// whose numbers nobody checked.
+
+/** Everything a catalogue needs to be read: the products, and the four
+ *  constants solved against them. */
+export interface Fixture {
+  readonly label: string;
+  readonly products: readonly Product[];
+  /** What the business pays out a month whatever it sells. Breakeven. */
+  readonly fixedMonthlyCost: number;
+  /** The comfortable gain, in $/mo -- the gauge's green/yellow split. */
+  readonly comfortable: number;
+  /** The gauge's domain, in $/mo. */
+  readonly rateDomain: readonly [number, number];
+  /** The License Mix y-axis cap, in $/mo. */
+  readonly mrrCap: number;
+  /**
+   * WHICH PRODUCTS THE CALIBRATION ROWS MOVE, by id.
+   *
+   * On the tier fixture the yellow row cuts Team and the red row cuts Team AND
+   * Enterprise; on the two-app fixture both rows start at Amygdala. The rows
+   * are therefore a property of the CATALOGUE rather than of the table, and
+   * naming them here is what lets one `rateBandTable` read either fixture.
+   */
+  readonly calibration: {
+    /** Gets +50 monthly licences in row 2 — the row that must stay green. */
+    readonly grow: string;
+    /** Fees to their floors in row 3 — the row that must read yellow. */
+    readonly yellow: readonly string[];
+    /** Fees to their floors in row 4 — the row that must read red. */
+    readonly red: readonly string[];
+  };
+}
+
 /**
- * The opening catalogue: three RAYS from the span's start, and ZERO changes.
+ * TIERS -- one product per price point, the shape a single app sells in.
  *
- * The two FLOORS the calibration turns on are Team's $29 and Enterprise's
- * $250 — a discounted seat and a discounted contract, both figures a business
- * could actually offer.
+ * Three products of deliberately different SHAPES, because one band per product
+ * is only worth drawing if the bands disagree: Starter is many cheap seats,
+ * Enterprise is eight expensive ones, Team is in between -- yet all three land
+ * within $500/mo of each other, so no band swamps the stack. Enterprise is
+ * mostly ANNUAL and Starter mostly MONTHLY, which is what makes the `%` dial
+ * worth having: it moves Enterprise hard and Starter barely at all.
+ *
+ *     product      #mo    $     #yr   %      MRR/mo
+ *     ----------   ----   ---   ---   ----   --------
+ *     Starter      120    15     60   85 %    2,565.00
+ *     Team          40    49     25   90 %    3,062.50
+ *     Enterprise     2   400      6   80 %    2,720.00
+ *     ---------------------------------------------------
+ *                                             8,347.50
  */
-export const PRODUCTS: readonly Product[] = [
-  {
-    id: "starter",
-    label: "Starter",
-    start: DOMAIN_START.getTime(),
-    committed: {
-      monthlyLicenses: 120,
-      fee: 15,
-      annualLicenses: 60,
-      annualPct: 85,
-    },
-    monthlyRange: [0, 300],
-    feeRange: [9, 25],
-    annualRange: [0, 200],
-    pctRange: [70, 100],
-    changes: {},
+export const TIERS: Fixture = {
+  label: "Tiers",
+  fixedMonthlyCost: 6_600,
+  comfortable: 1_100,
+  rateDomain: [-6_600, 24_500],
+  mrrCap: 16_000,
+  calibration: {
+    grow: "starter",
+    yellow: ["team"],
+    red: ["team", "enterprise"],
   },
-  {
-    id: "team",
-    label: "Team",
-    start: DOMAIN_START.getTime(),
-    committed: {
-      monthlyLicenses: 40,
-      fee: 49,
-      annualLicenses: 25,
-      annualPct: 90,
+  products: [
+    {
+      id: "starter",
+      label: "Starter",
+      start: DOMAIN_START.getTime(),
+      committed: {
+        monthlyLicenses: 120,
+        fee: 15,
+        annualLicenses: 60,
+        annualPct: 85,
+      },
+      monthlyRange: [0, 300],
+      feeRange: [9, 25],
+      annualRange: [0, 200],
+      pctRange: [70, 100],
+      changes: {},
     },
-    monthlyRange: [0, 120],
-    feeRange: [29, 80],
-    annualRange: [0, 80],
-    pctRange: [70, 100],
-    changes: {},
-  },
-  {
-    id: "enterprise",
-    label: "Enterprise",
-    start: DOMAIN_START.getTime(),
-    committed: {
-      monthlyLicenses: 2,
-      fee: 400,
-      annualLicenses: 6,
-      annualPct: 80,
+    {
+      id: "team",
+      label: "Team",
+      start: DOMAIN_START.getTime(),
+      committed: {
+        monthlyLicenses: 40,
+        fee: 49,
+        annualLicenses: 25,
+        annualPct: 90,
+      },
+      monthlyRange: [0, 120],
+      feeRange: [29, 80],
+      annualRange: [0, 80],
+      pctRange: [70, 100],
+      changes: {},
     },
-    monthlyRange: [0, 20],
-    feeRange: [250, 600],
-    annualRange: [0, 20],
-    // Enterprise is the product that negotiates hardest on prepay, so its
-    // percentage band reaches lower than the other two's.
-    pctRange: [60, 100],
-    changes: {},
+    {
+      id: "enterprise",
+      label: "Enterprise",
+      start: DOMAIN_START.getTime(),
+      committed: {
+        monthlyLicenses: 2,
+        fee: 400,
+        annualLicenses: 6,
+        annualPct: 80,
+      },
+      monthlyRange: [0, 20],
+      feeRange: [250, 600],
+      annualRange: [0, 20],
+      // Enterprise negotiates hardest on prepay, so its percentage band
+      // reaches lower than the other two's.
+      pctRange: [60, 100],
+      changes: {},
+    },
+  ],
+};
+
+/**
+ * APPS -- one card per PRODUCT, which is the other thing Peter said the board
+ * has to be able to be: "Amygdala and JTF with mo/annual billing".
+ *
+ * TWO cards rather than three, on purpose: it is the case that proves the board
+ * is not secretly built for three, and it is the one a two-app shop would
+ * actually open. Amygdala is the volume seat product and JTF the expensive
+ * per-installation one, so the two bands are still different shapes.
+ *
+ *     product      #mo    $     #yr   %      MRR/mo
+ *     ----------   ----   ---   ---   ----   --------
+ *     Amygdala      80     50    30   80 %    5,200.00
+ *     JTF           25    120    10   75 %    3,900.00
+ *     ---------------------------------------------------
+ *                                             9,100.00
+ *
+ * Its own four inequalities, solved the same way -- the floors are Amygdala's
+ * $30 and JTF's $80:
+ *
+ *     scenario                          MRR/mo    rate/mo   band
+ *     -------------------------------   -------   -------   ------
+ *     as it opens                        9,100     2,700    green
+ *     Amygdala +50 monthly licences     11,600     5,200    green
+ *     Amygdala's fee at its floor        7,020       620    yellow
+ *     Amygdala AND JTF at their floors   5,720      -680    red
+ *
+ * FIXED in (5,720, 7,020) -> 6,400; COMFORTABLE in (620, 2,700] -> 1,600.
+ */
+export const APPS: Fixture = {
+  label: "Apps",
+  fixedMonthlyCost: 6_400,
+  comfortable: 1_600,
+  rateDomain: [-6_400, 34_500],
+  mrrCap: 18_000,
+  calibration: {
+    grow: "amygdala",
+    yellow: ["amygdala"],
+    red: ["amygdala", "jtf"],
   },
-];
+  products: [
+    {
+      id: "amygdala",
+      label: "Amygdala",
+      start: DOMAIN_START.getTime(),
+      committed: {
+        monthlyLicenses: 80,
+        fee: 50,
+        annualLicenses: 30,
+        annualPct: 80,
+      },
+      monthlyRange: [0, 300],
+      feeRange: [30, 120],
+      annualRange: [0, 150],
+      pctRange: [70, 100],
+      changes: {},
+    },
+    {
+      id: "jtf",
+      label: "JTF",
+      start: DOMAIN_START.getTime(),
+      committed: {
+        monthlyLicenses: 25,
+        fee: 120,
+        annualLicenses: 10,
+        annualPct: 75,
+      },
+      monthlyRange: [0, 120],
+      feeRange: [80, 300],
+      annualRange: [0, 60],
+      pctRange: [60, 100],
+      changes: {},
+    },
+  ],
+};
+
+/**
+ * FLIP THIS ONE CONST to swap the whole board over: `TIERS` or `APPS`.
+ *
+ * Everything below reads through it, so nothing else has to change -- and the
+ * test asserts both tables either way, so the fixture that is not active is
+ * still checked.
+ */
+export const FIXTURE: Fixture = TIERS;
+
+/** The catalogue the board opens on. */
+export const PRODUCTS: readonly Product[] = FIXTURE.products;
 
 /**
  * THE BOARD OPENS WITH NO CHANGES. The first interaction makes its own, at the
@@ -874,33 +1067,41 @@ export const removeMutation = (
 // ── The dials ────────────────────────────────────────────────────────────────
 
 /**
- * ONE ROW'S PAIR for one product across one mutation.
+ * ONE PRODUCT'S FOUR MEASURES across one mutation — the shape
+ * `GroupedMutationSliders` takes, and the shape Peter asked for on 2026-09-18:
+ * "N products with 2 variants (monthly and annual)", one CARD each.
  *
- * Two of these are built per product — the Monthly row's `(#, $)` and the
- * Annual row's `(#, %)` — from the SAME `before`/`from` plans, so the two rows
- * are two readings of one history rather than two histories. Both carry the
- * product's own id, which is what lets a selection, a discontinuation or a
- * launch in one row mean the same product in the other.
+ * The order is `MONTHLY`, `FEE`, `ANNUAL`, `PCT`, which the bench's `axes`
+ * caption as `mo` (#, $) and `yr` (#, %). Position for position; `FIELDS` below
+ * is the only place that order is written down.
+ *
+ * FOUR MEASURES ON ONE ENTITY IS WHAT DELETED THE SYNC MACHINERY. While the
+ * board drew two paired rows this module carried `monthlyPairs`, `annualPairs`,
+ * a shared `soldAcross` walk to keep them in step, two per-row range helpers and
+ * a `shownPlanOf` lookup — because a summary needs all four numbers and a paired
+ * entity only ever carried two. One entity carries all four, so the summary is a
+ * function of the entity (`monthlyOfEntity`) and every one of those six pieces
+ * is gone.
  */
-export const pairOf = (
+export const entityOf = (
   product: Product,
   before: Plan | null,
   from: Plan | null,
-  fields: readonly [PlanField, PlanField],
-  ranges: readonly [
-    readonly [number, number],
-    readonly [number, number],
-  ],
-): PairedMutationEntity => {
-  const measure = (index: 0 | 1) => ({
-    prior: before === null ? null : before[fields[index]],
-    value: from === null ? null : from[fields[index]],
-    range: ranges[index],
+): GroupedMutationEntity => {
+  const measure = (field: PlanField, range: readonly [number, number]) => ({
+    prior: before === null ? null : before[field],
+    value: from === null ? null : from[field],
+    range,
   });
   return {
     id: product.id,
     label: product.label,
-    measures: [measure(0), measure(1)],
+    measures: [
+      measure("monthlyLicenses", product.monthlyRange),
+      measure("fee", product.feeRange),
+      measure("annualLicenses", product.annualRange),
+      measure("annualPct", product.pctRange),
+    ],
   };
 };
 
@@ -911,114 +1112,85 @@ interface AcrossMutation {
   readonly from: Plan | null;
 }
 
-/** The products on the books at a mutation, with their two plans. */
-const soldAcross = (
-  products: readonly Product[],
-  mutationId: string,
-  mutations: readonly Mutation[],
-): AcrossMutation[] =>
-  pipe(
-    products,
-    map(
-      (product: Product): AcrossMutation => ({
-        product,
-        before: planBefore(product, mutationId, mutations),
-        from: planFrom(product, mutationId, mutations),
-      }),
-    ),
-    filter((row: AcrossMutation) => isSoldAt(row.before, row.from)),
-  );
-
-/** The products on the books with NO mutation — every one on its committed
- *  plan, read in the span's first month, prior and value the same figures. */
-const soldAtOpening = (products: readonly Product[]): AcrossMutation[] =>
-  pipe(
-    products,
-    filter((product: Product) => product.committed !== null),
-    map((product: Product): AcrossMutation => {
-      const opening = planAt(product, DOMAIN_START.getTime(), []);
-      return { product, before: opening, from: opening };
-    }),
-  );
-
-/** The Monthly row's ranges for one product. */
-const monthlyRanges = (
-  product: Product,
-): readonly [readonly [number, number], readonly [number, number]] => [
-  product.monthlyRange,
-  product.feeRange,
-];
-
-/** The Annual row's ranges for one product. */
-const annualRanges = (
-  product: Product,
-): readonly [readonly [number, number], readonly [number, number]] => [
-  product.annualRange,
-  product.pctRange,
-];
-
 /**
- * THE TWO ROWS, for a mutation or for the opening state.
+ * THE CARDS, for a mutation or for the opening state.
  *
  * `mutationId === null` is the board's OPENING state — there is no change to
  * show, and saying so with `prior === value` is what makes every reading
  * downstream fall out with no special case: the delta is zero, no change line is
  * drawn, and the gauge reads exactly the baseline.
  *
- * BOTH ROWS LIST THE SAME PRODUCTS IN THE SAME ORDER, by construction: they are
- * two `map`s over one `soldAcross` result. That is the invariant the bench
- * depends on — a product discontinued in the Monthly row has to vanish from the
- * Annual one in the same frame, or one product is two different things on screen.
+ * A product not on the books at this mutation is simply absent from the list —
+ * which is `isSoldAt`'s four-case table, and is how a discontinued product
+ * disappears from the row at later dates while still being shown, struck
+ * through, at its own.
  */
-export const monthlyPairs = (
+export const entitiesFor = (
   products: readonly Product[],
   mutationId: string | null,
   mutations: readonly Mutation[],
-): PairedMutationEntity[] =>
-  map(
-    (row: AcrossMutation) =>
-      pairOf(row.product, row.before, row.from, MONTHLY_FIELDS, monthlyRanges(row.product)),
+): GroupedMutationEntity[] => {
+  const across: AcrossMutation[] =
     mutationId === null
-      ? soldAtOpening(products)
-      : soldAcross(products, mutationId, mutations),
+      ? pipe(
+          products,
+          filter((product: Product) => product.committed !== null),
+          map((product: Product): AcrossMutation => {
+            const opening = planAt(product, DOMAIN_START.getTime(), []);
+            return { product, before: opening, from: opening };
+          }),
+        )
+      : pipe(
+          products,
+          map((product: Product): AcrossMutation => ({
+            product,
+            before: planBefore(product, mutationId, mutations),
+            from: planFrom(product, mutationId, mutations),
+          })),
+          filter((row: AcrossMutation) => isSoldAt(row.before, row.from)),
+        );
+  return map(
+    (row: AcrossMutation) => entityOf(row.product, row.before, row.from),
+    across,
   );
-
-export const annualPairs = (
-  products: readonly Product[],
-  mutationId: string | null,
-  mutations: readonly Mutation[],
-): PairedMutationEntity[] =>
-  map(
-    (row: AcrossMutation) =>
-      pairOf(row.product, row.before, row.from, ANNUAL_FIELDS, annualRanges(row.product)),
-    mutationId === null
-      ? soldAtOpening(products)
-      : soldAcross(products, mutationId, mutations),
-  );
+};
 
 /**
- * THE PLAN THE DIALS ARE SHOWING for one product — what both rows' summary
- * lines are computed from.
+ * WHAT ONE CARD BILLS A MONTH, read off its own four dials.
  *
- * A summary needs ALL FOUR numbers (`#mo × $ + #yr × $ × pct`) and a row's
- * entity only carries two, so the line cannot be computed from the entity the
- * component hands it. It is computed from the product instead, looked up by the
- * entity's id — which is exact, because both rows are derived from these same
- * products on every render, so the lookup and the dials cannot disagree.
+ * `#mo × $ + #yr × $ × pct`, exactly `monthlyOf`'s arithmetic — and it has to
+ * be, because this is the line under the card that tells the reader their drag
+ * did what the gauge says it did. The test pins the two equal.
  *
- * `null` for a product that is not on the books at this mutation, which is the
- * state a discontinued product's summary reads as an empty line.
+ * It reads the ENTITY rather than the product, which is the whole gain of one
+ * card over two rows: while the measures were split across two entities this
+ * was impossible and the board had to look the product up by id
+ * (`shownPlanOf`, now deleted).
+ *
+ * A discontinued product has every measure at `null` and bills nothing.
  */
-export const shownPlanOf = (
-  products: readonly Product[],
-  id: string,
-  mutationId: string | null,
-  mutations: readonly Mutation[],
-): Plan | null => {
-  const product = find((one: Product) => one.id === id, products);
-  if (product === undefined) return null;
-  if (mutationId === null) return planAt(product, DOMAIN_START.getTime(), []);
-  return planFrom(product, mutationId, mutations);
+export const monthlyOfEntity = (entity: GroupedMutationEntity): number => {
+  const at = (index: GroupedMeasureIndex): number | null =>
+    entity.measures[index]?.value ?? null;
+  const monthly = at(MONTHLY);
+  const fee = at(FEE);
+  const annual = at(ANNUAL);
+  const pct = at(PCT);
+  if (monthly === null || fee === null || annual === null || pct === null) {
+    return 0;
+  }
+  return monthly * fee + annual * fee * (pct / 100);
+};
+
+/** What ONE annual licence on this card costs a year — the figure on the
+ *  invoice, which is the thing the `%` dial is actually setting. */
+export const annualPriceOfEntity = (
+  entity: GroupedMutationEntity,
+): number | null => {
+  const fee = entity.measures[FEE]?.value ?? null;
+  const pct = entity.measures[PCT]?.value ?? null;
+  if (fee === null || pct === null) return null;
+  return fee * MONTHS_PER_YEAR * (pct / 100);
 };
 
 // ── The money ────────────────────────────────────────────────────────────────
@@ -1064,22 +1236,25 @@ export const mrrAt = (
  * It lives in the FIXTURE rather than in a component because it is the whole
  * reason breakeven is a number at all: without it every scenario is profitable,
  * the gauge's red half is unreachable, and the License Mix chart has no rule
- * worth drawing. $6,600 is the solution to the calibration's four inequalities —
+ * worth drawing. It is the solution to the calibration's four inequalities —
  * the midpoint of the interval they leave, to the nearest hundred (see the
- * header). It is ALSO the breakeven MRR the stack's dashed rule is drawn at,
- * which is the point of having it in one place: the rule and the gauge's zero
- * are the same number by construction.
+ * header) — which is why it comes off the FIXTURE rather than being written
+ * here: a different catalogue has a different interval. It is ALSO the
+ * breakeven MRR the stack's dashed rule is drawn at, which is the point of
+ * having it in one place: the rule and the gauge's zero are the same number by
+ * construction.
  */
-export const FIXED_MONTHLY_COST = 6_600;
+export const FIXED_MONTHLY_COST = FIXTURE.fixedMonthlyCost;
 
 /** The business's rate, given what it bills in a MONTH. */
 export const rateFromMrr = (mrr: number): number => mrr - FIXED_MONTHLY_COST;
 
 /**
  * The comfortable gain, in $/mo. At or above it the gauge lights green, below it
- * yellow; below zero is red, and that split is the gauge's own.
+ * yellow; below zero is red, and that split is the gauge's own. Solved against
+ * the active fixture, so it comes off it too.
  */
-export const COMFORTABLE = 1_100;
+export const COMFORTABLE = FIXTURE.comfortable;
 
 /**
  * The gauge's domain, in $/mo.
@@ -1104,7 +1279,7 @@ export const COMFORTABLE = 1_100;
  * So the promise is kept the other way round: `drawnRate` states the clamp
  * explicitly, and the DEBUG summary prints the drawn figure BESIDE the raw one.
  */
-export const RATE_DOMAIN: readonly [number, number] = [-6_600, 24_500];
+export const RATE_DOMAIN: readonly [number, number] = FIXTURE.rateDomain;
 
 /**
  * What the gauge will actually DRAW for a rate — the domain clamp, named.
@@ -1195,24 +1370,32 @@ export const monthsBetween = (from: number, to: number): number =>
 const MONTHS_PER_UNIT = 1;
 
 /**
- * The rate over a whole span, weighted by time.
+ * The MRR over a whole span, weighted by time. NO fixed cost subtracted.
  *
  * Takes a FUNCTION and the moments rather than the products and the mutations,
  * because neither model is anything this arithmetic needs: given "what does it
  * bill at time t" and "when can it change", the average is decided.
  *
+ * IT RETURNS RAW MRR, and that is what lets the calibration read either
+ * fixture: a rate is MRR less a fixed cost, and WHICH fixed cost is a property
+ * of the catalogue being read. `rateBandTable` subtracts the one belonging to
+ * the fixture it was handed; `averageRate` below subtracts the ACTIVE one.
+ * Returning a rate here would have baked the active fixture into the
+ * arithmetic, so the two-app table would have been priced on the tier
+ * catalogue's overheads — a wrong number that type-checks.
+ *
  * Moments outside the span are IGNORED rather than clamped: one before it is
  * already in the MRR at the span's start, and one after it never happens inside
  * the period being read.
  */
-export const averageRateOver = (
+export const averageMrrOver = (
   start: number,
   end: number,
   moments: readonly number[],
   mrr: (time: number) => number,
 ): number => {
   const span = monthsBetween(start, end);
-  if (span <= 0) return rateFromMrr(mrr(start));
+  if (span <= 0) return mrr(start);
   const inside = filter(
     (moment: number) => moment > start && moment < end,
     moments,
@@ -1224,8 +1407,16 @@ export const averageRateOver = (
     const to = edges[index + 1] ?? end;
     weighted += monthsBetween(from, to) * mrr(from);
   }
-  return rateFromMrr(weighted / span);
+  return weighted / span;
 };
+
+/** The same span read as a RATE, against the ACTIVE fixture's fixed cost. */
+export const averageRateOver = (
+  start: number,
+  end: number,
+  moments: readonly number[],
+  mrr: (time: number) => number,
+): number => rateFromMrr(averageMrrOver(start, end, moments, mrr));
 
 /** The share of the span a change made at `at` is in force for. */
 export const weightFrom = (start: number, end: number, at: number): number => {
@@ -1235,18 +1426,31 @@ export const weightFrom = (start: number, end: number, at: number): number => {
 };
 
 /**
- * THE GAUGE'S READING: the scenario's rate averaged over the whole year, in
- * MONTHS.
+ * THE GAUGE'S READING, in MRR: the scenario's monthly revenue averaged over the
+ * whole year, in MONTHS.
  *
- * Not the selected change's own rate, which would say a product discontinued in
+ * Not the selected change's own MRR, which would say a product discontinued in
  * December costs the year what the same product discontinued in January does.
  *
  * It samples EVERY MONTH (`momentsOf`), not only the flags — see there. On the
  * OPENING scenario, which carries no changes at all, every sample is the same
- * figure and the weighted average collapses to it exactly: $8,347.50 of MRR less
- * $6,600 of fixed cost, so $1,747.50/mo. That collapse is what makes the
+ * figure and the weighted average collapses to it exactly: $8,347.50 on the tier
+ * fixture, $9,100 on the two-app one. That collapse is what makes each
  * calibration solvable in one line per row.
  */
+export const averageMrr = (
+  domain: TimeDomain,
+  mutations: readonly Mutation[],
+  products: readonly Product[],
+): number =>
+  averageMrrOver(
+    timeOf(domain[0]),
+    timeOf(domain[1]),
+    momentsOf(mutations),
+    (time: number) => mrrAt(products, time, mutations),
+  );
+
+/** The same reading as a RATE — MRR less the ACTIVE fixture's fixed cost. */
 export const averageRate = (
   domain: TimeDomain,
   mutations: readonly Mutation[],
@@ -1305,9 +1509,12 @@ export type RateBand = "red" | "yellow" | "green";
 
 /** The band a rate reads as. Mirrors the gauge's own split, so the headless
  *  table and the drawn dial cannot disagree. */
-export const bandOfRate = (rate: number): RateBand => {
+export const bandOfRate = (
+  rate: number,
+  comfortable: number = COMFORTABLE,
+): RateBand => {
   if (rate < 0) return "red";
-  if (rate < COMFORTABLE) return "yellow";
+  if (rate < comfortable) return "yellow";
   return "green";
 };
 
@@ -1329,7 +1536,9 @@ export interface RateRow {
  */
 const calibrationProducts = (
   products: readonly Product[],
-  change: (product: Product) => { addMonthly?: number; fee?: number } | undefined,
+  change: (
+    product: Product,
+  ) => { addMonthly?: number; fee?: number } | undefined,
 ): Product[] =>
   map((product: Product) => {
     const asked = change(product);
@@ -1354,53 +1563,65 @@ const calibrationProducts = (
     };
   }, products);
 
-/** Which product each calibration row reaches for, by id — spelled out rather
- *  than by position, because "the second one" is a fact about the fixture's
- *  array and "Team" is a fact about the business. */
-const STARTER = "starter";
-const TEAM = "team";
-const ENTERPRISE = "enterprise";
+/** A product's own label, for a row's sentence. Falls back to the id so a
+ *  fixture that names a product the table cannot find still prints something
+ *  a reader can act on rather than an empty phrase. */
+const labelOf = (products: readonly Product[], id: string): string =>
+  find((product: Product) => product.id === id, products)?.label ?? id;
+
+/**
+ * The row's sentence, naming the products it moved — `Team's fee at its floor`
+ * for one, `Team and Enterprise at their fee floors` for several.
+ *
+ * SINGULAR AND PLURAL are spelled separately because the fixtures differ on
+ * exactly this: both yellow rows cut ONE product and both red rows cut several.
+ * "Team at their fee floors" is what a single shared phrasing produced, and a
+ * calibration table is a thing people read aloud to each other.
+ */
+const atFloorsLabel = (
+  products: readonly Product[],
+  ids: readonly string[],
+): string => {
+  const names = map((id: string) => labelOf(products, id), ids);
+  return names.length === 1
+    ? `${names[0]}'s fee at its floor`
+    : `${names.join(" and ")} at their fee floors`;
+};
 
 /**
  * The calibration, as data — each row the reading THE GAUGE GIVES for the
  * catalogue the board OPENS on, with the row's change applied to every month of
- * the year. Exactly the table in this file's header.
+ * the year. Exactly the table in the fixture's own header.
+ *
+ * IT TAKES A WHOLE FIXTURE, not just the products, because a row's BAND depends
+ * on that catalogue's own fixed cost and comfortable gain — reading one
+ * catalogue's MRR against another's breakeven would produce a table that looks
+ * fine and describes nothing. Passing the fixture is what lets the test assert
+ * BOTH tables while only one of them is active.
  */
-export const rateBandTable = (
-  products: readonly Product[] = PRODUCTS,
-): RateRow[] => {
+export const rateBandTable = (fixture: Fixture = FIXTURE): RateRow[] => {
+  const { products } = fixture;
   const row = (scenario: string, scenarioProducts: Product[]): RateRow => {
-    const rate = averageRate(TIME_DOMAIN, SEED_MUTATIONS, scenarioProducts);
-    return {
-      scenario,
-      mrr: rate + FIXED_MONTHLY_COST,
-      rate,
-      band: bandOfRate(rate),
-    };
+    const mrr = averageMrr(TIME_DOMAIN, SEED_MUTATIONS, scenarioProducts);
+    const rate = mrr - fixture.fixedMonthlyCost;
+    return { scenario, mrr, rate, band: bandOfRate(rate, fixture.comfortable) };
   };
   const floorOf = (product: Product): number => product.feeRange[0];
+  const atFloors = (ids: readonly string[]): Product[] =>
+    calibrationProducts(products, (product) =>
+      ids.includes(product.id) ? { fee: floorOf(product) } : undefined,
+    );
+  const { grow, yellow, red } = fixture.calibration;
   return [
     row("as it opens", [...products]),
     row(
-      "Starter +50 monthly licences",
+      `${labelOf(products, grow)} +50 monthly licences`,
       calibrationProducts(products, (product) =>
-        product.id === STARTER ? { addMonthly: 50 } : undefined,
+        product.id === grow ? { addMonthly: 50 } : undefined,
       ),
     ),
-    row(
-      "Team's fee at its floor",
-      calibrationProducts(products, (product) =>
-        product.id === TEAM ? { fee: floorOf(product) } : undefined,
-      ),
-    ),
-    row(
-      "Team AND Enterprise at their fee floors",
-      calibrationProducts(products, (product) =>
-        product.id === TEAM || product.id === ENTERPRISE
-          ? { fee: floorOf(product) }
-          : undefined,
-      ),
-    ),
+    row(atFloorsLabel(products, yellow), atFloors(yellow)),
+    row(atFloorsLabel(products, red), atFloors(red)),
   ];
 };
 
@@ -1411,12 +1632,12 @@ export const rateBandTable = (
  *
  * A fixed domain is the point — the bands' heights are then comparable across
  * every edit, and a stack that re-scaled itself would make a product
- * discontinued look like a product unchanged. $16,000 is sized against the
- * FIXTURE: it seats the opening stack's $8,347.50 top edge at just over half the
- * plot, leaves the breakeven rule at $6,600 clearly below it, and holds a
- * doubling of the business before anything runs off the top.
+ * discontinued look like a product unchanged. It is sized against the FIXTURE
+ * and comes off it: $16,000 seats the tier catalogue's $8,347.50 top edge at
+ * just over half the plot and leaves the breakeven rule at $6,600 clearly below
+ * it, and the two-app catalogue needs $18,000 for the same reading.
  */
-export const DEFAULT_MRR_CAP = 16_000;
+export const DEFAULT_MRR_CAP = FIXTURE.mrrCap;
 
 /**
  * The breakeven MRR, in dollars a month — the dashed rule across the stack.

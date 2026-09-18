@@ -9,11 +9,13 @@
  * balance line draws.
  */
 import { describe, expect, it } from "vitest";
-import { map } from "../../../src/fn";
+import { find, map } from "../../../src/fn";
 import { timeOf } from "../../../src";
 import type { Mutation } from "../../../src";
+import type { GroupedMutationEntity } from "../../../src/components/GroupedMutationSliders";
 import {
-  ANNUAL_FIELDS,
+  ANNUAL,
+  APPS,
   BREAKEVEN_MRR,
   COMFORTABLE,
   COMMITTED_RATE,
@@ -25,7 +27,12 @@ import {
   FIXED_MONTHLY_COST,
   LICENSE_DOMAIN,
   MIN_MRR_CAP,
-  MONTHLY_FIELDS,
+  MONTHLY,
+  FEE,
+  PCT,
+  FIELDS,
+  FIXTURE,
+  TIERS,
   MONTHLY_NET,
   MONTHS_PER_YEAR,
   MONTH_COUNT,
@@ -40,7 +47,7 @@ import {
   addMutation,
   addProduct,
   addedAt,
-  annualPairs,
+  annualPriceOfEntity,
   annualPriceOf,
   averageRate,
   bandOfRate,
@@ -61,7 +68,9 @@ import {
   monthRangeOf,
   monthStarts,
   monthlyOf,
-  monthlyPairs,
+  monthlyOfEntity,
+  entitiesFor,
+  averageMrr,
   mrrAt,
   nearestMutation,
   peakMonth,
@@ -78,7 +87,6 @@ import {
   runningBalances,
   scenarioDigest,
   segmentLabelsOf,
-  shownPlanOf,
   stackOrderTable,
   uniqueId,
   variabilityOf,
@@ -105,11 +113,11 @@ const at = (iso: string): number => new Date(iso).getTime();
 const oneChange = (iso = "2025-07-01"): Mutation[] =>
   addMutation([], new Date(iso)).mutations;
 
-/** The two fields each row's measure 0 and measure 1 write. */
-const MO_COUNT = MONTHLY_FIELDS[0];
-const MO_FEE = MONTHLY_FIELDS[1];
-const YR_COUNT = ANNUAL_FIELDS[0];
-const YR_PCT = ANNUAL_FIELDS[1];
+/** The plan field each of the card's four measures writes. */
+const MO_COUNT = FIELDS[MONTHLY];
+const MO_FEE = FIELDS[FEE];
+const YR_COUNT = FIELDS[ANNUAL];
+const YR_PCT = FIELDS[PCT];
 
 describe("the span and its month grid", () => {
   it("holds twelve month slots, the first being the span's own start", () => {
@@ -119,7 +127,9 @@ describe("the span and its month grid", () => {
   });
 
   it("snaps a pick to the first of its month", () => {
-    expect(monthOfPick(new Date("2025-08-19")).getTime()).toBe(at("2025-08-01"));
+    expect(monthOfPick(new Date("2025-08-19")).getTime()).toBe(
+      at("2025-08-01"),
+    );
     // Before the span opens, the clamp holds the pick at the span's start.
     expect(monthOfPick(new Date("2024-11-20")).getTime()).toBe(JAN);
   });
@@ -296,7 +306,7 @@ describe("the calibration — the four inequalities, solved", () => {
         band: "yellow",
       },
       {
-        scenario: "Team AND Enterprise at their fee floors",
+        scenario: "Team and Enterprise at their fee floors",
         mrr: 6_077.5,
         rate: -522.5,
         band: "red",
@@ -471,67 +481,98 @@ describe("the history walk", () => {
   });
 });
 
-describe("the two dial rows are ONE product list", () => {
+describe("one CARD per product", () => {
   const mutations = oneChange("2025-07-01");
   const flag = mutations[0]?.id ?? "";
 
-  it("lists the same products, in the same order, on both rows", () => {
-    const monthly = monthlyPairs(PRODUCTS, flag, mutations);
-    const annual = annualPairs(PRODUCTS, flag, mutations);
-    expect(map((pair) => pair.id, monthly)).toEqual(
-      map((pair) => pair.id, annual),
-    );
-    expect(map((pair) => pair.id, monthly)).toEqual([
-      "starter",
-      "team",
-      "enterprise",
-    ]);
+  it("draws one card per product on the books, in fixture order", () => {
+    expect(
+      map((card) => card.id, entitiesFor(PRODUCTS, flag, mutations)),
+    ).toEqual(["starter", "team", "enterprise"]);
   });
 
-  it("drops a discontinued product from BOTH rows at a later date", () => {
+  it("carries ALL FOUR measures on one card, each on its own band", () => {
+    const [starter] = entitiesFor(PRODUCTS, flag, mutations);
+    expect(starter?.measures.length).toBe(4);
+    expect(starter?.measures[MONTHLY]?.value).toBe(120);
+    expect(starter?.measures[FEE]?.value).toBe(15);
+    expect(starter?.measures[ANNUAL]?.value).toBe(60);
+    expect(starter?.measures[PCT]?.value).toBe(85);
+    // Measure 1 is a FEE band and measure 3 a PERCENTAGE band — unrelated
+    // scales under one name, which is the whole reason the card exists.
+    expect(starter?.measures[FEE]?.range).toEqual([9, 25]);
+    expect(starter?.measures[PCT]?.range).toEqual([70, 100]);
+  });
+
+  it("drops a discontinued product from the row at a LATER date", () => {
     const later = addMutation(mutations, new Date("2025-10-01")).mutations;
     const second = later[1]?.id ?? "";
     const gone = withDiscontinue(PRODUCTS, "team", flag);
-    expect(map((pair) => pair.id, monthlyPairs(gone, second, later))).toEqual([
-      "starter",
-      "enterprise",
-    ]);
-    expect(map((pair) => pair.id, annualPairs(gone, second, later))).toEqual([
+    // At its own date it is still drawn, struck through — all four null.
+    const atOwn = entitiesFor(gone, flag, later);
+    expect(map((card) => card.id, atOwn)).toContain("team");
+    // At a later date it is simply absent.
+    expect(map((card) => card.id, entitiesFor(gone, second, later))).toEqual([
       "starter",
       "enterprise",
     ]);
   });
 
-  it("gives each row its OWN two measures and ranges", () => {
-    const [starterMonthly] = monthlyPairs(PRODUCTS, flag, mutations);
-    const [starterAnnual] = annualPairs(PRODUCTS, flag, mutations);
-    expect(starterMonthly?.measures[0].value).toBe(120);
-    expect(starterMonthly?.measures[1].value).toBe(15);
-    expect(starterAnnual?.measures[0].value).toBe(60);
-    expect(starterAnnual?.measures[1].value).toBe(85);
-    // Measure 1's range is a FEE band on one row and a PERCENTAGE band on the
-    // other — the reason a bare measure index is never handed to the model.
-    expect(starterMonthly?.measures[1].range).toEqual([9, 25]);
-    expect(starterAnnual?.measures[1].range).toEqual([70, 100]);
+  it("nulls ALL FOUR measures together when a product is discontinued", () => {
+    const gone = withDiscontinue(PRODUCTS, "team", flag);
+    const team = find(
+      (card: GroupedMutationEntity) => card.id === "team",
+      entitiesFor(gone, flag, mutations),
+    );
+    expect(
+      map(
+        (measure: { value: number | null }) => measure.value,
+        team?.measures ?? [],
+      ),
+    ).toEqual([null, null, null, null]);
   });
 
   it("shows prior === value when there is no change to show", () => {
-    for (const pair of [
-      ...monthlyPairs(PRODUCTS, null, []),
-      ...annualPairs(PRODUCTS, null, []),
-    ]) {
-      expect(pair.measures[0].prior).toBe(pair.measures[0].value);
-      expect(pair.measures[1].prior).toBe(pair.measures[1].value);
+    for (const card of entitiesFor(PRODUCTS, null, [])) {
+      for (const measure of card.measures) {
+        expect(measure.prior).toBe(measure.value);
+      }
     }
   });
 
-  it("answers BOTH rows' summaries from one plan, looked up by id", () => {
-    const plan = shownPlanOf(PRODUCTS, "team", null, []);
-    expect(plan).not.toBeNull();
-    expect(monthlyOf(plan)).toBe(3_062.5);
-    expect(annualPriceOf(plan as NonNullable<typeof plan>)).toBe(529.2);
-    // A product not on the books reads null, which is the empty summary line.
-    expect(shownPlanOf(PRODUCTS, "nope", null, [])).toBeNull();
+  it("answers the summary FROM THE CARD — no lookup by id", () => {
+    const team = find(
+      (card: GroupedMutationEntity) => card.id === "team",
+      entitiesFor(PRODUCTS, null, []),
+    );
+    expect(team).toBeDefined();
+    // Exactly `monthlyOf` on the same plan — the two readings agree.
+    expect(monthlyOfEntity(team as never)).toBe(3_062.5);
+    expect(monthlyOfEntity(team as never)).toBe(
+      monthlyOf(planAt(PRODUCTS[1] as Product, JAN, [])),
+    );
+    expect(annualPriceOfEntity(team as never)).toBe(529.2);
+  });
+
+  it("bills nothing, and prices nothing, for a discontinued card", () => {
+    const gone = withDiscontinue(PRODUCTS, "team", flag);
+    const team = find(
+      (card: GroupedMutationEntity) => card.id === "team",
+      entitiesFor(gone, flag, mutations),
+    );
+    expect(monthlyOfEntity(team as never)).toBe(0);
+    expect(annualPriceOfEntity(team as never)).toBeNull();
+  });
+
+  it("maps every measure index to its own plan field", () => {
+    expect(FIELDS).toEqual([
+      "monthlyLicenses",
+      "fee",
+      "annualLicenses",
+      "annualPct",
+    ]);
+    // The index is unambiguous now, which it was not across two paired rows.
+    expect(new Set(FIELDS).size).toBe(4);
   });
 });
 
