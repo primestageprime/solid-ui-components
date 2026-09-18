@@ -97,7 +97,9 @@ import { Modal } from "../../../src/components/Modal";
 import {
   ClusterRow,
   EndWrapRow,
+  FillColumn,
   FillWrapRow,
+  FixedHeightBox,
   GrowCenterColumn,
   GrowFillBox,
   HalfFillColumn,
@@ -263,7 +265,12 @@ const RevenueRateGauge = createRateGauge({
 });
 
 /** The plot inset. Wide enough on the left for abbreviated dollar labels. */
-const LICENSE_MIX_MARGIN = { top: 20, right: 16, bottom: 28, left: 46 } as const;
+const LICENSE_MIX_MARGIN = {
+  top: 20,
+  right: 16,
+  bottom: 28,
+  left: 46,
+} as const;
 
 /**
  * THE LICENSE MIX CHART, curried once: the inset and the tick text are this
@@ -595,7 +602,9 @@ const LicenseBoardBench: Component = () => {
    *  on the invoice, which is the thing the `%` dial is actually setting. */
   const annualSummary = (entity: PairedMutationEntity): string => {
     const plan = shown(entity.id);
-    return plan === null ? "" : `${abbreviateDollars(annualPriceOf(plan))}/yr each`;
+    return plan === null
+      ? ""
+      : `${abbreviateDollars(annualPriceOf(plan))}/yr each`;
   };
 
   onMount(() => {
@@ -760,91 +769,112 @@ const LicenseBoardBench: Component = () => {
       <ViewportColumn>
         <SectionTitle>License Board</SectionTitle>
 
-        {/* The top half, halved again: two charts stacked. Each card is a
-            FillCardSurface — it takes its half of the band and lays out a
-            column that fills it — so the title keeps its own height and the
-            GrowFillBox hands the chart everything left. */}
-        <HalfFillColumn>
-          <HalfFillColumn>
-            <FillCardSurface>
-              <SpreadRow>
-                <TextTitle>Cash Flow</TextTitle>
-                <IconOnlyButton
-                  onClick={ceiling.reset}
-                  aria-label="Fit y-axis to current values"
-                  title="Fit y-axis to current values"
-                >
-                  <Icon name="shrink" size="sm" />
-                </IconOnlyButton>
-              </SpreadRow>
-              {/* THE CALL BOTH OTHER BOARDS MAKE, unchanged: `cells`,
+        {/* THE FRAME DIFFERS FROM THE OTHER TWO BOARDS, and the reason is
+            MEASURED rather than aesthetic.
+
+            Hourly and Scenario split the viewport in half — charts above,
+            controls below — because each has ONE row of dials, and one
+            `PairedMutationSliders` column has a hard minimum height: its
+            `MarkedSlider` draws at its own floor (180px measured) whatever the
+            container says, so a column is name(18) + dials(229) + summary(30) +
+            footer(24) ≈ 325px before it starts to overlap itself.
+
+            THIS board has TWO rows, so the controls need ~700px — more than half
+            of 1300. Given a 50/50 band the dials row overflowed its box by 61px
+            and the summary line printed on top of the readouts. (Side by side
+            was the other candidate and is worse: a column is 184px wide, so two
+            rows in a 628px pane would page to one product each.)
+
+            So the charts take a STATED height (`FixedHeightBox`, the library's
+            own 200px) and the controls take everything left (`FillColumn`) —
+            which is the same trade the variant's own header describes, and it is
+            the honest one here: the charts are readable at 200px and the dials
+            are not readable at 233px.
+
+            This IS the argument for one grouped control: a single row of four
+            captioned dials is ~325px, which fits a plain half-band with room. */}
+        <FixedHeightBox>
+          <FillCardSurface>
+            <SpreadRow>
+              <TextTitle>Cash Flow</TextTitle>
+              <IconOnlyButton
+                onClick={ceiling.reset}
+                aria-label="Fit y-axis to current values"
+                title="Fit y-axis to current values"
+              >
+                <Icon name="shrink" size="sm" />
+              </IconOnlyButton>
+            </SpreadRow>
+            {/* THE CALL BOTH OTHER BOARDS MAKE, unchanged: `cells`,
                   `scrub={false}`, `chartHeight="fill"`, `showGridlines` and the
                   fan as two `balanceSeries`. The y-domain's top is the
                   high-water mark, not the all-dials-at-max `PINNED_CEILING` —
                   see that constant for why. */}
-              <GrowFillBox>
-                <CashflowScrubChart
-                  cells={cells()}
-                  yMax={ceiling.ceiling()}
-                  scrub={false}
-                  chartHeight="fill"
-                  showGridlines
-                  lineLabel="Committed"
-                  balanceSeries={[
-                    fanSeries("optimistic", 1, nowIndex()),
-                    fanSeries("pessimistic", -1, nowIndex()),
-                  ]}
-                />
-              </GrowFillBox>
-            </FillCardSurface>
-          </HalfFillColumn>
+            <GrowFillBox>
+              <CashflowScrubChart
+                cells={cells()}
+                yMax={ceiling.ceiling()}
+                scrub={false}
+                chartHeight="fill"
+                showGridlines
+                lineLabel="Committed"
+                balanceSeries={[
+                  fanSeries("optimistic", 1, nowIndex()),
+                  fanSeries("pessimistic", -1, nowIndex()),
+                ]}
+              />
+            </GrowFillBox>
+          </FillCardSurface>
+        </FixedHeightBox>
 
-          <HalfFillColumn>
-            <FillCardSurface>
-              {/* The cap lives in the card's HEADER rather than in a settings
+        <FixedHeightBox>
+          <FillCardSurface>
+            {/* The cap lives in the card's HEADER rather than in a settings
                   strip of its own: it is one number, it belongs to this chart
                   alone, and a row of its own would cost the two charts the
                   height that makes them readable. `min` is the breakeven rule —
                   a cap below it would put the rule off the plot. */}
-              <SpreadRow>
-                <TextTitle>License Mix</TextTitle>
-                <ClusterRow>
-                  <NoteText>Cap</NoteText>
-                  <ThemedNumberInput
-                    name="mrr-cap"
-                    label=""
-                    size="sm"
-                    min={MIN_MRR_CAP}
-                    max={DEFAULT_MRR_CAP * 4}
-                    step={1_000}
-                    value={cap}
-                    onChange={(next) => {
-                      setCap(next ?? DEFAULT_MRR_CAP);
-                    }}
-                  />
-                </ClusterRow>
-              </SpreadRow>
-              {/* One band per PRODUCT, valued in $/mo, so the stack's top edge
+            <SpreadRow>
+              <TextTitle>License Mix</TextTitle>
+              <ClusterRow>
+                <NoteText>Cap</NoteText>
+                <ThemedNumberInput
+                  name="mrr-cap"
+                  label=""
+                  size="sm"
+                  min={MIN_MRR_CAP}
+                  max={DEFAULT_MRR_CAP * 4}
+                  step={1_000}
+                  value={cap}
+                  onChange={(next) => {
+                    setCap(next ?? DEFAULT_MRR_CAP);
+                  }}
+                />
+              </ClusterRow>
+            </SpreadRow>
+            {/* One band per PRODUCT, valued in $/mo, so the stack's top edge
                   IS total MRR and the dashed rule at the fixed monthly cost is
                   literally the breakeven line. `onPick` reports the RAW date;
                   `monthOfPick` is this board's grid — the first of the month at
                   or before it, clamped to the span's start. */}
-              <LicenseMixChart
-                series={licenseMixSeries(products(), mutations())}
-                xDomain={[DOMAIN_START, DOMAIN_END]}
-                yDomain={[0, cap()]}
-                xTickValues={QUARTER_TICKS}
-                rule={{ value: BREAKEVEN_MRR, label: "breakeven" }}
-                events={mutations()}
-                hoverLabel={(at) => monthRangeOf(at).label}
-                onPick={(at) => pickMonth(monthOfPick(at))}
-              />
-            </FillCardSurface>
-          </HalfFillColumn>
-        </HalfFillColumn>
+            <LicenseMixChart
+              series={licenseMixSeries(products(), mutations())}
+              xDomain={[DOMAIN_START, DOMAIN_END]}
+              yDomain={[0, cap()]}
+              xTickValues={QUARTER_TICKS}
+              rule={{ value: BREAKEVEN_MRR, label: "breakeven" }}
+              events={mutations()}
+              hoverLabel={(at) => monthRangeOf(at).label}
+              onPick={(at) => pickMonth(monthOfPick(at))}
+            />
+          </FillCardSurface>
+        </FixedHeightBox>
 
-        {/* The bottom half: Changes wide-left, the gauge narrow-right. */}
-        <HalfFillColumn>
+        {/* EVERYTHING LEFT goes to the controls: Changes wide-left, the gauge
+            narrow-right. `FillColumn` rather than `HalfFillColumn` because the
+            two charts above it are now definite rather than proportional — see
+            the note on the first chart for the measurement that forced it. */}
+        <FillColumn>
           <FillWrapRow>
             <MajorPaneBox>
               <FillCardSurface>
@@ -918,7 +948,7 @@ const LicenseBoardBench: Component = () => {
               </FillCardSurface>
             </GrowFillBox>
           </FillWrapRow>
-        </HalfFillColumn>
+        </FillColumn>
       </ViewportColumn>
 
       {/* The Add form. Rendered here rather than beside the dials because it
@@ -966,7 +996,8 @@ const printTables = (
         fee: pair.measures[1].value ?? "— (discontinued)",
         yrLicences: yearly?.measures[0].value ?? "— (discontinued)",
         pct: yearly?.measures[1].value ?? "— (discontinued)",
-        annualPrice: plan === null ? "" : abbreviateDollars(annualPriceOf(plan)),
+        annualPrice:
+          plan === null ? "" : abbreviateDollars(annualPriceOf(plan)),
         mrr: plan === null ? "" : dollarsPerMonth(monthlyOf(plan)),
       };
     }, monthly),
@@ -993,7 +1024,8 @@ const printTables = (
   console.table(
     map(
       (segment: SegmentLabel) => ({
-        flag: find((m: Mutation) => m.id === segment.id, mutations)?.label ?? "",
+        flag:
+          find((m: Mutation) => m.id === segment.id, mutations)?.label ?? "",
         chip: segment.label,
         month: segment.month,
         editing: segment.id === mutationId ? "◀ editing" : "",
