@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.172.0 — 2026-09-17
+
 ### Added
 - **`PairedMutationSliders` — a new Composite (Depth 3), a SIBLING of
   `MutationSliders` rather than a generalisation of it.** A row of named
@@ -32,7 +34,13 @@
   Structural Primitive slot child, built as ADR 0010 says a mark is built: a
   pure core (`Chart/stackedArea.ts`, which prints its stack as a table in its
   own test) plus ONE thin adapter that reads `useChart()`. Each series is a
-  list of `{ at, value }` step points; band *k* is closed between the
+  list of `{ at, value }` step points, where `at` takes `number | Date` at the
+  call site and the ADAPTER converts it — the same seam the chart's
+  reference-rule slot uses — so the core stays numeric as ADR 0010 asks; the
+  public point types are `StackedAreaSeriesData` and `StackedAreaPoint`. The
+  `series` prop states its two contracts: points ASCENDING by `at`, and values
+  not negative, because the mark holds a value forward and an out-of-order
+  point would silently draw a different stack. Band *k* is closed between the
   cumulative top of the bands below it and its own value, so the top of the
   stack is the total, two bands can never overlap, and a series at zero
   collapses onto the shared edge without disturbing the bands above it — all
@@ -65,6 +73,11 @@
 - **Layout variant `FillStretchRow`** — a `StretchRow` that claims the height
   its parent gives it (`height:100%; min-height:0`), the top of a fill chain
   that `FillColumn`'s `flex:1` cannot supply inside a block parent.
+- **Layout variant `FixedHeightBox`** — a `Box` whose height is STATED (baked
+  to `ScrubChart`'s `DEFAULT_CHART_HEIGHT`, 200px) rather than left to a parent
+  fill/flex context, with `min-height:0` and `overflow:hidden` so a fill child
+  absorbs it. Motivated by the thorcasting Payroll Simulator, whose chart cards
+  are bounded to the app chart's height inside a content-sized page.
 - **Text variants `SteadyMonoValue`, `SteadyMonoMeta` and `ReservedMonoMeta`**
   — mono readouts with an EXPLICIT line box, so two columns of them stay level
   whatever glyphs they hold, plus the reserved twin that holds its space and
@@ -77,6 +90,34 @@
   several states cannot change a column's height, hidden in the state that has
   no action to offer. **`plain-label` is a new variant VALUE and therefore a
   #2-Rule expansion — flagged for Peter's confirmation.**
+- **`npm run adherence` — a per-component design-philosophy worklist**
+  (`scripts/adherence.mjs`), refreshed after every commit into
+  `docs/adherence/`. `health` ratchets fourteen repo-wide counters and says
+  `inlineStyleSrc 65` without saying WHICH component owes what; this answers
+  the other question, per component, as a worklist an agent takes one item off.
+  Nine Tier-1 (mechanical, deterministic) rules, each citing the document it
+  comes from: a Composite owning CSS, rendering intrinsic HTML, importing a
+  third-party UI primitive or carrying an inline style; a depth header
+  shallower than its own imports imply; a header with no canonical `(Depth N)`
+  declaration or one whose kind and number contradict each other; helpers
+  reaching the root barrel; a published component with no curried path; and
+  exports no production consumer imports. Deliberately **not** a ratchet and
+  with no baseline — Peter decides — so `--quiet` always exits 0 and nothing
+  was bolted onto the script that gates merges in order to print something
+  advisory.
+- **The composition axiom and the push-back protocol are stated in the
+  governing docs.** No component above Depth 1 contains CSS or intrinsic
+  elements; it composes existing SUI components only. This release's
+  `MutationSliders`, `RateGauge` and `TreeDiffChart` refactors below are that
+  axiom applied, and the adherence worklist is how it is measured.
+- **The 2026-09-16 variant expansion is audited against real consumers**
+  (`docs/adherence/variant-audit-2026-09-16.md`): all 79 names that entered the
+  published surface that day, each classified KEEP / KEEP-PENDING / DEPRECATE /
+  MERGE against actual call sites in consumer repos rather than against a
+  grep. The 14 DEPRECATE findings are marked below; one MERGE
+  (fold `min-height:0` into `GrowBox`, retire `GrowFillBox`) is proposed only
+  and deliberately not done, because 9 `GrowBox` call sites across consumers
+  would change their automatic minimum size.
 
 ### Changed
 - **`windowLabel` (`MutationSliders/rows.ts`) takes the window's own NOUN as a
@@ -137,6 +178,63 @@
   them. The one DOM difference is internal: the tree diff's inert
   `div.sui-tree-diff__host` wrapper, which carried no CSS rule at all, is
   gone — the measured element is now the `TightStack` it used to wrap.
+
+### Fixed
+- **`RateGauge`'s collapsed callout fits its column — the ring shrinks first.**
+  `metricsFor` (`RateGauge/geometry.ts`) sized the ring's width RESERVATION
+  from `labelColumnWidth(labels)`, which is capped at `MAX_LABEL_WIDTH` (124),
+  while the final label column took the UNCAPPED `wantedColumnWidth(labels)`.
+  Where width was the binding constraint the ring therefore grew against a
+  reservation smaller than the words needed, leaving the column short: the
+  collapsed name `Scenario = Baseline` (~139 units) and a consumer's line-two
+  sentence (~175 units) both wanted more than 124, and the callout truncated to
+  `SCENARIO = BASE…` in a 420×580 card that had room to show it whole. When a
+  `box` is given, the ring's budget is now reserved against the labels' own
+  uncapped demand, so the ring cedes width to the column; the cap is scoped to
+  the `box === undefined` default canvas, which has no box to bound it. **No
+  public API change** — no prop, export or signature moved — and RateGauge's
+  114 tests pass, including a geometry test pinning that exact box and label
+  set and a mounting test asserting the callout's `foreignObject` is never
+  narrower than its own measured text.
+- **The adherence scanner counts only REAL JSX intrinsics, and only in
+  component files.** The "intrinsic" rule matched `<lowercaseword` with a
+  regex, which also fires on a generic type argument in TYPE position
+  (`createSignal<readonly string[]>`, `Set<string>`) and on plain `.ts` helpers
+  with no JSX at all, giving six components phantom findings (MutationSliders,
+  TreeDiffChart, ExtractionBoard, OverflowNav, QuickFilter,
+  ManagedListSection). It is now a real AST walk (the TypeScript compiler API,
+  parsed as TSX) over `JsxOpeningElement`/`JsxSelfClosingElement`, restricted
+  to `.tsx` component modules via a new `isJsxModulePath`. 392 open items /
+  62 high → 385 / 55, and 245 modules still scan in well under a second.
+- **The adherence scanner keys its file map by `<folder>/<basename>`, not by
+  basename alone.** Three names are carried by a unit in more than one folder
+  (`Grid`, `Tooltip`, `EllipsisText`), so a basename-keyed `Map` silently
+  dropped one unit of each pair (last write winning) AND attached a non-unit
+  file across folders — `Chart/Grid.css` landed on `Layout/Grid.tsx`, blaming a
+  Depth-1 Primitive for another component's stylesheet. A test now asserts both
+  units of each pair survive and that a stylesheet stays with its own folder.
+
+### Deprecated
+- **`TreeDiffChart`'s layout and frame GEOMETRY is deprecated at the root
+  barrel — 14 names, marked and kept.** `computeTreeDiffLayout`,
+  `TreeDiffLayoutInput`, `TreeDiffLayout`, `LayoutNode`, `LayoutEdge`,
+  `LayoutBand`, `LayoutGuide`, `LayoutCaption`, `computeFrame`, `NARROW_AT`,
+  `SPINE_AT`, `WIDE_AT`, `TreeDiffLayoutMode` and `Frame`. The 2026-09-17
+  audit found no caller anywhere — not a consumer repo, not the
+  `tree-diff-chart` showcase, not the Scenario Board bench, not
+  `barrel.test.ts` — and they contradict the policy the release that published
+  them settled twice: `RateGauge`'s geometry stayed private,
+  `MutationSliders`' geometry became private, and `LevelsTimeline/index.ts`
+  documents that a dev surface reaches `./geometry` directly. `Frame` is the
+  sharpest case: `LevelsTimeline/geometry.ts` and `ScrubChart` define the same
+  name internally, so publishing it here is one `export *` away from an
+  ambiguous re-export that resolves to nothing, silently. There is **no public
+  successor** and none is owed: `package.json` `exports` publishes the root,
+  the themes and the CSS entries only, so a package consumer never had a route
+  to these modules — an in-repo bench or showcase imports `./layout`,
+  `./layout-types` or `./frame` relatively. This is phase 2 of
+  add/deprecate/delete because they shipped in 0.171.0; **they are removed
+  after 0.172.x.**
 
 ## 0.171.0 — 2026-09-16
 
