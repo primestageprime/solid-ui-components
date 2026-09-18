@@ -790,6 +790,57 @@ State derivation:
     />
     ```
 
+## MutationToolbar
+
+- **MutationToolbar** — Composite (Depth 2). The header row of a "changes" panel: a title, the as-of chips that pick which change is being edited (a `SegmentedControl`), and the panel's actions. Composes `SpreadRow` / `ClusterRow`, `TextTitle` / `NoteText`, `SegmentedControl`, `GhostButton` / `PrimaryButton` / `DangerButton` and `Icon`; owns no CSS. **With no changes the chips' slot holds `emptyNote`** — never an empty bar, which would be a control that cannot be operated. **An action renders only when its callback is passed** (`onAdd`, `onReset`, `onSave`), so a screen with no Save draws none; **Delete renders only while a change is selected** and deletes that one. Key props: `title`, `changes` (`readonly MutationToolbarChange[]` — `{ id, label }`, in chip order), `selected` (`string | null`), `onSelect(id)`, `emptyNote`, `onAdd?`, `onReset?`, `onSave?`, `saveDisabled?`, `onDelete?(id)`. The words are an Override: `createMutationToolbar({ labels: { add, reset, save, delete, chips } })` curries a screen's own vocabulary ("Hire" rather than "Add"); defaults are `DEFAULT_MUTATION_TOOLBAR_LABELS`. No shipped curried variant — the default words are already the neutral ones. Use for: the header of any panel that edits a list of dated changes — the Scenario Board and Hourly Board benches, and a consumer's payroll or hourly builder.
+
+    ```tsx
+    const ChangesToolbar = createMutationToolbar({});
+    <ChangesToolbar
+      title="Changes"
+      changes={chips()}
+      selected={editing()}
+      onSelect={setEditing}
+      emptyNote="Click a week to propose a change"
+      onAdd={openAdd}
+      onReset={reset}
+      onSave={save}
+      saveDisabled={!dirty()}
+      onDelete={deleteChange}
+    />
+    ```
+
+## StackedTimelineChart
+
+- **StackedTimelineChart** — Composite (Depth 2). Stacked bands over time that **fill their box**, with an optional captioned horizontal rule, one numbered vertical rule per event, a hover readout and a pick. Composes `Chart` + `Grid` + `XAxis` / `YAxis` + `StackedAreaSeries` + `ReferenceLine` + `ChartTooltip` inside a `GrowFillBox`; owns no CSS. **It measures its own box** — `Chart` takes pixels and has no fill — the documented way: first size synchronously from `getBoundingClientRect` in `onMount`, then `observeSize`; a zero reading is never stored, so an unmeasured chart draws at `STACKED_TIMELINE_FALLBACK_SIZE` (640×220) rather than blank. **The pick is NOT snapped**: `onPick(at: Date)` reports the raw date and the caller snaps to its own grid, the `Chart.onPick` contract. Key props: `series` (`readonly StackedAreaSeriesData[]`, bottom first, step-valued), `xDomain` (`[Date, Date]`), `yDomain` (fixed, so bands stay comparable across edits), `xTickValues?`, `rule?` (`StackedTimelineRule` — `{ value, label }`, dashed), `events?` (`readonly StackedTimelineEvent[]` — `{ at, label }`; a `Mutation[]` fits as-is), `hoverLabel?` (`(at: number) => string`, tracks the pointer), `onPick?`. Overrides, curried with `createStackedTimelineChart({ margin, xTickFormat, yTickFormat })` — tick text carries a screen's units, so there is no shipped variant. Use for: hours or capacity by source over a year with a threshold and dated changes — the Hourly Board's Work Mix. For levels that are rails rather than bands, use `LevelsTimeline`.
+
+    ```tsx
+    const WorkMixChart = createStackedTimelineChart({
+      margin: { top: 20, right: 16, bottom: 28, left: 34 },
+      yTickFormat: (h) => `${h}h`,
+      xTickFormat: quarterLabelOf,
+    });
+    <WorkMixChart
+      series={bands()}
+      xDomain={[start, end]}
+      yDomain={[0, cap()]}
+      rule={{ value: 40, label: "full-time" }}
+      events={mutations()}
+      hoverLabel={(at) => weekRangeOf(at).label}
+      onPick={(at) => pickWeek(weekOfPick(at))}
+    />
+    ```
+
+## createHighWaterMark
+
+- **createHighWaterMark** — hook (`src/hooks`). An axis ceiling that **rises with the data and falls only on `reset()`**, the fix for a y-axis that re-fits, and so jitters, on every edit. `createHighWaterMark(peak, { transitionMs? })` takes an accessor for the highest value the axis must show right now and returns `{ ceiling, mark, reset }`: `mark()` is the high-water mark itself, `ceiling()` is what to DRAW — the mark, where a rise SNAPS (an eased rise would let the data poke out of the plot) and the fall after `reset()` EASES, with the same exponential approach and default duration (`DEFAULT_Y_FIT_TRANSITION_MS`, 240 ms) `ScrubChart` gives its fitted axis; `false` snaps, and `prefers-reduced-motion` always snaps. Unit-free: cents for `CashflowScrubChart.yMax`, hours for a `Chart`'s `yDomain`. The pure steps are exported and tested: `nextHighWater`, `stepHighWater`, `isHighWaterSettled`. Pair it with an `IconOnlyButton` carrying `Icon name="shrink"` for the reset. Use for: any chart whose values the reader edits live.
+
+    ```tsx
+    const top = createHighWaterMark(() => peakOf(cells()));
+    <CashflowScrubChart cells={cells()} yMax={top.ceiling()} chartHeight="fill" />
+    <IconOnlyButton onClick={top.reset} aria-label="Fit y-axis"><Icon name="shrink" size="sm" /></IconOnlyButton>
+    ```
+
 ## BandRail
 - **BandRail** — Primitive (Depth 1). A one-dimensional value axis whose thumb rides its own consequences. One horizontal rail, a draggable thumb, and named ticks standing off the rail at the values where the answer changes. The ticks are model OUTPUTS plotted on the axis of the model INPUT, so the control and the readout are one object — which is what separates it from a slider with a caption beside it. **It is not a chart**: no second axis, no fill, no gridlines. **It does no arithmetic and never snaps**: the consumer computes the thresholds, and the value reported back is never rounded to one. Key props: `domain` (`[number, number]`, the consumer's own units), `value`, `onChange`, `thresholds` (`Threshold[]`), `bands` (`Band[]`), `label` (accessible name — required), `format?` (renders a threshold's second text line; default `String`), `disabled?`. **Two marks, and the difference matters.** A `Threshold` says *where* the answer changes; it carries `value`, `label` (required, so meaning is never colour-only), `tone?` (the shared `Tone` union — the theme owns the colour) and `side?` (`"above"` | `"below"`, default `"above"`). A `Band` says *what* the answer becomes and over what span, which is the ambiguity a tick alone cannot fix — "insolvent in 6 mo" never said which side was the insolvent side. It carries `start?` and `end?` (both optional, defaulting to the domain ends, so a band may be bounded or half-open), `label`, `tone?` and `side?` (default `"below"`, so bands and thresholds separate without the consumer doing anything). A band draws as a labelled bar with a cap and a tick at each end it claims, and **dims when the value leaves it** — that dimming is how the reader learns the direction. Bands NEVER share a lane: two bars at one height would read as a single bar spanning both, a span neither band claims, so the box grows instead. The thumb carries one arc per holding band, and the crossing the value sits on is marked on the crossing itself rather than by colouring the thumb. `aria-valuetext` names the value, every holding band, and the crossing, so a screen reader gets the same answer the dimming gives a sighted reader. Factory: `createBandRail({ format })` — curry the formatter when the currency or unit is a static decision. Exported types: `BandRailProps`, `BandRailDataProps`, `BandRailOverrides`, `Band`, `PlacedBand`, `Threshold`, `ThresholdSide`, `PlacedThreshold`, `LabelAnchor`, `LaneGeometry`. Uses `--sui-border`, `--sui-border-focus`, `--sui-accent`, `--sui-success`, `--sui-warning`, `--sui-danger`, `--sui-highlight`, `--sui-chart-tick-color`, `--sui-text-secondary`, `--sui-font-mono`. Use for: a draw dial, a price dial, any "at what point does this stop working" control. **Renamed from `ThresholdRail`.** `ThresholdRail`, `createThresholdRail`, `ThresholdRailProps`, `ThresholdRailDataProps` and `ThresholdRailOverrides` still export as deprecated aliases for one minor version; the `sui-threshold-rail__*` CSS prefix does not — it is now `sui-band-rail__*`. `Threshold`, `ThresholdSide` and `PlacedThreshold` keep their names, because a threshold is still what they describe.
   - **Three things the rail absorbs, and the reason a consumer cannot compose it from a slider plus an axis.** *Lanes* — colliding labels stack outward from the rail, capped at four lanes so a label can never leave the box; the two sides stack independently, because `side` is the consumer's declaration. *Anchor fitting* — a label near either end anchors `start` or `end` instead of spilling out. *Self-sizing* — the viewBox grows only for the lanes actually used. Text is measured by estimate (~6.0px per monospace character), not `getBBox`, so the lane rules stay testable under jsdom.
@@ -1215,7 +1266,7 @@ State derivation:
 - **HeatStreamGrid** — Table where each cell contains a compact HeatStream. Key props: `rows`, `columns`, `keys`, `data` (function returning items per row/col), `onCellClick`, `selectionStore`. Use for: asset-by-time-window data completeness matrices with selection support.
 
 ## Icon
-- **Icon** — SVG icon component with 46 named icons across 8 groups (status, navigation, data, time, actions, UI, auth, cache; includes `pause`, `agent`, `dependency`, `edit`, `trash`, `gear`, `zoom-in`, `zoom-out`, `undo`). **`gear` and `settings` are different glyphs**: `gear` draws six teeth on a rim around a hub hole, and `settings` draws a hub with eight rays. Reach for `gear` when the affordance opens configuration, because a reader finds a gear by the teeth; `settings` reads as a sun or a brightness mark. **`refresh` and `undo` are two different marks**: `refresh` draws two arcs and two arrowheads and reads as a repeating cycle; `undo` draws an open hook with the arrowhead at its left end. Reach for `refresh` when the control fetches the data again, and for `undo` when it steps back through a history. **`zoom-in` and `zoom-out` extend the `search` family**: they keep the `search` lens and handle, and add a plus or a minus inside the lens. Reach for the pair for any scale control, such as a chart axis that fits to the visible data or to all of it. Key props: `name` (e.g., `check`, `warning`, `chevron-down`, `search`, `spinner`), `variant` (`outline`|`solid`), `size` (`xs`|`sm`|`md`|`lg`|`xl`). `variant`/`size` are Overrides — curry them via `createIcon`; **`InlineMetaIcon`** (outline, xs) is the shipped variant for icon-beside-sublabel meta rows. Use for: all iconography. Spinner icon auto-animates.
+- **Icon** — SVG icon component with 47 named icons across 8 groups (status, navigation, data, time, actions, UI, auth, cache; includes `pause`, `agent`, `dependency`, `edit`, `trash`, `gear`, `zoom-in`, `zoom-out`, `shrink`, `undo`). **`gear` and `settings` are different glyphs**: `gear` draws six teeth on a rim around a hub hole, and `settings` draws a hub with eight rays. Reach for `gear` when the affordance opens configuration, because a reader finds a gear by the teeth; `settings` reads as a sun or a brightness mark. **`refresh` and `undo` are two different marks**: `refresh` draws two arcs and two arrowheads and reads as a repeating cycle; `undo` draws an open hook with the arrowhead at its left end. Reach for `refresh` when the control fetches the data again, and for `undo` when it steps back through a history. **`zoom-in` and `zoom-out` extend the `search` family**: they keep the `search` lens and handle, and add a plus or a minus inside the lens. Reach for the pair for any scale control, such as a chart axis that fits to the visible data or to all of it. **`shrink` is not a zoom**: two arrows pointing in from opposite corners, with no lens. Reach for it when a control fits something back down to its contents, such as a y-axis that has grown and should shrink to the current data. Key props: `name` (e.g., `check`, `warning`, `chevron-down`, `search`, `spinner`), `variant` (`outline`|`solid`), `size` (`xs`|`sm`|`md`|`lg`|`xl`). `variant`/`size` are Overrides — curry them via `createIcon`; **`InlineMetaIcon`** (outline, xs) is the shipped variant for icon-beside-sublabel meta rows. Use for: all iconography. Spinner icon auto-animates.
 
 ## Checkbox
 - **Checkbox** — Atomic boolean control: a native `input[type=checkbox]` (visually hidden) behind a themed box + checkmark, with an optional inline label. Mirrors the `Toggle` API so the two are interchangeable. Key props: `checked`, `size` (`sm`|`md`|`lg`), `color` (`ColorVariant`, tints the checked fill), `label`, `labelPosition` (`left`|`right`), `onCheckedChange(checked)` (value handler) plus all native `<input>` attributes and `onChange`. Uses `--sui-accent`, `--sui-border`, `--sui-success`, `--sui-danger`, `--sui-bg-deep` tokens. Curried: `createCheckbox(defaults)`, `SmallCheckbox`, `DoneCheckbox`. Use for: standalone checkboxes (do NOT hand-roll an `<input type=checkbox>`).

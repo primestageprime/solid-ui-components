@@ -20,3 +20,15 @@ export type {
   AxisRect,
   DragSize,
 } from "./createDnDReorder";
+// An axis ceiling that rises with the data and falls only on reset — the fix
+// for a y-axis that jitters as values are edited.
+export {
+  createHighWaterMark,
+  nextHighWater,
+  stepHighWater,
+  isHighWaterSettled,
+} from "./createHighWaterMark";
+export type {
+  HighWaterMark,
+  HighWaterMarkOptions,
+} from "./createHighWaterMark";

@@ -106,6 +106,9 @@ import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
 import { RateGaugeShowcase } from "./showcases/rate-gauge";
+import { MutationToolbarShowcase } from "./showcases/mutation-toolbar";
+import { StackedTimelineChartShowcase } from "./showcases/stacked-timeline-chart";
+import { HighWaterMarkShowcase } from "./showcases/high-water-mark";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { BandRailShowcase } from "./showcases/band-rail";
 import { MarkedSliderShowcase } from "./showcases/marked-slider";
@@ -692,6 +695,24 @@ const items: Item[] = [
     label: "PairedMutationSliders",
     component: PairedMutationSlidersShowcase,
     tags: ["depth:3", "form", "data"],
+  },
+  {
+    id: "mutation-toolbar",
+    label: "MutationToolbar",
+    component: MutationToolbarShowcase,
+    tags: ["depth:2", "form", "navigation"],
+  },
+  {
+    id: "stacked-timeline-chart",
+    label: "StackedTimelineChart",
+    component: StackedTimelineChartShowcase,
+    tags: ["depth:2", "chart", "time", "data"],
+  },
+  {
+    id: "high-water-mark",
+    label: "createHighWaterMark",
+    component: HighWaterMarkShowcase,
+    tags: ["depth:2", "chart", "math"],
   },
   {
     id: "slider",

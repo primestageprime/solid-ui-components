@@ -34,6 +34,7 @@ export const ICON_GROUPS = {
     "search",
     "zoom-in",
     "zoom-out",
+    "shrink",
     "filter",
     "refresh",
     "undo",
@@ -83,6 +84,7 @@ export type IconName =
   | "search"
   | "zoom-in"
   | "zoom-out"
+  | "shrink"
   | "filter"
   | "refresh"
   | "undo"
@@ -284,6 +286,13 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
       solid: `<circle cx="7" cy="7" r="5" fill="currentColor"/>
             <path d="M4.75 7H9.25" stroke="var(--sui-bg-primary)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
             <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
+    },
+    // Two arrows pointing in to the centre from opposite corners — "fit this
+    // back down", the inverse of an expand. Distinct from `zoom-out`, which
+    // is a magnifier and reads as a view scale rather than a fit.
+    shrink: {
+      outline: `<path d="M14 2L9.5 6.5M9.5 3.5v3h3M2 14l4.5-4.5M6.5 12.5v-3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M14 2L9.5 6.5M9.5 3.5v3h3M2 14l4.5-4.5M6.5 12.5v-3h-3" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
     filter: {
       outline: `<path d="M2 3h12L9 8.5V13l-2-1V8.5L2 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>`,

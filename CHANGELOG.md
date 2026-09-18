@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- **`MutationToolbar`** — Composite (Depth 2). The title, as-of chips and Add / Reset / Save / Delete row of a "changes" panel, extracted from the Hourly Board bench (the Scenario Board bench and Thorcasting's payroll simulator hand-build the same row). Actions render only when their callback is passed; words curry through `createMutationToolbar({ labels })`.
+- **`StackedTimelineChart`** — Composite (Depth 2). Stacked bands over time that fill their box, with a captioned rule, numbered event rules, a hover readout and an unsnapped date pick. The Hourly Board's Work Mix, extracted; curry tick text with `createStackedTimelineChart`.
+- **`createHighWaterMark`** — hook. An axis ceiling that rises with the data, holds when it falls, and eases down on `reset()`. The Hourly Board's Cash Flow ceiling, extracted.
+- **`Icon` `shrink`** — two arrows pointing in from opposite corners, for "fit this back down to its contents".
+
 ## 0.173.0 — 2026-09-17
 
 ### Added

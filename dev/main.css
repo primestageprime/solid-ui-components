@@ -2853,3 +2853,33 @@ th:has(.tf-th-center) .hud-table__header-content {
   flex-direction: column;
   height: 420px;
 }
+
+/* StackedTimelineChart fills its box, so the demo gives it one. */
+.stacked-timeline-chart-demo {
+  display: flex;
+  flex-direction: column;
+  height: 260px;
+}
+/* createHighWaterMark's demo: a card-height chart with its header above. */
+.high-water-mark-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 280px;
+}
+
+/* Solar Sankey bench: the diagram scales to the card, capped for legibility. */
+.solar-sankey-demo svg {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+}
+.solar-sankey-demo__figure {
+  font-size: 26px;
+  font-weight: 600;
+}
+.solar-sankey-demo__label {
+  font-size: 15px;
+  fill: var(--sui-text-secondary);
+}
