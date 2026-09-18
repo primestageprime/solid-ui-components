@@ -650,7 +650,36 @@ export const segmentsOf = (
       plan: clamped(product, own),
     });
   }
-  return sortBy((segment: Segment) => segment.from, segments);
+  return collapse(sortBy((segment: Segment) => segment.from, segments));
+};
+
+/**
+ * ONE SEGMENT PER MONTH — the later declaration wins.
+ *
+ * ⚠ THIS IS A BUG FIX WITH A REAL SYMPTOM. A change made in the span's FIRST
+ * month sits at the same month index as the committed plan, so the walk
+ * produced two segments both starting at 0. `segmentAt` picked the later one
+ * (correct), but `cohortsOf` walks EVERY segment — so it opened the annual base
+ * twice, and the product billed its whole annual base twice in month 0 and
+ * again twice at the renewal.
+ *
+ * It was invisible in the numbers and loud in the gauge: nudging Amygdala's `%`
+ * dial by one point moved the reading by +$512/mo, when the honest answer is
+ * about +$6/mo. A doubled base is exactly the kind of error that looks like a
+ * plausible chart.
+ *
+ * Collapsing here rather than at each reader is what makes it structural: there
+ * is no month with two plans, so nothing downstream has to remember that there
+ * could be.
+ */
+const collapse = (ordered: readonly Segment[]): Segment[] => {
+  const kept: Segment[] = [];
+  for (const segment of ordered) {
+    const last = kept[kept.length - 1];
+    if (last !== undefined && last.from === segment.from) kept.pop();
+    kept.push(segment);
+  }
+  return kept;
 };
 
 /** The segment in force at a month index, or `undefined` before the first. */

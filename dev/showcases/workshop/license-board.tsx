@@ -62,7 +62,6 @@ import { find, map } from "../../../src/fn";
 
 import { CashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
-import { monthlyCells } from "../../../src/components/DateAxis";
 import {
   createHighWaterMark,
   createMutationToolbar,
@@ -121,6 +120,7 @@ import {
   MONTHLY_FEE_DOMAIN,
   PCT_DOMAIN,
   MONTH_COUNT,
+  MONTH_SLOTS,
   OPENING_BALANCE,
   PRODUCTS,
   RATE_DOMAIN,
@@ -311,8 +311,36 @@ const ChangesToolbar = createMutationToolbar({});
 
 // ── Constants the layout needs ──────────────────────────────────────────────
 
-/** The chart's months, as cells — one per month across the two-year span. */
-const CELLS = monthlyCells(DOMAIN_START, DOMAIN_END);
+/**
+ * The chart's months, as cells — ONE PER MONTH THE MODEL FORECASTS, built from
+ * `MONTH_SLOTS` rather than from `monthlyCells`.
+ *
+ * ⚠ THAT IS A BUG FIX, not a preference. `monthlyCells(start, end)` is
+ * INCLUSIVE of the end month, so `monthlyCells(2025-01-01, 2027-01-01)` returns
+ * TWENTY-FIVE cells while the forecast has twenty-four. The twenty-fifth read
+ * `balances[24]`, found `undefined`, fell back to zero, and the Cash Flow line
+ * dropped off a cliff at the right-hand edge — with the fan dragging it below
+ * the axis. Nothing threw; the chart just drew a lie.
+ *
+ * Deriving the cells from the model's own slot grid makes the two agree BY
+ * CONSTRUCTION, which is the same discipline the other boards apply to their
+ * cell edges. `MONTH_SLOTS` is the grid a click snaps to, so the cells, the
+ * forecast and the pick are now one calendar rather than three that happen to
+ * line up.
+ */
+const CELLS = map(
+  (slot: number) => ({
+    start: new Date(slot),
+    end: new Date(
+      Date.UTC(
+        new Date(slot).getUTCFullYear(),
+        new Date(slot).getUTCMonth() + 1,
+        1,
+      ),
+    ),
+  }),
+  MONTH_SLOTS,
+);
 
 /** The x-axis's tick values, and the vocabulary they read in. */
 const QUARTER_TICKS = quarterTicks();

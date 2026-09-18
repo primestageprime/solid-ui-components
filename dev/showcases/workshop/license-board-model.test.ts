@@ -428,6 +428,29 @@ describe("the sources", () => {
   });
 });
 
+describe("the chart's cells and the forecast are ONE calendar", () => {
+  it("has exactly one balance per month slot — the off-by-one that drew a lie", () => {
+    // `monthlyCells(start, end)` is INCLUSIVE of the end month and would give
+    // 25 cells for this span; the board builds its cells from MONTH_SLOTS so
+    // the counts agree by construction. A 25th cell read `balances[24]`,
+    // found undefined, fell back to zero and dropped the Cash Flow line off a
+    // cliff at the right-hand edge without throwing.
+    expect(balancesByMonth(PRODUCTS, []).length).toBe(MONTH_SLOTS.length);
+    expect(netCashByMonth(PRODUCTS, []).length).toBe(MONTH_SLOTS.length);
+    expect(cashByMonth(PRODUCTS, []).length).toBe(MONTH_SLOTS.length);
+    expect(cashTable(PRODUCTS, []).length).toBe(MONTH_SLOTS.length);
+    for (const band of licenseMixSeries(PRODUCTS, [])) {
+      expect(band.points.length).toBe(MONTH_SLOTS.length);
+    }
+  });
+
+  it("never reads past the end of the forecast", () => {
+    const balances = balancesByMonth(PRODUCTS, []);
+    expect(balances[MONTH_SLOTS.length - 1]).toBeGreaterThan(0);
+    expect(balances[MONTH_SLOTS.length]).toBeUndefined();
+  });
+});
+
 describe("the running balance", () => {
   it("opens at the opening balance plus the first month's net", () => {
     const balances = balancesByMonth(PRODUCTS, []);
@@ -678,6 +701,64 @@ describe("a change re-bases the forecast", () => {
     const gone = withDiscontinue(PRODUCTS, "jtf", flag);
     const back = withoutChange(gone, "jtf", flag);
     expect((back[1] as Product).changes).toEqual({});
+  });
+});
+
+describe("a change in the FIRST month replaces rather than duplicates", () => {
+  // ⚠ A change at month 0 sits at the same month index as the committed plan.
+  // The walk used to emit BOTH, and `cohortsOf` opened the annual base twice —
+  // so the product billed its whole annual base twice at month 0 and twice at
+  // the renewal. Invisible in the table, loud in the gauge: a one-point nudge
+  // of Amygdala's `%` moved the reading by +$512/mo instead of about +$6/mo.
+  const january = addMutation([], new Date("2025-01-01")).mutations;
+  const flag = january[0]?.id ?? "";
+
+  it("keeps ONE segment for the month, the later declaration winning", () => {
+    const nudged = withChange(
+      PRODUCTS,
+      "amygdala",
+      flag,
+      "annualPct",
+      86,
+      january,
+    );
+    const segments = segmentsOf(nudged[0] as Product, january);
+    expect(segments.length).toBe(1);
+    expect(segments[0]?.from).toBe(0);
+    expect(segments[0]?.plan?.annual.pct).toBe(86);
+  });
+
+  it("opens ONE annual cohort, not two", () => {
+    const nudged = withChange(
+      PRODUCTS,
+      "amygdala",
+      flag,
+      "annualPct",
+      86,
+      january,
+    );
+    expect(cohortsOf(nudged[0] as Product, january).length).toBe(1);
+    // 12 licences at 86% of 12 × $49 = $505.68 each, ONCE.
+    expect(
+      annualPayments(nudged[0] as Product, january)[0]?.amount,
+    ).toBeCloseTo(12 * 505.68, 6);
+  });
+
+  it("moves the gauge by a believable amount", () => {
+    const nudged = withChange(
+      PRODUCTS,
+      "amygdala",
+      flag,
+      "annualPct",
+      86,
+      january,
+    );
+    const moved = averageNetCash(nudged, january);
+    const delta = moved - COMMITTED_RATE;
+    // Two payments of 12 × $5.88 across 24 months — single digits a month, not
+    // the +$512 a doubled base produced.
+    expect(delta).toBeCloseTo((2 * 12 * 5.88) / MONTH_COUNT, 6);
+    expect(delta).toBeLessThan(10);
   });
 });
 
