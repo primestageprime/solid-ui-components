@@ -66,8 +66,10 @@ real demand**, flagged per row. But read precisely:
   `ScenarioTreeDiff`). Their only callers anywhere are their own showcases.
 
 So the curried variants' own demand is genuinely unproven, and the audit says
-so — but see the verdict note: deprecating them is closed off by policy, not
-by judgment.
+so — but that is not a verdict against them. Peter ruled (2026-09-17) that
+`/promote` keeps requiring a curried variant, which settles the question the
+rows below used to defer: the four are KEEP on the policy's own demand, and an
+absent caller is no longer an open flag.
 
 ## Verdicts
 
@@ -86,10 +88,10 @@ by judgment.
 | `LevelsTimeline`, `createLevelsTimeline` | component + factory | none | KEEP-PENDING | A time chart of numeric LEVELS — a rail per value, thickness = count, Sankey ribbons where counts move, one-ended flows. No existing chart expresses movement between values over time. Consumer: thorcasting-ui headcount/pay rails; board bench today. A prop would not do. |
 | `MutationSliders`, `createMutationSliders` | component + factory | none | KEEP-PENDING | A row of vertical prior-vs-future dials with the allowed range as the clamp and three presences (present / removed / new) as three shapes. No existing control states a before-and-after pair on one track. Consumer: thorcasting-ui pay editor; board bench today. A prop would not do. |
 | `TreeDiffChart`, `createTreeDiffChart` | component + factory | none | KEEP-PENDING | Two-sided diff of content-addressed trees with a band per root entry and pruned `[SAME]` nodes. Nothing else in SUI is a structural diff. Consumer: thorcasting-ui adapters — the prop signature was deliberately frozen for them and is pinned by `barrel.test.ts`. A prop would not do. |
-| `RateDial` | curried variant | **none — not even the board bench** | KEEP-PENDING (policy) | Plain numbers against zero: the dial with no units and no domain nouns. It is the **sanctioned entry point** — "clients import only curried components; never factories/bases". Deprecating it would leave a component promoted one day earlier with no legal import for a client, which is a slow delete with nothing to migrate to, not phase 2 of add/deprecate/delete. Its own demand is unproven (the board curries `createRateGauge` with dollar wording, as `variants.ts`'s header says the second form should). Flagged for Peter. |
-| `LevelsRailChart` | curried variant | **none — not even the board bench** | KEEP-PENDING (policy) | As `RateDial`: the zero-config drop-in (plain numbers, no format baked) and the only client-legal import for `LevelsTimeline`. Same unproven-demand caveat, same policy floor. |
-| `NumberMutationSliders` | curried variant | **none — not even the board bench** | KEEP-PENDING (policy) | As `RateDial`: locale-grouped numbers, neutral verbs, no grid — the client-legal import for `MutationSliders`. Same caveat, same floor. |
-| `ScenarioTreeDiff` | curried variant | **none — not even the board bench** | KEEP-PENDING (policy) | As `RateDial`, and additionally pinned by `TreeDiffChart/barrel.test.ts` as part of the thorcasting contract. Leaves `legend` at the chart's data-derived default on purpose. Same caveat, same floor. |
+| `RateDial` | curried variant | **none — not even the board bench** | **KEEP** | Peter ruled (2026-09-17) that `/promote` KEEPS requiring a curried variant: the curried drop-in is the client-legal entry point whether or not a client has reached for it yet, so its demand is the policy's, not a caller's. Plain numbers against zero: the dial with no units and no domain nouns. It is the **sanctioned entry point** — "clients import only curried components; never factories/bases" — and deprecating it would leave a component promoted one day earlier with no legal import for a client, a slow delete with nothing to migrate to rather than phase 2 of add/deprecate/delete. That the board curries `createRateGauge` with dollar wording instead (as `variants.ts`'s header says the second form should) is the expected division of labour, not a verdict. A prop would not do — the baked wording IS the variant. |
+| `LevelsRailChart` | curried variant | **none — not even the board bench** | **KEEP** | As `RateDial`, on the same 2026-09-17 ruling: the zero-config drop-in (plain numbers, no format baked) and the only client-legal import for `LevelsTimeline`. |
+| `NumberMutationSliders` | curried variant | **none — not even the board bench** | **KEEP** | As `RateDial`, on the same 2026-09-17 ruling: locale-grouped numbers, neutral verbs, no grid — the client-legal import for `MutationSliders`. |
+| `ScenarioTreeDiff` | curried variant | **none — not even the board bench** | **KEEP** | As `RateDial`, on the same 2026-09-17 ruling, and additionally pinned by `TreeDiffChart/barrel.test.ts` as part of the thorcasting contract. Leaves `legend` at the chart's data-derived default on purpose. |
 | `timeOf` | helper (LevelsTimeline) | none in product; 12 call sites across `scenario-board.tsx`, `-people.ts`, `-rate.ts`, `levels-timeline` showcase | KEEP-PENDING | Normalises a `TimeValue` (`Date \| number`) to a number. `.getTime()` does not typecheck on the union, so every consumer that hand-rolled it would be a second definition of one number. Consumer: the board's three modules today, thorcasting's adapters next. A prop would not do — it is a function, and the alternative is duplication, which is what §4 is trying to prevent. |
 | `KINDS`, `kindColor`, `kindLabel`, `kindLegendItems`, `presentKinds`, `TreeDiffKind` | change-kind vocabulary (TreeDiffChart) | none in product; `TreeDiffChart.tsx` internally, `tree-diff-chart` showcase; `KINDS`/`kindColor`/`kindLabel` pinned by `barrel.test.ts` | KEEP-PENDING | The four-value change vocabulary a consumer must speak to supply `kind`, plus the token mapping so a consumer keying the colours in its OWN chrome reads the same tokens the chart paints from. Consumer: thorcasting-ui (it supplies `kind`; the chart never infers it). A prop would not do — a consumer-side legend cannot be a prop of the chart. |
 | `ROOT_BASELINE_ID`, `ROOT_COMPARE_ID`, `COMMIT_BASELINE_ID`, `COMMIT_COMPARE_ID`, `HEAD_BASELINE_ID`, `HEAD_COMPARE_ID`, `SAME_ID` | synthetic node ids (TreeDiffChart) | none in product; `SAME_ID`/`ROOT_BASELINE_ID` in the showcase | KEEP-PENDING | The ids the chart MINTS for its spine, which a consumer needs to recognise in `onNodeClick` and to drive `selectedId` — the only way to tell a spine click from an entry click without string-matching a private literal. Consumer: thorcasting-ui's selection wiring. A prop would not do: these are the chart's own values, not the consumer's. |
@@ -100,7 +102,9 @@ by judgment.
 | `computeTreeDiffLayout`, `TreeDiffLayoutInput`, `TreeDiffLayout`, `LayoutNode`, `LayoutEdge`, `LayoutBand`, `LayoutGuide`, `LayoutCaption` | layout geometry (TreeDiffChart) | **none anywhere** — not the showcase, not the bench, not `barrel.test.ts` | **DEPRECATE** | No consumer and no expected one: a consumer supplies a tree and reads `onNodeClick`; it never asks the chart where a node landed. This repo adjudicated the identical question twice in the same release the other way — RateGauge's "~20 `geometry.ts` exports stay private", MutationSliders' "~30 `geometry.ts` FUNCTIONS are now private" — and `LevelsTimeline/index.ts` documents the policy at length ("a dev surface that wants it reaches `./geometry` directly"). `TreeDiffChart` never got that scrub. Marked deprecated; NOT deleted (published in 0.171.0). **No public successor, and none is needed**: `package.json` `exports` publishes the root, the themes and the CSS only, so no package consumer ever had a route to these modules — this is an over-publication being withdrawn, not a migration. |
 | `computeFrame`, `Frame`, `TreeDiffLayoutMode`, `NARROW_AT`, `SPINE_AT`, `WIDE_AT` | frame geometry (TreeDiffChart) | **none anywhere** | **DEPRECATE** | As above — the three width thresholds and the frame box are how the chart chooses its own layout, a decision the chart owns. `Frame` additionally publishes a name that `LevelsTimeline/geometry.ts` and `ScrubChart` also define internally: if either is ever `export *`'d from the root, an ambiguous re-export resolves to NOTHING, silently — the exact hazard `barrel.test.ts` was written for. Marked deprecated; NOT deleted, same no-successor note as the row above. |
 
-Counts: **KEEP 2, KEEP-PENDING 63, DEPRECATE 14, MERGE proposed 1** (of 79).
+Counts: **KEEP 6, KEEP-PENDING 59, DEPRECATE 14, MERGE proposed 1** (of 79)
+(re-tallied 2026-09-17: the four curried variants moved KEEP-PENDING → KEEP on
+Peter's ruling; no name changed verdict class otherwise).
 
 ## MERGE proposals — proposed, not done
 
@@ -160,8 +164,12 @@ justification is owed for a variant this far past proving itself.
    subpath, so the only importer these modules could ever have is an in-repo
    dev surface reaching them relatively (as the scenario board reaches
    `LevelsTimeline/geometry`), and none does.
-3. **Ask Peter about the four curried variants.** They are the policy-
-   mandated entry points and every real caller so far has curried the factory
-   instead. If that keeps being true past thorcasting's 0.171.x bump, the
-   question is whether the promote checklist should require a curried variant
-   at all — a policy question, not a per-variant one.
+3. ~~**Ask Peter about the four curried variants.**~~ **Answered
+   2026-09-17 — `/promote` KEEPS requiring a curried variant.** The question
+   was whether the checklist should still demand one when every real caller so
+   far has curried the factory instead; the ruling is that it should, because
+   the curried drop-in is the client-legal entry point and a component
+   published without one has no legal import for a client. `RateDial`,
+   `LevelsRailChart`, `NumberMutationSliders` and `ScenarioTreeDiff` are
+   therefore KEEP in the table above, and no future audit owes a
+   caller-count justification for a curried variant. Nothing to do.
