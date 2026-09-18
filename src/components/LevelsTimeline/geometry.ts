@@ -49,6 +49,7 @@
 //     rather than NaN.
 // ============================================
 import { clamp } from "../../internal/math/clamp";
+import { hCurve } from "../../internal/geometry/hCurve";
 import { linearScale } from "../Chart/scales";
 import { monthlyCells } from "../DateAxis/cells";
 import { filter, find, join, map, sortBy, sum } from "../../fn";
@@ -856,24 +857,12 @@ export interface EdgePoint {
 }
 
 /**
- * A cubic with HORIZONTAL tangents at both ends: both control points sit at
- * their own endpoint's y, half the span apart in x. That is the whole of the
- * Sankey look — a band leaves flat and arrives flat, so it blends into a
- * horizontal rail instead of meeting it at an angle.
- *
- * Because the construction is symmetric, the same two points traversed the
- * other way give the mirror-image curve — which is what lets a band's bottom
- * edge be walked backwards to close the shape.
+ * The Sankey cubic. Moved to `src/internal/geometry/hCurve.ts` on 2026-09-17
+ * when `Chart`'s `StackedAreaSeries` became its second call site; re-exported
+ * here so this module stays the one place a reader of the chart's geometry
+ * looks. See that file for what the construction is and why.
  */
-export const hCurve = (
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-): string => {
-  const mid = (x0 + x1) / 2;
-  return `C ${round3(mid)} ${round3(y0)}, ${round3(mid)} ${round3(y1)}, ${round3(x1)} ${round3(y1)}`;
-};
+export { hCurve } from "../../internal/geometry/hCurve";
 
 /** An edge walked forwards, without its opening `M`. */
 const forwardEdge = (points: readonly EdgePoint[]): string => {
