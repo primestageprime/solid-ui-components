@@ -1349,6 +1349,14 @@ const CALIBRATION_AT: Mutation = {
  * readings Peter named actually are: "ten hours more" is an offset that rides
  * the season, and "at its floor" is a level. `undefined` on either measure
  * leaves it committed.
+ *
+ * A service NOT SOLD at the span's start is left alone, and the test of that is
+ * `offerAt` rather than `committed === null`: those two used to be the same
+ * question and are not any more — a service added in the modal has no committed
+ * RATE but does have a schedule and a real offer from its own first mutation. It
+ * is absent from THIS table because the table's changes all land at the span's
+ * start, where it does not yet exist, which is a statement about the date rather
+ * than about the field.
  */
 const calibrationServices = (
   services: readonly Service[],
@@ -1359,7 +1367,7 @@ const calibrationServices = (
 ): Service[] =>
   map((service: Service, index: number) => {
     const asked = change(service, index);
-    if (asked === undefined || service.committed === null) return service;
+    if (asked === undefined) return service;
     const opening = offerAt(service, DOMAIN_START.getTime(), []);
     if (opening === null) return service;
     return {

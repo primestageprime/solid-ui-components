@@ -422,6 +422,22 @@ describe("the calibration table — every change made at the START of the year",
     expect(rows[1]!.rate - rows[0]!.rate).toBeCloseTo(10 * 150, 9);
   });
 
+  it("leaves an ADDED service out, because it is not sold at the span's start", () => {
+    // The table's changes all land at the span's start, and a service added at
+    // a later mutation does not exist there — so it contributes nothing and the
+    // four rows stay a statement about the fixture's two services. The test of
+    // that is `offerAt` and not `committed === null`: those two used to be the
+    // same question and are not any more.
+    const { services } = addService(
+      SERVICES,
+      { name: "C", hours: 8, rate: 200 },
+      Q2.id,
+    );
+    expect(map((row) => row.rate, rateBandTable(services))).toEqual(
+      map((row) => row.rate, rateBandTable()),
+    );
+  });
+
   it("solves the four inequalities that FIX the two constants", () => {
     const rev0 = 4_936.520547945205;
     const revAfloor = 3_908.4383561643835;
