@@ -1,0 +1,95 @@
+{
+  "_why": "Every exemption carries its own reason string, in the repo, next to the rule it suspends. scripts/prop-rubric.json exists for exactly this purpose, and health-baseline._raises exists because a justification that lives only in a commit message is effectively lost. An entry here suspends the NAMED rules for that component and nothing else; the item still appears in OPEN_ITEMS.md under 'Exempted' with this reason attached, so a suspension is visible rather than invisible.",
+  "_source": "The component lists are quoted from STYLE_GUIDE.md § Layout Purity § Exemptions and from docs/BEST_PRACTICES.md §8. Adding a component here without a matching sentence in one of those documents is a policy change, not an exemption — take it to Peter.",
+
+  "thirdPartyPrimitives": ["@kobalte/", "@ark-ui/", "@corvu/", "katex"],
+  "_thirdPartyPrimitives": "UI-primitive packages only. d3-* is deliberately absent: BEST_PRACTICES §8 makes d3 math-only ('d3 is math only, Solid owns the DOM'), and math inside a Composite breaks nothing. @solid-primitives/* is absent for the same reason — those are reactive hooks, not DOM primitives.",
+
+  "components": {
+    "Layout": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — the Layout family IS the arrangement vocabulary and is required to declare flex/grid/overflow directly."
+    },
+    "AppShell": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "ThreePanelLayout": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "Page": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "ScrollRegion": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "BucketQueue": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "StaticSplitLayout": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "Section": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "CollapsiblePanel": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "Modal": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "BottomSheet": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 — layout-tagged."
+    },
+    "ButtonGroup": {
+      "rules": ["css", "intrinsic", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 1 + ruling 5 (2026-07-14) — layout-exempt but DEPRECATED-as-such; its runtime gap/orientation props are legacy and stay working."
+    },
+
+    "Toast": {
+      "rules": ["css", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 3 — overlay control; keeps its position: absolute|fixed anchoring only. Its internal rows and columns are NOT exempt, which is why 'intrinsic' is absent from this list."
+    },
+    "PopoverMenu": {
+      "rules": ["css", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 3 — overlay control, anchoring only."
+    },
+    "Dropdown": {
+      "rules": ["css", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 3 — overlay control, anchoring only."
+    },
+    "Tooltip": {
+      "rules": ["css", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 3 — overlay control, anchoring only."
+    },
+    "Select": {
+      "rules": ["css", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 3 — the popover portion anchors a floating surface."
+    },
+    "Combobox": {
+      "rules": ["css", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 3 — the popover portion anchors a floating surface."
+    },
+    "DatePicker": {
+      "rules": ["css", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 3 — the popover portion anchors a floating surface."
+    },
+    "DateRangePicker": {
+      "rules": ["css", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 3 — the popover portion anchors a floating surface."
+    },
+    "MultiSelectFilter": {
+      "rules": ["css", "inline-style"],
+      "reason": "STYLE_GUIDE § Layout Purity § Exemptions 3 — the popover portion anchors a floating surface."
+    }
+  }
+}
