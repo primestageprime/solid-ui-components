@@ -30,6 +30,21 @@
  * each printed as a table on mount behind `DEBUG`, so the board can be read and
  * argued with from a terminal before anyone opens a browser.
  *
+ * TWO OF PETER'S RULINGS OF 2026-09-18 LIVE IN THE MODEL, not here, and they
+ * are what every figure on this bench now reads in:
+ *
+ *   • EVERY MONEY FIGURE IS $/WK — the service summaries, the gauge's two
+ *     sentences, its domain, its baseline and its caution, the fixed cost and
+ *     the DEBUG tables. "Hourly people tend to think of it that way." There is
+ *     no ×52 in any sentence; the projection integrates $/wk × weeks.
+ *   • THE BASELINE IS A SEASON. The committed hours are a curve over the 53
+ *     week slots — summer high, February low, one-week spikes on spring break,
+ *     the 4th of July and Labor Day — so the Work Mix stack shows a shape
+ *     across the year and the balance line BENDS with it. A proposed change is
+ *     an OFFSET from that curve, carried forward from its week until the next
+ *     change, which is why "+8 h/wk from April" is eight hours on top of the
+ *     season rather than a flat 25 for the rest of the year.
+ *
  * TWO FINDINGS, one of them now closed:
  *
  *   • `Chart` EXPOSED NO CLICK — `ChartProps` had no `onClick` and the context
@@ -134,7 +149,6 @@ import {
   TIME_DOMAIN,
   addMutation,
   addService,
-  annualOfPair,
   averageRate,
   bandOfRate,
   canAdd,
@@ -150,6 +164,7 @@ import {
   monthlyFrom,
   pairsForMutation,
   pairsWithoutMutation,
+  peakWeek,
   pinnedCeiling,
   projectedBalances,
   projectionTable,
@@ -160,10 +175,12 @@ import {
   removeMutation,
   runningBalances,
   scenarioDigest,
+  scheduleTable,
   segmentLabelsOf,
   totalHoursAt,
   weekLabel,
   weekOfPick,
+  weeklyOfPair,
   withChange,
   withDrop,
   withoutChange,
@@ -172,16 +189,17 @@ import {
   type SegmentLabel,
   type Service,
   type ServiceDraft,
+  type WeekRow,
 } from "./hourly-board-model";
 import type { MeasureIndex } from "../../../src/components/PairedMutationSliders";
 import type { PairedMutationEntity } from "../../../src/components/PairedMutationSliders";
 import {
   againstBreakeven,
-  dollarsPerYear,
+  dollarsPerWeek,
   formatHours,
   formatRate,
   revenueShift,
-  signedDollarsPerYear,
+  signedDollarsPerWeek,
 } from "./hourly-board-money";
 
 export const meta = { label: "Hourly Board" };
@@ -254,9 +272,10 @@ const COMMITTED = runningBalances(MONTHLY_NET, OPENING_BALANCE);
  * still be on the chart … that way the y axis doesn't shift when we change the
  * amounts", and `CashflowScrubChart` takes `yMin` / `yMax` in cents to do
  * exactly that. MEASURED at 1400×1300 with both pinned, it is the wrong trade on
- * THIS fixture: the dials can reach $340k/yr, twelve months of which is $340k of
- * projection, so the domain has to run to $450k — and the committed line, which
- * ends at $134k, is squashed into the bottom fifth of the plot and reads flat.
+ * THIS fixture: the dials can reach $10.5k/wk, thirteen months of which is
+ * $575k of projection, so the domain has to run to $650k — and the committed
+ * line, which ends at $132k, is squashed into the bottom fifth of the plot and
+ * reads flat.
  *
  * The two fixtures are simply not in proportion: the monthly flows are
  * hand-written (the business as already committed) while the dials price a whole
@@ -316,10 +335,11 @@ const BOUNDARIES = monthStarts(DOMAIN_START, COMMITTED.length);
  *
  * Weeks and not months because every change on this board lands on an ISO week
  * and every hours figure is quoted per week — the same argument `averageRate`
- * makes for the gauge, now made for the line beside it. A scenario whose hours
- * alternate 30 / 10 week to week accrues a different amount in each stretch, so
- * the monthly deltas differ and the line BENDS instead of running straight at
- * the mean (Peter's ruling, 2026-09-17).
+ * makes for the gauge, now made for the line beside it. `momentsOf` samples
+ * EVERY week rather than only the flags, so the SEASON reaches the line whether
+ * or not anybody proposed anything: February bills under breakeven and August
+ * well over it, so the projection dips and then climbs instead of running
+ * straight at the mean (Peter's rulings, 2026-09-17 and 2026-09-18).
  */
 const samplingFor = (
   mutations: readonly Mutation[],
@@ -355,9 +375,10 @@ const fanSeries = (id: string, sign: number, nowIndex: number) => ({
     cell.balanceCents + sign * fanAt(index, nowIndex) * 100,
 });
 
-/** The summary under each pair of dials: what that service bills in a year. */
+/** The summary under each pair of dials: what that service bills in the WEEK
+ *  being edited — `$3k/wk` is twenty hours at $150, with no year in it. */
 const summaryOf = (entity: PairedMutationEntity): string =>
-  entity.measures[0].value === null ? "" : dollarsPerYear(annualOfPair(entity));
+  entity.measures[0].value === null ? "" : dollarsPerWeek(weeklyOfPair(entity));
 
 /** The board, read as tables, with no browser in the room. */
 const printTables = (
@@ -379,9 +400,31 @@ const printTables = (
         hours: pair.measures[0].value ?? "— (dropped)",
         priorRate: pair.measures[1].prior ?? "— (new service)",
         rate: pair.measures[1].value ?? "— (dropped)",
-        annual: summaryOf(pair),
+        weekly: summaryOf(pair),
       }),
       pairs,
+    ),
+  );
+  // THE COMMITTED SCHEDULE, week by week — the season as a table. The stack
+  // above it is a picture of these 53 rows, and a curve is exactly the kind of
+  // thing that looks plausible in a picture and wrong in a column of numbers.
+  console.table(
+    map(
+      (row: WeekRow) => ({
+        week: row.week,
+        chip: row.label,
+        hours: map(
+          (service: Service, index: number) =>
+            `${service.label} ${row.hours[index] ?? 0}h`,
+          services,
+        ).join(" · "),
+        total: row.total,
+        fullTime: row.fullTime,
+        spike: row.spike,
+        revenue: dollarsPerWeek(row.revenue),
+        cap,
+      }),
+      scheduleTable(services, mutations),
     ),
   );
   console.table(
@@ -462,13 +505,13 @@ const printTables = (
   const drawn = drawnRate(average);
   console.log(
     "baseline",
-    signedDollarsPerYear(COMMITTED_RATE),
+    signedDollarsPerWeek(COMMITTED_RATE),
     "· rate from here",
-    signedDollarsPerYear(rateAt(at, mutations, services)),
+    signedDollarsPerWeek(rateAt(at, mutations, services)),
     "· gauge (year average)",
-    signedDollarsPerYear(average),
+    signedDollarsPerWeek(average),
     "· AS DRAWN",
-    signedDollarsPerYear(drawn),
+    signedDollarsPerWeek(drawn),
     isOffDial(average)
       ? "(CLAMPED — off the end of the dial)"
       : "(on the dial)",
@@ -482,8 +525,10 @@ const printTables = (
     monthlyFrom(rateAt(at, mutations, services)).toFixed(0),
     "· any change?",
     hasAnyChange(services),
+    "· peak",
+    `${peakWeek(services, mutations).total}h in ${peakWeek(services, mutations).label}`,
     "· a pinned balance ceiling would need",
-    dollarsPerYear(PINNED_CEILING).replace("/yr", ""),
+    dollarsPerWeek(PINNED_CEILING).replace("/wk", ""),
     "(see PINNED_CEILING for why the chart is unpinned)",
   );
   /* eslint-enable no-console */
@@ -946,8 +991,9 @@ const HourlyBoardBench: Component = () => {
                     when={selectedSegment()}
                     fallback={
                       <NoteText>
-                        Click the Work Mix chart, or move a dial, to propose a
-                        change
+                        The schedule above is COMMITTED. Click a week, or move a
+                        dial, to propose a change — it carries the same offset
+                        from the curve until the next one.
                       </NoteText>
                     }
                   >
