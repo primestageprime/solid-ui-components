@@ -20,7 +20,9 @@ import {
   CardGrid,
   LooseCardGrid,
   WrappedClusterRow,
+  FixedHeightBox,
 } from "./index";
+import { DEFAULT_CHART_HEIGHT } from "../ScrubChart/helpers";
 
 describe("Layout primitives", () => {
   it("Stack applies gap class", () => {
@@ -49,6 +51,14 @@ describe("Layout curried variants", () => {
   it("TightStack uses gap-xs", () => {
     const { container } = render(() => <TightStack>x</TightStack>);
     expect(container.firstElementChild!.className).toMatch(/stack--gap-xs/);
+  });
+
+  it("FixedHeightBox bakes the app chart height, min-height:0, and overflow:hidden", () => {
+    const { container } = render(() => <FixedHeightBox>x</FixedHeightBox>);
+    const style = container.firstElementChild!.getAttribute("style") ?? "";
+    expect(style).toMatch(new RegExp(`height: ?${DEFAULT_CHART_HEIGHT}px`));
+    expect(style).toMatch(/min-height: ?0/);
+    expect(style).toMatch(/overflow: ?hidden/);
   });
 
   it("ClusterRow uses gap-sm + align-center", () => {

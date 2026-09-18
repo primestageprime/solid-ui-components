@@ -29,8 +29,24 @@ The folder name doesn't show up in consumer imports (everything routes through t
 
 ### Depth 2+ Components (Composites)
 - **Zero CSS files** — all visual styling comes from Atomic/Layout variants
+- **Renders no intrinsic (lowercase) elements and no third-party primitives; if
+  a Composite needs a mark no Primitive draws, the answer is a new justified
+  Primitive, not markup in the Composite**
 - Compose from curried variants of Atomic and Layout components
 - Use `Dynamic` + lookup maps for variant selection where applicable
+
+**The axiom (Peter, 2026-09-17): no component above Depth 1 contains anything
+but existing SUI components.** No raw HTML/SVG elements, no CSS file, no inline
+style, no third-party primitives — those live only in Depth-1 Primitives. The
+whole point of SUI is composition: enough curried components exported that
+complex components assemble like lego blocks instead of being hand-built every
+time. This is the target, not a description of the current tree — 31 components
+whose own header declares Depth 2+ still import their own CSS file, and the
+direction is to migrate them (see
+[`docs/BEST_PRACTICES.md` §1](docs/BEST_PRACTICES.md#1-two-layers-primitives-and-composites)
+and `docs/adherence/OPEN_ITEMS.md`). A new component or variant needs a
+justification that no existing component can do the job — see the push-back
+protocol in [`AGENT_GUIDE.md`](AGENT_GUIDE.md#the-push-back-protocol--before-you-create-anything).
 
 ## Depth Rules
 
@@ -108,6 +124,12 @@ renders the glyph/text. Don't force an absurd one-child `<Row>` wrapper around a
 pill just to satisfy the letter of the rule; the target is duplicated
 *arrangement* vocabulary, not every `inline-flex`.
 
+**This carve-out is Primitive-scoped (Depth 1) and is about CSS, not markup.**
+It permits an *existing* Primitive to keep the `inline-flex` that centres its
+own glyph. It says nothing about a Composite: a Composite owns no CSS file at
+all and renders no intrinsic element to style, so there is nothing for the
+carve-out to apply to (see *Depth 2+ Components (Composites)* above).
+
 ### Rulings on the hard cases (Peter, 2026-07-14)
 
 Four situations that have no obvious Layout home were adjudicated:
@@ -160,6 +182,16 @@ the vocabulary the migration added, and the standing keep-vs-migrate
 discriminators live in
 `docs/superpowers/plans/2026-07-14-layout-purity-migration.md` › *Migration
 complete*. New components still comply from the start.
+
+**AUDITED-INTRINSIC is a grandfathered disposition, not a standing
+permission.** It was recorded for components that already existed at the
+2026-07-14 migration, at any depth — several carriers are Depth 2+
+(`WeekCalendar`, `ServiceHealthDot`, `QuadrantGrid`, `GapCell`). It settles the
+*layout-purity* question for that component's *existing* CSS and nothing more:
+it does not authorise a new Composite to own a CSS file, an inline style, or
+intrinsic markup. New components comply with the composition axiom from the
+start, and the grandfathered ones are migration backlog tracked in
+`docs/adherence/OPEN_ITEMS.md`.
 
 ## Prop Architecture: Overrides vs Data
 
