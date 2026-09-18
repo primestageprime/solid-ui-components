@@ -10,33 +10,94 @@
  *
  * The wiring, stated once:
  *
+ *   seasonalHours ────────────▶ offerAt  (the committed weekly schedule)
  *   services ──workMixSeries──▶ StackedAreaSeries  (one band per service, hrs/wk)
- *   services ──revenueAt──────▶ rateAt ──▶ the balance line's forward slope
+ *   services ──revenueAt──────▶ rateAt ──▶ the balance line's sampled slope
  *   services ──revenueAt──────▶ averageRate ──▶ RateGauge.value  (the WHOLE year)
  *   services ──pairsForMutation▶ PairedMutationSliders.entities  (two dials each)
  *   segment click ────────────▶ which mutation the dials edit
  *
- * ── THE CALIBRATION ────────────────────────────────────────────────────────
+ * ── THE UNIT IS DOLLARS A WEEK ─────────────────────────────────────────────
+ *
+ * Peter, 2026-09-18: "Hourly people tend to think of it that way." So every
+ * money figure this board quotes is $/WK — the service summaries, both of the
+ * gauge's sentences, its domain and baseline, the fixed cost and every DEBUG
+ * table. There is no ×52 anywhere in the arithmetic the reader is shown:
+ *
+ *     rate = Σ (hours/wk × $/hr) − fixed costs        [$/wk]
+ *
+ * The year has not gone away — it is the SPAN the gauge averages over and the
+ * length the projection integrates across — but it is no longer a unit. The
+ * bridge from a weekly rate to a monthly cash figure is `monthlyFrom`, spelled
+ * once, and the projection's own conversion is the explicit `WEEKS_PER_UNIT`
+ * table beside `accruedOver`. `abbreviateDollars` is still the shared rounding
+ * policy; only the suffix and the arithmetic changed.
+ *
+ * ── THE BASELINE IS A SEASON, NOT A NUMBER ─────────────────────────────────
+ *
+ * Peter, 2026-09-18: "Model them having more work in the summer and less
+ * winter. Spikes during 4th of July and Labor Day and spring break."
+ *
+ * So a service's COMMITTED hours are a CURVE over the 53 week slots of the span
+ * (`seasonalHours`), not a scalar: a smooth annual cosine peaking in July /
+ * August and troughing in January / February, plus a one-week additive spike on
+ * the weeks holding spring break, Independence Day and Labor Day. Service B
+ * peaks four weeks after Service A, so the stack reads as two shapes rather than
+ * one shape drawn twice. The two services' stack peaks at 61 h/wk in the Labor
+ * Day week and troughs at 25 in mid-February — over the 40-hour rule in summer,
+ * under it in winter, and inside the 80 cap everywhere, which is the reading the
+ * dashed rule and the fixed domain exist to give.
+ *
+ * This is the BASELINE. The board still opens with ZERO mutations: the season is
+ * what the business has already committed to, not something proposed.
+ *
+ * ── HOW A PROPOSED CHANGE COMPOSES WITH THE SEASON ─────────────────────────
+ *
+ * A change is an OFFSET, carried forward — not a level:
+ *
+ *     hours(week) = clamp(seasonalHours(shape, week) + offset(week))
+ *     offset      = 0 before the first change; after a change in week c that
+ *                   set the hours to h, it is h − seasonalHours(shape, c), and
+ *                   it carries until the next change
+ *
+ * So "+10 h/wk from July" means ten hours ON TOP OF the season for the rest of
+ * the year, which is what a person proposing more work means, and the dial's
+ * prior and value are both read in the week being edited — their difference is
+ * therefore the change the reader made and never the season's own drift. A drop
+ * is still absence (`null`), and a reinstate still DELETES the change, so the
+ * service falls back onto whatever offset it was carrying.
+ *
+ * `changes` stores the ABSOLUTE hours the reader set, and the offset is derived
+ * from the change's own week at read time. That way what is stored is what the
+ * dial said, and the storage cannot disagree with the curve it was read against.
+ *
+ * With nothing selected the dials read the SPAN'S FIRST WEEK — so clicking that
+ * week changes nothing, which is the only reading that makes the first click a
+ * no-op rather than a jump.
+ *
+ * ── THE CALIBRATION, RE-SOLVED IN $/WK ─────────────────────────────────────
  *
  * Revenue is an INFLOW, so the arithmetic and the words run the same way — up is
- * better, which is the exact opposite of the Scenario Board's payroll gauge:
+ * better, which is the exact opposite of the Scenario Board's payroll gauge.
  *
- *     rate = Σ (hours/wk × $/hr × 52) − fixed costs
+ * Every row is the reading THE GAUGE GIVES: the rate time-averaged over the
+ * whole span, with the change made at the span's start so it is in force for all
+ * of it (weight 1). Because the baseline is seasonal, the average is no longer
+ * the same number as the opening week's rate — the average is what the dial
+ * shows, so the average is what the constants are solved against. With
+ * FIXED_WEEKLY_COST = 3,600 and COMFORTABLE = 1,000:
  *
- * Peter's two readings, solved rather than picked. With the fixture below
- * (Service A 20 h/wk @ $150, Service B 15 h/wk @ $120), FIXED_MONTHLY_COST =
- * 15,000 and COMFORTABLE = 60,000:
- *
- *     scenario                     revenue      rate      band    why
- *     --------------------------   ---------   --------   ------  ----------------
- *     as it opens                   249,600      69,600   green   ≥ COMFORTABLE
- *     A's hours +10 (20→30 h/wk)    327,600     147,600   green   raising reads better
- *     A's rate to its floor         197,600      17,600   yellow  above water, not clear
- *     BOTH rates to their floors    166,400     −13,600   red     under breakeven
+ *     scenario                     revenue/wk   rate/wk   band    why
+ *     --------------------------   ----------   -------   ------  ----------------
+ *     as it opens                       4,937     1,337   green   ≥ COMFORTABLE
+ *     A's hours +10 (offset)            6,437     2,837   green   raising reads better
+ *     A's rate to its floor             3,908       308   yellow  above water, not clear
+ *     BOTH rates to their floors        3,291      −309   red     under breakeven
  *
  * The constants are the solution to four inequalities, which is why they are
- * derived here and not chosen (REV0 = 249,600, REVfloor = 166,400, REVafloor =
- * 197,600, all fixed by the fixture's own ranges):
+ * derived here and not chosen (REV0 = 4,936.52, REVafloor = 3,908.44, REVfloor =
+ * 3,291.01 — the time-weighted averages of the seasonal schedule, fixed by the
+ * fixture's own shapes and ranges):
  *
  *     REV0      − FIXED ≥ COMFORTABLE    the board opens green
  *     REVafloor − FIXED > 0              cutting ONE rate is not yet a loss
@@ -45,31 +106,37 @@
  *
  * Raising a service's hours needs no inequality of its own: revenue only rises,
  * so a board that opens green stays green — which is the reading Peter asked for
- * and the sign that the gauge is wired up the right way round.
+ * and the sign that the gauge is wired up the right way round. That row is
+ * EXACTLY +$1,500/wk (ten hours at $150 every week of the year), and it is exact
+ * only because Service A's allowance was widened to 45 h/wk so the offset never
+ * meets the clamp — see the fixture.
  *
- * Solving them leaves FIXED ∈ (166,400, 189,600) and, at FIXED = 180,000,
- * COMFORTABLE ∈ (17,600, 69,600]. 180,000 and 60,000 sit inside both with room
- * either side, so nothing here balances on a knife edge. `rateBandTable()`
- * prints exactly the table above and the test asserts it.
+ * Solving them leaves FIXED ∈ (3,291.01, 3,908.44) and, at FIXED = 3,600,
+ * COMFORTABLE ∈ (308.44, 1,336.52]. 3,600 is within a dollar of the midpoint of
+ * the first and 1,000 sits inside the second with room either side, so nothing
+ * here balances on a knife edge. `rateBandTable()` prints exactly the table
+ * above and the test asserts it.
  *
  * ── WHEN, NOT ONLY HOW MUCH ────────────────────────────────────────────────
  *
- * Every row of that table is a change made at the START of the year, where the
- * weight is 1. The gauge reads the COMPOSITE — the rate time-averaged over the
- * whole span the board draws — so a change is worth its own rate times the share
- * of the year it is in force for, and the table is the w = 1 case rather than
- * the only case.
+ * The gauge reads the COMPOSITE — the rate time-averaged over the whole span the
+ * board draws — so a change is worth its own rate times the share of the year it
+ * is in force for, and the table above is the w = 1 case rather than the only
+ * case.
  *
  * That the table describes the OPENING MOVE at all is a fact about
- * `nextFreeSlot`: the domain starts on a quarter boundary, so the first free
- * quarter IS the domain start, so the first interaction a reader makes lands at
- * weight 1 and the dial agrees with the table. The test pins that.
+ * `nextFreeSlot`: the first free WEEK is clamped to the span's own start, so the
+ * first interaction a reader makes lands at weight 1 and the dial agrees with
+ * the table. The test pins that.
  *
- * The binding consequence is `weightToReach`: cutting both rates to their
- * floors reaches RED only from the first 16.4% of the year. The same cut made in
- * April is in force for three quarters, pulls the average down by three quarters
- * of its own depth, and leaves the gauge YELLOW. That is not a miscalibration —
- * it is the composite reading doing its job.
+ * `weightToReach` is the algebra of that trade — the share of the span a change
+ * must still have ahead of it to pull the average past a threshold — and it is
+ * exact for a change BETWEEN TWO FLAT LEVELS. Under a seasonal baseline neither
+ * level is flat, so it is a reading of the shape of the trade rather than a
+ * prediction about this fixture, and the empirical claim is the one the test
+ * makes instead: both rates cut to their floors in APRIL leaves the gauge
+ * yellow, where the same cut in January reads red. That is not a
+ * miscalibration — it is the composite reading doing its job.
  */
 import {
   filter,
@@ -170,19 +237,188 @@ export const DOMAIN_START = new Date("2025-01-01");
 export const DOMAIN_END = new Date("2026-01-01");
 export const TIME_DOMAIN: TimeDomain = [DOMAIN_START, DOMAIN_END];
 
-/** Weeks in a year. Hours are quoted per WEEK and money per YEAR; one bridge. */
+/** Weeks in a year. The cosine's period, and the week/month bridge. */
 export const WEEKS_PER_YEAR = 52;
 
 /** Months in a year. The balance chart steps a month at a time. */
 export const MONTHS_PER_YEAR = 12;
 
-/** A year's rate as a month's worth of it. */
-export const monthlyFrom = (ratePerYear: number): number =>
-  ratePerYear / MONTHS_PER_YEAR;
+/** A week, in ms. Unlike a month, a week IS a fixed length. */
+export const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Weeks in an average month — the ONE conversion between this board's unit
+ *  ($/wk) and the cash chart's grain (a month). */
+export const WEEKS_PER_MONTH = WEEKS_PER_YEAR / MONTHS_PER_YEAR;
+
+/** A WEEKLY rate as a month's worth of it. Every money figure on this board is
+ *  $/wk; the cash chart's cells are months, and this is the only place the two
+ *  meet. */
+export const monthlyFrom = (ratePerWeek: number): number =>
+  ratePerWeek * WEEKS_PER_MONTH;
+
+// ── The week grid ────────────────────────────────────────────────────────────
+//
+// The season is quoted per WEEK SLOT, so the slots have to be the same grid a
+// click lands on — otherwise a reader could pick a week the schedule has no
+// reading for. They are not re-derived here: `nextFreeSlot` is already the
+// exported enumeration of that grid, so walking it once at module load makes
+// the two identical by construction rather than by agreement.
+
+/** Every week slot in the span, in order. Slot 0 is the span's own start (a
+ *  truncated week — see `weekSlotOf`'s clamp); slot 52 opens on 29 December. */
+export const WEEK_SLOTS: readonly number[] = ((): number[] => {
+  const slots: number[] = [];
+  const taken: Mutation[] = [];
+  for (;;) {
+    const at = nextFreeSlot(
+      DOMAIN_START.getTime(),
+      DOMAIN_END.getTime(),
+      taken,
+    );
+    if (at === undefined) break;
+    slots.push(at);
+    taken.push({ id: String(at), at: new Date(at), label: "" });
+  }
+  return slots;
+})();
+
+/** The number of week slots the span holds — 53, for a 365-day year opening
+ *  mid-week. The season's table has one row each. */
+export const WEEK_COUNT = WEEK_SLOTS.length;
+
+/**
+ * The week slot a MOMENT falls in, as an index into `WEEK_SLOTS`.
+ *
+ * Arithmetic rather than a lookup, and CLAMPED at both ends on purpose: a
+ * mutation date need not be on the grid (a click is snapped, but a fixture or a
+ * date typed into a test is not), and a silent miss would put a July reading on
+ * January's hours. Anything at or before the span's start is slot 0 and anything
+ * at or after its end is the last slot.
+ */
+export const slotOfTime = (time: number): number => {
+  const firstWholeWeek = WEEK_SLOTS[1];
+  const monday = weekOfPick(time).getTime();
+  if (firstWholeWeek === undefined || monday < firstWholeWeek) return 0;
+  const index = 1 + Math.floor((monday - firstWholeWeek) / WEEK_MS);
+  return Math.min(Math.max(index, 0), WEEK_COUNT - 1);
+};
+
+/**
+ * Every moment the schedule can change at: EVERY WEEK SLOT, and each flag.
+ *
+ * The week slots are in here because the baseline is seasonal — the rate now
+ * moves every week whether or not anybody proposed anything, so a sampler given
+ * only the mutation times would read a flat year and the gauge and the
+ * projection would both miss the season they are drawn to show.
+ *
+ * Flags are usually slots already (a click snaps), so the union is normally the
+ * slots alone; a mutation off the grid is kept rather than rounded onto one.
+ */
+export const momentsOf = (mutations: readonly Mutation[]): number[] => {
+  const times = new Set<number>(WEEK_SLOTS);
+  for (const mutation of mutations) times.add(timeOf(mutation.at));
+  return sortBy((time: number) => time, [...times]);
+};
+
+// ── The season ───────────────────────────────────────────────────────────────
+
+/**
+ * The shape of one service's committed year, in hours a week.
+ *
+ * A SHAPE rather than 53 numbers because the reader is meant to be able to say
+ * what the picture means: a base, how hard it swings, when it peaks, and how
+ * much a holiday week adds. The spike WEEKS are not in here — they are calendar
+ * facts shared by every service (see `SPIKE_SLOTS`), and giving each service its
+ * own would invite two services with different Labor Days.
+ */
+export interface SeasonalShape {
+  /** The hours a week the curve swings about. */
+  readonly base: number;
+  /** How far it swings, as a fraction of the base. 0.3 = ±30%. */
+  readonly swing: number;
+  /** The week slot the curve peaks in; it troughs 26 slots away. */
+  readonly peakSlot: number;
+  /** What a spike week adds, as a fraction of the base. */
+  readonly spike: number;
+}
+
+/** The year the span opens in — the calendar the holidays are read from. */
+const SPAN_YEAR = DOMAIN_START.getUTCFullYear();
+
+/** The first Monday of a month, as a UTC timestamp. Labor Day, by definition. */
+const firstMondayOf = (year: number, month: number): number => {
+  for (let day = 1; day <= 7; day += 1) {
+    const at = Date.UTC(year, month, day);
+    if (new Date(at).getUTCDay() === 1) return at;
+  }
+  return Date.UTC(year, month, 1);
+};
+
+/**
+ * The three weeks that spike, as dates — spring break, Independence Day and
+ * Labor Day, in span order.
+ *
+ * Spring break has no fixed date, so mid-March is a CHOICE (Peter: "spring
+ * break (choose mid-March, say the week)") and it is named here rather than
+ * buried in a slot number. The other two are derived from the calendar: the 4th
+ * of July is a date, Labor Day is the first Monday of September.
+ */
+export const SPIKE_DATES: readonly number[] = [
+  Date.UTC(SPAN_YEAR, 2, 15),
+  Date.UTC(SPAN_YEAR, 6, 4),
+  firstMondayOf(SPAN_YEAR, 8),
+];
+
+/** The same three, as week slots — 10 (Mar 10), 26 (Jun 30) and 35 (Sep 1). */
+export const SPIKE_SLOTS: readonly number[] = sortBy(
+  (slot: number) => slot,
+  map((at: number) => slotOfTime(at), SPIKE_DATES),
+);
+
+/** Is this week one of the three that spike? */
+export const isSpikeWeek = (week: number): boolean =>
+  some((slot: number) => slot === week, SPIKE_SLOTS);
+
+/**
+ * THE COMMITTED SCHEDULE, for one service in one week — hours a week.
+ *
+ *     base × (1 + swing × cos(2π(week − peakSlot)/52))  +  spike on 3 weeks
+ *
+ * A cosine because the year is a cycle and a reader can name its two ends: the
+ * peak is where the cosine is 1 and the trough is 26 slots away, so "peaks in
+ * July, troughs in January" is a single number (`peakSlot`) rather than a table
+ * somebody has to check. The spike is ADDITIVE and lasts exactly one week,
+ * which is what a holiday week is — not a change in the season.
+ *
+ * WHOLE HOURS. The dials snap to 1 and `formatHours` rounds, so a schedule with
+ * a fractional hour in it would be a figure the board cannot show and the dial
+ * cannot emit. Rounding here means the table, the stack and the dial all read
+ * the same number.
+ */
+export const seasonalHours = (shape: SeasonalShape, week: number): number => {
+  const phase = (2 * Math.PI * (week - shape.peakSlot)) / WEEKS_PER_YEAR;
+  const curve = shape.base * (1 + shape.swing * Math.cos(phase));
+  return Math.round(curve + (isSpikeWeek(week) ? shape.base * shape.spike : 0));
+};
+
+/**
+ * A FLAT shape at `base` — no swing, no spike.
+ *
+ * What a service ADDED in the modal gets. It has negotiated no season any more
+ * than it has negotiated a range: the reader typed one figure, and inventing a
+ * summer for it would be the board making up a fact. Its offset is then zero
+ * everywhere and it holds the figure it was added at, exactly.
+ */
+export const flatShape = (base: number): SeasonalShape => ({
+  base,
+  swing: 0,
+  peakSlot: 0,
+  spike: 0,
+});
 
 // ── The services ─────────────────────────────────────────────────────────────
 
-/** What one service is worth at one moment: the pair the dials edit. */
+/** What one service is worth in one WEEK: the pair the dials edit. */
 export interface Offer {
   /** Hours a week. */
   readonly hours: number;
@@ -191,24 +427,48 @@ export interface Offer {
 }
 
 /**
+ * What a service is COMMITTED to, before anything is proposed against it.
+ *
+ * Only the rate. The hours are a curve, not a number, so they live in
+ * `seasonal` — and keeping them out of here means there is exactly one place
+ * the committed schedule is written down. `committed === null` is still the
+ * whole of "not sold yet", which is what `isSoldAt` and `addedAt` read.
+ */
+export interface Committed {
+  /** Dollars an hour. */
+  readonly rate: number;
+}
+
+/**
  * A service the business sells.
+ *
+ * `seasonal` is the committed weekly SCHEDULE's shape and is always present,
+ * including for a service added in the modal (a flat shape — see `flatShape`),
+ * because `offerAt` has to have a curve to read whether or not the service was
+ * ever committed.
  *
  * `hoursRange` / `rateRange` are the per-service ALLOWANCE — the shaded box on
  * each dial and the clamp. They are NOT the axis domain: the axes run 0–80 h/wk
  * and $0–300/hr for the whole row, which is what makes two services comparable,
  * and each service's own range says what THIS service is allowed inside that.
+ * `hoursRange` is also what keeps the STACK inside the cap: the two fixture
+ * services' ceilings add to 77 h/wk, under the 80 the chart is drawn to.
  *
- * `changes` is keyed by mutation id, and an ABSENT key means this service did
- * not move at that mutation — not that it was sold for nothing. That absence is
- * the whole reason the history is a map: adding a mutation needs no change to
- * anybody's history. A `null` VALUE is the service being DROPPED at that
- * mutation, which is what "removal = both measures null" looks like in storage.
+ * `changes` is keyed by mutation id and holds the ABSOLUTE hours the reader set
+ * in that week (the offset from the curve is derived from the change's own week
+ * — see the header). An ABSENT key means this service did not move at that
+ * mutation — not that it was sold for nothing. That absence is the whole reason
+ * the history is a map: adding a mutation needs no change to anybody's history.
+ * A `null` VALUE is the service being DROPPED at that mutation, which is what
+ * "removal = both measures null" looks like in storage.
  */
 export interface Service {
   readonly id: string;
   readonly label: string;
-  /** The offer before the FIRST mutation. `null` = not sold yet. */
-  readonly committed: Offer | null;
+  /** The committed weekly schedule's shape. Always present. */
+  readonly seasonal: SeasonalShape;
+  /** The committed rate. `null` = not sold yet. */
+  readonly committed: Committed | null;
   readonly hoursRange: readonly [number, number];
   readonly rateRange: readonly [number, number];
   readonly changes: Readonly<Record<string, Offer | null>>;
@@ -235,16 +495,39 @@ export const SERVICES: readonly Service[] = [
   {
     id: "service-a",
     label: "Service A",
-    committed: { hours: 20, rate: 150 },
-    hoursRange: [0, 30],
+    // 20 h/wk on average, swinging ±30% about a late-July peak: 14 h/wk in
+    // February, 26 in August, 35 in a spike week.
+    seasonal: {
+      base: 20,
+      swing: 0.3,
+      peakSlot: slotOfTime(Date.UTC(SPAN_YEAR, 6, 28)),
+      spike: 0.5,
+    },
+    committed: { rate: 150 },
+    // 45 and not 30: the committed schedule itself reaches 35 h/wk in a spike
+    // week, so the old allowance would have clamped the BASELINE — and 45 is
+    // what lets the calibration's +10 offset ride the whole curve without
+    // meeting the clamp, which is what keeps that row exactly +$1,500/wk.
+    hoursRange: [0, 45],
     rateRange: [100, 200],
     changes: {},
   },
   {
     id: "service-b",
     label: "Service B",
-    committed: { hours: 15, rate: 120 },
-    hoursRange: [0, 25],
+    // The SAME season read four weeks later and a third less hard, so the two
+    // bands are two shapes rather than one drawn twice: B is still climbing
+    // while A has turned over.
+    seasonal: {
+      base: 15,
+      swing: 0.25,
+      peakSlot: slotOfTime(Date.UTC(SPAN_YEAR, 7, 25)),
+      spike: 0.5,
+    },
+    committed: { rate: 120 },
+    // 32 holds its own spike week (26 h/wk) with room to raise, and 45 + 32 =
+    // 77 keeps the whole stack under the 80 cap.
+    hoursRange: [0, 32],
     rateRange: [80, 160],
     changes: {},
   },
@@ -256,54 +539,149 @@ export const SEED_MUTATIONS: readonly Mutation[] = [];
 // ── Walking the history ──────────────────────────────────────────────────────
 
 /**
- * The offer a service carried JUST BEFORE a mutation: its last change at any
- * earlier mutation, or its committed offer if it made none.
+ * WHAT A CHANGE MEANS, once the season is taken out of it: an hours OFFSET from
+ * the committed curve, and a rate. `null` — anywhere a level is carried — is the
+ * service not being sold, which covers both dropped and not-yet-added.
  *
- * Walks in time order rather than reading one key, for the same reason the
- * payroll board does: a service raised at mutation 1 and untouched at mutation 2
- * has a prior of its mutation-1 offer while the reader is editing mutation 2.
+ * This is the type the history is really written in. `changes` stores absolute
+ * hours (what the dial said), and the offset is derived from the change's own
+ * week here, so the two cannot disagree about the curve they were read against.
+ */
+interface Level {
+  readonly offsetHours: number;
+  readonly rate: number;
+}
+
+/** The committed level: on the curve exactly, at the committed rate. */
+const committedLevel = (service: Service): Level | null =>
+  service.committed === null
+    ? null
+    : { offsetHours: 0, rate: service.committed.rate };
+
+/** What a stored change means as a level, read against ITS OWN week. */
+const levelOf = (service: Service, change: Offer, at: number): Level => ({
+  offsetHours: change.hours - seasonalHours(service.seasonal, slotOfTime(at)),
+  rate: change.rate,
+});
+
+/** The hours the ALLOWANCE admits. The schedule and every offset ride inside
+ *  it, which is what keeps the stack under the chart's cap. */
+const clampHours = (service: Service, hours: number): number =>
+  Math.min(Math.max(hours, service.hoursRange[0]), service.hoursRange[1]);
+
+/** THE COMMITTED SCHEDULE at a moment, in hours a week — the baseline with no
+ *  proposal in it at all. What the Work Mix chart draws before the first click. */
+export const scheduledHours = (service: Service, time: number): number =>
+  clampHours(service, seasonalHours(service.seasonal, slotOfTime(time)));
+
+/** A level READ IN A WEEK: the season plus the offset, inside the allowance. */
+const offerOf = (
+  service: Service,
+  level: Level | null,
+  time: number,
+): Offer | null =>
+  level === null
+    ? null
+    : {
+        hours: clampHours(
+          service,
+          seasonalHours(service.seasonal, slotOfTime(time)) + level.offsetHours,
+        ),
+        rate: level.rate,
+      };
+
+/** The moment a mutation sits at — the week its change is read in. */
+const timeOfMutation = (
+  mutationId: string,
+  mutations: readonly Mutation[],
+): number =>
+  timeOf(
+    find((mutation: Mutation) => mutation.id === mutationId, mutations)?.at ??
+      DOMAIN_START,
+  );
+
+/** The level a service carried just BEFORE a mutation. Walks in time order
+ *  rather than reading one key, for the same reason the payroll board does: a
+ *  service raised at mutation 1 and untouched at mutation 2 has a prior of its
+ *  mutation-1 level while the reader is editing mutation 2. */
+const levelBefore = (
+  service: Service,
+  mutationId: string,
+  mutations: readonly Mutation[],
+): Level | null => {
+  let carried = committedLevel(service);
+  for (const mutation of orderedMutations(mutations)) {
+    if (mutation.id === mutationId) return carried;
+    const own = service.changes[mutation.id];
+    if (own !== undefined)
+      carried =
+        own === null ? null : levelOf(service, own, timeOf(mutation.at));
+  }
+  return carried;
+};
+
+/**
+ * The offer a service carried JUST BEFORE a mutation, read IN THAT MUTATION'S
+ * WEEK.
+ *
+ * The week matters and it is the mutation's own: the dial's prior and value are
+ * then two readings of the same week, so their difference is the change the
+ * reader made and never the season's drift between two dates.
  */
 export const offerBefore = (
   service: Service,
   mutationId: string,
   mutations: readonly Mutation[],
-): Offer | null => {
-  let carried = service.committed;
-  for (const mutation of orderedMutations(mutations)) {
-    if (mutation.id === mutationId) return carried;
-    const own = service.changes[mutation.id];
-    if (own !== undefined) carried = own;
-  }
-  return carried;
-};
+): Offer | null =>
+  offerOf(
+    service,
+    levelBefore(service, mutationId, mutations),
+    timeOfMutation(mutationId, mutations),
+  );
 
-/** The offer from a mutation onward: its change at it, or whatever it was on. */
+/**
+ * The offer from a mutation onward, in that mutation's week: its change at it,
+ * or whatever it was on.
+ *
+ * A change stored AT this mutation is read back as itself — the offset is
+ * derived from this very week, so adding it back to this week's season returns
+ * the figure the dial wrote (clamped to the allowance, as the dial is).
+ */
 export const offerFrom = (
   service: Service,
   mutationId: string,
   mutations: readonly Mutation[],
 ): Offer | null => {
   const own = service.changes[mutationId];
-  if (own !== undefined) return own;
-  return offerBefore(service, mutationId, mutations);
+  if (own === undefined) return offerBefore(service, mutationId, mutations);
+  if (own === null) return null;
+  return { hours: clampHours(service, own.hours), rate: own.rate };
 };
 
 /**
  * The offer in force at a MOMENT, or `null` when the service is not sold then.
  * `null` is absence, not zero: a service sold for nothing would still be work.
+ *
+ * THE SEASON IS IN HERE. With no change at all this is the committed schedule's
+ * own reading for that week; with changes it is the last one's offset carried
+ * forward onto that week's curve. Every other money figure on the board is a
+ * reading of this one function, which is why the season reaches the gauge, the
+ * projection and the stack without any of them knowing about it.
  */
 export const offerAt = (
   service: Service,
   time: number,
   mutations: readonly Mutation[],
 ): Offer | null => {
-  let carried = service.committed;
+  let carried = committedLevel(service);
   for (const mutation of orderedMutations(mutations)) {
     if (timeOf(mutation.at) > time) break;
     const own = service.changes[mutation.id];
-    if (own !== undefined) carried = own;
+    if (own !== undefined)
+      carried =
+        own === null ? null : levelOf(service, own, timeOf(mutation.at));
   }
-  return carried;
+  return offerOf(service, carried, time);
 };
 
 /**
@@ -487,6 +865,11 @@ export const addService = (
   const added: Service = {
     id,
     label: name,
+    // FLAT, for the same reason the range is the whole track: a service invented
+    // in a modal has negotiated no season, and giving it a summer would be the
+    // board inventing a fact about it. Its offset is zero everywhere, so it
+    // holds the figure it was added at exactly.
+    seasonal: flatShape(draft.hours ?? 0),
     committed: null,
     hoursRange: HOURS_DOMAIN,
     rateRange: RATE_DOMAIN_PER_HOUR,
@@ -607,14 +990,22 @@ interface AcrossMutation {
 }
 
 /**
- * The pairs when there is NO mutation yet: every service on the offer it already
- * carries, prior and value the same figures.
+ * The pairs when there is NO mutation yet: every service on its committed
+ * schedule, READ IN THE SPAN'S FIRST WEEK, prior and value the same figures.
  *
  * A separate function rather than a nullable id threaded through the walkers,
  * because the question is different. With a mutation the dials show a CHANGE;
  * with none there is no change to show, and saying so with `prior === value` is
  * what makes every reading downstream fall out with no special case — the delta
  * is zero, no change line is drawn, and the gauge reads exactly the baseline.
+ *
+ * WHICH WEEK, now that the hours are a curve, is the boundary case of the
+ * composition rule and so is stated rather than left to fall out: the span's
+ * FIRST week. The first free slot is that same week (`nextFreeSlot` clamps to
+ * the span's start), so a reader's first click proposes a change whose dials
+ * already read what these did — nothing jumps. Reading the curve's BASE instead
+ * would make the opening dial disagree with both the chart's left edge and the
+ * first change the reader can make.
  */
 export const pairsWithoutMutation = (
   services: readonly Service[],
@@ -622,26 +1013,28 @@ export const pairsWithoutMutation = (
   pipe(
     services,
     filter((service: Service) => service.committed !== null),
-    map((service: Service) =>
-      pairOf(service, service.committed, service.committed),
-    ),
+    map((service: Service) => {
+      const opening = offerAt(service, DOMAIN_START.getTime(), []);
+      return pairOf(service, opening, opening);
+    }),
   );
 
-/** Annual revenue from one pair of dials, as the summary line reads it. */
-export const annualOfPair = (entity: PairedMutationEntity): number => {
+/** WEEKLY revenue from one pair of dials, as the summary line reads it — hours
+ *  a week times dollars an hour, with no year in it. */
+export const weeklyOfPair = (entity: PairedMutationEntity): number => {
   const hours = entity.measures[HOURS].value;
   const rate = entity.measures[RATE].value;
   if (hours === null || rate === null) return 0;
-  return hours * rate * WEEKS_PER_YEAR;
+  return hours * rate;
 };
 
 // ── The money ────────────────────────────────────────────────────────────────
 
-/** What one offer bills in a year. */
-export const annualOf = (offer: Offer | null): number =>
-  offer === null ? 0 : offer.hours * offer.rate * WEEKS_PER_YEAR;
+/** What one offer bills in a WEEK. No ×52: the week IS the unit. */
+export const weeklyOf = (offer: Offer | null): number =>
+  offer === null ? 0 : offer.hours * offer.rate;
 
-/** What every service sold at a moment bills in a year, added up. */
+/** What every service sold at a moment bills in that WEEK, added up. */
 export const revenueAt = (
   services: readonly Service[],
   time: number,
@@ -649,41 +1042,35 @@ export const revenueAt = (
 ): number =>
   sum(
     map(
-      (service: Service) => annualOf(offerAt(service, time, mutations)),
+      (service: Service) => weeklyOf(offerAt(service, time, mutations)),
       services,
     ),
   );
 
 /**
- * What the business pays out in a month regardless of what it sells — the
+ * What the business pays out in a WEEK regardless of what it sells — the
  * premises, the tools, the people who are not billable.
  *
  * It lives in the FIXTURE rather than in a component because it is the whole
  * reason breakeven is a number at all: without it every scenario is profitable
- * and the gauge's red half is unreachable.
+ * and the gauge's red half is unreachable. $3,600 is the solution to the
+ * calibration's four inequalities and within a dollar of the middle of the
+ * interval they leave — see the header.
  */
-export const FIXED_MONTHLY_COST = 15_000;
+export const FIXED_WEEKLY_COST = 3_600;
 
-/** The same, per year — the unit every other figure on this board is in. */
-export const FIXED_ANNUAL_COST = FIXED_MONTHLY_COST * MONTHS_PER_YEAR;
-
-/** The business's rate, given what it bills in a year. */
+/** The business's rate, given what it bills in a WEEK. */
 export const rateFromRevenue = (revenue: number): number =>
-  revenue - FIXED_ANNUAL_COST;
-
-/** The COMMITTED rate — what the fixture bills before anything is proposed. */
-export const COMMITTED_RATE = rateFromRevenue(
-  revenueAt(SERVICES, DOMAIN_START.getTime(), []),
-);
+  revenue - FIXED_WEEKLY_COST;
 
 /**
- * The comfortable gain. At or above it the gauge lights green, below it yellow;
- * below zero is red, and that split is the gauge's own.
+ * The comfortable gain, in $/wk. At or above it the gauge lights green, below it
+ * yellow; below zero is red, and that split is the gauge's own.
  */
-export const COMFORTABLE = 60_000;
+export const COMFORTABLE = 1_000;
 
 /**
- * The gauge's domain, in $/yr.
+ * The gauge's domain, in $/wk.
  *
  * Sized against the FIXTURE, not against everything the board can become, and
  * the difference is worth stating because `RateGauge` clamps `value` to its
@@ -691,13 +1078,13 @@ export const COMFORTABLE = 60_000;
  * dial that quietly contradicts the terminal.
  *
  *   • The floor is exact and unconditional: every service dropped is no revenue
- *     and all of the fixed cost, which is −FIXED_ANNUAL_COST. Nothing can go
+ *     and all of the fixed cost, which is −FIXED_WEEKLY_COST. Nothing can go
  *     below it, because revenue cannot be negative.
  *   • The ceiling holds for the two services the board OPENS with —
- *     `maxReachableRate(SERVICES)` is 340,000, and the test pins it under this
+ *     `maxReachableRate(SERVICES)` is 10,520, and the test pins it under this
  *     number. It does NOT hold once services are ADDED: `addService` gives a
  *     service the whole track (it has negotiated no band of its own), so one
- *     added service alone reaches 80 × 300 × 52 = $1.248M, and the count is
+ *     added service alone reaches 80 × 300 = $24k/wk, and the count is
  *     unbounded. No per-service range can fix that; only a cap on the row could,
  *     and inventing one would be the board making up a constraint.
  *
@@ -707,7 +1094,7 @@ export const COMFORTABLE = 60_000;
  * exploratory scenario that runs off the top says so in words rather than
  * looking like a gauge that has stopped responding.
  */
-export const RATE_DOMAIN: readonly [number, number] = [-180_000, 360_000];
+export const RATE_DOMAIN: readonly [number, number] = [-3_600, 11_000];
 
 /**
  * What the gauge will actually DRAW for a rate — the domain clamp, named.
@@ -722,13 +1109,20 @@ export const drawnRate = (rate: number): number =>
 /** Is this rate off the end of the dial? Then the table must say so. */
 export const isOffDial = (rate: number): boolean => drawnRate(rate) !== rate;
 
-/** The highest rate the fixture's ranges can reach — the domain's ceiling test. */
+/**
+ * The highest rate the fixture's ranges can reach, in $/wk — the domain's
+ * ceiling test.
+ *
+ * The allowance is what bounds it whatever the season does: an offset large
+ * enough to lift the curve's trough to the ceiling puts its peak through it, and
+ * `clampHours` holds the whole schedule inside the range. So "every week at the
+ * top of the allowance" really is the most the board can bill.
+ */
 export const maxReachableRate = (services: readonly Service[]): number =>
   rateFromRevenue(
     sum(
       map(
-        (service: Service) =>
-          service.hoursRange[1] * service.rateRange[1] * WEEKS_PER_YEAR,
+        (service: Service) => service.hoursRange[1] * service.rateRange[1],
         services,
       ),
     ),
@@ -739,11 +1133,12 @@ export const minReachableRate = (): number => rateFromRevenue(0);
 
 // ── The composite reading ────────────────────────────────────────────────────
 //
-// Time is weighted in MONTHS rather than milliseconds, and that is a decision
-// rather than a convenience: a calendar month is not 1/12 of a year, so a change
-// made on 1 July weighs 0.4959 of a year in milliseconds and exactly half of it
-// in months. Every mutation is snapped to a month boundary and every figure is
-// quoted per year, so months are the unit the reader is counting in.
+// Time is weighted in WEEKS or MONTHS rather than milliseconds, and that is a
+// decision rather than a convenience: a calendar month is not 1/12 of a year, so
+// a change made on 1 July weighs 0.4959 of a year in milliseconds and exactly
+// half of it in months. This board counts WEEKS — its changes land on ISO weeks
+// and its schedule is quoted per week — so weeks are the default wherever it
+// asks; the month reading stays available beside it.
 //
 // COPIED from `scenario-board-rate.ts` rather than imported, deliberately: that
 // module's `averageRateOver` returns a PAYROLL rate through `rateFromPayChange`,
@@ -766,9 +1161,6 @@ const monthPosition = (time: number): number => {
 /** Months from one moment to another. Exact — and integral — on boundaries. */
 export const monthsBetween = (from: number, to: number): number =>
   monthPosition(to) - monthPosition(from);
-
-/** A week, in ms. Unlike a month, a week IS a fixed length. */
-export const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Weeks from one moment to another.
@@ -859,6 +1251,13 @@ export const weightFrom = (
  * one with the same mean. That is the seasonality Peter asked for, and it is
  * why the unit is not a detail. `unit` is still a parameter, defaulting here
  * to weeks, so a test can print both readings side by side.
+ *
+ * It samples EVERY WEEK (`momentsOf`), not only the flags. With a seasonal
+ * baseline the revenue moves week to week whether or not anybody proposed
+ * anything, so a sampler given the mutation times alone would read a flat year
+ * — and the gauge would ignore the season the chart above it draws. With no
+ * mutation at all this is therefore the time-weighted average of the committed
+ * schedule, which is exactly what `COMMITTED_RATE` is.
  */
 export const averageRate = (
   domain: TimeDomain,
@@ -869,10 +1268,23 @@ export const averageRate = (
   averageRateOver(
     timeOf(domain[0]),
     timeOf(domain[1]),
-    map((mutation: Mutation) => timeOf(mutation.at), mutations),
+    momentsOf(mutations),
     (time: number) => revenueAt(services, time, mutations),
     unit,
   );
+
+/**
+ * The COMMITTED rate, in $/wk — what the fixture's seasonal schedule bills on
+ * average before anything is proposed, less the fixed cost.
+ *
+ * THE SAME CALL the gauge makes for its own baseline, so the two are equal by
+ * construction rather than by arithmetic that could drift: with no mutation the
+ * gauge's value IS this number, the delta is zero and the brace reads "no change
+ * to revenue". It is no longer the opening WEEK's rate — the opening week is
+ * January, near the trough — and that gap is the whole reason the calibration is
+ * solved against the average.
+ */
+export const COMMITTED_RATE = averageRate(TIME_DOMAIN, [], SERVICES);
 
 /**
  * The INSTANTANEOUS rate from a moment onward — what the business runs at once
@@ -888,14 +1300,15 @@ export const rateAt = (
 
 /**
  * The share of the year a change must still have ahead of it to pull the average
- * from the opening rate down past a THRESHOLD:
+ * from the committed rate past a THRESHOLD:
  *
  *     COMMITTED + w × (changed − COMMITTED) < threshold
  *
- * With the floor-cut scenario (changed = −13,600, COMMITTED = 69,600) and a
- * threshold of zero that is 0.836 — so cutting both rates to their floors reaches
- * RED only from the first 16.4% of the year, and the same cut made in April
- * leaves the gauge yellow.
+ * EXACT for a change between two FLAT levels, which is what its two arguments
+ * are — two rates. Under a seasonal baseline neither level is flat, so read this
+ * as the shape of the trade rather than a prediction about this fixture: the
+ * empirical claim is the test's, which cuts both rates to their floors in April
+ * and reads the gauge yellow where the same cut in January reads red.
  */
 export const weightToReach = (changed: number, threshold: number): number =>
   (COMMITTED_RATE - threshold) / (COMMITTED_RATE - changed);
@@ -919,59 +1332,98 @@ export interface RateRow {
   readonly band: RateBand;
 }
 
-/** The revenue of a whole set of offers, one per service, in fixture order. */
-const revenueOfOffers = (offers: readonly (Offer | null)[]): number =>
-  sum(map((offer: Offer | null) => annualOf(offer), offers));
-
-/** Each service's committed offer, or its floor on one or both measures. */
-const committedOffers = (services: readonly Service[]): (Offer | null)[] =>
-  map((service: Service) => service.committed, services);
+/** The one mutation every calibration row is made at: the span's own start, so
+ *  each change is in force for the WHOLE span and the row is a statement about
+ *  the constants rather than about a date. */
+const CALIBRATION_AT: Mutation = {
+  id: "calibration",
+  at: DOMAIN_START,
+  label: "1",
+};
 
 /**
- * The calibration, as data — AT THE START OF THE YEAR, where the weight is 1 and
- * the average equals the instantaneous rate. That is the one moment at which the
- * table is a statement about the CONSTANTS rather than about a date, which is
- * why it is the moment the table fixes. What a LATER change does is
- * `weightToReach`'s business, and it has a test of its own.
+ * One calibration scenario, as a set of services carrying ONE change at the
+ * span's start.
+ *
+ * `hours` is a DELTA and `rate` an absolute figure, because that is what the two
+ * readings Peter named actually are: "ten hours more" is an offset that rides
+ * the season, and "at its floor" is a level. `undefined` on either measure
+ * leaves it committed.
+ *
+ * A service NOT SOLD at the span's start is left alone, and the test of that is
+ * `offerAt` rather than `committed === null`: those two used to be the same
+ * question and are not any more — a service added in the modal has no committed
+ * RATE but does have a schedule and a real offer from its own first mutation. It
+ * is absent from THIS table because the table's changes all land at the span's
+ * start, where it does not yet exist, which is a statement about the date rather
+ * than about the field.
+ */
+const calibrationServices = (
+  services: readonly Service[],
+  change: (
+    service: Service,
+    index: number,
+  ) => { addHours?: number; rate?: number } | undefined,
+): Service[] =>
+  map((service: Service, index: number) => {
+    const asked = change(service, index);
+    if (asked === undefined) return service;
+    const opening = offerAt(service, DOMAIN_START.getTime(), []);
+    if (opening === null) return service;
+    return {
+      ...service,
+      changes: {
+        ...service.changes,
+        [CALIBRATION_AT.id]: {
+          hours: opening.hours + (asked.addHours ?? 0),
+          rate: asked.rate ?? opening.rate,
+        },
+      },
+    };
+  }, services);
+
+/**
+ * The calibration, as data — each row the reading THE GAUGE GIVES for a change
+ * made at the span's start, which is the time-weighted average of the whole
+ * seasonal year at weight 1.
+ *
+ * The average and not the opening week's rate, and that is the one thing the
+ * seasonal baseline changed about this table: the two were the same number while
+ * the schedule was flat, and the dial has always read the average. What a LATER
+ * change does is `weightToReach`'s business, and it has a test of its own.
  */
 export const rateBandTable = (
   services: readonly Service[] = SERVICES,
 ): RateRow[] => {
-  const committed = committedOffers(services);
-  const raisedHours = map(
-    (offer: Offer | null, index: number) =>
-      offer === null || index !== 0
-        ? offer
-        : { ...offer, hours: offer.hours + 10 },
-    committed,
-  );
-  const firstAtFloor = map(
-    (offer: Offer | null, index: number) =>
-      offer === null || index !== 0
-        ? offer
-        : { ...offer, rate: services[index]?.rateRange[0] ?? offer.rate },
-    committed,
-  );
-  const allAtFloor = map(
-    (offer: Offer | null, index: number) =>
-      offer === null
-        ? offer
-        : { ...offer, rate: services[index]?.rateRange[0] ?? offer.rate },
-    committed,
-  );
-  const row = (
-    scenario: string,
-    offers: readonly (Offer | null)[],
-  ): RateRow => {
-    const revenue = revenueOfOffers(offers);
-    const rate = rateFromRevenue(revenue);
-    return { scenario, revenue, rate, band: bandOfRate(rate) };
+  const row = (scenario: string, scenarioServices: Service[]): RateRow => {
+    const mutations = [CALIBRATION_AT];
+    const rate = averageRate(TIME_DOMAIN, mutations, scenarioServices);
+    return {
+      scenario,
+      revenue: rate + FIXED_WEEKLY_COST,
+      rate,
+      band: bandOfRate(rate),
+    };
   };
+  const floorOf = (service: Service): number => service.rateRange[0];
   return [
-    row("as it opens", committed),
-    row("first service's hours +10", raisedHours),
-    row("first service's rate at its floor", firstAtFloor),
-    row("every rate at its floor", allAtFloor),
+    row("as it opens", [...services]),
+    row(
+      "first service's hours +10",
+      calibrationServices(services, (_service, index) =>
+        index === 0 ? { addHours: 10 } : undefined,
+      ),
+    ),
+    row(
+      "first service's rate at its floor",
+      calibrationServices(services, (service, index) =>
+        index === 0 ? { rate: floorOf(service) } : undefined,
+      ),
+    ),
+    row(
+      "every rate at its floor",
+      calibrationServices(services, (service) => ({ rate: floorOf(service) })),
+    ),
   ];
 };
 
@@ -997,22 +1449,19 @@ export const FULL_TIME_HOURS = 40;
 /** The cap can never sit below the rule it has to contain. */
 export const MIN_WORK_CAP = FULL_TIME_HOURS;
 
-/** Every moment the mix can change at: the span's left edge and each flag. */
-export const momentsOf = (mutations: readonly Mutation[]): number[] =>
-  sortBy(
-    (time: number) => time,
-    [
-      DOMAIN_START.getTime(),
-      ...map((mutation: Mutation) => timeOf(mutation.at), mutations),
-    ],
-  );
-
 /**
  * The hours-a-week points for one service. Changes only, opening at the edge.
  *
- * Only changes are emitted. A point repeating the current figure would spend a
- * Sankey transition on nothing; dropping to ZERO is a change and IS emitted,
- * because that is what collapses the band onto the edge below it.
+ * It walks EVERY WEEK now rather than only the flags, because the season is a
+ * change the reader did not make: a band emitted at the mutation times alone
+ * would draw a flat year with steps at the flags, which is the one picture this
+ * board must not draw. It is still CHANGES that are emitted — a week repeating
+ * the previous week's whole hours spends a transition on nothing — so the
+ * fixture's smooth curve costs about thirty points a band rather than 53, and a
+ * flat stretch costs one.
+ *
+ * Dropping to ZERO is a change and IS emitted, because that is what collapses
+ * the band onto the edge below it.
  *
  * Every series opens at the span's left edge, including one at zero: a band that
  * started later would leave the bands above it with no floor to sit on until it
@@ -1063,6 +1512,78 @@ export const totalHoursAt = (
       services,
     ),
   );
+
+/** One week of the schedule, as a row a terminal can print. */
+export interface WeekRow {
+  /** The slot index, 0–52. */
+  readonly week: number;
+  /** `W27 · Jun 30` — the same chip the as-of control reads. */
+  readonly label: string;
+  /** One column per service, in fixture order: its hours that week. */
+  readonly hours: readonly number[];
+  /** The top of the stack that week. */
+  readonly total: number;
+  /** `over` or `under` the full-time rule. */
+  readonly fullTime: "over" | "under";
+  /** `spike` on the three holiday weeks, empty otherwise. */
+  readonly spike: string;
+  /** What the business bills that week, in $/wk. */
+  readonly revenue: number;
+}
+
+/**
+ * THE SCHEDULE, week by week — the season as a table, so the shape can be
+ * argued with from a terminal before anyone opens the chart.
+ *
+ * This is the observation the Work Mix chart draws and the projection
+ * integrates: one row per week slot, every service's hours beside the total and
+ * what it bills. A curve is exactly the kind of thing that looks plausible in a
+ * picture and wrong in a column of numbers, which is why it is printed.
+ */
+export const scheduleTable = (
+  services: readonly Service[] = SERVICES,
+  mutations: readonly Mutation[] = [],
+): WeekRow[] =>
+  map((at: number, week: number) => {
+    const hours = map(
+      (service: Service) => offerAt(service, at, mutations)?.hours ?? 0,
+      services,
+    );
+    const total = sum(hours);
+    return {
+      week,
+      label: weekLabel(new Date(at)),
+      hours,
+      total,
+      fullTime:
+        total > FULL_TIME_HOURS ? ("over" as const) : ("under" as const),
+      spike: isSpikeWeek(week) ? "spike" : "",
+      revenue: revenueAt(services, at, mutations),
+    };
+  }, WEEK_SLOTS);
+
+/** The busiest week of a schedule, and how many hours it holds. The claim the
+ *  cap has to contain: 61 h/wk in the Labor Day week, for the fixture. */
+export const peakWeek = (
+  services: readonly Service[] = SERVICES,
+  mutations: readonly Mutation[] = [],
+): WeekRow => {
+  const rows = sortBy(
+    (row: WeekRow) => -row.total,
+    scheduleTable(services, mutations),
+  );
+  return (
+    rows[0] ?? {
+      week: 0,
+      label: "",
+      hours: [],
+      total: 0,
+      fullTime: "under" as const,
+      spike: "",
+      revenue: 0,
+    }
+  );
+};
 
 /** The quarter starts inside the span — the x-axis's four tick values. */
 export const quarterTicks = (
@@ -1128,12 +1649,21 @@ export const fanAt = (index: number, nowIndex: number): number => {
   return months <= 0 ? 0 : UNCERTAINTY_PER_MONTH_SQUARED * months * months;
 };
 
-/** The units a year holds, per sampling unit. `monthlyFrom` is the month row of
- *  this same table, kept because a year's rate quoted per month has callers of
- *  its own. */
-const UNITS_PER_YEAR: Readonly<Record<RateUnit, number>> = {
-  month: MONTHS_PER_YEAR,
-  week: WEEKS_PER_YEAR,
+/**
+ * THE WEEKS ONE SAMPLING UNIT HOLDS — the whole of the unit conversion, named.
+ *
+ * The rate is quoted per WEEK, so a stretch measured in weeks needs no
+ * conversion at all and the integral is `weeks × $/wk` exactly as Peter's
+ * ruling states it. A stretch measured in months needs the one factor there is,
+ * and it is `monthlyFrom`'s factor: both rows of this table and that function
+ * are the same statement, which is why they are written next to each other.
+ *
+ * This replaces a `UNITS_PER_YEAR` divisor. A divisor was the right shape while
+ * the rate was annual; with a weekly rate it would be a second, invisible ×52.
+ */
+const WEEKS_PER_UNIT: Readonly<Record<RateUnit, number>> = {
+  month: WEEKS_PER_MONTH,
+  week: 1,
 };
 
 /** The first instant of each of `count` consecutive months from `from`. The
@@ -1152,7 +1682,12 @@ export const monthStarts = (from: Date, count: number): number[] => {
  * The balance a rate ACCRUES between two moments — the projection's integral.
  *
  *     accrued = Σ over each stretch between changes of
- *                   span(stretch, unit) × rate(at its start) / unitsPerYear
+ *                   span(stretch, unit) × weeksPerUnit × rate(at its start)
+ *
+ * The rate is $/WK and the stretches are weeks, so in this board's own unit that
+ * is `weeks × $/wk` with nothing in between — the conversion factor is 1, and
+ * the `WEEKS_PER_UNIT` table above says so out loud rather than leaving a ×52
+ * hidden in a divisor.
  *
  * A SUM rather than one multiplication, and that is the whole of Peter's ruling
  * (2026-09-17): weekly seasonality has to reach the cash flow projection, not
@@ -1191,7 +1726,7 @@ export const accruedOver = (
   for (let index = 0; index < edges.length - 1; index += 1) {
     const start = edges[index] ?? from;
     const end = edges[index + 1] ?? to;
-    accrued += spanIn(unit, start, end) * (rate(start) / UNITS_PER_YEAR[unit]);
+    accrued += spanIn(unit, start, end) * WEEKS_PER_UNIT[unit] * rate(start);
   }
   return accrued;
 };

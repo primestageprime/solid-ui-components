@@ -1,10 +1,13 @@
 /**
  * Hourly Board model — the whole board, argued with from a terminal.
  *
- * The calibration is the point of this file: four readings Peter named, each
- * derived from the constants rather than asserted against a screenshot, plus
- * the four inequalities that FIX those constants — so a later edit that moves
- * one of them fails here and not in a review of a dial.
+ * Two things are the point of this file. The CALIBRATION: four readings Peter
+ * named, each derived from the constants rather than asserted against a
+ * screenshot, plus the four inequalities that FIX those constants — so a later
+ * edit that moves one of them fails here and not in a review of a dial. And the
+ * SEASON: the committed schedule is printed week by week, all 53 of them, because
+ * a curve is exactly the kind of thing that looks plausible in a picture and
+ * wrong in a column of numbers.
  */
 import { describe, expect, it } from "vitest";
 import { map } from "../../../src/fn";
@@ -14,9 +17,9 @@ import type {
   StackedAreaPoint,
   StackedAreaSeriesData,
 } from "../../../src";
-// The MARK's own core, so the crowding of two weekly changes inside one
-// transition is asserted against the geometry that draws them rather than
-// against a screenshot.
+// The MARK's own core, so the crowding of weekly changes inside one transition
+// is asserted against the geometry that draws them rather than against a
+// screenshot.
 import {
   buildStackedArea,
   transitionWidth,
@@ -28,7 +31,7 @@ import {
   DOMAIN_END,
   DOMAIN_START,
   EMPTY_DRAFT,
-  FIXED_ANNUAL_COST,
+  FIXED_WEEKLY_COST,
   FULL_TIME_HOURS,
   HOURS,
   HOURS_DOMAIN,
@@ -40,13 +43,17 @@ import {
   RATE_DOMAIN_PER_HOUR,
   SEED_MUTATIONS,
   SERVICES,
+  SPIKE_SLOTS,
   TIME_DOMAIN,
+  WEEKS_PER_MONTH,
   WEEKS_PER_YEAR,
+  WEEK_COUNT,
+  WEEK_SLOTS,
   addMutation,
   addService,
   addedAt,
-  annualOf,
-  annualOfPair,
+  weeklyOf,
+  weeklyOfPair,
   accruedOver,
   averageRate,
   averageRateOver,
@@ -54,7 +61,9 @@ import {
   canAdd,
   drawnRate,
   ensureMutation,
+  flatShape,
   isOffDial,
+  isSpikeWeek,
   hourPointsFor,
   isDirty,
   isSoldAt,
@@ -71,6 +80,7 @@ import {
   offerFrom,
   pairsForMutation,
   pairsWithoutMutation,
+  peakWeek,
   pinnedCeiling,
   projectedBalances,
   projectionTable,
@@ -83,7 +93,11 @@ import {
   revenueAt,
   runningBalances,
   scenarioDigest,
+  scheduleTable,
+  scheduledHours,
+  seasonalHours,
   segmentLabelsOf,
+  slotOfTime,
   totalHoursAt,
   weekLabel,
   weekOfPick,
@@ -96,15 +110,29 @@ import {
   workMixSeries,
   type RateSampling,
   type Service,
+  type WeekRow,
 } from "./hourly-board-model";
 
 const START = DOMAIN_START.getTime();
 const END = DOMAIN_END.getTime();
 
-/** Q1 2025, where `nextFreeSlot` puts a first interaction. */
+/** Week slot 0, where `nextFreeSlot` puts a first interaction. */
 const Q1: Mutation = { id: "q1", at: new Date("2025-01-01"), label: "1" };
-/** Q2 2025 — three quarters of the year left to run. */
+/** 1 April 2025 — three quarters of the year left to run. It is a TUESDAY, so
+ *  it is deliberately OFF the week grid: `slotOfTime` has to place it (slot 13,
+ *  the week opening 31 March) rather than miss. */
 const Q2: Mutation = { id: "q2", at: new Date("2025-04-01"), label: "2" };
+
+/** Both services' rates at their own floors, from `at` onward. */
+const bothAtFloor = (at: Mutation): Service[] =>
+  withChange(
+    withChange(SERVICES, "service-a", at.id, RATE, 100, [at]),
+    "service-b",
+    at.id,
+    RATE,
+    80,
+    [at],
+  );
 
 // ── The fixture ──────────────────────────────────────────────────────────────
 
@@ -116,20 +144,33 @@ describe("the opening scenario", () => {
     ]);
     expect(SEED_MUTATIONS).toEqual([]);
     // "Changes: {}" is the whole of "nothing proposed" — an absent key already
-    // means unchanged, so an empty map is a history with nothing in it.
+    // means unchanged, so an empty map is a history with nothing in it. The
+    // SEASON is not a change: it is the schedule those changes are proposed
+    // against, and it is in `seasonal` rather than in here.
     for (const service of SERVICES) {
       expect(Object.keys(service.changes)).toEqual([]);
     }
   });
 
-  it("is Peter's fixture — 20 h/wk @ $150 and 15 h/wk @ $120", () => {
-    expect(SERVICES[0]?.committed).toEqual({ hours: 20, rate: 150 });
-    expect(SERVICES[1]?.committed).toEqual({ hours: 15, rate: 120 });
+  it("is Peter's fixture — 20 h/wk @ $150 and 15 h/wk @ $120, now as SEASONS", () => {
+    expect(SERVICES[0]?.seasonal.base).toBe(20);
+    expect(SERVICES[0]?.committed).toEqual({ rate: 150 });
+    expect(SERVICES[1]?.seasonal.base).toBe(15);
+    expect(SERVICES[1]?.committed).toEqual({ rate: 120 });
+    // Service B peaks LATER than Service A, which is what makes the stack read
+    // as two shapes rather than one drawn twice.
+    expect(SERVICES[1]!.seasonal.peakSlot).toBeGreaterThan(
+      SERVICES[0]!.seasonal.peakSlot,
+    );
   });
 
-  it("bills $249.6k a year before anything is proposed", () => {
-    expect(annualOf({ hours: 20, rate: 150 })).toBe(20 * 150 * WEEKS_PER_YEAR);
-    expect(revenueAt(SERVICES, START, [])).toBe(249_600);
+  it("bills $3.8k in its FIRST week, which is near the trough", () => {
+    expect(weeklyOf({ hours: 20, rate: 150 })).toBe(3_000);
+    // No ×52 anywhere: the week IS the unit.
+    expect(weeklyOf({ hours: 20, rate: 150 })).toBe(20 * 150);
+    // The opening week is January, so the schedule reads below its own base.
+    expect(revenueAt(SERVICES, START, [])).toBe(15 * 150 + 13 * 120);
+    expect(revenueAt(SERVICES, START, [])).toBe(3_810);
   });
 
   it("gives every service a range INSIDE the shared tracks", () => {
@@ -144,65 +185,292 @@ describe("the opening scenario", () => {
       expect(service.rateRange[1]).toBeLessThanOrEqual(RATE_DOMAIN_PER_HOUR[1]);
     }
   });
+
+  it("holds the COMMITTED SCHEDULE inside each allowance, spikes and all", () => {
+    // The widened allowances are not cosmetic: Service A's own schedule reaches
+    // 35 h/wk in a spike week, so an allowance of 30 would have clamped the
+    // BASELINE and the spike would have read as a plateau.
+    for (const service of SERVICES) {
+      for (const at of WEEK_SLOTS) {
+        const hours = seasonalHours(service.seasonal, slotOfTime(at));
+        expect(hours).toBeLessThanOrEqual(service.hoursRange[1]);
+        expect(hours).toBeGreaterThanOrEqual(service.hoursRange[0]);
+      }
+    }
+    expect(SERVICES[0]?.hoursRange).toEqual([0, 45]);
+    expect(SERVICES[1]?.hoursRange).toEqual([0, 32]);
+  });
+});
+
+// ── The week grid ────────────────────────────────────────────────────────────
+
+describe("the week grid the season is quoted on", () => {
+  it("IS the pick grid — 53 slots, the first clamped to the span's start", () => {
+    expect(WEEK_COUNT).toBe(53);
+    expect(WEEK_SLOTS[0]).toBe(START);
+    expect(new Date(WEEK_SLOTS[52]!).toISOString().slice(0, 10)).toBe(
+      "2025-12-29",
+    );
+    // Every slot is a slot `nextFreeSlot` would hand out, because that is where
+    // the list came from.
+    expect(nextFreeSlot(START, END, [])).toBe(WEEK_SLOTS[0]);
+    expect(
+      nextFreeSlot(START, END, [{ id: "a", at: new Date(START), label: "" }]),
+    ).toBe(WEEK_SLOTS[1]);
+  });
+
+  it("places any moment on a slot, CLAMPED at both ends", () => {
+    expect(slotOfTime(START)).toBe(0);
+    // Inside the truncated first week.
+    expect(slotOfTime(new Date("2025-01-03T09:00:00Z").getTime())).toBe(0);
+    expect(slotOfTime(WEEK_SLOTS[1]!)).toBe(1);
+    // OFF THE GRID: a Tuesday belongs to the week that opened the day before.
+    expect(slotOfTime(timeOf(Q2.at))).toBe(13);
+    expect(new Date(WEEK_SLOTS[13]!).toISOString().slice(0, 10)).toBe(
+      "2025-03-31",
+    );
+    // Outside the span, both ways. A silent miss here would put a July reading
+    // on January's hours.
+    expect(slotOfTime(START - 10 * 24 * 3600 * 1000)).toBe(0);
+    expect(slotOfTime(END)).toBe(WEEK_COUNT - 1);
+    expect(slotOfTime(END + 400 * 24 * 3600 * 1000)).toBe(WEEK_COUNT - 1);
+  });
+
+  it("samples EVERY WEEK, not only the flags", () => {
+    // The season moves the rate every week whether or not anybody proposed
+    // anything, so the moments are the slots plus whatever flags exist.
+    expect(momentsOf([])).toEqual([...WEEK_SLOTS]);
+    const withFlag = momentsOf([Q2]);
+    expect(withFlag).toHaveLength(WEEK_COUNT + 1);
+    expect(withFlag).toContain(timeOf(Q2.at));
+    expect(withFlag[0]).toBe(START);
+    // A flag already ON the grid adds nothing — the union is a set.
+    expect(momentsOf([Q1])).toHaveLength(WEEK_COUNT);
+  });
+});
+
+// ── The season ───────────────────────────────────────────────────────────────
+
+describe("seasonalHours — the committed schedule", () => {
+  /** Every week of the fixture's schedule, as rows. */
+  const rows: WeekRow[] = scheduleTable();
+
+  it("PRINTS all 53 weeks, so the curve can be read as numbers", () => {
+    // `process.stdout.write` and not `console.table`: vitest's reporter
+    // swallows a passing test's console output under a non-TTY (nothing at all
+    // reaches the terminal in CI or under an agent), and a table nobody can see
+    // is not an observation. This writes the table itself, so
+    // `npx vitest run dev/showcases/workshop -t "PRINTS all 53"` really prints
+    // the season.
+    const column = (text: string, width: number): string =>
+      text.padStart(width, " ");
+    const lines = map(
+      (row: WeekRow) =>
+        [
+          column(String(row.week), 4),
+          column(row.label, 13),
+          column(String(row.hours[0]), 4),
+          column(String(row.hours[1]), 4),
+          column(String(row.total), 6),
+          column(row.fullTime, 6),
+          column(row.spike, 6),
+          column(`$${row.revenue}`, 8),
+        ].join(" "),
+      rows,
+    );
+    process.stdout.write(
+      [
+        "",
+        "The COMMITTED weekly schedule — the baseline, with nothing proposed",
+        [
+          column("wk", 4),
+          column("chip", 13),
+          column("A", 4),
+          column("B", 4),
+          column("total", 6),
+          column("40h", 6),
+          column("spike", 6),
+          column("$/wk", 8),
+        ].join(" "),
+        ...lines,
+        `peak ${peakWeek().total} h/wk in ${peakWeek().label}`,
+        "",
+      ].join("\n"),
+    );
+    expect(rows).toHaveLength(WEEK_COUNT);
+    expect(lines).toHaveLength(53);
+  });
+
+  it("peaks in July / August and troughs in January / February", () => {
+    const hoursOf = (index: number): number[] =>
+      map((row: WeekRow) => row.hours[index] ?? 0, rows);
+    for (const index of [0, 1]) {
+      const hours = hoursOf(index);
+      const highest = Math.max(...hours);
+      const lowest = Math.min(...hours);
+      // The peak of the CURVE, ignoring the three spike weeks, which are
+      // holidays rather than a season.
+      const smooth = map(
+        (row: WeekRow) => (row.spike === "" ? (row.hours[index] ?? 0) : 0),
+        rows,
+      );
+      const peakAt = smooth.indexOf(Math.max(...smooth));
+      const troughAt = hours.indexOf(lowest);
+      const peakMonth = new Date(WEEK_SLOTS[peakAt]!).getUTCMonth();
+      const troughMonth = new Date(WEEK_SLOTS[troughAt]!).getUTCMonth();
+      expect([6, 7]).toContain(peakMonth);
+      expect([0, 1]).toContain(troughMonth);
+      expect(highest).toBeGreaterThan(lowest);
+    }
+  });
+
+  it("spikes for exactly ONE week, on the three dates Peter named", () => {
+    // Spring break (mid-March, chosen), Independence Day, Labor Day.
+    expect(
+      map(
+        (slot: number) =>
+          new Date(WEEK_SLOTS[slot]!).toISOString().slice(0, 10),
+        SPIKE_SLOTS,
+      ),
+    ).toEqual(["2025-03-10", "2025-06-30", "2025-09-01"]);
+    // The 4th of July 2025 is a Friday and 1 September is the first MONDAY of
+    // September — the two are calendar facts, not slot numbers somebody typed.
+    expect(new Date("2025-07-04").getTime()).toBeGreaterThan(WEEK_SLOTS[26]!);
+    expect(new Date("2025-07-04").getTime()).toBeLessThan(WEEK_SLOTS[27]!);
+    expect(new Date("2025-09-01").getUTCDay()).toBe(1);
+    for (const slot of SPIKE_SLOTS) {
+      expect(isSpikeWeek(slot)).toBe(true);
+      // Half again on the base, for that week alone.
+      const shape = SERVICES[0]!.seasonal;
+      expect(
+        seasonalHours(shape, slot) -
+          seasonalHours({ ...shape, spike: 0 }, slot),
+      ).toBe(shape.base * shape.spike);
+      expect(isSpikeWeek(slot + 1)).toBe(false);
+      expect(isSpikeWeek(slot - 1)).toBe(false);
+    }
+  });
+
+  it("stacks to 61 h/wk at its PEAK — over full time, under the cap", () => {
+    const peak = peakWeek();
+    expect(peak.total).toBe(61);
+    expect(peak.label).toBe("W36 · Sep 1");
+    expect(peak.spike).toBe("spike");
+    expect(peak.total).toBeGreaterThan(FULL_TIME_HOURS);
+    expect(peak.total).toBeLessThan(DEFAULT_WORK_CAP);
+    // And the whole schedule is inside the cap, which is the claim the fixed
+    // y-domain rests on.
+    for (const row of rows)
+      expect(row.total).toBeLessThanOrEqual(DEFAULT_WORK_CAP);
+    // The trough is UNDER full time, so the dashed rule is crossed rather than
+    // permanently exceeded — the reading Peter asked the rule for.
+    expect(Math.min(...map((row: WeekRow) => row.total, rows))).toBe(25);
+  });
+
+  it("is WHOLE HOURS, because the dial snaps to one", () => {
+    for (const row of rows)
+      for (const hours of row.hours) expect(hours).toBe(Math.round(hours));
+  });
+
+  it("gives an ADDED service a flat shape, and no season at all", () => {
+    expect(flatShape(8)).toEqual({ base: 8, swing: 0, peakSlot: 0, spike: 0 });
+    for (const week of [0, 10, 26, 30, 52])
+      expect(seasonalHours(flatShape(8), week)).toBe(8);
+  });
+
+  it("reads the schedule with no proposal in it through `scheduledHours`", () => {
+    expect(scheduledHours(SERVICES[0]!, START)).toBe(15);
+    expect(scheduledHours(SERVICES[1]!, START)).toBe(13);
+    expect(scheduledHours(SERVICES[0]!, WEEK_SLOTS[35]!)).toBe(35);
+  });
 });
 
 // ── The calibration ──────────────────────────────────────────────────────────
 
 describe("the calibration table — every change made at the START of the year", () => {
   it("prints exactly the four readings the header states", () => {
-    expect(rateBandTable()).toEqual([
-      {
-        scenario: "as it opens",
-        revenue: 249_600,
-        rate: 69_600,
-        band: "green",
-      },
-      {
-        scenario: "first service's hours +10",
-        revenue: 327_600,
-        rate: 147_600,
-        band: "green",
-      },
-      {
-        scenario: "first service's rate at its floor",
-        revenue: 197_600,
-        rate: 17_600,
-        band: "yellow",
-      },
-      {
-        scenario: "every rate at its floor",
-        revenue: 166_400,
-        rate: -13_600,
-        band: "red",
-      },
+    const rows = rateBandTable();
+    expect(map((row) => row.scenario, rows)).toEqual([
+      "as it opens",
+      "first service's hours +10",
+      "first service's rate at its floor",
+      "every rate at its floor",
     ]);
+    expect(map((row) => row.band, rows)).toEqual([
+      "green",
+      "green",
+      "yellow",
+      "red",
+    ]);
+    // The rows are the GAUGE's reading — the time-weighted average of the whole
+    // seasonal year — so they carry the calendar's own fractions.
+    expect(rows[0]?.revenue).toBeCloseTo(4_936.52, 2);
+    expect(rows[0]?.rate).toBeCloseTo(1_336.52, 2);
+    expect(rows[1]?.revenue).toBeCloseTo(6_436.52, 2);
+    expect(rows[1]?.rate).toBeCloseTo(2_836.52, 2);
+    expect(rows[2]?.revenue).toBeCloseTo(3_908.44, 2);
+    expect(rows[2]?.rate).toBeCloseTo(308.44, 2);
+    expect(rows[3]?.revenue).toBeCloseTo(3_291.01, 2);
+    expect(rows[3]?.rate).toBeCloseTo(-308.99, 2);
+  });
+
+  it("makes the +10 row EXACTLY ten hours at $150, every week", () => {
+    // The offset rides the whole curve without ever meeting the allowance, which
+    // is what keeps this row a statement about the constants rather than about
+    // where a clamp happens to bite. It is why Service A's range is 45.
+    const rows = rateBandTable();
+    expect(rows[1]!.rate - rows[0]!.rate).toBeCloseTo(10 * 150, 9);
+  });
+
+  it("leaves an ADDED service out, because it is not sold at the span's start", () => {
+    // The table's changes all land at the span's start, and a service added at
+    // a later mutation does not exist there — so it contributes nothing and the
+    // four rows stay a statement about the fixture's two services. The test of
+    // that is `offerAt` and not `committed === null`: those two used to be the
+    // same question and are not any more.
+    const { services } = addService(
+      SERVICES,
+      { name: "C", hours: 8, rate: 200 },
+      Q2.id,
+    );
+    expect(map((row) => row.rate, rateBandTable(services))).toEqual(
+      map((row) => row.rate, rateBandTable()),
+    );
   });
 
   it("solves the four inequalities that FIX the two constants", () => {
-    const rev0 = 249_600;
-    const revAfloor = 197_600;
-    const revFloor = 166_400;
+    const rev0 = 4_936.520547945205;
+    const revAfloor = 3_908.4383561643835;
+    const revFloor = 3_291.0136986301363;
     // The board opens green.
-    expect(rev0 - FIXED_ANNUAL_COST).toBeGreaterThanOrEqual(COMFORTABLE);
+    expect(rev0 - FIXED_WEEKLY_COST).toBeGreaterThanOrEqual(COMFORTABLE);
     // Cutting ONE rate is not yet a loss…
-    expect(revAfloor - FIXED_ANNUAL_COST).toBeGreaterThan(0);
+    expect(revAfloor - FIXED_WEEKLY_COST).toBeGreaterThan(0);
     // …but it is no longer comfortable.
-    expect(revAfloor - FIXED_ANNUAL_COST).toBeLessThan(COMFORTABLE);
+    expect(revAfloor - FIXED_WEEKLY_COST).toBeLessThan(COMFORTABLE);
     // Cutting BOTH crosses zero.
-    expect(revFloor - FIXED_ANNUAL_COST).toBeLessThan(0);
+    expect(revFloor - FIXED_WEEKLY_COST).toBeLessThan(0);
+    // And those three revenues ARE the table's, so the inequalities are about
+    // this fixture and not about three numbers typed twice.
+    const rows = rateBandTable();
+    expect(rows[0]?.revenue).toBeCloseTo(rev0, 9);
+    expect(rows[2]?.revenue).toBeCloseTo(revAfloor, 9);
+    expect(rows[3]?.revenue).toBeCloseTo(revFloor, 9);
   });
 
   it("is not balanced on a knife edge — the solution has room either side", () => {
-    // FIXED ∈ (166,400, 189,600): every reading holds anywhere in there.
-    for (const fixed of [170_000, 180_000, 189_000]) {
-      expect(249_600 - fixed).toBeGreaterThan(0);
-      expect(166_400 - fixed).toBeLessThan(0);
+    // FIXED ∈ (3,291.01, 3,908.44): every reading holds anywhere in there.
+    for (const fixed of [3_350, 3_600, 3_850]) {
+      expect(3_908.44 - fixed).toBeGreaterThan(0);
+      expect(3_291.01 - fixed).toBeLessThan(0);
     }
-    expect(FIXED_ANNUAL_COST).toBeGreaterThan(166_400);
-    expect(FIXED_ANNUAL_COST).toBeLessThan(189_600);
-    // COMFORTABLE ∈ (17,600, 69,600] at that fixed cost.
-    expect(COMFORTABLE).toBeGreaterThan(17_600);
-    expect(COMFORTABLE).toBeLessThanOrEqual(69_600);
+    expect(FIXED_WEEKLY_COST).toBeGreaterThan(3_291.01);
+    expect(FIXED_WEEKLY_COST).toBeLessThan(3_908.44);
+    // 3,600 is within a dollar of the middle of that interval.
+    expect(FIXED_WEEKLY_COST).toBeCloseTo((3_291.01 + 3_908.44) / 2, -1);
+    // COMFORTABLE ∈ (308.44, 1,336.52] at that fixed cost.
+    expect(COMFORTABLE).toBeGreaterThan(308.44);
+    expect(COMFORTABLE).toBeLessThanOrEqual(1_336.52);
   });
 
   it("names the band the way the gauge splits it", () => {
@@ -216,25 +484,26 @@ describe("the calibration table — every change made at the START of the year",
     // RateGauge CLAMPS value to its domain and announces the DRAWN figure, so
     // a reachable reading outside the domain makes the dial contradict the
     // table in front of the reader.
-    expect(minReachableRate()).toBe(-FIXED_ANNUAL_COST);
+    expect(minReachableRate()).toBe(-FIXED_WEEKLY_COST);
     expect(minReachableRate()).toBeGreaterThanOrEqual(RATE_DOMAIN[0]);
-    expect(maxReachableRate(SERVICES)).toBe(340_000);
+    expect(maxReachableRate(SERVICES)).toBe(45 * 200 + 32 * 160 - 3_600);
+    expect(maxReachableRate(SERVICES)).toBe(10_520);
     expect(maxReachableRate(SERVICES)).toBeLessThanOrEqual(RATE_DOMAIN[1]);
   });
 
   it("cannot hold an ADDED service, so the clamp is named instead", () => {
     // `addService` gives a service the whole track — it has negotiated no band
-    // of its own — so one added service alone reaches 80 x 300 x 52 = $1.248M
-    // and the count is unbounded. No per-service range can fix that, so the
-    // promise is kept the other way round: the clamp is a named function and
-    // the DEBUG line prints the DRAWN figure beside the raw one.
+    // of its own — so one added service alone reaches 80 × 300 = $24k/wk and
+    // the count is unbounded. No per-service range can fix that, so the promise
+    // is kept the other way round: the clamp is a named function and the DEBUG
+    // line prints the DRAWN figure beside the raw one.
     const { services } = addService(
       SERVICES,
       { name: "Runaway", hours: 80, rate: 300 },
       Q1.id,
     );
     const runaway = maxReachableRate(services);
-    expect(runaway).toBe(340_000 + 80 * 300 * WEEKS_PER_YEAR);
+    expect(runaway).toBe(10_520 + 80 * 300);
     expect(runaway).toBeGreaterThan(RATE_DOMAIN[1]);
     expect(isOffDial(runaway)).toBe(true);
     expect(drawnRate(runaway)).toBe(RATE_DOMAIN[1]);
@@ -250,9 +519,17 @@ describe("the calibration table — every change made at the START of the year",
     for (const row of rateBandTable()) expect(isOffDial(row.rate)).toBe(false);
   });
 
-  it("puts the committed rate where the table's first row says", () => {
-    expect(COMMITTED_RATE).toBe(69_600);
-    expect(rateFromRevenue(249_600)).toBe(COMMITTED_RATE);
+  it("puts the committed rate where the table's first row says, by construction", () => {
+    // THE SAME CALL the gauge makes for its baseline, so exact equality rather
+    // than a second arithmetic that could drift — and with it, "no change to
+    // revenue" on a board that opens with nothing proposed.
+    expect(COMMITTED_RATE).toBe(averageRate(TIME_DOMAIN, [], SERVICES));
+    expect(rateBandTable()[0]?.rate).toBe(COMMITTED_RATE);
+    expect(COMMITTED_RATE).toBeCloseTo(1_336.52, 2);
+    // It is NOT the opening week's rate: the opening week is January, near the
+    // trough. That gap is the whole reason the table is solved on the average.
+    expect(rateAt(START, [], SERVICES)).toBe(3_810 - FIXED_WEEKLY_COST);
+    expect(rateFromRevenue(4_936.520547945205)).toBeCloseTo(COMMITTED_RATE, 9);
   });
 });
 
@@ -261,8 +538,8 @@ describe("the calibration table — every change made at the START of the year",
 describe("the composite reading — WHEN a change lands", () => {
   it("puts the FIRST interaction at weight 1, which is what the table describes", () => {
     // This is the fact that makes the calibration table a statement about the
-    // opening move rather than about an arbitrary date: the span starts on a
-    // quarter boundary, so the first free quarter IS the span's left edge.
+    // opening move rather than about an arbitrary date: the first week slot is
+    // clamped to the span's left edge.
     expect(nextFreeSlot(START, END, [])).toBe(START);
     expect(weightFrom(START, END, START)).toBe(1);
   });
@@ -291,60 +568,60 @@ describe("the composite reading — WHEN a change lands", () => {
     ).not.toBeCloseTo(0.75, 6);
   });
 
-  it("reaches RED only from the first 16.4% of the year", () => {
-    // COMMITTED + w × (floorCut − COMMITTED) < 0  ⇒  w > 0.836
-    const needed = weightToReach(-13_600, 0);
-    expect(needed).toBeCloseTo(69_600 / 83_200, 10);
-    expect(needed).toBeCloseTo(0.8365, 4);
-    // So the same cut made in April leaves the gauge YELLOW, not red — the
-    // composite reading doing its job, not a miscalibration.
-    const floored = map(
-      (service: Service) => ({
-        ...service,
-        changes: {
-          [Q2.id]: {
-            hours: service.committed?.hours ?? 0,
-            rate: service.rateRange[0],
-          },
-        },
-      }),
-      SERVICES,
+  it("states the flat-level algebra, and keeps it honest about the season", () => {
+    // `weightToReach` is exact for a change between two FLAT levels, which is
+    // what its two arguments are — two rates.
+    const needed = weightToReach(-308.98630136986367, 0);
+    expect(needed).toBeCloseTo(
+      COMMITTED_RATE / (COMMITTED_RATE + 308.98630136986367),
+      9,
     );
-    // The gauge reads in WEEKS (this board's grain), so the weight is the
-    // share of the 365 days left after 1 April rather than nine twelfths.
-    const weeks = weightFrom(START, END, timeOf(Q2.at), "week");
-    expect(weeks).toBeCloseTo(275 / 365, 10);
-    const average = averageRate(TIME_DOMAIN, [Q2], floored);
-    expect(average).toBeCloseTo(69_600 + weeks * -83_200, 6);
-    // The month reading is still there for comparison, and still yellow: the
-    // unit moves the figure by a few hundred dollars, not the verdict.
-    expect(averageRate(TIME_DOMAIN, [Q2], floored, "month")).toBeCloseTo(
-      69_600 + 0.75 * -83_200,
-      6,
-    );
-    expect(bandOfRate(average)).toBe("yellow");
+    expect(needed).toBeCloseTo(0.8122, 4);
+    // Under a seasonal baseline neither level is flat, so the claim that counts
+    // is the EMPIRICAL one, and it runs the other way from the flat algebra: a
+    // cut made in April is in force for exactly the weeks that bill the most,
+    // so it bites harder than its share of the year — three dollars a week
+    // above breakeven rather than the $250 the flat reading would give.
+    const inApril = averageRate(TIME_DOMAIN, [Q2], bothAtFloor(Q2));
+    expect(inApril).toBeCloseTo(3.37, 2);
+    expect(bandOfRate(inApril)).toBe("yellow");
+    const flatReading =
+      COMMITTED_RATE +
+      weightFrom(START, END, timeOf(Q2.at), "week") *
+        (-308.98630136986367 - COMMITTED_RATE);
+    expect(inApril).toBeLessThan(flatReading);
+    // The same cut in JANUARY is in force for the whole span and reads red.
+    const inJanuary = averageRate(TIME_DOMAIN, [Q1], bothAtFloor(Q1));
+    expect(inJanuary).toBeCloseTo(-308.99, 2);
+    expect(bandOfRate(inJanuary)).toBe("red");
+    expect(inJanuary).toBeLessThan(inApril);
   });
 
-  it("agrees with the instantaneous rate when the change is at the left edge", () => {
-    const floored = map(
-      (service: Service) => ({
-        ...service,
-        changes: {
-          [Q1.id]: {
-            hours: service.committed?.hours ?? 0,
-            rate: service.rateRange[0],
-          },
-        },
-      }),
-      SERVICES,
+  it("reads the AVERAGE and not the week, even for a change at the left edge", () => {
+    const floored = bothAtFloor(Q1);
+    // The table's last row, exactly — same change, same weight.
+    expect(averageRate(TIME_DOMAIN, [Q1], floored)).toBe(
+      rateBandTable()[3]?.rate,
     );
-    expect(averageRate(TIME_DOMAIN, [Q1], floored)).toBe(-13_600);
-    expect(rateAt(START, [Q1], floored)).toBe(-13_600);
+    // And the opening WEEK is a different, much worse number, because January
+    // is near the trough. Both are red; only one of them is what the dial says.
+    expect(rateAt(START, [Q1], floored)).toBe(15 * 100 + 13 * 80 - 3_600);
+    expect(rateAt(START, [Q1], floored)).toBe(-1_060);
     expect(bandOfRate(averageRate(TIME_DOMAIN, [Q1], floored))).toBe("red");
   });
 
   it("reads exactly the baseline with no mutation at all", () => {
     expect(averageRate(TIME_DOMAIN, [], SERVICES)).toBe(COMMITTED_RATE);
+  });
+
+  it("moves the figure and not the verdict when the unit changes", () => {
+    // The month reading is still there for comparison: the unit is a statement
+    // about what the reader counts, worth a few dollars a week, not a verdict.
+    const inWeeks = averageRate(TIME_DOMAIN, [], SERVICES);
+    const inMonths = averageRate(TIME_DOMAIN, [], SERVICES, "month");
+    expect(inMonths).toBeCloseTo(1_327.64, 2);
+    expect(bandOfRate(inMonths)).toBe(bandOfRate(inWeeks));
+    expect(Math.abs(inMonths - inWeeks)).toBeLessThan(15);
   });
 });
 
@@ -360,30 +637,51 @@ describe("the history", () => {
       hours: 25,
       rate: 150,
     });
+    // The PRIOR is the SCHEDULE in that same week — 17 h/wk in the week of 31
+    // March — so the dial's delta is the eight hours the reader added and never
+    // the season's own drift between two dates.
     expect(offerBefore(raised[0] as Service, Q2.id, [Q2])).toEqual({
-      hours: 20,
+      hours: 17,
+      rate: 150,
+    });
+    expect(scheduledHours(SERVICES[0]!, timeOf(Q2.at))).toBe(17);
+  });
+
+  it("CARRIES THE OFFSET forward, not the level", () => {
+    // Peter's composition rule, and the whole of it: +8 h/wk in the week of 31
+    // March is +8 h/wk for the rest of the year, riding the season rather than
+    // flattening it. The last week of the span is back near the trough (15
+    // h/wk committed), so the offset shows as 23 rather than as 25.
+    expect(offerAt(raised[0] as Service, END, [Q2])).toEqual({
+      hours: 23,
+      rate: 150,
+    });
+    expect(scheduledHours(SERVICES[0]!, END)).toBe(15);
+    // In August the same offset sits on a much higher curve.
+    expect(offerAt(raised[0] as Service, WEEK_SLOTS[31]!, [Q2])?.hours).toBe(
+      26 + 8,
+    );
+    // BEFORE the change nothing moved at all.
+    expect(offerAt(raised[0] as Service, START, [Q2])).toEqual({
+      hours: 15,
       rate: 150,
     });
   });
 
   it("leaves every other service and every other mutation untouched", () => {
     expect(raised[1]?.changes).toEqual({});
-    expect(offerAt(raised[0] as Service, START, [Q2])).toEqual({
-      hours: 20,
-      rate: 150,
-    });
-    expect(offerAt(raised[0] as Service, END, [Q2])).toEqual({
-      hours: 25,
-      rate: 150,
+    expect(offerAt(raised[1] as Service, START, [Q2])).toEqual({
+      hours: 13,
+      rate: 120,
     });
   });
 
   it("walks in TIME order, not key order", () => {
-    // Raised at Q1, untouched at Q2: the prior while editing Q2 is the Q1
-    // figure, not the committed one.
+    // Repriced at Q1, untouched at Q2: the prior while editing Q2 is the Q1
+    // rate, on the week of Q2's own schedule.
     const twice = withChange(SERVICES, "service-a", Q1.id, RATE, 180, [Q1, Q2]);
     expect(offerBefore(twice[0] as Service, Q2.id, [Q1, Q2])).toEqual({
-      hours: 20,
+      hours: 17,
       rate: 180,
     });
   });
@@ -392,7 +690,7 @@ describe("the history", () => {
     const dropped = withDrop(SERVICES, "service-b", Q2.id);
     expect(offerFrom(dropped[1] as Service, Q2.id, [Q2])).toBeNull();
     expect(offerBefore(dropped[1] as Service, Q2.id, [Q2])).toEqual({
-      hours: 15,
+      hours: 12,
       rate: 120,
     });
     const pair = pairsForMutation(dropped, Q2.id, [Q2])[1];
@@ -404,10 +702,15 @@ describe("the history", () => {
     const dropped = withDrop(SERVICES, "service-b", Q2.id);
     const back = withoutChange(dropped, "service-b", Q2.id);
     expect(back[1]?.changes).toEqual({});
+    // Back on the SCHEDULE, which is what "whatever the previous change left it
+    // on" means when nothing came before: the season itself.
     expect(offerFrom(back[1] as Service, Q2.id, [Q2])).toEqual({
-      hours: 15,
+      hours: 12,
       rate: 120,
     });
+    expect(offerAt(back[1] as Service, END, [Q2])?.hours).toBe(
+      scheduledHours(SERVICES[1]!, END),
+    );
   });
 
   it("hides a service dropped EARLIER at every later mutation", () => {
@@ -427,27 +730,52 @@ describe("the history", () => {
     expect(isSoldAt(null, offer)).toBe(true); // added HERE
     expect(isSoldAt(null, null)).toBe(false); // gone, or not yet
   });
+
+  it("clamps a change to the allowance, exactly as the dial does", () => {
+    const over = withChange(SERVICES, "service-a", Q1.id, HOURS, 60, [Q1]);
+    expect(offerFrom(over[0] as Service, Q1.id, [Q1])?.hours).toBe(45);
+    // And the offset a clamped change implies cannot lift a later week past it
+    // either, which is what keeps the STACK inside the cap.
+    for (const at of WEEK_SLOTS)
+      expect(offerAt(over[0] as Service, at, [Q1])?.hours).toBeLessThanOrEqual(
+        45,
+      );
+  });
 });
 
 describe("the dials with no mutation", () => {
-  it("puts prior and value on the same figure, so every delta is zero", () => {
+  it("reads the SPAN'S FIRST WEEK, prior and value the same figures", () => {
     const pairs = pairsWithoutMutation(SERVICES);
     expect(pairs).toHaveLength(2);
     for (const pair of pairs) {
       expect(pair.measures[HOURS].prior).toBe(pair.measures[HOURS].value);
       expect(pair.measures[RATE].prior).toBe(pair.measures[RATE].value);
     }
+    // The first week and not the curve's BASE: the first free slot IS that week,
+    // so the reader's first click proposes a change whose dials already read
+    // these figures and nothing jumps.
+    expect(pairs[0]?.measures[HOURS].value).toBe(15);
+    expect(pairs[1]?.measures[HOURS].value).toBe(13);
+    const atFirstSlot = pairsForMutation(SERVICES, Q1.id, [Q1]);
+    expect(map((pair) => pair.measures[HOURS].value, atFirstSlot)).toEqual([
+      15, 13,
+    ]);
+    expect(map((pair) => pair.measures[RATE].value, atFirstSlot)).toEqual([
+      150, 120,
+    ]);
   });
 
-  it("reads the summary as annual revenue", () => {
-    expect(annualOfPair(pairsWithoutMutation(SERVICES)[0]!)).toBe(156_000);
-    expect(annualOfPair(pairsWithoutMutation(SERVICES)[1]!)).toBe(93_600);
+  it("reads the summary as WEEKLY revenue", () => {
+    expect(weeklyOfPair(pairsWithoutMutation(SERVICES)[0]!)).toBe(15 * 150);
+    expect(weeklyOfPair(pairsWithoutMutation(SERVICES)[1]!)).toBe(13 * 120);
+    // Hours × rate, with no year in it at all.
+    expect(weeklyOfPair(pairsWithoutMutation(SERVICES)[0]!)).toBe(2_250);
   });
 
   it("reads a removed pair as zero rather than as arithmetic on an absence", () => {
     const dropped = withDrop(SERVICES, "service-b", Q2.id);
     const pair = pairsForMutation(dropped, Q2.id, [Q2])[1]!;
-    expect(annualOfPair(pair)).toBe(0);
+    expect(weeklyOfPair(pair)).toBe(0);
   });
 });
 
@@ -481,10 +809,18 @@ describe("adding a service", () => {
     expect(addedAt(added, [Q1, Q2])).toBe(Q2.id);
   });
 
-  it("gives a negotiated-nothing service the whole track as its range", () => {
+  it("gives a negotiated-nothing service no season and the whole track", () => {
     const { services } = addService(SERVICES, draft, Q2.id);
     expect(services[2]?.hoursRange).toEqual(HOURS_DOMAIN);
     expect(services[2]?.rateRange).toEqual(RATE_DOMAIN_PER_HOUR);
+    expect(services[2]?.seasonal).toEqual(flatShape(8));
+    // So it holds the figure it was added at, every week to the end of the span
+    // — a summer it never agreed to would be the board inventing a fact.
+    for (const at of [WEEK_SLOTS[20]!, WEEK_SLOTS[35]!, END])
+      expect(offerAt(services[2] as Service, at, [Q1, Q2])).toEqual({
+        hours: 8,
+        rate: 200,
+      });
   });
 
   it("derives the id from the NAME, so the same add twice is the same result", () => {
@@ -528,8 +864,9 @@ describe("deleting a change", () => {
   it("undoes a DROP by the same deletion, with no special case", () => {
     const dropped = withDrop(SERVICES, "service-b", Q2.id);
     const next = removeMutation({ mutations: [Q2], services: dropped }, Q2.id);
+    // Back on its own schedule, which for the span's last week is 13 h/wk.
     expect(offerAt(next.services[1] as Service, END, [])).toEqual({
-      hours: 15,
+      hours: 13,
       rate: 120,
     });
   });
@@ -550,7 +887,7 @@ describe("the mutation calendar", () => {
     ).toEqual(["1", "2"]);
   });
 
-  it("makes the first change at the first free quarter", () => {
+  it("makes the first change at the first free slot", () => {
     const ensured = ensureMutation(
       { mutations: [], selected: null },
       START,
@@ -580,36 +917,56 @@ describe("the Work Mix stack", () => {
     expect(MIN_WORK_CAP).toBe(FULL_TIME_HOURS);
   });
 
-  it("opens every band at the span's left edge", () => {
+  it("opens every band at the span's left edge, on its own schedule", () => {
     const series = workMixSeries(SERVICES, []);
     expect(map((one) => one.id, series)).toEqual(["service-a", "service-b"]);
     for (const one of series) {
       expect(timeOf(one.points[0]!.at)).toBe(START);
     }
-    expect(series[0]?.points).toEqual([{ at: DOMAIN_START, value: 20 }]);
+    expect(series[0]?.points[0]).toEqual({ at: DOMAIN_START, value: 15 });
   });
 
-  it("emits ONLY changes, and emits a drop to zero because that IS one", () => {
-    const raised = withChange(SERVICES, "service-a", Q2.id, HOURS, 25, [Q2]);
-    expect(hourPointsFor(raised[0] as Service, [Q2])).toEqual([
-      { at: DOMAIN_START, value: 20 },
-      { at: new Date("2025-04-01"), value: 25 },
-    ]);
-    // A rate-only change moves no hours, so the band emits no second point.
+  it("DRAWS THE SEASON, and still emits only changes", () => {
+    const series = workMixSeries(SERVICES, []);
+    for (const band of series) {
+      // Far more than the one point a flat year gave, and fewer than 53: a week
+      // repeating the previous week's whole hours spends no transition.
+      expect(band.points.length).toBeGreaterThan(20);
+      expect(band.points.length).toBeLessThan(WEEK_COUNT);
+      const values = map((point) => point.value, band.points);
+      // Consecutive points always differ — that IS "only changes".
+      for (const [index, value] of values.entries())
+        if (index > 0) expect(value).not.toBe(values[index - 1]);
+      // The shape: the summer weeks sit above the winter ones.
+      expect(Math.max(...values)).toBeGreaterThan(Math.min(...values));
+    }
+    // Service A's spike weeks are the three highest points of its band.
+    const aValues = map((point) => point.value, series[0]!.points);
+    expect(Math.max(...aValues)).toBe(35);
+  });
+
+  it("emits a rate-only change as NO new hours point, and a drop to zero", () => {
+    // A rate-only change moves no hours, so the band is the schedule's own.
     const repriced = withChange(SERVICES, "service-a", Q2.id, RATE, 180, [Q2]);
-    expect(hourPointsFor(repriced[0] as Service, [Q2])).toHaveLength(1);
+    expect(hourPointsFor(repriced[0] as Service, [Q2])).toEqual(
+      hourPointsFor(SERVICES[0] as Service, [Q2]),
+    );
     const dropped = withDrop(SERVICES, "service-b", Q2.id);
-    expect(hourPointsFor(dropped[1] as Service, [Q2])).toEqual([
-      { at: DOMAIN_START, value: 15 },
-      { at: new Date("2025-04-01"), value: 0 },
-    ]);
+    const points = hourPointsFor(dropped[1] as Service, [Q2]);
+    const last = points[points.length - 1];
+    expect(last).toEqual({ at: new Date("2025-04-01"), value: 0 });
+    // Nothing after it: every later week is zero, which is not a change.
+    expect(map((point) => point.value, points).lastIndexOf(0)).toBe(
+      points.length - 1,
+    );
   });
 
   it("makes the top of the stack the total, under the default cap", () => {
-    expect(totalHoursAt(SERVICES, START, [])).toBe(35);
+    expect(totalHoursAt(SERVICES, START, [])).toBe(28);
     expect(totalHoursAt(SERVICES, START, [])).toBeLessThan(DEFAULT_WORK_CAP);
-    // Both services at the top of their own ranges is 55 h/wk — over full time,
-    // which is the reading the 40-hour rule exists to give, and still inside 80.
+    // Both services held at the top of their own ranges is 77 h/wk — well over
+    // full time, which is the reading the 40-hour rule exists to give, and
+    // still inside 80. That inequality is what the allowances are chosen for.
     const maxed = map(
       (service: Service) => ({
         ...service,
@@ -622,11 +979,17 @@ describe("the Work Mix stack", () => {
       }),
       SERVICES,
     );
-    expect(totalHoursAt(maxed, END, [Q1])).toBe(55);
+    expect(totalHoursAt(maxed, END, [Q1])).toBe(77);
     expect(totalHoursAt(maxed, END, [Q1])).toBeGreaterThan(FULL_TIME_HOURS);
     expect(totalHoursAt(maxed, END, [Q1])).toBeLessThanOrEqual(
       DEFAULT_WORK_CAP,
     );
+    // And it holds in EVERY week, including the spikes, because the clamp is on
+    // the materialised hours rather than on the curve.
+    for (const at of WEEK_SLOTS)
+      expect(totalHoursAt(maxed, at, [Q1])).toBeLessThanOrEqual(
+        DEFAULT_WORK_CAP,
+      );
   });
 
   it("reads the x axis in the same vocabulary as the as-of chips", () => {
@@ -639,10 +1002,6 @@ describe("the Work Mix stack", () => {
     expect(map((tick: number) => quarterLabelOf(tick), quarterTicks())).toEqual(
       ["2025-Q1", "2025-Q2", "2025-Q3", "2025-Q4"],
     );
-  });
-
-  it("puts a moment at the span's edge and at every flag", () => {
-    expect(momentsOf([Q2])).toEqual([START, new Date("2025-04-01").getTime()]);
   });
 });
 
@@ -674,13 +1033,15 @@ describe("the balance line", () => {
 
   it("pivots about NOW and leaves the past alone", () => {
     const slow = projectedBalances(committed, flat(0), 6);
-    const fast = projectedBalances(committed, flat(120_000), 6);
+    const fast = projectedBalances(committed, flat(1_200), 6);
     for (let index = 0; index <= 6; index += 1) {
       expect(slow[index]).toBe(committed[index]);
       expect(fast[index]).toBe(committed[index]);
     }
-    // $120k/yr is $10k a month, so one month past the pivot is $10k above it.
-    expect(fast[7]! - (committed[6] ?? 0)).toBeCloseTo(10_000, 6);
+    // $1.2k/wk is $5,200 a month (52/12 weeks in it), so one month past the
+    // pivot is $5,200 above it.
+    expect(monthlyFrom(1_200)).toBe(5_200);
+    expect(fast[7]! - (committed[6] ?? 0)).toBeCloseTo(5_200, 6);
     expect(slow[7]).toBe(committed[6]);
   });
 
@@ -688,10 +1049,10 @@ describe("the balance line", () => {
   // slope `projectedBalances` drew before it integrated anything, and EXACTLY
   // rather than nearly: `monthsBetween` is integral on month boundaries and the
   // cell edges ARE month boundaries, so the sum of one-month stretches collapses
-  // to `rate/12 × (m − now)`. Exact equality is the whole point — a
+  // to `monthlyFrom(rate) × (m − now)`. Exact equality is the whole point — a
   // `toBeCloseTo` here would hide an integrator that drifts.
   it("integrated flat in MONTHS is the old straight slope, exactly", () => {
-    const rate = 120_000;
+    const rate = 1_200;
     const nowIndex = 3;
     const projected = projectedBalances(committed, flat(rate), nowIndex);
     const pivot = committed[nowIndex] ?? 0;
@@ -704,15 +1065,19 @@ describe("the balance line", () => {
 
   // And in WEEKS it does NOT, by about a third of a percent — which is the
   // calendar and not a bug. The span holds 52 and a seventh weeks, so summing
-  // 1/52 of the rate over each of them accrues slightly MORE than twelve
-  // twelfths. The model says the same thing about the gauge's own weight (a
-  // change on 1 April is 0.75 of the year in months and 0.7534 in weeks): the
-  // unit is a statement about what the reader counts, not a correction.
+  // the rate over each of them accrues slightly MORE than twelve twelfths. The
+  // model says the same thing about the gauge's own weight (a change on 1 April
+  // is 0.75 of the year in months and 0.7534 in weeks): the unit is a statement
+  // about what the reader counts, not a correction.
   it("integrated flat in WEEKS differs by the calendar, not by an error", () => {
-    const rate = 120_000;
+    const rate = 1_200;
     const inMonths = accruedOver(START, END, [], () => rate, "month");
     const inWeeks = accruedOver(START, END, [], () => rate, "week");
-    expect(inMonths).toBeCloseTo(rate, 6);
+    // Twelve months of a weekly rate IS 52 weeks of it, by WEEKS_PER_MONTH.
+    expect(inMonths).toBeCloseTo(rate * WEEKS_PER_YEAR, 6);
+    expect(inMonths).toBeCloseTo(rate * 12 * WEEKS_PER_MONTH, 6);
+    // And the span's own weeks are the honest count: 52 and a seventh of them.
+    expect(inWeeks).toBeCloseTo(rate * weeksBetween(START, END), 6);
     expect(inWeeks / inMonths).toBeCloseTo(weeksBetween(START, END) / 52, 10);
     expect(inWeeks).toBeGreaterThan(inMonths);
     expect(inWeeks / inMonths).toBeCloseTo(1, 2);
@@ -778,13 +1143,13 @@ describe("the board as tables", () => {
         service: pair.label,
         hours: pair.measures[HOURS].value,
         rate: pair.measures[RATE].value,
-        annual: annualOfPair(pair),
+        weekly: weeklyOfPair(pair),
       }),
       pairsWithoutMutation(SERVICES),
     );
     expect(dials).toEqual([
-      { service: "Service A", hours: 20, rate: 150, annual: 156_000 },
-      { service: "Service B", hours: 15, rate: 120, annual: 93_600 },
+      { service: "Service A", hours: 15, rate: 150, weekly: 2_250 },
+      { service: "Service B", hours: 13, rate: 120, weekly: 1_560 },
     ]);
   });
 });
@@ -885,14 +1250,15 @@ describe("the first free WEEK", () => {
     }
     // A 365-day span opening mid-week: one truncated week plus 52 whole ones.
     expect(slots).toHaveLength(53);
+    expect(slots).toEqual([...WEEK_SLOTS]);
     expect(slots[0]).toBe(START);
     expect(new Date(slots[52]!).toISOString().slice(0, 10)).toBe("2025-12-29");
     // BOTH ENDS OF THE SPAN READ W01, and that is ISO-8601 rather than a bug:
     // a week belongs to the year of its THURSDAY, and 2025-12-29's Thursday is
     // 2026-01-01. The chips stay unique because the date differs, so the
     // control stays operable — do NOT "fix" this into W53.
-    expect(weekLabel(new Date(slots[0]!))).toBe("W01 \u00b7 Jan 1");
-    expect(weekLabel(new Date(slots[52]!))).toBe("W01 \u00b7 Dec 29");
+    expect(weekLabel(new Date(slots[0]!))).toBe("W01 · Jan 1");
+    expect(weekLabel(new Date(slots[52]!))).toBe("W01 · Dec 29");
     expect(nextFreeSlot(START, END, taken)).toBeUndefined();
   });
 
@@ -916,12 +1282,15 @@ describe("the first free WEEK", () => {
 });
 
 describe("a change at week 27 of the year", () => {
-  /** The 27th slot: `nextFreeSlot` walked 26 times. */
+  /** The 27th slot: `nextFreeSlot` walked 26 times. It is also the week that
+   *  holds the 4th of July, so it is a SPIKE week. */
   const WEEK_27 = new Date("2025-06-30");
 
   it("is where the 27th slot actually falls", () => {
     expect(weekOfPick(WEEK_27).getTime()).toBe(WEEK_27.getTime());
     expect(weekLabel(WEEK_27)).toBe("W27 · Jun 30");
+    expect(slotOfTime(WEEK_27.getTime())).toBe(26);
+    expect(isSpikeWeek(26)).toBe(true);
   });
 
   it("weighs about half the year — 185 of its 365 days", () => {
@@ -960,121 +1329,49 @@ describe("the as-of chips read in WEEKS", () => {
   });
 });
 
-// ── Weekly seasonality ───────────────────────────────────────────────────────
+// ── The season reaches every reading ─────────────────────────────────────────
 
-describe("weekly seasonality is representable", () => {
-  /** Four consecutive weeks from the span's start, on the board's own grid. */
-  const WEEKS = map(
-    (iso: string) => ({ id: `w-${iso}`, at: new Date(iso), label: "" }),
-    ["2025-01-01", "2025-01-06", "2025-01-13", "2025-01-20"],
-  ) as Mutation[];
-
-  /** Service A's hours alternating 30 / 10 week to week; B untouched. */
-  const alternating = (): Service[] =>
-    map((service: Service, index: number) => {
-      if (index !== 0) return service;
-      const changes: Record<string, { hours: number; rate: number }> = {};
-      for (const [step, week] of WEEKS.entries()) {
-        changes[week.id] = {
-          hours: step % 2 === 0 ? 30 : 10,
-          rate: service.committed?.rate ?? 0,
-        };
-      }
-      return { ...service, changes: { ...service.changes, ...changes } };
-    }, SERVICES);
-
-  /** The same four weeks, every one of them at `hours`. */
-  const flatAt = (hours: number): Service[] =>
-    map((service: Service, index: number) => {
-      if (index !== 0) return service;
-      const changes: Record<string, { hours: number; rate: number }> = {};
-      for (const week of WEEKS) {
-        changes[week.id] = { hours, rate: service.committed?.rate ?? 0 };
-      }
-      return { ...service, changes: { ...service.changes, ...changes } };
-    }, SERVICES);
-
-  it("samples the rate at EACH week, not once for the month", () => {
-    const services = alternating();
-    const sampled = map(
-      (week: Mutation) => rateAt(timeOf(week.at), WEEKS, services),
-      WEEKS,
-    );
-    // Two distinct readings, alternating — which is the whole of "the model
-    // can hold week-to-week variation".
-    expect(new Set(sampled).size).toBe(2);
-    expect(sampled[0]).toBe(sampled[2]);
-    expect(sampled[1]).toBe(sampled[3]);
-    expect(sampled[0]).toBeGreaterThan(sampled[1]!);
-  });
-
-  it("weights each week's own rate into the composite", () => {
-    const services = alternating();
-    // One week at a time: the average over a single week IS that week's rate.
-    for (const [step, week] of WEEKS.entries()) {
-      const next = WEEKS[step + 1];
-      if (next === undefined) continue;
-      const only = averageRateOver(
-        timeOf(week.at),
-        timeOf(next.at),
-        map((w: Mutation) => timeOf(w.at), WEEKS),
-        (time: number) => revenueAt(services, time, WEEKS),
-        "week",
-      );
-      expect(only).toBe(rateAt(timeOf(week.at), WEEKS, services));
-    }
-    // And over the whole year the alternating scenario sits strictly between
-    // the two flat ones it alternates between.
-    const swung = averageRate(TIME_DOMAIN, WEEKS, services);
-    const high = averageRate(TIME_DOMAIN, WEEKS, flatAt(30));
-    const low = averageRate(TIME_DOMAIN, WEEKS, flatAt(10));
-    expect(swung).toBeLessThan(high);
-    expect(swung).toBeGreaterThan(low);
-    expect(rateFromRevenue(0)).toBeLessThan(high);
-  });
-
-  // THE GAP, now CLOSED (Peter's ruling, 2026-09-17). It used to read "does
-  // NOT reach the balance chart, which projects one flat slope", and pinned the
-  // scalar-rate limitation: whatever the weeks did, one rate times the elapsed
-  // months drew one straight line. The prediction in that note held — the cells
-  // being monthly was never the limitation, and no chart contract had to change
-  // (`CashflowScrubChart` takes pre-computed `balanceCents` per cell, so this is
-  // arithmetic on the bench side of the wire). `projectedBalances` now takes a
-  // `RateSampling` and integrates it, and these are the tests of that.
+describe("the season reaches the gauge and the projection", () => {
   const committed = runningBalances(MONTHLY_NET, OPENING_BALANCE);
   const BOUNDARIES = monthStarts(DOMAIN_START, committed.length);
 
-  /** The board's own sampling: `rateAt` at every change, summed in WEEKS. */
-  const samplingFor = (services: readonly Service[]): RateSampling => ({
+  /** The board's own sampling: `rateAt` at every week, summed in WEEKS. */
+  const samplingFor = (
+    services: readonly Service[],
+    mutations: readonly Mutation[] = [],
+  ): RateSampling => ({
     boundaries: BOUNDARIES,
-    rate: (time: number) => rateAt(time, WEEKS, services),
-    moments: map((week: Mutation) => timeOf(week.at), WEEKS),
+    rate: (time: number) => rateAt(time, mutations, services),
+    moments: momentsOf(mutations),
     unit: "week",
   });
 
-  it("REACHES the balance chart: the monthly deltas differ", () => {
-    const projected = projectedBalances(
-      committed,
-      samplingFor(alternating()),
-      0,
-    );
+  it("samples a DIFFERENT rate in every week of the committed year", () => {
+    const sampled = map((at: number) => rateAt(at, [], SERVICES), WEEK_SLOTS);
+    // Not one reading, and not two: a season.
+    expect(new Set(sampled).size).toBeGreaterThan(10);
+    // February is under breakeven and August is well over it — which is the
+    // whole reason a weekly board is worth drawing.
+    expect(sampled[6]!).toBeLessThan(0);
+    expect(sampled[31]!).toBeGreaterThan(COMFORTABLE);
+  });
+
+  it("BENDS the projection: no two monthly deltas are the same", () => {
+    const projected = projectedBalances(committed, samplingFor(SERVICES), 0);
     const deltas = map(
       (balance: number, index: number) =>
         index === 0 ? 0 : balance - (projected[index - 1] ?? 0),
       projected,
     ).slice(1);
-    // The alternation lands inside JANUARY — four weekly changes from the
-    // span's start — so the first month's delta is the mixed one and every
-    // later month runs at the last change's rate. Two distinct deltas is
-    // therefore exactly what the fixture should produce, and ONE (what the old
-    // scalar projection gave for every scenario) is what it must not.
-    const distinct = new Set(map((d: number) => Math.round(d), deltas));
-    expect(distinct.size).toBeGreaterThan(1);
-    // WHAT THE FLAT SCENARIO DOES, and it is not "one delta": summed in WEEKS,
-    // a 31-day month accrues more than a 28-day one, so its monthly steps differ
-    // too. That is the calendar being counted honestly rather than seasonality,
-    // and the two are told apart by DIVIDING each step by the weeks in its own
-    // month — flat, that quotient is one constant; alternating, it is not.
+    expect(new Set(map((d: number) => Math.round(d), deltas)).size).toBe(
+      deltas.length,
+    );
+    // The winter months LOSE money and the summer months make it, so the line
+    // dips before it climbs — a flat slope cannot draw that at all.
+    expect(deltas[1]!).toBeLessThan(0);
+    expect(deltas[6]!).toBeGreaterThan(0);
+    // Dividing each step by the weeks in its own month is what tells a season
+    // apart from the calendar: flat, that quotient is one constant.
     const perWeek = (balances: readonly number[]): number[] =>
       map((balance: number, index: number) => {
         if (index === 0) return 0;
@@ -1087,45 +1384,36 @@ describe("weekly seasonality is representable", () => {
           ) / 100
         );
       }, balances).slice(1);
-    const level = projectedBalances(committed, samplingFor(flatAt(30)), 0);
+    const level = projectedBalances(
+      committed,
+      { ...samplingFor(SERVICES), rate: () => COMMITTED_RATE },
+      0,
+    );
     expect(new Set(perWeek(level)).size).toBe(1);
     expect(new Set(perWeek(projected)).size).toBeGreaterThan(1);
   });
 
-  it("ends the year on the closed form, week by week", () => {
-    const services = alternating();
-    const projected = projectedBalances(committed, samplingFor(services), 0);
-    // THE CLOSED FORM, restated independently: Σ over each stretch between
-    // changes of that stretch's weeks × the rate in force × 1/52. The middle
-    // two stretches are exactly one week each (Jan 6 → 13 → 20, Mondays), so
-    // those terms ARE `rateAt(week) / 52` — Peter's sum verbatim. The first is
-    // the five days from Wednesday 1 January to Monday 6 January and the last
-    // runs to the end of the span, and the edge walk weighs both by the
-    // fraction of a week they hold rather than rounding them onto a sample.
-    const rateOf = (iso: string): number =>
-      rateAt(new Date(iso).getTime(), WEEKS, services);
-    const stretch = (from: string, to: string): number =>
-      (weeksBetween(new Date(from).getTime(), new Date(to).getTime()) *
-        rateOf(from)) /
-      52;
-    const closedForm =
-      stretch("2025-01-01", "2025-01-06") +
-      stretch("2025-01-06", "2025-01-13") +
-      stretch("2025-01-13", "2025-01-20") +
-      stretch("2025-01-20", "2026-01-01");
+  it("ends the span on the closed form, week by week", () => {
+    // THE CLOSED FORM, restated independently: Σ over each week of that week's
+    // length × the rate in force. Every stretch here is a whole week except the
+    // first (five days) and the last (three), and the edge walk weighs both by
+    // the fraction of a week they hold rather than rounding them onto a sample.
+    const projected = projectedBalances(committed, samplingFor(SERVICES), 0);
+    let closedForm = 0;
+    for (const [index, at] of WEEK_SLOTS.entries()) {
+      const to = WEEK_SLOTS[index + 1] ?? END;
+      closedForm += weeksBetween(at, to) * rateAt(at, [], SERVICES);
+    }
     expect(projected[projected.length - 1]! - (committed[0] ?? 0)).toBeCloseTo(
       closedForm,
       6,
     );
-    // And the alternation is worth strictly less than four weeks at 30 hours
-    // and strictly more than four at 10 — the seasonality is IN the number.
-    const high = projectedBalances(committed, samplingFor(flatAt(30)), 0);
-    const low = projectedBalances(committed, samplingFor(flatAt(10)), 0);
-    expect(projected[projected.length - 1]!).toBeLessThan(
-      high[high.length - 1]!,
-    );
-    expect(projected[projected.length - 1]!).toBeGreaterThan(
-      low[low.length - 1]!,
+    // And the season is IN the number: the same span at the committed AVERAGE
+    // rate accrues almost exactly the same total, because that is what an
+    // average is — but it gets there in a straight line.
+    expect(closedForm).toBeCloseTo(
+      COMMITTED_RATE * weeksBetween(START, END),
+      6,
     );
   });
 
@@ -1135,11 +1423,7 @@ describe("weekly seasonality is representable", () => {
     // construction — the same balance with a width added. Asserting the
     // RELATIONSHIP rather than building a second integration is the point: a
     // parallel computation could drift from the line it is drawn around.
-    const projected = projectedBalances(
-      committed,
-      samplingFor(alternating()),
-      0,
-    );
+    const projected = projectedBalances(committed, samplingFor(SERVICES), 0);
     const optimistic = map(
       (balance: number, index: number) => balance + fanAt(index, 0),
       projected,
@@ -1147,114 +1431,153 @@ describe("weekly seasonality is representable", () => {
     for (const [index, balance] of projected.entries()) {
       expect(optimistic[index]! - balance).toBeCloseTo(fanAt(index, 0), 6);
     }
-    // The fan's own month-on-month steps differ too, because the line's do.
-    const deltas = map(
-      (balance: number, index: number) =>
-        index === 0 ? 0 : balance - (optimistic[index - 1] ?? 0),
-      optimistic,
-    ).slice(1);
-    expect(
-      new Set(map((d: number) => Math.round(d), deltas)).size,
-    ).toBeGreaterThan(1);
   });
 
-  // WHICH INSTANT "NOW" IS, stated rather than implied — the one thing the
-  // exact-equality test above is structurally blind to, because under a FLAT
-  // rate any consistent window start gives the same span.
+  // WHICH INSTANT "NOW" IS, stated rather than implied.
   //
-  // The integral runs from the PIVOT CELL'S START, which is the window the
-  // scalar version used too (`committed[nowIndex]` already holds that month's
-  // net flow, and the old line added `rate/12 × 1` on top of it for the next
-  // cell). What CHANGED is the sampling inside that first month: the old line
-  // charged the whole of it at the post-change rate, and the integral splits it
-  // at the change's own moment. So a change made LATE in its month moves the
-  // first projected step less than it used to and every step after it exactly
-  // as much — which is the change being honest about a date it previously
-  // rounded, and it is the one visible difference for a flat scenario too.
+  // The integral runs from the PIVOT CELL'S START, and the sampling inside that
+  // first month splits at the change's own moment: a change made LATE in its
+  // month moves the first projected step less than it does every step after it.
   it("runs its window from the PIVOT CELL'S START, splitting at the change", () => {
     const W14: Mutation = { id: "w14", at: new Date("2025-03-31"), label: "1" };
-    const W27: Mutation = { id: "w27", at: new Date("2025-06-30"), label: "2" };
-    const twoWeeks = [W14, W27];
+    const twoWeeks = [W14];
+    // +15 h/wk from the week of 31 March, carried over the whole season after.
     const services = withChange(
-      withChange(SERVICES, "service-a", W14.id, HOURS, 30, twoWeeks),
+      SERVICES,
       "service-a",
-      W27.id,
+      W14.id,
       HOURS,
-      10,
+      scheduledHours(SERVICES[0]!, timeOf(W14.at)) + 15,
       twoWeeks,
     );
-    const sampling: RateSampling = {
-      boundaries: BOUNDARIES,
-      rate: (time: number) => rateAt(time, twoWeeks, services),
-      moments: map((mutation: Mutation) => timeOf(mutation.at), twoWeeks),
-      unit: "week",
-    };
+    const sampling = samplingFor(services, twoWeeks);
     // March is the pivot cell — `W14` falls on its last day.
     const projected = projectedBalances(committed, sampling, 2);
     const marchStart = new Date("2025-03-01").getTime();
     const changeAt = timeOf(W14.at);
     const aprilStart = new Date("2025-04-01").getTime();
-    const before = rateAt(marchStart, twoWeeks, services);
-    const after = rateAt(changeAt, twoWeeks, services);
-    expect(after).toBeGreaterThan(before);
-    // The first projected step is the two stretches either side of the change,
-    // NOT one month at the new rate — thirty of March's thirty-one days still
-    // run at the old one.
-    const firstStep =
-      (weeksBetween(marchStart, changeAt) * before) / 52 +
-      (weeksBetween(changeAt, aprilStart) * after) / 52;
+    expect(rateAt(changeAt, twoWeeks, services)).toBeGreaterThan(
+      rateAt(changeAt, [], SERVICES),
+    );
+    // The first projected step is the sum over MARCH'S OWN WEEKS either side of
+    // the change, not one month at one rate.
+    let firstStep = 0;
+    const edges = [
+      marchStart,
+      ...map(
+        (at: number) => at,
+        [...momentsOf(twoWeeks)].filter(
+          (at: number) => at > marchStart && at < aprilStart,
+        ),
+      ),
+      aprilStart,
+    ];
+    for (const [index, at] of edges.entries()) {
+      const to = edges[index + 1];
+      if (to === undefined) continue;
+      firstStep += weeksBetween(at, to) * rateAt(at, twoWeeks, services);
+    }
     expect(projected[3]! - (committed[2] ?? 0)).toBeCloseTo(firstStep, 6);
-    // And it is strictly smaller than the step after it, which runs the whole
-    // month at the new rate. The old scalar line made the two equal.
+    // And it is strictly smaller than the step after it: April runs the whole
+    // month with the change in force, and on a rising season besides.
     expect(projected[3]! - (committed[2] ?? 0)).toBeLessThan(
       projected[4]! - projected[3]!,
     );
   });
 
   it("prints the sampled rate per cell in the DEBUG table", () => {
-    const rows = projectionTable(committed, samplingFor(alternating()), 0);
+    const rows = projectionTable(committed, samplingFor(SERVICES), 0);
     expect(rows).toHaveLength(committed.length);
     expect(rows[0]?.month).toBe("2025-01");
-    // The per-cell PROJECTED RATE — the number that did not exist while the
-    // projection took one scalar. January's sample is the Jan 1 change's rate.
+    // The per-cell PROJECTED RATE — January's sample is the opening week's.
     expect(rows[0]?.projectedRate).toBe(
-      Math.round(rateAt(START, WEEKS, alternating())),
+      Math.round(rateAt(START, [], SERVICES)),
     );
+    // Twelve DIFFERENT sampled rates out of thirteen cells, which is the season
+    // in a column. The one repeat is the thirteenth cell: it is January again,
+    // and the season has come back round to where it started.
+    expect(new Set(map((row) => row.projectedRate, rows)).size).toBe(
+      rows.length - 1,
+    );
+    expect(rows[12]?.projectedRate).toBe(rows[0]?.projectedRate);
     expect(map((row) => row.part, rows)[0]).toBe("committed");
     expect(map((row) => row.part, rows)[1]).toBe("projected");
+  });
+
+  it("holds a PROPOSED week-to-week swing on top of the season", () => {
+    // The offset rule composes: four weekly changes alternating high and low
+    // hours, each read against its own week, and each in force until the next.
+    const weeks = map(
+      (iso: string) => ({ id: `w-${iso}`, at: new Date(iso), label: "" }),
+      ["2025-01-01", "2025-01-06", "2025-01-13", "2025-01-20"],
+    ) as Mutation[];
+    let services: readonly Service[] = SERVICES;
+    for (const [step, week] of weeks.entries())
+      services = withChange(
+        services,
+        "service-a",
+        week.id,
+        HOURS,
+        step % 2 === 0 ? 30 : 10,
+        weeks,
+      );
+    // Each change is read back as the figure the dial wrote.
+    for (const [step, week] of weeks.entries())
+      expect(offerFrom(services[0] as Service, week.id, weeks)?.hours).toBe(
+        step % 2 === 0 ? 30 : 10,
+      );
+    const sampled = map(
+      (week: Mutation) => rateAt(timeOf(week.at), weeks, services),
+      weeks,
+    );
+    expect(sampled[0]!).toBeGreaterThan(sampled[1]!);
+    expect(sampled[2]!).toBeGreaterThan(sampled[3]!);
+    // The composite sits strictly between the two scenarios that hold the high
+    // and the low figure at every one of those weeks instead of alternating.
+    const holding = (hours: number): readonly Service[] => {
+      let held: readonly Service[] = SERVICES;
+      for (const week of weeks)
+        held = withChange(held, "service-a", week.id, HOURS, hours, weeks);
+      return held;
+    };
+    const swung = averageRate(TIME_DOMAIN, weeks, services);
+    expect(swung).toBeLessThan(averageRate(TIME_DOMAIN, weeks, holding(30)));
+    expect(swung).toBeGreaterThan(averageRate(TIME_DOMAIN, weeks, holding(10)));
+    // And a one-week window averages to that week's own rate, exactly.
+    for (const [step, week] of weeks.entries()) {
+      const next = weeks[step + 1];
+      if (next === undefined) continue;
+      expect(
+        averageRateOver(
+          timeOf(week.at),
+          timeOf(next.at),
+          map((one: Mutation) => timeOf(one.at), weeks),
+          (time: number) => revenueAt(services, time, weeks),
+          "week",
+        ),
+      ).toBe(rateAt(timeOf(week.at), weeks, services));
+    }
   });
 });
 
 // ── A week is 1/52 of the x-domain ───────────────────────────────────────────
 
-describe("two weekly changes inside one transition", () => {
+describe("the season inside one transition width", () => {
   const PLOT_WIDTH = 640;
 
-  it("crowd, so the mark's existing shortening is always in play", () => {
+  it("crowds, so the mark's existing shortening is always in play", () => {
     const perWeek = PLOT_WIDTH / weeksBetween(START, END);
     // 12.3px of plot per week against a 28px full transition: adjacent weekly
-    // changes are ALWAYS closer together than a full transition apart, so the
-    // shortening is the normal case here rather than an edge one.
+    // points are ALWAYS closer together than a full transition apart, so the
+    // shortening is the normal case here rather than an edge one — and with a
+    // seasonal baseline it is in play across the WHOLE year rather than at two
+    // adjacent flags.
     expect(perWeek).toBeCloseTo(12.27, 1);
     expect(transitionWidth(PLOT_WIDTH)).toBe(28);
     expect(perWeek).toBeLessThan(transitionWidth(PLOT_WIDTH));
   });
 
-  it("still read as two changes — three stretches, no collapse", () => {
-    const weeks: Mutation[] = map(
-      (iso: string) => ({ id: `w-${iso}`, at: new Date(iso), label: "" }),
-      ["2025-04-07", "2025-04-14"],
-    );
-    const services = map((service: Service, index: number) => {
-      if (index !== 0) return service;
-      return {
-        ...service,
-        changes: {
-          [weeks[0]!.id]: { hours: 30, rate: service.committed?.rate ?? 0 },
-          [weeks[1]!.id]: { hours: 10, rate: service.committed?.rate ?? 0 },
-        },
-      };
-    }, SERVICES);
+  it("draws the whole seasonal stack without collapsing or going NaN", () => {
     const series = map(
       (band: StackedAreaSeriesData) => ({
         id: band.id,
@@ -1266,7 +1589,7 @@ describe("two weekly changes inside one transition", () => {
           band.points,
         ),
       }),
-      workMixSeries(services, weeks),
+      workMixSeries(SERVICES, []),
     );
     const geometry = buildStackedArea(
       series,
@@ -1274,11 +1597,37 @@ describe("two weekly changes inside one transition", () => {
       (v: number) => 200 - (v / 80) * 200,
       [START, END],
     );
-    // Opening stretch, the 30h week, the 10h week.
-    expect(geometry.segments).toHaveLength(3);
+    // One segment per emitted point of the widest band — about thirty rather
+    // than the three a two-flag scenario gave.
+    expect(geometry.segments.length).toBeGreaterThan(20);
     expect(geometry.transition).toBe(28);
     for (const band of geometry.bands) {
       expect(band.path).not.toContain("NaN");
+      expect(band.path.length).toBeGreaterThan(0);
     }
+  });
+
+  it("still reads two adjacent weekly CHANGES as two changes", () => {
+    const weeks: Mutation[] = map(
+      (iso: string) => ({ id: `w-${iso}`, at: new Date(iso), label: "" }),
+      ["2025-04-07", "2025-04-14"],
+    );
+    const services = withChange(
+      withChange(SERVICES, "service-a", weeks[0]!.id, HOURS, 30, weeks),
+      "service-a",
+      weeks[1]!.id,
+      HOURS,
+      10,
+      weeks,
+    );
+    const points = hourPointsFor(services[0] as Service, weeks);
+    const at = (iso: string): number => new Date(iso).getTime();
+    const valueAt = (iso: string): number | undefined =>
+      map(
+        (point) => (timeOf(point.at) === at(iso) ? point.value : -1),
+        points,
+      ).find((value: number) => value !== -1);
+    expect(valueAt("2025-04-07")).toBe(30);
+    expect(valueAt("2025-04-14")).toBe(10);
   });
 });
