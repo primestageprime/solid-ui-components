@@ -3,6 +3,31 @@
 ## Unreleased
 
 ### Added
+- **`PairedMutationSliders` — a new Composite (Depth 3), a SIBLING of
+  `MutationSliders` rather than a generalisation of it.** A row of named
+  entities, each with TWO differently-united dials under one name — hours a
+  week and dollars an hour, quantity and unit price. `MutationSliders` cannot
+  express it: its `domain` is documented as the shared scale that makes two
+  dials comparable, and two measures in different units share no domain, no
+  formatter and no snap grid, so widening it to N measures would re-shape
+  `onChange`, `format`, `snap`, `selected` and the pinning maths for its two
+  live consumers — a breaking change where a sibling is additive. Nothing in
+  `MutationSliders` is deprecated by this. Both measures are described ONCE at
+  the component through `axes: [PairedMeasureAxis, PairedMeasureAxis]` (name,
+  unit, grid and scale per measure), `onChange` is
+  `(id, measureIndex, value)`, and an optional `summary(entity)` prints the
+  consumer's own one-line reading under the pair — this component runs no
+  arithmetic across the two measures and could not. Pinning is MEASURE-LOCAL by
+  construction: the row projects its paired entities down to single-measure
+  `Entity` views, one per index, and reuses the pin arithmetic `rows.ts`
+  already owns, so measure 0 and measure 1 are disjoint projections. Removal is
+  BOTH measures at `null` — no flag. Zero CSS, zero intrinsic elements,
+  composing only `MarkedSlider`, the Button, Text and Layout variants and
+  `Icon`. Ships the FACTORY `createPairedMutationSliders({ axes, labels })` and
+  **no curried variant**, deliberately: every pair of axes anybody has asked
+  for so far is a consumer's own domain, and SUI does not guess which units.
+  Ships with a showcase, a `COMPONENTS.md` entry, a pinned barrel contract test
+  and mounting tests.
 - **`MarkedSlider` — a new Atomic Primitive (Depth 1), extracted from
   `MutationSliders`.** ONE vertical slider, marked: the track line, the shaded
   allowed-range box, the muted prior arrowhead and the accent value arrowhead
@@ -31,6 +56,12 @@
   #2-Rule expansion — flagged for Peter's confirmation.**
 
 ### Changed
+- **`rowLayout` (`MutationSliders/rows.ts`) takes the entity SLOT WIDTH as a
+  trailing, optional argument** (`rowLayout(width, count, offset, adding, slot
+  = DIAL_SLOT)`). Additive: every existing caller and every one of the module's
+  existing assertions uses the four-argument form and keeps one dial's slot
+  unchanged. `PairedMutationSliders` passes `2 * DIAL_SLOT`, so a two-dial-wide
+  entity pages by whole pairs instead of by half of one.
 - **`MutationSliders` now holds to the composition axiom: no CSS and no
   intrinsic elements above Depth 1** (Peter's ruling, 2026-09-17). Its private
   dial no longer renders two raw `<button>`s, an SVG overlay and the Kobalte
