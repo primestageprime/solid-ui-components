@@ -1484,8 +1484,96 @@ export const hourPointsFor = (
 };
 
 /**
- * One band per service, BOTTOM FIRST — array order is stacking order and
- * palette order, so the fixture's order is the reading order of the chart.
+ * Population standard deviation of a list of numbers — the measure of "how
+ * big are the bumps" `byVariability` sorts on.
+ */
+const stdDev = (values: readonly number[]): number => {
+  if (values.length === 0) return 0;
+  const mean = sum(values) / values.length;
+  return Math.sqrt(
+    sum(map((value: number) => (value - mean) ** 2, values)) / values.length,
+  );
+};
+
+/**
+ * ONE SERVICE'S VARIABILITY: the standard deviation of its hours across
+ * every week slot in the span (`WEEK_SLOTS`), read from the LIVE schedule —
+ * the committed season plus every change proposed against it (`offerAt`),
+ * not the committed season alone. So a scenario that raises a service's
+ * spikes moves it up the stack the moment the reader makes that change.
+ *
+ * Std dev rather than peak-to-trough: Peter, 2026-09-18, asked for "the one
+ * with the biggest bumps", and std dev is the reading that carries BOTH the
+ * spike weeks AND the season's own swing, where peak-to-trough would see
+ * only the two extremes and miss a service that swings hard everywhere else.
+ */
+export const variabilityOf = (
+  service: Service,
+  mutations: readonly Mutation[],
+): number =>
+  stdDev(
+    map(
+      (at: number) => offerAt(service, at, mutations)?.hours ?? 0,
+      WEEK_SLOTS,
+    ),
+  );
+
+/**
+ * Services ordered ASCENDING by variability — so the MOST variable service
+ * is LAST, which `StackedAreaSeries` draws as the TOP band (its own header:
+ * "array order is stacking order"). Peter, 2026-09-18: "Sort by
+ * variability. So the one with the biggest bumps is on top."
+ *
+ * `sortBy` is STABLE, so two services whose variability ties keep the
+ * FIXTURE'S OWN order rather than swapping as the reader edits toward and
+ * away from the tie.
+ */
+export const byVariability = (
+  services: readonly Service[],
+  mutations: readonly Mutation[],
+): Service[] =>
+  sortBy((service: Service) => variabilityOf(service, mutations), services);
+
+/**
+ * One row of the DEBUG stack-order table: a service's variability beside
+ * where it landed in the stack — position 0 is the bottom band. Printed so
+ * the order `byVariability` chose can be argued with from a terminal before
+ * anyone looks at which band is on top.
+ */
+export interface StackOrderRow {
+  readonly service: string;
+  readonly stdDevHoursPerWeek: number;
+  readonly position: number;
+  readonly band: "bottom" | "top" | "middle";
+}
+
+/** The stack-order table `byVariability` produces, as data. */
+export const stackOrderTable = (
+  services: readonly Service[],
+  mutations: readonly Mutation[],
+): StackOrderRow[] => {
+  const ordered = byVariability(services, mutations);
+  return map(
+    (service: Service, position: number): StackOrderRow => ({
+      service: service.label,
+      stdDevHoursPerWeek: Math.round(variabilityOf(service, mutations) * 100) / 100,
+      position,
+      band:
+        position === 0
+          ? "bottom"
+          : position === ordered.length - 1
+            ? "top"
+            : "middle",
+    }),
+    ordered,
+  );
+};
+
+/**
+ * One band per service, ordered by `byVariability` — the MOST variable
+ * service is LAST in the array, which is the TOP band (see `byVariability`'s
+ * header and `StackedAreaSeries`'s: "array order is stacking order and
+ * palette order").
  */
 export const workMixSeries = (
   services: readonly Service[],
@@ -1497,7 +1585,7 @@ export const workMixSeries = (
       label: service.label,
       points: hourPointsFor(service, mutations),
     }),
-    services,
+    byVariability(services, mutations),
   );
 
 /** Total hours a week at a moment — the top edge of the stack. */
