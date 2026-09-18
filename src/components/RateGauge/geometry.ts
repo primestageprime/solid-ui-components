@@ -372,13 +372,20 @@ export const metricsFor = (
   box: Box | undefined,
   labels: readonly string[],
 ): Metrics => {
-  // The DIAL is sized first, against the column's capped estimate, because the
-  // instrument is the thing the card is for. Only then does the column take
-  // whatever width is left over — which matters when the box is tall and
-  // narrow-ish, where the dial is bound by the height and would otherwise
-  // leave a band of dead space to the right of a needlessly clipped label.
-  // The column never grows at the dial's expense, only into slack.
-  const sizing = labelColumnWidth(labels);
+  // The DIAL is sized first, because the instrument is the thing the card is
+  // for — but "sized first" must mean sized against what the column will
+  // ACTUALLY need, not a pre-capped guess of it. Reserving less than the
+  // words demand is not the dial ceding width, it is the dial taking width
+  // the column needed and finding out only after the fact — which is exactly
+  // how a measured box used to leave a callout truncated even though the box
+  // had room for it (Peter, 2026-09-17, the Hourly board's collapsed
+  // callout). So the box case reserves the labels' own uncapped demand, and
+  // only the unmeasured default canvas — which has no box to bound it —
+  // falls back to `labelColumnWidth`'s ceiling. The column still never grows
+  // at the dial's expense: the final `labelWidth` below is clamped to
+  // whatever the box actually leaves once the dial has taken its share.
+  const wanted = wantedColumnWidth(labels);
+  const sizing = box === undefined ? labelColumnWidth(labels) : wanted;
   const ringOuter = ringOuterFor(box, sizing);
   const brace = ringOuter * RATIO.brace;
   const outerExtent = extentOf(ringOuter);
@@ -393,10 +400,7 @@ export const metricsFor = (
       ? sizing
       : Math.max(
           MIN_LABEL_WIDTH,
-          Math.min(
-            wantedColumnWidth(labels),
-            box.width - textX - CANVAS_MARGIN,
-          ),
+          Math.min(wanted, box.width - textX - CANVAS_MARGIN),
         );
   return {
     center,
@@ -441,14 +445,23 @@ const TEXT_GAP = 6;
  */
 const LABEL_CHAR_WIDTH = 7.3;
 /**
- * The column's floor and ceiling.
+ * The column's floor, and the DEFAULT canvas's ceiling.
  *
  * The floor keeps a gauge whose labels are all short from cutting the column
- * to a stub the eye reads as clipped. The ceiling matters more: the value's
- * name is the consumer's and can be any length, and it ELLIPSIZES into this
- * column — so a name allowed to set the width without limit would both stretch
- * the dial thin and defeat the truncation it is supposed to trigger. Past the
- * ceiling the name gives way, not the dial.
+ * to a stub the eye reads as clipped. The ceiling only matters when there is
+ * no box: the value's name is the consumer's and can be any length, and on
+ * the unmeasured canvas it ELLIPSIZES into this column with nothing else to
+ * bound it — so a name allowed to set that canvas's width without limit
+ * would both stretch the dial thin and defeat the truncation it is supposed
+ * to trigger. Past the ceiling the name gives way, not the dial.
+ *
+ * A MEASURED box needs no such guess: the box itself is the ceiling, so
+ * `metricsFor` reserves the labels' own uncapped demand for the ring budget
+ * and lets the box clamp the column afterward — see the note there
+ * (Peter, 2026-09-17). Applying this cap in the box case as well is exactly
+ * the bug that shipped: it under-reserved for a long line-two sentence, the
+ * ring grew to fill the "spare" width, and the column that was left had less
+ * room than the words needed even though the box itself did not.
  */
 const MIN_LABEL_WIDTH = 56;
 const MAX_LABEL_WIDTH = 124;
@@ -461,11 +474,13 @@ const wantedColumnWidth = (texts: readonly string[]): number =>
   );
 
 /**
- * How wide a label column has to be to hold these strings.
+ * How wide a label column has to be to hold these strings, on the DEFAULT
+ * (unmeasured) canvas.
  *
- * Capped, because the dial is sized around this figure and a long label
+ * Capped, because that canvas has no box to bound it and a long label
  * would otherwise squeeze the instrument to make room for words that are
- * going to ellipsize anyway.
+ * going to ellipsize anyway. A measured box does not use this — see
+ * `metricsFor`.
  */
 export const labelColumnWidth = (texts: readonly string[]): number =>
   Math.min(MAX_LABEL_WIDTH, wantedColumnWidth(texts));
