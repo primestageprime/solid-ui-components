@@ -43,6 +43,7 @@ import { ThemedNumberInput } from "../../../src/components/ThemedNumberInput";
 import { ClusterRow, NarrowStack } from "../../../src/components/Layout";
 import { NoteText } from "../../../src/components/Text";
 import type { PairedMutationEntity } from "../../../src/components/PairedMutationSliders";
+import type { GroupedMutationEntity } from "../../../src/components/GroupedMutationSliders";
 
 import { BoardView } from "./board-kit/BoardView";
 import {
@@ -169,10 +170,18 @@ const balanceCells = (
   );
 };
 
-/** The summary under each pair of dials: what that service bills in the WEEK
- *  being edited — `$3k/wk` is twenty hours at $150, with no year in it. */
-const summaryOf = (entity: PairedMutationEntity): string =>
-  entity.measures[0].value === null ? "" : dollarsPerWeek(weeklyOfPair(entity));
+/**
+ * The summary under each pair of dials: what that service bills in the WEEK
+ * being edited — `$3k/wk` is twenty hours at $150, with no year in it.
+ *
+ * It takes the WIDE entity (measures as a readonly list) because that is the
+ * shape `BoardView` asks for — see `BoardViewProps.summary` — and narrows to
+ * this board's pair itself. A dropped service has no hours and says nothing.
+ */
+const summaryOf = (entity: GroupedMutationEntity): string =>
+  entity.measures[0]?.value === null || entity.measures[0] === undefined
+    ? ""
+    : dollarsPerWeek(weeklyOfPair(entity as PairedMutationEntity));
 
 // ── The Add form ────────────────────────────────────────────────────────────
 

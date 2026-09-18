@@ -251,8 +251,18 @@ export interface BoardViewProps {
   readonly config: BoardConfig;
   /** The dials for the change being edited, already narrowed by the board. */
   readonly entities: readonly PairedMutationEntity[];
-  /** The summary line under one entity's dials. */
-  readonly summary?: (entity: PairedMutationEntity) => string;
+  /**
+   * The consumer's one-line reading of a whole entity, printed under its dials.
+   *
+   * Typed against the WIDE entity — measures as a readonly list rather than a
+   * 2-tuple — because a summary is the one prop both slider components share
+   * and the two disagree about arity. Typing it as the paired 2-tuple and
+   * casting on the grouped path would hand a six-measure board an entity that
+   * CLAIMS to have two, which is the same class of mistake the index remapping
+   * existed to prevent, moved one layer up. A function accepting the wide shape
+   * is assignable to the narrow one, so the paired path needs no cast either.
+   */
+  readonly summary?: (entity: GroupedMutationEntity) => string;
   readonly labels: BoardLabels;
 
   readonly cashflow: CashflowOptions;
@@ -534,14 +544,7 @@ export const BoardView: Component<BoardViewProps> = (props) => {
                         }),
                         props.entities,
                       )}
-                      summary={
-                        props.summary === undefined
-                          ? undefined
-                          : (entity: GroupedMutationEntity) =>
-                              (props.summary as (
-                                e: GroupedMutationEntity,
-                              ) => string)(entity)
-                      }
+                      summary={props.summary}
                       onChange={(
                         id: string,
                         measure: GroupedMeasureIndex,
@@ -683,7 +686,7 @@ const PairedRow: Component<{
   Row: ReturnType<typeof createPairedMutationSliders>;
   group: AxisGroup;
   entities: readonly PairedMutationEntity[];
-  summary?: (entity: PairedMutationEntity) => string;
+  summary?: (entity: GroupedMutationEntity) => string;
   onMeasure: (id: string, measure: number, value: number) => void;
   onRemove: (id: string) => void;
   onRestore: (id: string) => void;
