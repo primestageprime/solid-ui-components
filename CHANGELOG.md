@@ -180,6 +180,22 @@
   gone — the measured element is now the `TightStack` it used to wrap.
 
 ### Fixed
+- **`RateGauge`'s collapsed callout fits its column — the ring shrinks first.**
+  `metricsFor` (`RateGauge/geometry.ts`) sized the ring's width RESERVATION
+  from `labelColumnWidth(labels)`, which is capped at `MAX_LABEL_WIDTH` (124),
+  while the final label column took the UNCAPPED `wantedColumnWidth(labels)`.
+  Where width was the binding constraint the ring therefore grew against a
+  reservation smaller than the words needed, leaving the column short: the
+  collapsed name `Scenario = Baseline` (~139 units) and a consumer's line-two
+  sentence (~175 units) both wanted more than 124, and the callout truncated to
+  `SCENARIO = BASE…` in a 420×580 card that had room to show it whole. When a
+  `box` is given, the ring's budget is now reserved against the labels' own
+  uncapped demand, so the ring cedes width to the column; the cap is scoped to
+  the `box === undefined` default canvas, which has no box to bound it. **No
+  public API change** — no prop, export or signature moved — and RateGauge's
+  114 tests pass, including a geometry test pinning that exact box and label
+  set and a mounting test asserting the callout's `foreignObject` is never
+  narrower than its own measured text.
 - **The adherence scanner counts only REAL JSX intrinsics, and only in
   component files.** The "intrinsic" rule matched `<lowercaseword` with a
   regex, which also fires on a generic type argument in TYPE position
