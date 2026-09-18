@@ -47,6 +47,7 @@ import {
   addedAt,
   annualOf,
   annualOfPair,
+  accruedOver,
   averageRate,
   averageRateOver,
   bandOfRate,
@@ -59,7 +60,10 @@ import {
   isSoldAt,
   maxReachableRate,
   minReachableRate,
+  fanAt,
   momentsOf,
+  monthStarts,
+  monthlyFrom,
   monthsBetween,
   nextFreeSlot,
   offerAt,
@@ -69,6 +73,7 @@ import {
   pairsWithoutMutation,
   pinnedCeiling,
   projectedBalances,
+  projectionTable,
   quarterLabelOf,
   quarterTicks,
   rateAt,
@@ -89,6 +94,7 @@ import {
   withDrop,
   withoutChange,
   workMixSeries,
+  type RateSampling,
   type Service,
 } from "./hourly-board-model";
 
@@ -644,6 +650,22 @@ describe("the Work Mix stack", () => {
 
 describe("the balance line", () => {
   const committed = runningBalances(MONTHLY_NET, OPENING_BALANCE);
+  /** The chart's cell edges — the same months `monthlyCells` draws. */
+  const BOUNDARIES = monthStarts(DOMAIN_START, committed.length);
+
+  /** A projection with NO seasonality in it: one rate, everywhere, summed in
+   *  MONTHS. The same single code path a sampled scenario takes — which is what
+   *  makes "identical to the old straight slope" an equivalence rather than a
+   *  preserved branch. */
+  const flat = (
+    rate: number,
+    unit: "month" | "week" = "month",
+  ): RateSampling => ({
+    boundaries: BOUNDARIES,
+    rate: () => rate,
+    moments: [],
+    unit,
+  });
 
   it("runs the committed flows forward from the opening balance", () => {
     expect(committed[0]).toBe(OPENING_BALANCE + (MONTHLY_NET[0] ?? 0));
@@ -651,8 +673,8 @@ describe("the balance line", () => {
   });
 
   it("pivots about NOW and leaves the past alone", () => {
-    const slow = projectedBalances(committed, 0, 6);
-    const fast = projectedBalances(committed, 120_000, 6);
+    const slow = projectedBalances(committed, flat(0), 6);
+    const fast = projectedBalances(committed, flat(120_000), 6);
     for (let index = 0; index <= 6; index += 1) {
       expect(slow[index]).toBe(committed[index]);
       expect(fast[index]).toBe(committed[index]);
@@ -660,6 +682,40 @@ describe("the balance line", () => {
     // $120k/yr is $10k a month, so one month past the pivot is $10k above it.
     expect(fast[7]! - (committed[6] ?? 0)).toBeCloseTo(10_000, 6);
     expect(slow[7]).toBe(committed[6]);
+  });
+
+  // THE EQUIVALENCE. Integrating a FLAT rate in MONTHS reproduces the straight
+  // slope `projectedBalances` drew before it integrated anything, and EXACTLY
+  // rather than nearly: `monthsBetween` is integral on month boundaries and the
+  // cell edges ARE month boundaries, so the sum of one-month stretches collapses
+  // to `rate/12 × (m − now)`. Exact equality is the whole point — a
+  // `toBeCloseTo` here would hide an integrator that drifts.
+  it("integrated flat in MONTHS is the old straight slope, exactly", () => {
+    const rate = 120_000;
+    const nowIndex = 3;
+    const projected = projectedBalances(committed, flat(rate), nowIndex);
+    const pivot = committed[nowIndex] ?? 0;
+    for (let index = nowIndex + 1; index < committed.length; index += 1) {
+      expect(projected[index]).toBe(
+        pivot + monthlyFrom(rate) * (index - nowIndex),
+      );
+    }
+  });
+
+  // And in WEEKS it does NOT, by about a third of a percent — which is the
+  // calendar and not a bug. The span holds 52 and a seventh weeks, so summing
+  // 1/52 of the rate over each of them accrues slightly MORE than twelve
+  // twelfths. The model says the same thing about the gauge's own weight (a
+  // change on 1 April is 0.75 of the year in months and 0.7534 in weeks): the
+  // unit is a statement about what the reader counts, not a correction.
+  it("integrated flat in WEEKS differs by the calendar, not by an error", () => {
+    const rate = 120_000;
+    const inMonths = accruedOver(START, END, [], () => rate, "month");
+    const inWeeks = accruedOver(START, END, [], () => rate, "week");
+    expect(inMonths).toBeCloseTo(rate, 6);
+    expect(inWeeks / inMonths).toBeCloseTo(weeksBetween(START, END) / 52, 10);
+    expect(inWeeks).toBeGreaterThan(inMonths);
+    expect(inWeeks / inMonths).toBeCloseTo(1, 2);
   });
 
   it("pins the ceiling above anything the dials can reach", () => {
@@ -670,7 +726,7 @@ describe("the balance line", () => {
     );
     const steepest = projectedBalances(
       committed,
-      maxReachableRate(SERVICES),
+      flat(maxReachableRate(SERVICES)),
       0,
     );
     for (const balance of steepest)
@@ -977,25 +1033,195 @@ describe("weekly seasonality is representable", () => {
     expect(rateFromRevenue(0)).toBeLessThan(high);
   });
 
-  // THE GAP, pinned rather than worked around. `projectedBalances` takes a
-  // SCALAR rate, so whatever the weeks did it draws ONE straight slope from
-  // the pivot — every forward delta is the same. The cells being monthly is
-  // not the limitation: monthly cells WOULD show week-to-week alternation as
-  // differing month-on-month deltas if the projection integrated a sampled
-  // rate. The smallest change that would carry seasonality into the balance
-  // chart is therefore to hand `projectedBalances` a per-cell rate (or a
-  // `rateAt` sampler) instead of one number. Not built here — it is a change
-  // to the chart's contract and belongs to whoever needs it next.
-  it("does NOT reach the balance chart, which projects one flat slope", () => {
-    const committed = runningBalances(MONTHLY_NET, OPENING_BALANCE);
-    const projected = projectedBalances(committed, 120_000, 2);
-    const forward = projected.slice(2);
+  // THE GAP, now CLOSED (Peter's ruling, 2026-09-17). It used to read "does
+  // NOT reach the balance chart, which projects one flat slope", and pinned the
+  // scalar-rate limitation: whatever the weeks did, one rate times the elapsed
+  // months drew one straight line. The prediction in that note held — the cells
+  // being monthly was never the limitation, and no chart contract had to change
+  // (`CashflowScrubChart` takes pre-computed `balanceCents` per cell, so this is
+  // arithmetic on the bench side of the wire). `projectedBalances` now takes a
+  // `RateSampling` and integrates it, and these are the tests of that.
+  const committed = runningBalances(MONTHLY_NET, OPENING_BALANCE);
+  const BOUNDARIES = monthStarts(DOMAIN_START, committed.length);
+
+  /** The board's own sampling: `rateAt` at every change, summed in WEEKS. */
+  const samplingFor = (services: readonly Service[]): RateSampling => ({
+    boundaries: BOUNDARIES,
+    rate: (time: number) => rateAt(time, WEEKS, services),
+    moments: map((week: Mutation) => timeOf(week.at), WEEKS),
+    unit: "week",
+  });
+
+  it("REACHES the balance chart: the monthly deltas differ", () => {
+    const projected = projectedBalances(
+      committed,
+      samplingFor(alternating()),
+      0,
+    );
     const deltas = map(
       (balance: number, index: number) =>
-        index === 0 ? 0 : balance - (forward[index - 1] ?? 0),
-      forward,
+        index === 0 ? 0 : balance - (projected[index - 1] ?? 0),
+      projected,
     ).slice(1);
-    expect(new Set(map((d: number) => Math.round(d), deltas)).size).toBe(1);
+    // The alternation lands inside JANUARY — four weekly changes from the
+    // span's start — so the first month's delta is the mixed one and every
+    // later month runs at the last change's rate. Two distinct deltas is
+    // therefore exactly what the fixture should produce, and ONE (what the old
+    // scalar projection gave for every scenario) is what it must not.
+    const distinct = new Set(map((d: number) => Math.round(d), deltas));
+    expect(distinct.size).toBeGreaterThan(1);
+    // WHAT THE FLAT SCENARIO DOES, and it is not "one delta": summed in WEEKS,
+    // a 31-day month accrues more than a 28-day one, so its monthly steps differ
+    // too. That is the calendar being counted honestly rather than seasonality,
+    // and the two are told apart by DIVIDING each step by the weeks in its own
+    // month — flat, that quotient is one constant; alternating, it is not.
+    const perWeek = (balances: readonly number[]): number[] =>
+      map((balance: number, index: number) => {
+        if (index === 0) return 0;
+        const from = BOUNDARIES[index - 1] ?? 0;
+        const to = BOUNDARIES[index] ?? 0;
+        return (
+          Math.round(
+            ((balance - (balances[index - 1] ?? 0)) / weeksBetween(from, to)) *
+              100,
+          ) / 100
+        );
+      }, balances).slice(1);
+    const level = projectedBalances(committed, samplingFor(flatAt(30)), 0);
+    expect(new Set(perWeek(level)).size).toBe(1);
+    expect(new Set(perWeek(projected)).size).toBeGreaterThan(1);
+  });
+
+  it("ends the year on the closed form, week by week", () => {
+    const services = alternating();
+    const projected = projectedBalances(committed, samplingFor(services), 0);
+    // THE CLOSED FORM, restated independently: Σ over each stretch between
+    // changes of that stretch's weeks × the rate in force × 1/52. The middle
+    // two stretches are exactly one week each (Jan 6 → 13 → 20, Mondays), so
+    // those terms ARE `rateAt(week) / 52` — Peter's sum verbatim. The first is
+    // the five days from Wednesday 1 January to Monday 6 January and the last
+    // runs to the end of the span, and the edge walk weighs both by the
+    // fraction of a week they hold rather than rounding them onto a sample.
+    const rateOf = (iso: string): number =>
+      rateAt(new Date(iso).getTime(), WEEKS, services);
+    const stretch = (from: string, to: string): number =>
+      (weeksBetween(new Date(from).getTime(), new Date(to).getTime()) *
+        rateOf(from)) /
+      52;
+    const closedForm =
+      stretch("2025-01-01", "2025-01-06") +
+      stretch("2025-01-06", "2025-01-13") +
+      stretch("2025-01-13", "2025-01-20") +
+      stretch("2025-01-20", "2026-01-01");
+    expect(projected[projected.length - 1]! - (committed[0] ?? 0)).toBeCloseTo(
+      closedForm,
+      6,
+    );
+    // And the alternation is worth strictly less than four weeks at 30 hours
+    // and strictly more than four at 10 — the seasonality is IN the number.
+    const high = projectedBalances(committed, samplingFor(flatAt(30)), 0);
+    const low = projectedBalances(committed, samplingFor(flatAt(10)), 0);
+    expect(projected[projected.length - 1]!).toBeLessThan(
+      high[high.length - 1]!,
+    );
+    expect(projected[projected.length - 1]!).toBeGreaterThan(
+      low[low.length - 1]!,
+    );
+  });
+
+  it("carries the bend into the FAN, which is an offset from the line", () => {
+    // The board draws the fan as `cell.balanceCents + sign × fanAt(index,
+    // nowIndex)` (`fanSeries` in `hourly-board.tsx`), so it integrates by
+    // construction — the same balance with a width added. Asserting the
+    // RELATIONSHIP rather than building a second integration is the point: a
+    // parallel computation could drift from the line it is drawn around.
+    const projected = projectedBalances(
+      committed,
+      samplingFor(alternating()),
+      0,
+    );
+    const optimistic = map(
+      (balance: number, index: number) => balance + fanAt(index, 0),
+      projected,
+    );
+    for (const [index, balance] of projected.entries()) {
+      expect(optimistic[index]! - balance).toBeCloseTo(fanAt(index, 0), 6);
+    }
+    // The fan's own month-on-month steps differ too, because the line's do.
+    const deltas = map(
+      (balance: number, index: number) =>
+        index === 0 ? 0 : balance - (optimistic[index - 1] ?? 0),
+      optimistic,
+    ).slice(1);
+    expect(
+      new Set(map((d: number) => Math.round(d), deltas)).size,
+    ).toBeGreaterThan(1);
+  });
+
+  // WHICH INSTANT "NOW" IS, stated rather than implied — the one thing the
+  // exact-equality test above is structurally blind to, because under a FLAT
+  // rate any consistent window start gives the same span.
+  //
+  // The integral runs from the PIVOT CELL'S START, which is the window the
+  // scalar version used too (`committed[nowIndex]` already holds that month's
+  // net flow, and the old line added `rate/12 × 1` on top of it for the next
+  // cell). What CHANGED is the sampling inside that first month: the old line
+  // charged the whole of it at the post-change rate, and the integral splits it
+  // at the change's own moment. So a change made LATE in its month moves the
+  // first projected step less than it used to and every step after it exactly
+  // as much — which is the change being honest about a date it previously
+  // rounded, and it is the one visible difference for a flat scenario too.
+  it("runs its window from the PIVOT CELL'S START, splitting at the change", () => {
+    const W14: Mutation = { id: "w14", at: new Date("2025-03-31"), label: "1" };
+    const W27: Mutation = { id: "w27", at: new Date("2025-06-30"), label: "2" };
+    const twoWeeks = [W14, W27];
+    const services = withChange(
+      withChange(SERVICES, "service-a", W14.id, HOURS, 30, twoWeeks),
+      "service-a",
+      W27.id,
+      HOURS,
+      10,
+      twoWeeks,
+    );
+    const sampling: RateSampling = {
+      boundaries: BOUNDARIES,
+      rate: (time: number) => rateAt(time, twoWeeks, services),
+      moments: map((mutation: Mutation) => timeOf(mutation.at), twoWeeks),
+      unit: "week",
+    };
+    // March is the pivot cell — `W14` falls on its last day.
+    const projected = projectedBalances(committed, sampling, 2);
+    const marchStart = new Date("2025-03-01").getTime();
+    const changeAt = timeOf(W14.at);
+    const aprilStart = new Date("2025-04-01").getTime();
+    const before = rateAt(marchStart, twoWeeks, services);
+    const after = rateAt(changeAt, twoWeeks, services);
+    expect(after).toBeGreaterThan(before);
+    // The first projected step is the two stretches either side of the change,
+    // NOT one month at the new rate — thirty of March's thirty-one days still
+    // run at the old one.
+    const firstStep =
+      (weeksBetween(marchStart, changeAt) * before) / 52 +
+      (weeksBetween(changeAt, aprilStart) * after) / 52;
+    expect(projected[3]! - (committed[2] ?? 0)).toBeCloseTo(firstStep, 6);
+    // And it is strictly smaller than the step after it, which runs the whole
+    // month at the new rate. The old scalar line made the two equal.
+    expect(projected[3]! - (committed[2] ?? 0)).toBeLessThan(
+      projected[4]! - projected[3]!,
+    );
+  });
+
+  it("prints the sampled rate per cell in the DEBUG table", () => {
+    const rows = projectionTable(committed, samplingFor(alternating()), 0);
+    expect(rows).toHaveLength(committed.length);
+    expect(rows[0]?.month).toBe("2025-01");
+    // The per-cell PROJECTED RATE — the number that did not exist while the
+    // projection took one scalar. January's sample is the Jan 1 change's rate.
+    expect(rows[0]?.projectedRate).toBe(
+      Math.round(rateAt(START, WEEKS, alternating())),
+    );
+    expect(map((row) => row.part, rows)[0]).toBe("committed");
+    expect(map((row) => row.part, rows)[1]).toBe("projected");
   });
 });
 
