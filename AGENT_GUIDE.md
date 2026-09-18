@@ -171,6 +171,32 @@ real caller needs it. Create the variant to serve a shipping consumer — never 
 pre-stock the shelf. (See also *Variant Surface: keep it minimal* in
 `STYLE_GUIDE.md`.)
 
+### The push-back protocol — before you create anything
+
+**Before creating any component or variant, do one of two things.**
+
+**(a) Name the existing component or variant that covers it** — by name — and
+use it. Search on the *state model* rather than the name you imagined (the
+`sui-gap-analysis` route does exactly this); a component you could not find is
+usually a component that already exists.
+
+**(b) Write a three-line justification and get Peter's confirmation:**
+
+1. **What mark or behaviour no existing Primitive provides** — the specific
+   thing, not "a card like that one but nicer".
+2. **Who the real consumer is** — the shipping app and screen that will render
+   it. **Showcase or bench usage is not a consumer.**
+3. **Why a variant of an existing Primitive can't express it** — which
+   Primitive you tried and what it could not do.
+
+Then **wait for Peter's confirmation**. Pushing back is the expected
+behaviour, not friction: an agent that silently adds a component or variant has
+broken the rule even when the addition is good. This is the enforcement arm of
+the composition axiom — *no component above Depth 1 contains anything but
+existing SUI components* ([README › Design
+philosophy](README.md#design-philosophy)) — so "I need new markup here" is
+almost always "I have not yet found the Primitive that already draws this".
+
 ### This is why the scales are short
 
 This rule is already load-bearing in the library:
@@ -401,7 +427,7 @@ Each bullet cost an hour and names where the pattern now lives.
 
 **Fill-height needs no prop.** `height: 100%` against a parent of INDEFINITE
 height computes to `auto`, so one declaration serves both callers — a card with
-a height gives it, a content-sized column doesn't (`RateGauge.css`). There is
+a height gives it, a content-sized column doesn't (`RateGaugeCanvas.css`). There is
 nothing for a `fill` prop to choose between. Three companions:
 
 - `aspect-ratio` on the host applies ONLY while the height is indeterminate, so
@@ -661,6 +687,17 @@ bundle is ruined anyway. That is what this script is for.
 - **`scripts/health-history.json` is tracked and changes on every `npm run
   health` run.** Commit it alongside health-affecting work rather than leaving
   it dirty in a shared checkout.
+- **`npm run adherence` is a REPORT with no ceiling, and its two output files
+  are git-ignored.** `docs/adherence/OPEN_ITEMS.md` and `report.json` are
+  rewritten by a `post-commit` hook and by the SessionStart hook, and they never
+  appear in a diff — deliberately, so a post-commit hook does not leave an
+  unrelated dirty file in a shared checkout the way `health-history.json` does
+  (see the bullet above for what that costs). Do not commit them, and do not
+  "fix" a finding as a side effect of unrelated work: one item, one PR, via
+  `.claude/skills/refactor-pass/SKILL.md`, which pins the public API. The rules
+  and the document each one comes from are in `scripts/adherence.mjs`'s header;
+  exemptions with their reasons are in `scripts/adherence-exemptions.json`.
+  Whether it ever becomes a ratchet is Peter's call.
 - **`docs/usage-manifest.json` is a REPORT, not a gate — and it does not tell
   you your push is safe.** The `pre-push` check warns and never blocks (it
   blocked until 2026-08-05, by which point it had refused four consecutive

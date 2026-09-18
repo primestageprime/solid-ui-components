@@ -1,6 +1,5 @@
 // ============================================
 // RateGauge — Composite (Depth 2)
-// Owns CSS (RateGauge.css). Composes Text (EllipsizedHudCaption) + Tooltip.
 //
 // A right-facing half ring — a "D" open to the left — that answers one
 // question: is the rate right now above or below its baseline, and by how
@@ -24,30 +23,37 @@
 // which keeps each row as near its own mark as legibility allows and cannot
 // let two leaders cross.
 //
-// The component does NO arithmetic beyond geometry and the delta it announces.
-// Everything positional lives in geometry.ts, which is pure and prints as a
-// table (geometry.test.ts); this file only paints what that returns. It is the
-// headless-observation-first discipline made structural: there is nowhere in
-// this module for a number to be decided.
+// ## What this module is, and is not
 //
-// Why it is Depth 2 and not the Atomic it began as: the value's NAME is
-// consumer-supplied and non-enumerated, so by Peter's standing rule it has to
-// ellipsize and offer the full value in a Tooltip. That means real HTML in a
-// <foreignObject> — the same device AnimatedSwimlaneChart uses — and real HTML
-// means the Text and Tooltip components rather than an SVG <text>. The delta
-// and the reference needle's name are short strings, so they stay as SVG text.
+// It owns NO CSS and renders NO intrinsic element. It composes three SUI
+// components and nothing else:
 //
-// It owns CSS at Depth 2, which the strict rule forbids. DELIBERATE EXCEPTION:
-// RateGauge.css is structural SVG geometry — stroke widths, dash patterns, band
-// fills, foreignObject clipping — none of which any atomic variant can express,
-// and none of which is layout. Every piece of it is noted where it sits.
+//   • RateGaugeCanvas (Structural Primitive, Depth 1) — the instrument. The
+//     meter host, the measured box, the dial, the needles, the brace, the
+//     callouts and the <foreignObject> live there, with RateGaugeCanvas.css,
+//     which is the only place stroke widths, dash patterns, band fills and
+//     label clipping can be expressed.
+//   • Tooltip + EllipsizedHudCaption — the label device, supplied INTO the
+//     canvas's <foreignObject> via `renderLabel`. A Primitive may not import a
+//     sibling Primitive, so the canvas states the slot and this module fills
+//     it. ADR 0010's core/adapter split, at the element level.
 //
-// Every WORD the gauge says about the numbers is the consumer's. The component
-// supplies no units, no currency, no domain nouns: `formatAgainst` returns the
-// whole second line of a callout and `formatDelta` the whole brace line, so a
-// consumer saying "$60k/yr over breakeven" and one saying "12 points clear"
-// both get exactly their own sentence. The generic defaults print a plain
-// grouped number, and "at zero" for zero.
+// What is left here is exactly the WORDING. Every word the gauge says about
+// the numbers is the consumer's: the component supplies no units, no currency
+// and no domain nouns. `formatAgainst` returns the whole second line of a
+// callout and `formatDelta` the whole brace line, so a consumer saying
+// "$60k/yr over breakeven" and one saying "12 points clear" both get exactly
+// their own sentence. The generic defaults print a plain grouped number, and
+// "at zero" for zero. Those functions, the strings they produce, the column
+// they have to be sized against and the announcement they compose are this
+// module's whole job — no number is decided here and no pixel is painted.
+//
+// Which lines are UNBOUNDED is a wording decision too, and so it is made here:
+// the value rows carry the consumer's non-enumerated `label`, so they go to
+// the canvas's ellipsize-plus-tooltip seam. The delta line is the consumer's
+// words as well, but it is a HUD line they build to fit; the reference
+// needle's name is this module's default or a short override. Neither can run
+// away with the column, so both stay bounded.
 //
 // The curried surface is `createRateGauge` (variants.ts): the WORDING — the
 // reference needle's name and the two formatters — is presentational and curries
@@ -63,32 +69,20 @@
 //
 // One size, one geometry — expand only when a caller demands it.
 // ============================================
+import { type Component, type JSX, mergeProps } from "solid-js";
 import {
-  For,
-  Index,
-  type Component,
-  createMemo,
-  createSignal,
-  onCleanup,
-  mergeProps,
-  onMount,
-  Show,
-} from "solid-js";
-import {
-  type Band,
-  type Box,
   type Callout,
   clampedValue,
-  COLUMN_TICK_HALF,
-  gaugeGeometry,
-  PIVOT_RADIUS,
-  TERMINAL_RADIUS,
   type Domain,
+  type GaugeGeometry,
 } from "./geometry";
+import {
+  RateGaugeCanvas,
+  type RateGaugeLabelSlot,
+  type RateGaugeLine,
+} from "./RateGaugeCanvas";
 import { EllipsizedHudCaption } from "../Text";
 import { Tooltip } from "../Tooltip";
-import { observeSize } from "../../internal/dom/observeSize";
-import "./RateGauge.css";
 
 export interface RateGaugeProps {
   /** The value range the ring spans, mapped onto [−90°, +90°]. */
@@ -159,18 +153,6 @@ const plainAgainst = (value: number): string =>
 const plainDelta = (delta: number): string =>
   `${delta < 0 ? "−" : "+"}${Math.abs(Math.round(delta)).toLocaleString()}`;
 
-/** Height of a callout's label box, and half of it — one 11px line. */
-const LABEL_BOX_HEIGHT = 14;
-/**
- * A band carries its own tone and whether it is lit. The dimming is the primary
- * channel for the answer — the reader watches which band the needle stands
- * in — so the tone is redundant encoding rather than the only signal.
- */
-const bandClass = (band: Band): string =>
-  `sui-rate-gauge__band sui-rate-gauge__band--${band.tone} sui-rate-gauge__band--${
-    band.lit ? "lit" : "dim"
-  }`;
-
 /**
  * Which callouts carry the consumer's own words, and so must ellipsize.
  *
@@ -183,43 +165,6 @@ const isConsumerText = (callout: Callout): boolean =>
   callout.id === "value" || callout.id === "valueAndBaseline";
 
 export const RateGauge: Component<RateGaugeProps> = (props) => {
-  // The host's own box, once it has one.
-  //
-  // With it, the canvas is that box at ONE UNIT PER CSS PIXEL: the dial grows
-  // to fill the card while the labels, strokes and dots keep their own size.
-  // Without it — a card that sizes to its content, which is most of the
-  // bench — the gauge draws its default dial on a canvas cut tight to it, and
-  // the whole thing scales together as it always did. That fallback is why
-  // this is a signal starting `undefined` rather than a measurement the first
-  // render has to wait for: an unmeasured gauge is a correct gauge, not a
-  // blank one.
-  const [box, setBox] = createSignal<Box | undefined>(undefined);
-  let host: HTMLDivElement | undefined;
-
-  const measureHost = (): void => {
-    if (host === undefined) return;
-    const rect = host.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      setBox({ width: rect.width, height: rect.height });
-    }
-  };
-
-  onMount(() => {
-    if (host === undefined) return;
-    // Synchronously first, so the first paint is already at the right size.
-    measureHost();
-    const stop = observeSize(host, (measured) => {
-      if (measured.width > 0 && measured.height > 0) {
-        setBox(measured);
-        return;
-      }
-      // Not laid out yet. Look again once this frame's layout has settled
-      // rather than recording a zero as though it were the answer.
-      queueMicrotask(measureHost);
-    });
-    onCleanup(stop);
-  });
-
   const baselineLabel = () => props.baselineLabel ?? DEFAULT_BASELINE_LABEL;
 
   /** Where a value stands against the ring's zero, entirely in the consumer's words. */
@@ -245,35 +190,35 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
         ];
   };
 
-  const geometry = createMemo(() =>
-    gaugeGeometry({
-      domain: props.domain,
-      baseline: props.baseline,
-      value: props.value,
-      caution: props.caution,
-      // The canvas is cut to the words as well as to the dial, so geometry is
-      // handed the strings that will END UP in the column — which is not the
-      // same as the three props. When the two needles coincide the callouts
-      // collapse to one row naming both, and that row's text is longer than
-      // any of the three; sizing the column from the props measured a string
-      // the gauge was never going to draw.
-      labels: columnTexts(),
-      box: box(),
-    }),
-  );
-  const tone = () => geometry().tone;
-
-  /** The words each callout carries. The delta row is the only formatted one. */
-  const textFor = (callout: Callout): readonly string[] => {
-    if (callout.id === "delta") return [deltaText(geometry().delta)];
+  /**
+   * The words each callout carries. The delta row is the only formatted one.
+   *
+   * Line one names the thing; line two says where it stands against zero.
+   * Only the NAME of a value row can be any length — it is the consumer's — so
+   * only it is `unbounded`. The relative line is short by construction (the
+   * consumer builds it to fit a HUD column).
+   */
+  const linesFor = (
+    callout: Callout,
+    geometry: GaugeGeometry,
+  ): readonly RateGaugeLine[] => {
+    if (callout.id === "delta") {
+      return [{ text: deltaText(geometry.delta), unbounded: false }];
+    }
     if (callout.id === "baseline") {
-      return [baselineLabel(), against(geometry().drawnBaseline)];
+      return [
+        { text: baselineLabel(), unbounded: false },
+        { text: against(geometry.drawnBaseline), unbounded: false },
+      ];
     }
     const name =
       callout.id === "valueAndBaseline"
         ? `${props.label} = ${baselineLabel()}`
         : props.label;
-    return [name, against(geometry().drawnValue)];
+    return [
+      { text: name, unbounded: isConsumerText(callout) },
+      { text: against(geometry.drawnValue), unbounded: false },
+    ];
   };
 
   // One sentence, same disposition as BandRail: the announcement has to carry
@@ -293,171 +238,40 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
    * the picture, not a quantity, so there is nothing domain-specific in them
    * for a consumer to have an opinion about.
    */
-  const bandPhrase = () => {
-    if (geometry().caution === undefined) return "";
-    if (geometry().tone === "danger") return " Below zero.";
-    return geometry().tone === "success"
+  const bandPhrase = (geometry: GaugeGeometry) => {
+    if (geometry.caution === undefined) return "";
+    if (geometry.tone === "danger") return " Below zero.";
+    return geometry.tone === "success"
       ? " Above the caution threshold."
       : " Below the caution threshold.";
   };
 
   // The same phrases the callouts carry, in the same words — a screen reader
   // and a sighted reader should be able to quote the gauge to each other.
-  const valueText = () =>
-    `${props.label}: ${against(geometry().drawnValue)}. ${baselineLabel()}: ${against(
-      geometry().drawnBaseline,
-    )}. ${deltaText(geometry().delta)}.${bandPhrase()}`;
+  const valueText = (geometry: GaugeGeometry): string =>
+    `${props.label}: ${against(geometry.drawnValue)}. ${baselineLabel()}: ${against(
+      geometry.drawnBaseline,
+    )}. ${deltaText(geometry.delta)}.${bandPhrase(geometry)}`;
+
+  /** The label device, dropped into the canvas's `<foreignObject>` slot. */
+  const renderLabel = (slot: RateGaugeLabelSlot): JSX.Element => (
+    <Tooltip content={slot.text} triggerAs="span">
+      <EllipsizedHudCaption>{slot.text}</EllipsizedHudCaption>
+    </Tooltip>
+  );
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: intentional ARIA meter; a native <meter> is a replaced element with its own UA bar rendering and cannot host the SVG dial that IS this readout.
-    <div
-      ref={host}
-      class={`sui-rate-gauge sui-rate-gauge--${tone()}`}
-      role="meter"
-      aria-label={props.label}
-      aria-valuemin={props.domain[0]}
-      aria-valuemax={props.domain[1]}
-      aria-valuenow={geometry().drawnValue}
-      aria-valuetext={valueText()}
-    >
-      <svg
-        class="sui-rate-gauge__canvas"
-        viewBox={geometry().viewBox}
-        aria-hidden="true"
-      >
-        {/* The ring's bands. Only the one holding the needle is lit — two of
-            them normally, three once a caution threshold splits the positive
-            half. */}
-        <For each={geometry().bands}>
-          {(band) => <path class={bandClass(band)} d={band.path} />}
-        </For>
-
-        {/* The delta as an AREA: the sector the two needles enclose, in the
-            active tone at low alpha. Then the zero reference line. */}
-        <Show when={geometry().deltaSector}>
-          <path
-            class="sui-rate-gauge__delta-sector"
-            d={geometry().deltaSector}
-          />
-        </Show>
-        <line
-          class="sui-rate-gauge__zero"
-          x1={geometry().metrics.center.cx}
-          y1={geometry().metrics.center.cy}
-          x2={geometry().zeroLine.x2}
-          y2={geometry().zeroLine.y2}
-        />
-
-        {/* The baseline needle: dashed and grey, because it is the reference,
-            not the reading. No tip cap — the cap marks where you ARE. */}
-        <line
-          class="sui-rate-gauge__needle sui-rate-gauge__needle--baseline"
-          x1={geometry().metrics.center.cx}
-          y1={geometry().metrics.center.cy}
-          x2={geometry().baselineTip.x}
-          y2={geometry().baselineTip.y}
-        />
-
-        {/* The delta brace, outside the ring, in the active tone. Its cusp is
-            where the delta's leader starts — which is why that callout carries
-            no dot. */}
-        <Show when={geometry().brace}>
-          <path class="sui-rate-gauge__brace" d={geometry().brace} />
-        </Show>
-
-        {/* The current needle, capped with an arc concentric with the ring so
-            the cap reads as a segment of the instrument's own edge. */}
-        <line
-          class="sui-rate-gauge__needle sui-rate-gauge__needle--value"
-          x1={geometry().metrics.center.cx}
-          y1={geometry().metrics.center.cy}
-          x2={geometry().valueTip.x}
-          y2={geometry().valueTip.y}
-        />
-        <path
-          class="sui-rate-gauge__needle-cap"
-          d={geometry().valueTip.capArc}
-        />
-
-        <circle
-          class="sui-rate-gauge__pivot"
-          cx={geometry().metrics.center.cx}
-          cy={geometry().metrics.center.cy}
-          r={PIVOT_RADIUS}
-        />
-
-        {/* The callouts. Geometry decided every point; this only paints. */}
-        <For each={geometry().callouts}>
-          {(callout) => (
-            <g class={`sui-rate-gauge__row sui-rate-gauge__row--${callout.id}`}>
-              <path class="sui-rate-gauge__leader" d={callout.leader} />
-              {/* The terminal, when geometry says there is room for one. A dot
-                  on a mark the callout does not name reads as a blemish on
-                  that mark, so those leaders start bare from the anchor
-                  instead. Filled for a live mark, open for the baseline — the
-                  same distinction the dashed needle already makes. */}
-              <Show when={callout.showDot}>
-                <circle
-                  class="sui-rate-gauge__terminal"
-                  cx={callout.anchor.x}
-                  cy={callout.anchor.y}
-                  r={TERMINAL_RADIUS}
-                />
-              </Show>
-              <line
-                class="sui-rate-gauge__column-tick"
-                x1={callout.labelX}
-                x2={callout.labelX}
-                y1={callout.y - COLUMN_TICK_HALF}
-                y2={callout.y + COLUMN_TICK_HALF}
-              />
-              {/* Line one names the thing; line two says where it stands
-                  against zero. Only the NAME can be any length — it is the
-                  consumer's — so only it needs a <foreignObject> to ellipsize
-                  in and a Tooltip to hand the whole of itself back. The
-                  relative line is short by construction (the consumer builds
-                  it to fit a HUD column), so it stays SVG text. */}
-              <Index each={textFor(callout)}>
-                {(line, index) => (
-                  <Show
-                    when={index === 0 && isConsumerText(callout)}
-                    fallback={
-                      <text
-                        class={`sui-rate-gauge__label${
-                          index === 0 ? "" : " sui-rate-gauge__label--relative"
-                        }${
-                          callout.id === "delta"
-                            ? " sui-rate-gauge__label--delta"
-                            : ""
-                        }`}
-                        x={callout.textX}
-                        y={callout.lineY[index]}
-                        dominant-baseline="middle"
-                      >
-                        {line()}
-                      </text>
-                    }
-                  >
-                    <foreignObject
-                      x={callout.textX}
-                      y={callout.lineY[index] - LABEL_BOX_HEIGHT / 2}
-                      width={geometry().labelWidth}
-                      height={LABEL_BOX_HEIGHT}
-                    >
-                      <div class="sui-rate-gauge__label-box">
-                        <Tooltip content={line()} triggerAs="span">
-                          <EllipsizedHudCaption>{line()}</EllipsizedHudCaption>
-                        </Tooltip>
-                      </div>
-                    </foreignObject>
-                  </Show>
-                )}
-              </Index>
-            </g>
-          )}
-        </For>
-      </svg>
-    </div>
+    <RateGaugeCanvas
+      domain={props.domain}
+      baseline={props.baseline}
+      value={props.value}
+      caution={props.caution}
+      labels={columnTexts()}
+      lines={linesFor}
+      valueText={valueText}
+      ariaLabel={props.label}
+      renderLabel={renderLabel}
+    />
   );
 };
 

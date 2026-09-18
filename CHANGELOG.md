@@ -48,6 +48,35 @@
 - **`MutationSliders` is declared Depth 3**, which is what it always was by
   the rule now that its column is a real component boundary: the Composite
   holds a Depth-2 column holding a Depth-1 slider.
+- **`RateGauge` and `TreeDiffChart` are honestly Depth 2 — internal
+  refactor, no public API change.** Both were labelled Composite (Depth 2)
+  while rendering raw `svg` / `path` / `text` / `foreignObject` / `div` and
+  owning a CSS file as a "deliberate exception". Peter's 2026-09-17 ruling is
+  that no component above Depth 1 contains anything but existing SUI
+  components, so each chart's canvas moved into a **Structural Primitive
+  (Depth 1)** beside it: `RateGauge/RateGaugeCanvas.tsx` +
+  `RateGaugeCanvas.css` (was `RateGauge.css`) and
+  `TreeDiffChart/TreeDiffCanvas.tsx` + `TreeDiffCanvas.css` (was
+  `TreeDiffChart.css`). Each Composite now owns **zero CSS and zero intrinsic
+  elements** and composes only SUI components — the canvas, plus `Tooltip` +
+  the ellipsizing `Text` variant, plus `Legend` + `TightStack` for the tree
+  diff. The ellipsize-and-tooltip label device is supplied INTO the canvas's
+  `<foreignObject>` through a `renderLabel` slot, because a Primitive may not
+  import the sibling `Tooltip` Primitive; that is ADR 0010's core/adapter
+  split made structural, and the same seam as `ScrubChart`'s render
+  callbacks. What stayed in each Composite is the orchestration a Composite
+  is for: layout/highlight/legend derivation for the tree diff, and the whole
+  of the WORDING (`formatAgainst`, `formatDelta`, the `aria-valuetext`
+  announcement, and which callout lines are unbounded) for the gauge.
+  **Nothing a consumer can see changed**: every prop, export, class name and
+  rendered element is what 0.171.0 shipped, and RateGauge's 110 and
+  TreeDiffChart's 65 existing tests pass unmodified. The two canvases are
+  deliberately **not exported** — one consumer is a hypothetical seam, two is
+  a real one (ADR 0010) — so they carry no barrel entry and no showcase of
+  their own; the existing `rate-gauge` and `tree-diff-chart` showcases render
+  them. The one DOM difference is internal: the tree diff's inert
+  `div.sui-tree-diff__host` wrapper, which carried no CSS rule at all, is
+  gone — the measured element is now the `TightStack` it used to wrap.
 
 ## 0.171.0 — 2026-09-16
 

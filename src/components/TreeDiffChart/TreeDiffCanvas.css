@@ -1,6 +1,9 @@
-/* TreeDiffChart — Composite (Depth 2).
+/* TreeDiffCanvas — Structural Primitive (Depth 1).
  * The SVG coordinate system is the layout engine; nothing here is box-model
- * geometry.
+ * geometry. This file belongs to the CANVAS, not to the TreeDiffChart
+ * Composite that composes it: a Composite owns no CSS, so the stroke widths,
+ * fills and label clipping that only an SVG can express live here, with the
+ * Primitive that draws them.
  *
  * TWO PAINT SCHEMES, and the second overrides the first.
  *
