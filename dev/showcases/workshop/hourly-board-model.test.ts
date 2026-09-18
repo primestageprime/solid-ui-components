@@ -58,6 +58,7 @@ import {
   averageRate,
   averageRateOver,
   bandOfRate,
+  byVariability,
   canAdd,
   drawnRate,
   ensureMutation,
@@ -98,12 +99,14 @@ import {
   seasonalHours,
   segmentLabelsOf,
   slotOfTime,
+  stackOrderTable,
   totalHoursAt,
   weekLabel,
   weekOfPick,
   weeksBetween,
   weightFrom,
   weightToReach,
+  variabilityOf,
   withChange,
   withDrop,
   withoutChange,
@@ -919,11 +922,15 @@ describe("the Work Mix stack", () => {
 
   it("opens every band at the span's left edge, on its own schedule", () => {
     const series = workMixSeries(SERVICES, []);
-    expect(map((one) => one.id, series)).toEqual(["service-a", "service-b"]);
+    // ORDERED BY VARIABILITY, not fixture order: Service B's std dev
+    // (≈3.32 h/wk) is lower than Service A's (≈5.07 h/wk), so B is the
+    // BOTTOM band and A is the TOP — see "the stack, ordered by variability"
+    // below for the numbers.
+    expect(map((one) => one.id, series)).toEqual(["service-b", "service-a"]);
     for (const one of series) {
       expect(timeOf(one.points[0]!.at)).toBe(START);
     }
-    expect(series[0]?.points[0]).toEqual({ at: DOMAIN_START, value: 15 });
+    expect(series[0]?.points[0]).toEqual({ at: DOMAIN_START, value: 13 });
   });
 
   it("DRAWS THE SEASON, and still emits only changes", () => {
@@ -940,9 +947,77 @@ describe("the Work Mix stack", () => {
       // The shape: the summer weeks sit above the winter ones.
       expect(Math.max(...values)).toBeGreaterThan(Math.min(...values));
     }
-    // Service A's spike weeks are the three highest points of its band.
-    const aValues = map((point) => point.value, series[0]!.points);
+    // Service A is the MORE variable service, so it is series[1] (the top
+    // band) here — see the ordering test above. Its spike weeks are the three
+    // highest points of its band.
+    const aValues = map((point) => point.value, series[1]!.points);
     expect(Math.max(...aValues)).toBe(35);
+  });
+
+  describe("the stack, ordered by variability", () => {
+    it("puts the STEADIER service on the bottom and the SPIKIER one on top", () => {
+      // Peter, 2026-09-18: "Sort by variability. So the one with the biggest
+      // bumps is on top." Service A swings harder (±30% of a bigger base)
+      // than Service B (±25% of a smaller one), so A's std dev of its 53
+      // weekly hours is the larger of the two, and A lands on top.
+      const stdDevA = variabilityOf(SERVICES[0] as Service, []);
+      const stdDevB = variabilityOf(SERVICES[1] as Service, []);
+      expect(stdDevA).toBeGreaterThan(stdDevB);
+      expect(stdDevA).toBeCloseTo(5.07, 1);
+      expect(stdDevB).toBeCloseTo(3.32, 1);
+      expect(map((service) => service.id, byVariability(SERVICES, []))).toEqual(
+        ["service-b", "service-a"],
+      );
+    });
+
+    it("flips when a scenario raises the steadier service's spikes above the other's", () => {
+      // A single flat offset does not change a service's SWING — it shifts
+      // the whole curve, and `variabilityOf` reads that unchanged shape.
+      // What raises B's spikes above A's is a mid-year CHANGE: pushed to the
+      // top of its allowance from Q1, then dropped to zero at Q3, so B's
+      // live schedule swings from 32 h/wk to 0 — a bigger bump than A's own
+      // ±30% season.
+      const Q3: Mutation = { id: "q3", at: new Date("2025-07-01"), label: "3" };
+      const mutations = [Q1, Q3];
+      const raised = withDrop(
+        withChange(SERVICES, "service-b", Q1.id, HOURS, 32, mutations),
+        "service-b",
+        Q3.id,
+      );
+      const stdDevA = variabilityOf(raised[0] as Service, mutations);
+      const stdDevB = variabilityOf(raised[1] as Service, mutations);
+      expect(stdDevB).toBeGreaterThan(stdDevA);
+      expect(
+        map((service) => service.id, byVariability(raised, mutations)),
+      ).toEqual(["service-a", "service-b"]);
+    });
+
+    it("keeps the FIXTURE'S OWN order when variability ties", () => {
+      const tied: Service[] = [
+        { ...(SERVICES[0] as Service), seasonal: flatShape(20) },
+        { ...(SERVICES[1] as Service), seasonal: flatShape(20) },
+      ];
+      expect(variabilityOf(tied[0] as Service, [])).toBe(0);
+      expect(variabilityOf(tied[1] as Service, [])).toBe(0);
+      expect(map((service) => service.id, byVariability(tied, []))).toEqual([
+        "service-a",
+        "service-b",
+      ]);
+    });
+
+    it("prints the stack order table the DEBUG panel shows", () => {
+      const table = stackOrderTable(SERVICES, []);
+      expect(map((row) => row.service, table)).toEqual([
+        "Service B",
+        "Service A",
+      ]);
+      expect(map((row) => row.band, table)).toEqual(["bottom", "top"]);
+      expect(table[0]?.position).toBe(0);
+      expect(table[1]?.position).toBe(1);
+      expect(table[0]!.stdDevHoursPerWeek).toBeLessThan(
+        table[1]!.stdDevHoursPerWeek,
+      );
+    });
   });
 
   it("emits a rate-only change as NO new hours point, and a drop to zero", () => {

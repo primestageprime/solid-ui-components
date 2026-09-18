@@ -177,6 +177,7 @@ import {
   scenarioDigest,
   scheduleTable,
   segmentLabelsOf,
+  stackOrderTable,
   totalHoursAt,
   weekLabel,
   weekOfPick,
@@ -458,6 +459,12 @@ const printTables = (
       workMixSeries(services, mutations),
     ),
   );
+  // THE STACK ORDER: each service's variability (std dev of its 53 weekly
+  // hours, read from the LIVE schedule) beside where that put it — position 0
+  // is the bottom band, and the highest std dev lands last, which is the TOP
+  // band. Peter, 2026-09-18: "Sort by variability. So the one with the
+  // biggest bumps is on top."
+  console.table(stackOrderTable(services, mutations));
   console.table(
     map(
       (tick: number) => ({
@@ -661,10 +668,11 @@ const WorkMixPlot: Component<{
         <Grid />
         <YAxis tickFormat={formatHours} />
         <XAxis tickValues={QUARTER_TICKS} tickFormat={quarterLabelOf} />
-        {/* One band per service, BOTTOM FIRST — array order is stacking order
-            and palette order, and the top of the stack IS the total hours a
-            week. Paint is not configurable, deliberately: a caller who could
-            repaint one band could break the picture's only claim. */}
+        {/* One band per service, ordered by VARIABILITY (`workMixSeries` →
+            `byVariability`) — bottom is the steadiest service, top is the one
+            with the biggest bumps, and the top of the stack IS the total
+            hours a week. Paint is not configurable, deliberately: a caller
+            who could repaint one band could break the picture's only claim. */}
         <StackedAreaSeries series={series()} />
         {/* Peter: the chart "affords overtime, but lets you know when you're
             working more than full time". A rule ACROSS the stack, not a bound
