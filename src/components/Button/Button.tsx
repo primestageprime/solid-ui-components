@@ -21,7 +21,14 @@ export interface ButtonProps
     | "outlined"
     | "text"
     | "icon-only"
-    | "pill";
+    | "pill"
+    /**
+     * A TOGGLEABLE LABEL: the button stripped back to its own text, with no
+     * box, no padding and no colour of its own, taking the accent when
+     * `active`. For a name that is also the select control — see
+     * `PressableLabelButton`.
+     */
+    | "plain-label";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   /** Active/selected state (absorbed from HUDButton) */

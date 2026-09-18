@@ -2,7 +2,52 @@
 
 ## Unreleased
 
+### Added
+- **`MarkedSlider` — a new Atomic Primitive (Depth 1), extracted from
+  `MutationSliders`.** ONE vertical slider, marked: the track line, the shaded
+  allowed-range box, the muted prior arrowhead and the accent value arrowhead
+  pointing at the track from opposite sides, the tone-coloured change line
+  between them, and the caller's `deltaLabel` level with its midpoint. It owns
+  `MarkedSlider.css` and the Kobalte slider root, which is what a Primitive is
+  allowed to own; it is named by SHAPE, not by domain (`domain`, `range`,
+  `value`, `prior`, `deltaLabel` — no entity, no scenario), and it formats
+  nothing, because a unit is not a Primitive's business. Factory:
+  `createMarkedSlider({ snap })`; curried variant `ContinuousMarkedSlider`.
+  Ships with a showcase, a `COMPONENTS.md` entry and mounting tests.
+- **Layout variant `FillStretchRow`** — a `StretchRow` that claims the height
+  its parent gives it (`height:100%; min-height:0`), the top of a fill chain
+  that `FillColumn`'s `flex:1` cannot supply inside a block parent.
+- **Text variants `SteadyMonoValue`, `SteadyMonoMeta` and `ReservedMonoMeta`**
+  — mono readouts with an EXPLICIT line box, so two columns of them stay level
+  whatever glyphs they hold, plus the reserved twin that holds its space and
+  says nothing.
+- **Button variants `PressableLabelButton`, `GlyphSlotGhostButton` and
+  `ReservedGlyphSlotButton`**, and a new `plain-label` Button variant behind
+  the first: a name that is also the select control — the button stripped back
+  to its own text, taking the accent when `active` and struck through when it
+  carries `data-struck`. The other two pin a glyph slot's box at 24px so its
+  several states cannot change a column's height, hidden in the state that has
+  no action to offer. **`plain-label` is a new variant VALUE and therefore a
+  #2-Rule expansion — flagged for Peter's confirmation.**
+
 ### Changed
+- **`MutationSliders` now holds to the composition axiom: no CSS and no
+  intrinsic elements above Depth 1** (Peter's ruling, 2026-09-17). Its private
+  dial no longer renders two raw `<button>`s, an SVG overlay and the Kobalte
+  root directly, and `MutationSliders.css` is gone — the drawing moved into the
+  new `MarkedSlider` Primitive, the row's fill chain into `FillStretchRow`, the
+  name toggle into `PressableLabelButton`, the readouts into the steady Text
+  variants and the footer slot into the glyph-slot Button variants. The dial's
+  geometry moved to `MarkedSlider/geometry.ts` beside the Primitive that paints
+  it; the row's paging and pinning math is now `MutationSliders/rows.ts`.
+  **The public API is unchanged** — `MutationSlidersProps`, `Entity`, `Domain`,
+  `ChangeTone`, `MutationSliderLabels`, `createMutationSliders`,
+  `NumberMutationSliders`, every callback and every behaviour, all pinned by
+  the 219 existing tests, which pass unchanged apart from the CSS selectors
+  they reach through.
+- **`MutationSliders` is declared Depth 3**, which is what it always was by
+  the rule now that its column is a real component boundary: the Composite
+  holds a Depth-2 column holding a Depth-1 slider.
 - **`RateGauge` and `TreeDiffChart` are honestly Depth 2 — internal
   refactor, no public API change.** Both were labelled Composite (Depth 2)
   while rendering raw `svg` / `path` / `text` / `foreignObject` / `div` and

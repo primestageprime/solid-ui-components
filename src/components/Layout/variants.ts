@@ -712,6 +712,27 @@ export const FillWrapRow: Component<RowDataProps> = createRow({
   style: { flex: "1", "min-height": "0" },
 });
 
+/** FillStretchRow — a `StretchRow` that CLAIMS THE HEIGHT ITS PARENT GIVES IT
+ *  (`height:100%; min-height:0; gap:sm`), stretching its children to fill it.
+ *
+ *  The TOP of a fill chain, and the piece `FillWrapRow` and `FillColumn`
+ *  cannot supply: those bake `flex:1`, which distributes height WITHIN a flex
+ *  parent and does nothing at all inside a BLOCK one. `height: 100%` against a
+ *  parent of INDEFINITE height computes to `auto` by the CSS sizing rules, so
+ *  ONE declaration serves both callers — a card with a height gives it, a
+ *  content-sized column does not — with no `fill` prop and no branch (the
+ *  trick `RateGauge.css` uses). `min-height: 0` lets it SHRINK inside a flex
+ *  cell instead of pushing the card open.
+ *
+ *  For a row of instruments that must absorb its container in BOTH directions:
+ *  `MutationSliders`, whose dials lengthen with the height the row claims.
+ *  Measured on the scenario board at 1400×1300 — the cell offered 759px and
+ *  the row was taking 363px of content before this existed. */
+export const FillStretchRow: Component<RowDataProps> = createRow({
+  gap: "sm",
+  style: { height: "100%", "min-height": "0" },
+});
+
 /** GrowCenterColumn — fills the height its parent column has left and CENTRES
  *  its child in it (`flex:1 1 0; min-height:0; justify:center`).
  *

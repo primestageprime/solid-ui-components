@@ -37,7 +37,7 @@ export { NumberMutationSliders } from "./variants";
 // for exactly this reason). An ambiguous `export *` resolves to NOTHING
 // silently, so if a second component ever wants one of these words, THAT one
 // qualifies — this component was here first and has consumers.
-export type { ChangeTone, Domain, Entity } from "./geometry";
+export type { ChangeTone, Domain, Entity } from "../MarkedSlider/geometry";
 
 // Qualified aliases, kept alongside. Additive: the scenario board already
 // imports `MutationEntity`, and a name that reads unambiguously at a distant
@@ -45,4 +45,4 @@ export type { ChangeTone, Domain, Entity } from "./geometry";
 export type {
   Entity as MutationEntity,
   Domain as MutationSlidersDomain,
-} from "./geometry";
+} from "../MarkedSlider/geometry";

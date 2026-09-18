@@ -166,6 +166,54 @@ export const MonoMeta = createText({
   style: { "font-size": "11px", "font-family": "var(--sui-font-mono)" },
 });
 
+// ── Readout rows whose line box does NOT depend on their glyphs ──────────
+// Peter, 2026-09-16: "elements that become invisible ... don't hold their
+// space. That means the control moves around when you change it, which is
+// really bad UX." An EXPLICIT line box is what makes two readouts in
+// neighbouring columns agree: measured in the browser, an em-dash gave a line
+// box 1px shorter than a five-character figure, which moved that column's
+// figure and the control under it against its neighbours. One pixel is not a
+// bug anybody would report, but "identical" is a promise that survives a font
+// change and "within a pixel" is not.
+
+// Steady mono value — `MonoValue` with an explicit line box, for the big
+// figure in a column of instruments whose neighbours must stay level.
+export const SteadyMonoValue = createText({
+  variant: "value",
+  style: {
+    "font-family": '"JetBrains Mono", "Fira Code", monospace',
+    "line-height": "1.25",
+  },
+});
+
+// Steady mono meta — `MonoMeta` with an explicit line box, for the muted
+// second line under a steady value.
+export const SteadyMonoMeta = createText({
+  variant: "sublabel",
+  style: {
+    "font-size": "11px",
+    "font-family": "var(--sui-font-mono)",
+    "line-height": "1.35",
+  },
+});
+
+// Reserved mono meta — `SteadyMonoMeta` that HOLDS ITS SPACE AND SAYS NOTHING
+// (`visibility: hidden`). For the state where the second line has nothing to
+// report: removing the node would jump everything below it, and `visibility`
+// (unlike `display: none`) keeps the box while taking the node out of the
+// accessibility tree and out of the tab order. Give it a non-breaking space,
+// not an empty string — an empty inline box collapses to zero height and takes
+// the row with it.
+export const ReservedMonoMeta = createText({
+  variant: "sublabel",
+  style: {
+    "font-size": "11px",
+    "font-family": "var(--sui-font-mono)",
+    "line-height": "1.35",
+    visibility: "hidden",
+  },
+});
+
 // Danger-tinted body text — inline error reasons in detail panels.
 export const DangerBody = createText({
   variant: "body",

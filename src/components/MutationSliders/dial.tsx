@@ -1,89 +1,79 @@
 // ============================================
-// MutationDial — ONE dial. Private to MutationSliders (Depth 2).
+// MutationDial — ONE entity's column. Composite (Depth 2), private to
+// MutationSliders.
+//
+// ZERO CSS AND ZERO INTRINSIC ELEMENTS, as of 2026-09-17 (Peter's axiom: no
+// component above Depth 1 contains anything but existing SUI components — no
+// raw elements, no CSS, no third-party primitives). Everything this file used
+// to draw by hand now comes from a component that owns it:
+//
+//   • the dial itself      → `MarkedSlider` (Depth 1, owns MarkedSlider.css,
+//                            owns the Kobalte root and the SVG overlay)
+//   • the name toggle      → `PressableLabelButton` + `NowrapLabel`
+//   • the two readouts     → `SteadyMonoValue`, `SteadyMonoMeta` /
+//                            `ReservedMonoMeta`
+//   • the footer slot      → `GlyphSlotGhostButton` / `ReservedGlyphSlotButton`
+//                            + `Icon`
+//   • the column           → `TightCenteredColumn`
 //
 // Lowercase filename ON PURPOSE, the same disposition as geometry.ts and
 // BandRail/bands.tsx: `isEntryPath` in scripts/render-coverage.mjs matches any
 // PascalCase `.tsx` under src/components/, so a `MutationDial.tsx` here would
 // register as a published component owing its own showcase, its own catalog
 // entry and its own COMPONENTS.md section. Nobody has asked for a standalone
-// dial yet (SUI: start minimal, expand on demand), so the seam is real and the
-// export is not. Promoting it later is one rename and a showcase.
+// column yet (SUI: start minimal, expand on demand), so the seam is real and
+// the export is not.
 //
-// WHAT THIS OWNS: one entity's column — the name button, the Kobalte slider
-// root, the SVG overlay of marks, the two readouts and the one footer slot. It
-// measures its own height and intercepts its own arrow keys.
+// WHAT THIS OWNS: one entity's column — which words go in the two readouts,
+// which of the two actions the one footer slot is offering, and the fact that
+// the name is a toggle. It FORMATS: the consumer's `format` is applied here,
+// and the Primitive below is handed finished strings, because a unit is not a
+// Primitive's business.
 //
 // WHAT IT DOES NOT OWN: the row. Paging, selection, pinning and the shared
-// domain all belong to the composite, because each of them is a fact about the
-// OTHER dials. This component is told whether it is selected; it never decides
-// that, and it never sees its siblings.
+// domain all belong to the composite above, because each of them is a fact
+// about the OTHER dials. This component is told whether it is selected; it
+// never decides that, and it never sees its siblings.
 //
-// THE MOVE SEAM. A dial reports where its thumb WENT, in three phases, and the
-// composite decides what that means for the row:
-//
-//   • `drag`   — an intermediate value under the pointer. Cheap listeners only.
-//   • `commit` — the pointer was released. The expensive one.
-//   • `step`   — one arrow key, which is a whole gesture on its own.
-//
-// Reporting the phase rather than calling two callbacks keeps the pin fan-out
-// in ONE place: a pinned dial must move its peers instead of itself, and that
-// decision cannot be made here without this component knowing the row.
-//
-// Composes Layout (TightCenteredColumn) + Text (MonoMeta, MonoValue,
-// NowrapLabel) + Button (SmallGhostButton) + Icon, over Kobalte's slider root.
-// The CSS it shares with the row (MutationSliders.css) is the dial's own
-// interior geometry — a fixed canvas, an SVG overlay and a percentage-placed
-// thumb — which is data-driven placement rather than an arrangement
-// vocabulary, and is the deliberate Depth-2 CSS exception noted there.
+// THE MOVE SEAM. `MarkedSlider` reports an intermediate value through
+// `onChange` and a committed one through `onChangeEnd`, and this file passes
+// both up unchanged so the pin fan-out stays in ONE place: a pinned dial must
+// move its peers instead of itself, and that decision cannot be made here
+// without this component knowing the row.
 // ============================================
-import { Slider as KobalteSlider } from "@kobalte/core/slider";
-import { type Component, type JSX, Show, onCleanup, onMount } from "solid-js";
-import { observeSize } from "../../internal/dom/observeSize";
-import { SmallGhostButton } from "../Button";
+import { type Component, type JSX, Show } from "solid-js";
+import { Dynamic } from "solid-js/web";
+import {
+  GlyphSlotGhostButton,
+  PressableLabelButton,
+  ReservedGlyphSlotButton,
+} from "../Button";
 import { Icon } from "../Icon";
 import { TightCenteredColumn } from "../Layout";
-import { MonoMeta, MonoValue, NowrapLabel } from "../Text";
-import type { ResolvedLabels } from "./labels";
+import { MarkedSlider } from "../MarkedSlider";
 import {
-  BAND_HALF,
-  CHANGE_HALF,
-  DELTA_X,
   type DialGeometry,
   type Domain,
   type Entity,
-  TRACK_X,
-  VIEW_WIDTH,
   deltaLabelOf,
   dialGeometry,
-  settle,
-  trackPath,
-} from "./geometry";
-
-/** Which way each arrow key moves the value. */
-const ARROW_DIRECTION: Record<string, number> = {
-  ArrowUp: 1,
-  ArrowRight: 1,
-  ArrowDown: -1,
-  ArrowLeft: -1,
-};
-
-/** Which way each page key moves it. */
-const PAGE_DIRECTION: Record<string, number> = {
-  PageUp: 1,
-  PageDown: -1,
-};
-
-/** A page key, and Shift+arrow, move ten arrow steps. */
-const PAGE_MULTIPLE = 10;
+} from "../MarkedSlider/geometry";
+import {
+  NowrapLabel,
+  ReservedMonoMeta,
+  SteadyMonoMeta,
+  SteadyMonoValue,
+} from "../Text";
+import type { ResolvedLabels } from "./labels";
 
 /**
  * The placeholder an empty text slot carries.
  *
  * A non-breaking space, not an empty string: an empty inline box collapses to
  * zero height and takes the row with it, which is the shift this exists to
- * prevent. The `--reserved` class hides it; the character keeps the line.
+ * prevent. `ReservedMonoMeta` hides it; the character keeps the line.
  */
-const NBSP = "\u00a0";
+const NBSP = " ";
 
 /** The removed entity's readout: there is no future amount to print. */
 const NO_VALUE = "—";
@@ -95,102 +85,6 @@ const NO_VALUE = "—";
  * Restore beside it IS an Icon (`undo`), because one exists that means it.
  */
 const REMOVE_MARK = "⊗";
-
-/** Which gesture produced a value, and therefore what it costs to honour. */
-export type MovePhase = "drag" | "commit" | "step";
-
-/**
- * One dial's painted marks, drawn back to front: the scale, the allowed range,
- * the coloured change, then the two arrowheads on top of all of it.
- *
- * The overlay is `aria-hidden`: every mark on it restates something the thumb
- * already announces through `aria-valuenow` and the readout prints in words, so
- * putting the drawing in the accessibility tree would say each amount twice.
- */
-const DialMarks: Component<{
-  dial: DialGeometry;
-  /** The signed delta, already formatted, or `null` when there is none. */
-  deltaLabel: string | null;
-  /** The dial's drawn height in px — the viewBox is 1:1 with it. */
-  height: number;
-}> = (props) => (
-  <svg
-    class="sui-mutation-sliders__marks"
-    // The viewBox grows with the BOX rather than the box stretching a fixed
-    // viewBox. `preserveAspectRatio="none"` scales TEXT as well as geometry,
-    // so a stretched viewBox would magnify the 11px delta labels vertically
-    // into something distorted and unreadable. Keeping the two 1:1 means the
-    // track lengthens while every label and arrowhead stays the size it was.
-    viewBox={`0 0 ${VIEW_WIDTH} ${props.height}`}
-    preserveAspectRatio="none"
-    aria-hidden="true"
-  >
-    <path
-      class="sui-mutation-sliders__track-line"
-      d={trackPath(props.height)}
-    />
-    {/* The allowed range, under everything: it is the span the entity is
-        permitted, not a mark that hides the scale it sits on. */}
-    <rect
-      class="sui-mutation-sliders__band"
-      x={TRACK_X - BAND_HALF}
-      y={props.dial.band.y}
-      width={BAND_HALF * 2}
-      height={props.dial.band.height}
-    />
-    <Show when={props.dial.changeLine}>
-      {(line) => (
-        <rect
-          class="sui-mutation-sliders__change"
-          classList={{
-            [`sui-mutation-sliders__change--${props.dial.changeTone}`]: true,
-          }}
-          x={TRACK_X - CHANGE_HALF}
-          y={line().y}
-          width={CHANGE_HALF * 2}
-          height={line().height}
-        />
-      )}
-    </Show>
-    {/* A NEW entity has no prior amount, so there is no prior arrow to draw —
-        not one parked at the range floor, which would point at a figure that
-        was never true. */}
-    <Show when={props.dial.priorArrow}>
-      {(arrow) => (
-        <path class="sui-mutation-sliders__arrow--prior" d={arrow()} />
-      )}
-    </Show>
-    <Show when={props.dial.futureArrow}>
-      {(arrow) => (
-        <path class="sui-mutation-sliders__arrow--future" d={arrow()} />
-      )}
-    </Show>
-    {/* The figure, level with the middle of the line it names. It is SVG text
-        rather than a DOM node because its y is decided by the data, and a DOM
-        node would need an inline style to sit there. */}
-    {/* ALWAYS RENDERED, hidden when there is nothing to name. It carries no
-        `aria-hidden` of its own: the whole overlay above is already
-        `aria-hidden`, so repeating it here said nothing and tripped
-        `noAriaHiddenOnFocusable`, which reads an SVG `<text>` as focusable.
-        Deleting the redundant attribute is a better answer than suppressing
-        the rule. An SVG text node
-        cannot shift its siblings, but keeping the node means every dial has
-        the same shape in every state — which is what the no-shift tests
-        assert, and what stops a future edit reintroducing a conditional row
-        somewhere it DOES matter. */}
-    <text
-      class="sui-mutation-sliders__delta"
-      classList={{
-        [`sui-mutation-sliders__delta--${props.dial.changeTone}`]: true,
-        "sui-mutation-sliders__reserved": props.deltaLabel === null,
-      }}
-      x={DELTA_X}
-      y={props.dial.deltaY ?? 0}
-    >
-      {props.deltaLabel ?? NBSP}
-    </text>
-  </svg>
-);
 
 export interface MutationDialProps {
   /** The entity this dial draws. */
@@ -215,8 +109,10 @@ export interface MutationDialProps {
   onSelect: () => void;
   /** The dial's box was measured — every dial in a row shares one height. */
   onMeasure: (height: number) => void;
-  /** The thumb reached `value` by `phase`. Already settled onto range + grid. */
-  onMove: (value: number, phase: MovePhase) => void;
+  /** An intermediate value. Already settled onto range + grid. */
+  onMove: (value: number) => void;
+  /** A COMMITTED value — a released pointer, or one arrow key. */
+  onCommit: (value: number) => void;
   /** The footer's action on a present entity. Omitted, no ⊗ is drawn. */
   onRemove?: () => void;
   /** The footer's action on a removed entity. Omitted, no ↺ is drawn. */
@@ -286,155 +182,51 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
       : null;
   };
 
-  /**
-   * Arrow and page keys, intercepted in the CAPTURE phase.
-   *
-   * Kobalte's own thumb handler steps by its `step`, which is the DRAG unit —
-   * one unit on a wide scale, which no keyboard user wants. Its handler runs
-   * unconditionally and does not check `defaultPrevented`, so the only way to
-   * replace it is to stop the event before it arrives: a capture listener on
-   * the dial fires ahead of Solid's delegated one, and `stopPropagation` there
-   * means Kobalte never sees the key at all.
-   *
-   * Home and End are deliberately left to Kobalte: they run to the domain's
-   * ends, and the move handler settles them onto the allowed range.
-   */
-  const bindDial = (el: HTMLElement): void => {
-    // FIRST MEASUREMENT, SYNCHRONOUSLY, on mount.
-    //
-    // The ref runs before the element is in the document, so `clientHeight`
-    // here is 0 and the dial would paint its first frame at the fallback
-    // height while the box is already tall. That frame is not cosmetic: the
-    // drawn track and Kobalte's track element only line up when the viewBox
-    // height EQUALS the dial's pixel height, so until the measurement lands, a
-    // pointer maps over one extent while the reader aims at another — which is
-    // exactly "my mouse appears to be changing proportionate to the whole
-    // slider rather than dragging the handle".
-    //
-    // `onMount` + `getBoundingClientRect` forces layout and returns the real
-    // height with NO animation frame in between. That also makes the dial
-    // correct in a hidden tab, where the browser suspends rAF and
-    // `observeSize`'s deferred delivery never runs.
-    onMount(() => {
-      const measured = el.getBoundingClientRect().height;
-      // A ZERO height is no information, not a measurement — the same rule the
-      // row's signal uses. Writing it would CLOBBER a real size the observer
-      // had already delivered, which is exactly what happens under jsdom,
-      // where nothing lays out and every rect is zero.
-      if (measured > 0) props.onMeasure(measured);
-    });
-    onCleanup(observeSize(el, (size) => props.onMeasure(size.height)));
-
-    const onKeyDown = (event: KeyboardEvent): void => {
-      const direction = ARROW_DIRECTION[event.key] ?? 0;
-      const paging = PAGE_DIRECTION[event.key] ?? 0;
-      if (direction === 0 && paging === 0) return;
-      if (event.ctrlKey || event.metaKey || event.altKey) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const current = dial();
-      if (current.removed) return;
-      // Shift+arrow pages, the way it does in Kobalte's own handler.
-      const magnitude =
-        paging !== 0 || event.shiftKey
-          ? props.keyStep * PAGE_MULTIPLE
-          : props.keyStep;
-      const sign = paging !== 0 ? paging : direction;
-      const from = current.clampedValue ?? current.range[0];
-      const next = settle(current.range, from + sign * magnitude, props.snap);
-      // Each step IS a completed gesture for the keyboard, so it commits
-      // immediately rather than on keyup: a held arrow key repeats keydown
-      // without an intervening keyup, so waiting for one would commit once at
-      // the END of a long press instead of once per step.
-      if (next !== current.clampedValue) props.onMove(next, "step");
-    };
-    el.addEventListener("keydown", onKeyDown, true);
-    onCleanup(() => el.removeEventListener("keydown", onKeyDown, true));
-  };
-
-  /**
-   * Kobalte models every slider as multi-thumb. This dial is single-thumb by
-   * contract, so the array is an implementation detail the consumer never
-   * sees: one value in, `values[0]` out.
-   *
-   * `settle`, not a bare clamp: the grid is this component's promise too, not
-   * only Kobalte's. Kobalte snaps to its OWN min-relative grid, which is not
-   * the same grid when a range floor is not a multiple of `snap`.
-   */
-  const report = (values: number[], phase: MovePhase): void => {
-    props.onMove(settle(dial().range, values[0], props.snap), phase);
-  };
-
   return (
     <TightCenteredColumn>
-      {/* The name is the SELECT control. A real <button>, so Tab and Enter
-          work without this component inventing key handling, and
-          `aria-pressed` because it is a toggle rather than a command — a
-          screen reader then says "Adlai, pressed" instead of leaving the state
-          to the colour. */}
-      <button
-        type="button"
-        class="sui-mutation-sliders__name"
-        classList={{
-          "sui-mutation-sliders__name--removed": dial().removed,
-          "sui-mutation-sliders__name--selected": props.selected,
-        }}
+      {/* The name is the SELECT control — a real button, so Tab and Enter work
+          without this component inventing key handling, and `aria-pressed`
+          because it is a toggle rather than a command: a screen reader then
+          says "Adlai, pressed" instead of leaving the state to the colour.
+          `data-struck` is the removal, which the strike says a second time for
+          anyone who cannot see the colour. */}
+      <PressableLabelButton
+        active={props.selected}
         aria-pressed={props.selected}
+        data-struck={dial().removed ? "" : undefined}
         onClick={() => props.onSelect()}
       >
         <NowrapLabel>{props.entity.label}</NowrapLabel>
-      </button>
-      <KobalteSlider
-        ref={bindDial}
-        class="sui-mutation-sliders__dial"
-        classList={{
-          "sui-mutation-sliders__dial--selected": props.selected,
-        }}
-        orientation="vertical"
-        value={[dial().clampedValue ?? dial().range[0]]}
-        onChange={(values) => report(values, "drag")}
-        onChangeEnd={(values) => report(values, "commit")}
-        minValue={props.domain[0]}
-        maxValue={props.domain[1]}
-        // THE CLAMP IS NOT HERE. Kobalte's own min/max are the DOMAIN, which
-        // is what keeps the track's inset fixed and this component free of
-        // per-entity inline styles — so the allowed range is enforced on the
-        // way OUT, in `settle`. The component is controlled, so an emitted
-        // value that the caller writes straight back leaves the thumb parked
-        // on the range edge, which is the "stops dead at the edge" behaviour.
-        step={props.dragStep}
-        disabled={dial().removed}
-        data-removed={dial().removed ? "" : undefined}
-        getValueLabel={(params) => props.format(params.values[0])}
-      >
-        <DialMarks
-          dial={dial()}
-          deltaLabel={deltaLabelOf(props.format, dial().delta)}
-          height={props.height}
-        />
-        <KobalteSlider.Track class="sui-mutation-sliders__track">
-          <Show when={!dial().removed}>
-            <KobalteSlider.Thumb
-              class="sui-mutation-sliders__thumb"
-              aria-label={props.entity.label}
-              // The allowed RANGE is what a reader can reach, so the range is
-              // what the thumb announces — Kobalte would otherwise read out
-              // the shared domain, which is the track's extent rather than
-              // this entity's.
-              aria-valuemin={dial().range[0]}
-              aria-valuemax={dial().range[1]}
-              // Kobalte's own `aria-valuetext` comes from its internal number
-              // formatter, NOT from `getValueLabel` — that only feeds its
-              // ValueLabel, which this dial does not draw.
-              aria-valuetext={futureReadout()}
-            >
-              <KobalteSlider.Input />
-            </KobalteSlider.Thumb>
-          </Show>
-        </KobalteSlider.Track>
-      </KobalteSlider>
+      </PressableLabelButton>
+      {/* ONE height feeds everything: the viewBox, the track path, AND every
+          value→y mapping behind the range, the arrows, the change line and the
+          delta label. Omitting it left those five at the 260px default while
+          the track and the viewBox were at the measured height, so the bands
+          and arrows bunched into the top third of a tall dial and the pointer
+          disagreed with all of them.
+
+          The BASE `MarkedSlider`, not `ContinuousMarkedSlider`: `snap` is the
+          one override a variant can lock, and this row forwards a CONSUMER's
+          grid, which is data here rather than a decision this file gets to
+          make. That is the same case the barrel already documents for
+          `MutationSliders` itself. */}
+      <MarkedSlider
+        domain={props.domain}
+        range={dial().range}
+        value={props.entity.value}
+        prior={props.entity.old}
+        height={props.height}
+        snap={props.snap}
+        dragStep={props.dragStep}
+        keyStep={props.keyStep}
+        label={props.entity.label}
+        valueText={futureReadout()}
+        deltaLabel={deltaLabelOf(props.format, dial().delta)}
+        active={props.selected}
+        onMeasure={props.onMeasure}
+        onChange={(value) => props.onMove(value)}
+        onChangeEnd={(value) => props.onCommit(value)}
+      />
       {/* The required line, then where it came from — if anywhere. The second
           line is ALWAYS RENDERED and merely hidden when it has nothing to say
           (Peter, 2026-09-16: "elements that become invisible but don't hold
@@ -442,32 +234,34 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           Dragging a value onto its prior amount used to delete this row, which
           jumped the big figure and the button up under the pointer
           mid-gesture. */}
-      <MonoValue class="sui-mutation-sliders__figure">
-        {futureReadout()}
-      </MonoValue>
-      <MonoMeta
-        class={`sui-mutation-sliders__prior${
-          priorReadout() === "" ? " sui-mutation-sliders__reserved" : ""
-        }`}
+      <SteadyMonoValue>{futureReadout()}</SteadyMonoValue>
+      <Dynamic
+        component={priorReadout() === "" ? ReservedMonoMeta : SteadyMonoMeta}
       >
         {priorReadout() || NBSP}
-      </MonoMeta>
+      </Dynamic>
       {/* ONE slot, three states. A present entity offers ⊗ Remove; a removed
           one offers ↺ Restore in the same place; and where the consumer
           supplies neither callback the button still holds its space, hidden. A
           disabled ⊗ was the wrong shape: it said "you did this and there is
           nothing more to do", when what the reader wants is the way back. */}
-      <SmallGhostButton
-        class={`sui-mutation-sliders__footer${
-          footer() ? "" : " sui-mutation-sliders__reserved"
-        }`}
-        aria-label={footer()?.label}
-        aria-hidden={footer() ? undefined : "true"}
-        disabled={!footer()}
-        onClick={() => footer()?.act()}
+      <Show
+        when={footer()}
+        fallback={
+          <ReservedGlyphSlotButton disabled aria-hidden="true">
+            {REMOVE_MARK}
+          </ReservedGlyphSlotButton>
+        }
       >
-        {footer()?.glyph ?? REMOVE_MARK}
-      </SmallGhostButton>
+        {(slot) => (
+          <GlyphSlotGhostButton
+            aria-label={slot().label}
+            onClick={() => slot().act()}
+          >
+            {slot().glyph}
+          </GlyphSlotGhostButton>
+        )}
+      </Show>
     </TightCenteredColumn>
   );
 };

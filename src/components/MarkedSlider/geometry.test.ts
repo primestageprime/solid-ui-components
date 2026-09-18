@@ -1,5 +1,5 @@
 // ============================================
-// MutationSliders geometry — the headless observation.
+// MarkedSlider geometry — the headless observation.
 //
 // Every number the dial's SVG paints is decided in geometry.ts, so a whole row
 // of mutations reads as a TABLE without a browser. These tests print that
@@ -25,16 +25,8 @@ import {
   VIEW_WIDTH,
   DELTA_X,
   MINUS,
-  ADD_SLOT,
-  ARROW_SLOT,
-  DIAL_SLOT,
   arrowPath,
   bandFor,
-  moveTogether,
-  pinTo,
-  rowLayout,
-  visibleWindow,
-  windowLabel,
   MIN_DIAL_HEIGHT,
   deltaLabelOf,
   deltaOf,
@@ -699,140 +691,6 @@ describe("the delta label's place on the dial", () => {
   });
 });
 
-describe("visibleWindow", () => {
-  const ROOM_FOR_THREE = DIAL_SLOT * 3;
-
-  it("shows as many WHOLE dials as fit", () => {
-    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 9, 0)).toEqual({
-      start: 0,
-      end: 3,
-    });
-  });
-
-  it("never shows a partial dial — the remainder is not a quarter of one", () => {
-    expect(visibleWindow(DIAL_SLOT * 3.9, DIAL_SLOT, 9, 0)).toEqual({
-      start: 0,
-      end: 3,
-    });
-  });
-
-  it("shows everything when everything fits, and never more", () => {
-    expect(visibleWindow(DIAL_SLOT * 50, DIAL_SLOT, 4, 0)).toEqual({
-      start: 0,
-      end: 4,
-    });
-  });
-
-  it("shows ONE dial when not even one fits, rather than nothing", () => {
-    // Peter, 2026-09-16: "Minimum of 1 slider." A row that renders nothing
-    // because its container is narrow looks broken; a clipped dial does not.
-    expect(visibleWindow(10, DIAL_SLOT, 9, 0)).toEqual({ start: 0, end: 1 });
-    expect(visibleWindow(0, DIAL_SLOT, 9, 0)).toEqual({ start: 0, end: 1 });
-    expect(visibleWindow(-500, DIAL_SLOT, 9, 0)).toEqual({ start: 0, end: 1 });
-  });
-
-  it("pages by moving the window, keeping its size", () => {
-    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 9, 4)).toEqual({
-      start: 4,
-      end: 7,
-    });
-  });
-
-  it("clamps an offset past the end onto the LAST full window", () => {
-    // The caller holds the offset in a signal and entities can be removed
-    // underneath it; a stale offset must settle, not empty the row.
-    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 9, 99)).toEqual({
-      start: 6,
-      end: 9,
-    });
-  });
-
-  it("clamps a negative offset to the start", () => {
-    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 9, -4)).toEqual({
-      start: 0,
-      end: 3,
-    });
-  });
-
-  it("is empty for an empty row rather than showing a dial that is not there", () => {
-    expect(visibleWindow(ROOM_FOR_THREE, DIAL_SLOT, 0, 0)).toEqual({
-      start: 0,
-      end: 0,
-    });
-  });
-
-  it("survives a zero dial width instead of dividing by it", () => {
-    expect(visibleWindow(500, 0, 9, 0)).toEqual({ start: 0, end: 1 });
-  });
-});
-
-describe("rowLayout", () => {
-  it("does not page, and reserves no arrows, when everything fits", () => {
-    const layout = rowLayout(DIAL_SLOT * 9 + ADD_SLOT, 9, 0, true);
-    expect(layout.paging).toBe(false);
-    expect(layout).toMatchObject({ start: 0, end: 9, capacity: 9 });
-  });
-
-  it("pages, and takes the arrows' room, when it does not", () => {
-    const layout = rowLayout(
-      DIAL_SLOT * 3 + ADD_SLOT + 2 * ARROW_SLOT,
-      9,
-      0,
-      true,
-    );
-    expect(layout.paging).toBe(true);
-    expect(layout.capacity).toBe(3);
-  });
-
-  // The two-pass rule, stated as a case: a width that fits every dial EXACTLY
-  // must not be spoiled by reserving arrows it then never draws.
-  it("does not lose a dial to arrows that never appear", () => {
-    const exact = DIAL_SLOT * 5 + ADD_SLOT;
-    expect(rowLayout(exact, 5, 0, true)).toMatchObject({
-      capacity: 5,
-      paging: false,
-    });
-  });
-
-  // ...and the converse: one dial too many, and the arrows' room comes out of
-  // the dials, so the count can drop by more than the one that overflowed.
-  it("pays for the arrows out of the dials once it must page", () => {
-    const exact = DIAL_SLOT * 5 + ADD_SLOT;
-    const layout = rowLayout(exact, 6, 0, true);
-    expect(layout.paging).toBe(true);
-    expect(layout.capacity).toBeLessThan(5);
-  });
-
-  it("reserves the + slot whether or not the row pages", () => {
-    const width = DIAL_SLOT * 4;
-    expect(rowLayout(width, 4, 0, true).capacity).toBeLessThan(
-      rowLayout(width, 4, 0, false).capacity,
-    );
-  });
-
-  it("still shows one dial in a container far too narrow for any", () => {
-    expect(rowLayout(20, 9, 0, true)).toMatchObject({
-      start: 0,
-      end: 1,
-      capacity: 1,
-      paging: true,
-    });
-  });
-});
-
-describe("windowLabel", () => {
-  it("names the window the way a reader counts, from one", () => {
-    expect(windowLabel(2, 5, 7)).toBe("dials 3\u20135 of 7");
-  });
-
-  it("says `dial 3 of 7` for a single one, not `dials 3-3`", () => {
-    expect(windowLabel(2, 3, 7)).toBe("dial 3 of 7");
-  });
-
-  it("has something to say about an empty row", () => {
-    expect(windowLabel(0, 0, 0)).toBe("no dials");
-  });
-});
 
 describe("filling the container's height", () => {
   it("draws at the fixed default when nothing was measured", () => {
@@ -903,107 +761,6 @@ describe("filling the container's height", () => {
   });
 });
 
-describe("pinTo — a selection levels up", () => {
-  const JUNIOR: readonly [number, number] = [40_000, 60_000];
-  const MID: readonly [number, number] = [55_000, 80_000];
-  const SENIOR: readonly [number, number] = [70_000, 110_000];
-  const PEOPLE: readonly Entity[] = [
-    { id: "a", label: "A", old: 44_000, value: 46_000, range: JUNIOR },
-    { id: "b", label: "B", old: 60_000, value: 72_000, range: MID },
-    { id: "c", label: "C", old: 90_000, value: 95_000, range: SENIOR },
-    { id: "d", label: "D", old: 50_000, value: 52_000, range: JUNIOR },
-    { id: "gone", label: "Gone", old: 50_000, value: null, range: JUNIOR },
-  ];
-  const amountOf = (
-    moved: readonly { id: string; value: number }[],
-    id: string,
-  ) => moved.find((m) => m.id === id)?.value;
-
-  it("snaps every selected entity to the HIGHEST among them", () => {
-    // b is 72_000, a is 46_000 — a comes UP, b does not move.
-    const moved = pinTo(PEOPLE, ["a", "b"]);
-    expect(amountOf(moved, "a")).toBe(60_000);
-    expect(amountOf(moved, "b")).toBeUndefined();
-  });
-
-  it("clamps each one to its OWN band rather than dropping it", () => {
-    // Target is c's 95_000. A junior's ceiling is 60_000, so A follows as far
-    // as a junior can and stays pinned at the top of their band.
-    expect(amountOf(pinTo(PEOPLE, ["a", "c"]), "a")).toBe(60_000);
-  });
-
-  it("levels UP, never down — the expensive mistake is a mis-click that cuts", () => {
-    const moved = pinTo(PEOPLE, ["b", "d"]);
-    // d rises to b's 72_000, clamped to the junior ceiling of 60_000...
-    expect(amountOf(moved, "d")).toBe(60_000);
-    // ...and b, the highest, is untouched.
-    expect(amountOf(moved, "b")).toBeUndefined();
-  });
-
-  it("skips a terminated entity entirely, in both directions", () => {
-    const moved = pinTo(PEOPLE, ["a", "gone"]);
-    // It contributes no maximum and receives no amount.
-    expect(amountOf(moved, "gone")).toBeUndefined();
-    expect(moved).toHaveLength(0);
-  });
-
-  it("leaves unselected entities alone", () => {
-    const ids = map((m) => m.id, pinTo(PEOPLE, ["a", "b"]));
-    expect(ids).not.toContain("c");
-    expect(ids).not.toContain("d");
-  });
-
-  it("reports nothing when a lone entity is selected", () => {
-    expect(pinTo(PEOPLE, ["a"])).toEqual([]);
-    expect(pinTo(PEOPLE, [])).toEqual([]);
-  });
-});
-
-describe("moveTogether — a pinned group drags as one", () => {
-  const JUNIOR: readonly [number, number] = [40_000, 60_000];
-  const SENIOR: readonly [number, number] = [70_000, 110_000];
-  const PEOPLE: readonly Entity[] = [
-    { id: "a", label: "A", old: 44_000, value: 50_000, range: JUNIOR },
-    { id: "b", label: "B", old: 90_000, value: 90_000, range: SENIOR },
-    { id: "gone", label: "Gone", old: 50_000, value: null, range: JUNIOR },
-  ];
-  const amountOf = (
-    moved: readonly { id: string; value: number }[],
-    id: string,
-  ) => moved.find((m) => m.id === id)?.value;
-
-  it("applies the SAME delta to every selected entity", () => {
-    const moved = moveTogether(PEOPLE, ["a", "b"], 5_000);
-    expect(amountOf(moved, "a")).toBe(55_000);
-    expect(amountOf(moved, "b")).toBe(95_000);
-  });
-
-  it("clamps each to its own band, so one hitting a ceiling stops there", () => {
-    const moved = moveTogether(PEOPLE, ["a", "b"], 30_000);
-    expect(amountOf(moved, "a")).toBe(60_000); // junior ceiling
-    expect(amountOf(moved, "b")).toBe(110_000); // senior ceiling
-  });
-
-  it("moves downward just as well", () => {
-    expect(amountOf(moveTogether(PEOPLE, ["a", "b"], -5_000), "a")).toBe(
-      45_000,
-    );
-  });
-
-  it("applies the delta to each OWN value, so a split group keeps its shape", () => {
-    // If it applied the delta to a shared figure, these two would collapse
-    // onto one another the moment the group was nudged.
-    const moved = moveTogether(PEOPLE, ["a", "b"], 1_000);
-    expect(
-      (amountOf(moved, "b") as number) - (amountOf(moved, "a") as number),
-    ).toBe(40_000);
-  });
-
-  it("never moves a terminated entity or an unselected one", () => {
-    const moved = moveTogether(PEOPLE, ["a", "gone"], 1_000);
-    expect(map((m) => m.id, moved)).toEqual(["a"]);
-  });
-});
 
 describe("the CSS mirrors the canvas", () => {
   // The dial's SVG overlay covers the Kobalte root exactly, and the Kobalte
@@ -1022,17 +779,17 @@ describe("the CSS mirrors the canvas", () => {
    * than no test, because it reads as a guarantee. Strip the commentary and
    * only the CSS is left to match.
    */
-  const css = readFileSync(join(here, "MutationSliders.css"), "utf8").replace(
+  const css = readFileSync(join(here, "MarkedSlider.css"), "utf8").replace(
     /\/\*[\s\S]*?\*\//g,
     "",
   );
 
   it("declares the dial height this file draws into", () => {
-    expect(css).toContain(`--sui-mutation-dial-height: ${VIEW_HEIGHT}px`);
+    expect(css).toContain(`--sui-marked-slider-height: ${VIEW_HEIGHT}px`);
   });
 
   it("declares the track inset this file maps the domain onto", () => {
-    expect(css).toContain(`--sui-mutation-track-inset: ${TRACK_TOP}px`);
+    expect(css).toContain(`--sui-marked-slider-track-inset: ${TRACK_TOP}px`);
     expect(VIEW_HEIGHT - TRACK_BOTTOM).toBe(TRACK_TOP);
   });
 
@@ -1048,7 +805,7 @@ describe("the CSS mirrors the canvas", () => {
    * THE POINTER INVARIANT, and the one that produced a real bug report.
    *
    * Kobalte maps pointer-y → value over the TRACK ELEMENT's box, which the
-   * stylesheet insets from the dial by `--sui-mutation-track-inset`. The SVG
+   * stylesheet insets from the dial by `--sui-marked-slider-track-inset`. The SVG
    * draws its track between `TRACK_TOP` and `trackBottomOf(height)` in viewBox
    * units that are 1:1 with px. If those two extents ever differ, the reader
    * aims at one line and drags along another — Peter, 2026-09-16: "my mouse
@@ -1062,7 +819,7 @@ describe("the CSS mirrors the canvas", () => {
    */
   it("draws the track exactly where the CSS puts the pointer's track", () => {
     const inset = Number(
-      /--sui-mutation-track-inset:\s*(\d+)px/.exec(css)?.[1],
+      /--sui-marked-slider-track-inset:\s*(\d+)px/.exec(css)?.[1],
     );
     expect(inset).toBe(TRACK_TOP);
     for (const height of [MIN_DIAL_HEIGHT, 260, 600, 1000]) {
@@ -1079,23 +836,30 @@ describe("the CSS mirrors the canvas", () => {
     // short dial would draw a track longer than the one the pointer uses —
     // the same mismatch from the other direction.
     const cssFloor = Number(
-      /--sui-mutation-dial-min-height:\s*(\d+)px/.exec(css)?.[1],
+      /--sui-marked-slider-min-height:\s*(\d+)px/.exec(css)?.[1],
     );
     expect(cssFloor).toBe(MIN_DIAL_HEIGHT);
     expect(dialHeightFor(50)).toBe(cssFloor);
   });
 
+  // THE TOP OF THE FILL CHAIN now belongs to a LAYOUT VARIANT, because the row
+  // that claims the parent's height is a Composite and a Composite owns no
+  // CSS. `FillStretchRow` is where the two declarations live, and this reads
+  // the variant's own source for them — the same assertion, moved to the file
+  // that now makes the promise.
   it("makes the ROOT claim the height its parent gives it", () => {
-    const root = css.slice(css.indexOf(".sui-mutation-sliders {"));
-    const rootRule = root.slice(0, root.indexOf("}"));
-    // Matched as DECLARATIONS — leading whitespace and trailing semicolon —
-    // so nothing but a real rule can satisfy them.
-    expect(rootRule).toMatch(/\n\s*height:\s*100%;/);
-    expect(rootRule).toMatch(/\n\s*min-height:\s*0;/);
+    const layout = readFileSync(
+      join(here, "..", "Layout", "variants.ts"),
+      "utf8",
+    );
+    const variant = layout.slice(layout.indexOf("export const FillStretchRow"));
+    const locked = variant.slice(0, variant.indexOf("});"));
+    expect(locked).toContain('height: "100%"');
+    expect(locked).toContain('"min-height": "0"');
   });
 
-  it("lets the DIAL take the leftover height inside its column", () => {
-    expect(css).toContain("flex: 1 1 var(--sui-mutation-dial-height)");
+  it("lets the SLIDER take the leftover height inside its column", () => {
+    expect(css).toContain("flex: 1 1 var(--sui-marked-slider-height)");
   });
 
   // Peter, 2026-09-16: the name, the dial and the amount on ONE axis. The
@@ -1114,18 +878,18 @@ describe("the CSS mirrors the canvas", () => {
 
   it("declares the floor that geometry stops shrinking at", () => {
     expect(css).toContain(
-      `--sui-mutation-dial-min-height: ${MIN_DIAL_HEIGHT}px`,
+      `--sui-marked-slider-min-height: ${MIN_DIAL_HEIGHT}px`,
     );
   });
 
   it("declares the dial width the canvas draws into", () => {
-    expect(css).toContain(`--sui-mutation-dial-width: ${VIEW_WIDTH}px`);
+    expect(css).toContain(`--sui-marked-slider-width: ${VIEW_WIDTH}px`);
   });
 
   it("declares where the track's centre line sits", () => {
     // The track is NOT the canvas centre: the delta label takes the right of
     // the dial, so the Kobalte track has to be told the same x this file uses.
-    expect(css).toContain(`--sui-mutation-track-x: ${TRACK_X}px`);
+    expect(css).toContain(`--sui-marked-slider-track-x: ${TRACK_X}px`);
   });
 
   it("leaves the delta label room to the right of the future arrow", () => {

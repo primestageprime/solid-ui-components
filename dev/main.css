@@ -2845,3 +2845,11 @@ th:has(.tf-th-center) .hud-table__header-content {
   flex-direction: column;
   height: 420px;
 }
+
+/* MarkedSlider — the same sized frame, for the Primitive's own
+   "absorbs its container's height" card. */
+.marked-slider-demo__tall-frame {
+  display: flex;
+  flex-direction: column;
+  height: 420px;
+}

@@ -1,16 +1,19 @@
 // ============================================
-// MutationSliders — Composite (Depth 2)
-// Composes Layout (CenteredStack, StretchRow) + Button (SmallGhostButton) +
-// Icon over the private `MutationDial` (dial.tsx), which is itself Depth 2 and
-// Kobalte-backed (@kobalte/core/slider), matching the Slider / Combobox /
-// Select / Toast wrapping pattern.
+// MutationSliders — Composite (Depth 3)
+// Composes Layout (CenteredStack, FillStretchRow) + Button (SmallGhostButton)
+// + Icon over the private `MutationDial` (dial.tsx), which is itself a
+// Depth-2 Composite over the `MarkedSlider` Primitive. Depth 3 by the rule —
+// 1 + the highest depth it contains — and it says 3 rather than the 2 it
+// claimed before because the dial is now a real component boundary instead of
+// a file that drew its own SVG.
 //
-// DELIBERATE DEPTH-2 CSS EXCEPTION. The row shares MutationSliders.css with
-// its dials. Everything it holds is the dial's own INTERIOR geometry — a fixed
-// canvas, an SVG overlay lying 1:1 on it, and a percentage-placed thumb —
-// which is data-driven placement rather than an arrangement vocabulary, the
-// same disposition as Slider's notches. The ROW, each entity's COLUMN and the
-// readouts are composed from Layout and Text variants, not from CSS.
+// ZERO CSS, as of 2026-09-17 (Peter's axiom: no component above Depth 1
+// contains anything but existing SUI components — no raw elements, no CSS, no
+// third-party primitives). The stylesheet this folder used to own is now
+// `MarkedSlider.css`, beside the Primitive that paints what it describes; the
+// row's own fill chain is `FillStretchRow` (Layout/variants.ts); the readouts
+// and the footer slot are Text and Button variants. Nothing here styles
+// anything, and nothing here renders an intrinsic element.
 //
 // A row of VERTICAL dials, one per named entity. Each dial answers: what is
 // this entity ALLOWED, where was it, and where is it going?
@@ -70,8 +73,10 @@
 // rather than huddling in a corner of a caller-chosen scale. `domain` stays as
 // an optional override for a track that must hold still.
 //
-// Everything positional lives in geometry.ts, which is pure and prints as a
-// table (geometry.test.ts). Every WORD lives in labels.ts. One dial's DOM
+// Everything a DIAL draws lives in MarkedSlider — its geometry in
+// `MarkedSlider/geometry.ts`, its DOM and its CSS in the Primitive itself.
+// Everything about the ROW lives in rows.ts, which is pure and prints as a
+// table (rows.test.ts). Every WORD lives in labels.ts. One entity's COLUMN
 // lives in dial.tsx. This file owns exactly what is left, and what is left is
 // the ROW: how many dials fit, which window shows, which names are selected,
 // and what a move means when more than one is pinned.
@@ -129,8 +134,8 @@ import { clamp } from "../../internal/math/clamp";
 import { observeSize } from "../../internal/dom/observeSize";
 import { SmallGhostButton } from "../Button";
 import { Icon } from "../Icon";
-import { CenteredStack, StretchRow } from "../Layout";
-import { MutationDial, type MovePhase } from "./dial";
+import { CenteredStack, FillStretchRow } from "../Layout";
+import { MutationDial } from "./dial";
 import {
   type MutationSliderLabels,
   type ResolvedLabels,
@@ -143,15 +148,16 @@ import {
   dialHeightFor,
   dragStep,
   dialGeometry,
-  moveTogether,
   niceStep,
+  trackDomainOf,
+} from "../MarkedSlider/geometry";
+import {
+  moveTogether,
   pinTo,
   type RowLayout,
   rowLayout,
-  trackDomainOf,
   windowLabel,
-} from "./geometry";
-import "./MutationSliders.css";
+} from "./rows";
 
 export type { MutationSliderLabels } from "./labels";
 
@@ -349,14 +355,25 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
     if (height > 0) setMeasuredDialHeight(height);
   };
 
+  /**
+   * Which of the two callbacks a fan-out speaks through.
+   *
+   *   • `change` — intermediate, so `onChange` only.
+   *   • `commit` — the value already went out through `onChange`, so this says
+   *                only `onChangeEnd`.
+   *   • `both`   — one whole gesture that was never dragged: a group forming,
+   *                or an arrow key.
+   */
+  type Emission = "change" | "commit" | "both";
+
   /** Emit one change per entity a pin or a group move actually moved. */
   const emitAll = (
     moved: readonly { id: string; value: number }[],
-    commit: boolean,
+    how: Emission,
   ): void => {
     for (const { id, value } of moved) {
-      props.onChange(id, value);
-      if (commit) props.onChangeEnd?.(id, value);
+      if (how !== "commit") props.onChange(id, value);
+      if (how !== "change") props.onChangeEnd?.(id, value);
     }
   };
 
@@ -373,7 +390,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
     if (props.selected === undefined) setOwnSelection(next);
     props.onSelectionChange?.(next);
     if (next.length > 1 && next.includes(id)) {
-      emitAll(pinTo(props.entities, next), true);
+      emitAll(pinTo(props.entities, next), "both");
     }
   };
 
@@ -443,18 +460,22 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
    * ROW: an unpinned dial moves itself, a pinned one moves its whole selection
    * by the delta it travelled.
    *
-   * The three phases each carry a different promise, and collapsing them would
-   * break one of the two callbacks:
+   * The dial reports an intermediate value through `onChange` and a committed
+   * one through `onChangeEnd`, and the two carry different promises:
    *
-   *   • `drag`   — intermediate, so `onChange` only.
-   *   • `commit` — the pointer was released, so `onChangeEnd` only. Kobalte
-   *                has already emitted the same value through `drag`.
-   *   • `step`   — one arrow key is a whole gesture, so BOTH.
+   *   • intermediate — under the pointer, or one arrow key. `onChange` only.
+   *   • committed    — the pointer was released, or the key step finished. The
+   *                    same value already went out as intermediate, so this
+   *                    says only `onChangeEnd`.
    *
-   * A pinned move always commits: `moveTogether` is a group decision, and
-   * leaving the peers uncommitted would persist the dragged dial alone.
+   * An arrow key therefore emits both, in that order, which is what makes one
+   * key press a whole gesture: it moves AND it persists.
+   *
+   * A pinned move fans out to the whole selection either way: `moveTogether`
+   * is a group decision, and leaving the peers uncommitted would persist the
+   * dragged dial alone.
    */
-  const move = (entity: Entity, next: number, phase: MovePhase): void => {
+  const move = (entity: Entity, next: number, commit: boolean): void => {
     if (isPinned(entity.id)) {
       const current: DialGeometry = dialGeometry(
         domain(),
@@ -465,23 +486,22 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
       // clamped to its own range, so one hitting a ceiling stops there while
       // the rest carry on.
       const delta = next - (current.clampedValue ?? next);
-      if (phase === "drag") {
-        if (delta !== 0) {
-          emitAll(moveTogether(props.entities, selection(), delta), false);
-        }
+      if (commit) {
+        emitAll(moveTogether(props.entities, selection(), delta), "commit");
         return;
       }
-      emitAll(moveTogether(props.entities, selection(), delta), true);
+      if (delta !== 0) {
+        emitAll(moveTogether(props.entities, selection(), delta), "change");
+      }
       return;
     }
-    if (phase !== "commit") props.onChange(entity.id, next);
-    if (phase !== "drag") props.onChangeEnd?.(entity.id, next);
+    if (commit) props.onChangeEnd?.(entity.id, next);
+    else props.onChange(entity.id, next);
   };
 
   return (
-    <StretchRow
+    <FillStretchRow
       ref={measure}
-      class="sui-mutation-sliders"
       // A group rather than a bare div, so the window is ANNOUNCED. Without
       // it a screen-reader user paging the row hears five dials change names
       // and nothing telling them where in the seven they now are.
@@ -534,7 +554,8 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
             selected={isSelected(entity().id)}
             onSelect={() => toggleSelection(entity().id)}
             onMeasure={measureDial}
-            onMove={(value, phase) => move(entity(), value, phase)}
+            onMove={(value) => move(entity(), value, false)}
+            onCommit={(value) => move(entity(), value, true)}
             onRemove={
               props.onRemove ? () => props.onRemove?.(entity().id) : undefined
             }
@@ -567,7 +588,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
           </CenteredStack>
         )}
       </Show>
-    </StretchRow>
+    </FillStretchRow>
   );
 };
 
