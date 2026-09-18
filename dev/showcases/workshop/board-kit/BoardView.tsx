@@ -14,19 +14,28 @@
  * Frame and rows are the Scenario Board's own Layout variants and its two
  * classes, reused rather than copied, so this adds no CSS at all.
  *
- * ── THE ONE PIECE THAT IS NOT COMPOSITION: THE DIAL ROW ────────────────────
+ * ── WHICH DIAL ROW, AND WHY THERE ARE THREE ───────────────────────────────
  *
- * `PairedMutationSliders.measures` is a strict 2-TUPLE and its `MeasureIndex`
- * is `0 | 1`, because a paired row IS two dials. A board with FOUR axes
- * therefore draws two paired rows, and each row's callback reports an index
- * within ITS OWN pair — so the view has to map that local index back to the
- * global measure before it writes anything. Getting that wrong is precisely the
- * bug the Hourly bench's own comment warns about ("ignoring the measure index
- * would write an hours figure into a rate"), one board further along.
+ * The row is chosen by how many axes the config declares:
  *
- * `groupsOf` and `globalIndex` are that mapping, and `BoardView.test.tsx` pins
- * it for one, two and four axes — the License Board's shape included, before
- * that board exists to find it the expensive way.
+ *   1 axis    `MutationSliders`          the Scenario Board's shape
+ *   2 axes    `PairedMutationSliders`    the Hourly Board's shape
+ *   3+ axes   `GroupedMutationSliders`   N measures under captioned groups
+ *
+ * The third arrived on 2026-09-18 (#161) and is the reason this file has no
+ * index arithmetic in it. Before it existed, four axes had to be drawn as TWO
+ * paired rows — `PairedMutationSliders.measures` is a strict 2-tuple and its
+ * `MeasureIndex` is `0 | 1` — so each row reported an index inside its own
+ * pair and the view had to map that back to the global measure. Getting that
+ * wrong writes a value into the wrong measure, which is the bug the Hourly
+ * bench's own comment warns about ("ignoring the measure index would write an
+ * hours figure into a rate"), one board further along.
+ *
+ * `GroupedMutationSliders` takes all N measures and the groups directly and
+ * reports a GLOBAL index, so that mapping is not needed and is not written.
+ * `groupsOf` survives because the 1- and 2-axis rows still need to know a
+ * config declares one row, and `BoardView.test.ts` pins it — including that a
+ * four-axis board is ONE grouped row rather than two paired ones.
  *
  * ── WHAT THE BOARD STILL SUPPLIES ──────────────────────────────────────────
  *
@@ -62,6 +71,15 @@ import type {
   MeasureIndex,
   PairedMutationEntity,
 } from "../../../../src/components/PairedMutationSliders";
+// A RELATIVE import into `src/components/`, on purpose: `GroupedMutationSliders`
+// is still on the workshop bench and deliberately absent from the package
+// barrel, and its own barrel says so. The path is the honest signal.
+import { createGroupedMutationSliders } from "../../../../src/components/GroupedMutationSliders";
+import type {
+  GroupedMeasureAxis,
+  GroupedMeasureIndex,
+  GroupedMutationEntity,
+} from "../../../../src/components/GroupedMutationSliders";
 import { GhostButton, IconOnlyButton, PrimaryButton } from "../../../../src/components/Button";
 import { Icon } from "../../../../src/components/Icon";
 import { Modal } from "../../../../src/components/Modal";
@@ -319,24 +337,49 @@ export const BoardView: Component<BoardViewProps> = (props) => {
     formatValue: props.mixLevels?.formatValue ?? String,
   });
 
-  /** The dial row each group draws: a PAIR when it holds two axes, a single
-   *  dial when it holds one. The axes ARE the curry, so this is per group. */
-  const rows = map((group: AxisGroup) => {
-    if (group.axes.length >= 2) {
-      const Row = createPairedMutationSliders({
-        axes: [group.axes[0] as MeasureAxis, group.axes[1] as MeasureAxis],
+  /**
+   * THE DIAL ROW, chosen by arity. See the header for why three and not one.
+   *
+   * Three or more axes is ONE grouped row over every measure — not a stack of
+   * paired ones — so nothing here remaps an index.
+   */
+  const grouped = config.axes.length > 2;
+
+  const GroupedRow = grouped
+    ? createGroupedMutationSliders({
+        axes: map(
+          (axis: MeasureAxis): GroupedMeasureAxis => ({
+            label: axis.label,
+            domain: axis.domain,
+            snap: axis.snap,
+            format: axis.format,
+            ...(axis.group === undefined ? {} : { group: axis.group }),
+          }),
+          config.axes,
+        ),
         labels,
-      });
-      return { group, Row, paired: true as const };
-    }
-    const axis = group.axes[0] as MeasureAxis;
-    const Row = createMutationSliders({
-      format: axis.format,
-      snap: axis.snap,
-      labels,
-    });
-    return { group, Row, paired: false as const };
-  }, groups);
+      })
+    : undefined;
+
+  /** The 1- and 2-axis rows, curried per group. The axes ARE the curry. */
+  const rows = grouped
+    ? []
+    : map((group: AxisGroup) => {
+        if (group.axes.length >= 2) {
+          const Row = createPairedMutationSliders({
+            axes: [group.axes[0] as MeasureAxis, group.axes[1] as MeasureAxis],
+            labels,
+          });
+          return { group, Row, paired: true as const };
+        }
+        const axis = group.axes[0] as MeasureAxis;
+        const Row = createMutationSliders({
+          format: axis.format,
+          snap: axis.snap,
+          labels,
+        });
+        return { group, Row, paired: false as const };
+      }, groups);
 
   /**
    * The cells as a MUTABLE array, memoised.
@@ -480,6 +523,36 @@ export const BoardView: Component<BoardViewProps> = (props) => {
                     a conditional EXPRESSION for the same reason as the mix
                     card above — a `fallback` would construct a single-dial row
                     around a paired component on every two-axis board. */}
+                {GroupedRow !== undefined ? (
+                  <GrowFillBox>
+                    <GroupedRow
+                      entities={map(
+                        (entity: PairedMutationEntity): GroupedMutationEntity => ({
+                          id: entity.id,
+                          label: entity.label,
+                          measures: entity.measures,
+                        }),
+                        props.entities,
+                      )}
+                      summary={
+                        props.summary === undefined
+                          ? undefined
+                          : (entity: GroupedMutationEntity) =>
+                              (props.summary as (
+                                e: GroupedMutationEntity,
+                              ) => string)(entity)
+                      }
+                      onChange={(
+                        id: string,
+                        measure: GroupedMeasureIndex,
+                        value: number,
+                      ) => props.onMeasure(id, measure, value)}
+                      onRemove={props.onRemove}
+                      onRestore={props.onRestore}
+                      onAdd={props.onAdd}
+                    />
+                  </GrowFillBox>
+                ) : null}
                 <Index each={rows}>
                   {(row) => (
                     <GrowFillBox>

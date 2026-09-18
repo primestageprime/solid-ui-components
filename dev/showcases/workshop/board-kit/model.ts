@@ -531,21 +531,30 @@ export const momentsOf = (
 
 // ── The money ────────────────────────────────────────────────────────────────
 
-/** What ONE entity contributes at a moment. An absence contributes nothing —
- *  which is the consumer stating what the absence MEANS, not arithmetic on it. */
+/**
+ * What ONE entity contributes at a moment.
+ *
+ * A board with MEMORY answers through `config.contributionAt`, which is handed
+ * the whole entity and the history; one without answers from its measures at
+ * that moment. The absence of an entity contributes nothing either way — which
+ * is the consumer stating what the absence MEANS, not arithmetic on it.
+ */
 export const contributionOfEntity = (
-  config: Pick<BoardConfig, "contributionOf">,
+  config: Pick<BoardConfig, "contributionOf" | "contributionAt">,
   entity: BoardEntity,
   time: number,
   mutations: readonly Mutation[],
 ): number => {
+  if (config.contributionAt !== undefined) {
+    return config.contributionAt(entity, time, mutations);
+  }
   const levels = levelsAt(entity, time, mutations);
   return levels === null ? 0 : config.contributionOf(levels);
 };
 
 /** What the whole roster contributes at a moment, in unit terms. */
 export const contributionAt = (
-  config: Pick<BoardConfig, "contributionOf">,
+  config: Pick<BoardConfig, "contributionOf" | "contributionAt">,
   entities: readonly BoardEntity[],
   time: number,
   mutations: readonly Mutation[],
@@ -667,7 +676,10 @@ export const weightFrom = (
  * edited, which is a slope rather than an average.
  */
 export const rateAt = (
-  config: Pick<BoardConfig, "contributionOf" | "side" | "fixedCost">,
+  config: Pick<
+    BoardConfig,
+    "contributionOf" | "contributionAt" | "side" | "fixedCost"
+  >,
   entities: readonly BoardEntity[],
   time: number,
   mutations: readonly Mutation[],

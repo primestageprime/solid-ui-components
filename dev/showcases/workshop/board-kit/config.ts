@@ -179,8 +179,36 @@ export interface BoardConfig<M extends number = number> {
   readonly domain: TimeDomain;
   /** One per measure, in reading order. `length` is `M`. */
   readonly axes: readonly MeasureAxis[];
-  /** What ONE entity contributes, in unit terms, from its measures. */
+  /**
+   * What ONE entity contributes, in unit terms, from its measures ALONE.
+   *
+   * Enough for a board whose rate is a function of where its dials are right
+   * now, which is both shipped boards: a service bills `hours x rate` in every
+   * week it is sold, and a person costs their salary in every month they are
+   * employed.
+   */
   readonly contributionOf: (measures: readonly number[]) => number;
+  /**
+   * What ONE entity contributes AT A MOMENT, when its measures alone cannot
+   * say — a board whose cash has MEMORY.
+   *
+   * Peter redefined the License Board on 2026-09-18 into exactly that shape: an
+   * annual licence sold in month 0 pays its whole fee in month 0 and nothing
+   * again until it renews at +12, and a negative growth delta does not bite
+   * until renewal. So what the business bills in March is not a function of
+   * where March's dials sit — it is a function of every cohort sold before it.
+   *
+   * OPTIONAL, and `contributionOf` stays required, because a board that has no
+   * memory should not have to write a time-dependent function to say so. When
+   * this is present the kit calls it and `contributionOf` is unused; every
+   * derivation downstream — the gauge's average, the projection's integral, the
+   * calibration table — already samples per moment and needs no other change.
+   */
+  readonly contributionAt?: (
+    entity: BoardEntity,
+    time: number,
+    mutations: readonly Mutation[],
+  ) => number;
   /** What the board is charged regardless of the roster, in unit terms. */
   readonly fixedCost: number;
   /** At or above this gain the gauge lights green; below it, yellow. */
