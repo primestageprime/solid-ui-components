@@ -93,7 +93,7 @@ import {
   bandOfRate,
   isPresentAt,
   maxRateFor,
-  monthlyFrom,
+  accruedOver,
   pinnedCeiling,
   rateBandTable,
   rateFromPayChange,
@@ -578,21 +578,49 @@ export const monthIndexOf = (at: TimeValue): number => {
 };
 
 /**
- * The balance line: COMMITTED up to `nowIndex`, then PROJECTED forward at the
- * scenario's live rate.
+ * WHAT THE PROJECTION SAMPLES: the rate as a function of time and the moments
+ * it can change at. One object rather than two arguments because they are one
+ * decision — "how is the forward rate read?".
+ */
+export interface RateSampling {
+  /** The rate in force from a moment onward. `rateAt` bound to a scenario. */
+  readonly rate: (time: number) => number;
+  /** The moments the rate is allowed to change at. The mutation times. */
+  readonly moments: readonly number[];
+}
+
+/**
+ * The balance line: COMMITTED up to `nowIndex`, then PROJECTED forward by
+ * INTEGRATING the sampled rate from the pivot.
  *
- *     balance(m) = balance(now) + rate × (m − now)
+ *     balance(m) = balance(now) + accruedOver(now, m, …)
  *
  * This is the wire from the dials to the chart. A drag changes the rate, the
  * rate changes every month after now, and the line visibly pivots about the
  * now point — which is the whole reason the board puts them on one screen.
  * Before now nothing moves, because the past is not a forecast.
+ *
+ * The INTEGRAL rather than one slope, because a scenario's rate is
+ * piecewise-constant per MUTATION and there can be several ahead of the pivot:
+ * the old scalar read the rate once, at the pivot, and drew the whole rest of
+ * the year at it — so a raise landing in October was drawn as though it had
+ * been in force since April. With ONE change ahead of the pivot the two agree
+ * to the bit, which is why this board's numbers do not move (Peter's ruling,
+ * 2026-09-17; the same function shape serves the Hourly Board, which sums in
+ * WEEKS because its changes land on ISO weeks).
  */
-export const projectedBalances = (rate: number, nowIndex: number): number[] =>
+export const projectedBalances = (
+  sampling: RateSampling,
+  nowIndex: number,
+): number[] =>
   map((_cell: { start: Date }, index: number) => {
-    const committed = COMMITTED[Math.min(nowIndex, COMMITTED.length - 1)] ?? 0;
+    const pivotIndex = Math.min(nowIndex, COMMITTED.length - 1);
+    const committed = COMMITTED[pivotIndex] ?? 0;
     if (index <= nowIndex) return COMMITTED[index] ?? committed;
-    return committed + monthlyFrom(rate) * (index - nowIndex);
+    const from = CELLS[pivotIndex]?.start.getTime();
+    const to = CELLS[index]?.start.getTime();
+    if (from === undefined || to === undefined) return committed;
+    return committed + accruedOver(from, to, sampling.moments, sampling.rate);
   }, CELLS);
 
 /**
@@ -628,10 +656,10 @@ export const PINNED_CEILING = pinnedCeiling(
 
 /** The chart's cells. Cents, because the chart's y IS cents. */
 export const balanceCells = (
-  rate: number,
+  sampling: RateSampling,
   nowIndex: number,
 ): CashflowCell[] => {
-  const balances = projectedBalances(rate, nowIndex);
+  const balances = projectedBalances(sampling, nowIndex);
   return map(
     (cell: { start: Date; end: Date }, index: number) => ({
       ...cell,
@@ -937,21 +965,18 @@ const ScenarioBoardBench: Component = () => {
   const rate = () => averageRate(TIME_DOMAIN, mutations(), people());
 
   /**
-   * THE PROJECTION'S SLOPE: the instantaneous rate from the moment being
-   * edited, which is a different question and wants a different answer — a
-   * line drawn forward from a point runs at the rate in force AT that point,
-   * not at the year's average.
+   * THE PROJECTION'S SAMPLING. Not a slope: the projection no longer HAS one.
+   *
+   * It used to read the instantaneous rate ONCE, at the moment being edited,
+   * and draw the rest of the year at it. Now it is handed the sampler and
+   * integrates it stretch by stretch, so the pivot's own rate is the FIRST
+   * sample rather than the only one and a later mutation is not back-dated to
+   * the pivot.
    */
-  const projectedRate = () => {
-    const at = editing();
-    const chosen =
-      at === null ? undefined : find((m: Mutation) => m.id === at, mutations());
-    return rateAt(
-      chosen === undefined ? DOMAIN_START.getTime() : timeOf(chosen.at),
-      mutations(),
-      people(),
-    );
-  };
+  const sampling = (): RateSampling => ({
+    rate: (time: number) => rateAt(time, mutations(), people()),
+    moments: map((mutation: Mutation) => timeOf(mutation.at), mutations()),
+  });
 
   const dials = () => {
     const at = editing();
@@ -1153,7 +1178,7 @@ const ScenarioBoardBench: Component = () => {
               <TextTitle>Running balance</TextTitle>
               <GrowFillBox>
                 <CashflowScrubChart
-                  cells={balanceCells(projectedRate(), nowIndex())}
+                  cells={balanceCells(sampling(), nowIndex())}
                   scrub={false}
                   chartHeight="fill"
                   showGridlines

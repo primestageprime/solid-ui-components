@@ -268,6 +268,48 @@ export const averageRateOver = (
 };
 
 /**
+ * The balance a rate ACCRUES between two moments — the projection's integral.
+ *
+ *     accrued = Σ over each stretch between changes of
+ *                   months(stretch) × rate(at its start) / 12
+ *
+ * A SUM rather than one multiplication, so a rate that CHANGES inside the
+ * projected span shows as differing month-on-month deltas rather than as one
+ * straight slope at whichever rate happened to be in force at the pivot. On
+ * THIS board the two agree numerically whenever there is a single change ahead
+ * of the pivot — the rate is piecewise-constant per mutation, and one constant
+ * stretch integrates to exactly `rate/12 × months`. It stops agreeing the
+ * moment two mutations sit ahead of the pivot, which is the case the old
+ * scalar drew wrong and nobody had noticed.
+ *
+ * MONTHS, with no unit parameter: this board's mutations land on quarters and
+ * every figure it quotes is monthly, so there is no caller for a weekly sum.
+ * The Hourly Board has one and parametrizes its own copy (`RateUnit` in
+ * `hourly-board-model.ts`). The duplication is the same deliberate one
+ * `averageRateOver` carries: importing across would drag the people model and
+ * three payroll constants into that board's module graph.
+ *
+ * Moments outside the stretch are IGNORED, the rule `averageRateOver` follows.
+ */
+export const accruedOver = (
+  from: number,
+  to: number,
+  moments: readonly number[],
+  rate: (time: number) => number,
+): number => {
+  if (to <= from) return 0;
+  const inside = moments.filter((moment) => moment > from && moment < to);
+  const edges = [from, ...inside.sort((a, b) => a - b), to];
+  let accrued = 0;
+  for (let index = 0; index < edges.length - 1; index += 1) {
+    const start = edges[index] ?? from;
+    const end = edges[index + 1] ?? to;
+    accrued += monthsBetween(start, end) * monthlyFrom(rate(start));
+  }
+  return accrued;
+};
+
+/**
  * The share of the span that a change made at `at` is in force for.
  *
  * The number the calibration is really about: a raise is only ever worth its

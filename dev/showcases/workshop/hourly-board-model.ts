@@ -156,7 +156,12 @@ export const segmentLabelsOf = (
  *  on the Work Mix plot arrives unsnapped (`Chart.onPick` snaps nothing) and
  *  goes through here. */
 export const weekOfPick = (at: Date | number): Date =>
-  new Date(weekSlotOf(typeof at === "number" ? at : at.getTime(), timeOf(DOMAIN_START)));
+  new Date(
+    weekSlotOf(
+      typeof at === "number" ? at : at.getTime(),
+      timeOf(DOMAIN_START),
+    ),
+  );
 
 // ── The span ─────────────────────────────────────────────────────────────────
 
@@ -1123,26 +1128,168 @@ export const fanAt = (index: number, nowIndex: number): number => {
   return months <= 0 ? 0 : UNCERTAINTY_PER_MONTH_SQUARED * months * months;
 };
 
+/** The units a year holds, per sampling unit. `monthlyFrom` is the month row of
+ *  this same table, kept because a year's rate quoted per month has callers of
+ *  its own. */
+const UNITS_PER_YEAR: Readonly<Record<RateUnit, number>> = {
+  month: MONTHS_PER_YEAR,
+  week: WEEKS_PER_YEAR,
+};
+
+/** The first instant of each of `count` consecutive months from `from`. The
+ *  balance chart's own cell edges — `monthlyCells(DOMAIN_START, …)[i].start` —
+ *  stated as a number the arithmetic can take, so the projection's integral and
+ *  the drawn cells cannot disagree about where a month begins. */
+export const monthStarts = (from: Date, count: number): number[] => {
+  const starts: number[] = [];
+  for (let index = 0; index < count; index += 1) {
+    starts.push(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + index, 1));
+  }
+  return starts;
+};
+
 /**
- * The balance line: COMMITTED up to `nowIndex`, then PROJECTED forward at the
- * scenario's live rate.
+ * The balance a rate ACCRUES between two moments — the projection's integral.
  *
- *     balance(m) = balance(now) + rate/12 × (m − now)
+ *     accrued = Σ over each stretch between changes of
+ *                   span(stretch, unit) × rate(at its start) / unitsPerYear
+ *
+ * A SUM rather than one multiplication, and that is the whole of Peter's ruling
+ * (2026-09-17): weekly seasonality has to reach the cash flow projection, not
+ * only the gauge. One scalar rate times the elapsed months draws the same
+ * straight slope whatever the weeks did, so a scenario alternating 30 and 10
+ * hours week to week projected as a flat line while the gauge beside it read
+ * the swing. Integrating the SAMPLED rate makes each stretch carry its own
+ * reading, so the deltas differ cell to cell and the line bends.
+ *
+ * The walk is over the CHANGE MOMENTS rather than over a fixed grid of weeks,
+ * and the two agree by construction on this board: every mutation is snapped to
+ * an ISO week (`weekOfPick`), so a stretch between two changes is a whole number
+ * of weeks and summing the stretches IS summing `rateAt(week) × 1/52` over
+ * them. Walking the moments is also exact when they are not — a change landing
+ * mid-week is weighted by the fraction of the week it is in force for instead of
+ * being rounded onto the nearest sample.
+ *
+ * Moments outside the stretch are IGNORED, the same rule `averageRateOver`
+ * follows: one before it is already in the rate at the start, and one after it
+ * never happens inside the stretch being projected.
+ */
+export const accruedOver = (
+  from: number,
+  to: number,
+  moments: readonly number[],
+  rate: (time: number) => number,
+  unit: RateUnit = "month",
+): number => {
+  if (to <= from) return 0;
+  const inside = filter(
+    (moment: number) => moment > from && moment < to,
+    moments,
+  );
+  const edges = [from, ...sortBy((moment: number) => moment, inside), to];
+  let accrued = 0;
+  for (let index = 0; index < edges.length - 1; index += 1) {
+    const start = edges[index] ?? from;
+    const end = edges[index + 1] ?? to;
+    accrued += spanIn(unit, start, end) * (rate(start) / UNITS_PER_YEAR[unit]);
+  }
+  return accrued;
+};
+
+/**
+ * WHAT THE PROJECTION SAMPLES: the rate as a function of time, the moments it
+ * can change at, the cell edges to integrate between, and the unit to sum in.
+ *
+ * One object rather than four positional arguments because they are one
+ * decision — "how is the forward rate read?" — and a caller that has an answer
+ * for `rate` always has one for `moments`.
+ */
+export interface RateSampling {
+  /** The first instant of each cell, in ms. Same length and order as the
+   *  committed balances. See `monthStarts`. */
+  readonly boundaries: readonly number[];
+  /** The rate in force from a moment onward. `rateAt` bound to a scenario — or
+   *  `() => rate` for a flat projection, which is the same one code path. */
+  readonly rate: (time: number) => number;
+  /** The moments the rate is allowed to change at. The mutation times. */
+  readonly moments: readonly number[];
+  /** The unit the integral is summed in. MONTHS unless the board counts weeks —
+   *  the Hourly Board does, because its changes land on ISO weeks. */
+  readonly unit?: RateUnit;
+}
+
+/**
+ * The balance line: COMMITTED up to `nowIndex`, then PROJECTED forward by
+ * INTEGRATING the sampled rate from the pivot.
+ *
+ *     balance(m) = balance(now) + accruedOver(now, m, …)
  *
  * This is the wire from the dials to the chart. A drag changes the rate, the
  * rate changes every month after now, and the line visibly pivots about the now
  * point. Before now nothing moves, because the past is not a forecast.
+ *
+ * A FLAT scenario integrated in MONTHS reproduces the straight slope this
+ * function used to draw, exactly rather than nearly: `monthsBetween` is integral
+ * on month boundaries and the cell edges are month boundaries, so the sum
+ * collapses to `rate/12 × (m − now)`. That equality is the proof the change is
+ * additive in behaviour — see `hourly-board-model.test.ts`.
  */
 export const projectedBalances = (
   committed: readonly number[],
-  rate: number,
+  sampling: RateSampling,
   nowIndex: number,
 ): number[] =>
   map((_balance: number, index: number) => {
-    const pivot = committed[Math.min(nowIndex, committed.length - 1)] ?? 0;
+    const pivotIndex = Math.min(nowIndex, committed.length - 1);
+    const pivot = committed[pivotIndex] ?? 0;
     if (index <= nowIndex) return committed[index] ?? pivot;
-    return pivot + monthlyFrom(rate) * (index - nowIndex);
+    const from = sampling.boundaries[pivotIndex];
+    const to = sampling.boundaries[index];
+    if (from === undefined || to === undefined) return pivot;
+    return (
+      pivot +
+      accruedOver(
+        from,
+        to,
+        sampling.moments,
+        sampling.rate,
+        sampling.unit ?? "month",
+      )
+    );
   }, committed);
+
+/** One row of the DEBUG projection table: the rate the projection SAMPLED for
+ *  that cell and what it did to the balance. The per-cell number that was
+ *  invisible while the projection took one scalar. */
+export interface ProjectionRow {
+  readonly month: string;
+  readonly projectedRate: number;
+  readonly balance: number;
+  readonly delta: number;
+  readonly part: "committed" | "projected";
+}
+
+/** The balance line as a table — headless first, so the bend can be argued
+ *  with from a terminal before anyone opens the chart. */
+export const projectionTable = (
+  committed: readonly number[],
+  sampling: RateSampling,
+  nowIndex: number,
+): ProjectionRow[] => {
+  const balances = projectedBalances(committed, sampling, nowIndex);
+  return map((balance: number, index: number) => {
+    const at = sampling.boundaries[index] ?? 0;
+    const previous =
+      index === 0 ? (committed[0] ?? 0) : (balances[index - 1] ?? 0);
+    return {
+      month: new Date(at).toISOString().slice(0, 7),
+      projectedRate: Math.round(sampling.rate(at)),
+      balance: Math.round(balance),
+      delta: Math.round(balance - previous),
+      part: index <= nowIndex ? ("committed" as const) : ("projected" as const),
+    };
+  }, balances);
+};
 
 /**
  * The chart's PINNED y-domain ceiling, in dollars. Computed once from what the

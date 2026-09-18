@@ -145,11 +145,14 @@ import {
   isDirty,
   isOffDial,
   maxReachableRate,
+  momentsOf,
+  monthStarts,
   monthlyFrom,
   pairsForMutation,
   pairsWithoutMutation,
   pinnedCeiling,
   projectedBalances,
+  projectionTable,
   quarterLabelOf,
   quarterTicks,
   rateAt,
@@ -165,6 +168,7 @@ import {
   withDrop,
   withoutChange,
   workMixSeries,
+  type RateSampling,
   type SegmentLabel,
   type Service,
   type ServiceDraft,
@@ -303,9 +307,36 @@ const monthIndexOf = (at: TimeValue): number => {
   return index;
 };
 
+/** The chart's cell edges, as numbers. Agrees with `CELLS` by construction. */
+const BOUNDARIES = monthStarts(DOMAIN_START, COMMITTED.length);
+
+/**
+ * HOW THE PROJECTION READS THE RATE: sampled at every change, integrated in
+ * WEEKS.
+ *
+ * Weeks and not months because every change on this board lands on an ISO week
+ * and every hours figure is quoted per week — the same argument `averageRate`
+ * makes for the gauge, now made for the line beside it. A scenario whose hours
+ * alternate 30 / 10 week to week accrues a different amount in each stretch, so
+ * the monthly deltas differ and the line BENDS instead of running straight at
+ * the mean (Peter's ruling, 2026-09-17).
+ */
+const samplingFor = (
+  mutations: readonly Mutation[],
+  services: readonly Service[],
+): RateSampling => ({
+  boundaries: BOUNDARIES,
+  rate: (time: number) => rateAt(time, mutations, services),
+  moments: momentsOf(mutations),
+  unit: "week",
+});
+
 /** The chart's cells. Cents, because the chart's y IS cents. */
-const balanceCells = (rate: number, nowIndex: number): CashflowCell[] => {
-  const balances = projectedBalances(COMMITTED, rate, nowIndex);
+const balanceCells = (
+  sampling: RateSampling,
+  nowIndex: number,
+): CashflowCell[] => {
+  const balances = projectedBalances(COMMITTED, sampling, nowIndex);
   return map(
     (cell: { start: Date; end: Date }, index: number) => ({
       ...cell,
@@ -399,6 +430,22 @@ const printTables = (
     ),
   );
   console.table(rateBandTable(services));
+  // THE BALANCE LINE, per cell — the PROJECTED RATE the integral sampled for
+  // each month alongside what it accrued. While the projection took one scalar
+  // there was nothing per-cell to print; now a scenario whose weeks alternate
+  // shows it here as differing `delta`s, which is the reading the chart draws.
+  console.table(
+    projectionTable(
+      COMMITTED,
+      samplingFor(mutations, services),
+      mutationId === null
+        ? 0
+        : monthIndexOf(
+            find((m: Mutation) => m.id === mutationId, mutations)?.at ??
+              DOMAIN_START,
+          ),
+    ),
+  );
   const at =
     mutationId === null
       ? DOMAIN_START.getTime()
@@ -631,21 +678,17 @@ const HourlyBoardBench: Component = () => {
   const rate = () => averageRate(TIME_DOMAIN, mutations(), services());
 
   /**
-   * THE PROJECTION'S SLOPE: the instantaneous rate from the moment being
-   * edited. A different question from the gauge's and it wants a different
-   * answer — a line drawn forward from a point runs at the rate in force AT
-   * that point, not at the year's average.
+   * THE PROJECTION'S SAMPLING. Not a slope: the projection no longer HAS one
+   * scalar slope.
+   *
+   * A single instantaneous rate read at the pivot was what this memo used to
+   * be, and it is what made every forward delta identical — a straight line at
+   * whatever the rate happened to be at the moment being edited, whatever the
+   * weeks after it did. Now the projection is handed the sampler and integrates
+   * it week by week, so the pivot's own rate is simply the FIRST sample rather
+   * than the only one.
    */
-  const projectedRate = () => {
-    const at = editing();
-    const chosen =
-      at === null ? undefined : find((m: Mutation) => m.id === at, mutations());
-    return rateAt(
-      chosen === undefined ? DOMAIN_START.getTime() : timeOf(chosen.at),
-      mutations(),
-      services(),
-    );
-  };
+  const sampling = () => samplingFor(mutations(), services());
 
   const pairs = () => {
     const at = editing();
@@ -832,7 +875,7 @@ const HourlyBoardBench: Component = () => {
                   `PINNED_CEILING` below the fixture for the arithmetic. */}
               <GrowFillBox>
                 <CashflowScrubChart
-                  cells={balanceCells(projectedRate(), nowIndex())}
+                  cells={balanceCells(sampling(), nowIndex())}
                   scrub={false}
                   chartHeight="fill"
                   showGridlines
@@ -903,7 +946,8 @@ const HourlyBoardBench: Component = () => {
                     when={selectedSegment()}
                     fallback={
                       <NoteText>
-                        Click the Work Mix chart, or move a dial, to propose a change
+                        Click the Work Mix chart, or move a dial, to propose a
+                        change
                       </NoteText>
                     }
                   >
