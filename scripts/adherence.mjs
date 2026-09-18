@@ -92,6 +92,7 @@ import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import posix from "node:path/posix";
+import ts from "typescript";
 import { length } from "./fn.mjs";
 import { collectExportSurface } from "./export-usage-report.mjs";
 
@@ -99,7 +100,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // ── pure helpers (the test surface) ──────────────────────────────────────────
 
-export const isTestPath = (p) => p.includes(".test.");
+export const isTestPath = (p) => p.includes(".test.") || p.includes(".spec.");
 
 /** Any non-test `.ts`/`.tsx` module under src/components. Deliberately WIDER
  *  than render-coverage's PascalCase selector: MutationSliders' header names
@@ -212,15 +213,56 @@ export const SVG_TAGS = new Set([
   "feComposite", "feColorMatrix", "feDropShadow",
 ]);
 
+/** A `.tsx` module eligible for JSX scanning: not a test/spec file, and not a
+ *  plain `.ts` module — a `.ts` helper like `highlight.ts` has no JSX in it at
+ *  all, so scanning it for intrinsic elements can only ever produce a phantom
+ *  finding (its `Set<string>`/`ReadonlySet<string>` type arguments). depth
+ *  accounting deliberately stays on the wider `isModulePath` (it needs `.ts`
+ *  helpers counted); this narrower filter is used only by the `intrinsic`
+ *  rule. */
+export const isJsxModulePath = (p) => p.endsWith(".tsx") && !isTestPath(p);
+
 /** Intrinsic (lowercase) JSX elements the module renders, tag → count.
- *  `<div>`, `<div/>`, `<div className=…>` and `<my-element>` all match; a
- *  `<Foo>` does not (capital), and neither does a lone `<` in a comparison
- *  (the delimiter class after the name is required, as in render-coverage's
- *  `mountsAny`). */
+ *  `<div>`, `<div/>` and `<div className=…>` all match; a `<Foo>` (capital)
+ *  does not.
+ *
+ *  Parses with the TypeScript compiler (`ts.createSourceFile`, `ScriptKind.TSX`)
+ *  and walks `JsxOpeningElement`/`JsxSelfClosingElement` nodes rather than
+ *  regex-matching `<lowercase`, because the regex cannot tell a real element
+ *  from a generic type argument in TYPE position — `createSignal<readonly
+ *  string[]>` and `Set<string>` both matched `<[a-z]`, which is how
+ *  `ADH-MutationSliders-intrinsic` and `ADH-TreeDiffChart-intrinsic` were born
+ *  phantom (2026-09-17). An AST walk only visits nodes the parser classified
+ *  as JSX, so a generic argument can never be misread as an element, and
+ *  commented-out markup is skipped for free (comments carry no AST nodes) —
+ *  no separate `stripComments` pass needed here.
+ *
+ *  Unparsable source (a fixture string in a test, say) yields an empty map
+ *  rather than throwing — one bad module must not crash the whole report. */
 export const intrinsicElementsOf = (src) => {
   const counts = new Map();
-  for (const m of stripComments(src).matchAll(/<([a-z][a-zA-Z0-9-]*)[\s/>]/g))
-    counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
+  let sourceFile;
+  try {
+    sourceFile = ts.createSourceFile(
+      "module.tsx",
+      src,
+      ts.ScriptTarget.Latest,
+      /* setParentNodes */ false,
+      ts.ScriptKind.TSX,
+    );
+  } catch {
+    return counts;
+  }
+  const record = (tagName) => {
+    if (ts.isIdentifier(tagName) && /^[a-z]/.test(tagName.text))
+      counts.set(tagName.text, (counts.get(tagName.text) ?? 0) + 1);
+  };
+  const visit = (node) => {
+    if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node))
+      record(node.tagName);
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
   return counts;
 };
 
@@ -584,7 +626,7 @@ export function analyse({
       // ── intrinsic: raw HTML where a Primitive belongs ─────────────────────
       const html = new Map();
       const svg = new Map();
-      for (const f of code)
+      for (const f of code.filter(isJsxModulePath))
         for (const [tag, n] of intrinsicElementsOf(read(f))) {
           const bucket = SVG_TAGS.has(tag) ? svg : html;
           bucket.set(tag, (bucket.get(tag) ?? 0) + n);

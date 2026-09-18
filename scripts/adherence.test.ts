@@ -30,6 +30,7 @@ import { describe, it, expect } from "vitest";
 import {
   analyse,
   intrinsicElementsOf,
+  isJsxModulePath,
   isPrimitiveDepth,
   isUnitPath,
   leadingCommentBlock,
@@ -273,6 +274,59 @@ describe("intrinsic — HTML is a finding, SVG is information", () => {
     );
     expect(bySeverity["intrinsic"]).toBe("high");
     expect(bySeverity["intrinsic-svg"]).toBe("info");
+  });
+
+  // Regression: the regex this replaced matched `<[a-z]` anywhere, so a
+  // generic TYPE argument (`createSignal<readonly string[]>`, `Set<string>`)
+  // read as an element named "readonly" or "string". MutationSliders.tsx:339
+  // and TreeDiffChart's highlight.ts were phantom `-intrinsic` findings for
+  // exactly this reason (2026-09-17).
+  it("does not mistake a generic type argument for an element", () => {
+    const counts = intrinsicElementsOf(
+      `const [s, setS] = createSignal<readonly string[]>([]);\n` +
+        `const seen = new Set<string>();`,
+    );
+    expect(counts.size).toBe(0);
+  });
+
+  it("still finds a real element alongside generic type arguments", () => {
+    const counts = intrinsicElementsOf(
+      `const [s] = createSignal<readonly string[]>([]);\n` +
+        `const el = <div>{s()}</div>;`,
+    );
+    expect(counts.size).toBe(1);
+    expect(counts.get("div")).toBe(1);
+  });
+});
+
+describe("isJsxModulePath — only a real component module is scanned for intrinsics", () => {
+  it("accepts a plain .tsx component module", () => {
+    expect(isJsxModulePath("/src/components/Foo/Foo.tsx")).toBe(true);
+  });
+
+  it("rejects a .ts helper — it cannot contain JSX, only type arguments", () => {
+    expect(isJsxModulePath("/src/components/Foo/highlight.ts")).toBe(false);
+  });
+
+  it("rejects a .test.tsx and a .spec.tsx file", () => {
+    expect(isJsxModulePath("/src/components/Foo/Foo.test.tsx")).toBe(false);
+    expect(isJsxModulePath("/src/components/Foo/Foo.spec.tsx")).toBe(false);
+  });
+});
+
+describe("intrinsic rule — a .ts helper's generics never reach the finding", () => {
+  it("scans the real .tsx module and ignores the .ts helper attached to it", () => {
+    const report = analyse(
+      world({
+        "/src/components/Chart/Chart.tsx":
+          HEADER("Chart", "Composite", 2) +
+          `export const Chart = () => <div />;`,
+        "/src/components/Chart/highlight.ts":
+          `export const f = (): Set<string> => new Set<string>();`,
+      }),
+    );
+    const item = report.items.find((i) => i.id === "ADH-Chart-intrinsic");
+    expect(item?.detail).toEqual(["<div> ×1"]);
   });
 });
 
