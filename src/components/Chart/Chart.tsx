@@ -26,6 +26,15 @@ import { DEFAULT_GLYPH_SIZE } from "./shapes";
 import type { Id } from "./slot-types";
 import "./Chart.css";
 
+/** What a pick carries besides the x value: where on the SCREEN it happened,
+ *  so a consumer can seat a menu or a popover at the click without measuring
+ *  the chart again, plus the raw event for anything else. */
+export interface ChartPickMeta {
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly event: MouseEvent;
+}
+
 export interface ChartProps {
   width: number;
   height: number;
@@ -61,6 +70,23 @@ export interface ChartProps {
   class?: string;
   style?: JSX.CSSProperties | string;
   children?: JSX.Element;
+  /**
+   * Provided => clicking inside the PLOT AREA reports the x under the pointer.
+   * Omitted => no click listener and no cursor change at all, so a readout
+   * chart never promises an interaction it does not have.
+   *
+   * The x comes from the SAME mapping the crosshair and `hoverX` use — the
+   * inverse of the x scale, gated on the plot area — so what a reader picks is
+   * what the crosshair was standing on. A `Date` when `xDomain` is
+   * date-based, a number when it is numeric; `hoverX` stays epoch-ms either
+   * way, because the context is number-typed by contract.
+   *
+   * NOT SNAPPED. A chart does not know what a consumer's grid is — months,
+   * ISO weeks, sample indices — so snapping is the consumer's, on the raw
+   * value. (`LevelsTimeline.onPick` snaps to a month because a levels
+   * timeline IS a month-grained picture; this root is not.)
+   */
+  onPick?: (x: number | Date, meta: ChartPickMeta) => void;
 }
 
 const DEFAULT_MARGIN: Margin = { top: 8, right: 8, bottom: 28, left: 36 };
@@ -82,14 +108,21 @@ const isDateDomain = (d: ChartProps["xDomain"]): d is [Date, Date] => {
 };
 
 export const Chart: Component<ChartProps> = (props) => {
-  // NB: `onPointer*` are listed so that any pass-through handlers from a consumer
-  // are routed to `local` (and discarded) — never spread onto the <svg> via
-  // `others`, where they would clobber Chart's own listeners.
+  // NB: `onPointer*` and `onClick` are listed so that any pass-through handlers
+  // from a consumer are routed to `local` (and discarded) — never spread onto
+  // the <svg> via `others`, where they would clobber Chart's own listeners
+  // (`others` is spread AFTER the explicit handlers, so it would win).
+  // `onClick` is on that list for exactly the same reason the pointer handlers
+  // are: `onPick` is dispatched from Chart's own click listener.
   // We widen via intersection so the keys are valid for `splitProps` even though
   // they are intentionally absent from the public `ChartProps` surface.
   type PointerPassthrough = Pick<
     JSX.SvgSVGAttributes<SVGSVGElement>,
-    "onPointerMove" | "onPointerDown" | "onPointerUp" | "onPointerLeave"
+    | "onPointerMove"
+    | "onPointerDown"
+    | "onPointerUp"
+    | "onPointerLeave"
+    | "onClick"
   >;
   const [local, others] = splitProps(props as ChartProps & PointerPassthrough, [
     "width",
@@ -103,10 +136,12 @@ export const Chart: Component<ChartProps> = (props) => {
     "class",
     "style",
     "children",
+    "onPick",
     "onPointerMove",
     "onPointerDown",
     "onPointerUp",
     "onPointerLeave",
+    "onClick",
   ]);
 
   // Title lives in an HTML `<div>` ABOVE the SVG (see render below), so
@@ -128,6 +163,10 @@ export const Chart: Component<ChartProps> = (props) => {
     Math.max(0, local.annotationLaneHeight ?? 0),
   );
 
+  // Whether x is a TIME axis, asked once. `xScale` is number-typed either way
+  // (epoch ms for a time scale), so this is the only thing that decides
+  // whether a pick reports a `Date` or a number.
+  const xIsTime = createMemo(() => isDateDomain(local.xDomain));
   const xScale = createMemo<Scale>(() => {
     const d = local.xDomain;
     return isDateDomain(d)
@@ -265,6 +304,31 @@ export const Chart: Component<ChartProps> = (props) => {
     }
   };
 
+  /**
+   * A CLICK inside the plot, reported in data coordinates.
+   *
+   * Shares `pointerDataX` with the hover path rather than re-deriving the
+   * mapping, which is what makes the picked x the one the crosshair was
+   * standing on. A click in the axis gutters maps to `null` and is dropped —
+   * the plot-area gate is the same gate the crosshair hides behind.
+   *
+   * Left on the <svg> alongside the pointer listeners (the module header's
+   * "single listener" rule) rather than on the pick surface below, so the
+   * mapping and the gate cannot diverge between the two gestures. The surface
+   * exists only to carry the cursor.
+   */
+  const onClick = (e: MouseEvent) => {
+    const pick = local.onPick;
+    if (pick === undefined) return;
+    const x = pointerDataX(e.clientX);
+    if (x == null) return;
+    pick(xIsTime() ? new Date(x) : x, {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      event: e,
+    });
+  };
+
   const ctx: ChartContextValue = {
     width,
     height,
@@ -320,6 +384,7 @@ export const Chart: Component<ChartProps> = (props) => {
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerLeave}
+          onClick={local.onPick === undefined ? undefined : onClick}
           {...(others as JSX.SvgSVGAttributes<SVGSVGElement>)}
         >
           <Show when={local.title}>
@@ -365,6 +430,23 @@ export const Chart: Component<ChartProps> = (props) => {
             </clipPath>
           </defs>
           <g transform={`translate(${margin().left}, ${margin().top})`}>
+            {/* THE PICK SURFACE — a cursor, and nothing else.
+                A `cursor` on the <svg> would claim the axis gutters too, and
+                only the PLOT is pickable, so the promise is made by a rect of
+                exactly the plot's size. FIRST child, so DOM (= paint) order
+                leaves every slot above it and their own hit-testing
+                untouched; transparent rather than absent, because an SVG
+                shape with no fill takes no pointer events and so shows no
+                cursor. The click itself is handled on the <svg>. */}
+            <Show when={local.onPick !== undefined}>
+              <rect
+                class="sui-chart__pick-surface"
+                x={0}
+                y={0}
+                width={innerWidth()}
+                height={innerHeight()}
+              />
+            </Show>
             {local.children}
           </g>
         </svg>
