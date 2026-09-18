@@ -195,7 +195,8 @@ describe("the captioned runs", () => {
 
   it("knows whether the caption LINE is needed at all", () => {
     expect(hasCaptions(FOUR_AXES)).toBe(true);
-    expect(hasCaptions([{ label: "Hrs" }, { label: "$" }])).toBe(false);
+    // Two axes that name no group: the caption LINE is not drawn at all.
+    expect(hasCaptions([{}, {}])).toBe(false);
   });
 });
 
