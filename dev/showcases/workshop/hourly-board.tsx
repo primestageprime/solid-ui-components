@@ -30,13 +30,19 @@
  * each printed as a table on mount behind `DEBUG`, so the board can be read and
  * argued with from a terminal before anyone opens a browser.
  *
- * TWO FINDINGS, both stated rather than worked around:
+ * TWO FINDINGS, one of them now closed:
  *
- *   • `Chart` EXPOSES NO CLICK. `ChartProps` has no `onClick` and the context
- *     publishes `hoverX`, `drag` and `emphasis` but no click dispatch, so
- *     click-to-add on the Work Mix plot is not reachable today. A change is
- *     added through the `Add` button only. (`drag.committed` would fire on any
- *     drag and is not a click; using it would be inventing a gesture.)
+ *   • `Chart` EXPOSED NO CLICK — `ChartProps` had no `onClick` and the context
+ *     published `hoverX`, `drag` and `emphasis` but no click dispatch, so
+ *     click-to-add on the Work Mix plot was unreachable and a change could only
+ *     be made by moving a dial. (`drag.committed` would fire on any drag and is
+ *     not a click; using it would have been inventing a gesture.) Peter,
+ *     2026-09-17: "you should still have clicks on the chart at a weekly
+ *     granularity. That allows for weekly seasonality in projections." So
+ *     `Chart` grew `onPick`, and this board snaps the picked date to the start
+ *     of its ISO WEEK. Snapping is HERE and not in `Chart` because the grid is
+ *     this board's: a chart root that snapped to weeks would be wrong for every
+ *     consumer counting in something else.
  *   • THE FULL-TIME RULE IS A `ReferenceLine`, not a `LineSeries`.
  *     `LineSeriesProps` has no `label`, and `ReferenceLineStyleProps` does —
  *     with a documented seat for `orientation="horizontal"` (right plot edge,
@@ -126,6 +132,7 @@ import {
   SEED_MUTATIONS,
   SERVICES,
   TIME_DOMAIN,
+  addMutation,
   addService,
   annualOfPair,
   averageRate,
@@ -152,6 +159,8 @@ import {
   scenarioDigest,
   segmentLabelsOf,
   totalHoursAt,
+  weekLabel,
+  weekOfPick,
   withChange,
   withDrop,
   withoutChange,
@@ -350,6 +359,12 @@ const printTables = (
         flag:
           find((m: Mutation) => m.id === segment.id, mutations)?.label ?? "",
         segment: segment.label,
+        // The WEEK, unabridged, beside the month the chip is filed under: the
+        // chip is an abbreviation and the terminal should not have to be.
+        week: weekLabel(
+          find((m: Mutation) => m.id === segment.id, mutations)?.at ??
+            DOMAIN_START,
+        ),
         month: segment.month,
         editing: segment.id === mutationId ? "◀ editing" : "",
       }),
@@ -512,6 +527,8 @@ const WorkMixPlot: Component<{
   services: readonly Service[];
   mutations: readonly Mutation[];
   cap: number;
+  /** A click on the plot, already snapped to the start of its ISO week. */
+  onPickWeek: (at: Date) => void;
 }> = (props) => {
   const [box, setBox] = createSignal<{ width: number; height: number }>(
     FALLBACK_PLOT,
@@ -542,6 +559,12 @@ const WorkMixPlot: Component<{
         xDomain={[DOMAIN_START, DOMAIN_END]}
         yDomain={[0, props.cap]}
         margin={WORK_MIX_MARGIN}
+        /* `Chart.onPick` reports the RAW date under the pointer — it snaps
+           nothing, because a chart root does not know whose grid it is on.
+           `weekOfPick` is this board's grid: the ISO Monday at or before the
+           pick, clamped to the span's start so a click in the truncated first
+           week lands on the left edge rather than five days into the year. */
+        onPick={(at) => props.onPickWeek(weekOfPick(at))}
       >
         <Grid />
         <YAxis tickFormat={formatHours} />
@@ -670,6 +693,24 @@ const HourlyBoardBench: Component = () => {
       setEditing(ensured.selected);
     });
     return ensured.selected;
+  };
+
+  /**
+   * A CLICK ON THE WORK MIX PLOT proposes a change in that WEEK, or selects the
+   * one already there.
+   *
+   * `addMutation` does both and says which, so there is no branch here on
+   * whether anything was added — and dedupe needs no tolerance window, because
+   * the date arrives already snapped to the week slot and two picks in one week
+   * are the same timestamp. `batch`, for the reason every other write here
+   * batches: the change list and the selection describe ONE scenario.
+   */
+  const pickWeek = (at: Date): void => {
+    const next = addMutation(mutations(), at);
+    batch(() => {
+      setMutations(next.mutations);
+      setEditing(next.selected);
+    });
   };
 
   /**
@@ -834,6 +875,7 @@ const HourlyBoardBench: Component = () => {
                 services={services()}
                 mutations={mutations()}
                 cap={cap()}
+                onPickWeek={pickWeek}
               />
             </FillCardSurface>
           </HalfFillColumn>
@@ -861,7 +903,7 @@ const HourlyBoardBench: Component = () => {
                     when={selectedSegment()}
                     fallback={
                       <NoteText>
-                        Press Add, or move a dial, to propose a change
+                        Click the Work Mix chart, or move a dial, to propose a change
                       </NoteText>
                     }
                   >

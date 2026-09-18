@@ -1,13 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { render, fireEvent } from "@solidjs/testing-library";
-import { Chart } from "./Chart";
+import { Chart, type ChartPickMeta } from "./Chart";
 import { XAxis, YAxis } from "./Axes";
 import { PointSeries } from "./Series";
 import { PinMarkers, type Pin } from "./PinMarkers";
 import { useChart } from "./context";
 import { slotId } from "./slot-types";
 import type { Component } from "solid-js";
-import { pointer, installPointerCapture } from "../../test-utils";
+import {
+  pointer,
+  installPointerCapture,
+  installRects,
+  rectOf,
+} from "../../test-utils";
 
 describe("Chart", () => {
   it("renders with a numeric xDomain (back-compat)", () => {
@@ -752,5 +757,164 @@ describe("Chart — annotation lane", () => {
     expect(captured!.clip.annotationLanePathUrl()).toBe(
       `url(#${laneClip.getAttribute("id")})`,
     );
+  });
+  // ── onPick ────────────────────────────────────────────────────────────────
+  //
+  // The rect is STUBBED rather than left at jsdom's all-zero default: a click
+  // has to be placed at a known fraction of the plot, and a zero-width rect
+  // makes every clientX land at the same data x, so the test would pass for
+  // the wrong reason.
+  describe("onPick", () => {
+    const WIDTH = 200;
+    const HEIGHT = 100;
+    // The default margin, stated: left 36, right 8 => an inner width of 156.
+    const INNER_WIDTH = WIDTH - 36 - 8;
+    const PLOT_LEFT = 100;
+
+    const stubSvgRect = (): (() => void) =>
+      installRects((el) =>
+        el.tagName.toLowerCase() === "svg"
+          ? rectOf({ left: PLOT_LEFT, top: 50, width: WIDTH, height: HEIGHT })
+          : null,
+      );
+
+    /** A click a quarter of the way across the PLOT, in client coords. */
+    const quarterAcross = PLOT_LEFT + 36 + INNER_WIDTH * 0.25;
+
+    it("reports x at 25% of a numeric domain for a click 25% across the plot", () => {
+      const restore = stubSvgRect();
+      const picks: (number | Date)[] = [];
+      const { container } = render(() => (
+        <Chart
+          width={WIDTH}
+          height={HEIGHT}
+          xDomain={[0, 400]}
+          yDomain={[0, 100]}
+          onPick={(x) => picks.push(x)}
+        />
+      ));
+      fireEvent.click(container.querySelector("svg")!, {
+        clientX: quarterAcross,
+        clientY: 80,
+      });
+      restore();
+      expect(picks).toHaveLength(1);
+      expect(picks[0] as number).toBeCloseTo(100, 6);
+    });
+
+    it("reports a Date at 25% of a time domain, and the click's client point", () => {
+      const restore = stubSvgRect();
+      const t0 = new Date("2025-01-01T00:00:00Z");
+      const t1 = new Date("2025-01-05T00:00:00Z");
+      const picks: { x: number | Date; meta: ChartPickMeta }[] = [];
+      const { container } = render(() => (
+        <Chart
+          width={WIDTH}
+          height={HEIGHT}
+          xDomain={[t0, t1]}
+          yDomain={[0, 100]}
+          onPick={(x, meta) => picks.push({ x, meta })}
+        />
+      ));
+      fireEvent.click(container.querySelector("svg")!, {
+        clientX: quarterAcross,
+        clientY: 80,
+      });
+      restore();
+      expect(picks).toHaveLength(1);
+      const picked = picks[0]!.x;
+      expect(picked).toBeInstanceOf(Date);
+      // A quarter of four days is one day.
+      expect((picked as Date).toISOString()).toBe("2025-01-02T00:00:00.000Z");
+      expect(picks[0]!.meta.clientX).toBe(quarterAcross);
+      expect(picks[0]!.meta.clientY).toBe(80);
+      expect(picks[0]!.meta.event.type).toBe("click");
+    });
+
+    it("drops a click in the axis gutter — the plot-area gate the crosshair uses", () => {
+      const restore = stubSvgRect();
+      const picks: (number | Date)[] = [];
+      const { container } = render(() => (
+        <Chart
+          width={WIDTH}
+          height={HEIGHT}
+          xDomain={[0, 400]}
+          yDomain={[0, 100]}
+          onPick={(x) => picks.push(x)}
+        />
+      ));
+      // Inside the LEFT margin (36px), so left of the plot.
+      fireEvent.click(container.querySelector("svg")!, {
+        clientX: PLOT_LEFT + 10,
+        clientY: 80,
+      });
+      restore();
+      expect(picks).toEqual([]);
+    });
+
+    it("renders the pick surface when onPick is supplied", () => {
+      const { container } = render(() => (
+        <Chart
+          width={WIDTH}
+          height={HEIGHT}
+          xDomain={[0, 400]}
+          yDomain={[0, 100]}
+          onPick={() => undefined}
+        />
+      ));
+      const surface = container.querySelector(".sui-chart__pick-surface")!;
+      expect(surface).toBeTruthy();
+      expect(surface.getAttribute("width")).toBe(String(INNER_WIDTH));
+      // FIRST child of the margin group, so every slot paints (and hit-tests)
+      // above it.
+      expect(surface.parentElement!.firstElementChild).toBe(surface);
+    });
+
+    it("adds neither a listener nor a cursor without onPick", () => {
+      const restore = stubSvgRect();
+      const { container } = render(() => (
+        <Chart
+          width={WIDTH}
+          height={HEIGHT}
+          xDomain={[0, 400]}
+          yDomain={[0, 100]}
+        />
+      ));
+      const svg = container.querySelector("svg")!;
+      expect(container.querySelector(".sui-chart__pick-surface")).toBeNull();
+      // Nothing else to assert on a handler that was never attached: the
+      // click must not throw and must change nothing.
+      expect(() =>
+        fireEvent.click(svg, { clientX: quarterAcross, clientY: 80 }),
+      ).not.toThrow();
+      restore();
+    });
+
+    it("keeps its own click listener when a consumer passes onClick", () => {
+      const restore = stubSvgRect();
+      const picks: (number | Date)[] = [];
+      const passthrough = { onClick: () => undefined } as Record<
+        string,
+        unknown
+      >;
+      const { container } = render(() => (
+        <Chart
+          width={WIDTH}
+          height={HEIGHT}
+          xDomain={[0, 400]}
+          yDomain={[0, 100]}
+          onPick={(x) => picks.push(x)}
+          // Not on the public surface — a consumer spreading props could still
+          // send it, and `others` is spread AFTER Chart's own handlers.
+          {...passthrough}
+        />
+      ));
+      fireEvent.click(container.querySelector("svg")!, {
+        clientX: quarterAcross,
+        clientY: 80,
+      });
+      restore();
+      expect(picks).toHaveLength(1);
+    });
   });
 });

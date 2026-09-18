@@ -9,7 +9,18 @@
 import { describe, expect, it } from "vitest";
 import { map } from "../../../src/fn";
 import { timeOf } from "../../../src";
-import type { Mutation } from "../../../src";
+import type {
+  Mutation,
+  StackedAreaPoint,
+  StackedAreaSeriesData,
+} from "../../../src";
+// The MARK's own core, so the crowding of two weekly changes inside one
+// transition is asserted against the geometry that draws them rather than
+// against a screenshot.
+import {
+  buildStackedArea,
+  transitionWidth,
+} from "../../../src/components/Chart/stackedArea";
 import {
   COMFORTABLE,
   COMMITTED_RATE,
@@ -37,6 +48,7 @@ import {
   annualOf,
   annualOfPair,
   averageRate,
+  averageRateOver,
   bandOfRate,
   canAdd,
   drawnRate,
@@ -66,7 +78,11 @@ import {
   revenueAt,
   runningBalances,
   scenarioDigest,
+  segmentLabelsOf,
   totalHoursAt,
+  weekLabel,
+  weekOfPick,
+  weeksBetween,
   weightFrom,
   weightToReach,
   withChange,
@@ -255,6 +271,20 @@ describe("the composite reading — WHEN a change lands", () => {
     expect(monthsBetween(START, END)).toBe(12);
   });
 
+  // The two units, side by side, on the SAME date. Months are the tidier
+  // number and weeks are the one this board counts in — the difference is a
+  // statement about the reader's grid, not a correction.
+  it("weighs in WEEKS when asked, and a week is not a twelfth of a year", () => {
+    expect(weeksBetween(START, END)).toBeCloseTo(365 / 7, 10);
+    expect(
+      weightFrom(START, END, new Date("2025-04-01").getTime(), "week"),
+    ).toBeCloseTo(275 / 365, 10);
+    // 90 days in, not three months in.
+    expect(
+      weightFrom(START, END, new Date("2025-04-01").getTime(), "week"),
+    ).not.toBeCloseTo(0.75, 6);
+  });
+
   it("reaches RED only from the first 16.4% of the year", () => {
     // COMMITTED + w × (floorCut − COMMITTED) < 0  ⇒  w > 0.836
     const needed = weightToReach(-13_600, 0);
@@ -274,8 +304,18 @@ describe("the composite reading — WHEN a change lands", () => {
       }),
       SERVICES,
     );
+    // The gauge reads in WEEKS (this board's grain), so the weight is the
+    // share of the 365 days left after 1 April rather than nine twelfths.
+    const weeks = weightFrom(START, END, timeOf(Q2.at), "week");
+    expect(weeks).toBeCloseTo(275 / 365, 10);
     const average = averageRate(TIME_DOMAIN, [Q2], floored);
-    expect(average).toBeCloseTo(69_600 + 0.75 * -83_200, 6);
+    expect(average).toBeCloseTo(69_600 + weeks * -83_200, 6);
+    // The month reading is still there for comparison, and still yellow: the
+    // unit moves the figure by a few hundred dollars, not the verdict.
+    expect(averageRate(TIME_DOMAIN, [Q2], floored, "month")).toBeCloseTo(
+      69_600 + 0.75 * -83_200,
+      6,
+    );
     expect(bandOfRate(average)).toBe("yellow");
   });
 
@@ -690,5 +730,329 @@ describe("the board as tables", () => {
       { service: "Service A", hours: 20, rate: 150, annual: 156_000 },
       { service: "Service B", hours: 15, rate: 120, annual: 93_600 },
     ]);
+  });
+});
+
+// ── Weekly change dates ──────────────────────────────────────────────────────
+//
+// Peter, 2026-09-17: "You should still have clicks on the chart at a weekly
+// granularity. That allows for weekly seasonality in projections." `Chart`
+// grew an `onPick` that reports the RAW date under the pointer; everything
+// below is the board's own grid, which is what a pick lands on.
+
+describe("the week a pick lands in", () => {
+  it("snaps a mid-week pick back to its ISO Monday", () => {
+    // Wednesday 9 April 2025 -> Monday 7 April 2025.
+    expect(weekOfPick(new Date("2025-04-09T13:22:00Z")).toISOString()).toBe(
+      "2025-04-07T00:00:00.000Z",
+    );
+    // A pick already ON a Monday does not move.
+    expect(weekOfPick(new Date("2025-04-07T00:00:00Z")).toISOString()).toBe(
+      "2025-04-07T00:00:00.000Z",
+    );
+  });
+
+  it("CLAMPS the span's first, truncated week to the span's own start", () => {
+    // The span opens on Wednesday 1 January 2025, so the ISO Monday of its
+    // first week is 29 December 2024 — outside the span. Without the clamp the
+    // first pickable slot would be Monday the 6th, five days in, and a change
+    // at the left edge could no longer be in force for the WHOLE span — which
+    // is the only claim `rateBandTable()` makes.
+    expect(DOMAIN_START.getUTCDay()).toBe(3);
+    for (const iso of [
+      "2025-01-01T00:00:00Z",
+      "2025-01-03T09:00:00Z",
+      "2025-01-05T23:59:00Z",
+    ]) {
+      expect(weekOfPick(new Date(iso)).getTime()).toBe(START);
+    }
+    // The next Monday is a slot of its own.
+    expect(weekOfPick(new Date("2025-01-06T00:00:00Z")).getTime()).toBe(
+      new Date("2025-01-06").getTime(),
+    );
+    expect(weightFrom(START, END, START, "week")).toBe(1);
+  });
+
+  it("DEDUPES by week — a second pick in one week selects what is there", () => {
+    const monday = weekOfPick(new Date("2025-04-07T00:00:00Z"));
+    const first = addMutation([], monday);
+    expect(first.mutations).toHaveLength(1);
+    // Thursday of the same week, snapped: the same slot, so the same timestamp.
+    const again = addMutation(
+      first.mutations,
+      weekOfPick(new Date("2025-04-10T16:40:00Z")),
+    );
+    expect(again.mutations).toHaveLength(1);
+    expect(again.selected).toBe(first.selected);
+    // The NEXT week is a different change.
+    const next = addMutation(
+      again.mutations,
+      weekOfPick(new Date("2025-04-14T08:00:00Z")),
+    );
+    expect(next.mutations).toHaveLength(2);
+    expect(next.selected).not.toBe(first.selected);
+  });
+});
+
+describe("the first free WEEK", () => {
+  const atWeek = (iso: string): Mutation => ({
+    id: iso,
+    at: new Date(iso),
+    label: "",
+  });
+
+  it("puts a first interaction on the span's own start, at weight 1", () => {
+    expect(nextFreeSlot(START, END, [])).toBe(START);
+  });
+
+  it("moves a week at a time as slots are taken", () => {
+    expect(nextFreeSlot(START, END, [atWeek("2025-01-01")])).toBe(
+      new Date("2025-01-06").getTime(),
+    );
+    expect(
+      nextFreeSlot(START, END, [atWeek("2025-01-01"), atWeek("2025-01-06")]),
+    ).toBe(new Date("2025-01-13").getTime());
+  });
+
+  it("steps over a taken week rather than stopping at it", () => {
+    expect(nextFreeSlot(START, END, [atWeek("2025-01-06")])).toBe(START);
+  });
+
+  it("offers 53 slots across the year, and none once they are all taken", () => {
+    const slots: number[] = [];
+    let taken: Mutation[] = [];
+    for (;;) {
+      const at = nextFreeSlot(START, END, taken);
+      if (at === undefined) break;
+      slots.push(at);
+      taken = [...taken, { id: String(at), at: new Date(at), label: "" }];
+    }
+    // A 365-day span opening mid-week: one truncated week plus 52 whole ones.
+    expect(slots).toHaveLength(53);
+    expect(slots[0]).toBe(START);
+    expect(new Date(slots[52]!).toISOString().slice(0, 10)).toBe("2025-12-29");
+    // BOTH ENDS OF THE SPAN READ W01, and that is ISO-8601 rather than a bug:
+    // a week belongs to the year of its THURSDAY, and 2025-12-29's Thursday is
+    // 2026-01-01. The chips stay unique because the date differs, so the
+    // control stays operable — do NOT "fix" this into W53.
+    expect(weekLabel(new Date(slots[0]!))).toBe("W01 \u00b7 Jan 1");
+    expect(weekLabel(new Date(slots[52]!))).toBe("W01 \u00b7 Dec 29");
+    expect(nextFreeSlot(START, END, taken)).toBeUndefined();
+  });
+
+  it("creates its change at the first free week, not the first quarter", () => {
+    const ensured = ensureMutation(
+      { mutations: [], selected: null },
+      START,
+      END,
+    );
+    expect(ensured.created).toBe(true);
+    expect(timeOf(ensured.mutations[0]!.at)).toBe(START);
+    const second = ensureMutation(
+      { mutations: ensured.mutations, selected: null },
+      START,
+      END,
+    );
+    expect(timeOf(second.mutations[1]!.at)).toBe(
+      new Date("2025-01-06").getTime(),
+    );
+  });
+});
+
+describe("a change at week 27 of the year", () => {
+  /** The 27th slot: `nextFreeSlot` walked 26 times. */
+  const WEEK_27 = new Date("2025-06-30");
+
+  it("is where the 27th slot actually falls", () => {
+    expect(weekOfPick(WEEK_27).getTime()).toBe(WEEK_27.getTime());
+    expect(weekLabel(WEEK_27)).toBe("W27 · Jun 30");
+  });
+
+  it("weighs about half the year — 185 of its 365 days", () => {
+    const weight = weightFrom(START, END, WEEK_27.getTime(), "week");
+    expect(weight).toBeCloseTo(185 / 365, 10);
+    // "Week 27 of 52" is about half the year and not exactly half of it: the
+    // span is 365 days, so it holds 52 and a seventh weeks and the 27th slot
+    // has 185 of those days still to run.
+    expect(weight).toBeCloseTo(0.5, 1);
+  });
+});
+
+describe("the as-of chips read in WEEKS", () => {
+  it("labels each chip by week number and date, and needs no disambiguation", () => {
+    const weeks = map(
+      (iso: string) => ({ id: iso, at: new Date(iso), label: "" }),
+      ["2025-04-07", "2025-04-14", "2025-06-30"],
+    );
+    expect(map((s) => s.label, segmentLabelsOf(weeks))).toEqual([
+      "W15 · Apr 7",
+      "W16 · Apr 14",
+      "W27 · Jun 30",
+    ]);
+    // Two chips in one QUARTER used to need a suffix. One per WEEK is unique
+    // by construction — the grid is weekly and `addMutation` refuses a second
+    // mutation on an existing timestamp — so no chip carries one.
+    for (const chip of segmentLabelsOf(weeks)) {
+      expect(chip.label).not.toContain("Q");
+    }
+    // The month the chip is filed under rides along unabridged, as before.
+    expect(map((s) => s.month, segmentLabelsOf(weeks))).toEqual([
+      "2025-04",
+      "2025-04",
+      "2025-06",
+    ]);
+  });
+});
+
+// ── Weekly seasonality ───────────────────────────────────────────────────────
+
+describe("weekly seasonality is representable", () => {
+  /** Four consecutive weeks from the span's start, on the board's own grid. */
+  const WEEKS = map(
+    (iso: string) => ({ id: `w-${iso}`, at: new Date(iso), label: "" }),
+    ["2025-01-01", "2025-01-06", "2025-01-13", "2025-01-20"],
+  ) as Mutation[];
+
+  /** Service A's hours alternating 30 / 10 week to week; B untouched. */
+  const alternating = (): Service[] =>
+    map((service: Service, index: number) => {
+      if (index !== 0) return service;
+      const changes: Record<string, { hours: number; rate: number }> = {};
+      for (const [step, week] of WEEKS.entries()) {
+        changes[week.id] = {
+          hours: step % 2 === 0 ? 30 : 10,
+          rate: service.committed?.rate ?? 0,
+        };
+      }
+      return { ...service, changes: { ...service.changes, ...changes } };
+    }, SERVICES);
+
+  /** The same four weeks, every one of them at `hours`. */
+  const flatAt = (hours: number): Service[] =>
+    map((service: Service, index: number) => {
+      if (index !== 0) return service;
+      const changes: Record<string, { hours: number; rate: number }> = {};
+      for (const week of WEEKS) {
+        changes[week.id] = { hours, rate: service.committed?.rate ?? 0 };
+      }
+      return { ...service, changes: { ...service.changes, ...changes } };
+    }, SERVICES);
+
+  it("samples the rate at EACH week, not once for the month", () => {
+    const services = alternating();
+    const sampled = map(
+      (week: Mutation) => rateAt(timeOf(week.at), WEEKS, services),
+      WEEKS,
+    );
+    // Two distinct readings, alternating — which is the whole of "the model
+    // can hold week-to-week variation".
+    expect(new Set(sampled).size).toBe(2);
+    expect(sampled[0]).toBe(sampled[2]);
+    expect(sampled[1]).toBe(sampled[3]);
+    expect(sampled[0]).toBeGreaterThan(sampled[1]!);
+  });
+
+  it("weights each week's own rate into the composite", () => {
+    const services = alternating();
+    // One week at a time: the average over a single week IS that week's rate.
+    for (const [step, week] of WEEKS.entries()) {
+      const next = WEEKS[step + 1];
+      if (next === undefined) continue;
+      const only = averageRateOver(
+        timeOf(week.at),
+        timeOf(next.at),
+        map((w: Mutation) => timeOf(w.at), WEEKS),
+        (time: number) => revenueAt(services, time, WEEKS),
+        "week",
+      );
+      expect(only).toBe(rateAt(timeOf(week.at), WEEKS, services));
+    }
+    // And over the whole year the alternating scenario sits strictly between
+    // the two flat ones it alternates between.
+    const swung = averageRate(TIME_DOMAIN, WEEKS, services);
+    const high = averageRate(TIME_DOMAIN, WEEKS, flatAt(30));
+    const low = averageRate(TIME_DOMAIN, WEEKS, flatAt(10));
+    expect(swung).toBeLessThan(high);
+    expect(swung).toBeGreaterThan(low);
+    expect(rateFromRevenue(0)).toBeLessThan(high);
+  });
+
+  // THE GAP, pinned rather than worked around. `projectedBalances` takes a
+  // SCALAR rate, so whatever the weeks did it draws ONE straight slope from
+  // the pivot — every forward delta is the same. The cells being monthly is
+  // not the limitation: monthly cells WOULD show week-to-week alternation as
+  // differing month-on-month deltas if the projection integrated a sampled
+  // rate. The smallest change that would carry seasonality into the balance
+  // chart is therefore to hand `projectedBalances` a per-cell rate (or a
+  // `rateAt` sampler) instead of one number. Not built here — it is a change
+  // to the chart's contract and belongs to whoever needs it next.
+  it("does NOT reach the balance chart, which projects one flat slope", () => {
+    const committed = runningBalances(MONTHLY_NET, OPENING_BALANCE);
+    const projected = projectedBalances(committed, 120_000, 2);
+    const forward = projected.slice(2);
+    const deltas = map(
+      (balance: number, index: number) =>
+        index === 0 ? 0 : balance - (forward[index - 1] ?? 0),
+      forward,
+    ).slice(1);
+    expect(new Set(map((d: number) => Math.round(d), deltas)).size).toBe(1);
+  });
+});
+
+// ── A week is 1/52 of the x-domain ───────────────────────────────────────────
+
+describe("two weekly changes inside one transition", () => {
+  const PLOT_WIDTH = 640;
+
+  it("crowd, so the mark's existing shortening is always in play", () => {
+    const perWeek = PLOT_WIDTH / weeksBetween(START, END);
+    // 12.3px of plot per week against a 28px full transition: adjacent weekly
+    // changes are ALWAYS closer together than a full transition apart, so the
+    // shortening is the normal case here rather than an edge one.
+    expect(perWeek).toBeCloseTo(12.27, 1);
+    expect(transitionWidth(PLOT_WIDTH)).toBe(28);
+    expect(perWeek).toBeLessThan(transitionWidth(PLOT_WIDTH));
+  });
+
+  it("still read as two changes — three stretches, no collapse", () => {
+    const weeks: Mutation[] = map(
+      (iso: string) => ({ id: `w-${iso}`, at: new Date(iso), label: "" }),
+      ["2025-04-07", "2025-04-14"],
+    );
+    const services = map((service: Service, index: number) => {
+      if (index !== 0) return service;
+      return {
+        ...service,
+        changes: {
+          [weeks[0]!.id]: { hours: 30, rate: service.committed?.rate ?? 0 },
+          [weeks[1]!.id]: { hours: 10, rate: service.committed?.rate ?? 0 },
+        },
+      };
+    }, SERVICES);
+    const series = map(
+      (band: StackedAreaSeriesData) => ({
+        id: band.id,
+        points: map(
+          (point: StackedAreaPoint) => ({
+            at: timeOf(point.at),
+            value: point.value,
+          }),
+          band.points,
+        ),
+      }),
+      workMixSeries(services, weeks),
+    );
+    const geometry = buildStackedArea(
+      series,
+      (v: number) => ((v - START) / (END - START)) * PLOT_WIDTH,
+      (v: number) => 200 - (v / 80) * 200,
+      [START, END],
+    );
+    // Opening stretch, the 30h week, the 10h week.
+    expect(geometry.segments).toHaveLength(3);
+    expect(geometry.transition).toBe(28);
+    for (const band of geometry.bands) {
+      expect(band.path).not.toContain("NaN");
+    }
   });
 });

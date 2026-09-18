@@ -455,6 +455,74 @@ export const addMutation = (
 
 // ── Making the first change ──────────────────────────────────────────────────
 
+/**
+ * THE SNAP GRAIN — how coarse a calendar the board runs on.
+ *
+ * `"quarter"` is the Scenario Board's, and the default everywhere, so nothing
+ * that does not ask changes. `"week"` is the Hourly Board's: Peter,
+ * 2026-09-17 — "you should still have clicks on the chart at a weekly
+ * granularity. That allows for weekly seasonality in projections." A business
+ * that sells HOURS A WEEK cannot express week-to-week seasonality on a
+ * quarterly grid, so the grain is a parameter of the calendar rather than a
+ * second calendar.
+ *
+ * It is not a free choice per call site: BOTH ways a change can be created —
+ * a click on the chart and a drag with nothing selected — have to land on the
+ * SAME grid, because `addMutation` dedupes on an exact timestamp. Two flags
+ * five days apart would both be "this week" to a reader and two separate
+ * changes to the model.
+ */
+export type SnapGrain = "quarter" | "week";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEK_MS = 7 * DAY_MS;
+
+/** The ISO week's Monday at or before a moment, at UTC midnight. */
+const isoMondayOf = (time: number): number => {
+  const at = new Date(time);
+  // getUTCDay is 0 for Sunday; ISO weeks start on Monday, so rotate.
+  const back = (at.getUTCDay() + 6) % 7;
+  return Date.UTC(
+    at.getUTCFullYear(),
+    at.getUTCMonth(),
+    at.getUTCDate() - back,
+  );
+};
+
+/**
+ * The WEEK SLOT a moment belongs to: its ISO Monday, or the span's own start
+ * when that Monday falls before it.
+ *
+ * THE CLAMP IS THE POINT, not a rounding convenience. A span rarely opens on
+ * a Monday — the Hourly Board's opens on Wednesday 2025-01-01 — so without it
+ * the first pickable slot would be the following Monday, five days into a
+ * year-long span. Every reading that depends on "a change at the left edge is
+ * in force for the whole span" would then be off by those five days: the
+ * gauge would disagree with `rateBandTable()`, whose whole claim is that it
+ * describes the weight-1 case. Clamping makes the span's first week a
+ * TRUNCATED one whose slot IS the span's start, so weight 1 is reachable and
+ * the opening move still agrees with the table.
+ *
+ * Both entry points call this: a click snaps through it, and `nextFreeSlot`
+ * enumerates the same grid.
+ */
+export const weekSlotOf = (time: number, domainStart: number): number =>
+  Math.max(isoMondayOf(time), domainStart);
+
+/** The week slots inside the span — the first one clamped to its start. */
+const weekStartsIn = (start: number, end: number): number[] => {
+  const first = isoMondayOf(start);
+  const stops: number[] = [];
+  for (let index = 0; ; index += 1) {
+    const monday = first + index * WEEK_MS;
+    if (monday >= end) break;
+    const at = Math.max(monday, start);
+    if (at >= end) break;
+    stops.push(at);
+  }
+  return stops;
+};
+
 /** The month a quarter starts, as a UTC timestamp. */
 const quarterStartsIn = (start: number, end: number): number[] => {
   const from = new Date(start);
@@ -492,21 +560,29 @@ const quarterStartsIn = (start: number, end: number): number[] => {
  * flag the timeline can hold, the reader sees it appear there, and moving it is
  * a click on the chart away.
  *
- * Returns `undefined` when every quarter in the span is already taken, which
+ * Returns `undefined` when every slot in the span is already taken, which
  * the caller reads as "there is nowhere left to put one" rather than crowding
- * two flags onto a month.
+ * two flags onto one slot.
+ *
+ * `snap` chooses the grid, defaulting to the quarters the Scenario Board has
+ * always used. On `"week"` the same argument holds a grain down: the first
+ * free WEEK from the start of the span, which for a span opening mid-week is
+ * that truncated first week (see `weekSlotOf`) and so is still weight 1.
  */
 export const nextFreeSlot = (
   domainStart: number,
   domainEnd: number,
   mutations: readonly Mutation[],
+  snap: SnapGrain = "quarter",
 ): number | undefined => {
   const taken = new Set(
     map((mutation: Mutation) => timeOf(mutation.at), mutations),
   );
-  return quarterStartsIn(domainStart, domainEnd).find(
-    (at: number) => !taken.has(at),
-  );
+  const slots =
+    snap === "week"
+      ? weekStartsIn(domainStart, domainEnd)
+      : quarterStartsIn(domainStart, domainEnd);
+  return slots.find((at: number) => !taken.has(at));
 };
 
 /**
@@ -525,6 +601,7 @@ export const ensureMutation = (
   },
   domainStart: number,
   domainEnd: number,
+  snap: SnapGrain = "quarter",
 ): { mutations: Mutation[]; selected: string | null; created: boolean } => {
   if (scenario.selected !== null) {
     return {
@@ -533,7 +610,7 @@ export const ensureMutation = (
       created: false,
     };
   }
-  const at = nextFreeSlot(domainStart, domainEnd, scenario.mutations);
+  const at = nextFreeSlot(domainStart, domainEnd, scenario.mutations, snap);
   if (at === undefined) {
     return {
       mutations: [...scenario.mutations],
@@ -671,6 +748,36 @@ const MONTH_NAMES: readonly string[] = [
 export const monthAbbrev = (at: TimeValue): string =>
   MONTH_NAMES[new Date(timeOf(at)).getUTCMonth()] ?? "";
 
+/**
+ * The ISO week number of a moment — the week containing its Thursday, which is
+ * the ISO rule stated as arithmetic rather than as a table of exceptions.
+ */
+export const isoWeekNumber = (at: TimeValue): number => {
+  const thursday = isoMondayOf(timeOf(at)) + 3 * DAY_MS;
+  const year = new Date(thursday).getUTCFullYear();
+  return Math.floor((thursday - Date.UTC(year, 0, 1)) / WEEK_MS) + 1;
+};
+
+/**
+ * `W27 · Jun 30` — what a chip reads under week snap.
+ *
+ * Two vocabularies in one label, deliberately, because the chip has two jobs
+ * a single one cannot do. The WEEK NUMBER is what a reader talks seasonality
+ * in ("the week 27 dip"). The MONTH AND DAY is what makes the chip locatable
+ * against the axis, which is ticked by QUARTER: nobody can find W27 on a
+ * quarter axis, and everybody can find Jun 30.
+ *
+ * The year is not in it. It is in the axis, in the quarter chips this replaces
+ * for the hourly board, and in `SegmentLabel.month` — and 53 chips on one
+ * control cannot each carry four characters that never vary within a span.
+ */
+export const weekLabel = (at: TimeValue): string => {
+  const when = new Date(timeOf(at));
+  return `W${String(isoWeekNumber(at)).padStart(2, "0")} \u00b7 ${
+    MONTH_NAMES[when.getUTCMonth()] ?? ""
+  } ${when.getUTCDate()}`;
+};
+
 /** One chip on the as-of control. */
 export interface SegmentLabel {
   readonly id: string;
@@ -681,11 +788,20 @@ export interface SegmentLabel {
 }
 
 /**
- * The as-of chips, labelled to match the AXIS.
+ * The as-of chips, labelled to match the GRAIN the board runs on.
  *
- * The timeline's axis labels a one-year span by quarter (`2025-Q3`), so a chip
- * that said `2025-07` made the reader translate between two vocabularies for
- * the same instant. The chip reads the quarter.
+ * UNDER QUARTER SNAP the label matches the AXIS. The timeline's axis labels a
+ * one-year span by quarter (`2025-Q3`), so a chip that said `2025-07` made the
+ * reader translate between two vocabularies for the same instant. The chip
+ * reads the quarter.
+ *
+ * UNDER WEEK SNAP that rule cannot hold, and saying so is better than
+ * pretending: the axis is still ticked by quarter, and a chip reading
+ * `2025-Q3` for each of thirteen weekly changes would be thirteen chips with
+ * one label. So a week chip reads `W27 · Jun 30` (see `weekLabel`) — the week
+ * number the reader argues seasonality in, plus the date that locates it on a
+ * quarter-ticked axis. The vocabularies differ on purpose, because the grain
+ * does.
  *
  * TWO MUTATIONS CAN SHARE A QUARTER — a click in July and another in August
  * are both `2025-Q3` — and two chips with one label is a control that cannot
@@ -708,8 +824,25 @@ export interface SegmentLabel {
  */
 export const segmentLabelsOf = (
   mutations: readonly Mutation[],
+  snap: SnapGrain = "quarter",
 ): SegmentLabel[] => {
   const ordered = orderedMutations(mutations);
+  // WEEK SNAP NEEDS NO DISAMBIGUATION. The crowding rule below exists because
+  // two mutations can share a quarter; one mutation per WEEK is unique by
+  // construction — the slot grid is weekly and `addMutation` refuses a second
+  // mutation at an existing timestamp — so every week chip already differs
+  // from every other. There is nothing to add a suffix for, and adding one
+  // anyway would widen 53 possible chips to say what the label already says.
+  if (snap === "week") {
+    return map(
+      (mutation: Mutation) => ({
+        id: mutation.id,
+        label: weekLabel(mutation.at),
+        month: monthLabel(mutation.at),
+      }),
+      ordered,
+    );
+  }
   const crowd = new Map<string, number>();
   for (const mutation of ordered) {
     const quarter = quarterLabelOf(mutation.at);

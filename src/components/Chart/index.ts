@@ -1,5 +1,5 @@
 export { Chart } from "./Chart";
-export type { ChartProps } from "./Chart";
+export type { ChartProps, ChartPickMeta } from "./Chart";
 export { Grid } from "./Grid";
 export type { GridProps } from "./Grid";
 export { XAxis, YAxis } from "./Axes";

@@ -259,3 +259,14 @@
 .sui-chart__bar--interactive {
   cursor: pointer;
 }
+
+/* The pick surface — only a chart that CAN be picked says so. A crosshair
+   cursor on a readout promises an interaction that isn't there, which is the
+   same rule `.sui-levels-timeline__surface--pickable` follows; the rect is
+   only rendered when `onPick` is supplied, so the class needs no modifier.
+   `fill: transparent` rather than none, because a shape with no fill takes no
+   pointer events and therefore shows no cursor at all. */
+.sui-chart__pick-surface {
+  fill: transparent;
+  cursor: crosshair;
+}
