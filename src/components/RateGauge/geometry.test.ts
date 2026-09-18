@@ -887,6 +887,34 @@ describe("the canvas", () => {
     expect(tall.metrics.textX + tall.metrics.labelWidth).toBeLessThanOrEqual(540);
   });
 
+  // The Hourly board's own regression (Peter, 2026-09-17): a 420×580 card, a
+  // COLLAPSED callout ("Scenario = Baseline") and a line-two sentence
+  // ("$69.6k/yr over breakeven") longer than the collapsed name itself. The
+  // ring used to be sized against a capped guess of the column's width, grew
+  // into the space the column actually needed, and left less than either line
+  // wanted — even though the box had room for both, as this box does.
+  it("fits both the collapsed callout and a long line-two sentence in a tight card", () => {
+    const labels = [
+      "Scenario = Baseline",
+      "$69.6k/yr over breakeven",
+      "at breakeven",
+    ] as const;
+    const g = gaugeGeometry({
+      domain: DOMAIN,
+      baseline: 5000,
+      value: 5000,
+      labels,
+      box: { width: 420, height: 580 },
+    });
+    const widest = Math.max(...labels.map((text) => text.length * 7.3));
+    // The column is cut to the longest word it actually carries, not to a
+    // ceiling that assumed every callout's words were shorter than this one.
+    expect(g.metrics.labelWidth).toBeGreaterThanOrEqual(widest);
+    expect(g.metrics.textX + g.metrics.labelWidth).toBeLessThanOrEqual(
+      g.metrics.viewWidth,
+    );
+  });
+
   it("does not make the column wider than its own text wants", () => {
     const tall = read({ width: 900, height: 400 });
     // The longest label is 11 characters; the column stops there rather than

@@ -18,6 +18,7 @@ import { createSignal } from "solid-js";
 import { describe, expect, it } from "vitest";
 import { RateGauge, createRateGauge } from "./RateGauge";
 import { RateDial } from "./variants";
+import { installRects, rectOf } from "../../test-utils";
 
 const DOMAIN: readonly [number, number] = [-30000, 30000];
 
@@ -349,6 +350,54 @@ describe("RateGauge", () => {
     // "Scenario A = Reference" is 22 characters; "Reference" alone is 9, and a
     // column cut to the shorter one would truncate the row it actually draws.
     expect(Number(box?.getAttribute("width"))).toBeGreaterThan(9 * 7.3 * 1.5);
+  });
+
+  // The Hourly board's own regression (Peter, 2026-09-17): a ~420×580 gauge
+  // card, a COLLAPSED callout, and a line-two sentence ("$69.6k/yr over
+  // breakeven") longer than the collapsed name. The ring used to be sized
+  // against a capped guess of the column's width and grew into the space the
+  // column actually needed, so the card rendered "SCENARIO = BASE…" — a
+  // <foreignObject> narrower than the text it was asked to carry — even
+  // though the card had the width to show it whole.
+  it("never renders a foreignObject narrower than its measured text, at 420×580", () => {
+    const restore = installRects((el) =>
+      el.classList.contains("sui-rate-gauge")
+        ? rectOf({ left: 0, top: 0, width: 420, height: 580 })
+        : null,
+    );
+    const breakevenPerYear = (value: number): string =>
+      value === 0
+        ? "at breakeven"
+        : `$${(Math.abs(value) / 1000).toFixed(1)}k/yr ${
+            value > 0 ? "over" : "below"
+          } breakeven`;
+    try {
+      const { container } = render(() => (
+        <RateGauge
+          domain={DOMAIN}
+          baseline={69600}
+          value={69600}
+          label="Scenario"
+          baselineLabel="Baseline"
+          formatAgainst={breakevenPerYear}
+          formatDelta={delta}
+        />
+      ));
+      const nameText = "Scenario = Baseline";
+      const fo = container.querySelector("foreignObject");
+      expect(fo).not.toBeNull();
+      // The estimate `labelColumnWidth` itself uses (LABEL_CHAR_WIDTH, 7.3)
+      // — the same figure the column-sizing tests above pin against.
+      expect(Number(fo?.getAttribute("width"))).toBeGreaterThanOrEqual(
+        nameText.length * 7.3,
+      );
+      // And the row reads whole, not clipped to an ellipsis.
+      expect(
+        container.querySelector(".sui-rate-gauge__label-box")?.textContent,
+      ).toBe(nameText);
+    } finally {
+      restore();
+    }
   });
 
   it("takes the consumer's name for the baseline needle", () => {
