@@ -79,8 +79,13 @@ export interface StackedBand {
   readonly path: string;
   /** The top edge alone, for a hairline stroke. */
   readonly edge: string;
-  /** The lower edge alone. Identical, point for point, to the band BELOW's
-   *  `edge` — they are ONE array, built once. */
+  /**
+   * The lower edge alone. Identical, point for point, to the band BELOW's
+   * `edge` — they are ONE array, built once. No adapter draws it: it is here
+   * so the sharing invariant is assertable as an IDENTITY
+   * (`bands[k + 1].floor === bands[k].edge`) rather than by re-deriving the
+   * stack in a test and comparing two calculations that could drift together.
+   */
   readonly floor: string;
 }
 

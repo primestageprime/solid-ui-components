@@ -20,15 +20,15 @@ export type {
   ReferenceLineProps,
 } from "./Series";
 export { StackedAreaSeries } from "./StackedAreaSeries";
-export type { StackedAreaSeriesProps } from "./StackedAreaSeries";
+export type {
+  StackedAreaSeriesProps,
+  StackedAreaSeriesData,
+  StackedAreaPoint,
+} from "./StackedAreaSeries";
 // The core (`buildStackedArea`) stays internal, as `buildDeviationBand` does:
 // a consumer composes the SLOT, not the geometry. Only the types a caller
 // needs to state its own data cross the barrel.
-export type {
-  StepPoint,
-  StackedSeries,
-  StackedAreaCurve,
-} from "./stackedArea";
+export type { StackedAreaCurve } from "./stackedArea";
 export { Crosshair } from "./Crosshair";
 export type { CrosshairProps, CrosshairSeries } from "./Crosshair";
 export { DeviationBand } from "./DeviationBandMark";

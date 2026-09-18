@@ -23,12 +23,9 @@
 // claim is that band k sits on band k−1.
 // ============================================
 import { For, createMemo } from "solid-js";
+import { map } from "../../fn";
 import { useChart } from "./context";
-import {
-  type StackedAreaCurve,
-  type StackedSeries,
-  buildStackedArea,
-} from "./stackedArea";
+import { type StackedAreaCurve, buildStackedArea } from "./stackedArea";
 
 /** ADR 0003: eight series slots, and a ninth category is a redesign. */
 const PALETTE_SLOTS = 8;
@@ -38,15 +35,41 @@ const paint = (index: number): string =>
     ? `var(--sui-series-${index + 1}, currentColor)`
     : "currentColor";
 
+/**
+ * One step point at the call site. `at` takes `number | Date` — the same
+ * pair `ReferenceLine`'s `value` takes, and for the same reason: a chart on a
+ * time domain is handed `Date`s, and the conversion belongs in the adapter,
+ * not in the core, which knows only numbers.
+ */
+export interface StackedAreaPoint {
+  readonly at: number | Date;
+  readonly value: number;
+}
+
+/** One series at the call site. */
+export interface StackedAreaSeriesData {
+  readonly id: string;
+  readonly label?: string;
+  /**
+   * ASCENDING by `at`, and values are NOT negative. Both are the caller's to
+   * hold: the mark holds a value forward from its point, so an out-of-order
+   * point would silently draw a different stack, and a negative value would
+   * put a band below its own floor — neither is a shape this mark has.
+   */
+  readonly points: readonly StackedAreaPoint[];
+}
+
+const toScaleValue = (at: number | Date): number =>
+  at instanceof Date ? at.getTime() : at;
+
 export interface StackedAreaSeriesProps {
   /**
    * The stack, BOTTOM FIRST — array order is stacking order and palette
    * order. Each series is step-valued: a point's `value` takes hold at its
    * `at` and is held until the next point, and a series contributes nothing
-   * before its first point. `at` is in the chart's x-domain unit — epoch ms
-   * under a time domain, the same number `ReferenceLine` reads a `Date` as.
+   * before its first point.
    */
-  series: readonly StackedSeries[];
+  series: readonly StackedAreaSeriesData[];
   /**
    * How a change is crossed. `"smoothStep"` (default) spends a transition on
    * it — the Sankey blend, flat in and flat out. `"linear"` lands it square
@@ -68,8 +91,24 @@ export function StackedAreaSeries(props: StackedAreaSeriesProps) {
   const geometry = createMemo(() => {
     const xs = ctx.xScale();
     const ys = ctx.yScale();
-    return buildStackedArea(
+    // The one conversion this adapter exists to absorb: the call site's
+    // `Date`s become the scale's own numbers before the core sees them.
+    const series = map(
+      (one: StackedAreaSeriesData) => ({
+        id: one.id,
+        label: one.label,
+        points: map(
+          (point: StackedAreaPoint) => ({
+            at: toScaleValue(point.at),
+            value: point.value,
+          }),
+          one.points,
+        ),
+      }),
       props.series,
+    );
+    return buildStackedArea(
+      series,
       xs,
       ys,
       xs.domain,

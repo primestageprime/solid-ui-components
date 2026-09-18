@@ -20,7 +20,7 @@ import {
   Crosshair,
   ChartTooltip,
   StackedAreaSeries,
-  type StackedSeries,
+  type StackedAreaSeriesData,
   domainOf,
 } from "../../src/components/Chart";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -49,7 +49,7 @@ const seedSeries = (n: number, seed = 1): Pt[] => {
 // month 5 and returns at month 9, so the collapse case is visible in the
 // gallery and not only in stackedArea.test.ts (whose printed table is this
 // same fixture).
-const STACK: readonly StackedSeries[] = [
+const STACK: readonly StackedAreaSeriesData[] = [
   {
     id: "one",
     label: "One",
@@ -421,9 +421,10 @@ export const ChartShowcase: Component = () => {
             third series drops to zero at month 5 and returns at month 9 — its
             band collapses onto the edge below and leaves the rest untouched.
             The dashed <code>&lt;LineSeries&gt;</code> is a cap the stack is
-            read against; the y-domain is pinned to it, which is the whole
-            point of composing the mark with the existing slots rather than
-            giving it a frame of its own.
+            read against, on a y-domain fixed at <code>[0, 45]</code> so the
+            cap holds its height whatever the stack does — the mark composes
+            with the grid, the axes and another series because it has no frame
+            of its own.
           </p>
           <Chart
             width={640}
