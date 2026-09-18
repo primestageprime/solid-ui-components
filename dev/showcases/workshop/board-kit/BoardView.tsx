@@ -36,13 +36,7 @@
  * board's own field names — and folding them into `BoardConfig` would make the
  * config a second copy of the bench rather than a description of it.
  */
-import {
-  type Component,
-  Index,
-  type JSX,
-  Show,
-  createMemo,
-} from "solid-js";
+import { type Component, Index, type JSX, createMemo } from "solid-js";
 import { filter, map } from "../../../../src/fn";
 
 import { CashflowScrubChart } from "../../../../src/components/CashflowScrubChart";
@@ -188,8 +182,16 @@ export interface MixOptions {
   readonly rule?: { value: number; label: string };
   readonly hoverLabel?: (at: number) => string;
   readonly margin?: { top: number; right: number; bottom: number; left: number };
-  /** Anything the card's header carries beside the title — a cap input, say. */
-  readonly header?: JSX.Element;
+  /**
+   * Anything the card's header carries beside the title — a cap input, say.
+   *
+   * A FUNCTION, not an element. `props.mix` is a getter over the board's own
+   * object literal, so every read of it REBUILDS whatever JSX that literal
+   * holds; an element here would be a fresh control on every reactive read, and
+   * a control that measures or focuses itself on mount then never settles. A
+   * function is read once and called once.
+   */
+  readonly header?: () => JSX.Element;
 }
 
 /** What the levels mix draws instead of a stack. */
@@ -217,7 +219,14 @@ export interface BoardForm {
   readonly canConfirm: boolean;
   readonly onConfirm: () => void;
   readonly onClose: () => void;
-  readonly body: JSX.Element;
+  /**
+   * The form's fields. A FUNCTION for the same reason as `MixOptions.header`,
+   * plus one of its own: `Modal` creates its children lazily inside a `Show`,
+   * which is what makes an `onMount` in the form fire on every OPEN — exactly
+   * when the first field wants the caret. An element built up front would have
+   * run that `onMount` once, at page load, with no modal on screen.
+   */
+  readonly body: () => JSX.Element;
 }
 
 export interface BoardViewProps {
@@ -263,63 +272,83 @@ export interface BoardViewProps {
 /**
  * THE BOARD, DRAWN.
  *
- * Every piece is curried INSIDE the component rather than at module level,
- * which is the one place this departs from the benches it replaces: a bench
- * curries once because it is one board, and this draws whichever board it is
- * handed. The curry is memoised on the config, so a board that does not change
- * its axes never re-curries.
+ * -- EVERY CURRY HAPPENS ONCE, AT SETUP, AND THAT IS NOT AN OPTIMISATION ----
+ *
+ * A curried SUI component is a NEW component function. Building one inside a
+ * memo that re-runs -- and a prop read inside a memo re-runs whenever anything
+ * that prop's expression touches changes -- hands Solid a different component
+ * on every change, which UNMOUNTS and REMOUNTS the whole subtree. For a row of
+ * sliders that measures itself in `onMount`, the remount delivers a
+ * measurement, which re-renders, which re-curries: the page locks up with no
+ * error in the console, which is exactly how this was found.
+ *
+ * So the curries below read `props` ONCE, at setup, outside any tracking scope.
+ * That is sound rather than a shortcut: everything they read -- the axes, the
+ * sentences, the tick formatters, the plot inset -- is a property of the BOARD
+ * and is a module constant on all three benches. What varies at render time
+ * (the y-domain, the series, the entities) is passed as data below and is not
+ * curried at all. This is the same split the benches already had; the kit just
+ * has to be explicit about which half is which.
  */
 export const BoardView: Component<BoardViewProps> = (props) => {
-  const groups = createMemo(() => groupsOf(props.config.axes));
+  // Read once, on purpose -- see the header. A board does not change its shape.
+  const config = props.config;
+  const groups = groupsOf(config.axes);
+  const mix = props.mix;
+  const labels = props.labels;
+  // The two JSX slots, captured ONCE — see `MixOptions.header` for why they are
+  // functions and why reading them repeatedly is what locked the page up.
+  const mixHeader = props.mix.header;
+  const formBody = props.form.body;
 
   const Toolbar = createMutationToolbar({});
 
-  const Gauge = createMemo(() =>
-    createRateGauge({
-      baselineLabel: "Baseline",
-      formatAgainst: props.config.sentences.against,
-      formatDelta: props.config.sentences.delta,
-    }),
-  );
+  const Gauge = createRateGauge({
+    baselineLabel: "Baseline",
+    formatAgainst: config.sentences.against,
+    formatDelta: config.sentences.delta,
+  });
 
-  const StackChart = createMemo(() =>
-    createStackedTimelineChart({
-      ...(props.mix.margin === undefined ? {} : { margin: props.mix.margin }),
-      ...(props.mix.yTickFormat === undefined
-        ? {}
-        : { yTickFormat: props.mix.yTickFormat }),
-      ...(props.mix.xTickFormat === undefined
-        ? {}
-        : { xTickFormat: props.mix.xTickFormat }),
-    }),
-  );
+  const StackChart = createStackedTimelineChart({
+    ...(mix.margin === undefined ? {} : { margin: mix.margin }),
+    ...(mix.yTickFormat === undefined ? {} : { yTickFormat: mix.yTickFormat }),
+    ...(mix.xTickFormat === undefined ? {} : { xTickFormat: mix.xTickFormat }),
+  });
 
-  const Timeline = createMemo(() =>
-    createLevelsTimeline({
-      formatValue: props.mixLevels?.formatValue ?? String,
-    }),
-  );
+  const Timeline = createLevelsTimeline({
+    formatValue: props.mixLevels?.formatValue ?? String,
+  });
 
-  /** The dial row a group draws: a PAIR when it holds two axes, a single dial
-   *  when it holds one. Curried per group, because the axes ARE the curry. */
-  const rowsOf = createMemo(() =>
-    map((group: AxisGroup) => {
-      if (group.axes.length >= 2) {
-        const Row = createPairedMutationSliders({
-          axes: [group.axes[0] as MeasureAxis, group.axes[1] as MeasureAxis],
-          labels: props.labels,
-        });
-        return { group, Row, paired: true as const };
-      }
-      const axis = group.axes[0] as MeasureAxis;
-      const Row = createMutationSliders({
-        format: axis.format,
-        snap: axis.snap,
-        labels: props.labels,
+  /** The dial row each group draws: a PAIR when it holds two axes, a single
+   *  dial when it holds one. The axes ARE the curry, so this is per group. */
+  const rows = map((group: AxisGroup) => {
+    if (group.axes.length >= 2) {
+      const Row = createPairedMutationSliders({
+        axes: [group.axes[0] as MeasureAxis, group.axes[1] as MeasureAxis],
+        labels,
       });
-      return { group, Row, paired: false as const };
-    }, groups()),
-  );
+      return { group, Row, paired: true as const };
+    }
+    const axis = group.axes[0] as MeasureAxis;
+    const Row = createMutationSliders({
+      format: axis.format,
+      snap: axis.snap,
+      labels,
+    });
+    return { group, Row, paired: false as const };
+  }, groups);
+
+  /**
+   * The cells as a MUTABLE array, memoised.
+   *
+   * `CashflowScrubChart.cells` is `CashflowCell[]` and the board hands over a
+   * `readonly` list, so a copy is needed — but the copy must be MEMOISED, not
+   * spread at the call site. `props.cashflow` is a getter: reading it re-runs
+   * the board's object literal, so `cells={[...props.cashflow.cells]}` hands
+   * the chart a brand-new array on every read, and anything downstream keyed on
+   * that array's identity never settles.
+   */
+  const cells = createMemo(() => [...props.cashflow.cells]);
 
   /** ONE faint alternative in the fan, above or below the projection. */
   const fanSeries = (id: string, sign: number) => ({
@@ -371,7 +400,7 @@ export const BoardView: Component<BoardViewProps> = (props) => {
               </SpreadRow>
               <GrowFillBox>
                 <CashflowScrubChart
-                  cells={[...props.cashflow.cells]}
+                  cells={cells()}
                   yMax={ceiling.ceiling()}
                   scrub={false}
                   chartHeight="fill"
@@ -390,39 +419,37 @@ export const BoardView: Component<BoardViewProps> = (props) => {
             <FillCardSurface>
               <SpreadRow>
                 <TextTitle>{props.mixTitle}</TextTitle>
-                {props.mix.header}
+                {mixHeader?.()}
               </SpreadRow>
-              <Show
-                when={props.config.mix === "levels" ? props.mixLevels : null}
-                fallback={
-                  <StackedMix
-                    Chart={StackChart()}
-                    series={props.mixSeries ?? []}
-                    config={props.config}
-                    mix={props.mix}
+              {/* A CONDITIONAL EXPRESSION, not `Show`+`fallback`. A JSX
+                  element written in a `fallback` prop is CONSTRUCTED when the
+                  `Show` is created, whichever branch wins — so a fallback here
+                  would build the levels chart on a stacked board and the stack
+                  on a levels one, each with the other's props. An expression
+                  builds only the branch it returns. */}
+              {config.mix === "levels" && props.mixLevels !== undefined ? (
+                <GrowFillBox>
+                  <Timeline
+                    levels={props.mixLevels.levels}
+                    transfers={props.mixLevels.transfers}
                     mutations={props.mutations}
-                    onPick={props.onPick}
+                    domain={config.domain}
+                    valueDomain={props.mixLevels.valueDomain}
+                    selectedMutationId={props.selected ?? undefined}
+                    onSelectMutation={props.onSelect}
+                    onPick={props.onPickTime}
                   />
-                }
-              >
-                {(levels) => {
-                  const Chart = Timeline();
-                  return (
-                    <GrowFillBox>
-                      <Chart
-                        levels={levels().levels}
-                        transfers={levels().transfers}
-                        mutations={props.mutations}
-                        domain={props.config.domain}
-                        valueDomain={levels().valueDomain}
-                        selectedMutationId={props.selected ?? undefined}
-                        onSelectMutation={props.onSelect}
-                        onPick={props.onPickTime}
-                      />
-                    </GrowFillBox>
-                  );
-                }}
-              </Show>
+                </GrowFillBox>
+              ) : (
+                <StackedMix
+                  Chart={StackChart}
+                  series={props.mixSeries ?? []}
+                  config={config}
+                  mix={props.mix}
+                  mutations={props.mutations}
+                  onPick={props.onPick}
+                />
+              )}
             </FillCardSurface>
           </HalfFillColumn>
         </HalfFillColumn>
@@ -449,25 +476,14 @@ export const BoardView: Component<BoardViewProps> = (props) => {
                   onDelete={props.onDelete}
                 />
                 {/* `Index`, not `For`: the rows are derived wholesale from the
-                    config's axes, so POSITION is their identity. */}
-                <Index each={rowsOf()}>
+                    config's axes, so POSITION is their identity. The branch is
+                    a conditional EXPRESSION for the same reason as the mix
+                    card above — a `fallback` would construct a single-dial row
+                    around a paired component on every two-axis board. */}
+                <Index each={rows}>
                   {(row) => (
                     <GrowFillBox>
-                      <Show
-                        when={row().paired}
-                        fallback={
-                          <SingleRow
-                            Row={row().Row as ReturnType<typeof createMutationSliders>}
-                            group={row().group}
-                            entities={props.entities}
-                            axis={row().group.axes[0] as MeasureAxis}
-                            onMeasure={props.onMeasure}
-                            onRemove={props.onRemove}
-                            onRestore={props.onRestore}
-                            onAdd={props.onAdd}
-                          />
-                        }
-                      >
+                      {row().paired ? (
                         <PairedRow
                           Row={
                             row().Row as ReturnType<
@@ -482,7 +498,22 @@ export const BoardView: Component<BoardViewProps> = (props) => {
                           onRestore={props.onRestore}
                           onAdd={props.onAdd}
                         />
-                      </Show>
+                      ) : (
+                        <SingleRow
+                          Row={
+                            row().Row as ReturnType<
+                              typeof createMutationSliders
+                            >
+                          }
+                          group={row().group}
+                          entities={props.entities}
+                          axis={row().group.axes[0] as MeasureAxis}
+                          onMeasure={props.onMeasure}
+                          onRemove={props.onRemove}
+                          onRestore={props.onRestore}
+                          onAdd={props.onAdd}
+                        />
+                      )}
                     </GrowFillBox>
                   )}
                 </Index>
@@ -494,10 +525,10 @@ export const BoardView: Component<BoardViewProps> = (props) => {
                 <TextTitle>{props.gaugeTitle}</TextTitle>
                 <GrowCenterColumn>
                   <BoardGauge
-                    Gauge={Gauge()}
-                    domain={props.config.rateDomain}
+                    Gauge={Gauge}
+                    domain={config.rateDomain}
                     baseline={props.baseline}
-                    caution={props.config.comfortable}
+                    caution={config.comfortable}
                     value={props.value}
                   />
                 </GrowCenterColumn>
@@ -527,13 +558,13 @@ export const BoardView: Component<BoardViewProps> = (props) => {
           </EndWrapRow>
         }
       >
-        {props.form.body}
+        {formBody()}
       </Modal>
     </div>
   );
 };
 
-/** The stacked mix, lifted out so the `Show` fallback stays one expression. */
+/** The stacked mix, lifted out so the branch above stays one expression. */
 const StackedMix: Component<{
   Chart: ReturnType<typeof createStackedTimelineChart>;
   series: readonly StackedAreaSeriesData[];

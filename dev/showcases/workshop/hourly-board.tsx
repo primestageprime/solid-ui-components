@@ -419,7 +419,7 @@ const HourlyBoardBench: Component = () => {
         // of its own would cost the two charts the height that makes them
         // readable. `min` is the full-time rule — a cap below it would put the
         // rule off the plot.
-        header: (
+        header: () => (
           <ClusterRow>
             <NoteText>Cap</NoteText>
             <ThemedNumberInput
@@ -462,7 +462,7 @@ const HourlyBoardBench: Component = () => {
         canConfirm: canAdd(draft()),
         onConfirm: confirmAdd,
         onClose: () => setAdding(false),
-        body: (
+        body: () => (
           <ServiceForm
             draft={draft()}
             onDraft={setDraft}
