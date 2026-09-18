@@ -637,14 +637,42 @@ export const COMFORTABLE = 60_000;
 /**
  * The gauge's domain, in $/yr.
  *
- * Wide enough to hold every reading the DIALS can reach, which is the binding
- * constraint rather than the calibration table: `RateGauge` clamps `value` to
- * its domain and announces the DRAWN figure, so a reachable reading outside the
- * domain would make the dial and the DEBUG table disagree in front of the
- * reader. The floor is every service dropped (no revenue, all of the fixed cost)
- * and the ceiling is every service at the top of its own range.
+ * Sized against the FIXTURE, not against everything the board can become, and
+ * the difference is worth stating because `RateGauge` clamps `value` to its
+ * domain and announces the DRAWN figure — so a reading outside the domain is a
+ * dial that quietly contradicts the terminal.
+ *
+ *   • The floor is exact and unconditional: every service dropped is no revenue
+ *     and all of the fixed cost, which is −FIXED_ANNUAL_COST. Nothing can go
+ *     below it, because revenue cannot be negative.
+ *   • The ceiling holds for the two services the board OPENS with —
+ *     `maxReachableRate(SERVICES)` is 340,000, and the test pins it under this
+ *     number. It does NOT hold once services are ADDED: `addService` gives a
+ *     service the whole track (it has negotiated no band of its own), so one
+ *     added service alone reaches 80 × 300 × 52 = $1.248M, and the count is
+ *     unbounded. No per-service range can fix that; only a cap on the row could,
+ *     and inventing one would be the board making up a constraint.
+ *
+ * So the promise is kept the other way round: `drawnRate` states the clamp
+ * explicitly, and the DEBUG summary prints the drawn figure BESIDE the raw one.
+ * The terminal then reports what the dial draws by construction, and an
+ * exploratory scenario that runs off the top says so in words rather than
+ * looking like a gauge that has stopped responding.
  */
 export const RATE_DOMAIN: readonly [number, number] = [-180_000, 360_000];
+
+/**
+ * What the gauge will actually DRAW for a rate — the domain clamp, named.
+ *
+ * `RateGauge` applies exactly this to `value` before it draws or announces
+ * anything, so the consumer that wants its table to agree with its dial applies
+ * it too rather than assuming the two never differ.
+ */
+export const drawnRate = (rate: number): number =>
+  Math.min(Math.max(rate, RATE_DOMAIN[0]), RATE_DOMAIN[1]);
+
+/** Is this rate off the end of the dial? Then the table must say so. */
+export const isOffDial = (rate: number): boolean => drawnRate(rate) !== rate;
 
 /** The highest rate the fixture's ranges can reach — the domain's ceiling test. */
 export const maxReachableRate = (services: readonly Service[]): number =>

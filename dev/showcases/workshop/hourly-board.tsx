@@ -131,10 +131,12 @@ import {
   averageRate,
   bandOfRate,
   canAdd,
+  drawnRate,
   ensureMutation,
   fanAt,
   hasAnyChange,
   isDirty,
+  isOffDial,
   maxReachableRate,
   monthlyFrom,
   pairsForMutation,
@@ -390,6 +392,12 @@ const printTables = (
             DOMAIN_START,
         );
   const average = averageRate(TIME_DOMAIN, mutations, services);
+  // THE DRAWN FIGURE, not only the computed one. `RateGauge` clamps `value` to
+  // its domain and announces the clamped number, and the domain is sized against
+  // the FIXTURE — an added service carries the whole track, so an exploratory
+  // scenario can run off the top. Printing both is what keeps the terminal and
+  // the dial in agreement instead of promising they never differ.
+  const drawn = drawnRate(average);
   console.log(
     "baseline",
     signedDollarsPerYear(COMMITTED_RATE),
@@ -397,12 +405,17 @@ const printTables = (
     signedDollarsPerYear(rateAt(at, mutations, services)),
     "· gauge (year average)",
     signedDollarsPerYear(average),
+    "· AS DRAWN",
+    signedDollarsPerYear(drawn),
+    isOffDial(average)
+      ? "(CLAMPED — off the end of the dial)"
+      : "(on the dial)",
     "·",
-    bandOfRate(average),
+    bandOfRate(drawn),
     "·",
-    againstBreakeven(average),
+    againstBreakeven(drawn),
     "·",
-    revenueShift(average - COMMITTED_RATE),
+    revenueShift(drawn - COMMITTED_RATE),
     "· monthly slope",
     monthlyFrom(rateAt(at, mutations, services)).toFixed(0),
     "· any change?",

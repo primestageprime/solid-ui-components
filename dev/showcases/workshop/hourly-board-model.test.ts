@@ -39,7 +39,9 @@ import {
   averageRate,
   bandOfRate,
   canAdd,
+  drawnRate,
   ensureMutation,
+  isOffDial,
   hourPointsFor,
   isDirty,
   isSoldAt,
@@ -188,7 +190,7 @@ describe("the calibration table — every change made at the START of the year",
     expect(bandOfRate(COMFORTABLE)).toBe("green");
   });
 
-  it("holds the whole reachable range inside the gauge's domain", () => {
+  it("holds the FIXTURE's whole reachable range inside the gauge's domain", () => {
     // RateGauge CLAMPS value to its domain and announces the DRAWN figure, so
     // a reachable reading outside the domain makes the dial contradict the
     // table in front of the reader.
@@ -196,6 +198,34 @@ describe("the calibration table — every change made at the START of the year",
     expect(minReachableRate()).toBeGreaterThanOrEqual(RATE_DOMAIN[0]);
     expect(maxReachableRate(SERVICES)).toBe(340_000);
     expect(maxReachableRate(SERVICES)).toBeLessThanOrEqual(RATE_DOMAIN[1]);
+  });
+
+  it("cannot hold an ADDED service, so the clamp is named instead", () => {
+    // `addService` gives a service the whole track — it has negotiated no band
+    // of its own — so one added service alone reaches 80 x 300 x 52 = $1.248M
+    // and the count is unbounded. No per-service range can fix that, so the
+    // promise is kept the other way round: the clamp is a named function and
+    // the DEBUG line prints the DRAWN figure beside the raw one.
+    const { services } = addService(
+      SERVICES,
+      { name: "Runaway", hours: 80, rate: 300 },
+      Q1.id,
+    );
+    const runaway = maxReachableRate(services);
+    expect(runaway).toBe(340_000 + 80 * 300 * WEEKS_PER_YEAR);
+    expect(runaway).toBeGreaterThan(RATE_DOMAIN[1]);
+    expect(isOffDial(runaway)).toBe(true);
+    expect(drawnRate(runaway)).toBe(RATE_DOMAIN[1]);
+  });
+
+  it("clamps at both ends and leaves everything between alone", () => {
+    expect(drawnRate(RATE_DOMAIN[0] - 1)).toBe(RATE_DOMAIN[0]);
+    expect(drawnRate(RATE_DOMAIN[1] + 1)).toBe(RATE_DOMAIN[1]);
+    expect(drawnRate(COMMITTED_RATE)).toBe(COMMITTED_RATE);
+    expect(isOffDial(COMMITTED_RATE)).toBe(false);
+    // Every row of the calibration table is on the dial, which is the whole
+    // reason the table can be quoted as what the reader sees.
+    for (const row of rateBandTable()) expect(isOffDial(row.rate)).toBe(false);
   });
 
   it("puts the committed rate where the table's first row says", () => {
