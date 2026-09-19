@@ -1505,15 +1505,21 @@ export const variabilityOf = (source: CashSource): number =>
   stdDev([...source.cash]);
 
 /**
- * Sources ordered ASCENDING by variability, so the MOST variable is LAST — the
- * TOP band. On this model that puts the ANNUAL sources on top by construction:
- * two spikes and twenty-two zeroes is the most variable thing a band can be,
- * which is exactly the shape the reader should meet first.
+ * Sources ordered by BILLING first — every monthly source below every annual
+ * source — and by variability second, steadiest lowest within each group,
+ * ties broken by fixture order (the stable sort's input order). Peter
+ * (2026-09-18): "put the annuals on the top and the monthlies on the bottom."
+ * A product with zero annual licences still contributes a flat, all-zero
+ * annual source, so it still lands in the annual group — it just sits at
+ * that group's bottom, being the steadiest thing a band can be.
  */
-export const byVariability = (sources: readonly CashSource[]): CashSource[] =>
-  sortBy((source: CashSource) => variabilityOf(source), sources);
+export const mixOrder = (sources: readonly CashSource[]): CashSource[] =>
+  sortBy((source: CashSource) => {
+    const billingRank = source.billing === "mo" ? 0 : 1;
+    return billingRank * 1e12 + variabilityOf(source);
+  }, sources);
 
-/** One band per SOURCE, most variable on top. */
+/** One band per SOURCE, monthlies on the bottom, annuals on top. */
 export const licenseMixSeries = (
   products: readonly Product[],
   mutations: readonly Mutation[],
@@ -1530,7 +1536,7 @@ export const licenseMixSeries = (
         MONTH_SLOTS,
       ),
     }),
-    byVariability(cashSources(products, mutations)),
+    mixOrder(cashSources(products, mutations)),
   );
 
 /** The quarter starts inside the span — the x-axis's tick values. */
