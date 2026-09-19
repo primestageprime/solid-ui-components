@@ -215,9 +215,9 @@ const DEBUG = false;
  * which side of the middle it sits on. `formatDelta` keeps the sign on the
  * readout for the same reason.
  *
- * The `%` track runs 50–100 rather than 0–100 — see `PCT_DOMAIN` — so the
- * figures a business would actually offer get the whole length of the dial
- * instead of its top half.
+ * The `%` track runs the WHOLE 0–100 — see `PCT_DOMAIN`. JTF's annual licence
+ * costs 20% of twelve monthly fees, which a floored track could not express at
+ * all.
  */
 const LicenseSliders = createGroupedMutationSliders({
   axes: [
@@ -239,7 +239,10 @@ const LicenseSliders = createGroupedMutationSliders({
       label: "$",
       group: "mo",
       domain: MONTHLY_FEE_DOMAIN,
-      snap: 1,
+      // FIFTIES. The track runs to $6,000 — JTF's monthly licence alone is
+      // $5,000 — and a one-dollar step across that range is a precision the
+      // pointer does not have.
+      snap: 50,
       format: formatFee,
     },
     {
