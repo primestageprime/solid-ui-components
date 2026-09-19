@@ -29,6 +29,12 @@ export interface SegmentOption {
   color?: ColorVariant;
   /** Disable just this segment. */
   disabled?: boolean;
+  /**
+   * Opt THIS segment out of the remove affordance while `onRemove` is set.
+   * Only meaningful alongside `onRemove`; with no `onRemove` nothing is
+   * removable and this is ignored. Defaults to removable.
+   */
+  removable?: boolean;
 }
 
 /**
@@ -50,6 +56,28 @@ export interface SegmentedControlProps
   color?: ColorVariant;
   /** Disable the entire control. */
   disabled?: boolean;
+  /**
+   * Makes every segment removable: each one grows a × that fires this with the
+   * segment's value. Omit and no segment carries one — the control is a pure
+   * selector, exactly as it was before this existed.
+   *
+   * THE × IS A SIBLING OF THE SEGMENT, NOT A CHILD. The segment is already a
+   * `<button role="radio">`, and a button inside a button is invalid HTML whose
+   * inner control stops answering clicks. So a removable segment renders as a
+   * `__cell` wrapper holding the radio and the × side by side; a segment that
+   * is not removable keeps the flat markup it always had.
+   *
+   * REVEALED ON HOVER, REACHABLE WITHOUT ONE. The × fades in on hover and on
+   * focus-within, and is permanently visible on a coarse pointer (`@media
+   * (hover: none)`) where there IS no hover. It is not a tab stop of its own —
+   * the group keeps one — so the keyboard path is **Delete or Backspace on the
+   * focused segment**, which removes it.
+   *
+   * The caller owns the consequence: removing the selected value leaves this
+   * control with a `value` that matches nothing, so pick the next selection in
+   * the same update.
+   */
+  onRemove?: (value: string) => void;
 }
 
 export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
@@ -57,6 +85,7 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
     "options",
     "value",
     "onValueChange",
+    "onRemove",
     "color",
     "disabled",
     "class",
@@ -81,6 +110,23 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
       cl.push(`sui-segmented__seg--${color}`);
     if (isDisabled(opt)) cl.push("sui-segmented__seg--disabled");
     return cl.join(" ");
+  };
+
+  // A segment is removable only while the control has somewhere to send the
+  // removal. `removable: false` opts one segment out of an otherwise removable
+  // set — a pinned "All", say.
+  const isRemovable = (opt: SegmentOption) =>
+    Boolean(local.onRemove) && opt.removable !== false && !isDisabled(opt);
+
+  // The × needs a sentence of its own: "Remove" beside a label the user can
+  // read tells them WHICH chip goes. A JSX label has no text to borrow, so the
+  // value stands in — it is the only string the option is guaranteed to carry.
+  const removeLabel = (opt: SegmentOption) =>
+    `Remove ${typeof opt.label === "string" ? opt.label : opt.value}`;
+
+  const remove = (opt: SegmentOption) => {
+    if (!isRemovable(opt)) return;
+    local.onRemove?.(opt.value);
   };
 
   const select = (opt: SegmentOption) => {
@@ -153,24 +199,60 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
           const selected = () => opt.value === local.value;
           const showDivider = () =>
             i() > 0 && local.options[i() - 1].group !== opt.group;
+          // Delete/Backspace on the focused segment removes it. This is the
+          // whole keyboard path: the × is deliberately not a tab stop, so
+          // without this a keyboard could select a chip but never drop one.
+          const onSegKeyDown: JSX.EventHandler<HTMLButtonElement, KeyboardEvent> = (
+            e,
+          ) => {
+            if (e.key !== "Delete" && e.key !== "Backspace") return;
+            if (!isRemovable(opt)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            remove(opt);
+          };
+          const segment = () => (
+            // biome-ignore lint/a11y/useSemanticElements: intentional ARIA radiogroup/segmented pattern
+            <button
+              type="button"
+              role="radio"
+              aria-checked={selected() ? "true" : "false"}
+              aria-disabled={isDisabled(opt) ? "true" : undefined}
+              aria-keyshortcuts={isRemovable(opt) ? "Delete" : undefined}
+              disabled={isDisabled(opt)}
+              tabindex={!isDisabled(opt) && selected() ? 0 : -1}
+              class={segClasses(opt)}
+              onClick={() => select(opt)}
+              onKeyDown={onSegKeyDown}
+            >
+              {opt.label ?? opt.value}
+            </button>
+          );
           return (
             <>
               <Show when={showDivider()}>
                 <span class="sui-segmented__divider" aria-hidden="true" />
               </Show>
-              {/* biome-ignore lint/a11y/useSemanticElements: intentional ARIA radiogroup/segmented pattern */}
-              <button
-                type="button"
-                role="radio"
-                aria-checked={selected() ? "true" : "false"}
-                aria-disabled={isDisabled(opt) ? "true" : undefined}
-                disabled={isDisabled(opt)}
-                tabindex={!isDisabled(opt) && selected() ? 0 : -1}
-                class={segClasses(opt)}
-                onClick={() => select(opt)}
-              >
-                {opt.label ?? opt.value}
-              </button>
+              <Show when={isRemovable(opt)} fallback={segment()}>
+                <span class="sui-segmented__cell">
+                  {segment()}
+                  <button
+                    type="button"
+                    class="sui-segmented__remove"
+                    aria-label={removeLabel(opt)}
+                    title={removeLabel(opt)}
+                    tabindex={-1}
+                    onClick={(e) => {
+                      // The × sits inside the chip's hit area; without this the
+                      // same click would also select the chip it just removed.
+                      e.stopPropagation();
+                      remove(opt);
+                    }}
+                  >
+                    ×
+                  </button>
+                </span>
+              </Show>
             </>
           );
         }}

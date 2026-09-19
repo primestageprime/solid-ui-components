@@ -336,3 +336,160 @@ describe("SegmentedControl", () => {
     expect(onValueChange).toHaveBeenCalledWith("off"); // skipped disabled "prod"
   });
 });
+
+// The remove affordance. A removable segment is a CELL holding the radio and
+// its × side by side — never a button inside a button, which is invalid HTML
+// and would stop the radio answering clicks.
+describe("SegmentedControl remove", () => {
+  const REMOVABLE: SegmentOption[] = [
+    { value: "a", label: "Alpha" },
+    { value: "b", label: "Beta" },
+  ];
+
+  it("draws no × and no cell wrapper without onRemove", () => {
+    const { container } = render(() => (
+      <SegmentedControl options={REMOVABLE} value="a" />
+    ));
+    expect(container.querySelector(".sui-segmented__cell")).toBeNull();
+    expect(container.querySelector(".sui-segmented__remove")).toBeNull();
+  });
+
+  it("gives every segment a × once onRemove is passed, as a SIBLING of the radio", () => {
+    const { container } = render(() => (
+      <SegmentedControl options={REMOVABLE} value="a" onRemove={() => {}} />
+    ));
+    const cells = container.querySelectorAll(".sui-segmented__cell");
+    expect(cells.length).toBe(2);
+    expect(container.querySelectorAll(".sui-segmented__remove").length).toBe(2);
+    // The radio must not CONTAIN the ×.
+    expect(
+      cells[0].querySelector('[role="radio"] .sui-segmented__remove'),
+    ).toBeNull();
+  });
+
+  it("names the × after the segment it removes", () => {
+    const { container } = render(() => (
+      <SegmentedControl options={REMOVABLE} value="a" onRemove={() => {}} />
+    ));
+    const x = container.querySelectorAll(".sui-segmented__remove")[1];
+    expect(x.getAttribute("aria-label")).toBe("Remove Beta");
+  });
+
+  it("falls back to the value when the label is JSX and has no text to borrow", () => {
+    const { container } = render(() => (
+      <SegmentedControl
+        options={[{ value: "b", label: <em>Beta</em> }]}
+        value="b"
+        onRemove={() => {}}
+      />
+    ));
+    expect(
+      container.querySelector(".sui-segmented__remove")!.getAttribute("aria-label"),
+    ).toBe("Remove b");
+  });
+
+  it("clicking the × fires onRemove and NOT onValueChange", () => {
+    const onRemove = vi.fn();
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl
+        options={REMOVABLE}
+        value="a"
+        onRemove={onRemove}
+        onValueChange={onValueChange}
+      />
+    ));
+    fireEvent.click(container.querySelectorAll(".sui-segmented__remove")[1]);
+    expect(onRemove).toHaveBeenCalledWith("b");
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("removes the focused segment on Delete and on Backspace", () => {
+    const onRemove = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl options={REMOVABLE} value="a" onRemove={onRemove} />
+    ));
+    const segs = container.querySelectorAll('[role="radio"]');
+    fireEvent.keyDown(segs[1], { key: "Delete" });
+    fireEvent.keyDown(segs[0], { key: "Backspace" });
+    expect(onRemove).toHaveBeenNthCalledWith(1, "b");
+    expect(onRemove).toHaveBeenNthCalledWith(2, "a");
+  });
+
+  it("leaves arrow keys alone — Delete is the only new key", () => {
+    const onRemove = vi.fn();
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl
+        options={REMOVABLE}
+        value="a"
+        onRemove={onRemove}
+        onValueChange={onValueChange}
+      />
+    ));
+    fireEvent.keyDown(container.querySelector('[role="radiogroup"]')!, {
+      key: "ArrowRight",
+    });
+    expect(onValueChange).toHaveBeenCalledWith("b");
+    expect(onRemove).not.toHaveBeenCalled();
+  });
+
+  it("`removable: false` opts one segment out while the rest keep their ×", () => {
+    const onRemove = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl
+        options={[{ value: "all", label: "All", removable: false }, ...REMOVABLE]}
+        value="all"
+        onRemove={onRemove}
+      />
+    ));
+    expect(container.querySelectorAll(".sui-segmented__remove").length).toBe(2);
+    fireEvent.keyDown(container.querySelectorAll('[role="radio"]')[0], {
+      key: "Delete",
+    });
+    expect(onRemove).not.toHaveBeenCalled();
+  });
+
+  it("a disabled segment is not removable either", () => {
+    const onRemove = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl
+        options={[{ value: "a", label: "Alpha", disabled: true }]}
+        value="a"
+        onRemove={onRemove}
+      />
+    ));
+    expect(container.querySelector(".sui-segmented__remove")).toBeNull();
+    fireEvent.keyDown(container.querySelector('[role="radio"]')!, {
+      key: "Delete",
+    });
+    expect(onRemove).not.toHaveBeenCalled();
+  });
+
+  it("keeps ONE tab stop: the × is never one", () => {
+    const { container } = render(() => (
+      <SegmentedControl options={REMOVABLE} value="a" onRemove={() => {}} />
+    ));
+    for (const x of container.querySelectorAll(".sui-segmented__remove"))
+      expect(x.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("the selection survives a removal the caller does not answer", () => {
+    // The control is controlled: removing a value it is not told about leaves
+    // `value` pointing at a segment that is gone, and the control must not
+    // invent a new selection of its own.
+    const [opts, setOpts] = createSignal<SegmentOption[]>(REMOVABLE);
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <SegmentedControl
+        options={opts()}
+        value="a"
+        onValueChange={onValueChange}
+        onRemove={(v) => setOpts((o) => o.filter((x) => x.value !== v))}
+      />
+    ));
+    fireEvent.click(container.querySelectorAll(".sui-segmented__remove")[0]);
+    expect(container.querySelectorAll('[role="radio"]').length).toBe(1);
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+});

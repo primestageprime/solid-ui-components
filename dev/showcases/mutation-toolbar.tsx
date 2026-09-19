@@ -6,7 +6,11 @@
 // proven as a drop-in rather than described. Three forms, because the three
 // screens that use it differ in exactly these ways:
 //
-//   • The full row — Add, Reset, Save and Delete — as the Hourly Board uses it.
+//   • The boards' row — an × on each chip and nothing but Reset in the corner,
+//     as the Hourly and License Boards use it since 2026-09-18. Save went to
+//     the board's own title row, where one Save covers the whole board.
+//   • The full row — Add, Reset, Save and the DEPRECATED corner Delete — the
+//     shape the component shipped with, kept so the old path stays proven.
 //   • A CURRIED row with its own words and only Delete + Reset, as the
 //     Scenario Board uses it (it commits on the fly, so it has no Save).
 //   • The empty state: no changes yet, so a sentence stands in the chips' slot.
@@ -64,6 +68,10 @@ export const MutationToolbarShowcase: Component = () => {
     setSelected("june");
   };
 
+  const [boardChanges, setBoardChanges] =
+    createSignal<readonly MutationToolbarChange[]>(SEED);
+  const [boardSelected, setBoardSelected] = createSignal<string | null>("june");
+
   const [payChanges, setPayChanges] =
     createSignal<readonly MutationToolbarChange[]>(SEED);
   const [paySelected, setPaySelected] = createSignal<string | null>(
@@ -75,11 +83,44 @@ export const MutationToolbarShowcase: Component = () => {
       <SectionTitle>MutationToolbar</SectionTitle>
       <CaptionLabel>
         Composite (Depth 2). Title, as-of chips and the panel's actions. An
-        action renders only when its callback is passed; Delete only while a
-        change is selected.
+        action renders only when its callback is passed. A change is removed
+        from its own chip (`onRemove`); the corner Delete it replaced is
+        deprecated but still honoured.
       </CaptionLabel>
 
       <SpacedStack>
+        <div class="example-group">
+          <SubsectionTitle>
+            The boards' row — × on the chip, Reset as a glyph
+          </SubsectionTitle>
+          <CaptionLabel>
+            Hover a chip (or focus one and press Delete) to remove that change.
+            The corner holds nothing but Reset; Save lives on the board's title
+            row, because one board saves once.
+          </CaptionLabel>
+          <CardSurface>
+            <MutationToolbar
+              title="Changes"
+              changes={boardChanges()}
+              selected={boardSelected()}
+              onSelect={setBoardSelected}
+              emptyNote="Click a month, or move a dial, to propose a change"
+              onReset={() => {
+                setBoardChanges(SEED);
+                setBoardSelected("june");
+              }}
+              onRemove={(id) => {
+                const rest = boardChanges().filter(
+                  (change) => change.id !== id,
+                );
+                setBoardChanges(rest);
+                if (boardSelected() === id)
+                  setBoardSelected(rest[0]?.id ?? null);
+              }}
+            />
+          </CardSurface>
+        </div>
+
         <div class="example-group">
           <SubsectionTitle>The full row</SubsectionTitle>
           <CardSurface>

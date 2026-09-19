@@ -8,7 +8,10 @@
  *
  *   Cash Flow  — `CashflowScrubChart` + `createHighWaterMark`
  *   Mix        — `StackedTimelineChart` or `LevelsTimeline`, on `config.mix`
- *   Changes    — `MutationToolbar` + the dial row `config.axes` chooses
+ *   Changes    — `MutationToolbar` (title, the chips with their ×, the `undo`
+ *                Reset) + the dial row `config.axes` chooses, which owns the +
+ *   Board Save — one `PrimaryButton` beside the board's own title, on
+ *                `saveDisabled`. A board is one scenario and saves once.
  *   Rate gauge — `createRateGauge` with `config.sentences`
  *
  * Frame and rows are the Scenario Board's own Layout variants and its two
@@ -284,12 +287,15 @@ export interface BoardViewProps {
 
   readonly onSelect: (id: string) => void;
   readonly onMeasure: (id: string, measure: number, value: number) => void;
+  /** Drop an ENTITY — the ⊗ on a dial. Not to be confused with `onDelete`. */
   readonly onRemove: (id: string) => void;
   readonly onRestore: (id: string) => void;
   readonly onAdd: () => void;
   readonly onReset: () => void;
+  /** Save the whole board. Drawn beside the board's title, not in a card. */
   readonly onSave: () => void;
   readonly saveDisabled: boolean;
+  /** Remove a CHANGE. Reaches the × on that change's own chip. */
   readonly onDelete: (id: string) => void;
   readonly onPick?: (at: Date) => void;
   readonly onPickTime?: (at: TimeValue) => void;
@@ -432,7 +438,17 @@ export const BoardView: Component<BoardViewProps> = (props) => {
   return (
     <div class="component-section component-section--full scenario-board-frame">
       <ViewportColumn>
-        <SectionTitle>{props.config.title}</SectionTitle>
+        {/* ONE SAVE, FOR THE WHOLE BOARD (Peter, 2026-09-18: "the save will be
+            global"). It used to sit in the Changes card's corner, which said
+            the card was the thing being saved — it never was. A board is one
+            scenario, so its Save sits beside the board's own name, and the
+            dirty rule is unchanged: nothing to write, nothing to press. */}
+        <SpreadRow>
+          <SectionTitle>{props.config.title}</SectionTitle>
+          <PrimaryButton disabled={props.saveDisabled} onClick={props.onSave}>
+            Save
+          </PrimaryButton>
+        </SpreadRow>
 
         {/* The top half, halved again: two charts stacked. Each card is a
             FillCardSurface — it takes its half of the band and lays out a
@@ -516,17 +532,18 @@ export const BoardView: Component<BoardViewProps> = (props) => {
                     children out as a column that FILLS the card, so a second
                     column inside it would sit at its own content height and
                     leave the dials ending part-way down. */}
+                {/* The change goes from its own chip: `onDelete` reaches the
+                    chips' × rather than a corner button that names no victim.
+                    No Add (the dial row below already owns the +) and no Save
+                    (it is the board's now, up beside the board's name). */}
                 <Toolbar
                   title="Changes"
                   changes={props.changes}
                   selected={props.selected}
                   onSelect={props.onSelect}
                   emptyNote={props.emptyNote}
-                  onAdd={props.onAdd}
                   onReset={props.onReset}
-                  onSave={props.onSave}
-                  saveDisabled={props.saveDisabled}
-                  onDelete={props.onDelete}
+                  onRemove={props.onDelete}
                 />
                 {/* `Index`, not `For`: the rows are derived wholesale from the
                     config's axes, so POSITION is their identity. The branch is

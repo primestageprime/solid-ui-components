@@ -45,19 +45,26 @@
 /* The first and the last segment each touch two container corners, so those
    outer corners follow the container's curve. A divider only renders between
    two segments, so it never takes the first or the last child position and
-   :first-child / :last-child still select a segment. */
-.sui-segmented__seg:first-child {
+   :first-child / :last-child still select a segment.
+
+   A removable segment is wrapped in a `__cell`, so these are scoped with `>`
+   to the segments that really are the container's own children — otherwise a
+   wrapped segment, being the first child of ITS cell, would claim the
+   container's left curve wherever it sat in the row. The cell rules further
+   down restate each of these one level deeper. */
+.sui-segmented > .sui-segmented__seg:first-child {
   border-top-left-radius: var(--sui-segmented-radius-outer);
   border-bottom-left-radius: var(--sui-segmented-radius-outer);
 }
-.sui-segmented__seg:last-child {
+.sui-segmented > .sui-segmented__seg:last-child {
   border-top-right-radius: var(--sui-segmented-radius-outer);
   border-bottom-right-radius: var(--sui-segmented-radius-outer);
 }
 
 /* Ridged groove seam: a recessed dark line plus a bright inset ridge, so the
    boundary between adjacent segments reads as a tactile groove. */
-.sui-segmented__seg:not(:first-child) {
+.sui-segmented > .sui-segmented__seg:not(:first-child),
+.sui-segmented__cell:not(:first-child) > .sui-segmented__seg {
   border-left: 1px solid var(--sui-bg-deep, #001018);
   box-shadow: inset 1px 0 0 var(--sui-border-bright);
 }
@@ -111,6 +118,126 @@
 .sui-segmented__divider + .sui-segmented__seg {
   border-left: none;
   box-shadow: none;
+}
+
+/* ── Removable segments ───────────────────────────────────────────────────
+   A removable segment and its × are SIBLINGS inside a `__cell`, never nested:
+   the segment is a <button role="radio">, and a button inside a button is
+   invalid HTML whose inner control stops answering clicks. The cell is the
+   chip the eye sees — the segment paints its own fill, and the × borrows it
+   through `:has` so the accent runs unbroken to the chip's right edge. */
+.sui-segmented__cell {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+/* The × itself. Declared BEFORE every `__cell`-scoped rule below it, because
+   the lint rule reads a bare class after a compound one as a rule that may
+   never apply. */
+.sui-segmented__remove {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  padding: 8px 8px 8px 2px;
+  cursor: pointer;
+  /* HIDDEN, NOT ABSENT. Opacity keeps the × in the layout, so a chip does not
+     jump wider under the pointer and shove the rest of the row sideways. */
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+/* A touch screen has no hover to reveal anything with, so there the × is
+   simply always there. */
+@media (hover: none) {
+  .sui-segmented__remove {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* The cell now holds the row's end positions, so it hands the container's
+   curve to the segment on its left edge and to the × on its right. */
+.sui-segmented__cell:first-child > .sui-segmented__seg {
+  border-top-left-radius: var(--sui-segmented-radius-outer);
+  border-bottom-left-radius: var(--sui-segmented-radius-outer);
+}
+.sui-segmented__cell:last-child > .sui-segmented__remove {
+  border-top-right-radius: var(--sui-segmented-radius-outer);
+  border-bottom-right-radius: var(--sui-segmented-radius-outer);
+}
+/* The divider already separates groups — same doubled-line rule as above. */
+.sui-segmented__divider + .sui-segmented__cell > .sui-segmented__seg {
+  border-left: none;
+  box-shadow: none;
+}
+/* The × closes the chip's right end, so the segment stops rounding there and
+   gives up the padding the × now occupies. */
+.sui-segmented__cell > .sui-segmented__seg {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-right: 8px;
+}
+
+/* Revealed by hover OR by keyboard focus landing anywhere in the cell. */
+.sui-segmented__cell:hover > .sui-segmented__remove,
+.sui-segmented__cell:focus-within > .sui-segmented__remove {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* The selected chip's fill continues under its ×. One rule per accent, mirroring
+   the `--selected` fills above. */
+.sui-segmented__cell:has(.sui-segmented__seg--selected) > .sui-segmented__remove,
+.sui-segmented__cell:has(.sui-segmented__seg--selected.sui-segmented__seg--primary)
+  > .sui-segmented__remove {
+  background: var(--sui-accent);
+  color: var(--sui-bg-deep, #001018);
+}
+.sui-segmented__cell:has(.sui-segmented__seg--selected.sui-segmented__seg--danger)
+  > .sui-segmented__remove {
+  background: var(--sui-danger);
+  color: white;
+}
+.sui-segmented__cell:has(.sui-segmented__seg--selected.sui-segmented__seg--warning)
+  > .sui-segmented__remove {
+  background: var(--sui-warning);
+  color: var(--sui-bg-deep, #001018);
+}
+.sui-segmented__cell:has(.sui-segmented__seg--selected.sui-segmented__seg--success)
+  > .sui-segmented__remove {
+  background: var(--sui-success);
+  color: var(--sui-bg-deep, #001018);
+}
+
+/* An unselected chip's hover wash covers its × too, so the two halves of the
+   chip light up together rather than one at a time. */
+.sui-segmented__cell:hover:not(:has(.sui-segmented__seg--selected))
+  > .sui-segmented__remove,
+.sui-segmented__cell:hover
+  > .sui-segmented__seg:not(.sui-segmented__seg--disabled):not(
+    .sui-segmented__seg--selected
+  ) {
+  color: var(--sui-text-primary);
+  background: rgba(var(--sui-accent-rgb), 0.06);
+}
+
+.sui-segmented__remove:hover {
+  /* On the × itself the wash deepens — the one place where the pointer is
+     about to DELETE something should say so before the click. */
+  background: var(--sui-danger);
+  color: white;
+}
+.sui-segmented__remove:focus-visible {
+  outline: 2px solid var(--sui-accent);
+  outline-offset: -2px;
 }
 
 /* Disabled */

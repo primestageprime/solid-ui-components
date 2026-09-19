@@ -1,7 +1,7 @@
 // MutationToolbar — Composite (Depth 2). The header row of a "changes" panel:
 // a title, the as-of chips that pick which change is being edited, and the
 // panel's actions. Composes SpreadRow / ClusterRow (Layout), TextTitle /
-// NoteText (Atomic), SegmentedControl (Atomic), the curried Buttons and Icon —
+// NoteText (Atomic), SegmentedControl and Tooltip (Atomic), the Buttons and Icon —
 // every one Depth 1, so this is Depth 2 and owns no CSS.
 //
 // WHY IT EXISTS: the Scenario Board and Hourly Board benches built this row by
@@ -18,13 +18,26 @@
 // Scenario Board commits on the fly) should not draw one. Delete removes the
 // SELECTED change, so it renders only while one is selected — hidden rather
 // than disabled, because the empty-state sentence already explains that state.
+//
+// THE CHANGE CARRIES ITS OWN REMOVAL (Peter, 2026-09-18). A Delete button in
+// the corner names no victim: the reader has to look back at the chips to see
+// what it would take. `onRemove` puts an × on the chip itself, where the thing
+// being removed is the thing under the pointer, and the corner gets that much
+// quieter. Reset shrinks to an icon for the same reason — one destructive
+// word per row was already one too many.
 import { type Component, type JSX, Show, mergeProps } from "solid-js";
 import { map } from "../../fn";
-import { DangerButton, GhostButton, PrimaryButton } from "../Button";
+import {
+  DangerButton,
+  GhostButton,
+  IconOnlyButton,
+  PrimaryButton,
+} from "../Button";
 import { Icon } from "../Icon";
 import { ClusterRow, SpreadRow } from "../Layout";
 import { SegmentedControl } from "../SegmentedControl";
 import { NoteText, TextTitle } from "../Text";
+import { Tooltip } from "../Tooltip";
 
 /** One change the as-of chips can pick. `label` is what the chip reads. */
 export interface MutationToolbarChange {
@@ -61,7 +74,24 @@ export interface MutationToolbarProps {
   onSave?: () => void;
   /** Disables Save — typically "nothing has changed since the last save". */
   saveDisabled?: boolean;
-  /** Delete the selected change. Omit and no Delete button renders. */
+  /**
+   * Remove one change from the chips. Each chip grows a × that fires this with
+   * that chip's id — revealed on hover and on focus, always visible on a touch
+   * screen, and reachable from the keyboard with Delete on the focused chip.
+   *
+   * The caller owns what happens to the selection: removing the selected
+   * change leaves `selected` naming one that no longer exists, so pick the
+   * next one in the same update.
+   */
+  onRemove?: (id: string) => void;
+  /**
+   * Delete the selected change from a button in the corner. Omit and no Delete
+   * button renders.
+   *
+   * @deprecated Superseded by `onRemove`, which puts the removal on the chip
+   * it removes instead of in a corner that names no victim. Still honoured for
+   * screens that have not moved; prefer `onRemove` in new code.
+   */
   onDelete?: (id: string) => void;
   /** The words. See `MutationToolbarLabels`. */
   labels?: Partial<MutationToolbarLabels>;
@@ -95,6 +125,7 @@ export const MutationToolbar: Component<MutationToolbarProps> = (props) => {
           )}
           value={props.selected ?? ""}
           onValueChange={props.onSelect}
+          onRemove={props.onRemove}
           aria-label={labels().chips}
         />
       </Show>
@@ -106,9 +137,24 @@ export const MutationToolbar: Component<MutationToolbarProps> = (props) => {
             </GhostButton>
           )}
         </Show>
+        {/* RESET IS A GLYPH, NOT A WORD. It is the row's least-used control
+            and its most alarming one, and a word-width button spends the
+            header's scarcest axis saying so. The `undo` hook is the arrow that
+            goes BACK — `refresh` is the round one, which reads as "run it
+            again". The tooltip and the accessible name are both `labels.reset`,
+            so a curried vocabulary still owns the word even though the button
+            no longer prints it. The Tooltip trigger is a span because a button
+            inside a button is invalid HTML; the button carries the name. */}
         <Show when={props.onReset}>
           {(reset) => (
-            <GhostButton onClick={() => reset()()}>{labels().reset}</GhostButton>
+            <Tooltip content={labels().reset} triggerAs="span">
+              <IconOnlyButton
+                aria-label={labels().reset}
+                onClick={() => reset()()}
+              >
+                <Icon name="undo" size="sm" />
+              </IconOnlyButton>
+            </Tooltip>
           )}
         </Show>
         <Show when={props.onSave}>
