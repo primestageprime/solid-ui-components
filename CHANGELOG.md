@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.175.0 — 2026-09-19
+
 ### Added
 
 - **`SegmentedControl` — `onRemove`.** Optional, and additive: omit it and the control renders exactly the markup it always did. With it, every segment grows a × that fires `onRemove(value)`. The × is a **sibling** of the `role="radio"` button inside a `sui-segmented__cell` wrapper, never a child — a button inside a button is invalid HTML and stops the inner control answering clicks. Hover reveals it, `:focus-within` reveals it, `@media (hover: none)` shows it permanently because a touch screen has no hover, and it is never a tab stop: the keyboard path is **Delete or Backspace on the focused segment**. `removable: false` on one option pins it out of an otherwise removable set.
