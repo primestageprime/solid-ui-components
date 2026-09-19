@@ -25,8 +25,7 @@ import {
   COMMITTED_RATE,
   COUNT_DOMAIN,
   DELTA_DOMAIN,
-  DOMAIN_END,
-  DOMAIN_START,
+  REFERENCE_START,
   EMPTY_DRAFT,
   FIELDS,
   FIXED_MONTHLY_COST,
@@ -37,7 +36,11 @@ import {
   MONTHLY_FEE_DOMAIN,
   MONTHS_PER_YEAR,
   MONTH_COUNT,
-  MONTH_SLOTS,
+  domainEndOf,
+  monthSlotsOf,
+  monthStartOf,
+  quarterTicks,
+  nextFreeSlot,
   OPENING_BALANCE,
   PRODUCTS,
   RATE_DOMAIN,
@@ -101,7 +104,18 @@ import {
   revenueShift,
 } from "./license-board-money";
 
-const JAN = DOMAIN_START.getTime();
+/**
+ * THE START THE TESTS PIN. The board itself opens at the month-start of TODAY,
+ * which is a moving target and so cannot be an expectation; the model takes its
+ * start as a PARAMETER and defaults to `REFERENCE_START`, so every case below
+ * states its figures against the fixed January-2025 span it was solved on.
+ *
+ * `describe("a span that starts today")` at the foot of this file is the other
+ * half of that bargain: it passes a DIFFERENT start and asserts the calendar
+ * moves with it.
+ */
+const JAN = REFERENCE_START;
+const MONTH_SLOTS = monthSlotsOf(JAN);
 const at = (iso: string): number => new Date(iso).getTime();
 
 const AMYGDALA = PRODUCTS[0] as Product;
@@ -156,7 +170,7 @@ describe("the span", () => {
     const ensured = ensureMutation(
       { mutations: [], selected: null },
       JAN,
-      DOMAIN_END.getTime(),
+      domainEndOf(JAN),
     );
     expect(ensured.created).toBe(true);
     const [first] = ensured.mutations;
@@ -981,5 +995,145 @@ describe("the forecast rows themselves", () => {
     expect(sum([...first.bySource])).toBe(first.cash);
     expect(first.net).toBe(first.cash - FIXED_MONTHLY_COST);
     expect(first.balance).toBe(OPENING_BALANCE + first.net);
+  });
+});
+
+/**
+ * THE SPAN STARTS TODAY — asserted on a start that is not today.
+ *
+ * The board reads the clock once and threads the month-start of today in
+ * (`license-board.tsx`), which is unpinnable by construction. What IS pinnable,
+ * and is the whole claim, is that the model CARRIES its start: give it a
+ * September the way the clock would, and the calendar — the slots, the chips,
+ * the ticks, the first free month, the cohort anniversaries — moves with it,
+ * while the figures that were never about a calendar do not move at all.
+ */
+describe("a span that starts today", () => {
+  const SEP = monthStartOf(Date.UTC(2026, 8, 1));
+
+  it("takes the month-start of any moment in the month", () => {
+    expect(monthStartOf(Date.UTC(2026, 8, 18, 13, 45))).toBe(SEP);
+    expect(monthStartOf(SEP)).toBe(SEP);
+  });
+
+  it("opens at that month and still runs 24, to the same anniversary", () => {
+    const slots = monthSlotsOf(SEP);
+    expect(slots.length).toBe(MONTH_COUNT);
+    expect(slots[0]).toBe(at("2026-09-01"));
+    expect(slots[12]).toBe(at("2027-09-01"));
+    expect(slots[23]).toBe(at("2028-08-01"));
+    expect(domainEndOf(SEP)).toBe(at("2028-09-01"));
+  });
+
+  it("offers the START MONTH as the first free slot", () => {
+    expect(nextFreeSlot(SEP, domainEndOf(SEP), [])).toBe(SEP);
+    const ensured = ensureMutation(
+      { mutations: [], selected: null },
+      SEP,
+      domainEndOf(SEP),
+    );
+    const [first] = ensured.mutations;
+    expect(first === undefined ? 0 : timeOf(first.at)).toBe(SEP);
+  });
+
+  it("names the start month in its own quarter — `2026-Q3 · Sep`", () => {
+    expect(
+      map(
+        (segment) => segment.label,
+        segmentLabelsOf([{ id: "a", at: new Date(SEP), label: "1" }]),
+      ),
+    ).toEqual(["2026-Q3 · Sep"]);
+  });
+
+  it("indexes, snaps and reads back months in the new calendar", () => {
+    expect(monthIndexOf(SEP, SEP)).toBe(0);
+    expect(monthIndexOf(at("2027-09-15"), SEP)).toBe(12);
+    // A pick BEFORE the span clamps to its first month, as January's did.
+    expect(monthOfPick(new Date("2026-04-20"), SEP).getTime()).toBe(SEP);
+    expect(monthOfPick(new Date("2026-10-19"), SEP).getTime()).toBe(
+      at("2026-10-01"),
+    );
+    expect(monthRangeOf(at("2026-09-18"), SEP).label).toBe(
+      "2026-09-01 to 2026-09-30",
+    );
+  });
+
+  it("ticks from the first quarter start INSIDE the span", () => {
+    const ticks = quarterTicks(SEP);
+    expect(ticks[0]).toBe(at("2026-10-01"));
+    expect(ticks[ticks.length - 1]).toBe(at("2028-07-01"));
+  });
+
+  it("lands the annual lump in month 0 and its renewal 12 months on", () => {
+    expect(annualPayments(JTF, [], SEP)).toEqual([
+      { month: 0, amount: 12_000 },
+      { month: 12, amount: 12_000 },
+    ]);
+    const rows = cashTable(PRODUCTS, [], FIXED_MONTHLY_COST, SEP);
+    expect(rows[0]?.label).toBe("2026-09");
+    expect(rows[12]?.label).toBe("2027-09");
+    expect(rows[23]?.label).toBe("2028-08");
+    // The lump is in the month the board OPENS in — Sep 2026, not January.
+    expect(rows[0]?.cash).toBe(16_700 + 12_000);
+    expect(rows[12]?.cash).toBe(16_700 + 12_000);
+    expect(rows[1]?.cash).toBe(16_700);
+    // The balance opens at the balance NOW, in the span's first month.
+    expect(rows[0]?.balance).toBe(
+      OPENING_BALANCE + 16_700 + 12_000 - FIXED_MONTHLY_COST,
+    );
+  });
+
+  it("dates the License Mix bands from the new start", () => {
+    for (const band of licenseMixSeries(PRODUCTS, [], SEP)) {
+      expect(band.points.length).toBe(MONTH_COUNT);
+      expect(timeOf(band.points[0]?.at ?? 0)).toBe(SEP);
+    }
+  });
+
+  it("moves no figure that was never about a calendar", () => {
+    // THE CALIBRATION IS START-INDEPENDENT, asserted rather than assumed: the
+    // fixed cost, the comfortable gain and the two moves are solved against a
+    // CATALOGUE, not against a year.
+    expect(rateBandTable(APPS, SEP)).toEqual(rateBandTable(APPS, JAN));
+    expect(rateBandTable(TIERS, SEP)).toEqual(rateBandTable(TIERS, JAN));
+    expect(averageNetCash(PRODUCTS, [], FIXED_MONTHLY_COST, SEP)).toBe(
+      averageNetCash(PRODUCTS, [], FIXED_MONTHLY_COST, JAN),
+    );
+    expect(
+      balancesByMonth(
+        PRODUCTS,
+        [],
+        OPENING_BALANCE,
+        FIXED_MONTHLY_COST,
+        SEP,
+      ),
+    ).toEqual(
+      balancesByMonth(
+        PRODUCTS,
+        [],
+        OPENING_BALANCE,
+        FIXED_MONTHLY_COST,
+        JAN,
+      ),
+    );
+  });
+
+  it("re-bases a change stated in the span's own calendar", () => {
+    // A change at the span's SEVENTH month, named the way a click would name it.
+    const changes = addMutation([], new Date("2027-03-01")).mutations;
+    const [flag] = changes;
+    const id = flag === undefined ? "" : flag.id;
+    const dropped = withChange(
+      PRODUCTS,
+      "amygdala",
+      id,
+      "monthlyCount",
+      0,
+      changes,
+    );
+    const cash = cashByMonth(dropped, changes, SEP);
+    // Six months of Amygdala's $11,700 beside JTF's $5,000, then none of it.
+    expect(cash[5]).toBe(16_700);
+    expect(cash[6]).toBe(5_000);
   });
 });

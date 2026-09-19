@@ -109,8 +109,6 @@ import {
   COMMITTED_RATE,
   COUNT_DOMAIN,
   DELTA_DOMAIN,
-  DOMAIN_END,
-  DOMAIN_START,
   EMPTY_DRAFT,
   FIELDS,
   FIXED_MONTHLY_COST,
@@ -118,7 +116,6 @@ import {
   MONTHLY_FEE_DOMAIN,
   PCT_DOMAIN,
   MONTH_COUNT,
-  MONTH_SLOTS,
   OPENING_BALANCE,
   PRODUCTS,
   RATE_DOMAIN,
@@ -135,6 +132,7 @@ import {
   cashByMonth,
   cashSources,
   cashTable,
+  domainEndOf,
   drawnRate,
   ensureMutation,
   entitiesFor,
@@ -146,6 +144,8 @@ import {
   monthIndexOf,
   monthOfPick,
   monthRangeOf,
+  monthSlotsOf,
+  monthStartOf,
   monthlyCashOfEntity,
   netCashByMonth,
   quarterLabelOf,
@@ -154,6 +154,7 @@ import {
   removeMutation,
   scenarioDigest,
   segmentLabelsOf,
+  timeDomainOf,
   withChange,
   withDiscontinue,
   withoutChange,
@@ -179,6 +180,26 @@ export const meta = { label: "License Board" };
 
 /** Flip to print every derived table to the console on mount. */
 const DEBUG = false;
+
+/**
+ * THE TIMELINE STARTS TODAY — at the MONTH-START OF TODAY (Peter, 2026-09-18:
+ * "start the cashflow timeline today"). Licences bill monthly, so the month is
+ * the unit the span can open on; the board is a forecast from the month we are
+ * in, and the running balance opens at the balance NOW.
+ *
+ * ⚠ THE CLOCK IS READ EXACTLY ONCE, HERE, AND THREADED. Every model function
+ * takes `start` and calls no `new Date()` of its own, so the model stays pure
+ * and its tests stay deterministic on a fixed start. Reading the clock once at
+ * module load also means the board cannot re-base itself under the reader if it
+ * is left open across midnight on the first of a month.
+ */
+const START = monthStartOf(Date.now());
+
+/** The span's own month grid — the slots a click snaps to, from `START`. */
+const MONTH_SLOTS = monthSlotsOf(START);
+
+/** The span as the two Dates the License Mix chart's `xDomain` wants. */
+const TIME_DOMAIN = timeDomainOf(START);
 
 // ── The curried components ───────────────────────────────────────────────────
 
@@ -330,7 +351,7 @@ const ChangesToolbar = createMutationToolbar({});
  * `MONTH_SLOTS` rather than from `monthlyCells`.
  *
  * ⚠ THAT IS A BUG FIX, not a preference. `monthlyCells(start, end)` is
- * INCLUSIVE of the end month, so `monthlyCells(2025-01-01, 2027-01-01)` returns
+ * INCLUSIVE of the end month, so `monthlyCells` across a two-year span returns
  * TWENTY-FIVE cells while the forecast has twenty-four. The twenty-fifth read
  * `balances[24]`, found `undefined`, fell back to zero, and the Cash Flow line
  * dropped off a cliff at the right-hand edge — with the fan dragging it below
@@ -356,8 +377,9 @@ const CELLS = map(
   MONTH_SLOTS,
 );
 
-/** The x-axis's tick values, and the vocabulary they read in. */
-const QUARTER_TICKS = quarterTicks();
+/** The x-axis's tick values, and the vocabulary they read in. A span opening
+ *  mid-quarter draws its first tick at the NEXT quarter start. */
+const QUARTER_TICKS = quarterTicks(START);
 
 /** The board opens with NO changes; the first interaction makes its own. */
 const OPENING_SELECTION: string | null = SEED_MUTATIONS[0]?.id ?? null;
@@ -386,8 +408,14 @@ const balanceCells = (
   products: readonly Product[],
   mutations: readonly Mutation[],
 ): CashflowCell[] => {
-  const balances = balancesByMonth(products, mutations);
-  const net = netCashByMonth(products, mutations);
+  const balances = balancesByMonth(
+    products,
+    mutations,
+    OPENING_BALANCE,
+    FIXED_MONTHLY_COST,
+    START,
+  );
+  const net = netCashByMonth(products, mutations, FIXED_MONTHLY_COST, START);
   return map(
     (cell: { start: Date; end: Date }, index: number) => ({
       ...cell,
@@ -544,17 +572,26 @@ const LicenseBoardBench: Component = () => {
   const dirty = () => isDirty(products(), mutations(), saved());
 
   /** THE GAUGE'S READING: average net cash a month across the whole span. */
-  const rate = () => averageNetCash(products(), mutations());
+  const rate = () =>
+    averageNetCash(products(), mutations(), FIXED_MONTHLY_COST, START);
 
   /** ONE CARD PER PRODUCT on the books at the change being edited. */
   const cards = () => entitiesFor(products(), editing(), mutations());
 
-  /** The month the fan opens from — the change being edited, or month zero. */
+  /**
+   * The month the fan opens from — the change being edited, or MONTH ZERO.
+   *
+   * MONTH ZERO IS NOW, since the span opens at the month-start of today, so the
+   * board that has no change selected fans from index 0 and THE WHOLE LINE IS
+   * FORECAST. There is no committed history to draw differently: the chart's
+   * only history/projection boundary is this index, and it starts at the
+   * left-hand edge.
+   */
   const nowIndex = () => {
     const at = editing();
     const chosen =
       at === null ? undefined : find((m: Mutation) => m.id === at, mutations());
-    return chosen === undefined ? 0 : monthIndexOf(timeOf(chosen.at));
+    return chosen === undefined ? 0 : monthIndexOf(timeOf(chosen.at), START);
   };
 
   const cells = createMemo(() => balanceCells(products(), mutations()));
@@ -579,7 +616,7 @@ const LicenseBoardBench: Component = () => {
    * so this needed no change to the component.
    */
   const mixCeiling = createHighWaterMark(() => {
-    const cash = cashByMonth(products(), mutations());
+    const cash = cashByMonth(products(), mutations(), START);
     return Math.max(...cash, 0) * MIX_HEADROOM;
   });
 
@@ -616,8 +653,8 @@ const LicenseBoardBench: Component = () => {
     if (already !== null) return already;
     const ensured = ensureMutation(
       { mutations: mutations(), selected: null },
-      DOMAIN_START.getTime(),
-      DOMAIN_END.getTime(),
+      START,
+      domainEndOf(START),
     );
     batch(() => {
       setMutations(ensured.mutations);
@@ -800,13 +837,13 @@ const LicenseBoardBench: Component = () => {
                   twelve months apart and the monthly ones are smooth ramps.
                   Most variable on top, which puts the spikes there. */}
               <LicenseMixChart
-                series={licenseMixSeries(products(), mutations())}
-                xDomain={[DOMAIN_START, DOMAIN_END]}
+                series={licenseMixSeries(products(), mutations(), START)}
+                xDomain={TIME_DOMAIN}
                 yDomain={[0, mixCeiling.ceiling()]}
                 xTickValues={QUARTER_TICKS}
                 events={mutations()}
-                hoverLabel={(at) => monthRangeOf(at).label}
-                onPick={(at) => pickMonth(monthOfPick(at))}
+                hoverLabel={(at) => monthRangeOf(at, START).label}
+                onPick={(at) => pickMonth(monthOfPick(at, START))}
               />
             </FillCardSurface>
           </HalfFillColumn>
@@ -925,7 +962,7 @@ const printTables = (
   // net and the running balance. The two charts are pictures of these 24 rows,
   // and a lumpy forecast is exactly the kind of thing that looks plausible in a
   // picture and wrong in a column of numbers.
-  const sources = cashSources(products, mutations);
+  const sources = cashSources(products, mutations, START);
   console.table(
     map(
       (row: CashRow) => ({
@@ -943,7 +980,7 @@ const printTables = (
         net: row.net,
         balance: Math.round(row.balance),
       }),
-      cashTable(products, mutations),
+      cashTable(products, mutations, FIXED_MONTHLY_COST, START),
     ),
   );
   // THE ANNUAL PAYMENTS, per product — the worked example, as data: which
@@ -956,12 +993,12 @@ const printTables = (
       map(
         (row: { month: number; amount: number }) =>
           `m${row.month}=${abbreviateDollars(row.amount)}`,
-        annualPayments(product, mutations),
+        annualPayments(product, mutations, START),
       ).join(" "),
     );
   }
-  console.table(rateBandTable(FIXTURE));
-  const average = averageNetCash(products, mutations);
+  console.table(rateBandTable(FIXTURE, START));
+  const average = averageNetCash(products, mutations, FIXED_MONTHLY_COST, START);
   const drawn = drawnRate(average);
   console.log(
     "fixture",
