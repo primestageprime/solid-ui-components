@@ -158,8 +158,14 @@ justification is owed for a variant this far past proving itself.
    `undocumentedExports`. Documenting it would DROP that metric, and this PR
    is gated on the metric not moving, so the entry is deliberately not added
    here.
-2. **Retire the deprecated TreeDiffChart geometry exports** once nothing reads
-   them — phase 3, after a minor version has passed. Cheap to do, because
+2. ~~**Retire the deprecated TreeDiffChart geometry exports** once nothing
+   reads them — phase 3, after a minor version has passed.~~ **Done
+   2026-09-18** — 0.173.0 and 0.174.0 shipped with nothing reading them, and
+   all 14 names were removed from `TreeDiffChart/index.ts` (and so from the
+   root barrel) after re-verifying zero readers against the 18 consumer repos
+   on this machine, the usage manifest and a workspace-wide grep. Breaking for
+   the published surface, so it wants its own MINOR bump when released.
+   Original note: cheap to do, because
    there is nothing to migrate: `package.json` `exports` has no component
    subpath, so the only importer these modules could ever have is an in-repo
    dev surface reaching them relatively (as the scenario board reaches
