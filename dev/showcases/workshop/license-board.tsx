@@ -13,8 +13,12 @@
  *   Cash Flow    — `CashflowScrubChart` + `createHighWaterMark`
  *   License Mix  — `createStackedTimelineChart`, one band per SOURCE
  *                  (product × billing variant), valued in dollars of CASH
- *   Changes      — `createMutationToolbar` + ONE `createGroupedMutationSliders`
+ *   Changes      — `createMutationToolbar` (title, the chips with their ×, and
+ *                  the `undo` Reset — no Add, no Save, no Delete) + ONE
+ *                  `createGroupedMutationSliders` (which owns the + itself)
  *                  + `Modal` + `ThemedInput` + `ThemedNumberInput`
+ *   Board Save   — one `PrimaryButton` beside the board's own title, enabled
+ *                  by `dirty()`. A board is one scenario and saves once.
  *   Rate gauge   — `createRateGauge`, revenue-side sentences in $/mo
  *
  * Frame: `ViewportColumn` / `HalfFillColumn` / `FillWrapRow` / `MajorPaneBox` /
@@ -756,7 +760,16 @@ const LicenseBoardBench: Component = () => {
   return (
     <div class="component-section component-section--full scenario-board-frame">
       <ViewportColumn>
-        <SectionTitle>License Board</SectionTitle>
+        {/* ONE SAVE, FOR THE WHOLE BOARD (Peter, 2026-09-18: "the save will be
+            global"). Same move as the Hourly Board: the Save left the Changes
+            card's corner, which had implied the card was the unit being saved,
+            and came to sit beside the board's own name. */}
+        <SpreadRow>
+          <SectionTitle>License Board</SectionTitle>
+          <PrimaryButton disabled={!dirty()} onClick={save}>
+            Save
+          </PrimaryButton>
+        </SpreadRow>
 
         {/* The top half, halved again: two charts stacked. Each card is a
             FillCardSurface — it takes its half of the band and lays out a
@@ -849,11 +862,8 @@ const LicenseBoardBench: Component = () => {
                   selected={editing()}
                   onSelect={setEditing}
                   emptyNote="Click a month, or move a dial, to propose a change — it holds until the next one."
-                  onAdd={openAdd}
                   onReset={reset}
-                  onSave={save}
-                  saveDisabled={!dirty()}
-                  onDelete={deleteChange}
+                  onRemove={deleteChange}
                 />
                 {/* ONE ROW, NEVER TWO (Peter, 2026-09-18). Six dials side by
                     side per card, the two captioned groups beside each other,

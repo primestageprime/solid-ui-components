@@ -2,6 +2,7 @@ import { type Component, createSignal } from "solid-js";
 import {
   SegmentedControl,
   createSegmentedControl,
+  type SegmentOption,
 } from "../../src/components/SegmentedControl";
 import { Stack } from "../../src/components/Layout/Stack";
 
@@ -16,9 +17,20 @@ const OverrideControl = createSegmentedControl({
   ],
 });
 
+// A removable set. "All" is pinned — a scope list that can lose its catch-all
+// is a list you can strand.
+const SCOPES: SegmentOption[] = [
+  { value: "all", label: "All", removable: false },
+  { value: "june", label: "W23 · Jun 2" },
+  { value: "september", label: "W36 · Sep 1" },
+  { value: "december", label: "W49 · Dec 1" },
+];
+
 export const SegmentedControlShowcase: Component = () => {
   const [mode, setMode] = createSignal("auto");
   const [view, setView] = createSignal("day");
+  const [scopes, setScopes] = createSignal<SegmentOption[]>(SCOPES);
+  const [scope, setScope] = createSignal("june");
 
   return (
     <div class="component-section">
@@ -57,6 +69,33 @@ export const SegmentedControlShowcase: Component = () => {
           color="success"
         />
         <div class="text-meta">View: {view()}</div>
+      </div>
+
+      <div class="example-group">
+        <h3>Removable segments</h3>
+        <p class="text-meta">
+          With <code>onRemove</code> every segment grows a × — hover one, or
+          focus a segment and press Delete. <code>removable: false</code> pins
+          one out of it: <code>All</code> here has no ×. The × is a sibling of
+          the radio, never nested inside it, so the segment keeps answering
+          clicks.
+        </p>
+        <SegmentedControl
+          options={scopes()}
+          value={scope()}
+          onValueChange={setScope}
+          onRemove={(value) => {
+            const rest = scopes().filter((o) => o.value !== value);
+            setScopes(rest);
+            if (scope() === value) setScope(rest[0]?.value ?? "");
+          }}
+        />
+        <div class="text-meta">
+          Scope: {scope() || "—"} ·{" "}
+          <button type="button" onClick={() => setScopes(SCOPES)}>
+            restore
+          </button>
+        </div>
       </div>
 
       <div class="example-group">

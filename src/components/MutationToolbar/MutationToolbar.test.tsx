@@ -55,7 +55,9 @@ describe("MutationToolbar", () => {
         onReset={() => {}}
       />
     ));
-    expect(screen.getByText("Reset")).toBeTruthy();
+    // Reset prints no word — it is the `undo` glyph, named by its aria-label.
+    expect(screen.getByRole("button", { name: "Reset" })).toBeTruthy();
+    expect(screen.queryByText("Reset")).toBeNull();
     expect(screen.queryByText("Add")).toBeNull();
     expect(screen.queryByText("Save")).toBeNull();
     expect(screen.queryByText("Delete")).toBeNull();
@@ -109,6 +111,71 @@ describe("MutationToolbar", () => {
     const save = screen.getByText("Save").closest("button") as HTMLButtonElement;
     expect(save.disabled).toBe(true);
   });
+
+  it("names the Reset button with the curried word and draws no Reset text", () => {
+    const onReset = vi.fn();
+    render(() => (
+      <MutationToolbar
+        title="Changes"
+        changes={CHANGES}
+        selected="june"
+        onSelect={() => {}}
+        emptyNote="none"
+        onReset={onReset}
+        labels={{ reset: "Start over" }}
+      />
+    ));
+    const reset = screen.getByRole("button", { name: "Start over" });
+    expect(reset.textContent).not.toContain("Start over");
+    fireEvent.click(reset);
+    expect(onReset).toHaveBeenCalledOnce();
+  });
+
+  it("puts an × on each chip when onRemove is passed, and none when it is not", () => {
+    const onRemove = vi.fn();
+    const { container, unmount } = render(() => (
+      <MutationToolbar
+        title="Changes"
+        changes={CHANGES}
+        selected="june"
+        onSelect={() => {}}
+        emptyNote="none"
+        onRemove={onRemove}
+      />
+    ));
+    const xs = container.querySelectorAll(".sui-segmented__remove");
+    expect(xs.length).toBe(2);
+    fireEvent.click(xs[1]);
+    expect(onRemove).toHaveBeenCalledWith("september");
+    unmount();
+
+    const bare = render(() => (
+      <MutationToolbar
+        title="Changes"
+        changes={CHANGES}
+        selected="june"
+        onSelect={() => {}}
+        emptyNote="none"
+      />
+    ));
+    expect(bare.container.querySelector(".sui-segmented__remove")).toBeNull();
+  });
+
+  it("removing a chip does not also select it", () => {
+    const onSelect = vi.fn();
+    const { container } = render(() => (
+      <MutationToolbar
+        title="Changes"
+        changes={CHANGES}
+        selected="june"
+        onSelect={onSelect}
+        emptyNote="none"
+        onRemove={() => {}}
+      />
+    ));
+    fireEvent.click(container.querySelectorAll(".sui-segmented__remove")[1]);
+    expect(onSelect).not.toHaveBeenCalled();
+  });
 });
 
 describe("createMutationToolbar", () => {
@@ -128,7 +195,9 @@ describe("createMutationToolbar", () => {
       />
     ));
     expect(screen.getByText("Hire")).toBeTruthy();
-    expect(screen.getByText("Reset")).toBeTruthy();
+    // The word still belongs to the curry — it moved from the face of the
+    // button to its name and its tooltip.
+    expect(screen.getByRole("button", { name: "Reset" })).toBeTruthy();
     expect(
       screen.getByRole("radiogroup", { name: "Pay change being edited" }),
     ).toBeTruthy();

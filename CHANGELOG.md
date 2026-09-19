@@ -2,7 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+- **`SegmentedControl` — `onRemove`.** Optional, and additive: omit it and the control renders exactly the markup it always did. With it, every segment grows a × that fires `onRemove(value)`. The × is a **sibling** of the `role="radio"` button inside a `sui-segmented__cell` wrapper, never a child — a button inside a button is invalid HTML and stops the inner control answering clicks. Hover reveals it, `:focus-within` reveals it, `@media (hover: none)` shows it permanently because a touch screen has no hover, and it is never a tab stop: the keyboard path is **Delete or Backspace on the focused segment**. `removable: false` on one option pins it out of an otherwise removable set.
+- **`MutationToolbar` — `onRemove`.** The chips' × reaches the toolbar: pass `onRemove(id)` and each change is removed from its own chip. Peter, 2026-09-18: a Delete button in the corner names no victim.
+
+### Changed
+
+- **`MutationToolbar` — Reset is a glyph.** The Reset button is now the `undo` icon in an `IconOnlyButton` wrapped in a `Tooltip` rather than a word-width `GhostButton`. **Props are unchanged**: `labels.reset` now supplies both the tooltip and the accessible name, so a curried vocabulary still owns the word. Anything asserting on Reset's visible TEXT must move to its accessible name.
+
+### Deprecated
+
+- **`MutationToolbar` — `onDelete`.** Superseded by `onRemove`, which puts the removal on the chip it removes. Still honoured and still renders only while a change is selected; prefer `onRemove` in new code.
+
 ### Removed
+
 - **`TreeDiffChart`'s layout and frame GEOMETRY is no longer exported — the 14
   deprecated names are gone from the barrel. BREAKING for the published
   surface; wants a MINOR bump when released.** `computeTreeDiffLayout`,
