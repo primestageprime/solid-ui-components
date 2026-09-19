@@ -87,7 +87,6 @@ import { ThemedInput } from "../../../src/components/Inputs";
 import { ThemedNumberInput } from "../../../src/components/ThemedNumberInput";
 import { Modal } from "../../../src/components/Modal";
 import {
-  ClusterRow,
   EndWrapRow,
   FillWrapRow,
   GrowCenterColumn,
@@ -99,17 +98,12 @@ import {
   ViewportColumn,
 } from "../../../src/components/Layout";
 import { FillCardSurface } from "../../../src/components/Surface";
-import {
-  NoteText,
-  SectionTitle,
-  TextTitle,
-} from "../../../src/components/Text";
+import { SectionTitle, TextTitle } from "../../../src/components/Text";
 
 import {
   COMFORTABLE,
   COMMITTED_RATE,
   COUNT_DOMAIN,
-  DEFAULT_CASH_CAP,
   DELTA_DOMAIN,
   DOMAIN_END,
   DOMAIN_START,
@@ -134,6 +128,7 @@ import {
   balancesByMonth,
   bandOfRate,
   canAdd,
+  cashByMonth,
   cashSources,
   cashTable,
   drawnRate,
@@ -215,9 +210,9 @@ const DEBUG = false;
  * which side of the middle it sits on. `formatDelta` keeps the sign on the
  * readout for the same reason.
  *
- * The `%` track runs 50–100 rather than 0–100 — see `PCT_DOMAIN` — so the
- * figures a business would actually offer get the whole length of the dial
- * instead of its top half.
+ * The `%` track runs the WHOLE 0–100 — see `PCT_DOMAIN`. JTF's annual licence
+ * costs 20% of twelve monthly fees, which a floored track could not express at
+ * all.
  */
 const LicenseSliders = createGroupedMutationSliders({
   axes: [
@@ -234,12 +229,19 @@ const LicenseSliders = createGroupedMutationSliders({
       domain: DELTA_DOMAIN,
       snap: 1,
       format: formatDelta,
+      // The READOUT is signed (`+2`, `−1`) because which side of zero Δ sits on
+      // is the whole reading. The CHANGE label must not be: `deltaLabelOf`
+      // writes its own sign, and a signed formatter there printed `++1`.
+      deltaFormat: (value: number) => String(Math.round(value)),
     },
     {
       label: "$",
       group: "mo",
       domain: MONTHLY_FEE_DOMAIN,
-      snap: 1,
+      // FIFTIES. The track runs to $6,000 — JTF's monthly licence alone is
+      // $5,000 — and a one-dollar step across that range is a precision the
+      // pointer does not have.
+      snap: 50,
       format: formatFee,
     },
     {
@@ -255,6 +257,10 @@ const LicenseSliders = createGroupedMutationSliders({
       domain: DELTA_DOMAIN,
       snap: 1,
       format: formatDelta,
+      // The READOUT is signed (`+2`, `−1`) because which side of zero Δ sits on
+      // is the whole reading. The CHANGE label must not be: `deltaLabelOf`
+      // writes its own sign, and a signed formatter there printed `++1`.
+      deltaFormat: (value: number) => String(Math.round(value)),
     },
     {
       label: "%",
@@ -305,6 +311,10 @@ const LicenseMixChart = createStackedTimelineChart({
   yTickFormat: (value: number) => abbreviateDollars(value),
   xTickFormat: quarterLabelOf,
 });
+
+/** How much room the License Mix stack keeps above its tallest month. A spike
+ *  flush against the top of the plot reads as clipped even when it is not. */
+const MIX_HEADROOM = 1.15;
 
 /** THE CHANGES HEADER. The default words are this board's already. */
 const ChangesToolbar = createMutationToolbar({});
@@ -518,8 +528,6 @@ const LicenseBoardBench: Component = () => {
   const [mutations, setMutations] =
     createSignal<readonly Mutation[]>(SEED_MUTATIONS);
   const [editing, setEditing] = createSignal<string | null>(OPENING_SELECTION);
-  /** The y-axis cap, in dollars of cash a month. Peter's "settings". */
-  const [cap, setCap] = createSignal(DEFAULT_CASH_CAP);
   const [adding, setAdding] = createSignal(false);
   const [draft, setDraft] = createSignal<ProductDraft>(EMPTY_DRAFT);
   /** Which products are PINNED. A scenario-level idea — two products raised
@@ -555,24 +563,43 @@ const LicenseBoardBench: Component = () => {
   );
 
   /**
-   * THE LINE UNDER A CARD, three readings — `$2k/mo · $500/yr each · $6k a year`.
+   * THE LICENSE MIX CEILING, its own high-water mark.
    *
-   * The steady month, then the DERIVED annual price (what the `%` dial actually
-   * produces, which a reader cannot check unless it is printed), then what the
-   * whole annual base costs when it pays.
+   * The peak the stack has reached — the highest total cash any month brings in
+   * — with headroom so the tallest spike is not flush against the top of the
+   * plot. `createHighWaterMark` does the rest: it never falls on its own, so a
+   * drag that shrinks a band moves the BAND rather than re-scaling the axis
+   * under it, and `reset()` eases it down to the current peak.
    *
-   * Three rather than one because they are three different kinds of number: one
-   * arrives every month, one is a price, and one arrives twice in twenty-four
-   * months. Folding the lump into a monthly figure would put the single
+   * `StackedTimelineChart` takes its ceiling as `yDomain`, which is a live prop,
+   * so this needed no change to the component.
+   */
+  const mixCeiling = createHighWaterMark(() => {
+    const cash = cashByMonth(products(), mutations());
+    return Math.max(...cash, 0) * MIX_HEADROOM;
+  });
+
+  /**
+   * THE LINE UNDER A CARD — `$11.7k/mo · $0/yr`.
+   *
+   * Two readings, and they are the two the card is actually about: what this
+   * product bills in a steady month, and what its annual base costs when it
+   * pays. Folding the lump into a monthly figure would put the one
    * average-pretending-to-be-a-reading on a board whose whole point is that cash
    * is lumpy.
+   *
+   * IT WAS THREE and is now two, because the card is 516px wide and
+   * `$11.7k/mo · $9.2k/yr each · $0 a year` did not fit it — the derived
+   * per-licence price was the reading that could go, since the `%` dial's own
+   * readout already shows what the reader set and the lump shows what it costs.
+   * `annualPriceOfEntity` is still there, still tested, and still printed in the
+   * DEBUG table for anyone checking the derivation.
    */
   const cardSummary = (entity: GroupedMutationEntity): string => {
     const monthly = monthlyCashOfEntity(entity);
-    const each = annualPriceOfEntity(entity);
     const lump = annualLumpOfEntity(entity);
-    if (monthly === null || each === null || lump === null) return "";
-    return `${dollarsPerMonth(monthly)} · ${abbreviateDollars(each)}/yr each · ${abbreviateDollars(lump)} a year`;
+    if (monthly === null || lump === null) return "";
+    return `${dollarsPerMonth(monthly)} · ${abbreviateDollars(lump)}/yr`;
   };
 
   onMount(() => {
@@ -679,7 +706,6 @@ const LicenseBoardBench: Component = () => {
       setProducts(PRODUCTS);
       setMutations(SEED_MUTATIONS);
       setEditing(OPENING_SELECTION);
-      setCap(DEFAULT_CASH_CAP);
       setSelected([]);
       setSaved(scenarioDigest(PRODUCTS, SEED_MUTATIONS));
     });
@@ -734,27 +760,27 @@ const LicenseBoardBench: Component = () => {
 
           <HalfFillColumn>
             <FillCardSurface>
-              {/* The cap lives in the card's HEADER rather than a settings
-                  strip of its own: it is one number, it belongs to this chart
-                  alone, and a row of its own would cost the two charts the
-                  height that makes them readable. */}
+              {/* THE SAME CONTROL AS CASH FLOW, for the same reason (Peter,
+                  2026-09-18: "the license mix should use the same y-axis as the
+                  cashflow. With the shrink icon"). A typed cap was a number the
+                  reader had to maintain; a high-water mark maintains itself —
+                  it rises when a change pushes the stack above it, HOLDS when
+                  the stack falls so a drag moves the bands and not the axis,
+                  and the ⤡ eases it back down to the current peak.
+
+                  TWO INDEPENDENT MARKS, one per chart, not one shared: the two
+                  charts measure different quantities (dollars of cash a month
+                  against a running balance) and a shared ceiling would make one
+                  of them unreadable the moment the other moved. */}
               <SpreadRow>
                 <TextTitle>License Mix</TextTitle>
-                <ClusterRow>
-                  <NoteText>Cap</NoteText>
-                  <ThemedNumberInput
-                    name="cash-cap"
-                    label=""
-                    size="sm"
-                    min={1_000}
-                    max={DEFAULT_CASH_CAP * 4}
-                    step={1_000}
-                    value={cap}
-                    onChange={(next) => {
-                      setCap(next ?? DEFAULT_CASH_CAP);
-                    }}
-                  />
-                </ClusterRow>
+                <IconOnlyButton
+                  onClick={mixCeiling.reset}
+                  aria-label="Fit y-axis to current values"
+                  title="Fit y-axis to current values"
+                >
+                  <Icon name="shrink" size="sm" />
+                </IconOnlyButton>
               </SpreadRow>
               {/* One band per SOURCE — a product on one billing variant —
                   valued in dollars of CASH, so the annual bands are two spikes
@@ -763,7 +789,7 @@ const LicenseBoardBench: Component = () => {
               <LicenseMixChart
                 series={licenseMixSeries(products(), mutations())}
                 xDomain={[DOMAIN_START, DOMAIN_END]}
-                yDomain={[0, cap()]}
+                yDomain={[0, mixCeiling.ceiling()]}
                 xTickValues={QUARTER_TICKS}
                 events={mutations()}
                 hoverLabel={(at) => monthRangeOf(at).label}

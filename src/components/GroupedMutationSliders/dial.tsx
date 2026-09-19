@@ -285,14 +285,19 @@ export const GroupedDial: Component<GroupedDialProps> = (props) => {
                             index(),
                           )}
                           valueText={valueReadout(index())}
+                          // `deltaFormat`, NOT `format`: `deltaLabelOf` writes
+                          // the sign itself, so a signed `format` (a Δ axis)
+                          // would print it twice — `++1`.
                           deltaLabel={deltaLabelOf(
-                            props.axes[index()]?.format ?? String,
+                            props.axes[index()]?.deltaFormat ?? String,
                             dial(index())?.delta ?? null,
                           )}
                           active={props.selected}
                           onMeasure={props.onMeasure}
                           onChange={(value) => props.onMove(index(), value)}
-                          onChangeEnd={(value) => props.onCommit(index(), value)}
+                          onChangeEnd={(value) =>
+                            props.onCommit(index(), value)
+                          }
                         />
                         <SteadyMonoValue>
                           {valueReadout(index())}

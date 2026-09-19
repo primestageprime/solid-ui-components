@@ -34,7 +34,13 @@ afterAll(() => sizer.restore());
  */
 const LICENCE_AXES: GroupedMeasureAxes = [
   { label: "#", group: "mo", domain: [0, 500], snap: 1 },
-  { label: "$", group: "mo", domain: [0, 600], snap: 1, format: (n) => `$${n}` },
+  {
+    label: "$",
+    group: "mo",
+    domain: [0, 600],
+    snap: 1,
+    format: (n) => `$${n}`,
+  },
   { label: "#", group: "yr", domain: [0, 500], snap: 1 },
   {
     label: "%",
@@ -245,7 +251,8 @@ describe("GroupedMutationSliders", () => {
       // Only the entity's own group and the two per-run ones, with no caption
       // text between them: every run's aria-label is the bare entity name.
       expect(
-        container.querySelectorAll('[role="group"][aria-label="Design"]').length,
+        container.querySelectorAll('[role="group"][aria-label="Design"]')
+          .length,
       ).toBeGreaterThan(0);
     });
   });
@@ -507,6 +514,74 @@ describe("GroupedMutationSliders", () => {
     it("costs one dial slot per measure, so a 4-axis row is twice a 2-axis one", () => {
       expect(slotFor(4)).toBe(2 * slotFor(2));
       expect(slotFor(4)).toBe(4 * DIAL_SLOT);
+    });
+  });
+
+  describe("a SIGNED axis and its change", () => {
+    /** A Δ axis: the readout carries the sign, the change must not carry two. */
+    const SIGNED_AXES: GroupedMeasureAxes = [
+      {
+        label: "Δ",
+        domain: [-5, 5],
+        snap: 1,
+        format: (n) =>
+          n === 0 ? "0" : n > 0 ? `+${n}` : `\u2212${Math.abs(n)}`,
+        deltaFormat: (n) => String(n),
+      },
+    ];
+    const moved: readonly GroupedMutationEntity[] = [
+      {
+        id: "growth",
+        label: "Growth",
+        measures: [{ prior: 0, value: 1, range: [-5, 5] }],
+      },
+    ];
+
+    it("keeps the sign on the VALUE readout", () => {
+      const { getByLabelText } = render(() => (
+        <GroupedMutationSliders
+          entities={moved}
+          axes={SIGNED_AXES}
+          onChange={() => {}}
+        />
+      ));
+      expect(getByLabelText("Growth Δ").getAttribute("aria-valuetext")).toBe(
+        "+1",
+      );
+    });
+
+    it("writes the sign ONCE on the change — not `++1`", () => {
+      const { container } = render(() => (
+        <GroupedMutationSliders
+          entities={moved}
+          axes={SIGNED_AXES}
+          onChange={() => {}}
+        />
+      ));
+      expect(container.textContent).toContain("+1");
+      expect(container.textContent).not.toContain("++");
+    });
+
+    it("falls back to `format` when no `deltaFormat` is given", () => {
+      // The default is unchanged for every unsigned axis, which is all of them
+      // until one needs a sign.
+      const plain: GroupedMeasureAxes = [
+        { label: "#", domain: [0, 100], snap: 1, format: (n) => `${n}` },
+      ];
+      const { container } = render(() => (
+        <GroupedMutationSliders
+          entities={[
+            {
+              id: "seats",
+              label: "Seats",
+              measures: [{ prior: 10, value: 14, range: [0, 100] }],
+            },
+          ]}
+          axes={plain}
+          onChange={() => {}}
+        />
+      ));
+      expect(container.textContent).toContain("+4");
     });
   });
 

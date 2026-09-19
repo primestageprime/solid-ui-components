@@ -104,39 +104,48 @@
  *
  * ── THE FIXTURE, AND THE CALIBRATION ───────────────────────────────────────
  *
- * ACTIVE: Peter's own two products.
+ * ACTIVE: Peter's own two products, on his own figures.
  *
- *     product      #mo   Δmo    $mo    #yr   Δyr    %yr   → $/yr each
- *     ----------   ---   ----   ----   ---   ----   ----   ----------
- *     Amygdala      40    +2     $49    12     0     85%      $499.80
- *     JTF            8    −1    $120     6    −1     83%    $1,195.20
+ *     product      #mo   Δmo     $mo     #yr   Δyr    %yr   → $/yr each
+ *     ----------   ---   ----   ------   ---   ----   ----   ----------
+ *     Amygdala      13     0      $900     0     0     85%    (none yet)
+ *     JTF            1     0    $5,000     1     0     20%      $12,000
  *
- * Over 24 months that is $103,550.40 of cash — $74,088 from Amygdala's growing
- * monthly base, $4,320 from JTF's dying one, and $25,142.40 in four annual lumps
- * (Amygdala $5,997.60 at months 0 and 12; JTF $7,171.20 at month 0 and $5,976 at
- * month 12, the renewal that shows the churn). An average of $4,314.60/mo.
+ * EVERY Δ STARTS AT ZERO — a stable base that renews, which Peter will move
+ * himself. That is worth saying because it changes what a calibration row can
+ * be: "stall Δ to 0" is a no-op on this fixture and would have printed a yellow
+ * row identical to the green one.
  *
- * The three rows are the three REGIMES, which is the honest way to calibrate a
- * board whose whole model is Δ:
+ * AMYGDALA HAS NO ANNUAL LICENCES YET. A count of zero opens no cohort, so its
+ * `yr` band is flat at nothing and its two `yr` dials wait to be moved. JTF's
+ * single annual licence costs $12,000 a year against its $5,000 monthly fee —
+ * 20% of twelve months, which is the price that forced the percentage track
+ * down to zero.
  *
- *     scenario                          cash/mo   net/mo    band    regime
- *     -------------------------------   -------   -------   ------  -----------
- *     as it opens                       4,314.60  1,714.60  green   leaky bucket
- *     Amygdala's monthly Δ stalls to 0  3,187.60    587.60  yellow  stable base
- *     Amygdala's monthly Δ goes to −2   2,085.10   −514.90  red     dying base
+ * So the board bills $16,700 every month (13 × $900 + 1 × $5,000), plus a
+ * $12,000 lump in month 0 and its renewal in month 12: $424,800 over 24 months,
+ * averaging $17,700/mo.
+ *
+ * The two rows below "as it opens" are MOVES the fixture names, because the two
+ * catalogues fail differently:
+ *
+ *     scenario                            cash/mo    net/mo     band
+ *     ---------------------------------   --------   --------   ------
+ *     as it opens                         17,700.00  6,700.00   green
+ *     JTF's monthly licences are lost     12,700.00  1,700.00   yellow
+ *     Amygdala's monthly Δ goes to −1      9,412.50  −1,587.50  red
  *
  * Solving the four inequalities the same way as ever:
  *
- *     opens − FIXED ≥ COMFORTABLE     the board opens green
- *     stall − FIXED > 0               a stalled bucket is not yet a loss
- *     stall − FIXED < COMFORTABLE     …but it is no longer comfortable
- *     dying − FIXED < 0               a dying base crosses zero
+ *     opens  − FIXED ≥ COMFORTABLE    the board opens green
+ *     yellow − FIXED > 0              losing JTF's monthly book is not yet a loss
+ *     yellow − FIXED < COMFORTABLE    …but it is no longer comfortable
+ *     red    − FIXED < 0              a dying Amygdala crosses zero
  *
- * FIXED ∈ (2,085.10, 3,187.60) → 2,600; COMFORTABLE ∈ (587.60, 1,714.60] →
- * 1,100.
+ * FIXED ∈ (9,412.50, 12,700) → 11,000; COMFORTABLE ∈ (1,700, 6,700] → 4,000.
  * `rateBandTable()` prints that table and the test asserts every cell. The
- * Starter/Team/Enterprise trio is kept as `TIERS`, with its own solved
- * constants, one const away.
+ * Starter/Team/Enterprise ladder is kept as `TIERS`, with its own solved
+ * constants and its own two moves, one const away.
  */
 import {
   filter,
@@ -371,23 +380,35 @@ export const ANNUAL_COUNT: GroupedMeasureIndex = 3;
 export const ANNUAL_DELTA: GroupedMeasureIndex = 4;
 export const ANNUAL_PCT: GroupedMeasureIndex = 5;
 
-/** The shared tracks every card is drawn on. */
-export const COUNT_DOMAIN: readonly [number, number] = [0, 500];
+/**
+ * The shared tracks every card is drawn on.
+ *
+ * SIZED TO THE REAL BUSINESS (Peter's own figures, 2026-09-18): Amygdala sells
+ * thirteen monthly licences and JTF sells one. On a 0–500 track those are
+ * slivers a pointer cannot aim at and an eye cannot read, so the count track
+ * stops at 50 — every figure in the fixture sits in the lower half of it with
+ * room to double, which is what a track is for.
+ */
+export const COUNT_DOMAIN: readonly [number, number] = [0, 50];
 /** Δ runs BOTH WAYS around zero, because that is the whole point of it: the
  *  same dial says growing, stable and dying depending which side it sits. */
-export const DELTA_DOMAIN: readonly [number, number] = [-20, 20];
-export const MONTHLY_FEE_DOMAIN: readonly [number, number] = [0, 600];
+export const DELTA_DOMAIN: readonly [number, number] = [-5, 5];
+export const MONTHLY_FEE_DOMAIN: readonly [number, number] = [0, 6_000];
 /**
- * The percentage track stops at 100 and starts at 50.
+ * The percentage track runs the WHOLE range, 0 to 100.
  *
- * 100 is the ceiling because an annual licence sold for MORE than twelve monthly
- * ones is a penalty for paying up front, which nobody prices — and a dial that
- * could express it would invite it. 50 is the floor for the mirror reason: half
- * price is already an aggressive prepay discount, and a track running to zero
- * would spend four fifths of its length on figures the business would never
- * offer, leaving the ones it might in a band too short to aim at.
+ * An earlier pass floored it at 50, on the argument that half price is already
+ * an aggressive prepay discount. Peter's own figures killed that: JTF's annual
+ * licence costs $12,000 a year against a $5,000 monthly fee, which is 20% of
+ * twelve months — a deep multi-year-style discount that a 50–100 track cannot
+ * express at all. The rule was a guess about what a business would offer, and
+ * the business offers otherwise.
+ *
+ * 100 is still the ceiling: an annual licence sold for MORE than twelve monthly
+ * ones is a penalty for paying up front, and a dial that could express it would
+ * invite it.
  */
-export const PCT_DOMAIN: readonly [number, number] = [50, 100];
+export const PCT_DOMAIN: readonly [number, number] = [0, 100];
 
 /** Read one field out of a plan. */
 export const fieldValue = (plan: Plan, field: PlanField): number => {
@@ -444,6 +465,21 @@ const clamped = (product: Product, plan: Plan | null): Plan | null => {
 
 // ── The fixtures ─────────────────────────────────────────────────────────────
 
+/**
+ * ONE CALIBRATION ROW'S MOVE.
+ *
+ *   • `lost`  — this product's MONTHLY licences go to zero. The cliff a business
+ *               falls off when one big customer leaves.
+ *   • `delta` — this product's monthly Δ becomes `to`, turning a stable base
+ *               into a dying one.
+ *
+ * Two shapes rather than one because the two catalogues fail differently, and a
+ * calibration that could only express one of them would have to pretend.
+ */
+export type CalibrationMove =
+  | { readonly kind: "lost"; readonly product: string }
+  | { readonly kind: "delta"; readonly product: string; readonly to: number };
+
 /** Everything a catalogue needs: the products, and the constants solved against
  *  them. Flip `FIXTURE` below to swap the whole board over. */
 export interface Fixture {
@@ -454,14 +490,23 @@ export interface Fixture {
   readonly rateDomain: readonly [number, number];
   readonly cashCap: number;
   /**
-   * THE THREE REGIME ROWS: which product's monthly Δ they move, and to what.
+   * THE TWO ROWS BELOW "as it opens": what each one does, to which product.
    *
-   * Row 2 always stalls it to 0 — a stable base is a stable base — and row 3
-   * takes it NEGATIVE by `dying`. That figure is the fixture's because the row
-   * has to actually cross zero: the same −2 that kills Amygdala's forecast
-   * barely dents a catalogue whose monthly base is six times the size.
+   * IT IS NO LONGER "stall Δ to 0, then take it negative". Peter's own fixture
+   * opens with EVERY Δ at zero — a stable base he will move himself — so
+   * stalling one to zero is a no-op and would have printed a yellow row
+   * identical to the green one. The rows have to be moves that actually bite,
+   * and WHICH move bites depends on the catalogue: losing JTF's single $5,000
+   * licence costs more than Amygdala's whole annual side.
+   *
+   * So a row is a MOVE, and the fixture names both. `yellow` must land above
+   * zero and below `comfortable`; `red` must cross zero. The test asserts
+   * exactly that for both fixtures.
    */
-  readonly calibration: { readonly regime: string; readonly dying: number };
+  readonly calibration: {
+    readonly yellow: CalibrationMove;
+    readonly red: CalibrationMove;
+  };
 }
 
 /**
@@ -474,27 +519,34 @@ export interface Fixture {
  */
 export const APPS: Fixture = {
   label: "Apps",
-  fixedMonthlyCost: 2_600,
-  comfortable: 1_100,
-  rateDomain: [-2_600, 12_000],
-  cashCap: 20_000,
-  calibration: { regime: "amygdala", dying: -2 },
+  fixedMonthlyCost: 11_000,
+  comfortable: 4_000,
+  rateDomain: [-11_000, 30_000],
+  cashCap: 35_000,
+  calibration: {
+    yellow: { kind: "lost", product: "jtf" },
+    red: { kind: "delta", product: "amygdala", to: -1 },
+  },
   products: [
     {
       id: "amygdala",
       label: "Amygdala",
       start: DOMAIN_START.getTime(),
       committed: {
-        monthly: { count: 40, delta: 2, fee: 49 },
-        annual: { count: 12, delta: 0, pct: 85 },
+        monthly: { count: 13, delta: 0, fee: 900 },
+        // NO ANNUAL LICENCES YET, and that is a real state rather than a gap:
+        // a count of zero opens no cohort, so the `yr` band is flat at nothing
+        // and the two `yr` dials sit there waiting to be moved. It is also the
+        // case most likely to be got wrong, so the test pins it.
+        annual: { count: 0, delta: 0, pct: 85 },
       },
       ranges: {
-        monthlyCount: [0, 300],
-        monthlyDelta: [-20, 20],
-        monthlyFee: [20, 120],
-        annualCount: [0, 100],
-        annualDelta: [-20, 20],
-        annualPct: [70, 100],
+        monthlyCount: [0, 50],
+        monthlyDelta: [-5, 5],
+        monthlyFee: [200, 2_000],
+        annualCount: [0, 30],
+        annualDelta: [-5, 5],
+        annualPct: [0, 100],
       },
       changes: {},
     },
@@ -503,67 +555,76 @@ export const APPS: Fixture = {
       label: "JTF",
       start: DOMAIN_START.getTime(),
       committed: {
-        monthly: { count: 8, delta: -1, fee: 120 },
-        annual: { count: 6, delta: -1, pct: 83 },
+        monthly: { count: 1, delta: 0, fee: 5_000 },
+        // ONE annual licence at 20% of twelve monthly fees — $12,000 a year
+        // against a $5,000 monthly one. That 20% is why the percentage track
+        // had to reach the floor: it is a real price, and a 50–100 track could
+        // not express it.
+        annual: { count: 1, delta: 0, pct: 20 },
       },
       ranges: {
-        monthlyCount: [0, 120],
-        monthlyDelta: [-20, 20],
-        monthlyFee: [60, 300],
-        annualCount: [0, 60],
-        annualDelta: [-20, 20],
-        annualPct: [60, 100],
+        monthlyCount: [0, 10],
+        monthlyDelta: [-5, 5],
+        monthlyFee: [1_000, 6_000],
+        annualCount: [0, 10],
+        annualDelta: [-5, 5],
+        annualPct: [0, 100],
       },
       changes: {},
     },
   ],
 };
 
-const TIER_RANGES: PlanRanges = {
-  monthlyCount: [0, 300],
-  monthlyDelta: [-20, 20],
-  monthlyFee: [0, 600],
-  annualCount: [0, 100],
-  annualDelta: [-20, 20],
-  annualPct: [50, 100],
-};
-
 /**
  * TIERS — one card per price point, the alternative catalogue, kept so the board
  * can be read as one app's pricing ladder rather than a portfolio.
  *
- * Its four constants are solved the same way against its own three regime rows,
- * and the test asserts them too, so this fixture cannot rot while it is not the
- * active one:
+ * Re-scaled onto the same tracks as APPS (counts under 50, fees under $6,000),
+ * because the tracks are the board's and a fixture that needed its own would be
+ * two boards. Its four constants are solved the same way against its own two
+ * moves, and the test asserts them too, so this fixture cannot rot while it is
+ * not the active one:
  *
- *     scenario                        cash/mo    net/mo    band
- *     -----------------------------   --------   -------   ------
- *     as it opens                     18,406.05  1,506.05  green
- *     Starter's monthly Δ stalls to 0 17,371.05    471.05  yellow
- *     Starter's monthly Δ goes to −6  16,336.05   −563.95  red
+ *     scenario                          cash/mo     net/mo    band
+ *     -------------------------------   ---------   -------   ------
+ *     as it opens                       37,820.00   8,320.00  green
+ *     Starter's monthly Δ goes to −6    31,103.33   1,603.33  yellow
+ *     Enterprise's monthly licences go  27,820.00  −1,680.00  red
  *
- * FIXED ∈ (16,336.05, 17,371.05) → 16,900; COMFORTABLE ∈ (471.05, 1,506.05] →
- * 1,000. Starter is the volume tier and carries the monthly base the regime
- * rows move, which is why its Δ is the one that can cross zero; `dying` is −6
- * rather than APPS' −2 for the same reason.
+ * FIXED ∈ (27,820, 31,103.33) → 29,500; COMFORTABLE ∈ (1,603.33, 8,320] →
+ * 5,000. NOTE WHICH MOVE IS WHICH: here a dying Starter is the YELLOW row and
+ * losing Enterprise is RED, the opposite way round from APPS — because
+ * Enterprise carries the expensive licences on this ladder while JTF carries
+ * them on the other. That is the whole reason a row is a MOVE the fixture names
+ * rather than a fixed recipe.
  */
 export const TIERS: Fixture = {
   label: "Tiers",
-  fixedMonthlyCost: 16_900,
-  comfortable: 1_000,
-  rateDomain: [-16_900, 40_000],
-  cashCap: 60_000,
-  calibration: { regime: "starter", dying: -6 },
+  fixedMonthlyCost: 29_500,
+  comfortable: 5_000,
+  rateDomain: [-29_500, 60_000],
+  cashCap: 150_000,
+  calibration: {
+    yellow: { kind: "delta", product: "starter", to: -6 },
+    red: { kind: "lost", product: "enterprise" },
+  },
   products: [
     {
       id: "starter",
       label: "Starter",
       start: DOMAIN_START.getTime(),
       committed: {
-        monthly: { count: 280, delta: 6, fee: 15 },
-        annual: { count: 60, delta: 2, pct: 83 },
+        monthly: { count: 40, delta: 0, fee: 200 },
+        annual: { count: 10, delta: 0, pct: 85 },
       },
-      ranges: TIER_RANGES,
+      ranges: {
+        monthlyCount: [0, 50],
+        monthlyDelta: [-5, 5],
+        monthlyFee: [100, 600],
+        annualCount: [0, 30],
+        annualDelta: [-5, 5],
+        annualPct: [0, 100],
+      },
       changes: {},
     },
     {
@@ -571,10 +632,17 @@ export const TIERS: Fixture = {
       label: "Team",
       start: DOMAIN_START.getTime(),
       committed: {
-        monthly: { count: 40, delta: 1, fee: 49 },
-        annual: { count: 25, delta: 0, pct: 85 },
+        monthly: { count: 12, delta: 0, fee: 900 },
+        annual: { count: 6, delta: 0, pct: 80 },
       },
-      ranges: TIER_RANGES,
+      ranges: {
+        monthlyCount: [0, 30],
+        monthlyDelta: [-5, 5],
+        monthlyFee: [500, 2_000],
+        annualCount: [0, 20],
+        annualDelta: [-5, 5],
+        annualPct: [0, 100],
+      },
       changes: {},
     },
     {
@@ -582,10 +650,17 @@ export const TIERS: Fixture = {
       label: "Enterprise",
       start: DOMAIN_START.getTime(),
       committed: {
-        monthly: { count: 2, delta: 0, fee: 400 },
-        annual: { count: 6, delta: 1, pct: 83 },
+        monthly: { count: 2, delta: 0, fee: 5_000 },
+        annual: { count: 3, delta: 0, pct: 20 },
       },
-      ranges: TIER_RANGES,
+      ranges: {
+        monthlyCount: [0, 10],
+        monthlyDelta: [-5, 5],
+        monthlyFee: [2_000, 6_000],
+        annualCount: [0, 10],
+        annualDelta: [-5, 5],
+        annualPct: [0, 100],
+      },
       changes: {},
     },
   ],
@@ -1335,17 +1410,17 @@ export interface RateRow {
   readonly band: RateBand;
 }
 
-/** One product's MONTHLY Δ replaced everywhere in its history — the regime
- *  change each calibration row makes. */
-const withRegime = (
+/** One product's plan rewritten everywhere in its history — the committed plan
+ *  and every change — so a calibration row reads "all span". */
+const rewrite = (
   products: readonly Product[],
   id: string,
-  delta: number,
+  move: (plan: Plan) => Plan,
 ): Product[] =>
   map((product: Product) => {
     if (product.id !== id) return product;
     const moved = (plan: Plan | null): Plan | null =>
-      plan === null ? null : withField(plan, "monthlyDelta", delta);
+      plan === null ? null : move(plan);
     return {
       ...product,
       committed: moved(product.committed),
@@ -1358,9 +1433,36 @@ const withRegime = (
     };
   }, products);
 
+/** A calibration row's products, and the sentence that names what it did. */
+const applyMove = (
+  products: readonly Product[],
+  move: CalibrationMove,
+): { label: string; products: readonly Product[] } => {
+  const name =
+    find((product: Product) => product.id === move.product, products)?.label ??
+    move.product;
+  if (move.kind === "lost") {
+    return {
+      label: `${name}'s monthly licences are lost`,
+      products: rewrite(products, move.product, (plan) =>
+        withField(plan, "monthlyCount", 0),
+      ),
+    };
+  }
+  return {
+    // A REAL MINUS (U+2212) when the figure is negative, as everywhere else.
+    label: `${name}'s monthly Δ goes to ${
+      move.to < 0 ? `\u2212${Math.abs(move.to)}` : String(move.to)
+    }`,
+    products: rewrite(products, move.product, (plan) =>
+      withField(plan, "monthlyDelta", move.to),
+    ),
+  };
+};
+
 /**
- * THE CALIBRATION, as data — the three REGIMES, which is the honest way to
- * calibrate a board whose whole model is Δ.
+ * THE CALIBRATION, as data — what the gauge reads for the catalogue the board
+ * opens on, and for the two MOVES the fixture names as its yellow and red.
  *
  * It takes a whole FIXTURE, not just the products, because a row's BAND depends
  * on that catalogue's own fixed cost and comfortable gain — reading one
@@ -1370,9 +1472,6 @@ const withRegime = (
  */
 export const rateBandTable = (fixture: Fixture = FIXTURE): RateRow[] => {
   const { products, calibration } = fixture;
-  const name =
-    find((product: Product) => product.id === calibration.regime, products)
-      ?.label ?? calibration.regime;
   const row = (
     scenario: string,
     scenarioProducts: readonly Product[],
@@ -1381,18 +1480,12 @@ export const rateBandTable = (fixture: Fixture = FIXTURE): RateRow[] => {
     const net = cash - fixture.fixedMonthlyCost;
     return { scenario, cash, net, band: bandOfRate(net, fixture.comfortable) };
   };
+  const yellow = applyMove(products, calibration.yellow);
+  const red = applyMove(products, calibration.red);
   return [
     row("as it opens", products),
-    row(
-      `${name}'s monthly Δ stalls to 0`,
-      withRegime(products, calibration.regime, 0),
-    ),
-    row(
-      // A REAL MINUS (U+2212), not a hyphen — the same rule every other number
-      // on this board follows, and `dying` is always negative.
-      `${name}'s monthly Δ goes to \u2212${Math.abs(calibration.dying)}`,
-      withRegime(products, calibration.regime, calibration.dying),
-    ),
+    row(yellow.label, yellow.products),
+    row(red.label, red.products),
   ];
 };
 

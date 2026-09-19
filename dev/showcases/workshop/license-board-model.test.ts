@@ -56,6 +56,7 @@ import {
   balancesByMonth,
   bandOfRate,
   byVariability,
+  variabilityOf,
   canAdd,
   cashByMonth,
   cashSources,
@@ -196,18 +197,24 @@ describe("Δ produces three regimes", () => {
     expect(countAfter(variant, 23)).toBe(0);
   });
 
-  it("stops billing once a dying monthly base reaches zero", () => {
-    const cash = monthlyCashByMonth(JTF, []);
-    expect(cash[0]).toBe(8 * 120);
-    expect(cash[7]).toBe(1 * 120);
-    expect(cash[8]).toBe(0);
-    expect(cash[23]).toBe(0);
+  it("holds a STABLE base flat across the whole span", () => {
+    // Every Δ in the active fixture starts at zero — Peter's own opening state.
+    expect(monthlyCashByMonth(AMYGDALA, [])[0]).toBe(13 * 900);
+    expect(monthlyCashByMonth(AMYGDALA, [])[23]).toBe(13 * 900);
+    expect(monthlyCashByMonth(JTF, [])[23]).toBe(1 * 5_000);
   });
 
-  it("ramps a growing monthly base all the way out", () => {
-    const cash = monthlyCashByMonth(AMYGDALA, []);
-    expect(cash[0]).toBe(40 * 49);
-    expect(cash[23]).toBe((40 + 2 * 23) * 49);
+  it("stops billing once a dying monthly base reaches zero", () => {
+    const dying = withVariant(AMYGDALA, "monthly", {
+      count: 13,
+      delta: -1,
+      fee: 900,
+    });
+    const cash = monthlyCashByMonth(dying, []);
+    expect(cash[0]).toBe(13 * 900);
+    expect(cash[12]).toBe(1 * 900);
+    expect(cash[13]).toBe(0);
+    expect(cash[23]).toBe(0);
   });
 });
 
@@ -215,48 +222,59 @@ describe("annual licences pay once a year, in cohorts", () => {
   it("PETER'S WORKED EXAMPLE: ten at Δ −1 pays 10× at m0 and 9× at m12", () => {
     // A monthly fee of $100 at 100% derives an annual price of exactly $1,200,
     // so the worked example reads in round numbers.
+    // $1,000/mo at 100% derives exactly $12,000 a year. (JTF's fee band floors
+    // at $1,000, and `clamped` holds every plan inside its product's own
+    // allowance — a cheaper fee here would have been silently raised to it.)
     const priced = withVariant(JTF, "monthly", {
-      count: 8,
-      delta: -1,
-      fee: 100,
+      count: 1,
+      delta: 0,
+      fee: 1_000,
     });
     const ten = withVariant(priced, "annual", {
       count: 10,
       delta: -1,
       pct: 100,
     });
-    expect(annualFeeOf(ten.committed as never)).toBe(1_200);
+    expect(annualFeeOf(ten.committed as never)).toBe(12_000);
     expect(annualPayments(ten, [])).toEqual([
-      { month: 0, amount: 12_000 },
-      { month: 12, amount: 10_800 },
+      { month: 0, amount: 10 * 12_000 },
+      { month: 12, amount: 9 * 12_000 },
     ]);
   });
 
   it("charges the counted base in the FIRST month and renews at twelve", () => {
-    // Amygdala: 12 annual at $500, Δ 0 — a stable base renews IN FULL.
-    // 12 annual at 85% of 12 × $49 = $499.80 each.
-    expect(annualFeeOf(AMYGDALA.committed as never)).toBeCloseTo(499.8, 6);
-    const payments = annualPayments(AMYGDALA, []);
-    expect(map((row) => row.month, payments)).toEqual([0, 12]);
-    expect(payments[0]?.amount).toBeCloseTo(5_997.6, 6);
-    expect(payments[1]?.amount).toBeCloseTo(5_997.6, 6);
+    // JTF: ONE annual licence at 20% of 12 × $5,000 = $12,000 a year, Δ 0 — a
+    // stable base renews IN FULL.
+    expect(annualFeeOf(JTF.committed as never)).toBe(12_000);
+    expect(annualPayments(JTF, [])).toEqual([
+      { month: 0, amount: 12_000 },
+      { month: 12, amount: 12_000 },
+    ]);
   });
 
-  it("churns the fixture's own dying annual base at its renewal", () => {
-    // JTF: 6 annual at $1,200, Δ −1 → 6 × 1200 at m0, 5 × 1200 at m12.
-    // 6 annual at 83% of 12 × $120 = $1,195.20 each; 5 of them at the renewal.
-    expect(annualFeeOf(JTF.committed as never)).toBeCloseTo(1_195.2, 6);
-    const payments = annualPayments(JTF, []);
-    expect(payments[0]?.amount).toBeCloseTo(7_171.2, 6);
-    expect(payments[1]?.amount).toBeCloseTo(5_976, 6);
+  it("opens NO cohort for a product with no annual licences yet", () => {
+    // Amygdala sells none, which is a real state rather than a gap: the `yr`
+    // band is flat at nothing and its two `yr` dials wait to be moved.
+    expect(AMYGDALA.committed?.annual.count).toBe(0);
+    expect(cohortsOf(AMYGDALA, []).length).toBe(0);
+    expect(annualPayments(AMYGDALA, [])).toEqual([]);
+    expect(sum(annualCashByMonth(AMYGDALA, []))).toBe(0);
+  });
+
+  it("churns a dying annual base at its renewal", () => {
+    const dying = withVariant(JTF, "annual", { count: 6, delta: -1, pct: 20 });
+    const payments = annualPayments(dying, []);
+    expect(payments[0]?.amount).toBe(6 * 12_000);
+    expect(payments[1]?.amount).toBe(5 * 12_000);
   });
 
   it("opens a cohort EVERY MONTH when Δ is positive, paid in the month sold", () => {
-    // $100/mo at 100% derives $1,200 a year, so each sale is a round lump.
+    // $200/mo at 100% derives $2,400 a year (Amygdala's fee band floors at
+    // $200), so each sale is a round lump.
     const priced = withVariant(AMYGDALA, "monthly", {
-      count: 40,
-      delta: 2,
-      fee: 100,
+      count: 13,
+      delta: 0,
+      fee: 200,
     });
     const growing = withVariant(priced, "annual", {
       count: 4,
@@ -265,13 +283,13 @@ describe("annual licences pay once a year, in cohorts", () => {
     });
     const cash = annualCashByMonth(growing, []);
     // Month 0: the base of four. Months 1–11: one new sale each, paid then.
-    expect(cash[0]).toBe(4 * 1_200);
-    expect(cash[1]).toBe(1_200);
-    expect(cash[11]).toBe(1_200);
+    expect(cash[0]).toBe(4 * 2_400);
+    expect(cash[1]).toBe(2_400);
+    expect(cash[11]).toBe(2_400);
     // Month 12: the base renews (400) AND the month-0… no — the base's own
     // anniversary only. The month-1 cohort renews at month 13.
-    expect(cash[12]).toBe(4 * 1_200 + 1_200);
-    expect(cash[13]).toBe(1_200 + 1_200);
+    expect(cash[12]).toBe(4 * 2_400 + 2_400);
+    expect(cash[13]).toBe(2_400 + 2_400);
   });
 
   it("shrinks a cohort ONCE PER ANNIVERSARY, never per month", () => {
@@ -295,25 +313,18 @@ describe("annual licences pay once a year, in cohorts", () => {
     expect(born.slice(0, 4)).toEqual([0, 1, 2, 3]);
   });
 
-  it("opens ONE cohort for a stable or dying base", () => {
-    expect(cohortsOf(AMYGDALA, []).length).toBe(1);
+  it("opens ONE cohort for a stable or dying base, and none for an empty one", () => {
     expect(cohortsOf(JTF, []).length).toBe(1);
+    expect(cohortsOf(AMYGDALA, []).length).toBe(0);
   });
 
   it("renews at the price in force THEN, not the one it was sold at", () => {
     const mutations = oneChange("2025-07-01");
     const flag = mutations[0]?.id ?? "";
-    const raised = withChange(
-      [AMYGDALA],
-      "amygdala",
-      flag,
-      "annualPct",
-      100,
-      mutations,
-    );
+    const raised = withChange([JTF], "jtf", flag, "annualPct", 40, mutations);
     const cash = annualCashByMonth(raised[0] as Product, mutations);
-    expect(cash[0]).toBeCloseTo(12 * 499.8, 6);
-    expect(cash[12]).toBeCloseTo(12 * 49 * 12, 6);
+    expect(cash[0]).toBe(12_000);
+    expect(cash[12]).toBe(24_000);
   });
 
   it("THE MONTHLY $ DIAL PRICES THE ANNUAL SIDE TOO", () => {
@@ -323,58 +334,58 @@ describe("annual licences pay once a year, in cohorts", () => {
     // month-12 renewal costs more because of it. That coupling is the whole
     // reason the annual side is a percentage rather than a price.
     const dearer = withChange(
-      [AMYGDALA],
-      "amygdala",
+      [JTF],
+      "jtf",
       flag,
       "monthlyFee",
-      98,
+      6_000,
       mutations,
     );
     const cash = annualCashByMonth(dearer[0] as Product, mutations);
-    expect(cash[0]).toBeCloseTo(12 * 499.8, 6);
-    expect(cash[12]).toBeCloseTo(12 * 999.6, 6);
+    expect(cash[0]).toBe(12_000);
+    expect(cash[12]).toBe(6_000 * 12 * 0.2);
   });
 });
 
 describe("the opening forecast", () => {
-  it("is two products, with no changes at all", () => {
+  it("is two products, with no changes and every Δ at zero", () => {
     expect(SEED_MUTATIONS).toEqual([]);
     expect(hasAnyChange(PRODUCTS)).toBe(false);
     expect(map((product) => product.label, PRODUCTS)).toEqual([
       "Amygdala",
       "JTF",
     ]);
+    for (const product of PRODUCTS) {
+      expect(product.committed?.monthly.delta).toBe(0);
+      expect(product.committed?.annual.delta).toBe(0);
+    }
   });
 
-  it("takes $16,088.80 in the first month — the opening lumps land together", () => {
+  it("takes $28,700 in the first month — the annual lump lands with it", () => {
     const cash = cashByMonth(PRODUCTS, []);
-    expect(cash[0]).toBeCloseTo(40 * 49 + 5_997.6 + 8 * 120 + 7_171.2, 6);
-    expect(cash[0]).toBeCloseTo(16_088.8, 6);
+    expect(cash[0]).toBe(13 * 900 + 1 * 5_000 + 12_000);
+    expect(cash[0]).toBe(28_700);
   });
 
-  it("drops to a quiet month once the lumps are past", () => {
-    expect(cashByMonth(PRODUCTS, [])[1]).toBe(42 * 49 + 7 * 120);
+  it("drops to $16,700 once the lump is past, and holds there", () => {
+    expect(cashByMonth(PRODUCTS, [])[1]).toBe(16_700);
+    expect(cashByMonth(PRODUCTS, [])[11]).toBe(16_700);
   });
 
   it("spikes again at the twelve-month anniversary", () => {
-    const cash = cashByMonth(PRODUCTS, []);
-    expect(cash[12]).toBeCloseTo(64 * 49 + 5_997.6 + 5_976, 6);
-    expect(cash[12]).toBeCloseTo(15_109.6, 6);
+    expect(cashByMonth(PRODUCTS, [])[12]).toBe(28_700);
   });
 
-  it("takes $103,550.40 across the span, averaging $4,314.60 a month", () => {
-    expect(sum(cashByMonth(PRODUCTS, []))).toBeCloseTo(103_550.4, 4);
-    expect(averageCash(PRODUCTS, [])).toBeCloseTo(4_314.6, 6);
+  it("takes $424,800 across the span, averaging $17,700 a month", () => {
+    expect(sum(cashByMonth(PRODUCTS, []))).toBe(424_800);
+    expect(averageCash(PRODUCTS, [])).toBe(17_700);
   });
 
   it("nets the fixed cost off every month", () => {
     const net = netCashByMonth(PRODUCTS, []);
-    expect(net[0]).toBeCloseTo(16_088.8 - FIXED_MONTHLY_COST, 6);
-    expect(averageNetCash(PRODUCTS, [])).toBeCloseTo(
-      4_314.6 - FIXED_MONTHLY_COST,
-      6,
-    );
-    expect(COMMITTED_RATE).toBeCloseTo(1_714.6, 6);
+    expect(net[0]).toBe(28_700 - FIXED_MONTHLY_COST);
+    expect(averageNetCash(PRODUCTS, [])).toBe(17_700 - FIXED_MONTHLY_COST);
+    expect(COMMITTED_RATE).toBe(6_700);
   });
 
   it("keeps every allowance inside the shared tracks", () => {
@@ -387,6 +398,9 @@ describe("the opening forecast", () => {
       );
       expect(product.ranges.monthlyFee[1]).toBeLessThanOrEqual(
         MONTHLY_FEE_DOMAIN[1],
+      );
+      expect(product.ranges.monthlyDelta[1]).toBeLessThanOrEqual(
+        DELTA_DOMAIN[1],
       );
       expect(product.ranges.annualPct[0]).toBeGreaterThanOrEqual(PCT_DOMAIN[0]);
       expect(product.ranges.annualPct[1]).toBeLessThanOrEqual(PCT_DOMAIN[1]);
@@ -410,12 +424,23 @@ describe("the sources", () => {
     ]);
   });
 
-  it("puts the SPIKY annual sources on top of the stack", () => {
+  it("puts the SPIKY annual source on top, and keeps flat ties in fixture order", () => {
     const ordered = byVariability(cashSources(PRODUCTS, []));
-    const top = ordered[ordered.length - 1];
-    expect(top?.billing).toBe("yr");
-    // …and the flattest source at the bottom.
-    expect(ordered[0]?.billing).toBe("mo");
+    // JTF's two lumps are the most variable thing on the board.
+    expect(ordered[ordered.length - 1]?.id).toBe("jtf-yr");
+    // EVERY OTHER BAND IS PERFECTLY FLAT on the opening fixture — every Δ is
+    // zero, and Amygdala sells no annual licences at all — so three sources tie
+    // at a standard deviation of zero. `sortBy` is STABLE, so they keep the
+    // fixture's own order rather than shuffling between renders, which is the
+    // reason stability matters here and not a detail.
+    expect(map((source) => variabilityOf(source), ordered).slice(0, 3)).toEqual(
+      [0, 0, 0],
+    );
+    expect(map((source) => source.id, ordered).slice(0, 3)).toEqual([
+      "amygdala-mo",
+      "amygdala-yr",
+      "jtf-mo",
+    ]);
   });
 
   it("stacks to a top edge that IS the month's total cash", () => {
@@ -454,10 +479,7 @@ describe("the chart's cells and the forecast are ONE calendar", () => {
 describe("the running balance", () => {
   it("opens at the opening balance plus the first month's net", () => {
     const balances = balancesByMonth(PRODUCTS, []);
-    expect(balances[0]).toBeCloseTo(
-      OPENING_BALANCE + 16_088.8 - FIXED_MONTHLY_COST,
-      6,
-    );
+    expect(balances[0]).toBe(OPENING_BALANCE + 28_700 - FIXED_MONTHLY_COST);
     expect(balances.length).toBe(MONTH_COUNT);
   });
 
@@ -465,14 +487,16 @@ describe("the running balance", () => {
     const balances = balancesByMonth(PRODUCTS, []);
     const quietStep = (balances[11] ?? 0) - (balances[10] ?? 0);
     const lumpStep = (balances[12] ?? 0) - (balances[11] ?? 0);
-    expect(lumpStep).toBeGreaterThan(quietStep * 5);
+    // The lump month adds $12,000 of annual cash on top of the steady $16,700,
+    // so the step is three times the quiet one rather than a slope.
+    expect(lumpStep).toBeGreaterThan(quietStep * 2);
+    expect(lumpStep - quietStep).toBe(12_000);
   });
 
   it("ends where the whole forecast puts it", () => {
     const balances = balancesByMonth(PRODUCTS, []);
-    expect(balances[MONTH_COUNT - 1]).toBeCloseTo(
-      OPENING_BALANCE + 103_550.4 - FIXED_MONTHLY_COST * MONTH_COUNT,
-      4,
+    expect(balances[MONTH_COUNT - 1]).toBe(
+      OPENING_BALANCE + 424_800 - FIXED_MONTHLY_COST * MONTH_COUNT,
     );
   });
 });
@@ -482,15 +506,15 @@ describe("the calibration — three regimes, solved", () => {
     const rows = rateBandTable(APPS);
     expect(map((row) => [row.scenario, row.band], rows)).toEqual([
       ["as it opens", "green"],
-      ["Amygdala's monthly Δ stalls to 0", "yellow"],
-      ["Amygdala's monthly Δ goes to −2", "red"],
+      ["JTF's monthly licences are lost", "yellow"],
+      ["Amygdala's monthly Δ goes to −1", "red"],
     ]);
-    expect(rows[0]?.cash).toBeCloseTo(4_314.6, 6);
-    expect(rows[0]?.net).toBeCloseTo(1_714.6, 6);
-    expect(rows[1]?.cash).toBeCloseTo(3_187.6, 6);
-    expect(rows[1]?.net).toBeCloseTo(587.6, 6);
-    expect(rows[2]?.cash).toBeCloseTo(2_085.1, 6);
-    expect(rows[2]?.net).toBeCloseTo(-514.9, 6);
+    expect(rows[0]?.cash).toBe(17_700);
+    expect(rows[0]?.net).toBe(6_700);
+    expect(rows[1]?.cash).toBe(12_700);
+    expect(rows[1]?.net).toBe(1_700);
+    expect(rows[2]?.cash).toBe(9_412.5);
+    expect(rows[2]?.net).toBe(-1_587.5);
   });
 
   it("satisfies the four inequalities APPS' constants were solved from", () => {
@@ -515,12 +539,16 @@ describe("the calibration — three regimes, solved", () => {
     expect(TIERS.fixedMonthlyCost).toBeLessThan(stall?.cash ?? 0);
   });
 
-  it("names the regime product the fixture chose", () => {
+  it("lets each fixture name its OWN two moves, in its own order", () => {
+    // APPS goes yellow by LOSING a product and red by a dying Δ; TIERS is the
+    // other way round, because Enterprise carries the expensive licences on
+    // that ladder where JTF carries them on this one. A fixed recipe could not
+    // express both.
     expect(rateBandTable(TIERS)[1]?.scenario).toBe(
-      "Starter's monthly Δ stalls to 0",
+      "Starter's monthly Δ goes to −6",
     );
     expect(rateBandTable(TIERS)[2]?.scenario).toBe(
-      "Starter's monthly Δ goes to −6",
+      "Enterprise's monthly licences are lost",
     );
   });
 
@@ -559,10 +587,10 @@ describe("one CARD per product, six dials", () => {
   it("carries all six measures in FIELDS order", () => {
     const [amygdala] = entitiesFor(PRODUCTS, flag, mutations);
     expect(amygdala?.measures.length).toBe(6);
-    expect(amygdala?.measures[MONTHLY_COUNT]?.value).toBe(40);
-    expect(amygdala?.measures[MONTHLY_DELTA]?.value).toBe(2);
-    expect(amygdala?.measures[MONTHLY_FEE]?.value).toBe(49);
-    expect(amygdala?.measures[ANNUAL_COUNT]?.value).toBe(12);
+    expect(amygdala?.measures[MONTHLY_COUNT]?.value).toBe(13);
+    expect(amygdala?.measures[MONTHLY_DELTA]?.value).toBe(0);
+    expect(amygdala?.measures[MONTHLY_FEE]?.value).toBe(900);
+    expect(amygdala?.measures[ANNUAL_COUNT]?.value).toBe(0);
     expect(amygdala?.measures[ANNUAL_DELTA]?.value).toBe(0);
     expect(amygdala?.measures[ANNUAL_PCT]?.value).toBe(85);
   });
@@ -588,16 +616,13 @@ describe("one CARD per product, six dials", () => {
   it("reads its summary FROM THE CARD", () => {
     const [amygdala] = entitiesFor(PRODUCTS, null, []);
     expect(monthlyCashOfEntity(amygdala as GroupedMutationEntity)).toBe(
-      40 * 49,
+      13 * 900,
     );
-    expect(annualPriceOfEntity(amygdala as GroupedMutationEntity)).toBeCloseTo(
-      499.8,
-      6,
+    // The derived price exists even with no licences sold on it yet.
+    expect(annualPriceOfEntity(amygdala as GroupedMutationEntity)).toBe(
+      900 * 12 * 0.85,
     );
-    expect(annualLumpOfEntity(amygdala as GroupedMutationEntity)).toBeCloseTo(
-      12 * 499.8,
-      6,
-    );
+    expect(annualLumpOfEntity(amygdala as GroupedMutationEntity)).toBe(0);
   });
 
   it("shows prior === value when there is no change to show", () => {
@@ -644,7 +669,7 @@ describe("a change re-bases the forecast", () => {
       "amygdala",
       flag,
       "monthlyCount",
-      100,
+      30,
       mutations,
     );
     const segments = segmentsOf(raised[0] as Product, mutations);
@@ -653,18 +678,18 @@ describe("a change re-bases the forecast", () => {
 
   it("runs Δ from the CHANGE, not from month zero", () => {
     const raised = withChange(
-      PRODUCTS,
+      withChange(PRODUCTS, "amygdala", flag, "monthlyCount", 30, mutations),
       "amygdala",
       flag,
-      "monthlyCount",
-      100,
+      "monthlyDelta",
+      2,
       mutations,
     );
     const cash = monthlyCashByMonth(raised[0] as Product, mutations);
-    // Month 5 is still the opening ramp; month 6 re-bases at 100 and ramps on.
-    expect(cash[5]).toBe((40 + 2 * 5) * 49);
-    expect(cash[6]).toBe(100 * 49);
-    expect(cash[7]).toBe(102 * 49);
+    // Month 5 is still the flat opening base; month 6 re-bases at 30 and ramps.
+    expect(cash[5]).toBe(13 * 900);
+    expect(cash[6]).toBe(30 * 900);
+    expect(cash[7]).toBe(32 * 900);
   });
 
   it("carries the five fields it did not touch", () => {
@@ -678,8 +703,9 @@ describe("a change re-bases the forecast", () => {
     );
     const segment = segmentsOf(raised[0] as Product, mutations)[1];
     expect(segment?.plan?.monthly.delta).toBe(5);
-    expect(segment?.plan?.monthly.fee).toBe(49);
-    expect(segment?.plan?.annual.count).toBe(12);
+    expect(segment?.plan?.monthly.count).toBe(13);
+    expect(segment?.plan?.monthly.fee).toBe(900);
+    expect(segment?.plan?.annual.count).toBe(0);
     expect(segment?.plan?.annual.pct).toBe(85);
   });
 
@@ -689,12 +715,12 @@ describe("a change re-bases the forecast", () => {
       "jtf",
       flag,
       "monthlyCount",
-      500,
+      50,
       mutations,
     );
     expect(
       segmentsOf(over[1] as Product, mutations)[1]?.plan?.monthly.count,
-    ).toBe(120);
+    ).toBe(10);
   });
 
   it("relaunches by DELETING the change", () => {
@@ -713,52 +739,30 @@ describe("a change in the FIRST month replaces rather than duplicates", () => {
   const january = addMutation([], new Date("2025-01-01")).mutations;
   const flag = january[0]?.id ?? "";
 
+  const nudge = () =>
+    withChange(PRODUCTS, "jtf", flag, "annualPct", 21, january);
+
   it("keeps ONE segment for the month, the later declaration winning", () => {
-    const nudged = withChange(
-      PRODUCTS,
-      "amygdala",
-      flag,
-      "annualPct",
-      86,
-      january,
-    );
-    const segments = segmentsOf(nudged[0] as Product, january);
+    const segments = segmentsOf(nudge()[1] as Product, january);
     expect(segments.length).toBe(1);
     expect(segments[0]?.from).toBe(0);
-    expect(segments[0]?.plan?.annual.pct).toBe(86);
+    expect(segments[0]?.plan?.annual.pct).toBe(21);
   });
 
   it("opens ONE annual cohort, not two", () => {
-    const nudged = withChange(
-      PRODUCTS,
-      "amygdala",
-      flag,
-      "annualPct",
-      86,
-      january,
+    expect(cohortsOf(nudge()[1] as Product, january).length).toBe(1);
+    // One licence at 21% of 12 x $5,000 = $12,600, ONCE.
+    expect(annualPayments(nudge()[1] as Product, january)[0]?.amount).toBe(
+      12_600,
     );
-    expect(cohortsOf(nudged[0] as Product, january).length).toBe(1);
-    // 12 licences at 86% of 12 × $49 = $505.68 each, ONCE.
-    expect(
-      annualPayments(nudged[0] as Product, january)[0]?.amount,
-    ).toBeCloseTo(12 * 505.68, 6);
   });
 
   it("moves the gauge by a believable amount", () => {
-    const nudged = withChange(
-      PRODUCTS,
-      "amygdala",
-      flag,
-      "annualPct",
-      86,
-      january,
-    );
-    const moved = averageNetCash(nudged, january);
-    const delta = moved - COMMITTED_RATE;
-    // Two payments of 12 × $5.88 across 24 months — single digits a month, not
-    // the +$512 a doubled base produced.
-    expect(delta).toBeCloseTo((2 * 12 * 5.88) / MONTH_COUNT, 6);
-    expect(delta).toBeLessThan(10);
+    const delta = averageNetCash(nudge(), january) - COMMITTED_RATE;
+    // Two payments $600 dearer across 24 months - $50 a month, not the doubled
+    // base's five-figure jump.
+    expect(delta).toBeCloseTo((2 * 600) / MONTH_COUNT, 6);
+    expect(delta).toBeLessThan(100);
   });
 });
 
@@ -769,7 +773,7 @@ describe("launching and deleting", () => {
     name: "Pro",
     monthlyCount: 20,
     monthlyDelta: 3,
-    monthlyFee: 80,
+    monthlyFee: 800,
     annualCount: 5,
     annualDelta: 1,
     annualPct: 90,
@@ -781,7 +785,12 @@ describe("launching and deleting", () => {
     expect(canAdd({ ...EMPTY_DRAFT, name: "Pro", monthlyDelta: 99 })).toBe(
       false,
     );
-    expect(canAdd({ ...EMPTY_DRAFT, name: "Pro", annualPct: 10 })).toBe(false);
+    expect(canAdd({ ...EMPTY_DRAFT, name: "Pro", monthlyCount: 99 })).toBe(
+      false,
+    );
+    // 10% IS now a figure the track admits — JTF sells at 20%.
+    expect(canAdd({ ...EMPTY_DRAFT, name: "Pro", annualPct: 10 })).toBe(true);
+    expect(canAdd({ ...EMPTY_DRAFT, name: "Pro", annualPct: 101 })).toBe(false);
   });
 
   it("accepts a NEGATIVE Δ, because a dying product is a real one", () => {
@@ -804,10 +813,10 @@ describe("launching and deleting", () => {
     // It bills nothing before its launch month and its full base at it.
     const cash = monthlyCashByMonth(pro, mutations);
     expect(cash[5]).toBe(0);
-    expect(cash[6]).toBe(20 * 80);
-    // 5 annual at 90% of 12 × $80 = $864 each.
+    expect(cash[6]).toBe(20 * 800);
+    // 5 annual at 90% of 12 × $800 = $8,640 each.
     expect(annualPayments(pro, mutations)[0]?.month).toBe(6);
-    expect(annualPayments(pro, mutations)[0]?.amount).toBeCloseTo(5 * 864, 6);
+    expect(annualPayments(pro, mutations)[0]?.amount).toBe(5 * 8_640);
   });
 
   it("deletes a change and everything launched at it", () => {
@@ -837,16 +846,16 @@ describe("the wording", () => {
   });
 
   it("quotes cash per month, and reads the gauge revenue-side", () => {
-    expect(dollarsPerMonth(1_714.6)).toBe("$1.7k/mo");
-    expect(againstBreakeven(1_714.6)).toBe("$1.7k/mo over breakeven");
-    expect(againstBreakeven(-514.9)).toBe("$515/mo below breakeven");
+    expect(dollarsPerMonth(6_700)).toBe("$6.7k/mo");
+    expect(againstBreakeven(6_700)).toBe("$6.7k/mo over breakeven");
+    expect(againstBreakeven(-1_587.5)).toBe("$1.6k/mo below breakeven");
     expect(revenueShift(0)).toBe("no change to revenue");
   });
 
   it("reads counts and fees in their own terms", () => {
-    expect(formatLicenses(40)).toBe("40");
-    expect(formatFee(49)).toBe("$49");
-    expect(formatFee(1_200)).toBe("$1,200");
+    expect(formatLicenses(13)).toBe("13");
+    expect(formatFee(900)).toBe("$900");
+    expect(formatFee(5_000)).toBe("$5,000");
   });
 });
 
@@ -861,7 +870,7 @@ describe("save", () => {
       "amygdala",
       flag,
       "monthlyDelta",
-      5,
+      2,
       mutations,
     );
     expect(isDirty(moved, mutations, saved)).toBe(true);
@@ -940,8 +949,8 @@ describe("the forecast, printed", () => {
           payments,
         ).join("  ")}\n`,
       );
-      // Every product's annual base pays twice across 24 months.
-      expect(payments.length).toBe(2);
+      // JTF's annual base pays twice across 24 months; Amygdala sells none.
+      expect(payments.length).toBe(product.id === "amygdala" ? 0 : 2);
     }
   });
 });
