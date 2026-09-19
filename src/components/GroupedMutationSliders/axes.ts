@@ -76,6 +76,21 @@ export interface GroupedMeasureAxis {
    */
   readonly format?: (value: number) => string;
   /**
+   * Renders this measure's CHANGE — the floating label beside the thumb saying
+   * how far the dial moved.
+   *
+   * It is handed a MAGNITUDE, never a signed number: `deltaLabelOf` supplies the
+   * `+` or `−` itself, because which way a thumb moved is the component's
+   * knowledge and not the formatter's. Default: `format`.
+   *
+   * SUPPLY IT WHEN `format` IS SIGNED. A Δ axis whose readout says `+2` and `−1`
+   * needs a signed `format`, and feeding that same function a magnitude produces
+   * `++1` — a sign written twice, once by each of two places that each
+   * reasonably believed they owned it. This is the seam that lets one axis have
+   * a signed READING and an unsigned CHANGE.
+   */
+  readonly deltaFormat?: (magnitude: number) => string;
+  /**
    * Round every emitted amount on this measure onto a grid of this size — `1`
    * for whole licences, `5` for five-dollar steps. Omitted, the drag stays
    * continuous to the finest unit the domain can express.
@@ -132,6 +147,8 @@ export const axisDomainOf = (
 export interface ResolvedGroupedAxis {
   readonly domain: Domain;
   readonly format: (value: number) => string;
+  /** How the CHANGE reads, given a magnitude. Falls back to `format`. */
+  readonly deltaFormat: (magnitude: number) => string;
   readonly label?: string;
   readonly group?: string;
   readonly snap?: number;
@@ -162,6 +179,7 @@ export const resolveAxis = (
   return {
     domain,
     format: formatOf(axis),
+    deltaFormat: axis.deltaFormat ?? formatOf(axis),
     label: axis.label,
     group: axis.group,
     snap: axis.snap,

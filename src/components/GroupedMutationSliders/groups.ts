@@ -206,8 +206,7 @@ export const groupRuns = (
   let open: { caption: string; indices: number[] } | null = null;
   let openName: string | undefined;
   for (const [index, name] of groups.entries()) {
-    const continues =
-      open !== null && name !== undefined && name === openName;
+    const continues = open !== null && name !== undefined && name === openName;
     if (continues && open !== null) {
       open.indices.push(index);
       continue;
@@ -247,11 +246,10 @@ export const dialLabel = (
 ): string =>
   join(
     " ",
-    filter((part: string) => part !== "", [
-      entityLabel,
-      caption,
-      axisLabel ?? `measure ${index + 1}`,
-    ]),
+    filter(
+      (part: string) => part !== "",
+      [entityLabel, caption, axisLabel ?? `measure ${index + 1}`],
+    ),
   );
 
 /** Does any axis name a group? When none does, no caption line is drawn at

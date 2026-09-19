@@ -286,7 +286,8 @@ export type GroupedMutationSlidersDataProps = Omit<
 export const GroupedMutationSliders: Component<GroupedMutationSlidersProps> = (
   props,
 ) => {
-  const labels = (): ResolvedGroupedLabels => resolveGroupedLabels(props.labels);
+  const labels = (): ResolvedGroupedLabels =>
+    resolveGroupedLabels(props.labels);
 
   // ── the row, when it does not all fit ──────────────────────────────────
   // The row measures ITSELF rather than taking a width prop: how much room it
@@ -329,8 +330,8 @@ export const GroupedMutationSliders: Component<GroupedMutationSlidersProps> = (
   };
 
   /** Every axis, resolved against the data once per render pass. */
-  const axes = createMemo(
-    (): ResolvedGroupedAxes => resolveAxes(props.axes, props.entities),
+  const axes = createMemo((): ResolvedGroupedAxes =>
+    resolveAxes(props.axes, props.entities),
   );
 
   /** The captioned runs those axes break into, and whether any is captioned. */
