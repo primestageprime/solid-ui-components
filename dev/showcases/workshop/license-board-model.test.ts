@@ -55,7 +55,7 @@ import {
   averageNetCash,
   balancesByMonth,
   bandOfRate,
-  byVariability,
+  mixOrder,
   variabilityOf,
   canAdd,
   cashByMonth,
@@ -424,22 +424,39 @@ describe("the sources", () => {
     ]);
   });
 
-  it("puts the SPIKY annual source on top, and keeps flat ties in fixture order", () => {
-    const ordered = byVariability(cashSources(PRODUCTS, []));
-    // JTF's two lumps are the most variable thing on the board.
-    expect(ordered[ordered.length - 1]?.id).toBe("jtf-yr");
-    // EVERY OTHER BAND IS PERFECTLY FLAT on the opening fixture — every Δ is
-    // zero, and Amygdala sells no annual licences at all — so three sources tie
-    // at a standard deviation of zero. `sortBy` is STABLE, so they keep the
-    // fixture's own order rather than shuffling between renders, which is the
-    // reason stability matters here and not a detail.
+  it("puts every MONTHLY source on the bottom and every ANNUAL source on top, steadiest lowest within each group", () => {
+    const ordered = mixOrder(cashSources(PRODUCTS, []));
+    // Bottom → top: both monthly bands (perfectly flat, tied at a standard
+    // deviation of zero, so `sortBy`'s STABILITY keeps them in fixture order),
+    // then the annual bands — Amygdala sells no annual licences at all, so its
+    // `yr` band is flat at nothing and sits at the BOTTOM of the annual group;
+    // JTF's two lumps are the most variable thing on the board, so `jtf-yr` is
+    // last: the top band.
+    expect(map((source) => source.id, ordered)).toEqual([
+      "amygdala-mo",
+      "jtf-mo",
+      "amygdala-yr",
+      "jtf-yr",
+    ]);
     expect(map((source) => variabilityOf(source), ordered).slice(0, 3)).toEqual(
       [0, 0, 0],
     );
-    expect(map((source) => source.id, ordered).slice(0, 3)).toEqual([
-      "amygdala-mo",
-      "amygdala-yr",
-      "jtf-mo",
+  });
+
+  it("does the same for the TIERS fixture — monthlies below, annuals above, ties in fixture order", () => {
+    const ordered = mixOrder(cashSources(TIERS.products, []));
+    // All three monthly bands are flat (every committed Δ is zero), so they
+    // keep the fixture's own product order at the bottom. All three products
+    // sell annual licences here — unlike APPS, no annual band is flat — so the
+    // annual group orders purely by variability: Starter's smaller annual book
+    // is steadiest, Team's is spikiest, so Team's `yr` band is the very top.
+    expect(map((source) => source.id, ordered)).toEqual([
+      "starter-mo",
+      "team-mo",
+      "enterprise-mo",
+      "starter-yr",
+      "enterprise-yr",
+      "team-yr",
     ]);
   });
 
