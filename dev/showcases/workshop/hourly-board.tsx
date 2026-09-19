@@ -15,10 +15,12 @@
  *                                       Scenario Board makes)
  *   Work Mix   — `Chart` + `Grid` + `YAxis` + `XAxis` (tickValues) +
  *                `StackedAreaSeries` + `ReferenceLine` ×(1 + one per change)
- *   Changes    — `SpreadRow` + `TextTitle` + `SegmentedControl` + `ClusterRow` +
- *                `PrimaryButton` / `GhostButton` / `DangerButton` +
- *                `PairedMutationSliders` + `Modal` + `ThemedInput` +
- *                `ThemedNumberInput`
+ *   Changes    — `createMutationToolbar` (title, the chips with their ×, and
+ *                the `undo` Reset — no Add, no Save, no Delete) +
+ *                `PairedMutationSliders` (which owns the + itself) + `Modal` +
+ *                `ThemedInput` + `ThemedNumberInput`
+ *   Board Save — one `PrimaryButton` beside the board's own title, enabled by
+ *                `dirty()`. A board is one scenario and saves once.
  *   Rate gauge — `createRateGauge` with revenue-side sentences
  *
  * Frame and rows: `ViewportColumn` / `HalfFillColumn` / `FillWrapRow` /
@@ -847,7 +849,17 @@ const HourlyBoardBench: Component = () => {
   return (
     <div class="component-section component-section--full scenario-board-frame">
       <ViewportColumn>
-        <SectionTitle>Hourly Board</SectionTitle>
+        {/* ONE SAVE, FOR THE WHOLE BOARD (Peter, 2026-09-18: "the save will be
+            global"). It used to sit in the Changes card's corner, which said
+            the card was the thing being saved — it never was. A board is one
+            scenario, so its Save belongs beside the board's own name, and the
+            dirty rule is unchanged: nothing to write, nothing to press. */}
+        <SpreadRow>
+          <SectionTitle>Hourly Board</SectionTitle>
+          <PrimaryButton disabled={!dirty()} onClick={save}>
+            Save
+          </PrimaryButton>
+        </SpreadRow>
 
         {/* The top half, halved again: two charts stacked. Each card is a
             FillCardSurface — it takes its half of the band and lays out a
@@ -945,11 +957,8 @@ const HourlyBoardBench: Component = () => {
                   selected={editing()}
                   onSelect={setEditing}
                   emptyNote="Click a week, or move a dial, to propose a change — it holds until the next one."
-                  onAdd={openAdd}
                   onReset={reset}
-                  onSave={save}
-                  saveDisabled={!dirty()}
-                  onDelete={deleteChange}
+                  onRemove={deleteChange}
                 />
                 <GrowFillBox>
                   <HourlySliders
