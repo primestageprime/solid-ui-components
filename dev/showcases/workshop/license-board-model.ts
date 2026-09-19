@@ -81,11 +81,23 @@
  * and the test pins the 10 → 9 case exactly; the monthly reading is a one-line
  * change there.
  *
- * ── THE SPAN IS 24 MONTHS, SO AN ANNIVERSARY IS VISIBLE ────────────────────
+ * ── THE SPAN STARTS TODAY AND RUNS 24 MONTHS ───────────────────────────────
  *
- * Twelve would draw the opening lump and no renewal at all, which is the half of
- * the model that is hard to believe without seeing it. Twenty-four shows every
- * cohort pay twice.
+ * IT OPENS AT THE MONTH-START OF TODAY (Peter, 2026-09-18: "start the cashflow
+ * timeline today"). Licences bill monthly, so the month is the smallest unit the
+ * span can open on, and month 0 is the month we are in. THERE IS NO COMMITTED
+ * HISTORY in front of it: the opening balance is the balance now, and every one
+ * of the twenty-four months is forecast.
+ *
+ * ⚠ THE START IS THREADED, NOT READ. No function in this file calls
+ * `new Date()`; the bench reads the clock once at module load and passes the
+ * number in as `start`, so the model stays pure and the tests stay deterministic
+ * by pinning a fixed start of their own (`REFERENCE_START`).
+ *
+ * TWENTY-FOUR MONTHS, because twelve would draw the opening lump and no renewal
+ * at all, which is the half of the model that is hard to believe without seeing
+ * it. Twenty-four shows every cohort pay twice — a base bought today pays today
+ * and renews a year from today.
  *
  * ── A SOURCE IS A PRODUCT × A BILLING VARIANT ──────────────────────────────
  *
@@ -183,13 +195,50 @@ export type { SegmentLabel };
 
 // ── The span ─────────────────────────────────────────────────────────────────
 
+/**
+ * THE SPAN STARTS TODAY — at the MONTH-START OF TODAY (Peter, 2026-09-18:
+ * "start the cashflow timeline today"). Licences bill monthly, so the month is
+ * the smallest unit this board can start on: a span opening on the 18th would
+ * put two thirds of a billing period in its first cell.
+ *
+ * ⚠ THE START IS A PARAMETER, NOT A CONSTANT, and `new Date()` appears NOWHERE
+ * in this file. The bench reads the clock ONCE at module load
+ * (`monthStartOf(Date.now())`) and threads that number in; every function here
+ * takes `start` and is therefore pure, so the tests pin a FIXED start and every
+ * numeric expectation stays deterministic. `REFERENCE_START` is that fixed
+ * start, and the default for a caller that has no clock to offer.
+ */
+export const monthStartOf = (time: number): number => {
+  const at = new Date(time);
+  return Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), 1);
+};
+
+/**
+ * THE SPAN THE TESTS PIN: 2025-01-01, the start the board used to be born with.
+ * It is the DEFAULT of every `start` parameter below, which is what lets a test
+ * state a case without naming a calendar — and what makes the one test that
+ * DOES name one (2026-09) the proof that the labels move with it.
+ */
+export const REFERENCE_START = monthStartOf(Date.UTC(2025, 0, 1));
+
 /** TWO YEARS, so every annual cohort pays twice and a renewal is visible. */
-export const DOMAIN_START = new Date("2025-01-01");
-export const DOMAIN_END = new Date("2027-01-01");
-export const TIME_DOMAIN: readonly [Date, Date] = [DOMAIN_START, DOMAIN_END];
+export const MONTH_COUNT = 24;
 
 /** Months in a year — the renewal period, and the only place 12 appears. */
 export const MONTHS_PER_YEAR = 12;
+
+/** The month the span runs OUT at — exclusive, 24 months on from its start. */
+export const domainEndOf = (start: number = REFERENCE_START): number => {
+  const at = new Date(start);
+  return Date.UTC(at.getUTCFullYear(), at.getUTCMonth() + MONTH_COUNT, 1);
+};
+
+/** The span as the two Dates a chart's `xDomain` wants. MUTABLE by type, because
+ *  that is the tuple `StackedTimelineChart.xDomain` declares. */
+export const timeDomainOf = (start: number = REFERENCE_START): [Date, Date] => [
+  new Date(start),
+  new Date(domainEndOf(start)),
+];
 
 // ── This board's grain is the MONTH ──────────────────────────────────────────
 
@@ -212,47 +261,46 @@ export const ensureMutation = (
 ): { mutations: Mutation[]; selected: string | null; created: boolean } =>
   ensureMutationOn(scenario, domainStart, domainEnd, "month");
 
-/** The as-of chips, labelled by MONTH — `2025-Q3 · Aug`. */
+/** The as-of chips, labelled by MONTH — `2026-Q3 · Sep`. */
 export const segmentLabelsOf = (
   mutations: readonly Mutation[],
 ): SegmentLabel[] => segmentLabelsOn(mutations, "month");
 
 /** The month slot a picked date belongs to. A click on the License Mix plot
  *  arrives unsnapped and goes through here. */
-export const monthOfPick = (at: Date | number): Date =>
-  new Date(
-    monthSlotOf(
-      typeof at === "number" ? at : at.getTime(),
-      timeOf(DOMAIN_START),
-    ),
-  );
+export const monthOfPick = (
+  at: Date | number,
+  start: number = REFERENCE_START,
+): Date =>
+  new Date(monthSlotOf(typeof at === "number" ? at : at.getTime(), start));
 
-/** Every month slot in the span, in order — 24 of them. */
-export const MONTH_SLOTS: readonly number[] = ((): number[] => {
+/**
+ * Every month slot in the span, in order — 24 of them, from its start.
+ *
+ * PLAIN ARITHMETIC rather than a walk of `nextFreeSlot`: `Date.UTC(y, m + i, 1)`
+ * makes "twenty-four months from the start" true BY CONSTRUCTION for any start,
+ * where the walk made it a consequence of a fixed end date and a clamp. The
+ * slots are identical to the walk's for a start on the first of a month, which
+ * every start is — `monthStartOf` sees to that.
+ */
+export const monthSlotsOf = (start: number = REFERENCE_START): number[] => {
+  const at = new Date(start);
   const slots: number[] = [];
-  const taken: Mutation[] = [];
-  for (;;) {
-    const at = nextFreeSlot(
-      DOMAIN_START.getTime(),
-      DOMAIN_END.getTime(),
-      taken,
-    );
-    if (at === undefined) break;
-    slots.push(at);
-    taken.push({ id: String(at), at: new Date(at), label: "" });
+  for (let index = 0; index < MONTH_COUNT; index += 1) {
+    slots.push(Date.UTC(at.getUTCFullYear(), at.getUTCMonth() + index, 1));
   }
   return slots;
-})();
-
-/** How many months the forecast runs. 24. */
-export const MONTH_COUNT = MONTH_SLOTS.length;
+};
 
 /** The month INDEX a moment falls in, clamped into the span. */
-export const monthIndexOf = (time: number): number => {
-  const at = monthSlotOf(time, DOMAIN_START.getTime());
-  const index = findIndex((slot: number) => slot === at, MONTH_SLOTS);
+export const monthIndexOf = (
+  time: number,
+  start: number = REFERENCE_START,
+): number => {
+  const at = monthSlotOf(time, start);
+  const index = findIndex((slot: number) => slot === at, monthSlotsOf(start));
   if (index >= 0) return index;
-  return time <= DOMAIN_START.getTime() ? 0 : MONTH_COUNT - 1;
+  return time <= start ? 0 : MONTH_COUNT - 1;
 };
 
 /** A day, in ms. */
@@ -265,11 +313,12 @@ const isoDate = (time: number): string =>
 /** A month as its first and last DAY — what the License Mix hover reads. */
 export const monthRangeOf = (
   time: number,
+  spanStart: number = REFERENCE_START,
 ): { start: number; end: number; label: string } => {
-  const start = monthSlotOf(time, DOMAIN_START.getTime());
+  const start = monthSlotOf(time, spanStart);
   const at = new Date(start);
   const nextMonth = Date.UTC(at.getUTCFullYear(), at.getUTCMonth() + 1, 1);
-  const end = Math.min(nextMonth, DOMAIN_END.getTime()) - DAY_MS;
+  const end = Math.min(nextMonth, domainEndOf(spanStart)) - DAY_MS;
   return { start, end, label: `${isoDate(start)} to ${isoDate(end)}` };
 };
 
@@ -480,6 +529,19 @@ export type CalibrationMove =
   | { readonly kind: "lost"; readonly product: string }
   | { readonly kind: "delta"; readonly product: string; readonly to: number };
 
+/**
+ * THE FIXTURE'S PRODUCTS ARE ALREADY ON THE BOOKS when the span opens, whatever
+ * month that is — so their `start` is the epoch rather than any calendar date.
+ *
+ * It used to be the span's own start, which was a constant when the span was.
+ * Now that the board opens at the month-start of TODAY, a fixture pinned to a
+ * date would have to be rewritten every time the clock moved; "since before the
+ * span, whenever the span is" is the thing that was always meant, and stating it
+ * as a time before every possible span makes the calibration table
+ * START-INDEPENDENT by construction (the test asserts exactly that).
+ */
+export const COMMITTED_SINCE = 0;
+
 /** Everything a catalogue needs: the products, and the constants solved against
  *  them. Flip `FIXTURE` below to swap the whole board over. */
 export interface Fixture {
@@ -531,7 +593,7 @@ export const APPS: Fixture = {
     {
       id: "amygdala",
       label: "Amygdala",
-      start: DOMAIN_START.getTime(),
+      start: COMMITTED_SINCE,
       committed: {
         monthly: { count: 13, delta: 0, fee: 900 },
         // NO ANNUAL LICENCES YET, and that is a real state rather than a gap:
@@ -553,7 +615,7 @@ export const APPS: Fixture = {
     {
       id: "jtf",
       label: "JTF",
-      start: DOMAIN_START.getTime(),
+      start: COMMITTED_SINCE,
       committed: {
         monthly: { count: 1, delta: 0, fee: 5_000 },
         // ONE annual licence at 20% of twelve monthly fees — $12,000 a year
@@ -612,7 +674,7 @@ export const TIERS: Fixture = {
     {
       id: "starter",
       label: "Starter",
-      start: DOMAIN_START.getTime(),
+      start: COMMITTED_SINCE,
       committed: {
         monthly: { count: 40, delta: 0, fee: 200 },
         annual: { count: 10, delta: 0, pct: 85 },
@@ -630,7 +692,7 @@ export const TIERS: Fixture = {
     {
       id: "team",
       label: "Team",
-      start: DOMAIN_START.getTime(),
+      start: COMMITTED_SINCE,
       committed: {
         monthly: { count: 12, delta: 0, fee: 900 },
         annual: { count: 6, delta: 0, pct: 80 },
@@ -648,7 +710,7 @@ export const TIERS: Fixture = {
     {
       id: "enterprise",
       label: "Enterprise",
-      start: DOMAIN_START.getTime(),
+      start: COMMITTED_SINCE,
       committed: {
         monthly: { count: 2, delta: 0, fee: 5_000 },
         annual: { count: 3, delta: 0, pct: 20 },
@@ -680,15 +742,19 @@ export const SEED_MUTATIONS: readonly Mutation[] = [];
 
 // ── Walking the history ──────────────────────────────────────────────────────
 
-/** The moment a mutation sits at. */
+/** The moment a mutation sits at — the span's start when there is no such
+ *  change to read, which is the earliest moment the span has. */
 const timeOfMutation = (
   mutationId: string,
   mutations: readonly Mutation[],
-): number =>
-  timeOf(
-    find((mutation: Mutation) => mutation.id === mutationId, mutations)?.at ??
-      DOMAIN_START,
+  start: number = REFERENCE_START,
+): number => {
+  const found = find(
+    (mutation: Mutation) => mutation.id === mutationId,
+    mutations,
   );
+  return found === undefined ? start : timeOf(found.at);
+};
 
 /** One stretch of a product's life on one plan. */
 export interface Segment {
@@ -710,10 +776,11 @@ export interface Segment {
 export const segmentsOf = (
   product: Product,
   mutations: readonly Mutation[],
+  start: number = REFERENCE_START,
 ): Segment[] => {
   const segments: Segment[] = [
     {
-      from: monthIndexOf(product.start),
+      from: monthIndexOf(product.start, start),
       plan: clamped(product, product.committed),
     },
   ];
@@ -721,7 +788,7 @@ export const segmentsOf = (
     const own = product.changes[mutation.id];
     if (own === undefined) continue;
     segments.push({
-      from: monthIndexOf(timeOfMutation(mutation.id, mutations)),
+      from: monthIndexOf(timeOfMutation(mutation.id, mutations, start), start),
       plan: clamped(product, own),
     });
   }
@@ -775,10 +842,11 @@ export const planAtMonth = (
   product: Product,
   month: number,
   mutations: readonly Mutation[],
+  start: number = REFERENCE_START,
 ): Plan | null => {
-  const slot = MONTH_SLOTS[month];
+  const slot = monthSlotsOf(start)[month];
   if (slot !== undefined && !isLiveAt(product, slot)) return null;
-  return segmentAt(segmentsOf(product, mutations), month)?.plan ?? null;
+  return segmentAt(segmentsOf(product, mutations, start), month)?.plan ?? null;
 };
 
 // ── MONTHLY licences: a count times a fee ───────────────────────────────────
@@ -792,15 +860,16 @@ export const countAfter = (population: Population, months: number): number =>
 export const monthlyCashByMonth = (
   product: Product,
   mutations: readonly Mutation[],
+  start: number = REFERENCE_START,
 ): number[] => {
-  const segments = segmentsOf(product, mutations);
+  const segments = segmentsOf(product, mutations, start);
   return map((slot: number, month: number) => {
     if (!isLiveAt(product, slot)) return 0;
     const segment = segmentAt(segments, month);
     const plan = segment?.plan;
     if (segment === undefined || plan === null || plan === undefined) return 0;
     return countAfter(plan.monthly, month - segment.from) * plan.monthly.fee;
-  }, MONTH_SLOTS);
+  }, monthSlotsOf(start));
 };
 
 // ── ANNUAL licences: cohorts, paying once a year ────────────────────────────
@@ -860,8 +929,9 @@ export const cohortSizeAt = (cohort: Cohort, anniversary: number): number => {
 export const cohortsOf = (
   product: Product,
   mutations: readonly Mutation[],
+  start: number = REFERENCE_START,
 ): Cohort[] => {
-  const segments = segmentsOf(product, mutations);
+  const segments = segmentsOf(product, mutations, start);
   const cohorts: Cohort[] = [];
   for (const [index, segment] of segments.entries()) {
     const plan = segment.plan;
@@ -899,14 +969,16 @@ export const cohortsOf = (
 export const annualCashByMonth = (
   product: Product,
   mutations: readonly Mutation[],
+  start: number = REFERENCE_START,
 ): number[] => {
-  const segments = segmentsOf(product, mutations);
-  const cash = map(() => 0, MONTH_SLOTS);
-  for (const cohort of cohortsOf(product, mutations)) {
+  const slots = monthSlotsOf(start);
+  const segments = segmentsOf(product, mutations, start);
+  const cash = map(() => 0, slots);
+  for (const cohort of cohortsOf(product, mutations, start)) {
     let month = cohort.bornAt;
     let anniversary = 0;
     while (month < MONTH_COUNT) {
-      const slot = MONTH_SLOTS[month];
+      const slot = slots[month];
       if (slot !== undefined && isLiveAt(product, slot)) {
         const plan = segmentAt(segments, month)?.plan;
         const fee = plan === null || plan === undefined ? 0 : annualFeeOf(plan);
@@ -940,6 +1012,7 @@ export interface CashSource {
 export const cashSources = (
   products: readonly Product[],
   mutations: readonly Mutation[],
+  start: number = REFERENCE_START,
 ): CashSource[] => {
   const sources: CashSource[] = [];
   for (const product of products) {
@@ -948,14 +1021,14 @@ export const cashSources = (
       label: `${product.label} · mo`,
       productId: product.id,
       billing: "mo",
-      cash: monthlyCashByMonth(product, mutations),
+      cash: monthlyCashByMonth(product, mutations, start),
     });
     sources.push({
       id: `${product.id}-yr`,
       label: `${product.label} · yr`,
       productId: product.id,
       billing: "yr",
-      cash: annualCashByMonth(product, mutations),
+      cash: annualCashByMonth(product, mutations, start),
     });
   }
   return sources;
@@ -965,12 +1038,13 @@ export const cashSources = (
 export const cashByMonth = (
   products: readonly Product[],
   mutations: readonly Mutation[],
+  start: number = REFERENCE_START,
 ): number[] => {
-  const sources = cashSources(products, mutations);
+  const sources = cashSources(products, mutations, start);
   return map(
     (_slot: number, month: number) =>
       sum(map((source: CashSource) => source.cash[month] ?? 0, sources)),
-    MONTH_SLOTS,
+    monthSlotsOf(start),
   );
 };
 
@@ -979,14 +1053,17 @@ export const netCashByMonth = (
   products: readonly Product[],
   mutations: readonly Mutation[],
   fixed: number = FIXED_MONTHLY_COST,
+  start: number = REFERENCE_START,
 ): number[] =>
-  map((cash: number) => cash - fixed, cashByMonth(products, mutations));
+  map((cash: number) => cash - fixed, cashByMonth(products, mutations, start));
 
 /** Average GROSS cash a month across the span. */
 export const averageCash = (
   products: readonly Product[],
   mutations: readonly Mutation[],
-): number => sum(cashByMonth(products, mutations)) / Math.max(MONTH_COUNT, 1);
+  start: number = REFERENCE_START,
+): number =>
+  sum(cashByMonth(products, mutations, start)) / Math.max(MONTH_COUNT, 1);
 
 /**
  * THE GAUGE'S READING: average NET cash a month across the whole span.
@@ -1000,8 +1077,10 @@ export const averageNetCash = (
   products: readonly Product[],
   mutations: readonly Mutation[],
   fixed: number = FIXED_MONTHLY_COST,
+  start: number = REFERENCE_START,
 ): number =>
-  sum(netCashByMonth(products, mutations, fixed)) / Math.max(MONTH_COUNT, 1);
+  sum(netCashByMonth(products, mutations, fixed, start)) /
+  Math.max(MONTH_COUNT, 1);
 
 /** The rate the board opens on, and the gauge's baseline. */
 export const COMMITTED_RATE = averageNetCash(PRODUCTS, SEED_MUTATIONS);
@@ -1015,7 +1094,11 @@ export const isOffDial = (rate: number): boolean => drawnRate(rate) !== rate;
 
 // ── The running balance ─────────────────────────────────────────────────────
 
-/** The opening bank balance, in dollars. */
+/**
+ * The opening bank balance, in dollars — THE BALANCE TODAY, since the span now
+ * opens at the month-start of today. There is no committed history in front of
+ * it: month 0 is the first forecast month, not the first month of a record.
+ */
 export const OPENING_BALANCE = 38_000;
 
 /**
@@ -1033,10 +1116,11 @@ export const balancesByMonth = (
   mutations: readonly Mutation[],
   opening: number = OPENING_BALANCE,
   fixed: number = FIXED_MONTHLY_COST,
+  start: number = REFERENCE_START,
 ): number[] => {
   const balances: number[] = [];
   let carried = opening;
-  for (const flow of netCashByMonth(products, mutations, fixed)) {
+  for (const flow of netCashByMonth(products, mutations, fixed, start)) {
     carried += flow;
     balances.push(carried);
   }
@@ -1469,14 +1553,23 @@ const applyMove = (
  * catalogue's cash against another's breakeven would produce a table that looks
  * fine and describes nothing. That is what lets the test assert BOTH tables
  * while only one fixture is active.
+ *
+ * IT IS START-INDEPENDENT. It runs on `SEED_MUTATIONS` — there are none —
+ * against products committed since before any span opens, so which calendar the
+ * twenty-four months carry cannot move a figure in it. `start` is a parameter
+ * only because everything in the chain takes one, and the test asserts the table
+ * is identical for a January start and a September one.
  */
-export const rateBandTable = (fixture: Fixture = FIXTURE): RateRow[] => {
+export const rateBandTable = (
+  fixture: Fixture = FIXTURE,
+  start: number = REFERENCE_START,
+): RateRow[] => {
   const { products, calibration } = fixture;
   const row = (
     scenario: string,
     scenarioProducts: readonly Product[],
   ): RateRow => {
-    const cash = averageCash(scenarioProducts, SEED_MUTATIONS);
+    const cash = averageCash(scenarioProducts, SEED_MUTATIONS, start);
     const net = cash - fixture.fixedMonthlyCost;
     return { scenario, cash, net, band: bandOfRate(net, fixture.comfortable) };
   };
@@ -1523,6 +1616,7 @@ export const mixOrder = (sources: readonly CashSource[]): CashSource[] =>
 export const licenseMixSeries = (
   products: readonly Product[],
   mutations: readonly Mutation[],
+  start: number = REFERENCE_START,
 ): StackedAreaSeriesData[] =>
   map(
     (source: CashSource) => ({
@@ -1533,24 +1627,33 @@ export const licenseMixSeries = (
           at: new Date(slot),
           value: source.cash[month] ?? 0,
         }),
-        MONTH_SLOTS,
+        monthSlotsOf(start),
       ),
     }),
-    mixOrder(cashSources(products, mutations)),
+    mixOrder(cashSources(products, mutations, start)),
   );
 
-/** The quarter starts inside the span — the x-axis's tick values. */
+/**
+ * The quarter starts inside the span — the x-axis's tick values.
+ *
+ * A SPAN OPENING MID-QUARTER IS NOW THE NORMAL CASE, not the exception: the
+ * board starts in whatever month today is. The walk begins at the first of the
+ * start's own quarter and SKIPS the ticks before the span (`at >= start`), so a
+ * September start's first tick is October's — the axis carries no label for a
+ * quarter the plot does not draw.
+ */
 export const quarterTicks = (
-  start: Date = DOMAIN_START,
-  end: Date = DOMAIN_END,
+  start: number = REFERENCE_START,
+  end: number = domainEndOf(start),
 ): number[] => {
+  const from = new Date(start);
   const ticks: number[] = [];
-  let year = start.getUTCFullYear();
-  let month = Math.floor(start.getUTCMonth() / 3) * 3;
+  let year = from.getUTCFullYear();
+  let month = Math.floor(from.getUTCMonth() / 3) * 3;
   for (;;) {
     const at = Date.UTC(year, month, 1);
-    if (at >= end.getTime()) break;
-    if (at >= start.getTime()) ticks.push(at);
+    if (at >= end) break;
+    if (at >= start) ticks.push(at);
     month += 3;
     if (month > 11) {
       month -= 12;
@@ -1589,9 +1692,16 @@ export const cashTable = (
   products: readonly Product[] = PRODUCTS,
   mutations: readonly Mutation[] = [],
   fixed: number = FIXED_MONTHLY_COST,
+  start: number = REFERENCE_START,
 ): CashRow[] => {
-  const sources = cashSources(products, mutations);
-  const balances = balancesByMonth(products, mutations, OPENING_BALANCE, fixed);
+  const sources = cashSources(products, mutations, start);
+  const balances = balancesByMonth(
+    products,
+    mutations,
+    OPENING_BALANCE,
+    fixed,
+    start,
+  );
   return map((slot: number, month: number) => {
     const bySource = map(
       (source: CashSource) => source.cash[month] ?? 0,
@@ -1606,7 +1716,7 @@ export const cashTable = (
       net: cash - fixed,
       balance: balances[month] ?? 0,
     };
-  }, MONTH_SLOTS);
+  }, monthSlotsOf(start));
 };
 
 /** The months a product's annual licences actually paid in, and what they paid.
@@ -1614,12 +1724,13 @@ export const cashTable = (
 export const annualPayments = (
   product: Product,
   mutations: readonly Mutation[],
+  start: number = REFERENCE_START,
 ): { month: number; amount: number }[] =>
   filter(
     (row: { month: number; amount: number }) => row.amount > 0,
     map(
       (amount: number, month: number) => ({ month, amount }),
-      annualCashByMonth(product, mutations),
+      annualCashByMonth(product, mutations, start),
     ),
   );
 
