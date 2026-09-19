@@ -7,7 +7,7 @@
  * every figure is $/MO and there is no week anywhere in the words.
  *
  * IT DOES NOT FORK THE ROUNDING POLICY. `abbreviateDollars` is imported from
- * `scenario-board-money` rather than rewritten, because `$5.9k` / `$60k` /
+ * `board-kit/model` rather than rewritten, because `$5.9k` / `$60k` /
  * `$1.2M` is one decision for the whole workshop and a second abbreviator here
  * would be a second policy that can disagree with the first. What this module
  * adds is the two REVENUE sentences the gauge asks for, and the MONTHLY unit.
@@ -16,7 +16,7 @@
  * `formatAgainst` and `formatDelta` as sentence builders, so these ARE the
  * gauge's callout lines, written and tested here where something can check them.
  */
-import { MINUS, abbreviateDollars } from "./scenario-board-money";
+import { MINUS, abbreviateDollars } from "./board-kit/model";
 
 export { MINUS, abbreviateDollars };
 

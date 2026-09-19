@@ -178,17 +178,20 @@ import type {
   GroupedMutationEntity,
 } from "../../../src/components/GroupedMutationSliders";
 // The mutation calendar is REUSED, not re-derived — the same snapping, the same
-// numbering and the same chips as the Scenario and Hourly Boards.
+// numbering and the same chips as the Hourly Board. It comes from `board-kit`,
+// the shared home; until 2026-09-19 it came from the Scenario Board bench's own
+// `scenario-board-people.ts`, which was where the kit's calendar was first
+// written and which retired with that bench.
 import {
   addMutation,
   ensureMutation as ensureMutationOn,
   monthLabel,
-  monthSlotOf,
   nextFreeSlot as nextFreeSlotOn,
   orderedMutations,
   type SegmentLabel,
   segmentLabelsOf as segmentLabelsOn,
-} from "./scenario-board-people";
+  slotOf,
+} from "./board-kit/model";
 
 export { addMutation, monthLabel, orderedMutations };
 export type { SegmentLabel };
@@ -242,13 +245,24 @@ export const timeDomainOf = (start: number = REFERENCE_START): [Date, Date] => [
 
 // ── This board's grain is the MONTH ──────────────────────────────────────────
 
+/** The span, as the `{ grain, domain }` slice the kit's calendar reads. The
+ *  kit binds the grain ONCE per board, so this is the only place `"month"` is
+ *  spelled and the four wrappers below cannot drift onto different grids. */
+const calendarOf = (
+  domainStart: number,
+  domainEnd: number,
+): { grain: "month"; domain: [Date, Date] } => ({
+  grain: "month",
+  domain: [new Date(domainStart), new Date(domainEnd)],
+});
+
 /** The first free MONTH from the span's start. */
 export const nextFreeSlot = (
   domainStart: number,
   domainEnd: number,
   mutations: readonly Mutation[],
 ): number | undefined =>
-  nextFreeSlotOn(domainStart, domainEnd, mutations, "month");
+  nextFreeSlotOn(calendarOf(domainStart, domainEnd), mutations);
 
 /** The selected change, or a new one at the next free MONTH. */
 export const ensureMutation = (
@@ -259,7 +273,7 @@ export const ensureMutation = (
   domainStart: number,
   domainEnd: number,
 ): { mutations: Mutation[]; selected: string | null; created: boolean } =>
-  ensureMutationOn(scenario, domainStart, domainEnd, "month");
+  ensureMutationOn(calendarOf(domainStart, domainEnd), scenario);
 
 /** The as-of chips, labelled by MONTH — `2026-Q3 · Sep`. */
 export const segmentLabelsOf = (
@@ -272,7 +286,7 @@ export const monthOfPick = (
   at: Date | number,
   start: number = REFERENCE_START,
 ): Date =>
-  new Date(monthSlotOf(typeof at === "number" ? at : at.getTime(), start));
+  new Date(slotOf("month", typeof at === "number" ? at : at.getTime(), start));
 
 /**
  * Every month slot in the span, in order — 24 of them, from its start.
@@ -297,7 +311,7 @@ export const monthIndexOf = (
   time: number,
   start: number = REFERENCE_START,
 ): number => {
-  const at = monthSlotOf(time, start);
+  const at = slotOf("month", time, start);
   const index = findIndex((slot: number) => slot === at, monthSlotsOf(start));
   if (index >= 0) return index;
   return time <= start ? 0 : MONTH_COUNT - 1;
@@ -315,7 +329,7 @@ export const monthRangeOf = (
   time: number,
   spanStart: number = REFERENCE_START,
 ): { start: number; end: number; label: string } => {
-  const start = monthSlotOf(time, spanStart);
+  const start = slotOf("month", time, spanStart);
   const at = new Date(start);
   const nextMonth = Date.UTC(at.getUTCFullYear(), at.getUTCMonth() + 1, 1);
   const end = Math.min(nextMonth, domainEndOf(spanStart)) - DAY_MS;
