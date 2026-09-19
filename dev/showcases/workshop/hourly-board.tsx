@@ -1,127 +1,53 @@
 /**
- * Hourly Board bench — Peter's sketch of 2026-09-17, composed.
+ * Hourly Board bench — the WIRING, and nothing else.
  *
- * A business that sells HOURS, read four ways at once. This bench builds
- * NOTHING: the running balance is `CashflowScrubChart`, the work mix is `Chart`
- * + `StackedAreaSeries` + `ReferenceLine`, the as-of picker is
- * `SegmentedControl`, the dials are `PairedMutationSliders` and the card on the
- * right is `RateGauge`. What it adds is the ARRANGEMENT and the WIRING — whether
- * four pieces say the same thing when they are looking at one scenario.
+ * A business that sells HOURS, read four ways at once. The ARRANGEMENT moved to
+ * `board-kit/BoardView.tsx`, which draws whichever board it is handed; the
+ * NUMBERS moved to `hourly.config.ts`, which is this board stated as a
+ * `BoardConfig` over `board-kit`. What is left here is the state the reader
+ * moves and the handlers that move it.
  *
- * Component per region, so the reuse is checkable:
+ * The regions the view composes, so the reuse stays checkable:
  *
- *   Cash Flow  — `CashflowScrubChart`  (cells, scrub={false}, chartHeight="fill",
- *                                       balanceSeries fan; the same call the
- *                                       Scenario Board makes)
- *   Work Mix   — `Chart` + `Grid` + `YAxis` + `XAxis` (tickValues) +
- *                `StackedAreaSeries` + `ReferenceLine` ×(1 + one per change)
- *   Changes    — `SpreadRow` + `TextTitle` + `SegmentedControl` + `ClusterRow` +
- *                `PrimaryButton` / `GhostButton` / `DangerButton` +
- *                `PairedMutationSliders` + `Modal` + `ThemedInput` +
- *                `ThemedNumberInput`
- *   Rate gauge — `createRateGauge` with revenue-side sentences
+ *   Cash Flow  — `CashflowScrubChart` + `createHighWaterMark`
+ *   Work Mix   — `StackedTimelineChart` (`config.mix === "stacked"`)
+ *   Changes    — `MutationToolbar` + `PairedMutationSliders` (two axes, one row)
+ *   Rate gauge — `createRateGauge` with `config.sentences`
  *
- * Frame and rows: `ViewportColumn` / `HalfFillColumn` / `FillWrapRow` /
- * `MajorPaneBox` / `GrowFillBox` / `FillCardSurface` / `GrowCenterColumn`, and
- * the Scenario Board's own `.scenario-board-frame` and `.scenario-board-gauge`
- * classes — reused rather than copied, so this bench adds no CSS at all.
+ * Two of Peter's rulings of 2026-09-18 live in the CONFIG, not here, and they
+ * are what every figure on this bench reads in:
  *
- * Every number comes from a named pure function in `hourly-board-model.ts`,
- * each printed as a table on mount behind `DEBUG`, so the board can be read and
- * argued with from a terminal before anyone opens a browser.
- *
- * TWO OF PETER'S RULINGS OF 2026-09-18 LIVE IN THE MODEL, not here, and they
- * are what every figure on this bench now reads in:
- *
- *   • EVERY MONEY FIGURE IS $/WK — the service summaries, the gauge's two
- *     sentences, its domain, its baseline and its caution, the fixed cost and
- *     the DEBUG tables. "Hourly people tend to think of it that way." There is
- *     no ×52 in any sentence; the projection integrates $/wk × weeks.
- *   • A SERVICE IS A SEGMENT OR A RAY, and its year is CHANGE EVENTS. Every
- *     service has a start date, a segment has an end date too, and what it
- *     bills in between is the last change at or before that week — the way
- *     the payroll board reads pay. There is no seasonal formula: a season is
- *     composed from changes. Service A opens at 20 h/wk × $18, goes to 30 h/wk
- *     in June and 15 h/wk × $20 in September, so the stack steps twice and the
- *     balance line takes three slopes.
- *
- * TWO FINDINGS, one of them now closed:
- *
- *   • `Chart` EXPOSED NO CLICK — `ChartProps` had no `onClick` and the context
- *     published `hoverX`, `drag` and `emphasis` but no click dispatch, so
- *     click-to-add on the Work Mix plot was unreachable and a change could only
- *     be made by moving a dial. (`drag.committed` would fire on any drag and is
- *     not a click; using it would have been inventing a gesture.) Peter,
- *     2026-09-17: "you should still have clicks on the chart at a weekly
- *     granularity. That allows for weekly seasonality in projections." So
- *     `Chart` grew `onPick`, and this board snaps the picked date to the start
- *     of its ISO WEEK. Snapping is HERE and not in `Chart` because the grid is
- *     this board's: a chart root that snapped to weeks would be wrong for every
- *     consumer counting in something else.
- *   • THE FULL-TIME RULE IS A `ReferenceLine`, not a `LineSeries`.
- *     `LineSeriesProps` has no `label`, and `ReferenceLineStyleProps` does —
- *     with a documented seat for `orientation="horizontal"` (right plot edge,
- *     just above the rule). It is the same dashed rule at 40 with the caption
- *     Peter asked for, and it is the mark the library provides for a captioned
- *     rule. The per-change rules are the same mark, `orientation="vertical"`,
- *     which seats its caption at the top of the plot — so the flags ARE
- *     numbered, as the Scenario Board's are.
+ *   • EVERY MONEY FIGURE IS $/WK — `unit: "wk"`. "Hourly people tend to think
+ *     of it that way." There is no ×52 in any sentence; the projection
+ *     integrates $/wk × weeks.
+ *   • A SERVICE IS A SEGMENT OR A RAY, and its year is CHANGE EVENTS. That is
+ *     `BoardEntity`'s rule now, shared with every board: what a service bills
+ *     in any week is the last change at or before it, and a season is composed
+ *     from changes rather than from a formula.
  */
 import {
+  type Component,
   batch,
   createMemo,
   createSignal,
   onMount,
-  type Component,
 } from "solid-js";
 import { find, map } from "../../../src/fn";
 
-import { CashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import { monthlyCells } from "../../../src/components/DateAxis";
-// THE PACKAGE BARREL, for everything that has been promoted. Both factories
-// this board curries came out of the workshop this week, so it imports them the
-// way a client would rather than reaching into their folders.
-import {
-  createHighWaterMark,
-  createMutationToolbar,
-  createPairedMutationSliders,
-  createRateGauge,
-  createStackedTimelineChart,
-  timeOf,
-} from "../../../src";
+import { timeOf } from "../../../src";
 import type { Mutation, TimeValue } from "../../../src";
-import {
-  GhostButton,
-  IconOnlyButton,
-  PrimaryButton,
-} from "../../../src/components/Button";
-import { Icon } from "../../../src/components/Icon";
 import { ThemedInput } from "../../../src/components/Inputs";
 import { ThemedNumberInput } from "../../../src/components/ThemedNumberInput";
-import { Modal } from "../../../src/components/Modal";
-import {
-  ClusterRow,
-  EndWrapRow,
-  FillWrapRow,
-  GrowCenterColumn,
-  GrowFillBox,
-  HalfFillColumn,
-  MajorPaneBox,
-  NarrowStack,
-  SpreadRow,
-  ViewportColumn,
-} from "../../../src/components/Layout";
-import { FillCardSurface } from "../../../src/components/Surface";
-import {
-  NoteText,
-  SectionTitle,
-  TextTitle,
-} from "../../../src/components/Text";
+import { ClusterRow, NarrowStack } from "../../../src/components/Layout";
+import { NoteText } from "../../../src/components/Text";
+import type { PairedMutationEntity } from "../../../src/components/PairedMutationSliders";
+import type { GroupedMutationEntity } from "../../../src/components/GroupedMutationSliders";
 
+import { BoardView } from "./board-kit/BoardView";
 import {
-  COMFORTABLE,
-  COMMITTED_RATE,
+  CONFIG,
   DEFAULT_WORK_CAP,
   DOMAIN_END,
   DOMAIN_START,
@@ -131,7 +57,6 @@ import {
   MIN_WORK_CAP,
   MONTHLY_NET,
   OPENING_BALANCE,
-  RATE_DOMAIN,
   RATE_DOMAIN_PER_HOUR,
   SEED_MUTATIONS,
   SERVICES,
@@ -139,36 +64,21 @@ import {
   addMutation,
   addService,
   averageRate,
-  bandOfRate,
   canAdd,
-  drawnRate,
+  COMMITTED_RATE,
+  dollarsPerWeek,
   ensureMutation,
   fanAt,
-  hasAnyChange,
   isDirty,
-  isOffDial,
-  maxReachableRate,
   momentsOf,
   monthStarts,
-  monthlyFrom,
-  pairsForMutation,
-  pairsWithoutMutation,
-  peakWeek,
-  pinnedCeiling,
-  projectedBalances,
-  projectionTable,
   quarterLabelOf,
   quarterTicks,
   rateAt,
-  rateBandTable,
   removeMutation,
   runningBalances,
   scenarioDigest,
-  scheduleTable,
   segmentLabelsOf,
-  stackOrderTable,
-  totalHoursAt,
-  weekLabel,
   weekOfPick,
   weekRangeOf,
   weeklyOfPair,
@@ -176,97 +86,17 @@ import {
   withDrop,
   withoutChange,
   workMixSeries,
+  pairsForMutation,
+  pairsWithoutMutation,
+  projectedBalances,
   type RateSampling,
   type SegmentLabel,
   type Service,
   type ServiceDraft,
-  type WeekRow,
-} from "./hourly-board-model";
-import type { MeasureIndex } from "../../../src/components/PairedMutationSliders";
-import type { PairedMutationEntity } from "../../../src/components/PairedMutationSliders";
-import {
-  againstBreakeven,
-  dollarsPerWeek,
-  formatHours,
-  formatRate,
-  revenueShift,
-  signedDollarsPerWeek,
-} from "./hourly-board-money";
+} from "./hourly.config";
+import { formatHours } from "./hourly-board-money";
 
 export const meta = { label: "Hourly Board" };
-
-/** Flip to print every derived table to the console on mount. */
-const DEBUG = false;
-
-// ── The curried components ───────────────────────────────────────────────────
-
-/**
- * THE BOARD'S OWN DIALS, curried ONCE at module level.
- *
- * `axes` is mandatory at the curry and carries every per-measure presentational
- * decision there is — the unit, the name, the grid and the scale — and all four
- * are properties of THIS BOARD rather than of any one render. So the call site
- * below passes data and callbacks only, which is the whole point of the factory:
- * `PairedMutationSliders` ships no curried variant on purpose, because
- * `"Hrs/wk"` 0–80 snap 1 × `"$/hr"` 0–300 snap 5 is an hourly board's axes, not
- * a library's.
- *
- * The vocabulary is the board's too: a service is DROPPED and REINSTATED, not
- * removed and restored, and a measure with no prior amount reads "new service".
- */
-const HourlySliders = createPairedMutationSliders({
-  axes: [
-    {
-      label: "Hrs/wk",
-      domain: HOURS_DOMAIN,
-      snap: 1,
-      format: formatHours,
-    },
-    {
-      label: "$/hr",
-      domain: RATE_DOMAIN_PER_HOUR,
-      snap: 5,
-      format: formatRate,
-    },
-  ],
-  labels: { remove: "Drop", restore: "Reinstate", new: "new service" },
-});
-
-/**
- * THE BOARD'S OWN GAUGE, curried the same way.
- *
- * Both formatters are SENTENCE builders — the gauge supplies no words of its own
- * around them — so what the callouts say is this board's wording, written and
- * tested in `hourly-board-money` rather than inline here. They are REVENUE-side:
- * up is over breakeven and up is more revenue, with no sign flip anywhere, which
- * is the one thing that differs from the payroll board's gauge.
- */
-const RevenueRateGauge = createRateGauge({
-  baselineLabel: "Baseline",
-  formatAgainst: againstBreakeven,
-  formatDelta: revenueShift,
-});
-
-/** The plot inset. Wide enough on the left for `$/hr`-free hour labels. */
-const WORK_MIX_MARGIN = { top: 20, right: 16, bottom: 28, left: 34 } as const;
-
-/**
- * THE WORK MIX CHART, curried once: the inset and the tick text are this
- * board's (hours on y, quarters on x), so the call site passes data only.
- * `StackedTimelineChart` measures its own box, so the board no longer does.
- */
-const WorkMixChart = createStackedTimelineChart({
-  margin: WORK_MIX_MARGIN,
-  yTickFormat: formatHours,
-  xTickFormat: quarterLabelOf,
-});
-
-/**
- * THE CHANGES HEADER. The default words are this board's words already, so
- * the curry states nothing — it exists so the call site is data-only, the
- * same as every other piece here.
- */
-const ChangesToolbar = createMutationToolbar({});
 
 // ── Constants the layout needs ──────────────────────────────────────────────
 
@@ -276,42 +106,18 @@ const CELLS = monthlyCells(DOMAIN_START, DOMAIN_END);
 /** The COMMITTED balance — what the fixture's flows have already produced. */
 const COMMITTED = runningBalances(MONTHLY_NET, OPENING_BALANCE);
 
-/**
- * The ceiling a PINNED balance domain would need, in dollars — and the reason
- * the chart is left unpinned.
- *
- * Peter's rule on the Scenario Board was "if all sliders are down the line would
- * still be on the chart … that way the y axis doesn't shift when we change the
- * amounts", and `CashflowScrubChart` takes `yMin` / `yMax` in cents to do
- * exactly that. MEASURED at 1400×1300 with both pinned, it is the wrong trade on
- * THIS fixture: the dials can reach $10.5k/wk, thirteen months of which is
- * $575k of projection, so the domain has to run to $650k — and the committed
- * line, which ends at $132k, is squashed into the bottom fifth of the plot and
- * reads flat.
- *
- * The two fixtures are simply not in proportion: the monthly flows are
- * hand-written (the business as already committed) while the dials price a whole
- * year of billable work, and a domain wide enough for the second makes the first
- * unreadable. Pinning is the right call once they share a scale; it is not right
- * yet, and a squashed line is worse than an axis that moves. So the number is
- * computed, printed in the DEBUG table and left out of the chart — which is also
- * exactly what the Scenario Board does with its own `PINNED_CEILING`.
- */
-const PINNED_CEILING = pinnedCeiling(
-  COMMITTED,
-  maxReachableRate(SERVICES),
-  (months) => fanAt(months, 0),
-);
+/** The chart's cell edges, as numbers. Agrees with `CELLS` by construction. */
+const BOUNDARIES = monthStarts(DOMAIN_START, COMMITTED.length);
 
 /** The change the board opens on: the first seeded one, so the as-of chips
- *  show from the first frame and the dials read a real step. `null` only if
- *  the fixture seeds none. */
+ *  show from the first frame and the dials read a real step. */
 const OPENING_SELECTION: string | null = SEED_MUTATIONS[0]?.id ?? null;
 
 /** The Work Mix x-axis's four ticks, and the vocabulary they read in. */
 const QUARTER_TICKS = quarterTicks();
 
-// ── Derivations the LAYOUT owns ─────────────────────────────────────────────
+/** The plot inset. Wide enough on the left for `$/hr`-free hour labels. */
+const WORK_MIX_MARGIN = { top: 20, right: 16, bottom: 28, left: 34 } as const;
 
 /** The as-of chips: one per change, labelled by WEEK. */
 const chipsOf = (
@@ -332,20 +138,11 @@ const monthIndexOf = (at: TimeValue): number => {
   return index;
 };
 
-/** The chart's cell edges, as numbers. Agrees with `CELLS` by construction. */
-const BOUNDARIES = monthStarts(DOMAIN_START, COMMITTED.length);
-
 /**
  * HOW THE PROJECTION READS THE RATE: sampled at every change, integrated in
- * WEEKS.
- *
- * Weeks and not months because every change on this board lands on an ISO week
- * and every hours figure is quoted per week — the same argument `averageRate`
- * makes for the gauge, now made for the line beside it. `momentsOf` samples
- * EVERY week rather than only the flags, so a segment that starts or ends
- * between two flags still reaches the line in the week it happens, and each
- * stretch of the history carries its own slope instead of the year's mean
- * (Peter's rulings, 2026-09-17 and 2026-09-18).
+ * WEEKS — the same argument `averageRate` makes for the gauge, made for the
+ * line beside it. `momentsOf` samples EVERY week rather than only the flags, so
+ * each stretch of the history carries its own slope instead of the year's mean.
  */
 const samplingFor = (
   mutations: readonly Mutation[],
@@ -373,192 +170,18 @@ const balanceCells = (
   );
 };
 
-/** One faint alternative in the fan, above or below the projection. */
-const fanSeries = (id: string, sign: number, nowIndex: number) => ({
-  id,
-  class: "scenario-board-demo__fan",
-  balanceCents: (cell: CashflowCell, index: number): number =>
-    cell.balanceCents + sign * fanAt(index, nowIndex) * 100,
-});
-
-/** The highest point anything on the Cash Flow chart reaches, in cents: the
- *  projection or the upper edge of its fan, whichever is higher. */
-const peakBalanceCents = (
-  cells: readonly CashflowCell[],
-  nowIndex: number,
-): number => {
-  let peak = 0;
-  for (const [index, cell] of cells.entries()) {
-    const top = cell.balanceCents + Math.abs(fanAt(index, nowIndex)) * 100;
-    if (top > peak) peak = top;
-  }
-  return peak;
-};
-
-/** The summary under each pair of dials: what that service bills in the WEEK
- *  being edited — `$3k/wk` is twenty hours at $150, with no year in it. */
-const summaryOf = (entity: PairedMutationEntity): string =>
-  entity.measures[0].value === null ? "" : dollarsPerWeek(weeklyOfPair(entity));
-
-/** The board, read as tables, with no browser in the room. */
-const printTables = (
-  services: readonly Service[],
-  mutations: readonly Mutation[],
-  mutationId: string | null,
-  cap: number,
-): void => {
-  /* eslint-disable no-console */
-  const pairs =
-    mutationId === null
-      ? pairsWithoutMutation(services)
-      : pairsForMutation(services, mutationId, mutations);
-  console.table(
-    map(
-      (pair: PairedMutationEntity) => ({
-        service: pair.label,
-        priorHours: pair.measures[0].prior ?? "— (new service)",
-        hours: pair.measures[0].value ?? "— (dropped)",
-        priorRate: pair.measures[1].prior ?? "— (new service)",
-        rate: pair.measures[1].value ?? "— (dropped)",
-        weekly: summaryOf(pair),
-      }),
-      pairs,
-    ),
-  );
-  // THE SCHEDULE, week by week — every service's history as a table. The
-  // stack above it is a picture of these 53 rows, and a stepped history is
-  // exactly the kind of thing that looks plausible in a picture and wrong in a
-  // column of numbers.
-  console.table(
-    map(
-      (row: WeekRow) => ({
-        week: row.week,
-        chip: row.label,
-        hours: map(
-          (service: Service, index: number) =>
-            `${service.label} ${row.hours[index] ?? 0}h`,
-          services,
-        ).join(" · "),
-        total: row.total,
-        fullTime: row.fullTime,
-        revenue: dollarsPerWeek(row.revenue),
-        cap,
-      }),
-      scheduleTable(services, mutations),
-    ),
-  );
-  console.table(
-    map(
-      (segment: SegmentLabel) => ({
-        flag:
-          find((m: Mutation) => m.id === segment.id, mutations)?.label ?? "",
-        segment: segment.label,
-        // The WEEK, unabridged, beside the month the chip is filed under: the
-        // chip is an abbreviation and the terminal should not have to be.
-        week: weekLabel(
-          find((m: Mutation) => m.id === segment.id, mutations)?.at ??
-            DOMAIN_START,
-        ),
-        month: segment.month,
-        editing: segment.id === mutationId ? "◀ editing" : "",
-      }),
-      segmentLabelsOf(mutations),
-    ),
-  );
-  console.table(
-    map(
-      (series: { id: string; label?: string; points: readonly unknown[] }) => ({
-        band: series.label ?? series.id,
-        points: map(
-          (point) =>
-            `${new Date(timeOf((point as { at: Date }).at)).toISOString().slice(0, 10)}=${(point as { value: number }).value}h`,
-          series.points as readonly { at: Date; value: number }[],
-        ).join(" "),
-      }),
-      workMixSeries(services, mutations),
-    ),
-  );
-  // THE STACK ORDER: each service's variability (std dev of its 53 weekly
-  // hours, read from the LIVE schedule) beside where that put it — position 0
-  // is the bottom band, and the highest std dev lands last, which is the TOP
-  // band. Peter, 2026-09-18: "Sort by variability. So the one with the
-  // biggest bumps is on top."
-  console.table(stackOrderTable(services, mutations));
-  console.table(
-    map(
-      (tick: number) => ({
-        quarter: quarterLabelOf(tick),
-        totalHours: totalHoursAt(services, tick, mutations),
-        fullTime:
-          totalHoursAt(services, tick, mutations) > FULL_TIME_HOURS
-            ? "over"
-            : "under",
-        cap,
-      }),
-      QUARTER_TICKS,
-    ),
-  );
-  console.table(rateBandTable(services));
-  // THE BALANCE LINE, per cell — the PROJECTED RATE the integral sampled for
-  // each month alongside what it accrued. While the projection took one scalar
-  // there was nothing per-cell to print; now a scenario whose weeks alternate
-  // shows it here as differing `delta`s, which is the reading the chart draws.
-  console.table(
-    projectionTable(
-      COMMITTED,
-      samplingFor(mutations, services),
-      mutationId === null
-        ? 0
-        : monthIndexOf(
-            find((m: Mutation) => m.id === mutationId, mutations)?.at ??
-              DOMAIN_START,
-          ),
-    ),
-  );
-  const at =
-    mutationId === null
-      ? DOMAIN_START.getTime()
-      : timeOf(
-          find((m: Mutation) => m.id === mutationId, mutations)?.at ??
-            DOMAIN_START,
-        );
-  const average = averageRate(TIME_DOMAIN, mutations, services);
-  // THE DRAWN FIGURE, not only the computed one. `RateGauge` clamps `value` to
-  // its domain and announces the clamped number, and the domain is sized against
-  // the FIXTURE — an added service carries the whole track, so an exploratory
-  // scenario can run off the top. Printing both is what keeps the terminal and
-  // the dial in agreement instead of promising they never differ.
-  const drawn = drawnRate(average);
-  console.log(
-    "baseline",
-    signedDollarsPerWeek(COMMITTED_RATE),
-    "· rate from here",
-    signedDollarsPerWeek(rateAt(at, mutations, services)),
-    "· gauge (year average)",
-    signedDollarsPerWeek(average),
-    "· AS DRAWN",
-    signedDollarsPerWeek(drawn),
-    isOffDial(average)
-      ? "(CLAMPED — off the end of the dial)"
-      : "(on the dial)",
-    "·",
-    bandOfRate(drawn),
-    "·",
-    againstBreakeven(drawn),
-    "·",
-    revenueShift(drawn - COMMITTED_RATE),
-    "· monthly slope",
-    monthlyFrom(rateAt(at, mutations, services)).toFixed(0),
-    "· any change?",
-    hasAnyChange(services),
-    "· peak",
-    `${peakWeek(services, mutations).total}h in ${peakWeek(services, mutations).label}`,
-    "· a pinned balance ceiling would need",
-    dollarsPerWeek(PINNED_CEILING).replace("/wk", ""),
-    "(see PINNED_CEILING for why the chart is unpinned)",
-  );
-  /* eslint-enable no-console */
-};
+/**
+ * The summary under each pair of dials: what that service bills in the WEEK
+ * being edited — `$3k/wk` is twenty hours at $150, with no year in it.
+ *
+ * It takes the WIDE entity (measures as a readonly list) because that is the
+ * shape `BoardView` asks for — see `BoardViewProps.summary` — and narrows to
+ * this board's pair itself. A dropped service has no hours and says nothing.
+ */
+const summaryOf = (entity: GroupedMutationEntity): string =>
+  entity.measures[0]?.value === null || entity.measures[0] === undefined
+    ? ""
+    : dollarsPerWeek(weeklyOfPair(entity as PairedMutationEntity));
 
 // ── The Add form ────────────────────────────────────────────────────────────
 
@@ -568,9 +191,7 @@ const printTables = (
  * A COMPONENT rather than a block of JSX inside the board because of the focus:
  * `Modal` has no initial-focus mechanism of its own and its children are created
  * lazily inside its `Show`, so an `onMount` in here fires on every OPEN — which
- * is exactly when the name field wants the caret. An `onMount` in the board would
- * have fired once, at page load, while the form did not exist. Lifted verbatim
- * from the Scenario Board's hire modal.
+ * is exactly when the name field wants the caret.
  */
 const ServiceForm: Component<{
   draft: ServiceDraft;
@@ -630,12 +251,7 @@ const HourlyBoardBench: Component = () => {
   const [services, setServices] = createSignal<readonly Service[]>(SERVICES);
   const [mutations, setMutations] =
     createSignal<readonly Mutation[]>(SEED_MUTATIONS);
-  /**
-   * WHICH CHANGE THE DIALS ARE EDITING, or `null` when there is none. The
-   * board opens on the first seeded change (`OPENING_SELECTION`); `null` is the
-   * honest answer once every change is deleted, and every reading below asks
-   * for it rather than assuming a change exists.
-   */
+  /** WHICH CHANGE THE DIALS ARE EDITING, or `null` when there is none. */
   const [editing, setEditing] = createSignal<string | null>(OPENING_SELECTION);
   /** The y-axis cap, in hours a week. Peter's "settings", in the card header. */
   const [cap, setCap] = createSignal(DEFAULT_WORK_CAP);
@@ -646,23 +262,8 @@ const HourlyBoardBench: Component = () => {
     scenarioDigest(SERVICES, SEED_MUTATIONS),
   );
 
-  const dirty = () => isDirty(services(), mutations(), saved());
-
   /** THE GAUGE'S READING: the whole year, averaged. */
   const rate = () => averageRate(TIME_DOMAIN, mutations(), services());
-
-  /**
-   * THE PROJECTION'S SAMPLING. Not a slope: the projection no longer HAS one
-   * scalar slope.
-   *
-   * A single instantaneous rate read at the pivot was what this memo used to
-   * be, and it is what made every forward delta identical — a straight line at
-   * whatever the rate happened to be at the moment being edited, whatever the
-   * weeks after it did. Now the projection is handed the sampler and integrates
-   * it week by week, so the pivot's own rate is simply the FIRST sample rather
-   * than the only one.
-   */
-  const sampling = () => samplingFor(mutations(), services());
 
   const pairs = () => {
     const at = editing();
@@ -683,34 +284,16 @@ const HourlyBoardBench: Component = () => {
     return chosen === undefined ? 0 : monthIndexOf(chosen.at);
   };
 
-  const cells = createMemo(() => balanceCells(sampling(), nowIndex()));
-
-  /**
-   * THE CASH FLOW CEILING IS A HIGH-WATER MARK (Peter, 2026-09-18: an axis
-   * that re-fits on every drag jitters). It rises when a change pushes the
-   * line above it and never falls, so a drag down moves the LINE and leaves
-   * the axis alone; the shrink button resets it to the current peak, eased.
-   * It is the peak the reader has actually SEEN, not the `PINNED_CEILING`
-   * every dial at max could reach — that one squashes the committed line into
-   * the bottom fifth of the plot.
-   */
-  const ceiling = createHighWaterMark(() =>
-    peakBalanceCents(cells(), nowIndex()),
+  const cells = createMemo(() =>
+    balanceCells(samplingFor(mutations(), services()), nowIndex()),
   );
 
-  onMount(() => {
-    if (DEBUG) printTables(services(), mutations(), editing(), cap());
-  });
-
   /**
-   * THE FIRST INTERACTION MAKES ITS OWN CHANGE.
-   *
-   * Dragging a dial with nothing selected would otherwise be a no-op, which
-   * makes the opening state a place the reader can get stuck. Now the gesture
-   * means what it obviously means — a change, at the next free quarter, which
-   * for this span is its left edge — and the drag lands on it. `batch`, because
-   * the change list and the selection describe ONE scenario and a render between
-   * the two writes would draw a board disagreeing with itself.
+   * THE FIRST INTERACTION MAKES ITS OWN CHANGE. Dragging a dial with nothing
+   * selected would otherwise be a no-op, which makes the opening state a place
+   * the reader can get stuck. `batch`, because the change list and the
+   * selection describe ONE scenario and a render between the two writes would
+   * draw a board disagreeing with itself.
    */
   const editingOrFirst = (): string | null => {
     const already = editing();
@@ -727,34 +310,24 @@ const HourlyBoardBench: Component = () => {
     return ensured.selected;
   };
 
-  /**
-   * A CLICK ON THE WORK MIX PLOT proposes a change in that WEEK, or selects the
-   * one already there.
-   *
-   * `addMutation` does both and says which, so there is no branch here on
-   * whether anything was added — and dedupe needs no tolerance window, because
-   * the date arrives already snapped to the week slot and two picks in one week
-   * are the same timestamp. `batch`, for the reason every other write here
-   * batches: the change list and the selection describe ONE scenario.
-   */
+  /** A CLICK ON THE WORK MIX PLOT proposes a change in that WEEK, or selects
+   *  the one already there. `addMutation` does both and says which, so there is
+   *  no branch here on whether anything was added. */
   const pickWeek = (at: Date): void => {
-    const next = addMutation(mutations(), at);
+    const next = addMutation(mutations(), weekOfPick(at));
     batch(() => {
       setMutations(next.mutations);
       setEditing(next.selected);
     });
   };
 
-  /**
-   * A drag edits the selected change — making one first if there is none. The
-   * measure INDEX is the whole difference between this component and a row of
-   * single dials: ignoring it would write an hours figure into a rate.
-   */
-  const setMeasure = (id: string, measure: MeasureIndex, value: number) => {
+  /** A drag edits the selected change — making one first if there is none. The
+   *  measure INDEX is what stops an hours figure being written into a rate. */
+  const setMeasure = (id: string, measure: number, value: number): void => {
     const at = editingOrFirst();
     if (at === null) return;
     setServices((current) =>
-      withChange(current, id, at, measure, value, mutations()),
+      withChange(current, id, at, measure as 0 | 1, value, mutations()),
     );
   };
 
@@ -765,52 +338,38 @@ const HourlyBoardBench: Component = () => {
     setServices((current) => withDrop(current, id, at));
   };
 
-  /**
-   * ↺ Reinstate: drop the change entirely rather than invent an offer. The
-   * service carries whatever the previous change left it on. It needs no guard —
-   * it is only ever drawn for something already dropped, which takes a change to
-   * have happened.
-   */
+  /** ↺ Reinstate: drop the change entirely rather than invent an offer. It
+   *  needs no guard — it is only ever drawn for something already dropped. */
   const reinstate = (id: string): void => {
     const at = editing();
     if (at === null) return;
     setServices((current) => withoutChange(current, id, at));
   };
 
-  /**
-   * The `+` opens the form; nothing changes until Add is pressed. The draft is
-   * RESET on open rather than on close, so a cancelled form cannot leave a
-   * half-typed name inside the next one, and every path out of the modal —
-   * Cancel, Escape, the overlay, the × — is the same single line.
-   */
+  /** The `+` opens the form; nothing changes until Add is pressed. The draft is
+   *  RESET on open rather than on close, so a cancelled form cannot leave a
+   *  half-typed name inside the next one. */
   const openAdd = (): void => {
     editingOrFirst();
     setDraft(EMPTY_DRAFT);
     setAdding(true);
   };
 
-  const closeAdd = (): void => {
-    setAdding(false);
-  };
-
-  /**
-   * Confirm. The guard is not redundant beside the disabled button: Enter in the
-   * name field reaches here too, and a keyboard path that skipped the check
-   * would be a second, weaker rule.
-   */
+  /** Confirm. The guard is not redundant beside the disabled button: Enter in
+   *  the name field reaches here too. */
   const confirmAdd = (): void => {
     const current = draft();
     const at = editing();
     if (at === null || !canAdd(current)) return;
-    setServices((existing) => addService(existing, current, at, mutations()).services);
+    setServices(
+      (existing) => addService(existing, current, at, mutations()).services,
+    );
     setAdding(false);
   };
 
-  /**
-   * DELETE THE SELECTED CHANGE, and everything that only existed because of it.
-   * One pure function the test pins, and one `batch` so the three signals move
-   * together.
-   */
+  /** DELETE THE SELECTED CHANGE, and everything that only existed because of
+   *  it. One pure function the test pins, one `batch` so the three signals
+   *  move together. */
   const deleteChange = (id: string): void => {
     const next = removeMutation(
       { mutations: mutations(), services: services() },
@@ -833,175 +392,94 @@ const HourlyBoardBench: Component = () => {
     });
   };
 
-  /**
-   * SAVE. On a bench there is nothing to save TO, so it prints the scenario as
-   * tables and marks the board clean — which is the honest bench behaviour and
-   * also the observation a real Save would owe anyway (headless first). The
-   * button disables itself until something has moved.
-   */
+  /** SAVE. On a bench there is nothing to save TO, so it marks the board clean
+   *  — the honest bench behaviour. The button disables itself until something
+   *  has moved. */
   const save = (): void => {
-    printTables(services(), mutations(), editing(), cap());
     setSaved(scenarioDigest(services(), mutations()));
   };
 
   return (
-    <div class="component-section component-section--full scenario-board-frame">
-      <ViewportColumn>
-        <SectionTitle>Hourly Board</SectionTitle>
-
-        {/* The top half, halved again: two charts stacked. Each card is a
-            FillCardSurface — it takes its half of the band and lays out a
-            column that fills it — so the title keeps its own height and the
-            GrowFillBox hands the chart everything left. */}
-        <HalfFillColumn>
-          <HalfFillColumn>
-            <FillCardSurface>
-              <SpreadRow>
-                <TextTitle>Cash Flow</TextTitle>
-                <IconOnlyButton
-                  onClick={ceiling.reset}
-                  aria-label="Fit y-axis to current values"
-                  title="Fit y-axis to current values"
-                >
-                  <Icon name="shrink" size="sm" />
-                </IconOnlyButton>
-              </SpreadRow>
-              {/* THE CALL THE SCENARIO BOARD MAKES, unchanged: `cells`,
-                  `scrub={false}`, `chartHeight="fill"`, `showGridlines` and the
-                  fan as two `balanceSeries`. The y-domain's top is the
-                  high-water mark (`ceiling`), not the all-dials-at-max
-                  `PINNED_CEILING` — see that constant for why. */}
-              <GrowFillBox>
-                <CashflowScrubChart
-                  cells={cells()}
-                  yMax={ceiling.ceiling()}
-                  scrub={false}
-                  chartHeight="fill"
-                  showGridlines
-                  lineLabel="Committed"
-                  balanceSeries={[
-                    fanSeries("optimistic", 1, nowIndex()),
-                    fanSeries("pessimistic", -1, nowIndex()),
-                  ]}
-                />
-              </GrowFillBox>
-            </FillCardSurface>
-          </HalfFillColumn>
-
-          <HalfFillColumn>
-            <FillCardSurface>
-              {/* The cap lives in the card's HEADER rather than in a settings
-                  strip of its own: it is one number, it belongs to this chart
-                  alone, and a row of its own would cost the two charts the
-                  height that makes them readable. `min` is the full-time rule —
-                  a cap below it would put the rule off the plot. */}
-              <SpreadRow>
-                <TextTitle>Work Mix</TextTitle>
-                <ClusterRow>
-                  <NoteText>Cap</NoteText>
-                  <ThemedNumberInput
-                    name="work-cap"
-                    label=""
-                    size="sm"
-                    min={MIN_WORK_CAP}
-                    max={HOURS_DOMAIN[1] * 2}
-                    step={5}
-                    value={cap}
-                    onChange={(next) => {
-                      setCap(next ?? DEFAULT_WORK_CAP);
-                    }}
-                  />
-                </ClusterRow>
-              </SpreadRow>
-              {/* `onPick` reports the RAW date; `weekOfPick` is this board's
-                  grid — the ISO Monday at or before it, clamped to the span's
-                  start. The hover reads the same week as a range of days. */}
-              <WorkMixChart
-                series={workMixSeries(services(), mutations())}
-                xDomain={[DOMAIN_START, DOMAIN_END]}
-                yDomain={[0, cap()]}
-                xTickValues={QUARTER_TICKS}
-                rule={{ value: FULL_TIME_HOURS, label: "full-time" }}
-                events={mutations()}
-                hoverLabel={(at) => weekRangeOf(at).label}
-                onPick={(at) => pickWeek(weekOfPick(at))}
-              />
-            </FillCardSurface>
-          </HalfFillColumn>
-        </HalfFillColumn>
-
-        {/* The bottom half: Changes wide-left, the gauge narrow-right. */}
-        <HalfFillColumn>
-          <FillWrapRow>
-            <MajorPaneBox>
-              <FillCardSurface>
-                {/* NO extra Stack here. `FillCardSurface` already lays its
-                    children out as a column that FILLS the card, so a second
-                    column inside it would sit at its own content height and
-                    leave the dials ending part-way down. */}
-                <ChangesToolbar
-                  title="Changes"
-                  changes={chipsOf(mutations())}
-                  selected={editing()}
-                  onSelect={setEditing}
-                  emptyNote="Click a week, or move a dial, to propose a change — it holds until the next one."
-                  onAdd={openAdd}
-                  onReset={reset}
-                  onSave={save}
-                  saveDisabled={!dirty()}
-                  onDelete={deleteChange}
-                />
-                <GrowFillBox>
-                  <HourlySliders
-                    entities={pairs()}
-                    summary={summaryOf}
-                    onChange={setMeasure}
-                    onRemove={drop}
-                    onRestore={reinstate}
-                    onAdd={openAdd}
-                  />
-                </GrowFillBox>
-              </FillCardSurface>
-            </MajorPaneBox>
-
-            <GrowFillBox class="scenario-board-gauge">
-              <FillCardSurface>
-                <TextTitle>Rate, right now</TextTitle>
-                <GrowCenterColumn>
-                  <RevenueRateGauge
-                    domain={RATE_DOMAIN}
-                    baseline={COMMITTED_RATE}
-                    caution={COMFORTABLE}
-                    value={rate()}
-                    label="Scenario"
-                  />
-                </GrowCenterColumn>
-              </FillCardSurface>
-            </GrowFillBox>
-          </FillWrapRow>
-        </HalfFillColumn>
-      </ViewportColumn>
-
-      {/* The Add form. Rendered here rather than beside the dials because it
-          PORTALS — where it sits in this tree decides nothing about where it
-          draws, and the state it edits is the board's. */}
-      <Modal
-        open={adding()}
-        onClose={closeAdd}
-        title="Add a service"
-        subtitle="It starts at the change being edited, on the figures you give it."
-        footer={
-          <EndWrapRow>
-            <GhostButton onClick={closeAdd}>Cancel</GhostButton>
-            <PrimaryButton disabled={!canAdd(draft())} onClick={confirmAdd}>
-              Add
-            </PrimaryButton>
-          </EndWrapRow>
-        }
-      >
-        <ServiceForm draft={draft()} onDraft={setDraft} onSubmit={confirmAdd} />
-      </Modal>
-    </div>
+    <BoardView
+      config={CONFIG}
+      entities={pairs()}
+      summary={summaryOf}
+      labels={{ remove: "Drop", restore: "Reinstate", new: "new service" }}
+      cashflowTitle="Cash Flow"
+      mixTitle="Work Mix"
+      gaugeTitle="Rate, right now"
+      cashflow={{
+        cells: cells(),
+        fanOf: fanAt,
+        nowIndex: nowIndex(),
+        lineLabel: "Committed",
+      }}
+      mixSeries={workMixSeries(services(), mutations())}
+      mix={{
+        yDomain: [0, cap()],
+        xTickValues: QUARTER_TICKS,
+        xTickFormat: quarterLabelOf,
+        yTickFormat: formatHours,
+        rule: { value: FULL_TIME_HOURS, label: "full-time" },
+        hoverLabel: (at: number) => weekRangeOf(at).label,
+        margin: WORK_MIX_MARGIN,
+        // The cap lives in the card's HEADER rather than in a settings strip of
+        // its own: it is one number, it belongs to this chart alone, and a row
+        // of its own would cost the two charts the height that makes them
+        // readable. `min` is the full-time rule — a cap below it would put the
+        // rule off the plot.
+        header: () => (
+          <ClusterRow>
+            <NoteText>Cap</NoteText>
+            <ThemedNumberInput
+              name="work-cap"
+              label=""
+              size="sm"
+              min={MIN_WORK_CAP}
+              max={HOURS_DOMAIN[1] * 2}
+              step={5}
+              value={cap}
+              onChange={(next) => {
+                setCap(next ?? DEFAULT_WORK_CAP);
+              }}
+            />
+          </ClusterRow>
+        ),
+      }}
+      changes={chipsOf(mutations())}
+      selected={editing()}
+      mutations={mutations()}
+      emptyNote="Click a week, or move a dial, to propose a change — it holds until the next one."
+      baseline={COMMITTED_RATE}
+      value={rate()}
+      onSelect={setEditing}
+      onMeasure={setMeasure}
+      onRemove={drop}
+      onRestore={reinstate}
+      onAdd={openAdd}
+      onReset={reset}
+      onSave={save}
+      saveDisabled={!isDirty(services(), mutations(), saved())}
+      onDelete={deleteChange}
+      onPick={pickWeek}
+      form={{
+        open: adding(),
+        title: "Add a service",
+        subtitle:
+          "It starts at the change being edited, on the figures you give it.",
+        confirmLabel: "Add",
+        canConfirm: canAdd(draft()),
+        onConfirm: confirmAdd,
+        onClose: () => setAdding(false),
+        body: () => (
+          <ServiceForm
+            draft={draft()}
+            onDraft={setDraft}
+            onSubmit={confirmAdd}
+          />
+        ),
+      }}
+    />
   );
 };
 
