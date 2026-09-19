@@ -131,6 +131,38 @@
   align-items: stretch;
 }
 
+/* The × itself. Declared BEFORE every `__cell`-scoped rule below it, because
+   the lint rule reads a bare class after a compound one as a rule that may
+   never apply. */
+.sui-segmented__remove {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  padding: 8px 8px 8px 2px;
+  cursor: pointer;
+  /* HIDDEN, NOT ABSENT. Opacity keeps the × in the layout, so a chip does not
+     jump wider under the pointer and shove the rest of the row sideways. */
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+/* A touch screen has no hover to reveal anything with, so there the × is
+   simply always there. */
+@media (hover: none) {
+  .sui-segmented__remove {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 /* The cell now holds the row's end positions, so it hands the container's
    curve to the segment on its left edge and to the × on its right. */
 .sui-segmented__cell:first-child > .sui-segmented__seg {
@@ -154,40 +186,11 @@
   padding-right: 8px;
 }
 
-.sui-segmented__remove {
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 13px;
-  line-height: 1;
-  padding: 8px 8px 8px 2px;
-  cursor: pointer;
-  /* HIDDEN, NOT ABSENT. Opacity keeps the × in the layout, so a chip does not
-     jump wider under the pointer and shove the rest of the row sideways. */
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    opacity 0.15s ease,
-    background 0.15s ease,
-    color 0.15s ease;
-}
-
 /* Revealed by hover OR by keyboard focus landing anywhere in the cell. */
 .sui-segmented__cell:hover > .sui-segmented__remove,
 .sui-segmented__cell:focus-within > .sui-segmented__remove {
   opacity: 1;
   pointer-events: auto;
-}
-
-/* A touch screen has no hover to reveal anything with, so there the × is
-   simply always there. */
-@media (hover: none) {
-  .sui-segmented__remove {
-    opacity: 1;
-    pointer-events: auto;
-  }
 }
 
 /* The selected chip's fill continues under its ×. One rule per accent, mirroring
