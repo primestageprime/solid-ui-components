@@ -16,9 +16,9 @@
  * `formatAgainst` and `formatDelta` as sentence builders, so these ARE the
  * gauge's callout lines, written and tested here where something can check them.
  */
-import { abbreviateDollars } from "./scenario-board-money";
+import { MINUS, abbreviateDollars } from "./scenario-board-money";
 
-export { abbreviateDollars };
+export { MINUS, abbreviateDollars };
 
 /**
  * The same amount as a RATE — `$5.9k/mo`.
@@ -76,6 +76,25 @@ export const revenueShift = (rateDelta: number): string =>
     : `${dollarsPerMonth(Math.abs(rateDelta))} ${rateDelta > 0 ? "more" : "less"} revenue`;
 
 // ── The dials' two units ─────────────────────────────────────────────────────
+
+/**
+ * A NET CHANGE A MONTH, as the Δ dial reads it — `+2`, `−1`, `0`.
+ *
+ * THE SIGN IS THE READING. Δ is the whole sales model, and which SIDE of zero it
+ * sits on is what picks the regime — a growing bucket, a stable base or a dying
+ * one — so a dial that printed `2` and `-2` alike, or that dropped the plus,
+ * would hide the one bit of information it exists to carry.
+ *
+ * A REAL MINUS SIGN (U+2212), not a hyphen, the same rule every other number on
+ * this board follows: a hyphen is a different glyph at a different height, and
+ * these are numbers. Zero is unsigned, because a signed zero claims a direction
+ * that did not happen.
+ */
+export const formatDelta = (delta: number): string => {
+  const whole = Math.round(delta);
+  if (whole === 0) return "0";
+  return whole > 0 ? `+${whole}` : `${MINUS}${Math.abs(whole)}`;
+};
 
 /**
  * A licence COUNT, as the Licenses dial reads it — `120`.
