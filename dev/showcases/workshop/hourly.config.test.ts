@@ -1,5 +1,12 @@
 /**
- * Hourly Board model — the whole board, argued with from a terminal.
+ * Hourly Board — the whole board, argued with from a terminal, THROUGH THE KIT.
+ *
+ * This is `hourly-board-model.test.ts` pointed at `hourly.config.ts`, which is
+ * the same board expressed as a `BoardConfig` over `board-kit`. Every numeric
+ * expectation below is unchanged, and that is the whole acceptance test for the
+ * refactor: the calibration table, the seasonal schedule, the weekly weights,
+ * the projection's bends and the variability order all still read what they
+ * read when each of these functions was written out longhand.
  *
  * Two things are the point of this file. The CALIBRATION: four readings Peter
  * named, each derived from the constants rather than asserted against a
@@ -112,7 +119,7 @@ import {
   type RateSampling,
   type Service,
   type WeekRow,
-} from "./hourly-board-model";
+} from "./hourly.config";
 
 const START = DOMAIN_START.getTime();
 const END = DOMAIN_END.getTime();

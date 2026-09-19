@@ -64,8 +64,12 @@ Peter's rulings, 2026-09-18, and the whole of the model:
    week being edited. A change in December is worth a month of its rate, not a
    year of it.
 
-The bench's model is `dev/showcases/workshop/hourly-board-model.ts`, pure and
-tested (`hourly-board-model.test.ts`, 100+ assertions). The functions worth
+The bench's model is `dev/showcases/workshop/hourly.config.ts`, pure and tested
+(`hourly.config.test.ts`, 99 assertions). It is the board stated as a
+`BoardConfig` over `dev/showcases/workshop/board-kit/`, which holds the shared
+arithmetic; the names below are unchanged and still exported from it. (Until
+2026-09-18 this was `hourly-board-model.ts`, 1,770 lines of which two thirds
+was arithmetic the Scenario Board had already written.) The functions worth
 porting as-is, renamed into thorcasting's vocabulary:
 
 | Bench function | What it answers |

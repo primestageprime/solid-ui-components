@@ -15,6 +15,34 @@
 
 - **`MutationToolbar` — `onDelete`.** Superseded by `onRemove`, which puts the removal on the chip it removes. Still honoured and still renders only while a change is selected; prefer `onRemove` in new code.
 
+### Removed
+
+- **`TreeDiffChart`'s layout and frame GEOMETRY is no longer exported — the 14
+  deprecated names are gone from the barrel. BREAKING for the published
+  surface; wants a MINOR bump when released.** `computeTreeDiffLayout`,
+  `TreeDiffLayoutInput`, `TreeDiffLayout`, `LayoutNode`, `LayoutEdge`,
+  `LayoutBand`, `LayoutGuide`, `LayoutCaption`, `computeFrame`, `Frame`,
+  `TreeDiffLayoutMode`, `NARROW_AT`, `SPINE_AT` and `WIDE_AT`. Published in
+  0.171.0, deprecated in 0.172.0, and removed here after 0.173.0 and 0.174.0
+  shipped — phase 3 of add/deprecate/delete, the follow-up
+  `docs/adherence/variant-audit-2026-09-16.md` booked for "once a minor version
+  has passed with nothing reading them".
+  **Migration: none, because there is no reader and no successor is owed.**
+  Re-verified on 2026-09-18 rather than taken from the audit:
+  `scripts/export-usage-report.mjs` lists all 14 as unused across the 18
+  consumer repos on this machine with no namespace (`import * as`) imports,
+  `docs/usage-manifest.json` (the 447 exports consumers actually import)
+  contains none of the names, and a workspace-wide grep hits only
+  `TreeDiffChart`'s own files. `package.json` `exports` publishes the root, the
+  themes and the CSS entries only — no component subpath — so a package
+  consumer never had a route to these modules at all; the four repos not on
+  this machine are covered by that same fact. The modules themselves are
+  untouched: an in-repo dev surface still imports `./layout`, `./layout-types`
+  or `./frame` relatively, exactly as the scenario board reaches
+  `LevelsTimeline/geometry`. Removing `Frame` also retires the
+  ambiguous-re-export hazard it carried at the root, where
+  `LevelsTimeline/geometry.ts` and `ScrubChart` define the same name.
+
 ## 0.174.0 — 2026-09-18
 
 ### Added

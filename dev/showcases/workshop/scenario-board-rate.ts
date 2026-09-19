@@ -283,11 +283,17 @@ export const averageRateOver = (
  * scalar drew wrong and nobody had noticed.
  *
  * MONTHS, with no unit parameter: this board's mutations land on quarters and
- * every figure it quotes is monthly, so there is no caller for a weekly sum.
- * The Hourly Board has one and parametrizes its own copy (`RateUnit` in
- * `hourly-board-model.ts`). The duplication is the same deliberate one
- * `averageRateOver` carries: importing across would drag the people model and
- * three payroll constants into that board's module graph.
+ * every figure it quotes is monthly, so there is no caller here for a weekly
+ * sum.
+ *
+ * DEPRECATED as a copy. This used to carry a note saying the duplication with
+ * the Hourly Board's own `accruedOver` was deliberate, because importing across
+ * would drag the people model and three payroll constants into that board's
+ * module graph. That reasoning was sound and is now moot: `board-kit/model.ts`
+ * has ONE `accruedOver`, parametrised by the unit the rate is quoted in, and it
+ * takes a function and the moments — so it drags nothing at all. This board is
+ * still on its own copy because it has not been migrated to the kit yet; when
+ * it is, this function goes. Don't extend it.
  *
  * Moments outside the stretch are IGNORED, the rule `averageRateOver` follows.
  */
