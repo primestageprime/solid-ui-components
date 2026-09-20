@@ -361,9 +361,32 @@ export interface SegmentLabel {
  * of them and not only the second, because a reader comparing two chips needs
  * them to differ in the same place.
  *
- * UNDER WEEK OR MONTH GRAIN there is nothing to disambiguate: one mutation per
- * slot is unique by construction, since the grid is that fine and `addMutation`
- * refuses a second mutation at an existing timestamp.
+ * UNDER WEEK GRAIN there is nothing to disambiguate: one mutation per slot is
+ * unique by construction, since the grid is that fine and `addMutation` refuses
+ * a second mutation at an existing timestamp. A week chip is given its OWN
+ * vocabulary — `W27 · Jun 30` (see `weekLabel`) — because thirteen weekly
+ * changes in one quarter would otherwise be thirteen chips with one label.
+ *
+ * UNDER MONTH GRAIN uniqueness holds for the week branch's exact reason, but
+ * the chip is NOT given a vocabulary of its own, because it does not need one:
+ * `2025-Q3 · Aug` is already the crowded-quarter chip, it names the quarter the
+ * axis is ticked by, and the month beside it is what makes it locatable. So the
+ * month branch is the quarter branch with the suffix ALWAYS on.
+ *
+ * Always-on is the whole point of it being a branch rather than a fall-through
+ * to the crowding rule below. That rule suffixes only a quarter holding more
+ * than one mutation, so a board that opens with no changes would give its
+ * reader `2025-Q1` for a first change, `2025-Q1 · Jan` and `2025-Q1 · Feb` once
+ * there are two in that quarter, and a bare `2025-Q2` for a third — one
+ * control, three chip formats, changing shape as they work.
+ *
+ * ⚠ RECONCILED 2026-09-19, when the Scenario Board bench was retired. The kit
+ * had a bare `2025-08` here and `scenario-board-people.ts` had the always-on
+ * suffix with the twelve lines of argument above; the kit's one-liner conflated
+ * UNIQUENESS with FORMAT CONSISTENCY. Resolved in favour of the one somebody
+ * thought about, exactly as `nearestMutation`'s tie-break was. The only
+ * month-grain consumer is the License Board, which was already reading through
+ * the Scenario Board's version — so nothing a reader sees moved.
  */
 export const segmentLabelsOf = (
   mutations: readonly Mutation[],
@@ -384,7 +407,7 @@ export const segmentLabelsOf = (
     return map(
       (mutation: Mutation) => ({
         id: mutation.id,
-        label: monthLabel(mutation.at),
+        label: `${quarterLabelOf(mutation.at)} · ${monthAbbrev(mutation.at)}`,
         month: monthLabel(mutation.at),
       }),
       ordered,

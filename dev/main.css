@@ -2801,8 +2801,12 @@ th:has(.tf-th-center) .hud-table__header-content {
   font-size: 0.875rem;
 }
 
-/* Scenario Board bench — the two faint alternatives fanning away from the
-   committed balance line. A consumer's own series class owns colour, dash and
+/* Board benches — the two faint alternatives fanning away from the committed
+   balance line. NAMED FOR THE SCENARIO BOARD, which wrote these three rules
+   and was retired on 2026-09-19; they are kept under their original names
+   because `board-kit/BoardView.tsx` and the License Board bench both still
+   draw them, and renaming a class is a breaking edit to files this pass does
+   not own. The stale name is debt, recorded here rather than left silent. A consumer's own series class owns colour, dash and
    opacity (CashflowBalanceSeries.class); the chart ships none, so without this
    rule the fan would read as three equally-committed lines. */
 .scenario-board-demo__fan {
@@ -2812,7 +2816,7 @@ th:has(.tf-th-center) .hud-table__header-content {
   stroke-dasharray: 5 4;
 }
 
-/* Scenario Board bench — the board fills the gallery's viewport.
+/* Board benches — the board fills the gallery's viewport.
    MEASURED, not guessed: the gallery's scroll container is
    `main.showcase__content`, which is exactly 100vh with 32px of padding top
    and bottom and holds the section as its only child with no margins of its
@@ -2822,7 +2826,7 @@ th:has(.tf-th-center) .hud-table__header-content {
   height: var(--sui-bench-viewport);
 }
 
-/* Scenario Board — the gauge's cell. It GROWS and shrinks with the row rather
+/* Board benches — the gauge's cell. It GROWS and shrinks with the row rather
    than keeping its intrinsic width, so the bottom row stays side by side at
    the widths Peter reviewed (1090px and up) instead of wrapping the gauge
    underneath the sliders.
