@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.176.0 — 2026-09-19
+
 ### Added
 
 - **`GroupedMutationSliders` — promoted from the workshop bench.** A row of named entities, each with **N differently-united range-banded prior-vs-future dials under one name, in captioned groups** — the N-measure sibling of `PairedMutationSliders`, which is the N=2 case. Consecutive axes sharing a `group` name draw under one caption; the pin fans out across the SAME measure index and no other; the row pages by whole entities. Ships the **factory only** (`createGroupedMutationSliders({ axes, labels })`) and no curried variant, deliberately: `axes.length` is each entity's measure count, so a curried name would fix every consumer's data shape rather than its presentation. Nothing in `MutationSliders` or `PairedMutationSliders` is deprecated by it.
