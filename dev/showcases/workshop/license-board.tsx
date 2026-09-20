@@ -67,20 +67,18 @@ import { find, map } from "../../../src/fn";
 import { CashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import {
+  createGroupedMutationSliders,
   createHighWaterMark,
   createMutationToolbar,
   createRateGauge,
   createStackedTimelineChart,
   timeOf,
 } from "../../../src";
-import type { Mutation } from "../../../src";
-// NOT ON THE PACKAGE BARREL YET — imported by relative path, which says "this is
-// not published" at the call site. `/promote` turns that around.
-import {
-  createGroupedMutationSliders,
-  type GroupedMeasureIndex,
-  type GroupedMutationEntity,
-} from "../../../src/components/GroupedMutationSliders";
+import type {
+  GroupedMeasureIndex,
+  GroupedMutationEntity,
+  Mutation,
+} from "../../../src";
 import {
   GhostButton,
   IconOnlyButton,

@@ -1,19 +1,20 @@
 // ============================================
-// GroupedMutationSliders — Composite (Depth 3) — ON THE WORKSHOP BENCH
+// GroupedMutationSliders — Composite (Depth 3)
 //
-// NOT ON THE BARREL, ON PURPOSE. This component is being prototyped on
-// `dev/showcases/workshop/grouped-mutation-sliders.tsx` and is deliberately
-// absent from `src/index.ts`, so it owes no dedicated showcase, no
-// COMPONENTS.md section and no CHANGELOG line yet — the same way `RateGauge`
-// and `LevelsTimeline` lived while they were on their benches. `/promote` is
-// what turns that around, in one deliberate step, once the API has settled.
-// Its only consumers today are its own bench and the License Board bench, both
-// of which import it by relative path.
+// PUBLISHED, as of the 2026-09-19 promotion. It has a dedicated showcase
+// (`dev/showcases/grouped-mutation-sliders.tsx`), a catalog entry, a
+// COMPONENTS.md section, a CHANGELOG line and a `barrel.test.ts` pinning every
+// name it publishes through the PACKAGE ROOT. Its bench is gone — the one
+// deliberate step `/promote` exists to take, once an API has settled — and its
+// first consumer, the License Board, now imports it from `../../../src` like
+// any client.
 //
 // Composes Layout (CenteredStack, FillStretchRow) + Button (SmallGhostButton)
 // + Icon over the private `GroupedDial` (dial.tsx), which is itself a Depth-2
-// Composite over the `MarkedSlider` Primitive. Depth 3 by the rule — 1 + the
-// highest depth it contains — exactly as `PairedMutationSliders` is.
+// Composite over the `MarkedSlider` Primitive — and through that dial, the
+// `PressableLabelButton`, the Steady/Reserved Mono Text variants and the
+// `GlyphSlotGhostButton`. Depth 3 by the rule — 1 + the highest depth it
+// contains — exactly as `PairedMutationSliders` is.
 //
 // ZERO CSS AND ZERO INTRINSIC ELEMENTS (Peter's axiom: no component above
 // Depth 1 contains anything but existing SUI components). Nothing in this

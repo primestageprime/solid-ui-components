@@ -2846,6 +2846,17 @@ th:has(.tf-th-center) .hud-table__header-content {
   height: 420px;
 }
 
+/* GroupedMutationSliders — the same sized frame, sized ABOVE the ~325px a
+   grouped column needs (name + caption + the MarkedSlider's 180px floor + two
+   readouts + the summary + the footer). A frame SHORTER than that hands the
+   row a box under its own floor, the dial keeps drawing at 180, and the summary
+   prints on top of the readouts — so this number is a measurement, not a taste. */
+.grouped-mutation-sliders-demo {
+  display: flex;
+  flex-direction: column;
+  height: 480px;
+}
+
 /* MarkedSlider — the same sized frame, for the Primitive's own
    "absorbs its container's height" card. */
 .marked-slider-demo__tall-frame {
