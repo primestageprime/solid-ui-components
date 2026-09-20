@@ -11,8 +11,10 @@
 //     the board's own title row, where one Save covers the whole board.
 //   • The full row — Add, Reset, Save and the DEPRECATED corner Delete — the
 //     shape the component shipped with, kept so the old path stays proven.
-//   • A CURRIED row with its own words and only Delete + Reset, as the
-//     Scenario Board uses it (it commits on the fly, so it has no Save).
+//   • A CURRIED row with its own words and only Delete + Reset — the shape a
+//     board that commits on the fly needs, since it has no Save. The retired
+//     Scenario Board bench was the original of this case; the variant is kept
+//     because the no-Save path is a published capability, not a bench's quirk.
 //   • The empty state: no changes yet, so a sentence stands in the chips' slot.
 import { type Component, createSignal } from "solid-js";
 import {
@@ -33,7 +35,8 @@ const SEED: readonly MutationToolbarChange[] = [
   { id: "september", label: "W36 · Sep 1" },
 ];
 
-/** The Scenario Board's vocabulary, curried once. */
+/** A payroll board's vocabulary, curried once — the Scenario Board's words,
+ *  kept as the example after that bench retired on 2026-09-19. */
 const PayChangesToolbar = createMutationToolbar({
   labels: { chips: "Pay change being edited" },
 });
