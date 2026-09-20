@@ -6,7 +6,7 @@
  * Scenario Board's payroll sentences and the reason this file exists at all.
  *
  * IT DOES NOT FORK THE ROUNDING POLICY. `abbreviateDollars` is imported from
- * `scenario-board-money` rather than rewritten, because `$8.5k` / `$60k` /
+ * `board-kit/model` rather than rewritten, because `$8.5k` / `$60k` /
  * `$1.2M` is one decision for the whole workshop and a second abbreviator here
  * would be a second policy that can disagree with the first. What this module
  * adds is the two REVENUE sentences the gauge asks for, and the WEEKLY unit.
@@ -15,7 +15,7 @@
  * `formatAgainst` and `formatDelta` as sentence builders, so these ARE the
  * gauge's callout lines, written and tested here where something can check them.
  */
-import { abbreviateDollars } from "./scenario-board-money";
+import { abbreviateDollars } from "./board-kit/model";
 
 export { abbreviateDollars };
 
