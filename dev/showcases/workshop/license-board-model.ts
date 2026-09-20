@@ -247,7 +247,18 @@ export const timeDomainOf = (start: number = REFERENCE_START): [Date, Date] => [
 
 /** The span, as the `{ grain, domain }` slice the kit's calendar reads. The
  *  kit binds the grain ONCE per board, so this is the only place `"month"` is
- *  spelled and the four wrappers below cannot drift onto different grids. */
+ *  spelled and the four wrappers below cannot drift onto different grids.
+ *
+ *  ⚠ ONE INVARIANT MOVED ACROSS THE SEAM, 2026-09-19. The retired Scenario
+ *  Board's `monthStartsIn` CLAMPED a partial first month up to the span's own
+ *  start; the kit's `slotsIn` SKIPS it instead (it clamps only under week
+ *  grain). That difference is invisible here because every span start this
+ *  board takes has been through `monthStartOf`, so the first grid stop equals
+ *  the start and both spellings agree. It is a CALLER CONVENTION, not a type:
+ *  `nextFreeSlot` and `ensureMutation` are exported taking an arbitrary
+ *  `domainStart`, so a caller that hands one an unaligned date would lose its
+ *  first slot rather than have it clamped — and with it the weight-1 case every
+ *  calibration reading is stated at. Pass a `monthStartOf` result. */
 const calendarOf = (
   domainStart: number,
   domainEnd: number,
