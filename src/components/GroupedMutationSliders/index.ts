@@ -1,35 +1,33 @@
-// Folder barrel — the surface this component's BENCHES import.
+// Barrel — the PUBLIC surface, re-exported from `src/index.ts`.
 //
-// NOT re-exported from `src/index.ts`, and that is the whole disposition of
-// this file today. `GroupedMutationSliders` is on the workshop bench
-// (`dev/showcases/workshop/grouped-mutation-sliders.tsx`), so it is deliberately
-// absent from the package barrel: a published component owes a dedicated
-// showcase, a catalog entry, a COMPONENTS.md section and a CHANGELOG line, and
-// none of those should be written against an API still being argued with.
-// `RateGauge` and `LevelsTimeline` both lived exactly here first. `/promote` is
-// the one deliberate step that adds this folder to `src/index.ts` and pays all
-// four debts at once.
+// Deliberately narrow, the same disposition as `PairedMutationSliders`' and
+// `MutationSliders`'. `groups.ts` is pure and prints as a table
+// (`groups.test.ts`); its projection helpers exist so a test can read a row
+// without a browser, not so a consumer can. `axes.ts`'s resolvers and
+// `labels.ts`'s defaults are private for the same reason, and `dial.tsx` is a
+// real seam that no caller has asked for — promoting it later is a rename and
+// a showcase, unpublishing it would be a breaking change.
 //
-// So its two consumers — its own bench and the License Board bench — import
-// from this path directly, which is the honest shape: a relative import into
-// `src/components/` says "this is not published yet" at every call site, where
-// a barrel export would have said the opposite.
+// EVERY EXPORTED TYPE IS QUALIFIED, and that is not cosmetic. `src/index.ts`
+// is `export *` over every component barrel, and an AMBIGUOUS `export *` — two
+// modules publishing one name — resolves to NOTHING, silently. `Entity`,
+// `Domain`, `MeasureIndex` and `ChangeTone` are already published names with
+// live consumers, so nothing here reuses a bare one: the measure index is
+// `GroupedMeasureIndex`, the measure is `GroupedMeasure`, and so on. Having
+// done it while the folder was still on the bench meant promotion could not be
+// the thing that silently broke `Chart`, `MutationSliders` or
+// `PairedMutationSliders` — and `barrel.test.ts` pins both sets through the
+// package root, which is what makes a future collision loud instead of silent.
 //
-// EVERY EXPORTED TYPE IS ALREADY QUALIFIED, against the day it IS published.
-// `src/index.ts` is `export *` over every component barrel, and an AMBIGUOUS
-// `export *` — two modules publishing one name — resolves to NOTHING, silently.
-// `Entity`, `Domain`, `MeasureIndex` and `ChangeTone` are already published
-// names with live consumers, so nothing here reuses a bare one: the measure
-// index is `GroupedMeasureIndex`, the measure is `GroupedMeasure`, and so on.
-// Doing it now rather than at promotion means promotion cannot be the thing
-// that silently breaks `Chart` or `MutationSliders`.
-//
-// NO CURRIED VARIANT, AND THAT IS THE CORRECT NUMBER FOR TODAY — the same
-// argument `PairedMutationSliders`' barrel makes. The FACTORY is what satisfies
-// "clients import only curried components": a variant here would have to name
-// every unit, grid, scale and caption, and the only combination anyone has
-// asked for is DOMAIN-SPECIFIC (a licence board's `mo` #/$ and `yr` #/%). SUI
-// does not guess which units.
+// NO CURRIED VARIANT, AND THAT IS THE CORRECT NUMBER — the same argument
+// `PairedMutationSliders`' barrel makes, one notch stronger. The FACTORY is
+// what satisfies "clients import only curried components". Here a variant could
+// not merely guess wrong about presentation, it would FIX THE DATA SHAPE:
+// `axes` is required in `GroupedMutationSlidersOverrides`, and `axes.length` IS
+// each entity's measure count, so a curried name would dictate how many dials
+// every consumer's entities carry. There is no generic N the way there is a
+// generic number for `NumberMutationSliders`. The consumer curries once with
+// `createGroupedMutationSliders` and imports its own curried name thereafter.
 export {
   GroupedMutationSliders,
   createGroupedMutationSliders,

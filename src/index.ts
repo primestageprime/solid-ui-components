@@ -38,6 +38,7 @@ export * from "./components/RateGauge";
 export * from "./components/MarkedSlider";
 export * from "./components/MutationSliders";
 export * from "./components/PairedMutationSliders";
+export * from "./components/GroupedMutationSliders";
 export * from "./components/MutationToolbar";
 export * from "./components/LiveHeartbeatTrace";
 export * from "./components/ConnectionStatus";
