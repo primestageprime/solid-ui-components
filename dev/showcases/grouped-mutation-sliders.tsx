@@ -149,31 +149,16 @@ const THREE: readonly GroupedMutationEntity[] = [
 ];
 
 /**
- * Four entities on the four-measure shape: two that moved, one at the ceiling
- * of its own range (`Gus`'s `%`, so the clamp is visible the moment it is
- * dragged) and one NEW — every prior `null`, which is what an arrival IS.
+ * Four entities on the four-measure shape: one at the ceiling of its own range
+ * (`Gus`'s `%`, so the clamp is visible the moment it is dragged), one NEW —
+ * every prior `null`, which is what an arrival IS — and two that moved.
+ *
+ * THE TWO INTERESTING ONES COME FIRST, and that is not arbitrary. A row four
+ * grouped entities wide is 4 × 4 dials, which pages in any card narrower than
+ * ~1550px, so whatever is at position 3 and 4 is off screen on first render.
+ * A fixture nobody sees demonstrates nothing.
  */
 const FOUR: readonly GroupedMutationEntity[] = [
-  {
-    id: "eli",
-    label: "Eli",
-    measures: [
-      { prior: 100, value: 120, range: [0, 300] },
-      { prior: 15, value: 15, range: [9, 25] },
-      { prior: 50, value: 60, range: [0, 200] },
-      { prior: 85, value: 85, range: [50, 100] },
-    ],
-  },
-  {
-    id: "fay",
-    label: "Fay",
-    measures: [
-      { prior: 40, value: 40, range: [0, 120] },
-      { prior: 49, value: 49, range: [29, 80] },
-      { prior: 25, value: 25, range: [0, 80] },
-      { prior: 90, value: 90, range: [50, 100] },
-    ],
-  },
   {
     id: "gus",
     label: "Gus",
@@ -192,6 +177,26 @@ const FOUR: readonly GroupedMutationEntity[] = [
       { prior: null, value: 99, range: [50, 200] },
       { prior: null, value: 7, range: [0, 50] },
       { prior: null, value: 75, range: [50, 100] },
+    ],
+  },
+  {
+    id: "eli",
+    label: "Eli",
+    measures: [
+      { prior: 100, value: 120, range: [0, 300] },
+      { prior: 15, value: 15, range: [9, 25] },
+      { prior: 50, value: 60, range: [0, 200] },
+      { prior: 85, value: 85, range: [50, 100] },
+    ],
+  },
+  {
+    id: "fay",
+    label: "Fay",
+    measures: [
+      { prior: 40, value: 40, range: [0, 120] },
+      { prior: 49, value: 49, range: [29, 80] },
+      { prior: 25, value: 25, range: [0, 80] },
+      { prior: 90, value: 90, range: [50, 100] },
     ],
   },
 ];
