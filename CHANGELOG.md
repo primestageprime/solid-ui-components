@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+### Removed
+
+- **The Scenario Board workshop bench is retired** —
+  `dev/showcases/workshop/scenario-board.tsx` and its three modules
+  (`-people.ts`, `-rate.ts`, `-money.ts`) with their three test files, 3,453
+  lines in all. **Nothing in the published package changes**: a bench is a dev
+  surface and none of this was ever exported. Peter, 2026-09-19: "you can
+  delete scenario board. It's already been promoted and implemented" — its
+  components reached SUI and thorcasting-ui built its payroll simulator from
+  them, so the bench had served its purpose.
+  **This was not an `rm`.** Three of its modules were load-bearing for the
+  other two benches and for the board-kit's genericity proof, so the shared
+  code was rehomed into `dev/showcases/workshop/board-kit/` FIRST, in its own
+  commit, with the bench still rendering and the suite green. `board-kit`
+  already carried byte-identical copies of `abbreviateDollars`/`MINUS` and of
+  the whole mutation calendar, so the Hourly Board, the License Board and the
+  kit's own test were repointed at the kit rather than given new duplicates.
+  The kit's `segmentLabelsOf` was **reconciled** where the two versions had
+  quietly disagreed under month grain (the kit read a bare `2025-08`, the
+  Scenario Board `2025-Q3 · Aug` with twelve lines arguing the always-on
+  suffix) — resolved in favour of the argued rule, which is what the only
+  month-grain consumer was already reading, so no rendered label moved. The
+  genericity proof lives on as `board-kit/scenario-shape.fixture.ts`: the
+  calibration table is still COMPUTED from the Scenario Board's constants
+  rather than retyped, so bending the kit still bends the table
+  (mutation-checked both ways).
+
 ## 0.175.0 — 2026-09-19
 
 ### Added

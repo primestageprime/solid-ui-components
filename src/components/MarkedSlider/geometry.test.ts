@@ -457,10 +457,12 @@ describe("niceStep", () => {
     }
   });
 
-  // LOAD-BEARING for scenario-board, which confirmed it in the browser on
-  // 2026-09-16: its domain is [0, 10] integer LEVELS and it keys rails BY
-  // level, so a step of 0.1 would not merely round oddly — it would hand the
-  // board level 6.3 and shatter one rail into a rail per fractional pay.
+  // LOAD-BEARING for the workshop's board benches, first confirmed in the
+  // browser by the (now retired) Scenario Board on 2026-09-16 and carried by
+  // `board-kit/BoardView.tsx` since: a levels domain is [0, 10] integer LEVELS
+  // and rails are keyed BY level, so a step of 0.1 would not merely round
+  // oddly — it would hand the board level 6.3 and shatter one rail into a rail
+  // per fractional pay.
   it("never goes below 1 on a domain counted in whole numbers", () => {
     expect(niceStep([0, 10])).toBe(1);
     expect(niceStep([0, 5])).toBe(1);

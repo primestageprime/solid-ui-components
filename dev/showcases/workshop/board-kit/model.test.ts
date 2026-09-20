@@ -9,8 +9,8 @@
  * So this file drives the SAME functions from a config shaped like the OTHER
  * board — one axis instead of two, `side: "expense"` instead of `"revenue"`,
  * `unit: "yr"` instead of `"wk"`, a quarterly grain instead of a weekly one —
- * and asserts the Scenario Board's own published calibration table, imported
- * from `scenario-board-rate.ts` rather than retyped. If the kit were Hourly
+ * and asserts the Scenario Board's own published calibration table, computed by
+ * `scenario-shape.fixture.ts` rather than retyped. If the kit were Hourly
  * code wearing a generic hat, this would not read 60,000 / 40,000 / 20,000 /
  * −180,000.
  *
@@ -53,13 +53,13 @@ import {
   spanIn,
   weightFrom,
 } from "./model";
+import { abbreviateDollars } from "./model";
 import {
   COMFORTABLE,
   RATE_BASELINE,
   RATE_DOMAIN,
   rateBandTable,
-} from "../scenario-board-rate";
-import { abbreviateDollars } from "../scenario-board-money";
+} from "./scenario-shape.fixture";
 
 const DOMAIN_START = new Date("2025-01-01");
 const DOMAIN_END = new Date("2026-01-01");
@@ -303,6 +303,18 @@ describe("the calendar, by grain", () => {
     expect(map((s) => s.label, segmentLabelsOf([Q4], "week"))).toEqual([
       "W40 · Oct 1",
     ]);
+    // A monthly grid needs none either — but its chip is the crowded-quarter
+    // chip with the suffix ALWAYS on, rather than a bare `2025-07`. Always-on
+    // is the point: the crowding rule alone would give one control three chip
+    // formats as the reader works (`2025-Q3`, then two `2025-Q3 · Jul`/`· Aug`,
+    // then a bare `2025-Q4`). Reconciled from the retired Scenario Board's
+    // version on 2026-09-19; the License Board reads through this branch.
+    expect(map((s) => s.label, segmentLabelsOf([july], "month"))).toEqual([
+      "2025-Q3 · Jul",
+    ]);
+    expect(
+      map((s) => s.label, segmentLabelsOf([july, august], "month")),
+    ).toEqual(["2025-Q3 · Jul", "2025-Q3 · Aug"]);
   });
 
   it("selects rather than duplicates, and renumbers by POSITION", () => {
