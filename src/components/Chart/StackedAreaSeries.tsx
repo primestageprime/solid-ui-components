@@ -30,7 +30,7 @@ import { type StackedAreaCurve, buildStackedArea } from "./stackedArea";
 /** ADR 0003: eight series slots, and a ninth category is a redesign. */
 const PALETTE_SLOTS = 8;
 
-const paint = (index: number): string =>
+export const seriesPaint = (index: number): string =>
   index < PALETTE_SLOTS
     ? `var(--sui-series-${index + 1}, currentColor)`
     : "currentColor";
@@ -127,14 +127,14 @@ export function StackedAreaSeries(props: StackedAreaSeriesProps) {
             <path
               class="sui-chart__stacked-area-band"
               d={band.path}
-              fill={paint(band.index)}
+              fill={seriesPaint(band.index)}
             >
               <title>{band.label ?? band.id}</title>
             </path>
             <path
               class="sui-chart__stacked-area-edge"
               d={band.edge}
-              stroke={paint(band.index)}
+              stroke={seriesPaint(band.index)}
             />
           </>
         )}

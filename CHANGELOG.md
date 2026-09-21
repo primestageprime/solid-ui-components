@@ -4,6 +4,157 @@
 
 ### Added
 
+- **`StackedTimelineChart` forwards `curve` to its stack, and curries it.**
+  `StackedAreaSeries` has taken `curve: "smoothStep" | "linear"` since the
+  stack shipped, but the composite never passed it, so every consumer drew the
+  smoothed crossing whether or not it suited the data. `curve` now sits on
+  `StackedTimelineChartProps` and in `StackedTimelineChartOverrides`, beside
+  `margin` and the tick formats.
+  **Why it belongs at curry time.** Whether an x-axis carries a continuum or a
+  row of buckets is one fact about a screen's data, not a per-render choice —
+  the same class of decision as the tick text's unit.
+  **Why a consumer wants `"linear"`.** `smoothStep` spends x on a change: the
+  band rises before it and falls after it, which is the correct picture of a
+  quantity that varies continuously. On an axis of buckets — a month's cash, a
+  week's hours — a bucket has no interior, so those shoulders draw a figure the
+  model never produced, and a one-bucket spike reads as a rise and a fall
+  rather than as one payment. The License Board's mix stack is the case that
+  found it.
+  **Nothing changes for an existing consumer**: the default is still
+  `"smoothStep"`.
+
+- **`StackedTimelineChart` draws COLUMNS when you give it `columns`.** Pass the
+  bucket starts and the stack renders through `BarSeries` instead of
+  `StackedAreaSeries`: one column per bucket per band, holding what each series
+  carries at that bucket's start. `columnWidth` (default `0.84`, curried) is
+  the column's share of its bucket, so the remainder is the gutter that makes
+  the buckets read as separate.
+  **Why it beats `curve: "linear"`.** The square crossing stops the mark from
+  stating a figure the model never produced, but the stack is still one
+  unbroken shape. A gutter at every boundary says the x-axis carries buckets,
+  which is the thing a monthly cash chart most needs to say.
+  **The caller owns the edges.** A bucket is a fact of its calendar and this
+  chart knows no calendar — the same reason `onPick` reports a raw date.
+  Deriving buckets from the series' own points would give uneven columns,
+  because a point marks a change and not a period.
+  **The pure half is `stackBuckets(series, edges)`**, beside `stackSegments` in
+  `stackedArea.ts`. It reads the same `valueAt` the band mark reads, so a
+  column and a band can never disagree about what a series holds. It sorts the
+  edges, so a caller cannot make a backwards bucket.
+  **Nothing changes for an existing consumer**: without `columns` the chart
+  draws bands exactly as before.
+
+- **A chart no longer selects its own axis text.** `.sui-chart__svg` takes
+  `user-select: none`. A chart is a graphic, and `onPick` makes it a click
+  target, so a click or a drag inside it left the tick labels highlighted. The
+  overlay is a sibling of the `<svg>`, so portal-rendered tooltip text stays
+  selectable.
+
+- **`StackedTimelineChart` highlights the SELECTED event.** `selectedEvent`
+  takes the event's index in `events`; that rule goes solid, 2px, accented and
+  full-strength, and its number takes the accent too. Every other rule stays
+  dashed and recessive. Out of range, or omitted, selects nothing — so a
+  caller's `findIndex` miss (`-1`) reads correctly with no special case.
+  **Solid-versus-dashed carries the state on its own**, so the accent is a
+  second cue and never the only one.
+  **The index IS the identity**, for the same reason the rules render through
+  `Index` and not `For`: callers rebuild the event list wholesale on every
+  edit, so an id would have to survive a rebuild this component never sees.
+  `ReferenceLine` gains `labelColor` for the caption, applied as an inline
+  STYLE: a `fill` attribute is the lowest-priority CSS there is, and
+  `.sui-chart__ref-label` already sets `fill`, so an attribute is ignored.
+  `crisp()` also learned the stroke width — an odd width centres on a half
+  pixel, an even one on a whole pixel — so the 2px selected rule stays as
+  sharp as the 1px ones beside it.
+
+- **A column chart GHOSTS the rule a click would leave, under the pointer.**
+  `StackedTimelineChart` draws a faint vertical rule on the hovered bucket's
+  start whenever it has both `onPick` (something to act on the click) and
+  `columns` (a grid that says where the click lands). It reads the same
+  `hoverX` mapping `Chart.onPick` reports from, so the ghost and the click
+  cannot drift apart, and it reuses `ReferenceLine`, so the ghost IS the rule
+  it will become — same half-pixel snap, same dash.
+  **It needs the grid, and that is the point.** `Chart.onPick` is deliberately
+  unsnapped: the root does not know whose calendar it is on. A ghost on the
+  raw x would promise a spot the caller's own snapping then moves, which is
+  worse than no ghost. Given `columns` the chart can keep the promise, so that
+  is the only case it draws one. `GhostPin` is the same idea for a glyph and
+  anchors to `hoverX` too.
+  `ReferenceLine` gains `opacity` (default `0.6`) to make it possible.
+
+- **Every `BarSeries` edge lands on a WHOLE pixel, and `separator` is now
+  `segmentGap`.** A bar left at 349.87 left pixel 349 holding 13% fill and 87%
+  ground. That geometry is identical for every segment of a stack, but what
+  the partial column LOOKS like is not: a blue fill blended 13% over a
+  blue-grey plot ground is invisible, while amber or red at 13% tints it warm
+  and shows. The warm segments read as reaching a pixel further left than the
+  blue one under them — a stack that measured identical to three decimal
+  places looked misaligned.
+  **Rounding the two BOUNDARIES, not the centre.** Neighbouring bars share a
+  boundary, so both round to the same integer, and one inset taken from the
+  mean slot keeps every gutter exactly `2 * inset` wide whatever each bucket's
+  own width. On the License Board that took the gutters from a 0.29px spread
+  to a single value: every one is 6px.
+  **`separator` (a 1px stroke) becomes `segmentGap` (pixels of ground).** A
+  stroke straddles the rect's edge by half a pixel, which would have undone
+  the snapping and brought back the very softness it was added to remove. The
+  gap does the same job — a luminance step at a near-equiluminant boundary —
+  without touching an edge. `StackedTimelineChart` exposes it as `segmentGap`,
+  curried, default 1.
+
+- **`BarSeries` takes a per-datum `step`, and a `separator` between stacked
+  segments.** Two fixes a real stacked column chart asked for.
+  **`step` as a function.** One number spends the same slot on every datum
+  while each bar still centres on its own, so every bit of the difference
+  lands in the GAPS: months of 28 to 31 days gave gaps of 4.7 to 6.5 px around
+  a constant 30.6 px bar, and a rule drawn on a real month boundary then
+  missed the gap's centre by up to 0.9 px. Per-datum slots take the gap spread
+  to 0.29 px and the rule offset to 0.05 px. A number still works.
+  **A gap between stacked segments.** A validated categorical palette is held
+  inside a narrow lightness band, so two adjacent segments come out near
+  EQUILUMINANT — this stack's blue and amber sit at luminance .210 and .206,
+  4.32:1 and 4.25:1 against the ground. The eye finds edges by luminance, so a
+  boundary carrying only hue reads as soft and the segments stop looking like
+  they share a width. See `segmentGap` above.
+
+- **The VERTICAL reference rule is snapped to a half pixel.** A 1px stroke
+  centred on a fraction spreads across two device pixels at partial coverage
+  and paints grey, while its neighbour nearer a half lands on one and paints
+  sharp — so a row of event rules read as two different colours. Centred on
+  `round(x) + 0.5` the stroke covers whole pixels instead. This is geometry,
+  not the `shape-rendering="crispEdges"` hint it replaces: it holds at any
+  device pixel ratio and leaves nothing to the renderer's discretion.
+  **The horizontal rule is deliberately left alone.** A vertical rule takes its
+  x from the x-scale at a datum and a chart draws a ROW of them, so a reader
+  sees neighbours side by side. A horizontal rule is the threshold, usually one
+  per chart; it has no neighbour to be compared against, and snapping would
+  move it off its own value — the value the reader measures the data against.
+  Tests pin the split, that the snap keeps the rules in order, and that it
+  never spaces evenly placed rules more than a pixel apart.
+
+- **`BarSeries` reads the scales REACTIVELY — a resizing chart re-lays its
+  bars.** The geometry moved into a `createMemo` over `ctx.xScale()` /
+  `ctx.yScale()`. It used to be computed inside the `For` row callback, which
+  Solid runs once per datum identity, so the scales were read once and never
+  again.
+  **What it looked like.** A chart that measures its own box draws its first
+  frame at a fallback size. `StackedTimelineChart`'s fallback is 640 wide, so
+  in a 936-wide card the bars stayed laid out for 640 and filled two thirds of
+  the plot while the axes sat on the real width. Nothing errored.
+  `StackedAreaSeries` never had it, because its geometry has always been a memo
+  over the scale. Every shipped `BarSeries` consumer is a fixed-size chart, so
+  nothing in the catalog was wrong; the first self-measuring consumer exposed
+  it. A test doubles a chart's width and asserts the bars follow, and it fails
+  against a read-once scale.
+
+- **`BarSeries` takes `step` — one slot in data units, default `1`.** A
+  **time** x-domain requires it. `BarSeries` sizes a slot as
+  `xs(center + step) - xs(center)`, so on a date domain the default of one
+  unit is one MILLISECOND and the slot comes out around 1e-8 px. That is near
+  zero but not zero, so the `|| plotWidth / data.length` fallback never fires
+  and every bar renders invisible, with no error and nothing in the console.
+  `CompletionTimeline` escaped it by passing an index `x`. A regression test
+  now pins a real width on a date domain.
 - **`FillPaneRailGrid` — a curried `Grid` that states a width instead of a share.** A fluid pane track (`minmax(0, 1fr)`) beside a rail track held at `RateGauge`'s own `NATURAL_GAUGE_WIDTH` (292px, a data import like `FixedHeightBox`'s `DEFAULT_CHART_HEIGHT`), filling its parent column's remaining height. Replaces the `FillWrapRow` / `MajorPaneBox` / `GrowFillBox` proportional row on the License Board bench, where the gauge measured 438px at a 1439px viewport and 262px at a 1000px one. It also ends an overflow that looked like a broken 50/50 but was not one: the halves measured exactly equal at both viewports while the bottom band's CONTENT measured 468px inside its own 393px half, because a flex item's cross-size stretch is floored by its content — a `minmax(0, …)` track has a min sizing function of zero and suppresses that minimum on both axes.
 
 ## 0.176.0 — 2026-09-19

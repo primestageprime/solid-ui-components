@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import type { Component } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { Chart } from "./Chart";
-import { AreaSeries, PointSeries } from "./Series";
+import { AreaSeries, BarSeries, PointSeries } from "./Series";
 import { useChart } from "./context";
 
 interface Datum {
@@ -175,5 +175,214 @@ describe("AreaSeries — closes the fill at the drawn line's ends", () => {
     expect(p.length).toBe(4);
     expect(p[2][0]).toBe(p[1][0]);
     expect(p[3][0]).toBe(p[0][0]);
+  });
+});
+
+// ── BarSeries — the scale must be read REACTIVELY ───────────────────────────
+//
+// `For` keeps a row's nodes while the datum's identity holds, so a scale read
+// inside the row closure runs once and never again. A chart that measures its
+// own box draws its first frame at a fallback size, so the bars stayed laid
+// out for that first width while the axes moved to the real one.
+describe("BarSeries", () => {
+  const BARS = [{ at: 0 }, { at: 1 }, { at: 2 }, { at: 3 }];
+
+  const widthsOf = (container: HTMLElement): number[] =>
+    [...container.querySelectorAll(".sui-chart__bar")].map((bar) =>
+      Number(bar.getAttribute("width")),
+    );
+
+  it("re-lays the bars when the chart is re-measured", () => {
+    const [width, setWidth] = createSignal(400);
+    const { container } = render(() => (
+      <Chart width={width()} height={100} xDomain={[0, 4]} yDomain={[0, 10]}>
+        <BarSeries data={BARS} x={(_d, i) => i} value={() => 5} />
+      </Chart>
+    ));
+    const narrow = widthsOf(container)[0];
+    setWidth(800);
+    const wide = widthsOf(container)[0];
+    expect(narrow).toBeGreaterThan(0);
+    // The margins are fixed while the width doubles, so the ratio is a little
+    // OVER two. What matters is that it moved at all: before the fix `wide`
+    // was exactly `narrow`.
+    expect(wide).toBeGreaterThan(narrow * 1.5);
+  });
+
+  it("takes `step` as one slot in DATA units, which a TIME x needs", () => {
+    const START = Date.UTC(2026, 0, 1);
+    const MONTH = 30 * 86400000;
+    const months = [0, 1, 2, 3].map((i) => ({ at: START + i * MONTH }));
+    const { container } = render(() => (
+      <Chart
+        width={400}
+        height={100}
+        xDomain={[new Date(START), new Date(START + 4 * MONTH)]}
+        yDomain={[0, 10]}
+      >
+        <BarSeries
+          data={months}
+          x={(d) => d.at}
+          value={() => 5}
+          step={MONTH}
+          bandWidth={0.8}
+        />
+      </Chart>
+    ));
+    // One millisecond — the default step — would land near zero here, and the
+    // `||` fallback never fires because near zero is not zero.
+    for (const width of widthsOf(container)) expect(width).toBeGreaterThan(20);
+  });
+
+  it("takes a per-datum `step`, so uneven buckets get even gaps", () => {
+    // Three buckets of 31, 28 and 31 days. One mean step would draw three
+    // equal bars on their own true centres, and every day of the difference
+    // would land in the GAPS.
+    const START = Date.UTC(2027, 0, 1);
+    const D = 86400000;
+    const edges = [START, START + 31 * D, START + 59 * D, START + 90 * D];
+    const buckets = [0, 1, 2].map((i) => ({ from: edges[i], to: edges[i + 1] }));
+    const { container } = render(() => (
+      <Chart
+        width={600}
+        height={100}
+        xDomain={[new Date(START), new Date(edges[3])]}
+        yDomain={[0, 10]}
+      >
+        <BarSeries
+          data={buckets}
+          x={(b) => (b.from + b.to) / 2}
+          value={() => 5}
+          step={(b) => b.to - b.from}
+          bandWidth={0.8}
+        />
+      </Chart>
+    ));
+    const bars = [...container.querySelectorAll(".sui-chart__bar")].map((bar) => ({
+      l: Number(bar.getAttribute("x")),
+      w: Number(bar.getAttribute("width")),
+    }));
+    expect(bars).toHaveLength(3);
+    // A February column IS narrower than a January one — the bar is its bucket.
+    expect(bars[1].w).toBeLessThan(bars[0].w);
+    // …and the gaps come out equal, which is the thing a reader sees.
+    const gaps = [
+      bars[1].l - (bars[0].l + bars[0].w),
+      bars[2].l - (bars[1].l + bars[1].w),
+    ];
+    expect(gaps[0]).toBeCloseTo(gaps[1], 1);
+  });
+
+  it("opens a GAP between stacked segments only when asked", () => {
+    const stack = (segmentGap?: number) =>
+      render(() => (
+        <Chart width={400} height={100} xDomain={[0, 4]} yDomain={[0, 10]}>
+          <BarSeries
+            data={[{ at: 0 }]}
+            x={(_d, i) => i}
+            segments={() => [{ value: 3 }, { value: 4 }]}
+            segmentGap={segmentGap}
+          />
+        </Chart>
+      )).container;
+    const boxes = (c: HTMLElement) =>
+      [...c.querySelectorAll(".sui-chart__bar")]
+        .map((b) => ({
+          y: Number(b.getAttribute("y")),
+          h: Number(b.getAttribute("height")),
+        }))
+        .sort((a, b) => a.y - b.y);
+
+    // Flush: the upper segment's bottom IS the lower one's top.
+    const [upper, lower] = boxes(stack());
+    expect(upper.y + upper.h).toBe(lower.y);
+
+    // With a gap, 2px of ground sits between them — and NO stroke does it,
+    // because a stroke would straddle the edge and undo the snapping.
+    const [gUpper, gLower] = boxes(stack(2));
+    expect(gLower.y - (gUpper.y + gUpper.h)).toBe(2);
+    expect(
+      stack(2).querySelector(".sui-chart__bar")?.getAttribute("stroke"),
+    ).toBeNull();
+  });
+
+  it("puts every bar edge on a WHOLE pixel", () => {
+    // A fractional edge leaves a partial pixel, and a partial pixel is only
+    // VISIBLE for a fill far from the ground — so a warm segment read as
+    // reaching further left than the blue one beneath it.
+    const { container } = render(() => (
+      <Chart width={437} height={100} xDomain={[0, 7]} yDomain={[0, 10]}>
+        <BarSeries data={[0, 1, 2, 3, 4, 5, 6].map((at) => ({ at }))} x={(_d, i) => i} value={() => 5} />
+      </Chart>
+    ));
+    // `Number.isInteger`, not `% 1`: a bar left of the plot gives -0, and
+    // `Object.is(-0, 0)` is false.
+    for (const bar of container.querySelectorAll(".sui-chart__bar")) {
+      expect(Number.isInteger(Number(bar.getAttribute("x")))).toBe(true);
+      expect(Number.isInteger(Number(bar.getAttribute("width")))).toBe(true);
+    }
+  });
+
+  it("gives every gutter the SAME width, whatever each bucket's own", () => {
+    const D = 86400000;
+    const jan = Date.UTC(2027, 0, 1);
+    const edges = [jan, jan + 31 * D, jan + 59 * D, jan + 90 * D];
+    const buckets = [0, 1, 2].map((i) => ({ from: edges[i], to: edges[i + 1] }));
+    const { container } = render(() => (
+      <Chart
+        width={600}
+        height={100}
+        xDomain={[new Date(jan), new Date(edges[3])]}
+        yDomain={[0, 10]}
+      >
+        <BarSeries
+          data={buckets}
+          x={(b) => (b.from + b.to) / 2}
+          value={() => 5}
+          step={(b) => b.to - b.from}
+          bandWidth={0.8}
+        />
+      </Chart>
+    ));
+    const bars = [...container.querySelectorAll(".sui-chart__bar")].map((b) => ({
+      l: Number(b.getAttribute("x")),
+      w: Number(b.getAttribute("width")),
+    }));
+    // February is narrower than January — the bar IS its bucket…
+    expect(bars[1].w).toBeLessThan(bars[0].w);
+    // …and yet the gutters come out identical, to the pixel. Rounding the two
+    // BOUNDARIES is what does it: neighbours share one, so both land on the
+    // same integer, and one inset off the mean slot keeps the rest equal.
+    const gaps = [
+      bars[1].l - (bars[0].l + bars[0].w),
+      bars[2].l - (bars[1].l + bars[1].w),
+    ];
+    expect(gaps[0]).toBe(gaps[1]);
+  });
+
+  it("draws no rect for a zero segment, and keeps the bands above it put", () => {
+    const { container } = render(() => (
+      <Chart width={400} height={100} xDomain={[0, 4]} yDomain={[0, 10]}>
+        <BarSeries
+          data={[{ at: 0 }]}
+          x={(_d, i) => i}
+          segments={() => [{ value: 3 }, { value: 0 }, { value: 4 }]}
+        />
+      </Chart>
+    ));
+    const bars = [...container.querySelectorAll(".sui-chart__bar")];
+    expect(bars).toHaveLength(2);
+    const box = (bar: Element) => ({
+      top: Number(bar.getAttribute("y")),
+      height: Number(bar.getAttribute("height")),
+    });
+    // Sorted DOWN the screen: the 4 sits above the 3, since y grows downward.
+    const [upper, lower] = bars.map(box).sort((a, b) => a.top - b.top);
+    // Heights hold roughly the 4:3 the values asked for. Only roughly: every
+    // edge is rounded to a whole pixel, which is what keeps a warm segment
+    // from reading as wider than the blue one beneath it.
+    expect(upper.height / lower.height).toBeCloseTo(4 / 3, 1);
+    // And the two still meet EXACTLY: the hole moved neither of them.
+    expect(upper.top + upper.height).toBe(lower.top);
   });
 });
