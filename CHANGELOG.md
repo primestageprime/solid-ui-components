@@ -155,6 +155,7 @@
   and every bar renders invisible, with no error and nothing in the console.
   `CompletionTimeline` escaped it by passing an index `x`. A regression test
   now pins a real width on a date domain.
+- **`FillPaneRailGrid` — a curried `Grid` that states a width instead of a share.** A fluid pane track (`minmax(0, 1fr)`) beside a rail track held at `RateGauge`'s own `NATURAL_GAUGE_WIDTH` (292px, a data import like `FixedHeightBox`'s `DEFAULT_CHART_HEIGHT`), filling its parent column's remaining height. Replaces the `FillWrapRow` / `MajorPaneBox` / `GrowFillBox` proportional row on the License Board bench, where the gauge measured 438px at a 1439px viewport and 262px at a 1000px one. It also ends an overflow that looked like a broken 50/50 but was not one: the halves measured exactly equal at both viewports while the bottom band's CONTENT measured 468px inside its own 393px half, because a flex item's cross-size stretch is floored by its content — a `minmax(0, …)` track has a min sizing function of zero and suppresses that minimum on both axes.
 
 ## 0.176.0 — 2026-09-19
 

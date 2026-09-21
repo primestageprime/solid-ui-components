@@ -21,10 +21,9 @@
  *                  by `dirty()`. A board is one scenario and saves once.
  *   Rate gauge   — `createRateGauge`, revenue-side sentences in $/mo
  *
- * Frame: `ViewportColumn` / `HalfFillColumn` / `FillWrapRow` / `MajorPaneBox` /
+ * Frame: `ViewportColumn` / `HalfFillColumn` / `FillPaneRailGrid` /
  * `GrowFillBox` / `FillCardSurface` / `GrowCenterColumn`, reusing the Scenario
- * Board's `.scenario-board-frame` and `.scenario-board-gauge` — so this bench
- * adds no CSS at all.
+ * Board's `.scenario-board-frame` — so this bench adds no CSS at all.
  *
  * Every number comes from a named pure function in `license-board-model.ts`,
  * each printed as a table on mount behind `DEBUG`, so the board can be read and
@@ -54,6 +53,23 @@
  * pass had to give the charts a stated height because it drew TWO paired rows
  * needing ~700px; one grouped row is ~325px, so the halves are back and the
  * License Mix chart has its height back with them.
+ *
+ * ── THE BOTTOM BAND IS A STATED FRAME (Peter, 2026-09-21) ──────────────────
+ *
+ * "I'd like to be able to specify an exact width for the gauge. The changes
+ * panel should get whatever is left over." It was a PERCENTAGE — `MajorPaneBox`
+ * at 60% beside a growing cell — so the gauge was 438px at a 1439px viewport
+ * and 262px at a 1000px one, and the dial was a different instrument on every
+ * screen. It is now one `FillPaneRailGrid`: a `minmax(0, 1fr)` pane track
+ * beside a rail track stated at `RateGauge`'s own natural width.
+ *
+ * That ALSO fixed the halves, which were never the thing that was broken. They
+ * measured 606/606 at 1439×1325 and 393/393 at 1000×900 — exact at both — while
+ * the bottom row's CONTENT measured 468px inside its own 393px half, because a
+ * flex item's cross-size stretch is floored by its content and
+ * `GroupedMutationSliders` has a ~420px floor. A `minmax(0, …)` track has a min
+ * sizing function of zero, which suppresses that content-based minimum
+ * outright, so the band now ends where its half ends.
  */
 import {
   batch,
@@ -90,11 +106,10 @@ import { ThemedNumberInput } from "../../../src/components/ThemedNumberInput";
 import { Modal } from "../../../src/components/Modal";
 import {
   EndWrapRow,
-  FillWrapRow,
+  FillPaneRailGrid,
   GrowCenterColumn,
   GrowFillBox,
   HalfFillColumn,
-  MajorPaneBox,
   NarrowStack,
   SpreadRow,
   ViewportColumn,
@@ -855,58 +870,61 @@ const LicenseBoardBench: Component = () => {
           </HalfFillColumn>
         </HalfFillColumn>
 
-        {/* The bottom half: Changes wide-left, the gauge narrow-right. */}
+        {/* The bottom half: Changes takes whatever is left, the gauge is held
+            to its own width. ONE frame, no wrappers — `FillPaneRailGrid`'s two
+            tracks ARE the two cards, so each card is a grid item rather than a
+            card inside a box inside a row. */}
         <HalfFillColumn>
-          <FillWrapRow>
-            <MajorPaneBox>
-              <FillCardSurface>
-                {/* NO extra Stack here. `FillCardSurface` already lays its
-                    children out as a column that FILLS the card. */}
-                <ChangesToolbar
-                  title="Changes"
-                  changes={chipsOf(mutations())}
-                  selected={editing()}
-                  onSelect={setEditing}
-                  emptyNote="Click a month, or move a dial, to propose a change — it holds until the next one."
-                  onReset={reset}
-                  onRemove={deleteChange}
+          <FillPaneRailGrid>
+            <FillCardSurface>
+              {/* NO extra Stack here. `FillCardSurface` already lays its
+                  children out as a column that FILLS the card. */}
+              <ChangesToolbar
+                title="Changes"
+                changes={chipsOf(mutations())}
+                selected={editing()}
+                onSelect={setEditing}
+                emptyNote="Click a month, or move a dial, to propose a change — it holds until the next one."
+                onReset={reset}
+                onRemove={deleteChange}
+              />
+              {/* ONE ROW, NEVER TWO (Peter, 2026-09-18). Six dials side by
+                  side per card, the two captioned groups beside each other,
+                  and when the pane cannot hold every card the row PAGES with
+                  ‹ › rather than wrapping — by a WHOLE card, so a product's
+                  `mo` group is never on screen with its `yr` group off it.
+                  See the file header for the measured width. */}
+              <GrowFillBox>
+                <LicenseSliders
+                  entities={cards()}
+                  summary={cardSummary}
+                  selected={selected()}
+                  onSelectionChange={setSelected}
+                  onChange={setMeasure}
+                  onRemove={discontinue}
+                  onRestore={relaunch}
+                  onAdd={openAdd}
                 />
-                {/* ONE ROW, NEVER TWO (Peter, 2026-09-18). Six dials side by
-                    side per card, the two captioned groups beside each other,
-                    and when the pane cannot hold every card the row PAGES with
-                    ‹ › rather than wrapping — by a WHOLE card, so a product's
-                    `mo` group is never on screen with its `yr` group off it.
-                    See the file header for the measured width. */}
-                <GrowFillBox>
-                  <LicenseSliders
-                    entities={cards()}
-                    summary={cardSummary}
-                    selected={selected()}
-                    onSelectionChange={setSelected}
-                    onChange={setMeasure}
-                    onRemove={discontinue}
-                    onRestore={relaunch}
-                    onAdd={openAdd}
-                  />
-                </GrowFillBox>
-              </FillCardSurface>
-            </MajorPaneBox>
+              </GrowFillBox>
+            </FillCardSurface>
 
-            <GrowFillBox class="scenario-board-gauge">
-              <FillCardSurface>
-                <TextTitle>Cash, on average</TextTitle>
-                <GrowCenterColumn>
-                  <RevenueRateGauge
-                    domain={RATE_DOMAIN}
-                    baseline={COMMITTED_RATE}
-                    caution={COMFORTABLE}
-                    value={rate()}
-                    label="Scenario"
-                  />
-                </GrowCenterColumn>
-              </FillCardSurface>
-            </GrowFillBox>
-          </FillWrapRow>
+            {/* THE GAUGE HOLDS ITS SIZE. Its card is the rail track, so it is
+                the same width at every viewport and the dial is drawn at one
+                size — no `.scenario-board-gauge` min-width, because a track
+                that cannot wrap needs nothing to stop it wrapping. */}
+            <FillCardSurface>
+              <TextTitle>Cash, on average</TextTitle>
+              <GrowCenterColumn>
+                <RevenueRateGauge
+                  domain={RATE_DOMAIN}
+                  baseline={COMMITTED_RATE}
+                  caution={COMFORTABLE}
+                  value={rate()}
+                  label="Scenario"
+                />
+              </GrowCenterColumn>
+            </FillCardSurface>
+          </FillPaneRailGrid>
         </HalfFillColumn>
       </ViewportColumn>
 

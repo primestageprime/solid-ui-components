@@ -103,6 +103,11 @@ import {
   formatLicenses,
   revenueShift,
 } from "./license-board-money";
+import {
+  metricsFor,
+  NATURAL_GAUGE_WIDTH,
+  RING_OUTER,
+} from "../../../src/components/RateGauge/geometry";
 
 /**
  * THE START THE TESTS PIN. The board itself opens at the month-start of TODAY,
@@ -1135,5 +1140,58 @@ describe("a span that starts today", () => {
     // Six months of Amygdala's $11,700 beside JTF's $5,000, then none of it.
     expect(cash[5]).toBe(16_700);
     expect(cash[6]).toBe(5_000);
+  });
+});
+
+/**
+ * THE GAUGE'S RAIL IS WIDE ENOUGH FOR THE WORDS THIS BOARD PUTS IN IT.
+ *
+ * `FillPaneRailGrid` holds the gauge's card to `NATURAL_GAUGE_WIDTH`, and that
+ * constant is derived from how long a board's callout SENTENCE runs. That is a
+ * fact about this file's wording, not about the instrument, so a change to
+ * `againstBreakeven` or `revenueShift` — or a fixture with a wider rate domain,
+ * which is where the longest sentence comes from — can outgrow the rail with
+ * nothing failing. The failure would be silent and in the wrong place: a gauge
+ * in a measured box does not ellipsize, it starves the DIAL to leave the words
+ * room, and a ring quietly drawn at its floor is not something a test of the
+ * model would ever notice.
+ *
+ * So the sweep is the guard. Both fixtures, both sentences, across each rate
+ * domain — if the longest one no longer fits the stated width, this fails, and
+ * `HUD_SENTENCE_CHARS` in `RateGauge/geometry.ts` is the number to raise.
+ */
+describe("the gauge's stated rail width", () => {
+  const sentencesFor = (
+    domain: readonly [number, number],
+    baseline: number,
+  ): string[] => {
+    const steps = Array.from({ length: 201 }, (_, index) => index);
+    const pairs = map((step: number) => {
+      const value = domain[0] + ((domain[1] - domain[0]) * step) / 200;
+      return [againstBreakeven(value), revenueShift(value - baseline)];
+    }, steps);
+    return pairs.flat();
+  };
+
+  it("fits the longest callout EITHER fixture can produce, dial unstarved", () => {
+    const labels = [
+      "Scenario",
+      "Baseline",
+      ...sentencesFor(APPS.rateDomain, COMMITTED_RATE),
+      ...sentencesFor(TIERS.rateDomain, COMMITTED_RATE),
+    ];
+    // What the column would take if nothing bounded it — asked of the geometry
+    // itself rather than recomputed here, so the test cannot drift from the
+    // component's own character-width rule.
+    const wanted = metricsFor({ width: 10_000, height: 400 }, labels)
+      .labelWidth;
+    const metrics = metricsFor(
+      { width: NATURAL_GAUGE_WIDTH, height: 400 },
+      labels,
+    );
+    // The column is NOT clamped — every word has the room it asked for.
+    expect(metrics.labelWidth).toBeCloseTo(wanted, 6);
+    // …and the dial still reaches the size it draws when nothing bounds it.
+    expect(metrics.ringOuter).toBeGreaterThanOrEqual(RING_OUTER);
   });
 });
