@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+### Added
+
+- **`StackedTimelineChart` forwards `curve` to its stack, and curries it.**
+  `StackedAreaSeries` has taken `curve: "smoothStep" | "linear"` since the
+  stack shipped, but the composite never passed it, so every consumer drew the
+  smoothed crossing whether or not it suited the data. `curve` now sits on
+  `StackedTimelineChartProps` and in `StackedTimelineChartOverrides`, beside
+  `margin` and the tick formats.
+  **Why it belongs at curry time.** Whether an x-axis carries a continuum or a
+  row of buckets is one fact about a screen's data, not a per-render choice —
+  the same class of decision as the tick text's unit.
+  **Why a consumer wants `"linear"`.** `smoothStep` spends x on a change: the
+  band rises before it and falls after it, which is the correct picture of a
+  quantity that varies continuously. On an axis of buckets — a month's cash, a
+  week's hours — a bucket has no interior, so those shoulders draw a figure the
+  model never produced, and a one-bucket spike reads as a rise and a fall
+  rather than as one payment. The License Board's mix stack is the case that
+  found it.
+  **Nothing changes for an existing consumer**: the default is still
+  `"smoothStep"`.
+
 ## 0.176.0 — 2026-09-19
 
 ### Added
