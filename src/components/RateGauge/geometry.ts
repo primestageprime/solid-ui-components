@@ -498,6 +498,47 @@ export const labelColumnWidth = (texts: readonly string[]): number =>
 export const TEXT_X = LABEL_X + TEXT_GAP;
 
 /**
+ * The longest callout a board's HUD sentence runs to, in characters.
+ *
+ * MEASURED, not chosen: the sentences these gauges carry are built to fit a HUD
+ * column and the longest any board can currently produce is
+ * `"$11.0k/mo below breakeven"` — 25 characters, swept over the whole rate
+ * domain rather than read off one screenshot. A NAME can be any length and
+ * ellipsizes (see `MAX_LABEL_WIDTH`); a SENTENCE is the component's caller
+ * building a line to fit, so its length is a property of the wording and can be
+ * stated.
+ */
+const HUD_SENTENCE_CHARS = 25;
+
+/**
+ * The width a gauge WANTS, for a layout that has to state one.
+ *
+ * A gauge in a measured box does not degrade gracefully into a narrow one: by
+ * `metricsFor`'s rule the RING is sized against the label column's UNCAPPED
+ * demand and the column is clamped to the box afterwards, so a box too narrow
+ * for the words starves the dial to its `MIN_RING_OUTER` floor rather than
+ * ellipsizing. That is the number a proportional layout hands it at small
+ * windows, and it is why this exists.
+ *
+ * DERIVED, not typed in — the smallest width at which BOTH of the gauge's own
+ * criteria hold: the label column is unclamped (the words do not compress) and
+ * the ring reaches `RING_OUTER`, the dial it draws when nothing imposes a size
+ * on it (the ring is not starved). Below it one of the two gives way; above it
+ * the dial simply grows. Every term is a constant this file already decided:
+ *
+ *     TEXT_X (105) + HUD_SENTENCE_CHARS × LABEL_CHAR_WIDTH (182.5)
+ *                  + CANVAS_MARGIN (4)  =  291.5  →  292
+ *
+ * Exported for a LAYOUT to bake, the way `DEFAULT_CHART_HEIGHT` is — a data
+ * import, so a frame can hold an instrument to its own natural width without
+ * any call site writing a pixel. It stays out of the public barrel with the
+ * rest of `geometry.ts`.
+ */
+export const NATURAL_GAUGE_WIDTH = Math.ceil(
+  TEXT_X + HUD_SENTENCE_CHARS * LABEL_CHAR_WIDTH + CANVAS_MARGIN,
+);
+
+/**
  * Where every leader stops being radial and turns: the vertical gutter at the
  * rightmost point of the turn circle.
  *

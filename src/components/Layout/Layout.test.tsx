@@ -21,8 +21,10 @@ import {
   LooseCardGrid,
   WrappedClusterRow,
   FixedHeightBox,
+  FillPaneRailGrid,
 } from "./index";
 import { DEFAULT_CHART_HEIGHT } from "../ScrubChart/helpers";
+import { NATURAL_GAUGE_WIDTH } from "../RateGauge/geometry";
 
 describe("Layout primitives", () => {
   it("Stack applies gap class", () => {
@@ -158,6 +160,43 @@ describe("Layout curried variants", () => {
     expect(el.className).toMatch(/stack--gap-sm/);
     const style = el.getAttribute("style") ?? "";
     expect(style).toMatch(/padding/);
+  });
+
+  // FillPaneRailGrid — the TRACK LIST is the component, so it is asserted
+  // literally rather than matched loosely. Three separate claims, because each
+  // one fails differently and silently:
+  //   • the rail track is the gauge's own NATURAL_GAUGE_WIDTH, not a number
+  //     somebody typed here — a copy would rot the moment the gauge's geometry
+  //     moved, which is the whole reason it is imported;
+  //   • the pane track is `minmax(0, 1fr)` and NOT a bare `1fr`, which is
+  //     `minmax(auto, 1fr)` and would let a self-measuring pane push the rail
+  //     off its stated width;
+  //   • `grid-template-rows: minmax(0, 1fr)` is what suppresses the row's
+  //     content-based minimum — drop it and the band overflows its half again.
+  it("FillPaneRailGrid states the rail track at RateGauge's natural width", () => {
+    const { container } = render(() => (
+      <FillPaneRailGrid>
+        <div>pane</div>
+        <div>rail</div>
+      </FillPaneRailGrid>
+    ));
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.className).toBe("grid grid--gap-sm");
+    expect(el.style.gridTemplateColumns).toBe(
+      `minmax(0, 1fr) ${NATURAL_GAUGE_WIDTH}px`,
+    );
+    expect(el.style.gridTemplateRows).toBe("minmax(0, 1fr)");
+    expect(el.style.flex).toBe("1 1 0%");
+    expect(el.style.minHeight).toBe("0px");
+    expect(el.textContent).toBe("panerail");
+  });
+
+  it("FillPaneRailGrid's rail is a STATED width, not a percentage", () => {
+    const { container } = render(() => <FillPaneRailGrid>x</FillPaneRailGrid>);
+    const tracks = (container.firstElementChild as HTMLElement).style
+      .gridTemplateColumns;
+    expect(tracks).not.toMatch(/%/);
+    expect(tracks).toMatch(/\d+px$/);
   });
 });
 
