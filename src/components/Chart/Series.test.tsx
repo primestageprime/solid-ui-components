@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import type { Component } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import { Chart } from "./Chart";
-import { AreaSeries, PointSeries } from "./Series";
+import { AreaSeries, BarSeries, PointSeries } from "./Series";
 import { useChart } from "./context";
 
 interface Datum {
@@ -175,5 +175,86 @@ describe("AreaSeries — closes the fill at the drawn line's ends", () => {
     expect(p.length).toBe(4);
     expect(p[2][0]).toBe(p[1][0]);
     expect(p[3][0]).toBe(p[0][0]);
+  });
+});
+
+// ── BarSeries — the scale must be read REACTIVELY ───────────────────────────
+//
+// `For` keeps a row's nodes while the datum's identity holds, so a scale read
+// inside the row closure runs once and never again. A chart that measures its
+// own box draws its first frame at a fallback size, so the bars stayed laid
+// out for that first width while the axes moved to the real one.
+describe("BarSeries", () => {
+  const BARS = [{ at: 0 }, { at: 1 }, { at: 2 }, { at: 3 }];
+
+  const widthsOf = (container: HTMLElement): number[] =>
+    [...container.querySelectorAll(".sui-chart__bar")].map((bar) =>
+      Number(bar.getAttribute("width")),
+    );
+
+  it("re-lays the bars when the chart is re-measured", () => {
+    const [width, setWidth] = createSignal(400);
+    const { container } = render(() => (
+      <Chart width={width()} height={100} xDomain={[0, 4]} yDomain={[0, 10]}>
+        <BarSeries data={BARS} x={(_d, i) => i} value={() => 5} />
+      </Chart>
+    ));
+    const narrow = widthsOf(container)[0];
+    setWidth(800);
+    const wide = widthsOf(container)[0];
+    expect(narrow).toBeGreaterThan(0);
+    // The margins are fixed while the width doubles, so the ratio is a little
+    // OVER two. What matters is that it moved at all: before the fix `wide`
+    // was exactly `narrow`.
+    expect(wide).toBeGreaterThan(narrow * 1.5);
+  });
+
+  it("takes `step` as one slot in DATA units, which a TIME x needs", () => {
+    const START = Date.UTC(2026, 0, 1);
+    const MONTH = 30 * 86400000;
+    const months = [0, 1, 2, 3].map((i) => ({ at: START + i * MONTH }));
+    const { container } = render(() => (
+      <Chart
+        width={400}
+        height={100}
+        xDomain={[new Date(START), new Date(START + 4 * MONTH)]}
+        yDomain={[0, 10]}
+      >
+        <BarSeries
+          data={months}
+          x={(d) => d.at}
+          value={() => 5}
+          step={MONTH}
+          bandWidth={0.8}
+        />
+      </Chart>
+    ));
+    // One millisecond — the default step — would land near zero here, and the
+    // `||` fallback never fires because near zero is not zero.
+    for (const width of widthsOf(container)) expect(width).toBeGreaterThan(20);
+  });
+
+  it("draws no rect for a zero segment, and keeps the bands above it put", () => {
+    const { container } = render(() => (
+      <Chart width={400} height={100} xDomain={[0, 4]} yDomain={[0, 10]}>
+        <BarSeries
+          data={[{ at: 0 }]}
+          x={(_d, i) => i}
+          segments={() => [{ value: 3 }, { value: 0 }, { value: 4 }]}
+        />
+      </Chart>
+    ));
+    const bars = [...container.querySelectorAll(".sui-chart__bar")];
+    expect(bars).toHaveLength(2);
+    const box = (bar: Element) => ({
+      top: Number(bar.getAttribute("y")),
+      height: Number(bar.getAttribute("height")),
+    });
+    // Sorted DOWN the screen: the 4 sits above the 3, since y grows downward.
+    const [upper, lower] = bars.map(box).sort((a, b) => a.top - b.top);
+    // Heights hold the 4:3 the values asked for, whatever the plot's inset.
+    expect(upper.height / lower.height).toBeCloseTo(4 / 3, 5);
+    // And the two meet exactly: the hole moved neither of them.
+    expect(upper.top + upper.height).toBeCloseTo(lower.top, 5);
   });
 });

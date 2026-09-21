@@ -302,74 +302,92 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 	const bandWidth = () => props.bandWidth ?? 0.65;
 	const step = () => props.step ?? 1;
 	const baseline = () => props.baseline ?? 0;
+	const interactive = () =>
+		props.onBarClick != null || props.onSegmentClick != null;
+
+	/* THE GEOMETRY IS A MEMO, not a read inside the row closure. `For` keeps a
+	   row's nodes for as long as the datum's identity holds, so a scale read in
+	   that closure runs ONCE and never again. A chart that measures its own box
+	   draws its first frame at a FALLBACK size (`StackedTimelineChart` does),
+	   and the bars then stayed laid out for that first width while the axes
+	   moved to the real one — a stack that filled two thirds of its plot.
+	   `StackedAreaSeries` never had it, because its geometry has always been a
+	   memo over `ctx.xScale()`. Fixed-size consumers never resize, which is why
+	   this went unseen. */
+	const bars = createMemo(() => {
+		const xs = ctx.xScale();
+		const ys = ctx.yScale();
+		const base = baseline();
+		const fallbackSlot =
+			(xs.range[1] - xs.range[0]) / Math.max(1, props.data.length);
+		return props.data.map((datum, index) => {
+			const center = props.x(datum, index);
+			// Slot pixel width: the distance to the next centre, one `step` along.
+			const slotPx = Math.abs(xs(center + step()) - xs(center)) || fallbackSlot;
+			const width = slotPx * bandWidth();
+			const source: readonly BarSegment[] = props.segments
+				? props.segments(datum)
+				: [{ value: props.value?.(datum) ?? 0 }];
+			let posCursor = base;
+			let negCursor = base;
+			const segments = source
+				.map((seg, segIndex) => {
+					const top = seg.value > 0 ? posCursor + seg.value : negCursor;
+					const bottom = seg.value > 0 ? posCursor : negCursor + seg.value;
+					if (seg.value > 0) posCursor += seg.value;
+					else negCursor += seg.value;
+					return {
+						seg,
+						segIndex,
+						y: ys(top),
+						height: Math.abs(ys(bottom) - ys(top)),
+					};
+				})
+				// A zero segment draws no rect. The cursors above already counted
+				// it, so dropping it here cannot move the bands above it.
+				.filter((placed) => placed.seg.value !== 0);
+			return { datum, index, x: xs(center) - width / 2, width, segments };
+		});
+	});
+
 	return (
 		<g
 			class={`sui-chart__bars${props.class ? ` ${props.class}` : ""}`}
 			clip-path={ctx.clip.plotPathUrl()}
 		>
-			<For each={props.data}>
-				{(d, i) => {
-					const xs = ctx.xScale();
-					const ys = ctx.yScale();
-					const center = props.x(d, i());
-					// Slot pixel width: distance to the next-integer center in data space.
-					const slotPx =
-						Math.abs(xs(center + step()) - xs(center)) ||
-						(xs.range[1] - xs.range[0]) / Math.max(1, props.data.length);
-					const bw = slotPx * bandWidth();
-					const xPx = xs(center) - bw / 2;
-					const _baseY = ys(baseline());
-
-					const segs: readonly BarSegment[] = props.segments
-						? props.segments(d)
-						: [{ value: props.value?.(d) ?? 0 }];
-
-					let posCursor = baseline();
-					let negCursor = baseline();
-
-					return (
-						<For each={segs}>
-							{(seg, si) => {
-								if (seg.value === 0) return null;
-								const top = seg.value > 0 ? posCursor + seg.value : negCursor;
-								const bottom =
-									seg.value > 0 ? posCursor : negCursor + seg.value;
-								if (seg.value > 0) posCursor += seg.value;
-								else negCursor += seg.value;
-								const yPx = ys(top);
-								const hPx = Math.abs(ys(bottom) - ys(top));
-								const interactive = () =>
-									props.onBarClick != null || props.onSegmentClick != null;
-								const click = (e: MouseEvent) => {
-									e.stopPropagation();
-									props.onSegmentClick?.(d, seg, si());
-									props.onBarClick?.(d, i());
-								};
-								return (
-									// biome-ignore lint/a11y/noStaticElementInteractions: interactive role/tabIndex + Enter/Space keyboard parity are wired dynamically when a click handler is provided; the analyzer can't see the conditional role
-									<rect
-										class="sui-chart__bar"
-										classList={{ "sui-chart__bar--interactive": interactive() }}
-										role={interactive() ? "button" : undefined}
-										tabIndex={interactive() ? 0 : undefined}
-										x={xPx}
-										y={yPx}
-										width={bw}
-										height={hPx}
-										fill={seg.fill ?? props.fill}
-										onClick={click}
-										onKeyDown={(e) => {
-											if (e.key === "Enter" || e.key === " ") {
-												e.preventDefault();
-												click(e as unknown as MouseEvent);
-											}
-										}}
-									/>
-								);
-							}}
-						</For>
-					);
-				}}
+			<For each={bars()}>
+				{(bar) => (
+					<For each={bar.segments}>
+						{(placed) => {
+							const click = (e: MouseEvent) => {
+								e.stopPropagation();
+								props.onSegmentClick?.(bar.datum, placed.seg, placed.segIndex);
+								props.onBarClick?.(bar.datum, bar.index);
+							};
+							return (
+								// biome-ignore lint/a11y/noStaticElementInteractions: interactive role/tabIndex + Enter/Space keyboard parity are wired dynamically when a click handler is provided; the analyzer can't see the conditional role
+								<rect
+									class="sui-chart__bar"
+									classList={{ "sui-chart__bar--interactive": interactive() }}
+									role={interactive() ? "button" : undefined}
+									tabIndex={interactive() ? 0 : undefined}
+									x={bar.x}
+									y={placed.y}
+									width={bar.width}
+									height={placed.height}
+									fill={placed.seg.fill ?? props.fill}
+									onClick={click}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											click(e as unknown as MouseEvent);
+										}
+									}}
+								/>
+							);
+						}}
+					</For>
+				)}
 			</For>
 		</g>
 	);

@@ -44,6 +44,21 @@
   **Nothing changes for an existing consumer**: without `columns` the chart
   draws bands exactly as before.
 
+- **`BarSeries` reads the scales REACTIVELY — a resizing chart re-lays its
+  bars.** The geometry moved into a `createMemo` over `ctx.xScale()` /
+  `ctx.yScale()`. It used to be computed inside the `For` row callback, which
+  Solid runs once per datum identity, so the scales were read once and never
+  again.
+  **What it looked like.** A chart that measures its own box draws its first
+  frame at a fallback size. `StackedTimelineChart`'s fallback is 640 wide, so
+  in a 936-wide card the bars stayed laid out for 640 and filled two thirds of
+  the plot while the axes sat on the real width. Nothing errored.
+  `StackedAreaSeries` never had it, because its geometry has always been a memo
+  over the scale. Every shipped `BarSeries` consumer is a fixed-size chart, so
+  nothing in the catalog was wrong; the first self-measuring consumer exposed
+  it. A test doubles a chart's width and asserts the bars follow, and it fails
+  against a read-once scale.
+
 - **`BarSeries` takes `step` — one slot in data units, default `1`.** A
   **time** x-domain requires it. `BarSeries` sizes a slot as
   `xs(center + step) - xs(center)`, so on a date domain the default of one
