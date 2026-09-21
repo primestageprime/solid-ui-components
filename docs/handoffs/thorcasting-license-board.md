@@ -163,14 +163,30 @@ monthly column beside an annual one for one offering
 | Fixed monthly cost (breakeven) | Read from the fold, as the payroll gauge reads its rate — not a constant |
 | The engine rule | `SubscriptionRevenue`, `thorcasting-engine/src/rules/subscription.rs:40-54` |
 
-**⚠ The percentage ranges do not line up.** `suiteDiscount.ts:46` caps the
-discount slider at `DISCOUNT_MAX_PCT = 50` — "a discount over half is not a
-cadence discount, it is a different price, and it is authored at Configure." The
-board's `%` track runs the whole 0–100 on purpose, because JTF's annual licence
-really costs 20% of twelve monthly fees, which is an **80% discount** and so
-outside what the suite card can author. Either the board's `%` writes past the
-slider's cap, or JTF's annual price stays a Configure-authored figure the board
-reads and does not move. Settle this with Peter before wiring the `%` dial.
+**The percentage ranges do not line up, and the board wins.**
+`suiteDiscount.ts:46` caps the discount slider at `DISCOUNT_MAX_PCT = 50` — "a
+discount over half is not a cadence discount, it is a different price, and it is
+authored at Configure." But JTF's annual licence really costs 20% of twelve
+monthly fees, which is an **80% discount**, and so is a price the suite card
+cannot author at all.
+
+*Ruled by Peter, 2026-09-21:* **the board's `%` track runs the whole 0–100 and
+writes past the cap.** A forecast exists to price scenarios the configured
+product does not yet allow, so the cap must not be able to veto a projection.
+Wire the `%` dial to the full range and let it author the derived annual price.
+
+Two consequences to handle rather than discover:
+
+- **`DISCOUNT_MAX_PCT` stays where it is.** It still governs the suite card,
+  which is a different job — authoring a real cadence discount. Do not raise it
+  to 100 to make the two agree; the cap is a deliberate ruling about what
+  Configure may express, not an arbitrary limit.
+- **The suite card will be shown values its own slider cannot represent.** Once
+  the board has written an 80% discount, whatever renders that slider has to
+  survive a value above its maximum — clamp the *thumb* for display, never the
+  stored figure, and do not let a render round-trip write the clamped value
+  back. A slider that silently corrects 80 to 50 on mount would destroy the
+  board's number the first time anyone opened that card.
 
 **The load-bearing convention** — `src/lib/scenarioBoard/types.ts:9-24`: money is
 integer cents everywhere **including the props**, and **each adapter returns the
@@ -265,5 +281,7 @@ sit beside the board's own title on both boards. Prefer this document's prop set
 - [ ] Changes is one paging row; the toolbar passes `onReset` + `onRemove` only.
 - [ ] Save is one board-level button, disabled until dirty; nothing reaches the
       server before it.
-- [ ] Assumptions 8 and 9, and the §4 percentage conflict, confirmed with Peter.
+- [ ] Assumptions 8 and 9 confirmed with Peter. (The §4 percentage conflict is
+      settled — the board's `%` writes the full 0–100, past the suite card's
+      cap.)
 - [ ] The five gaps above are TODOs in the code, not hand-rolled workarounds.
