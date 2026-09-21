@@ -830,12 +830,14 @@ const LicenseBoardBench: Component = () => {
                   <Icon name="shrink" size="sm" />
                 </IconOnlyButton>
               </SpreadRow>
-              {/* One band per SOURCE — a product on one billing variant —
-                  valued in dollars of CASH, so the annual bands are two spikes
-                  twelve months apart and the monthly ones are smooth ramps.
-                  Most variable on top, which puts the spikes there. */}
+              {/* One COLUMN per month, split by SOURCE — a product on one
+                  billing variant — valued in dollars of CASH. The annual
+                  sources pay in two columns twelve months apart and nothing
+                  between; the monthly ones pay in every column. Most variable
+                  on top, which puts the spikes there. */}
               <LicenseMixChart
                 series={licenseMixSeries(products(), mutations(), START)}
+                columns={MONTH_SLOTS}
                 xDomain={TIME_DOMAIN}
                 yDomain={[0, mixCeiling.ceiling()]}
                 xTickValues={QUARTER_TICKS}
