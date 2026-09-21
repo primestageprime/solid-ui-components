@@ -4,6 +4,7 @@
 // asserted against the DOM here. The stack's own geometry is
 // `StackedAreaSeries`'s, and its tests own it.
 import { fireEvent, render } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	type FakeSizer,
@@ -274,6 +275,97 @@ describe("StackedTimelineChart", () => {
 		// February's column is narrower; the GAP beside it is not.
 		expect(widthOf(lefts[1])).toBeLessThan(widthOf(lefts[0]));
 		expect(gaps[0]).toBeCloseTo(gaps[1], 1);
+	});
+
+	// ── The SELECTED event ─────────────────────────────────────────────────
+	const EVENTS = [
+		{ at: new Date("2025-03-02T00:00:00Z"), label: "1" },
+		{ at: new Date("2025-06-02T00:00:00Z"), label: "2" },
+		{ at: new Date("2025-09-02T00:00:00Z"), label: "3" },
+	];
+	const rulesIn = (container: HTMLElement) =>
+		[...container.querySelectorAll("line")]
+			.filter((line) => line.hasAttribute("x1") && line.hasAttribute("opacity"))
+			.map((line) => ({
+				opacity: Number(line.getAttribute("opacity")),
+				dash: line.getAttribute("stroke-dasharray"),
+				width: line.getAttribute("stroke-width"),
+			}));
+
+	it("draws the selected rule SOLID and the rest dashed", () => {
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				events={EVENTS}
+				selectedEvent={1}
+			/>
+		));
+		const rules = rulesIn(container);
+		expect(rules).toHaveLength(3);
+		// Solid-versus-dashed carries the state without colour, which is why it
+		// is asserted and the accent is only a second cue.
+		expect(rules[1].dash).toBe("none");
+		expect(rules[1].opacity).toBe(1);
+		expect(rules[1].width).toBe("2");
+		for (const index of [0, 2]) {
+			expect(rules[index].dash).toBe("4 4");
+			expect(rules[index].opacity).toBe(0.6);
+		}
+	});
+
+	it("accents the selected NUMBER through a style, which a CSS class cannot beat", () => {
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				events={EVENTS}
+				selectedEvent={2}
+			/>
+		));
+		const captions = [...container.querySelectorAll(".sui-chart__ref-label")];
+		expect(captions.map((c) => c.textContent)).toEqual(["1", "2", "3"]);
+		// A `fill` ATTRIBUTE is the lowest-priority CSS there is, and the class
+		// already sets `fill`, so the colour has to arrive as a style.
+		expect((captions[2] as SVGElement).style.fill).not.toBe("");
+		expect((captions[0] as SVGElement).style.fill).toBe("");
+	});
+
+	it("RE-STYLES an already-drawn rule when the selection moves", () => {
+		// `Index` keeps a row's nodes, so the selection has to reach one already
+		// drawn. Hoisting the comparison into a const above the JSX would break
+		// exactly this and nothing else would notice.
+		const [picked, setPicked] = createSignal(0);
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				events={EVENTS}
+				selectedEvent={picked()}
+			/>
+		));
+		expect(rulesIn(container)[0].dash).toBe("none");
+		setPicked(2);
+		expect(rulesIn(container)[0].dash).toBe("4 4");
+		expect(rulesIn(container)[2].dash).toBe("none");
+	});
+
+	it("selects nothing when `selectedEvent` is absent or out of range", () => {
+		for (const selectedEvent of [undefined, -1, 9]) {
+			const { container } = render(() => (
+				<StackedTimelineChart
+					series={SERIES}
+					xDomain={[START, END]}
+					yDomain={[0, 80]}
+					events={EVENTS}
+					selectedEvent={selectedEvent}
+				/>
+			));
+			expect(rulesIn(container).every((r) => r.dash === "4 4")).toBe(true);
+		}
 	});
 
 	// ── The GHOST pick rule ────────────────────────────────────────────────

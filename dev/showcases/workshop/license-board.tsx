@@ -842,6 +842,12 @@ const LicenseBoardBench: Component = () => {
                 yDomain={[0, mixCeiling.ceiling()]}
                 xTickValues={QUARTER_TICKS}
                 events={mutations()}
+                /* The toolbar selects by id; the chart selects by position,
+                   because it rebuilds its rules wholesale on every edit. One
+                   lookup keeps the two saying the same thing. */
+                selectedEvent={mutations().findIndex(
+                  (mutation) => mutation.id === editing(),
+                )}
                 hoverLabel={(at) => monthRangeOf(at, START).label}
                 onPick={(at) => pickMonth(monthOfPick(at, START))}
               />

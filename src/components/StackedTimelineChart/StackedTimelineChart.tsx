@@ -101,6 +101,9 @@ const GhostPickRule: Component<{
 	);
 };
 
+/** The selected rule's accent. It matches whatever picked the change. */
+const SELECTED_RULE = "var(--sui-accent)";
+
 /** Faint enough to read as "not yet", against a real rule's 0.6. */
 const GHOST_OPACITY = 0.24;
 
@@ -116,6 +119,21 @@ export interface StackedTimelineChartProps {
 	rule?: StackedTimelineRule;
 	/** One numbered vertical rule each. */
 	events?: readonly StackedTimelineEvent[];
+	/**
+	 * Which event is SELECTED, as its index in `events`. Its rule goes solid,
+	 * accented and full-strength, and its number takes the accent too; every
+	 * other rule stays dashed and recessive. Out of range, or omitted, selects
+	 * nothing.
+	 *
+	 * THE INDEX IS THE IDENTITY, for the same reason the rules render through
+	 * `Index` and not `For`: callers rebuild the event list wholesale on every
+	 * edit, so an id would have to survive a rebuild this component never sees.
+	 * A caller holding ids maps one to its position.
+	 *
+	 * Solid-versus-dashed carries the state on its own, so the accent is a
+	 * second cue and never the only one.
+	 */
+	selectedEvent?: number;
 	/** The readout under the pointer, from its raw timestamp. Omit for none. */
 	hoverLabel?: (at: number) => string;
 	/** A click on the plot, as the RAW date under the pointer. */
@@ -282,11 +300,27 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 				{/* `Index`, not `For`: callers rebuild the event list wholesale on
             every edit, so position IS the identity. */}
 				<Index each={props.events ?? []}>
-					{(event) => (
+					{(event, index) => (
+						/* `Index` keeps a row's nodes, so the selection has to reach an
+						   ALREADY-DRAWN rule. It does: Solid compiles a JSX prop into a
+						   getter, so reading `props.selectedEvent` inside one of these
+						   expressions stays reactive. (A spread is reactive too — these
+						   are separate ternaries for reading, not for correctness.) What
+						   WOULD break it is hoisting the comparison into a const above
+						   the JSX; a test pins the re-style against that. */
 						<ReferenceLine
 							orientation="vertical"
 							value={new Date(timeOf(event().at))}
 							label={event().label}
+							color={index === props.selectedEvent ? SELECTED_RULE : undefined}
+							labelColor={
+								index === props.selectedEvent ? SELECTED_RULE : undefined
+							}
+							strokeDasharray={
+								index === props.selectedEvent ? "none" : undefined
+							}
+							strokeWidth={index === props.selectedEvent ? 2 : undefined}
+							opacity={index === props.selectedEvent ? 1 : undefined}
 						/>
 					)}
 				</Index>

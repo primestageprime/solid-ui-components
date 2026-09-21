@@ -50,6 +50,23 @@
   overlay is a sibling of the `<svg>`, so portal-rendered tooltip text stays
   selectable.
 
+- **`StackedTimelineChart` highlights the SELECTED event.** `selectedEvent`
+  takes the event's index in `events`; that rule goes solid, 2px, accented and
+  full-strength, and its number takes the accent too. Every other rule stays
+  dashed and recessive. Out of range, or omitted, selects nothing — so a
+  caller's `findIndex` miss (`-1`) reads correctly with no special case.
+  **Solid-versus-dashed carries the state on its own**, so the accent is a
+  second cue and never the only one.
+  **The index IS the identity**, for the same reason the rules render through
+  `Index` and not `For`: callers rebuild the event list wholesale on every
+  edit, so an id would have to survive a rebuild this component never sees.
+  `ReferenceLine` gains `labelColor` for the caption, applied as an inline
+  STYLE: a `fill` attribute is the lowest-priority CSS there is, and
+  `.sui-chart__ref-label` already sets `fill`, so an attribute is ignored.
+  `crisp()` also learned the stroke width — an odd width centres on a half
+  pixel, an even one on a whole pixel — so the 2px selected rule stays as
+  sharp as the 1px ones beside it.
+
 - **A column chart GHOSTS the rule a click would leave, under the pointer.**
   `StackedTimelineChart` draws a faint vertical rule on the hovered bucket's
   start whenever it has both `onPick` (something to act on the click) and

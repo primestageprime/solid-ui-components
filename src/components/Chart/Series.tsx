@@ -487,6 +487,16 @@ export interface ReferenceLineStyleProps {
 	label?: string;
 	/** Color override; takes precedence over `stroke`. Defaults via CSS class. */
 	color?: string;
+	/**
+	 * The CAPTION's colour. Omitted, it stays on its CSS class, so colouring a
+	 * rule does not silently recolour its text. Supply it to carry an emphasis
+	 * through to the number as well as the line.
+	 *
+	 * It lands as an inline STYLE, not a `fill` attribute: a presentation
+	 * attribute is the lowest-priority CSS there is, and `.sui-chart__ref-label`
+	 * already sets `fill`, so an attribute would be ignored every time.
+	 */
+	labelColor?: string;
 }
 
 /**
@@ -512,8 +522,14 @@ const toScaleValue = (v: number | Date): number =>
  * `CashflowScrubChart`.
  */
 const CAPTION_EDGE_INSET = 18;
-/** Centre a 1px stroke on whole pixels: `round(x) + 0.5` covers [x, x+1]. */
-const crisp = (px: number): number => Math.round(px) + 0.5;
+/**
+ * Centre a stroke so it covers WHOLE pixels. An odd width sits on a half
+ * pixel (1px at x+0.5 covers [x, x+1]); an even one sits on a whole pixel
+ * (2px at x covers [x-1, x+1]). Get this backwards and the stroke straddles
+ * two device pixels at partial coverage and paints grey.
+ */
+const crisp = (px: number, width: number): number =>
+	Math.round(width) % 2 === 0 ? Math.round(px) : Math.round(px) + 0.5;
 
 /** Baseline (px) of a vertical caption, measured from the plot top. */
 const CAPTION_BASELINE_Y = 8;
@@ -560,6 +576,11 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 					{(caption) => (
 						<text
 							class="sui-chart__ref-label"
+						style={
+							props.labelColor === undefined
+								? undefined
+								: { fill: props.labelColor }
+						}
 							x={caption().x}
 							y={caption().y}
 							text-anchor={caption().textAnchor}
@@ -589,8 +610,8 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 				<line
 					y1={props.label ? CAPTION_RULE_CLEARANCE : 0}
 					y2={ctx.innerHeight()}
-					x1={crisp(ctx.xScale()(resolved().value))}
-					x2={crisp(ctx.xScale()(resolved().value))}
+					x1={crisp(ctx.xScale()(resolved().value), props.strokeWidth ?? 1)}
+					x2={crisp(ctx.xScale()(resolved().value), props.strokeWidth ?? 1)}
 					stroke={strokeColor()}
 					stroke-width={props.strokeWidth ?? 1}
 					stroke-dasharray={props.strokeDasharray ?? "4 4"}
@@ -599,6 +620,11 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 				<Show when={props.label}>
 					<text
 						class="sui-chart__ref-label"
+						style={
+							props.labelColor === undefined
+								? undefined
+								: { fill: props.labelColor }
+						}
 						x={clampCaptionX(ctx.xScale()(resolved().value), ctx.innerWidth())}
 						y={CAPTION_BASELINE_Y}
 						text-anchor="middle"
