@@ -1,6 +1,6 @@
 ---
 name: promote
-description: Use when graduating a component from the dev workshop bench into the published SUI catalog — for requests like "/promote <Component>", "promote the Fab", or "ship/publish this component". Drives the design-system persona through the curried drop-in variant, dedicated showcase, barrel export, catalog registration, and COMPONENTS.md entry, then version-bumps, tags, and pushes to trigger the GitHub Packages publish.
+description: Use when graduating a component from the dev workshop bench into the published SUI catalog — for requests like "/promote <Component>", "promote the Fab", or "ship/publish this component". Drives the design-system persona through the curried drop-in variant, dedicated showcase, barrel export, catalog registration, and COMPONENTS.md entry, then version-bumps, tags the release commit, and lands it on `main`, where a green CI run triggers the GitHub Packages publish.
 ---
 
 # Promote a component (workshop → published catalog)
