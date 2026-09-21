@@ -44,6 +44,12 @@
   **Nothing changes for an existing consumer**: without `columns` the chart
   draws bands exactly as before.
 
+- **A chart no longer selects its own axis text.** `.sui-chart__svg` takes
+  `user-select: none`. A chart is a graphic, and `onPick` makes it a click
+  target, so a click or a drag inside it left the tick labels highlighted. The
+  overlay is a sibling of the `<svg>`, so portal-rendered tooltip text stays
+  selectable.
+
 - **`BarSeries` takes a per-datum `step`, and a `separator` between stacked
   segments.** Two fixes a real stacked column chart asked for.
   **`step` as a function.** One number spends the same slot on every datum
@@ -63,17 +69,20 @@
   `StackedTimelineChart` exposes it as `columnSeparator`, curried, defaulting
   to `var(--sui-bg-elevated)`; `"none"` turns it off.
 
-- **The VERTICAL reference rule renders with `crispEdges`.** A 1px
-  axis-aligned stroke at a fractional x straddles two device columns and paints
-  grey, while its neighbour near a half-pixel paints sharp — so a row of event
-  rules looked like it had two different colours in it.
+- **The VERTICAL reference rule is snapped to a half pixel.** A 1px stroke
+  centred on a fraction spreads across two device pixels at partial coverage
+  and paints grey, while its neighbour nearer a half lands on one and paints
+  sharp — so a row of event rules read as two different colours. Centred on
+  `round(x) + 0.5` the stroke covers whole pixels instead. This is geometry,
+  not the `shape-rendering="crispEdges"` hint it replaces: it holds at any
+  device pixel ratio and leaves nothing to the renderer's discretion.
   **The horizontal rule is deliberately left alone.** A vertical rule takes its
-  x from the x-scale at a datum, so it lands on a fraction nearly always, and a
-  chart draws a ROW of them; a reader sees neighbours side by side. A
-  horizontal rule is the threshold, usually one per chart, so it has no
-  neighbour to be compared against, and snapping it would move it off its own
-  value by up to half a pixel — the value the reader measures the data against.
-  Two tests pin the split.
+  x from the x-scale at a datum and a chart draws a ROW of them, so a reader
+  sees neighbours side by side. A horizontal rule is the threshold, usually one
+  per chart; it has no neighbour to be compared against, and snapping would
+  move it off its own value — the value the reader measures the data against.
+  Tests pin the split, that the snap keeps the rules in order, and that it
+  never spaces evenly placed rules more than a pixel apart.
 
 - **`BarSeries` reads the scales REACTIVELY — a resizing chart re-lays its
   bars.** The geometry moved into a `createMemo` over `ctx.xScale()` /

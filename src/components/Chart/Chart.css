@@ -8,6 +8,12 @@
 .sui-chart__svg {
   display: block;
   overflow: visible;
+  /* A chart is a GRAPHIC, and `onPick` makes it a click target, so a click or
+     a drag inside it would otherwise select the axis tick text and leave it
+     highlighted. The overlay is a sibling, so portal-rendered tooltip text
+     stays selectable. */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Responsive: fill the container width; the SVG's viewBox keeps the aspect

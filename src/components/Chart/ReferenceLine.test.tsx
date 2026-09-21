@@ -165,18 +165,37 @@ describe("ReferenceLine — class prop", () => {
 // A horizontal rule is the threshold, usually one per chart, and snapping it
 // would move it off the very value the reader measures the data against.
 describe("ReferenceLine — crisp rendering", () => {
-  const lineOf = (orientation: "horizontal" | "vertical") =>
+  const lineOf = (orientation: "horizontal" | "vertical", value: number) =>
     render(() => (
       <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
-        <ReferenceLine orientation={orientation} value={3.7} />
+        <ReferenceLine orientation={orientation} value={value} />
       </Chart>
     )).container.querySelector("line");
 
-  it("snaps the VERTICAL rule, so a row of them reads as one colour", () => {
-    expect(lineOf("vertical")?.getAttribute("shape-rendering")).toBe("crispEdges");
+  it("centres the VERTICAL rule on a half pixel, so it covers whole ones", () => {
+    for (const value of [3.7, 4.1, 6.23, 9.99]) {
+      const x = Number(lineOf("vertical", value)?.getAttribute("x1"));
+      expect(x % 1).toBe(0.5);
+    }
+  });
+
+  it("keeps the rules in ORDER and evenly spaced through the snap", () => {
+    // Rounding is the risk: it must not reorder two close rules, nor make
+    // evenly spaced ones look unevenly spaced by more than the rounding.
+    const xs = [2, 4, 6, 8].map((value) =>
+      Number(lineOf("vertical", value)?.getAttribute("x1")),
+    );
+    for (let i = 1; i < xs.length; i += 1) expect(xs[i]).toBeGreaterThan(xs[i - 1]);
+    const gaps = xs.slice(1).map((x, i) => x - xs[i]);
+    expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThanOrEqual(1);
   });
 
   it("leaves the HORIZONTAL rule alone, so a threshold keeps its exact value", () => {
-    expect(lineOf("horizontal")?.getAttribute("shape-rendering")).toBeNull();
+    const ys = [17, 37, 53, 71].map((value) =>
+      Number(lineOf("horizontal", value)?.getAttribute("y1")),
+    );
+    // Unsnapped, so at least one of these lands off a half pixel. Were the
+    // rule snapped too, every one of them would sit exactly on one.
+    expect(ys.some((y) => y % 0.5 !== 0)).toBe(true);
   });
 });

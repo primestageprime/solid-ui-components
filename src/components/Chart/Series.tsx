@@ -464,6 +464,9 @@ const toScaleValue = (v: number | Date): number =>
  * `CashflowScrubChart`.
  */
 const CAPTION_EDGE_INSET = 18;
+/** Centre a 1px stroke on whole pixels: `round(x) + 0.5` covers [x, x+1]. */
+const crisp = (px: number): number => Math.round(px) + 0.5;
+
 /** Baseline (px) of a vertical caption, measured from the plot top. */
 const CAPTION_BASELINE_Y = 8;
 /** Distance (px) the rule top drops to clear a vertical caption. */
@@ -519,26 +522,31 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 				</Show>
 			</Show>
 			<Show when={resolved().orientation === "vertical"}>
-				{/* `crispEdges` on the VERTICAL rule alone, and deliberately not on
-				    the horizontal one above. A vertical rule takes its x from the
-				    x-scale at a datum, so it lands on a fraction nearly always, and
-				    a chart draws a ROW of them (one per event) — a reader sees
-				    neighbours side by side and reads the antialiasing as two
-				    different colours. A horizontal rule is the threshold, usually
-				    one per chart, so it has no neighbour to be compared against;
-				    snapping it would move it off its own value by up to half a
-				    pixel, and that value is the thing the reader measures the data
-				    against. Do not add it there for symmetry. */}
+				{/* THE VERTICAL RULE IS SNAPPED TO A HALF PIXEL, and the horizontal
+				    one above deliberately is not.
+
+				    A vertical rule takes its x from the x-scale at a datum, so it
+				    lands on a fraction nearly always, and a chart draws a ROW of
+				    them, one per event. A 1px stroke centred on a fraction spreads
+				    across two device pixels at partial coverage and paints grey,
+				    while its neighbour nearer a half lands on one and paints sharp
+				    — so a row of rules reads as two different colours. Centred on
+				    `round(x) + 0.5` the stroke covers whole pixels instead, which
+				    holds at any device pixel ratio and needs no renderer hint.
+
+				    A horizontal rule is the threshold, usually ONE per chart. It
+				    has no neighbour to be compared against, and snapping would move
+				    it off its own value — the value the reader measures the data
+				    against. Do not snap it for symmetry. */}
 				<line
 					y1={props.label ? CAPTION_RULE_CLEARANCE : 0}
 					y2={ctx.innerHeight()}
-					x1={ctx.xScale()(resolved().value)}
-					x2={ctx.xScale()(resolved().value)}
+					x1={crisp(ctx.xScale()(resolved().value))}
+					x2={crisp(ctx.xScale()(resolved().value))}
 					stroke={strokeColor()}
 					stroke-width={props.strokeWidth ?? 1}
 					stroke-dasharray={props.strokeDasharray ?? "4 4"}
 					opacity={0.6}
-					shape-rendering="crispEdges"
 				/>
 				<Show when={props.label}>
 					<text
