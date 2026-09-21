@@ -173,6 +173,82 @@ describe("StackedTimelineChart", () => {
 				?.getAttribute("d"),
 		).not.toContain("C ");
 	});
+
+	// ── The COLUMN mark ────────────────────────────────────────────────────
+	//
+	// `columns` selects it. The regression these guard is the time-scale slot:
+	// `BarSeries` sizes a slot as `xs(center + step) - xs(center)`, and with the
+	// default step of 1 on a DATE domain that is one millisecond — near zero,
+	// but not zero, so the fallback never fires and every bar renders invisible.
+	const QUARTERS = [
+		START,
+		new Date("2025-04-01T00:00:00Z"),
+		new Date("2025-07-01T00:00:00Z"),
+		new Date("2025-10-01T00:00:00Z"),
+	];
+
+	it("draws a column per bucket per band when `columns` is supplied", () => {
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				columns={QUARTERS}
+			/>
+		));
+		// Four buckets, two bands, both non-zero throughout.
+		expect(container.querySelectorAll(".sui-chart__bar")).toHaveLength(8);
+		// And no band path at all — the two marks never draw together.
+		expect(container.querySelectorAll(".sui-chart__stacked-area-band")).toHaveLength(0);
+	});
+
+	it("gives every column a real width on a DATE domain", () => {
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				columns={QUARTERS}
+			/>
+		));
+		const widths = [...container.querySelectorAll(".sui-chart__bar")].map(
+			(bar) => Number(bar.getAttribute("width")),
+		);
+		expect(widths.length).toBeGreaterThan(0);
+		// A whole plot over four buckets leaves each one a substantial slot. One
+		// millisecond would land near zero here.
+		for (const width of widths) expect(width).toBeGreaterThan(20);
+	});
+
+	it("leaves a GUTTER, so the buckets read as separate", () => {
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				columns={QUARTERS}
+				columnWidth={0.5}
+			/>
+		));
+		const bars = [...container.querySelectorAll(".sui-chart__bar")];
+		const width = Number(bars[0].getAttribute("width"));
+		const lefts = [...new Set(bars.map((b) => Number(b.getAttribute("x"))))].sort(
+			(a, b) => a - b,
+		);
+		// Half the slot is the column, so the next column starts a full column
+		// width past this one's right edge.
+		expect(lefts[1] - lefts[0]).toBeGreaterThan(width);
+	});
+
+	it("draws BANDS when `columns` is absent", () => {
+		const { container } = render(() => (
+			<StackedTimelineChart series={SERIES} xDomain={[START, END]} yDomain={[0, 80]} />
+		));
+		expect(container.querySelectorAll(".sui-chart__bar")).toHaveLength(0);
+		expect(
+			container.querySelectorAll(".sui-chart__stacked-area-band").length,
+		).toBeGreaterThan(0);
+	});
 });
 
 describe("createStackedTimelineChart", () => {

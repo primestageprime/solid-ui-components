@@ -23,6 +23,36 @@
   **Nothing changes for an existing consumer**: the default is still
   `"smoothStep"`.
 
+- **`StackedTimelineChart` draws COLUMNS when you give it `columns`.** Pass the
+  bucket starts and the stack renders through `BarSeries` instead of
+  `StackedAreaSeries`: one column per bucket per band, holding what each series
+  carries at that bucket's start. `columnWidth` (default `0.84`, curried) is
+  the column's share of its bucket, so the remainder is the gutter that makes
+  the buckets read as separate.
+  **Why it beats `curve: "linear"`.** The square crossing stops the mark from
+  stating a figure the model never produced, but the stack is still one
+  unbroken shape. A gutter at every boundary says the x-axis carries buckets,
+  which is the thing a monthly cash chart most needs to say.
+  **The caller owns the edges.** A bucket is a fact of its calendar and this
+  chart knows no calendar — the same reason `onPick` reports a raw date.
+  Deriving buckets from the series' own points would give uneven columns,
+  because a point marks a change and not a period.
+  **The pure half is `stackBuckets(series, edges)`**, beside `stackSegments` in
+  `stackedArea.ts`. It reads the same `valueAt` the band mark reads, so a
+  column and a band can never disagree about what a series holds. It sorts the
+  edges, so a caller cannot make a backwards bucket.
+  **Nothing changes for an existing consumer**: without `columns` the chart
+  draws bands exactly as before.
+
+- **`BarSeries` takes `step` — one slot in data units, default `1`.** A
+  **time** x-domain requires it. `BarSeries` sizes a slot as
+  `xs(center + step) - xs(center)`, so on a date domain the default of one
+  unit is one MILLISECOND and the slot comes out around 1e-8 px. That is near
+  zero but not zero, so the `|| plotWidth / data.length` fallback never fires
+  and every bar renders invisible, with no error and nothing in the console.
+  `CompletionTimeline` escaped it by passing an index `x`. A regression test
+  now pins a real width on a date domain.
+
 ## 0.176.0 — 2026-09-19
 
 ### Added

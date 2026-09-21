@@ -33,6 +33,7 @@ import {
 import { observeSize } from "../../internal/dom/observeSize";
 import type { StackedAreaCurve, StackedAreaSeriesData } from "../Chart";
 import {
+	BarSeries,
 	Chart,
 	ChartTooltip,
 	Grid,
@@ -42,6 +43,8 @@ import {
 	YAxis,
 } from "../Chart";
 import type { Margin } from "../Chart/context";
+import { seriesPaint } from "../Chart/StackedAreaSeries";
+import { stackBuckets } from "../Chart/stackedArea";
 import { GrowFillBox } from "../Layout";
 import { type TimeValue, timeOf } from "../LevelsTimeline/geometry";
 
@@ -75,6 +78,23 @@ export interface StackedTimelineChartProps {
 	/** A click on the plot, as the RAW date under the pointer. */
 	onPick?: (at: Date) => void;
 	/**
+	 * Bucket STARTS. Supplied, the stack draws as COLUMNS — one per bucket,
+	 * holding what each series carries at that bucket's start — instead of as
+	 * bands, and `curve` no longer applies. The last bucket runs to
+	 * `xDomain[1]`, so 24 month starts draw 24 columns.
+	 *
+	 * WHY THE CALLER OWNS THEM: a bucket is a fact of the caller's calendar,
+	 * and this chart knows no calendar — the same reason `onPick` reports a raw
+	 * date. Supply them when the x-axis carries BUCKETS rather than a
+	 * continuum: a month's cash, a week's hours. A bucket has no interior, so a
+	 * band drawn across one states a figure the model never produced.
+	 *
+	 * Unequal buckets (a 28-day month beside a 31-day one) draw at ONE width,
+	 * each centred on its own true midpoint: the position is exact and the
+	 * width is nominal.
+	 */
+	columns?: readonly TimeValue[];
+	/**
 	 * How the stack crosses a change. `"smoothStep"` (the default) spends x on
 	 * the crossing: the band rises before the change and falls after it, which
 	 * is the picture of a quantity that varies continuously. `"linear"` spends
@@ -88,6 +108,12 @@ export interface StackedTimelineChartProps {
 	 * Presentational — curried.
 	 */
 	curve?: StackedAreaCurve;
+	/**
+	 * A column's width as a fraction of its bucket, so the remainder is the
+	 * GUTTER that makes the buckets read as separate. Default 0.84. Ignored
+	 * without `columns`. Presentational — curried.
+	 */
+	columnWidth?: number;
 	/** Plot inset. Presentational — curried. */
 	margin?: Partial<Margin>;
 	/** X tick text. Presentational — curried. */
@@ -124,6 +150,35 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 
 	const hover = createMemo(() => props.hoverLabel);
 
+	/* The bucketed stack, in DATA units. `stackBuckets` reads the same
+	   `valueAt` the band mark reads, so a column and a band can never disagree
+	   about what a series holds at a moment. */
+	const buckets = createMemo(() => {
+		const edges = props.columns;
+		if (edges === undefined || edges.length === 0) return [];
+		const series = props.series.map((one) => ({
+			id: one.id,
+			label: one.label,
+			points: one.points.map((point) => ({
+				at: timeOf(point.at),
+				value: point.value,
+			})),
+		}));
+		return stackBuckets(series, [
+			...edges.map(timeOf),
+			props.xDomain[1].getTime(),
+		]);
+	});
+
+	/* ONE slot width for every column, the mean bucket. Months are 28 to 31
+	   days, so no single width is exact; each column still centres on its own
+	   bucket, which keeps the POSITION exact and the width nominal. */
+	const columnStep = createMemo(() => {
+		const all = buckets();
+		if (all.length === 0) return 1;
+		return (all[all.length - 1].to - all[0].from) / all.length;
+	});
+
 	return (
 		<GrowFillBox ref={frame}>
 			<Chart
@@ -137,7 +192,28 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 				<Grid />
 				<YAxis tickFormat={props.yTickFormat} />
 				<XAxis tickValues={props.xTickValues} tickFormat={props.xTickFormat} />
-				<StackedAreaSeries series={props.series} curve={props.curve} />
+				{/* `columns` selects the mark. One prop, so a caller cannot ask for
+				    columns and leave the chart without a bucket grid to draw them on. */}
+				<Show
+					when={buckets().length > 0}
+					fallback={
+						<StackedAreaSeries series={props.series} curve={props.curve} />
+					}
+				>
+					<BarSeries
+						data={buckets()}
+						x={(bucket) => (bucket.from + bucket.to) / 2}
+						step={columnStep()}
+						bandWidth={props.columnWidth ?? 0.84}
+						segments={(bucket) =>
+							bucket.values.map((value, index) => ({
+								value,
+								fill: seriesPaint(index),
+								key: index,
+							}))
+						}
+					/>
+				</Show>
 				<Show when={props.rule}>
 					{(rule) => (
 						<ReferenceLine
@@ -180,7 +256,7 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 /** Props that are presentational — locked at curry time. */
 export type StackedTimelineChartOverrides = Pick<
 	StackedTimelineChartProps,
-	"curve" | "margin" | "xTickFormat" | "yTickFormat"
+	"curve" | "columnWidth" | "margin" | "xTickFormat" | "yTickFormat"
 >;
 
 /** Props left to the call site: data and callbacks only. */
