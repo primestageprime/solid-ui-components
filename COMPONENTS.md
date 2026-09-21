@@ -841,7 +841,7 @@ State derivation:
       onReset={reset}
       onSave={save}
       saveDisabled={!dirty()}
-      onDelete={deleteChange}
+      onRemove={removeChange}
     />
     ```
 
