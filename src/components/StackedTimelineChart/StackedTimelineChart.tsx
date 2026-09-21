@@ -42,7 +42,7 @@ import {
 	XAxis,
 	YAxis,
 } from "../Chart";
-import type { Margin } from "../Chart/context";
+import { type Margin, useChart } from "../Chart/context";
 import { seriesPaint } from "../Chart/StackedAreaSeries";
 import { stackBuckets } from "../Chart/stackedArea";
 import { GrowFillBox } from "../Layout";
@@ -60,6 +60,49 @@ export interface StackedTimelineRule {
 	readonly value: number;
 	readonly label: string;
 }
+
+/**
+ * The rule a click WOULD leave, drawn while the pointer is over the plot.
+ *
+ * It reads `ctx.hoverX()` — the SAME mapping `Chart.onPick` reports from — so
+ * the ghost cannot drift from where the click actually lands. It then snaps
+ * that raw x onto the caller's own bucket grid and draws at the bucket's
+ * START, because that is where a rule for that bucket goes.
+ *
+ * THE GRID IS WHY THIS IS SAFE. `Chart.onPick` is deliberately unsnapped: the
+ * root does not know whose calendar it is on. A ghost drawn on the raw x
+ * would therefore promise a position the caller's own snapping then moves,
+ * which is worse than no ghost at all. Given `columns` the chart DOES know
+ * the grid, so it can keep the promise — and that is the only case it draws.
+ *
+ * `GhostPin` is the same idea for a glyph, and anchors to `hoverX` too.
+ */
+const GhostPickRule: Component<{
+	buckets: readonly { from: number; to: number }[];
+}> = (props) => {
+	const ctx = useChart();
+	const at = createMemo(() => {
+		const x = ctx.hoverX();
+		if (x === null) return undefined;
+		return props.buckets.find(
+			(bucket) => x >= bucket.from && x < bucket.to,
+		)?.from;
+	});
+	return (
+		<Show when={at()}>
+			{(from) => (
+				<ReferenceLine
+					orientation="vertical"
+					value={new Date(from())}
+					opacity={GHOST_OPACITY}
+				/>
+			)}
+		</Show>
+	);
+};
+
+/** Faint enough to read as "not yet", against a real rule's 0.6. */
+const GHOST_OPACITY = 0.24;
 
 export interface StackedTimelineChartProps {
 	/** The stack, BOTTOM FIRST. Step-valued, as `StackedAreaSeries` reads it. */
@@ -247,6 +290,13 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 						/>
 					)}
 				</Index>
+				{/* The ghost goes AFTER the real rules, so a hovered month that
+				    already carries one does not paint the ghost underneath it. It
+				    draws only where a pick can be promised: `onPick` to act on it
+				    and `columns` to say where it lands. */}
+				<Show when={props.onPick !== undefined && buckets().length > 0}>
+					<GhostPickRule buckets={buckets()} />
+				</Show>
 				{/* `fallback` with no data: the readout names a moment of the
             calendar, not a point of a series, so it tracks the pointer. */}
 				<Show when={hover()}>

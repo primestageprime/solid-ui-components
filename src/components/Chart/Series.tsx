@@ -467,6 +467,12 @@ export interface ReferenceLineStyleProps {
 	strokeWidth?: number;
 	strokeDasharray?: string;
 	/**
+	 * Default 0.6. Drop it to draw a GHOST — the same rule, in the same place,
+	 * faint enough to read as "not yet". `GhostPin` is the same idea for a
+	 * glyph, and both anchor to `hoverX`.
+	 */
+	opacity?: number;
+	/**
 	 * Caption for the rule. Each orientation gives it a different seat:
 	 *
 	 * - `orientation="horizontal"` — the caption sits at the right plot edge,
@@ -548,7 +554,7 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 					stroke={strokeColor()}
 					stroke-width={props.strokeWidth ?? 1}
 					stroke-dasharray={props.strokeDasharray ?? "4 4"}
-					opacity={0.6}
+					opacity={props.opacity ?? 0.6}
 				/>
 				<Show when={horizontalMark().caption}>
 					{(caption) => (
@@ -588,7 +594,7 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 					stroke={strokeColor()}
 					stroke-width={props.strokeWidth ?? 1}
 					stroke-dasharray={props.strokeDasharray ?? "4 4"}
-					opacity={0.6}
+					opacity={props.opacity ?? 0.6}
 				/>
 				<Show when={props.label}>
 					<text

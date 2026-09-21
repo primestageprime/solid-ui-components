@@ -276,6 +276,109 @@ describe("StackedTimelineChart", () => {
 		expect(gaps[0]).toBeCloseTo(gaps[1], 1);
 	});
 
+	// ── The GHOST pick rule ────────────────────────────────────────────────
+	//
+	// The promise is that the ghost stands where the click will leave a real
+	// rule. It reads the same `hoverX` mapping `onPick` reports from, then
+	// snaps onto the caller's bucket grid — so the two cannot drift.
+	// `hasAttribute` on both: gridlines and axis ticks carry neither, and
+	// `Number(null)` is 0, which would otherwise read as a very faint rule.
+	const ghostsIn = (container: HTMLElement): number[] =>
+		[...container.querySelectorAll("line")]
+			.filter(
+				(line) =>
+					line.hasAttribute("x1") &&
+					line.hasAttribute("opacity") &&
+					Number(line.getAttribute("opacity")) < 0.5,
+			)
+			.map((line) => Number(line.getAttribute("x1")));
+
+	const hoverable = (extra: Record<string, unknown>) => {
+		const restore = stubRects();
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				{...extra}
+			/>
+		));
+		fireEvent.pointerMove(container.querySelector("svg")!, {
+			clientX: 400,
+			clientY: 150,
+		});
+		restore();
+		return container;
+	};
+
+	const QUARTER_COLUMNS = [
+		START,
+		new Date("2025-04-01T00:00:00Z"),
+		new Date("2025-07-01T00:00:00Z"),
+		new Date("2025-10-01T00:00:00Z"),
+	];
+
+	it("ghosts the rule a click would leave, on the hovered bucket's START", () => {
+		const container = hoverable({
+			columns: QUARTER_COLUMNS,
+			onPick: () => {},
+		});
+		const ghosts = ghostsIn(container);
+		expect(ghosts).toHaveLength(1);
+
+		// THE PROMISE: the ghost stands exactly where a REAL rule for a bucket
+		// start stands. Draw all four as events and the ghost must be one of them
+		// — not the raw x under the pointer.
+		const restore = stubRects();
+		const real = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				columns={QUARTER_COLUMNS}
+				events={QUARTER_COLUMNS.map((at, index) => ({
+					at,
+					label: String(index + 1),
+				}))}
+			/>
+		));
+		restore();
+		const realXs = [...real.container.querySelectorAll("line")]
+			.filter(
+				(line) =>
+					line.hasAttribute("x1") && line.getAttribute("opacity") === "0.6",
+			)
+			.map((line) => Number(line.getAttribute("x1")));
+		expect(realXs).toContain(ghosts[0]);
+	});
+
+	it("draws NO ghost without `onPick` — there is no click to promise", () => {
+		expect(ghostsIn(hoverable({ columns: QUARTER_COLUMNS }))).toHaveLength(0);
+	});
+
+	it("draws NO ghost without `columns` — the pick is unsnapped, so it would lie", () => {
+		expect(ghostsIn(hoverable({ onPick: () => {} }))).toHaveLength(0);
+	});
+
+	it("clears the ghost when the pointer leaves", () => {
+		const restore = stubRects();
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				columns={QUARTER_COLUMNS}
+				onPick={() => {}}
+			/>
+		));
+		const svg = container.querySelector("svg")!;
+		fireEvent.pointerMove(svg, { clientX: 400, clientY: 150 });
+		expect(ghostsIn(container)).toHaveLength(1);
+		fireEvent.pointerLeave(svg);
+		restore();
+		expect(ghostsIn(container)).toHaveLength(0);
+	});
+
 	it("draws BANDS when `columns` is absent", () => {
 		const { container } = render(() => (
 			<StackedTimelineChart series={SERIES} xDomain={[START, END]} yDomain={[0, 80]} />

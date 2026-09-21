@@ -50,6 +50,21 @@
   overlay is a sibling of the `<svg>`, so portal-rendered tooltip text stays
   selectable.
 
+- **A column chart GHOSTS the rule a click would leave, under the pointer.**
+  `StackedTimelineChart` draws a faint vertical rule on the hovered bucket's
+  start whenever it has both `onPick` (something to act on the click) and
+  `columns` (a grid that says where the click lands). It reads the same
+  `hoverX` mapping `Chart.onPick` reports from, so the ghost and the click
+  cannot drift apart, and it reuses `ReferenceLine`, so the ghost IS the rule
+  it will become — same half-pixel snap, same dash.
+  **It needs the grid, and that is the point.** `Chart.onPick` is deliberately
+  unsnapped: the root does not know whose calendar it is on. A ghost on the
+  raw x would promise a spot the caller's own snapping then moves, which is
+  worse than no ghost. Given `columns` the chart can keep the promise, so that
+  is the only case it draws one. `GhostPin` is the same idea for a glyph and
+  anchors to `hoverX` too.
+  `ReferenceLine` gains `opacity` (default `0.6`) to make it possible.
+
 - **Every `BarSeries` edge lands on a WHOLE pixel, and `separator` is now
   `segmentGap`.** A bar left at 349.87 left pixel 349 holding 13% fill and 87%
   ground. That geometry is identical for every segment of a stack, but what
