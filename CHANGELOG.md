@@ -63,10 +63,17 @@
   `StackedTimelineChart` exposes it as `columnSeparator`, curried, defaulting
   to `var(--sui-bg-elevated)`; `"none"` turns it off.
 
-- **Vertical and horizontal reference rules render with `crispEdges`.** A 1px
+- **The VERTICAL reference rule renders with `crispEdges`.** A 1px
   axis-aligned stroke at a fractional x straddles two device columns and paints
   grey, while its neighbour near a half-pixel paints sharp — so a row of event
   rules looked like it had two different colours in it.
+  **The horizontal rule is deliberately left alone.** A vertical rule takes its
+  x from the x-scale at a datum, so it lands on a fraction nearly always, and a
+  chart draws a ROW of them; a reader sees neighbours side by side. A
+  horizontal rule is the threshold, usually one per chart, so it has no
+  neighbour to be compared against, and snapping it would move it off its own
+  value by up to half a pixel — the value the reader measures the data against.
+  Two tests pin the split.
 
 - **`BarSeries` reads the scales REACTIVELY — a resizing chart re-lays its
   bars.** The geometry moved into a `createMemo` over `ctx.xScale()` /

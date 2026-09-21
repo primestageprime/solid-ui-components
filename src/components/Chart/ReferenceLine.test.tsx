@@ -156,3 +156,27 @@ describe("ReferenceLine — class prop", () => {
     ).toBe("sui-chart__ref");
   });
 });
+
+// ── Crisp rendering is scoped to the VERTICAL rule ──────────────────────────
+//
+// A vertical rule takes its x from the x-scale at a datum, so it lands on a
+// fraction nearly always, and a chart draws a ROW of them — a reader sees
+// neighbours side by side and reads the antialiasing as two different colours.
+// A horizontal rule is the threshold, usually one per chart, and snapping it
+// would move it off the very value the reader measures the data against.
+describe("ReferenceLine — crisp rendering", () => {
+  const lineOf = (orientation: "horizontal" | "vertical") =>
+    render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <ReferenceLine orientation={orientation} value={3.7} />
+      </Chart>
+    )).container.querySelector("line");
+
+  it("snaps the VERTICAL rule, so a row of them reads as one colour", () => {
+    expect(lineOf("vertical")?.getAttribute("shape-rendering")).toBe("crispEdges");
+  });
+
+  it("leaves the HORIZONTAL rule alone, so a threshold keeps its exact value", () => {
+    expect(lineOf("horizontal")?.getAttribute("shape-rendering")).toBeNull();
+  });
+});

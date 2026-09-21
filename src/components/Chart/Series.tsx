@@ -504,7 +504,6 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 					stroke-width={props.strokeWidth ?? 1}
 					stroke-dasharray={props.strokeDasharray ?? "4 4"}
 					opacity={0.6}
-					shape-rendering="crispEdges"
 				/>
 				<Show when={horizontalMark().caption}>
 					{(caption) => (
@@ -520,6 +519,16 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 				</Show>
 			</Show>
 			<Show when={resolved().orientation === "vertical"}>
+				{/* `crispEdges` on the VERTICAL rule alone, and deliberately not on
+				    the horizontal one above. A vertical rule takes its x from the
+				    x-scale at a datum, so it lands on a fraction nearly always, and
+				    a chart draws a ROW of them (one per event) — a reader sees
+				    neighbours side by side and reads the antialiasing as two
+				    different colours. A horizontal rule is the threshold, usually
+				    one per chart, so it has no neighbour to be compared against;
+				    snapping it would move it off its own value by up to half a
+				    pixel, and that value is the thing the reader measures the data
+				    against. Do not add it there for symmetry. */}
 				<line
 					y1={props.label ? CAPTION_RULE_CLEARANCE : 0}
 					y2={ctx.innerHeight()}
