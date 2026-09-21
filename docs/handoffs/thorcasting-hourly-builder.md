@@ -126,10 +126,13 @@ custom CSS, no new components** — the payroll simulator's rule holds here.
 ### Frame
 
 `ChartScreen` (thorcasting's own chrome, as the payroll simulator uses it) →
-`ViewportColumn` → two `HalfFillColumn`s. Top half: two stacked
+`ViewportColumn` → a `SpreadRow` (`SectionTitle` + `PrimaryButton` Save,
+disabled until dirty) above two `HalfFillColumn`s. Top half: two stacked
 `HalfFillColumn`s, one card each. Bottom half: `FillWrapRow` holding a
 `MajorPaneBox` (Changes) and a `GrowFillBox` (the gauge). Every card is a
-`FillCardSurface` with a `TextTitle` header.
+`FillCardSurface` with a `TextTitle` header. **One Save for the whole board**,
+beside the board's own name — a board is one scenario, so the Save is not the
+Changes card's.
 
 ### Cash Flow
 
@@ -158,14 +161,16 @@ have a floor.
 
 | Piece | SUI | Notes |
 |---|---|---|
-| Header | **`createMutationToolbar({ labels? })`** | NEW. Title, the chips (`{ id, label }` per change, labelled `W23 · Jun 2`), and Add / Reset / Save / Delete. Pass only the callbacks the screen supports; Delete shows only while a change is selected |
+| Header | **`createMutationToolbar({ labels? })`** | NEW. Title, the chips (`{ id, label }` per change, labelled `W23 · Jun 2`, each carrying its own ×), and the panel's actions. Pass only the callbacks the screen supports; **this board passes `onReset` + `onRemove` only** — the dial row owns the `+`, and Save is the board's, up beside its name. `onRemove(id)` fires with the chip whose × was clicked, so the caller moves the selection in the same update; the corner `onDelete` it supersedes is deprecated as of 0.175.0 (a Delete in the corner names no victim) |
 | Dials | `createPairedMutationSliders({ axes: [Hrs/wk 0–80 snap 1, $/hr 0–300 snap 5], labels: { remove: "Drop", restore: "Reinstate", new: "new service" } })` | One pair per service live at the selected change; `summary` prints that week's `$/wk`. `onChange(id, measureIndex, value)` — the index says which of hours or rate moved |
 | Add a service | `Modal` holding a `NarrowStack` of `ThemedInput` (name) + two `ThemedNumberInput`s (hrs/wk, $/hr); footer `EndWrapRow` of `GhostButton` Cancel + `PrimaryButton` Add | A new service is a RAY starting at the selected change, with the whole track as its allowance |
 
 **`MutationToolbar` also replaces the hand-built row in
 `payrollSimulatorScreen.tsx`** (the TODO at its as-of row). Curry
-`createMutationToolbar({})` and pass `onDelete` + `onReset` + `onSave` — the
-payroll screen has no Add in that row.
+`createMutationToolbar({})` and pass `onReset` + `onRemove` — that row has no
+Add, and its Save goes beside the screen's own title rather than into the row.
+(`onSave` and `onAdd` are still honoured by the component for a screen that
+wants them there; these boards do not.)
 
 ### Rate, right now
 

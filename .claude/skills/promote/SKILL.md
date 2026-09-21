@@ -112,11 +112,17 @@ Create a TodoWrite item per step and complete them in order.
 
 ## Release & publish
 
-Publishing to GitHub Packages is **CI-driven**: `.github/workflows/publish.yml`
-triggers on a push to `main` that changes `package.json`, then builds and runs
+Publishing to GitHub Packages is **CI-gated**: `.github/workflows/publish.yml`
+triggers on `workflow_run` — it waits for the **CI** workflow (`ci.yml`, which
+runs on pushes to `main`) to *complete successfully* on `main`, and never fires
+on the push itself (`workflow_dispatch` is the manual escape hatch). There is
+no `package.json` path filter — `workflow_run` cannot have one — so it runs
+after every green CI on `main` and publishes only when the registry lacks the
+version in `package.json`. It checks out the sha CI validated, builds, runs
 `npm publish` to `https://npm.pkg.github.com` using the CI `GITHUB_TOKEN` (no
-local npm token needed) and dispatches a `sui-published` event to consumers
-(amygdala-ui). So the release = a version-bump commit pushed to main.
+local npm token needed), and then dispatches a `sui-published` event to
+consumers (amygdala-ui). So the release = a version-bump commit on `main`
+whose CI run goes green.
 
 1. **Bump the version** in `package.json` by semver. A new component or curried
    variant is a **minor** bump (e.g. `0.40.0 → 0.41.0`); a bugfix is a patch.
@@ -127,20 +133,38 @@ local npm token needed) and dispatches a `sui-published` event to consumers
    ```bash
    git commit -m "chore(release): X.Y.Z"
    ```
-   (Repo convention commits to `main` directly.)
-4. **Tag and push** (tagging lapsed historically — resume it):
+   (Historically this went straight to `main`; recent releases go through a
+   short-lived `chore/release-X.Y.Z` PR. Either way, what step 4 needs is the
+   sha the release ends up on in `main`.)
+4. **Get it onto `main`, then tag that commit BY SHA** (tagging lapsed
+   historically — resume it):
    ```bash
-   git tag vX.Y.Z
-   git push origin main
+   git push origin main          # or push the release branch and merge its PR
+   git fetch origin main
+   git log --oneline -3 origin/main          # find the release commit
+   git tag vX.Y.Z <that-sha>                 # never a bare `git tag vX.Y.Z`
    git push origin vX.Y.Z
    ```
-   The push to `main` (with the `package.json` change) fires `publish.yml`.
+   **Name the sha.** A bare `git tag vX.Y.Z` tags *your branch head*, which is
+   not the commit `main` carries once the release went through a PR — and a tag
+   on a commit that never landed is worse than none. This is not hypothetical:
+   0.175.0 shipped untagged and `v0.175.0` had to be backfilled afterwards onto
+   `6d52311`, its `chore: release 0.175.0` commit on `main`. Either the release
+   commit or the merge that brought it in is an acceptable target (`v0.175.0` →
+   `6d52311`, the release commit; `v0.176.0` → `ec918d6`, the merge); tag
+   **after** the merge, so the sha you name is one `main` actually has.
 5. **Confirm the publish:**
    ```bash
    gh run list --workflow=publish.yml --limit 1
    npm view @primestageprime/solid-ui-components version --registry=https://npm.pkg.github.com
    ```
-   The workflow no-ops gracefully if the version is already published.
+   Publish follows CI, so nothing starts until the `main` CI run passes; the
+   workflow then no-ops gracefully if the version is already published.
+   **A green publish run does not prove consumers were notified** — the "Notify
+   consumers" step exits 0 when `REPO_ACCESS_TOKEN` is unset, and the dispatch
+   is non-fatal when it fails, so a consumer can silently never hear about a
+   release: read that step's log and bump the consumer's `package.json` by hand
+   if it skipped.
 
 ## Done when
 
