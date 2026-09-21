@@ -30,6 +30,7 @@ import {
 	onMount,
 	Show,
 } from "solid-js";
+import { find, map } from "../../fn";
 import { observeSize } from "../../internal/dom/observeSize";
 import type { StackedAreaCurve, StackedAreaSeriesData } from "../Chart";
 import {
@@ -84,8 +85,10 @@ const GhostPickRule: Component<{
 	const at = createMemo(() => {
 		const x = ctx.hoverX();
 		if (x === null) return undefined;
-		return props.buckets.find(
-			(bucket) => x >= bucket.from && x < bucket.to,
+		return find(
+			(bucket: { from: number; to: number }) =>
+				x >= bucket.from && x < bucket.to,
+			props.buckets,
 		)?.from;
 	});
 	return (
@@ -228,16 +231,22 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 	const buckets = createMemo(() => {
 		const edges = props.columns;
 		if (edges === undefined || edges.length === 0) return [];
-		const series = props.series.map((one) => ({
-			id: one.id,
-			label: one.label,
-			points: one.points.map((point) => ({
-				at: timeOf(point.at),
-				value: point.value,
-			})),
-		}));
+		const series = map(
+			(one: StackedAreaSeriesData) => ({
+				id: one.id,
+				label: one.label,
+				points: map(
+					(point: { at: number | Date; value: number }) => ({
+						at: timeOf(point.at),
+						value: point.value,
+					}),
+					one.points,
+				),
+			}),
+			props.series,
+		);
 		return stackBuckets(series, [
-			...edges.map(timeOf),
+			...map(timeOf, edges),
 			props.xDomain[1].getTime(),
 		]);
 	});
@@ -279,11 +288,14 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 						bandWidth={props.columnWidth ?? 0.84}
 						segmentGap={props.segmentGap ?? 1}
 						segments={(bucket) =>
-							bucket.values.map((value, index) => ({
-								value,
-								fill: seriesPaint(index),
-								key: index,
-							}))
+							map(
+								(value: number, index: number) => ({
+									value,
+									fill: seriesPaint(index),
+									key: index,
+								}),
+								bucket.values,
+							)
 						}
 					/>
 				</Show>

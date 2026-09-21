@@ -10,6 +10,7 @@ import {
 	onCleanup,
 	Show,
 } from "solid-js";
+import { filter, map, sum } from "../../fn";
 import { useChart } from "./context";
 import { buildReferenceLine } from "./referenceLine";
 import { slotId as brandSlotId } from "./slot-types";
@@ -360,20 +361,17 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 		   gutters even: neighbouring bars share a boundary, so both round to the
 		   same integer, and one inset taken from the MEAN slot keeps every
 		   gutter exactly `2 * inset` wide whatever each bucket's own width. */
+		const slotOf = (datum: T, index: number): number => {
+			const center = props.x(datum, index);
+			return Math.abs(xs(center + stepOf(datum, index)) - xs(center)) || fallbackSlot;
+		};
 		const meanSlot =
 			props.data.length === 0
 				? fallbackSlot
-				: props.data.reduce((sum, datum, index) => {
-						const center = props.x(datum, index);
-						return (
-							sum +
-							(Math.abs(xs(center + stepOf(datum, index)) - xs(center)) ||
-								fallbackSlot)
-						);
-					}, 0) / props.data.length;
+				: sum(map(slotOf, props.data)) / props.data.length;
 		const inset = Math.round((meanSlot * (1 - bandWidth())) / 2);
 
-		return props.data.map((datum, index) => {
+		return map((datum: T, index: number) => {
 			const center = props.x(datum, index);
 			const half = stepOf(datum, index) / 2;
 			const left = Math.round(xs(center - half)) + inset;
@@ -384,38 +382,37 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 				: [{ value: props.value?.(datum) ?? 0 }];
 			let posCursor = base;
 			let negCursor = base;
-			const placed = source
-				.map((seg, segIndex) => {
-					const top = seg.value > 0 ? posCursor + seg.value : negCursor;
-					const bottom = seg.value > 0 ? posCursor : negCursor + seg.value;
-					if (seg.value > 0) posCursor += seg.value;
-					else negCursor += seg.value;
-					return {
-						seg,
-						segIndex,
-						y: Math.round(ys(top)),
-						height: Math.max(1, Math.round(Math.abs(ys(bottom) - ys(top)))),
-					};
-				})
-				// A zero segment draws no rect. The cursors above already counted
-				// it, so dropping it here cannot move the bands above it.
-				.filter((one) => one.seg.value !== 0);
+			const stack = (seg: BarSegment, segIndex: number) => {
+				const top = seg.value > 0 ? posCursor + seg.value : negCursor;
+				const bottom = seg.value > 0 ? posCursor : negCursor + seg.value;
+				if (seg.value > 0) posCursor += seg.value;
+				else negCursor += seg.value;
+				return {
+					seg,
+					segIndex,
+					y: Math.round(ys(top)),
+					height: Math.max(1, Math.round(Math.abs(ys(bottom) - ys(top)))),
+				};
+			};
+			// A zero segment draws no rect. `stack` above already counted it into
+			// the cursors, so dropping it here cannot move the bands above it.
+			const placed = filter(
+				(one: { seg: BarSegment }) => one.seg.value !== 0,
+				map(stack, source),
+			);
 
 			/* The gap is taken off each segment's TOP, so it shows the ground
 			   through rather than painting a stroke. A stroke would straddle the
 			   rect's edge by half a pixel and undo the snapping above. The
 			   top-most segment keeps its top: there is nothing above it. */
-			const topMost = Math.min(...placed.map((one) => one.y));
-			const segments =
-				gap <= 0
-					? placed
-					: placed.map((one) =>
-							one.y === topMost || one.height <= gap + 1
-								? one
-								: { ...one, y: one.y + gap, height: one.height - gap },
-						);
+			const topMost = Math.min(...map((one) => one.y, placed));
+			const openGap = (one: (typeof placed)[number]) =>
+				one.y === topMost || one.height <= gap + 1
+					? one
+					: { ...one, y: one.y + gap, height: one.height - gap };
+			const segments = gap <= 0 ? placed : map(openGap, placed);
 			return { datum, index, x: left, width, segments };
-		});
+		}, props.data);
 	});
 
 	return (
