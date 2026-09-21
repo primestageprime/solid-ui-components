@@ -22,6 +22,8 @@ import type { GridDataProps } from "./Grid";
 import type { Component } from "solid-js";
 // Data import (not a component import) — see FixedHeightBox docstring.
 import { DEFAULT_CHART_HEIGHT } from "../ScrubChart/helpers";
+// Same disposition, other axis — see FillPaneRailGrid.
+import { NATURAL_GAUGE_WIDTH } from "../RateGauge/geometry";
 
 // Plain flex column, no baked gap — a bare vertical stack whose children space
 // themselves (own margins) or sit flush. For a wrapper that just needs a flex
@@ -365,6 +367,58 @@ export const LabelValueGrid: Component<GridDataProps> = createGrid({
   gap: "md",
   align: "baseline",
 });
+/**
+ * FillPaneRailGrid — a two-track frame that fills its parent's remaining
+ * height: a PANE that takes whatever is left beside a RAIL held to an
+ * instrument's own natural width
+ * (`minmax(0, 1fr) {NATURAL_GAUGE_WIDTH}px; grid-template-rows: minmax(0, 1fr);
+ * flex:1; min-height:0`).
+ *
+ * The frame a proportional row cannot draw, for two reasons:
+ *
+ *   • A PERCENTAGE is not a width. `MajorPaneBox` + `GrowFillBox` in a
+ *     `FillWrapRow` hands the minor cell a share, so the instrument in it
+ *     resizes with the window — 438px at a 1439px viewport and 262px at a
+ *     1000px one, measured on the License Board. An instrument that is drawn
+ *     against a stated width is then drawn at a different size on every
+ *     screen, and below its natural width it does not shrink gracefully: the
+ *     dial starves to its floor to leave the words room. A track states the
+ *     width once and the pane takes the remainder, which is the same picture
+ *     at every viewport.
+ *   • A `minmax(0, …)` track has a min sizing function of ZERO, so a grid item
+ *     in it has NO content-based automatic minimum and can be shrunk to the
+ *     track. A flex item cannot: its cross-size stretch is floored by its
+ *     content, which is why the bottom row of the License Board measured 468px
+ *     inside its own 393px half at 1000×900 — the halves were exact and the
+ *     CONTENT overflowed them. `grid-template-rows: minmax(0, 1fr)` is that
+ *     same trick on the other axis and is the load-bearing half of this
+ *     variant; without it the implicit row is auto-sized to content and the
+ *     overflow comes straight back.
+ *
+ * It also cannot WRAP, which `FillWrapRow` will: a wrapped rail drops below
+ * its pane and takes the row's height with it.
+ *
+ * `NATURAL_GAUGE_WIDTH` is `RateGauge`'s own derived width (a data import, not
+ * a component import — see `FixedHeightBox`): the smallest width at which its
+ * label column is unclamped and its ring still reaches full size. The rail is
+ * named for the SHAPE, not for that gauge — anything that wants a stated width
+ * beside a fluid pane belongs in it.
+ *
+ * Use for: a board's bottom band — a pane of controls beside one instrument
+ * held to a constant size. Use `PaneRow` when both sides are fluid,
+ * `FillWrapRow` when the cells SHOULD wrap at narrow widths, and
+ * `HalfFillColumn` for a proportional split rather than a stated one.
+ */
+export const FillPaneRailGrid: Component<GridDataProps> = createGrid({
+  columns: `minmax(0, 1fr) ${NATURAL_GAUGE_WIDTH}px`,
+  gap: "sm",
+  style: {
+    flex: "1",
+    "min-height": "0",
+    "grid-template-rows": "minmax(0, 1fr)",
+  },
+});
+
 export const ConstrainedBox: Component<BoxDataProps> = createBox({
   style: { "max-width": "400px" },
 });

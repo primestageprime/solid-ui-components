@@ -56,6 +56,7 @@ import {
   WideCardGrid,
   ChipGrid,
   LabelValueGrid,
+  FillPaneRailGrid,
   // app chrome
   CompactAppHeader,
   InlineAppHeader,
@@ -86,7 +87,7 @@ interface VariantSpec {
   note: string;
   Variant: Slot;
   /** Children shape. Defaults to three fit-width chips. */
-  kind?: "chips" | "blocks" | "tall" | "wide" | "pairs";
+  kind?: "chips" | "blocks" | "tall" | "wide" | "pairs" | "paneRail";
   /** Demo inside a definite-height frame — only the clip/scroll families need
    *  one, and a plain stack looks broken in it. */
   bounded?: boolean;
@@ -361,6 +362,13 @@ const GRIDS: VariantSpec[] = [
     Variant: LabelValueGrid,
     kind: "pairs",
   },
+  {
+    name: "FillPaneRailGrid",
+    note: "a fluid pane beside a rail held to a STATED width (RateGauge's own natural 292px) — resize the window and the rail does not move; minmax(0,…) on both axes is what lets the cells shrink instead of overflowing, and a grid cannot wrap the rail underneath",
+    Variant: FillPaneRailGrid,
+    kind: "paneRail",
+    bounded: true,
+  },
 ];
 
 const CHILDREN: Record<NonNullable<VariantSpec["kind"]>, () => JSX.Element> = {
@@ -383,6 +391,14 @@ const CHILDREN: Record<NonNullable<VariantSpec["kind"]>, () => JSX.Element> = {
     <div class="layout-demo-wide-content">
       <LargePlaceholder label="content wider than the frame" />
     </div>
+  ),
+  // EXACTLY TWO children, because the frame has exactly two tracks. A third
+  // would land in an implicit row and demonstrate the opposite of the point.
+  paneRail: () => (
+    <>
+      <FillPlaceholder label="pane — whatever is left over" />
+      <FillPlaceholder label="rail — a stated width, at every viewport" />
+    </>
   ),
   pairs: () => (
     <>
