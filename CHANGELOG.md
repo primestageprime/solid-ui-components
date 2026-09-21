@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.177.0 — 2026-09-21
+
 ### Added
 
 - **`StackedTimelineChart` forwards `curve` to its stack, and curries it.**
