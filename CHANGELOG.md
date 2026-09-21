@@ -50,6 +50,26 @@
   overlay is a sibling of the `<svg>`, so portal-rendered tooltip text stays
   selectable.
 
+- **Every `BarSeries` edge lands on a WHOLE pixel, and `separator` is now
+  `segmentGap`.** A bar left at 349.87 left pixel 349 holding 13% fill and 87%
+  ground. That geometry is identical for every segment of a stack, but what
+  the partial column LOOKS like is not: a blue fill blended 13% over a
+  blue-grey plot ground is invisible, while amber or red at 13% tints it warm
+  and shows. The warm segments read as reaching a pixel further left than the
+  blue one under them — a stack that measured identical to three decimal
+  places looked misaligned.
+  **Rounding the two BOUNDARIES, not the centre.** Neighbouring bars share a
+  boundary, so both round to the same integer, and one inset taken from the
+  mean slot keeps every gutter exactly `2 * inset` wide whatever each bucket's
+  own width. On the License Board that took the gutters from a 0.29px spread
+  to a single value: every one is 6px.
+  **`separator` (a 1px stroke) becomes `segmentGap` (pixels of ground).** A
+  stroke straddles the rect's edge by half a pixel, which would have undone
+  the snapping and brought back the very softness it was added to remove. The
+  gap does the same job — a luminance step at a near-equiluminant boundary —
+  without touching an edge. `StackedTimelineChart` exposes it as `segmentGap`,
+  curried, default 1.
+
 - **`BarSeries` takes a per-datum `step`, and a `separator` between stacked
   segments.** Two fixes a real stacked column chart asked for.
   **`step` as a function.** One number spends the same slot on every datum
@@ -58,16 +78,12 @@
   a constant 30.6 px bar, and a rule drawn on a real month boundary then
   missed the gap's centre by up to 0.9 px. Per-datum slots take the gap spread
   to 0.29 px and the rule offset to 0.05 px. A number still works.
-  **`separator`.** A paint drawn between stacked segments and around each bar,
-  1px. A validated categorical palette is held inside a narrow lightness band,
-  so two adjacent segments come out near EQUILUMINANT — this stack's blue and
-  amber sit at luminance .210 and .206, 4.32:1 and 4.25:1 against the ground.
-  The eye finds edges by luminance, so a boundary carrying only hue reads as
-  soft and the segments stop looking like they share a width. A
-  surface-coloured hairline puts the luminance step back. Omitted, the
-  segments meet directly, as they always have.
-  `StackedTimelineChart` exposes it as `columnSeparator`, curried, defaulting
-  to `var(--sui-bg-elevated)`; `"none"` turns it off.
+  **A gap between stacked segments.** A validated categorical palette is held
+  inside a narrow lightness band, so two adjacent segments come out near
+  EQUILUMINANT — this stack's blue and amber sit at luminance .210 and .206,
+  4.32:1 and 4.25:1 against the ground. The eye finds edges by luminance, so a
+  boundary carrying only hue reads as soft and the segments stop looking like
+  they share a width. See `segmentGap` above.
 
 - **The VERTICAL reference rule is snapped to a half pixel.** A 1px stroke
   centred on a fraction spreads across two device pixels at partial coverage

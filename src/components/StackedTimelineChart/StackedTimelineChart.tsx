@@ -115,9 +115,8 @@ export interface StackedTimelineChartProps {
 	 */
 	columnWidth?: number;
 	/**
-	 * The hairline between a column's stacked segments, and around each column.
-	 * Defaults to the chart's own surface, so it reads as a GAP; pass `"none"`
-	 * to let the segments meet directly. Ignored without `columns`.
+	 * Pixels of GROUND left between a column's stacked segments. Default 1;
+	 * 0 lets them meet directly. Ignored without `columns`.
 	 *
 	 * It is not decoration. The series palette is held inside a narrow
 	 * lightness band, so two neighbouring bands come out near EQUILUMINANT and
@@ -125,7 +124,7 @@ export interface StackedTimelineChartProps {
 	 * finds edges by luminance, so that boundary reads as soft and the two
 	 * segments stop looking like they share a width. Presentational — curried.
 	 */
-	columnSeparator?: string;
+	segmentGap?: number;
 	/** Plot inset. Presentational — curried. */
 	margin?: Partial<Margin>;
 	/** X tick text. Presentational — curried. */
@@ -217,11 +216,7 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 						x={(bucket) => (bucket.from + bucket.to) / 2}
 						step={columnStep}
 						bandWidth={props.columnWidth ?? 0.84}
-						separator={
-							props.columnSeparator === "none"
-								? undefined
-								: (props.columnSeparator ?? "var(--sui-bg-elevated)")
-						}
+						segmentGap={props.segmentGap ?? 1}
 						segments={(bucket) =>
 							bucket.values.map((value, index) => ({
 								value,
@@ -275,7 +270,7 @@ export type StackedTimelineChartOverrides = Pick<
 	StackedTimelineChartProps,
 	
 	| "curve"
-	| "columnSeparator"
+	| "segmentGap"
 	| "columnWidth"
 	| "margin"
 	| "xTickFormat"

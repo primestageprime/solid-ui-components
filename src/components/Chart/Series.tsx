@@ -295,19 +295,20 @@ export interface BarSeriesProps<T> {
 	/** Default fill when a segment doesn't specify one. */
 	fill?: string;
 	/**
-	 * A paint paletted BETWEEN stacked segments and around each bar, 1px wide.
-	 * Pass the chart's own surface colour and it reads as a GAP.
+	 * Pixels of GROUND left between stacked segments. Default 0.
 	 *
 	 * **Why a stack wants one.** A validated categorical palette is held inside
 	 * a narrow lightness band, so two adjacent segments come out near
 	 * EQUILUMINANT — this stack's blue and amber sit at luminance .210 and
 	 * .206. The eye finds edges by luminance, so a boundary carrying only hue
-	 * reads as soft, and its position reads as uncertain: the segments look
-	 * like they do not share a width even when they are the same rect. A
-	 * surface-coloured hairline puts a luminance step back at that boundary.
-	 * Omitted, the segments meet directly, as they always have.
+	 * reads as soft, and the two segments stop looking like they share a width.
+	 * A gap of ground puts the luminance step back.
+	 *
+	 * It is a GAP and not a stroke on purpose: a stroke straddles the rect's
+	 * edge by half a pixel, which would undo the whole-pixel snapping the bars
+	 * depend on and bring back the very edge softness this is here to remove.
 	 */
-	separator?: string;
+	segmentGap?: number;
 	onBarClick?: (datum: T, index: number) => void;
 	onSegmentClick?: (
 		datum: T,
@@ -341,20 +342,49 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 		const xs = ctx.xScale();
 		const ys = ctx.yScale();
 		const base = baseline();
+		const gap = props.segmentGap ?? 0;
 		const fallbackSlot =
 			(xs.range[1] - xs.range[0]) / Math.max(1, props.data.length);
+
+		/* EVERY EDGE LANDS ON A WHOLE PIXEL.
+
+		   A bar left at 349.87 leaves pixel 349 holding 13% fill and 87% ground.
+		   The geometry is the same for every segment of the stack, but what that
+		   partial column LOOKS like is not: a blue fill blended 13% over a
+		   blue-grey plot ground is invisible, while amber or red at 13% tints it
+		   warm and shows. The warm segments then read as reaching a pixel
+		   further left than the blue one under them, and the stack looks
+		   misaligned when it is identical to three decimal places.
+
+		   Rounding the two BOUNDARIES rather than the centre is what keeps the
+		   gutters even: neighbouring bars share a boundary, so both round to the
+		   same integer, and one inset taken from the MEAN slot keeps every
+		   gutter exactly `2 * inset` wide whatever each bucket's own width. */
+		const meanSlot =
+			props.data.length === 0
+				? fallbackSlot
+				: props.data.reduce((sum, datum, index) => {
+						const center = props.x(datum, index);
+						return (
+							sum +
+							(Math.abs(xs(center + stepOf(datum, index)) - xs(center)) ||
+								fallbackSlot)
+						);
+					}, 0) / props.data.length;
+		const inset = Math.round((meanSlot * (1 - bandWidth())) / 2);
+
 		return props.data.map((datum, index) => {
 			const center = props.x(datum, index);
-			// Slot pixel width: the distance to the next centre, one `step` along.
-			const slotPx =
-				Math.abs(xs(center + stepOf(datum, index)) - xs(center)) || fallbackSlot;
-			const width = slotPx * bandWidth();
+			const half = stepOf(datum, index) / 2;
+			const left = Math.round(xs(center - half)) + inset;
+			const right = Math.round(xs(center + half)) - inset;
+			const width = Math.max(1, right - left);
 			const source: readonly BarSegment[] = props.segments
 				? props.segments(datum)
 				: [{ value: props.value?.(datum) ?? 0 }];
 			let posCursor = base;
 			let negCursor = base;
-			const segments = source
+			const placed = source
 				.map((seg, segIndex) => {
 					const top = seg.value > 0 ? posCursor + seg.value : negCursor;
 					const bottom = seg.value > 0 ? posCursor : negCursor + seg.value;
@@ -363,14 +393,28 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 					return {
 						seg,
 						segIndex,
-						y: ys(top),
-						height: Math.abs(ys(bottom) - ys(top)),
+						y: Math.round(ys(top)),
+						height: Math.max(1, Math.round(Math.abs(ys(bottom) - ys(top)))),
 					};
 				})
 				// A zero segment draws no rect. The cursors above already counted
 				// it, so dropping it here cannot move the bands above it.
-				.filter((placed) => placed.seg.value !== 0);
-			return { datum, index, x: xs(center) - width / 2, width, segments };
+				.filter((one) => one.seg.value !== 0);
+
+			/* The gap is taken off each segment's TOP, so it shows the ground
+			   through rather than painting a stroke. A stroke would straddle the
+			   rect's edge by half a pixel and undo the snapping above. The
+			   top-most segment keeps its top: there is nothing above it. */
+			const topMost = Math.min(...placed.map((one) => one.y));
+			const segments =
+				gap <= 0
+					? placed
+					: placed.map((one) =>
+							one.y === topMost || one.height <= gap + 1
+								? one
+								: { ...one, y: one.y + gap, height: one.height - gap },
+						);
+			return { datum, index, x: left, width, segments };
 		});
 	});
 
@@ -400,8 +444,6 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 									width={bar.width}
 									height={placed.height}
 									fill={placed.seg.fill ?? props.fill}
-									stroke={props.separator}
-									stroke-width={props.separator === undefined ? undefined : 1}
 									onClick={click}
 									onKeyDown={(e) => {
 										if (e.key === "Enter" || e.key === " ") {
