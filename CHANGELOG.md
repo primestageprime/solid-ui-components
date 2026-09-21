@@ -44,6 +44,30 @@
   **Nothing changes for an existing consumer**: without `columns` the chart
   draws bands exactly as before.
 
+- **`BarSeries` takes a per-datum `step`, and a `separator` between stacked
+  segments.** Two fixes a real stacked column chart asked for.
+  **`step` as a function.** One number spends the same slot on every datum
+  while each bar still centres on its own, so every bit of the difference
+  lands in the GAPS: months of 28 to 31 days gave gaps of 4.7 to 6.5 px around
+  a constant 30.6 px bar, and a rule drawn on a real month boundary then
+  missed the gap's centre by up to 0.9 px. Per-datum slots take the gap spread
+  to 0.29 px and the rule offset to 0.05 px. A number still works.
+  **`separator`.** A paint drawn between stacked segments and around each bar,
+  1px. A validated categorical palette is held inside a narrow lightness band,
+  so two adjacent segments come out near EQUILUMINANT — this stack's blue and
+  amber sit at luminance .210 and .206, 4.32:1 and 4.25:1 against the ground.
+  The eye finds edges by luminance, so a boundary carrying only hue reads as
+  soft and the segments stop looking like they share a width. A
+  surface-coloured hairline puts the luminance step back. Omitted, the
+  segments meet directly, as they always have.
+  `StackedTimelineChart` exposes it as `columnSeparator`, curried, defaulting
+  to `var(--sui-bg-elevated)`; `"none"` turns it off.
+
+- **Vertical and horizontal reference rules render with `crispEdges`.** A 1px
+  axis-aligned stroke at a fractional x straddles two device columns and paints
+  grey, while its neighbour near a half-pixel paints sharp — so a row of event
+  rules looked like it had two different colours in it.
+
 - **`BarSeries` reads the scales REACTIVELY — a resizing chart re-lays its
   bars.** The geometry moved into a `createMemo` over `ctx.xScale()` /
   `ctx.yScale()`. It used to be computed inside the `For` row callback, which

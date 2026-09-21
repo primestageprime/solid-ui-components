@@ -240,6 +240,42 @@ describe("StackedTimelineChart", () => {
 		expect(lefts[1] - lefts[0]).toBeGreaterThan(width);
 	});
 
+	it("leaves EVEN gaps across months of different lengths", () => {
+		// Jan, Feb and Mar 2025: 31, 28 and 31 days. One mean slot put all of
+		const D = 86400000;
+		const jan = Date.UTC(2025, 0, 1);
+		const months = [jan, jan + 31 * D, jan + 59 * D];
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[new Date(jan), new Date(jan + 90 * D)]}
+				yDomain={[0, 80]}
+				columns={months.map((at) => new Date(at))}
+			/>
+		));
+		const lefts = [
+			...new Set(
+				[...container.querySelectorAll(".sui-chart__bar")].map((bar) =>
+					Number(bar.getAttribute("x")),
+				),
+			),
+		].sort((a, b) => a - b);
+		const widthOf = (left: number): number =>
+			Number(
+				[...container.querySelectorAll(".sui-chart__bar")]
+					.find((bar) => Number(bar.getAttribute("x")) === left)
+					?.getAttribute("width"),
+			);
+		expect(lefts).toHaveLength(3);
+		const gaps = [
+			lefts[1] - (lefts[0] + widthOf(lefts[0])),
+			lefts[2] - (lefts[1] + widthOf(lefts[1])),
+		];
+		// February's column is narrower; the GAP beside it is not.
+		expect(widthOf(lefts[1])).toBeLessThan(widthOf(lefts[0]));
+		expect(gaps[0]).toBeCloseTo(gaps[1], 1);
+	});
+
 	it("draws BANDS when `columns` is absent", () => {
 		const { container } = render(() => (
 			<StackedTimelineChart series={SERIES} xDomain={[START, END]} yDomain={[0, 80]} />

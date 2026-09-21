@@ -114,6 +114,18 @@ export interface StackedTimelineChartProps {
 	 * without `columns`. Presentational — curried.
 	 */
 	columnWidth?: number;
+	/**
+	 * The hairline between a column's stacked segments, and around each column.
+	 * Defaults to the chart's own surface, so it reads as a GAP; pass `"none"`
+	 * to let the segments meet directly. Ignored without `columns`.
+	 *
+	 * It is not decoration. The series palette is held inside a narrow
+	 * lightness band, so two neighbouring bands come out near EQUILUMINANT and
+	 * the boundary between them carries hue but almost no luminance. The eye
+	 * finds edges by luminance, so that boundary reads as soft and the two
+	 * segments stop looking like they share a width. Presentational — curried.
+	 */
+	columnSeparator?: string;
 	/** Plot inset. Presentational — curried. */
 	margin?: Partial<Margin>;
 	/** X tick text. Presentational — curried. */
@@ -170,14 +182,14 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 		]);
 	});
 
-	/* ONE slot width for every column, the mean bucket. Months are 28 to 31
-	   days, so no single width is exact; each column still centres on its own
-	   bucket, which keeps the POSITION exact and the width nominal. */
-	const columnStep = createMemo(() => {
-		const all = buckets();
-		if (all.length === 0) return 1;
-		return (all[all.length - 1].to - all[0].from) / all.length;
-	});
+	/* EACH column gets its OWN bucket as its slot, never one mean month. With a
+	   single mean, every bar still centres on its own bucket while every bar is
+	   the same width, so all of the 28-to-31-day difference lands in the GAPS:
+	   4.7 px beside 6.5 px around a constant 30.6 px bar, and an event rule on a
+	   real month boundary then missed the gap's centre. Per-bucket slots put the
+	   boundary back in the middle of every gap. */
+	const columnStep = (bucket: { from: number; to: number }): number =>
+		bucket.to - bucket.from;
 
 	return (
 		<GrowFillBox ref={frame}>
@@ -203,8 +215,13 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 					<BarSeries
 						data={buckets()}
 						x={(bucket) => (bucket.from + bucket.to) / 2}
-						step={columnStep()}
+						step={columnStep}
 						bandWidth={props.columnWidth ?? 0.84}
+						separator={
+							props.columnSeparator === "none"
+								? undefined
+								: (props.columnSeparator ?? "var(--sui-bg-elevated)")
+						}
 						segments={(bucket) =>
 							bucket.values.map((value, index) => ({
 								value,
@@ -256,7 +273,13 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 /** Props that are presentational — locked at curry time. */
 export type StackedTimelineChartOverrides = Pick<
 	StackedTimelineChartProps,
-	"curve" | "columnWidth" | "margin" | "xTickFormat" | "yTickFormat"
+	
+	| "curve"
+	| "columnSeparator"
+	| "columnWidth"
+	| "margin"
+	| "xTickFormat"
+	| "yTickFormat"
 >;
 
 /** Props left to the call site: data and callbacks only. */

@@ -282,12 +282,32 @@ export interface BarSeriesProps<T> {
 	 * later, so the derived slot comes out near zero — and near zero is not
 	 * zero, so the fallback below never fires and every bar renders invisible.
 	 * Pass the bucket's width in ms (a month, an hour) and the bars appear.
+	 *
+	 * **Pass a FUNCTION when the buckets differ in width.** One number spends
+	 * the same slot on every datum while each bar still centres on its own
+	 * datum, so every bit of the difference lands in the GAPS: months of 28 to
+	 * 31 days gave gaps of 4.7 to 6.5 px around a constant 30.6 px bar, and a
+	 * rule drawn on a real month boundary then missed the gap's centre.
 	 */
-	step?: number;
+	step?: number | ((d: T, i: number) => number);
 	/** Y value to stack against. Default 0. */
 	baseline?: number;
 	/** Default fill when a segment doesn't specify one. */
 	fill?: string;
+	/**
+	 * A paint paletted BETWEEN stacked segments and around each bar, 1px wide.
+	 * Pass the chart's own surface colour and it reads as a GAP.
+	 *
+	 * **Why a stack wants one.** A validated categorical palette is held inside
+	 * a narrow lightness band, so two adjacent segments come out near
+	 * EQUILUMINANT — this stack's blue and amber sit at luminance .210 and
+	 * .206. The eye finds edges by luminance, so a boundary carrying only hue
+	 * reads as soft, and its position reads as uncertain: the segments look
+	 * like they do not share a width even when they are the same rect. A
+	 * surface-coloured hairline puts a luminance step back at that boundary.
+	 * Omitted, the segments meet directly, as they always have.
+	 */
+	separator?: string;
 	onBarClick?: (datum: T, index: number) => void;
 	onSegmentClick?: (
 		datum: T,
@@ -300,7 +320,10 @@ export interface BarSeriesProps<T> {
 export function BarSeries<T>(props: BarSeriesProps<T>) {
 	const ctx = useChart();
 	const bandWidth = () => props.bandWidth ?? 0.65;
-	const step = () => props.step ?? 1;
+	const stepOf = (d: T, i: number): number => {
+		const step = props.step;
+		return typeof step === "function" ? step(d, i) : (step ?? 1);
+	};
 	const baseline = () => props.baseline ?? 0;
 	const interactive = () =>
 		props.onBarClick != null || props.onSegmentClick != null;
@@ -323,7 +346,8 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 		return props.data.map((datum, index) => {
 			const center = props.x(datum, index);
 			// Slot pixel width: the distance to the next centre, one `step` along.
-			const slotPx = Math.abs(xs(center + step()) - xs(center)) || fallbackSlot;
+			const slotPx =
+				Math.abs(xs(center + stepOf(datum, index)) - xs(center)) || fallbackSlot;
 			const width = slotPx * bandWidth();
 			const source: readonly BarSegment[] = props.segments
 				? props.segments(datum)
@@ -376,6 +400,8 @@ export function BarSeries<T>(props: BarSeriesProps<T>) {
 									width={bar.width}
 									height={placed.height}
 									fill={placed.seg.fill ?? props.fill}
+									stroke={props.separator}
+									stroke-width={props.separator === undefined ? undefined : 1}
 									onClick={click}
 									onKeyDown={(e) => {
 										if (e.key === "Enter" || e.key === " ") {
@@ -478,6 +504,7 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 					stroke-width={props.strokeWidth ?? 1}
 					stroke-dasharray={props.strokeDasharray ?? "4 4"}
 					opacity={0.6}
+					shape-rendering="crispEdges"
 				/>
 				<Show when={horizontalMark().caption}>
 					{(caption) => (
@@ -502,6 +529,7 @@ export const ReferenceLine: Component<ReferenceLineProps> = (props) => {
 					stroke-width={props.strokeWidth ?? 1}
 					stroke-dasharray={props.strokeDasharray ?? "4 4"}
 					opacity={0.6}
+					shape-rendering="crispEdges"
 				/>
 				<Show when={props.label}>
 					<text

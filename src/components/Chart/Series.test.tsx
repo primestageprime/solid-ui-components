@@ -234,6 +234,64 @@ describe("BarSeries", () => {
     for (const width of widthsOf(container)) expect(width).toBeGreaterThan(20);
   });
 
+  it("takes a per-datum `step`, so uneven buckets get even gaps", () => {
+    // Three buckets of 31, 28 and 31 days. One mean step would draw three
+    // equal bars on their own true centres, and every day of the difference
+    // would land in the GAPS.
+    const START = Date.UTC(2027, 0, 1);
+    const D = 86400000;
+    const edges = [START, START + 31 * D, START + 59 * D, START + 90 * D];
+    const buckets = [0, 1, 2].map((i) => ({ from: edges[i], to: edges[i + 1] }));
+    const { container } = render(() => (
+      <Chart
+        width={600}
+        height={100}
+        xDomain={[new Date(START), new Date(edges[3])]}
+        yDomain={[0, 10]}
+      >
+        <BarSeries
+          data={buckets}
+          x={(b) => (b.from + b.to) / 2}
+          value={() => 5}
+          step={(b) => b.to - b.from}
+          bandWidth={0.8}
+        />
+      </Chart>
+    ));
+    const bars = [...container.querySelectorAll(".sui-chart__bar")].map((bar) => ({
+      l: Number(bar.getAttribute("x")),
+      w: Number(bar.getAttribute("width")),
+    }));
+    expect(bars).toHaveLength(3);
+    // A February column IS narrower than a January one — the bar is its bucket.
+    expect(bars[1].w).toBeLessThan(bars[0].w);
+    // …and the gaps come out equal, which is the thing a reader sees.
+    const gaps = [
+      bars[1].l - (bars[0].l + bars[0].w),
+      bars[2].l - (bars[1].l + bars[1].w),
+    ];
+    expect(gaps[0]).toBeCloseTo(gaps[1], 1);
+  });
+
+  it("paints a separator between stacked segments only when asked", () => {
+    const stack = (separator?: string) =>
+      render(() => (
+        <Chart width={400} height={100} xDomain={[0, 4]} yDomain={[0, 10]}>
+          <BarSeries
+            data={[{ at: 0 }]}
+            x={(_d, i) => i}
+            segments={() => [{ value: 3 }, { value: 4 }]}
+            separator={separator}
+          />
+        </Chart>
+      ));
+    const bare = stack().container.querySelector(".sui-chart__bar");
+    expect(bare?.getAttribute("stroke")).toBeNull();
+    const ruled = stack("var(--surface)").container.querySelector(".sui-chart__bar");
+    expect(ruled?.getAttribute("stroke")).toBe("var(--surface)");
+    expect(ruled?.getAttribute("stroke-width")).toBe("1");
+  });
+
   it("draws no rect for a zero segment, and keeps the bands above it put", () => {
     const { container } = render(() => (
       <Chart width={400} height={100} xDomain={[0, 4]} yDomain={[0, 10]}>
