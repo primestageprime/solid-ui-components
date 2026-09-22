@@ -121,26 +121,25 @@ consumer must confirm, and every contradiction of this brief you found.
 
 ## For consumer-repo prototyping
 
-The loop for building a real screen in a consumer app (jtf-ui,
-thorcasting-ui, amygdala-ui, dside-ui, taskmaster):
+Peter, 2026-09-22: *"I don't want to build in thorcasting and move to SUI.
+I'd like to build in SUI as a parallel linked codebase. That way Thorcasting
+never sees anything but pure SUI."* The direction is **SUI-first** — the
+consumer is never where a shape is drafted, only where the finished
+composition is proven live. The link exists to remove publish latency, not
+to relocate authoring:
 
-1. **Link SUI locally**: `npm run link:consumer` so the consumer resolves
-   SUI from source, not the published package. Not in `package.json` as of
-   2026-09-22 — until it lands, use the consumer's own local-source setup
-   (`docs/local-development.md`) and say so in your report.
-2. **Compose the screen from curried variants only** — same axiom as
-   above, just consumed rather than authored. Import only curried exports,
-   never a `create*` factory or an unexported base.
-3. **Hit the SUI gate only when composition genuinely fails** — i.e. no
-   existing curried variant, and no combination of existing ones, expresses
-   the shape. That failure is the signal to cross into SUI, not a shortcut
-   around section 1's push-back gate.
-4. **Extract into SUI via `/sui-build`** once the piece is real and a
-   second screen would draw it the same way. Don't build the same shape
-   twice in the consumer while waiting for the extraction — extract first,
-   then keep composing.
-5. **Unlink and bump** the consumer's `package.json` to the version
-   `/promote` or `/ship` cut, so its CI exercises the same dist a
-   registry consumer gets. Nothing is written twice — a Local Curried
-   Variant duplicating a shape another consumer already needed is a step-4
-   miss, not a valid end state.
+1. **Link the consumer to the local SUI checkout**: `npm run link:consumer
+   -- <path>` (see `docs/link-consumer.md`) so the consumer renders SUI's
+   **source** live, with HMR on SUI edits and no build/publish round-trip.
+   That's what the link is for — nothing else.
+2. **Every shape is authored in SUI.** A `/workshop` bench composes the
+   screen; `new:component`/`new:variant` (after the section-1 push-back
+   gate) covers any piece composition genuinely can't express. The consumer
+   screen then imports **only curried SUI exports** — it is the live proof
+   that the pure composition works, never the place a piece gets drafted.
+3. **Nothing is ever written in the consumer that would later be
+   "extracted."** If you're about to write JSX in the consumer that isn't a
+   curried SUI export wired to data props, stop — that's a SUI bench task,
+   not consumer code.
+4. **Unlink and bump** the consumer's pin once the SUI release lands, so
+   its CI exercises the same dist a registry consumer gets.
