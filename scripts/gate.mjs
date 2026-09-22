@@ -7,6 +7,7 @@
 //   node scripts/gate.mjs --fast          # same, but skip `build`
 //   node scripts/gate.mjs --only lint     # one job only (comma-separated ok)
 //   node scripts/gate.mjs --pre-push      # used by githooks/pre-push — see below
+//   node scripts/gate.mjs --no-lock       # skip the machine-wide lock (see below)
 //
 // WHY THIS EXISTS
 //
@@ -69,6 +70,18 @@
 // builds — it is a separate CI job/step and `--fast` was scoped to the one
 // named in the brief; skip it too with `--only` if you don't need it.
 //
+// WHY THERE IS A MACHINE-WIDE LOCK
+//
+// Several agents each running `npm run gate` at once made the `test` step
+// take 517s instead of 163s (pure contention — each passed alone), timing
+// out three suites on their 60s hooks. So `gate` now acquires an exclusive,
+// machine-wide lock (see scripts/gate-lock.mjs) before running, and waits
+// for any other gate already holding it — printing who holds it and which
+// step they're on — rather than racing it. The lock is keyed to the repo's
+// MAIN checkout (shared across worktrees), covers the whole run by default,
+// and is released on normal exit, SIGINT/SIGTERM, and uncaught exceptions.
+// `--no-lock` opts out.
+//
 // THE `--pre-push` HEALTH STEP IS INTENTIONALLY DIFFERENT FROM CI's
 //
 // CI's `health` job runs plain `npm run health`, which fails on a REGRESSION
@@ -91,6 +104,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { acquireGateLock } from "./gate-lock.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -314,6 +328,7 @@ const STEPS = [
 const argv = process.argv.slice(2);
 const fast = argv.includes("--fast");
 const prePush = argv.includes("--pre-push");
+const noLock = argv.includes("--no-lock");
 const onlyFlagIdx = argv.indexOf("--only");
 const onlyNames = onlyFlagIdx !== -1 ? (argv[onlyFlagIdx + 1] ?? "").split(",").map((s) => s.trim()) : null;
 
@@ -337,11 +352,21 @@ const stepsToRun = STEPS.filter((s) => {
   return true;
 });
 
+// ── machine-wide lock ────────────────────────────────────────────────────
+//
+// Concurrent gates on one machine contend for CPU/IO and can time out
+// otherwise-passing suites (see scripts/gate-lock.mjs header) — so a gate
+// waits for any other gate already running against the SAME repo (shared
+// across worktrees, keyed off `git rev-parse --git-common-dir`) rather than
+// racing it. `--no-lock` opts out (e.g. CI, where each run is isolated).
+const lock = noLock ? null : await acquireGateLock(root);
+
 // ── run ──────────────────────────────────────────────────────────────────
 
 const results = [];
 let overall = 0;
 for (const step of stepsToRun) {
+  lock?.setStep(step.name);
   console.log(`\n▶ ${step.name}`);
   const status = step.isolate ? withDetachedWorktree(step.run) : step.run(root);
   const ok = status === 0;
@@ -352,6 +377,8 @@ for (const step of stepsToRun) {
     break;
   }
 }
+
+lock?.release();
 
 console.log("\n── gate summary ──────────────────────────");
 for (const { name, status } of results) {
