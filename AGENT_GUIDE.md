@@ -517,9 +517,22 @@ can. File-content assertions must strip comments first. And after any scripted
 edit, READ THE FILE BACK: biome reflows what you wrote and a too-loose replace
 no-ops in silence — five times in one day.
 
-**Gates.** `npx tsc --noEmit` covers `src` only; a bench change type-checks only
-under `npm run typecheck:dev`. **Never pipe a gate** into `head` or `echo` — the
-exit status is the gate, and a pipe throws it away.
+**Gates.** Don't hand-assemble the CI command list — `npx tsc --noEmit` covers
+`src` only (a bench change type-checks only under `npm run typecheck:dev`),
+`npm run lint` is warning-tolerant where CI's `lint:ci` is not, and `npm run
+build`/`npm run bundle-budget` in THIS checkout collide with a running `vite
+--port 6006` dev server through the shared `node_modules/.vite` cache and wedge
+it. Run **`npm run gate`** instead: it derives its step list from
+`.github/workflows/ci.yml` (same commands, same order, same flags), prints each
+step's name and exit status, stops at the first failure, and runs `build` and
+`bundle-budget` inside a detached `git worktree` so the live checkout's Vite
+cache is never touched — safe to run next to Peter's dev server. `npm run gate
+-- --fast` skips `build`; `npm run gate -- --only <step>` runs one step. It is
+also what `githooks/pre-push` runs (`--pre-push`, which additionally
+auto-commits a tightened health baseline instead of costing a manual
+`--update-baseline` round-trip — see `scripts/gate.mjs`'s header). **Never pipe
+a gate** into `head` or `echo` regardless — the exit status is the gate, and a
+pipe throws it away.
 
 **Budget for consumer integration.** A first-consumer bench surfaces faults in
 other components that are invisible on their own benches — this board found the
