@@ -97,6 +97,8 @@
     "kpi": "node scripts/kpi-table.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",
     "usage-manifest": "node scripts/usage-manifest.mjs",
+    "link:consumer": "node scripts/link-consumer.mjs",
+    "unlink:consumer": "node scripts/link-consumer.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:dev": "tsc -p tsconfig.dev.json",
     "lint": "node scripts/lint-ci.mjs lint src",
