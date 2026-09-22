@@ -1,24 +1,45 @@
 #!/bin/sh
-# SUI health ratchet — gates PUSHES only, never commits (Peter ruling 2026-07-15).
+# SUI gate — gates PUSHES only.
+#
+# Runs `scripts/gate.mjs --pre-push`: the exact step list CI runs
+# (.github/workflows/ci.yml), in CI's order, with CI's flags — so pre-push
+# and CI cannot drift into asking different questions. See scripts/gate.mjs's
+# header for the full rationale, for how `build`/`bundle-budget` stay out of
+# this checkout's live `node_modules/.vite` (so a running `vite --port 6006`
+# dev server is never disturbed), and for exactly what `--pre-push` changes
+# on the health step (only its response to an unrecorded ratchet
+# IMPROVEMENT — it auto-commits the tightened baseline instead of costing a
+# manual `--update-baseline` round-trip on every gain, then still blocks
+# THIS push, because a commit made inside this hook cannot join the push
+# that triggered it — verified, not assumed; see the comment on
+# `healthStepPrePush` in scripts/gate.mjs). A real regression still blocks
+# exactly as before. Commits are otherwise never gated (Peter ruling
+# 2026-07-15) — the one exception is that single, deliberate, self-documenting
+# baseline commit, which exists to make forgetting `--update-baseline`
+# impossible rather than to gate anything.
+#
 # Versioned in githooks/; wired via `git config core.hooksPath githooks`,
 # which the npm "prepare" script sets automatically on install.
-echo "pre-push: SUI health ratchet (scripts/health.mjs)…"
-if ! npm run --silent health; then
+echo "pre-push: SUI gate (scripts/gate.mjs --pre-push — same checks as CI)…"
+if ! node scripts/gate.mjs --pre-push; then
   {
     echo ""
     echo "══════════════════════════════════════════════════════════════"
-    echo " ✗ PUSH BLOCKED — SUI health ratchet"
+    echo " ✗ PUSH BLOCKED — see the failed step above"
     echo ""
-    echo " Either a metric rose above its ceiling, or one improved and the"
-    echo " ceiling was not tightened to match. Details are above; commits"
-    echo " are never gated — fix and push again."
+    echo " scripts/gate.mjs runs every CI job's exact commands, in CI's"
+    echo " order, and stops at the first failure — same gate either way."
     echo ""
-    echo "   full offender lists:  npm run health -- --verbose"
-    echo "   lock in a GAIN:       npm run health -- --update-baseline"
-    echo "   accept an INCREASE:   npm run health -- --update-baseline=<metric>[,<metric>]"
-    echo "                         (the bare flag cannot raise a ceiling —"
-    echo "                          name the metric to say you meant it)"
-    echo "                         commit the baseline with your change"
+    echo "   run everything gate runs:    npm run gate"
+    echo "   run just the failing step:   npm run gate -- --only <step>"
+    echo "   skip the (slow) build step:  npm run gate -- --fast"
+    echo ""
+    echo " If the failed step was health: a REGRESSION still blocks here"
+    echo " exactly like above (see the ✗ REGRESSED lines). An unrecorded"
+    echo " IMPROVEMENT does not — gate already committed the tightened"
+    echo " baseline locally (scripts/health-baseline.json); the ONLY reason"
+    echo " this push is still blocked is that the hook's own commit cannot"
+    echo " join the push that triggered it. Just run 'git push' again."
     echo "══════════════════════════════════════════════════════════════"
   } >&2
   exit 1
