@@ -1,11 +1,20 @@
 /**
  * Builder Board bench — the four-panel frame at three viewport sizes.
  *
- * This bench builds NOTHING but the frame. Each panel holds a title and a
- * centred placeholder, so what is on show is the GEOMETRY: A over B in the top
- * half, C beside the fixed-width rail D in the bottom half, at a laptop, a
+ * This bench builds NOTHING but the frame. Panels B, C and D hold a title and
+ * a centred placeholder, so what is on show is the GEOMETRY: A over B in the
+ * top half, C beside the fixed-width rail D in the bottom half, at a laptop, a
  * desktop and a wide viewport — and the same picture at each, with only the
  * pane C growing.
+ *
+ * PANEL A HOLDS A REAL FILL CHART, not a placeholder (2026-09-22). The first
+ * consumer wrapped its `chartHeight="fill"` chart in a content-sized shell of
+ * its own and the chart measured 1472×0 in every tab: `fill` is `height:
+ * 100%`, which resolves against the nearest box with a height and computes to
+ * `auto` against one without. A placeholder cannot fail that way, so it could
+ * not have caught it. The chart here sits in the card's `GrowFillBox` the way
+ * the License Board bench has it, and the measured table's A row is the
+ * chart's own svg height as well as the card's — a zero there is the defect.
  *
  * Two tables sit under the frame. The MODEL is `builderBoardTable`, the
  * headless observation `geometry.ts` prints for the picked viewport; the
@@ -20,6 +29,8 @@
 import { type Component, createSignal, onCleanup, onMount } from "solid-js";
 import { join, map } from "../../../src/fn";
 import { BuilderBoard } from "../../../src/components/BuilderBoard";
+import { CashflowScrubChart } from "../../../src/components/CashflowScrubChart";
+import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import {
   builderBoardTable,
   type PanelId,
@@ -28,6 +39,7 @@ import {
 import { CodeBlock } from "../../../src/components/CodeBlock";
 import {
   GrowCenterColumn,
+  GrowFillBox,
   NarrowStack,
   ScrollXBox,
   SpreadRow,
@@ -58,6 +70,20 @@ const SizePicker = createSegmentedControl({
 
 const PANELS: readonly PanelId[] = ["a", "b", "c", "d"];
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Ninety days of a balance that climbs a thousand dollars a day — enough of
+ *  a line to see the chart take the card's height. */
+const CELLS: CashflowCell[] = map((i: number) => {
+  const start = new Date(Date.UTC(2026, 0, 1) + i * DAY_MS);
+  return {
+    start,
+    end: new Date(start.getTime() + DAY_MS),
+    cashflowCents: 100_000,
+    balanceCents: 1_000_000 + i * 100_000,
+  };
+}, Array.from({ length: 90 }, (_, i) => i));
+
 const PANEL_NAMES: Readonly<Record<PanelId, string>> = {
   a: "A cashflow",
   b: "B series",
@@ -69,15 +95,18 @@ const cell = (value: number | string, width: number): string =>
   String(value).padStart(width);
 
 /** The four panels as the browser laid them out, in the model's own table
- *  shape so the two read side by side. */
+ *  shape so the two read side by side — plus the height of the first svg in
+ *  each panel, which is what a fill chart actually got. */
 const measuredTable = (frame: HTMLElement): string => {
   const origin = frame.getBoundingClientRect();
-  const header = `${"panel".padEnd(12)}${cell("x", 6)}${cell("y", 6)}${cell("width", 7)}${cell("height", 8)}`;
+  const header = `${"panel".padEnd(12)}${cell("x", 6)}${cell("y", 6)}${cell("width", 7)}${cell("height", 8)}${cell("svg h", 7)}`;
   const rows = map((id: PanelId) => {
     const el = frame.querySelector<HTMLElement>(`[data-builder-board-panel="${id}"]`);
     if (el === null) return `${PANEL_NAMES[id].padEnd(12)}  (not rendered)`;
     const r = el.getBoundingClientRect();
-    return `${PANEL_NAMES[id].padEnd(12)}${cell(Math.round(r.left - origin.left), 6)}${cell(Math.round(r.top - origin.top), 6)}${cell(Math.round(r.width), 7)}${cell(Math.round(r.height), 8)}`;
+    const svg = el.querySelector("svg");
+    const svgHeight = svg === null ? "—" : Math.round(svg.getBoundingClientRect().height);
+    return `${PANEL_NAMES[id].padEnd(12)}${cell(Math.round(r.left - origin.left), 6)}${cell(Math.round(r.top - origin.top), 6)}${cell(Math.round(r.width), 7)}${cell(Math.round(r.height), 8)}${cell(svgHeight, 7)}`;
   }, PANELS);
   return join("\n", [header, ...rows]);
 };
@@ -127,7 +156,20 @@ const BuilderBoardBench: Component = () => {
             class={`builder-board-bench__viewport builder-board-bench__viewport--${size()}`}
           >
             <BuilderBoard
-              panelA={<Placeholder title="Cash Flow" note="panel A — the cashflow chart, full width, a quarter of the height" />}
+              panelA={
+                <>
+                  <TextTitle>Cash Flow</TextTitle>
+                  <GrowFillBox>
+                    <CashflowScrubChart
+                      cells={CELLS}
+                      scrub={false}
+                      chartHeight="fill"
+                      showGridlines
+                      lineLabel="Balance"
+                    />
+                  </GrowFillBox>
+                </>
+              }
               panelB={<Placeholder title="Series" note="panel B — the series being changed; clicking it inserts a time segment" />}
               panelC={<Placeholder title="Changes" note="panel C — the controls; fills what the rail leaves and scrolls inside its card" />}
               panelD={<Placeholder title="Cash, on average" note="panel D — the gauge, a stated width" />}
