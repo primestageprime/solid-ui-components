@@ -95,10 +95,15 @@ summarizes.
 - Never `npm run build` in the live checkout — it wedges the shared Vite
   cache under a running dev server.
 - `execution-coverage` is unmeasurable after a red vitest run.
-- Never call `preview_stop` on a server you did not start in this task, and
-  never start anything on port 6006 (Peter's live gallery) or a consumer's
-  live port — `preview_list` shows Peter's servers alongside yours. Need a
-  preview? `pa next` for a port; stop only that one.
+- `preview_start({name})` resolves `.claude/launch.json` from your
+  **primary working directory**. In a SUI worktree that's SUI's
+  `launch.json`, whose only entry is `gallery` on 6006 — so asking for any
+  other name silently starts a **second** gallery on Peter's port
+  (`reused: false`), and stopping "your" mistake kills his. In a SUI
+  worktree, never call `preview_start` by name. Need a preview? `pa next`
+  for a port, add your **own** uniquely named entry to the `launch.json` of
+  the directory you're actually running from, and `preview_stop` only that
+  `serverId`. Never touch 6006 or a consumer's live port.
 - Run gates in the **foreground**. Launching a gate with `run_in_background`
   and then saying "I'll wait" ends your turn and leaves you idle until
   someone nudges you.
