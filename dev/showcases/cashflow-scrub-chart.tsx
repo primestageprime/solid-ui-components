@@ -152,6 +152,7 @@ export const CashflowScrubChartShowcase: Component = () => {
     Math.max(0, todayIndex),
   );
   const [chartExpanded, setChartExpanded] = createSignal(false);
+  const [chartMinimized, setChartMinimized] = createSignal(false);
   const [scenarioOver, setScenarioOver] = createSignal(true);
   const [hideDomainPins, setHideDomainPins] = createSignal(true);
 
@@ -926,6 +927,57 @@ export const CashflowScrubChartShowcase: Component = () => {
           {chartExpanded()
             ? "expanded — the frame holds chartHeightExpanded, and a click takes it back."
             : "collapsed — the frame holds chartHeight, and a click grows it."}
+        </MutedBody>
+      </div>
+
+      <div class="example-group">
+        <h3>Top-right control, and the bar it leaves</h3>
+        <p class="text-meta">
+          <code>topAction</code> is the master switch for the THIRD corner
+          control, and it reaches <code>ScrubChart</code> unchanged.{" "}
+          <code>topAction</code> alone draws the default button in the top-RIGHT
+          corner of the frame — a <code>minus</code> glyph named "Minimize
+          chart" — and a click replaces the whole chart with one line. Click the
+          minus below, then the plus on the bar.
+        </p>
+        <p class="text-meta">
+          This chart supplies the bar's line itself, which{" "}
+          <code>ScrubChart</code> cannot: it reads the balances, so the bar
+          states the CLOSING balance beside the date span. The closing one and
+          not the selected day's — the chart is a forecast, and a folded
+          forecast should not move under a scrub the reader can no longer see.
+          Pass <code>renderMinimized</code> to replace that line;{" "}
+          <code>ctx.summary</code> still hands back the span.
+        </p>
+        <p class="text-meta">
+          Minimized is its OWN axis, not a third step under{" "}
+          <code>expanded</code>: expand this chart, minimize it, restore it, and
+          it comes back expanded. <code>minimized</code> and{" "}
+          <code>onMinimizedChange</code> make the control controlled, which is
+          how the caption below reads the state; omit both and the chart owns
+          it, starting open.
+        </p>
+
+        <CashflowScrubChart
+          cells={cells}
+          selected={expandSelectedIdx()}
+          onScrub={(i) => setExpandSelectedIdx(i)}
+          today={PINNED_TODAY}
+          showGridlines
+          chartHeight={200}
+          chartHeightExpanded={480}
+          topAction
+          minimized={chartMinimized()}
+          onMinimizedChange={setChartMinimized}
+          yMin={0}
+          yFitDomain={balanceExtent}
+          yAxisWidth={72}
+        />
+
+        <MutedBody>
+          {chartMinimized()
+            ? "minimized — the bar holds the closing balance, and the plus brings the chart back."
+            : "open — the frame and the ribbon are up, and the minus folds them to one line."}
         </MutedBody>
       </div>
 

@@ -204,3 +204,41 @@ export const chartYDomain = (
   const [autoLo, autoHi] = extentOf([0, ...values]);
   return [bounds.yMin ?? autoLo, bounds.yMax ?? autoHi];
 };
+
+/**
+ * A BALANCE in full dollars — `$148,204` / `−$1,234`.
+ *
+ * Not `fmtDollars`, which prefixes a `+` because it labels a day's signed
+ * DELTA. A balance carries no sign when it is positive. Not `fmtAxisDollars`
+ * either: the bar holds one number and has the room to state it in full,
+ * while an axis label has 40px.
+ */
+const fmtBalanceDollars = (cents: number): string => {
+  const grouped = formatGroupedNumber(Math.abs(cents) / 100);
+  return cents < 0 ? `−$${grouped}` : `$${grouped}`;
+};
+
+/**
+ * The line the minimized bar shows: the CLOSING balance and the date span.
+ *
+ * ScrubChart derives the span on its own — it sees the cells. It cannot
+ * derive a value, because `renderChart` is a slot and the component never
+ * reads one. This chart does read one, so it fills the slot.
+ *
+ * The CLOSING balance and not the opening one, and not the selected day's:
+ * the chart is a forecast, and the number a reader wants from a folded
+ * forecast is where it ends up. A selected day would also make the bar move
+ * under a scrub the reader can no longer see.
+ *
+ * @param cells The whole cell range, in order.
+ * @param summary The date span ScrubChart derived.
+ * @returns The one line, or the span alone when there are no cells.
+ */
+export const minimizedCashflowLine = (
+  cells: readonly CashflowCell[],
+  summary: string,
+): string => {
+  const last = cells[cells.length - 1];
+  if (!last) return summary;
+  return `${fmtBalanceDollars(last.balanceCents)} · ${summary}`;
+};

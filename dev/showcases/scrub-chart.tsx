@@ -752,6 +752,56 @@ export const ScrubChartShowcase: Component = () => {
       </div>
 
       <div class="example-group">
+        <h3>Top-right control, and the bar it leaves</h3>
+        <p class="text-meta">
+          <code>topAction</code> is the master switch for the THIRD corner
+          control. <code>topAction</code> alone draws the default button in the
+          top-RIGHT corner of the frame — a <code>minus</code> glyph named
+          "Minimize chart" — and a click replaces the whole chart with one line:
+          the core information on the left, a restore button on the right. Click
+          the minus below, then the plus.
+        </p>
+        <p class="text-meta">
+          ScrubChart never reads a value, because <code>renderChart</code> is a
+          slot, so with no <code>renderMinimized</code> the bar prints the cell
+          range's date span — all the chart can derive on its own. The chart
+          below states its own line and prints <code>ctx.summary</code> beside
+          it. <code>CashflowScrubChart</code> supplies that default itself: it
+          reads the balances, so its bar shows the closing balance.
+        </p>
+        <p class="text-meta">
+          Minimized is its OWN axis, not a third step under{" "}
+          <code>expanded</code>. Expand this chart, minimize it, restore it: it
+          comes back expanded. Pass an object to re-aim the button —{" "}
+          <code>{"{ icon, label, onClick }"}</code>. With an{" "}
+          <code>onClick</code> of your own the chart does NOT minimize; the
+          button is yours and the page owns what follows.
+        </p>
+
+        <ScrubChart<CashflowCell>
+          cells={cells}
+          selected={selectedIdx()}
+          onScrub={(i) => setSelectedIdx(i)}
+          today={PINNED_TODAY}
+          showGridlines
+          chartHeight={200}
+          chartHeightExpanded={480}
+          topAction
+          renderMinimized={(ctx) => (
+            <>
+              {ctx.cells.length} days · {ctx.summary}
+            </>
+          )}
+          yFitDomain={positionExtent}
+          yFitBounds={{ visible: { min: 0 }, series: { min: 0 } }}
+          formatYLabel={(v) => fmtDollars(v / 100)}
+          xTickCadence="auto"
+          renderCell={cashflowDayCell}
+          renderChart={renderPositionChart}
+        />
+      </div>
+
+      <div class="example-group">
         <h3>Hover crosshair + tooltip via the ScrubChart adapters</h3>
         <p class="text-meta">
           <code>ScrubChartCrosshair</code> and <code>ScrubChartTooltip</code>{" "}

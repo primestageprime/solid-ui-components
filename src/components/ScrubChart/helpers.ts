@@ -26,6 +26,10 @@
 //     at the given cadence (Monday / 1st / quarter-start / Jan 1)?
 //   • CADENCE_LADDER                   — the week→year escalation order the
 //     `"auto"` cadence walks until candidate count fits under the tick cap.
+//   • minimizedSummary(cells)          — the date span the minimized bar shows
+//     when the caller supplies no `renderMinimized` slot.
+//   • AXIS_LAYOUT_FRAMES               — frames a scroll write on the ribbon
+//     waits for the cells to lay out.
 //
 // Extracted verbatim from ScrubChart.tsx — no behaviour change.
 // ============================================
@@ -294,3 +298,58 @@ export const CADENCE_LADDER: ResolvedXTickCadence[] = [
   "quarter",
   "year",
 ];
+
+// ── The detail ribbon's layout wait ──────────────────────────────────────
+
+/**
+ * Frames a scroll write on the ribbon waits for the cells to lay out.
+ *
+ * A freshly mounted scroll container is not scrollable until its children
+ * have laid out: `scrollWidth` equals `clientWidth`, so a write clamps to 0
+ * and is lost. ScrubChart retries across this many animation frames before it
+ * gives up. Both writers take the number — the `centerOn` recenter, and the
+ * offset a restore puts back after the bar unmounted the ribbon.
+ */
+export const AXIS_LAYOUT_FRAMES = 12;
+
+// ── The minimized bar's default summary ──────────────────────────────────
+
+/** One cell's start, as `"Sep 22"` — the same short form `defaultFormatX`
+ *  gives a week tick, so the bar and the x-axis read alike. */
+const shortDate = (d: Date): string =>
+  d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+
+/** The two-digit year, as `"'26"`. Matches `defaultFormatX`. */
+const shortYear = (d: Date): string => {
+  const yearStr = String(d.getUTCFullYear());
+  return `'${yearStr.slice(-2)}`;
+};
+
+/**
+ * The line the minimized bar shows when the caller passes no
+ * `renderMinimized` slot: the cell range's date span.
+ *
+ * It is the ONLY summary ScrubChart can derive. `renderChart` is a slot, so
+ * the component never sees a value — it sees dates. A caller that owns the
+ * data states its own line and prints this one beside it.
+ *
+ * The year appears only when the two ends fall in DIFFERENT years. A span
+ * inside one year needs no year to be unambiguous, and the bar is one line.
+ *
+ * @param cells The whole cell range, in order.
+ * @returns The span, or `""` when there are no cells.
+ */
+export const minimizedSummary = <C extends Cell>(cells: C[]): string => {
+  const first = cells[0];
+  const last = cells[cells.length - 1];
+  if (!first || !last) return "";
+  const sameYear = first.start.getUTCFullYear() === last.start.getUTCFullYear();
+  const from = shortDate(first.start);
+  const to = shortDate(last.start);
+  if (sameYear) return from === to ? from : `${from} – ${to}`;
+  return `${from} ${shortYear(first.start)} – ${to} ${shortYear(last.start)}`;
+};

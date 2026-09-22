@@ -308,6 +308,30 @@ export interface CashflowScrubChartProps {
   /** Milliseconds the frame takes to reach the other height. `false` jumps to
    *  it. Default 240. No effect without `chartHeightExpanded`. */
   expandTransition?: ScrubChartProps<CashflowCell>["expandTransition"];
+  /**
+   * THE MASTER SWITCH for the TOP-RIGHT corner control.
+   *
+   * `true` renders the default button: a `minus` glyph named "Minimize
+   * chart", and a click drops the whole chart to a one-line bar. An object
+   * states your own glyph, name or handler — see `ScrubChartTopAction`.
+   * Forwarded to ScrubChart unchanged; its doc is the full contract.
+   */
+  topAction?: ScrubChartProps<CashflowCell>["topAction"];
+  /** Is the chart minimized right now? Controlled: omit it and ScrubChart
+   *  owns the signal, starting open. No effect without `topAction`. */
+  minimized?: ScrubChartProps<CashflowCell>["minimized"];
+  /** Fires when the reader minimizes or restores the chart. */
+  onMinimizedChange?: ScrubChartProps<CashflowCell>["onMinimizedChange"];
+  /**
+   * The minimized bar's content, left of the restore button.
+   *
+   * This chart supplies its OWN default, which ScrubChart cannot: the
+   * closing balance and the date span — `"$148,204 · Sep 22 – Mar 22"`.
+   * ScrubChart never reads a value, because `renderChart` is a slot, so
+   * without this the bar would print the span alone. State the prop to
+   * replace that line; `ctx.summary` still hands back the span.
+   */
+  renderMinimized?: ScrubChartProps<CashflowCell>["renderMinimized"];
   /** Width of one axis cell in px. Default 60 — matches the cashflow cell content. */
   cellWidth?: number;
   /** Extra balance lines overlaid on the chart. The y-domain widens to span

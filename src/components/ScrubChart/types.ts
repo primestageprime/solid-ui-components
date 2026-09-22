@@ -24,6 +24,7 @@
 
 import type { JSX } from "solid-js";
 import type { Cell, DateAxisCellContext } from "../DateAxis";
+import type { IconName } from "../Icon";
 import type {
   ScrubChartYFitBound,
   ScrubChartYFitPin,
@@ -184,6 +185,53 @@ export interface ScrubChartClip {
   plotPathUrl: string;
 }
 
+/**
+ * The TOP-RIGHT corner control's settings.
+ *
+ * The button is the third of the frame's corner controls, and the only one a
+ * caller re-aims. The y-fit button picks a y extent and the expand chevron
+ * picks a height; both do ONE thing, so both are named for it. This one
+ * carries whatever the page needs, so the name states its CORNER instead —
+ * the prop is `topAction` and the CSS hook is
+ * `.sui-scrub-chart__top-action`.
+ *
+ * Every field is optional, so `topAction={{}}` and `topAction` alone ask for
+ * the same default button.
+ */
+export interface ScrubChartTopAction {
+  /** The glyph the button shows. Default `"minus"` — the one-line bar a
+   *  click leaves behind. */
+  icon?: IconName;
+  /** The button's name. It is both the tooltip and the `aria-label`.
+   *  Default "Minimize chart". */
+  label?: string;
+  /**
+   * What a click does.
+   *
+   * Omit it and the chart MINIMIZES itself: the frame and the ribbon give
+   * way to the one-line bar. State it and the chart does not minimize at
+   * all — the button only calls this, and the page owns what follows.
+   */
+  onClick?: () => void;
+}
+
+/**
+ * What the minimized bar hands its `renderMinimized` slot.
+ *
+ * The bar carries no geometry, so this is not `ScrubChartContext`: the frame
+ * is gone and there is no plot to measure against. The slot gets the cells,
+ * the selection and the default summary, which lets a caller print its own
+ * value beside the span the chart already derived.
+ */
+export interface ScrubChartMinimizedContext<C extends Cell> {
+  /** The whole cell range, as passed to `cells`. */
+  cells: C[];
+  /** The selected cell index, or -1 when nothing is selected. */
+  selected: number;
+  /** The span the bar shows with no slot — e.g. `"Sep 22 – Mar 22"`. */
+  summary: string;
+}
+
 export interface ScrubChartProps<C extends Cell> {
   cells: C[];
   /** Selected cell index. Optional in plain (scrub=false) mode. */
@@ -275,6 +323,48 @@ export interface ScrubChartProps<C extends Cell> {
    * gets the height at once, whatever this prop says.
    */
   expandTransition?: number | false;
+  /**
+   * THE MASTER SWITCH for the TOP-RIGHT corner control.
+   *
+   * `true` renders the default button: a `minus` glyph named "Minimize
+   * chart", and a click drops the whole chart to the one-line bar. An object
+   * renders the same button with your glyph, your name, or your handler —
+   * see `ScrubChartTopAction`. Leave the prop unset and the top-right corner
+   * stays empty, so no existing chart gains a button.
+   *
+   * The button pins to the frame's top-right corner on the same scrim the
+   * other two corner controls wear. Unlike them it has no axis gutter to sit
+   * in, so it FLOATS over the top right of the plot. It reserves no room and
+   * hides for nothing, which is the tradeoff the other two already take at a
+   * narrow width.
+   */
+  topAction?: boolean | ScrubChartTopAction;
+  /**
+   * Is the chart minimized right now?
+   *
+   * Controlled: omit it and ScrubChart owns the signal, starting open. The
+   * same split `expanded` and `yScaleMode` take.
+   *
+   * Minimized is its OWN axis, not a third step under `expanded`. The chart
+   * remembers the height it left — a chart minimized while expanded comes
+   * back expanded — and the expand chevron does not render while the bar is
+   * up, because there is no frame for it to move.
+   */
+  minimized?: boolean;
+  /** Fires when the reader minimizes or restores the chart. */
+  onMinimizedChange?: (minimized: boolean) => void;
+  /**
+   * The minimized bar's content, left of the restore button.
+   *
+   * ScrubChart never sees the values — `renderChart` is a slot — so with no
+   * slot here the bar prints the cell range's date span, which is all the
+   * chart can derive on its own. A caller that owns the data states the line
+   * it wants instead; `ctx.summary` hands back that same span to print
+   * beside it.
+   *
+   * No effect without `topAction`, since nothing minimizes the chart.
+   */
+  renderMinimized?: (ctx: ScrubChartMinimizedContext<C>) => JSX.Element;
   /** Width of one axis cell in px. Default 40. */
   cellWidth?: number;
   /** Accent color for the detail ribbon — draws a 1px border around the ENTIRE
