@@ -111,10 +111,15 @@ summarizes.
 ## 6. Git rules for a shared checkout
 
 Branch before your first commit. Stage only your own paths — never
-`git add -A`. Never `--amend`, `stash`, or `reset --hard`. Push immediately
-after committing (another agent's push otherwise carries your local commits
-to origin on their schedule). Integrate via `gh pr create`. Bench PRs get
-the `bench` label.
+`git add -A`. Never `--amend` or `reset --hard`. Never `git stash` — not
+even tagged, not even in your own worktree. The stash list is
+per-**repository**, shared across every worktree of it: a `pop` or `drop`
+in yours can take another agent's, or Peter's, stash (this happened
+2026-09-18 with his unrelated July stash). To test against clean main, use
+`git worktree add --detach <tmp> origin/main`, never a stash. Push
+immediately after committing (another agent's push otherwise carries your
+local commits to origin on their schedule). Integrate via `gh pr create`.
+Bench PRs get the `bench` label.
 
 ## 7. Contradict the brief
 
