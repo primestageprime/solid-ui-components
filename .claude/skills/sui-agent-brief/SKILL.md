@@ -36,12 +36,18 @@ never the matrix it could support.
 ## 2. Land pixels in 20 minutes
 
 Compose the smallest renderable thing from curried variants only, on a
-**bench** (`/workshop <name>`) — it appears in the local gallery (`npm run
-dev`, port 6006) immediately, no PR or merge required to show Peter. Get his
-reaction to pixels, not to a description, before iterating further; spec
-churn against text is where the hours go (the License board took ~5 hours
-and four PRs off a 40-minute brief). PR the bench once it's worth keeping
-around, for durability and so other agents can see it.
+**bench** (`/workshop <name>`) — it appears in **your worktree's** gallery
+(`npm run dev`, port 6006) instantly via `import.meta.glob` auto-discovery.
+But every subagent works in an isolated worktree, and **Peter looks at
+main** — a bench on an unmerged branch is invisible to him, however green.
+So open the bench PR with the `bench` label and get it merged the moment
+it's green; that's what makes it show up in the gallery Peter actually
+looks at. Get his reaction to pixels, not to a description, before
+iterating further; spec churn against text is where the hours go (the
+License board took ~5 hours and four PRs off a 40-minute brief). (2026-09-18:
+two green bench PRs sat unmerged while Peter looked at main and reported
+"there's nothing in the SUI workshops" — a merged-but-unlanded bench is the
+same as no bench.)
 
 ## 3. Use the generators, never hand-build the checklist
 
