@@ -95,6 +95,13 @@ summarizes.
 - Never `npm run build` in the live checkout — it wedges the shared Vite
   cache under a running dev server.
 - `execution-coverage` is unmeasurable after a red vitest run.
+- Never call `preview_stop` on a server you did not start in this task, and
+  never start anything on port 6006 (Peter's live gallery) or a consumer's
+  live port — `preview_list` shows Peter's servers alongside yours. Need a
+  preview? `pa next` for a port; stop only that one.
+- Run gates in the **foreground**. Launching a gate with `run_in_background`
+  and then saying "I'll wait" ends your turn and leaves you idle until
+  someone nudges you.
 
 ## 6. Git rules for a shared checkout
 
