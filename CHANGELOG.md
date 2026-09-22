@@ -2,6 +2,56 @@
 
 ## Unreleased
 
+## 0.178.0 — 2026-09-22
+
+### Added
+
+- **`ScrubChart` gains a THIRD corner control, and the bar it leaves.**
+  `topAction` is the master switch. `topAction` alone draws the default button
+  in the frame's top-RIGHT corner — a `minus` glyph named "Minimize chart" —
+  and a click replaces the whole chart, frame and ribbon alike, with ONE line:
+  the core information on the left, a `plus` restore button on the right.
+  `CashflowScrubChart` forwards the prop unchanged, so every page that draws
+  its chart through the wrapper gets the control with no button of its own.
+  **Why the corner names it and not the function.** The y-fit button picks a y
+  extent and the expand chevron picks a height; each does ONE thing, so each is
+  named for it. This one is the caller's to re-aim through
+  `{ icon, label, onClick }`, and an `onClick` of the caller's own REPLACES the
+  minimize step — the button calls it and the chart never leaves the frame. A
+  name like `__minimize` would then lie, so the prop is `topAction` and the CSS
+  hooks are `.sui-scrub-chart__top-action` / `__top-action-btn`.
+  **What the bar says.** `ScrubChart` never reads a value, because
+  `renderChart` is a slot, so with no `renderMinimized` the bar prints the cell
+  range's date span — `"Sep 22 – Dec 31"`, or `"Sep 22 '26 – Mar 22 '27"` when
+  the two ends fall in different years. `CashflowScrubChart` supplies that
+  default itself, because it DOES read the balances: its bar shows the CLOSING
+  balance beside the span. The closing one and not the selected day's — the
+  chart is a forecast, the number a reader wants from a folded forecast is
+  where it ends up, and a selected day would move the bar under a scrub the
+  reader can no longer see. `renderMinimized` replaces the line either way, and
+  `ctx.summary` still hands back the span.
+  **Minimized is its OWN axis, not a third step under `expanded`.** The height
+  signals are untouched, so a chart minimized while expanded comes back
+  expanded. `minimized` / `onMinimizedChange` make the control controlled;
+  `minimized` with no `topAction` is IGNORED, because nothing could raise the
+  bar and so nothing may strand a reader in one.
+  **Nothing changes for an existing consumer**: with no `topAction` the corner
+  stays empty and no chart gains a button.
+
+### Fixed
+
+- **`ScrubChart` re-measures the frame and the ribbon on every mount.** The
+  minimized bar UNMOUNTS both, and two measurements rode on a one-time
+  `onMount`. The width observer watched the FIRST frame element, so a restored
+  chart kept whatever width it had when the reader minimized it and a resize in
+  between never reached it. The ribbon's scroll container started fresh at 0, so
+  a restore parked the reader at the first cell with the window band and the
+  selection out of step. The frame measurement now attaches per mount, and
+  `restoreAxisScroll` puts the remembered offset back — waiting out the fresh
+  container's layout across `AXIS_LAYOUT_FRAMES`, which is now the one number
+  the `centerOn` recenter takes as well. No existing caller can reach either
+  path, since only `minimized` unmounts them.
+
 ## 0.177.0 — 2026-09-21
 
 ### Added
