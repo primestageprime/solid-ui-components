@@ -64,7 +64,13 @@
 //      `node_modules/` is individually symlinked into a real directory at
 //      `<tmp>/node_modules/`, skipping `.vite*`/`.cache` — so every package is
 //      shared (no reinstall) but Vite's cache dir is a fresh, local,
-//      auto-created directory inside `<tmp>`.
+//      auto-created directory inside `<tmp>`. The entries come from THIS
+//      checkout's `node_modules/` when it has one; an agent worktree
+//      typically doesn't (Node resolution walks up to the main checkout's,
+//      so everything else works without it), so `gate` falls back to the
+//      MAIN checkout's `node_modules/` — found via `git rev-parse
+//      --git-common-dir`, since every worktree's `.git` points at
+//      `<main>/.git` — and prints which one it used.
 //
 // `--fast` skips only the `build` step (as asked). `bundle-budget` still
 // builds — it is a separate CI job/step and `--fast` was scoped to the one
@@ -116,13 +122,48 @@ const run = (cmd, args, opts = {}) =>
 const SKIP_NODE_MODULES_ENTRIES = new Set([".cache"]);
 const isViteCache = (name) => name === ".vite" || name.startsWith(".vite-");
 
+// True if `dir` has at least one real package entry to symlink (i.e. isn't
+// missing, isn't empty, and isn't just Vite's cache dir left behind by a
+// previous run).
+function hasUsableNodeModules(dir) {
+  if (!existsSync(dir)) return false;
+  return readdirSync(dir).some(
+    (entry) => !isViteCache(entry) && !SKIP_NODE_MODULES_ENTRIES.has(entry),
+  );
+}
+
+// An agent worktree (see CLAUDE.md's "Assigned worktree branch is stale"
+// setup) has no `node_modules/` of its own — Node's module resolution walks
+// up to the MAIN checkout's, so everything except this isolated-worktree
+// step works anyway, and there is nothing here to symlink. Fall back to the
+// main checkout's `node_modules/`, found via `git rev-parse
+// --git-common-dir` (absolute, per-worktree metadata all points at
+// `<main>/.git`, so its dirname is `<main>`).
+function findNodeModulesSource() {
+  const localNM = join(root, "node_modules");
+  if (hasUsableNodeModules(localNM)) return { dir: localNM, label: `local checkout (${root})` };
+
+  const commonDir = spawnSync(
+    "git",
+    ["rev-parse", "--path-format=absolute", "--git-common-dir"],
+    { cwd: root, encoding: "utf8" },
+  );
+  if (commonDir.status === 0) {
+    const mainRoot = dirname(commonDir.stdout.trim());
+    const mainNM = join(mainRoot, "node_modules");
+    if (hasUsableNodeModules(mainNM)) return { dir: mainNM, label: `main checkout (${mainRoot})` };
+  }
+
+  throw new Error(
+    `no usable node_modules/ found in the local checkout (${localNM}) or the main checkout — run \`npm ci\` in the main checkout first.`,
+  );
+}
+
 // Real dir, symlinked children — see header comment §2 for why not a single
 // symlink to the whole `node_modules/`.
 function linkNodeModulesInto(tmpDir) {
-  const srcNM = join(root, "node_modules");
-  if (!existsSync(srcNM)) {
-    throw new Error(`node_modules/ missing at ${srcNM} — run npm install first.`);
-  }
+  const { dir: srcNM, label } = findNodeModulesSource();
+  console.log(`  node_modules resolved from: ${label}`);
   const dstNM = join(tmpDir, "node_modules");
   mkdirSync(dstNM, { recursive: true });
   for (const entry of readdirSync(srcNM)) {

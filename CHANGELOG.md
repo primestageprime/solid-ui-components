@@ -6,6 +6,10 @@
 
 - `scripts/gate.mjs` now acquires a machine-wide lock (`scripts/gate-lock.mjs`, `os.tmpdir()`, keyed to the repo's main `.git` so worktrees share it) before running, so concurrent `npm run gate` invocations on one machine serialize instead of contending for CPU and timing out `test` suites; opt out with `--no-lock`.
 
+### Fixed
+
+- `npm run gate`'s isolated `build`/`bundle-budget` steps now fall back to the MAIN checkout's `node_modules/` (found via `git rev-parse --git-common-dir`) when the running checkout has none of its own (or an empty one) to symlink from — fixes `ERR_MODULE_NOT_FOUND: Cannot find package 'vite'` when running `gate` from an agent worktree, which is exactly who it's for. `scripts/`-only; does not touch the published package.
+
 ## 0.178.0 — 2026-09-22
 
 ### Added
