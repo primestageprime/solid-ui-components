@@ -123,16 +123,46 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm publish --ignore-scripts
 
+      # NOTIFY CONSUMERS — AND FAIL IF WE CANNOT.
+      #
+      # This step used to `exit 0` when REPO_ACCESS_TOKEN was unset and swallow
+      # a failed dispatch with "non-fatal", which made a green publish run prove
+      # nothing whatever about consumers hearing of the release. That is the
+      # worst shape a notification can have: it is silent exactly when it is
+      # broken. Both paths now fail the job.
+      #
+      # WHAT THIS STILL CANNOT TELL YOU
+      # -------------------------------
+      # `POST /repos/{owner}/{repo}/dispatches` returns 204 whether or not any
+      # workflow in the target repo listens for the event type. So a green step
+      # here proves the token worked and GitHub accepted the event — NOT that
+      # anything ran. As of this PR, *no repository in the org has a workflow
+      # listening for `sui-published`*: amygdala-ui's only `repository_dispatch`
+      # listener is `schema-updated` in update-sha.yml, which watches
+      # amygdala-rs. The consumer side is a separate PR in each consumer repo;
+      # see this PR's body for the per-repo list.
       - name: Notify consumers (amygdala-ui)
         if: steps.check.outputs.already_published == 'false'
         env:
           GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+          VERSION: ${{ steps.check.outputs.version }}
         run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "REPO_ACCESS_TOKEN not set — skipping cross-repo dispatch. Update amygdala-ui's package.json manually."
-            exit 0
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::Secret REPO_ACCESS_TOKEN is not set on this repository."
+            echo "Version $VERSION HAS BEEN PUBLISHED, but no consumer can be notified."
+            echo "The token must be a PAT with 'repo' scope on the consumer repositories."
+            echo "Add it at: Settings → Secrets and variables → Actions → New repository secret."
+            echo "Until then, bump the consumers' package.json by hand."
+            exit 1
           fi
-          gh api repos/primestageprime/amygdala-ui/dispatches \
+          if ! gh api repos/primestageprime/amygdala-ui/dispatches \
             -f event_type=sui-published \
-            -F "client_payload[version]=${{ steps.check.outputs.version }}" || \
-            echo "Dispatch failed — non-fatal."
+            -F "client_payload[version]=${VERSION}"; then
+            echo "::error::repository_dispatch to primestageprime/amygdala-ui failed."
+            echo "Version $VERSION HAS BEEN PUBLISHED, so the registry is ahead of the consumer."
+            echo "Most likely REPO_ACCESS_TOKEN lacks 'repo' scope on amygdala-ui, or has expired."
+            exit 1
+          fi
+          echo "Dispatched sui-published ($VERSION) to amygdala-ui."
+          echo "NOTE: a 204 means GitHub accepted the event, not that a workflow listened for it."
