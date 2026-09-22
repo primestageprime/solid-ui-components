@@ -236,7 +236,9 @@ const parseArgs = (argv) => {
     json: flag("json"),
     base: value("base"),
     head: value("head") ?? "HEAD",
-    changelogPath: value("changelog") ?? resolve(repoRoot, "CHANGELOG.md"),
+    // A `--changelog=` path is the caller's, so resolve it against THEIR cwd;
+    // the default is the repo's own file wherever the script was invoked from.
+    changelogPath: value("changelog") ? resolve(process.cwd(), value("changelog")) : resolve(repoRoot, "CHANGELOG.md"),
     date: value("date"),
   };
 };

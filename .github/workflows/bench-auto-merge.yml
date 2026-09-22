@@ -74,6 +74,10 @@ jobs:
         run: |
           set -euo pipefail
           FILES=$(gh api --paginate "repos/${REPO}/pulls/${PR}/files" --jq '.[].filename')
+          if [ -z "$FILES" ]; then
+            echo "::error::The API returned no changed files for PR #${PR}. Not auto-merging a PR whose contents could not be read."
+            exit 1
+          fi
           echo "Changed files:"
           echo "$FILES" | sed 's/^/  /'
 

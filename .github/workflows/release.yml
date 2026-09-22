@@ -128,6 +128,12 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Skipping here LOSES NOTHING. `## Unreleased` is cumulative and the
+      # script's base is the previous RELEASE commit, not the previous merge —
+      # so when two PRs land close together and this run skips, the run on the
+      # later sha diffs across both merges and rolls both PRs' entries into one
+      # version. That is the right answer: one version, one consumer bump, both
+      # changes.
       - name: Skip if main has moved on
         id: freshness
         if: steps.selfcheck.outputs.skip == 'false'
@@ -155,7 +161,14 @@ jobs:
         id: decide
         if: steps.selfcheck.outputs.skip == 'false' && steps.freshness.outputs.skip == 'false'
         run: |
-          node scripts/release.mjs --json | tee /tmp/decision.json
+          set -euo pipefail
+          # Redirect rather than pipe through `tee`: with a pipe the step's exit
+          # status is tee's, so a script that exited 1 (it does that when it
+          # cannot determine the change set) would leave an empty file and the
+          # next line would fail on a JSON parse error instead of on the real
+          # reason. No pipe, no ambiguity.
+          node scripts/release.mjs --json > /tmp/decision.json
+          cat /tmp/decision.json
           {
             echo "release=$(node -p "require('/tmp/decision.json').release")"
             echo "next=$(node -p "require('/tmp/decision.json').nextVersion")"
@@ -186,7 +199,13 @@ jobs:
 
           # --atomic: the branch and the tag land together or neither does.
           # A tag on a commit main never took is worse than no tag.
-          git push --atomic origin "HEAD:main" "refs/tags/v${NEXT}"
+          if ! git push --atomic origin "HEAD:main" "refs/tags/v${NEXT}"; then
+            echo "::error::Pushing the release commit and tag v${NEXT} to main was rejected."
+            echo "main's required status checks reject a direct push from a non-admin."
+            echo "REPO_ACCESS_TOKEN exists (this job checked that first) but must also belong"
+            echo "to a repo ADMIN — enforce_admins is false, which is what lets an admin through."
+            exit 1
+          fi
 
           echo "### Released \`${NEXT}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
