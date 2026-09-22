@@ -31,6 +31,18 @@
   drift from the stylesheet. The `Builder Board` workshop bench draws the
   frame at a laptop, a desktop and a wide viewport beside the model's table
   and a `getBoundingClientRect` table of the rendered panels.
+- **`StillCashflowScrubChart`, and `createCashflowScrubChart` to curry your
+  own.** The chart that draws its final frame at once, on mount and on every
+  data change: `yFitTransition: false`, `expandTransition: false`. The
+  default `CashflowScrubChart` keeps its 240ms ease, which a reader who PANS
+  wants — the domain moves every frame and a snapping axis would flicker. A
+  reader who switches TABS does not want it: the chart mounts on one series,
+  the page's fold lands a frame later, and the axis glides between the two
+  while the line redraws under it, so whether anything changed is hidden in
+  the motion. `StillCashflowScrubChart.test.tsx` pins the difference on the
+  swap frame; the Builder Board bench's panel A swaps between two fixtures a
+  decade apart in scale. Motion is the ONE presentational thing this chart
+  has to freeze, which is why it had no factory before.
 - **`AnchorBox`, `AnchorFillBox`, `TopRightOverlayBox`** — the containing
   block for an absolutely-positioned affordance (`position: relative`), its
   fill-height sibling (`height: 100%; min-height: 0`, so a

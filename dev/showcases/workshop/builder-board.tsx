@@ -29,7 +29,7 @@
 import { type Component, createSignal, onCleanup, onMount } from "solid-js";
 import { join, map } from "../../../src/fn";
 import { BuilderBoard } from "../../../src/components/BuilderBoard";
-import { CashflowScrubChart } from "../../../src/components/CashflowScrubChart";
+import { StillCashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import {
   builderBoardTable,
@@ -44,6 +44,7 @@ import {
   ScrollXBox,
   SpreadRow,
 } from "../../../src/components/Layout";
+import { GhostButton } from "../../../src/components/Button";
 import { createSegmentedControl } from "../../../src/components/SegmentedControl";
 import { NoteText, SectionTitle, TextTitle } from "../../../src/components/Text";
 
@@ -72,17 +73,22 @@ const PANELS: readonly PanelId[] = ["a", "b", "c", "d"];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Ninety days of a balance that climbs a thousand dollars a day — enough of
- *  a line to see the chart take the card's height. */
-const CELLS: CashflowCell[] = map((i: number) => {
-  const start = new Date(Date.UTC(2026, 0, 1) + i * DAY_MS);
-  return {
-    start,
-    end: new Date(start.getTime() + DAY_MS),
-    cashflowCents: 100_000,
-    balanceCents: 1_000_000 + i * 100_000,
-  };
-}, Array.from({ length: 90 }, (_, i) => i));
+/** Ninety days of a balance that climbs `stepCents` a day — enough of a line
+ *  to see the chart take the card's height. Two fixtures, a decade apart in
+ *  scale, so a swap between them moves the y-axis by an order of magnitude:
+ *  the STILL chart in panel A shows the new axis on the same frame, with no
+ *  glide, which is the point of the swap button. */
+const cellsClimbing = (stepCents: number): CashflowCell[] =>
+  map((i: number) => {
+    const start = new Date(Date.UTC(2026, 0, 1) + i * DAY_MS);
+    return {
+      start,
+      end: new Date(start.getTime() + DAY_MS),
+      cashflowCents: stepCents,
+      balanceCents: 1_000_000 + i * stepCents,
+    };
+  }, Array.from({ length: 90 }, (_, i) => i));
+const FIXTURES: readonly CashflowCell[][] = [cellsClimbing(100_000), cellsClimbing(1_000_000)];
 
 const PANEL_NAMES: Readonly<Record<PanelId, string>> = {
   a: "A cashflow",
@@ -123,6 +129,7 @@ const Placeholder: Component<{ title: string; note: string }> = (props) => (
 
 const BuilderBoardBench: Component = () => {
   const [size, setSize] = createSignal<SizeId>("laptop");
+  const [fixture, setFixture] = createSignal(0);
   const [measured, setMeasured] = createSignal("(measuring…)");
   let frame: HTMLDivElement | undefined;
 
@@ -158,14 +165,23 @@ const BuilderBoardBench: Component = () => {
             <BuilderBoard
               panelA={
                 <>
-                  <TextTitle>Cash Flow</TextTitle>
+                  <SpreadRow>
+                    <TextTitle>Cash Flow</TextTitle>
+                    <GhostButton onClick={() => setFixture((i) => 1 - i)}>
+                      Swap fixture ({fixture() === 0 ? "$1k/day" : "$10k/day"})
+                    </GhostButton>
+                  </SpreadRow>
                   <GrowFillBox>
-                    <CashflowScrubChart
-                      cells={CELLS}
+                    <StillCashflowScrubChart
+                      cells={FIXTURES[fixture()]!}
                       scrub={false}
                       chartHeight="fill"
                       showGridlines
                       lineLabel="Balance"
+                      yFitDomain={() => {
+                        const cells = FIXTURES[fixture()]!;
+                        return [0, cells[cells.length - 1]!.balanceCents];
+                      }}
                     />
                   </GrowFillBox>
                 </>
