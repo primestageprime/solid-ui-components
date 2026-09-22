@@ -2399,3 +2399,57 @@ describe("marker value replaces valueCents", () => {
     ).toBeTruthy();
   });
 });
+
+// ── The minimized bar's default line (top-right control) ────────────────
+// ScrubChart derives the date span and stops there, because `renderChart` is
+// a slot and it never reads a value. This chart reads the balances, so it
+// fills the slot with the closing balance.
+describe("CashflowScrubChart minimized bar", () => {
+  const summaryText = (container: HTMLElement): string =>
+    container.querySelector<HTMLElement>(".sui-scrub-chart__minimized-summary")!
+      .textContent ?? "";
+
+  it("states the closing balance beside the span", () => {
+    const cells = makeCells(10);
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        selected={3}
+        onScrub={() => {}}
+        topAction={true}
+        minimized={true}
+      />
+    ));
+    const closing = cells[cells.length - 1].balanceCents;
+    expect(closing).toBeGreaterThan(0);
+    expect(summaryText(container)).toBe(
+      `$${(closing / 100).toLocaleString("en-US")} · May 1 – May 10`,
+    );
+  });
+
+  it("lets the caller's slot replace that line", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+        topAction={true}
+        minimized={true}
+        renderMinimized={(ctx) => <span>Runway · {ctx.summary}</span>}
+      />
+    ));
+    expect(summaryText(container)).toBe("Runway · May 1 – May 10");
+  });
+
+  it("renders no button and no bar without topAction", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={makeCells(10)}
+        selected={3}
+        onScrub={() => {}}
+      />
+    ));
+    expect(container.querySelector(".sui-scrub-chart__top-action")).toBeNull();
+    expect(container.querySelector(".sui-scrub-chart__minimized")).toBeNull();
+  });
+});

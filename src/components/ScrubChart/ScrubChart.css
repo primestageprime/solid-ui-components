@@ -166,10 +166,17 @@
 }
 
 /* Corner controls — the small icon buttons ScrubChart parks inside its own
-   frame. Two live here, and they share every rule but the edge they pin to:
-   the y-fit control in the ORIGIN corner (bottom left) and the expand
-   chevron in the END corner (bottom right). One family, one set of rules, so
-   a change reaches both and the two read as one pair across the frame.
+   frame. THREE live here, and they share every rule but the edges they pin
+   to: the y-fit control in the ORIGIN corner (bottom left), the expand
+   chevron in the END corner (bottom right), and the caller-aimed top action
+   (top right). One family, one set of rules, so a change reaches all three
+   and they read as one set around the frame.
+
+   The bottom pair hangs from the x-axis row and so sits on one line across
+   the frame. The top action has NO axis gutter to sit in: it floats over the
+   top right of the plot on its scrim, reserves no room, and hides for
+   nothing. That is the same tradeoff the bottom pair already takes below
+   roughly a 160px frame, stated below.
 
    ScrubChart states the x-axis row's top edge through `axisTop`, and that
    inline `top` beats the `bottom` inset below; the `bottom` inset serves a
@@ -202,15 +209,24 @@
   z-index: 2;
 }
 
-/* The two corners. Each class carries ONE edge inset and nothing else, so the
-   controls cannot overlap even on a narrow chart. Both names are also the
-   public hook a consumer targets — do not rename either. */
+/* The three corners. Each class carries only the edge insets it needs, so no
+   two controls can overlap even on a narrow chart. Every name is also the
+   public hook a consumer targets — do not rename any of them. */
 .sui-scrub-chart__y-fit {
   left: 2px;
 }
 
 .sui-scrub-chart__expand {
   right: 2px;
+}
+
+/* The top action states `bottom: auto` because `.sui-scrub-chart__corner`
+   above sets a `bottom` inset for the pair that hangs from the x-axis row.
+   Same specificity, so this block must stay AFTER that one. */
+.sui-scrub-chart__top-action {
+  top: 2px;
+  right: 2px;
+  bottom: auto;
 }
 
 /* The button is a glyph on a plain scrim at rest: no border, no ring. It
@@ -222,10 +238,16 @@
    Keep the 26px size in step with `CORNER_BUTTON_SIZE` in helpers.ts: it is
    the hit TARGET, and the border below is smaller.
 
-   Each button also carries a name of its own — `.sui-scrub-chart__y-fit-btn`
-   and `.sui-scrub-chart__expand-btn`. Those names style nothing here. They
-   are the hooks a consumer overrides one button with, so keep them in the
-   markup. */
+   Each button also carries a name of its own — `.sui-scrub-chart__y-fit-btn`,
+   `.sui-scrub-chart__expand-btn`, `.sui-scrub-chart__top-action-btn` and
+   `.sui-scrub-chart__restore-btn`. Those names style nothing here. They are
+   the hooks a consumer overrides one button with, so keep them in the markup.
+
+   The LAST of the four sits in the minimized bar and not in the frame, so it
+   takes this block without `.sui-scrub-chart__corner`: the row places it and
+   the rules below only give it its size, its glyph colour and its scrim. That
+   is deliberate — the button a reader clicks to come back looks like the one
+   they clicked to leave. */
 .sui-scrub-chart__corner-btn {
   position: relative;
   display: inline-flex;

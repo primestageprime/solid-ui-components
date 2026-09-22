@@ -57,6 +57,7 @@ import {
   fmtDollars,
   formatCornerLabel,
   markerValueCents,
+  minimizedCashflowLine,
 } from "./helpers";
 import type {
   CashflowBalanceSeries,
@@ -904,6 +905,15 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       expanded={props.expanded}
       onExpandedChange={props.onExpandedChange}
       expandTransition={props.expandTransition}
+      topAction={props.topAction}
+      minimized={props.minimized}
+      onMinimizedChange={props.onMinimizedChange}
+      // The caller's slot wins. With none, this chart states the line
+      // ScrubChart cannot — it reads the balances, and ScrubChart does not.
+      renderMinimized={
+        props.renderMinimized ??
+        ((ctx) => minimizedCashflowLine(ctx.cells, ctx.summary))
+      }
       cellWidth={cellWidth()}
       rightGutter={reservedSpace().rightGutter}
       xAxisExtraHeight={belowExtraHeight(reservedSpace().belowRows)}

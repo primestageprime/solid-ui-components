@@ -42,6 +42,12 @@ import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapt
 import { DateAxis, type Cell } from "../DateAxis";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { ScrubChartExpandControl } from "./ScrubChartExpandControl";
+import { ScrubChartMinimizedBar } from "./ScrubChartMinimizedBar";
+import {
+  DEFAULT_TOP_ACTION_ICON,
+  DEFAULT_TOP_ACTION_LABEL,
+  ScrubChartTopActionControl,
+} from "./ScrubChartTopActionControl";
 import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
 import {
   ScrubChartAxes,
@@ -49,6 +55,7 @@ import {
   ScrubChartHighlights,
 } from "./ScrubChartAxes";
 import {
+  AXIS_LAYOUT_FRAMES,
   CADENCE_LADDER,
   DEFAULT_CELL_WIDTH,
   DEFAULT_CHART_HEIGHT,
@@ -61,6 +68,7 @@ import {
   defaultFormatX,
   defaultFormatY,
   matchesCadence,
+  minimizedSummary,
 } from "./helpers";
 import { createYAxisScales } from "./yAxis";
 import {
@@ -75,6 +83,7 @@ import type {
   ScrubChartDataProps,
   ScrubChartOverrides,
   ScrubChartProps,
+  ScrubChartTopAction,
 } from "./types";
 import {
   DEFAULT_Y_FIT_MARGIN,
@@ -91,9 +100,11 @@ export type {
   ScrubChartContext,
   ScrubChartHighlight,
   ScrubChartMarker,
+  ScrubChartMinimizedContext,
   ScrubChartProps,
   ScrubChartOverrides,
   ScrubChartDataProps,
+  ScrubChartTopAction,
   ScrubChartXTickCadence,
   ResolvedXTickCadence,
   ScrubChartYFitBound,
@@ -116,7 +127,8 @@ export const ScrubChart = <C extends Cell>(
   const filling = () => props.chartHeight === "fill";
   const [measuredHeight, setMeasuredHeight] = createSignal(0);
   const collapsedHeight = () => {
-    if (!filling()) return (props.chartHeight as number) ?? DEFAULT_CHART_HEIGHT;
+    if (!filling())
+      return (props.chartHeight as number) ?? DEFAULT_CHART_HEIGHT;
     // Until the first ResizeObserver callback lands there is no measurement to
     // use, and a frame of 0 would divide by zero downstream.
     return measuredHeight() > 0 ? measuredHeight() : DEFAULT_CHART_HEIGHT;
@@ -150,6 +162,46 @@ export const ScrubChart = <C extends Cell>(
       expandable() && (props.expandTransition ?? DEFAULT_EXPAND_TRANSITION_MS),
     reducedMotion: prefersReducedMotion,
   });
+  // ── The top-right control + the minimized bar ────────────────────────
+  // `topAction` is the master switch. `true` and an object both ask for the
+  // button; only an object changes it. The chart minimizes itself unless the
+  // caller states an `onClick`, in which case the button is the caller's and
+  // the chart never leaves the frame.
+  const topAction = (): ScrubChartTopAction | null => {
+    if (props.topAction === undefined || props.topAction === false) return null;
+    return props.topAction === true ? {} : props.topAction;
+  };
+  const [ownedMinimized, setOwnedMinimized] = createSignal(false);
+  // Controlled when the caller passes `minimized`; owned otherwise — the same
+  // split `expanded` and `yScaleMode` take. It is its OWN axis: the frame's
+  // height signals are untouched, so a chart minimized while expanded comes
+  // back expanded.
+  const minimized = () =>
+    topAction() !== null && (props.minimized ?? ownedMinimized());
+  const setMinimized = (next: boolean) => {
+    if (props.minimized === undefined) setOwnedMinimized(next);
+    props.onMinimizedChange?.(next);
+  };
+  const topActionIcon = () => topAction()?.icon ?? DEFAULT_TOP_ACTION_ICON;
+  const topActionLabel = () => topAction()?.label ?? DEFAULT_TOP_ACTION_LABEL;
+  const runTopAction = () => {
+    const own = topAction()?.onClick;
+    if (own) own();
+    else setMinimized(true);
+  };
+  // The line the bar shows. The caller's slot wins; the derived date span is
+  // the fallback, and the slot gets it too so a caller can print its own
+  // value beside it.
+  const minimizedLine = (): JSX.Element => {
+    const summary = minimizedSummary(props.cells);
+    return (
+      props.renderMinimized?.({
+        cells: props.cells,
+        selected: selectedIdx(),
+        summary,
+      }) ?? summary
+    );
+  };
   const cellWidth = () => props.cellWidth ?? DEFAULT_CELL_WIDTH;
   // Scrub layer on/off — gates the DateAxis ribbon, the window band, and the
   // pointer gestures together (see the prop doc).
@@ -192,50 +244,65 @@ export const ScrubChart = <C extends Cell>(
   // `hover` is on and the pointer is over the frame (and not mid-pan).
   const [hoverIndex, setHoverIndex] = createSignal<number | null>(null);
   let frameEl: HTMLDivElement | undefined;
-  onMount(() => {
-    if (!frameEl) return;
-    // First frame. The seed is 1200; the SVGs state a `viewBox` in chart
-    // units with `preserveAspectRatio="none"`, so a first paint at the seed
-    // stretches 1200 units over the real frame width and the fixed pixel
-    // reservations (y-axis column, right gutter) draw scaled for one frame,
-    // then snap. onMount runs after DOM insertion and before that paint, so
-    // one synchronous read puts the real width on the first frame. A zero
-    // width means the frame has no layout box yet (display: none, a detached
-    // host, jsdom); the seed stays until the observer reports a real size.
-    const box = frameEl.getBoundingClientRect();
-    const width = Math.round(box.width);
-    if (width > 0) setChartWidth(width);
-    // The HEIGHT needs the same synchronous first read, and for a second
-    // reason on top of the first-frame one. `observeSize` defers through
-    // `requestAnimationFrame`, and a browser SUSPENDS rAF for a document that
-    // is not visible — so in a hidden or backgrounded tab the frame's CSS box
-    // stretches (plain layout) while a height that arrived only through the
-    // observer stays at its fallback forever. The drawing then reads as
-    // stretched, and nothing corrects it until the tab is shown. Measuring
-    // here removes the dependency: the observer handles only CHANGES.
-    if (filling()) {
-      const height = Math.round(box.height);
-      if (height > 0) setMeasuredHeight(height);
-    }
-    // observeSize change-guards and rAF-defers the write. Setting chartWidth
-    // synchronously inside the observer dispatch re-rendered the chart (and the
-    // page around it) mid-delivery, which re-queued this same observer and made
-    // the browser emit "ResizeObserver loop completed with undelivered
-    // notifications" during a window drag. See internal/dom/observeSize.
-    onCleanup(
-      observeSize(frameEl, (size) => {
-        setChartWidth(size.width);
-        // Only in fill mode: in the numeric path the height is the caller's and
-        // measuring it would be a second, contradicting source of truth.
-        //
-        // A ZERO IS NOT A MEASUREMENT — it is the layout saying "not yet", or
-        // "this is inside `display: none`". Storing it would throw away a good
-        // height the moment a card is hidden, and the chart would come back at
-        // the fallback rather than at the size it had. Keep the last real one.
-        if (filling() && size.height > 0) setMeasuredHeight(size.height);
-      }),
-    );
-  });
+  // The measurement attaches PER MOUNT of the frame, not once per component.
+  // `minimized` unmounts the frame, so a component-level `onMount` would read
+  // the first frame's box, observe that element, and then watch a detached
+  // node for the rest of the session — a restored chart would keep whatever
+  // width it had when the reader minimized it, and a resize in between would
+  // never reach it.
+  //
+  // The `onMount` stays INSIDE the ref: a ref fires while the element is
+  // still detached, where `getBoundingClientRect` reads zeros, and the note
+  // below depends on the read landing after insertion. Solid registers this
+  // effect and its cleanup on the owner of the branch the frame renders in,
+  // so both re-run each time the bar gives the frame back.
+  const attachFrame = (el: HTMLDivElement) => {
+    frameEl = el;
+    onMount(() => {
+      // First frame. The seed is 1200; the SVGs state a `viewBox` in chart
+      // units with `preserveAspectRatio="none"`, so a first paint at the seed
+      // stretches 1200 units over the real frame width and the fixed pixel
+      // reservations (y-axis column, right gutter) draw scaled for one frame,
+      // then snap. onMount runs after DOM insertion and before that paint, so
+      // one synchronous read puts the real width on the first frame. A zero
+      // width means the frame has no layout box yet (display: none, a detached
+      // host, jsdom); the seed stays until the observer reports a real size.
+      const box = el.getBoundingClientRect();
+      const width = Math.round(box.width);
+      if (width > 0) setChartWidth(width);
+      // The HEIGHT needs the same synchronous first read, and for a second
+      // reason on top of the first-frame one. `observeSize` defers through
+      // `requestAnimationFrame`, and a browser SUSPENDS rAF for a document that
+      // is not visible — so in a hidden or backgrounded tab the frame's CSS box
+      // stretches (plain layout) while a height that arrived only through the
+      // observer stays at its fallback forever. The drawing then reads as
+      // stretched, and nothing corrects it until the tab is shown. Measuring
+      // here removes the dependency: the observer handles only CHANGES.
+      if (filling()) {
+        const height = Math.round(box.height);
+        if (height > 0) setMeasuredHeight(height);
+      }
+      // observeSize change-guards and rAF-defers the write. Setting chartWidth
+      // synchronously inside the observer dispatch re-rendered the chart (and the
+      // page around it) mid-delivery, which re-queued this same observer and made
+      // the browser emit "ResizeObserver loop completed with undelivered
+      // notifications" during a window drag. See internal/dom/observeSize.
+      onCleanup(
+        observeSize(el, (size) => {
+          setChartWidth(size.width);
+          // Only in fill mode: in the numeric path the height is the caller's
+          // and measuring it would be a second, contradicting source of truth.
+          //
+          // A ZERO IS NOT A MEASUREMENT — it is the layout saying "not yet",
+          // or "this is inside `display: none`". Storing it would throw away a
+          // good height the moment a card is hidden, and the chart would come
+          // back at the fallback rather than at the size it had. Keep the last
+          // real one.
+          if (filling() && size.height > 0) setMeasuredHeight(size.height);
+        }),
+      );
+    });
+  };
 
   // Vertical plot region — independent of y-axis width.
   const vSpan = () => insetSpan(chartHeight(), 0, xAxisHeight());
@@ -257,8 +324,39 @@ export const ScrubChart = <C extends Cell>(
   const [axisScrollLeft, setAxisScrollLeft] = createSignal(0);
   const [axisViewportWidth, setAxisViewportWidth] = createSignal(0);
   let axisScrollEl: HTMLDivElement | undefined;
+  /**
+   * Put a freshly mounted ribbon back at `left`.
+   *
+   * The ribbon UNMOUNTS while the chart is minimized, and a new scroll
+   * container starts at 0 — so a restore parked the reader at the first cell,
+   * with the window band and the selection out of step. The offset itself
+   * survives in `axisScrollLeft`, because only the element went away.
+   *
+   * A fresh container is not scrollable for a frame or two, and a write
+   * against `scrollWidth === clientWidth` clamps to 0 and is lost. That is
+   * the same wait `centerOn` handles below, so this write retries until the
+   * cells have laid out. `left <= 0` is the first mount, where there is
+   * nothing to restore.
+   */
+  const restoreAxisScroll = (
+    el: HTMLDivElement,
+    left: number,
+    attempt: number,
+  ) => {
+    if (left <= 0) return;
+    if (el.scrollWidth <= el.clientWidth && attempt < AXIS_LAYOUT_FRAMES) {
+      if (typeof requestAnimationFrame === "function")
+        requestAnimationFrame(() => restoreAxisScroll(el, left, attempt + 1));
+      return;
+    }
+    el.scrollLeft = left;
+  };
   const handleAxisRef = (el: HTMLDivElement) => {
     axisScrollEl = el;
+    // BEFORE the reads below: they would overwrite the remembered offset with
+    // the fresh element's 0. The programmatic write fires a `scroll` event, so
+    // the signal catches up once the ribbon has laid out.
+    restoreAxisScroll(el, axisScrollLeft(), 0);
     setAxisViewportWidth(el.clientWidth);
     setAxisScrollLeft(el.scrollLeft);
     el.addEventListener("scroll", () => setAxisScrollLeft(el.scrollLeft), {
@@ -448,11 +546,10 @@ export const ScrubChart = <C extends Cell>(
     // until the content is measurably scrollable, then position instantly
     // (a long smooth animation from a cold offset looks janky); once laid out,
     // an explicit recenter animates smoothly.
-    const MAX_LAYOUT_FRAMES = 12;
     const canDefer = typeof requestAnimationFrame === "function";
     const applyScroll = (attempt: number) => {
       // Content not yet wider than the viewport → layout not ready; retry.
-      if (el.scrollWidth <= el.clientWidth && attempt < MAX_LAYOUT_FRAMES) {
+      if (el.scrollWidth <= el.clientWidth && attempt < AXIS_LAYOUT_FRAMES) {
         if (canDefer) requestAnimationFrame(() => applyScroll(attempt + 1));
         return;
       }
@@ -661,54 +758,70 @@ export const ScrubChart = <C extends Cell>(
   return (
     <div
       class="sui-scrub-chart"
-      classList={{ "sui-scrub-chart--fill": filling() }}
+      // FILL MODE GIVES WAY TO THE BAR. The modifier hands the root the
+      // container's whole height, which is right for a chart and wrong for one
+      // line — the bar would stretch down the container with the restore
+      // button floating in the middle of it. While the bar is up the root
+      // sizes from its content, like every other minimized chart.
+      classList={{ "sui-scrub-chart--fill": filling() && !minimized() }}
     >
-      <div
-        class="sui-scrub-chart__frame"
-        // In fill mode the HEIGHT IS THE STYLESHEET'S: the modifier gives the
-        // root a height and the frame `flex:1`, so the frame takes what the
-        // container has left after the ribbon. An inline `height:100%` here
-        // resolved against a root with no height of its own — computing to
-        // `auto`, sizing from content, and feeding the fallback straight back
-        // into the measurement.
-        style={filling() ? undefined : { height: `${chartHeight()}px` }}
-        ref={(el) => (frameEl = el)}
-        onPointerMove={handleHoverMove}
-        onPointerLeave={handleHoverLeave}
+      <Show
+        when={!minimized()}
+        fallback={
+          // The bar REPLACES the frame and the ribbon. Both unmount, which is
+          // the whole point of the control that raised it: the page gets the
+          // height back. `attachFrame` re-measures when the frame returns.
+          <ScrubChartMinimizedBar onRestore={() => setMinimized(false)}>
+            {minimizedLine()}
+          </ScrubChartMinimizedBar>
+        }
       >
-        {/* Highlight bands — opt-in shaded rects over cell ranges. The
+        <div
+          class="sui-scrub-chart__frame"
+          // In fill mode the HEIGHT IS THE STYLESHEET'S: the modifier gives the
+          // root a height and the frame `flex:1`, so the frame takes what the
+          // container has left after the ribbon. An inline `height:100%` here
+          // resolved against a root with no height of its own — computing to
+          // `auto`, sizing from content, and feeding the fallback straight back
+          // into the measurement.
+          style={filling() ? undefined : { height: `${chartHeight()}px` }}
+          ref={attachFrame}
+          onPointerMove={handleHoverMove}
+          onPointerLeave={handleHoverLeave}
+        >
+          {/* Highlight bands — opt-in shaded rects over cell ranges. The
             BOTTOM layer of the frame: the gridlines and the series both
             paint over them, because a band is background. Its CSS states
             `z-index: -1` to hold that place — see the note on
             `.sui-scrub-chart__grid`. */}
-        <Show when={chartWidth() > 0 && highlightBands().length > 0}>
-          <ScrubChartHighlights
-            chartWidth={chartWidth}
-            chartHeight={chartHeight}
-            plotTop={plotTop}
-            plotHeight={plotHeight}
-            bands={highlightBands}
-          />
-        </Show>
-        {/* Gridlines — opt-in horizontal rules at the y-axis ticks. They sit
+          <Show when={chartWidth() > 0 && highlightBands().length > 0}>
+            <ScrubChartHighlights
+              chartWidth={chartWidth}
+              chartHeight={chartHeight}
+              plotTop={plotTop}
+              plotHeight={plotHeight}
+              bands={highlightBands}
+            />
+          </Show>
+          {/* Gridlines — opt-in horizontal rules at the y-axis ticks. They sit
             BENEATH the series so the data paints over the chrome, unlike the
             axes below (drawn after so the labels stay legible). Document
             order does NOT settle that on its own: the consumer's chart <svg>
             is static, so this absolute layer would paint over it. The CSS
             states `z-index: -1` — read the note there before moving either. */}
-        <Show
-          when={props.showGridlines && chartWidth() > 0 && yScale() != null}
-        >
-          <ScrubChartGrid
-            chartWidth={chartWidth}
-            chartHeight={chartHeight}
-            plotLeft={plotLeft}
-            plotRight={plotRight}
-            yTicks={yTicks}
-          />
-        </Show>
-        <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
-        {/* Clip host — ScrubChart owns no <svg> around `renderChart` (the
+          <Show
+            when={props.showGridlines && chartWidth() > 0 && yScale() != null}
+          >
+            <ScrubChartGrid
+              chartWidth={chartWidth}
+              chartHeight={chartHeight}
+              plotLeft={plotLeft}
+              plotRight={plotRight}
+              yTicks={yTicks}
+            />
+          </Show>
+          <Show when={chartWidth() > 0}>{props.renderChart(ctx())}</Show>
+          {/* Clip host — ScrubChart owns no <svg> around `renderChart` (the
             consumer supplies its own), so the plot-rect <clipPath> lives in a
             zero-size <svg> of its own. A clipPath paints nothing itself, and
             `userSpaceOnUse` resolves against the REFERENCING element, so the
@@ -730,151 +843,168 @@ export const ScrubChart = <C extends Cell>(
             stylesheet — SSR's first paint, or a consumer build that strips
             component CSS — a bare inline <svg> falls back to 300x150 and
             would push the consumer's chart down. */}
-        <Show when={chartWidth() > 0}>
-          <svg
-            class="sui-scrub-chart__defs"
-            width="0"
-            height="0"
-            aria-hidden="true"
-          >
-            <defs>
-              <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
-                <rect
-                  x={plotLeft()}
-                  y={plotTop()}
-                  width={Math.max(0, plotRight() - plotLeft())}
-                  height={Math.max(0, plotBottom() - plotTop())}
-                />
-              </clipPath>
-            </defs>
-          </svg>
-        </Show>
-        {/* Axis chrome — drawn after the chart so labels sit on top of any
+          <Show when={chartWidth() > 0}>
+            <svg
+              class="sui-scrub-chart__defs"
+              width="0"
+              height="0"
+              aria-hidden="true"
+            >
+              <defs>
+                <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+                  <rect
+                    x={plotLeft()}
+                    y={plotTop()}
+                    width={Math.max(0, plotRight() - plotLeft())}
+                    height={Math.max(0, plotBottom() - plotTop())}
+                  />
+                </clipPath>
+              </defs>
+            </svg>
+          </Show>
+          {/* Axis chrome — drawn after the chart so labels sit on top of any
             line bleed but the lines themselves can still be clipped to the
             plot region by the consumer. Pointer-events disabled so the
             gesture overlay above still captures clicks/drags. */}
-        <Show when={chartWidth() > 0 && (yScale() || xTicks().length > 0)}>
-          <ScrubChartAxes
-            chartWidth={chartWidth}
-            chartHeight={chartHeight}
-            plotLeft={plotLeft}
-            plotTop={plotTop}
-            plotRight={plotRight}
-            plotBottom={plotBottom}
-            yScaleActive={() => yScale() != null}
-            yFitCorner={() => props.yFitDomain != null}
-            yTicks={yTicks}
-            xTicks={xTicks}
-            formatY={fmtY}
-          />
-        </Show>
-        {/* Window-band overlay — owned by ScrubChart so consumers don't
+          <Show when={chartWidth() > 0 && (yScale() || xTicks().length > 0)}>
+            <ScrubChartAxes
+              chartWidth={chartWidth}
+              chartHeight={chartHeight}
+              plotLeft={plotLeft}
+              plotTop={plotTop}
+              plotRight={plotRight}
+              plotBottom={plotBottom}
+              yScaleActive={() => yScale() != null}
+              yFitCorner={() => props.yFitDomain != null}
+              yTicks={yTicks}
+              xTicks={xTicks}
+              formatY={fmtY}
+            />
+          </Show>
+          {/* Window-band overlay — owned by ScrubChart so consumers don't
             have to draw it themselves. Translucent rect over the slice of
             cells currently visible in the axis viewport. Part of the scrub
             layer: composed off entirely in plain mode. */}
-        <Show when={scrubOn() && props.cells.length > 0}>
-          <svg
-            class="sui-scrub-chart__window"
-            role="img"
-            aria-label="Scrub window"
-            viewBox={`0 0 ${chartWidth()} ${chartHeight()}`}
-            preserveAspectRatio="none"
-          >
-            <rect
-              x={windowBounds()[0]}
-              y={plotTop()}
-              width={windowBounds()[1] - windowBounds()[0]}
-              height={plotHeight()}
-              fill="var(--sui-scrub-chart-window-fill, rgba(88,166,255,0.14))"
-              stroke="var(--sui-scrub-chart-window-stroke, rgba(88,166,255,0.55))"
-              stroke-width={1}
+          <Show when={scrubOn() && props.cells.length > 0}>
+            <svg
+              class="sui-scrub-chart__window"
+              role="img"
+              aria-label="Scrub window"
+              viewBox={`0 0 ${chartWidth()} ${chartHeight()}`}
+              preserveAspectRatio="none"
+            >
+              <rect
+                x={windowBounds()[0]}
+                y={plotTop()}
+                width={windowBounds()[1] - windowBounds()[0]}
+                height={plotHeight()}
+                fill="var(--sui-scrub-chart-window-fill, rgba(88,166,255,0.14))"
+                stroke="var(--sui-scrub-chart-window-stroke, rgba(88,166,255,0.55))"
+                stroke-width={1}
+              />
+            </svg>
+          </Show>
+          {/* Pointer gestures (pan + click-to-scrub) — scrub layer only. */}
+          <Show when={scrubOn()}>
+            <div
+              class="sui-scrub-chart__overlay"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             />
-          </svg>
-        </Show>
-        {/* Pointer gestures (pan + click-to-scrub) — scrub layer only. */}
-        <Show when={scrubOn()}>
-          <div
-            class="sui-scrub-chart__overlay"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-          />
-        </Show>
-        {/* Consumer overlay layer — ABOVE the gesture overlay so its
+          </Show>
+          {/* Consumer overlay layer — ABOVE the gesture overlay so its
             interactive decorations (plotline markers) receive clicks. */}
-        <Show when={props.renderChartOverlay && chartWidth() > 0}>
-          {props.renderChartOverlay!(ctx())}
-        </Show>
-        {/* Y-fit toggle — rendered only when `yFitDomain` is set. It sits in
+          <Show when={props.renderChartOverlay && chartWidth() > 0}>
+            {props.renderChartOverlay!(ctx())}
+          </Show>
+          {/* Y-fit toggle — rendered only when `yFitDomain` is set. It sits in
             the axis origin corner: `plotBottom` puts it level with the x-axis
             tick labels, and the y-axis column holds it left of the plot, so
             it covers no gridline, no label and no data. It comes LAST in the
             frame so it stacks above the gesture overlay and answers its own
             clicks. See ScrubChartYFitControl.tsx for the markup. */}
-        <Show when={props.yFitDomain}>
-          <ScrubChartYFitControl
-            mode={yScaleMode}
-            onSelect={selectYScaleMode}
-            axisTop={plotBottom}
-          />
-        </Show>
-        {/* Expand chevron — rendered only when `chartHeightExpanded` is set.
+          <Show when={props.yFitDomain}>
+            <ScrubChartYFitControl
+              mode={yScaleMode}
+              onSelect={selectYScaleMode}
+              axisTop={plotBottom}
+            />
+          </Show>
+          {/* Expand chevron — rendered only when `chartHeightExpanded` is set.
             It mirrors the y-fit button across the frame: same size, same
             inset, same level on the x-axis row, pinned to the RIGHT edge, so
             a chart that shows both keeps the two apart. */}
-        <Show when={expandable()}>
-          <ScrubChartExpandControl
-            expanded={expanded}
-            onToggle={toggleExpanded}
-            axisTop={plotBottom}
-          />
-        </Show>
-        {/* Hover readout layer — above all chrome, pointer-events:none so it
+          <Show when={expandable()}>
+            <ScrubChartExpandControl
+              expanded={expanded}
+              onToggle={toggleExpanded}
+              axisTop={plotBottom}
+            />
+          </Show>
+          {/* Top-right control — rendered only when `topAction` is set. It
+            joins the corner family whole but takes the corner OPPOSITE the
+            origin, where there is no axis gutter, so it floats over the top
+            right of the plot on its scrim. It comes after the gesture overlay
+            for the same reason the other two do: the button must answer its
+            own clicks. See ScrubChartTopActionControl.tsx. */}
+          <Show when={topAction() !== null}>
+            <ScrubChartTopActionControl
+              icon={topActionIcon}
+              label={topActionLabel}
+              onClick={runTopAction}
+            />
+          </Show>
+          {/* Hover readout layer — above all chrome, pointer-events:none so it
             never blocks the gesture overlay beneath. Only this slot gets the
             live hoverIndex, so renderChart doesn't redraw on pointer move. */}
-        <Show
-          when={
-            props.hover &&
-            props.renderHoverOverlay &&
-            chartWidth() > 0 &&
-            hoverIndex() !== null
-          }
-        >
-          <div class="sui-scrub-chart__hover-layer">
-            {props.renderHoverOverlay!({ ...ctx(), hoverIndex: hoverIndex() })}
-          </div>
-        </Show>
-      </div>
+          <Show
+            when={
+              props.hover &&
+              props.renderHoverOverlay &&
+              chartWidth() > 0 &&
+              hoverIndex() !== null
+            }
+          >
+            <div class="sui-scrub-chart__hover-layer">
+              {props.renderHoverOverlay!({
+                ...ctx(),
+                hoverIndex: hoverIndex(),
+              })}
+            </div>
+          </Show>
+        </div>
 
-      {/* The detail ribbon (day-cell filmstrip) — scrub layer only. Plain
+        {/* The detail ribbon (day-cell filmstrip) — scrub layer only. Plain
           mode renders just the chart frame above. An optional accent border
           wraps the whole ribbon (identity cue) when `ribbonAccent` is set. */}
-      <Show when={scrubOn()}>
-        <div
-          class="sui-scrub-chart__ribbon"
-          style={
-            props.ribbonAccent
-              ? {
-                  border: `1px ${
-                    props.ribbonAccentDashed ? "dashed" : "solid"
-                  } ${props.ribbonAccent}`,
-                  "border-radius": "6px",
-                  overflow: "hidden",
-                }
-              : undefined
-          }
-        >
-          <DateAxis<C>
-            cells={props.cells}
-            selected={selectedIdx()}
-            today={props.today}
-            cellWidth={cellWidth()}
-            onCellClick={(idx, cell) => emitScrub(idx, cell)}
-            renderCell={props.renderCell}
-            scrollableRef={handleAxisRef}
-          />
-        </div>
+        <Show when={scrubOn()}>
+          <div
+            class="sui-scrub-chart__ribbon"
+            style={
+              props.ribbonAccent
+                ? {
+                    border: `1px ${
+                      props.ribbonAccentDashed ? "dashed" : "solid"
+                    } ${props.ribbonAccent}`,
+                    "border-radius": "6px",
+                    overflow: "hidden",
+                  }
+                : undefined
+            }
+          >
+            <DateAxis<C>
+              cells={props.cells}
+              selected={selectedIdx()}
+              today={props.today}
+              cellWidth={cellWidth()}
+              onCellClick={(idx, cell) => emitScrub(idx, cell)}
+              renderCell={props.renderCell}
+              scrollableRef={handleAxisRef}
+            />
+          </div>
+        </Show>
       </Show>
     </div>
   );
