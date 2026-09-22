@@ -1,0 +1,195 @@
+name: Auto-release
+
+# CUTS THE RELEASE COMMIT SO A HUMAN DOESN'T HAVE TO.
+#
+# The chain this joins, end to end:
+#
+#   PR merged to main
+#     → CI (ci.yml) runs on the merge commit
+#       → THIS WORKFLOW (workflow_run, CI succeeded, branch main)
+#         → scripts/release.mjs decides; if it says release it bumps the minor
+#           in package.json + package-lock.json and rolls CHANGELOG.md
+#         → commit `chore(release): X.Y.0`, tag vX.Y.0 AT THAT COMMIT'S SHA,
+#           atomic push of both to main
+#           → CI runs again on the release commit
+#             → publish.yml (workflow_run, CI succeeded) publishes X.Y.0
+#               → publish.yml dispatches `sui-published` to consumers
+#
+# Two human round-trips disappear: the release PR and the manual `git tag`.
+# Nothing about the publish gate changes — the release commit still has to go
+# green in CI before publish.yml will touch it.
+#
+# WHY THIS NEEDS A PAT AND NOT `GITHUB_TOKEN`
+# -------------------------------------------
+# Two independent reasons, either of which alone is fatal:
+#
+#   1. A push authored by `GITHUB_TOKEN` does not trigger workflow runs. The
+#      release commit would land on main and no CI run would ever start for it,
+#      so publish.yml's `workflow_run` trigger would never fire. The whole chain
+#      would be inert while every step reported success.
+#   2. `main` is branch-protected with required status checks (test, typecheck,
+#      build, health, bundle-budget; strict). A direct push of a commit that has
+#      not yet passed them is rejected. `enforce_admins` is false, so an admin's
+#      PAT is allowed through; `github-actions[bot]` is not an admin.
+#
+# So `REPO_ACCESS_TOKEN` must be a PAT belonging to a repo ADMIN, with `repo`
+# and `workflow` scope. The first step below fails loudly, by name, if it is
+# absent — the mistake this PR also fixes in publish.yml is exactly the mistake
+# of skipping quietly.
+#
+# GUARDS AGAINST RELEASING ITSELF, AND THERE ARE THREE
+# ----------------------------------------------------
+#   • The release commit empties `## Unreleased`, and an empty `## Unreleased`
+#     is a hard "no release" in scripts/release.mjs.
+#   • The script diffs against the most recent release commit REACHABLE FROM
+#     HEAD, head included. On the release commit, base == head, so the change
+#     set is empty and no path is shippable.
+#   • The explicit subject-line check below, which skips before the script even
+#     runs. Belt, braces and a second belt: a release loop publishes a version
+#     per minute until someone notices.
+#
+# WHAT DOES *NOT* RELEASE
+# -----------------------
+# A merge that touches only docs, dev/, scripts/ or .github/ does not cut a
+# version, even with content under `## Unreleased`. The published tarball is
+# dist/ built from src/, plus the manifest: a README edit produces a package
+# byte-identical to the one consumers already have, and spending a version and
+# a consumer bump PR on it is the cost, not the benefit. A dependency-block
+# change in package.json DOES release, because a peer range or a runtime dep
+# reaches the consumer with src/ untouched. `devDependencies` do not count.
+# Unreleased content simply waits for the next merge that ships something.
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# One release at a time. Two concurrent runs would both read version N and both
+# try to write N+1; the second push would be rejected, but only after the second
+# run had already decided it was releasing.
+concurrency:
+  group: auto-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # Same shape as publish.yml: a manual dispatch is deliberate and trusted, an
+    # automatic run must follow a CI run that actually passed.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      # FIRST, and on its own, so the failure names the secret rather than
+      # surfacing as an opaque 403 from `git push` eight steps later.
+      - name: Require REPO_ACCESS_TOKEN
+        env:
+          RELEASE_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_TOKEN" ]; then
+            echo "::error::Secret REPO_ACCESS_TOKEN is not set on this repository."
+            echo "Auto-release cannot run without it. It must be a Personal Access Token"
+            echo "belonging to a repo ADMIN, with 'repo' and 'workflow' scope:"
+            echo "  • pushes by GITHUB_TOKEN do not trigger workflow runs, so the release"
+            echo "    commit would never get a CI run and publish.yml would never fire;"
+            echo "  • main's required status checks reject a direct push from a non-admin."
+            echo "Add it at: Settings → Secrets and variables → Actions → New repository secret."
+            exit 1
+          fi
+          echo "REPO_ACCESS_TOKEN is present."
+
+      - name: Checkout the sha CI validated
+        uses: actions/checkout@v5
+        with:
+          # workflow_run defaults to the default branch's HEAD, not the commit
+          # CI actually validated — the same pin publish.yml makes, for the same
+          # reason. fetch-depth 0 because scripts/release.mjs walks history to
+          # find the previous release commit.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          persist-credentials: true
+
+      - name: Skip if this commit is itself a release
+        id: selfcheck
+        run: |
+          SUBJECT=$(git log -1 --format=%s)
+          echo "subject: $SUBJECT"
+          if echo "$SUBJECT" | grep -Eq '^chore(\(release\))?: (release )?[0-9]+\.[0-9]+\.[0-9]+'; then
+            echo "This is a release commit — not releasing it again."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip if main has moved on
+        id: freshness
+        if: steps.selfcheck.outputs.skip == 'false'
+        run: |
+          git fetch origin main
+          HEAD_SHA=$(git rev-parse HEAD)
+          MAIN_SHA=$(git rev-parse origin/main)
+          echo "head=$HEAD_SHA  main=$MAIN_SHA"
+          if [ "$HEAD_SHA" != "$MAIN_SHA" ]; then
+            echo "The validated sha is no longer main's tip — a later merge will carry this release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js
+        if: steps.selfcheck.outputs.skip == 'false' && steps.freshness.outputs.skip == 'false'
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      # No `npm ci` anywhere in this job: scripts/release.mjs imports only node
+      # builtins, on purpose. This job is seconds, not minutes.
+      - name: Decide whether a release is owed
+        id: decide
+        if: steps.selfcheck.outputs.skip == 'false' && steps.freshness.outputs.skip == 'false'
+        run: |
+          node scripts/release.mjs --json | tee /tmp/decision.json
+          {
+            echo "release=$(node -p "require('/tmp/decision.json').release")"
+            echo "next=$(node -p "require('/tmp/decision.json').nextVersion")"
+          } >> "$GITHUB_OUTPUT"
+          node -p "'Reason: ' + require('/tmp/decision.json').reason"
+
+      - name: Bump, roll the changelog, commit, tag and push
+        if: steps.decide.outputs.release == 'true'
+        env:
+          NEXT: ${{ steps.decide.outputs.next }}
+        run: |
+          set -euo pipefail
+          node scripts/release.mjs
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Only the three files the script writes. Never `git add -A`: a stray
+          # file from a previous step would ride into the release commit.
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "chore(release): ${NEXT}"
+
+          # TAG THE SHA, NOT THE BRANCH. `git tag vX.Y.0` with no argument tags
+          # whatever HEAD happens to be, which is how v0.175.0 ended up needing
+          # a backfill onto 6d52311 after the fact. Name the commit.
+          RELEASE_SHA=$(git rev-parse HEAD)
+          echo "Release commit: $RELEASE_SHA"
+          git tag "v${NEXT}" "$RELEASE_SHA"
+
+          # --atomic: the branch and the tag land together or neither does.
+          # A tag on a commit main never took is worse than no tag.
+          git push --atomic origin "HEAD:main" "refs/tags/v${NEXT}"
+
+          echo "### Released \`${NEXT}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- commit \`${RELEASE_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- tag \`v${NEXT}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- CI will now run on the release commit; publish.yml follows it." >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,112 @@
+name: Bench auto-merge
+
+# A PR labelled `bench` that touches nothing a consumer installs merges itself
+# once every required check is green. Workshop benches, gallery wiring and docs
+# are reviewed by looking at the bench, not by a human clicking Merge — and a
+# bench PR that sits waiting for that click is the third round-trip in a release
+# cycle that has no business having three.
+#
+# WHAT IT WILL AND WILL NOT MERGE
+# -------------------------------
+# The label alone is not authority. Every changed file must be inside the
+# allowlist:
+#
+#     dev/**            the workshop and gallery
+#     docs/**           handoffs, ADRs, agent docs
+#     *.md              top-level prose (README, CHANGELOG, AGENT_GUIDE, …)
+#
+# Anything else — and `src/**` most of all — and the job stops with the
+# offending paths printed. A `bench` label on a PR that edits a component is
+# either a mislabel or an attempt to route library code past review, and both
+# deserve the same answer. The check reads the PR's file list from the API
+# rather than diffing locally, because actions/checkout is shallow by default
+# and a local diff would silently see the wrong base.
+#
+# `--auto` does NOT bypass anything. It asks GitHub to merge when the branch's
+# required status checks (test, typecheck, build, health, bundle-budget) pass.
+# A red check means the PR sits there, labelled, exactly as it does today.
+#
+# TWO REPOSITORY SETTINGS THIS DEPENDS ON — BOTH CURRENTLY ABSENT
+# ---------------------------------------------------------------
+#   1. "Allow auto-merge" is OFF (`allow_auto_merge: false` as of this PR).
+#      `gh pr merge --auto` cannot work until someone with admin rights turns it
+#      on at Settings → General → Pull Requests. The job fails with that
+#      sentence in the log rather than exiting 0 on a merge that never happened.
+#   2. There is no `bench` label in this repo yet. Create it at
+#      Settings → Labels, or the trigger below can never fire.
+#
+# Neither can be set from a workflow, so both are named here and in the PR body.
+#
+# ON THE TOKEN
+# ------------
+# A merge performed with `GITHUB_TOKEN` does not trigger downstream workflow
+# runs, so a bench PR merged that way lands on main without a CI run — harmless
+# for dev/docs (nothing to release, nothing to publish), but it does mean main's
+# own CI history gets a hole. `REPO_ACCESS_TOKEN` is used when present so the
+# merge behaves like a human's, and `GITHUB_TOKEN` is the fallback.
+
+on:
+  pull_request:
+    types: [labeled, opened, reopened, synchronize, ready_for_review]
+
+concurrency:
+  group: bench-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  auto-merge:
+    if: >-
+      github.event.pull_request.draft == false &&
+      contains(github.event.pull_request.labels.*.name, 'bench')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check every changed path is bench-safe
+        id: paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          FILES=$(gh api --paginate "repos/${REPO}/pulls/${PR}/files" --jq '.[].filename')
+          echo "Changed files:"
+          echo "$FILES" | sed 's/^/  /'
+
+          # Allowlist, not a denylist: an unrecognised top-level directory must
+          # fail closed. `src/**` is called out separately only so the log says
+          # the thing a reviewer needs to hear.
+          OFFENDERS=$(echo "$FILES" | grep -Ev '^(dev/|docs/|[^/]+\.md$)' || true)
+
+          if [ -n "$OFFENDERS" ]; then
+            echo "::error::This PR is labelled 'bench' but changes files outside dev/, docs/ and top-level *.md — not auto-merging."
+            echo "$OFFENDERS" | sed 's/^/  ::/'
+            if echo "$OFFENDERS" | grep -q '^src/'; then
+              echo "::error::It touches src/ — library code goes through review, whatever the label says."
+            fi
+            exit 1
+          fi
+          echo "All changed paths are within dev/, docs/ or top-level *.md."
+
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN || github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          if gh pr merge "$PR" --repo "$REPO" --auto --merge; then
+            echo "Auto-merge enabled — this PR merges as soon as its required checks pass."
+            exit 0
+          fi
+          echo "::error::Could not enable auto-merge on PR #${PR}."
+          echo "The usual cause is that auto-merge is disabled for this repository."
+          echo "Check with:  gh api repos/${REPO} --jq .allow_auto_merge"
+          echo "It read 'false' when this workflow was written. Turn it on at"
+          echo "Settings → General → Pull Requests → Allow auto-merge. Only a repo"
+          echo "admin can do that; a workflow cannot."
+          exit 1
