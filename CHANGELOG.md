@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+### Added
+
+- **`BuilderBoard` — the ONE frame a scenario builder draws its four panels
+  in.** A Composite (Depth 2) that owns no CSS and renders no intrinsic
+  element: `panelA` (the cashflow) over `panelB` (the one series the builder
+  changes) in the top half, each an equal `FillCardSurface` inside a
+  `HalfFillColumn`; `panelC` (the controls) beside `panelD` (an instrument) in
+  the bottom half, a `FillPaneRailGrid` whose rail is held to a STATED width
+  and whose pane takes what the rail leaves, with a `ScrollFillColumn` inside
+  C so a list that outgrows its half scrolls in its card instead of pushing
+  the board past the viewport. **Why a component and not a recipe.** Three
+  builder pages composed those same five variants three different ways — a
+  60% pane, so the gauge resized with the window; a stated 200px box, so the
+  bottom half sat at content height and left the page empty; an inline
+  min-height floor — and drew three different pictures of one board. The
+  frame fixes the ORDER the variants nest in and nothing else, so every tab
+  is identical by construction and a page cannot re-decide a size.
+  **The rail is a token.** `rail` names the width the instrument is held to;
+  `"gauge"` is `RateGauge`'s own derived natural width and the only token
+  today. A pixel never crosses into a consumer. Factory `createBuilderBoard({
+  rail })`; types `BuilderBoardProps`, `BuilderBoardOverrides`,
+  `BuilderBoardDataProps`, `BuilderBoardRailWidth`.
+  **The numbers are decided headless.** `BuilderBoard/geometry.ts` (private)
+  derives the four rects for any viewport from the gap steps and the rail
+  token — `builderBoardRects` — and prints them — `builderBoardTable`;
+  `geometry.test.ts` pins them and reads `Layout.css` so the model cannot
+  drift from the stylesheet. The `Builder Board` workshop bench draws the
+  frame at a laptop, a desktop and a wide viewport beside the model's table
+  and a `getBoundingClientRect` table of the rendered panels.
+
 ## 0.178.0 — 2026-09-22
 
 ### Added

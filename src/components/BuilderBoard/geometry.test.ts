@@ -17,7 +17,7 @@ import {
   HALF_GUTTER,
   PAIR_GUTTER,
   RAIL_WIDTH_PX,
-} from "./builderBoard";
+} from "./geometry";
 
 const LAPTOP = { width: 1200, height: 700 };
 
@@ -75,7 +75,7 @@ describe("builderBoardTable — the printed observation", () => {
 });
 
 describe("GAP_PX agrees with Layout.css", () => {
-  const css = readFileSync(joinPath(__dirname, "Layout.css"), "utf8");
+  const css = readFileSync(joinPath(__dirname, "..", "Layout", "Layout.css"), "utf8");
   const gapOf = (step: string): number => {
     const m = css.match(new RegExp(`\\.stack--gap-${step}\\s*\\{\\s*gap:\\s*(\\d+)px`));
     if (m === null) throw new Error(`no .stack--gap-${step} rule in Layout.css`);
