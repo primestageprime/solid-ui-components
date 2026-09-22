@@ -44,3 +44,34 @@ const ${pascal}Bench: Component = () => (
 export default ${pascal}Bench;
 `;
 };
+
+/**
+ * The `npm run new:bench` template (scripts/new-bench.mjs) — additive
+ * sibling of `renderBenchTemplate`, not a replacement for it. Differs in two
+ * ways the `/workshop` skill's plain template does not need: it imports from
+ * the PACKAGE BARREL (`../../../src`, not a component subpath) so the bench
+ * reads exactly as a Consumer App would, and it opens on an empty
+ * `ViewportColumn` frame — the bridge Layout's own docstring describes
+ * between a block-height bench frame (`component-section--full`, sized in
+ * dev/main.css) and the flex Layout vocabulary — rather than a bare `<div>`,
+ * since every real bench (License Board, Hourly Board, …) starts there.
+ */
+export const renderBarrelBenchTemplate = ({ slug, label }) => {
+  const pascal = slugToPascal(slug);
+  return `import { Component } from "solid-js";
+import { SectionTitle, ViewportColumn } from "../../../src";
+
+export const meta = { label: ${JSON.stringify(label)} };
+
+const ${pascal}Bench: Component = () => (
+  <div class="component-section component-section--full">
+    <ViewportColumn>
+      <SectionTitle>${label}</SectionTitle>
+      {/* build here */}
+    </ViewportColumn>
+  </div>
+);
+
+export default ${pascal}Bench;
+`;
+};

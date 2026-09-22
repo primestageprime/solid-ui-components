@@ -778,6 +778,71 @@ bundle is ruined anyway. That is what this script is for.
 `docs/adr/0008-deliberately-unfixed.md` before "fixing" a metric or a config
 oddity** — it lists what has already been evaluated and rejected, and why.
 
+## Scaffold generators — the checklist below is now a command
+
+`.claude/skills/sui-build/SKILL.md` step 4 lists ten artefacts a new
+component owes before `health` will pass it: depth header, factory,
+Overrides/DataProps split, barrel export, mounting test, showcase, a
+`dev/main.css` demo class, the `dev/main.tsx` catalog entry, a `COMPONENTS.md`
+line, a `CHANGELOG.md` line. **That list is no longer something a human
+types — it is what these three generators emit, all green at birth:**
+
+```bash
+npm run new:component -- <Name> --depth <N> [--primitive]
+npm run new:variant   -- <Primitive> <VariantName> --<override>=<value> ...
+npm run new:bench     -- <slug> [--label "Nice Label"]
+```
+
+- **`new:component`** writes the ten artefacts above for a brand-new
+  Primitive (`--primitive`, Depth 1, owns a `.css` file) or Composite (Depth
+  2+, composes `NarrowStack` so it is a real Composite rather than a bare
+  `<div>`). Write the body; the scaffolding is already adherence-clean.
+- **`new:variant`** appends a curried variant to an existing Primitive's
+  `variants.ts` (`FillPaneRailGrid` / `FixedHeightBox` in
+  `src/components/Layout/variants.ts` are the pattern — including a baked
+  number arriving as a DATA import, not a literal, which this generator
+  cannot do for you: fix that up by hand when the override wants one), plus
+  its barrel export, a mounting test, a `COMPONENTS.md` line and a
+  CHANGELOG line. It also resolves the Primitive's FOLDER by searching every
+  `variants.ts` for the one that already imports `create<Primitive>` — Grid's
+  factory lives in `src/components/Layout/Grid.tsx`, not a `Grid/` folder of
+  its own, the same "namespace folder" shape CONTEXT.md's Badge example
+  describes.
+  **Known limit:** the generated mount and its `dev/` demo (see below) pass
+  no data props beyond `children`, so this only works out of the box for a
+  Primitive whose `DataProps` has no REQUIRED field — true for all of Layout
+  and for Button, false for e.g. `RateGauge` (`domain`/`baseline`/`value`/
+  `label` are required). For those, `typecheck:dev` points at the two
+  generated files and a human supplies real values.
+- **`new:bench`** writes `dev/showcases/workshop/<slug>.tsx`, importing from
+  the PACKAGE BARREL (`../../../src`, the way a Consumer App would) with an
+  empty `ViewportColumn` frame. There is no separate nav-registration step —
+  benches are auto-discovered via `import.meta.glob` in `dev/main.tsx`
+  (`workshop-benches.ts`), the same way `license-board` appears with no
+  manual entry anywhere. Additive sibling of the plain `/workshop` skill
+  template (`scripts/workshop-new.mjs` + `workshop-lib.mjs`'s
+  `renderBenchTemplate`) — both stay; use whichever shape a bench needs.
+
+All three **refuse atomically**: the whole write plan (new files + every
+anchored edit to a shared file) is validated before anything is written, so a
+refusal always leaves the tree byte-identical and a re-run after fixing the
+collision just works — see `scripts/generator-lib.mjs`. Each one runs `npm
+run health` before and after and prints the delta; an improvement it causes
+(e.g. `undocumentedExports` dropping because the new `COMPONENTS.md` line
+resolves a name that was already undocumented) still needs
+`npm run health -- --update-baseline`, exactly as any other change would —
+the generator does not do this for you, because bare `--update-baseline` can
+only lower a ceiling and the caller should look at what moved first.
+`scripts/health-history.json` changes on every run either way; commit it
+alongside the generated component per the bullet above.
+
+`new:variant`'s `dev/` reference is a shared, generator-owned waiting room —
+`dev/showcases/generated-variants.tsx` — created and registered
+(`tags: ["workshop"]`, out of the depth-grouped list) on first use, appended
+to on every later call. It exists only to keep `componentsWithoutShowcase`
+at 0 the moment a variant is born; promote a variant into its Primitive's own
+showcase by hand once its API has settled, the same as any other Promotion.
+
 ## Don't hand-roll a DOM double — `src/test-utils/` has one
 
 jsdom ships no `ResizeObserver`, no `matchMedia`, no `PointerEvent`, no
