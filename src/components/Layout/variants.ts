@@ -419,6 +419,44 @@ export const FillPaneRailGrid: Component<GridDataProps> = createGrid({
   },
 });
 
+/** AnchorBox — the CONTAINING BLOCK for an absolutely-positioned affordance
+ *  (`position: relative`). A corner button, a legend pinned to an edge, a
+ *  badge over a picture: each is `position: absolute` and takes its box from
+ *  the nearest positioned ancestor, and without one it takes the page. This
+ *  is that ancestor, and nothing else — no size, no flex, so it lays out as
+ *  the plain block it wraps. Pair it with `TopRightOverlayBox` for the
+ *  affordance itself. Use `AnchorFillBox` when the anchor must also take a
+ *  parent's height. */
+export const AnchorBox: Component<BoxDataProps> = createBox({
+  style: { position: "relative" },
+});
+
+/** AnchorFillBox — `AnchorBox` that FILLS a parent of definite height
+ *  (`position: relative; height: 100%; min-height: 0`).
+ *
+ *  For a chart drawn at `chartHeight="fill"` under a corner control: the
+ *  chart's `fill` is `height: 100%`, which resolves against the nearest box
+ *  with a height — so a plain `AnchorBox` between the chart and its cell
+ *  computes it to `auto` and the chart measures 0px tall. Measured
+ *  2026-09-22 in the thorcasting builder tabs: a 284px card, a 1472×0 svg.
+ *  This variant carries the height through and, with `min-height: 0`, lets
+ *  the chart shrink into it. Against a parent of INDEFINITE height the
+ *  `100%` computes to `auto` (the same trick `FillStretchRow` relies on), so
+ *  a stated-height chart inside it is unharmed. */
+export const AnchorFillBox: Component<BoxDataProps> = createBox({
+  style: { position: "relative", height: "100%", "min-height": "0" },
+});
+
+/** TopRightOverlayBox — an affordance pinned to the top-right corner of its
+ *  `AnchorBox` (`position: absolute; top: 4px; right: 4px; z-index: 2`).
+ *  The corner the board kit and `ScrubChart`'s own `topAction` use for a
+ *  chart's one page-level control, inset by the `xs` step so it clears the
+ *  frame's border. `z-index: 2` puts it over an svg that is itself stacked
+ *  (`isolation: isolate`) rather than under it. */
+export const TopRightOverlayBox: Component<BoxDataProps> = createBox({
+  style: { position: "absolute", top: "4px", right: "4px", "z-index": "2" },
+});
+
 export const ConstrainedBox: Component<BoxDataProps> = createBox({
   style: { "max-width": "400px" },
 });

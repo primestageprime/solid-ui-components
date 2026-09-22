@@ -31,6 +31,13 @@
   drift from the stylesheet. The `Builder Board` workshop bench draws the
   frame at a laptop, a desktop and a wide viewport beside the model's table
   and a `getBoundingClientRect` table of the rendered panels.
+- **`AnchorBox`, `AnchorFillBox`, `TopRightOverlayBox`** — the containing
+  block for an absolutely-positioned affordance (`position: relative`), its
+  fill-height sibling (`height: 100%; min-height: 0`, so a
+  `chartHeight="fill"` chart under a corner control takes its cell instead of
+  measuring 0px — found live in the thorcasting builder tabs), and the
+  affordance pinned to the anchor's top-right corner. Three Layout variants
+  so a consumer's chart shell carries no inline layout style of its own.
 
 ## 0.178.0 — 2026-09-22
 

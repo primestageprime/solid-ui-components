@@ -41,6 +41,9 @@ import {
   ClipFillColumnFlush,
   ScrollFillColumn,
   // boxes
+  AnchorBox,
+  AnchorFillBox,
+  TopRightOverlayBox,
   ClipBox,
   ClipFillBox,
   FixedHeightBox,
@@ -87,7 +90,7 @@ interface VariantSpec {
   note: string;
   Variant: Slot;
   /** Children shape. Defaults to three fit-width chips. */
-  kind?: "chips" | "blocks" | "tall" | "wide" | "pairs" | "paneRail";
+  kind?: "chips" | "blocks" | "tall" | "wide" | "pairs" | "paneRail" | "anchored";
   /** Demo inside a definite-height frame — only the clip/scroll families need
    *  one, and a plain stack looks broken in it. */
   bounded?: boolean;
@@ -248,6 +251,19 @@ const COLUMNS: VariantSpec[] = [
 
 const BOXES: VariantSpec[] = [
   {
+    name: "AnchorBox",
+    note: "the CONTAINING BLOCK for an absolutely-positioned affordance (position:relative), no size of its own — the corner chip below is a TopRightOverlayBox",
+    Variant: AnchorBox,
+    kind: "anchored",
+  },
+  {
+    name: "AnchorFillBox",
+    note: "AnchorBox that FILLS a parent of definite height (height:100%; min-height:0) — a chartHeight=\"fill\" chart under a corner control measures the cell rather than 0px",
+    Variant: AnchorFillBox,
+    kind: "anchored",
+    bounded: true,
+  },
+  {
     name: "GrowCenterColumn",
     note: "fills the height its parent column has left and CENTRES its child — the sibling of GrowFillBox for an instrument that keeps its own aspect and would otherwise pin to the top",
     Variant: GrowCenterColumn,
@@ -398,6 +414,17 @@ const CHILDREN: Record<NonNullable<VariantSpec["kind"]>, () => JSX.Element> = {
     <>
       <FillPlaceholder label="pane — whatever is left over" />
       <FillPlaceholder label="rail — a stated width, at every viewport" />
+    </>
+  ),
+  // The overlay is the second child ON PURPOSE: it must be inside the anchor
+  // to take its box from it, and the placeholder under it is what it floats
+  // over.
+  anchored: () => (
+    <>
+      <FillPlaceholder label="anchor — the overlay's containing block" />
+      <TopRightOverlayBox>
+        <FitPlaceholder label="top-right" />
+      </TopRightOverlayBox>
     </>
   ),
   pairs: () => (
