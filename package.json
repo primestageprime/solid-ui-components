@@ -101,6 +101,8 @@
     "usage-manifest": "node scripts/usage-manifest.mjs",
     "link:consumer": "node scripts/link-consumer.mjs",
     "unlink:consumer": "node scripts/link-consumer.mjs",
+    "release:dry": "node scripts/release.mjs --dry-run",
+    "release:decide": "node scripts/release.mjs --json",
     "typecheck": "tsc --noEmit",
     "typecheck:dev": "tsc -p tsconfig.dev.json",
     "lint": "node scripts/lint-ci.mjs lint src",

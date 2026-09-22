@@ -112,6 +112,22 @@ Create a TodoWrite item per step and complete them in order.
 
 ## Release & publish
 
+> **Steps 1–4 are now automatic — do not do them by hand.**
+> `.github/workflows/release.yml` runs after every green CI on `main`. If the
+> merge touched `src/**` (or a dependency block in `package.json`) **and**
+> `CHANGELOG.md` has content under `## Unreleased`, it bumps the minor, rolls
+> `Unreleased` into a dated `## X.Y.0 — YYYY-MM-DD` heading, commits
+> `chore(release): X.Y.0`, tags **that commit's sha** as `vX.Y.0`, and pushes
+> both atomically. So your job in a promotion PR is only to **leave a good
+> `## Unreleased` entry** — the version, the heading, the commit and the tag all
+> follow from it. Preview the decision locally with `npm run release:dry`
+> (writes nothing). It requires the `REPO_ACCESS_TOKEN` secret to be an admin
+> PAT; it fails loudly, naming the secret, if that is missing.
+>
+> Steps 1–4 below are kept as the manual fallback for when the workflow is
+> disabled or a **patch/major** bump is wanted — auto-release only ever cuts a
+> minor.
+
 Publishing to GitHub Packages is **CI-gated**: `.github/workflows/publish.yml`
 triggers on `workflow_run` — it waits for the **CI** workflow (`ci.yml`, which
 runs on pushes to `main`) to *complete successfully* on `main`, and never fires
