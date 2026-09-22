@@ -2,6 +2,12 @@
 
 This document is for Claude Code agents and AI assistants working on PrimeStage apps that use this component library.
 
+**Spawning a UI subagent** (here or in a consumer repo)? Splice
+`.claude/skills/sui-agent-brief/SKILL.md` into the top of its prompt first —
+it's the standard preamble covering the composition axiom, the push-back
+gate, the build loop, and the trap list, so it doesn't have to be retyped or
+re-derived per brief.
+
 ## The #1 Rule
 
 **Never pass visual/layout props inline. Always use or create curried variants.**
