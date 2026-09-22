@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- `scripts/gate.mjs` now acquires a machine-wide lock (`scripts/gate-lock.mjs`, `os.tmpdir()`, keyed to the repo's main `.git` so worktrees share it) before running, so concurrent `npm run gate` invocations on one machine serialize instead of contending for CPU and timing out `test` suites; opt out with `--no-lock`.
+
 ## 0.178.0 — 2026-09-22
 
 ### Added
