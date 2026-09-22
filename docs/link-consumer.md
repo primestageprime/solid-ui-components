@@ -1,5 +1,10 @@
 # `npm run link:consumer` — cross-repo HMR against a local SUI checkout
 
+**This link exists to remove publish latency, not to relocate authoring:**
+every shape is still built in SUI (a `/workshop` bench, promoted through
+`new:component`/`new:variant`), and the consumer only ever imports curried
+SUI exports — it proves the composition live, it never drafts a piece.
+
 `scripts/link-consumer.mjs` wires a local SUI checkout into a consumer app
 via `npm link`, so the consumer's dev server resolves SUI's **source**
 (`src/index.ts`, via the `source` export condition already in
