@@ -26,7 +26,7 @@
 // rather than hidden. Per-series, so one chart can hold both.
 // ============================================
 
-import { type Component, For, Show, createEffect, createMemo } from "solid-js";
+import { type Component, For, Show, createEffect, createMemo, mergeProps } from "solid-js";
 import {
   ScrubChart,
   ScrubChartBand,
@@ -937,3 +937,47 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     />
   );
 };
+
+// ── Factory ───────────────────────────────────────────────────────────────
+// The one presentational thing this chart has to freeze is MOTION. Every
+// other prop is data or sizing, which is why no factory shipped before
+// (COMPONENTS.md said so); the two transitions are neither.
+
+/** The knobs a curried variant locks: how the chart MOVES. `yFitTransition`
+ *  is the fitted y-domain's ease toward a new target and `expandTransition`
+ *  the frame's ease between its two heights; `false` snaps either. */
+export type CashflowScrubChartOverrides = Pick<
+  CashflowScrubChartProps,
+  "yFitTransition" | "expandTransition"
+>;
+
+/** Props available to consumers of a curried CashflowScrubChart variant. */
+export type CashflowScrubChartDataProps = Omit<
+  CashflowScrubChartProps,
+  keyof CashflowScrubChartOverrides
+>;
+
+export function createCashflowScrubChart(
+  defaults: Partial<CashflowScrubChartOverrides>,
+): Component<CashflowScrubChartDataProps> {
+  return (props) => (
+    <CashflowScrubChart {...(mergeProps(defaults, props) as CashflowScrubChartProps)} />
+  );
+}
+
+/** StillCashflowScrubChart — the chart that draws its FINAL FRAME AT ONCE, on
+ *  mount and on every data change (`yFitTransition: false`,
+ *  `expandTransition: false`).
+ *
+ *  The default chart eases its fitted y-axis toward each new domain over
+ *  240ms, which a reader who PANS wants: the domain moves on every frame and
+ *  an axis that snapped would flicker. A reader who switches between TABS
+ *  does not: the chart mounts on one series, the page's fold lands a frame
+ *  later, and the axis glides between the two while the line redraws under
+ *  it — so whether anything actually changed is hidden inside the motion
+ *  (Peter, 2026-09-22: "distracting, and makes it harder to determine if
+ *  anything has changed when I change tabs"). The variant is the additive
+ *  answer: `CashflowScrubChart` keeps its ease for the panning pages, and a
+ *  page whose question is "what changed?" takes this one. */
+export const StillCashflowScrubChart: Component<CashflowScrubChartDataProps> =
+  createCashflowScrubChart({ yFitTransition: false, expandTransition: false });

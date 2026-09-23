@@ -1,5 +1,11 @@
-export { CashflowScrubChart } from "./CashflowScrubChart";
+export {
+  CashflowScrubChart,
+  StillCashflowScrubChart,
+  createCashflowScrubChart,
+} from "./CashflowScrubChart";
 export type {
+  CashflowScrubChartOverrides,
+  CashflowScrubChartDataProps,
   CashflowCell,
   CashflowScrubChartProps,
   CashflowBalanceSeries,
