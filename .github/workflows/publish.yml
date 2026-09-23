@@ -123,16 +123,69 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm publish --ignore-scripts
 
-      - name: Notify consumers (amygdala-ui)
+      # NOTIFY CONSUMERS — AND FAIL IF WE CANNOT.
+      #
+      # This step used to `exit 0` when REPO_ACCESS_TOKEN was unset and swallow
+      # a failed dispatch with "non-fatal", which made a green publish run prove
+      # nothing whatever about consumers hearing of the release. That is the
+      # worst shape a notification can have: it is silent exactly when it is
+      # broken. Both paths now fail the job.
+      #
+      # CONSUMERS: every repo under primestageprime that pins
+      # @primestageprime/solid-ui-components. Add a repo here the moment it
+      # gains a `sui-bump.yml` listener; a dispatch to a repo with no listener
+      # is a harmless no-op (see below), so listing a repo early is safe.
+      #
+      # PAYLOAD (client_payload on the `sui-published` event):
+      #   version — package.json version just published, e.g. "0.178.0"
+      #   tag     — the release tag, e.g. "v0.178.0"
+      #   sha     — the commit SHA that was built and published
+      #
+      # WHAT THIS STILL CANNOT TELL YOU
+      # -------------------------------
+      # `POST /repos/{owner}/{repo}/dispatches` returns 204 whether or not any
+      # workflow in the target repo listens for the event type. So a green
+      # dispatch here proves the token worked and GitHub accepted the event —
+      # NOT that anything ran. Each consumer's listener is a separate PR in
+      # that consumer repo.
+      #
+      # One consumer's failure must not skip the rest — each dispatch runs
+      # even if an earlier one failed — but the job still fails at the end,
+      # naming every repo that failed, so a partial notify is never green.
+      - name: Notify consumers
         if: steps.check.outputs.already_published == 'false'
         env:
           GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+          VERSION: ${{ steps.check.outputs.version }}
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "REPO_ACCESS_TOKEN not set — skipping cross-repo dispatch. Update amygdala-ui's package.json manually."
-            exit 0
+          set -uo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::Secret REPO_ACCESS_TOKEN is not set on this repository."
+            echo "Version $VERSION HAS BEEN PUBLISHED, but no consumer can be notified."
+            echo "The token must be a PAT with 'repo' scope on the consumer repositories."
+            echo "Add it at: Settings → Secrets and variables → Actions → New repository secret."
+            echo "Until then, bump the consumers' package.json by hand."
+            exit 1
           fi
-          gh api repos/primestageprime/amygdala-ui/dispatches \
-            -f event_type=sui-published \
-            -F "client_payload[version]=${{ steps.check.outputs.version }}" || \
-            echo "Dispatch failed — non-fatal."
+          TAG="v${VERSION}"
+          CONSUMERS=(thorcasting-ui amygdala-ui dside-ui jtf-ui)
+          FAILED=()
+          for repo in "${CONSUMERS[@]}"; do
+            if gh api "repos/primestageprime/${repo}/dispatches" \
+              -f event_type=sui-published \
+              -F "client_payload[version]=${VERSION}" \
+              -F "client_payload[tag]=${TAG}" \
+              -F "client_payload[sha]=${SHA}"; then
+              echo "Dispatched sui-published ($VERSION, $TAG, $SHA) to ${repo}."
+            else
+              echo "::error::repository_dispatch to primestageprime/${repo} failed."
+              FAILED+=("$repo")
+            fi
+          done
+          echo "NOTE: a 204 means GitHub accepted the event, not that a workflow listened for it."
+          if [ "${#FAILED[@]}" -gt 0 ]; then
+            echo "::error::Version $VERSION HAS BEEN PUBLISHED, so the registry is ahead of these consumers: ${FAILED[*]}"
+            echo "::error::Most likely REPO_ACCESS_TOKEN lacks 'repo' scope on the failed repo(s), or has expired."
+            exit 1
+          fi

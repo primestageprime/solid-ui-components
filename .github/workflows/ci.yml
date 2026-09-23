@@ -164,6 +164,17 @@ jobs:
       # imports the typescript compiler API.
       - run: npm ci --ignore-scripts
       - run: npm run health
+      # Component catalog (scripts/catalog.mjs) — a generated, COMMITTED
+      # index over every exported component/factory (depth, family,
+      # variantOf, COMPONENTS.md summary/useFor/notToBeConfusedWith), the
+      # discovery surface for `npm run find`. Unlike
+      # docs/usage-manifest.json (which compares against consumer repos
+      # this runner cannot see, hence pre-push WARN-only, see
+      # githooks/pre-push), catalog.json is built purely from THIS repo's
+      # own source — COMPONENTS.md, CHANGELOG.md, dev/main.tsx, src/ — so a
+      # stale copy is fully detectable in CI and gated here rather than
+      # left to a hook someone bypasses.
+      - run: npm run catalog -- --check
 
   build:
     runs-on: ubuntu-latest

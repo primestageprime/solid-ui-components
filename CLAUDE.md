@@ -5,6 +5,13 @@ Repo-specific guidance for Claude Code. Project-wide docs live in `CONTEXT.md`,
 
 ## Agent skills
 
+### UI subagent brief
+
+`.claude/skills/sui-agent-brief/SKILL.md` — splice into the top of any UI
+subagent's prompt (SUI or a consumer repo) before the task-specific brief;
+covers the composition axiom, the push-back gate, the build loop, and the
+trap list.
+
 ### Issue tracker
 
 Tasks are tracked ad hoc in-session for now — there is no external tracker
