@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- **`AreaSeries` `lower` — fill between two lines.** Additive: set `lower`
+  and the area runs between `y` and `lower` (a band / channel) instead of
+  down to `baseline`, one closed subpath per contiguous run; a NaN on either
+  edge breaks the band. Omitted, the path is byte-identical to before (pinned
+  in `Series.test.tsx` against strings captured before the change). Pure core
+  `buildBandPath` in `Chart/areaBand.ts`, tested on fixtures.
+
 ## 0.179.0 — 2026-09-23
 
 ### Added

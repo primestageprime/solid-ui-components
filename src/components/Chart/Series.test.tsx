@@ -386,3 +386,58 @@ describe("BarSeries", () => {
     expect(upper.top + upper.height).toBe(lower.top);
   });
 });
+
+// ── AreaSeries.lower — additive: omitted, the path is byte-identical ─────────
+// These strings were captured from the implementation BEFORE `lower` existed,
+// so a change to the baseline path shows up here, not in a consumer.
+describe("AreaSeries — without lower, the path is unchanged", () => {
+  const renderD = (points: readonly Datum[], baseline?: number) => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <AreaSeries
+          data={points}
+          x={(d) => d.x}
+          y={(d) => d.y}
+          baseline={baseline}
+        />
+      </Chart>
+    ));
+    return container.querySelector(".sui-chart__area")?.getAttribute("d");
+  };
+
+  it.each([
+    [data, undefined, "M0.00,57.60L46.80,51.20L109.20,44.80L156.00,38.40 L156.00,64.00 L0.00,64.00 Z"],
+    [data, 20, "M0.00,57.60L46.80,51.20L109.20,44.80L156.00,38.40 L156.00,51.20 L0.00,51.20 Z"],
+    [
+      [{ x: 0, y: 10 }, { x: 2, y: NaN }, { x: 5, y: 20 }, { x: 10, y: NaN }],
+      undefined,
+      "M0.00,57.60M78.00,51.20 L78.00,64.00 L0.00,64.00 Z",
+    ],
+    [[{ x: 5, y: 50 }], 20, "M78.00,32.00 L78.00,51.20 L78.00,51.20 Z"],
+  ] as const)("fixture %#", (points, baseline, expected) => {
+    expect(renderD(points, baseline)).toBe(expected);
+  });
+});
+
+describe("AreaSeries — lower fills between two lines", () => {
+  it("draws the band between y and lower and ignores baseline", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <AreaSeries
+          data={data}
+          x={(d) => d.x}
+          y={(d) => d.y}
+          lower={(d) => d.y / 2}
+          baseline={90}
+        />
+      </Chart>
+    ));
+    const d =
+      container.querySelector(".sui-chart__area")?.getAttribute("d") ?? "";
+    // Forward along y (57.60 … 38.40), back along y/2, closed.
+    expect(d.startsWith("M0.00,57.60L46.80,51.20")).toBe(true);
+    expect(d.endsWith("L0.00,60.80Z")).toBe(true);
+    // baseline 90 would put a y near 6.4px; it must not appear.
+    expect(d).not.toContain(",6.40");
+  });
+});

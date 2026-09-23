@@ -508,7 +508,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 123
+    "line": 132
   },
   {
     "name": "AssigneeIcon",
@@ -651,7 +651,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 322
+    "line": 344
   },
   {
     "name": "BaselineClusterRow",
@@ -8095,7 +8095,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 85
+    "line": 86
   },
   {
     "name": "Link",
@@ -9656,7 +9656,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 186
+    "line": 208
   },
   {
     "name": "PopoverMenu",
@@ -10035,7 +10035,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 540
+    "line": 562
   },
   {
     "name": "RemovableItemCard",
