@@ -334,6 +334,52 @@
     "line": 44
   },
   {
+    "name": "AnchorBox",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createBox",
+      "overrides": "{\n  style: { position: \"relative\" },\n}"
+    },
+    "overrides": [
+      "grow",
+      "shrink"
+    ],
+    "dataProps": "BoxDataProps",
+    "summary": "Curried `Box`: the CONTAINING BLOCK for an absolutely-positioned affordance (`position: relative`), no size and no flex of its own.",
+    "notToBeConfusedWith": null,
+    "useFor": "a chart with one page-level corner button (a y-axis shrink) or an edge-pinned legend.",
+    "notes": "AnchorBox — the CONTAINING BLOCK for an absolutely-positioned affordance (`position: relative`). A corner button, a legend pinned to an edge, a badge over a picture: each is `position: absolute` and takes its box from the nearest positioned ancestor, and without one it takes the page. This is that ancestor, and nothing else — no size, no flex, so it lays out as the plain block it wraps. Pair it with `TopRightOverlayBox` for the affordance itself. Use `AnchorFillBox` when the anchor must also take a parent's height. */",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 430
+  },
+  {
+    "name": "AnchorFillBox",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createBox",
+      "overrides": "{\n  style: { position: \"relative\", height: \"100%\", \"min-height\": \"0\" },\n}"
+    },
+    "overrides": [
+      "grow",
+      "shrink"
+    ],
+    "dataProps": "BoxDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "AnchorFillBox — `AnchorBox` that FILLS a parent of definite height (`position: relative; height: 100%; min-height: 0`). For a chart drawn at `chartHeight=\"fill\"` under a corner control: the chart's `fill` is `height: 100%`, which resolves against the nearest box with a height — so a plain `AnchorBox` between the chart and its cell computes it to `auto` and the chart measures 0px tall. Measured 2026-09-22 in the thorcasting builder tabs: a 284px card, a 1472×0 svg. This variant carries the height through and, with `min-height: 0`, lets the chart shrink into it. Against a parent of INDEFINITE height the `100%` computes to `auto` (the same trick `FillStretchRow` relies on), so a stated-height chart inside it is unharmed. */",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 446
+  },
+  {
     "name": "AnimatedSwimlaneChart",
     "depth": 2,
     "kind": "variant",
@@ -374,7 +420,7 @@
     "showcase": null,
     "since": "v0.18.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 836
+    "line": 874
   },
   {
     "name": "AppMain",
@@ -933,6 +979,25 @@
     "line": 49
   },
   {
+    "name": "BuilderBoard",
+    "depth": 2,
+    "kind": "composite",
+    "family": "BuilderBoard",
+    "variantOf": null,
+    "overrides": [
+      "rail"
+    ],
+    "dataProps": "BuilderBoardDataProps",
+    "summary": "Composite (Depth 2).",
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/BuilderBoard/BuilderBoard.tsx",
+    "line": 103
+  },
+  {
     "name": "BulkActionBar",
     "depth": 2,
     "kind": "composite",
@@ -1074,7 +1139,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 852
+    "line": 890
   },
   {
     "name": "CardSurface",
@@ -1114,13 +1179,16 @@
     "kind": "composite",
     "family": "CashflowScrubChart",
     "variantOf": null,
-    "overrides": null,
-    "dataProps": null,
+    "overrides": [
+      "yFitTransition",
+      "expandTransition"
+    ],
+    "dataProps": "CashflowScrubChartDataProps",
     "summary": "Domain Composite (Depth 3).",
     "notToBeConfusedWith": [
       "not `40` like bare ScrubChart), `lineClass?` (CSS class added to every mark of the PRIMARY balance line alongside each mark's base class — the polyline AND the primary dot on the hover crosshair;"
     ],
-    "useFor": "cashflow / coffers visualisations that need both per-day detail (the axis ribbon) and the running-balance arc (the chart). No factory: every prop is data or sizing — there's nothing presentational to freeze.",
+    "useFor": "cashflow / coffers visualisations that need both per-day detail (the axis ribbon) and the running-balance arc (the chart).",
     "notes": null,
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.47.0",
@@ -1579,7 +1647,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 876
+    "line": 914
   },
   {
     "name": "ChipLabel",
@@ -1671,7 +1739,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 829
+    "line": 867
   },
   {
     "name": "ClipFillBox",
@@ -1694,7 +1762,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 735
+    "line": 773
   },
   {
     "name": "ClipFillColumn",
@@ -1719,7 +1787,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 709
+    "line": 747
   },
   {
     "name": "ClipFillColumnFlush",
@@ -1744,7 +1812,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 720
+    "line": 758
   },
   {
     "name": "ClusterRow",
@@ -1917,7 +1985,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 839
+    "line": 877
   },
   {
     "name": "CompactCard",
@@ -2170,7 +2238,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 422
+    "line": 460
   },
   {
     "name": "ContentStack",
@@ -2573,6 +2641,23 @@
     "line": 46
   },
   {
+    "name": "createBuilderBoard",
+    "depth": 2,
+    "kind": "factory",
+    "family": "BuilderBoard",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/BuilderBoard/BuilderBoard.tsx",
+    "line": 145
+  },
+  {
     "name": "createButton",
     "depth": 1,
     "kind": "factory",
@@ -2605,6 +2690,23 @@
     "since": null,
     "file": "src/components/ButtonGroup/ButtonGroup.tsx",
     "line": 75
+  },
+  {
+    "name": "createCashflowScrubChart",
+    "depth": 3,
+    "kind": "factory",
+    "family": "CashflowScrubChart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/cashflow-scrub-chart",
+    "since": "Unreleased",
+    "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
+    "line": 960
   },
   {
     "name": "createCell",
@@ -4995,7 +5097,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 457
+    "line": 495
   },
   {
     "name": "DenseStatusNote",
@@ -5880,7 +5982,7 @@
     "useFor": null,
     "notes": "FillCardSurface — a card that FILLS the cell it is given and lays its children out as a column that fills it too. A bare `Surface` is a plain block div with no height, so in a sized flex cell it shrinks to its content and a chart inside it has no height to take. This variant sets `height:100%` and `direction:\"column\"`, which gives the inner Stack `fill` — so a title keeps its intrinsic height and a `GrowBox` around the chart takes everything left. The chain a full-height chart card needs, in one variant rather than three wrappers at the call site. */",
     "showcase": "#/surface",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Surface/variants.ts",
     "line": 20
   },
@@ -5907,7 +6009,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 486
+    "line": 524
   },
   {
     "name": "FillColumnFlush",
@@ -5932,7 +6034,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 496
+    "line": 534
   },
   {
     "name": "FillPaneRailGrid",
@@ -6007,7 +6109,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 785
+    "line": 823
   },
   {
     "name": "FillWrapRow",
@@ -6036,7 +6138,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 763
+    "line": 801
   },
   {
     "name": "FilterableTable",
@@ -6115,7 +6217,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 557
+    "line": 595
   },
   {
     "name": "FlatThreadGroup",
@@ -6594,7 +6696,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 798
+    "line": 836
   },
   {
     "name": "GrowCenterRow",
@@ -6620,7 +6722,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 806
+    "line": 844
   },
   {
     "name": "GrowClusterRow",
@@ -6671,7 +6773,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 622
+    "line": 660
   },
   {
     "name": "GrowFillBox",
@@ -6694,7 +6796,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 530
+    "line": 568
   },
   {
     "name": "GrowStack",
@@ -6719,7 +6821,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 646
+    "line": 684
   },
   {
     "name": "GrowTightStack",
@@ -6744,7 +6846,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 658
+    "line": 696
   },
   {
     "name": "GrowWrapRow",
@@ -6770,7 +6872,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 743
+    "line": 781
   },
   {
     "name": "HalfFillColumn",
@@ -6795,9 +6897,9 @@
     "useFor": "two stacked charts that must get the same room whatever they contain.",
     "notes": "HalfFillColumn — an EQUAL share of a proportional split (`flex:1 1 0; min-height:0`). Two of them halve their parent, three of them third it. The `0` basis is the load-bearing part and the reason this is not `ClipFillColumn`: a basis of `auto` measures each child's CONTENT first, so a tall chart beside a short one takes the lion's share and \"equal halves\" silently becomes \"proportional to content\". A zero basis divides the space before content is consulted. For two stacked charts that must get the same room whatever they contain. */",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Layout/variants.ts",
-    "line": 574
+    "line": 612
   },
   {
     "name": "HeartbeatSparkline",
@@ -7114,7 +7216,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 300
+    "line": 301
   },
   {
     "name": "HUDTabs",
@@ -7462,7 +7564,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 844
+    "line": 882
   },
   {
     "name": "InlineChartErrorOverlay",
@@ -8102,7 +8204,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 860
+    "line": 898
   },
   {
     "name": "LooseWrapRow",
@@ -8151,7 +8253,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 593
+    "line": 631
   },
   {
     "name": "ManagedListSection",
@@ -8836,7 +8938,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 631
+    "line": 669
   },
   {
     "name": "NoShrinkScrollBox",
@@ -8859,7 +8961,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 602
+    "line": 640
   },
   {
     "name": "NoteCard",
@@ -9194,7 +9296,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 474
+    "line": 512
   },
   {
     "name": "Page",
@@ -9234,7 +9336,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 442
+    "line": 480
   },
   {
     "name": "PageStack",
@@ -9329,7 +9431,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 609
+    "line": 647
   },
   {
     "name": "ParticipantNameLabel",
@@ -10252,7 +10354,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 684
+    "line": 722
   },
   {
     "name": "ScrollFillBox",
@@ -10300,7 +10402,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 699
+    "line": 737
   },
   {
     "name": "ScrollList",
@@ -10348,7 +10450,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 429
+    "line": 467
   },
   {
     "name": "ScrollRegion",
@@ -11764,6 +11866,29 @@
     "line": 18
   },
   {
+    "name": "StillCashflowScrubChart",
+    "depth": 3,
+    "kind": "variant",
+    "family": "CashflowScrubChart",
+    "variantOf": {
+      "factory": "createCashflowScrubChart",
+      "overrides": "{ yFitTransition: false, expandTransition: false }"
+    },
+    "overrides": [
+      "yFitTransition",
+      "expandTransition"
+    ],
+    "dataProps": "CashflowScrubChartDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "StillCashflowScrubChart — the chart that draws its FINAL FRAME AT ONCE, on mount and on every data change (`yFitTransition: false`, `expandTransition: false`). The default chart eases its fitted y-axis toward each new domain over 240ms, which a reader who PANS wants: the domain moves on every frame and an axis that snapped would flicker. A reader who switches between TABS does not: the chart mounts on one series, the page's fold lands a frame later, and the axis glides between the two while the line redraws under it — so whether anything actually changed is hidden inside the motion (Peter, 2026-09-22: \"distracting, and makes it harder to determine if anything has changed when I change tabs\"). The variant is the additive answer: `CashflowScrubChart` keeps its ease for the panning pages, and a page whose question is \"what changed?\" takes this one. */",
+    "showcase": "#/cashflow-scrub-chart",
+    "since": "Unreleased",
+    "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
+    "line": 982
+  },
+  {
     "name": "StretchRow",
     "depth": 0,
     "kind": "variant",
@@ -12614,7 +12739,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 816
+    "line": 854
   },
   {
     "name": "TightSpreadRow",
@@ -12985,6 +13110,29 @@
     "line": 342
   },
   {
+    "name": "TopRightOverlayBox",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createBox",
+      "overrides": "{\n  style: { position: \"absolute\", top: \"4px\", right: \"4px\", \"z-index\": \"2\" },\n}"
+    },
+    "overrides": [
+      "grow",
+      "shrink"
+    ],
+    "dataProps": "BoxDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "TopRightOverlayBox — an affordance pinned to the top-right corner of its `AnchorBox` (`position: absolute; top: 4px; right: 4px; z-index: 2`). The corner the board kit and `ScrubChart`'s own `topAction` use for a chart's one page-level control, inset by the `xs` step so it clears the frame's border. `z-index: 2` puts it over an svg that is itself stacked (`isolation: isolate`) rather than under it. */",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 456
+  },
+  {
     "name": "TopSpreadRow",
     "depth": 0,
     "kind": "variant",
@@ -13274,7 +13422,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 513
+    "line": 551
   },
   {
     "name": "ViolationBadge",
@@ -13636,7 +13784,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 868
+    "line": 906
   },
   {
     "name": "withCellStyle",
@@ -13729,7 +13877,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 677
+    "line": 715
   },
   {
     "name": "WrappedClusterRow",
