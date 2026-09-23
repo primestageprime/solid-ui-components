@@ -317,6 +317,7 @@ export * from "./hooks";
 
 // GhostRow — de-emphasized clickable rows (rail children, link rows)
 export * from "./components/GhostRow";
+export * from "./components/ChannelChart";
 
 // Choreography — compose + sequence animation effects across components
 // (collapse/expand/fadeIn/fadeOut/slideDown/rollUp/glowIn/settleIn, step/

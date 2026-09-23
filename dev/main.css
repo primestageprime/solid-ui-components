@@ -2916,3 +2916,14 @@ th:has(.tf-th-center) .hud-table__header-content {
   font-size: 15px;
   fill: var(--sui-text-secondary);
 }
+
+/* ChannelChart fills its box, so the demo gives it one. */
+.channel-chart-demo {
+  display: flex;
+  flex-direction: column;
+  height: 420px;
+  max-width: 640px;
+}
+.channel-chart-demo--short {
+  height: 240px;
+}

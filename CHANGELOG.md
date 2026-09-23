@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Added
+
+- **`ChannelChart` / `ChannelDivergenceChart` — a channel with a running
+  value inside it.** A Composite (Depth 2, no CSS): a band `lo..hi` per
+  period drawn with `AreaSeries lower`, the running value as a line with a
+  toned marker per period and end labels; the divergence variant stacks a
+  diverging-bar plot (per-period distance outside the band, labelled, zero as
+  a flat tick) under it on ONE period axis with ONE margin. Everything it
+  draws comes from the pure `channelModel` in `channelGeometry.ts`, whose
+  `formatChannelTable` prints `i | key | lo | hi | value | outside | diff |
+  tone` — the headless observation, kept internal. Factory `createChannelChart`.
+
+- **`AreaSeries` `lower` — fill between two lines.** Additive: set `lower`
+  and the area runs between `y` and `lower` (a band / channel) instead of
+  down to `baseline`, one closed subpath per contiguous run; a NaN on either
+  edge breaks the band. Omitted, the path is byte-identical to before (pinned
+  in `Series.test.tsx` against strings captured before the change). Pure core
+  `buildBandPath` in `Chart/areaBand.ts`, tested on fixtures.
+
 ## 0.179.0 — 2026-09-23
 
 ### Added

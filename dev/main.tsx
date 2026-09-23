@@ -185,6 +185,9 @@ import { RouterDemoShowcase } from "./showcases/router-demo";
 import { SwimlaneNodeCardShowcase } from "./showcases/swimlane-node-card";
 import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 
+// Generated components (npm run new:component) — appended below, do not reorder.
+import { ChannelChartShowcase } from "./showcases/channel-chart";
+
 type ShowcaseProps = {
   onNavigate?: (id: string, pushHash?: boolean) => void;
 };
@@ -1127,6 +1130,13 @@ const items: Item[] = [
     label: "DAG Traversal · Bulk (sandbox)",
     component: DagTraversalBulkSandboxShowcase,
     tags: [],
+  },
+  // Generated component entries (npm run new:component) — appended above this line.
+  {
+    id: "channel-chart",
+    label: "ChannelChart",
+    component: ChannelChartShowcase,
+    tags: ["depth:2", "chart", "data"],
   },
 ];
 

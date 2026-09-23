@@ -508,7 +508,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 123
+    "line": 132
   },
   {
     "name": "AssigneeIcon",
@@ -651,7 +651,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 322
+    "line": 344
   },
   {
     "name": "BaselineClusterRow",
@@ -1387,6 +1387,64 @@
     "since": "v0.9.0",
     "file": "src/components/ChangeRenderer/ChangeRenderer.tsx",
     "line": 59
+  },
+  {
+    "name": "ChannelChart",
+    "depth": 2,
+    "kind": "variant",
+    "family": "ChannelChart",
+    "variantOf": {
+      "factory": "createChannelChart",
+      "overrides": "{\n\t\tshowDivergence: false,\n\t\tdivergenceShare: 0.45,\n\t\tlabelBars: false,\n\t\tlabelEnds: true,\n\t\tmarkerRadius: 4,\n\t\ttones: DEFAULT_CHANNEL_CHART_TONES,\n\t}"
+    },
+    "overrides": [
+      "showDivergence",
+      "divergenceShare",
+      "labelBars",
+      "labelEnds",
+      "markerRadius",
+      "tones"
+    ],
+    "dataProps": "ChannelChartDataProps",
+    "summary": "Composite (Depth 2).",
+    "notToBeConfusedWith": [
+      "Not `StackedTimelineChart`, which is a stacked composition from a floor.",
+      "Not `CashflowScrubChart`, which is a day ribbon plus a running balance.",
+      "Not `DeviationBand`, which is a sign-coloured difference between two lines."
+    ],
+    "useFor": "projection vs actual reconciliation, a budget envelope, a forecast cone with actuals.",
+    "notes": "The channel plot alone: band, running value, markers, end labels. */",
+    "showcase": "#/channel-chart",
+    "since": "Unreleased",
+    "file": "src/components/ChannelChart/variants.ts",
+    "line": 12
+  },
+  {
+    "name": "ChannelDivergenceChart",
+    "depth": 2,
+    "kind": "variant",
+    "family": "ChannelChart",
+    "variantOf": {
+      "factory": "createChannelChart",
+      "overrides": "{\n\t\tshowDivergence: true,\n\t\tdivergenceShare: 0.45,\n\t\tlabelBars: true,\n\t\tlabelEnds: true,\n\t\tmarkerRadius: 4,\n\t\ttones: DEFAULT_CHANNEL_CHART_TONES,\n\t}"
+    },
+    "overrides": [
+      "showDivergence",
+      "divergenceShare",
+      "labelBars",
+      "labelEnds",
+      "markerRadius",
+      "tones"
+    ],
+    "dataProps": "ChannelChartDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The channel plot above a diverging-bar plot that shares its period axis and its margin: each bar is the period's signed distance outside the band, labelled; a zero bar draws as a flat tick.",
+    "showcase": "#/channel-chart",
+    "since": "Unreleased",
+    "file": "src/components/ChannelChart/variants.ts",
+    "line": 27
   },
   {
     "name": "Chart",
@@ -2775,6 +2833,23 @@
     "since": null,
     "file": "src/components/Cell/Cell.tsx",
     "line": 90
+  },
+  {
+    "name": "createChannelChart",
+    "depth": 2,
+    "kind": "factory",
+    "family": "ChannelChart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/channel-chart",
+    "since": "Unreleased",
+    "file": "src/components/ChannelChart/ChannelChart.tsx",
+    "line": 439
   },
   {
     "name": "createChartCanvas",
@@ -8095,7 +8170,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 85
+    "line": 86
   },
   {
     "name": "Link",
@@ -9656,7 +9731,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 186
+    "line": 208
   },
   {
     "name": "PopoverMenu",
@@ -10035,7 +10110,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 540
+    "line": 562
   },
   {
     "name": "RemovableItemCard",

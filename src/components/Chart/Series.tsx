@@ -12,6 +12,7 @@ import {
 } from "solid-js";
 import { filter, map, sum } from "../../fn";
 import { useChart } from "./context";
+import { buildBandPath } from "./areaBand";
 import { buildReferenceLine } from "./referenceLine";
 import { slotId as brandSlotId } from "./slot-types";
 
@@ -117,6 +118,14 @@ export interface AreaSeriesProps<T> extends SeriesBase<T> {
 	fillOpacity?: number;
 	/** Y value for the baseline (in data domain). Default = bottom of yDomain. */
 	baseline?: number;
+	/**
+	 * The band's LOWER edge, per datum. Set, the fill runs between `y` and
+	 * `lower` (a band / channel) instead of down to `baseline`, and `baseline`
+	 * is ignored. A NaN on either edge breaks the band, the same rule a line
+	 * follows. Omitted, the area closes on `baseline` exactly as it always has.
+	 * Geometry: `buildBandPath` in `./areaBand`.
+	 */
+	lower?: (d: T) => number;
 	class?: string;
 }
 
@@ -125,6 +134,19 @@ export function AreaSeries<T>(props: AreaSeriesProps<T>) {
 	const d = createMemo(() => {
 		const xs = ctx.xScale();
 		const ys = ctx.yScale();
+		// A band (`lower` set) is its own path; the baseline path below is left
+		// untouched so an AreaSeries without `lower` is byte-identical.
+		const lower = props.lower;
+		if (lower)
+			return buildBandPath(
+				props.data,
+				props.x,
+				props.y,
+				lower,
+				xs,
+				ys,
+				props.skipMissing ?? true,
+			);
 		const baselineValue = props.baseline ?? ys.domain[0];
 		const baseY = ys(baselineValue);
 		const top = buildLine(

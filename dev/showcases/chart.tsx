@@ -49,6 +49,15 @@ const seedSeries = (n: number, seed = 1): Pt[] => {
 // month 5 and returns at month 9, so the collapse case is visible in the
 // gallery and not only in stackedArea.test.ts (whose printed table is this
 // same fixture).
+// A widening channel with one missing month (6), for the AreaSeries `lower`
+// demo: the band breaks there and the mid line breaks with it.
+const BAND = Array.from({ length: 12 }, (_, t) => {
+  const mid = 10 + t * 1.5;
+  const spread = 2 + t * 0.8;
+  const missing = t === 6 ? Number.NaN : 0;
+  return { t, mid: mid + missing, hi: mid + spread + missing, lo: mid - spread };
+});
+
 const STACK: readonly StackedAreaSeriesData[] = [
   {
     id: "one",
@@ -444,6 +453,28 @@ export const ChartShowcase: Component = () => {
               strokeWidth={1.5}
               strokeDasharray="6 4"
             />
+          </Chart>
+
+          <h3 class="showcase-heading-gap">Band between two lines</h3>
+          <p class="text-meta">
+            <code>&lt;AreaSeries lower&gt;</code> — set <code>lower</code> and
+            the fill runs between <code>y</code> and <code>lower</code> instead
+            of down to the baseline: a channel, an envelope, a forecast cone.
+            A NaN on either edge breaks the band (month 6 here), the same rule
+            a line follows. Omit <code>lower</code> and the area is exactly what
+            it always was.
+          </p>
+          <Chart width={640} height={200} xDomain={[0, 11]} yDomain={[0, 40]}>
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <AreaSeries
+              data={BAND}
+              x={(d) => d.t}
+              y={(d) => d.hi}
+              lower={(d) => d.lo}
+            />
+            <LineSeries data={BAND} x={(d) => d.t} y={(d) => d.mid} />
           </Chart>
 
           <h3 class="showcase-heading-gap">
