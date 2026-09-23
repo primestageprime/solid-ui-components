@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.179.0 — 2026-09-23
+
 ### Added
 
 - **`BuilderBoard` — the ONE frame a scenario builder draws its four panels
