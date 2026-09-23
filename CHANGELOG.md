@@ -12,7 +12,7 @@
   a flat tick) under it on ONE period axis with ONE margin. Everything it
   draws comes from the pure `channelModel` in `channelGeometry.ts`, whose
   `formatChannelTable` prints `i | key | lo | hi | value | outside | diff |
-  tone` — the headless observation, exported. Factory `createChannelChart`.
+  tone` — the headless observation, kept internal. Factory `createChannelChart`.
 
 - **`AreaSeries` `lower` — fill between two lines.** Additive: set `lower`
   and the area runs between `y` and `lower` (a band / channel) instead of

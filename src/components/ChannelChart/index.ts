@@ -15,7 +15,9 @@ export type {
 	ChannelChartProps,
 	ChannelChartTones,
 } from "./ChannelChart";
-export { channelModel, formatChannelTable } from "./channelGeometry";
+// The geometry core (`channelModel`, `formatChannelTable`) stays internal, as
+// `buildStackedArea` does: a consumer composes the chart, not the geometry.
+// Only the types a caller needs to state its own data cross the barrel.
 export type {
 	ChannelBar,
 	ChannelBarTone,

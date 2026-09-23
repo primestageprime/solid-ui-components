@@ -11,9 +11,14 @@ describe("the package root", () => {
 		"createChannelChart",
 		"DEFAULT_CHANNEL_CHART_TONES",
 		"CHANNEL_CHART_FALLBACK_SIZE",
-		"channelModel",
-		"formatChannelTable",
 	])("exports %s", (name) => {
 		expect((sui as Record<string, unknown>)[name]).toBeDefined();
 	});
+
+	it.each(["channelModel", "formatChannelTable"])(
+		"keeps the geometry core %s internal",
+		(name) => {
+			expect((sui as Record<string, unknown>)[name]).toBeUndefined();
+		},
+	);
 });
