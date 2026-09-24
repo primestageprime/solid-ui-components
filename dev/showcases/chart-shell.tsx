@@ -35,7 +35,7 @@ const LiveToggleExample: Component = () => {
   const [timeline, setTimeline] = createSignal(false);
   const [selected, setSelected] = createSignal(20);
   return (
-    <div class="example-group">
+    <div class="example-group" data-shell-example="live-toggle">
       <h3>One instance, scrub layer toggled live</h3>
       <p class="text-meta">
         <code>scrub</code>, <code>cellWidth</code>, <code>selected</code> and{" "}
@@ -70,7 +70,7 @@ const LiveToggleExample: Component = () => {
 const YAxisModeExample: Component = () => {
   const [mode, setMode] = createSignal<ScrubChartYAxisMode>("auto");
   return (
-    <div class="example-group">
+    <div class="example-group" data-shell-example="y-axis-mode">
       <h3>Y-axis mode switch (Auto | Fixed | Fit)</h3>
       <p class="text-meta">
         <code>yAxisMode</code> + <code>onYAxisModeChange</code> put a
@@ -93,6 +93,43 @@ const YAxisModeExample: Component = () => {
   );
 };
 
+/** A range cone around the balance: ±(4% of the day index) of spread, so it
+ *  widens into the future — its upper edge a series, its lower edge the fill
+ *  baseline, the way thorcasting draws its projection band. */
+const coneLo = (c: CashflowCell, i: number): number => c.balanceCents - i * 12_000;
+const coneHi = (c: CashflowCell, i: number): number => c.balanceCents + i * 12_000;
+
+/** Item 3 — Fixed mode holding a range narrower than the data: the line runs
+ *  off the top, the cone's lower edge off the bottom, and each clipped edge
+ *  gets ONE marker naming the value the reader cannot see. */
+const OutOfRangeExample: Component = () => (
+  <div class="example-group" data-shell-example="out-of-range">
+    <h3>Fixed range: out-of-range markers at both edges</h3>
+    <p class="text-meta">
+      A fixed <code>yMin</code>/<code>yMax</code> narrower than the data. The
+      peak past the top and the trough past the bottom each get a chevron and
+      their value — fed by the balance line, every series, and the cone's
+      lower edge (its fill baseline).
+    </p>
+    <StillCashflowScrubChart
+      cells={shellCells}
+      chartHeight={220}
+      scrub={false}
+      showGridlines
+      yAxisMode="fixed"
+      yMin={-200_000}
+      yMax={1_000_000}
+      balanceSeries={[
+        {
+          id: "cone",
+          balanceCents: coneHi,
+          fill: { baseline: coneLo },
+        },
+      ]}
+    />
+  </div>
+);
+
 export const ChartShellShowcase: Component = () => (
   <div class="component-section component-section--full">
     <h2>Chart shell primitives</h2>
@@ -101,5 +138,6 @@ export const ChartShellShowcase: Component = () => (
     </p>
     <LiveToggleExample />
     <YAxisModeExample />
+    <OutOfRangeExample />
   </div>
 );

@@ -48,6 +48,7 @@ import {
   markerJoinsLadder,
 } from "./labelCandidates";
 import { RuleMarker } from "./ruleMarker";
+import { type RangePoint, edgeLabelX, outOfRange } from "./outOfRange";
 import {
   barFraction,
   buildLineSegments,
@@ -409,47 +410,41 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       ? yToPlot(selectedLineCell.balanceCents)
       : 0;
 
-    // ── Over-top indicator ───────────────────────────────────────────────
-    // The y-axis scales to the LINES (consumer passes a line-based `yMax`); the
-    // range cone is allowed to overflow the top, clipped to the plot rect. When
-    // any series point exceeds the top of the plot (maps ABOVE plotTop in px),
-    // mark the GLOBAL peak with an upward chevron + the compact-formatted value
-    // at the top edge, so the unshown high point is legible. One marker at the
-    // peak suffices. A 0.5px epsilon avoids flagging values pinned exactly at
-    // the (nice-rounded) domain top.
-    const OVERTOP_EPS_PX = 0.5;
-    const overtopPeak = (() => {
-      let best: { x: number; value: number } | null = null;
-      // Mutable running-best accumulation across two nested loops (per-cell
-      // candidates, then per-candidate comparison) — a for-of loop, not
-      // forEach (no fn.forEach exists; a functional combinator would only
-      // add noise here, same call made for the min/max loop in extentOf).
-      for (const [i, cell] of ctx.cells.entries()) {
-        const candidates: number[] = line[i] ? [line[i].balanceCents] : [];
-        for (const s of props.balanceSeries ?? []) {
-          const v = s.balanceCents(cell, i);
-          if (v != null) candidates.push(v);
-        }
-        for (const v of candidates) {
-          // Above the plot top in screen space → exceeds the visible domain.
-          if (yToPlot(v) < ctx.plotTop - OVERTOP_EPS_PX) {
-            if (!best || v > best.value) best = { x: ctx.cellToX(i), value: v };
-          }
-        }
+    // ── Out-of-range markers ────────────────────────────────────────────
+    // A domain that does not cover the data clips it at the plot edge: a
+    // FIXED y range, or a line-based domain under a wider range cone. Each
+    // clipped edge gets ONE marker — the global peak above the top, the global
+    // trough below the bottom — with a chevron and the compact value. The
+    // candidates are every drawn value: the primary line, every series, and
+    // every fill BASELINE (a cone's lower edge). The decision is the pure
+    // `outOfRange` (outOfRange.ts), which also prints it as a table.
+    const rangePoints: RangePoint[] = [];
+    for (const [i, cell] of ctx.cells.entries()) {
+      const x = ctx.cellToX(i);
+      const push = (v: number | null | undefined) => {
+        if (v != null) rangePoints.push({ x, y: yToPlot(v), value: v });
+      };
+      push(line[i]?.balanceCents);
+      for (const s of props.balanceSeries ?? []) {
+        push(s.balanceCents(cell, i));
+        if (s.fill?.baseline) push(s.fill.baseline(cell, i));
       }
-      return best as { x: number; value: number } | null;
-    })();
+    }
+    const edges = outOfRange(rangePoints, ctx.plotTop, ctx.plotBottom);
+    const overtopPeak = edges.top;
+    const underTrough = edges.bottom;
 
-    // Keep the chevron + label clamped inside the plot's horizontal span so the
-    // label never clips off the left/right edges. The marker is drawn OUTSIDE
-    // the clip group (after it), at the very top edge of the plot.
+    // The chevrons sit at the extreme's x; the labels are held inside the
+    // plot's horizontal span so a value never clips off the left/right edge.
+    // Both are drawn OUTSIDE the clip group (after it), at the plot edge.
     const overtopLabelX =
       overtopPeak == null
         ? 0
-        : Math.min(
-            Math.max(overtopPeak.x, ctx.plotLeft + 28),
-            ctx.plotRight - 28,
-          );
+        : edgeLabelX(overtopPeak.x, ctx.plotLeft, ctx.plotRight);
+    const underLabelX =
+      underTrough == null
+        ? 0
+        : edgeLabelX(underTrough.x, ctx.plotLeft, ctx.plotRight);
 
     return (
       <svg
@@ -542,6 +537,25 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
               text-anchor="middle"
             >
               {fmtAxisDollars(overtopPeak.value)}
+            </text>
+          </g>
+        )}
+        {/* Under-bottom indicator — the over-top marker mirrored: a
+            downward chevron at the plot bottom and the trough's value above
+            it. Same classes plus a modifier, so a theme restyles both. */}
+        {underTrough && (
+          <g class="sui-cashflow-scrub-chart__overtop sui-cashflow-scrub-chart__overtop--bottom">
+            <path
+              class="sui-cashflow-scrub-chart__overtop-chevron"
+              d={`M ${underTrough.x} ${ctx.plotBottom - 1} l 4 -5 l -8 0 Z`}
+            />
+            <text
+              class="sui-cashflow-scrub-chart__overtop-label"
+              x={underLabelX}
+              y={ctx.plotBottom - 9}
+              text-anchor="middle"
+            >
+              {fmtAxisDollars(underTrough.value)}
             </text>
           </g>
         )}
