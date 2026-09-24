@@ -28,6 +28,24 @@ The deprecated `HUDSection`, `HUDPanel`, and `HUDList` aliases re-exported base 
 
 (`HUDModal`, `HUDTabs`, `HUDButtonGroup` already resolve to curried variants; `HUDPage`, `HUDListItem`, `createHUDPanel` are unchanged.)
 
+## Unstable exports
+
+`import { … } from "@primestageprime/solid-ui-components/unstable"` is a separate entry for names that sit **outside this package's semver guarantee**. Anything exported from `/unstable`:
+
+- may change shape, or be removed outright, in **any** release — including a patch, with no deprecation window
+- is not documented as a stable API below; a mention of it here just points here
+- is intended for the rare consumer who needs an internal piece — a pure geometry/formatting core, typically — that the curried-only policy above deliberately keeps out of the root barrel
+
+**If you depend on `/unstable`, pin an exact version** (no `^`/`~`) and re-check on every SUI bump. There is no migration guide for a breaking `/unstable` change; the changelog entry, if there is one, is the only notice.
+
+**For maintainers:** the root barrel (`src/index.ts`) never re-exports from `/unstable`, and `/unstable` never imports back from the root. Promoting a name out of `/unstable` to the stable surface is additive — add the root export in its own change once the shape has proven itself; do not delete it from `/unstable` at the same time. See AGENT_GUIDE.md § "Unstable exports" for the contributor-side rule.
+
+Current contents:
+
+| Export | From | Why it's here instead of the root |
+|---|---|---|
+| `channelModel`, `formatChannelTable` (+ their types) | `ChannelChart`'s geometry core | Kept internal by design (PR #194) — a consumer composes the chart, not the geometry. `/unstable` is for the consumer that genuinely needs the geometry itself. |
+
 ## Theming
 
 Components use `--sui-*` CSS custom properties for all colors, spacing, and visual tokens. The library ships two built-in themes:

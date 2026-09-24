@@ -81,7 +81,7 @@ jobs:
       # in sync.
       - name: Verify build output before packing
         run: |
-          for f in dist/index.js dist/server/index.js dist/index.d.ts dist/index.css; do
+          for f in dist/index.js dist/server/index.js dist/index.d.ts dist/index.css dist/unstable.js dist/unstable.d.ts; do
             if [ ! -s "$f" ]; then
               echo "::error::$f is missing or empty — refusing to publish."
               echo "The Build step is what creates it; installs here use --ignore-scripts."

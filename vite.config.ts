@@ -227,10 +227,46 @@ export default defineConfig(({ command, mode }) => {
             // components are wrapped, which is correct.
             minify: false,
             lib: {
-              entry: resolve(__dirname, "src/index.ts"),
+              // Two entries, still ONE flat per-module output tree
+              // (preserveModules below): `src/unstable.ts` re-exports from
+              // `channelGeometry.ts`, which `src/index.ts` also pulls in (via
+              // ChannelChart). With preserveModules on, Rollup keeps that
+              // shared module as its own single chunk referenced by both
+              // entry graphs — it is NOT hoisted into a synthetic shared
+              // chunk, so dist/index.js's byte content is unchanged by
+              // adding a second entry (diffed before/after this change).
+              entry: {
+                index: resolve(__dirname, "src/index.ts"),
+                unstable: resolve(__dirname, "src/unstable.ts"),
+              },
               name: "SolidUIComponents",
               formats: ["es"],
-              fileName: "index",
+              // With a single string entry, `fileName: "index"` named EVERY
+              // preserved-module chunk "index", and Rollup deduped the ~800
+              // collisions to index2.js…index694.js — that's why dist/ ships
+              // flat (components/X/X.d.ts exists from vite-plugin-dts, but
+              // there is no components/X/X.js; the JS lives at dist/indexN.js).
+              // A function form is required for two named entries, but it
+              // must reproduce the SAME base name for every chunk that isn't
+              // the unstable entry, or every one of those ~800 files renames
+              // itself to its module path — a breaking layout change, and it
+              // leaks the symlinked node_modules realpath into dist (measured:
+              // dist/solid-ui-components/node_modules/d3-color/... appeared).
+              // Verified: with this fileName, dist/index.js is byte-identical
+              // to a single-entry build, and the file listing gains exactly
+              // two files (unstable.js, unstable.d.ts) — nothing renamed.
+              fileName: (_format, entryName) =>
+                entryName === "unstable" ? "unstable.js" : "index.js",
+              // With a single `lib.entry` string, Vite named the one emitted
+              // stylesheet after it (index.css) by inference. Two named
+              // entries removed that inference and it fell back to `lib.name`
+              // (dist/solid-ui-components.css) — silently breaking the
+              // "./index.css" / "./styles.css" export targets and the
+              // katex-asset plugins below, which all hardcode dist/index.css.
+              // `cssFileName` is the first-class knob for this (vs an
+              // `output.assetFileNames` override, which would also rename
+              // every OTHER emitted asset unless carefully scoped).
+              cssFileName: "index",
             },
             rollupOptions: {
               external: CLIENT_ROLLUP_EXTERNALS,

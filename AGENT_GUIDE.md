@@ -910,6 +910,28 @@ anything, so tests that fired the observer and asserted immediately were
 reading that first measure — the fire was decorative. Before assuming a
 `resize()` call is load-bearing, delete it and watch what fails.
 
+## Unstable exports — `/unstable` is outside semver
+
+`@primestageprime/solid-ui-components/unstable` is a separate published entry
+for names that are deliberately **not** part of this package's semver
+guarantee: they may change shape or disappear in ANY release, including a
+patch. See COMPONENTS.md § "Unstable exports" for the full policy.
+
+For an agent working here, the load-bearing rule is: **the root barrel
+(`src/index.ts`) must never re-export from `src/unstable.ts`, and
+`src/unstable.ts` must never import back from `./index`.** Promoting a name
+out of `/unstable` to the stable root is an ADD — re-export it from the root
+barrel too, in its own PR, once it has proven itself — never a move that
+deletes it from `/unstable` in the same change. Deleting or changing something
+under `/unstable` needs no deprecation cycle; that is the point of the
+subpath.
+
+If you are adding a genuinely internal-but-reusable piece (a pure geometry
+core, a formatting helper) that a consumer might reasonably want but that the
+curried-only policy above says should not be a component export, `/unstable`
+is where it goes — not a new root export, and not a consumer copy-pasting the
+internals.
+
 ## Summary
 
 | Situation | Action |

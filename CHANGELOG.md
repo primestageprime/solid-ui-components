@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- **`/unstable` — a subpath entry outside semver.**
+  `import { … } from "@primestageprime/solid-ui-components/unstable"` for
+  exports that may change or disappear in any release, including a patch, with
+  no deprecation window. First contents: `channelModel` and
+  `formatChannelTable` (+ their types), ChannelChart's pure geometry core,
+  kept off the root barrel by design (0.180.0) but reachable here for a
+  consumer that genuinely needs the geometry itself. Pin an exact version if
+  you depend on it. See COMPONENTS.md / AGENT_GUIDE.md § "Unstable exports".
+
 ## 0.180.0 — 2026-09-24
 
 ### Added
