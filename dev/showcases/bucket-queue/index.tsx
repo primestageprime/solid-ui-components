@@ -4,6 +4,7 @@ import { BucketQueueDemo, renderRow, renderCard } from "./triage";
 import { PipelineDemo } from "./pipeline";
 import { FillDemo } from "./fill";
 import { DiscardStagingDemo } from "./discard";
+import { HeaderActionDemo } from "./headerAction";
 
 export const BucketQueueShowcase: Component = () => {
   return (
@@ -196,6 +197,22 @@ export const BucketQueueShowcase: Component = () => {
         collapsed with no way to open it.
       </p>
       <DiscardStagingDemo />
+
+      <SubsectionTitle>
+        headerAction — a bucket-scoped action beside the count
+      </SubsectionTitle>
+      <p class="text-meta">
+        <code>Bucket.headerAction</code> renders an element next to the
+        count, as a DOM sibling of the collapse-toggle button — never nested
+        inside it, so clicking it can never also toggle the disclosure.{" "}
+        <strong>Discard</strong> below carries both: it is{" "}
+        <code>collapsible</code> and starts pre-populated with a couple of
+        entries, and declares a &ldquo;Dismiss all&rdquo; action. Open the
+        pile with its chevron to see the two rows, then click{" "}
+        <strong>Dismiss all</strong> in its header — the pile empties without
+        the click also toggling the disclosure it sits inside of.
+      </p>
+      <HeaderActionDemo />
     </div>
   );
 };

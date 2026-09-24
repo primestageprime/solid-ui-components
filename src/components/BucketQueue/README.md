@@ -96,6 +96,7 @@ function Categorize(props: { initial: Txn[] }) {
 | `fill?` | `boolean` | Absorb the leftover height instead of shrink-wrapping to content, so the queue reaches the bottom of its column at any list length. Overrides `capRows` for this bucket; only applies while the bucket is populated. Default false. |
 | `collapsible?` | `boolean` | The user can collapse this bucket to its summary line and expand it again. Its header becomes a button and takes a chevron in place of its tone dot. Only applies while the bucket is populated. Default false. |
 | `collapsedByDefault?` | `boolean` | Start collapsed. **Ignored without `collapsible`.** Only the state before the user first toggles the bucket. Default false. |
+| `headerAction?` | `JSX.Element` | An action rendered beside the count, as a DOM sibling of the collapse-toggle button — never nested inside it, so clicking it never also toggles collapse. Keep it compact (e.g. `GlyphSlotGhostButton`): it shares the header's own line box, which is what bucket 0's header measures for every bucket's water-fill height. |
 
 ## Working a queue
 
