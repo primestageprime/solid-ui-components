@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.184.0 — 2026-09-24
+
 ### Added
 
 - **`IntervalInput`** — an "Every [#] [unit]" cadence control composing `ThemedNumberInput` + `Select` in one row. `value`/`onChange` carry a plain `{ every, unit }` object; unit labels pluralise from the current `every` by default, a caller-supplied `units` array's labels are used verbatim, `min` clamps `every` to an integer floor (default `1`). Pure helpers `clampEvery`/`unitLabel`/`defaultIntervalUnits` exported for direct unit testing.
