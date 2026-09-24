@@ -147,47 +147,65 @@ const FixedRangeExample: Component = () => {
 
 /** Item 6 — a builder page under the shell chart. The frame stands in for
  *  the window below the tab bar (tabBarH 0 here); the chart height asked for
- *  is thorcasting's Q7 policy (30% of the space, min 220, no max) and the
- *  pure core decides whether it must give way for B. */
-const BELOW_FRAME = { width: 1100, height: 640 };
-const LEGEND_H = 0;
-const belowInput = {
-  viewport: BELOW_FRAME,
+ *  is thorcasting's Q7 share (30% of the space). The pure core picks SPLIT
+ *  when the top half holds the chart's floor (220) + B's floor (156) and the
+ *  window is at least 900 wide; otherwise STACKED, and the page scrolls. */
+const belowInputFor = (width: number, height: number) => ({
+  viewport: { width, height },
   tabBarH: 0,
-  chartH: Math.max(220, 0.3 * BELOW_FRAME.height),
-  legendH: LEGEND_H,
-};
+  chartH: 0.3 * height,
+  legendH: 0,
+});
+const SPLIT_FRAME = belowInputFor(1100, 900);
+const STACKED_FRAME = belowInputFor(1100, 640);
 
-const BelowChartExample: Component = () => {
-  const rects = builderBoardBelowChart(belowInput);
+const BelowChartBoard: Component<{ input: ReturnType<typeof belowInputFor> }> = (
+  props,
+) => {
+  const rects = () => builderBoardBelowChart(props.input);
   return (
-    <div class="example-group" data-shell-example="below-chart">
-      <h3>BuilderBoardBelowChart — B and C|D under the shell chart</h3>
-      <p class="text-meta">
-        Panel A is the shell's chart, so the board draws B over C|D. C|D keeps
-        half the space below the tab bar; B takes the rest, and when that
-        would drop B under its floor the CHART gives way. The pure{" "}
-        <code>builderBoardBelowChart</code> sizes both; its observation:
-      </p>
-      <CodeBlock size="sm">{observeBuilderBoardBelowChart(belowInput)}</CodeBlock>
-      <div class="chart-shell-demo__frame">
+    <>
+      <CodeBlock size="sm">{observeBuilderBoardBelowChart(props.input)}</CodeBlock>
+      <div
+        class={
+          rects().layout === "split"
+            ? "chart-shell-demo__frame chart-shell-demo__frame--split"
+            : "chart-shell-demo__frame"
+        }
+      >
         <StillCashflowScrubChart
           cells={shellCells}
-          chartHeight={rects.chartH}
+          chartHeight={rects().chartH}
           scrub={false}
           showGridlines
           yAxisMode="auto"
         />
         <BuilderBoardBelowChart
-          lowerHeight={rects.lowerHeight}
+          rects={rects()}
           panelB={<MutedBody>B — the series being changed</MutedBody>}
           panelC={<MutedBody>C — the changes</MutedBody>}
           panelD={<MutedBody>D — rail</MutedBody>}
         />
       </div>
-    </div>
+    </>
   );
 };
+
+const BelowChartExample: Component = () => (
+  <div class="example-group" data-shell-example="below-chart">
+    <h3>BuilderBoardBelowChart — B and C|D under the shell chart</h3>
+    <p class="text-meta">
+      Panel A is the shell's chart, so the board draws B and C|D. Neither
+      floor is sacrificed: when the top half cannot hold the chart's 220 and
+      B's 156 (or the window is under 900 wide) the board STACKS and the page
+      scrolls. The pure <code>builderBoardBelowChart</code> decides; its
+      observation is printed above each board. A 1100×900 window (split):
+    </p>
+    <BelowChartBoard input={SPLIT_FRAME} />
+    <p class="text-meta">The same board in a 1100×640 window (stacked):</p>
+    <BelowChartBoard input={STACKED_FRAME} />
+  </div>
+);
 
 export const ChartShellShowcase: Component = () => (
   <div class="component-section component-section--full">

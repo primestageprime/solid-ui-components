@@ -8,7 +8,7 @@
 - **`ScrubChart` / `CashflowScrubChart`: `yAxisMode` + `onYAxisModeChange`** — Auto | Fixed | Fit switch in the origin corner, replacing the y-fit button when set (corner footprint guarantees kept; `Y_AXIS_MODE_COLUMN`).
 - **`ScrubChart` / `CashflowScrubChart`: `onYRangeChange`** — in Fixed mode the y-axis opens an inline Max/Min editor (`yRangeField="currency-cents"` shows dollars, emits cents).
 - **`CashflowScrubChart`: out-of-range markers at both edges** — the over-top chevron gains a bottom twin (Fixed mode only), fed by lines, series and the cone's fill baseline.
-- **`BuilderBoardBelowChart`** + pure `builderBoardBelowChart` / `observeBuilderBoardBelowChart` — the builder board under a shell chart (B over C|D; C|D half of the space below the tab bar; the chart gives way to keep B at its floor).
+- **`BuilderBoardBelowChart`** + pure `builderBoardBelowChart` / `observeBuilderBoardBelowChart` — the builder board under a shell chart: "split" (B over C|D, C|D half the space below the tab bar) when the top half holds a chart of at least 220 and a B of at least 156 and the window is at least 900 wide, else "stacked" (one scrolling column; `contentHeight` sizes the scroller). Neither floor is sacrificed.
 - **`SegmentedControl` `size="xs"`**, **`Icon` `expand`**.
 
 ## 0.179.0 — 2026-09-23

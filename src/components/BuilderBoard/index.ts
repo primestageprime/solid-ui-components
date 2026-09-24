@@ -30,11 +30,14 @@ export type {
 export {
   B_MIN_HEIGHT as BUILDER_BOARD_B_MIN_HEIGHT,
   CD_SHARE as BUILDER_BOARD_CD_SHARE,
+  CHART_MIN_HEIGHT as BUILDER_BOARD_CHART_MIN_HEIGHT,
+  STACK_BELOW_WIDTH as BUILDER_BOARD_STACK_BELOW_WIDTH,
   builderBoardBelowChart,
   observeBuilderBoardBelowChart,
 } from "./geometry";
 export type {
   BelowChartGaps as BuilderBoardBelowChartGaps,
   BelowChartInput as BuilderBoardBelowChartInput,
+  BelowChartLayout as BuilderBoardBelowChartLayout,
   BelowChartRects as BuilderBoardBelowChartRects,
 } from "./geometry";

@@ -26,7 +26,10 @@
 // Nothing here is typed in as a pixel a consumer could have chosen.
 // ============================================
 import { join, map } from "../../fn";
-import { NATURAL_GAUGE_WIDTH } from "../RateGauge/geometry";
+import {
+  NATURAL_GAUGE_WIDTH,
+  VIEW_HEIGHT as GAUGE_VIEW_HEIGHT,
+} from "../RateGauge/geometry";
 
 /** The Stack/Row/Grid gap steps, in px, as `Layout.css` states them.
  *  `builderBoard.test.ts` reads the stylesheet and asserts these agree with
@@ -139,47 +142,74 @@ export const builderBoardTable = (
 //
 // On a builder page inside the app shell, panel A (the cashflow) is the
 // SHELL's chart — one persistent instance above the page body — so the board
-// draws only B, C and D beneath it:
+// draws only B, C and D beneath it, in one of TWO layouts. Neither minimum is
+// ever sacrificed (Peter, 2026-09-23): when the window cannot hold both the
+// chart's floor and B's floor in the top half, the board STACKS and the page
+// scrolls, rather than shrinking either below its floor.
 //
-//   ┌───────────────────────────────────┐ ┐ tabBarH
-//   ├───────────────────────────────────┤ ┘
-//   │ A  shell chart (+ legend)         │   chartH (may give way) + legendH
-//   ├───────────────────────────────────┤   xs gutter
-//   │ B  the series being changed       │   the REMAINDER, never under B_MIN
-//   ├──────────────────────────┬────────┤   sm gutter
-//   │ C  changes               │ D rail │   CD_SHARE of the space below the
-//   └──────────────────────────┴────────┘   tab bar — the bottom half
+//   "split" — the viewport-filling board        "stacked" — one column
+//   ┌──────────────────────────────────┐         ┌──────────────────────┐
+//   ├──────────────────────────────────┤ tab bar ├──────────────────────┤
+//   │ A  shell chart (+ legend)        │         │ A  chart ≥ chartMin  │
+//   ├──────────────────────────────────┤ xs      ├──────────────────────┤
+//   │ B  the remainder, ≥ bMin         │         │ B  bMin              │
+//   ├─────────────────────────┬────────┤ sm      ├──────────────────────┤
+//   │ C  changes              │ D rail │         │ C  C_STACKED_HEIGHT  │
+//   └─────────────────────────┴────────┘         ├──────────────────────┤
+//     C|D = CD_SHARE of the space below          │ D  D_STACKED_HEIGHT  │
+//     the tab bar — the bottom half              └──────────────────────┘
+//                                                  page scrolls; the app
+//                                                  sizes it by contentHeight
 //
-// C|D keeps the bottom half of the space below the tab bar whatever the
-// chart does, so the controls sit in the same place on every builder. B takes
-// what the chart leaves of the top half. When the chart would leave B less
-// than `B_MIN_HEIGHT`, the CHART gives way (the shell renders it shorter) —
-// B is the series being edited and must stay legible; the chart is only its
-// context. The chart height policy itself (share of the window, its min) is
+// SPLIT when the window is at least `STACK_BELOW_WIDTH` wide AND the top half
+// holds chartMin + legend + the xs gutter + bMin (the top half is the space
+// below the tab bar less C|D and the sm gutter above it — the gutters are
+// real pixels, so the test counts them). Otherwise STACKED. In split mode the
+// chart takes what the app asks (`chartH`) unless that would push B under
+// `bMin`; then it gives way, but never below `chartMin` — the split test above
+// guarantees it never has to. In stacked mode the chart is the larger of
+// `chartH` and `chartMin`. The chart height POLICY (share of the window) is
 // the APP's, and arrives here as `chartH`.
 
-/** The share of the space below the tab bar that C|D takes. */
+/** The share of the space below the tab bar that C|D takes (split). */
 export const CD_SHARE = 0.5;
 
-/**
- * B's floor, in px: the smallest card that still shows a series. A card title
- * row (~28px: one `sm` button row) + a `sm` gap + a 120px plot — the height at
- * which ScrubChart's corner footprint (28px) and a three-tick y axis still
- * leave a readable line. Below it the chart above gives way instead.
- */
-export const B_MIN_HEIGHT = 28 + GAP_PX.sm + 120;
+/** A card's title row, in px: one `sm` button row. */
+const CARD_TITLE_ROW = 28;
 
-/** The gutters the below-chart board stacks with. Defaults are the frame's
- *  own tokens: `xs` between the chart block and B (they read as a pair, like
- *  A over B on the full board), `sm` between B and the bottom half. */
+/**
+ * B's default floor, in px: the smallest card that still shows a series. A
+ * card title row + a `sm` gap + a 120px plot — the height at which
+ * ScrubChart's corner footprint (28px) and a three-tick y axis still leave a
+ * readable line.
+ */
+export const B_MIN_HEIGHT = CARD_TITLE_ROW + GAP_PX.sm + 120;
+
+/** The chart's default floor, in px (thorcasting Q7: min 220, no max). */
+export const CHART_MIN_HEIGHT = 220;
+
+/** Narrower than this, the board stacks whatever the height: C beside a
+ *  292px rail leaves C under ~600px, too narrow for its controls. */
+export const STACK_BELOW_WIDTH = 900;
+
+/** C's height when stacked: a title row + `sm` gap + five 40px control rows.
+ *  C scrolls inside its card past that, as it does in split mode. */
+export const C_STACKED_HEIGHT = CARD_TITLE_ROW + GAP_PX.sm + 5 * 40;
+
+/** D's height when stacked: a title row + `sm` gap + the gauge's own natural
+ *  height (RateGauge's viewBox, cut to its content). */
+export const D_STACKED_HEIGHT =
+  CARD_TITLE_ROW + GAP_PX.sm + Math.ceil(GAUGE_VIEW_HEIGHT);
+
+/** The gutter between the chart block and B. Default `xs`: the chart and B
+ *  read as a pair, like A over B on the full board. The B-to-C|D gutter is
+ *  NOT an input — `BuilderBoardBelowChart` bakes `sm` there. */
 export interface BelowChartGaps {
   readonly chartToB: number;
-  readonly bToCD: number;
 }
 
 export const DEFAULT_BELOW_CHART_GAPS: BelowChartGaps = {
   chartToB: PAIR_GUTTER,
-  bToCD: HALF_GUTTER,
 };
 
 export interface BelowChartInput {
@@ -187,88 +217,113 @@ export interface BelowChartInput {
   readonly viewport: Viewport;
   /** Height of the app's top bar + tab strip above the chart, in px. */
   readonly tabBarH: number;
-  /** The chart height the app's policy asks for, in px. */
+  /** The chart height the app's policy asks for (its share), in px. */
   readonly chartH: number;
   /** Height of the chart's legend row, 0 without one, in px. */
   readonly legendH: number;
-  /** The chart-block-to-B gutter (the shell's, default `xs`). The B-to-C|D
-   *  gutter is NOT an input: `BuilderBoardBelowChart` bakes `sm` there, and
-   *  a model that let a caller move it would disagree with the drawn board. */
-  readonly gaps?: Partial<Pick<BelowChartGaps, "chartToB">>;
+  /** The chart's floor. Default `CHART_MIN_HEIGHT` (220). */
+  readonly chartMin?: number;
+  /** B's floor. Default `B_MIN_HEIGHT` (156). */
+  readonly bMin?: number;
+  /** Gutters; defaults to `DEFAULT_BELOW_CHART_GAPS`. */
+  readonly gaps?: Partial<BelowChartGaps>;
   /** The rail's width token. Default `gauge`. */
   readonly rail?: RailWidth;
 }
 
+export type BelowChartLayout = "split" | "stacked";
+
 export interface BelowChartRects {
-  /** The chart height to render — `chartH`, or less where it gave way. */
+  /** Which board to draw. */
+  readonly layout: BelowChartLayout;
+  /** The chart height to render. */
   readonly chartH: number;
-  /** How many px the chart gave up to keep B at its floor (0 = none). */
+  /** Px the chart gave up (split only; never below chartMin). */
   readonly chartGaveWay: number;
   /** B, C and D in viewport coordinates (y from the window's top). */
   readonly b: Rect;
   readonly c: Rect;
   readonly d: Rect;
-  /** The C|D row's height — what `BuilderBoardBelowChart` takes. */
+  /** Split: the C|D row's height. Stacked: C + gutter + D. */
   readonly lowerHeight: number;
+  /** Height of everything below the tab bar — chart, legend, B, C, D and
+   *  their gutters. Split: the space below the tab bar exactly. Stacked:
+   *  what the app's scroller must hold. */
+  readonly contentHeight: number;
 }
 
 /**
- * B and C|D beneath a shell chart, and the chart height that leaves B at
- * least `B_MIN_HEIGHT`. Pure: every number is a function of the input.
- * When even a zero-height chart cannot give B its floor (a tiny window), the
- * chart is 0 and B takes whatever the top half has left, never negative.
+ * The layout beneath a shell chart. Pure: every number is a function of the
+ * input. See the section header for the split/stacked rule.
  */
 export const builderBoardBelowChart = (input: BelowChartInput): BelowChartRects => {
-  const gaps = {
-    ...DEFAULT_BELOW_CHART_GAPS,
-    chartToB: input.gaps?.chartToB ?? DEFAULT_BELOW_CHART_GAPS.chartToB,
-  };
+  const chartToB = input.gaps?.chartToB ?? DEFAULT_BELOW_CHART_GAPS.chartToB;
+  const chartMin = input.chartMin ?? CHART_MIN_HEIGHT;
+  const bMin = input.bMin ?? B_MIN_HEIGHT;
   const width = input.viewport.width;
   const below = Math.max(0, input.viewport.height - input.tabBarH);
-  const lowerHeight = below * CD_SHARE;
-  const top = below - lowerHeight - gaps.bToCD;
-  const fixed = input.legendH + gaps.chartToB;
-  const wantB = top - fixed - input.chartH;
-  const chartH =
-    wantB >= B_MIN_HEIGHT
-      ? input.chartH
-      : Math.max(0, top - fixed - B_MIN_HEIGHT);
-  const bHeight = Math.max(0, top - fixed - chartH);
+  const lowerSplit = below * CD_SHARE;
+  const top = below - lowerSplit - HALF_GUTTER;
+  const fixed = input.legendH + chartToB;
+  const split = width >= STACK_BELOW_WIDTH && top >= chartMin + fixed + bMin;
+
+  if (split) {
+    const chartH = Math.max(chartMin, Math.min(input.chartH, top - fixed - bMin));
+    const bY = input.tabBarH + chartH + fixed;
+    const cdY = input.tabBarH + below - lowerSplit;
+    const railWidth = RAIL_WIDTH_PX[input.rail ?? "gauge"];
+    const paneWidth = width - railWidth - HALF_GUTTER;
+    return {
+      layout: "split",
+      chartH,
+      chartGaveWay: Math.max(0, input.chartH - chartH),
+      b: { x: 0, y: bY, width, height: top - fixed - chartH },
+      c: { x: 0, y: cdY, width: paneWidth, height: lowerSplit },
+      d: { x: paneWidth + HALF_GUTTER, y: cdY, width: railWidth, height: lowerSplit },
+      lowerHeight: lowerSplit,
+      contentHeight: below,
+    };
+  }
+
+  const chartH = Math.max(chartMin, input.chartH);
   const bY = input.tabBarH + chartH + fixed;
-  const cdY = input.tabBarH + below - lowerHeight;
-  const railWidth = RAIL_WIDTH_PX[input.rail ?? "gauge"];
-  const paneWidth = width - railWidth - HALF_GUTTER;
+  const cY = bY + bMin + HALF_GUTTER;
+  const dY = cY + C_STACKED_HEIGHT + HALF_GUTTER;
   return {
+    layout: "stacked",
     chartH,
-    chartGaveWay: input.chartH - chartH,
-    b: { x: 0, y: bY, width, height: bHeight },
-    c: { x: 0, y: cdY, width: paneWidth, height: lowerHeight },
-    d: { x: paneWidth + HALF_GUTTER, y: cdY, width: railWidth, height: lowerHeight },
-    lowerHeight,
+    chartGaveWay: 0,
+    b: { x: 0, y: bY, width, height: bMin },
+    c: { x: 0, y: cY, width, height: C_STACKED_HEIGHT },
+    d: { x: 0, y: dY, width, height: D_STACKED_HEIGHT },
+    lowerHeight: C_STACKED_HEIGHT + HALF_GUTTER + D_STACKED_HEIGHT,
+    contentHeight: dY + D_STACKED_HEIGHT - input.tabBarH,
   };
 };
 
 /**
- * The below-chart layout as a fixed-width table — the headless observation.
- * One row per box (the chart first, then B, C, D), whole px, plus a line
- * saying whether the chart gave way.
+ * The layout as a fixed-width table — the headless observation. A header
+ * line names the layout; then one row per box (the chart first, then B, C,
+ * D), whole px; then the content height and whether the chart gave way.
  *
- *     panel            y  width  height
- *     A chart         48   1440     286
- *     B series       …
+ *     layout split
+ *     panel        x     y  width  height
+ *     A chart      0    48   1920     310
+ *     ...
  */
 export const observeBuilderBoardBelowChart = (input: BelowChartInput): string => {
   const r = builderBoardBelowChart(input);
-  const row = (name: string, y: number, w: number, h: number) =>
-    `${name.padEnd(12)}${cell(Math.round(y), 6)}${cell(Math.round(w), 7)}${cell(Math.round(h), 8)}`;
+  const row = (name: string, x: number, y: number, w: number, h: number) =>
+    `${name.padEnd(12)}${cell(Math.round(x), 6)}${cell(Math.round(y), 6)}${cell(Math.round(w), 7)}${cell(Math.round(h), 8)}`;
   return join("\n", [
-    `${"panel".padEnd(12)}${cell("y", 6)}${cell("width", 7)}${cell("height", 8)}`,
-    row("A chart", input.tabBarH, input.viewport.width, r.chartH),
-    row("B series", r.b.y, r.b.width, r.b.height),
-    row("C changes", r.c.y, r.c.width, r.c.height),
-    row("D rail", r.d.y, r.d.width, r.d.height),
-    r.chartGaveWay > 0
-      ? `chart gave way ${Math.round(r.chartGaveWay)}px to hold B at ${B_MIN_HEIGHT}px`
-      : "chart as asked",
+    `layout ${r.layout}`,
+    `${"panel".padEnd(12)}${cell("x", 6)}${cell("y", 6)}${cell("width", 7)}${cell("height", 8)}`,
+    row("A chart", 0, input.tabBarH, input.viewport.width, r.chartH),
+    row("B series", r.b.x, r.b.y, r.b.width, r.b.height),
+    row("C changes", r.c.x, r.c.y, r.c.width, r.c.height),
+    row("D rail", r.d.x, r.d.y, r.d.width, r.d.height),
+    `content ${Math.round(r.contentHeight)}px below the tab bar${
+      r.chartGaveWay > 0 ? `; chart gave way ${Math.round(r.chartGaveWay)}px` : ""
+    }`,
   ]);
 };

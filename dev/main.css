@@ -2927,17 +2927,21 @@ th:has(.tf-th-center) .hud-table__header-content {
   height: 100%;
 }
 
-/* Chart shell showcase: a 640px frame standing in for the window below the
-   tab bar — the shell chart on top, BuilderBoardBelowChart filling the rest
-   (its ViewportColumn needs a definite-height flex parent). */
+/* Chart shell showcase: the shell chart on top, BuilderBoardBelowChart
+   below. A SPLIT board fills a definite-height frame (its ViewportColumn
+   needs a definite-height flex parent), 900px standing in for the window
+   below the tab bar; a STACKED board is content-height and the page scrolls. */
 .chart-shell-demo__frame {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  height: 640px;
 }
 
-.chart-shell-demo__frame > [data-builder-board] {
+.chart-shell-demo__frame--split {
+  height: 900px;
+}
+
+.chart-shell-demo__frame--split > [data-builder-board] {
   flex: 1 1 0;
   min-height: 0;
   height: auto;
