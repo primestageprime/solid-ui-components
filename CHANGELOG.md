@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.181.0 — 2026-09-24
+
 ### Added
 
 - **`/unstable` — a subpath entry outside semver.**
