@@ -98,7 +98,6 @@ export const ModalShowcase: Component<Depth2Props> = (props) => {
             onClose={() => setFixedOpen(false)}
             title="Settings"
             subtitle="Fixed at 60% of viewport height"
-            size="xl"
             height="fixed-60"
           >
             <label>
