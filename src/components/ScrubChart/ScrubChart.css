@@ -216,6 +216,30 @@
   left: 2px;
 }
 
+/* The y-axis mode switch takes the ORIGIN corner in place of the y-fit
+   button. Its box is the button's height, so it hangs from the same line and
+   the switch centres on the x tick labels like the button did. The width is
+   stated — keep it in step with `Y_AXIS_MODE_SWITCH_WIDTH` in helpers.ts (a
+   test reads this block) — and the segments share it equally, so the column
+   ScrubChart reserves is a constant rather than a measurement. */
+.sui-scrub-chart__y-axis-mode {
+  left: 2px;
+  width: 84px;
+  height: 26px;
+  align-items: center;
+}
+
+.sui-scrub-chart__y-axis-mode > .sui-segmented {
+  width: 100%;
+  background: var(--sui-bg-base, var(--sui-bg-elevated));
+}
+
+.sui-scrub-chart__y-axis-mode .sui-segmented__seg {
+  flex: 1 1 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .sui-scrub-chart__expand {
   right: 2px;
 }

@@ -57,6 +57,13 @@ export interface SegmentedControlProps
   /** Disable the entire control. */
   disabled?: boolean;
   /**
+   * Segment size. `"md"` (default) is the form-control size. `"xs"` is the
+   * chart-furniture size — 10px type on a 3px pad, for a switch that lives
+   * inside a chart's axis chrome (ScrubChart's y-axis mode switch). A
+   * presentational override: curry it with `createSegmentedControl`.
+   */
+  size?: "md" | "xs";
+  /**
    * Makes every segment removable: each one grows a × that fires this with the
    * segment's value. Omit and no segment carries one — the control is a pure
    * selector, exactly as it was before this existed.
@@ -88,12 +95,14 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
     "onRemove",
     "color",
     "disabled",
+    "size",
     "class",
   ]);
 
   const containerClasses = () => {
     const cl = ["sui-segmented"];
     if (local.disabled) cl.push("sui-segmented--disabled");
+    if (local.size === "xs") cl.push("sui-segmented--xs");
     if (local.class) cl.push(local.class);
     return cl.join(" ");
   };
@@ -264,7 +273,7 @@ export const SegmentedControl: Component<SegmentedControlProps> = (props) => {
 /** Config/visual props locked at variant-definition time. */
 export type SegmentedControlOverrides = Pick<
   SegmentedControlProps,
-  "options" | "color"
+  "options" | "color" | "size"
 >;
 /** Props available to consumers of a curried variant. */
 export type SegmentedControlDataProps = Omit<

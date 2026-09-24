@@ -251,3 +251,11 @@
 .sui-segmented--disabled .sui-segmented__seg {
   cursor: not-allowed;
 }
+
+/* `size="xs"` — chart furniture. A segment the height of an axis label row:
+   10px type on a 3px pad, so a three-way switch fits the origin corner of a
+   chart (ScrubChart's y-axis mode switch) without taking a row of its own. */
+.sui-segmented--xs .sui-segmented__seg {
+  font-size: 10px;
+  padding: 3px 6px;
+}

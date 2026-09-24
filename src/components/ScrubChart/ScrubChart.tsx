@@ -49,6 +49,7 @@ import {
   ScrubChartTopActionControl,
 } from "./ScrubChartTopActionControl";
 import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
+import { ScrubChartYAxisModeControl } from "./ScrubChartYAxisModeControl";
 import {
   ScrubChartAxes,
   ScrubChartGrid,
@@ -64,6 +65,7 @@ import {
   DEFAULT_X_MAX_TICKS,
   defaultYTickCount,
   CORNER_FOOTPRINT,
+  Y_AXIS_MODE_COLUMN,
   Y_FIT_COLUMN,
   defaultFormatX,
   defaultFormatY,
@@ -110,6 +112,7 @@ export type {
   ScrubChartYFitBound,
   ScrubChartYFitPin,
   ScrubChartYScaleMode,
+  ScrubChartYAxisMode,
 } from "./types";
 
 export const ScrubChart = <C extends Cell>(
@@ -236,7 +239,18 @@ export const ScrubChart = <C extends Cell>(
   // for `Y_FIT_COLUMN` instead: the column carries a gutter that moves the y
   // labels right of the y-fit button, and the row needs no such gutter.
   const yFitFootprint = () =>
-    props.yFitDomain || expandable() ? CORNER_FOOTPRINT : 0;
+    originCorner() || expandable() ? CORNER_FOOTPRINT : 0;
+
+  // ── The origin corner ────────────────────────────────────────────────
+  // ONE control holds the corner where the axes meet. `yAxisMode` (the
+  // three-segment switch) wins it when set; `yFitDomain` alone keeps the
+  // y-fit button. Either way the corner's guarantees — row footprint, column
+  // width, label floor — follow `originCorner()`, so no caller can get a
+  // control without the room it needs.
+  const axisModeOn = () => props.yAxisMode !== undefined;
+  const originCorner = () => axisModeOn() || props.yFitDomain != null;
+  const originColumn = () =>
+    axisModeOn() ? Y_AXIS_MODE_COLUMN : props.yFitDomain ? Y_FIT_COLUMN : 0;
 
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
@@ -458,7 +472,7 @@ export const ScrubChart = <C extends Cell>(
     tickCount: yTickCount,
     formatLabel: fmtY,
     axisWidth: () => props.yAxisWidth,
-    minWidth: () => (props.yFitDomain ? Y_FIT_COLUMN : 0),
+    minWidth: originColumn,
     transitionMs: () => props.yFitTransition ?? DEFAULT_Y_FIT_TRANSITION_MS,
   });
   const yScale = yAxis.scale;
@@ -875,7 +889,7 @@ export const ScrubChart = <C extends Cell>(
               plotRight={plotRight}
               plotBottom={plotBottom}
               yScaleActive={() => yScale() != null}
-              yFitCorner={() => props.yFitDomain != null}
+              yFitCorner={originCorner}
               yTicks={yTicks}
               xTicks={xTicks}
               formatY={fmtY}
@@ -925,7 +939,14 @@ export const ScrubChart = <C extends Cell>(
             it covers no gridline, no label and no data. It comes LAST in the
             frame so it stacks above the gesture overlay and answers its own
             clicks. See ScrubChartYFitControl.tsx for the markup. */}
-          <Show when={props.yFitDomain}>
+          <Show when={axisModeOn()}>
+            <ScrubChartYAxisModeControl
+              mode={() => props.yAxisMode ?? "auto"}
+              onSelect={(mode) => props.onYAxisModeChange?.(mode)}
+              axisTop={plotBottom}
+            />
+          </Show>
+          <Show when={!axisModeOn() && props.yFitDomain}>
             <ScrubChartYFitControl
               mode={yScaleMode}
               onSelect={selectYScaleMode}

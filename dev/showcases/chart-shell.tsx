@@ -8,6 +8,7 @@ import {
   type CashflowCell,
 } from "../../src/components/CashflowScrubChart";
 import { dailyCells } from "../../src/components/DateAxis";
+import type { ScrubChartYAxisMode } from "../../src/components/ScrubChart";
 import { MutedBody } from "../../src/components/Text";
 import { Toggle } from "../../src/components/Toggle";
 
@@ -63,6 +64,35 @@ const LiveToggleExample: Component = () => {
   );
 };
 
+/** Item 2 — the three-mode y-axis switch in the origin corner. The chart only
+ *  SHOWS the mode; this showcase states a toy policy for the domain: Auto and
+ *  Fit use the chart's own fitted domain, Fixed holds a stated range. */
+const YAxisModeExample: Component = () => {
+  const [mode, setMode] = createSignal<ScrubChartYAxisMode>("auto");
+  return (
+    <div class="example-group">
+      <h3>Y-axis mode switch (Auto | Fixed | Fit)</h3>
+      <p class="text-meta">
+        <code>yAxisMode</code> + <code>onYAxisModeChange</code> put a
+        three-segment switch in the axis origin corner, in place of the y-fit
+        button. Controlled: the app owns the mode and the domain each mode
+        implies. Hover a segment for what it does.
+      </p>
+      <StillCashflowScrubChart
+        cells={shellCells}
+        chartHeight={220}
+        showGridlines
+        scrub={false}
+        yAxisMode={mode()}
+        onYAxisModeChange={setMode}
+        yMin={mode() === "fixed" ? -500_000 : undefined}
+        yMax={mode() === "fixed" ? 2_000_000 : undefined}
+      />
+      <MutedBody>{`yAxisMode = "${mode()}"`}</MutedBody>
+    </div>
+  );
+};
+
 export const ChartShellShowcase: Component = () => (
   <div class="component-section component-section--full">
     <h2>Chart shell primitives</h2>
@@ -70,5 +100,6 @@ export const ChartShellShowcase: Component = () => (
       What an app shell needs to keep one persistent chart across pages.
     </p>
     <LiveToggleExample />
+    <YAxisModeExample />
   </div>
 );

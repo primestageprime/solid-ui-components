@@ -232,6 +232,9 @@ export interface ScrubChartMinimizedContext<C extends Cell> {
   summary: string;
 }
 
+/** The y-axis policy the corner switch picks between. See `yAxisMode`. */
+export type ScrubChartYAxisMode = "auto" | "fixed" | "autoscale";
+
 export interface ScrubChartProps<C extends Cell> {
   cells: C[];
   /** Selected cell index. Optional in plain (scrub=false) mode. */
@@ -452,6 +455,21 @@ export interface ScrubChartProps<C extends Cell> {
   yScaleMode?: ScrubChartYScaleMode;
   /** Fires when the user picks a segment of the fit toggle. */
   onYScaleModeChange?: (mode: ScrubChartYScaleMode) => void;
+  /**
+   * The y-axis POLICY the reader picked, shown as a three-segment switch in
+   * the axis origin corner: `"auto"` (grow with the data, never shrink),
+   * `"fixed"` (hold a range the reader set) or `"autoscale"` (fit the data
+   * now, both ways).
+   *
+   * Controlled, and the master switch: set it and the switch replaces the
+   * y-fit button in the corner (the corner's footprint guarantees carry over
+   * — see `Y_AXIS_MODE_COLUMN`); omit it and nothing changes. ScrubChart only
+   * SHOWS the mode and reports a pick. What each mode does to the domain is
+   * the caller's policy, stated through `yDomain` / `yFitDomain` as today.
+   */
+  yAxisMode?: ScrubChartYAxisMode;
+  /** Fires when the reader picks another segment of the y-axis mode switch. */
+  onYAxisModeChange?: (mode: ScrubChartYAxisMode) => void;
   /** Format y-axis tick values for display. Default: locale number. */
   formatYLabel?: (value: number) => string;
   /**

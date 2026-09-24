@@ -36,6 +36,7 @@
 
 import { formatGroupedNumber } from "../../internal/format/number";
 import { clamp } from "../../internal/math/clamp";
+import type { JSX } from "solid-js";
 import type { Cell } from "../DateAxis";
 import type { ResolvedXTickCadence } from "./types";
 
@@ -133,6 +134,18 @@ export const Y_FIT_INSET = CORNER_INSET;
 export const CORNER_LEVEL_OFFSET =
   X_LABEL_CENTRE_OFFSET - CORNER_BUTTON_SIZE / 2;
 
+/** Where a bottom-row corner control hangs from. An inline `top` beats the
+ *  stylesheet's `bottom` inset, so the control tracks the x-axis row instead
+ *  of the frame edge, and `CORNER_LEVEL_OFFSET` centres it on the x tick
+ *  labels. `undefined` leaves the stylesheet in charge. Shared by the y-fit
+ *  button and the y-axis mode switch, which hang in the same corner. */
+export const cornerStyle = (
+  axisTop: (() => number) | undefined,
+): JSX.CSSProperties | undefined =>
+  axisTop === undefined
+    ? undefined
+    : { top: `${axisTop() + CORNER_LEVEL_OFFSET}px`, bottom: "auto" };
+
 /** The y-fit button's level shift, in px. See `CORNER_LEVEL_OFFSET`. */
 export const Y_FIT_LEVEL_OFFSET = CORNER_LEVEL_OFFSET;
 
@@ -171,6 +184,26 @@ export const Y_FIT_GUTTER = 10;
  * wins as given.
  */
 export const Y_FIT_COLUMN = CORNER_FOOTPRINT + Y_FIT_GUTTER;
+
+/** The y-axis mode switch's width, in px. Three `xs` segments ("Auto",
+ *  "Fixed", "Fit") at an equal share each. Stated rather than measured so
+ *  the column below is a constant — keep it in step with the `width` of
+ *  `.sui-scrub-chart__y-axis-mode` in ScrubChart.css (a test reads it). */
+export const Y_AXIS_MODE_SWITCH_WIDTH = 84;
+
+/**
+ * The width the y-axis mode switch asks of the DEFAULT y-axis column, in px.
+ *
+ * The switch takes the origin corner the y-fit button took, under the same
+ * three guarantees: the x-axis row is at least `CORNER_FOOTPRINT` tall (the
+ * switch is shorter than the 26px button and centres in the same box), the
+ * default column holds the whole switch plus the frame-edge inset, and the
+ * `Y_FIT_GUTTER` keeps the y labels clear of its right edge. Wider than
+ * `Y_FIT_COLUMN` because three words are wider than one glyph; an explicit
+ * `yAxisWidth` still wins as given.
+ */
+export const Y_AXIS_MODE_COLUMN =
+  CORNER_INSET + Y_AXIS_MODE_SWITCH_WIDTH + Y_FIT_GUTTER;
 
 /**
  * The lowest pixel y a y-tick label's box may reach.

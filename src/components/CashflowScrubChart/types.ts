@@ -455,6 +455,13 @@ export interface CashflowScrubChartProps {
   yScaleMode?: ScrubChartProps<CashflowCell>["yScaleMode"];
   /** Fires when the reader picks the other segment of the fit toggle. */
   onYScaleModeChange?: ScrubChartProps<CashflowCell>["onYScaleModeChange"];
+  /** The y-axis policy switch (Auto | Fixed | Fit) in the origin corner.
+   *  Controlled, and the master switch — see ScrubChart's `yAxisMode`. The
+   *  chart only shows the mode; the caller states the domain each mode
+   *  implies through `yMin`/`yMax`/`yFitDomain`. */
+  yAxisMode?: ScrubChartProps<CashflowCell>["yAxisMode"];
+  /** Fires when the reader picks another y-axis mode. */
+  onYAxisModeChange?: ScrubChartProps<CashflowCell>["onYAxisModeChange"];
   /**
    * Distance in px from the container's left edge to the y-axis line.
    * ScrubChart measures the widest formatted label and, with `yFitDomain`
