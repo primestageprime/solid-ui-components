@@ -13,6 +13,21 @@
 - **`OverflowNav`: closable items + explicit overflow list** — `closable: true` on an item plus `onClose(id)` renders a trailing × button beside its link (never fires the item's `onClick`); `overflowItems` always live in the kebab, after width-spilled items.
 - **`Modal` `height="fixed-60"`** — a constant 60vh modal whose body scrolls internally, so switching tabs never resizes it. Default `"auto"` is unchanged.
 
+## 0.182.0 — 2026-09-24
+
+### Added
+
+- **`PopoverTooltip`** — a `Tooltip` sibling that also opens on tap/click.
+  Kobalte's `Tooltip` trigger can only ever be closed by a click (never
+  opened by one) and ignores touch pointers for hover, both unconditionally
+  in Kobalte's own source — found while diagnosing a tap-to-open gap in the
+  thorcasting import prototype's Count-cell popover. Built on
+  `@kobalte/core/popover` instead: tap opens/toggles, hover and keyboard
+  focus still open it, outside-click and Escape close it (all via Popover's
+  own `DismissableLayer`), and it stays open while the pointer moves into
+  the content so a long popover can be scrolled. `Tooltip` itself is
+  unchanged — fully additive. See COMPONENTS.md § PopoverTooltip.
+
 ## 0.181.0 — 2026-09-24
 
 ### Added

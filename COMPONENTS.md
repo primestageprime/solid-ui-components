@@ -2115,6 +2115,29 @@ Where the constituents live (design decision — prefer siblings of existing fam
     ```
   - Divergence from initial audit sketch: `class` is used instead of `className` (upstream convention); `openDelay`/`closeDelay` are not separately declared on `TooltipProps` because Kobalte's `TooltipRootProps` already includes them — `mergeProps` injects the 100 ms defaults before the passthrough spread.
 
+## PopoverTooltip
+- **PopoverTooltip** — Kobalte `@kobalte/core/popover`-backed sibling of `Tooltip`, for the ONE case Tooltip cannot cover: opening on tap/click. Kobalte's `Tooltip` trigger has no way to do this — its `onClick` unconditionally closes an open tooltip and never opens one, and its hover handler explicitly ignores `pointerType === "touch"` — both unconditional in Kobalte's own source, not configurable via any prop, so this is a separate component built on Popover rather than a variant of Tooltip. Popover's own trigger already toggles open/closed on click and its content already dismisses on outside-click/Escape (both free, via Popover's `DismissableLayer`); this component adds hover-open and focus-open on top, so tap, hover, and keyboard focus each independently open it, and it stays open while the pointer moves from the trigger into the content (a short `closeDelay` bridges that gap — needed to scroll a long popover's own content). `Tooltip` itself is unchanged; this is a fully additive sibling. Key props: `content` (`string | JSX.Element` or an accessor, same contract as `Tooltip`), `children` (the trigger), `class`, `triggerAs` (same `"span"`-for-already-interactive-content rationale as `Tooltip`), `closeDelay` (ms of pointer-leave grace before a hover-open closes; default `100`), plus any `PopoverRootOptions` field (`placement`, `gutter`, `modal`, `id`, `forceMount`, etc. — NOT `open`/`onOpenChange`, which this component owns internally to combine tap/hover/focus into one state) forwarded to `Kobalte.Popover.Root`. Exported types: `PopoverTooltipProps`, `PopoverTooltipContent`. Reuses the same `--sui-border`, `--sui-bg-secondary`, `--sui-text-primary`, `--sui-radius-sm`, `--sui-border-focus` theme tokens as `Tooltip`, in its own `PopoverTooltip.css` (`sui-popover-tooltip__*` classes — a separate file/prefix because this is a separate Depth-1 primitive with its own composition, not a curried variant of `Tooltip`). Use for: anywhere a hover tooltip also needs to work on tap/touch — a Count cell whose popover holds a small table, a mobile-reachable info bubble, any hover affordance that must also be tap-reachable.
+  - Example:
+    ```tsx
+    import { PopoverTooltip } from "solid-ui-components";
+
+    <PopoverTooltip content="Tap, hover, or focus to open. Tap again to close.">
+      <GhostButton>Count: 12</GhostButton>
+    </PopoverTooltip>
+
+    // A scrollable table that stays open while you scroll it:
+    <PopoverTooltip
+      content={
+        <ScrollRegionMd>
+          <DTableWithHeader>...</DTableWithHeader>
+        </ScrollRegionMd>
+      }
+    >
+      <TextValue>{count}</TextValue>
+    </PopoverTooltip>
+    ```
+  - Not `Tooltip`: `Tooltip` stays hover/focus-only by design (its whole render is Kobalte's `Tooltip.Root`, which has no tap-open path to add). Not a `Modal`/`Popover`-with-close-button pattern: `PopoverTooltip` has no title/description/close-button chrome, it's a floating readout, same visual weight as `Tooltip`.
+
 ## Renderers
 
 The renderers family is a set of small, composable components for displaying field-style data: primitives with labels, before/after diffs, and OHLC candlesticks. They share a `--sui-*` token-driven label/value grid and render zero-config for common cases; host code can opt into a `renderValue` dispatcher hook when a domain needs custom types (status badges, epoch-millis dates, etc.).
