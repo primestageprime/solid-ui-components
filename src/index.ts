@@ -208,6 +208,7 @@ export * from "./components/Combobox";
 export * from "./components/ThemedNumberInput";
 export * from "./components/Slider";
 export * from "./components/CurrencyInput";
+export * from "./components/IntervalInput";
 export * from "./components/Toast";
 export * from "./components/ValueRenderer";
 export * from "./components/DiffPair";

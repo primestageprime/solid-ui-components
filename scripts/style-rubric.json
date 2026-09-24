@@ -113,6 +113,9 @@
     "src/components/Heatmap/Heatmap.tsx": [
       "paint"
     ],
+    "src/components/IntervalInput/IntervalInput.tsx": [
+      "measured"
+    ],
     "src/components/Layout/Sidebar.tsx": [
       "measured"
     ],

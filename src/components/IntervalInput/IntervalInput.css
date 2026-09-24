@@ -1,0 +1,16 @@
+.sui-interval-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-1, 0.25rem);
+}
+
+.sui-interval-input__row {
+  flex-wrap: wrap;
+}
+
+/* The number field is `flex: 1` by default (ThemedNumberInput.css); cap it
+ * to the widest expected `every` (see EVERY_WIDTH_REM) so it doesn't stretch
+ * to fill the row the way CurrencyInput caps its own wrapper. */
+.sui-interval-input__number {
+  flex: 0 0 auto;
+}
