@@ -236,6 +236,9 @@
 
 .sui-scrub-chart__y-axis-mode .sui-segmented__seg {
   flex: 1 1 0;
+  /* A button's automatic minimum is its content, which would size the
+     segments by their words; zero lets the three share the width equally. */
+  min-width: 0;
   padding-left: 0;
   padding-right: 0;
 }
