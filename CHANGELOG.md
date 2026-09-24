@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.180.0 — 2026-09-24
+
 ### Added
 
 - **`ChannelChart` / `ChannelDivergenceChart` — a channel with a running
