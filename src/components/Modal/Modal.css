@@ -40,6 +40,14 @@
   max-height: 100vh;
 }
 
+/* Constant-height mode: the modal holds a fixed viewport fraction instead of
+   sizing to content, so switching tabs/content never resizes it. The body
+   (below) scrolls internally to absorb whatever doesn't fit. */
+.sui-modal--height-fixed-60 {
+  height: 60vh;
+  max-height: 60vh;
+}
+
 /* Modal header */
 .sui-modal__header {
   display: flex;
@@ -87,6 +95,9 @@
   padding: 20px;
   overflow-y: auto;
   flex: 1;
+  /* Without this, a flex child's auto min-height keeps it from shrinking
+     below its content, defeating overflow-y in fixed-height mode. */
+  min-height: 0;
 }
 
 .sui-modal__footer {

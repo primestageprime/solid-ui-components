@@ -9,6 +9,8 @@ interface Depth2Props {
 
 export const ModalShowcase: Component<Depth2Props> = (props) => {
   const [open, setOpen] = createSignal(false);
+  const [fixedOpen, setFixedOpen] = createSignal(false);
+  const [fixedTall, setFixedTall] = createSignal(false);
 
   return (
     <div class="component-section">
@@ -78,6 +80,47 @@ export const ModalShowcase: Component<Depth2Props> = (props) => {
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+      <div class="depth2-layout">
+        <div class="depth2-composed">
+          <h3>height="fixed-60"</h3>
+          <p class="text-meta">
+            Locks the modal to a constant 60vh regardless of content —
+            toggle the checkbox below to grow the body and confirm the
+            modal itself doesn't resize.
+          </p>
+          <button class="demo-btn" onClick={() => setFixedOpen(true)}>
+            Open Fixed-Height Modal
+          </button>
+          <Modal
+            open={fixedOpen()}
+            onClose={() => setFixedOpen(false)}
+            title="Settings"
+            subtitle="Fixed at 60% of viewport height"
+            size="xl"
+            height="fixed-60"
+          >
+            <label>
+              <input
+                type="checkbox"
+                checked={fixedTall()}
+                onChange={(e) => setFixedTall(e.currentTarget.checked)}
+              />{" "}
+              Grow body content
+            </label>
+            <TextBody>
+              This body's content height varies, but the modal's own height
+              stays fixed — the body scrolls instead.
+            </TextBody>
+            <div style={fixedTall() ? { height: "150vh" } : undefined}>
+              <TextBody>
+                {fixedTall()
+                  ? "Tall content — the modal frame should not grow."
+                  : "Short content."}
+              </TextBody>
+            </div>
+          </Modal>
         </div>
       </div>
     </div>
