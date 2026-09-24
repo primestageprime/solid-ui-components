@@ -14,3 +14,27 @@ export type {
   BuilderBoardDataProps,
 } from "./BuilderBoard";
 export type { RailWidth as BuilderBoardRailWidth } from "./geometry";
+
+// The board BELOW a shell chart (panel A is the shell's), and the pure core
+// the app sizes it — and the chart above it — with. These geometry exports
+// ARE public: the app must compute the chart height the board implies.
+export {
+  BuilderBoardBelowChart,
+  createBuilderBoardBelowChart,
+} from "./BuilderBoardBelowChart";
+export type {
+  BuilderBoardBelowChartProps,
+  BuilderBoardBelowChartOverrides,
+  BuilderBoardBelowChartDataProps,
+} from "./BuilderBoardBelowChart";
+export {
+  B_MIN_HEIGHT as BUILDER_BOARD_B_MIN_HEIGHT,
+  CD_SHARE as BUILDER_BOARD_CD_SHARE,
+  builderBoardBelowChart,
+  observeBuilderBoardBelowChart,
+} from "./geometry";
+export type {
+  BelowChartGaps as BuilderBoardBelowChartGaps,
+  BelowChartInput as BuilderBoardBelowChartInput,
+  BelowChartRects as BuilderBoardBelowChartRects,
+} from "./geometry";

@@ -134,3 +134,136 @@ export const builderBoardTable = (
   }, PANEL_ORDER);
   return join("\n", [header, ...rows]);
 };
+
+// ── The board BELOW a shell chart ─────────────────────────────────────────
+//
+// On a builder page inside the app shell, panel A (the cashflow) is the
+// SHELL's chart — one persistent instance above the page body — so the board
+// draws only B, C and D beneath it:
+//
+//   ┌───────────────────────────────────┐ ┐ tabBarH
+//   ├───────────────────────────────────┤ ┘
+//   │ A  shell chart (+ legend)         │   chartH (may give way) + legendH
+//   ├───────────────────────────────────┤   xs gutter
+//   │ B  the series being changed       │   the REMAINDER, never under B_MIN
+//   ├──────────────────────────┬────────┤   sm gutter
+//   │ C  changes               │ D rail │   CD_SHARE of the space below the
+//   └──────────────────────────┴────────┘   tab bar — the bottom half
+//
+// C|D keeps the bottom half of the space below the tab bar whatever the
+// chart does, so the controls sit in the same place on every builder. B takes
+// what the chart leaves of the top half. When the chart would leave B less
+// than `B_MIN_HEIGHT`, the CHART gives way (the shell renders it shorter) —
+// B is the series being edited and must stay legible; the chart is only its
+// context. The chart height policy itself (share of the window, its min) is
+// the APP's, and arrives here as `chartH`.
+
+/** The share of the space below the tab bar that C|D takes. */
+export const CD_SHARE = 0.5;
+
+/**
+ * B's floor, in px: the smallest card that still shows a series. A card title
+ * row (~28px: one `sm` button row) + a `sm` gap + a 120px plot — the height at
+ * which ScrubChart's corner footprint (28px) and a three-tick y axis still
+ * leave a readable line. Below it the chart above gives way instead.
+ */
+export const B_MIN_HEIGHT = 28 + GAP_PX.sm + 120;
+
+/** The gutters the below-chart board stacks with. Defaults are the frame's
+ *  own tokens: `xs` between the chart block and B (they read as a pair, like
+ *  A over B on the full board), `sm` between B and the bottom half. */
+export interface BelowChartGaps {
+  readonly chartToB: number;
+  readonly bToCD: number;
+}
+
+export const DEFAULT_BELOW_CHART_GAPS: BelowChartGaps = {
+  chartToB: PAIR_GUTTER,
+  bToCD: HALF_GUTTER,
+};
+
+export interface BelowChartInput {
+  /** The whole window the app draws in, in px. */
+  readonly viewport: Viewport;
+  /** Height of the app's top bar + tab strip above the chart, in px. */
+  readonly tabBarH: number;
+  /** The chart height the app's policy asks for, in px. */
+  readonly chartH: number;
+  /** Height of the chart's legend row, 0 without one, in px. */
+  readonly legendH: number;
+  /** Gutters; defaults to `DEFAULT_BELOW_CHART_GAPS`. */
+  readonly gaps?: Partial<BelowChartGaps>;
+  /** The rail's width token. Default `gauge`. */
+  readonly rail?: RailWidth;
+}
+
+export interface BelowChartRects {
+  /** The chart height to render — `chartH`, or less where it gave way. */
+  readonly chartH: number;
+  /** How many px the chart gave up to keep B at its floor (0 = none). */
+  readonly chartGaveWay: number;
+  /** B, C and D in viewport coordinates (y from the window's top). */
+  readonly b: Rect;
+  readonly c: Rect;
+  readonly d: Rect;
+  /** The C|D row's height — what `BuilderBoardBelowChart` takes. */
+  readonly lowerHeight: number;
+}
+
+/**
+ * B and C|D beneath a shell chart, and the chart height that leaves B at
+ * least `B_MIN_HEIGHT`. Pure: every number is a function of the input.
+ * When even a zero-height chart cannot give B its floor (a tiny window), the
+ * chart is 0 and B takes whatever the top half has left, never negative.
+ */
+export const builderBoardBelowChart = (input: BelowChartInput): BelowChartRects => {
+  const gaps = { ...DEFAULT_BELOW_CHART_GAPS, ...input.gaps };
+  const width = input.viewport.width;
+  const below = Math.max(0, input.viewport.height - input.tabBarH);
+  const lowerHeight = below * CD_SHARE;
+  const top = below - lowerHeight - gaps.bToCD;
+  const fixed = input.legendH + gaps.chartToB;
+  const wantB = top - fixed - input.chartH;
+  const chartH =
+    wantB >= B_MIN_HEIGHT
+      ? input.chartH
+      : Math.max(0, top - fixed - B_MIN_HEIGHT);
+  const bHeight = Math.max(0, top - fixed - chartH);
+  const bY = input.tabBarH + chartH + fixed;
+  const cdY = input.tabBarH + below - lowerHeight;
+  const railWidth = RAIL_WIDTH_PX[input.rail ?? "gauge"];
+  const paneWidth = width - railWidth - HALF_GUTTER;
+  return {
+    chartH,
+    chartGaveWay: input.chartH - chartH,
+    b: { x: 0, y: bY, width, height: bHeight },
+    c: { x: 0, y: cdY, width: paneWidth, height: lowerHeight },
+    d: { x: paneWidth + HALF_GUTTER, y: cdY, width: railWidth, height: lowerHeight },
+    lowerHeight,
+  };
+};
+
+/**
+ * The below-chart layout as a fixed-width table — the headless observation.
+ * One row per box (the chart first, then B, C, D), whole px, plus a line
+ * saying whether the chart gave way.
+ *
+ *     panel            y  width  height
+ *     A chart         48   1440     286
+ *     B series       …
+ */
+export const observeBuilderBoardBelowChart = (input: BelowChartInput): string => {
+  const r = builderBoardBelowChart(input);
+  const row = (name: string, y: number, w: number, h: number) =>
+    `${name.padEnd(12)}${cell(Math.round(y), 6)}${cell(Math.round(w), 7)}${cell(Math.round(h), 8)}`;
+  return join("\n", [
+    `${"panel".padEnd(12)}${cell("y", 6)}${cell("width", 7)}${cell("height", 8)}`,
+    row("A chart", input.tabBarH, input.viewport.width, r.chartH),
+    row("B series", r.b.y, r.b.width, r.b.height),
+    row("C changes", r.c.y, r.c.width, r.c.height),
+    row("D rail", r.d.y, r.d.width, r.d.height),
+    r.chartGaveWay > 0
+      ? `chart gave way ${Math.round(r.chartGaveWay)}px to hold B at ${B_MIN_HEIGHT}px`
+      : "chart as asked",
+  ]);
+};

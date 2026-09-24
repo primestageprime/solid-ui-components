@@ -12,6 +12,12 @@ import type {
   ScrubChartYAxisMode,
   ScrubChartYRange,
 } from "../../src/components/ScrubChart";
+import {
+  BuilderBoardBelowChart,
+  builderBoardBelowChart,
+  observeBuilderBoardBelowChart,
+} from "../../src/components/BuilderBoard";
+import { CodeBlock } from "../../src/components/CodeBlock";
 import { MutedBody } from "../../src/components/Text";
 import { Toggle } from "../../src/components/Toggle";
 
@@ -139,6 +145,50 @@ const FixedRangeExample: Component = () => {
   );
 };
 
+/** Item 6 — a builder page under the shell chart. The frame stands in for
+ *  the window below the tab bar (tabBarH 0 here); the chart height asked for
+ *  is thorcasting's Q7 policy (30% of the space, min 220, no max) and the
+ *  pure core decides whether it must give way for B. */
+const BELOW_FRAME = { width: 1100, height: 640 };
+const LEGEND_H = 0;
+const belowInput = {
+  viewport: BELOW_FRAME,
+  tabBarH: 0,
+  chartH: Math.max(220, 0.3 * BELOW_FRAME.height),
+  legendH: LEGEND_H,
+};
+
+const BelowChartExample: Component = () => {
+  const rects = builderBoardBelowChart(belowInput);
+  return (
+    <div class="example-group" data-shell-example="below-chart">
+      <h3>BuilderBoardBelowChart — B and C|D under the shell chart</h3>
+      <p class="text-meta">
+        Panel A is the shell's chart, so the board draws B over C|D. C|D keeps
+        half the space below the tab bar; B takes the rest, and when that
+        would drop B under its floor the CHART gives way. The pure{" "}
+        <code>builderBoardBelowChart</code> sizes both; its observation:
+      </p>
+      <CodeBlock size="sm">{observeBuilderBoardBelowChart(belowInput)}</CodeBlock>
+      <div class="chart-shell-demo__frame">
+        <StillCashflowScrubChart
+          cells={shellCells}
+          chartHeight={rects.chartH}
+          scrub={false}
+          showGridlines
+          yAxisMode="auto"
+        />
+        <BuilderBoardBelowChart
+          lowerHeight={rects.lowerHeight}
+          panelB={<MutedBody>B — the series being changed</MutedBody>}
+          panelC={<MutedBody>C — the changes</MutedBody>}
+          panelD={<MutedBody>D — rail</MutedBody>}
+        />
+      </div>
+    </div>
+  );
+};
+
 export const ChartShellShowcase: Component = () => (
   <div class="component-section component-section--full">
     <h2>Chart shell primitives</h2>
@@ -148,5 +198,6 @@ export const ChartShellShowcase: Component = () => (
     <LiveToggleExample />
     <YAxisModeExample />
     <FixedRangeExample />
+    <BelowChartExample />
   </div>
 );
