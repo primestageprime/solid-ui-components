@@ -75,6 +75,7 @@ import { StatusBadgeShowcase } from "./showcases/status-badge";
 import { TextShowcase } from "./showcases/text";
 import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
 import { CurrencyInputShowcase } from "./showcases/currency-input";
+import { IntervalInputShowcase } from "./showcases/interval-input";
 import { TruthIndicatorShowcase } from "./showcases/truth-indicator";
 import { QuickFilterAtomShowcase } from "./showcases/quickfilter-atom";
 import { AppShellShowcase } from "./showcases/app-shell";
@@ -546,6 +547,12 @@ const items: Item[] = [
     label: "CurrencyInput",
     component: CurrencyInputShowcase,
     tags: ["depth:1", "form"],
+  },
+  {
+    id: "interval-input",
+    label: "IntervalInput",
+    component: IntervalInputShowcase,
+    tags: ["depth:2", "form"],
   },
   {
     id: "app-shell",

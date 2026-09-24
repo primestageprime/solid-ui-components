@@ -1,7 +1,7 @@
 {
   "bareHexCss": 0,
   "bareHexTsx": 0,
-  "inlineStyleSrc": 65,
+  "inlineStyleSrc": 66,
   "inlineStyleShowcases": 20,
   "dotChains": 7,
   "collectionMethodCalls": 30,
@@ -17,7 +17,7 @@
     "inlineStyleSrc": {
       "from": 65,
       "to": 66,
-      "reason": "ScrubChartTooltip needs a measured, per-render anchor position (left/top), same as Chart/Tooltip.tsx already does for the same core; no static CSS class can express it"
+      "reason": "IntervalInput caps its number field to the fieldWidthForChars-derived max-width, same measured-category pattern as CurrencyInput"
     }
   }
 }

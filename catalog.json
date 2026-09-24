@@ -7369,7 +7369,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 301
+    "line": 302
   },
   {
     "name": "HUDTabs",
@@ -7871,6 +7871,23 @@
     "since": "0.103.0",
     "file": "src/components/Surface/variants.ts",
     "line": 31
+  },
+  {
+    "name": "IntervalInput",
+    "depth": 2,
+    "kind": "composite",
+    "family": "IntervalInput",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2).",
+    "notToBeConfusedWith": null,
+    "useFor": "billing/subscription/recurrence cadences — \"repeat every N days/weeks/months/years\".",
+    "notes": null,
+    "showcase": "#/interval-input",
+    "since": "Unreleased",
+    "file": "src/components/IntervalInput/IntervalInput.tsx",
+    "line": 131
   },
   {
     "name": "Kbd",

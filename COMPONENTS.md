@@ -1422,8 +1422,21 @@ Fields whose rendered content has a **known maximum width** should reserve exact
 | `CurrencyInput` | `maxValue` formatted (default `$10B` = 18 chars) + stepper | `15.16rem` (default) | `currencyWidthRem` → `fieldWidthForChars(18, 4)` |
 | `MoneyCell` | `maxValue` formatted (default `$10B`) + cell padding; `maxValue={null}` opts out | `15.16rem` (default) | `fieldWidthForChars(18, 0.5)` |
 | `DatePicker` | fixed ISO `YYYY-MM-DD` (10 chars) + caret icon | `8.75rem` | hand-sized in `DatePicker.css`, tabular |
+| `IntervalInput`'s number field | 3-digit `every` (≤ 999) + stepper | `5.86rem` | `fieldWidthForChars(3, 4)` |
 
 New fixed-width fields (fixed codes, capped numerics) should derive their cap from `fieldWidthForChars` rather than picking a magic rem.
+
+## IntervalInput
+- **IntervalInput** — Composite (Depth 2). Composes `ThemedNumberInput` + `Select` (both Atomic) plus the `Row` Layout primitive and `TextUnits`/`TextLabel` Text variants. An "Every [#] [unit]" cadence control rendered as one row: "Every", a width-capped number field (`5.86rem`, see the fixed-width table above), and a unit dropdown. `value`/`onChange` carry a plain `{ every: number; unit: "day"|"week"|"month"|"year" }` object — one signal for the whole cadence, not two accessors. Key props: `value` (`IntervalValue`), `onChange` (`(v: IntervalValue) => void`), `units?` (`IntervalUnitOption[]`, defaults to all four units with labels pluralised from the CURRENT `every` via `unitLabel`/`defaultIntervalUnits` — e.g. `"week"` at 1, `"weeks"` otherwise; a caller-supplied `units` array's labels are used VERBATIM, not re-pluralised), `min?` (`number`, default `1` — clamps `every` to an integer `>= min`), `disabled?`, `label?` (optional group label above the row), `name?` (form field name for the number input, default `"interval-every"`). `every` is clamped on every change (`clampEvery`); the number field ignores `ThemedNumberInput`'s mid-clear `undefined` emission rather than snapping the value away while the user is typing, and the select ignores its `null` deselection emission since a cadence always needs a unit. Exported pure helpers: `clampEvery(value, min)`, `unitLabel(unit, every)`, `defaultIntervalUnits(every)` — unit-tested directly, no mount required. Exported types: `IntervalInputProps`, `IntervalValue`, `IntervalUnit`, `IntervalUnitOption`. Use for: billing/subscription/recurrence cadences — "repeat every N days/weeks/months/years".
+  - Example:
+    ```tsx
+    import { IntervalInput } from "solid-ui-components";
+    import { createSignal } from "solid-js";
+
+    const [cadence, setCadence] = createSignal({ every: 2, unit: "week" as const });
+
+    <IntervalInput value={cadence()} onChange={setCadence} label="Repeats" />
+    ```
 
 ## Layout
 - **Stack** — Flex-column container. Key props: `gap` (`xs`|`sm`|`md`|`lg` — 4/8/12/16px), `align`, `justify`, `fill` (`height: 100%; min-height: 0` — forwards height through so a scrolling child like a `fill` BaseTable has concrete height). Use for: vertical stacking of elements.
