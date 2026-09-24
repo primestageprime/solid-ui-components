@@ -83,4 +83,26 @@ describe("CurrencyInput", () => {
     expect(container.querySelector(".sui-number-input")).not.toBeNull();
     expect(container.querySelector('[name="salary"]')).not.toBeNull();
   });
+
+  it('always shows a literal "$", whatever the viewer\'s locale', () => {
+    // "narrowSymbol" is what pins it; the locale-driven "symbol" display
+    // renders USD as "US$" in en-GB / en-CA.
+    const fmt = (locale: string) =>
+      new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: "USD",
+        currencyDisplay: "narrowSymbol",
+      }).format(1);
+    for (const locale of ["en-US", "en-GB", "en-CA", "en-AU"]) {
+      expect(fmt(locale)).toMatch(/^\$1/);
+    }
+    const [v] = createSignal<number | undefined>(1234.5);
+    const { container } = render(() => (
+      <CurrencyInput name="amount" value={v} onChange={() => {}} />
+    ));
+    const shown = (
+      container.querySelector(".sui-number-input__input") as HTMLInputElement
+    ).value;
+    expect(shown.startsWith("$")).toBe(true);
+  });
 });

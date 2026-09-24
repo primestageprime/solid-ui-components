@@ -3115,7 +3115,7 @@
     "showcase": "#/dirty-combo-box",
     "since": "Unreleased",
     "file": "src/components/DirtyComboBox/DirtyComboBox.tsx",
-    "line": 159
+    "line": 205
   },
   {
     "name": "createDistributionSparkline",
@@ -7426,7 +7426,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 304
+    "line": 305
   },
   {
     "name": "HUDTabs",
@@ -10372,6 +10372,23 @@
     "line": 207
   },
   {
+    "name": "ReservedWidth",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "ReservedWidth",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1).",
+    "notToBeConfusedWith": null,
+    "useFor": "anything whose width animates or swaps between states (DirtyComboBox; a SlideReveal beside a label).",
+    "notes": null,
+    "showcase": "#/reserved-width",
+    "since": "Unreleased",
+    "file": "src/components/ReservedWidth/ReservedWidth.tsx",
+    "line": 31
+  },
+  {
     "name": "ResizableContainer",
     "depth": 0,
     "kind": "primitive",
@@ -11338,12 +11355,12 @@
     "dataProps": null,
     "summary": "Atomic (Depth 1).",
     "notToBeConfusedWith": null,
-    "useFor": "actions that appear only in a state (DirtyComboBox's save segment and reset). Consequence to design for: the space is taken even while hidden.",
+    "useFor": "actions that appear only in a state.",
     "notes": null,
     "showcase": "#/slide-reveal",
     "since": "Unreleased",
     "file": "src/components/SlideReveal/SlideReveal.tsx",
-    "line": 29
+    "line": 31
   },
   {
     "name": "SliderField",

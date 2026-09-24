@@ -78,6 +78,7 @@ import { CurrencyInputShowcase } from "./showcases/currency-input";
 import { IntervalInputShowcase } from "./showcases/interval-input";
 import { DirtyComboBoxShowcase } from "./showcases/dirty-combo-box";
 import { SlideRevealShowcase } from "./showcases/slide-reveal";
+import { ReservedWidthShowcase } from "./showcases/reserved-width";
 import { TruthIndicatorShowcase } from "./showcases/truth-indicator";
 import { QuickFilterAtomShowcase } from "./showcases/quickfilter-atom";
 import { AppShellShowcase } from "./showcases/app-shell";
@@ -566,6 +567,12 @@ const items: Item[] = [
     id: "slide-reveal",
     label: "SlideReveal",
     component: SlideRevealShowcase,
+    tags: ["depth:1", "layout"],
+  },
+  {
+    id: "reserved-width",
+    label: "ReservedWidth",
+    component: ReservedWidthShowcase,
     tags: ["depth:1", "layout"],
   },
   {

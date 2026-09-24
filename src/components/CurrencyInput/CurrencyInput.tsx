@@ -80,10 +80,14 @@ export const CurrencyInput: Component<CurrencyInputProps> = (props) => {
     <div class="sui-currency-input" style={{ "max-width": `${widthRem()}rem` }}>
       <ThemedNumberInput
         {...(rest as ThemedNumberInputProps)}
-        // USD currency masking via kobalte's native Intl formatting.
+        // The symbol is ALWAYS "$" (Peter, 2026-09-24: hardcode "$" for now;
+        // international currency and i18n come later). `narrowSymbol` is what
+        // pins it: the default `symbol` display lets the viewer's LOCALE pick
+        // the glyph, so an en-GB or en-CA browser showed "US$".
         formatOptions={{
           style: "currency",
           currency: local.currency ?? "USD",
+          currencyDisplay: "narrowSymbol",
         }}
         // Default the numeric ceiling to the width ceiling unless overridden.
         max={local.max ?? maxValue()}

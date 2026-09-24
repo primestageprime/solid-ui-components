@@ -1,0 +1,20 @@
+/* ============================================
+   ReservedWidth — Atomic (Depth 1)
+   One grid cell holding the live content and an invisible widest-state copy:
+   the cell is the wider of the two, so the box never changes size. The copy
+   is `visibility: hidden` — it takes space and draws nothing.
+   ============================================ */
+.sui-reserved-width {
+  display: inline-grid;
+}
+
+.sui-reserved-width > * {
+  grid-area: 1 / 1;
+  justify-self: start;
+  min-width: 0;
+}
+
+.sui-reserved-width__widest {
+  visibility: hidden;
+  pointer-events: none;
+}

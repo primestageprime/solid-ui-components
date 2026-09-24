@@ -1,7 +1,8 @@
 // ============================================
 // DirtyComboBox — Composite (Depth 2)
 // Owns no CSS. Composes CompactDropdown (trigger slot + itemAction +
-// onItemDelete + DropdownFitLabel), SlideReveal, TagPill, TextSublabel, Icon,
+// onItemDelete + DropdownFitLabel), SlideReveal, ReservedWidth, TagPill,
+// TextSublabel, Icon,
 // the SmallGhostButton / IconOnlyButton curried variants, VerticalDivider and
 // the ClusterRow / TightClusterRow / LooseClusterRow Layout variants.
 //
@@ -13,8 +14,12 @@
 // headless observation — and this file only renders that view and forwards
 // the four commands:
 //
-//   • PRISTINE: no save, no reset. DIRTY: the save segment slides out of the
-//     combo and the reset slides in beside it (SlideReveal, 180ms).
+//   • PRISTINE: no save, no reset — the frame hugs [name ▾]. DIRTY: the save
+//     segment slides out and the frame grows with it, and the reset slides in
+//     beside it (SlideReveal, 180ms). The whole control sits inside an
+//     INVISIBLE reservation of its dirty width (ReservedWidth, an outer
+//     element), so nothing beside it ever moves and the frame never carries
+//     blank padding (Peter, 2026-09-24).
 //   • The reset sits a LOOSE gap away from save, so it is hard to fat-finger;
 //     there is deliberately no confirm.
 //   • Every row but the selected one carries a trash; Delete/Backspace on a
@@ -35,7 +40,13 @@ import { Icon } from "../Icon";
 import { IconOnlyButton, SmallGhostButton } from "../Button";
 import { VerticalDivider } from "../Divider";
 import { SlideReveal } from "../SlideReveal";
-import { ClusterRow, LooseClusterRow, TightClusterRow } from "../Layout";
+import { ReservedWidth } from "../ReservedWidth";
+import {
+  ClusterRow,
+  FlexRow,
+  LooseClusterRow,
+  TightClusterRow,
+} from "../Layout";
 import { map } from "../../fn";
 import type { DirtyComboItem, DirtyComboView } from "./dirtyComboModel";
 
@@ -70,7 +81,8 @@ export interface DirtyComboBoxProps {
 
 const labelOf = (item: DirtyComboItem): string => item.label;
 
-export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => {
+/** The drawn control, in whatever state `view` says. */
+const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
   // The row's trash. The selected row draws nothing: it cannot be deleted.
   const DeleteAction: Component<DropdownItemActionProps> = (row) => (
     <Show when={!row.selected}>
@@ -101,7 +113,9 @@ export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => {
           itemAction={DeleteAction}
           onItemDelete={deleteFromKeyboard}
           trigger={(state) => (
-            <TightClusterRow>
+            // Gapless, so a collapsed save segment leaves no blank space
+            // inside the frame after the caret.
+            <FlexRow>
               <SmallGhostButton onClick={state.toggle}>
                 <TightClusterRow>
                   <DropdownFitLabel
@@ -126,7 +140,7 @@ export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => {
                   </IconOnlyButton>
                 </TightClusterRow>
               </SlideReveal>
-            </TightClusterRow>
+            </FlexRow>
           )}
         />
       </ClusterRow>
@@ -142,6 +156,38 @@ export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => {
     </LooseClusterRow>
   );
 };
+
+/** Every action shown: the widest the control ever gets. */
+const widestView = (view: DirtyComboView): DirtyComboView => ({
+  ...view,
+  canSave: true,
+  canReset: true,
+});
+
+const noop = () => {};
+
+/**
+ * The control, inside an invisible reservation of its WIDEST (dirty) state:
+ * the visible frame hugs its content and grows into the reserved space as the
+ * save segment slides out, and nothing beside the control ever moves (Peter,
+ * 2026-09-24 — "hold the space, but do so invisibly (with an outer element)").
+ */
+export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => (
+  <ReservedWidth
+    widest={
+      <DirtyComboBoxBody
+        {...props}
+        view={widestView(props.view)}
+        onSelect={noop}
+        onSave={noop}
+        onReset={noop}
+        onDelete={noop}
+      />
+    }
+  >
+    <DirtyComboBoxBody {...props} />
+  </ReservedWidth>
+);
 
 // ── currying ─────────────────────────────────────────────────────────────
 
