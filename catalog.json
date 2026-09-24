@@ -1415,7 +1415,7 @@
     "useFor": "projection vs actual reconciliation, a budget envelope, a forecast cone with actuals.",
     "notes": "The channel plot alone: band, running value, markers, end labels. */",
     "showcase": "#/channel-chart",
-    "since": "Unreleased",
+    "since": "0.180.0",
     "file": "src/components/ChannelChart/variants.ts",
     "line": 12
   },
@@ -1442,7 +1442,7 @@
     "useFor": null,
     "notes": "The channel plot above a diverging-bar plot that shares its period axis and its margin: each bar is the period's signed distance outside the band, labelled; a zero bar draws as a flat tick.",
     "showcase": "#/channel-chart",
-    "since": "Unreleased",
+    "since": "0.180.0",
     "file": "src/components/ChannelChart/variants.ts",
     "line": 27
   },
@@ -2847,7 +2847,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/channel-chart",
-    "since": "Unreleased",
+    "since": "0.180.0",
     "file": "src/components/ChannelChart/ChannelChart.tsx",
     "line": 439
   },

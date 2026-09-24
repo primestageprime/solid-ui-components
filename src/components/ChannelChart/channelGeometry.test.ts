@@ -9,7 +9,7 @@ import {
 	markerTone,
 	periodIndexAt,
 } from "./channelGeometry";
-import { formatKiloCents, RENT_PERIODS, STAX_PERIODS } from "./fixtures";
+import { formatKiloCents, RENT_PERIODS, LICENSE_CLIENT_PERIODS } from "./fixtures";
 
 const opts = {
 	showDivergence: true,
@@ -17,8 +17,8 @@ const opts = {
 	formatValue: formatKiloCents,
 };
 
-describe("channelModel — the STAX fixture, printed", () => {
-	const model = channelModel(STAX_PERIODS, opts);
+describe("channelModel — the license-revenue fixture, printed", () => {
+	const model = channelModel(LICENSE_CLIENT_PERIODS, opts);
 
 	it("prints the table a reader checks the shape against", () => {
 		const table = formatChannelTable(model);
@@ -27,28 +27,28 @@ describe("channelModel — the STAX fixture, printed", () => {
 			[
 				"i | key     | lo       | hi       | value    | outside | diff     | tone",
 				"--|---------|----------|----------|----------|---------|----------|-------",
-				"0 | 2026-01 | 1820000  | 3744000  | 2784000  | no      | 0        | inside",
-				"1 | 2026-02 | 3640000  | 7488000  | 9358000  | yes     | 2830000  | over",
-				"2 | 2026-03 | 5460000  | 11232000 | 14612000 | yes     | 1510000  | over",
-				"3 | 2026-04 | 7280000  | 14976000 | 21506000 | yes     | 3150000  | over",
-				"4 | 2026-05 | 9100000  | 18720000 | 21506000 | yes     | -1820000 | over",
-				"5 | 2026-06 | 10920000 | 22464000 | 21506000 | no      | -1820000 | inside",
-				"6 | 2026-07 | 12740000 | 26208000 | 31110000 | yes     | 5860000  | over",
-				"7 | 2026-08 | 14560000 | 29952000 | 32930000 | yes     | 0        | over",
-				"8 | 2026-09 | 16380000 | 33696000 | 32930000 | no      | -1820000 | inside",
+				"0 | 2026-01 | 2000000  | 4000000  | 3000000  | no      | 0        | inside",
+				"1 | 2026-02 | 4000000  | 8000000  | 9600000  | yes     | 2600000  | over",
+				"2 | 2026-03 | 6000000  | 12000000 | 14900000 | yes     | 1300000  | over",
+				"3 | 2026-04 | 8000000  | 16000000 | 21900000 | yes     | 3000000  | over",
+				"4 | 2026-05 | 10000000 | 20000000 | 21900000 | yes     | -2000000 | over",
+				"5 | 2026-06 | 12000000 | 24000000 | 21900000 | no      | -2000000 | inside",
+				"6 | 2026-07 | 14000000 | 28000000 | 31700000 | yes     | 5800000  | over",
+				"7 | 2026-08 | 16000000 | 32000000 | 33600000 | yes     | -100000  | over",
+				"8 | 2026-09 | 18000000 | 36000000 | 33600000 | no      | -2000000 | inside",
 			].join("\n"),
 		);
 	});
 
-	it("ends at 329.3k inside 163.8k–337.0k, labelled at the last period", () => {
+	it("ends at 336k inside 180k–360k, labelled at the last period", () => {
 		expect(model.endLabels.map((l) => l.text)).toEqual([
-			"329.3k",
-			"337.0k",
-			"163.8k",
+			"336k",
+			"360k",
+			"180k",
 		]);
 		expect(model.markers[8]).toEqual({
 			i: 8,
-			value: 32_930_000,
+			value: 33_600_000,
 			tone: "inside",
 			end: true,
 		});
@@ -57,14 +57,14 @@ describe("channelModel — the STAX fixture, printed", () => {
 	it("labels bars through the caller's formatter, signed", () => {
 		expect(model.bars.map((b) => b.label)).toEqual([
 			"0",
-			"+28.3k",
-			"+15.1k",
-			"+31.5k",
-			"-18.2k",
-			"-18.2k",
-			"+58.6k",
-			"0",
-			"-18.2k",
+			"+26k",
+			"+13k",
+			"+30k",
+			"-20k",
+			"-20k",
+			"+58k",
+			"-1k",
+			"-20k",
 		]);
 		expect(model.bars.map((b) => b.tone)).toEqual([
 			"zero",
@@ -74,7 +74,7 @@ describe("channelModel — the STAX fixture, printed", () => {
 			"under",
 			"under",
 			"over",
-			"zero",
+			"under",
 			"under",
 		]);
 	});
@@ -87,14 +87,14 @@ describe("channelModel — the STAX fixture, printed", () => {
 		expect(model.leftMarginChars).toBe(Math.max(...all.map((t) => t.length)));
 		expect(model.margin.left).toBeGreaterThan(model.leftMarginChars * 6);
 		// Right margin makes room for the widest end label.
-		expect(model.margin.right).toBeGreaterThan("329.3k".length * 6);
+		expect(model.margin.right).toBeGreaterThan("360k".length * 6);
 	});
 
 	it("keeps the channel floor on zero and pads the top", () => {
 		expect(model.yDomain[0]).toBe(0);
-		expect(model.yDomain[1]).toBeGreaterThan(33_696_000);
+		expect(model.yDomain[1]).toBeGreaterThan(36_000_000);
 		expect(model.divDomain[0]).toBe(-model.divDomain[1]);
-		expect(model.divDomain[1]).toBeGreaterThan(5_860_000);
+		expect(model.divDomain[1]).toBeGreaterThan(5_800_000);
 	});
 });
 
@@ -124,7 +124,7 @@ describe("channelModel — edges never produce NaN", () => {
 	});
 
 	it("one period: one marker, one bar", () => {
-		const model = channelModel([STAX_PERIODS[1]], opts);
+		const model = channelModel([LICENSE_CLIENT_PERIODS[1]], opts);
 		expect(model.markers).toHaveLength(1);
 		expect(model.bars).toHaveLength(1);
 		expect(model.xDomain).toEqual([-0.5, 0.5]);

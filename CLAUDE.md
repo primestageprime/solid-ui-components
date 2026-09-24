@@ -36,3 +36,6 @@ moves to `docs/adr/` first.
   showcase/test/depth-header rules that will otherwise fail your PR.
 - `docs/adr/0008-deliberately-unfixed.md` — what is deliberately *not* to be
   "fixed", and why. Check it before driving any metric to zero.
+- `AGENT_GUIDE.md` § *Unstable exports* / `COMPONENTS.md` § *Unstable exports*
+  — before adding to or promoting from `/unstable`, or exporting something
+  from the root that belongs there instead.

@@ -13,7 +13,7 @@ import {
 import {
 	formatKiloCents,
 	RENT_PERIODS,
-	STAX_PERIODS,
+	LICENSE_CLIENT_PERIODS,
 } from "../../src/components/ChannelChart/fixtures";
 import { MutedBody, SectionTitle } from "../../src/components/Text";
 
@@ -29,19 +29,19 @@ export const ChannelChartShowcase: Component = () => {
 	return (
 		<div class="component-section component-section--full">
 			<div class="example-group">
-				<SectionTitle>ChannelDivergenceChart — STAX revenue</SectionTitle>
+				<SectionTitle>ChannelDivergenceChart — license revenue</SectionTitle>
 				<MutedBody>
 					Paid in batches, so the monthly bars swing over and under the band
-					while the cumulative line settles inside the channel: $329.3k
-					against $163.8k – $337.0k. A zero bar draws as a flat tick. Both
+					while the cumulative line settles inside the channel: $336k
+					against $180k – $360k. A zero bar draws as a flat tick. Both
 					plots share one period axis and one margin. Selected:{" "}
 					{selected() ?? "none"}.
 				</MutedBody>
 				<div class="channel-chart-demo">
 					<ChannelDivergenceChart
-						periods={STAX_PERIODS}
+						periods={LICENSE_CLIENT_PERIODS}
 						formatValue={formatKiloCents}
-						ariaLabel="STAX cumulative channel, 2026-01 to 2026-09"
+						ariaLabel="License revenue cumulative channel, 2026-01 to 2026-09"
 						selectedKey={selected()}
 						onPickPeriod={setSelected}
 						legend={LEGEND}
@@ -66,9 +66,9 @@ export const ChannelChartShowcase: Component = () => {
 				<SectionTitle>ChannelChart — the channel alone</SectionTitle>
 				<div class="channel-chart-demo channel-chart-demo--short">
 					<ChannelChart
-						periods={STAX_PERIODS}
+						periods={LICENSE_CLIENT_PERIODS}
 						formatValue={formatKiloCents}
-						ariaLabel="STAX cumulative channel"
+						ariaLabel="License revenue cumulative channel"
 					/>
 				</div>
 			</div>

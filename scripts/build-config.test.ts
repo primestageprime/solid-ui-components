@@ -121,12 +121,55 @@ either fails to publish or ships an exports target that does not exist.`;
     const checkList = workflow.match(/for f in ([^;]+); do/)?.[1] ?? "";
     expect(checkList, WHY_PUBLISH).not.toBe("");
 
-    for (const target of [pkg.exports["."].node, pkg.exports["."].browser]) {
+    for (const target of [
+      pkg.exports["."].node,
+      pkg.exports["."].browser,
+      pkg.exports["./unstable"].browser,
+      pkg.exports["./unstable"].types,
+    ]) {
       const path = target.replace(/^\.\//, "");
       expect(checkList, `${WHY_PUBLISH}\n\nMissing: ${path}`).toContain(path);
     }
     // The old single-bundle path must be gone, not merely joined by the new one.
     expect(checkList, WHY_PUBLISH).not.toMatch(/dist\/server\.js(\s|$)/);
+  });
+});
+
+// ============================================
+// The `/unstable` entry: outside semver, but still gated
+// ============================================
+//
+// Unlike every other export target, `/unstable`'s guarantee is that it
+// CHANGES — so these tests assert only the mechanics (it builds, it is
+// reachable, it is not accidentally promoted), never the shape of what it
+// exports. See COMPONENTS.md § "Unstable exports".
+describe("build config: the /unstable entry", () => {
+  it("has its own exports subpath, mirroring the root entry's conditions", () => {
+    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    const unstable = pkg.exports["./unstable"];
+    expect(unstable, "package.json must declare exports['./unstable']").toBeDefined();
+    // Same condition set the root "." entry exposes to source-mode consumers
+    // (thorcasting-ui's customConditions: ["source"]), minus "node" — there is
+    // no SSR build pass for this entry, and its first contents (channelModel /
+    // formatChannelTable) are already DOM-free, so "default" covers Node too.
+    expect(unstable.source).toBe("./src/unstable.ts");
+    expect(unstable.types).toBe("./dist/unstable.d.ts");
+    expect(unstable.browser).toBe("./dist/unstable.js");
+    expect(unstable.import).toBe("./dist/unstable.js");
+    expect(unstable.default).toBe("./dist/unstable.js");
+  });
+
+  it("vite.config.ts builds it as a second lib entry, not a separate build pass", () => {
+    const cfg = readFileSync(join(root, "vite.config.ts"), "utf8");
+    expect(cfg).toMatch(/unstable:\s*resolve\(__dirname,\s*["']src\/unstable\.ts["']\)/);
+  });
+
+  it("the root barrel never re-exports from ./unstable", () => {
+    // The policy (COMPONENTS.md): promoting something out of /unstable to the
+    // root is additive (re-export it from the root too); the root must never
+    // point back at /unstable. This is the mechanical half of that rule.
+    const barrel = readFileSync(join(root, "src/index.ts"), "utf8");
+    expect(barrel).not.toMatch(/unstable/i);
   });
 });
 

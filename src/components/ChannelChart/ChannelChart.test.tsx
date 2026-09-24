@@ -6,12 +6,12 @@ import {
 	ChannelChart as ChannelChartBase,
 } from "./ChannelChart";
 import { channelModel } from "./channelGeometry";
-import { formatKiloCents, STAX_PERIODS } from "./fixtures";
+import { formatKiloCents, LICENSE_CLIENT_PERIODS } from "./fixtures";
 import { ChannelChart, ChannelDivergenceChart } from "./variants";
 
 const common = {
 	formatValue: formatKiloCents,
-	ariaLabel: "STAX cumulative channel",
+	ariaLabel: "license revenue cumulative channel",
 };
 
 const bars = (c: HTMLElement) =>
@@ -20,10 +20,10 @@ const bars = (c: HTMLElement) =>
 describe("ChannelDivergenceChart", () => {
 	it("renders as one img with both plots on one period axis", () => {
 		const { container, getByRole } = render(() => (
-			<ChannelDivergenceChart periods={STAX_PERIODS} {...common} />
+			<ChannelDivergenceChart periods={LICENSE_CLIENT_PERIODS} {...common} />
 		));
 		expect(getByRole("img").getAttribute("aria-label")).toBe(
-			"STAX cumulative channel",
+			"license revenue cumulative channel",
 		);
 		expect(container.querySelectorAll("svg.sui-chart, .sui-chart svg").length)
 			.toBeGreaterThanOrEqual(2);
@@ -39,14 +39,14 @@ describe("ChannelDivergenceChart", () => {
 		// Out-of-band markers take the over tone.
 		expect(circles[1].getAttribute("fill")).toBe("var(--sui-danger)");
 		expect(circles[0].getAttribute("fill")).toBe("var(--sui-text-primary)");
-		// 7 signed bars + 2 zero bars drawn as a +/- tick pair = 11 rects.
-		expect(bars(container).length).toBe(11);
+		// 8 signed bars + 1 zero bar drawn as a +/- tick pair = 10 rects.
+		expect(bars(container).length).toBe(10);
 		expect(container.innerHTML).not.toContain("NaN");
 	});
 
 	it("both plots take the same left margin, so bars sit under points", () => {
 		const { container } = render(() => (
-			<ChannelDivergenceChart periods={STAX_PERIODS} {...common} />
+			<ChannelDivergenceChart periods={LICENSE_CLIENT_PERIODS} {...common} />
 		));
 		const plots = container.querySelectorAll<SVGGElement>(
 			"svg > g[transform^='translate']",
@@ -59,7 +59,7 @@ describe("ChannelDivergenceChart", () => {
 	});
 
 	it("reports a pick as the nearest period's key", () => {
-		const { margin } = channelModel(STAX_PERIODS, {
+		const { margin } = channelModel(LICENSE_CLIENT_PERIODS, {
 			showDivergence: true,
 			labelEnds: true,
 			formatValue: formatKiloCents,
@@ -73,7 +73,7 @@ describe("ChannelDivergenceChart", () => {
 		const onPickPeriod = vi.fn();
 		const { container } = render(() => (
 			<ChannelDivergenceChart
-				periods={STAX_PERIODS}
+				periods={LICENSE_CLIENT_PERIODS}
 				{...common}
 				onPickPeriod={onPickPeriod}
 			/>
@@ -92,7 +92,7 @@ describe("ChannelDivergenceChart", () => {
 	it("draws a solid rule at the selected period on both plots", () => {
 		const { container } = render(() => (
 			<ChannelDivergenceChart
-				periods={STAX_PERIODS}
+				periods={LICENSE_CLIENT_PERIODS}
 				{...common}
 				selectedKey="2026-04"
 			/>
@@ -106,7 +106,7 @@ describe("ChannelDivergenceChart", () => {
 describe("ChannelChart edges", () => {
 	it("the plain variant draws no bars", () => {
 		const { container } = render(() => (
-			<ChannelChart periods={STAX_PERIODS} {...common} />
+			<ChannelChart periods={LICENSE_CLIENT_PERIODS} {...common} />
 		));
 		expect(bars(container).length).toBe(0);
 		expect(container.querySelectorAll(".sui-chart__points circle").length).toBe(9);
@@ -122,7 +122,7 @@ describe("ChannelChart edges", () => {
 
 	it("a single period and an all-zero period never produce NaN", () => {
 		for (const periods of [
-			[STAX_PERIODS[1]],
+			[LICENSE_CLIENT_PERIODS[1]],
 			[{ key: "z", lo: 0, hi: 0, value: 0, diff: 0 }],
 		]) {
 			const { container, unmount } = render(() => (
@@ -137,7 +137,7 @@ describe("ChannelChart edges", () => {
 	it("renders a legend when legend text is supplied", () => {
 		const { getByText } = render(() => (
 			<ChannelChartBase
-				periods={STAX_PERIODS}
+				periods={LICENSE_CLIENT_PERIODS}
 				{...common}
 				legend={{
 					band: "projected",

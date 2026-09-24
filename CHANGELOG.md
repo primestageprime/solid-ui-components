@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+### Added
+
+- **`/unstable` — a subpath entry outside semver.**
+  `import { … } from "@primestageprime/solid-ui-components/unstable"` for
+  exports that may change or disappear in any release, including a patch, with
+  no deprecation window. First contents: `channelModel` and
+  `formatChannelTable` (+ their types), ChannelChart's pure geometry core,
+  kept off the root barrel by design (0.180.0) but reachable here for a
+  consumer that genuinely needs the geometry itself. Pin an exact version if
+  you depend on it. See COMPONENTS.md / AGENT_GUIDE.md § "Unstable exports".
+
+### Changed
+
+- **ChannelChart fixtures/showcase/tests no longer carry real client
+  figures.** `STAX_PERIODS` renamed to `LICENSE_CLIENT_PERIODS` with a
+  synthetic band and receipts (ending $336k inside $180k–$360k, vs. the
+  previous real $329.3k inside $163.8k–$337.0k); every derived test
+  expectation (the printed table, end labels, bar labels/tones, margin and
+  domain thresholds) was regenerated from the new fixture and checked by eye,
+  not hand-edited. `RENT_PERIODS` was already synthetic and is unchanged.
+
 ## 0.180.0 — 2026-09-24
 
 ### Added

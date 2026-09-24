@@ -22,6 +22,13 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./unstable": {
+      "source": "./src/unstable.ts",
+      "types": "./dist/unstable.d.ts",
+      "browser": "./dist/unstable.js",
+      "import": "./dist/unstable.js",
+      "default": "./dist/unstable.js"
+    },
     "./testing/jsdom-nan-shim": {
       "source": "./src/testing/jsdomNaNDeclarationShim.ts",
       "types": "./src/testing/jsdomNaNDeclarationShim.ts",
