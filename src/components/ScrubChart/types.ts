@@ -232,6 +232,12 @@ export interface ScrubChartMinimizedContext<C extends Cell> {
   summary: string;
 }
 
+/** A y range in data units — what the inline range editor emits. */
+export interface ScrubChartYRange {
+  min: number;
+  max: number;
+}
+
 /** The y-axis policy the corner switch picks between. See `yAxisMode`. */
 export type ScrubChartYAxisMode = "auto" | "fixed" | "autoscale";
 
@@ -470,6 +476,19 @@ export interface ScrubChartProps<C extends Cell> {
   yAxisMode?: ScrubChartYAxisMode;
   /** Fires when the reader picks another segment of the y-axis mode switch. */
   onYAxisModeChange?: (mode: ScrubChartYAxisMode) => void;
+  /**
+   * Fires with the range the reader applied in the inline range editor, in
+   * data units. The editor exists only in FIXED mode (`yAxisMode="fixed"`)
+   * with this callback set: the y-axis label column becomes a button, and a
+   * click opens a small Max / Min editor over the plot's top-left, seeded
+   * from the domain on screen. Enter applies, Escape cancels. The chart does
+   * not hold the range — the caller stores it and passes it back through
+   * `yDomain` (or CashflowScrubChart's `yMin`/`yMax`).
+   */
+  onYRangeChange?: (range: ScrubChartYRange) => void;
+  /** How the range editor shows a value: `"number"` (default) as is,
+   *  `"currency-cents"` as dollars (the data stays in cents). */
+  yRangeField?: "number" | "currency-cents";
   /** Format y-axis tick values for display. Default: locale number. */
   formatYLabel?: (value: number) => string;
   /**

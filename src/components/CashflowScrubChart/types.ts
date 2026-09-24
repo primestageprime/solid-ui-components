@@ -462,6 +462,10 @@ export interface CashflowScrubChartProps {
   yAxisMode?: ScrubChartProps<CashflowCell>["yAxisMode"];
   /** Fires when the reader picks another y-axis mode. */
   onYAxisModeChange?: ScrubChartProps<CashflowCell>["onYAxisModeChange"];
+  /** Fires with the range (in CENTS) the reader applied in the inline
+   *  range editor — FIXED mode only; click the y-axis to open it. The editor
+   *  shows dollars. Store the range and pass it back as `yMin`/`yMax`. */
+  onYRangeChange?: ScrubChartProps<CashflowCell>["onYRangeChange"];
   /**
    * Distance in px from the container's left edge to the y-axis line.
    * ScrubChart measures the widest formatted label and, with `yFitDomain`
