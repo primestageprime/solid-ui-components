@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.182.0 — 2026-09-24
+
 ### Added
 
 - **`PopoverTooltip`** — a `Tooltip` sibling that also opens on tap/click.
