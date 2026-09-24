@@ -49,6 +49,8 @@ import {
   ScrubChartTopActionControl,
 } from "./ScrubChartTopActionControl";
 import { ScrubChartYFitControl } from "./ScrubChartYFitControl";
+import { ScrubChartYAxisModeControl } from "./ScrubChartYAxisModeControl";
+import { ScrubChartYRangeEditor } from "./ScrubChartYRangeEditor";
 import {
   ScrubChartAxes,
   ScrubChartGrid,
@@ -64,6 +66,8 @@ import {
   DEFAULT_X_MAX_TICKS,
   defaultYTickCount,
   CORNER_FOOTPRINT,
+  CORNER_LEVEL_OFFSET,
+  Y_AXIS_MODE_COLUMN,
   Y_FIT_COLUMN,
   defaultFormatX,
   defaultFormatY,
@@ -84,6 +88,7 @@ import type {
   ScrubChartOverrides,
   ScrubChartProps,
   ScrubChartTopAction,
+  ScrubChartYRange,
 } from "./types";
 import {
   DEFAULT_Y_FIT_MARGIN,
@@ -110,6 +115,8 @@ export type {
   ScrubChartYFitBound,
   ScrubChartYFitPin,
   ScrubChartYScaleMode,
+  ScrubChartYAxisMode,
+  ScrubChartYRange,
 } from "./types";
 
 export const ScrubChart = <C extends Cell>(
@@ -236,7 +243,18 @@ export const ScrubChart = <C extends Cell>(
   // for `Y_FIT_COLUMN` instead: the column carries a gutter that moves the y
   // labels right of the y-fit button, and the row needs no such gutter.
   const yFitFootprint = () =>
-    props.yFitDomain || expandable() ? CORNER_FOOTPRINT : 0;
+    originCorner() || expandable() ? CORNER_FOOTPRINT : 0;
+
+  // ── The origin corner ────────────────────────────────────────────────
+  // ONE control holds the corner where the axes meet. `yAxisMode` (the
+  // three-segment switch) wins it when set; `yFitDomain` alone keeps the
+  // y-fit button. Either way the corner's guarantees — row footprint, column
+  // width, label floor — follow `originCorner()`, so no caller can get a
+  // control without the room it needs.
+  const axisModeOn = () => props.yAxisMode !== undefined;
+  const originCorner = () => axisModeOn() || props.yFitDomain != null;
+  const originColumn = () =>
+    axisModeOn() ? Y_AXIS_MODE_COLUMN : props.yFitDomain ? Y_FIT_COLUMN : 0;
 
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
@@ -458,7 +476,7 @@ export const ScrubChart = <C extends Cell>(
     tickCount: yTickCount,
     formatLabel: fmtY,
     axisWidth: () => props.yAxisWidth,
-    minWidth: () => (props.yFitDomain ? Y_FIT_COLUMN : 0),
+    minWidth: originColumn,
     transitionMs: () => props.yFitTransition ?? DEFAULT_Y_FIT_TRANSITION_MS,
   });
   const yScale = yAxis.scale;
@@ -601,6 +619,36 @@ export const ScrubChart = <C extends Cell>(
         class: band.class,
       };
     }, bands);
+  });
+
+  // ── The inline range editor (fixed mode) ─────────────────────────────
+  // In FIXED mode with `onYRangeChange` set, the y-axis label column is a
+  // button: a click opens a small Max / Min editor over the plot's top-left.
+  // The hit zone runs from `plotTop` down to the corner control's top edge,
+  // so it never covers the mode switch. The editor is seeded from the domain
+  // on screen and closes on apply, cancel, or leaving fixed mode.
+  const rangeEditable = () =>
+    props.yAxisMode === "fixed" &&
+    props.onYRangeChange !== undefined &&
+    yScale() != null;
+  const [rangeEditorOpen, setRangeEditorOpen] = createSignal(false);
+  // Leaving fixed mode (or losing the callback) closes the editor, so coming
+  // back to fixed does not find it open over the plot.
+  createEffect(() => {
+    if (!rangeEditable()) setRangeEditorOpen(false);
+  });
+  const shownRange = (): ScrubChartYRange => {
+    const [a, b] = yScale()?.domain() ?? [0, 1];
+    return { min: Math.min(a, b), max: Math.max(a, b) };
+  };
+  const axisHitStyle = (): JSX.CSSProperties => ({
+    top: `${plotTop()}px`,
+    width: `${plotLeft()}px`,
+    height: `${Math.max(0, plotBottom() + CORNER_LEVEL_OFFSET - plotTop())}px`,
+  });
+  const rangeEditorStyle = (): JSX.CSSProperties => ({
+    top: `${plotTop() + 4}px`,
+    left: `${plotLeft() + 4}px`,
   });
 
   const yToPlot = (v: number): number => {
@@ -875,7 +923,7 @@ export const ScrubChart = <C extends Cell>(
               plotRight={plotRight}
               plotBottom={plotBottom}
               yScaleActive={() => yScale() != null}
-              yFitCorner={() => props.yFitDomain != null}
+              yFitCorner={originCorner}
               yTicks={yTicks}
               xTicks={xTicks}
               formatY={fmtY}
@@ -925,7 +973,39 @@ export const ScrubChart = <C extends Cell>(
             it covers no gridline, no label and no data. It comes LAST in the
             frame so it stacks above the gesture overlay and answers its own
             clicks. See ScrubChartYFitControl.tsx for the markup. */}
-          <Show when={props.yFitDomain}>
+          <Show when={axisModeOn()}>
+            <ScrubChartYAxisModeControl
+              mode={() => props.yAxisMode ?? "auto"}
+              onSelect={(mode) => props.onYAxisModeChange?.(mode)}
+              axisTop={plotBottom}
+            />
+          </Show>
+          {/* The y-axis as a button, fixed mode only — after the gesture
+            overlay so it answers its own clicks, like the corner controls. */}
+          <Show when={rangeEditable()}>
+            <button
+              type="button"
+              class="sui-scrub-chart__y-axis-hit"
+              aria-label="Edit y-axis range"
+              aria-expanded={rangeEditorOpen()}
+              style={axisHitStyle()}
+              onClick={() => setRangeEditorOpen(!rangeEditorOpen())}
+            />
+          </Show>
+          <Show when={rangeEditable() && rangeEditorOpen()}>
+            <div class="sui-scrub-chart__y-range-anchor" style={rangeEditorStyle()}>
+              <ScrubChartYRangeEditor
+                initial={shownRange()}
+                field={props.yRangeField}
+                onApply={(range) => {
+                  setRangeEditorOpen(false);
+                  props.onYRangeChange?.(range);
+                }}
+                onCancel={() => setRangeEditorOpen(false)}
+              />
+            </div>
+          </Show>
+          <Show when={!axisModeOn() && props.yFitDomain}>
             <ScrubChartYFitControl
               mode={yScaleMode}
               onSelect={selectYScaleMode}

@@ -28,6 +28,14 @@ export interface ModalProps {
   variant?: ColorVariant;
   /** Modal size */
   size?: "sm" | "md" | "lg" | "xl" | "fullscreen";
+  /**
+   * Height behavior. "auto" (default) sizes to content, up to the usual
+   * viewport cap. "fixed-60" locks the modal to a constant 60vh regardless
+   * of which tab/content is showing, with the body scrolling internally —
+   * use this when tabbed content in the header/body would otherwise cause
+   * the modal to resize as the active tab changes.
+   */
+  height?: "auto" | "fixed-60";
   /** Show close button */
   showClose?: boolean;
   children?: JSX.Element;
@@ -61,6 +69,7 @@ export const Modal: Component<ModalProps> = (props) => {
     if (props.size) classList.push(`sui-modal--${props.size}`);
     if (props.corners) classList.push(`sui-modal--corners-${props.corners}`);
     if (props.variant) classList.push(`sui-modal--${props.variant}`);
+    if (props.height) classList.push(`sui-modal--height-${props.height}`);
     return classList.join(" ");
   };
 

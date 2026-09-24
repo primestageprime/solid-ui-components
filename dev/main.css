@@ -2927,3 +2927,33 @@ th:has(.tf-th-center) .hud-table__header-content {
 .channel-chart-demo--short {
   height: 240px;
 }
+
+/* FullscreenBox showcase: a stated height for the in-flow box, so the
+   fill-mode chart inside has a definite parent. Fullscreen overrides it. */
+.fullscreen-box-demo {
+  height: 260px;
+}
+
+.fullscreen-box-demo > .sui-fullscreen-box {
+  height: 100%;
+}
+
+/* Chart shell showcase: the shell chart on top, BuilderBoardBelowChart
+   below. A SPLIT board fills a definite-height frame (its ViewportColumn
+   needs a definite-height flex parent), 900px standing in for the window
+   below the tab bar; a STACKED board is content-height and the page scrolls. */
+.chart-shell-demo__frame {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chart-shell-demo__frame--split {
+  height: 900px;
+}
+
+.chart-shell-demo__frame--split > [data-builder-board] {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+}

@@ -3,7 +3,8 @@
 // ============================================
 // OverflowNav — Pure Composite (Depth 2)
 // Composes Row (Layout Primitive) + NavLink (Atomic Primitive)
-// + PopoverMenu (Atomic Primitive).
+// + PopoverMenu (Atomic Primitive) + Button (Atomic Primitive, the
+// close affordance on closable items).
 //
 // Owns zero CSS files and zero inline `style={}` other than
 // `style={props.style}` passthrough. All visual treatment lives in
@@ -12,6 +13,15 @@
 // Horizontal list of nav items that automatically collapses items
 // that don't fit into a trailing kebab overflow menu, re-evaluated
 // on container resize.
+//
+// Two optional extras:
+// - Closable items (`closable: true` + the nav's `onClose(id)`) render
+//   a trailing close button beside the NavLink. Closing is the app's
+//   call — OverflowNav only reports the id.
+// - `overflowItems`: items the app puts in the kebab regardless of
+//   width (e.g. hidden tabs the reader can re-open). They list after
+//   any width-spilled items; the kebab is shown whenever either list
+//   is non-empty. Kebab rows keep `active`.
 // ============================================
 import {
   type Component,
@@ -27,6 +37,8 @@ import {
 import { isServer } from "solid-js/web";
 import { Row } from "../Layout/Row";
 import { NavLink, type NavLinkColor } from "../Navigation/NavLink";
+import { TightNoShrinkClusterRow } from "../Layout/variants";
+import { Button } from "../Button/Button";
 import { PopoverMenu, type PopoverMenuItem } from "../PopoverMenu/PopoverMenu";
 import { observeSize } from "../../internal/dom/observeSize";
 import { map, find } from "../../fn";
@@ -46,11 +58,25 @@ export interface OverflowNavItem {
   badge?: string | number;
   /** Optional click handler. Forwarded to the underlying anchor; also fires when the item is selected from the overflow menu. */
   onClick?: (event?: MouseEvent) => void;
+  /**
+   * Shows a trailing close button beside the inline link. Clicking it calls
+   * the nav's `onClose(id)` (not `onClick`). Ignored inside the kebab — a
+   * kebab row selects, it never closes. No effect without `onClose`.
+   */
+  closable?: boolean;
 }
 
 export interface OverflowNavProps {
-  /** Items to render. */
+  /** Items to render inline; any that don't fit spill into the kebab. */
   items: OverflowNavItem[];
+  /**
+   * Items that always live in the kebab, whatever the width — listed after
+   * width-spilled items. Selecting one fires its `onClick` (or follows its
+   * `href`), same as a spilled item. Default: none.
+   */
+  overflowItems?: OverflowNavItem[];
+  /** Called with an item's id when its close button is clicked (see `closable`). */
+  onClose?: (id: string) => void;
   /** Gap between inline NavLink items (forwarded to Row). Default `"sm"`. */
   gap?: "xs" | "sm";
   /** Vertical alignment of inline items (forwarded to Row). Default `"center"`. */
@@ -75,8 +101,9 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
   );
 
   let containerRef: HTMLDivElement | undefined;
-  // Per-item refs, indexed in lock-step with props.items.
-  const itemRefs: HTMLAnchorElement[] = [];
+  // Per-item refs (the NavLink, or its closable wrapper), indexed in
+  // lock-step with props.items.
+  const itemRefs: HTMLElement[] = [];
   // Cached natural widths (offsetWidth at measurement time), indexed alongside items.
   const [naturalWidths, setNaturalWidths] = createSignal<number[]>([]);
   // How many leading items are rendered inline (the rest are in the overflow menu).
@@ -96,6 +123,8 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
     }
   };
 
+  const explicitOverflow = (): OverflowNavItem[] => props.overflowItems ?? [];
+
   const recompute = () => {
     if (!containerRef) return;
     const widths = naturalWidths();
@@ -105,6 +134,10 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
     const containerWidth = containerRef.clientWidth;
     if (containerWidth <= 0) return;
 
+    // An explicit overflow list means the kebab is always there, so its
+    // reserve always applies.
+    const kebabForced = explicitOverflow().length > 0;
+
     // First, check if everything fits without any kebab.
     let runningWidth = 0;
     const g = gapPx();
@@ -112,7 +145,7 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
       runningWidth += widths[i];
       if (i > 0) runningWidth += g;
     }
-    if (runningWidth <= containerWidth) {
+    if (runningWidth <= containerWidth - (kebabForced ? KEBAB_RESERVE_PX : 0)) {
       setVisibleCount(total);
       return;
     }
@@ -153,6 +186,10 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
   // items render inline for the next measurement frame, then trim again.
   createEffect(() => {
     const len = props.items.length;
+    // Closability changes an item's width; the kebab's presence changes the budget.
+    // Reading every flag (and the explicit list's length) subscribes to them.
+    map((item) => item.closable, props.items);
+    explicitOverflow().length;
     setVisibleCount(len);
     if (isServer) return;
     requestAnimationFrame(measure);
@@ -170,8 +207,11 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
 
   // Items that fit inline.
   const visibleItems = () => props.items.slice(0, visibleCount());
-  // Items that spill into the overflow menu.
-  const overflowItems = () => props.items.slice(visibleCount());
+  // Items in the overflow menu: width-spilled first, then the explicit list.
+  const overflowItems = () => [
+    ...props.items.slice(visibleCount()),
+    ...explicitOverflow(),
+  ];
 
   // Convert overflow items to PopoverMenu items. The PopoverMenu's `items` type
   // requires at least one item, so we only render the menu when there's spill.
@@ -186,7 +226,9 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
   };
 
   const handleMenuSelect = (id: string) => {
-    const item = find((x) => x.id === id, props.items);
+    const item =
+      find((x) => x.id === id, props.items) ??
+      find((x) => x.id === id, explicitOverflow());
     if (!item) return;
     if (item.onClick) {
       item.onClick();
@@ -205,22 +247,48 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
       style={props.style}
     >
       <For each={visibleItems()}>
-        {(item, i) => (
-          <NavLink
-            ref={(el: HTMLAnchorElement) => {
-              itemRefs[i()] = el;
-            }}
-            href={item.href}
-            active={item.active}
-            color={item.color}
-            badge={item.badge}
-            onClick={
-              item.onClick ? (e: MouseEvent) => item.onClick!(e) : undefined
-            }
-          >
-            {item.label}
-          </NavLink>
-        )}
+        {(item, i) => {
+          const setRef = (el: HTMLElement) => {
+            itemRefs[i()] = el;
+          };
+          const link = (ref?: (el: HTMLAnchorElement) => void) => (
+            <NavLink
+              ref={ref}
+              href={item.href}
+              active={item.active}
+              color={item.color}
+              badge={item.badge}
+              onClick={
+                item.onClick ? (e: MouseEvent) => item.onClick!(e) : undefined
+              }
+            >
+              {item.label}
+            </NavLink>
+          );
+          return (
+            <Show
+              when={item.closable && props.onClose}
+              fallback={link(setRef)}
+            >
+              <TightNoShrinkClusterRow ref={setRef} data-closable-item={item.id}>
+                {link()}
+                <Button
+                  variant="icon-only"
+                  size="sm"
+                  aria-label={`Close ${item.label}`}
+                  title={`Close ${item.label}`}
+                  onClick={(e: MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    props.onClose?.(item.id);
+                  }}
+                >
+                  &times;
+                </Button>
+              </TightNoShrinkClusterRow>
+            </Show>
+          );
+        }}
       </For>
       <Show when={menuItems()}>
         {(menu) => (

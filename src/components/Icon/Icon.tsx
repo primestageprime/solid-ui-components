@@ -35,6 +35,7 @@ export const ICON_GROUPS = {
     "zoom-in",
     "zoom-out",
     "shrink",
+    "expand",
     "filter",
     "refresh",
     "undo",
@@ -85,6 +86,7 @@ export type IconName =
   | "zoom-in"
   | "zoom-out"
   | "shrink"
+  | "expand"
   | "filter"
   | "refresh"
   | "undo"
@@ -290,6 +292,12 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
     // Two arrows pointing in to the centre from opposite corners — "fit this
     // back down", the inverse of an expand. Distinct from `zoom-out`, which
     // is a magnifier and reads as a view scale rather than a fit.
+    // The mirror of `shrink`: two corner arrows pointing OUT — enter full
+    // screen. Same 16-unit box and strokes, so the pair swaps in place.
+    expand: {
+      outline: `<path d="M9.5 6.5L14 2M11 2h3v3M6.5 9.5L2 14M2 11v3h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M9.5 6.5L14 2M11 2h3v3M6.5 9.5L2 14M2 11v3h3" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
     shrink: {
       outline: `<path d="M14 2L9.5 6.5M9.5 3.5v3h3M2 14l4.5-4.5M6.5 12.5v-3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M14 2L9.5 6.5M9.5 3.5v3h3M2 14l4.5-4.5M6.5 12.5v-3h-3" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,

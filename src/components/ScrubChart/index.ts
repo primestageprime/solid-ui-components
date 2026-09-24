@@ -36,4 +36,6 @@ export type {
   ScrubChartYFitBound,
   ScrubChartYFitPin,
   ScrubChartYScaleMode,
+  ScrubChartYAxisMode,
+  ScrubChartYRange,
 } from "./ScrubChart";

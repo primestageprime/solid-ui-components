@@ -35,6 +35,7 @@ import { TreeDiffChartShowcase } from "./showcases/tree-diff-chart";
 import { DateAxisShowcase } from "./showcases/date-axis";
 import { ScrubChartShowcase } from "./showcases/scrub-chart";
 import { CashflowScrubChartShowcase } from "./showcases/cashflow-scrub-chart";
+import { ChartShellShowcase } from "./showcases/chart-shell";
 import { SwimlaneChartShowcase } from "./showcases/swimlane-chart";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
@@ -188,6 +189,7 @@ import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
 import { ChannelChartShowcase } from "./showcases/channel-chart";
+import { FullscreenBoxShowcase } from "./showcases/fullscreen-box";
 
 type ShowcaseProps = {
   onNavigate?: (id: string, pushHash?: boolean) => void;
@@ -310,6 +312,12 @@ const items: Item[] = [
     label: "CashflowScrubChart",
     component: CashflowScrubChartShowcase,
     tags: ["depth:2", "chart", "time", "data"],
+  },
+  {
+    id: "chart-shell",
+    label: "Chart shell primitives",
+    component: ChartShellShowcase,
+    tags: ["depth:2", "chart", "layout"],
   },
   {
     id: "swimlane-chart",
@@ -1144,6 +1152,12 @@ const items: Item[] = [
     label: "ChannelChart",
     component: ChannelChartShowcase,
     tags: ["depth:2", "chart", "data"],
+  },
+  {
+    id: "fullscreen-box",
+    label: "FullscreenBox",
+    component: FullscreenBoxShowcase,
+    tags: ["depth:1", "layout", "chart"],
   },
 ];
 

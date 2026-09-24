@@ -119,6 +119,22 @@ describe("Modal", () => {
     expect(document.querySelector(".sui-modal__title")).toBeNull();
   });
 
+  it("applies the fixed-60 height modifier class when requested", () => {
+    render(() => (
+      <Modal open={true} onClose={() => {}} title="T" height="fixed-60" />
+    ));
+    expect(dialog()!.classList.contains("sui-modal--height-fixed-60")).toBe(
+      true,
+    );
+  });
+
+  it("omits the height modifier class in the default auto mode", () => {
+    render(() => <Modal open={true} onClose={() => {}} title="T" />);
+    expect(
+      Array.from(dialog()!.classList).some((c) => c.startsWith("sui-modal--height-")),
+    ).toBe(false);
+  });
+
   it("applies size, variant, and corner modifier classes", () => {
     render(() => (
       <Modal
