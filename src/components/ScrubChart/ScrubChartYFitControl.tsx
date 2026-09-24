@@ -39,12 +39,16 @@
 //
 // This module owns the markup only. ScrubChart owns the mode signal and the
 // corner, which it states through `axisTop`.
+//
+// DEPRECATED as the origin-corner control for a chart that sets `yAxisMode`:
+// the three-segment ScrubChartYAxisModeControl takes the corner there. It
+// stays for every chart that sets `yFitDomain` alone; do not extend it.
 // ============================================
 
 import type { JSX } from "solid-js";
 import { Icon } from "../Icon";
 import { Tooltip } from "../Tooltip";
-import { CORNER_LEVEL_OFFSET } from "./helpers";
+import { cornerStyle } from "./helpers";
 import type { ScrubChartYScaleMode } from "./yScaleMode";
 
 /** Props for the y-fit button. `mode` is an accessor, so the parent's signal
@@ -60,17 +64,6 @@ export interface ScrubChartYFitControlProps {
    *  stylesheet parks the control at the frame's bottom edge. */
   axisTop?: () => number;
 }
-
-/** Where the control hangs from. An inline `top` beats the stylesheet's
- *  `bottom` inset, so the button tracks the x-axis row instead of the frame
- *  edge. `CORNER_LEVEL_OFFSET` then lifts the button until it centres on the x
- *  tick labels. `undefined` leaves the stylesheet in charge. */
-const cornerStyle = (
-  axisTop: (() => number) | undefined,
-): JSX.CSSProperties | undefined =>
-  axisTop === undefined
-    ? undefined
-    : { top: `${axisTop() + CORNER_LEVEL_OFFSET}px`, bottom: "auto" };
 
 /** The mode a click moves to — the OTHER one of the two. */
 const otherMode = (mode: ScrubChartYScaleMode): ScrubChartYScaleMode =>

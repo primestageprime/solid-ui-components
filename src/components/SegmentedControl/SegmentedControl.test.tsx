@@ -493,3 +493,13 @@ describe("SegmentedControl remove", () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 });
+
+describe("SegmentedControl size", () => {
+  it("adds the xs modifier only when asked, and a variant can bake it", () => {
+    const md = render(() => <SegmentedControl options={OPTS} value="auto" />);
+    expect(md.container.querySelector(".sui-segmented--xs")).toBeNull();
+    const Xs = createSegmentedControl({ options: OPTS, size: "xs" });
+    const xs = render(() => <Xs value="auto" />);
+    expect(xs.container.querySelector(".sui-segmented.sui-segmented--xs")).toBeTruthy();
+  });
+});
