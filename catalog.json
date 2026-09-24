@@ -7885,7 +7885,7 @@
     "useFor": "billing/subscription/recurrence cadences — \"repeat every N days/weeks/months/years\".",
     "notes": null,
     "showcase": "#/interval-input",
-    "since": "Unreleased",
+    "since": "0.184.0",
     "file": "src/components/IntervalInput/IntervalInput.tsx",
     "line": 131
   },
