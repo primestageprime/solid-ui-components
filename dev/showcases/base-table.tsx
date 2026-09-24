@@ -295,6 +295,33 @@ export const BaseTableShowcase: Component = () => {
             emptyMessage="No vessels found"
           />
 
+          <h3 class="showcase-heading-gap">
+            Composed — Fit (shrink-wrap to content)
+          </h3>
+          <p class="text-meta">
+            <code>fit</code> packs the table AND its bordered frame to the
+            columns' natural width instead of stretching full-width — for a
+            table whose columns are all fixed/capped content (IDs, speed),
+            where a full-width stretch would spread them apart with dead gaps.
+            The frame's right edge should land right after{" "}
+            <strong>Speed</strong>, not at the panel's own edge.
+          </p>
+          <BaseTable
+            data={sampleData.slice(0, 3)}
+            columns={[
+              { id: "id", header: "ID", accessor: "id", width: "3rem" },
+              { id: "imo", header: "IMO", accessor: "imo", width: "6rem" },
+              {
+                id: "speed",
+                header: "Speed",
+                accessor: "speed",
+                align: "right",
+                width: "4rem",
+              },
+            ]}
+            fit
+          />
+
           <h3 class="showcase-heading-gap">Curried Variants</h3>
           <NarrowStack>
             <div>
