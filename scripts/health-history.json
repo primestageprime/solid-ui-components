@@ -6172,5 +6172,47 @@
         }
       }
     }
+  },
+  {
+    "at": "2026-09-24T01:54:31.690Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 65,
+      "inlineStyleShowcases": 20,
+      "dotChains": 7,
+      "collectionMethodCalls": 30,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 146,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 65,
+      "inlineStyleShowcases": 20,
+      "dotChains": 7,
+      "collectionMethodCalls": 30,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 148,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 65,
+          "to": 66,
+          "reason": "ScrubChartTooltip needs a measured, per-render anchor position (left/top), same as Chart/Tooltip.tsx already does for the same core; no static CSS class can express it"
+        }
+      }
+    }
   }
 ]

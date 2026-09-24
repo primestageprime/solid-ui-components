@@ -998,6 +998,28 @@
     "line": 103
   },
   {
+    "name": "BuilderBoardBelowChart",
+    "depth": 2,
+    "kind": "variant",
+    "family": "BuilderBoard",
+    "variantOf": {
+      "factory": "createBuilderBoardBelowChart",
+      "overrides": "{}"
+    },
+    "overrides": [
+      "rail"
+    ],
+    "dataProps": "BuilderBoardBelowChartDataProps",
+    "summary": "Composite (Depth 2).",
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The gauge-railed below-chart board — the only rail today. */",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/BuilderBoard/BuilderBoardBelowChart.tsx",
+    "line": 147
+  },
+  {
     "name": "BulkActionBar",
     "depth": 2,
     "kind": "composite",
@@ -1193,7 +1215,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.47.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 86
+    "line": 87
   },
   {
     "name": "Cell",
@@ -2716,6 +2738,23 @@
     "line": 145
   },
   {
+    "name": "createBuilderBoardBelowChart",
+    "depth": 2,
+    "kind": "factory",
+    "family": "BuilderBoard",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": null,
+    "file": "src/components/BuilderBoard/BuilderBoardBelowChart.tsx",
+    "line": 138
+  },
+  {
     "name": "createButton",
     "depth": 1,
     "kind": "factory",
@@ -2764,7 +2803,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 960
+    "line": 983
   },
   {
     "name": "createCell",
@@ -3243,6 +3282,23 @@
     "line": 115
   },
   {
+    "name": "createFullscreenBox",
+    "depth": 1,
+    "kind": "factory",
+    "family": "FullscreenBox",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/fullscreen-box",
+    "since": null,
+    "file": "src/components/FullscreenBox/FullscreenBox.tsx",
+    "line": 150
+  },
+  {
     "name": "createGhostArc",
     "depth": 1,
     "kind": "factory",
@@ -3410,7 +3466,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 504
+    "line": 512
   },
   {
     "name": "createKbd",
@@ -3563,7 +3619,7 @@
     "showcase": null,
     "since": "0.85.1",
     "file": "src/components/Modal/Modal.tsx",
-    "line": 130
+    "line": 139
   },
   {
     "name": "createMonthOfYearPicker",
@@ -3631,7 +3687,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/OverflowNav/OverflowNav.tsx",
-    "line": 268
+    "line": 336
   },
   {
     "name": "createPairedMutationSliders",
@@ -3886,7 +3942,7 @@
     "showcase": "#/scrub-chart",
     "since": "0.44.0",
     "file": "src/components/ScrubChart/ScrubChart.tsx",
-    "line": 1024
+    "line": 1104
   },
   {
     "name": "createSection",
@@ -3920,7 +3976,7 @@
     "showcase": "#/segmented-control",
     "since": "0.60.0",
     "file": "src/components/SegmentedControl/SegmentedControl.tsx",
-    "line": 275
+    "line": 284
   },
   {
     "name": "createSegmentedInput",
@@ -6532,6 +6588,28 @@
     "line": 232
   },
   {
+    "name": "FullscreenBox",
+    "depth": 1,
+    "kind": "variant",
+    "family": "FullscreenBox",
+    "variantOf": {
+      "factory": "createFullscreenBox",
+      "overrides": "{}"
+    },
+    "overrides": [
+      "escapeCloses"
+    ],
+    "dataProps": "FullscreenBoxDataProps",
+    "summary": "Atomic (Depth 1).",
+    "notToBeConfusedWith": null,
+    "useFor": "a chart (or any stateful view) that must go full screen and come back as the same instance.",
+    "notes": "FullscreenBox — the default variant: Escape closes, default corner button. */",
+    "showcase": "#/fullscreen-box",
+    "since": "Unreleased",
+    "file": "src/components/FullscreenBox/FullscreenBox.tsx",
+    "line": 157
+  },
+  {
     "name": "FullscreenModal",
     "depth": 1,
     "kind": "variant",
@@ -7328,7 +7406,7 @@
     "showcase": "#/icon",
     "since": "v0.6.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 466
+    "line": 474
   },
   {
     "name": "IconClusterRow",
@@ -7679,7 +7757,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 512
+    "line": 520
   },
   {
     "name": "InlineSubtleDropdown",
@@ -10659,7 +10737,7 @@
     "showcase": "#/scrub-chart",
     "since": "0.44.0",
     "file": "src/components/ScrubChart/ScrubChart.tsx",
-    "line": 115
+    "line": 122
   },
   {
     "name": "ScrubChartBand",
@@ -10835,7 +10913,8 @@
     "variantOf": null,
     "overrides": [
       "options",
-      "color"
+      "color",
+      "size"
     ],
     "dataProps": "SegmentedControlDataProps",
     "summary": "Atomic (Depth 1).",
@@ -10845,7 +10924,7 @@
     "showcase": "#/segmented-control",
     "since": "0.60.0",
     "file": "src/components/SegmentedControl/SegmentedControl.tsx",
-    "line": 83
+    "line": 90
   },
   {
     "name": "SegmentedInput",
@@ -11961,7 +12040,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 982
+    "line": 1005
   },
   {
     "name": "StretchRow",
