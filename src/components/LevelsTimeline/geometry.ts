@@ -52,7 +52,7 @@ import { clamp } from "../../internal/math/clamp";
 import { hCurve } from "../../internal/geometry/hCurve";
 import { linearScale } from "../Chart/scales";
 import { monthlyCells } from "../DateAxis/cells";
-import { filter, find, join, map, sortBy, sum } from "../../fn";
+import { filter, find, findIndex, join, map, sortBy, sum } from "../../fn";
 
 /** A moment, as the consumer prefers to express it. */
 export type TimeValue = Date | number;
@@ -60,12 +60,31 @@ export type TimeValue = Date | number;
 /** The visible time span. The consumer's, never derived from the data. */
 export type TimeDomain = readonly [TimeValue, TimeValue];
 
-/** A numbered event: a flag above the plot and a rule dropped through it. */
+/**
+ * A numbered event: a flag above the plot and a rule dropped through it.
+ *
+ * THE CHART NUMBERS ITS OWN FLAGS (Peter, 2026-09-24): 1, 2, 3… in time
+ * order, so the box is one fixed width that always fits. `label` used to BE
+ * the flag's text, and a consumer passing a date there ("09-18") had it
+ * clipped to "09-1(" by an 18-unit box. It is no longer painted on the flag —
+ * it names the event for assistive technology only.
+ *
+ * It stays REQUIRED on purpose. Making it optional looked additive, but
+ * consumers also READ this type — two benches hand a `Mutation[]` straight to
+ * `StackedTimelineChart`, whose events need a `label: string` — and an
+ * optional field broke them at the type level. Unchanged type, changed paint.
+ */
 export interface Mutation {
   readonly id: string;
   readonly at: TimeValue;
-  /** The flag's own text — short by construction, e.g. "1". */
+  /** The event's own name. Announced, never painted — the flag shows its number. */
   readonly label: string;
+  /**
+   * What changed at this event, one line each ("Payroll 1", "Person 2"). The
+   * flag's hover tooltip lists them under the exact date. Optional: without
+   * them the tooltip is the date alone.
+   */
+  readonly details?: readonly string[];
 }
 
 export interface Point {
@@ -76,12 +95,27 @@ export interface Point {
 /** A mutation, placed: the rule's x and the box the number sits in. */
 export interface Flag {
   readonly id: string;
+  /** The flag's painted text: its 1-based number in time order, as a string. */
   readonly label: string;
-  /** Where the rule falls, and the centre the box is hung from. */
+  /** The same number, as a number. */
+  readonly number: number;
+  /** The mutation's moment, in ms — what the tooltip dates and a drag moves. */
+  readonly at: number;
+  /** The consumer's name for the event (`Mutation.label`). Announced only. */
+  readonly title: string;
+  /** The tooltip's lines. Empty when the consumer gave none. */
+  readonly details: readonly string[];
+  /** Where the rule falls — the event's TRUE x, whatever the box does. */
   readonly x: number;
+  /**
+   * True when the box was nudged off its rule to clear a neighbour. The rule
+   * then starts `FLAG_LEADER_DROP` lower, and a leader runs from the box's
+   * bottom centre (`textX`, `FLAG_RULE_TOP`) to the rule's top (`x`, `ruleTop`).
+   */
+  readonly displaced: boolean;
   readonly ruleTop: number;
   readonly ruleBottom: number;
-  /** The box, nudged so it stays on the canvas at either edge. */
+  /** The box: nudged clear of its neighbours, and kept on the canvas. */
   readonly boxX: number;
   readonly boxY: number;
   readonly boxWidth: number;
@@ -100,6 +134,30 @@ export interface ValueTick {
   readonly label: string;
 }
 
+/**
+ * One tick on the DATED bottom axis (Peter, 2026-09-24): a tick at every flag
+ * date and at a moderate cadence between them, labelled with the exact day
+ * wherever the label fits without overlapping another.
+ */
+export interface AxisTick {
+  readonly key: string;
+  /** The tick's moment, in ms. */
+  readonly at: number;
+  readonly x: number;
+  /** `2026-09-01` for the first label and at a year change, `10-03` otherwise. */
+  readonly label: string;
+  /** False where the tick is drawn but its label would collide and is dropped. */
+  readonly showLabel: boolean;
+  /** True for a flag's own date — those claim a label before any filler does. */
+  readonly event: boolean;
+  /** The tick's length below the plot — an event's is longer. */
+  readonly tickLength: number;
+  /** Where the label's text anchor sits, and which end of the text it is. */
+  readonly labelX: number;
+  readonly labelY: number;
+  readonly labelAnchor: "start" | "middle" | "end";
+}
+
 /** One month boundary on the bottom axis. */
 export interface MonthTick {
   readonly key: string;
@@ -116,16 +174,59 @@ export interface MonthTick {
 export const VIEW_WIDTH = 640;
 export const VIEW_HEIGHT = 232;
 
-/** The flag band, above the plot: the boxed numbers live here. */
-export const FLAG_BOX_WIDTH = 18;
+/**
+ * The flag band, above the plot: the boxed numbers live here.
+ *
+ * ONE width for every flag, and it fits TWO digits ("12") — Peter: the box
+ * must not resize as the count grows. Derived from the digit width at the
+ * 10px/600 the CSS sets on `.sui-levels-timeline__flag-label` (an estimate
+ * that errs wide, like `Y_LABEL_CHAR_PX`, because this file cannot measure),
+ * plus padding either side. It used to be a bare 18, which fit one digit.
+ */
+export const FLAG_DIGIT_PX = 6.4;
+export const FLAG_MAX_DIGITS = 2;
+export const FLAG_PAD_X = 4;
+export const FLAG_BOX_WIDTH = Math.ceil(
+  FLAG_MAX_DIGITS * FLAG_DIGIT_PX + FLAG_PAD_X * 2,
+);
 export const FLAG_BOX_HEIGHT = 16;
 export const FLAG_BOX_TOP = 6;
 /** A rule starts at the bottom of its flag box and drops through the plot. */
 export const FLAG_RULE_TOP = FLAG_BOX_TOP + FLAG_BOX_HEIGHT;
 
-/** The plot proper. */
-export const PLOT_LEFT = 14;
-export const PLOT_RIGHT = VIEW_WIDTH - 14;
+// ── THE DATED AXIS, below the plot ──────────────────────────────────────────
+//
+// Peter, 2026-09-24: labels are exact days, HORIZONTAL, and sparse enough that
+// they never overlap; a TICK MARK shows each event's exact position whether or
+// not its label survives, and the flag tooltip carries the full date. (A 45°
+// rotation was tried first and dropped the same day: its band cost a short
+// card a third of its plot.) So the axis keeps its old, shallow band, and all
+// the work is in WHICH labels are painted — see `datedAxisTicks`.
+
+/** A cadence tick's length, below the plot. */
+export const AXIS_TICK_LENGTH = 4;
+/** An EVENT's tick: longer, so the exact position reads without a label. */
+export const EVENT_TICK_LENGTH = 7;
+/**
+ * The width one character of a DATE label takes at the 9px the CSS sets on
+ * `.sui-levels-timeline__tick-label`. Measured in the browser on 2026-09-24:
+ * "2026-09-01" paints 54px wide, exactly 10 × 5.4. Same size as the value
+ * axis' labels, so the same estimate as `Y_LABEL_CHAR_PX`.
+ */
+export const AXIS_LABEL_CHAR_PX = 5.4;
+/** Clear air required between two painted labels, edge to edge. */
+export const AXIS_LABEL_GAP = 8;
+/**
+ * A FILLER (cadence) label needs this much MORE air than an event's does:
+ * flag dates are what the reader came for, and a filler crowding one is
+ * noise. "Moderately dense" is this number.
+ */
+export const FILLER_LABEL_EXTRA_GAP = 16;
+
+/** The plot proper. `PLOT_EDGE` is the plain margin at either side. */
+export const PLOT_EDGE = 14;
+export const PLOT_LEFT = PLOT_EDGE;
+export const PLOT_RIGHT = VIEW_WIDTH - PLOT_EDGE;
 export const PLOT_TOP = 36;
 export const PLOT_BOTTOM = 190;
 /**
@@ -145,15 +246,16 @@ export const MIN_VIEW_WIDTH = 320;
 
 /** The least of the box the PLOT may be reduced to before chrome gives way. */
 export const MIN_PLOT_FRACTION = 0.6;
-/** The axis, reduced to one tick row with thinned labels. */
+/** The axis, reduced to one tick row. Labels still thin by width, never overlap. */
 export const COMPACT_AXIS_BAND = 14;
 /** In compact chrome the plot starts here and the flags overlay its top. */
 export const COMPACT_PLOT_TOP = 2;
 /** Label every Nth tick in compact chrome — a full month row will not fit. */
 export const COMPACT_LABEL_EVERY = 3;
-
-/** The month axis, below the plot. */
-export const AXIS_TICK_LENGTH = 4;
+// NOTE: since the dated axis (2026-09-24) `labelEvery` only thins
+// `monthTicks`' own `showLabel`, which the painted axis no longer reads —
+// `datedAxisTicks` takes month-tick POSITIONS only and decides labels by
+// pitch. Kept because `monthTicks` is still exported and tested on its own.
 
 // ── THE VALUE AXIS, in the left gutter ──────────────────────────────────────
 //
@@ -257,8 +359,7 @@ export interface Frame {
  * threshold is whatever height makes those two statements agree. Change the
  * fraction and the threshold follows.
  */
-export const COMPACT_BELOW =
-  (PLOT_TOP + AXIS_BAND) / (1 - MIN_PLOT_FRACTION);
+export const COMPACT_BELOW = (PLOT_TOP + AXIS_BAND) / (1 - MIN_PLOT_FRACTION);
 
 /**
  * The vertical layout for one view height, in one of two chrome modes.
@@ -268,9 +369,9 @@ export const COMPACT_BELOW =
  * rails at all — the fixed 78 units of chrome had eaten the plot down to 46
  * units, and at that size the width caps collapsed to zero. So below
  * `COMPACT_BELOW` the flags OVERLAY the top of the plot rather than sitting in
- * a band of their own, and the axis shrinks to a single tick row with thinned
- * labels. Nothing changes size: the flags and the text are the same, they just
- * stop reserving space no short box can spare.
+ * a band of their own, and the axis shrinks to a single tick row. Nothing
+ * changes size: the flags and the text are the same, they just stop
+ * reserving space no short box can spare.
  */
 export const frameFor = (
   viewHeight: number,
@@ -291,8 +392,11 @@ export const frameFor = (
   const plotHeight = plotBottom - plotTop;
   return {
     viewWidth: width,
-    plotLeft: Math.max(PLOT_LEFT, Math.min(gutter, width * MAX_GUTTER_FRACTION)),
-    plotRight: width - PLOT_LEFT,
+    plotLeft: Math.max(
+      PLOT_LEFT,
+      Math.min(gutter, width * MAX_GUTTER_FRACTION),
+    ),
+    plotRight: width - PLOT_EDGE,
     viewHeight: height,
     plotTop,
     plotBottom,
@@ -344,8 +448,7 @@ export const frameForBox = (
   if (box.width <= 0 || box.height <= 0) return DEFAULT_FRAME;
   // Scaling BOTH dimensions is what keeps the aspect exact. Scaling one of
   // them was the letterbox.
-  const scale =
-    box.height < MIN_VIEW_HEIGHT ? MIN_VIEW_HEIGHT / box.height : 1;
+  const scale = box.height < MIN_VIEW_HEIGHT ? MIN_VIEW_HEIGHT / box.height : 1;
   return frameFor(box.height * scale, box.width * scale, gutter);
 };
 
@@ -386,20 +489,109 @@ export const xScaleFor = (
   if (span <= 0) return () => frame.plotLeft;
   return (at: TimeValue): number => {
     const fraction = (timeOf(at) - start) / span;
-    return frame.plotLeft + clamp(fraction, 0, 1) * (frame.plotRight - frame.plotLeft);
+    return (
+      frame.plotLeft +
+      clamp(fraction, 0, 1) * (frame.plotRight - frame.plotLeft)
+    );
   };
 };
+
+/** The mutations in time order — the order the flags are numbered in. */
+export const inTimeOrder = (
+  mutations: readonly Mutation[],
+): readonly Mutation[] =>
+  sortBy((mutation: Mutation) => timeOf(mutation.at), mutations);
+
+/** Each mutation's flag number, by id: 1, 2, 3… in time order. */
+export const mutationNumbers = (
+  mutations: readonly Mutation[],
+): ReadonlyMap<string, number> =>
+  new Map(
+    map(
+      (mutation: Mutation, index: number) => [mutation.id, index + 1] as const,
+      inTimeOrder(mutations),
+    ),
+  );
 
 /** The numbered flags and their rules, in time order. */
 export const flagPositions = (
   mutations: readonly Mutation[],
   xScale: (at: TimeValue) => number,
   frame: Frame = DEFAULT_FRAME,
-): readonly Flag[] =>
-  map(
-    (mutation: Mutation) => placeFlag(mutation, xScale(mutation.at), frame),
-    sortBy((mutation: Mutation) => timeOf(mutation.at), mutations),
+): readonly Flag[] => {
+  const ordered = inTimeOrder(mutations);
+  const xs = map((mutation: Mutation) => xScale(mutation.at), ordered);
+  const centres = nudgeFlagCentres(xs, frame.viewWidth);
+  return map(
+    (mutation: Mutation, index: number) =>
+      placeFlag(mutation, index + 1, xs[index], centres[index], frame),
+    ordered,
   );
+};
+
+/** Clear air between two nudged flag boxes. */
+export const FLAG_GAP = 2;
+/**
+ * How far below its box a DISPLACED flag's rule starts. The gap is spanned by
+ * a leader from the box's centre to the rule's true x, so a nudged box still
+ * points at the moment it names.
+ */
+export const FLAG_LEADER_DROP = 8;
+
+/**
+ * Where each flag's BOX centre goes, so that no two boxes overlap
+ * (Peter, 2026-09-24): a box whose neighbour is too close NUDGES sideways just
+ * enough to clear, and its rule stays at the true x.
+ *
+ * `xs` are the rules' x, in time order (so ascending). Boxes are laid out one
+ * `FLAG_BOX_WIDTH + FLAG_GAP` pitch apart at the least. Overlapping boxes
+ * merge into a CLUSTER centred on the mean of their true x's — so a pair
+ * spreads symmetrically about its midpoint rather than one shoving the
+ * other — and a cluster that then collides with its left neighbour merges
+ * again. Each cluster is clamped to the canvas. The standard 1-D label
+ * de-overlap: O(n), and a flag with room to spare is not moved at all.
+ */
+export const nudgeFlagCentres = (
+  xs: readonly number[],
+  viewWidth: number,
+): readonly number[] => {
+  const pitch = FLAG_BOX_WIDTH + FLAG_GAP;
+  const lo = FLAG_BOX_WIDTH / 2;
+  const hi = viewWidth - FLAG_BOX_WIDTH / 2;
+  interface Cluster {
+    count: number;
+    sum: number;
+  }
+  /** The first box's centre: the cluster centred on its mean, on the canvas. */
+  const firstCentre = (cluster: Cluster): number => {
+    const span = (cluster.count - 1) * pitch;
+    return clamp(
+      cluster.sum / cluster.count - span / 2,
+      lo,
+      Math.max(lo, hi - span),
+    );
+  };
+  const clusters: Cluster[] = [];
+  for (const x of xs) {
+    clusters.push({ count: 1, sum: x });
+    for (;;) {
+      const right = clusters[clusters.length - 1];
+      const left = clusters[clusters.length - 2];
+      if (left === undefined) break;
+      if (firstCentre(left) + left.count * pitch <= firstCentre(right) + 1e-9)
+        break;
+      left.count += right.count;
+      left.sum += right.sum;
+      clusters.pop();
+    }
+  }
+  const centres: number[] = [];
+  for (const cluster of clusters) {
+    const first = firstCentre(cluster);
+    for (let k = 0; k < cluster.count; k += 1) centres.push(first + k * pitch);
+  }
+  return centres;
+};
 
 /**
  * One tick per month boundary in the domain. Built from DateAxis's own
@@ -439,13 +631,33 @@ const MONTH_LABELS = [
 const asDate = (at: TimeValue): Date =>
   typeof at === "number" ? new Date(at) : at;
 
-const placeFlag = (mutation: Mutation, x: number, frame: Frame): Flag => {
-  const boxX = clamp(x - FLAG_BOX_WIDTH / 2, 0, VIEW_WIDTH - FLAG_BOX_WIDTH);
+const placeFlag = (
+  mutation: Mutation,
+  number: number,
+  x: number,
+  /** The box's centre, from `nudgeFlagCentres` — already on the canvas. */
+  centre: number,
+  frame: Frame,
+): Flag => {
+  // Clamped to the frame's OWN width. It was clamped to the default 640, so
+  // on a measured wide card every flag right of ~620 piled up there, detached
+  // from its rule.
+  const boxX = clamp(
+    centre - FLAG_BOX_WIDTH / 2,
+    0,
+    frame.viewWidth - FLAG_BOX_WIDTH,
+  );
+  const displaced = Math.abs(boxX + FLAG_BOX_WIDTH / 2 - x) > 0.5;
   return {
+    displaced,
     id: mutation.id,
-    label: mutation.label,
+    label: String(number),
+    number,
+    at: timeOf(mutation.at),
+    title: mutation.label,
+    details: mutation.details ?? [],
     x,
-    ruleTop: FLAG_RULE_TOP,
+    ruleTop: displaced ? FLAG_RULE_TOP + FLAG_LEADER_DROP : FLAG_RULE_TOP,
     ruleBottom: frame.plotBottom,
     boxX,
     boxY: FLAG_BOX_TOP,
@@ -590,7 +802,8 @@ export interface LevelsRailGeometry {
   readonly flows: readonly FlowBand[];
   readonly droplines: readonly Dropline[];
   readonly flags: readonly Flag[];
-  readonly ticks: readonly MonthTick[];
+  /** The dated bottom axis — see `datedAxisTicks`. */
+  readonly ticks: readonly AxisTick[];
   /** The value axis' ticks, in the left gutter. */
   readonly yTicks: readonly ValueTick[];
 }
@@ -616,7 +829,6 @@ export const marginFor = (gap: number): number =>
   Math.min(BAND_MARGIN, Math.max(0, gap) * BAND_MARGIN_FRACTION);
 
 /** The plot's height — the space the stack is laid out in. */
-
 
 /**
  * The width that fills a good fraction of the plot at the busiest moment.
@@ -1065,7 +1277,9 @@ export const flowBands = (
   moments: readonly number[],
   frame: Frame = DEFAULT_FRAME,
 ): readonly FlowBand[] => {
-  const railById = new Map(map((rail: Rail) => [rail.id, rail] as const, rails));
+  const railById = new Map(
+    map((rail: Rail) => [rail.id, rail] as const, rails),
+  );
   const ordered = sortBy((one: Transfer) => timeOf(one.at), transfers);
   const bands: FlowBand[] = [];
 
@@ -1076,9 +1290,15 @@ export const flowBands = (
     const here = filter((one: Transfer) => timeOf(one.at) === moment, ordered);
     /** The band that stops at this change, and the one that starts after it. */
     const before = (rail: Rail) =>
-      find((span: RailSpan) => Math.abs(span.x2 - x0) < CONTIGUITY_EPSILON, rail.spans);
+      find(
+        (span: RailSpan) => Math.abs(span.x2 - x0) < CONTIGUITY_EPSILON,
+        rail.spans,
+      );
     const after = (rail: Rail) =>
-      find((span: RailSpan) => Math.abs(span.x1 - x1) < CONTIGUITY_EPSILON, rail.spans);
+      find(
+        (span: RailSpan) => Math.abs(span.x1 - x1) < CONTIGUITY_EPSILON,
+        rail.spans,
+      );
 
     const srcRoot = new Map<number, Root>();
     const dstRoot = new Map<number, Root>();
@@ -1098,7 +1318,11 @@ export const flowBands = (
       const out = filter((i: number) => here[i].from === rail.id, indices);
       const into = filter((i: number) => here[i].to === rail.id, indices);
       const widthOf = (i: number) => bandWidth(here[i].count, perCount);
-      const otherY = (i: number, leaving: boolean, fallback: number): number => {
+      const otherY = (
+        i: number,
+        leaving: boolean,
+        fallback: number,
+      ): number => {
         const otherId = leaving ? here[i].to : here[i].from;
         const other = otherId === undefined ? undefined : railById.get(otherId);
         return other === undefined ? fallback : other.y;
@@ -1212,12 +1436,9 @@ export const flowBands = (
 
 /** The room reserved at each end of the plot for the outermost bands. */
 
-
 /** Open a range that has no height, so no scale built from it divides by zero. */
-const openOut = (
-  lo: number,
-  hi: number,
-): readonly [number, number] => (lo === hi ? [lo - 1, hi + 1] : [lo, hi]);
+const openOut = (lo: number, hi: number): readonly [number, number] =>
+  lo === hi ? [lo - 1, hi + 1] : [lo, hi];
 
 /** The levels' own range. No padding — the inset does that job now. */
 export const valueDomainOf = (
@@ -1292,7 +1513,10 @@ export const niceValueDomain = (
   // multiplication and the round trip does not always land on the number it
   // started from — an axis that drifts by a billionth per render is an axis
   // whose ticks are never quite its ends.
-  return [trim(Math.floor(lo / step) * step), trim(Math.ceil(hi / step) * step)];
+  return [
+    trim(Math.floor(lo / step) * step),
+    trim(Math.ceil(hi / step) * step),
+  ];
 };
 
 /**
@@ -1462,9 +1686,10 @@ export const levelsRailGeometry = (input: {
   // left edge — so the range and its labels are decided first, against a
   // provisional frame that only the tick COUNT is taken from.
   const yDomain = valueDomainFor(input.levels, input.valueDomain);
-  const provisional = input.box === undefined
-    ? frameFor(input.viewHeight ?? VIEW_HEIGHT)
-    : frameForBox(input.box);
+  const provisional =
+    input.box === undefined
+      ? frameFor(input.viewHeight ?? VIEW_HEIGHT)
+      : frameForBox(input.box);
   const format = input.formatValue ?? String;
   const gutter = gutterWidth(
     map(
@@ -1475,9 +1700,10 @@ export const levelsRailGeometry = (input: {
       ),
     ),
   );
-  const frame = input.box === undefined
-    ? frameFor(input.viewHeight ?? VIEW_HEIGHT, VIEW_WIDTH, gutter)
-    : frameForBox(input.box, gutter);
+  const frame =
+    input.box === undefined
+      ? frameFor(input.viewHeight ?? VIEW_HEIGHT, VIEW_WIDTH, gutter)
+      : frameForBox(input.box, gutter);
   const xScale = xScaleFor(input.domain, frame);
   const yScale = yScaleFor(yDomain, frame);
   const peak = peakTotal(input.levels);
@@ -1530,7 +1756,7 @@ export const levelsRailGeometry = (input: {
       xScale,
     ),
     flags: flagPositions(input.mutations, xScale, frame),
-    ticks: axisTicks(input.domain, xScale, frame),
+    ticks: datedAxisTicks(input.domain, input.mutations, xScale, frame),
     yTicks: valueTickMarks(yDomain, yScale, frame, format),
   };
 };
@@ -1538,28 +1764,63 @@ export const levelsRailGeometry = (input: {
 // ── the axis ─────────────────────────────────────────────────────────────────
 
 /**
- * The axis has three cadences, and the span picks one. Each threshold is the
- * point at which the previous cadence's LABELS stop fitting, which is a
- * different question from whether its ticks do.
+ * The axis has FOUR cadences, and the span picks one (Peter, 2026-09-24:
+ * "show tickmarks at the interesting thresholds (based on the total
+ * duration). For the 3 month projection that's weeks. For 6m and a year
+ * that's months. For 2y that's quarters."):
  *
- *   • under a year        — a tick and a label per month.
- *   • one to three years  — per QUARTER. Twelve `Jan`-width labels fit; twelve
- *                           `2026-Q1`-width ones do not, and quarters are the
- *                           cadence a reader of a multi-year span thinks in
- *                           anyway.
- *   • over three years    — per year.
+ *   • up to ~4 months (≤ `WEEKLY_UP_TO_DAYS`) — per WEEK, on ISO weeks: every
+ *                                              Monday, 00:00 UTC.
+ *   • up to 15 months    — per MONTH (6m and a year both land here).
+ *   • 16 to 35 months    — per QUARTER (2y lands here).
+ *   • three years and up — per YEAR.
+ *
+ * Every cadence tick is DRAWN; which of them get a LABEL is decided later by
+ * `datedAxisTicks`' collision rule, so a dense cadence costs ink, never
+ * overlap. The cut-points sit halfway-ish between Peter's named spans, so a
+ * 3-month projection with a few days' slack either side still reads in weeks.
  *
  * Per ADR 0010 a mark is a CORE plus an adapter, and the core here is already
  * shared: the calendar itself is `monthlyCells`, imported from DateAxis, so
  * the chart and that component cannot disagree about where a month is. What
- * is left — these two thresholds, and the decision to thin labels rather than
+ * is left — these thresholds, and the decision to thin labels rather than
  * drop ticks — is EDITORIAL, not mechanism: it is this chart's answer to how
  * much axis a 640-unit viewBox can carry. No other chart can reuse a judgement
  * about a viewBox it does not have, so it stays private here rather than
  * moving to `src/internal/`.
  */
-export const QUARTERLY_FROM_MONTHS = 12;
+export const WEEKLY_UP_TO_DAYS = 125;
+export const QUARTERLY_FROM_MONTHS = 16;
 export const YEARLY_FROM_MONTHS = 36;
+
+/** 0 = Sunday … 1 = Monday, as `getUTCDay` counts. ISO weeks start Monday. */
+const MONDAY = 1;
+
+/**
+ * One tick per ISO week start (Monday 00:00 UTC) inside the domain. The UTC
+ * day is used throughout, like every other date in this file, so a week
+ * boundary never drifts with the viewer's time zone.
+ */
+export const weekTicks = (
+  domain: TimeDomain,
+  xScale: (at: TimeValue) => number,
+): readonly MonthTick[] => {
+  const start = timeOf(domain[0]);
+  const end = timeOf(domain[1]);
+  const midnight = Math.ceil(start / DAY_MS) * DAY_MS;
+  const weekday = new Date(midnight).getUTCDay();
+  const first = midnight + ((MONDAY - weekday + 7) % 7) * DAY_MS;
+  const ticks: MonthTick[] = [];
+  for (let at = first; at <= end; at += 7 * DAY_MS) {
+    ticks.push({
+      key: new Date(at).toISOString(),
+      label: isoDayOf(at),
+      x: xScale(at),
+      showLabel: true,
+    });
+  }
+  return ticks;
+};
 
 /** Quarter boundaries are the Januarys, Aprils, Julys and Octobers. */
 const QUARTER_MONTHS = [0, 3, 6, 9];
@@ -1616,11 +1877,267 @@ export const axisTicks = (
 ): readonly MonthTick[] => {
   // Cells INCLUDE both ends, so a one-year domain is thirteen of them and
   // twelve months of span. The span is what the cadence is chosen from.
+  const days = (timeOf(domain[1]) - timeOf(domain[0])) / DAY_MS;
+  if (days <= WEEKLY_UP_TO_DAYS) return weekTicks(domain, xScale);
   const months = monthlyCells(asDate(domain[0]), asDate(domain[1])).length - 1;
   if (months >= YEARLY_FROM_MONTHS) return yearTicks(domain, xScale);
   if (months >= QUARTERLY_FROM_MONTHS) return quarterTicks(domain, xScale);
   return monthTicks(domain, xScale, frame.labelEvery);
 };
+
+/** `2026-09-01`, from UTC fields — the only place the day format lives. */
+export const isoDayOf = (at: TimeValue): string => {
+  const on = new Date(timeOf(at));
+  return `${on.getUTCFullYear()}-${pad2(on.getUTCMonth() + 1)}-${pad2(on.getUTCDate())}`;
+};
+
+/** `09-01` — the day without its year. */
+export const monthDayOf = (at: TimeValue): string => {
+  const on = new Date(timeOf(at));
+  return `${pad2(on.getUTCMonth() + 1)}-${pad2(on.getUTCDate())}`;
+};
+
+const pad2 = (n: number): string => (n < 10 ? `0${n}` : String(n));
+
+const yearOf = (time: number): number => new Date(time).getUTCFullYear();
+
+/**
+ * Dates, abbreviated the way a reader of a row of them wants: the FIRST in
+ * full (`2026-10-01`), then `MM-DD` until the year changes, then full again
+ * (`2026-10-01 | 11-01 | 2027-01-13 | 02-10`).
+ *
+ * ONE rule, shared: the dated axis labels its painted ticks with it and a
+ * consumer's change tabs label their chips with it, so the two rows can never
+ * disagree about when a year is worth writing. Pass the dates in the order
+ * they are read; each label depends on its predecessor, so a delete re-derives
+ * the row (drop `2027-01-13` above and `02-10` becomes `2027-02-10`).
+ */
+export const abbreviateDates = (
+  dates: readonly TimeValue[],
+): readonly string[] =>
+  map(
+    (at: TimeValue, index: number) =>
+      index === 0 || yearOf(timeOf(dates[index - 1])) !== yearOf(timeOf(at))
+        ? isoDayOf(at)
+        : monthDayOf(at),
+    dates,
+  );
+
+/** A candidate tick, before the labels are decided. */
+interface TickCandidate {
+  readonly at: number;
+  readonly event: boolean;
+}
+
+/** How a label of `width` sits about its tick at `x`, kept on the canvas. */
+export const labelPlacement = (
+  x: number,
+  width: number,
+  viewWidth: number,
+): {
+  readonly anchor: "start" | "middle" | "end";
+  readonly left: number;
+  readonly right: number;
+} => {
+  if (x - width / 2 < 0) return { anchor: "start", left: x, right: x + width };
+  if (x + width / 2 > viewWidth)
+    return { anchor: "end", left: x - width, right: x };
+  return { anchor: "middle", left: x - width / 2, right: x + width / 2 };
+};
+
+/** A label's estimated painted width — see `AXIS_LABEL_CHAR_PX`. */
+export const axisLabelWidth = (label: string): number =>
+  label.length * AXIS_LABEL_CHAR_PX;
+
+/**
+ * THE DATED AXIS (Peter, 2026-09-24, from a sketch, then revised the same
+ * day: "ensure that the labels are sparse enough. Use tick mark to show the
+ * exact position").
+ *
+ *   • A TICK at every flag date — longer than a cadence tick
+ *     (`EVENT_TICK_LENGTH`) — whether or not its label survives. The tick is
+ *     the exact position; the flag's tooltip is the exact date.
+ *   • FILLER ticks between, at the span's cadence (months, quarters or years —
+ *     `axisTicks`, unchanged) plus the domain's own start.
+ *   • Labels are HORIZONTAL and never overlap. Events claim labels first, in
+ *     time order; fillers after, and a filler needs `FILLER_LABEL_EXTRA_GAP`
+ *     more air. A candidate is painted only if, with it added, every pair of
+ *     neighbouring painted labels still clears `AXIS_LABEL_GAP` edge to edge —
+ *     widths from the ACTUAL labels, which `abbreviateDates` derives from the
+ *     painted set. (Adding a label can only SHORTEN the one after it — it may
+ *     lose its year, never gain one — so a set that cleared stays clear.)
+ *   • A label that would hang off the canvas anchors at its start or end
+ *     instead of its middle, so the first and last need no extra margin.
+ *
+ * A flag outside the domain gets no tick: the flag itself clamps to the edge,
+ * but a tick at the edge claiming a date that is not there would lie.
+ */
+export const datedAxisTicks = (
+  domain: TimeDomain,
+  mutations: readonly Mutation[],
+  xScale: (at: TimeValue) => number,
+  frame: Frame = DEFAULT_FRAME,
+): readonly AxisTick[] => {
+  const start = timeOf(domain[0]);
+  const end = timeOf(domain[1]);
+  const inDomain = (time: number): boolean => time >= start && time <= end;
+  const eventTimes = new Set(
+    filter(
+      inDomain,
+      map((mutation: Mutation) => timeOf(mutation.at), mutations),
+    ),
+  );
+  const fillerTimes = new Set(
+    filter(
+      (time: number) => inDomain(time) && !eventTimes.has(time),
+      [
+        start,
+        ...map(
+          (tick: MonthTick) => Date.parse(tick.key),
+          axisTicks(domain, xScale, frame),
+        ),
+      ],
+    ),
+  );
+  const candidates: readonly TickCandidate[] = sortBy(
+    (one: TickCandidate) => one.at,
+    [
+      ...map((at: number) => ({ at, event: true }), [...eventTimes]),
+      ...map((at: number) => ({ at, event: false }), [...fillerTimes]),
+    ],
+  );
+
+  /** The painted set's spans, in x order, with its labels re-derived. */
+  const spansOf = (painted: readonly number[]) => {
+    const ordered = sortBy((time: number) => time, painted);
+    const labels = abbreviateDates(ordered);
+    return map((time: number, index: number) => {
+      const x = xScale(time);
+      const label = labels[index];
+      return {
+        at: time,
+        x,
+        label,
+        ...labelPlacement(x, axisLabelWidth(label), frame.viewWidth),
+      };
+    }, ordered);
+  };
+
+  /** Does `painted` plus `one` still clear? A filler asks for more air. */
+  const fits = (painted: readonly number[], one: TickCandidate): boolean => {
+    const spans = spansOf([...painted, one.at]);
+    for (const [index, span] of spans.entries()) {
+      const next = spans[index + 1];
+      if (next === undefined) continue;
+      const involves = span.at === one.at || next.at === one.at;
+      const gap =
+        AXIS_LABEL_GAP + (involves && !one.event ? FILLER_LABEL_EXTRA_GAP : 0);
+      if (span.right + gap > next.left) return false;
+    }
+    return true;
+  };
+
+  let painted: readonly number[] = [];
+  for (const one of [
+    ...filter((c: TickCandidate) => c.event, candidates),
+    ...filter((c: TickCandidate) => !c.event, candidates),
+  ]) {
+    if (fits(painted, one)) painted = [...painted, one.at];
+  }
+
+  const spanAt = new Map(
+    map((span) => [span.at, span] as const, spansOf(painted)),
+  );
+  return map((one: TickCandidate) => {
+    const x = xScale(one.at);
+    const span = spanAt.get(one.at);
+    return {
+      key: String(one.at),
+      at: one.at,
+      x,
+      label: span?.label ?? monthDayOf(one.at),
+      showLabel: span !== undefined,
+      event: one.event,
+      tickLength: one.event ? EVENT_TICK_LENGTH : AXIS_TICK_LENGTH,
+      labelX: x,
+      labelY: frame.axisLabelY,
+      labelAnchor: span?.anchor ?? "middle",
+    };
+  }, candidates);
+};
+
+// ── dragging a flag ──────────────────────────────────────────────────────────
+//
+// Peter, 2026-09-24: a flag is DRAGGED along x to move its event's date, snapped
+// to the day, and it can never pass a neighbour — it clamps to one day after
+// the previous flag and one day before the next. That keeps time order, so a
+// flag never renumbers under the pointer. The chart only REPORTS the new date
+// (`onMoveMutation`); the consumer moves the event and re-renders.
+
+export const DAY_MS = 86_400_000;
+
+/**
+ * How far the pointer must travel, in viewBox units (= CSS px), before a press
+ * on a flag is a DRAG rather than a click. Below it, the press still selects.
+ */
+export const DRAG_THRESHOLD_PX = 3;
+
+/** The nearest UTC midnight. */
+export const snapToDay = (time: number): number =>
+  Math.round(time / DAY_MS) * DAY_MS;
+
+/**
+ * Where a mutation may be moved to: `time`, snapped to the day, clamped to
+ * (previous flag + 1 day) … (next flag − 1 day) and to the domain.
+ *
+ * Neighbours are the adjacent mutations IN TIME ORDER. When the room is
+ * empty — neighbours on consecutive days — the mutation stays where it is
+ * rather than being forced onto a neighbour. An unknown id is returned as
+ * the snapped time, unclamped by neighbours.
+ */
+export const clampMutationTime = (
+  mutations: readonly Mutation[],
+  id: string,
+  time: number,
+  domain?: TimeDomain,
+): number => {
+  const ordered = inTimeOrder(mutations);
+  const index = findIndex((mutation: Mutation) => mutation.id === id, ordered);
+  const current = index < 0 ? undefined : timeOf(ordered[index].at);
+  const previous = ordered[index - 1];
+  const next = ordered[index + 1];
+  const lows = [
+    ...(index > 0 && previous !== undefined
+      ? [timeOf(previous.at) + DAY_MS]
+      : []),
+    ...(domain === undefined ? [] : [timeOf(domain[0])]),
+  ];
+  const highs = [
+    ...(index >= 0 && next !== undefined ? [timeOf(next.at) - DAY_MS] : []),
+    ...(domain === undefined ? [] : [timeOf(domain[1])]),
+  ];
+  const low = lows.length === 0 ? Number.NEGATIVE_INFINITY : Math.max(...lows);
+  const high =
+    highs.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...highs);
+  if (low > high) return current ?? snapToDay(time);
+  return clamp(snapToDay(time), low, high);
+};
+
+/** A drag's pointer x, resolved to the date the flag may move to. */
+export const dragTimeAt = (
+  mutations: readonly Mutation[],
+  id: string,
+  x: number,
+  domain: TimeDomain,
+  frame: Frame = DEFAULT_FRAME,
+): number =>
+  clampMutationTime(mutations, id, timeAtX(domain, x, frame), domain);
+
+/**
+ * Where a flag's hover tooltip hangs: just under its box, so it never covers
+ * the number being hovered.
+ */
+export const FLAG_TIP_TOP = FLAG_RULE_TOP + 4;
 
 // ── hover and pick ───────────────────────────────────────────────────────────
 
@@ -1721,20 +2238,51 @@ export interface Hover {
 }
 
 /**
- * Resolve a pointer x into a hover. The crosshair sits at the SNAPPED date's
- * x, not under the pointer: a rule that lands between two months would invite
- * the reader to believe the table describes the gap.
+ * A PICK STRATEGY: how a raw pointer moment becomes the date a click reports
+ * (Peter, 2026-09-24: "The base chart should register the create-at-click
+ * strategy … make it so we can pass in the click function"). Pure, and it
+ * must return a moment INSIDE `domain`.
+ *
+ * Only one ships, `pickDay`. A month-start or cluster-to-a-start-date strategy
+ * is a later feature; it is one more function of this shape, not a new prop.
+ */
+export type PickStrategy = (raw: number, domain: TimeDomain) => number;
+
+/**
+ * THE WHOLE-DAY PICK: the UTC day the pointer is over — its midnight, floored
+ * rather than rounded, so a click anywhere in a day's column is that day —
+ * clamped to the domain.
+ */
+export const pickDay: PickStrategy = (raw, domain) =>
+  clamp(
+    Math.floor(raw / DAY_MS) * DAY_MS,
+    timeOf(domain[0]),
+    timeOf(domain[1]),
+  );
+
+/**
+ * The fallback when no strategy is passed: the nearest month start, clamped.
+ *
+ * @deprecated Pass a pick strategy (`pickAt`, e.g. `pickDay`). This is what
+ * every chart did before strategies existed, kept so that no existing caller
+ * changes behaviour silently; it goes once they have all chosen one.
+ */
+export const pickNearestMonth: PickStrategy = (raw, domain) =>
+  clamp(snapToMonth(raw), timeOf(domain[0]), timeOf(domain[1]));
+
+/**
+ * Resolve a pointer x into a hover. The crosshair sits at the PICKED date's
+ * x, not under the pointer — the same date a click would report, so the rule
+ * never promises a spot the click then moves, and never lands in a gap the
+ * table does not describe.
  */
 export const hoverAt = (
   levels: readonly Level[],
   domain: TimeDomain,
   x: number,
   frame: Frame = DEFAULT_FRAME,
+  pick: PickStrategy = pickNearestMonth,
 ): Hover => {
-  const at = clamp(
-    snapToMonth(timeAtX(domain, x, frame)),
-    timeOf(domain[0]),
-    timeOf(domain[1]),
-  );
+  const at = pick(timeAtX(domain, x, frame), domain);
   return { at, x: xScaleFor(domain, frame)(at), rows: levelsAt(levels, at) };
 };
