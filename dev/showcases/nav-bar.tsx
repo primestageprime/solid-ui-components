@@ -1,4 +1,4 @@
-import { type Component, createSignal } from "solid-js";
+import { type Component, createMemo, createSignal } from "solid-js";
 import { NavLink } from "../../src/components/Navigation";
 import { TightClusterRow, NarrowStack } from "../../src/components/Layout";
 import { OverflowNav, type OverflowNavItem } from "../../src/components/OverflowNav";
@@ -21,6 +21,57 @@ const SECTIONS: OverflowNavItem[] = [
 interface Depth2Props {
   onNavigate?: (id: string) => void;
 }
+
+// Pinnable tabs: Dashboard/Scenarios are permanent; the rest can be closed
+// into the kebab and re-opened from it.
+const TABS = [
+  { id: "dashboard", label: "Dashboard", closable: false },
+  { id: "timeline", label: "Timeline", closable: true },
+  { id: "scenarios", label: "Scenarios", closable: false },
+  { id: "configure", label: "Configure", closable: true },
+  { id: "import", label: "Import", closable: true },
+];
+
+const PinnableTabsDemo: Component = () => {
+  const [pinned, setPinned] = createSignal(
+    new Set(["dashboard", "timeline", "scenarios"]),
+  );
+  const [current, setCurrent] = createSignal("dashboard");
+  const toItem = (tab: (typeof TABS)[number]): OverflowNavItem => ({
+    id: tab.id,
+    label: tab.label,
+    href: "#",
+    active: current() === tab.id,
+    closable: tab.closable,
+    onClick: (e) => {
+      e?.preventDefault();
+      setPinned((prev) => new Set(prev).add(tab.id));
+      setCurrent(tab.id);
+    },
+  });
+  const inline = createMemo(() =>
+    TABS.filter((t) => pinned().has(t.id)).map(toItem),
+  );
+  const hidden = createMemo(() =>
+    TABS.filter((t) => !pinned().has(t.id)).map(toItem),
+  );
+  const close = (id: string) => {
+    setPinned((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    if (current() === id) setCurrent("dashboard");
+  };
+  return (
+    <NarrowStack>
+      <OverflowNav items={inline()} overflowItems={hidden()} onClose={close} />
+      <MutedBody>
+        on: {current()} · pinned: {[...pinned()].join(", ")}
+      </MutedBody>
+    </NarrowStack>
+  );
+};
 
 export const NavBarShowcase: Component<Depth2Props> = (props) => {
   const [picked, setPicked] = createSignal("");
@@ -92,6 +143,18 @@ export const NavBarShowcase: Component<Depth2Props> = (props) => {
           </ResizableContainer>
           <MutedBody>last activated: {picked() || "—"}</MutedBody>
         </NarrowStack>
+      </div>
+
+      <h3>OverflowNav — closable items and an explicit overflow list</h3>
+      <p class="text-meta">
+        Items marked <code>closable</code> get a trailing close button that
+        calls the nav's <code>onClose(id)</code>. <code>overflowItems</code>{" "}
+        always live in the kebab, whatever the width — here, the tabs the
+        reader has closed. Picking one from the kebab re-opens it. Kebab rows
+        keep <code>active</code>.
+      </p>
+      <div class="example-group">
+        <PinnableTabsDemo />
       </div>
     </div>
   );

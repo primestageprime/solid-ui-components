@@ -125,3 +125,77 @@ describe("OverflowNav spill", () => {
     expect(items[0].hasAttribute("aria-current")).toBe(false);
   });
 });
+
+describe("OverflowNav closable items", () => {
+  afterEach(() => cleanup());
+
+  it("renders a close button only on closable items, and reports the id", () => {
+    const onClose = vi.fn();
+    const onClick = vi.fn();
+    const { container } = render(() => (
+      <OverflowNav
+        onClose={onClose}
+        items={[
+          { id: "a", label: "Alpha", href: "/a" },
+          { id: "b", label: "Beta", href: "/b", closable: true, onClick },
+        ]}
+      />
+    ));
+    const closes = container.querySelectorAll("button[aria-label^='Close']");
+    expect(closes.length).toBe(1);
+    expect(closes[0].getAttribute("aria-label")).toBe("Close Beta");
+    fireEvent.click(closes[0]);
+    expect(onClose).toHaveBeenCalledWith("b");
+    // Closing is not a navigation.
+    expect(onClick).not.toHaveBeenCalled();
+    // The link itself still renders and stays clickable.
+    expect(container.querySelectorAll("a.nav-link").length).toBe(2);
+  });
+
+  it("shows no close button when onClose is absent", () => {
+    const { container } = render(() => (
+      <OverflowNav items={[{ id: "b", label: "Beta", closable: true }]} />
+    ));
+    expect(container.querySelector("button[aria-label^='Close']")).toBeNull();
+  });
+});
+
+describe("OverflowNav explicit overflow list", () => {
+  afterEach(() => cleanup());
+
+  it("puts overflowItems in the kebab even when every inline item fits", () => {
+    const onPick = vi.fn();
+    const { container } = render(() => (
+      <OverflowNav
+        items={[{ id: "a", label: "Alpha", href: "/a" }]}
+        overflowItems={[
+          { id: "x", label: "Configure", onClick: () => onPick("x") },
+          { id: "y", label: "Import", active: true, onClick: () => onPick("y") },
+        ]}
+      />
+    ));
+    // Inline strip holds only the real items.
+    const inline = Array.from(container.querySelectorAll("a.nav-link"));
+    expect(inline.map((a) => a.textContent)).toEqual(["Alpha"]);
+
+    const trigger = container.querySelector(".sui-popover-menu__trigger");
+    expect(trigger).not.toBeNull();
+    fireEvent.click(trigger!);
+    const rows = Array.from(
+      document.body.querySelectorAll(".sui-popover-menu__item"),
+    );
+    expect(rows.map((el) => el.textContent)).toEqual(["Configure", "Import"]);
+    expect(rows[1].classList.contains("sui-popover-menu__item--active")).toBe(
+      true,
+    );
+    fireEvent.click(rows[1]);
+    expect(onPick).toHaveBeenCalledWith("y");
+  });
+
+  it("renders no kebab when overflowItems is empty and nothing spills", () => {
+    const { container } = render(() => (
+      <OverflowNav items={[{ id: "a", label: "Alpha" }]} overflowItems={[]} />
+    ));
+    expect(container.querySelector(".sui-popover-menu__trigger")).toBeNull();
+  });
+});
