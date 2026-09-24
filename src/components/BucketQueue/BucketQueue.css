@@ -154,6 +154,32 @@
   outline-offset: -1px;
 }
 
+/* headerAction — only present when a bucket declares one (Bucket.headerAction,
+   types.ts). The header (div or toggle button, unchanged above) and the
+   action sit as SIBLINGS in this row, never nested, so a click on the action
+   can never bubble into the toggle's onClick. The row itself carries no
+   border/padding/background of its own: it exists only to lay the two out
+   side by side, so it never becomes a second thing the water-fill measures
+   differently from the header alone (see measurement.ts / BucketQueue.tsx). */
+.bucket-queue__header-row {
+  display: flex;
+  align-items: stretch;
+}
+/* Overrides `.bucket-queue__header--toggle`'s `width: 100%`, which assumed it
+   was the row's only child — here it shares the row with the action. */
+.bucket-queue__header-row > .bucket-queue__header {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+.bucket-queue__header-action {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--sui-border);
+}
+
 /* The disclosure chevron occupies EXACTLY the tone dot's 8px slot, and
    replaces it — one role-coloured mark per bucket, same place, so a
    collapsible bucket's label sits on the same left edge as every other. */

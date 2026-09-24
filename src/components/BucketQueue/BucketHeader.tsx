@@ -68,11 +68,15 @@ export function BucketHeader(props: BucketHeaderProps): JSX.Element {
     </>
   );
 
-  return (
+  // The header proper (div or toggle button) — identical markup either way to
+  // before `headerAction` existed. `headRef` goes straight on this element
+  // UNLESS an action is present, in which case the wrapping row below takes
+  // the ref instead (see there for why that's still safe to measure).
+  const Header = (headRef?: (el: HTMLElement) => void): JSX.Element => (
     <Show
       when={props.toggleable}
       fallback={
-        <div class="bucket-queue__header" ref={props.ref}>
+        <div class="bucket-queue__header" ref={headRef}>
           <Contents />
         </div>
       }
@@ -89,10 +93,26 @@ export function BucketHeader(props: BucketHeaderProps): JSX.Element {
         aria-expanded={!props.collapsed}
         aria-controls={props.bodyId}
         onClick={() => props.onToggle()}
-        ref={props.ref}
+        ref={headRef}
       >
         <Contents />
       </button>
+    </Show>
+  );
+
+  return (
+    <Show when={props.bucket.headerAction != null} fallback={Header(props.ref)}>
+      {/* The action is a DOM SIBLING of the header (div or button), never
+          nested inside it, so a click on the action can never bubble into the
+          toggle button's onClick. This wrapper carries no border/padding of
+          its own, so its measured height is just the header's — `headerAction`
+          is documented (types.ts) to stay within the header's own line box, so
+          this never changes what bucket 0's header measures for every bucket's
+          water-fill allocation (see BucketQueue.tsx / measurement.ts). */}
+      <div class="bucket-queue__header-row" ref={props.ref}>
+        {Header()}
+        <span class="bucket-queue__header-action">{props.bucket.headerAction}</span>
+      </div>
     </Show>
   );
 }

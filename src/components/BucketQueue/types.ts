@@ -61,6 +61,15 @@ export interface Bucket {
    *
    *  Default false: omit and the bucket shrink-wraps exactly as before. */
   fill?: boolean;
+  /** An action rendered in this bucket's header, beside the count — e.g. a
+   *  "Dismiss all" button on a staging pile. Rendered as a DOM SIBLING of the
+   *  collapse-toggle button (never nested inside it), so clicking the action
+   *  activates only the action and never toggles collapse. Sized to fit the
+   *  header's own line box (a compact button, e.g. `GlyphSlotGhostButton`) —
+   *  it must not grow the header, because bucket 0's header height is what the
+   *  water-fill measures and applies to every bucket (see BucketQueue.tsx).
+   *  Omit for the plain title + count header, unchanged. */
+  headerAction?: JSX.Element;
 }
 
 export interface BucketQueueProps<T> {
