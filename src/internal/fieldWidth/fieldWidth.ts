@@ -65,3 +65,50 @@ export function currencyMaxChars(maxValue: number): number {
 
 /** Default currency ceiling: ten billion dollars ("$10,000,000,000.00"). */
 export const CURRENCY_DEFAULT_MAX = 10_000_000_000;
+
+/**
+ * The magnitude an input field is SIZED for when it declares no ceiling: one
+ * billion (Peter, 2026-09-24: "a max width that accommodates something like
+ * 1 Billion"). A larger value is still accepted — it just fits tightly.
+ * `CURRENCY_DEFAULT_MAX` (ten billion) stays the TABLE cells' cap.
+ */
+export const INPUT_DEFAULT_WIDTH_MAX = 1_000_000_000;
+
+/** Digits after the decimal point in `n` ("0.25" → 2, "5" → 0). */
+const decimalsOf = (n: number): number => {
+  const text = String(n);
+  const point = text.indexOf(".");
+  return point < 0 ? 0 : text.length - point - 1;
+};
+
+/**
+ * The character count of the widest value a number field can show: the longer
+ * of `max` and `min` (a minus sign counts) as `formatOptions` renders them
+ * (en-US, so grouping commas, a currency symbol or a percent sign all count),
+ * plus the fraction digits a fractional `step` adds that the format would not
+ * already show.
+ *
+ * @example
+ *   numberFieldChars({ max: 1_000_000_000 })                   // "1,000,000,000" → 13
+ *   numberFieldChars({ max: 100, step: 0.25 })                 // "100" + ".25" → 6
+ *   numberFieldChars({ max: 1e9, formatOptions: { style: "currency", currency: "USD" } })
+ *                                                              // "$1,000,000,000.00" → 17
+ */
+export function numberFieldChars(opts: {
+  max: number;
+  min?: number;
+  step?: number;
+  formatOptions?: Intl.NumberFormatOptions;
+}): number {
+  const format = new Intl.NumberFormat("en-US", opts.formatOptions);
+  const widest = Math.max(
+    format.format(opts.max).length,
+    opts.min === undefined ? 0 : format.format(opts.min).length,
+  );
+  const { minimumFractionDigits = 0, maximumFractionDigits = 0 } =
+    format.resolvedOptions();
+  const shown = Math.min(decimalsOf(opts.step ?? 1), maximumFractionDigits);
+  const extra = Math.max(0, shown - minimumFractionDigits);
+  const point = extra > 0 && minimumFractionDigits === 0 ? 1 : 0;
+  return widest + extra + point;
+}

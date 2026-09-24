@@ -76,6 +76,8 @@ import { TextShowcase } from "./showcases/text";
 import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
 import { CurrencyInputShowcase } from "./showcases/currency-input";
 import { IntervalInputShowcase } from "./showcases/interval-input";
+import { DirtyComboBoxShowcase } from "./showcases/dirty-combo-box";
+import { SlideRevealShowcase } from "./showcases/slide-reveal";
 import { TruthIndicatorShowcase } from "./showcases/truth-indicator";
 import { QuickFilterAtomShowcase } from "./showcases/quickfilter-atom";
 import { AppShellShowcase } from "./showcases/app-shell";
@@ -553,6 +555,18 @@ const items: Item[] = [
     label: "IntervalInput",
     component: IntervalInputShowcase,
     tags: ["depth:2", "form"],
+  },
+  {
+    id: "dirty-combo-box",
+    label: "DirtyComboBox",
+    component: DirtyComboBoxShowcase,
+    tags: ["depth:2", "form"],
+  },
+  {
+    id: "slide-reveal",
+    label: "SlideReveal",
+    component: SlideRevealShowcase,
+    tags: ["depth:1", "layout"],
   },
   {
     id: "app-shell",

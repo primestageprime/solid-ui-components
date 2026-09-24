@@ -5,7 +5,9 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
   Dropdown,
+  DropdownFitLabel,
   type DropdownItem,
+  type DropdownItemActionProps,
   type DropdownProps,
   type DropdownTriggerState,
 } from "./Dropdown";
@@ -547,5 +549,126 @@ describe("Dropdown — a reason on a row", () => {
     expect(() => options[2].click()).not.toThrow();
     expect(picked).toEqual([]);
     expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+  });
+});
+
+describe("Dropdown — itemAction (a per-row action beside the option)", () => {
+  const Trash = (p: DropdownItemActionProps) =>
+    p.selected ? null : (
+      <button type="button" class="trash" data-id={p.item.id}>
+        x
+      </button>
+    );
+
+  const open = async (
+    itemAction?: typeof Trash,
+    onChange = (_: string) => {},
+  ) => {
+    const { container } = render(() => (
+      <Dropdown
+        items={items}
+        value="b"
+        onChange={onChange}
+        itemAction={itemAction}
+      />
+    ));
+    container
+      .querySelector<HTMLButtonElement>(".sui-dropdown__trigger")!
+      .click();
+    await tick();
+    return container;
+  };
+
+  it("renders exactly as before without one", async () => {
+    const container = await open();
+    expect(container.querySelector(".sui-dropdown__row")).toBeNull();
+    expect(container.querySelector(".sui-dropdown__item-label")).toBeNull();
+    expect(container.querySelector(".sui-dropdown__menu--actions")).toBeNull();
+    const option = container.querySelector('[role="option"]')!;
+    expect(option.parentElement?.getAttribute("role")).toBe("listbox");
+  });
+
+  it("draws the action as a SIBLING of each option, told which row is selected", async () => {
+    const container = await open(Trash);
+    const rows = container.querySelectorAll(".sui-dropdown__row");
+    expect(rows).toHaveLength(3);
+    const ids = Array.from(container.querySelectorAll(".trash"), (b) =>
+      b.getAttribute("data-id"),
+    );
+    expect(ids).toEqual(["a", "c"]);
+    // Never nested inside the option button.
+    expect(container.querySelector('[role="option"] .trash')).toBeNull();
+    expect(
+      container.querySelector(".sui-dropdown__menu--actions"),
+    ).toBeTruthy();
+  });
+
+  it("an action click neither selects the row nor closes the menu", async () => {
+    const picked: string[] = [];
+    const container = await open(Trash, (id) => picked.push(id));
+    container.querySelector<HTMLButtonElement>('.trash[data-id="a"]')!.click();
+    expect(picked).toEqual([]);
+    expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+  });
+});
+
+describe("DropdownFitLabel", () => {
+  it("lays every candidate into the cell, hidden, beside the visible label", () => {
+    const { container } = render(() => (
+      <DropdownFitLabel
+        label="Flat"
+        candidates={["Flat", "A much longer name"]}
+      />
+    ));
+    const sizers = container.querySelectorAll(".sui-dropdown-fit__sizer");
+    expect(Array.from(sizers, (s) => s.textContent)).toEqual([
+      "Flat",
+      "A much longer name",
+    ]);
+    expect(sizers[0]?.getAttribute("aria-hidden")).toBe("true");
+    expect(
+      container.querySelector(".sui-dropdown-fit__label")?.textContent,
+    ).toBe("Flat");
+  });
+});
+
+describe("Dropdown — onItemDelete (Delete/Backspace on a focused option)", () => {
+  const press = (el: Element, k: string) =>
+    el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true }));
+
+  it("reports the focused row on Delete and on Backspace", async () => {
+    const asked: string[] = [];
+    const { container } = render(() => (
+      <Dropdown
+        items={items}
+        value="b"
+        onChange={() => {}}
+        onItemDelete={(item) => asked.push(item.id)}
+      />
+    ));
+    container
+      .querySelector<HTMLButtonElement>(".sui-dropdown__trigger")!
+      .click();
+    await tick();
+    const options = container.querySelectorAll('[role="option"]');
+    press(options[0]!, "Delete");
+    press(options[2]!, "Backspace");
+    expect(asked).toEqual(["a", "c"]);
+    expect(container.querySelector('[role="listbox"]')).toBeTruthy();
+  });
+
+  it("does nothing without the prop", async () => {
+    const picked: string[] = [];
+    const { container } = render(() => (
+      <Dropdown items={items} value="b" onChange={(id) => picked.push(id)} />
+    ));
+    container
+      .querySelector<HTMLButtonElement>(".sui-dropdown__trigger")!
+      .click();
+    await tick();
+    expect(() =>
+      press(container.querySelector('[role="option"]')!, "Delete"),
+    ).not.toThrow();
+    expect(picked).toEqual([]);
   });
 });

@@ -13,9 +13,10 @@ function rootOf(container: HTMLElement): HTMLElement {
 describe("CurrencyInput", () => {
   // -- derived width cap ----------------------------------------------
 
-  it("derives the $10B cap from the formatted width: 18 chars → 15.16rem", () => {
-    // "$10,000,000,000.00" = 18 chars; 18*0.62 + 4rem chrome = 15.16rem.
-    expect(currencyWidthRem()).toBe(15.16);
+  it("is SIZED for $1B by default: 17 chars → 14.54rem", () => {
+    // "$1,000,000,000.00" = 17 chars; 17*0.62 + 4rem chrome = 14.54rem.
+    expect(currencyWidthRem()).toBe(14.54);
+    // "$10,000,000,000.00" = 18 chars → 15.16rem when a caller states $10B.
     expect(currencyWidthRem(10_000_000_000)).toBe(15.16);
   });
 
@@ -31,7 +32,7 @@ describe("CurrencyInput", () => {
       <CurrencyInput name="amount" value={v} onChange={() => {}} />
     ));
     const root = rootOf(container);
-    expect(root.style.maxWidth).toBe("15.16rem");
+    expect(root.style.maxWidth).toBe("14.54rem");
   });
 
   it("honours a smaller maxValue in the inline cap", () => {

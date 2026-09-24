@@ -143,6 +143,13 @@ export const ClusterRow: Component<RowDataProps> = createRow({
   align: "center",
   gap: "sm",
 });
+// LooseClusterRow — a centred cluster at the LOOSE (lg, 16px) gap: for an
+// action that must sit out of fat-finger reach of its neighbour (DirtyComboBox
+// keeps its reset this far from its save).
+export const LooseClusterRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "lg",
+});
 // IconClusterRow — a row of icon-only action buttons spaced so adjacent
 // GLYPHS sit ~one icon-width apart (ruled 2026-07-17): the sm gap plus each
 // IconOnlyButton's internal padding sums to ≈1em of visual separation.

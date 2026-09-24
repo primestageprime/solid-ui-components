@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   AVG_CHAR_REM,
   CURRENCY_DEFAULT_MAX,
+  INPUT_DEFAULT_WIDTH_MAX,
   currencyMaxChars,
   fieldWidthForChars,
+  numberFieldChars,
 } from "./fieldWidth";
 
 describe("fieldWidthForChars", () => {
@@ -34,5 +36,37 @@ describe("currencyMaxChars", () => {
 
   it("default ceiling is ten billion", () => {
     expect(CURRENCY_DEFAULT_MAX).toBe(10_000_000_000);
+  });
+});
+
+describe("numberFieldChars", () => {
+  it("sizes an unbounded field for one billion", () => {
+    expect(numberFieldChars({ max: INPUT_DEFAULT_WIDTH_MAX })).toBe(13);
+  });
+
+  it("counts the longer of max and a negative min", () => {
+    expect(numberFieldChars({ max: 100, min: -10_000 })).toBe(7);
+  });
+
+  it("adds the fraction digits a fractional step brings", () => {
+    expect(numberFieldChars({ max: 100, step: 0.25 })).toBe(6);
+    // A format that already shows them adds nothing.
+    expect(
+      numberFieldChars({
+        max: 1e9,
+        step: 0.01,
+        formatOptions: { style: "currency", currency: "USD" },
+      }),
+    ).toBe(17);
+  });
+
+  it("honours a format that caps the fraction digits", () => {
+    expect(
+      numberFieldChars({
+        max: 999,
+        step: 0.5,
+        formatOptions: { maximumFractionDigits: 0 },
+      }),
+    ).toBe(3);
   });
 });

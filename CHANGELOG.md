@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added
+
+- **`DirtyComboBox`** — a list of things that can be saved or reset, with dirty detection: `[Baseline] vs [name ▾ │ ✓]  ↺`. Pristine shows no save and no reset; dirty slides both out. Per-row delete (never the selected row; mouse or Delete/Backspace), a scrolling list, and a combo as wide as the longest name so it never jumps. Driven by the pure, exported **`dirtyComboModel`** plus store transitions (`viewOf`, `selectItem`, `saveDraft`, `resetDraft`, `removeItem`, `plainEqual`, `widthChOf`).
+- **`SlideReveal`** — slides its children in and out horizontally (a `0fr ↔ 1fr` grid column + fade, 180ms; instant under `prefers-reduced-motion`); collapsed children stay mounted but `inert`.
+- **`Dropdown`: `itemAction`, `onItemDelete`, `DropdownFitLabel`, `CompactDropdown`** — `itemAction` draws a component at the end of every row as a SIBLING of the option (its click never selects the row); `onItemDelete` is its keyboard path (Delete/Backspace on a focused option). `DropdownFitLabel` is a trigger-slot label as wide as the widest candidate, capped near 30 characters. `CompactDropdown` is the small framed curried variant. Additive: a Dropdown without them renders as before.
+- **`LooseClusterRow`** — Layout variant: a centred cluster at the `lg` (16px) gap.
+- **`numberFieldChars` / `INPUT_DEFAULT_WIDTH_MAX`** (internal `fieldWidth`) — the character count of the widest value a number field can show, and the one-billion default it is sized for.
+
+### Changed
+
+- **`Dropdown`: the menu scrolls past 280px.** Menus taller than that (roughly eight `md` rows) now scroll instead of running off the page.
+- **`ThemedNumberInput` never stretches the whole screen.** It caps its own width (inline `max-width`) to the widest value it can show — `max`/`min` as its `formatOptions` render them, plus a fractional `step`'s digits — or, with no `max`, to one billion (`12.06rem`). It still shrinks in a narrow column. Bare number fields that used to fill their column are now narrower.
+- **`CurrencyInput` is sized for $1B by default** (`"$1,000,000,000.00"`, `14.54rem`, was `15.16rem` for $10B). It still accepts up to $10B; a larger amount just fits tightly. `currencyWidthRem()` with no argument now returns `14.54`. `MoneyCell` is unchanged ($10B).
+
 ## 0.184.0 — 2026-09-24
 
 ### Added

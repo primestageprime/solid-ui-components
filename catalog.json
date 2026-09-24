@@ -215,7 +215,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 300
+    "line": 307
   },
   {
     "name": "ActionWrapRow",
@@ -241,7 +241,7 @@
     "showcase": null,
     "since": "0.118.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 244
+    "line": 251
   },
   {
     "name": "AddFab",
@@ -354,7 +354,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 430
+    "line": 437
   },
   {
     "name": "AnchorFillBox",
@@ -377,7 +377,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 446
+    "line": 453
   },
   {
     "name": "AnimatedSwimlaneChart",
@@ -420,7 +420,7 @@
     "showcase": null,
     "since": "v0.18.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 874
+    "line": 881
   },
   {
     "name": "AppMain",
@@ -677,7 +677,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 207
+    "line": 214
   },
   {
     "name": "BaselineDot",
@@ -720,7 +720,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 180
+    "line": 187
   },
   {
     "name": "BaselineWrapRow",
@@ -746,7 +746,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 270
+    "line": 277
   },
   {
     "name": "BaseTable",
@@ -1161,7 +1161,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 890
+    "line": 897
   },
   {
     "name": "CardSurface",
@@ -1391,7 +1391,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 170
+    "line": 177
   },
   {
     "name": "ChangeRenderer",
@@ -1703,7 +1703,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 283
+    "line": 290
   },
   {
     "name": "ChipGrid",
@@ -1727,7 +1727,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 914
+    "line": 921
   },
   {
     "name": "ChipLabel",
@@ -1794,7 +1794,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 357
+    "line": 364
   },
   {
     "name": "ClipColumn",
@@ -1819,7 +1819,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 867
+    "line": 874
   },
   {
     "name": "ClipFillBox",
@@ -1842,7 +1842,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 773
+    "line": 780
   },
   {
     "name": "ClipFillColumn",
@@ -1867,7 +1867,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 747
+    "line": 754
   },
   {
     "name": "ClipFillColumnFlush",
@@ -1892,7 +1892,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 758
+    "line": 765
   },
   {
     "name": "ClusterRow",
@@ -2065,7 +2065,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 877
+    "line": 884
   },
   {
     "name": "CompactCard",
@@ -2098,6 +2098,29 @@
     "since": null,
     "file": "src/components/Surface/variants.ts",
     "line": 66
+  },
+  {
+    "name": "CompactDropdown",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Dropdown",
+    "variantOf": {
+      "factory": "createDropdown",
+      "overrides": "{\n  size: \"sm\",\n  subtle: false,\n}"
+    },
+    "overrides": [
+      "size",
+      "subtle"
+    ],
+    "dataProps": "DropdownDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Compact framed picker: the small size with the full trigger frame. The form a combo takes inside a dense strip (DirtyComboBox). */",
+    "showcase": "#/dropdown",
+    "since": "Unreleased",
+    "file": "src/components/Dropdown/Dropdown.tsx",
+    "line": 594
   },
   {
     "name": "CompactFileDropTarget",
@@ -2318,7 +2341,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 460
+    "line": 467
   },
   {
     "name": "ContentStack",
@@ -3143,7 +3166,7 @@
     "showcase": "#/dropdown",
     "since": "0.105.0",
     "file": "src/components/Dropdown/Dropdown.tsx",
-    "line": 495
+    "line": 578
   },
   {
     "name": "createEmptyState",
@@ -4418,7 +4441,7 @@
     "showcase": "#/currency-input",
     "since": "0.68.0",
     "file": "src/components/CurrencyInput/CurrencyInput.tsx",
-    "line": 62
+    "line": 66
   },
   {
     "name": "CurrentValueIndicator",
@@ -5228,7 +5251,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 495
+    "line": 502
   },
   {
     "name": "DenseStatusNote",
@@ -5373,6 +5396,23 @@
     "since": "0.104.0",
     "file": "src/components/DataDisplay/DigitRoller.tsx",
     "line": 125
+  },
+  {
+    "name": "DirtyComboBox",
+    "depth": 2,
+    "kind": "composite",
+    "family": "DirtyComboBox",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2), owns no CSS.",
+    "notToBeConfusedWith": null,
+    "useFor": "a scenario/preset/draft picker whose selection carries unsaved edits (thorcasting's payroll scenario strip).",
+    "notes": null,
+    "showcase": "#/dirty-combo-box",
+    "since": "Unreleased",
+    "file": "src/components/DirtyComboBox/DirtyComboBox.tsx",
+    "line": 58
   },
   {
     "name": "DismissibleNoticeBanner",
@@ -5520,12 +5560,29 @@
     "dataProps": "DropdownDataProps",
     "summary": "Atomic (Depth 1).",
     "notToBeConfusedWith": null,
-    "useFor": "an editable name that also picks from a list. Exported types: `DropdownItem`, `DropdownProps`, `DropdownTriggerState`, `DropdownOverrides`, `DropdownDataProps`. Factory: `createDropdown({ size, subtle })`; curried variant **`InlineSubtleDropdown`** (`size:\"sm\"`, `subtle:true`) — the compact inline picker that reads as plain text until hovered. Use for: single-value selection with optional color indicators and a menu footer action (status pickers, category selectors). Theming: `Dropdown.css` owns its colors via `--sui-*` tokens (like Button/NavLink/PopoverMenu), so it adapts to any loaded theme with zero per-theme rules — trigger `color: var(--sui-text-primary)`, opaque menu `background: var(--sui-bg-elevated)` + `border: var(--sui-border-bright)` + plain elevation shadow, `--subtle` transparent-until-hover reading legible text. (The token-driven color layer was added 2026-07-20; before that the component CSS was structural-only, leaving the trigger dark-on-dark and the menu transparent under every theme except `hud`, which ships its own explicit dropdown skin that still wins under hud.)",
+    "useFor": "an editable name that also picks from a list. Exported types: `DropdownItem`, `DropdownProps`, `DropdownTriggerState`, `DropdownOverrides`, `DropdownDataProps`. Factory: `createDropdown({ size, subtle })`; curried variant **`InlineSubtleDropdown`** (`size:\"sm\"`, `subtle:true`) — the compact inline picker that reads as plain text until hovered. Use for: single-value selection with optional color indicators and a menu footer action (status pickers, category selectors). `itemAction` (`Component<DropdownItemActionProps>`, `{ item: DropdownItem; selected: boolean }`) draws a component at the END of every row — a trash button, say — as a SIBLING of the option button inside a `div.sui-dropdown__row` (a button cannot hold a button), so its click neither selects the row nor closes the menu; it decides for itself whether to draw anything (e.g. nothing on the selected row). With it the menu is exactly the dropdown's width and long labels ellipsise; without it every row renders byte-identically to before. The menu scrolls past `max-height: 280px`. `onItemDelete` (`(item: DropdownItem) => void`) is the keyboard path to a row's `itemAction`, which Tab cannot reach because Tab leaves the menu: Delete or Backspace on a focused option calls it (the menu does not filter — the consumer decides whether that row may go) and focus moves to the row that takes its place; without it the keys do nothing. Curried variant **`CompactDropdown`** (`size:\"sm\"`, `subtle:false`) — the small size with the full trigger frame, the form a combo takes inside a dense strip (DirtyComboBox). Theming: `Dropdown.css` owns its colors via `--sui-*` tokens (like Button/NavLink/PopoverMenu), so it adapts to any loaded theme with zero per-theme rules — trigger `color: var(--sui-text-primary)`, opaque menu `background: var(--sui-bg-elevated)` + `border: var(--sui-border-bright)` + plain elevation shadow, `--subtle` transparent-until-hover reading legible text. (The token-driven color layer was added 2026-07-20; before that the component CSS was structural-only, leaving the trigger dark-on-dark and the menu transparent under every theme except `hud`, which ships its own explicit dropdown skin that still wins under hud.)",
     "notes": null,
     "showcase": "#/dropdown",
     "since": "v0.19.0",
     "file": "src/components/Dropdown/Dropdown.tsx",
-    "line": 162
+    "line": 208
+  },
+  {
+    "name": "DropdownFitLabel",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Dropdown",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1, lives in `Dropdown.tsx`, CSS in `Dropdown.css`).",
+    "notToBeConfusedWith": null,
+    "useFor": "a combo whose width must not jump between selections (DirtyComboBox on the payroll-board bench).",
+    "notes": "A trigger label as wide as the WIDEST of `candidates` (capped near 30 characters, ellipsised past that) — so a slot trigger does not change width as the selection changes. Every candidate is laid into the same grid cell, invisible, and the cell takes the widest one's width; the visible label sits in that cell too. Compose it into a `trigger` slot. */",
+    "showcase": "#/dropdown",
+    "since": "Unreleased",
+    "file": "src/components/Dropdown/Dropdown.tsx",
+    "line": 188
   },
   {
     "name": "DRow",
@@ -5874,7 +5931,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 221
+    "line": 228
   },
   {
     "name": "EntityCard",
@@ -5984,7 +6041,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 311
+    "line": 318
   },
   {
     "name": "FadedNowrapSublabel",
@@ -6140,7 +6197,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 524
+    "line": 531
   },
   {
     "name": "FillColumnFlush",
@@ -6165,7 +6222,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 534
+    "line": 541
   },
   {
     "name": "FillPaneRailGrid",
@@ -6194,7 +6251,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 412
+    "line": 419
   },
   {
     "name": "FillPlaceholder",
@@ -6240,7 +6297,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 823
+    "line": 830
   },
   {
     "name": "FillWrapRow",
@@ -6269,7 +6326,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 801
+    "line": 808
   },
   {
     "name": "FilterableTable",
@@ -6348,7 +6405,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 595
+    "line": 602
   },
   {
     "name": "FlatThreadGroup",
@@ -6420,7 +6477,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 265
+    "line": 272
   },
   {
     "name": "FloatCell",
@@ -6824,7 +6881,7 @@
     "showcase": null,
     "since": "0.61.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 307
+    "line": 314
   },
   {
     "name": "GrowCenterColumn",
@@ -6849,7 +6906,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 836
+    "line": 843
   },
   {
     "name": "GrowCenterRow",
@@ -6875,7 +6932,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 844
+    "line": 851
   },
   {
     "name": "GrowClusterRow",
@@ -6901,7 +6958,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 194
+    "line": 201
   },
   {
     "name": "GrowColumn",
@@ -6926,7 +6983,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 660
+    "line": 667
   },
   {
     "name": "GrowFillBox",
@@ -6949,7 +7006,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 568
+    "line": 575
   },
   {
     "name": "GrowStack",
@@ -6974,7 +7031,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 684
+    "line": 691
   },
   {
     "name": "GrowTightStack",
@@ -6999,7 +7056,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 696
+    "line": 703
   },
   {
     "name": "GrowWrapRow",
@@ -7025,7 +7082,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 781
+    "line": 788
   },
   {
     "name": "HalfFillColumn",
@@ -7052,7 +7109,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 612
+    "line": 619
   },
   {
     "name": "HeartbeatSparkline",
@@ -7369,7 +7426,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 302
+    "line": 304
   },
   {
     "name": "HUDTabs",
@@ -7432,7 +7489,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 149
+    "line": 156
   },
   {
     "name": "IconOnlyButton",
@@ -7717,7 +7774,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 882
+    "line": 889
   },
   {
     "name": "InlineChartErrorOverlay",
@@ -7780,7 +7837,7 @@
     "showcase": "#/dropdown",
     "since": "0.105.0",
     "file": "src/components/Dropdown/Dropdown.tsx",
-    "line": 504
+    "line": 587
   },
   {
     "name": "InlineText",
@@ -7965,7 +8022,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 365
+    "line": 372
   },
   {
     "name": "LargeModal",
@@ -8374,7 +8431,33 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 898
+    "line": 905
+  },
+  {
+    "name": "LooseClusterRow",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createRow",
+      "overrides": "{\n  align: \"center\",\n  gap: \"lg\",\n}"
+    },
+    "overrides": [
+      "gap",
+      "align",
+      "justify",
+      "wrap",
+      "fill"
+    ],
+    "dataProps": "RowDataProps",
+    "summary": "Curried `Row` (`align:center; gap:lg`, 16px): a centred cluster at the LOOSE gap, for an action that must sit out of fat-finger reach of its neighbour.",
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "LooseClusterRow — a centred cluster at the LOOSE (lg, 16px) gap: for an action that must sit out of fat-finger reach of its neighbour (DirtyComboBox keeps its reset this far from its save).",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 149
   },
   {
     "name": "LooseWrapRow",
@@ -8400,7 +8483,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 261
+    "line": 268
   },
   {
     "name": "MajorPaneBox",
@@ -8423,7 +8506,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 631
+    "line": 638
   },
   {
     "name": "ManagedListSection",
@@ -9083,7 +9166,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 214
+    "line": 221
   },
   {
     "name": "NoShrinkColumn",
@@ -9108,7 +9191,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 669
+    "line": 676
   },
   {
     "name": "NoShrinkScrollBox",
@@ -9131,7 +9214,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 640
+    "line": 647
   },
   {
     "name": "NoteCard",
@@ -9466,7 +9549,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 512
+    "line": 519
   },
   {
     "name": "Page",
@@ -9506,7 +9589,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 480
+    "line": 487
   },
   {
     "name": "PageStack",
@@ -9601,7 +9684,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 647
+    "line": 654
   },
   {
     "name": "ParticipantNameLabel",
@@ -10516,7 +10599,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 337
+    "line": 344
   },
   {
     "name": "ScrollColumn",
@@ -10541,7 +10624,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 722
+    "line": 729
   },
   {
     "name": "ScrollFillBox",
@@ -10564,7 +10647,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 347
+    "line": 354
   },
   {
     "name": "ScrollFillColumn",
@@ -10589,7 +10672,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 737
+    "line": 744
   },
   {
     "name": "ScrollList",
@@ -10637,7 +10720,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 467
+    "line": 474
   },
   {
     "name": "ScrollRegion",
@@ -10729,7 +10812,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 319
+    "line": 326
   },
   {
     "name": "ScrollYBox",
@@ -10752,7 +10835,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 329
+    "line": 336
   },
   {
     "name": "ScrubChart",
@@ -11222,6 +11305,23 @@
     "since": "0.155.0",
     "file": "src/components/Slider/Slider.tsx",
     "line": 295
+  },
+  {
+    "name": "SlideReveal",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "SlideReveal",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1).",
+    "notToBeConfusedWith": null,
+    "useFor": "actions that appear only in a state (DirtyComboBox's save segment and reset).",
+    "notes": null,
+    "showcase": "#/slide-reveal",
+    "since": "Unreleased",
+    "file": "src/components/SlideReveal/SlideReveal.tsx",
+    "line": 20
   },
   {
     "name": "SliderField",
@@ -12100,7 +12200,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 157
+    "line": 164
   },
   {
     "name": "StringCell",
@@ -12503,7 +12603,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 226
+    "line": 233
   },
   {
     "name": "TextBody",
@@ -12776,7 +12876,7 @@
     "showcase": "#/themed-number-input",
     "since": "v0.7.0",
     "file": "src/components/ThemedNumberInput/ThemedNumberInput.tsx",
-    "line": 106
+    "line": 115
   },
   {
     "name": "ThemedTextarea",
@@ -12901,7 +13001,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 185
+    "line": 192
   },
   {
     "name": "TightNoShrinkClusterRow",
@@ -12927,7 +13027,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 854
+    "line": 861
   },
   {
     "name": "TightSpreadRow",
@@ -13271,7 +13371,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 199
+    "line": 206
   },
   {
     "name": "TopicTitle",
@@ -13318,7 +13418,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 456
+    "line": 463
   },
   {
     "name": "TopSpreadRow",
@@ -13344,7 +13444,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 162
+    "line": 169
   },
   {
     "name": "TreeDiffChart",
@@ -13610,7 +13710,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 551
+    "line": 558
   },
   {
     "name": "ViolationBadge",
@@ -13972,7 +14072,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 906
+    "line": 913
   },
   {
     "name": "withCellStyle",
@@ -14065,7 +14165,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 715
+    "line": 722
   },
   {
     "name": "WrappedClusterRow",
@@ -14091,7 +14191,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 293
+    "line": 300
   },
   {
     "name": "WrapRow",
@@ -14117,7 +14217,7 @@
     "showcase": null,
     "since": "0.118.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 231
+    "line": 238
   },
   {
     "name": "XAxis",

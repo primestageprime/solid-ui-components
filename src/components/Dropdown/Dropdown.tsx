@@ -157,7 +157,53 @@ export interface DropdownProps {
    *  open — this only tells the consumer that the user asked. Without it the
    *  refused pick stays silent, as it always was. */
   onDisabledSelect?: (item: DropdownItem) => void;
+  /** A component drawn at the END of every row, beside the option — a trash
+   *  button, say. It is a sibling of the option button, not a child, because a
+   *  button cannot hold a button, so its click never selects the row. It gets
+   *  the row's item and whether that row holds the value, and decides for
+   *  itself whether to draw anything. Without it every row renders exactly as
+   *  it always did. */
+  itemAction?: Component<DropdownItemActionProps>;
+  /** Called when the user presses Delete (or Backspace) on a focused option —
+   *  the keyboard path to a row's `itemAction`, which Tab cannot reach because
+   *  Tab leaves the menu. The consumer decides whether that row may go (the
+   *  menu does not filter), and focus moves to the row that takes its place.
+   *  Without it, the keys do nothing, as before. */
+  onItemDelete?: (item: DropdownItem) => void;
 }
+
+/** What an `itemAction` component receives for its row. */
+export interface DropdownItemActionProps {
+  /** The row's item. */
+  item: DropdownItem;
+  /** True when this row holds the Dropdown's `value`. */
+  selected: boolean;
+}
+
+/** A trigger label as wide as the WIDEST of `candidates` (capped near 30
+ *  characters, ellipsised past that) — so a slot trigger does not change width as the
+ *  selection changes. Every candidate is laid into the same grid cell,
+ *  invisible, and the cell takes the widest one's width; the visible label
+ *  sits in that cell too. Compose it into a `trigger` slot. */
+export const DropdownFitLabel: Component<{
+  /** The text shown. */
+  label: string;
+  /** Every text the label may ever show — normally every item's label. */
+  candidates: string[];
+}> = (props) => (
+  <span class="sui-dropdown-fit">
+    <For each={props.candidates}>
+      {(candidate) => (
+        <span class="sui-dropdown-fit__sizer" aria-hidden="true">
+          {candidate}
+        </span>
+      )}
+    </For>
+    <span class="sui-dropdown-fit__label" title={props.label}>
+      {props.label}
+    </span>
+  </span>
+);
 
 export const Dropdown: Component<DropdownProps> = (props) => {
   const merged = mergeProps(
@@ -348,6 +394,19 @@ export const Dropdown: Component<DropdownProps> = (props) => {
         // Tab leaves the widget — close without stealing focus back.
         closeMenu(false);
         break;
+      case "Delete":
+      case "Backspace": {
+        const item = merged.items[index];
+        if (!merged.onItemDelete || item === undefined) break;
+        e.preventDefault();
+        merged.onItemDelete(item);
+        // The row may be gone now; keep focus in the list, on the row that
+        // took its place (or the new last row).
+        queueMicrotask(() =>
+          focusOption(Math.min(index, merged.items.length - 1), 1),
+        );
+        break;
+      }
       // Enter/Space activate the native button (onClick={select}); Escape is
       // handled by the global keydown listener (closes + refocuses the trigger).
     }
@@ -428,32 +487,56 @@ export const Dropdown: Component<DropdownProps> = (props) => {
         <div
           id={menuId}
           ref={menuRef}
-          class="sui-dropdown__menu"
+          class={
+            merged.itemAction
+              ? "sui-dropdown__menu sui-dropdown__menu--actions"
+              : "sui-dropdown__menu"
+          }
           role="listbox"
           aria-labelledby={triggerId}
         >
           <For each={merged.items}>
-            {(item, index) => (
-              <button
-                class={itemClass(item)}
-                type="button"
-                role="option"
-                aria-selected={item.id === merged.value}
-                aria-disabled={isSelectable(item) ? undefined : true}
-                title={item.reason}
-                aria-describedby={
-                  item.reason === undefined
-                    ? undefined
-                    : reasonElementId(menuId, item.id)
-                }
-                tabindex={index() === activeIndex() ? 0 : -1}
-                onClick={() => select(item)}
-                onKeyDown={(e) => onOptionKeyDown(e, index())}
-              >
-                <Indicator color={item.color} shape={item.shape} />
-                {item.label}
-              </button>
-            )}
+            {(item, index) => {
+              const option = () => (
+                <button
+                  class={itemClass(item)}
+                  type="button"
+                  role="option"
+                  aria-selected={item.id === merged.value}
+                  aria-disabled={isSelectable(item) ? undefined : true}
+                  title={item.reason}
+                  aria-describedby={
+                    item.reason === undefined
+                      ? undefined
+                      : reasonElementId(menuId, item.id)
+                  }
+                  tabindex={index() === activeIndex() ? 0 : -1}
+                  onClick={() => select(item)}
+                  onKeyDown={(e) => onOptionKeyDown(e, index())}
+                >
+                  <Indicator color={item.color} shape={item.shape} />
+                  <Show when={merged.itemAction} fallback={item.label}>
+                    <span class="sui-dropdown__item-label">{item.label}</span>
+                  </Show>
+                </button>
+              );
+              return (
+                <Show when={merged.itemAction} fallback={option()}>
+                  {(Action) => {
+                    const ItemAction = Action();
+                    return (
+                      <div class="sui-dropdown__row" role="none">
+                        {option()}
+                        <ItemAction
+                          item={item}
+                          selected={item.id === merged.value}
+                        />
+                      </div>
+                    );
+                  }}
+                </Show>
+              );
+            }}
           </For>
           <Show when={merged.footer}>
             <div class="sui-dropdown__footer">{merged.footer}</div>
@@ -504,4 +587,11 @@ export function createDropdown(
 export const InlineSubtleDropdown = createDropdown({
   size: "sm",
   subtle: true,
+});
+
+/** Compact framed picker: the small size with the full trigger frame. The
+ *  form a combo takes inside a dense strip (DirtyComboBox). */
+export const CompactDropdown = createDropdown({
+  size: "sm",
+  subtle: false,
 });

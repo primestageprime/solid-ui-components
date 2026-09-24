@@ -195,3 +195,21 @@ describe("ThemedNumberInput", () => {
     expect(getByText("hint text")).toBeTruthy();
   });
 });
+
+describe("ThemedNumberInput — width cap (never stretches the screen)", () => {
+  const rootWidth = (el: HTMLElement) =>
+    (el.querySelector(".sui-number-input") as HTMLElement).style.maxWidth;
+
+  it("caps an unbounded field at one billion: 13 chars → 12.06rem", () => {
+    const { container } = render(() => <ThemedNumberInput name="n" />);
+    expect(rootWidth(container)).toBe("12.06rem");
+  });
+
+  it("caps a bounded field to its max", () => {
+    // "10,000" = 6 chars → 6*0.62 + 4 = 7.72rem.
+    const { container } = render(() => (
+      <ThemedNumberInput name="rpm" max={10_000} />
+    ));
+    expect(rootWidth(container)).toBe("7.72rem");
+  });
+});

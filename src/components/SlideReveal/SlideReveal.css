@@ -1,0 +1,32 @@
+/* ============================================
+   SlideReveal — Atomic (Depth 1)
+   A one-column inline grid whose column transitions 0fr ↔ 1fr: 1fr is the
+   children's intrinsic width, so the box grows to exactly what it holds with
+   no measurement. The inner box clips horizontally only (`clip`, not
+   `hidden`), so a child's focus ring is not cut off top and bottom.
+   ============================================ */
+.sui-slide-reveal {
+  display: inline-grid;
+  grid-template-columns: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-columns 180ms ease-out,
+    opacity 180ms ease-out;
+}
+
+.sui-slide-reveal--open {
+  grid-template-columns: 1fr;
+  opacity: 1;
+}
+
+.sui-slide-reveal__inner {
+  min-width: 0;
+  overflow-x: clip;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-slide-reveal {
+    transition: none;
+  }
+}
