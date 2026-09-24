@@ -44,13 +44,14 @@ const MONTHS = [
 ];
 
 /**
- * STAX revenue, in CENTS: a $18.2k–$37.44k monthly band, paid in batches that
- * swing over and under it, ending at $329.3k inside $163.8k–$337.0k.
+ * Representative license revenue, in CENTS: a $20k–$40k monthly band, paid
+ * in batches that swing over and under it, ending at $336k inside
+ * $180k–$360k. Synthetic — not a real client's figures.
  */
-export const STAX_PERIODS: readonly ChannelPeriod[] = cumulativePeriods(
+export const LICENSE_CLIENT_PERIODS: readonly ChannelPeriod[] = cumulativePeriods(
 	MONTHS,
-	map((d: number) => d * 100, [27840, 65740, 52540, 68940, 0, 0, 96040, 18200, 0]),
-	{ lo: 1_820_000, hi: 3_744_000 },
+	map((d: number) => d * 100, [30000, 66000, 53000, 70000, 0, 0, 98000, 19000, 0]),
+	{ lo: 2_000_000, hi: 4_000_000 },
 );
 
 /** An expense group: fixed rent of $1,668.49 with one late month (paid double in 05). */
@@ -60,7 +61,7 @@ export const RENT_PERIODS: readonly ChannelPeriod[] = cumulativePeriods(
 	{ lo: 166849, hi: 166849 },
 );
 
-/** Cents → "329.3k" / "100k" / "-18.2k". */
+/** Cents → "336k" / "100k" / "-18.2k". */
 export const formatKiloCents = (cents: number): string => {
 	const k = cents / 100_000;
 	return Number.isInteger(k) ? `${k}k` : `${k.toFixed(1)}k`;

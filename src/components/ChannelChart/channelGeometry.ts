@@ -5,7 +5,7 @@
 // caller's periods into domains, ticks, margins, markers, bars and end labels,
 // and `formatChannelTable` prints the period rows as a text table a reader
 // checks the shape against before looking at the GUI (channelGeometry.test.ts
-// prints the STAX fixture). No Solid, no DOM, no measurement.
+// prints the fixture). No Solid, no DOM, no measurement.
 //
 // THE PERIOD AXIS is an index `i ∈ [0, n)` with `xDomain = [-0.5, n - 0.5]`,
 // shared by BOTH plots, so a bar sits under its point by construction.
