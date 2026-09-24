@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.183.0 — 2026-09-24
+
 ### Added
 
 - **`FullscreenBox`** — the same element toggles in flow ↔ `position: fixed; inset: 0` (no portal, so children never remount); Escape closes; corner slot with a default expand/shrink button.
