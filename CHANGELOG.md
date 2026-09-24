@@ -7,6 +7,8 @@
 ### Added
 
 - **`IntervalInput`** — an "Every [#] [unit]" cadence control composing `ThemedNumberInput` + `Select` in one row. `value`/`onChange` carry a plain `{ every, unit }` object; unit labels pluralise from the current `every` by default, a caller-supplied `units` array's labels are used verbatim, `min` clamps `every` to an integer floor (default `1`). Pure helpers `clampEvery`/`unitLabel`/`defaultIntervalUnits` exported for direct unit testing.
+- **`BucketQueue`: `Bucket.headerAction`** — an action (`JSX.Element`) rendered beside the bucket's count, e.g. "Dismiss all" on a staging pile. Rendered as a DOM sibling of the collapse-toggle button (never nested inside it), so clicking the action never also toggles collapse. Additive: a bucket without `headerAction` renders byte-identical markup to before.
+- **`BaseTable`: `fit` now shrink-wraps the frame, not just the table** — `.hud-table--fit` gains `width: max-content` (capped by the existing `max-width: 100%`), so the bordered frame around a fit table matches the packed columns inside it instead of stretching to the container's full width. No change when `fit` is unset.
 
 ## 0.183.0 — 2026-09-24
 
