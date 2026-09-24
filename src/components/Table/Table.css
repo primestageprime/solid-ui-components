@@ -53,9 +53,14 @@
    scrolls WITHIN the frame, and (b) because a scroll container contributes a
    min-content of 0, a fit table dropped into a flex/grid cell collapses to the
    track and scrolls inside it rather than blowing the track out past the
-   viewport (the classic auto-fit-minmax overflow). The frame spans its
-   container (capped at 100%); the packed table left-aligns inside it. */
+   viewport (the classic auto-fit-minmax overflow). The FRAME itself also packs
+   to `max-content` (fixed 2026-09-24: it previously only capped its width at
+   100%, so a block frame with nothing else constraining it still stretched to
+   fill its container — a bordered box visibly wider than the packed columns
+   inside it, contradicting `fit`'s own doc comment in types.ts). Capped at
+   100% and left-aligned, exactly like the table it wraps. */
 .hud-table--fit {
+  width: max-content;
   max-width: 100%;
   min-width: 0;
 }
