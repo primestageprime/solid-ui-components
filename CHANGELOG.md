@@ -10,6 +10,8 @@
 - **`CashflowScrubChart`: out-of-range markers at both edges** — the over-top chevron gains a bottom twin (Fixed mode only), fed by lines, series and the cone's fill baseline.
 - **`BuilderBoardBelowChart`** + pure `builderBoardBelowChart` / `observeBuilderBoardBelowChart` — the builder board under a shell chart: "split" (B over C|D, C|D half the space below the tab bar) when the top half holds a chart of at least 220 and a B of at least 156 and the window is at least 900 wide, else "stacked" (one scrolling column; `contentHeight` sizes the scroller). Neither floor is sacrificed.
 - **`SegmentedControl` `size="xs"`**, **`Icon` `expand`**.
+- **`OverflowNav`: closable items + explicit overflow list** — `closable: true` on an item plus `onClose(id)` renders a trailing × button beside its link (never fires the item's `onClick`); `overflowItems` always live in the kebab, after width-spilled items.
+- **`Modal` `height="fixed-60"`** — a constant 60vh modal whose body scrolls internally, so switching tabs never resizes it. Default `"auto"` is unchanged.
 
 ## 0.181.0 — 2026-09-24
 

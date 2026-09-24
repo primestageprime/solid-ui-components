@@ -1695,7 +1695,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
     ```
 
 ## Modal
-- **Modal** — Portal-based modal with overlay, escape-to-close, and footer slot. Key props: `open`, `onClose`, `title`, `subtitle`, `corners` (`CornerStyle`), `variant` (`ColorVariant`), `size` (`sm`|`md`|`lg`|`xl`|`fullscreen`), `showClose`, `footer`. Use for: dialog windows.
+- **Modal** — Portal-based modal with overlay, escape-to-close, and footer slot. Key props: `open`, `onClose`, `title`, `subtitle`, `corners` (`CornerStyle`), `variant` (`ColorVariant`), `size` (`sm`|`md`|`lg`|`xl`|`fullscreen`), `height` (`auto` default | `fixed-60` — constant 60vh whatever the content, body scrolls inside; use when tabbed content would otherwise resize the modal), `showClose`, `footer`. Use for: dialog windows.
 
 ## ConfirmationModal
 - **ConfirmationModal** — Confirmation dialog with Cancel/Confirm footer built on Modal. Key props: `open`, `onClose`, `onConfirm`, `title`, `subtitle`, `description`, `size`, `corners`, `variant`, `confirmLabel`, `loadingLabel`, `cancelLabel`, `loading`, `confirmVariant` (`primary`|`danger`). Use for: destructive action confirmations, submit confirmations.
