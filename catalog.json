@@ -1015,7 +1015,7 @@
     "useFor": null,
     "notes": "The gauge-railed below-chart board — the only rail today. */",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.183.0",
     "file": "src/components/BuilderBoard/BuilderBoardBelowChart.tsx",
     "line": 147
   },
@@ -6605,7 +6605,7 @@
     "useFor": "a chart (or any stateful view) that must go full screen and come back as the same instance.",
     "notes": "FullscreenBox — the default variant: Escape closes, default corner button. */",
     "showcase": "#/fullscreen-box",
-    "since": "Unreleased",
+    "since": "0.183.0",
     "file": "src/components/FullscreenBox/FullscreenBox.tsx",
     "line": 157
   },
