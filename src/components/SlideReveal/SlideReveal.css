@@ -1,28 +1,27 @@
 /* ============================================
    SlideReveal — Atomic (Depth 1)
-   A one-column inline grid whose column transitions 0fr ↔ 1fr: 1fr is the
-   children's intrinsic width, so the box grows to exactly what it holds with
-   no measurement. The inner box clips horizontally only (`clip`, not
-   `hidden`), so a child's focus ring is not cut off top and bottom.
+   THE BOX NEVER CHANGES SIZE (Peter, 2026-09-24: an animation must hold
+   enough space that it never shifts the layout of other components). The
+   reveal is always laid out at its children's full width; only what is
+   VISIBLE inside that box animates — a clip-path that uncovers it from the
+   left edge ("slides out") while it fades in. Neighbours never move.
+
+   The clip insets by -4px on the three edges that stay put, so a child's
+   focus ring is never cut off.
    ============================================ */
 .sui-slide-reveal {
-  display: inline-grid;
-  grid-template-columns: 0fr;
+  display: inline-block;
+  white-space: nowrap;
+  clip-path: inset(-4px calc(100% + 4px) -4px -4px);
   opacity: 0;
   transition:
-    grid-template-columns 180ms ease-out,
+    clip-path 180ms ease-out,
     opacity 180ms ease-out;
 }
 
 .sui-slide-reveal--open {
-  grid-template-columns: 1fr;
+  clip-path: inset(-4px -4px -4px -4px);
   opacity: 1;
-}
-
-.sui-slide-reveal__inner {
-  min-width: 0;
-  overflow-x: clip;
-  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {

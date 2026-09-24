@@ -47,15 +47,15 @@ export interface DirtyComboView {
 }
 
 /** Peter: "comfortably fits 30 characters", ellipsis beyond that. */
-export const MAX_WIDTH_CH = 30;
+export const DIRTY_COMBO_MAX_WIDTH_CH = 30;
 
 /** A narrow combo still has to read as a combo. */
-export const MIN_WIDTH_CH = 4;
+export const DIRTY_COMBO_MIN_WIDTH_CH = 4;
 
 /** Structural equality over plain data (records, arrays, primitives). The
  *  default `equals`: a config is plain data, and two configs with the same
  *  numbers ARE the same config, whatever object holds them. */
-export const plainEqual = (a: unknown, b: unknown): boolean => {
+export const dirtyComboEqual = (a: unknown, b: unknown): boolean => {
   if (Object.is(a, b)) return true;
   if (typeof a !== "object" || typeof b !== "object") return false;
   if (a === null || b === null) return false;
@@ -64,7 +64,7 @@ export const plainEqual = (a: unknown, b: unknown): boolean => {
   const bKeys = Object.keys(b);
   if (aKeys.length !== bKeys.length) return false;
   const differs = (key: string): boolean =>
-    !plainEqual(
+    !dirtyComboEqual(
       (a as Record<string, unknown>)[key],
       (b as Record<string, unknown>)[key],
     );
@@ -73,9 +73,12 @@ export const plainEqual = (a: unknown, b: unknown): boolean => {
 
 const labelLength = (item: DirtyComboItem): number => item.label.length;
 
-/** Longest label in ch, clamped to [MIN_WIDTH_CH, MAX_WIDTH_CH]. */
-export const widthChOf = (items: readonly DirtyComboItem[]): number =>
-  Math.min(MAX_WIDTH_CH, Math.max(MIN_WIDTH_CH, ...map(labelLength, items)));
+/** Longest label in ch, clamped to [DIRTY_COMBO_MIN_WIDTH_CH, DIRTY_COMBO_MAX_WIDTH_CH]. */
+export const dirtyComboWidthCh = (items: readonly DirtyComboItem[]): number =>
+  Math.min(
+    DIRTY_COMBO_MAX_WIDTH_CH,
+    Math.max(DIRTY_COMBO_MIN_WIDTH_CH, ...map(labelLength, items)),
+  );
 
 /** Derive what the control draws from the list, the selection, and the
  *  draft/saved pair. */
@@ -84,7 +87,7 @@ export function dirtyComboModel<C>(
   selectedId: string,
   draft: C,
   saved: C,
-  equals: (a: C, b: C) => boolean = plainEqual,
+  equals: (a: C, b: C) => boolean = dirtyComboEqual,
 ): DirtyComboView {
   const dirty = !equals(draft, saved);
   const notSelected = (item: DirtyComboItem): boolean => item.id !== selectedId;
@@ -98,7 +101,7 @@ export function dirtyComboModel<C>(
       filter(notSelected),
       map((item) => item.id),
     ),
-    widthCh: widthChOf(items),
+    widthCh: dirtyComboWidthCh(items),
     selectedLabel: selected?.label ?? "",
   };
 }
@@ -106,13 +109,13 @@ export function dirtyComboModel<C>(
 // ── the store: transitions as pure functions ─────────────────────────────
 
 /** A saved item: a row plus the config it last saved. */
-export interface SavedItem<C> extends DirtyComboItem {
+export interface DirtyComboSavedItem<C> extends DirtyComboItem {
   saved: C;
 }
 
 /** The whole bench state. `draft` is the selected item's working copy. */
 export interface DirtyComboStore<C> {
-  items: SavedItem<C>[];
+  items: DirtyComboSavedItem<C>[];
   selectedId: string;
   draft: C;
 }
@@ -121,7 +124,7 @@ const savedOf = <C>(store: DirtyComboStore<C>, id: string): C | undefined =>
   find((item) => item.id === id, store.items)?.saved;
 
 /** Derive the view straight from a store. */
-export const viewOf = <C>(
+export const dirtyComboViewOf = <C>(
   store: DirtyComboStore<C>,
   equals?: (a: C, b: C) => boolean,
 ): DirtyComboView =>
@@ -136,7 +139,7 @@ export const viewOf = <C>(
 /** Switch to another item. The draft becomes that item's saved config, so
  *  any unsaved edit on the one being left is DISCARDED (no prompt — the same
  *  "no confirm" call Peter made for reset). An unknown id is a no-op. */
-export const selectItem = <C>(
+export const dirtyComboSelect = <C>(
   store: DirtyComboStore<C>,
   id: string,
 ): DirtyComboStore<C> => {
@@ -147,19 +150,22 @@ export const selectItem = <C>(
 };
 
 /** Commit the draft as the selected item's saved config. */
-export const saveDraft = <C>(store: DirtyComboStore<C>): DirtyComboStore<C> => {
-  const commit = (item: SavedItem<C>): SavedItem<C> =>
+export const dirtyComboSave = <C>(
+  store: DirtyComboStore<C>,
+): DirtyComboStore<C> => {
+  const commit = (item: DirtyComboSavedItem<C>): DirtyComboSavedItem<C> =>
     item.id === store.selectedId ? { ...item, saved: store.draft } : item;
   return { ...store, items: map(commit, store.items) };
 };
 
 /** Throw the draft away: back to the selected item's saved config. */
-export const resetDraft = <C>(store: DirtyComboStore<C>): DirtyComboStore<C> =>
-  selectItem(store, store.selectedId);
+export const dirtyComboReset = <C>(
+  store: DirtyComboStore<C>,
+): DirtyComboStore<C> => dirtyComboSelect(store, store.selectedId);
 
 /** Delete a row. The SELECTED row cannot be deleted — refused as a no-op,
  *  the same rule `deletableIds` draws. */
-export const removeItem = <C>(
+export const dirtyComboRemove = <C>(
   store: DirtyComboStore<C>,
   id: string,
 ): DirtyComboStore<C> =>

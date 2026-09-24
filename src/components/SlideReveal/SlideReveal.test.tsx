@@ -47,8 +47,10 @@ describe("SlideReveal", () => {
     expect(isInert(root)).toBe(true);
   });
 
-  it("animates 0fr ↔ 1fr in 180ms, and not at all under reduced motion", () => {
-    expect(css).toMatch(/grid-template-columns 180ms/);
+  it("animates only what is visible — never its size — in 180ms, and not at all under reduced motion", () => {
+    expect(css).toMatch(/clip-path 180ms/);
+    // The rule: nothing that sizes the box may transition.
+    expect(css).not.toMatch(/(grid-template-columns|width|max-width)\s+\d+ms/);
     expect(css).toMatch(
       /prefers-reduced-motion: reduce\)\s*\{\s*\.sui-slide-reveal\s*\{\s*transition: none/,
     );

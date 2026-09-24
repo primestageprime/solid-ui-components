@@ -9,16 +9,16 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  MAX_WIDTH_CH,
-  MIN_WIDTH_CH,
+  DIRTY_COMBO_MAX_WIDTH_CH,
+  DIRTY_COMBO_MIN_WIDTH_CH,
   dirtyComboModel,
-  plainEqual,
-  removeItem,
-  resetDraft,
-  saveDraft,
-  selectItem,
-  viewOf,
-  widthChOf,
+  dirtyComboEqual,
+  dirtyComboRemove,
+  dirtyComboReset,
+  dirtyComboSave,
+  dirtyComboSelect,
+  dirtyComboViewOf,
+  dirtyComboWidthCh,
 } from "./dirtyComboModel";
 import { LONG_NAME, PAYROLL_STORE } from "./dirtyComboFixtures";
 
@@ -61,20 +61,26 @@ describe("dirtyComboModel", () => {
   });
 });
 
-describe("widthChOf", () => {
+describe("dirtyComboWidthCh", () => {
   it("caps at 30 and floors at the minimum", () => {
-    expect(widthChOf([{ id: "l", label: LONG_NAME }])).toBe(MAX_WIDTH_CH);
-    expect(widthChOf([{ id: "s", label: "A" }])).toBe(MIN_WIDTH_CH);
-    expect(widthChOf([])).toBe(MIN_WIDTH_CH);
+    expect(dirtyComboWidthCh([{ id: "l", label: LONG_NAME }])).toBe(
+      DIRTY_COMBO_MAX_WIDTH_CH,
+    );
+    expect(dirtyComboWidthCh([{ id: "s", label: "A" }])).toBe(
+      DIRTY_COMBO_MIN_WIDTH_CH,
+    );
+    expect(dirtyComboWidthCh([])).toBe(DIRTY_COMBO_MIN_WIDTH_CH);
   });
 });
 
-describe("plainEqual", () => {
+describe("dirtyComboEqual", () => {
   it("compares plain data structurally", () => {
-    expect(plainEqual({ a: [1, { b: 2 }] }, { a: [1, { b: 2 }] })).toBe(true);
-    expect(plainEqual({ a: 1 }, { a: 1, b: undefined })).toBe(false);
-    expect(plainEqual([1], { 0: 1 })).toBe(false);
-    expect(plainEqual(null, {})).toBe(false);
+    expect(dirtyComboEqual({ a: [1, { b: 2 }] }, { a: [1, { b: 2 }] })).toBe(
+      true,
+    );
+    expect(dirtyComboEqual({ a: 1 }, { a: 1, b: undefined })).toBe(false);
+    expect(dirtyComboEqual([1], { 0: 1 })).toBe(false);
+    expect(dirtyComboEqual(null, {})).toBe(false);
   });
 });
 
@@ -85,39 +91,39 @@ describe("the bench store — Peter's click path", () => {
   });
 
   it("opens pristine, with the long name setting the width", () => {
-    const view = viewOf(PAYROLL_STORE);
+    const view = dirtyComboViewOf(PAYROLL_STORE);
     expect(view.dirty).toBe(false);
-    expect(view.widthCh).toBe(MAX_WIDTH_CH);
+    expect(view.widthCh).toBe(DIRTY_COMBO_MAX_WIDTH_CH);
     expect(view.deletableIds).not.toContain("s1");
   });
 
   it("edit → dirty → save → pristine, and the saved config moved", () => {
     const dirty = edit(155000);
-    expect(viewOf(dirty).dirty).toBe(true);
-    const saved = saveDraft(dirty);
-    expect(viewOf(saved).dirty).toBe(false);
+    expect(dirtyComboViewOf(dirty).dirty).toBe(true);
+    const saved = dirtyComboSave(dirty);
+    expect(dirtyComboViewOf(saved).dirty).toBe(false);
     expect(saved.items[0]?.saved.engineer).toBe(155000);
     expect(saved.items[1]).toBe(PAYROLL_STORE.items[1]);
   });
 
   it("edit → reset → pristine, and the saved config did not move", () => {
-    const reset = resetDraft(edit(155000));
-    expect(viewOf(reset).dirty).toBe(false);
+    const reset = dirtyComboReset(edit(155000));
+    expect(dirtyComboViewOf(reset).dirty).toBe(false);
     expect(reset.draft).toEqual(PAYROLL_STORE.items[0]?.saved);
   });
 
   it("switching loads the other item's saved config (discarding the edit)", () => {
-    const switched = selectItem(edit(155000), "s3");
+    const switched = dirtyComboSelect(edit(155000), "s3");
     expect(switched.selectedId).toBe("s3");
     expect(switched.draft).toEqual(PAYROLL_STORE.items[2]?.saved);
-    expect(viewOf(switched).dirty).toBe(false);
-    expect(selectItem(PAYROLL_STORE, "nope")).toBe(PAYROLL_STORE);
+    expect(dirtyComboViewOf(switched).dirty).toBe(false);
+    expect(dirtyComboSelect(PAYROLL_STORE, "nope")).toBe(PAYROLL_STORE);
   });
 
   it("deletes a non-selected row and refuses the selected one", () => {
-    expect(removeItem(PAYROLL_STORE, "s2").items).toHaveLength(
+    expect(dirtyComboRemove(PAYROLL_STORE, "s2").items).toHaveLength(
       PAYROLL_STORE.items.length - 1,
     );
-    expect(removeItem(PAYROLL_STORE, "s1")).toBe(PAYROLL_STORE);
+    expect(dirtyComboRemove(PAYROLL_STORE, "s1")).toBe(PAYROLL_STORE);
   });
 });

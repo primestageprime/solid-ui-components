@@ -3101,6 +3101,23 @@
     "line": 115
   },
   {
+    "name": "createDirtyComboBox",
+    "depth": 2,
+    "kind": "factory",
+    "family": "DirtyComboBox",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Curry the control's words once — the vocabulary belongs to the SCREEN (scenarios vs Baseline, presets vs Default), not to any one render. */",
+    "showcase": "#/dirty-combo-box",
+    "since": "Unreleased",
+    "file": "src/components/DirtyComboBox/DirtyComboBox.tsx",
+    "line": 159
+  },
+  {
     "name": "createDistributionSparkline",
     "depth": 1,
     "kind": "factory",
@@ -5396,23 +5413,6 @@
     "since": "0.104.0",
     "file": "src/components/DataDisplay/DigitRoller.tsx",
     "line": 125
-  },
-  {
-    "name": "DirtyComboBox",
-    "depth": 2,
-    "kind": "composite",
-    "family": "DirtyComboBox",
-    "variantOf": null,
-    "overrides": null,
-    "dataProps": null,
-    "summary": "Composite (Depth 2), owns no CSS.",
-    "notToBeConfusedWith": null,
-    "useFor": "a scenario/preset/draft picker whose selection carries unsaved edits (thorcasting's payroll scenario strip).",
-    "notes": null,
-    "showcase": "#/dirty-combo-box",
-    "since": "Unreleased",
-    "file": "src/components/DirtyComboBox/DirtyComboBox.tsx",
-    "line": 58
   },
   {
     "name": "DismissibleNoticeBanner",
@@ -10499,6 +10499,28 @@
     "line": 16
   },
   {
+    "name": "ScenarioComboBox",
+    "depth": 2,
+    "kind": "variant",
+    "family": "DirtyComboBox",
+    "variantOf": {
+      "factory": "createDirtyComboBox",
+      "overrides": "{\n    labels: {\n      reference: \"Baseline\",\n      versus: \"vs\",\n      save: \"Save\",\n      reset: \"Reset to saved\",\n      deleteItem: (label) => `Delete ${label}`,\n    },\n  }"
+    },
+    "overrides": [
+      "labels"
+    ],
+    "dataProps": "DirtyComboBoxDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Thorcasting's payroll scenario strip: `[Baseline] vs [scenario ▾ │ ✓] ↺`. */",
+    "showcase": "#/dirty-combo-box",
+    "since": "Unreleased",
+    "file": "src/components/DirtyComboBox/variants.ts",
+    "line": 12
+  },
+  {
     "name": "ScenarioDot",
     "depth": 1,
     "kind": "primitive",
@@ -11316,12 +11338,12 @@
     "dataProps": null,
     "summary": "Atomic (Depth 1).",
     "notToBeConfusedWith": null,
-    "useFor": "actions that appear only in a state (DirtyComboBox's save segment and reset).",
+    "useFor": "actions that appear only in a state (DirtyComboBox's save segment and reset). Consequence to design for: the space is taken even while hidden.",
     "notes": null,
     "showcase": "#/slide-reveal",
     "since": "Unreleased",
     "file": "src/components/SlideReveal/SlideReveal.tsx",
-    "line": 20
+    "line": 29
   },
   {
     "name": "SliderField",

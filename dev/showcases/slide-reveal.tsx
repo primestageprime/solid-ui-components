@@ -11,10 +11,10 @@ export const SlideRevealShowcase: Component = () => {
     <div class="component-section">
       <h2>SlideReveal — Atomic (Depth 1)</h2>
       <p class="text-meta">
-        Slides its children in and out horizontally: the box animates between
-        zero width and the children's own width (a 0fr ↔ 1fr grid column — no
-        measuring) while they fade, in 180ms; instant under
-        prefers-reduced-motion. Collapsed children stay mounted but inert, so a
+        Slides its children in and out — uncovered from the left edge while
+        they fade, in 180ms; instant under prefers-reduced-motion. The box
+        ALWAYS holds the children's full width, so an animation never shifts
+        its neighbours (Peter's rule) — the pill after it stays put. Collapsed children stay mounted but inert, so a
         hidden button can be neither tabbed to nor clicked. One prop:{" "}
         <code>when</code>.
       </p>
@@ -23,7 +23,7 @@ export const SlideRevealShowcase: Component = () => {
         <h3>Reveal actions beside a pill</h3>
         <ClusterRow>
           <SmallOutlinedButton onClick={() => setOpen((o) => !o)}>
-            {open() ? "Hide" : "Show"} actions
+            Toggle actions
           </SmallOutlinedButton>
           <TagPill tag={{ label: "Draft" }} />
           <SlideReveal when={open()}>
@@ -36,7 +36,7 @@ export const SlideRevealShowcase: Component = () => {
               </IconOnlyButton>
             </ClusterRow>
           </SlideReveal>
-          <TagPill tag={{ label: "follows the reveal" }} />
+          <TagPill tag={{ label: "neighbour — never moves" }} />
         </ClusterRow>
       </div>
     </div>

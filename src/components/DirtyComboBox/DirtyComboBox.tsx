@@ -22,7 +22,7 @@
 //   • The name is as wide as the LONGEST label (capped near 30 characters,
 //     ellipsised), so the combo never jumps when the selection changes.
 // ============================================
-import { type Component, Show } from "solid-js";
+import { type Component, Show, mergeProps } from "solid-js";
 import {
   CompactDropdown,
   DropdownFitLabel,
@@ -39,9 +39,24 @@ import { ClusterRow, LooseClusterRow, TightClusterRow } from "../Layout";
 import { map } from "../../fn";
 import type { DirtyComboItem, DirtyComboView } from "./dirtyComboModel";
 
-export interface DirtyComboBoxProps {
+/** The words the control speaks. Presentational: a curry states them once
+ *  (`createDirtyComboBox({ labels })`), never a call site. */
+export interface DirtyComboBoxLabels {
   /** The fixed left-hand pill, e.g. "Baseline". */
   reference: string;
+  /** The word between the pill and the combo, e.g. "vs". */
+  versus: string;
+  /** The save button's accessible name and tooltip. */
+  save: string;
+  /** The reset button's accessible name and tooltip. */
+  reset: string;
+  /** A row trash's accessible name and tooltip, from the row's label. */
+  deleteItem: (label: string) => string;
+}
+
+export interface DirtyComboBoxProps {
+  /** The words. See `DirtyComboBoxLabels`. */
+  labels: DirtyComboBoxLabels;
   items: DirtyComboItem[];
   selectedId: string;
   /** From `dirtyComboModel` — the control draws only what this says. */
@@ -60,8 +75,8 @@ export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => {
   const DeleteAction: Component<DropdownItemActionProps> = (row) => (
     <Show when={!row.selected}>
       <IconOnlyButton
-        aria-label={`Delete ${row.item.label}`}
-        title={`Delete ${row.item.label}`}
+        aria-label={props.labels.deleteItem(row.item.label)}
+        title={props.labels.deleteItem(row.item.label)}
         onClick={() => props.onDelete(row.item.id)}
       >
         <Icon name="trash" size="sm" />
@@ -77,8 +92,8 @@ export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => {
   return (
     <LooseClusterRow>
       <ClusterRow>
-        <TagPill tag={{ label: props.reference }} />
-        <TextSublabel>vs</TextSublabel>
+        <TagPill tag={{ label: props.labels.reference }} />
+        <TextSublabel>{props.labels.versus}</TextSublabel>
         <CompactDropdown
           items={props.items}
           value={props.selectedId}
@@ -103,8 +118,8 @@ export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => {
                 <TightClusterRow>
                   <VerticalDivider />
                   <IconOnlyButton
-                    aria-label="Save"
-                    title="Save"
+                    aria-label={props.labels.save}
+                    title={props.labels.save}
                     onClick={props.onSave}
                   >
                     <Icon name="check" size="sm" />
@@ -117,8 +132,8 @@ export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => {
       </ClusterRow>
       <SlideReveal when={props.view.canReset}>
         <IconOnlyButton
-          aria-label="Reset to saved"
-          title="Reset to saved"
+          aria-label={props.labels.reset}
+          title={props.labels.reset}
           onClick={props.onReset}
         >
           <Icon name="undo" size="sm" />
@@ -127,3 +142,22 @@ export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => {
     </LooseClusterRow>
   );
 };
+
+// ── currying ─────────────────────────────────────────────────────────────
+
+/** Props that are presentational — locked at curry time. */
+export type DirtyComboBoxOverrides = Pick<DirtyComboBoxProps, "labels">;
+
+/** Props left to the call site: data and callbacks only. */
+export type DirtyComboBoxDataProps = Omit<
+  DirtyComboBoxProps,
+  keyof DirtyComboBoxOverrides
+>;
+
+/** Curry the control's words once — the vocabulary belongs to the SCREEN
+ *  (scenarios vs Baseline, presets vs Default), not to any one render. */
+export function createDirtyComboBox(
+  defaults: DirtyComboBoxOverrides,
+): Component<DirtyComboBoxDataProps> {
+  return (props) => <DirtyComboBox {...mergeProps(defaults, props)} />;
+}
