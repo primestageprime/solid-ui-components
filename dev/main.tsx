@@ -35,6 +35,7 @@ import { TreeDiffChartShowcase } from "./showcases/tree-diff-chart";
 import { DateAxisShowcase } from "./showcases/date-axis";
 import { ScrubChartShowcase } from "./showcases/scrub-chart";
 import { CashflowScrubChartShowcase } from "./showcases/cashflow-scrub-chart";
+import { ChartShellShowcase } from "./showcases/chart-shell";
 import { SwimlaneChartShowcase } from "./showcases/swimlane-chart";
 import { DataTableContainerShowcase } from "./showcases/data-table-container";
 import { DigitRollerShowcase } from "./showcases/digit-roller";
@@ -306,6 +307,12 @@ const items: Item[] = [
     label: "CashflowScrubChart",
     component: CashflowScrubChartShowcase,
     tags: ["depth:2", "chart", "time", "data"],
+  },
+  {
+    id: "chart-shell",
+    label: "Chart shell primitives",
+    component: ChartShellShowcase,
+    tags: ["depth:2", "chart", "layout"],
   },
   {
     id: "swimlane-chart",
