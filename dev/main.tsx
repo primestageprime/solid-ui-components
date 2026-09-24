@@ -123,6 +123,7 @@ import { LevelsTimelineShowcase } from "./showcases/levels-timeline";
 import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
 import { ToastShowcase } from "./showcases/toast";
 import { TooltipShowcase } from "./showcases/tooltip";
+import { PopoverTooltipShowcase } from "./showcases/popover-tooltip";
 import { ValueRendererShowcase } from "./showcases/value-renderer";
 
 // Layout
@@ -848,6 +849,12 @@ const items: Item[] = [
     id: "tooltip",
     label: "Tooltip",
     component: TooltipShowcase,
+    tags: ["depth:0", "feedback"],
+  },
+  {
+    id: "popover-tooltip",
+    label: "PopoverTooltip",
+    component: PopoverTooltipShowcase,
     tags: ["depth:0", "feedback"],
   },
   {

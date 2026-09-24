@@ -9783,6 +9783,23 @@
     "line": 138
   },
   {
+    "name": "PopoverTooltip",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Tooltip",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Kobalte `@kobalte/core/popover`-backed sibling of `Tooltip`, for the ONE case Tooltip cannot cover: opening on tap/click.",
+    "notToBeConfusedWith": null,
+    "useFor": "anywhere a hover tooltip also needs to work on tap/touch — a Count cell whose popover holds a small table, a mobile-reachable info bubble, any hover affordance that must also be tap-reachable.",
+    "notes": null,
+    "showcase": "#/tooltip",
+    "since": "Unreleased",
+    "file": "src/components/Tooltip/PopoverTooltip.tsx",
+    "line": 82
+  },
+  {
     "name": "PressableLabelButton",
     "depth": 1,
     "kind": "variant",

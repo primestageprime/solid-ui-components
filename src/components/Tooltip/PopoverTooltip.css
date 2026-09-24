@@ -1,0 +1,74 @@
+/* ============================================
+   PopoverTooltip — Structural
+   Kobalte Popover-driven variant that opens on tap/click (toggle), hover, or
+   keyboard focus, and dismisses on outside click / Escape. Visuals mirror
+   Tooltip.css so the two read as one family; kept in a separate file because
+   PopoverTooltip is a separate Depth-1 primitive with its own composition,
+   not a variant of Tooltip.
+   ============================================ */
+.sui-popover-tooltip__trigger {
+  background-color: transparent;
+  color: inherit;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  word-spacing: inherit;
+  text-align: inherit;
+  cursor: inherit;
+}
+
+.sui-popover-tooltip__trigger:focus-visible {
+  outline: 2px solid var(--sui-border-focus, hsl(200 98% 39%));
+  outline-offset: 2px;
+}
+
+.sui-popover-tooltip__content {
+  /* Same layering rationale as Tooltip.css: above Modal's 1000, below
+     Toast's 9999 — see that file's comment for the incident this guards. */
+  z-index: 1100;
+  max-width: min(calc(100vw - 32px), 600px);
+  border: 1px solid var(--sui-border, hsl(240 5% 84%));
+  border-radius: var(--sui-radius-sm, 6px);
+  padding: 8px;
+  background-color: var(--sui-bg-secondary, hsl(214, 55%, 20%));
+  color: var(--sui-text-primary, white);
+  font-size: 14px;
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform-origin: var(--kb-popover-content-transform-origin);
+  animation: sui-popover-tooltip-hide 250ms ease-in forwards;
+}
+
+.sui-popover-tooltip__content[data-expanded] {
+  animation: sui-popover-tooltip-show 250ms ease-out;
+}
+
+@keyframes sui-popover-tooltip-show {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sui-popover-tooltip-hide {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.sui-popover-tooltip__arrow {
+  stroke-width: 2px;
+}
