@@ -191,8 +191,10 @@ export interface BelowChartInput {
   readonly chartH: number;
   /** Height of the chart's legend row, 0 without one, in px. */
   readonly legendH: number;
-  /** Gutters; defaults to `DEFAULT_BELOW_CHART_GAPS`. */
-  readonly gaps?: Partial<BelowChartGaps>;
+  /** The chart-block-to-B gutter (the shell's, default `xs`). The B-to-C|D
+   *  gutter is NOT an input: `BuilderBoardBelowChart` bakes `sm` there, and
+   *  a model that let a caller move it would disagree with the drawn board. */
+  readonly gaps?: Partial<Pick<BelowChartGaps, "chartToB">>;
   /** The rail's width token. Default `gauge`. */
   readonly rail?: RailWidth;
 }
@@ -217,7 +219,10 @@ export interface BelowChartRects {
  * chart is 0 and B takes whatever the top half has left, never negative.
  */
 export const builderBoardBelowChart = (input: BelowChartInput): BelowChartRects => {
-  const gaps = { ...DEFAULT_BELOW_CHART_GAPS, ...input.gaps };
+  const gaps = {
+    ...DEFAULT_BELOW_CHART_GAPS,
+    chartToB: input.gaps?.chartToB ?? DEFAULT_BELOW_CHART_GAPS.chartToB,
+  };
   const width = input.viewport.width;
   const below = Math.max(0, input.viewport.height - input.tabBarH);
   const lowerHeight = below * CD_SHARE;

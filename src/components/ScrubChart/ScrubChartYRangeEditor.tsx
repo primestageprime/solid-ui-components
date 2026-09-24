@@ -6,8 +6,11 @@
 // axis (ScrubChart: `yAxisMode="fixed"` + `onYRangeChange`). Two fields —
 // Max above Min, the order they sit on the axis — and Cancel / Apply.
 //
-// Enter applies; Escape cancels and STOPS there, so an Escape meant for the
-// editor never also closes a fullscreen box or a modal around the chart.
+// Enter applies; Escape cancels, stops propagation AND marks the event
+// handled (`preventDefault`). The second half is what protects a
+// FullscreenBox around the chart: it listens on `document`, and it ignores an
+// Escape whose `defaultPrevented` is set (pinned end to end in
+// FullscreenBox/escapeWithEditor.test.tsx).
 // Apply is disabled while the draft is not a range (a cleared end, or min not
 // below max) and the reason shows under the fields.
 //

@@ -67,6 +67,7 @@ describe("CashflowScrubChart out-of-range markers (fixed range)", () => {
       <CashflowScrubChart
         cells={cells}
         scrub={false}
+        yAxisMode="fixed"
         yMin={0}
         yMax={100_000}
         balanceSeries={[
@@ -82,6 +83,7 @@ describe("CashflowScrubChart out-of-range markers (fixed range)", () => {
       <CashflowScrubChart
         cells={cells}
         scrub={false}
+        yAxisMode="fixed"
         yMin={0}
         yMax={100_000}
         balanceSeries={[
@@ -96,5 +98,24 @@ describe("CashflowScrubChart out-of-range markers (fixed range)", () => {
     const m = markers(container);
     expect(m.top).toBe("$4M");
     expect(m.bottom).toBe("−$3k");
+  });
+
+  it("draws no bottom marker outside fixed mode (the top one is unconditional)", () => {
+    const { container } = render(() => (
+      <CashflowScrubChart
+        cells={cells}
+        scrub={false}
+        yMin={0}
+        yMax={100_000}
+        balanceSeries={[
+          {
+            id: "cone-hi",
+            balanceCents: () => 400_000_000,
+            fill: { baseline: () => -300_000 },
+          },
+        ]}
+      />
+    ));
+    expect(markers(container)).toEqual({ top: "$4M", bottom: undefined });
   });
 });

@@ -413,7 +413,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     // ── Out-of-range markers ────────────────────────────────────────────
     // A domain that does not cover the data clips it at the plot edge: a
     // FIXED y range, or a line-based domain under a wider range cone. Each
-    // clipped edge gets ONE marker — the global peak above the top, the global
+    // clipped edge gets ONE marker (the bottom one in fixed mode only) — the global peak above the top, the global
     // trough below the bottom — with a chevron and the compact value. The
     // candidates are every drawn value: the primary line, every series, and
     // every fill BASELINE (a cone's lower edge). The decision is the pure
@@ -432,7 +432,12 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
     }
     const edges = outOfRange(rangePoints, ctx.plotTop, ctx.plotBottom);
     const overtopPeak = edges.top;
-    const underTrough = edges.bottom;
+    // The BOTTOM marker is a Fixed-mode affordance only. Outside fixed mode a
+    // consumer's fitted or floored domain may leave a cone's lower edge below
+    // the plot on purpose (thorcasting floors its axis), and a chevron there
+    // would be noise on every page. The top marker stays unconditional, as it
+    // always was.
+    const underTrough = props.yAxisMode === "fixed" ? edges.bottom : null;
 
     // The chevrons sit at the extreme's x; the labels are held inside the
     // plot's horizontal span so a value never clips off the left/right edge.
