@@ -2916,3 +2916,13 @@ th:has(.tf-th-center) .hud-table__header-content {
   font-size: 15px;
   fill: var(--sui-text-secondary);
 }
+
+/* FullscreenBox showcase: a stated height for the in-flow box, so the
+   fill-mode chart inside has a definite parent. Fullscreen overrides it. */
+.fullscreen-box-demo {
+  height: 260px;
+}
+
+.fullscreen-box-demo > .sui-fullscreen-box {
+  height: 100%;
+}

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- **`FullscreenBox`** — the same element toggles in flow ↔ `position: fixed; inset: 0` (no portal, so children never remount); Escape closes; corner slot with a default expand/shrink button.
+- **`ScrubChart` / `CashflowScrubChart`: `yAxisMode` + `onYAxisModeChange`** — Auto | Fixed | Fit switch in the origin corner, replacing the y-fit button when set (corner footprint guarantees kept; `Y_AXIS_MODE_COLUMN`).
+- **`ScrubChart` / `CashflowScrubChart`: `onYRangeChange`** — in Fixed mode the y-axis opens an inline Max/Min editor (`yRangeField="currency-cents"` shows dollars, emits cents).
+- **`CashflowScrubChart`: out-of-range markers at both edges** — the over-top chevron gains a bottom twin, fed by lines, series and the cone's fill baseline.
+- **`SegmentedControl` `size="xs"`**, **`Icon` `expand`**.
+
 ## 0.179.0 — 2026-09-23
 
 ### Added

@@ -1,0 +1,35 @@
+/* In flow: a plain block that anchors its corner control. */
+.sui-fullscreen-box {
+  position: relative;
+  min-width: 0;
+}
+
+/* Fullscreen: the SAME element, fixed to the viewport. No portal — see the
+   component header. z-index 900 sits under Modal (1000) and the portaled
+   popovers (Tooltip, Combobox: 1100); FullscreenBox.test.tsx reads those
+   stylesheets and holds the order. The box is a flex column so a child that
+   fills (`height: 100%`, a `chartHeight="fill"` chart) takes the viewport. */
+.sui-fullscreen-box--on {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: var(--sui-space-md, 16px);
+  background: var(--sui-bg-base, var(--sui-bg-elevated));
+  overflow: auto;
+}
+
+.sui-fullscreen-box--on > :first-child {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* The toggle's corner: top right, above the content it floats over. */
+.sui-fullscreen-box__corner {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+}
