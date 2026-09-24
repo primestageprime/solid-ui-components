@@ -9873,7 +9873,7 @@
     "useFor": "anywhere a hover tooltip also needs to work on tap/touch — a Count cell whose popover holds a small table, a mobile-reachable info bubble, any hover affordance that must also be tap-reachable.",
     "notes": null,
     "showcase": "#/tooltip",
-    "since": "Unreleased",
+    "since": "0.182.0",
     "file": "src/components/Tooltip/PopoverTooltip.tsx",
     "line": 82
   },
