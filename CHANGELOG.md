@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.189.0 — 2026-09-25
+
 ### Fixed
 
 - **`OverflowNav` didn't fold on resize** (G16). Natural widths were measured once and cached, so a nav narrowed later (or measured before fonts/layout settled) kept every item inline; and a 0px container bailed instead of folding. Widths are now re-measured on every container resize, when labels/badges/items change, and once `document.fonts` is ready; a 0px (or narrower-than-kebab) container folds everything into the kebab. The decision is the pure, exported-to-tests `overflowNavVisibleCount` (`OverflowNav/fold.ts`). No API change.
