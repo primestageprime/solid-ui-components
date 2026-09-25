@@ -77,6 +77,7 @@ import {
   type Transfer,
   clampMutationTime,
   dragTimeAt,
+  rekeyPressedMutation,
   type PickStrategy,
   hoverAt,
   isoDayOf,
@@ -424,7 +425,9 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
    */
   let press:
     | {
-        readonly id: string;
+        id: string;
+        lastAt: number | undefined;
+        readonly index: number;
         readonly pointerId: number;
         readonly startX: number;
         readonly grab: number;
@@ -447,6 +450,8 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
     (event.currentTarget as Element).setPointerCapture?.(event.pointerId);
     press = {
       id: flag.id,
+      lastAt: undefined,
+      index: flag.number - 1,
       pointerId: event.pointerId,
       startX: x,
       grab: x - flag.x,
@@ -464,16 +469,18 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       press.moved = true;
       setDraggingId(press.id);
     }
-    move(
-      press.id,
-      dragTimeAt(
-        props.mutations,
-        press.id,
-        x - press.grab,
-        props.domain,
-        frame(),
-      ),
-    );
+    // G22: the consumer may have re-keyed the pressed mutation since the
+    // last move (an id derived from its date, a fresh row per edit). Follow it
+    // by id, else by the time last reported, else by its place in time order.
+    const id = rekeyPressedMutation(props.mutations, press);
+    if (id === undefined) return;
+    if (id !== press.id) {
+      press.id = id;
+      setDraggingId(id);
+    }
+    const at = dragTimeAt(props.mutations, id, x - press.grab, props.domain, frame());
+    press.lastAt = at;
+    move(id, at);
   };
 
   const onFlagPointerEnd = (event: PointerEvent): void => {

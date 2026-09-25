@@ -2,13 +2,18 @@
 
 ## Unreleased
 
+### Added
+
+- **`StackedTimelineChart`: LevelsTimeline's mutation contract** (G24), additive: `mutations` (numbered flags in the top margin, numbered in time order, a rule through the plot; the chart reserves the margin), `selectedMutationId` + `onSelectMutation` (flags become buttons: click, Enter/Space), `onMoveMutation(id, at)` (drag and ←/→ a day, clamped between neighbours and to `xDomain` via `clampMutationTime`), and `pickAt?: PickStrategy` to snap `onPick`. `events`/`selectedEvent` are deprecated in comments and keep working. The flag lane is an internal Depth-1 Chart slot (`Chart/MutationFlags`) over LevelsTimeline's geometry.
+- **`ScrubChart`: `onChartWidthChange?(width)`** — fires with the frame's measured width whenever it changes.
+
 ### Changed
 
 - **`CashflowScrubChart`: the right label gutter is capped at 25% of the plot** (G14). Past `MAX_RIGHT_GUTTER_SHARE` of the plot the gutter would leave, every `"right"` label falls back to `"below"`, so a long label on a narrow chart (thorcasting at 390px) no longer eats the plot. Wide charts are unchanged; so is any chart before its frame is measured.
 
-### Added
+### Fixed
 
-- **`ScrubChart`: `onChartWidthChange?(width)`** — fires with the frame's measured width whenever it changes.
+- **Flag drags survive a consumer re-keying the flag mid-drag** (G22), in `LevelsTimeline` and `StackedTimelineChart`: the press follows its id, else the time it last reported, else its place in time order (`rekeyPressedMutation`).
 
 ## 0.193.0 — 2026-09-25
 

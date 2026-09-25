@@ -286,3 +286,54 @@
   fill: transparent;
   cursor: crosshair;
 }
+
+/* MutationFlags — numbered flags in the top margin, a rule down the plot
+   (LevelsTimeline's flags, inside any Chart; G24). */
+.sui-chart__mutation-rule {
+  stroke: var(--sui-text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.sui-chart__mutation-box {
+  fill: var(--sui-bg-elevated);
+  stroke: var(--sui-text-muted);
+  stroke-width: 1;
+}
+.sui-chart__mutation-label {
+  fill: var(--sui-text-primary);
+  font-size: 10px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.sui-chart__mutation--selected .sui-chart__mutation-box {
+  fill: var(--sui-accent);
+  stroke: var(--sui-accent);
+}
+.sui-chart__mutation--selected .sui-chart__mutation-label {
+  fill: var(--sui-bg-elevated);
+}
+.sui-chart__mutation--selected .sui-chart__mutation-rule {
+  stroke: var(--sui-accent);
+  stroke-dasharray: none;
+  stroke-width: 2;
+}
+.sui-chart__mutation--muted {
+  opacity: 0.7;
+}
+.sui-chart__mutation[role="button"] {
+  cursor: pointer;
+}
+.sui-chart__mutation--draggable {
+  cursor: grab;
+  touch-action: none;
+}
+.sui-chart__mutation--dragging {
+  cursor: grabbing;
+}
+.sui-chart__mutation:focus-visible {
+  outline: none;
+}
+.sui-chart__mutation:focus-visible .sui-chart__mutation-box {
+  stroke: var(--sui-accent);
+  stroke-width: 2;
+}

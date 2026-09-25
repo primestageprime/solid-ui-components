@@ -12,6 +12,11 @@ import {
   type StackedTimelineEvent,
 } from "../../src/components/StackedTimelineChart";
 import { CardSurface } from "../../src/components/Surface";
+import { map } from "../../src/fn";
+import type {
+  Mutation,
+  TimeValue,
+} from "../../src/components/LevelsTimeline/geometry";
 import { FillChartFrame } from "../../src/components/ChartFrame";
 import { FixedHeightBox } from "../../src/components/Layout";
 import { CaptionLabel, SectionTitle } from "../../src/components/Text";
@@ -55,6 +60,34 @@ const HoursTimeline = createStackedTimelineChart({
     new Date(value).toLocaleString("en-US", { month: "short", timeZone: "UTC" }),
 });
 
+/** G24: LevelsTimeline's mutation contract — select, drag, arrow-nudge. */
+const MutationsExample: Component = () => {
+  const [mutations, setMutations] = createSignal<readonly Mutation[]>([
+    { id: "m1", at: Date.UTC(2025, 2, 3), label: "Hire" },
+    { id: "m2", at: Date.UTC(2025, 5, 2), label: "Raise" },
+    { id: "m3", at: Date.UTC(2025, 8, 1), label: "Contractor ends" },
+  ]);
+  const [selected, setSelected] = createSignal<string | undefined>("m2");
+  const move = (id: string, at: TimeValue) =>
+    setMutations((all) => map((m) => (m.id === id ? { ...m, at } : m), all));
+  return (
+    <CardSurface>
+      <div class="stacked-timeline-chart-demo">
+        <HoursTimeline
+          series={SERIES}
+          xDomain={[START, END]}
+          yDomain={[0, 80]}
+          rule={{ value: 40, label: "full-time" }}
+          mutations={mutations()}
+          selectedMutationId={selected()}
+          onSelectMutation={setSelected}
+          onMoveMutation={move}
+        />
+      </div>
+    </CardSurface>
+  );
+};
+
 export const StackedTimelineChartShowcase: Component = () => {
   const [events, setEvents] = createSignal<readonly StackedTimelineEvent[]>([
     { at: new Date("2025-06-02T00:00:00Z"), label: "1" },
@@ -94,6 +127,10 @@ export const StackedTimelineChartShowcase: Component = () => {
             />
           </div>
         </CardSurface>
+      </div>
+      <div class="example-group">
+        <h3>mutations — numbered flags: click selects, drag or ←/→ moves (clamped)</h3>
+        <MutationsExample />
       </div>
       <div class="example-group">
         <h3>In a FillChartFrame, inside a fixed-height box — thorcasting's Work Mix</h3>
