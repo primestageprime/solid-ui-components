@@ -63,7 +63,6 @@
 import {
   type Component,
   type JSX,
-  Index,
   Show,
   createSignal,
   mergeProps,
@@ -76,14 +75,17 @@ import {
   FillPaneRailGrid,
   HalfFillColumn,
   NarrowStack,
-  NoShrinkColumn,
   ScrollFillColumn,
   ViewportColumn,
+  createStack,
 } from "../Layout";
 import { FillCardSurface } from "../Surface";
 import {
   RAIL_WIDTH_PX,
   type RailWidth,
+  C_STACKED_HEIGHT,
+  D_STACKED_HEIGHT,
+  STACKED_CHART_HEIGHT,
   builderBoardLayoutFor,
   builderBoardStackedRects,
 } from "./geometry";
@@ -125,6 +127,16 @@ const RAIL_GRID: Readonly<
 > = {
   gauge: FillPaneRailGrid,
 };
+
+/** The single column's slots: each holds its card at the height geometry.ts
+ *  states for it, and never shrinks — the board scrolls instead. The heights
+ *  are the core's constants, so they bake here once, like ChartFrame's
+ *  stated height, rather than riding on an inline style. */
+const stackedSlot = (height: number) =>
+  createStack({ style: { height: `${height}px`, "flex-shrink": "0" } });
+const StackedChartSlot = stackedSlot(STACKED_CHART_HEIGHT);
+const StackedControlsSlot = stackedSlot(C_STACKED_HEIGHT);
+const StackedRailSlot = stackedSlot(D_STACKED_HEIGHT);
 
 export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
   const props = mergeProps({ rail: "gauge" as const }, rawProps);
@@ -170,26 +182,6 @@ export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
       {d.content()}
     </FillCardSurface>
   );
-  // The single column, top to bottom. The CARDS are fixed once; only the
-  // heights are read per width, so a resize never remounts a panel.
-  const columnCards: readonly (() => JSX.Element)[] = [
-    () => (
-      <FillCardSurface data-builder-board-panel="a">
-        {local.panelA}
-      </FillCardSurface>
-    ),
-    () => (
-      <FillCardSurface data-builder-board-panel="b">
-        {local.panelB}
-      </FillCardSurface>
-    ),
-    cardC,
-    cardD,
-  ];
-  const columnHeights = (): readonly number[] => {
-    const r = stackedRects();
-    return [r.a.height, r.b.height, r.c.height, r.d.height];
-  };
   return (
     <ViewportColumn
       data-builder-board=""
@@ -200,16 +192,21 @@ export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
         when={!stacked()}
         fallback={
           // SINGLE COLUMN: the board scrolls; each card holds the height the
-          // core stated (measured geometry, never a literal).
+          // core states (geometry.ts), in the slots below.
           <ScrollFillColumn>
             <NarrowStack>
-              <Index each={columnHeights()}>
-                {(height, i) => (
-                  <NoShrinkColumn style={{ height: `${height()}px` }}>
-                    {columnCards[i]()}
-                  </NoShrinkColumn>
-                )}
-              </Index>
+              <StackedChartSlot>
+                <FillCardSurface data-builder-board-panel="a">
+                  {local.panelA}
+                </FillCardSurface>
+              </StackedChartSlot>
+              <StackedChartSlot>
+                <FillCardSurface data-builder-board-panel="b">
+                  {local.panelB}
+                </FillCardSurface>
+              </StackedChartSlot>
+              <StackedControlsSlot>{cardC()}</StackedControlsSlot>
+              <StackedRailSlot>{cardD()}</StackedRailSlot>
             </NarrowStack>
           </ScrollFillColumn>
         }
