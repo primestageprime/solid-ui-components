@@ -297,6 +297,7 @@ describe("DirtyComboBox pending save", () => {
   const mountSaving = (onSave: () => unknown) => {
     const { container } = render(() => (
       <ScenarioComboBox
+        onCreate={() => {}}
         items={dirtyStore.items}
         selectedId={dirtyStore.selectedId}
         view={dirtyComboViewOf(dirtyStore)}
@@ -313,7 +314,14 @@ describe("DirtyComboBox pending save", () => {
       )!;
     const spinning = () =>
       saveButton().getAttribute("aria-label") === "Saving…";
-    return { saveButton, spinning };
+    /** The [ ↺ │ + ] split is shown (its SlideReveal open, not inert). */
+    const splitShown = () => {
+      const reveal = live()
+        .querySelector('[aria-label="New scenario"]')
+        ?.closest(".sui-slide-reveal");
+      return reveal?.classList.contains("sui-slide-reveal--open") === true;
+    };
+    return { saveButton, spinning, splitShown };
   };
   const deferred = () => {
     let resolve!: () => void;
@@ -348,12 +356,15 @@ describe("DirtyComboBox pending save", () => {
     try {
       const d = deferred();
       const onSave = vi.fn(() => d.promise);
-      const { saveButton, spinning } = mountSaving(onSave);
+      const { saveButton, spinning, splitShown } = mountSaving(onSave);
+      expect(splitShown()).toBe(true);
       saveButton().click();
       vi.advanceTimersByTime(199);
       expect(spinning()).toBe(false);
+      expect(splitShown()).toBe(true);
       vi.advanceTimersByTime(1);
       expect(spinning()).toBe(true);
+      expect(splitShown()).toBe(false);
       saveButton().click();
       expect(onSave).toHaveBeenCalledTimes(1);
       vi.advanceTimersByTime(600);
@@ -370,13 +381,15 @@ describe("DirtyComboBox pending save", () => {
     try {
       const d = deferred();
       const onSave = vi.fn(() => d.promise);
-      const { saveButton, spinning } = mountSaving(onSave);
+      const { saveButton, spinning, splitShown } = mountSaving(onSave);
       saveButton().click();
       vi.advanceTimersByTime(500);
       expect(spinning()).toBe(true);
+      expect(splitShown()).toBe(false);
       d.reject(new Error("offline"));
       await flush();
       expect(spinning()).toBe(false);
+      expect(splitShown()).toBe(true);
       saveButton().click();
       expect(onSave).toHaveBeenCalledTimes(2);
     } finally {

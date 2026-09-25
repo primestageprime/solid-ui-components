@@ -334,7 +334,7 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
       <Show
         when={props.onCreate}
         fallback={
-          <SlideReveal when={props.view.canReset}>
+          <SlideReveal when={props.view.canReset && saving() !== "spinning"}>
             <IconOnlyButton
               aria-label={props.labels.reset}
               title={props.labels.reset}
@@ -349,7 +349,9 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
             while dirty — a new item that differs from no existing one makes
             no sense — so it slides in with the ✓ segment, inside the same
             ReservedWidth, and nothing outside the control moves. */}
-        <SlideReveal when={props.view.canCreate}>
+        {/* Hidden while a slow save shows its spinner (Peter, 2026-09-25):
+            nothing to reset or fork mid-save. Back on reject. */}
+        <SlideReveal when={props.view.canCreate && saving() !== "spinning"}>
           <TightClusterRow>
             <IconOnlyButton
               aria-label={props.labels.reset}
