@@ -112,8 +112,14 @@ const BodyRow = createRow({
   style: { flex: "1 1 0", "min-height": "0" },
 });
 
-/** The y-title, centred down the rail. */
-const YTitleRail = createStack({ justify: "center" });
+/** The y-title, centred down the rail. CLIPPED to the body (G13): the
+ *  rotated title is as tall as its text, and a short body let it overflow up
+ *  into the header. `min-height: 0` lets the rail shrink with the body row;
+ *  `overflow: hidden` clips what no longer fits instead of spilling. */
+const YTitleRail = createStack({
+  justify: "center",
+  style: { "min-height": "0", overflow: "hidden" },
+});
 
 const menuItems = (
   current: ChartYAxisMode,

@@ -2996,7 +2996,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 213
+    "line": 219
   },
   {
     "name": "createCheckbox",

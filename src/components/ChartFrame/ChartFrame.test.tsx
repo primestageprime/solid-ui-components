@@ -46,6 +46,18 @@ describe("FillChartFrame — the fill chain reaches the body (G11)", () => {
     expect(rule).toMatch(/flex:\s*1 1 0/);
   });
 
+  it("the y-title rail is clipped to the body, never spilling into the header (G13)", () => {
+    const Fill = createChartFrame({ height: "fill" });
+    const { getByText } = render(() => (
+      <Fill title="T" yTitle="Salary ($)">
+        <span />
+      </Fill>
+    ));
+    const rail = getByText("Salary ($)").parentElement as HTMLElement;
+    expect(parseFloat(rail.style.minHeight)).toBe(0);
+    expect(rail.style.overflow).toBe("hidden");
+  });
+
   it("a fixed-height frame's box stays content-sized", () => {
     const { container } = render(() => (
       <ChartFrame title="T">
