@@ -5823,7 +5823,7 @@
     "showcase": null,
     "since": "0.108.0",
     "file": "src/components/DataDisplay/EllipsisText.tsx",
-    "line": 46
+    "line": 68
   },
   {
     "name": "EllipsizedChipLabel",

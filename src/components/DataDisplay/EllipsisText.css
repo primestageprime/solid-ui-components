@@ -8,16 +8,18 @@
 .sui-ellipsis-text {
   display: inline-block;
   max-width: 100%;
+  /* As a flex item it may shrink below its content — that is the clip. */
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   vertical-align: bottom;
 }
 
-/* The tooltip trigger stays `display: inline` so it forms no width containing
-   block — the span's `max-width: 100%` keeps resolving against the host box, so
-   the clip state doesn't change when the tooltip branch mounts. Neutralize the
-   UA button chrome so a clipped element looks identical to its plain siblings. */
+/* The tooltip trigger sits INSIDE the measured span and stays `display:
+   inline`: it forms no box of its own, so the span's ellipsis paints over its
+   text and mounting it cannot change the span's clip state (G23). Neutral
+   chrome, so a clipped value looks identical to its plain siblings. */
 .sui-ellipsis-text__trigger {
   display: inline;
   max-width: 100%;
