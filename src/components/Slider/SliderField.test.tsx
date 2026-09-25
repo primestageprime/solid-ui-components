@@ -1,4 +1,5 @@
 import { render, fireEvent } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { installFakeSizer, type FakeSizer } from "../../test-utils";
 import { Slider } from "./Slider";
@@ -184,6 +185,72 @@ describe("SliderField", () => {
     fireEvent.blur(field);
     expect(onCommit).toHaveBeenCalledTimes(1);
     expect(onCommit).toHaveBeenCalledWith("11");
+  });
+
+  // THE DOM IS THE DRAFT. Browser autocomplete, an IME and a stale hot-reload
+  // can each change the input's text without an `input` event reaching the
+  // field. Peter, 2026-09-24: amounts left reading "44K", "$10" and "25" —
+  // never committed, never reformatted. The commit reads what the input
+  // HOLDS, and the shown value is written back after it.
+  it("commits what the input holds, even when no input event announced it", () => {
+    const onCommit = vi.fn();
+    const { container } = render(() => (
+      <SliderField label="Runway" value="6" onCommit={onCommit} />
+    ));
+    const field = input(container);
+    fireEvent.focus(field);
+    fireEvent.input(field, { target: { value: "11" } });
+    field.value = "44K";
+    fireEvent.keyDown(field, { key: "Enter" });
+    fireEvent.blur(field);
+    expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(onCommit).toHaveBeenCalledWith("44K");
+  });
+
+  it("commits a change it never saw a focus or an input event for", () => {
+    const onCommit = vi.fn();
+    const { container } = render(() => (
+      <SliderField label="Runway" value="6" onCommit={onCommit} />
+    ));
+    const field = input(container);
+    field.value = "25";
+    fireEvent.blur(field);
+    expect(onCommit).toHaveBeenCalledWith("25");
+  });
+
+  it("writes the shown value back after a commit the caller ignores", () => {
+    const { container } = render(() => (
+      <SliderField label="Runway" value="6 months" onCommit={() => {}} />
+    ));
+    const field = input(container);
+    field.value = "$10";
+    fireEvent.blur(field);
+    expect(field.value).toBe("6 months");
+  });
+
+  it("shows the caller's formatted value after a commit it accepts", () => {
+    const [months, setMonths] = createSignal(6);
+    const { container } = render(() => (
+      <SliderField
+        label="Runway"
+        value={`${months()} months`}
+        editValue={String(months())}
+        onCommit={(text) => setMonths(Math.min(18, Number(text)))}
+      />
+    ));
+    const field = input(container);
+    fireEvent.focus(field);
+    fireEvent.input(field, { target: { value: "25" } });
+    fireEvent.keyDown(field, { key: "Enter" });
+    fireEvent.blur(field);
+    expect(field.value).toBe("18 months");
+  });
+
+  it("asks the browser not to autocomplete the figure", () => {
+    const { container } = render(() => (
+      <SliderField label="Runway" value="6" onCommit={() => {}} />
+    ));
+    expect(input(container).getAttribute("autocomplete")).toBe("off");
   });
 
   // Escape reverts. The blur that follows it must commit nothing: the field

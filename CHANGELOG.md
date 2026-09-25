@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`SliderField` (and so `MutationSliders`' editable amount) commits what the input holds.** Enter and blur now read the input's own text rather than the tracked draft, and write the formatted value back after every commit, so a change the field never saw an `input` event for (browser autocomplete, IME, a stale hot-reload) is settled and reformatted instead of left on screen as raw text ("44K", "$10"). The input also sets `autocomplete="off"`.
+
 ## 0.185.0 — 2026-09-25
 
 ### Added

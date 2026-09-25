@@ -2160,6 +2160,52 @@ describe("MutationSliders — precision: the amount edits in place", () => {
     expect([dialValue("Flynn"), dialValue("Adlai")]).toEqual([58_000, 58_000]);
   });
 
+  // Peter, 2026-09-24: after typing, amounts read "44K", "$10" and "25" while
+  // their neighbours read "$110K". A commit must SETTLE the figure and the
+  // field must then print it through the row's own `format` — on Enter and
+  // on blur alike.
+  describe.each(["Enter", "blur"] as const)("commits on %s and reformats", (how) => {
+    const mountFormatted = () => {
+      const [rows, setRows] = createSignal<readonly Entity[]>(FIXTURE);
+      const view = render(() => (
+        <MutationSliders
+          entities={rows()}
+          domain={DOMAIN}
+          precision={-3}
+          format={(n) => `$${n / 1000}K`}
+          onChange={(id, value) =>
+            setRows((before) =>
+              map((row: Entity) => (row.id === id ? { ...row, value } : row), before),
+            )
+          }
+        />
+      ));
+      const commitTyped = (text: string): HTMLInputElement => {
+        const input = view.getByLabelText("Peter amount") as HTMLInputElement;
+        fireEvent.focus(input);
+        fireEvent.input(input, { target: { value: text } });
+        if (how === "Enter") fireEvent.keyDown(input, { key: "Enter" });
+        fireEvent.blur(input);
+        return input;
+      };
+      return { commitTyped };
+    };
+
+    // Peter's range is 70–110k and he stands at 104k.
+    it.each([
+      ["44K", "$70K"],
+      ["44,000", "$70K"],
+      ["$44k", "$70K"],
+      ["$10", "$70K"],
+      ["25", "$70K"],
+      ["98,700", "$99K"],
+      ["250k", "$110K"],
+      ["104000", "$104K"],
+    ])("typed %s → shows %s", (typed, shown) => {
+      expect(mountFormatted().commitTyped(typed).value).toBe(shown);
+    });
+  });
+
   it("a removed entity has no field", () => {
     const { queryByLabelText } = mount();
     expect(queryByLabelText("Joe amount")).toBeNull();
