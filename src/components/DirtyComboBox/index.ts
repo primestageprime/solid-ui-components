@@ -19,6 +19,10 @@ export {
   dirtyComboSave,
   dirtyComboReset,
   dirtyComboRemove,
+  dirtyComboCreate,
+  dirtyComboRename,
+  dirtyComboUniqueLabel,
+  DIRTY_COMBO_NONE_ID,
   DIRTY_COMBO_MAX_WIDTH_CH,
   DIRTY_COMBO_MIN_WIDTH_CH,
 } from "./dirtyComboModel";
@@ -27,4 +31,5 @@ export type {
   DirtyComboView,
   DirtyComboStore,
   DirtyComboSavedItem,
+  DirtyComboNewItem,
 } from "./dirtyComboModel";
