@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`rateGaugeCalloutLabels(props)`** (type `RateGaugeCalloutLabelProps`) — exactly the texts RateGauge's leader callouts draw, from the same props, for `calloutModeFor(box, labels)`. RateGauge builds its own column from it, so an app's leaders/corners choice can't drift from the gauge (G20).
+
 ## 0.190.0 — 2026-09-25
 
 ### Added
