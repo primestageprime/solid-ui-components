@@ -54,8 +54,10 @@ export const NumberMutationSliders: Component<MutationSlidersDataProps> =
  * Locked: `format` is `formatCompactCurrency` — the "$" is HARDCODED, Peter's
  * call, i18n comes later — `readout` is `"beside"`, and `snap` is whole
  * thousands, so a drag lands on an amount the compact figure can say exactly
- * (Peter, 2026-09-16: "have the amount snap to whole $k numbers"). The labels
- * stay neutral; a consumer with its own verbs curries its own row.
+ * (Peter, 2026-09-16: "have the amount snap to whole $k numbers"). The
+ * footer verb is "Delete" (payroll board, 2026-09-24: a line removed from a
+ * scenario is deleted, not "removed"); the other labels stay neutral, and a
+ * consumer with its own verbs curries its own row.
  *
  * @example
  *   <CompactCurrencyMutationSliders
@@ -73,4 +75,5 @@ export const CompactCurrencyMutationSliders: Component<MutationSlidersDataProps>
     grouping: "link",
     precision: -3,
     itemFrame: ItemTintSurface,
+    labels: { remove: "Delete" },
   });

@@ -35,6 +35,12 @@ const SEED: readonly MutationToolbarChange[] = [
   { id: "september", label: "W36 · Sep 1" },
 ];
 
+/** The boards' row adds a hire flag the app can't delete: no × on that chip. */
+const BOARD_SEED: readonly MutationToolbarChange[] = [
+  ...SEED,
+  { id: "hire", label: "Hire · Oct 6", removable: false },
+];
+
 /** A payroll board's vocabulary, curried once — the Scenario Board's words,
  *  kept as the example after that bench retired on 2026-09-19. */
 const PayChangesToolbar = createMutationToolbar({
@@ -72,7 +78,7 @@ export const MutationToolbarShowcase: Component = () => {
   };
 
   const [boardChanges, setBoardChanges] =
-    createSignal<readonly MutationToolbarChange[]>(SEED);
+    createSignal<readonly MutationToolbarChange[]>(BOARD_SEED);
   const [boardSelected, setBoardSelected] = createSignal<string | null>("june");
 
   const [payChanges, setPayChanges] =
@@ -98,6 +104,8 @@ export const MutationToolbarShowcase: Component = () => {
           </SubsectionTitle>
           <CaptionLabel>
             Hover a chip (or focus one and press Delete) to remove that change.
+            The hire flag is `removable: false`: it has no ×, and never had
+            room for one.
             The corner holds nothing but Reset; Save lives on the board's title
             row, because one board saves once.
           </CaptionLabel>
@@ -109,7 +117,7 @@ export const MutationToolbarShowcase: Component = () => {
               onSelect={setBoardSelected}
               emptyNote="Click a month, or move a dial, to propose a change"
               onReset={() => {
-                setBoardChanges(SEED);
+                setBoardChanges(BOARD_SEED);
                 setBoardSelected("june");
               }}
               onRemove={(id) => {

@@ -3,6 +3,12 @@ export type {
   ChartFrameDataProps,
   ChartFrameOverrides,
 } from "./ChartFrame";
+export { createYAxisLockDialog } from "./YAxisLockDialog";
+export type {
+  YAxisLockDialogDataProps,
+  YAxisLockDialogLabels,
+  YAxisLockDialogOverrides,
+} from "./YAxisLockDialog";
 export * from "./variants";
 export {
   CHART_Y_AXIS_MODES,

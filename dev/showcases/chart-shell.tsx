@@ -18,8 +18,12 @@ import {
   observeBuilderBoardBelowChart,
 } from "../../src/components/BuilderBoard";
 import { CodeBlock } from "../../src/components/CodeBlock";
+import { calloutModeFor } from "../../src/components/RateGauge";
 import { MutedBody } from "../../src/components/Text";
 import { Toggle } from "../../src/components/Toggle";
+
+/** The words a gauge in D would say — what `calloutModeFor` sizes against. */
+const GAUGE_LABELS = ["Current $1,240,000", "Baseline $1,100,000"];
 
 const cashflowAt = (i: number): number =>
   Math.round(
@@ -184,7 +188,9 @@ const BelowChartBoard: Component<{ input: ReturnType<typeof belowInputFor> }> = 
           rects={rects()}
           panelB={<MutedBody>B — the series being changed</MutedBody>}
           panelC={<MutedBody>C — the changes</MutedBody>}
-          panelD={<MutedBody>D — rail</MutedBody>}
+          panelD={(box) => (
+            <MutedBody>{`D — rail · box ${box().width}×${box().height} · gauge: ${calloutModeFor(box(), GAUGE_LABELS)}`}</MutedBody>
+          )}
         />
       </div>
     </>
