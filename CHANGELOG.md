@@ -6,6 +6,14 @@
 
 - **`SliderField` (and so `MutationSliders`' editable amount) commits what the input holds.** Enter and blur now read the input's own text rather than the tracked draft, and write the formatted value back after every commit, so a change the field never saw an `input` event for (browser autocomplete, IME, a stale hot-reload) is settled and reformatted instead of left on screen as raw text ("44K", "$10"). The input also sets `autocomplete="off"`.
 
+## 0.187.0 — 2026-09-25
+
+### Added
+
+- **`DirtyComboBox` parity with thorcasting's scenario chip** (each opt-in; unconfigured, the control is unchanged): `onCreate` turns the reset into a split `[ ↺ │ + ]` shown only while dirty (it slides in with ✓) whose "+" creates, selects and opens the new item's name field; `onRename` makes the name click-to-rename (Enter or blur saves, Esc cancels) with the caret as the menu button; `labels.none` leads the menu with "None" (`DIRTY_COMBO_NONE_ID`); `DirtyComboItem` gains `color`/`shape` (a swatch on the row and the selected value) and `disabled`/`reason`. Model: `dirtyComboCreate`, `dirtyComboRename`, `dirtyComboUniqueLabel`; the view gains `canCreate`, `none` and `canRename`; `dirtyComboCreate` is refused while pristine. **`ScenarioComboBox` now names all three**, so its menu leads with "None".
+- **`EditableTitle`: `autoEdit`** — opens the editor at mount, focused with the text selected.
+- **`EditableTitle`: `fill`** — the click target spans the whole slot (blank space after the text included, text left-aligned) and the field fills the same width. `DirtyComboBox`'s rename uses it: everything from the name's left edge to the ▾ renames. **`ReservedWidth`**: the live wrapper now spans the reserved cell, so a filling child can use it (inline content still hugs the start).
+
 ## 0.186.0 — 2026-09-25
 
 ### Added

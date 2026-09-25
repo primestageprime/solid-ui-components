@@ -29,6 +29,40 @@ describe("EditableTitle", () => {
     expect(onChange).toHaveBeenCalledWith("world");
   });
 
+  it("autoEdit opens the editor on mount; an inert title never does", () => {
+    const onChange = vi.fn();
+    const live = render(() => (
+      <EditableTitle title="New scenario" onChange={onChange} autoEdit />
+    ));
+    const input = live.container.querySelector("input") as HTMLInputElement;
+    expect(input.value).toBe("New scenario");
+    fireEvent.input(input, { target: { value: "Lean 2027" } });
+    fireEvent.blur(input);
+    expect(onChange).toHaveBeenCalledWith("Lean 2027");
+    const inert = render(() => <EditableTitle title="x" autoEdit />);
+    expect(inert.container.querySelector("input")).toBeNull();
+  });
+
+  it("fill: the whole slot is the click target; default callers are unchanged", () => {
+    const filled = render(() => (
+      <EditableTitle title="Lean" onChange={vi.fn()} fill />
+    ));
+    const root = filled.container.querySelector(".sui-editable-title")!;
+    expect(root.classList.contains("sui-editable-title--fill")).toBe(true);
+    // The target is the flex item that spans the slot — a click anywhere in
+    // it (here, far right of the text) opens the editor.
+    const target = root.querySelector(".sui-editable-title__text")!;
+    expect(target.parentElement).toBe(root);
+    fireEvent.click(target, { clientX: 999 });
+    expect(filled.container.querySelector("input")).toBeTruthy();
+    const plain = render(() => <EditableTitle title="x" onChange={vi.fn()} />);
+    expect(
+      plain.container
+        .querySelector(".sui-editable-title")!
+        .classList.contains("sui-editable-title--fill"),
+    ).toBe(false);
+  });
+
   it("Escape cancels without committing", () => {
     const onChange = vi.fn();
     const { getByText, container } = render(() => (

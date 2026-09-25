@@ -18,7 +18,7 @@
 // callback (`title` / `onChange`), nothing presentational to freeze. Same
 // data-only exemption as SortableList.
 // ============================================
-import { type Component, Show, createSignal } from "solid-js";
+import { type Component, Show, createSignal, onMount } from "solid-js";
 import "./EditableTitle.css";
 
 /** What gesture opens the inline editor.
@@ -46,6 +46,17 @@ export interface EditableTitleProps {
   /** Selection state of the enclosing row — consulted only in `"clickSelected"`
    *  mode, where a title click edits iff the row is already selected. */
   rowSelected?: boolean;
+  /** Open the editor as soon as the title MOUNTS — focused, text selected — as
+   *  if it had just been clicked. For a thing the user has just created and
+   *  should name now (DirtyComboBox's "new"). Read once, at mount; an inert
+   *  title (no `onChange`) never opens. Default false (unchanged behavior). */
+  autoEdit?: boolean;
+  /** Stretch across the title's slot: the click target covers the blank
+   *  space after the text too (text left-aligned), and the field fills the
+   *  same width. For a title that IS its slot (DirtyComboBox's name, Peter
+   *  2026-09-24); a list-row title keeps the default text-only target so the
+   *  rest of the row stays free for drag. Default false. */
+  fill?: boolean;
 }
 
 export const EditableTitle: Component<EditableTitleProps> = (props) => {
@@ -65,6 +76,9 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
     setDraft(props.title);
     setEditing(true);
   };
+  onMount(() => {
+    if (props.autoEdit) startEdit();
+  });
   // Both "doubleClick" and "clickSelected" swap the title button for a
   // non-button element so a plain single click can reach the enclosing row
   // (selection) instead of editing. Only meaningful when editable.
@@ -86,7 +100,13 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
     if (props.editTrigger === "doubleClick") startEdit();
   };
   return (
-    <span class="sui-editable-title">
+    <span
+      class={
+        props.fill
+          ? "sui-editable-title sui-editable-title--fill"
+          : "sui-editable-title"
+      }
+    >
       <Show
         when={!editing()}
         fallback={
