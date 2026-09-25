@@ -37,7 +37,13 @@
 //       item.color/shape → a swatch on the row and the selected value;
 //       item.disabled/reason → Dropdown's own refused row with its reason.
 // ============================================
-import { type Component, Show, mergeProps } from "solid-js";
+import {
+  type Component,
+  Show,
+  createSignal,
+  mergeProps,
+  onCleanup,
+} from "solid-js";
 import {
   CompactDropdown,
   DropdownFitLabel,
@@ -74,6 +80,8 @@ export interface DirtyComboBoxLabels {
   versus: string;
   /** The save button's accessible name and tooltip. */
   save: string;
+  /** The spinner's accessible name while a slow save is out. Default "Saving…". */
+  saving?: string;
   /** The reset button's accessible name and tooltip. */
   reset: string;
   /** A row trash's accessible name and tooltip, from the row's label. */
@@ -97,7 +105,16 @@ export interface DirtyComboBoxProps {
   /** From `dirtyComboModel` — the control draws only what this says. */
   view: DirtyComboView;
   onSelect: (id: string) => void;
-  onSave: () => void;
+  /**
+   * Commit the draft. May return a promise (a save that round-trips): while
+   * it is pending the control ignores further saves, and past
+   * `DIRTY_COMBO_SAVE_SPINNER_DELAY_MS` the ✓ becomes a spinner ("Saving…").
+   * Resolve → the usual dirty→pristine collapse follows from `view`; reject →
+   * the ✓ comes back and the draft stays dirty.
+   */
+  // `unknown`, not `void | Promise<void>`: a `() => void` prop accepts any
+  // return (`() => list.push(x)`), and narrowing it would break such callers.
+  onSave: () => unknown;
   onReset: () => void;
   /** Delete a row. Never called for the selected row. */
   onDelete: (id: string) => void;
@@ -128,7 +145,39 @@ const Swatch: Component<{ item: DirtyComboItem | undefined }> = (props) => (
 );
 
 /** The drawn control, in whatever state `view` says. */
+/** A save quicker than this never shows a spinner — no flash on a fast save
+ *  (Peter, 2026-09-25). */
+export const DIRTY_COMBO_SAVE_SPINNER_DELAY_MS = 200;
+
+const isThenable = (value: unknown): value is PromiseLike<unknown> =>
+  typeof (value as { then?: unknown } | null)?.then === "function";
+
 const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
+  // "idle" → "pending" (a promise is out, ✓ still drawn) → "spinning" (still
+  // out after the delay: the spinner replaces ✓). Clicks are ignored unless idle.
+  const [saving, setSaving] = createSignal<"idle" | "pending" | "spinning">(
+    "idle",
+  );
+  let spinnerTimer: ReturnType<typeof setTimeout> | undefined;
+  const settle = () => {
+    if (spinnerTimer !== undefined) clearTimeout(spinnerTimer);
+    spinnerTimer = undefined;
+    setSaving("idle");
+  };
+  onCleanup(() => {
+    if (spinnerTimer !== undefined) clearTimeout(spinnerTimer);
+  });
+  const save = () => {
+    if (saving() !== "idle") return;
+    const result = props.onSave();
+    if (!isThenable(result)) return;
+    setSaving("pending");
+    spinnerTimer = setTimeout(
+      () => setSaving("spinning"),
+      DIRTY_COMBO_SAVE_SPINNER_DELAY_MS,
+    );
+    result.then(settle, settle);
+  };
   // "None" leads the menu when the labels name it.
   const noneRow = (): DirtyComboItem[] =>
     props.labels.none === undefined
@@ -258,11 +307,23 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
                 <TightClusterRow>
                   <VerticalDivider />
                   <IconOnlyButton
-                    aria-label={props.labels.save}
-                    title={props.labels.save}
-                    onClick={props.onSave}
+                    aria-label={
+                      saving() === "spinning"
+                        ? (props.labels.saving ?? "Saving…")
+                        : props.labels.save
+                    }
+                    title={
+                      saving() === "spinning"
+                        ? (props.labels.saving ?? "Saving…")
+                        : props.labels.save
+                    }
+                    aria-busy={saving() !== "idle"}
+                    onClick={save}
                   >
-                    <Icon name="check" size="sm" />
+                    <Icon
+                      name={saving() === "spinning" ? "spinner" : "check"}
+                      size="sm"
+                    />
                   </IconOnlyButton>
                 </TightClusterRow>
               </SlideReveal>
@@ -273,7 +334,7 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
       <Show
         when={props.onCreate}
         fallback={
-          <SlideReveal when={props.view.canReset}>
+          <SlideReveal when={props.view.canReset && saving() !== "spinning"}>
             <IconOnlyButton
               aria-label={props.labels.reset}
               title={props.labels.reset}
@@ -288,7 +349,9 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
             while dirty — a new item that differs from no existing one makes
             no sense — so it slides in with the ✓ segment, inside the same
             ReservedWidth, and nothing outside the control moves. */}
-        <SlideReveal when={props.view.canCreate}>
+        {/* Hidden while a slow save shows its spinner (Peter, 2026-09-25):
+            nothing to reset or fork mid-save. Back on reject. */}
+        <SlideReveal when={props.view.canCreate && saving() !== "spinning"}>
           <TightClusterRow>
             <IconOnlyButton
               aria-label={props.labels.reset}

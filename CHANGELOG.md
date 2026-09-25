@@ -5,6 +5,7 @@
 ### Added
 
 - **`StackedTimelineChart`: LevelsTimeline's mutation contract** (G24), additive: `mutations` (numbered flags in the top margin, numbered in time order, a rule through the plot; the chart reserves the margin), `selectedMutationId` + `onSelectMutation` (flags become buttons: click, Enter/Space), `onMoveMutation(id, at)` (drag and ←/→ a day, clamped between neighbours and to `xDomain` via `clampMutationTime`), and `pickAt?: PickStrategy` to snap `onPick`. `events`/`selectedEvent` are deprecated in comments and keep working. The flag lane is an internal Depth-1 Chart slot (`Chart/MutationFlags`) over LevelsTimeline's geometry.
+- **`DirtyComboBox`: pending save.** `onSave` may return a promise (its type widens to `() => unknown`, so existing callers still type-check). While it is pending further saves are ignored; past `DIRTY_COMBO_SAVE_SPINNER_DELAY_MS` (200ms) the ✓ becomes a spinner labelled "Saving…" (`labels.saving`, optional) and the `↺ │ +` split (or the lone reset) slides away. Resolve → the usual collapse; reject → ✓ and the split return and the draft stays dirty.
 
 ### Fixed
 
