@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`GroupedMutationSliders`: `entityFrame`** — an optional frame around each entity's whole column (name and dials), e.g. `ItemTintSurface` for a light background per license config; `MutationSliders`' `itemFrame`, one level up. An Override, so it curries via `createGroupedMutationSliders({ axes, entityFrame })`. Omitted, rendering is unchanged; a borderless, padding-free frame leaves the paging arithmetic unchanged.
+
 ## 0.196.0 — 2026-09-25
 
 ### Added
