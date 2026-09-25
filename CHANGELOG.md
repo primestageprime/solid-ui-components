@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added
+
+- **`FillChartFrame`** — curried `createChartFrame({ height: "fill" })`, the frame for a parent of definite height (a BuilderBoard chart panel).
+- **`ChartFrame`: `actions?: JSX.Element`** — the chart's own controls (a Cap field, a span picker) in the header before fullscreen and the y-axis split. Omitted, the header DOM is unchanged.
+- **`createYAxisStrategy`** (`src/hooks`) — ChartFrame's y-axis strategy (auto / autoscale / fixed) over `createAxisWaterMarks`, with its pure `stepYAxis`, `displayedDomain`, `checkLock`, and the headless `observeYAxis` / `formatYAxisRows` (`AXIS_WATER_MARK_HOLD`).
+- **`YAxisLockDialog`** (factory `createYAxisLockDialog({ labels })`) — the lock editor: `PrimaryConfirmationModal` + two `CurrencyInput`s, min < max with per-field errors, fields seeded from the lock at open.
+- **`calloutModeFor`** (+ types `RateGaugeBox`, `RateGaugeCalloutMode`) exported from the RateGauge barrel and the root — the leaders/corners breakpoint.
+- **`BuilderBoardBelowChart`: `panelD` may be `(box) => JSX`** — an accessor of D's measured content box (`BuilderBoardPanelBox`, pure `builderBoardPanelBoxOf`), so an app can pick its gauge with `calloutModeFor` inside a curried board. A plain element is unchanged.
+- **`MutationToolbarChange.removable?: boolean`** (default `true`) — `false` draws no × on that chip and ignores Delete.
+
+### Changed
+
+- **`CompactCurrencyMutationSliders`** says "Delete" (`labels.remove`) instead of "Remove".
+
 ## 0.185.0 — 2026-09-25
 
 ### Added
