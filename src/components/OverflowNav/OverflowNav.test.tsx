@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, fireEvent, cleanup } from "@solidjs/testing-library";
 import { OverflowNav, createOverflowNav } from "./OverflowNav";
+import { type FakeSizer, installFakeSizer } from "../../test-utils/fakeSizer";
 
-// jsdom reports offsetWidth=0 / clientWidth=0, so the overflow math bails out
-// (containerWidth <= 0) and every item stays rendered inline — no kebab. That
-// is exactly what lets us assert on the inline NavLinks here.
+// jsdom reports offsetWidth=0 / clientWidth=0: every item measures 0, which
+// the fold reads as "no layout" and keeps every item rendered inline — no
+// kebab. That is exactly what lets us assert on the inline NavLinks here.
 
 describe("OverflowNav", () => {
   it("renders every item inline as a nav-link", () => {
@@ -197,5 +198,81 @@ describe("OverflowNav explicit overflow list", () => {
       <OverflowNav items={[{ id: "a", label: "Alpha" }]} overflowItems={[]} />
     ));
     expect(container.querySelector(".sui-popover-menu__trigger")).toBeNull();
+  });
+});
+
+// G16: the fold must follow the container on every resize, with natural
+// widths RE-measured (not the ones cached at mount), and a 0px container must
+// fold everything instead of bailing.
+describe("OverflowNav re-folds on resize (G16)", () => {
+  const restore: Array<() => void> = [];
+  let sizer: FakeSizer;
+  let containerWidth = 0;
+  let itemWidth = 0;
+  afterEach(() => {
+    cleanup();
+    sizer.restore();
+    restore.splice(0).forEach((undo) => {
+      undo();
+    });
+  });
+
+  const mount = () => {
+    sizer = installFakeSizer();
+    const live = (target: object, key: string, read: () => number) => {
+      const original = Object.getOwnPropertyDescriptor(target, key);
+      Object.defineProperty(target, key, { configurable: true, get: read });
+      restore.push(() => {
+        original
+          ? Object.defineProperty(target, key, original)
+          : Reflect.deleteProperty(target, key);
+      });
+    };
+    live(Element.prototype, "clientWidth", () => containerWidth);
+    live(HTMLElement.prototype, "offsetWidth", () => itemWidth);
+    return render(() => (
+      <OverflowNav
+        items={[
+          { id: "a", label: "Alpha", href: "/a" },
+          { id: "b", label: "Beta", href: "/b" },
+          { id: "c", label: "Gamma", href: "/c" },
+        ]}
+      />
+    ));
+  };
+  const inline = (container: HTMLElement) =>
+    container.querySelectorAll("a.nav-link").length;
+  const kebab = (container: HTMLElement) =>
+    container.querySelector(".sui-popover-menu__trigger");
+
+  it("re-measures on resize: widths that were 0 at mount no longer read as 'fits'", async () => {
+    // Mounted before layout/fonts settled: items measured 0.
+    containerWidth = 800;
+    itemWidth = 0;
+    const { container } = mount();
+    await afterFrames(3);
+    expect(inline(container)).toBe(3);
+    // The real widths arrive, and the nav narrows to 223px (thorcasting at 800).
+    itemWidth = 130;
+    containerWidth = 223;
+    await sizer.resizeAll({ width: 223, height: 30 });
+    await afterFrames(3);
+    expect(inline(container)).toBe(1);
+    expect(kebab(container)).not.toBeNull();
+    // Widening back restores every item inline.
+    containerWidth = 1440;
+    await sizer.resizeAll({ width: 1440, height: 30 });
+    await afterFrames(3);
+    expect(inline(container)).toBe(3);
+    expect(kebab(container)).toBeNull();
+  });
+
+  it("a 0px container folds every item into the kebab", async () => {
+    containerWidth = 0;
+    itemWidth = 130;
+    const { container } = mount();
+    await afterFrames(3);
+    expect(inline(container)).toBe(0);
+    expect(kebab(container)).not.toBeNull();
   });
 });
