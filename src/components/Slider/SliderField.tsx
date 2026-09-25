@@ -146,10 +146,22 @@ export const SliderField: Component<SliderFieldProps> = (props) => {
 
   const text = (): string => textOf(state(), props.value);
 
-  const commit = (): void => {
+  /**
+   * THE INPUT IS THE DRAFT, NOT THE SIGNAL. Browser autocomplete, an IME or a
+   * stale hot-reload can change the input's text with no `input` event, so
+   * the tracked draft would miss it. Peter, 2026-09-24: amounts were left
+   * reading "44K", "$10" and "25", never committed and never reformatted,
+   * because Solid rewrites `value` only when `text()` CHANGES. So the commit
+   * reads what the input holds, and afterwards writes the shown text back.
+   */
+  const commit = (input: HTMLInputElement): void => {
     const current = state();
+    const typed = input.value;
     setState(AT_REST);
-    if (current.phase === "editing") props.onCommit(current.text);
+    if (current.phase === "editing" || (current.phase === "rest" && typed !== props.value)) {
+      props.onCommit(typed);
+    }
+    input.value = text();
   };
 
   return (
@@ -178,6 +190,9 @@ export const SliderField: Component<SliderFieldProps> = (props) => {
           value={text()}
           // A floor, not a measurement. The mirror above sets the width.
           size={1}
+          // A figure, not a form answer: the browser's history dropdown would
+          // change the text behind the field's back.
+          autocomplete="off"
           onFocus={(event) => {
             setState({
               phase: "editing",
@@ -188,7 +203,7 @@ export const SliderField: Component<SliderFieldProps> = (props) => {
           onInput={(event) =>
             setState({ phase: "editing", text: event.currentTarget.value })
           }
-          onBlur={commit}
+          onBlur={(event) => commit(event.currentTarget)}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault();
