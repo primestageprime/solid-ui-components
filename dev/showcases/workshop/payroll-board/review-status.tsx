@@ -11,7 +11,7 @@ import { SubsectionTitle } from "../../../../src/components/Text";
 export type ReviewStatus = "working" | "ready";
 
 export const REVIEW_STATUS: Record<string, ReviewStatus> = {
-  combo: "working",
+  combo: "ready",
   changes: "working",
 };
 
