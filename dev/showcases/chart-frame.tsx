@@ -14,6 +14,7 @@ import {
   ChartFrame,
   FillChartFrame,
   YAxisLockDialog,
+  YAxisLockDialogNumber,
   type ChartYAxisMode,
   chartYAxisModeInfo,
 } from "../../src/components/ChartFrame";
@@ -92,6 +93,33 @@ const StrategyExample: Component = () => {
   );
 };
 
+/** G9 — a COUNT axis (hours): the same strategy, locked through
+ *  `YAxisLockDialogNumber` — plain number fields, no "$". */
+const CountLockExample: Component = () => {
+  const fit = (): FitDomain => ({ min: 0, max: 38 });
+  const axis = createYAxisStrategy(fit, createAxisWaterMarks(fit));
+  const cell = (d: YAxisDomain | null) => (d === null ? "—" : `${d[0]}..${d[1]} h`);
+  return (
+    <>
+      <ChartFrame
+        title="Work mix"
+        yTitle="Hours"
+        yAxisMode={axis.mode()}
+        onYAxisModeChange={axis.setMode}
+        onYAxisPress={axis.press}
+      >
+        <MutedBody>{`mode ${axis.mode()} · shown ${cell(axis.domain())} · lock ${cell(axis.lock())} — pick Locked to open the dialog`}</MutedBody>
+      </ChartFrame>
+      <YAxisLockDialogNumber
+        open={axis.dialogOpen()}
+        lock={axis.lock()}
+        onLock={axis.setLock}
+        onClose={axis.closeDialog}
+      />
+    </>
+  );
+};
+
 /** A chart's own control in the header: the Work Mix "Cap" — a toolbar-size
  *  (29px) field, so the header keeps the buttons' height. */
 const CapExample: Component = () => {
@@ -156,6 +184,10 @@ export const ChartFrameShowcase: Component = () => {
           rescales the balances.
         </MutedBody>
         <StrategyExample />
+      </div>
+      <div class="example-group">
+        <h3>YAxisLockDialogNumber — a count axis (hours, headcount)</h3>
+        <CountLockExample />
       </div>
       <div class="example-group">
         <h3>FillChartFrame — takes a parent of definite height (here FixedHeightBox, 200px)</h3>
