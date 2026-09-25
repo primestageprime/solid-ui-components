@@ -1203,7 +1203,8 @@
     "variantOf": null,
     "overrides": [
       "yFitTransition",
-      "expandTransition"
+      "expandTransition",
+      "chrome"
     ],
     "dataProps": "CashflowScrubChartDataProps",
     "summary": "Domain Composite (Depth 3).",
@@ -2876,7 +2877,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 983
+    "line": 984
   },
   {
     "name": "createCell",
@@ -4049,7 +4050,7 @@
     "showcase": "#/scrub-chart",
     "since": "0.44.0",
     "file": "src/components/ScrubChart/ScrubChart.tsx",
-    "line": 1104
+    "line": 1112
   },
   {
     "name": "createSection",
@@ -6749,6 +6750,30 @@
     "since": null,
     "file": "src/components/MathFormula/MathFormula.tsx",
     "line": 232
+  },
+  {
+    "name": "FramedCashflowScrubChart",
+    "depth": 3,
+    "kind": "variant",
+    "family": "CashflowScrubChart",
+    "variantOf": {
+      "factory": "createCashflowScrubChart",
+      "overrides": "{\n    chrome: \"frame\",\n    yFitTransition: false,\n    expandTransition: false,\n  }"
+    },
+    "overrides": [
+      "yFitTransition",
+      "expandTransition",
+      "chrome"
+    ],
+    "dataProps": "CashflowScrubChartDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "FramedCashflowScrubChart — the chart inside a `ChartFrame` (Peter's chart visual language, 2026-09-24): `chrome: \"frame\"`, so it draws none of its own controls — no Auto | Fixed | Fit switch, no range editor, no expand chevron, no top action — and the frame's split button, driven by `createYAxisStrategy`, owns the y-axis. The chart takes what the strategy decides as controlled props: `yMin`/`yMax` (the domain, in cents), `yAxisMode` (still marks out-of-range values in `\"fixed\"`) and `expanded`. Still (`yFitTransition: false`, `expandTransition: false`), like `StillCashflowScrubChart`: the strategy's water marks already ease. */",
+    "showcase": "#/cashflow-scrub-chart",
+    "since": "Unreleased",
+    "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
+    "line": 1018
   },
   {
     "name": "FullscreenBox",
@@ -11066,7 +11091,7 @@
     "notToBeConfusedWith": [
       "not `Button`: at rest it is the glyph on a plain SCRIM, with no border and no ring, and it strokes in `--sui-accent` — the same token the default series line takes, so the control names the line it rescales."
     ],
-    "useFor": "linked chart + axis pairings where the chart needs to show the big picture while the axis is the user's zoomed-in detail view.",
+    "useFor": "linked chart + axis pairings where the chart needs to show the big picture while the axis is the user's zoomed-in detail view. **`chrome?: \"own\" | \"frame\"`** (override, default `\"own\"` — today's rendering, unchanged): `\"frame\"` draws NONE of the chart's own controls — no y-axis-mode switch or y-fit button in the origin corner (and no corner footprint or column: the plot takes the room), no fixed-mode range editor, no expand chevron, no top action — because a `ChartFrame` above holds them; the chart still follows `yDomain` / `yFitDomain`, `yAxisMode` and `expanded` as controlled props. Curry it (`createScrubChart({ chrome: \"frame\" })`); the shipped curry is `FramedCashflowScrubChart`.",
     "notes": null,
     "showcase": "#/scrub-chart",
     "since": "0.44.0",
@@ -12381,7 +12406,8 @@
     },
     "overrides": [
       "yFitTransition",
-      "expandTransition"
+      "expandTransition",
+      "chrome"
     ],
     "dataProps": "CashflowScrubChartDataProps",
     "summary": null,
@@ -12391,7 +12417,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 1005
+    "line": 1006
   },
   {
     "name": "StretchRow",

@@ -2,8 +2,13 @@
 // title bottom-to-top on the left, fullscreen + the Y-axis strategy split
 // button top right. The frame owns no axis state; this page owns the mode
 // and prints what each press asked for.
-import { type Component, createSignal } from "solid-js";
-import { StillCashflowScrubChart } from "../../src/components/CashflowScrubChart";
+import { type Component, createMemo, createSignal } from "solid-js";
+import {
+  type CashflowCell,
+  FramedCashflowScrubChart,
+  StillCashflowScrubChart,
+} from "../../src/components/CashflowScrubChart";
+import { map } from "../../src/fn";
 import { GhostButton } from "../../src/components/Button";
 import {
   ChartFrame,
@@ -23,29 +28,60 @@ import { ThemedNumberInput } from "../../src/components/ThemedNumberInput";
 import { MutedBody } from "../../src/components/Text";
 import { shellCells } from "./chart-shell";
 
-/** A fit the page can move, so the strategy has something to hold. */
-const PEAKS = [110_000, 130_000, 100_000, 90_000];
+/** How much the page scales the balances by — "Next data" steps through
+ *  them, so the strategy has a peak to hold and a fall to ignore. */
+const SCALES = [1, 1.4, 0.8, 0.6];
 
-/** The y-axis strategy + its lock dialog, driven by ChartFrame's split button. */
+const scaled = (factor: number): CashflowCell[] =>
+  map((c: CashflowCell) => ({ ...c, balanceCents: Math.round(c.balanceCents * factor) }), shellCells);
+
+/** The fit in DOLLARS — the unit the lock dialog's CurrencyInputs edit. The
+ *  chart takes cents, so the domain is scaled once, at the chart. */
+const balanceFit = (cells: readonly CashflowCell[]): FitDomain => {
+  const values = map((c: CashflowCell) => Math.round(c.balanceCents / 100), [...cells]);
+  return { min: Math.min(...values), max: Math.max(...values) };
+};
+
+const toCents = (dollars: number | undefined): number | undefined =>
+  dollars === undefined ? undefined : dollars * 100;
+
+/** G1 — a ScrubChart driven by its FRAME: `FramedCashflowScrubChart` draws no
+ *  controls of its own; ChartFrame's split button + `createYAxisStrategy`
+ *  decide the domain, which arrives as `yMin` / `yMax`, and the lock dialog
+ *  edits the Locked range. */
 const StrategyExample: Component = () => {
-  const [peakIndex, setPeakIndex] = createSignal(0);
-  const fit = (): FitDomain => ({ min: 60_000, max: PEAKS[peakIndex()] });
+  const [scaleIndex, setScaleIndex] = createSignal(0);
+  const cells = createMemo(() => scaled(SCALES[scaleIndex()]));
+  const fit = createMemo(() => balanceFit(cells()));
   const axis = createYAxisStrategy(fit, createAxisWaterMarks(fit));
-  const cell = (d: YAxisDomain | null) => (d === null ? "—" : `${d[0]}..${d[1]}`);
+  const dollars = (value: number) => `$${Math.round(value).toLocaleString()}`;
+  const cell = (d: YAxisDomain | null) =>
+    d === null ? "—" : `${dollars(d[0])}..${dollars(d[1])}`;
   return (
     <>
       <ChartFrame
-        title="Payroll"
-        yTitle="Salary ($)"
+        title="Cash balance"
+        yTitle="Cash balance ($)"
         yAxisMode={axis.mode()}
         onYAxisModeChange={axis.setMode}
         onYAxisPress={axis.press}
       >
-        <MutedBody>{`mode ${axis.mode()} · fit ${cell([fit().min, fit().max])} · shown ${cell(axis.domain())} · lock ${cell(axis.lock())}`}</MutedBody>
+        <FramedCashflowScrubChart
+          cells={cells()}
+          chartHeight="fill"
+          scrub={false}
+          showGridlines
+          yAxisMode={axis.mode()}
+          yMin={toCents(axis.domain()?.[0])}
+          yMax={toCents(axis.domain()?.[1])}
+        />
       </ChartFrame>
-      <GhostButton onClick={() => setPeakIndex((peakIndex() + 1) % PEAKS.length)}>
-        Next data peak
-      </GhostButton>
+      <TightClusterRow>
+        <GhostButton onClick={() => setScaleIndex((scaleIndex() + 1) % SCALES.length)}>
+          Next data
+        </GhostButton>
+        <MutedBody>{`mode ${axis.mode()} · fit ${cell([fit().min, fit().max])} · shown ${cell(axis.domain())} · lock ${cell(axis.lock())}`}</MutedBody>
+      </TightClusterRow>
       <YAxisLockDialog
         open={axis.dialogOpen()}
         lock={axis.lock()}
@@ -111,11 +147,13 @@ export const ChartFrameShowcase: Component = () => {
         <MutedBody>{`yAxisMode = "${mode()}" · fullscreen = ${fullscreen()} · last press: ${lastPress()}`}</MutedBody>
       </div>
       <div class="example-group">
-        <h3>createYAxisStrategy + YAxisLockDialog</h3>
+        <h3>A ScrubChart driven by its frame — createYAxisStrategy + YAxisLockDialog</h3>
         <MutedBody>
           Auto grows with the data and shrinks only on the face; Full auto
           follows the fit; Locked opens the lock dialog, seeded with the range
-          on screen. "Next data peak" moves the fit.
+          on screen. The chart is `FramedCashflowScrubChart` (`chrome: "frame"`):
+          no corner switch, range editor or chevron of its own. "Next data"
+          rescales the balances.
         </MutedBody>
         <StrategyExample />
       </div>
