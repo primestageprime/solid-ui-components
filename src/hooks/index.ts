@@ -50,3 +50,30 @@ export type {
   WaterMarkFrame,
   WaterMarkRow,
 } from "./createAxisWaterMarks";
+// The y-axis STRATEGY over those marks: ChartFrame's split button, as a pure
+// step (auto / autoscale / fixed), its reactive wrapper, the lock check, and
+// the headless observation.
+export {
+  AXIS_WATER_MARK_HOLD,
+  INITIAL_Y_AXIS,
+  checkLock,
+  createYAxisStrategy,
+  displayedDomain,
+  formatYAxisRows,
+  observeYAxis,
+  stepYAxis,
+} from "./createYAxisStrategy";
+export type {
+  YAxisDomain,
+  YAxisEvent,
+  YAxisFrame,
+  YAxisHoldStep,
+  YAxisIntent,
+  YAxisLockCheck,
+  YAxisLockError,
+  YAxisMode,
+  YAxisRow,
+  YAxisState,
+  YAxisStep,
+  YAxisStrategy,
+} from "./createYAxisStrategy";

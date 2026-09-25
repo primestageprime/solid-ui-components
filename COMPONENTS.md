@@ -298,6 +298,7 @@ State derivation:
       <PayLevelsChart … valueDomain={domain()} />
     </ChartFrame>
     ```
+- **YAxisLockDialog** — Composite (Depth 2), zero CSS. Composes `PrimaryConfirmationModal` + `CurrencyInput` × 2 + `TightStack`. The lock editor ChartFrame's `fixed` mode opens: Y max over Y min, validated by the pure `checkLock` (both numbers, min < max), each error on the field at fault and shown only after a Confirm. The fields open **already holding the lock** — the draft is derived ("the reader's edit, else `lock`"), never copied in after the inputs mount, and closing drops the edits. Key props: `open`, `lock` (`YAxisDomain | null`), `onLock(lock)`, `onClose`. The words are an Override (`createYAxisLockDialog({ labels: { title, description, confirm, max, min, notANumber, notAboveMin } })`); curried variant **`YAxisLockDialog`** says "Lock the y-axis" / "Lock" / "Y max" / "Y min". Wire it to `createYAxisStrategy`: `open={axis.dialogOpen()} lock={axis.lock()} onLock={axis.setLock} onClose={axis.closeDialog}`.
 
 ## Sparkline
 - **Sparkline** — Atomic (Depth 1). Generic inline SVG polyline: arbitrary values → tiny chart strip. Two render modes: `line` (smooth polyline, default) and `sawtooth` (drops to baseline between samples — per-period values like batch throughput). Color is prop-driven (explicit CSS string or token), no trend-class coupling: for trend-colored sparklines use `TrendSparkline`; for 0..1 connection-health strips use `HeartbeatSparkline`. Owns CSS (structural geometry only). Key props: `values` (number[], oldest first, auto-scaled), `mode` (`"line"`|`"sawtooth"`), `color` (default `var(--sui-accent)`), `width` (default 80), `height` (default 20). Exported types: `SparklineProps`, `SparklineMode`. Use for: inline throughput/count strips where the caller owns the color semantics.
@@ -939,6 +940,9 @@ State derivation:
       onPick={(at) => pickWeek(weekOfPick(at))}
     />
     ```
+
+## createYAxisStrategy
+- **createYAxisStrategy** — hook (`src/hooks`). The y-axis STRATEGY behind ChartFrame's split button, over `createAxisWaterMarks`: `createYAxisStrategy(fit, marks)` → `{ mode, info, domain, lock, dialogOpen, closeDialog, press, setMode, setLock }`. `auto` holds the marks (grow at once, shrink on `press`), `autoscale` draws the fit, `fixed` draws the reader's lock — seeded with the domain on screen on entry (no jump), edited in `YAxisLockDialog`. Entering `auto` resets the marks (no stale peak). Wire `yAxisMode={axis.mode()} onYAxisModeChange={axis.setMode} onYAxisPress={axis.press}` on the frame and `axis.domain()` into the chart. Pure core, exported and printed as a table: `stepYAxis(state, event, shown)` → `{ state, intent }`, `displayedDomain`, `checkLock(min, max)` (error codes `notANumber` / `notAboveMin`), and the headless observation `observeYAxis(frames, hold = AXIS_WATER_MARK_HOLD)` + `formatYAxisRows`. Types: `YAxisDomain`, `YAxisMode`, `YAxisState`, `YAxisEvent`, `YAxisIntent`, `YAxisStep`, `YAxisLockCheck`, `YAxisLockError`, `YAxisHoldStep`, `YAxisFrame`, `YAxisRow`, `YAxisStrategy`; `INITIAL_Y_AXIS`. Use for: every chart in a ChartFrame whose y-axis the reader manages.
 
 ## createHighWaterMark
 

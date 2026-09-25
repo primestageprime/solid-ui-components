@@ -3,6 +3,10 @@
 // ============================================
 import type { Component } from "solid-js";
 import { type ChartFrameDataProps, createChartFrame } from "./ChartFrame";
+import {
+  type YAxisLockDialogDataProps,
+  createYAxisLockDialog,
+} from "./YAxisLockDialog";
 
 /** The in-flow height of a framed chart: title row + a plot that reads. */
 export const CHART_FRAME_HEIGHT = 320;
@@ -20,3 +24,18 @@ export const ChartFrame: Component<ChartFrameDataProps> = createChartFrame({
 export const FillChartFrame: Component<ChartFrameDataProps> = createChartFrame({
   height: "fill",
 });
+
+/** The y-axis lock editor, in the chart language's own words. */
+export const YAxisLockDialog: Component<YAxisLockDialogDataProps> =
+  createYAxisLockDialog({
+    labels: {
+      title: "Lock the y-axis",
+      description:
+        "The axis stays at this range until you change it or pick another mode.",
+      confirm: "Lock",
+      max: "Y max",
+      min: "Y min",
+      notANumber: "Enter a number",
+      notAboveMin: "Max must be greater than min",
+    },
+  });
