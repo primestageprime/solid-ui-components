@@ -3795,7 +3795,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/OverflowNav/OverflowNav.tsx",
-    "line": 336
+    "line": 346
   },
   {
     "name": "createPairedMutationSliders",
@@ -6350,7 +6350,7 @@
     "useFor": null,
     "notes": "FillFullscreenBox — in flow, fills a parent of definite height and hands it to its first child. FillChartFrame's box. */",
     "showcase": "#/fullscreen-box",
-    "since": "Unreleased",
+    "since": "0.188.0",
     "file": "src/components/FullscreenBox/FullscreenBox.tsx",
     "line": 172
   },
@@ -9722,7 +9722,7 @@
     "dataProps": "OverflowNavDataProps",
     "summary": "Pure Composite (Depth 2).",
     "notToBeConfusedWith": null,
-    "useFor": "top nav bars, breadcrumb-style tab rows, any horizontal nav list that must adapt to a constrained container width without wrapping.",
+    "useFor": "top nav bars, breadcrumb-style tab rows, any horizontal nav list that must adapt to a constrained container width without wrapping. Fold (G16): natural widths are re-measured on every container resize, on item/label/badge changes and once fonts are ready; a 0px container folds every item into the kebab; the rule is the pure `overflowNavVisibleCount` in `fold.ts`.",
     "notes": "Default auto-collapsing nav. */",
     "showcase": null,
     "since": "0.52.0",
