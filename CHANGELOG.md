@@ -6,6 +6,13 @@
 
 - **`OverflowNav` didn't fold on resize** (G16). Natural widths were measured once and cached, so a nav narrowed later (or measured before fonts/layout settled) kept every item inline; and a 0px container bailed instead of folding. Widths are now re-measured on every container resize, when labels/badges/items change, and once `document.fonts` is ready; a 0px (or narrower-than-kebab) container folds everything into the kebab. The decision is the pure, exported-to-tests `overflowNavVisibleCount` (`OverflowNav/fold.ts`). No API change.
 
+## 0.188.0 — 2026-09-25
+
+### Fixed
+
+- **`FillChartFrame` drew its chart body 0px tall** (G12) at every width: its column is `height: 100%`, but the in-flow `FullscreenBox` around it sized to content (~26px), so the body row got 0px and the vertical y-title spilled into the heading. The box now fills too. **`FullscreenBox`: `fill`** (override, default off; curried **`FillFullscreenBox`**) makes the in-flow box fill a parent of definite height and hand it to its first child; a `ChartFrame` with `height: "fill"` uses it. Fixed-height frames and every other `FullscreenBox` are unchanged.
+- **`ChartFrame`: the vertical y-title overflowed up into the header when the body was short** (G13). Its rail now shrinks with the body row and clips (`min-height: 0; overflow: hidden`) instead of spilling.
+
 ## 0.187.0 — 2026-09-25
 
 ### Added
