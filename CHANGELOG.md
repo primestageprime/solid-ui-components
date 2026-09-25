@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.192.0 — 2026-09-25
+
 ### Fixed
 
 - **`StackedTimelineChart` grew without bound inside `FillChartFrame`** (thorcasting's Work Mix: ~180px/s in a 186px body). It measured its own root, a `GrowFillBox`, whose height came from its content when the parent was a plain block (FillChartFrame's children slot): svg + the inline-block baseline gap, ~3px taller every frame. The measured host now takes `height: 100%` of its parent (or `aspect-ratio: 640/220` from its width when the parent's height is indefinite) — LevelsTimeline's rule — so the content never sizes it. Still grows and shrinks in a flex column. Present since the chart shipped (0.189.0 too).
