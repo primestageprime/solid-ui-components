@@ -4,7 +4,7 @@
 // safe to run next to a live dev server.
 //
 //   node scripts/gate.mjs                 # every job, in ci.yml's order
-//   node scripts/gate.mjs --fast          # same, but skip `build`
+//   node scripts/gate.mjs --fast          # same, but skip the two isolated builds
 //   node scripts/gate.mjs --only lint     # one job only (comma-separated ok)
 //   node scripts/gate.mjs --pre-push      # used by githooks/pre-push — see below
 //   node scripts/gate.mjs --no-lock       # skip the machine-wide lock (see below)
@@ -72,9 +72,12 @@
 //      --git-common-dir`, since every worktree's `.git` points at
 //      `<main>/.git` — and prints which one it used.
 //
-// `--fast` skips only the `build` step (as asked). `bundle-budget` still
-// builds — it is a separate CI job/step and `--fast` was scoped to the one
-// named in the brief; skip it too with `--only` if you don't need it.
+// `--fast` skips BOTH isolated-worktree steps, `build` and `bundle-budget`
+// (each is a full build). `--pre-push` implies `--fast`: a pre-push hook that
+// runs ~8 minutes outlives GitHub's SSH idle timeout, so the gate passes
+// and then the push itself is dropped (observed 2026-09-25, twice). CI runs
+// both builds on every push; pre-push keeps the static checks, the tests and
+// the health ratchet.
 //
 // WHY THERE IS A MACHINE-WIDE LOCK
 //
@@ -389,7 +392,7 @@ if (onlyNames) {
 
 const stepsToRun = STEPS.filter((s) => {
   if (onlyNames) return onlyNames.includes(s.name);
-  if (fast && s.name === "build") return false;
+  if ((fast || prePush) && (s.name === "build" || s.name === "bundle-budget")) return false;
   return true;
 });
 
@@ -426,7 +429,7 @@ for (const { name, status } of results) {
   console.log(`  ${status === 0 ? "✓" : "✗"} ${name.padEnd(16)} exit ${status}`);
 }
 const skipped = stepsToRun.length < STEPS.length && !onlyNames;
-if (skipped) console.log("  (build skipped — --fast)");
+if (skipped) console.log(prePush ? "  (build + bundle-budget skipped — pre-push gates the static checks and tests; CI runs the isolated builds)" : "  (build + bundle-budget skipped — --fast)");
 console.log(overall === 0 ? "\n✓ gate passed" : "\n✗ gate FAILED");
 
 process.exit(overall);

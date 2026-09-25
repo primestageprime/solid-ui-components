@@ -20,7 +20,7 @@
 #
 # Versioned in githooks/; wired via `git config core.hooksPath githooks`,
 # which the npm "prepare" script sets automatically on install.
-echo "pre-push: SUI gate (scripts/gate.mjs --pre-push — same checks as CI)…"
+echo "pre-push: SUI gate (scripts/gate.mjs --pre-push — CI's static checks, tests and health; CI runs the builds)…"
 if ! node scripts/gate.mjs --pre-push; then
   {
     echo ""
@@ -32,7 +32,7 @@ if ! node scripts/gate.mjs --pre-push; then
     echo ""
     echo "   run everything gate runs:    npm run gate"
     echo "   run just the failing step:   npm run gate -- --only <step>"
-    echo "   skip the (slow) build step:  npm run gate -- --fast"
+    echo "   skip the two (slow) builds:  npm run gate -- --fast"
     echo ""
     echo " If the failed step was health: a REGRESSION still blocks here"
     echo " exactly like above (see the ✗ REGRESSED lines). An unrecorded"
