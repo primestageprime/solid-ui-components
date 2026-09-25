@@ -947,6 +947,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       yFitTransition={props.yFitTransition}
       yScaleMode={props.yScaleMode}
       onYScaleModeChange={props.onYScaleModeChange}
+      chrome={props.chrome}
       yAxisMode={props.yAxisMode}
       onYAxisModeChange={props.onYAxisModeChange}
       onYRangeChange={props.onYRangeChange}
@@ -971,7 +972,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
  *  the frame's ease between its two heights; `false` snaps either. */
 export type CashflowScrubChartOverrides = Pick<
   CashflowScrubChartProps,
-  "yFitTransition" | "expandTransition"
+  "yFitTransition" | "expandTransition" | "chrome"
 >;
 
 /** Props available to consumers of a curried CashflowScrubChart variant. */
@@ -1004,3 +1005,19 @@ export function createCashflowScrubChart(
  *  page whose question is "what changed?" takes this one. */
 export const StillCashflowScrubChart: Component<CashflowScrubChartDataProps> =
   createCashflowScrubChart({ yFitTransition: false, expandTransition: false });
+
+/** FramedCashflowScrubChart — the chart inside a `ChartFrame` (Peter's chart
+ *  visual language, 2026-09-24): `chrome: "frame"`, so it draws none of its
+ *  own controls — no Auto | Fixed | Fit switch, no range editor, no expand
+ *  chevron, no top action — and the frame's split button, driven by
+ *  `createYAxisStrategy`, owns the y-axis. The chart takes what the strategy
+ *  decides as controlled props: `yMin`/`yMax` (the domain, in cents),
+ *  `yAxisMode` (still marks out-of-range values in `"fixed"`) and
+ *  `expanded`. Still (`yFitTransition: false`, `expandTransition: false`),
+ *  like `StillCashflowScrubChart`: the strategy's water marks already ease. */
+export const FramedCashflowScrubChart: Component<CashflowScrubChartDataProps> =
+  createCashflowScrubChart({
+    chrome: "frame",
+    yFitTransition: false,
+    expandTransition: false,
+  });

@@ -41,7 +41,13 @@ import { IconOnlyButton } from "../Button";
 import { ButtonGroup } from "../ButtonGroup";
 import { FullscreenBox } from "../FullscreenBox";
 import { createIcon } from "../Icon";
-import { GrowFillBox, SpreadRow, createRow, createStack } from "../Layout";
+import {
+  ClusterRow,
+  GrowFillBox,
+  SpreadRow,
+  createRow,
+  createStack,
+} from "../Layout";
 import { type PopoverMenuItem, RightPopoverMenu } from "../PopoverMenu";
 import { TextTitle, VerticalAxisTitle, createText } from "../Text";
 import {
@@ -65,6 +71,13 @@ export interface ChartFrameProps {
   onYAxisModeChange?: (mode: ChartYAxisMode) => void;
   /** The main face was pressed: shrink to fit (auto) or edit the lock (fixed). */
   onYAxisPress?: () => void;
+  /**
+   * The chart's own controls — a Cap field, a span picker — drawn in the
+   * header's right-hand cluster BEFORE fullscreen and the y-axis split. Keep
+   * them toolbar-sized (a `size="sm"` field is 29px, the buttons' height) so
+   * the header does not grow. Omit it and the header is unchanged.
+   */
+  actions?: JSX.Element;
   /** Controlled fullscreen. Omit it and the frame owns the state. */
   fullscreen?: boolean;
   onFullscreenChange?: (next: boolean) => void;
@@ -126,6 +139,37 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
   const fullscreenName = () => (fullscreen() ? "Exit full screen" : "Full screen");
   const info = () => chartYAxisModeInfo(props.yAxisMode ?? "auto");
 
+  const buttons = (): JSX.Element => (
+    <ButtonGroup>
+      <IconOnlyButton
+        onClick={() => setFullscreen(!fullscreen())}
+        aria-label={fullscreenName()}
+        title={fullscreenName()}
+      >
+        <ButtonIcon name={fullscreen() ? "fullscreen-exit" : "fullscreen"} />
+      </IconOnlyButton>
+      <Show when={props.yAxisMode}>
+        {(mode) => (
+          <>
+            <IconOnlyButton
+              onClick={() => props.onYAxisPress?.()}
+              disabled={info().disabled}
+              aria-label={info().action}
+              title={info().action}
+            >
+              <ButtonIcon name={info().icon} />
+            </IconOnlyButton>
+            <RightPopoverMenu
+              trigger={<ScreenReaderLabel>Y-axis mode</ScreenReaderLabel>}
+              items={menuItems(mode())}
+              onSelect={(next) => props.onYAxisModeChange?.(next)}
+            />
+          </>
+        )}
+      </Show>
+    </ButtonGroup>
+  );
+
   return (
     <FullscreenBox
       fullscreen={fullscreen()}
@@ -135,34 +179,12 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
       <FrameColumn>
         <SpreadRow>
           <TextTitle>{props.title}</TextTitle>
-          <ButtonGroup>
-            <IconOnlyButton
-              onClick={() => setFullscreen(!fullscreen())}
-              aria-label={fullscreenName()}
-              title={fullscreenName()}
-            >
-              <ButtonIcon name={fullscreen() ? "fullscreen-exit" : "fullscreen"} />
-            </IconOnlyButton>
-            <Show when={props.yAxisMode}>
-              {(mode) => (
-                <>
-                  <IconOnlyButton
-                    onClick={() => props.onYAxisPress?.()}
-                    disabled={info().disabled}
-                    aria-label={info().action}
-                    title={info().action}
-                  >
-                    <ButtonIcon name={info().icon} />
-                  </IconOnlyButton>
-                  <RightPopoverMenu
-                    trigger={<ScreenReaderLabel>Y-axis mode</ScreenReaderLabel>}
-                    items={menuItems(mode())}
-                    onSelect={(next) => props.onYAxisModeChange?.(next)}
-                  />
-                </>
-              )}
-            </Show>
-          </ButtonGroup>
+          <Show when={props.actions} fallback={buttons()}>
+            <ClusterRow>
+              {props.actions}
+              {buttons()}
+            </ClusterRow>
+          </Show>
         </SpreadRow>
         <BodyRow>
           <Show when={props.yTitle}>

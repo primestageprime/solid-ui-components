@@ -455,6 +455,11 @@ export interface CashflowScrubChartProps {
   yScaleMode?: ScrubChartProps<CashflowCell>["yScaleMode"];
   /** Fires when the reader picks the other segment of the fit toggle. */
   onYScaleModeChange?: ScrubChartProps<CashflowCell>["onYScaleModeChange"];
+  /** Who draws the chart's controls — see ScrubChart's `chrome`. `"frame"`:
+   *  no corner switch, range editor, chevron or top action; a `ChartFrame`
+   *  holds them and the domain arrives through `yMin`/`yMax`. Presentational
+   *  — curried (`FramedCashflowScrubChart`), never passed at a call site. */
+  chrome?: ScrubChartProps<CashflowCell>["chrome"];
   /** The y-axis policy switch (Auto | Fixed | Fit) in the origin corner.
    *  Controlled, and the master switch — see ScrubChart's `yAxisMode`. The
    *  chart only shows the mode; the caller states the domain each mode

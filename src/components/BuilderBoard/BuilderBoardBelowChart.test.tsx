@@ -3,12 +3,14 @@
 // card at its stated height).
 import { render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { type FakeSizer, installFakeSizer } from "../../test-utils/fakeSizer";
 import {
   BuilderBoardBelowChart,
   builderBoardBelowChart,
   createBuilderBoardBelowChart,
   type BuilderBoardBelowChartRects,
+  builderBoardPanelBoxOf,
 } from "./index";
 
 const rectsFor = (width: number, height: number) =>
@@ -78,5 +80,63 @@ describe("BuilderBoardBelowChart", () => {
     const bottom = container.querySelector<HTMLElement>('[data-builder-board-half="bottom"]')!;
     expect(bottom.style.height).toBe(`${rectsFor(1920, 1200).lowerHeight}px`);
     expect(container.querySelector("i")).toBe(bNode);
+  });
+});
+
+describe("BuilderBoardBelowChart — panel D's box", () => {
+  let sizer: FakeSizer | undefined;
+  afterEach(() => sizer?.restore());
+
+  it("prints which box D sees: measured once laid out, else the stated rect", () => {
+    const stated = { width: 292, height: 426 };
+    const rows = [
+      ["unmeasured", undefined],
+      ["zero (not laid out)", { width: 0, height: 0 }],
+      ["measured", { width: 276, height: 410 }],
+    ] as const;
+    const table = rows
+      .map(([name, m]) => {
+        const b = builderBoardPanelBoxOf(m, stated);
+        return `${name.padEnd(20)} ${String(b.width).padStart(4)} ${String(b.height).padStart(4)}`;
+      })
+      .join("\n");
+    expect(table).toMatchInlineSnapshot(`
+      "unmeasured            292  426
+      zero (not laid out)   292  426
+      measured              276  410"
+    `);
+  });
+
+  it("hands a render function the stated rect, then the measured box, without remounting", async () => {
+    sizer = installFakeSizer();
+    const rects = rectsFor(1920, 1080);
+    let mounts = 0;
+    const { container } = render(() => (
+      <BuilderBoardBelowChart
+        panelB={<i>b</i>}
+        panelC={<i>c</i>}
+        panelD={(box) => {
+          mounts += 1;
+          return <i>{`${box().width}x${box().height}`}</i>;
+        }}
+        rects={rects}
+      />
+    ));
+    const card = panel(container, "d")!;
+    // jsdom lays nothing out: the first box is the core's stated rect.
+    expect(card.textContent).toBe(`${rects.d.width}x${rects.d.height}`);
+    // The card is laid out: 292 wide with 8px padding a side.
+    Object.defineProperty(card, "clientWidth", { value: 292 });
+    Object.defineProperty(card, "clientHeight", { value: 426 });
+    card.style.padding = "8px";
+    await sizer.resize(card, { width: 292, height: 426 });
+    expect(card.textContent).toBe("276x410");
+    expect(mounts).toBe(1);
+  });
+
+  it("measures nothing for a plain element", () => {
+    sizer = installFakeSizer();
+    mount(() => rectsFor(1920, 1080));
+    expect(sizer.observed()).toHaveLength(0);
   });
 });

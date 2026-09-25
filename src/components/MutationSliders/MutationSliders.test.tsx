@@ -2040,6 +2040,22 @@ describe("CompactCurrencyMutationSliders — the beside readout", () => {
   });
 });
 
+describe("CompactCurrencyMutationSliders — the footer verb", () => {
+  it('says "Delete", not the neutral "Remove"', () => {
+    const { container } = render(() => (
+      <CompactCurrencyMutationSliders
+        entities={[
+          { id: "a", label: "Ana", old: 125_000, value: 130_000, range: [70_000, 130_000] },
+        ]}
+        onChange={() => {}}
+        onRemove={() => {}}
+      />
+    ));
+    expect(queryButton(container, "Delete Ana")).toBeTruthy();
+    expect(queryButton(container, "Remove Ana")).toBeNull();
+  });
+});
+
 describe("MutationSliders — Reset | Delete split footer", () => {
   it("keeps the single ⊗ slot when onReset is omitted", () => {
     const { container } = render(() => (
