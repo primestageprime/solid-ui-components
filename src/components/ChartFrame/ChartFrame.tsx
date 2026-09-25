@@ -39,7 +39,7 @@ import { type Component, type JSX, Show, createSignal, mergeProps } from "solid-
 import { map } from "../../fn";
 import { IconOnlyButton } from "../Button";
 import { ButtonGroup } from "../ButtonGroup";
-import { FullscreenBox } from "../FullscreenBox";
+import { FillFullscreenBox, FullscreenBox } from "../FullscreenBox";
 import { createIcon } from "../Icon";
 import {
   ClusterRow,
@@ -130,6 +130,9 @@ const menuItems = (
 
 const ChartFrameBase: Component<ChartFrameProps> = (props) => {
   const FrameColumn = frameColumn(props.height);
+  // A filling frame's box must fill too, or the column's 100% resolves
+  // against a content-sized box and the body gets 0px (G11).
+  const Box = props.height === "fill" ? FillFullscreenBox : FullscreenBox;
   const [owned, setOwned] = createSignal(false);
   const fullscreen = () => props.fullscreen ?? owned();
   const setFullscreen = (next: boolean): void => {
@@ -171,7 +174,7 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
   );
 
   return (
-    <FullscreenBox
+    <Box
       fullscreen={fullscreen()}
       onFullscreenChange={setFullscreen}
       renderCorner={() => null}
@@ -197,7 +200,7 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
           <GrowFillBox>{props.children}</GrowFillBox>
         </BodyRow>
       </FrameColumn>
-    </FullscreenBox>
+    </Box>
   );
 };
 
