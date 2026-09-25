@@ -10,6 +10,8 @@
 // two identically-labelled dials are still tellable apart).
 // ============================================
 import { fireEvent, render } from "@solidjs/testing-library";
+import type { JSX } from "solid-js";
+import { ItemTintSurface } from "../Surface";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { type FakeSizer, installFakeSizer } from "../../test-utils";
 import { ADD_SLOT, ARROW_SLOT, DIAL_SLOT } from "../MutationSliders/rows";
@@ -635,5 +637,111 @@ describe("GroupedMutationSliders", () => {
     ));
     fireEvent.click(queryButton(withAdd.container, "Add entity") as Element);
     expect(onAdd).toHaveBeenCalled();
+  });
+});
+
+// entityFrame (Peter, 2026-09-25): each entity's column sits in its own frame
+// — a light background per license config. Additive: omitted, nothing changes.
+describe("GroupedMutationSliders entityFrame", () => {
+  const Frame = (props: { children?: JSX.Element }) => (
+    <div data-testid="entity-frame">{props.children}</div>
+  );
+  const FOUR: readonly GroupedMutationEntity[] = [
+    ...TWO,
+    LAUNCHED,
+    { ...LAUNCHED, id: "max", label: "Max" },
+  ];
+
+  /** Headless observation: for each visible entity, how many frames hold it. */
+  const framesPerEntity = (container: HTMLElement): string =>
+    Array.from(
+      container.querySelectorAll<HTMLButtonElement>("button[aria-pressed]"),
+      (name) =>
+        `${name.textContent?.trim()}: ${
+          name.closest('[data-testid="entity-frame"]') ? 1 : 0
+        } frame, ${
+          name
+            .closest('[data-testid="entity-frame"]')
+            ?.querySelectorAll('[role="slider"]').length ?? 0
+        } dials`,
+    ).join("\n");
+
+  it("renders ONE frame per entity, holding that entity's name and all its dials", () => {
+    const { container } = render(() => (
+      <GroupedMutationSliders
+        entities={FOUR}
+        axes={LICENCE_AXES}
+        onChange={() => {}}
+        entityFrame={Frame}
+      />
+    ));
+    expect(container.querySelectorAll('[data-testid="entity-frame"]')).toHaveLength(4);
+    expect(framesPerEntity(container)).toMatchInlineSnapshot(`
+      "Starter: 1 frame, 4 dials
+      Team: 1 frame, 4 dials
+      Pro: 1 frame, 4 dials
+      Max: 1 frame, 4 dials"
+    `);
+  });
+
+  it("without it, renders no frame and the same DOM as before", () => {
+    const plain = render(() => (
+      <GroupedMutationSliders entities={TWO} axes={LICENCE_AXES} onChange={() => {}} />
+    ));
+    expect(plain.container.querySelector('[data-testid="entity-frame"]')).toBeNull();
+    const row = plain.container.querySelector('[role="group"]')!;
+    // Each entity's column is a DIRECT child of the row, as it always was.
+    const names = row.querySelectorAll("button[aria-pressed]");
+    for (const name of Array.from(names)) {
+      expect(name.closest('[role="group"] > *')?.parentElement).toBe(row);
+    }
+  });
+
+  it("pages identically with and without ItemTintSurface (borderless, padding-free: no width)", async () => {
+    const pageOf = async (framed: boolean) => {
+      const { container, unmount } = render(() => (
+        <GroupedMutationSliders
+          entities={FOUR}
+          axes={LICENCE_AXES}
+          onChange={() => {}}
+          onAdd={() => {}}
+          entityFrame={framed ? ItemTintSurface : undefined}
+        />
+      ));
+      const row = container.querySelector('[role="group"]') as HTMLElement;
+      await sizer.resize(row, {
+        width: 2 * slotFor(4) + 2 * ARROW_SLOT + ADD_SLOT,
+        height: 300,
+      });
+      const out = {
+        label: row.getAttribute("aria-label"),
+        dials: container.querySelectorAll('[role="slider"]').length,
+      };
+      const frames = row.querySelectorAll(":scope > .surface").length;
+      unmount();
+      return { ...out, frames };
+    };
+    const framed = await pageOf(true);
+    expect(framed.frames).toBe(2);
+    const plain = await pageOf(false);
+    expect({ ...framed, frames: 0 }).toEqual(plain);
+    // The frame itself adds nothing to the width: no padding, no border.
+    const probe = render(() => <ItemTintSurface>x</ItemTintSurface>);
+    const surface = probe.container.querySelector(".surface") as HTMLElement;
+    expect(surface.classList.contains("surface--padding-none")).toBe(true);
+    expect(surface.style.borderStyle).toBe("none");
+    // …and it really paged, so the equality is about the window, not "all of it".
+    expect(plain.dials).toBe(8);
+  });
+
+  it("curries through createGroupedMutationSliders", () => {
+    const Framed = createGroupedMutationSliders({
+      axes: LICENCE_AXES,
+      entityFrame: Frame,
+    });
+    const { container } = render(() => (
+      <Framed entities={TWO} onChange={() => {}} />
+    ));
+    expect(container.querySelectorAll('[data-testid="entity-frame"]')).toHaveLength(2);
   });
 });

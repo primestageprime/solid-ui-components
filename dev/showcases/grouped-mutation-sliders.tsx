@@ -29,7 +29,11 @@ import {
   ConstrainedBox,
   SpacedStack,
 } from "../../src/components/Layout";
-import { CardSurface, FillCardSurface } from "../../src/components/Surface";
+import {
+  CardSurface,
+  FillCardSurface,
+  ItemTintSurface,
+} from "../../src/components/Surface";
 
 // ── The axes, one set per claim the component has to hold ──────────────────
 
@@ -313,6 +317,13 @@ const TieredGroupedSliders = createGroupedMutationSliders({
   labels: { remove: "Retire", restore: "Revive", new: "added" },
 });
 
+/** One tinted frame per entity, so each config's dials read as one block
+ *  (Peter, 2026-09-25). Borderless and padding-free: no width, same paging. */
+const FramedGroupedSliders = createGroupedMutationSliders({
+  axes: THREE_AXES,
+  entityFrame: ItemTintSurface,
+});
+
 export const GroupedMutationSlidersShowcase: Component = () => {
   const [two, setTwo] = createSignal<readonly GroupedMutationEntity[]>(TWO);
   const [three, setThree] =
@@ -326,6 +337,8 @@ export const GroupedMutationSlidersShowcase: Component = () => {
     createSignal<readonly GroupedMutationEntity[]>(FOUR);
   const [selected, setSelected] = createSignal<readonly string[]>([]);
   const [tall, setTall] = createSignal<readonly GroupedMutationEntity[]>(THREE);
+  const [framed, setFramed] =
+    createSignal<readonly GroupedMutationEntity[]>(THREE);
   const [curried, setCurried] =
     createSignal<readonly GroupedMutationEntity[]>(FOUR);
 
@@ -374,6 +387,19 @@ export const GroupedMutationSlidersShowcase: Component = () => {
             }
             onRemove={(id) => setThree((current) => dropped(current, id))}
             onRestore={(id) => setThree((current) => restored(current, id))}
+          />
+        </CardSurface>
+      </div>
+
+      <div class="example-group">
+        <h3>entityFrame — each entity's column on its own light background</h3>
+        <CardSurface>
+          <FramedGroupedSliders
+            entities={framed()}
+            summary={product}
+            onChange={(id, measure, value) =>
+              setFramed((current) => withMeasure(current, id, measure, value))
+            }
           />
         </CardSurface>
       </div>
