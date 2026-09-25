@@ -18,7 +18,8 @@ import {
   createAxisWaterMarks,
   createYAxisStrategy,
 } from "../../src/hooks";
-import { FixedHeightBox } from "../../src/components/Layout";
+import { FixedHeightBox, TightClusterRow } from "../../src/components/Layout";
+import { ThemedNumberInput } from "../../src/components/ThemedNumberInput";
 import { MutedBody } from "../../src/components/Text";
 import { shellCells } from "./chart-shell";
 
@@ -52,6 +53,26 @@ const StrategyExample: Component = () => {
         onClose={axis.closeDialog}
       />
     </>
+  );
+};
+
+/** A chart's own control in the header: the Work Mix "Cap" — a toolbar-size
+ *  (29px) field, so the header keeps the buttons' height. */
+const CapExample: Component = () => {
+  const [cap, setCap] = createSignal<number | undefined>(40);
+  return (
+    <ChartFrame
+      title="Work mix"
+      yTitle="Hours"
+      actions={
+        <TightClusterRow>
+          <MutedBody>Cap</MutedBody>
+          <ThemedNumberInput name="cap" size="sm" value={cap} onChange={setCap} aria-label="Cap" />
+        </TightClusterRow>
+      }
+    >
+      <StillCashflowScrubChart cells={shellCells} chartHeight="fill" scrub={false} />
+    </ChartFrame>
   );
 };
 
@@ -105,6 +126,10 @@ export const ChartFrameShowcase: Component = () => {
             <StillCashflowScrubChart cells={shellCells} chartHeight="fill" scrub={false} />
           </FillChartFrame>
         </FixedHeightBox>
+      </div>
+      <div class="example-group">
+        <h3>actions — a Cap field before the frame's buttons</h3>
+        <CapExample />
       </div>
       <div class="example-group">
         <h3>No y-axis to manage</h3>
