@@ -95,6 +95,7 @@ describe("single column below 600px — the printed observation", () => {
       B series         0   248    390     240
       C changes        0   496    390     236
       D rail           0   740    390     216
+      C natural height (236 is the pre-layout estimate); D follows C; the board scrolls
 
       layout split (768x900)
       panel            x     y  width  height

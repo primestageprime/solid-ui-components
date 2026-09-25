@@ -11,7 +11,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import { type FakeSizer, installFakeSizer } from "../../test-utils/fakeSizer";
 import { NATURAL_GAUGE_WIDTH } from "../RateGauge/geometry";
 import { BuilderBoard, createBuilderBoard } from "./BuilderBoard";
-import { C_STACKED_HEIGHT, D_STACKED_HEIGHT } from "./geometry";
+import { readFileSync } from "node:fs";
+import { join as joinPath } from "node:path";
+import { D_STACKED_HEIGHT } from "./geometry";
+import { MIN_DIAL_HEIGHT, VIEW_HEIGHT as DIAL_DESIGN_HEIGHT } from "../MarkedSlider/geometry";
 
 const board = () =>
   render(() => (
@@ -167,7 +170,7 @@ describe("BuilderBoard — single column on a narrow board", () => {
     expect(heights).toEqual([
       ["a", "240px"],
       ["b", "240px"],
-      ["c", `${C_STACKED_HEIGHT}px`],
+      ["c", ""], // natural height: no stated px, the board scrolls
       ["d", `${D_STACKED_HEIGHT}px`],
     ]);
     const gauge = panel(container, "d").firstElementChild;
@@ -176,6 +179,38 @@ describe("BuilderBoard — single column on a narrow board", () => {
     await sizer.resize(root, { width: 1200, height: 700 });
     expect(root.dataset.layout).toBeUndefined();
     expect(container.querySelector('[data-builder-board-half="bottom"]')).toBeTruthy();
+  });
+});
+
+describe("BuilderBoard — stacked C at its natural height", () => {
+  let sizer: FakeSizer | undefined;
+  afterEach(() => sizer?.restore());
+
+  it("never caps or clips C: it takes its content height and the board scrolls", async () => {
+    sizer = installFakeSizer();
+    const { container } = board();
+    const root = container.querySelector<HTMLElement>("[data-builder-board]")!;
+    await sizer.resize(root, { width: 390, height: 760 });
+    const slot = panel(container, "c").parentElement!;
+    // No stated height, no max, no clip, and it may not shrink: C's box is
+    // its content's (>= content height), so its dials are never squashed.
+    expect(slot.style.height).toBe("");
+    expect(slot.style.maxHeight).toBe("");
+    expect(slot.style.overflow).toBe("");
+    expect(slot.style.flexShrink).toBe("0");
+  });
+
+  it("the dial keeps its own floor and design height (MarkedSlider.css mirrors geometry)", () => {
+    // jsdom has no layout, so the floor the browser enforces is read from the
+    // stylesheet: min-height = MIN_DIAL_HEIGHT and a flex basis of the design
+    // height, which a natural-height C gives it in full (measured: 260px).
+    const css = readFileSync(
+      joinPath(__dirname, "..", "MarkedSlider", "MarkedSlider.css"),
+      "utf8",
+    );
+    expect(css).toMatch(new RegExp(`--sui-marked-slider-min-height:\\s*${MIN_DIAL_HEIGHT}px`));
+    expect(css).toMatch(new RegExp(`--sui-marked-slider-height:\\s*${DIAL_DESIGN_HEIGHT}px`));
+    expect(MIN_DIAL_HEIGHT).toBeGreaterThanOrEqual(180);
   });
 });
 

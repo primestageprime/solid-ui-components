@@ -75,6 +75,7 @@ import {
   FillPaneRailGrid,
   HalfFillColumn,
   NarrowStack,
+  NoShrinkColumn,
   ScrollFillColumn,
   ViewportColumn,
   createStack,
@@ -83,7 +84,6 @@ import { FillCardSurface } from "../Surface";
 import {
   RAIL_WIDTH_PX,
   type RailWidth,
-  C_STACKED_HEIGHT,
   D_STACKED_HEIGHT,
   STACKED_CHART_HEIGHT,
   builderBoardLayoutFor,
@@ -135,7 +135,6 @@ const RAIL_GRID: Readonly<
 const stackedSlot = (height: number) =>
   createStack({ style: { height: `${height}px`, "flex-shrink": "0" } });
 const StackedChartSlot = stackedSlot(STACKED_CHART_HEIGHT);
-const StackedControlsSlot = stackedSlot(C_STACKED_HEIGHT);
 const StackedRailSlot = stackedSlot(D_STACKED_HEIGHT);
 
 export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
@@ -205,7 +204,11 @@ export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
                   {local.panelB}
                 </FillCardSurface>
               </StackedChartSlot>
-              <StackedControlsSlot>{cardC()}</StackedControlsSlot>
+              {/* C at its NATURAL height (Peter, 2026-09-25): the dials
+                  keep their design height and the board scrolls, instead
+                  of C clamping to a stated px and scrolling inside itself
+                  with its dials squashed to their floor. */}
+              <NoShrinkColumn>{cardC()}</NoShrinkColumn>
               <StackedRailSlot>{cardD()}</StackedRailSlot>
             </NarrowStack>
           </ScrollFillColumn>
