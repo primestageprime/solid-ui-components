@@ -995,7 +995,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 103
+    "line": 109
   },
   {
     "name": "BuilderBoardBelowChart",
@@ -1017,7 +1017,7 @@
     "showcase": null,
     "since": "0.183.0",
     "file": "src/components/BuilderBoard/BuilderBoardBelowChart.tsx",
-    "line": 225
+    "line": 162
   },
   {
     "name": "BulkActionBar",
@@ -2809,7 +2809,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 145
+    "line": 158
   },
   {
     "name": "createBuilderBoardBelowChart",
@@ -2826,7 +2826,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/BuilderBoard/BuilderBoardBelowChart.tsx",
-    "line": 216
+    "line": 153
   },
   {
     "name": "createButton",
@@ -4509,7 +4509,7 @@
     "showcase": "#/chart-frame",
     "since": "0.186.0",
     "file": "src/components/ChartFrame/YAxisLockDialog.tsx",
-    "line": 135
+    "line": 159
   },
   {
     "name": "Crosshair",
@@ -14527,19 +14527,43 @@
     "family": "ChartFrame",
     "variantOf": {
       "factory": "createYAxisLockDialog",
-      "overrides": "{\n    labels: {\n      title: \"Lock the y-axis\",\n      description:\n        \"The axis stays at this range until you change it or pick another mode.\",\n      confirm: \"Lock\",\n      max: \"Y max\",\n      min: \"Y min\",\n      notANumber: \"Enter a number\",\n      notAboveMin: \"Max must be greater than min\",\n    },\n  }"
+      "overrides": "{ labels: Y_AXIS_LOCK_LABELS }"
     },
     "overrides": [
-      "labels"
+      "labels",
+      "field"
     ],
     "dataProps": "YAxisLockDialogDataProps",
     "summary": "Composite (Depth 2), zero CSS.",
     "notToBeConfusedWith": null,
     "useFor": null,
-    "notes": "The y-axis lock editor, in the chart language's own words. */",
+    "notes": "The y-axis lock editor for a money axis: CurrencyInput fields. */",
     "showcase": "#/chart-frame",
     "since": "0.186.0",
     "file": "src/components/ChartFrame/variants.ts",
-    "line": 29
+    "line": 41
+  },
+  {
+    "name": "YAxisLockDialogNumber",
+    "depth": null,
+    "kind": "variant",
+    "family": "ChartFrame",
+    "variantOf": {
+      "factory": "createYAxisLockDialog",
+      "overrides": "{ labels: Y_AXIS_LOCK_LABELS, field: \"number\" }"
+    },
+    "overrides": [
+      "labels",
+      "field"
+    ],
+    "dataProps": "YAxisLockDialogDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The y-axis lock editor for a COUNT axis (hours, headcount): plain number fields, no currency symbol. */",
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/variants.ts",
+    "line": 46
   }
 ]
