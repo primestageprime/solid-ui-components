@@ -263,6 +263,22 @@ export const NoteText = createText({
   style: { "font-style": "italic" },
 });
 
+// Vertical axis title — a chart's y-axis name and units ("Salary ($)",
+// "Hours"), written bottom-to-top along the plot's left edge, the way a
+// printed chart labels its y-axis. `vertical-rl` stacks the glyphs top-down
+// and the 180° turn flips them to read upward; nowrap keeps the title one
+// line, so its height is its text length. Curried as a Text variant rather
+// than a prop on each chart: one rail serves every chart type (ChartFrame).
+export const VerticalAxisTitle = createText({
+  variant: "sublabel",
+  as: "span",
+  style: {
+    "writing-mode": "vertical-rl",
+    transform: "rotate(180deg)",
+    "white-space": "nowrap",
+  },
+});
+
 // Danger-tinted small caption — compact inline error text beside a control.
 export const DangerSublabel = createText({
   variant: "sublabel",

@@ -129,12 +129,17 @@ import {
   mergeProps,
   onCleanup,
 } from "solid-js";
-import { filter } from "../../fn";
+import { filter, map, some } from "../../fn";
 import { clamp } from "../../internal/math/clamp";
 import { observeSize } from "../../internal/dom/observeSize";
 import { SmallGhostButton } from "../Button";
 import { Icon } from "../Icon";
-import { CenteredStack, FillStretchRow } from "../Layout";
+import {
+  CenteredStack,
+  FillStretchRow,
+  GutteredFillStretchRow,
+} from "../Layout";
+import { Dynamic } from "solid-js/web";
 import { MutationDial } from "./dial";
 import {
   type MutationSliderLabels,
@@ -147,11 +152,21 @@ import {
   type Entity,
   dialHeightFor,
   dragStep,
+  clampToRange,
   dialGeometry,
+  rangeOf,
   niceStep,
   trackDomainOf,
 } from "../MarkedSlider/geometry";
+import type { ReadoutMode } from "./readouts";
+import { applyLinkedMove, resetLinked } from "./links";
+import { settleTyped } from "./typed";
+import { type ItemRun, itemLayout, itemRuns } from "./items";
 import {
+  DIAL_SLOT,
+  GUTTERED_DIAL_SLOT,
+  GUTTER_GAP,
+  ROW_GAP,
   moveTogether,
   pinTo,
   type RowLayout,
@@ -160,6 +175,7 @@ import {
 } from "./rows";
 
 export type { MutationSliderLabels } from "./labels";
+export type { ReadoutMode as MutationSlidersReadout } from "./readouts";
 
 export interface MutationSlidersProps {
   /** One dial per entity, drawn in the order given — that order is the reading order. */
@@ -243,6 +259,23 @@ export interface MutationSlidersProps {
    */
   onRestore?: (id: string) => void;
   /**
+   * Turns each present dial's footer into a split pair, Reset | Delete,
+   * instead of the single ⊗ (Peter, 2026-09-24). Omitted, the footer is
+   * exactly what it always was.
+   *
+   * RESET IS A MOVE, not a setter (Peter, 2026-09-24): a dial with a prior
+   * amount goes back to it through `onChange` / `onChangeEnd`, exactly as a
+   * drag would — so a LINKED group follows it to that level, and any member
+   * that cannot stand there (outside its range, or removed) drops out of the
+   * selection through `onSelectionChange` (links.ts, `resetLinked`). This
+   * callback is called only for a dial with NO prior amount — a new entity —
+   * whose reset means whatever the consumer says it means.
+   *
+   * Neither Reset nor Delete confirms here — a consumer that wants a confirm
+   * on Delete wraps `onRemove` in its own dialog.
+   */
+  onReset?: (id: string) => void;
+  /**
    * Which entities are SELECTED, by id. Controlled when supplied.
    *
    * Omitted, the component keeps the selection itself — a consumer who only
@@ -269,10 +302,62 @@ export interface MutationSlidersProps {
    * most units in every case.
    */
   format?: (value: number) => string;
+  /**
+   * Where each dial prints its figures (readouts.ts). Default `"stacked"`:
+   * the future amount under the dial, `was <prior>` beneath it, the signed
+   * delta beside the change line. `"beside"` puts the OLD amount beside the
+   * prior arrowhead and the difference under the new amount as `+$5K (4%)`
+   * (Peter's payroll board, 2026-09-24).
+   *
+   * Presentational, so a variant locks it — see `CompactCurrencyMutationSliders`.
+   */
+  readout?: ReadoutMode;
+  /**
+   * How the SELECTION groups dials (Peter, 2026-09-24). Either way, two or
+   * more selected dials snap to the highest amount among them and then move
+   * together; the modes differ in how they are reached and how they move:
+   *
+   *   • `"pin"` (default) — the original: click names to select, and a move
+   *     carries every selected dial by the same DELTA, so a group a ceiling
+   *     split keeps its shape.
+   *   • `"link"` — a link button too (under each name, shown on hover or
+   *     focus, and always on a selected dial), and a move sends every selected
+   *     dial to the same AMOUNT, so a group a ceiling split collapses back to
+   *     level on the next move inside it (links.ts, `applyLinkedMove`).
+   *
+   * Presentational/behavioural, so a variant locks it — see
+   * `CompactCurrencyMutationSliders`. The selection itself stays
+   * `selected` / `onSelectionChange` in both modes: one group, two triggers.
+   */
+  grouping?: "pin" | "link";
+  /**
+   * Makes the amount under each dial EDITABLE IN PLACE, rounding what is
+   * typed to this power of ten: `2` → 0.01, `0` → whole units, `-3` → the
+   * thousand (Peter, 2026-09-24). Omitted, the amount is static text.
+   *
+   * No min, max or step of its own: a typed figure lands inside the entity's
+   * own RANGE — the same clamp a drag obeys — and `snap` is already the
+   * step. It is rounded FIRST and clamped second (typed.ts), so rounding can
+   * never carry a figure past the range. A commit moves the dial exactly as
+   * one key press does, so a linked or pinned group follows it.
+   */
+  precision?: number;
+  /**
+   * What an ITEM of several dials is drawn inside — a subtle background
+   * behind one person's two positions (Peter, 2026-09-24). Only runs of two
+   * or more dials sharing an `item` are framed; the frame's children are the
+   * run's dials in a row with the row's own gap, so the pitch — and the
+   * paging arithmetic — is unchanged. Omitted, items still page as whole
+   * units but draw no background.
+   *
+   * A component rather than a colour, so the look stays a variant's business:
+   * the consumer curries the frame it wants.
+   */
+  itemFrame?: Component<{ children?: JSX.Element }>;
 }
 
 /**
- * What a curried variant locks: the three PRESENTATIONAL decisions.
+ * What a curried variant locks: the PRESENTATIONAL decisions.
  *
  * `format` is here for the same reason it is on `Slider` and `BandRail` — the
  * unit a row reads in is a static style decision of the surface it sits on,
@@ -286,7 +371,13 @@ export interface MutationSlidersProps {
  */
 export type MutationSlidersOverrides = Pick<
   MutationSlidersProps,
-  "format" | "labels" | "snap"
+  | "format"
+  | "labels"
+  | "snap"
+  | "readout"
+  | "grouping"
+  | "precision"
+  | "itemFrame"
 >;
 
 /** What a curried variant exposes: everything except the curried overrides. */
@@ -399,12 +490,54 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
     onCleanup(observeSize(el, (size) => setWidth(size.width)));
   };
 
+  /**
+   * The `"beside"` readout's change figure runs right of each bar into the gap,
+   * so that row takes the 24px GUTTER (`GutteredFillStretchRow`) and pages by
+   * the matching slot. Every other row is exactly the 8px row it was.
+   */
+  const guttered = (): boolean => props.readout === "beside";
+
+  /** Whether any dial names an ITEM — the row then groups and pages by item. */
+  const itemized = (): boolean =>
+    some((entity: Entity) => entity.item !== undefined, props.entities);
+  /** The row's item runs (items.ts), over every entity, in reading order. */
+  const runs = createMemo((): readonly ItemRun[] =>
+    itemRuns(map((entity: Entity) => entity.item, props.entities)),
+  );
+
   const layout = createMemo((): RowLayout => {
     const count = props.entities.length;
     if (width() <= 0) {
       return { start: 0, end: count, capacity: count, paging: false };
     }
-    return rowLayout(width(), count, offset(), props.onAdd !== undefined);
+    if (itemized()) {
+      // BY WHOLE ITEMS: a page never shows one of a person's dials without
+      // the other. `offset` counts RUNS in this mode.
+      const out = itemLayout(
+        width(),
+        runs(),
+        offset(),
+        props.onAdd !== undefined,
+        guttered() ? GUTTERED_DIAL_SLOT : DIAL_SLOT,
+        guttered() ? GUTTER_GAP : ROW_GAP,
+      );
+      return {
+        start: out.start,
+        end: out.end,
+        capacity: out.end - out.start,
+        paging: out.paging,
+      };
+    }
+    return guttered()
+      ? rowLayout(
+          width(),
+          count,
+          offset(),
+          props.onAdd !== undefined,
+          GUTTERED_DIAL_SLOT,
+          GUTTER_GAP,
+        )
+      : rowLayout(width(), count, offset(), props.onAdd !== undefined);
   });
 
   /**
@@ -416,6 +549,13 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
    * keeps every pair reachable, at the cost of more presses on a long row.
    */
   const page = (delta: number): void => {
+    if (itemized()) {
+      // One RUN at a time — a whole person, whatever their dial count.
+      setOffset((current) =>
+        clamp(current + delta, 0, Math.max(runs().length - 1, 0)),
+      );
+      return;
+    }
     const { capacity } = layout();
     setOffset((current) =>
       clamp(current + delta, 0, Math.max(props.entities.length - capacity, 0)),
@@ -429,6 +569,18 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
 
   const visible = createMemo(() =>
     props.entities.slice(layout().start, layout().end),
+  );
+  /** The runs inside the visible window, each as its entities. */
+  const visibleRuns = createMemo((): readonly (readonly Entity[])[] =>
+    map(
+      (run: ItemRun) =>
+        map((index: number) => props.entities[index], run.indices),
+      filter(
+        (run: ItemRun) =>
+          run.indices[0] >= layout().start && run.indices[0] < layout().end,
+        runs(),
+      ),
+    ),
   );
 
   /**
@@ -476,6 +628,14 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
    * dragged dial alone.
    */
   const move = (entity: Entity, next: number, commit: boolean): void => {
+    if (isPinned(entity.id) && props.grouping === "link") {
+      // LINKED: every selected dial to the SAME amount this one reached.
+      emitAll(
+        applyLinkedMove(props.entities, selection(), next),
+        commit ? "commit" : "change",
+      );
+      return;
+    }
     if (isPinned(entity.id)) {
       const current: DialGeometry = dialGeometry(
         domain(),
@@ -499,8 +659,107 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
     else props.onChange(entity.id, next);
   };
 
+  /**
+   * A typed figure committed under a dial: settled onto the dial's own range
+   * and grid, then moved exactly as one key press moves — intermediate and
+   * committed — so a group fans out and a consumer persists it. Nothing that
+   * parses to nothing, and nothing that does not move, is emitted.
+   */
+  const typeIn = (entity: Entity, text: string): void => {
+    const precision = props.precision;
+    if (precision === undefined) return;
+    const current = dialGeometry(domain(), entity, dialHeight());
+    const next = settleTyped(text, {
+      min: current.range[0],
+      max: current.range[1],
+      precision,
+    });
+    if (next === null || next === current.clampedValue) return;
+    move(entity, next, false);
+    move(entity, next, true);
+  };
+
+  /**
+   * A per-dial Reset, through the MOVE path. Linked: `resetLinked` decides
+   * who follows and who unlinks. Pinned or alone: the same `move` a key
+   * press takes. No prior amount: the consumer's `onReset`.
+   */
+  const resetDial = (entity: Entity): void => {
+    if (entity.old === null) {
+      props.onReset?.(entity.id);
+      return;
+    }
+    if (props.grouping === "link") {
+      const { moves, unlink } = resetLinked(
+        props.entities,
+        selection(),
+        entity.id,
+      );
+      emitAll(moves, "both");
+      if (unlink.length > 0) {
+        const next = filter(
+          (id: string) => !some((gone: string) => gone === id, unlink),
+          selection(),
+        );
+        if (props.selected === undefined) setOwnSelection(next);
+        props.onSelectionChange?.(next);
+      }
+      return;
+    }
+    const target = clampToRange(rangeOf(domain(), entity), entity.old);
+    move(entity, target, false);
+    move(entity, target, true);
+  };
+
+  /** One dial of the row. `Index` keys by position — see the render below. */
+  const renderDial = (entity: () => Entity): JSX.Element => (
+          <MutationDial
+            entity={entity()}
+            domain={domain()}
+            // ONE height feeds everything: the viewBox, the track path, AND
+            // every value→y mapping behind the range, the arrows, the change
+            // line and the delta label. Omitting it left those five at the
+            // 260px default while the track and the viewBox were at the
+            // measured height, so the bands and arrows bunched into the top
+            // third of a tall dial and the pointer disagreed with all of them.
+            height={dialHeight()}
+            format={format}
+            labels={labels()}
+            readout={props.readout}
+            snap={props.snap}
+            dragStep={step()}
+            keyStep={keyStep()}
+            selected={isSelected(entity().id)}
+            onSelect={() => toggleSelection(entity().id)}
+            onMeasure={measureDial}
+            onMove={(value) => move(entity(), value, false)}
+            onCommit={(value) => move(entity(), value, true)}
+            onRemove={
+              props.onRemove ? () => props.onRemove?.(entity().id) : undefined
+            }
+            onRestore={
+              props.onRestore ? () => props.onRestore?.(entity().id) : undefined
+            }
+            onType={
+              props.precision === undefined
+                ? undefined
+                : (text) => typeIn(entity(), text)
+            }
+            onReset={
+              props.onReset ? () => resetDial(entity()) : undefined
+            }
+            onLink={
+              props.grouping === "link"
+                ? () => toggleSelection(entity().id)
+                : undefined
+            }
+            linked={props.grouping === "link" && isSelected(entity().id)}
+          />
+  );
+
   return (
-    <FillStretchRow
+    <Dynamic
+      component={guttered() ? GutteredFillStretchRow : FillStretchRow}
       ref={measure}
       // A group rather than a bare div, so the window is ANNOUNCED. Without
       // it a screen-reader user paging the row hears five dials change names
@@ -534,37 +793,34 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
           column — and the thumb's DOM node with it — on every step of a drag,
           which drops the pointer capture mid-gesture. Keying by position keeps
           each dial's node and updates only what it draws. */}
-      <Index each={visible()}>
-        {(entity) => (
-          <MutationDial
-            entity={entity()}
-            domain={domain()}
-            // ONE height feeds everything: the viewBox, the track path, AND
-            // every value→y mapping behind the range, the arrows, the change
-            // line and the delta label. Omitting it left those five at the
-            // 260px default while the track and the viewBox were at the
-            // measured height, so the bands and arrows bunched into the top
-            // third of a tall dial and the pointer disagreed with all of them.
-            height={dialHeight()}
-            format={format}
-            labels={labels()}
-            snap={props.snap}
-            dragStep={step()}
-            keyStep={keyStep()}
-            selected={isSelected(entity().id)}
-            onSelect={() => toggleSelection(entity().id)}
-            onMeasure={measureDial}
-            onMove={(value) => move(entity(), value, false)}
-            onCommit={(value) => move(entity(), value, true)}
-            onRemove={
-              props.onRemove ? () => props.onRemove?.(entity().id) : undefined
-            }
-            onRestore={
-              props.onRestore ? () => props.onRestore?.(entity().id) : undefined
-            }
-          />
-        )}
-      </Index>
+      <Show
+        when={itemized()}
+        fallback={<Index each={visible()}>{renderDial}</Index>}
+      >
+        {/* ITEMS: a run of two or more dials sharing an `item` sits inside
+            the consumer's `itemFrame`, in a row with the row's own gap, so the
+            pitch — and the paging — is the same as unframed dials. */}
+        <Index each={visibleRuns()}>
+          {(run) => (
+            <Show
+              when={run().length > 1 && props.itemFrame}
+              fallback={<Index each={run()}>{renderDial}</Index>}
+            >
+              {(Frame) => (
+                <Dynamic component={Frame()}>
+                  <Dynamic
+                    component={
+                      guttered() ? GutteredFillStretchRow : FillStretchRow
+                    }
+                  >
+                    <Index each={run()}>{renderDial}</Index>
+                  </Dynamic>
+                </Dynamic>
+              )}
+            </Show>
+          )}
+        </Index>
+      </Show>
       <Show when={layout().paging}>
         <CenteredStack>
           <SmallGhostButton
@@ -588,7 +844,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
           </CenteredStack>
         )}
       </Show>
-    </FillStretchRow>
+    </Dynamic>
   );
 };
 

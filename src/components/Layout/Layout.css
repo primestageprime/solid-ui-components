@@ -77,6 +77,12 @@
 .row--gap-lg {
   gap: 16px;
 }
+/* XL — 24px (the space-6 step). A gutter wide enough to hold a label that
+   runs out of one instrument into the gap before the next: MutationSliders'
+   "beside" readout, whose two-line change figure sits right of the bar. */
+.row--gap-xl {
+  gap: 24px;
+}
 
 .row--align-start {
   align-items: flex-start;

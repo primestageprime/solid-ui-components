@@ -43,6 +43,7 @@ import { CardSurface } from "../../src/components/Surface";
 import { SectionTitle, TextTitle } from "../../src/components/Text";
 import { SpacedStack, TightStack, createBox } from "../../src/components/Layout";
 import { filter, map, sortBy } from "../../src/fn";
+import { DatedEvents } from "./levels-timeline/dated-events";
 
 /**
  * The curried variant this showcase draws with. `formatValue` is the one
@@ -512,6 +513,10 @@ export const LevelsTimelineShowcase: Component = () => (
         <SpacedStack>
           <For each={TRACKS}>{(track) => <TrackReadout track={track} />}</For>
         </SpacedStack>
+      </CardSurface>
+
+      <CardSurface>
+        <DatedEvents />
       </CardSurface>
 
       <CardSurface>

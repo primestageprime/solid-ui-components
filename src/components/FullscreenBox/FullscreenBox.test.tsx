@@ -97,3 +97,19 @@ describe("FullscreenBox", () => {
     expect(mine).toBeLessThan(tooltip);
   });
 });
+
+// One visual language with ChartFrame (2026-09-25): corner brackets, never
+// arrows — an inward arrow means `fit`, not "back to windowed".
+describe("FullscreenBox default corner icons", () => {
+  it("draws fullscreen in flow and fullscreen-exit when full screen", () => {
+    const { container } = render(() => (
+      <FullscreenBox>
+        <span />
+      </FullscreenBox>
+    ));
+    const corner = () => container.querySelector(".sui-fullscreen-box__corner")!;
+    expect(corner().querySelector('[aria-label="fullscreen"]')).toBeTruthy();
+    fireEvent.click(corner().querySelector("button")!);
+    expect(corner().querySelector('[aria-label="fullscreen-exit"]')).toBeTruthy();
+  });
+});

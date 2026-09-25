@@ -216,3 +216,51 @@ describe("Icon zoom glyphs", () => {
     expect(ICON_PATHS["zoom-out"].outline).not.toContain("V9.25");
   });
 });
+
+// The chart frame's y-axis strategy (lock / arrows-up-down / fit) and the
+// change sliders' link toggle (link), 2026-09-25.
+describe("Icon chart-strategy and link glyphs", () => {
+  const added = [
+    "lock",
+    "arrows-up-down",
+    "fit",
+    "link",
+    "fullscreen",
+    "fullscreen-exit",
+  ] as const;
+
+  it("registers each in ICON_PATHS and in a gallery group", () => {
+    const grouped: readonly string[] = Object.values(ICON_GROUPS).flat();
+    added.forEach((name) => {
+      expect(ICON_PATHS[name].outline).toContain("<");
+      expect(ICON_PATHS[name].solid).toContain("<");
+      expect(grouped).toContain(name);
+    });
+  });
+
+  it("draws fit apart from expand and shrink", () => {
+    expect(ICON_PATHS.fit.outline).not.toBe(ICON_PATHS.expand.outline);
+    expect(ICON_PATHS.fit.outline).not.toBe(ICON_PATHS.shrink.outline);
+  });
+
+  // Fullscreen and windowed are corner brackets, never arrows: an inward
+  // arrow means `fit` (shrink the y-axis), not "minimize the chart".
+  it("draws fullscreen / fullscreen-exit as brackets, apart from each other", () => {
+    expect(ICON_PATHS.fullscreen.outline).not.toBe(
+      ICON_PATHS["fullscreen-exit"].outline,
+    );
+    expect(ICON_PATHS.fullscreen.outline).not.toBe(ICON_PATHS.shrink.outline);
+    expect(ICON_PATHS["fullscreen-exit"].outline).not.toBe(ICON_PATHS.fit.outline);
+  });
+
+  it("renders each in both variants", () => {
+    for (const name of added) {
+      for (const variant of ["outline", "solid"] as const) {
+        const { container } = render(() => <Icon name={name} variant={variant} />);
+        expect(
+          container.querySelector('[role="img"]')?.getAttribute("aria-label"),
+        ).toBe(name);
+      }
+    }
+  });
+});

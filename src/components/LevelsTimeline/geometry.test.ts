@@ -11,7 +11,7 @@
 // decides where the droplines fall.
 // ============================================
 import { describe, expect, it } from "vitest";
-import { filter, find, flatMap, map, sortBy, sum } from "../../fn";
+import { filter, find, flatMap, join, map, sortBy, sum } from "../../fn";
 import {
   DEFAULT_FRAME,
   BAND_MARGIN,
@@ -82,8 +82,35 @@ import {
   valueTicks,
   xScaleFor,
   yScaleFor,
+  EVENT_TICK_LENGTH,
+  FLAG_GAP,
+  FLAG_LEADER_DROP,
+  FLAG_RULE_TOP,
+  nudgeFlagCentres,
+  weekTicks,
+  levelsValueFit,
+  pickDay,
+  pickNearestMonth,
+  FILLER_LABEL_EXTRA_GAP,
+  abbreviateDates,
+  axisLabelWidth,
+  labelPlacement,
+  AXIS_LABEL_GAP,
+  AXIS_TICK_LENGTH,
+  DAY_MS,
+  DRAG_THRESHOLD_PX,
+  FLAG_BOX_WIDTH,
+  FLAG_DIGIT_PX,
+  FLAG_MAX_DIGITS,
+  FLAG_PAD_X,
+  clampMutationTime,
+  datedAxisTicks,
+  dragTimeAt,
+  isoDayOf,
+  mutationNumbers,
+  snapToDay,
 } from "./geometry";
-import type { Frame, ValueTick } from "./geometry";
+import type { AxisTick, Flag, Frame, ValueTick } from "./geometry";
 
 const utc = (iso: string): Date => new Date(iso);
 
@@ -187,8 +214,14 @@ describe("valueDomainOf and yScaleFor", () => {
     // headroom is there whatever the consumer's values happen to be.
     const [lo, hi] = valueDomainOf(LEVELS);
     expect([lo, hi]).toEqual([5000, 10000]);
-    expect(yScaleFor([lo, hi])(hi)).toBeCloseTo(PLOT_TOP + DEFAULT_FRAME.bandInset, 6);
-    expect(yScaleFor([lo, hi])(lo)).toBeCloseTo(DEFAULT_FRAME.plotBottom - DEFAULT_FRAME.bandInset, 6);
+    expect(yScaleFor([lo, hi])(hi)).toBeCloseTo(
+      PLOT_TOP + DEFAULT_FRAME.bandInset,
+      6,
+    );
+    expect(yScaleFor([lo, hi])(lo)).toBeCloseTo(
+      DEFAULT_FRAME.plotBottom - DEFAULT_FRAME.bandInset,
+      6,
+    );
   });
 
   it("opens a flat chart up rather than collapsing it", () => {
@@ -222,31 +255,120 @@ describe("axisTicks", () => {
     expect(ticks[0].label).toBe("Jan");
   });
 
-  it("switches to QUARTERS from one year — month labels stop fitting", () => {
-    // Twelve `Jan`-width labels fit; twelve `2026-Q1`-width ones do not, and
-    // quarters are what a reader of a multi-year span thinks in anyway.
+  it("keeps MONTHS through a year — Peter: 6m and a year are months", () => {
     const ticks = axisTicks(DOMAIN, (at) => timeOf(at) / 1e12);
+    expect(ticks).toHaveLength(13);
+    expect(ticks[0].label).toBe("Jan");
+  });
+
+  it("switches to QUARTERS for two years — Peter: 2y is quarters", () => {
+    const two: TimeDomain = [utc("2025-01-01"), utc("2027-01-01")];
+    const ticks = axisTicks(two, (at) => timeOf(at) / 1e12);
     expect(map((tick) => tick.label, ticks)).toEqual([
       "2025-Q1",
       "2025-Q2",
       "2025-Q3",
       "2025-Q4",
       "2026-Q1",
+      "2026-Q2",
+      "2026-Q3",
+      "2026-Q4",
+      "2027-Q1",
     ]);
   });
 
   it("labels every quarter even in compact chrome — the row is sparse already", () => {
-    const ticks = axisTicks(DOMAIN, (at) => timeOf(at) / 1e12, frameFor(140));
+    const two: TimeDomain = [utc("2025-01-01"), utc("2027-01-01")];
+    const ticks = axisTicks(two, (at) => timeOf(at) / 1e12, frameFor(140));
     expect(filter((tick) => tick.showLabel, ticks)).toHaveLength(ticks.length);
   });
 
   it("puts each quarter tick on its own boundary", () => {
-    const x = xScaleFor(DOMAIN);
-    const ticks = axisTicks(DOMAIN, x);
+    const two: TimeDomain = [utc("2025-01-01"), utc("2027-01-01")];
+    const x = xScaleFor(two);
+    const ticks = axisTicks(two, x);
     expect(ticks[0].x).toBe(x(utc("2025-01-01")));
     expect(ticks[1].x).toBe(x(utc("2025-04-01")));
     expect(ticks[2].x).toBe(x(utc("2025-07-01")));
     expect(ticks[3].x).toBe(x(utc("2025-10-01")));
+  });
+
+  it("switches to WEEKS for about three months, on ISO Mondays (UTC)", () => {
+    // 2026-09-01 is a Tuesday: the first week tick is Monday 2026-09-07.
+    const three: TimeDomain = [utc("2026-09-01"), utc("2026-12-01")];
+    const ticks = axisTicks(three, (at) => timeOf(at) / 1e12);
+    expect(ticks[0].label).toBe("2026-09-07");
+    expect(ticks).toHaveLength(13);
+    for (const tick of ticks) {
+      expect(new Date(tick.key).getUTCDay()).toBe(1);
+    }
+    // …and a Monday start is its own first tick.
+    const fromMonday = weekTicks(
+      [utc("2026-09-07"), utc("2026-09-21")],
+      () => 0,
+    );
+    expect(map((tick) => tick.label, fromMonday)).toEqual([
+      "2026-09-07",
+      "2026-09-14",
+      "2026-09-21",
+    ]);
+  });
+
+  it("picks the cadence from the span at Peter's named durations", () => {
+    const cadenceOf = (months: number): string => {
+      const end = new Date(Date.UTC(2026, months, 1));
+      const ticks = axisTicks(
+        [utc("2026-01-01"), end],
+        (at) => timeOf(at) / 1e12,
+      );
+      const gapDays =
+        (Date.parse(ticks[1].key) - Date.parse(ticks[0].key)) / DAY_MS;
+      if (gapDays === 7) return "week";
+      if (gapDays <= 31) return "month";
+      if (gapDays <= 92) return "quarter";
+      return "year";
+    };
+    expect(map(cadenceOf, [3, 4, 6, 12, 15, 24, 35, 36, 60])).toEqual([
+      "week",
+      "week",
+      "month",
+      "month",
+      "month",
+      "quarter",
+      "quarter",
+      "year",
+      "year",
+    ]);
+  });
+
+  it("prints the drawn-tick table for 3m, 6m, 1y and 2y domains", () => {
+    const spans: readonly [string, TimeDomain][] = [
+      ["3m", [utc("2026-09-01"), utc("2026-12-01")]],
+      ["6m", [utc("2026-09-01"), utc("2027-03-01")]],
+      ["1y", [utc("2026-09-01"), utc("2027-09-01")]],
+      ["2y", [utc("2026-09-01"), utc("2028-09-01")]],
+    ];
+    const pins: readonly Mutation[] = [
+      { id: "a", at: utc("2026-10-03"), label: "a" },
+      { id: "b", at: utc("2026-11-15"), label: "b" },
+    ];
+    for (const [name, domain] of spans) {
+      const ticks = datedAxisTicks(domain, pins, xScaleFor(domain));
+      console.log(
+        `\n${name}: ${ticks.length} ticks\n${join(
+          "\n",
+          map(
+            (tick: AxisTick) =>
+              `${isoDayOf(tick.at)}  ${String(Math.round(tick.x)).padStart(4)}  ${tick.event ? "event " : "filler"}  ${tick.showLabel ? tick.label : "·"}`,
+            ticks,
+          ),
+        )}`,
+      );
+      // Both events are ticked; the first always takes a label, and at 2y
+      // the second (43 days on, ~35u) is too close for a flat one.
+      expect(filter((tick: AxisTick) => tick.event, ticks)).toHaveLength(2);
+      expect(find((tick: AxisTick) => tick.event, ticks)?.showLabel).toBe(true);
+    }
   });
 
   it("switches to a year cadence rather than printing a grey stripe", () => {
@@ -267,6 +389,7 @@ describe("axisTicks", () => {
     // stay reachable because the bench and the tests need to name one.
     expect(monthTicks(DOMAIN, () => PLOT_LEFT)).toHaveLength(13);
     expect(quarterTicks(DOMAIN, () => PLOT_LEFT)).toHaveLength(5);
+    expect(weekTicks(DOMAIN, () => PLOT_LEFT)).toHaveLength(52);
   });
 });
 
@@ -303,7 +426,9 @@ describe("perCountWidth — the smallest of the caps", () => {
   const yScale = yScaleFor(valueDomainOf(LEVELS));
 
   it("fills a good fraction of the plot at the busiest moment", () => {
-    expect(round(fillWidth(12, DEFAULT_FRAME))).toBe(round((DEFAULT_FRAME.plotHeight * FILL_FRACTION) / 12));
+    expect(round(fillWidth(12, DEFAULT_FRAME))).toBe(
+      round((DEFAULT_FRAME.plotHeight * FILL_FRACTION) / 12),
+    );
   });
 
   it("keeps the TIGHTEST adjacent pair clear of each other", () => {
@@ -322,7 +447,9 @@ describe("perCountWidth — the smallest of the caps", () => {
       { id: "b", label: "B", value: 9500, points: [{ at: 0, count: 2 }] },
     ];
     const scale = yScaleFor(valueDomainOf(two));
-    expect(edgeWidth(two, scale, DEFAULT_FRAME)).toBeLessThan(fillWidth(2, DEFAULT_FRAME));
+    expect(edgeWidth(two, scale, DEFAULT_FRAME)).toBeLessThan(
+      fillWidth(2, DEFAULT_FRAME),
+    );
     const perCount = perCountWidth(two, scale, 2, DEFAULT_FRAME);
     for (const level of two) {
       const half = bandWidth(2, perCount) / 2;
@@ -368,9 +495,7 @@ describe("perCountWidth — the smallest of the caps", () => {
   });
 
   it("leaves only the edge cap when there is a single level", () => {
-    expect(adjacencyWidth([LEVELS[0]], yScale)).toBe(
-      Number.POSITIVE_INFINITY,
-    );
+    expect(adjacencyWidth([LEVELS[0]], yScale)).toBe(Number.POSITIVE_INFINITY);
   });
 
   it("has NO floor — a count of one is wide because the scale is wide", () => {
@@ -391,9 +516,9 @@ describe("bandWidth — conservation is exact and unconditional", () => {
       [2, 2],
       [1, 1],
     ]) {
-      expect(round(bandWidth(before, perCount) - bandWidth(moving, perCount))).toBe(
-        round(bandWidth(before - moving, perCount)),
-      );
+      expect(
+        round(bandWidth(before, perCount) - bandWidth(moving, perCount)),
+      ).toBe(round(bandWidth(before - moving, perCount)));
     }
   });
 
@@ -501,10 +626,7 @@ describe("adjacent bands never overlap", () => {
           return { top: rail.y - half, bottom: rail.y + half };
         }, geometry.rails),
       );
-      const ordered = sortBy(
-        (band: { top: number }) => band.top,
-        live,
-      );
+      const ordered = sortBy((band: { top: number }) => band.top, live);
       for (const [index, band] of ordered.entries()) {
         if (index === 0) continue;
         expect(band.top).toBeGreaterThanOrEqual(ordered[index - 1].bottom);
@@ -549,7 +671,7 @@ describe("curves", () => {
 describe("transitionWidth", () => {
   it("is a generous fraction of the plot — the S is the point", () => {
     const raw = (PLOT_RIGHT - PLOT_LEFT) * TRANSITION_FRACTION;
-    expect(round(raw)).toBe(round(612 * 0.11));
+    expect(round(raw)).toBe(round((VIEW_WIDTH - PLOT_LEFT - 14) * 0.11));
     expect(transitionWidth()).toBe(Math.min(raw, MAX_TRANSITION));
   });
 });
@@ -679,13 +801,14 @@ describe("one-ended flows — departures and arrivals", () => {
   /** Transfers only — the carry is tested in its own suite. */
   const flowsFor = (transfers: readonly Transfer[]) =>
     filter(
-      (flow: FlowBand) =>
-        flow.kind !== "carry" && flow.kind !== "continuation",
+      (flow: FlowBand) => flow.kind !== "carry" && flow.kind !== "continuation",
       geometryOf(LEVELS, transfers).flows,
     );
 
   it("runs a departure out of its source, with no destination named", () => {
-    const [leaving] = flowsFor([{ at: utc("2025-07-01"), from: "l6", count: 1 }]);
+    const [leaving] = flowsFor([
+      { at: utc("2025-07-01"), from: "l6", count: 1 },
+    ]);
     expect(leaving.kind).toBe("departure");
     expect(leaving.fromId).toBe("l6");
     expect(leaving.toId).toBeUndefined();
@@ -701,7 +824,9 @@ describe("one-ended flows — departures and arrivals", () => {
   it("keeps a one-ended flow the same width along its whole length", () => {
     // It is the GRADIENT that says the flow is going nowhere, not the shape —
     // a stub that wandered off would imply a destination the chart has not got.
-    const [leaving] = flowsFor([{ at: utc("2025-07-01"), from: "l6", count: 2 }]);
+    const [leaving] = flowsFor([
+      { at: utc("2025-07-01"), from: "l6", count: 2 },
+    ]);
     expect(round(leaving.srcBottom - leaving.srcTop)).toBe(
       round(leaving.dstBottom - leaving.dstTop),
     );
@@ -710,9 +835,9 @@ describe("one-ended flows — departures and arrivals", () => {
 
   it("drops a flow with neither end, and a typo rather than faking a departure", () => {
     expect(flowsFor([{ at: utc("2025-07-01"), count: 2 }])).toEqual([]);
-    expect(flowsFor([{ at: utc("2025-07-01"), from: "nope", count: 1 }])).toEqual(
-      [],
-    );
+    expect(
+      flowsFor([{ at: utc("2025-07-01"), from: "nope", count: 1 }]),
+    ).toEqual([]);
   });
 
   it("stacks two flows leaving one level at one moment rather than merging", () => {
@@ -852,8 +977,14 @@ describe("levelsRailGeometry — the whole observation", () => {
     const yScale = yScaleFor(geometry.yDomain);
     console.table([
       { field: "peak total", value: geometry.peak },
-      { field: "fill width", value: round(fillWidth(geometry.peak, geometry.frame)) },
-      { field: "adjacency width", value: round(adjacencyWidth(LEVELS, yScale)) },
+      {
+        field: "fill width",
+        value: round(fillWidth(geometry.peak, geometry.frame)),
+      },
+      {
+        field: "adjacency width",
+        value: round(adjacencyWidth(LEVELS, yScale)),
+      },
       { field: "perCount (the smaller)", value: round(geometry.perCount) },
       { field: "transition", value: transitionWidth() },
     ]);
@@ -962,7 +1093,10 @@ const capsAt = (rails: readonly Rail[], x: number, side: "x1" | "x2") =>
     (rail: Rail) =>
       map(
         (span: RailSpan) => ({ top: spanTop(span), bottom: spanBottom(span) }),
-        filter((span: RailSpan) => Math.abs(span[side] - x) < 0.001, rail.spans),
+        filter(
+          (span: RailSpan) => Math.abs(span[side] - x) < 0.001,
+          rail.spans,
+        ),
       ),
     rails,
   );
@@ -971,9 +1105,7 @@ const lands = (
   edge: number,
   caps: readonly { top: number; bottom: number }[],
 ): boolean =>
-  caps.some(
-    (cap) => edge >= cap.top - 0.001 && edge <= cap.bottom + 0.001,
-  );
+  caps.some((cap) => edge >= cap.top - 0.001 && edge <= cap.bottom + 0.001);
 
 describe("flush joins", () => {
   for (const [name, levels, transfers] of [
@@ -1092,7 +1224,9 @@ describe("continuations — a rail nothing happened to must not read as dashed",
     );
     expect(continuation).toBeDefined();
     // Same width both ends, so the join is geometrically invisible too.
-    expect(round(continuation?.srcBottom ?? 0) - round(continuation?.srcTop ?? 0)).toBe(
+    expect(
+      round(continuation?.srcBottom ?? 0) - round(continuation?.srcTop ?? 0),
+    ).toBe(
       round(continuation?.dstBottom ?? 0) - round(continuation?.dstTop ?? 0),
     );
   });
@@ -1246,7 +1380,9 @@ describe("timeAtX — the inverse scale", () => {
   it("round-trips a date through both scales", () => {
     const x = xScaleFor(DOMAIN);
     const at = timeOf(utc("2025-07-01"));
-    expect(Math.round(timeAtX(DOMAIN, x(at)) / 1000)).toBe(Math.round(at / 1000));
+    expect(Math.round(timeAtX(DOMAIN, x(at)) / 1000)).toBe(
+      Math.round(at / 1000),
+    );
   });
 
   it("clamps outside the plot rather than extrapolating", () => {
@@ -1367,18 +1503,19 @@ describe("compact chrome — the board's short cell", () => {
     }
   });
 
-  it("thins MONTH labels rather than overlapping them", () => {
-    // A sub-year domain, so the cadence is months and thinning applies.
-    const short: TimeDomain = [utc("2025-01-01"), utc("2025-09-01")];
+  it("thins dated labels rather than overlapping them in a narrow box", () => {
+    // A sub-year domain on a narrow card: nine month ticks, too close for a
+    // label each at the filler clearance, so some stay bare ticks.
+    const short: TimeDomain = [utc("2025-01-01"), utc("2025-11-01")];
     const geometry = levelsRailGeometry({
       levels: BOARD,
       transfers: [],
       mutations: MUTATIONS,
       domain: short,
-      box: { width: 800, height: 156 },
+      box: { width: MIN_VIEW_WIDTH, height: 156 },
     });
     const labelled = filter((tick) => tick.showLabel, geometry.ticks);
-    expect(geometry.ticks).toHaveLength(9);
+    expect(geometry.ticks).toHaveLength(11);
     expect(labelled.length).toBeLessThan(geometry.ticks.length);
     expect(labelled.length).toBeGreaterThan(2);
   });
@@ -1393,8 +1530,12 @@ describe("compact chrome — the board's short cell", () => {
     });
     expect(geometry.frame.compact).toBe(false);
     expect(geometry.frame.plotTop).toBe(PLOT_TOP);
-    // A one-year domain is quarters: Q1..Q4 plus the closing Q1.
-    expect(filter((tick) => tick.showLabel, geometry.ticks)).toHaveLength(5);
+    // A one-year domain is months: thirteen ticks, and the three flags fall
+    // on month starts, so they are among them.
+    expect(geometry.ticks).toHaveLength(13);
+    expect(
+      filter((tick) => tick.event && tick.showLabel, geometry.ticks),
+    ).toHaveLength(3);
   });
 });
 
@@ -1630,8 +1771,23 @@ describe("the value axis", () => {
   it("reserves a gutter for the labels, and the plot starts after it", () => {
     const geometry = geometryWith([60000, 100000]);
     const labels = map((tick: ValueTick) => tick.label, geometry.yTicks);
-    expect(geometry.frame.plotLeft).toBe(gutterWidth(labels));
-    expect(geometry.frame.plotLeft).toBeGreaterThan(PLOT_LEFT);
+    // The plot starts at the gutter or at the first date label's leftward
+    // reach (PLOT_LEFT), whichever is further in.
+    expect(geometry.frame.plotLeft).toBe(
+      Math.max(PLOT_LEFT, gutterWidth(labels)),
+    );
+    const wide = levelsRailGeometry({
+      levels: LEVELS,
+      transfers: [],
+      mutations: [],
+      domain: DOMAIN,
+      box: BOX,
+      valueDomain: [60000, 100000],
+      formatValue: (value: number) => `$${value}.00/yr`,
+    });
+    const wideLabels = map((tick: ValueTick) => tick.label, wide.yTicks);
+    expect(wide.frame.plotLeft).toBe(gutterWidth(wideLabels));
+    expect(wide.frame.plotLeft).toBeGreaterThan(PLOT_LEFT);
     // …and nothing is drawn to the left of it.
     const firstSpan = geometry.rails[0].spans[0];
     expect(firstSpan.x1).toBeGreaterThanOrEqual(geometry.frame.plotLeft);
@@ -1808,5 +1964,545 @@ describe("a pinned value domain holds the rails still", () => {
     const flat = geometryFor(80000, [80000, 80000]);
     expect(flat.yDomain[1]).toBeGreaterThan(flat.yDomain[0]);
     for (const rail of flat.rails) expect(rail.y).not.toBeNaN();
+  });
+});
+
+// ── numbered, dated, draggable flags (Peter, 2026-09-24) ─────────────────────
+
+describe("numbered flags", () => {
+  /** Peter's sketch: five events, 4 and 5 close together, one unlabelled. */
+  const SKETCH: readonly Mutation[] = [
+    {
+      id: "raise",
+      at: utc("2026-10-03"),
+      label: "10-03",
+      details: ["Person 2"],
+    },
+    { id: "start", at: utc("2026-09-01"), label: "09-01" },
+    {
+      id: "hire",
+      at: utc("2026-11-15"),
+      label: "",
+      details: ["Payroll 1", "Person 3"],
+    },
+    { id: "late", at: utc("2027-01-10"), label: "late" },
+    { id: "early", at: utc("2027-01-03"), label: "early" },
+  ];
+  const SKETCH_DOMAIN: TimeDomain = [utc("2026-09-01"), utc("2027-01-15")];
+
+  it("numbers flags 1..n in TIME order, ignoring the consumer's label", () => {
+    const flags = flagPositions(SKETCH, xScaleFor(SKETCH_DOMAIN));
+    expect(map((flag) => [flag.id, flag.label], flags)).toEqual([
+      ["start", "1"],
+      ["raise", "2"],
+      ["hire", "3"],
+      ["early", "4"],
+      ["late", "5"],
+    ]);
+    expect(mutationNumbers(SKETCH).get("late")).toBe(5);
+    // The label survives as the announced title; details ride along.
+    expect(flags[1].title).toBe("10-03");
+    expect(flags[2].title).toBe("");
+    expect(flags[2].details).toEqual(["Payroll 1", "Person 3"]);
+    expect(flags[3].details).toEqual([]);
+    expect(flags[0].at).toBe(timeOf(utc("2026-09-01")));
+  });
+
+  it("uses ONE box width, and it fits two digits", () => {
+    expect(FLAG_BOX_WIDTH).toBeGreaterThanOrEqual(
+      FLAG_MAX_DIGITS * FLAG_DIGIT_PX + 2 * FLAG_PAD_X,
+    );
+    const many: readonly Mutation[] = map(
+      (day: number) => ({
+        id: `d${day}`,
+        at: utc(`2026-09-${day < 10 ? `0${day}` : day}`),
+        label: `d${day}`,
+      }),
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    );
+    const flags: readonly Flag[] = flagPositions(
+      many,
+      xScaleFor(SKETCH_DOMAIN),
+    );
+    expect(flags[11].label).toBe("12");
+    expect(new Set(map((flag) => flag.boxWidth, flags))).toEqual(
+      new Set([FLAG_BOX_WIDTH]),
+    );
+  });
+
+  it("keeps a right-edge flag on its rule in a WIDE measured frame", () => {
+    // The box was clamped to the default 640, so on a 2000-wide card a flag
+    // at x≈1980 sat at 622 with its rule a card-width away.
+    const frame = frameForBox({ width: 2000, height: 300 });
+    const flags = flagPositions(
+      [{ id: "end", at: SKETCH_DOMAIN[1], label: "end" }],
+      xScaleFor(SKETCH_DOMAIN, frame),
+      frame,
+    );
+    expect(flags[0].textX).toBeCloseTo(flags[0].x, 6);
+    expect(flags[0].boxX + flags[0].boxWidth).toBeLessThanOrEqual(
+      frame.viewWidth,
+    );
+  });
+
+  it("keeps two flags 13 days apart from overlapping on a ~1000px card", () => {
+    // The reported thorcasting case. Boxes collide when the gap in days is
+    // under FLAG_BOX_WIDTH × domainDays / plotWidth: on this 12-month frame
+    // that is ~8 days, so 13 clears; on a 36-month domain it would not.
+    const frame = frameForBox({ width: 1000, height: 250 });
+    const year: TimeDomain = [utc("2026-01-01"), utc("2027-01-01")];
+    const flags = flagPositions(
+      [
+        { id: "a", at: utc("2026-09-05"), label: "09-05" },
+        { id: "b", at: utc("2026-09-18"), label: "09-18" },
+      ],
+      xScaleFor(year, frame),
+      frame,
+    );
+    expect(flags[0].boxX + flags[0].boxWidth).toBeLessThanOrEqual(
+      flags[1].boxX,
+    );
+    const collideBelowDays =
+      (FLAG_BOX_WIDTH * 365) / (frame.plotRight - frame.plotLeft);
+    expect(collideBelowDays).toBeLessThan(13);
+  });
+
+  it("prints the sketch as a table — flags, then the dated axis", () => {
+    const geometry = levelsRailGeometry({
+      levels: [],
+      transfers: [],
+      mutations: SKETCH,
+      domain: SKETCH_DOMAIN,
+    });
+    const flagTable = map(
+      (flag) => ({
+        n: flag.label,
+        id: flag.id,
+        date: isoDayOf(flag.at),
+        x: Math.round(flag.x * 10) / 10,
+        boxX: Math.round(flag.boxX * 10) / 10,
+        details: join(", ", flag.details),
+      }),
+      geometry.flags,
+    );
+    const axisTable = map(
+      (tick) => ({
+        date: isoDayOf(tick.at),
+        x: Math.round(tick.x * 10) / 10,
+        event: tick.event,
+        label: tick.showLabel ? tick.label : "·",
+      }),
+      geometry.ticks,
+    );
+    console.table(flagTable);
+    console.table(axisTable);
+    // Every flag date carries a label, in the sketch's own format.
+    expect(
+      map(
+        (tick: AxisTick) => tick.label,
+        filter(
+          (tick: AxisTick) => tick.event && tick.showLabel,
+          geometry.ticks,
+        ),
+      ),
+    ).toEqual(["2026-09-01", "10-03", "11-15", "2027-01-03"]);
+    // Pins 4 and 5 are too close for two flat labels: 5 keeps its event tick,
+    // the tooltip carries its date.
+    const late = find(
+      (tick: AxisTick) => tick.at === timeOf(utc("2027-01-10")),
+      geometry.ticks,
+    );
+    expect(late?.event).toBe(true);
+    expect(late?.showLabel).toBe(false);
+    // The first painted label is full, and so is the first after a year change.
+    const painted = filter((tick) => tick.showLabel, geometry.ticks);
+    expect(painted[0].label).toBe("2026-09-01");
+  });
+});
+
+describe("flag collision — boxes nudge, rules stay", () => {
+  const pitch = FLAG_BOX_WIDTH + FLAG_GAP;
+  const noOverlap = (flags: readonly Flag[]) => {
+    for (const [index, flag] of flags.entries()) {
+      const next = flags[index + 1];
+      if (next !== undefined) {
+        expect(flag.boxX + flag.boxWidth + FLAG_GAP).toBeLessThanOrEqual(
+          next.boxX + 1e-9,
+        );
+      }
+    }
+  };
+
+  it("leaves flags with room to spare exactly where they were", () => {
+    expect(nudgeFlagCentres([100, 200, 300], VIEW_WIDTH)).toEqual([
+      100, 200, 300,
+    ]);
+  });
+
+  it("spreads a colliding pair SYMMETRICALLY about its midpoint", () => {
+    const [a, b] = nudgeFlagCentres([300, 304], VIEW_WIDTH);
+    expect(b - a).toBeCloseTo(pitch, 9);
+    expect((a + b) / 2).toBeCloseTo(302, 9);
+  });
+
+  it("merges a cascade — three flags a day apart become one even row", () => {
+    const centres = nudgeFlagCentres([300, 302, 304, 400], VIEW_WIDTH);
+    expect(centres[1] - centres[0]).toBeCloseTo(pitch, 9);
+    expect(centres[2] - centres[1]).toBeCloseTo(pitch, 9);
+    expect(centres[1]).toBeCloseTo(302, 9);
+    expect(centres[3]).toBe(400);
+  });
+
+  it("keeps a nudged cluster on the canvas at either edge", () => {
+    const left = nudgeFlagCentres([1, 2], VIEW_WIDTH);
+    expect(left[0]).toBe(FLAG_BOX_WIDTH / 2);
+    const right = nudgeFlagCentres(
+      [VIEW_WIDTH - 2, VIEW_WIDTH - 1],
+      VIEW_WIDTH,
+    );
+    expect(right[1]).toBe(VIEW_WIDTH - FLAG_BOX_WIDTH / 2);
+    expect(right[1] - right[0]).toBeCloseTo(pitch, 9);
+  });
+
+  it("keeps flags ONE DAY apart clickable: no overlap, rules at the true x, leaders drawn", () => {
+    const year: TimeDomain = [utc("2026-01-01"), utc("2027-01-01")];
+    const scale = xScaleFor(year);
+    const flags = flagPositions(
+      [
+        { id: "a", at: utc("2026-06-01"), label: "a" },
+        { id: "b", at: utc("2026-06-02"), label: "b" },
+        { id: "c", at: utc("2026-09-01"), label: "c" },
+      ],
+      scale,
+    );
+    noOverlap(flags);
+    expect(flags[0].x).toBe(scale(utc("2026-06-01")));
+    expect(flags[1].x).toBe(scale(utc("2026-06-02")));
+    expect(map((flag) => flag.displaced, flags)).toEqual([true, true, false]);
+    expect(flags[0].ruleTop).toBe(FLAG_RULE_TOP + FLAG_LEADER_DROP);
+    expect(flags[2].ruleTop).toBe(FLAG_RULE_TOP);
+    // The nudge is sideways only, and each box sits on its own side of the pair.
+    expect(flags[0].textX).toBeLessThan(flags[0].x);
+    expect(flags[1].textX).toBeGreaterThan(flags[1].x);
+  });
+
+  it("never overlaps, however many flags pile into one week", () => {
+    const year: TimeDomain = [utc("2026-01-01"), utc("2027-01-01")];
+    const pile: readonly Mutation[] = map(
+      (day: number) => ({
+        id: `p${day}`,
+        at: utc(`2026-12-${day < 10 ? `0${day}` : day}`),
+        label: "",
+      }),
+      [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+    );
+    const flags = flagPositions(pile, xScaleFor(year));
+    noOverlap(flags);
+    for (const flag of flags) {
+      expect(flag.boxX + flag.boxWidth).toBeLessThanOrEqual(VIEW_WIDTH);
+    }
+  });
+});
+
+describe("the dated axis", () => {
+  const DOMAIN_Q: TimeDomain = [utc("2026-09-01"), utc("2027-01-15")];
+  const x = xScaleFor(DOMAIN_Q);
+  const painted = (ticks: readonly AxisTick[]) =>
+    filter((tick: AxisTick) => tick.showLabel, ticks);
+  const spanOf = (tick: AxisTick) =>
+    labelPlacement(tick.x, axisLabelWidth(tick.label), VIEW_WIDTH);
+
+  it("labels a flag date before any filler, and drops a colliding filler", () => {
+    // 10-02 is a day off the Oct 1 month tick: the flag keeps its label, the
+    // month tick goes bare.
+    const ticks = datedAxisTicks(
+      DOMAIN_Q,
+      [{ id: "a", at: utc("2026-10-02"), label: "a" }],
+      x,
+    );
+    const oct1 = find((tick) => tick.at === timeOf(utc("2026-10-01")), ticks);
+    const oct2 = find((tick) => tick.at === timeOf(utc("2026-10-02")), ticks);
+    expect(oct2?.showLabel).toBe(true);
+    expect(oct2?.event).toBe(true);
+    expect(oct1?.showLabel).toBe(false);
+  });
+
+  it("keeps two close flags as two EVENT TICKS but one label", () => {
+    const ticks = datedAxisTicks(
+      DOMAIN_Q,
+      [
+        { id: "a", at: utc("2026-11-10"), label: "a" },
+        { id: "b", at: utc("2026-11-11"), label: "b" },
+      ],
+      x,
+    );
+    const events = filter((tick) => tick.event, ticks);
+    expect(events).toHaveLength(2);
+    expect(map((tick) => tick.showLabel, events)).toEqual([true, false]);
+    // The exact position is still marked, by a longer tick.
+    expect(map((tick) => tick.tickLength, events)).toEqual([
+      EVENT_TICK_LENGTH,
+      EVENT_TICK_LENGTH,
+    ]);
+    expect(find((tick) => !tick.event, ticks)?.tickLength).toBe(
+      AXIS_TICK_LENGTH,
+    );
+  });
+
+  it("writes the year only on the first painted label and at a year change", () => {
+    const labels = map(
+      (tick: AxisTick) => tick.label,
+      painted(datedAxisTicks(DOMAIN_Q, [], x)),
+    );
+    expect(labels).toEqual([
+      "2026-09-01",
+      "10-01",
+      "11-01",
+      "12-01",
+      "2027-01-01",
+    ]);
+  });
+
+  it("never lets two painted labels overlap, however crowded", () => {
+    const crowded: readonly Mutation[] = map(
+      (day: number) => ({
+        id: `d${day}`,
+        at: utc(`2026-11-${day < 10 ? `0${day}` : day}`),
+        label: `d${day}`,
+      }),
+      [1, 3, 5, 7, 9, 11, 13, 15, 17, 19],
+    );
+    const shown = painted(datedAxisTicks(DOMAIN_Q, crowded, x));
+    expect(shown.length).toBeGreaterThan(2);
+    for (const [index, tick] of shown.entries()) {
+      const next = shown[index + 1];
+      if (next !== undefined) {
+        expect(spanOf(tick).right + AXIS_LABEL_GAP).toBeLessThanOrEqual(
+          spanOf(next).left + 1e-9,
+        );
+      }
+    }
+    // …and every one of the ten still has its tick.
+    expect(
+      filter((tick) => tick.event, datedAxisTicks(DOMAIN_Q, crowded, x)),
+    ).toHaveLength(10);
+  });
+
+  it("gives a filler more air than an event", () => {
+    // Just wide enough for an event beside an event, not for a filler.
+    expect(FILLER_LABEL_EXTRA_GAP).toBeGreaterThan(0);
+  });
+
+  it("gives no tick to a flag outside the domain", () => {
+    const ticks = datedAxisTicks(
+      DOMAIN_Q,
+      [{ id: "out", at: utc("2027-03-01"), label: "out" }],
+      x,
+    );
+    expect(filter((tick) => tick.event, ticks)).toHaveLength(0);
+  });
+
+  it("anchors an edge label inward so it stays on the canvas", () => {
+    const ticks = painted(datedAxisTicks(DOMAIN_Q, [], x));
+    expect(ticks[0].labelAnchor).toBe("start");
+    expect(spanOf(ticks[0]).left).toBeGreaterThanOrEqual(0);
+    for (const tick of ticks) {
+      expect(spanOf(tick).right).toBeLessThanOrEqual(VIEW_WIDTH);
+    }
+    expect(labelPlacement(VIEW_WIDTH - 2, 54, VIEW_WIDTH).anchor).toBe("end");
+    expect(labelPlacement(300, 54, VIEW_WIDTH).anchor).toBe("middle");
+  });
+
+  it("keeps the old shallow band — horizontal labels cost no height", () => {
+    const frame = frameFor(VIEW_HEIGHT);
+    expect(frame.viewHeight - frame.plotBottom).toBe(42);
+    expect(MIN_VIEW_HEIGHT).toBe(72);
+    expect(PLOT_LEFT).toBe(14);
+    for (const tick of datedAxisTicks(
+      DOMAIN_Q,
+      [],
+      xScaleFor(DOMAIN_Q, frame),
+      frame,
+    )) {
+      expect(tick.labelY).toBe(frame.axisLabelY);
+    }
+  });
+});
+
+describe("abbreviateDates — one rule for the axis and the change tabs", () => {
+  it("writes the year first and at each year change", () => {
+    expect(
+      abbreviateDates([
+        utc("2026-10-01"),
+        utc("2026-11-01"),
+        utc("2027-01-13"),
+        utc("2027-02-10"),
+      ]),
+    ).toEqual(["2026-10-01", "11-01", "2027-01-13", "02-10"]);
+  });
+
+  it("re-derives after a delete — 02-10 regains its year", () => {
+    expect(
+      abbreviateDates([
+        utc("2026-10-01"),
+        utc("2026-11-01"),
+        utc("2027-02-10"),
+      ]),
+    ).toEqual(["2026-10-01", "11-01", "2027-02-10"]);
+  });
+
+  it("is empty for nothing and full for one", () => {
+    expect(abbreviateDates([])).toEqual([]);
+    expect(abbreviateDates([timeOf(utc("2026-10-01"))])).toEqual([
+      "2026-10-01",
+    ]);
+  });
+
+  it("is what the axis paints", () => {
+    const domain: TimeDomain = [utc("2026-09-01"), utc("2027-01-15")];
+    const shown = filter(
+      (tick: AxisTick) => tick.showLabel,
+      datedAxisTicks(domain, [], xScaleFor(domain)),
+    );
+    expect(map((tick: AxisTick) => tick.label, shown)).toEqual(
+      abbreviateDates(map((tick: AxisTick) => tick.at, shown)),
+    );
+  });
+});
+
+describe("dragging a flag — the neighbour clamp", () => {
+  /** Peter's example: pins on 2026-09-01 and 2026-10-15. */
+  const PINS: readonly Mutation[] = [
+    { id: "b", at: utc("2026-10-15"), label: "b" },
+    { id: "a", at: utc("2026-09-01"), label: "a" },
+    { id: "c", at: utc("2026-12-01"), label: "c" },
+  ];
+  const DRAG_DOMAIN: TimeDomain = [utc("2026-08-01"), utc("2027-01-31")];
+  const day = (iso: string): number => timeOf(utc(iso));
+
+  it("stops the 09-01 pin at 2026-10-14 — one day before its neighbour", () => {
+    expect(
+      isoDayOf(clampMutationTime(PINS, "a", day("2026-11-20"), DRAG_DOMAIN)),
+    ).toBe("2026-10-14");
+  });
+
+  it("stops the 10-15 pin at 2026-09-02 going left and 2026-11-30 going right", () => {
+    expect(
+      isoDayOf(clampMutationTime(PINS, "b", day("2026-08-10"), DRAG_DOMAIN)),
+    ).toBe("2026-09-02");
+    expect(
+      isoDayOf(clampMutationTime(PINS, "b", day("2027-01-20"), DRAG_DOMAIN)),
+    ).toBe("2026-11-30");
+  });
+
+  it("lets the end pins run to the domain, and no further", () => {
+    expect(
+      isoDayOf(clampMutationTime(PINS, "a", day("2026-01-01"), DRAG_DOMAIN)),
+    ).toBe("2026-08-01");
+    expect(
+      isoDayOf(clampMutationTime(PINS, "c", day("2028-01-01"), DRAG_DOMAIN)),
+    ).toBe("2027-01-31");
+  });
+
+  it("snaps to the nearest UTC day", () => {
+    const noonish = day("2026-10-01") + 13 * 3_600_000;
+    expect(isoDayOf(snapToDay(noonish))).toBe("2026-10-02");
+    expect(isoDayOf(clampMutationTime(PINS, "b", noonish, DRAG_DOMAIN))).toBe(
+      "2026-10-02",
+    );
+    expect(snapToDay(day("2026-10-01") + 11 * 3_600_000) % DAY_MS).toBe(0);
+  });
+
+  it("stays put when its neighbours leave it no room", () => {
+    const squeezed: readonly Mutation[] = [
+      { id: "x", at: utc("2026-10-01"), label: "x" },
+      { id: "y", at: utc("2026-10-02"), label: "y" },
+      { id: "z", at: utc("2026-10-03"), label: "z" },
+    ];
+    expect(isoDayOf(clampMutationTime(squeezed, "y", day("2026-12-01")))).toBe(
+      "2026-10-02",
+    );
+  });
+
+  it("resolves a pointer x to a clamped day", () => {
+    const frame = frameFor(VIEW_HEIGHT);
+    const scale = xScaleFor(DRAG_DOMAIN, frame);
+    // Dragged all the way to the right edge: the neighbour wins.
+    expect(
+      isoDayOf(dragTimeAt(PINS, "a", frame.plotRight, DRAG_DOMAIN, frame)),
+    ).toBe("2026-10-14");
+    // Dragged onto its own x: stays on its own day.
+    expect(
+      isoDayOf(
+        dragTimeAt(PINS, "a", scale(utc("2026-09-01")), DRAG_DOMAIN, frame),
+      ),
+    ).toBe("2026-09-01");
+    expect(DRAG_THRESHOLD_PX).toBeGreaterThan(0);
+  });
+});
+
+describe("pick strategies — what a click on the plot reports", () => {
+  const WINDOW: TimeDomain = [utc("2026-08-01"), utc("2027-02-01")];
+  const at = (iso: string): number => timeOf(new Date(iso));
+
+  it("pickDay: the whole day under the pointer, floored, clamped to the domain", () => {
+    const table = map(
+      (raw: string) => [raw, isoDayOf(pickDay(at(raw), WINDOW))],
+      [
+        "2026-10-17T00:00:00Z",
+        "2026-10-17T11:59:00Z",
+        "2026-10-17T23:59:59Z",
+        "2026-12-31T18:00:00Z",
+        "2026-07-10T12:00:00Z",
+        "2027-03-10T12:00:00Z",
+      ],
+    );
+    console.table(table);
+    expect(map(([, day]) => day, table)).toEqual([
+      "2026-10-17",
+      "2026-10-17",
+      "2026-10-17",
+      "2026-12-31",
+      "2026-08-01",
+      "2027-02-01",
+    ]);
+  });
+
+  it("the deprecated fallback still snaps to the nearest month, as before", () => {
+    expect(isoDayOf(pickNearestMonth(at("2026-10-17T00:00:00Z"), WINDOW))).toBe(
+      "2026-11-01",
+    );
+    expect(isoDayOf(pickNearestMonth(at("2026-10-10T00:00:00Z"), WINDOW))).toBe(
+      "2026-10-01",
+    );
+  });
+
+  it("puts the hover crosshair on the date the strategy picks", () => {
+    const frame = frameFor(VIEW_HEIGHT);
+    const scale = xScaleFor(WINDOW, frame);
+    const x = scale(utc("2026-10-17T15:00:00Z"));
+    const byDay = hoverAt([], WINDOW, x, frame, pickDay);
+    expect(isoDayOf(byDay.at)).toBe("2026-10-17");
+    expect(byDay.x).toBe(scale(utc("2026-10-17")));
+    // No strategy: the month, exactly as before.
+    expect(isoDayOf(hoverAt([], WINDOW, x, frame).at)).toBe("2026-11-01");
+  });
+});
+
+describe("levelsValueFit — what a held value axis tracks", () => {
+  it("spans the levels anyone holds, and ignores empty ones", () => {
+    const levels: readonly Level[] = [
+      { id: "a", label: "a", value: 80_000, points: [{ at: 0, count: 2 }] },
+      { id: "b", label: "b", value: 110_000, points: [{ at: 0, count: 1 }] },
+      {
+        id: "ghost",
+        label: "g",
+        value: 500_000,
+        points: [{ at: 0, count: 0 }],
+      },
+      { id: "none", label: "n", value: 1, points: [] },
+    ];
+    expect(levelsValueFit(levels)).toEqual({ min: 80_000, max: 110_000 });
+    expect(levelsValueFit([])).toBeNull();
   });
 });

@@ -41,7 +41,7 @@
 // move its peers instead of itself, and that decision cannot be made here
 // without this component knowing the row.
 // ============================================
-import { type Component, type JSX, Show } from "solid-js";
+import { type Component, type JSX, Show, createSignal } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import {
   GlyphSlotGhostButton,
@@ -49,13 +49,13 @@ import {
   ReservedGlyphSlotButton,
 } from "../Button";
 import { Icon } from "../Icon";
-import { TightCenteredColumn } from "../Layout";
+import { TightCenteredColumn, TightClusterRow } from "../Layout";
 import { MarkedSlider } from "../MarkedSlider";
+import { SliderField } from "../Slider";
 import {
   type DialGeometry,
   type Domain,
   type Entity,
-  deltaLabelOf,
   dialGeometry,
 } from "../MarkedSlider/geometry";
 import {
@@ -65,6 +65,7 @@ import {
   SteadyMonoValue,
 } from "../Text";
 import type { ResolvedLabels } from "./labels";
+import { type DialReadouts, type ReadoutMode, readoutsOf } from "./readouts";
 
 /**
  * The placeholder an empty text slot carries.
@@ -75,9 +76,6 @@ import type { ResolvedLabels } from "./labels";
  */
 const NBSP = " ";
 
-/** The removed entity's readout: there is no future amount to print. */
-const NO_VALUE = "—";
-
 /**
  * The remove affordance. Peter's sketch draws a circled cross, and this is
  * that character rather than an `Icon`: the closest glyph in the set is
@@ -85,6 +83,13 @@ const NO_VALUE = "—";
  * Restore beside it IS an Icon (`undo`), because one exists that means it.
  */
 const REMOVE_MARK = "⊗";
+
+/**
+ * The link affordance — the Icon set's `link` (Peter approved it 2026-09-24,
+ * replacing the interim text chain). A function, not a const, so the hidden
+ * placeholder and the live button each get their own node.
+ */
+const linkMark = (): JSX.Element => <Icon name="link" size="sm" />;
 
 export interface MutationDialProps {
   /** The entity this dial draws. */
@@ -97,6 +102,8 @@ export interface MutationDialProps {
   format: (value: number) => string;
   /** Every word the dial says on the consumer's behalf, already resolved. */
   labels: ResolvedLabels;
+  /** Where the figures go. Default `"stacked"` — see readouts.ts. */
+  readout?: ReadoutMode;
   /** The grid emitted values land on, or `undefined` for a continuous drag. */
   snap?: number;
   /** What a POINTER drag moves by — Kobalte's own `step`. */
@@ -117,6 +124,26 @@ export interface MutationDialProps {
   onRemove?: () => void;
   /** The footer's action on a removed entity. Omitted, no ↺ is drawn. */
   onRestore?: () => void;
+  /**
+   * A figure was TYPED into the amount and committed. Supplied, the amount
+   * under the dial is an editable field; omitted, it is the static readout it
+   * always was. The raw text goes up — parsing belongs to the row.
+   */
+  onType?: (text: string) => void;
+  /**
+   * The footer's RESET on a present entity: put it back where it started.
+   * Supplied together with `onRemove`, the footer becomes a split pair —
+   * Reset | Delete — instead of the single ⊗. Omitted, the footer is exactly
+   * the one slot it always was.
+   */
+  onReset?: () => void;
+  /**
+   * The link button was pressed. Omitted, the column has no link slot at all
+   * and is exactly the shape it always was.
+   */
+  onLink?: () => void;
+  /** Whether this dial is in the row's link group (of two or more). */
+  linked?: boolean;
 }
 
 /**
@@ -127,27 +154,17 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
   const dial = (): DialGeometry =>
     dialGeometry(props.domain, props.entity, props.height);
 
-  /** The required line: what this entity will be. */
-  const futureReadout = (): string => {
-    const value = dial().clampedValue;
-    return value === null ? NO_VALUE : props.format(value);
-  };
-
   /**
-   * The muted line beneath it: where it came from — and ONLY that, so the
-   * future amount is not printed twice.
-   *
-   * Empty when there is nothing to say: a new entity has no prior amount (it
-   * says the consumer's `labels.new` instead), and an entity that did not move
-   * has a prior amount identical to the line above.
+   * Every figure this column prints, decided in readouts.ts so each mode
+   * prints as a table: the line under the dial, the muted one beneath it, and
+   * the two labels on the drawing.
    */
-  const priorReadout = (): string => {
-    const current = dial();
-    if (current.isNew) return props.labels.new;
-    if (current.clampedOld === null) return "";
-    if (current.clampedOld === current.clampedValue) return "";
-    return `was ${props.format(current.clampedOld)}`;
-  };
+  const readouts = (): DialReadouts =>
+    readoutsOf(props.readout ?? "stacked", dial(), props.format, props.labels);
+  /** The required line: what this entity will be. */
+  const futureReadout = (): string => readouts().value;
+  /** The muted line beneath it, or `""` when there is nothing to say. */
+  const priorReadout = (): string => readouts().meta;
 
   /**
    * What the one footer slot does right now, or `null` when the consumer has
@@ -182,8 +199,63 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
       : null;
   };
 
+  /**
+   * Whether the pointer is over the column or focus is inside it — the two
+   * ways a reader can be "at" this dial, and the two that reveal its link
+   * button. Focus counts so the keyboard can reach a button the mouse finds by
+   * hovering: the slot sits right after the name, so tabbing onto the name
+   * reveals the link and the next Tab lands on it.
+   */
+  const [hovered, setHovered] = createSignal(false);
+  const [focused, setFocused] = createSignal(false);
+  /** A linked dial always shows its link — it is the group's visible mark. */
+  const showLink = (): boolean =>
+    props.linked === true || hovered() || focused();
+
+  /** The split footer's two actions, or `null` for the single slot. */
+  const split = (): { reset: () => void; remove: () => void } | null => {
+    const reset = props.onReset;
+    const remove = props.onRemove;
+    return reset && remove && !dial().removed ? { reset, remove } : null;
+  };
+  /** Whether there is anything for Reset to undo. */
+  const changed = (): boolean =>
+    dial().isNew || dial().clampedOld !== dial().clampedValue;
+
+  /** ONE slot, three states — the footer every row had before the split. */
+  const single = (): JSX.Element => (
+      <Show
+        when={footer()}
+        fallback={
+          <ReservedGlyphSlotButton disabled aria-hidden="true">
+            {REMOVE_MARK}
+          </ReservedGlyphSlotButton>
+        }
+      >
+        {(slot) => (
+          <GlyphSlotGhostButton
+            aria-label={slot().label}
+            onClick={() => slot().act()}
+          >
+            {slot().glyph}
+          </GlyphSlotGhostButton>
+        )}
+      </Show>
+  );
+
   return (
-    <TightCenteredColumn>
+    <TightCenteredColumn
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusIn={() => setFocused(true)}
+      onFocusOut={(event: FocusEvent) =>
+        setFocused(
+          event.currentTarget instanceof Node &&
+            event.relatedTarget instanceof Node &&
+            event.currentTarget.contains(event.relatedTarget),
+        )
+      }
+    >
       {/* The name is the SELECT control — a real button, so Tab and Enter work
           without this component inventing key handling, and `aria-pressed`
           because it is a toggle rather than a command: a screen reader then
@@ -198,6 +270,35 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
       >
         <NowrapLabel>{props.entity.label}</NowrapLabel>
       </PressableLabelButton>
+      {/* The LINK slot, directly UNDER the name, and only for a row that
+          links. Under rather than above so the tab order is name → link →
+          thumb: focusing the name reveals the link and the next Tab lands on
+          it. It
+          HOLDS ITS SPACE while hidden (the reserved button), so revealing it on
+          hover moves nothing under the pointer. Linked, it stays shown and
+          takes the accent: that is the group's mark on every member. */}
+      <Show when={props.onLink}>
+        {(onLink) => (
+          <Show
+            when={showLink()}
+            fallback={
+              <ReservedGlyphSlotButton disabled aria-hidden="true">
+                {linkMark()}
+              </ReservedGlyphSlotButton>
+            }
+          >
+            <GlyphSlotGhostButton
+              active={props.linked === true}
+              aria-pressed={props.linked === true}
+              aria-label={`${props.linked ? "Unlink" : "Link"} ${props.entity.label}`}
+              title={props.linked ? "Unlink" : "Link"}
+              onClick={() => onLink()()}
+            >
+              {linkMark()}
+            </GlyphSlotGhostButton>
+          </Show>
+        )}
+      </Show>
       {/* ONE height feeds everything: the viewBox, the track path, AND every
           value→y mapping behind the range, the arrows, the change line and the
           delta label. Omitting it left those five at the 260px default while
@@ -221,7 +322,8 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
         keyStep={props.keyStep}
         label={props.entity.label}
         valueText={futureReadout()}
-        deltaLabel={deltaLabelOf(props.format, dial().delta)}
+        deltaLabel={readouts().deltaLabel}
+        priorLabel={readouts().priorLabel}
         active={props.selected}
         onMeasure={props.onMeasure}
         onChange={(value) => props.onMove(value)}
@@ -234,7 +336,21 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           Dragging a value onto its prior amount used to delete this row, which
           jumped the big figure and the button up under the pointer
           mid-gesture. */}
-      <SteadyMonoValue>{futureReadout()}</SteadyMonoValue>
+      {/* The amount. With a `precision` the row made it EDITABLE (Peter,
+          2026-09-24): `SliderField` owns the typing — Enter and blur commit,
+          Escape reverts — and hands the text to the row, which parses, rounds
+          and clamps it (typed.ts). A removed entity has no amount to edit. */}
+      <Show
+        when={props.onType !== undefined && !dial().removed}
+        fallback={<SteadyMonoValue>{futureReadout()}</SteadyMonoValue>}
+      >
+        <SliderField
+          label={`${props.entity.label} amount`}
+          value={futureReadout()}
+          editValue={String(dial().clampedValue ?? "")}
+          onCommit={(text) => props.onType?.(text)}
+        />
+      </Show>
       <Dynamic
         component={priorReadout() === "" ? ReservedMonoMeta : SteadyMonoMeta}
       >
@@ -245,21 +361,33 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           supplies neither callback the button still holds its space, hidden. A
           disabled ⊗ was the wrong shape: it said "you did this and there is
           nothing more to do", when what the reader wants is the way back. */}
-      <Show
-        when={footer()}
-        fallback={
-          <ReservedGlyphSlotButton disabled aria-hidden="true">
-            {REMOVE_MARK}
-          </ReservedGlyphSlotButton>
-        }
-      >
-        {(slot) => (
-          <GlyphSlotGhostButton
-            aria-label={slot().label}
-            onClick={() => slot().act()}
-          >
-            {slot().glyph}
-          </GlyphSlotGhostButton>
+      {/* SPLIT, when the consumer supplies both Reset and Delete: a present
+          entity offers ⟳ Reset | ⊗ Delete side by side in the same 24px row
+          the single slot occupies — so the column is the same height in every
+          state. No divider between them: `VerticalDivider`'s 16px margins
+          widened the pair to 118px, past the 88px dial it sits under, which
+          widens the column and breaks the row's paging arithmetic (DIAL_SLOT). Reset is DISABLED when there is nothing to reset
+          rather than hidden, so Delete never slides under the pointer. The
+          confirm on Delete is the consumer's: this only reports the intent. */}
+      <Show when={split()} fallback={single()}>
+        {(pair) => (
+          <TightClusterRow>
+            <GlyphSlotGhostButton
+              aria-label={`Reset ${props.entity.label}`}
+              title="Reset"
+              disabled={!changed()}
+              onClick={() => pair().reset()}
+            >
+              <Icon name="refresh" size="sm" />
+            </GlyphSlotGhostButton>
+            <GlyphSlotGhostButton
+              aria-label={`${props.labels.remove} ${props.entity.label}`}
+              title={props.labels.remove}
+              onClick={() => pair().remove()}
+            >
+              {REMOVE_MARK}
+            </GlyphSlotGhostButton>
+          </TightClusterRow>
         )}
       </Show>
     </TightCenteredColumn>

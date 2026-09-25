@@ -13,9 +13,10 @@ function rootOf(container: HTMLElement): HTMLElement {
 describe("CurrencyInput", () => {
   // -- derived width cap ----------------------------------------------
 
-  it("derives the $10B cap from the formatted width: 18 chars → 15.16rem", () => {
-    // "$10,000,000,000.00" = 18 chars; 18*0.62 + 4rem chrome = 15.16rem.
-    expect(currencyWidthRem()).toBe(15.16);
+  it("is SIZED for $1B by default: 17 chars → 14.54rem", () => {
+    // "$1,000,000,000.00" = 17 chars; 17*0.62 + 4rem chrome = 14.54rem.
+    expect(currencyWidthRem()).toBe(14.54);
+    // "$10,000,000,000.00" = 18 chars → 15.16rem when a caller states $10B.
     expect(currencyWidthRem(10_000_000_000)).toBe(15.16);
   });
 
@@ -31,7 +32,7 @@ describe("CurrencyInput", () => {
       <CurrencyInput name="amount" value={v} onChange={() => {}} />
     ));
     const root = rootOf(container);
-    expect(root.style.maxWidth).toBe("15.16rem");
+    expect(root.style.maxWidth).toBe("14.54rem");
   });
 
   it("honours a smaller maxValue in the inline cap", () => {
@@ -81,5 +82,27 @@ describe("CurrencyInput", () => {
     // the wrapper — confirms the Primitive mounted under the cap.
     expect(container.querySelector(".sui-number-input")).not.toBeNull();
     expect(container.querySelector('[name="salary"]')).not.toBeNull();
+  });
+
+  it('always shows a literal "$", whatever the viewer\'s locale', () => {
+    // "narrowSymbol" is what pins it; the locale-driven "symbol" display
+    // renders USD as "US$" in en-GB / en-CA.
+    const fmt = (locale: string) =>
+      new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: "USD",
+        currencyDisplay: "narrowSymbol",
+      }).format(1);
+    for (const locale of ["en-US", "en-GB", "en-CA", "en-AU"]) {
+      expect(fmt(locale)).toMatch(/^\$1/);
+    }
+    const [v] = createSignal<number | undefined>(1234.5);
+    const { container } = render(() => (
+      <CurrencyInput name="amount" value={v} onChange={() => {}} />
+    ));
+    const shown = (
+      container.querySelector(".sui-number-input__input") as HTMLInputElement
+    ).value;
+    expect(shown.startsWith("$")).toBe(true);
   });
 });

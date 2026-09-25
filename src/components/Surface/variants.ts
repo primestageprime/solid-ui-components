@@ -62,6 +62,18 @@ export const DangerSurface = createSurface({
   borderColor: "rgba(var(--sui-danger-rgb), 0.3)",
 });
 
+/** ItemTintSurface — the subtle wash behind ONE ITEM's several dials (Peter,
+ *  2026-09-24: a person holding two positions in a MutationSliders row).
+ *  Borderless and padding-free, so a framed run costs exactly the width of its
+ *  dials and the row's paging arithmetic is unchanged; a faint accent wash,
+ *  distinct from the selection's `active` ring. `MutationSliders`' `itemFrame`. */
+export const ItemTintSurface = createSurface({
+  padding: "none",
+  radius: "sm",
+  bg: "rgba(var(--sui-accent-rgb), 0.06)",
+  style: { border: "none" },
+});
+
 // Card frame variants (responsive sizing via min/max-width)
 export const CompactCard = createSurface({
   padding: "sm",

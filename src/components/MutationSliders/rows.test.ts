@@ -9,11 +9,19 @@
 // ============================================
 import { describe, expect, it } from "vitest";
 import { map } from "../../fn";
-import type { Entity } from "../MarkedSlider/geometry";
+import {
+  DELTA_X,
+  type Entity,
+  PRIOR_LABEL_X,
+  VIEW_WIDTH,
+} from "../MarkedSlider/geometry";
 import {
   ADD_SLOT,
   ARROW_SLOT,
   DIAL_SLOT,
+  GUTTERED_DIAL_SLOT,
+  GUTTER_GAP,
+  ROW_GAP,
   moveTogether,
   pinTo,
   rowLayout,
@@ -302,5 +310,43 @@ describe("moveTogether — a pinned group drags as one", () => {
   it("never moves a terminated entity or an unselected one", () => {
     const moved = moveTogether(PEOPLE, ["a", "gone"], 1_000);
     expect(map((m) => m.id, moved)).toEqual(["a"]);
+  });
+});
+
+describe("the guttered row — the beside readout's 24px gap", () => {
+  it("pages by the guttered slot and charges the chevrons and + the wider gap", () => {
+    const width = GUTTERED_DIAL_SLOT * 4;
+    const rows = [
+      { row: "plain, 4 fit", ...rowLayout(DIAL_SLOT * 4, 4, 0, false) },
+      { row: "guttered, 4 fit", ...rowLayout(width, 4, 0, false, GUTTERED_DIAL_SLOT, GUTTER_GAP) },
+      { row: "guttered, 6 in room for 4", ...rowLayout(width, 6, 0, false, GUTTERED_DIAL_SLOT, GUTTER_GAP) },
+      { row: "guttered + add, 4 in room for 4", ...rowLayout(width, 4, 0, true, GUTTERED_DIAL_SLOT, GUTTER_GAP) },
+    ];
+    console.table(rows);
+    expect(map((r) => [r.end - r.start, r.paging], rows)).toEqual([
+      [4, false],
+      [4, false],
+      // 448 − 2×(32+16) = 352 → 3 slots of 112.
+      [3, true],
+      // 448 − (32+16) = 400 → 3 whole slots, so it pages: 400 − 96 → 2.
+      [2, true],
+    ]);
+  });
+
+  it("the worst two-line figure clears the next dial's prior label", () => {
+    // 11px mono ≈ 6.6px a glyph. The figure starts at DELTA_X; the next
+    // dial's prior label is right-anchored at PRIOR_LABEL_X of ITS canvas.
+    const GLYPH = 6.6;
+    const figure = Math.max("−$100K".length, "(100%)".length) * GLYPH;
+    const prior = "$110K".length * GLYPH;
+    const intoGapRight = DELTA_X + figure - VIEW_WIDTH;
+    const intoGapLeft = prior - PRIOR_LABEL_X;
+    const clear = GUTTER_GAP - intoGapRight - intoGapLeft;
+    console.table([
+      { figure, prior, intoGapRight, intoGapLeft, gap: GUTTER_GAP, clear },
+      { figure, prior, intoGapRight, intoGapLeft, gap: ROW_GAP, clear: ROW_GAP - intoGapRight - intoGapLeft },
+    ]);
+    expect(clear).toBeGreaterThan(0);
+    expect(ROW_GAP - intoGapRight - intoGapLeft).toBeLessThan(0);
   });
 });

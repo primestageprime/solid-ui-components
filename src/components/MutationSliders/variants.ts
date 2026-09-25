@@ -11,6 +11,8 @@
 // than SUI guessing which currency or which verb.
 
 import type { Component } from "solid-js";
+import { formatCompactCurrency } from "../../internal/format/number";
+import { ItemTintSurface } from "../Surface";
 import {
   createMutationSliders,
   type MutationSlidersDataProps,
@@ -39,4 +41,36 @@ import {
 export const NumberMutationSliders: Component<MutationSlidersDataProps> =
   createMutationSliders({
     format: (value: number) => value.toLocaleString(),
+  });
+
+/**
+ * CompactCurrencyMutationSliders — a row of money in compact dollars (Peter's
+ * payroll board, 2026-09-24): `$125K` under the dial, the old amount beside
+ * the prior arrowhead, and the difference as `+$5K (4%)`. The amount is
+ * editable in place, rounded to the thousand (`precision: -3`), and an item's
+ * several dials sit on `ItemTintSurface`. Selected dials are
+ * LINKED — a hover link button toggles them, and they move as one level.
+ *
+ * Locked: `format` is `formatCompactCurrency` — the "$" is HARDCODED, Peter's
+ * call, i18n comes later — `readout` is `"beside"`, and `snap` is whole
+ * thousands, so a drag lands on an amount the compact figure can say exactly
+ * (Peter, 2026-09-16: "have the amount snap to whole $k numbers"). The labels
+ * stay neutral; a consumer with its own verbs curries its own row.
+ *
+ * @example
+ *   <CompactCurrencyMutationSliders
+ *     entities={rows()}
+ *     onChange={setPay}
+ *     selected={links()}
+ *     onSelectionChange={setLinks}
+ *   />
+ */
+export const CompactCurrencyMutationSliders: Component<MutationSlidersDataProps> =
+  createMutationSliders({
+    format: formatCompactCurrency,
+    readout: "beside",
+    snap: 1_000,
+    grouping: "link",
+    precision: -3,
+    itemFrame: ItemTintSurface,
   });

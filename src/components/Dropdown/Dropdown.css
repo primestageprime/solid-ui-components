@@ -83,6 +83,59 @@
   z-index: 100;
 }
 
+/* A long list scrolls inside the menu instead of running off the page. */
+.sui-dropdown__menu {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* With an `itemAction` the menu is exactly as wide as the dropdown, so a long
+   label ellipsises instead of widening the menu past its trigger. */
+.sui-dropdown__menu--actions {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* A row = the option plus its action, side by side. */
+.sui-dropdown__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sui-dropdown__item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* DropdownFitLabel — every candidate shares one grid cell, invisible, so the
+   cell is the widest one's width, capped so ~30 characters fit (ellipsis past
+   that). The cap is 34ch, not 30: `ch` is one "0", and a proportional face
+   with theme letter-spacing runs wider — measured under HUD (0.55px
+   tracking), a realistic 30-character name needed 229px against 30ch = 214px. */
+.sui-dropdown-fit {
+  display: inline-grid;
+  grid-template-columns: minmax(0, auto);
+  max-width: 34ch;
+  min-width: 0;
+  text-align: left;
+}
+
+.sui-dropdown-fit > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sui-dropdown-fit__sizer {
+  visibility: hidden;
+}
+
 /* Menu items */
 .sui-dropdown__item {
   display: flex;
@@ -197,4 +250,12 @@
 
 .sui-dropdown__footer {
   border-top: 1px solid var(--sui-border);
+}
+
+/* An option inside an `itemAction` row takes the room its action leaves.
+   Last in the file: it is more specific than every `.sui-dropdown__item`
+   rule above, which must not follow it. */
+.sui-dropdown__row > .sui-dropdown__item {
+  flex: 1;
+  min-width: 0;
 }

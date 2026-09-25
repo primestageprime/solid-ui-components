@@ -48,6 +48,7 @@ import { Slider as KobalteSlider } from "@kobalte/core/slider";
 import {
   type Component,
   type JSX,
+  Index,
   Show,
   mergeProps,
   onCleanup,
@@ -58,6 +59,7 @@ import {
   BAND_HALF,
   CHANGE_HALF,
   DELTA_X,
+  PRIOR_LABEL_X,
   type DialGeometry,
   type Domain,
   TRACK_X,
@@ -96,6 +98,13 @@ const PAGE_MULTIPLE = 10;
  */
 const NBSP = " ";
 
+/** The line pitch of a multi-line delta label, in em. */
+const LINE_EM = 1.2;
+
+/** A delta label's lines — one for every label that has no newline. */
+const deltaLines = (label: string | null): readonly string[] =>
+  label === null ? [] : label.split("\n");
+
 /**
  * One slider's painted marks, drawn back to front: the scale, the allowed
  * range, the coloured change, then the two arrowheads on top of all of it.
@@ -108,6 +117,8 @@ const Marks: Component<{
   dial: DialGeometry;
   /** The signed delta, already formatted, or `null` when there is none. */
   deltaLabel: string | null;
+  /** The prior value, already formatted, beside its arrow — or `null`. */
+  priorLabel: string | null;
   /** The drawn height in px — the viewBox is 1:1 with it. */
   height: number;
 }> = (props) => (
@@ -174,8 +185,44 @@ const Marks: Component<{
       x={DELTA_X}
       y={props.dial.deltaY ?? 0}
     >
-      {props.deltaLabel ?? NBSP}
+      {/* A label with a newline is drawn as LINES, centred as a block on the
+          change line's midpoint — "−$100K" over "(100%)" is half the width
+          of the one-line figure, which is what lets it sit right of the bar
+          without reaching the next slider (Peter, 2026-09-24). A one-line
+          label is the plain text node it always was. */}
+      <Show
+        when={deltaLines(props.deltaLabel).length > 1}
+        fallback={props.deltaLabel ?? NBSP}
+      >
+        <Index each={deltaLines(props.deltaLabel)}>
+          {(line, index) => (
+            <tspan
+              x={DELTA_X}
+              dy={
+                index === 0
+                  ? `${-(deltaLines(props.deltaLabel).length - 1) * LINE_EM / 2}em`
+                  : `${LINE_EM}em`
+              }
+            >
+              {line()}
+            </tspan>
+          )}
+        </Index>
+      </Show>
     </text>
+    {/* The prior figure, level with the prior arrowhead and left of it. OPT-IN
+        and therefore conditional, unlike the delta: a slider that never asks
+        for it keeps exactly the nodes it always had, and one that does asks
+        for it on a surface where nothing sits below it to shift. */}
+    <Show when={props.priorLabel !== null && props.dial.oldY !== null}>
+      <text
+        class="sui-marked-slider__prior-label"
+        x={PRIOR_LABEL_X}
+        y={props.dial.oldY ?? 0}
+      >
+        {props.priorLabel}
+      </text>
+    </Show>
   </svg>
 );
 
@@ -202,6 +249,13 @@ export interface MarkedSliderProps {
    * business. `null` or omitted draws nothing and holds the space.
    */
   deltaLabel?: string | null;
+  /**
+   * The PRIOR value beside the prior arrowhead, ALREADY FORMATTED — the
+   * mirror of `deltaLabel` on the other side of the track. `null` or omitted
+   * draws nothing. A caller drawing it should drop `deltaLabel`: both labels
+   * run past the canvas into the gap between neighbouring sliders.
+   */
+  priorLabel?: string | null;
   /** The thumb's accessible name. */
   label: string;
   /**
@@ -382,6 +436,7 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
       <Marks
         dial={dial()}
         deltaLabel={props.deltaLabel ?? null}
+        priorLabel={props.priorLabel ?? null}
         height={height()}
       />
       <KobalteSlider.Track class="sui-marked-slider__track">

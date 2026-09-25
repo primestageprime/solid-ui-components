@@ -14,7 +14,7 @@
 // default.
 // ============================================
 import { render } from "@solidjs/testing-library";
-import { createSignal } from "solid-js";
+import { type JSX, createSignal } from "solid-js";
 import { describe, expect, it } from "vitest";
 import { RateGauge, createRateGauge } from "./RateGauge";
 import { RateDial } from "./variants";
@@ -502,5 +502,94 @@ describe("RateDial", () => {
         (node) => node.textContent,
       ),
     ).toEqual(["Scenario A23,000", "+18,000", "Reference5,000"]);
+  });
+});
+
+describe("callouts — the corners gauge", () => {
+  const perMonth = (value: number): string =>
+    `$${Math.abs(Math.round(value)).toLocaleString("en-US")}/mo`;
+  const signed = (delta: number): string => `${delta < 0 ? "-" : "+"}${perMonth(delta)}`;
+  const wording = { baselineLabel: "Baseline", formatAgainst: perMonth, formatDelta: signed };
+  const LeaderGauge = createRateGauge(wording);
+  const CornerGauge = createRateGauge({ ...wording, callouts: "corners" });
+  const renderIn = (width: number, height: number, gauge: () => JSX.Element) => {
+    const restore = installRects((el) =>
+      el.classList.contains("sui-rate-gauge")
+        ? rectOf({ left: 0, top: 0, width, height })
+        : null,
+    );
+    try {
+      return render(gauge).container;
+    } finally {
+      restore();
+    }
+  };
+  const texts = (container: HTMLElement): string[] =>
+    Array.from(container.querySelectorAll("text, foreignObject")).map(
+      (el) => el.textContent ?? "",
+    );
+  const reading = { domain: [-200000, 200000] as const, baseline: 75000, value: 125000 };
+
+  it("draws corner blocks with no leaders, value block on top", () => {
+    const container = renderIn(260, 430, () => <CornerGauge {...reading} label="Scenario" />);
+    expect(container.querySelectorAll(".sui-rate-gauge__leader")).toHaveLength(0);
+    expect(texts(container)).toEqual([
+      "Scenario",
+      "$125,000/mo",
+      "+$50,000/mo (67%)",
+      "Baseline",
+      "$75,000/mo",
+    ]);
+    const anchors = Array.from(container.querySelectorAll("text")).map((t) =>
+      t.getAttribute("text-anchor"),
+    );
+    expect(new Set(anchors)).toEqual(new Set(["end"]));
+    expect(
+      container.querySelector(".sui-rate-gauge__row--delta .sui-rate-gauge__label--delta"),
+    ).not.toBeNull();
+  });
+
+  it("draws corners even in a wide box, and leaders even in a narrow one — it never picks", () => {
+    const wide = renderIn(900, 300, () => <CornerGauge {...reading} label="Scenario" />);
+    expect(wide.querySelectorAll(".sui-rate-gauge__leader")).toHaveLength(0);
+    const narrow = renderIn(200, 500, () => <LeaderGauge {...reading} label="Scenario" />);
+    expect(narrow.querySelectorAll(".sui-rate-gauge__leader").length).toBeGreaterThan(0);
+  });
+
+  it("takes the consumer's corner delta wording whole", () => {
+    const Worded = createRateGauge({
+      ...wording,
+      callouts: "corners",
+      formatCornerDelta: (delta, baseline) => `${signed(delta)} vs ${perMonth(baseline)}`,
+    });
+    const container = renderIn(260, 430, () => <Worded {...reading} label="Scenario" />);
+    expect(texts(container)).toContain("+$50,000/mo vs $75,000/mo");
+  });
+
+  it("renders the SAME markup under the default as under explicit leaders", () => {
+    const Explicit = createRateGauge({ ...wording, callouts: "leaders" });
+    const a = renderIn(260, 430, () => <LeaderGauge {...reading} label="Scenario" />);
+    const b = renderIn(260, 430, () => <Explicit {...reading} label="Scenario" />);
+    expect(a.innerHTML).toBe(b.innerHTML);
+  });
+
+  it("keeps ONE dial radius as the value sweeps the whole scale", () => {
+    const ringOf = (value: number) =>
+      Array.from(
+        renderIn(240, 395, () => <CornerGauge {...reading} value={value} label="Scenario" />)
+          .querySelectorAll(".sui-rate-gauge__band"),
+      )
+        .map((band) => band.getAttribute("d"))
+        .join("|");
+    const rings = new Set(
+      [-200000, -100000, 0, 74999, 75000, 75001, 125000, 200000].map(ringOf),
+    );
+    expect(rings.size).toBe(1);
+  });
+
+  it("draws corners unmeasured too", () => {
+    const container = render(() => <CornerGauge {...reading} label="Scenario" />).container;
+    expect(container.querySelectorAll(".sui-rate-gauge__leader")).toHaveLength(0);
+    expect(texts(container)).toHaveLength(5);
   });
 });

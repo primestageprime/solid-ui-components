@@ -76,6 +76,9 @@ import { TextShowcase } from "./showcases/text";
 import { ThemedNumberInputShowcase } from "./showcases/themed-number-input";
 import { CurrencyInputShowcase } from "./showcases/currency-input";
 import { IntervalInputShowcase } from "./showcases/interval-input";
+import { DirtyComboBoxShowcase } from "./showcases/dirty-combo-box";
+import { SlideRevealShowcase } from "./showcases/slide-reveal";
+import { ReservedWidthShowcase } from "./showcases/reserved-width";
 import { TruthIndicatorShowcase } from "./showcases/truth-indicator";
 import { QuickFilterAtomShowcase } from "./showcases/quickfilter-atom";
 import { AppShellShowcase } from "./showcases/app-shell";
@@ -104,6 +107,7 @@ import { RecentStarredShowcase } from "./showcases/recent-starred";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
 import { ChartHeaderShowcase } from "./showcases/chart-header";
+import { ChartFrameShowcase } from "./showcases/chart-frame";
 import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
@@ -555,6 +559,24 @@ const items: Item[] = [
     tags: ["depth:2", "form"],
   },
   {
+    id: "dirty-combo-box",
+    label: "DirtyComboBox",
+    component: DirtyComboBoxShowcase,
+    tags: ["depth:2", "form"],
+  },
+  {
+    id: "slide-reveal",
+    label: "SlideReveal",
+    component: SlideRevealShowcase,
+    tags: ["depth:1", "layout"],
+  },
+  {
+    id: "reserved-width",
+    label: "ReservedWidth",
+    component: ReservedWidthShowcase,
+    tags: ["depth:1", "layout"],
+  },
+  {
     id: "app-shell",
     label: "AppShell",
     component: AppShellShowcase,
@@ -625,6 +647,12 @@ const items: Item[] = [
     label: "ChartHeader",
     component: ChartHeaderShowcase,
     tags: ["depth:2", "chart", "indicator"],
+  },
+  {
+    id: "chart-frame",
+    label: "ChartFrame",
+    component: ChartFrameShowcase,
+    tags: ["depth:2", "chart", "container"],
   },
   {
     id: "sparkline",

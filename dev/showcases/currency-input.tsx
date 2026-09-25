@@ -19,14 +19,14 @@ export const CurrencyInputShowcase: Component = () => {
         A money-amount field — `ThemedNumberInput`'s stepper + keyboard
         semantics, with USD currency masking and a FIXED width capped to the
         widest expected value so it never stretches to fill its column. The cap
-        is DERIVED from the formatted width of `maxValue` (default $10B):
-        <code> "$10,000,000,000.00"</code> is 18 chars →{" "}
-        <code>{currencyWidthRem()}rem</code> (18×0.62rem + 4rem stepper chrome).
+        is DERIVED from the formatted width of `maxValue` (sized for $1B by default):
+        <code> "$1,000,000,000.00"</code> is 17 chars →{" "}
+        <code>{currencyWidthRem()}rem</code> (17×0.62rem + 4rem stepper chrome).
         Tabular figures keep the digits from reflowing as you type.
       </p>
 
       <div class="example-group">
-        <h3>Default ($10B cap)</h3>
+        <h3>Default ($1B width)</h3>
         <div class="text-meta demo-caption-gap">
           Placed in a wide container — the field caps at {currencyWidthRem()}rem
           instead of stretching.

@@ -98,6 +98,14 @@ export interface Entity {
    * a caller who had not finished thinking, not a case worth supporting.
    */
   readonly range: Domain;
+  /**
+   * Which ITEM this dial belongs to, when one item carries several dials — a
+   * person holding two positions (Peter, 2026-09-24). CONSECUTIVE entities
+   * sharing a key are drawn as one group and never paged apart
+   * (MutationSliders/items.ts). Optional, and ignored by everything that draws
+   * a single dial; omitted everywhere, a row is exactly what it always was.
+   */
+  readonly item?: string;
 }
 
 /** A rectangle on the track, in canvas units. */
@@ -240,6 +248,15 @@ export const ARROW_HALF = 5;
  * base. Everything right of here on the canvas is the label's room.
  */
 export const DELTA_X = TRACK_X + ARROW_GAP + ARROW_LENGTH + 5;
+
+/**
+ * Where the PRIOR label ENDS — the mirror of `DELTA_X`, just clear of the
+ * prior arrowhead's base. The label is right-anchored here and runs LEFT past
+ * the canvas edge (the overlay is `overflow: visible`), into the margin the
+ * previous column's right half leaves. A row drawing it drops the delta label
+ * beside the change line, so the two never meet across the gap.
+ */
+export const PRIOR_LABEL_X = TRACK_X - ARROW_GAP - ARROW_LENGTH - 5;
 
 /** A REAL minus sign (U+2212), not a hyphen — this is a number, not a dash. */
 export const MINUS = "\u2212";

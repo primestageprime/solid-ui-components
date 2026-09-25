@@ -143,6 +143,13 @@ export const ClusterRow: Component<RowDataProps> = createRow({
   align: "center",
   gap: "sm",
 });
+// LooseClusterRow — a centred cluster at the LOOSE (lg, 16px) gap: for an
+// action that must sit out of fat-finger reach of its neighbour (DirtyComboBox
+// keeps its reset this far from its save).
+export const LooseClusterRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "lg",
+});
 // IconClusterRow — a row of icon-only action buttons spaced so adjacent
 // GLYPHS sit ~one icon-width apart (ruled 2026-07-17): the sm gap plus each
 // IconOnlyButton's internal padding sums to ≈1em of visual separation.
@@ -822,6 +829,20 @@ export const FillWrapRow: Component<RowDataProps> = createRow({
  *  the row was taking 363px of content before this existed. */
 export const FillStretchRow: Component<RowDataProps> = createRow({
   gap: "sm",
+  style: { height: "100%", "min-height": "0" },
+});
+
+/** GutteredFillStretchRow — a `FillStretchRow` with an XL (24px) gap instead
+ *  of `sm` (8px): the same fill chain, with a GUTTER between instruments that
+ *  their own labels may run into.
+ *
+ *  For `MutationSliders` in its `"beside"` readout (Peter, 2026-09-24): the
+ *  change figure sits right of each bar on two lines ("−$100K" over "(100%)",
+ *  ~40px) and runs past the dial's 88px canvas, while the next dial's prior
+ *  label runs left into the same gap. 8px lets the two meet; 24px keeps them
+ *  apart. The row's paging arithmetic uses the matching slot width. */
+export const GutteredFillStretchRow: Component<RowDataProps> = createRow({
+  gap: "xl",
   style: { height: "100%", "min-height": "0" },
 });
 

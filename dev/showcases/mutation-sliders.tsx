@@ -13,8 +13,9 @@
  * adding and pinning all do something.
  */
 import { type Component, createSignal } from "solid-js";
-import { map } from "../../src/fn";
+import { find, map } from "../../src/fn";
 import {
+  CompactCurrencyMutationSliders,
   NumberMutationSliders,
   createMutationSliders,
   type MutationEntity,
@@ -94,6 +95,16 @@ const BudgetMutationSliders = createMutationSliders({
   snap: 5,
 });
 
+/** A pay review in dollars, for the compact-currency row. */
+const PAY: readonly MutationEntity[] = [
+  { id: "p1", label: "Ana", old: 80_000, value: 110_000, range: [70_000, 130_000] },
+  { id: "p2", label: "Bo", old: 80_000, value: 95_000, range: [70_000, 130_000] },
+  { id: "p3", label: "Cy", old: 95_000, value: 110_000, range: [70_000, 115_000], item: "cy" },
+  // Cy holds a second, part-time position: one ITEM, two dials, on the tint.
+  { id: "p3-eve", label: "Evening", old: 45_000, value: 50_000, range: [40_000, 60_000], item: "cy" },
+  { id: "p4", label: "Di", old: null, value: 80_000, range: [70_000, 130_000] },
+];
+
 export const MutationSlidersShowcase: Component = () => {
   const [rows, setRows] = createSignal<readonly MutationEntity[]>(SIX);
   const [added, setAdded] = createSignal(0);
@@ -101,6 +112,8 @@ export const MutationSlidersShowcase: Component = () => {
     createSignal<readonly MutationEntity[]>(THREE);
   const [tall, setTall] = createSignal<readonly MutationEntity[]>(THREE);
   const [budget, setBudget] = createSignal<readonly MutationEntity[]>(SIX);
+  const [pay, setPay] = createSignal<readonly MutationEntity[]>(PAY);
+  const [linked, setLinked] = createSignal<readonly string[]>([]);
 
   const setValue = (id: string, value: number): void => {
     setRows((current) => withValue(current, id, value));
@@ -199,6 +212,39 @@ export const MutationSlidersShowcase: Component = () => {
             />
           </FillCardSurface>
         </div>
+      </div>
+
+      <div class="example-group">
+        <h3>Compact dollars, old beside the arrow, linked groups (hover a dial), and Cy's two positions as one item</h3>
+        <CardSurface>
+          <CompactCurrencyMutationSliders
+            entities={pay()}
+            onChange={(id, value) =>
+              setPay((current) => withValue(current, id, value))
+            }
+            onRemove={(id) => setPay((current) => withValue(current, id, null))}
+            onRestore={(id) =>
+              setPay((current) =>
+                withValue(
+                  current,
+                  id,
+                  find((e: MutationEntity) => e.id === id, PAY)?.value ?? null,
+                ),
+              )
+            }
+            onReset={(id) =>
+              setPay((current) =>
+                withValue(
+                  current,
+                  id,
+                  find((e: MutationEntity) => e.id === id, PAY)?.old ?? null,
+                ),
+              )
+            }
+            selected={linked()}
+            onSelectionChange={setLinked}
+          />
+        </CardSurface>
       </div>
 
       <div class="example-group">

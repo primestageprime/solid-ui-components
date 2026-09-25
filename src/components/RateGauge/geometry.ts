@@ -24,7 +24,7 @@
 //     "zero" line that is not at zero.
 // ============================================
 import { clamp } from "../../internal/math/clamp";
-import { filter, find, join, map, sortBy, sum } from "../../fn";
+import { filter, find, flatMap, join, map, sortBy, sum } from "../../fn";
 
 /** A value domain, mapped linearly onto [−90°, +90°]. */
 export type Domain = readonly [number, number];
@@ -386,7 +386,20 @@ export const metricsFor = (
   // whatever the box actually leaves once the dial has taken its share.
   const wanted = wantedColumnWidth(labels);
   const sizing = box === undefined ? labelColumnWidth(labels) : wanted;
-  const ringOuter = ringOuterFor(box, sizing);
+  return metricsWithRing(ringOuterFor(box, sizing), box, wanted, sizing);
+};
+
+/**
+ * Every length, for a dial whose outer radius is already decided. The leader
+ * layout decides it in `metricsFor`; the corner layout decides it in
+ * `cornerRingFor` and draws the same dial with it.
+ */
+const metricsWithRing = (
+  ringOuter: number,
+  box: Box | undefined,
+  wanted: number,
+  sizing: number,
+): Metrics => {
   const brace = ringOuter * RATIO.brace;
   const outerExtent = extentOf(ringOuter);
   const center = {
@@ -594,6 +607,11 @@ export const CALLOUT_PITCH =
  * it is a row pushed off the anchor it names.
  */
 const CALLOUT_MARGIN = 8;
+
+/** How far a row's centre must stay from the box's edge: half its block of
+ *  lines, and never less than the margin a one-line row always had. */
+const edgeClearance = (lines: number): number =>
+  Math.max(CALLOUT_MARGIN, (lines * LABEL_LINE_HEIGHT) / 2);
 
 const DEGREES_PER_HALF_TURN = 180;
 const QUARTER_TURN = 90;
@@ -1022,6 +1040,19 @@ export interface GaugeInput {
    * this existed.
    */
   readonly box?: Box;
+  /**
+   * Which callout layout to draw. `leaders` (the default) is the leader
+   * column, exactly as it always was; `corners` sets the words in the box's
+   * right-hand corners with no leaders. The gauge never picks — a layout
+   * does, with `calloutModeFor`.
+   */
+  readonly callouts?: CalloutMode;
+  /**
+   * The lines each corner block will carry, for sizing the corner layout —
+   * the same role `labels` plays for the leader column. Only read under
+   * `callouts: "corners"`.
+   */
+  readonly cornerLabels?: CornerLabels;
 }
 
 /** Everything the component paints. Nothing is decided after this. */
@@ -1056,6 +1087,11 @@ export interface GaugeGeometry {
   readonly viewBox: string;
   /** How much room a label has before it must truncate. */
   readonly labelWidth: number;
+  /** Which callout layout was drawn — the input's `callouts`, echoed. */
+  readonly calloutMode: CalloutMode;
+  /** The corner blocks, placed — only in `corners` mode, where `callouts`
+   *  is empty. */
+  readonly corners: readonly CornerBlock[] | undefined;
 }
 
 /**
@@ -1185,6 +1221,7 @@ interface Unplaced {
  */
 const placeRows = (
   naturals: readonly number[],
+  lineCounts: readonly number[],
   metrics: Metrics,
 ): readonly number[] => {
   if (naturals.length === 0) return [];
@@ -1195,40 +1232,162 @@ const placeRows = (
     pushed.push(floor);
   }
   const displacement = sum(map((y: number, index: number) => y - naturals[index], pushed));
-  let shift = -displacement / pushed.length;
-  const top = pushed[0] + shift;
-  const bottom = pushed[pushed.length - 1] + shift;
-  if (top < CALLOUT_MARGIN) shift += CALLOUT_MARGIN - top;
-  else if (bottom > metrics.viewHeight - CALLOUT_MARGIN) {
-    shift -= bottom - (metrics.viewHeight - CALLOUT_MARGIN);
+  const shift = -displacement / pushed.length;
+  // THE CLAMP holds every row's TEXT inside the box, row by row (fixed
+  // 2026-09-24). It used to be one rigid shift of the whole block, clamping
+  // only row CENTRES by a margin sized for one line: a two-line edge row's
+  // first line sat 5px above a height-bound box, and a block spanning pole to
+  // pole was shifted down off one edge to rescue the other. Now each row is
+  // held half its own block clear of both edges, and the pitch is restored
+  // downward then upward — the rows keep their order, so the leaders bend
+  // rather than cross. Only when the box is too short for the stack at all
+  // does the top row win and the bottom one overflow.
+  const lo = (index: number): number => edgeClearance(lineCounts[index]);
+  const hi = (index: number): number => metrics.viewHeight - edgeClearance(lineCounts[index]);
+  const rows = [
+    ...map(
+      (y: number, index: number) => Math.min(Math.max(y + shift, lo(index)), hi(index)),
+      pushed,
+    ),
+  ];
+  for (let index = 1; index < rows.length; index += 1) {
+    rows[index] = Math.max(rows[index], rows[index - 1] + CALLOUT_PITCH);
   }
-  return map((y: number) => y + shift, pushed);
+  for (let index = rows.length - 1; index >= 0; index -= 1) {
+    const ceiling = index === rows.length - 1 ? hi(index) : rows[index + 1] - CALLOUT_PITCH;
+    rows[index] = Math.min(rows[index], ceiling);
+  }
+  if (rows[0] < lo(0)) {
+    rows[0] = lo(0);
+    for (let index = 1; index < rows.length; index += 1) {
+      rows[index] = Math.max(rows[index], rows[index - 1] + CALLOUT_PITCH);
+    }
+  }
+  return rows;
+};
+
+/** The least distance between two parallel leader segments, and so between
+ *  two vertical channels. */
+export const CHANNEL_GAP = 4;
+
+/** The shortest radial stub a leader may be cut back to. */
+const MIN_STUB = 4;
+
+/**
+ * Where each leader leaves its radial stub — its EXIT — and so the height its
+ * horizontal starts at.
+ *
+ * Every stub starts out reaching the common turn circle. Near a pole the turn
+ * points bunch within a few px vertically, and three horizontals leaving them
+ * would run on top of each other. So consecutive exits (in row order) are
+ * held `CHANNEL_GAP` apart by sliding each one ALONG ITS OWN RAY — a shorter
+ * or longer stub, never a bend — between `MIN_STUB` past its anchor and the
+ * turn circle. A stub whose row sits at the exit's own height is left alone.
+ */
+const leaderExits = (
+  anchors: readonly { readonly radius: number; readonly angle: number }[],
+  turns: readonly Point[],
+  metrics: Metrics,
+): readonly Point[] => {
+  const heightAt = (index: number, radius: number): number =>
+    pointAt(metrics.center, radius, anchors[index].angle).y;
+  const range = map((anchor: { readonly radius: number }, index: number) => {
+    const a = heightAt(index, Math.min(metrics.turn, anchor.radius + MIN_STUB));
+    const b = turns[index].y;
+    return [Math.min(a, b), Math.max(a, b)] as const;
+  }, anchors);
+  const ys = [...map((turn: Point) => turn.y, turns)];
+  for (let index = 1; index < ys.length; index += 1) {
+    ys[index] = Math.min(Math.max(ys[index], ys[index - 1] + CHANNEL_GAP), range[index][1]);
+  }
+  for (let index = ys.length - 2; index >= 0; index -= 1) {
+    ys[index] = Math.max(Math.min(ys[index], ys[index + 1] - CHANNEL_GAP), range[index][0]);
+  }
+  return map((y: number, index: number) => {
+    const angle = anchors[index].angle;
+    const sin = Math.sin(radians(angle));
+    // A horizontal ray cannot change height: its exit stays on the circle.
+    if (Math.abs(sin) < 1e-6) return turns[index];
+    const radius = (metrics.center.cy - y) / sin;
+    return { x: metrics.center.cx + radius * Math.cos(radians(angle)), y };
+  }, ys);
 };
 
 /**
- * Build one callout's leader: radial stub to the turn circle, horizontal to
- * the gutter, a dogleg to the row's height, then the run to the label column.
+ * THE VERTICAL CHANNEL each leader climbs or drops in (Peter, 2026-09-24:
+ * "leader lines must never overlap or cross"). Leaders are ORTHOGONAL: a
+ * radial stub to the turn circle, then (if the row moved) a vertical run to
+ * the row's height, then the horizontal run to the label column — stepped,
+ * nested elbows.
  *
- * The dogleg exists only because the spacing pass moved the row off the height
- * its anchor asked for; it is the only segment that is neither radial nor
- * horizontal.
+ * Why they cannot cross, given rows that keep the turn points' top-to-bottom
+ * order (`placeRows`):
+ *   • a RISING leader's vertical spans [row, turn] above its own turn, a
+ *     FALLING one's spans [turn, row] below it, so a riser and a faller never
+ *     share a height band — neither's horizontals can meet the other's
+ *     vertical;
+ *   • among risers, the higher row takes the channel further LEFT, so each
+ *     riser's final run passes only channels that start below it; among
+ *     fallers, mirrored, the lower row takes the channel further left;
+ *   • consecutive channels in one family are at least `CHANNEL_GAP` apart, so
+ *     no two verticals run on top of each other.
+ *
+ * A channel starts at the turn point's own x when moving AWAY from the pivot's
+ * height (a vertical from there stays outside the turn circle). A leader
+ * moving TOWARD it — a riser from the lower half, a faller from the upper —
+ * would cut back through the dial, so its channel starts one gap past the
+ * circle's rightmost point instead.
+ */
+const leaderChannels = (
+  turns: readonly Point[],
+  rows: readonly number[],
+  metrics: Metrics,
+): readonly number[] => {
+  const natural = (index: number): number => {
+    const turn = turns[index];
+    const rising = rows[index] < turn.y;
+    const towardCentre = rising ? turn.y > metrics.center.cy : turn.y < metrics.center.cy;
+    return towardCentre ? metrics.center.cx + metrics.brace + BRACE_CUSP_DEPTH + CHANNEL_GAP : turn.x;
+  };
+  const channels = map((_: Point, index: number) => natural(index), turns);
+  const spread = (order: readonly number[]): readonly [number, number][] => {
+    const placed: [number, number][] = [];
+    for (const index of order) {
+      const previous = placed.length === 0 ? -Infinity : placed[placed.length - 1][1] + CHANNEL_GAP;
+      placed.push([index, Math.max(channels[index], previous)]);
+    }
+    return placed;
+  };
+  const indices = map((_: Point, index: number) => index, turns);
+  const risers = filter((index: number) => rows[index] < turns[index].y, indices);
+  const fallers = filter((index: number) => rows[index] > turns[index].y, indices);
+  const assigned = new Map<number, number>([
+    ...spread(risers),
+    ...spread([...fallers].reverse()),
+  ]);
+  return map((_: Point, index: number) => assigned.get(index) ?? channels[index], turns);
+};
+
+/**
+ * Build one callout's leader: radial stub to the turn circle; then, only if
+ * the spacing pass moved the row off its turn's height, across to its
+ * channel and up or down it; then the run to the label column. Every segment
+ * past the stub is horizontal or vertical.
  */
 const leaderPoints = (
   anchor: Point,
   turn: Point,
   rowY: number,
+  channelX: number,
   metrics: Metrics,
 ): readonly Point[] => {
-  const gutter = { x: metrics.turnX, y: turn.y };
-  const elbow = { x: metrics.elbowX, y: rowY };
   const runEnd = { x: metrics.labelX, y: rowY };
-  // A turn point already ON the gutter (the 3 o'clock callout) needs no
-  // horizontal approach, and a row that landed at its natural height needs no
-  // dogleg. Emitting either as a zero-length segment would draw a visible
-  // stutter at the joint.
-  const approach = turn.x === metrics.turnX ? [] : [gutter];
-  const dogleg = turn.y === rowY ? [] : [elbow];
-  return [anchor, turn, ...approach, ...dogleg, runEnd];
+  // A row at (or within a pixel of) its exit's height is one straight run:
+  // a sub-pixel channel would draw a visible stutter at the joint, so the
+  // exit takes the row's height instead.
+  if (Math.abs(turn.y - rowY) < 1) return [anchor, { x: turn.x, y: rowY }, runEnd];
+  const across = channelX === turn.x ? [] : [{ x: channelX, y: turn.y }];
+  return [anchor, turn, ...across, { x: channelX, y: rowY }, runEnd];
 };
 
 /**
@@ -1280,7 +1439,13 @@ const placeCallouts = (
   const stubs = map((e: { stub: number }) => e.stub, sorted);
   const naturals = map((e: { naturalY: number }) => e.naturalY, sorted);
   const turns = map((e: { turn: Point }) => e.turn, sorted);
-  const rows = placeRows(naturals, metrics);
+  const rows = placeRows(
+    naturals,
+    map((callout: Unplaced) => linesFor(callout.id), ordered),
+    metrics,
+  );
+  const exitPoints = leaderExits(ordered, turns, metrics);
+  const channels = leaderChannels(exitPoints, rows, metrics);
   const bands = markBands(angles, metrics);
   const anchors = map(
     (callout: Unplaced) => pointAt(metrics.center, callout.radius, callout.angle),
@@ -1288,7 +1453,7 @@ const placeCallouts = (
   );
   return map((callout: Unplaced, index: number) => {
     const anchor = anchors[index];
-    const points = leaderPoints(anchor, turns[index], rows[index], metrics);
+    const points = leaderPoints(anchor, exitPoints[index], rows[index], channels[index], metrics);
     const others = [bands.ring, bands.cap, bands.brace];
     const neighbours = filter((_: Point, i: number) => i !== index, anchors);
     const lines = linesFor(callout.id);
@@ -1323,6 +1488,276 @@ const placeCallouts = (
   }, ordered);
 };
 
+// ── the corner layout ────────────────────────────────────────────────────────
+// Peter, 2026-09-24: when the leader column does not fit beside a dial that
+// fills the height, drop the leaders and put the words in the box's
+// right-hand CORNERS instead, right-aligned, so the dial keeps the height.
+//
+// The gauge NEVER chooses its own layout (Peter, 2026-09-24): a consumer asks
+// for `callouts: "corners"`, and the default `leaders` never reaches this
+// code, so every existing gauge draws exactly what it drew before. Which one a
+// screen shows is the LAYOUT's decision, at one breakpoint — `calloutModeFor`
+// below is that breakpoint, pure, for a layout to call.
+
+/** The two callout layouts a gauge can be asked to draw. */
+export type CalloutMode = "leaders" | "corners";
+
+/** The two blocks a corner layout carries: the current value's (name, where
+ *  it stands, the difference) and the reference needle's (name, where it
+ *  stands). */
+export type CornerId = "value" | "baseline";
+
+export type CornerLabels = Readonly<Record<CornerId, readonly string[]>>;
+
+/**
+ * Which block goes in which corner. Peter chose the value block on TOP and
+ * the reference below (2026-09-24, the reverse of his first sketch) — one
+ * constant, so flipping it moves nothing else.
+ */
+export const CORNER_BLOCKS: Readonly<{ top: CornerId; bottom: CornerId }> = {
+  top: "value",
+  bottom: "baseline",
+};
+
+/** One placed corner block. Text is right-aligned on `x`. */
+export interface CornerBlock {
+  readonly id: CornerId;
+  readonly corner: "top" | "bottom";
+  /** The right edge every line ends on. */
+  readonly x: number;
+  /** The middle of each line, top to bottom. */
+  readonly lineY: readonly number[];
+  /** The block's estimated width — what an unbounded line may use. */
+  readonly width: number;
+}
+
+/** Without leaders there is no stub: the dial reaches the brace's cusp. */
+const cornerExtentOf = (ringOuter: number): number =>
+  ringOuter * RATIO.brace + BRACE_CUSP_DEPTH;
+
+const blockWidth = (lines: readonly string[]): number =>
+  Math.max(0, ...map((line: string) => line.length * LABEL_CHAR_WIDTH, lines));
+
+/** How far right the dial's outer edge reaches `dy` above or below the pivot. */
+const reachAt = (extent: number, dy: number): number =>
+  dy >= extent ? 0 : Math.sqrt(extent * extent - dy * dy);
+
+/** Does a dial of this radius leave the box's corners clear for these blocks? */
+const cornersClear = (
+  box: Box,
+  ringOuter: number,
+  labels: CornerLabels,
+): boolean => {
+  const extent = cornerExtentOf(ringOuter);
+  const clearOf = (lines: readonly string[]): boolean =>
+    CANVAS_MARGIN +
+      reachAt(extent, box.height / 2 - CANVAS_MARGIN - lines.length * LABEL_LINE_HEIGHT) +
+      LABEL_GAP <=
+    box.width - CANVAS_MARGIN - blockWidth(lines);
+  return (
+    CANVAS_MARGIN * 2 + extent <= box.width &&
+    clearOf(labels.value) &&
+    clearOf(labels.baseline)
+  );
+};
+
+/** Bisect to a tenth of a pixel for the largest radius `fits` accepts. */
+const largestFitting = (
+  lo: number,
+  hi: number,
+  fits: (radius: number) => boolean,
+): number => {
+  if (hi - lo < 0.1) return lo;
+  const mid = (lo + hi) / 2;
+  return fits(mid) ? largestFitting(mid, hi, fits) : largestFitting(lo, mid, fits);
+};
+
+/**
+ * The corner layout's dial: as tall as the box allows, unless the corner
+ * blocks need some of that — then the largest that leaves them clear, never
+ * below the dial's floor.
+ */
+export const cornerRingFor = (box: Box, labels: CornerLabels): number => {
+  const byHeight = (box.height / 2 - CANVAS_MARGIN - BRACE_CUSP_DEPTH) / RATIO.brace;
+  const fits = (radius: number) => cornersClear(box, radius, labels);
+  if (fits(byHeight)) return Math.max(MIN_RING_OUTER, byHeight);
+  return Math.max(MIN_RING_OUTER, largestFitting(0, byHeight, fits));
+};
+
+/** A box wide enough that width can never bind. */
+const UNBOUNDED_WIDTH = 1_000_000;
+
+/**
+ * The narrowest box at which the LEADER layout's dial is height-bound with
+ * its label column whole: the unconstrained drawing's own width.
+ */
+export const minLeadersWidth = (height: number, labels: readonly string[]): number => {
+  const free = metricsFor({ width: UNBOUNDED_WIDTH, height }, labels);
+  return free.textX + free.labelWidth + CANVAS_MARGIN;
+};
+
+/**
+ * THE BREAKPOINT a layout picks a gauge by: leaders while the box is at least
+ * `minLeadersWidth` wide — the leader column fits beside a dial that fills
+ * the height — corners below that. Not a ratio: the threshold is
+ * `height / 2` plus a constant the words set (the callout column and its
+ * gaps), so a fixed W/H ratio would be right at one height only.
+ */
+export const calloutModeFor = (box: Box, labels: readonly string[]): CalloutMode =>
+  box.width < minLeadersWidth(box.height, labels) ? "corners" : "leaders";
+
+/**
+ * An UNMEASURED corners gauge's canvas: the default dial, cut tight to it and
+ * to the wider corner block beside it — the corner layout's counterpart of
+ * the leader layout's default canvas.
+ */
+const defaultCornerBox = (labels: CornerLabels): Box => ({
+  width:
+    CANVAS_MARGIN * 2 +
+    cornerExtentOf(RING_OUTER) +
+    LABEL_GAP +
+    Math.max(blockWidth(labels.value), blockWidth(labels.baseline)),
+  height: (cornerExtentOf(RING_OUTER) + CANVAS_MARGIN) * 2,
+});
+
+/** Both blocks, placed: the top one hangs from the top margin, the bottom one
+ *  stands on the bottom margin, both right-aligned on the right margin. */
+const placeCorners = (box: Box, labels: CornerLabels): readonly CornerBlock[] => {
+  const x = box.width - CANVAS_MARGIN;
+  const room = box.width - CANVAS_MARGIN * 2;
+  const top = labels[CORNER_BLOCKS.top];
+  const bottom = labels[CORNER_BLOCKS.bottom];
+  const lineAt = (first: number) => (_: unknown, index: number) =>
+    first + index * LABEL_LINE_HEIGHT;
+  return [
+    {
+      id: CORNER_BLOCKS.top,
+      corner: "top",
+      x,
+      lineY: map(lineAt(CANVAS_MARGIN + LABEL_LINE_HEIGHT / 2), [...top]),
+      width: Math.min(room, blockWidth(top)),
+    },
+    {
+      id: CORNER_BLOCKS.bottom,
+      corner: "bottom",
+      x,
+      lineY: map(
+        lineAt(box.height - CANVAS_MARGIN - LABEL_LINE_HEIGHT * (bottom.length - 0.5)),
+        [...bottom],
+      ),
+      width: Math.min(room, blockWidth(bottom)),
+    },
+  ];
+};
+
+/**
+ * One block per corner that is at least as wide, line for line, as every
+ * candidate — the longest string at each line index, and as many lines as
+ * the longest candidate. Sizing the corner layout to this instead of to the
+ * current words is what holds the dial at one radius while the value moves.
+ */
+export const widestCornerLabels = (candidates: readonly CornerLabels[]): CornerLabels => {
+  const widest = (id: CornerId): readonly string[] => {
+    const blocks = map((labels: CornerLabels) => labels[id], candidates);
+    const count = Math.max(0, ...map((block: readonly string[]) => block.length, blocks));
+    const longestAt = (index: number): string =>
+      sortBy(
+        (line: string) => -line.length,
+        map((block: readonly string[]) => block[index] ?? "", blocks),
+      )[0] ?? "";
+    return map((_: unknown, index: number) => longestAt(index), Array.from({ length: count }));
+  };
+  return { value: widest("value"), baseline: widest("baseline") };
+};
+
+const NO_CORNERS: CornerLabels = { value: [], baseline: [] };
+
+// ── the routing check ────────────────────────────────────────────────────────
+// Pure, and the proof of the routing: every leader's polyline against every
+// other's. A CROSSING is two segments properly intersecting; a CLOSE PARALLEL
+// is two parallel segments nearer than `minGap` whose extents overlap — the
+// "running on top of each other" Peter saw. Two radial STUBS are exempt from
+// the second: stubs on needles a degree apart are a degree apart by
+// geometry, and no routing can separate them. They still may not cross.
+
+export interface LeaderConflict {
+  readonly kind: "cross" | "close";
+  readonly a: number;
+  readonly b: number;
+  /** Segment index within each leader; 0 is the radial stub. */
+  readonly segmentA: number;
+  readonly segmentB: number;
+}
+
+const orient = (a: Point, b: Point, c: Point): number =>
+  (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+
+const EPSILON = 1e-9;
+
+const properlyCross = (p1: Point, p2: Point, p3: Point, p4: Point): boolean => {
+  const d1 = orient(p3, p4, p1);
+  const d2 = orient(p3, p4, p2);
+  const d3 = orient(p1, p2, p3);
+  const d4 = orient(p1, p2, p4);
+  const straddles = (m: number, n: number) =>
+    (m > EPSILON && n < -EPSILON) || (m < -EPSILON && n > EPSILON);
+  return straddles(d1, d2) && straddles(d3, d4);
+};
+
+/** Parallel (within ~3°), nearer than `minGap`, and overlapping by > 0.5px. */
+const closeParallel = (a: Point, b: Point, c: Point, d: Point, minGap: number): boolean => {
+  const ux = b.x - a.x;
+  const uy = b.y - a.y;
+  const vx = d.x - c.x;
+  const vy = d.y - c.y;
+  const lu = Math.hypot(ux, uy);
+  const lv = Math.hypot(vx, vy);
+  if (lu < EPSILON || lv < EPSILON) return false;
+  if (Math.abs(ux * vy - uy * vx) / (lu * lv) > 0.05) return false;
+  if (Math.abs(orient(a, b, c)) / lu >= minGap) return false;
+  const along = (p: Point) => ((p.x - a.x) * ux + (p.y - a.y) * uy) / lu;
+  const from = Math.max(0, Math.min(along(c), along(d)));
+  const to = Math.min(lu, Math.max(along(c), along(d)));
+  return to - from > 0.5;
+};
+
+type Segment = readonly [Point, Point];
+
+const segmentsOf = (points: readonly Point[]): readonly Segment[] =>
+  map(
+    (point: Point, index: number) => [points[index], point] as const,
+    filter((_: Point, index: number) => index > 0, points),
+  );
+
+/** Every crossing and every close parallel between two different leaders. */
+export const leaderConflicts = (
+  leaders: readonly (readonly Point[])[],
+  minGap: number = CHANNEL_GAP / 2,
+): readonly LeaderConflict[] => {
+  const found: LeaderConflict[] = [];
+  const segments = map(segmentsOf, leaders);
+  for (let a = 0; a < leaders.length; a += 1) {
+    for (let b = a + 1; b < leaders.length; b += 1) {
+      found.push(
+        ...flatMap(
+          ([p1, p2]: Segment, segmentA: number) =>
+            flatMap(([p3, p4]: Segment, segmentB: number): LeaderConflict[] => {
+              if (properlyCross(p1, p2, p3, p4)) {
+                return [{ kind: "cross", a, b, segmentA, segmentB }];
+              }
+              return !(segmentA === 0 && segmentB === 0) &&
+                closeParallel(p1, p2, p3, p4, minGap)
+                ? [{ kind: "close", a, b, segmentA, segmentB }]
+                : [];
+            }, segments[b]),
+          segments[a],
+        ),
+      );
+    }
+  }
+  return found;
+};
+
 /**
  * The whole dial for one reading. Call this once per render; the component
  * reads fields off it and paints, deciding nothing.
@@ -1333,7 +1768,19 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
   const zero = angleFor(input.domain, 0);
   const baselineAngle = angleFor(input.domain, input.baseline);
   const valueAngle = angleFor(input.domain, input.value);
-  const metrics = metricsFor(input.box, input.labels ?? []);
+  const labels = input.labels ?? [];
+  const calloutMode = input.callouts ?? "leaders";
+  const cornerLabels = input.cornerLabels ?? NO_CORNERS;
+  const cornerBox = input.box ?? defaultCornerBox(cornerLabels);
+  const metrics =
+    calloutMode === "corners"
+      ? metricsWithRing(
+          cornerRingFor(cornerBox, cornerLabels),
+          cornerBox,
+          wantedColumnWidth(labels),
+          wantedColumnWidth(labels),
+        )
+      : metricsFor(input.box, labels);
   const zoneEnd = pointAt(metrics.center, metrics.ringOuter, zero);
   const collapsed = drawn === drawnBaseline;
   const tone = bandAt(input.domain, input.value, input.caution);
@@ -1398,12 +1845,17 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
     viewWidth: metrics.viewWidth,
     viewBox: `0 0 ${metrics.viewWidth} ${metrics.viewHeight}`,
     labelWidth: metrics.labelWidth,
-    callouts: placeCallouts(
-      { zero, baseline: baselineAngle, value: valueAngle },
-      collapsed,
-      !collapsed,
-      brace === "" ? 0 : BRACE_CUSP_DEPTH,
-      metrics,
-    ),
+    callouts:
+      calloutMode === "corners"
+        ? []
+        : placeCallouts(
+            { zero, baseline: baselineAngle, value: valueAngle },
+            collapsed,
+            !collapsed,
+            brace === "" ? 0 : BRACE_CUSP_DEPTH,
+            metrics,
+          ),
+    calloutMode,
+    corners: calloutMode === "corners" ? placeCorners(cornerBox, cornerLabels) : undefined,
   };
 };

@@ -28,9 +28,11 @@
 // headless-observation-first discipline made structural: there is nowhere in
 // this module for a number to be decided.
 //
-// Why it is still Atomic: the only consumer text it PAINTS is a mutation's
-// flag number, which is enumerated and short by construction. Nothing else in
-// the plot carries ink — no series labels, no legend, no colour coding. A
+// Why it is still Atomic: the chart paints its OWN flag numbers (enumerated
+// and short by construction) and the only consumer text it paints is inside
+// its own hover panels — a level's formatted value, and a flag's `details`
+// lines — never in the plot. Nothing else in the plot carries ink — no series
+// labels, no legend, no colour coding. A
 // level is told apart by WHERE IT SITS, and that is deliberate: a per-level
 // colour ramp reads as a ranking, as though one level were a better KIND of
 // thing than another, when the only difference between them is height.
@@ -59,11 +61,12 @@ import {
   onMount,
 } from "solid-js";
 import {
-  AXIS_TICK_LENGTH,
+  DAY_MS,
+  DRAG_THRESHOLD_PX,
   FLAG_RULE_TOP,
+  FLAG_TIP_TOP,
   Y_LABEL_GAP,
   Y_TICK_LENGTH,
-
   type Flag,
   type Level,
   type Mutation,
@@ -72,9 +75,14 @@ import {
   type Hover,
   type TimeDomain,
   type Transfer,
+  clampMutationTime,
+  dragTimeAt,
+  type PickStrategy,
   hoverAt,
+  isoDayOf,
   levelsRailGeometry,
   monthLabelOf,
+  mutationNumbers,
   timeOf,
 } from "./geometry";
 import { placeTooltipX } from "../Chart/tooltipPlacement";
@@ -111,20 +119,45 @@ export interface LevelsTimelineProps {
   /** Provided => the flags become buttons. Omitted => the chart is a readout. */
   onSelectMutation?: (id: string) => void;
   /**
+   * Provided => the flags can be DRAGGED along x (and nudged a day at a time
+   * with the arrow keys) to move their event's date, snapped to the day.
+   * Omitted => they stay put.
+   *
+   * The chart only REPORTS the new moment, once per day crossed; the consumer
+   * moves the event and re-renders, which is what carries the levels, flows
+   * and the flag itself to the new date. A flag can never be dragged past a
+   * neighbour: it clamps to one day after the previous flag and one day
+   * before the next (`clampMutationTime`), so the numbering never changes
+   * under the pointer. A press that travels less than a few px is still a
+   * click, and still selects.
+   */
+  onMoveMutation?: (id: string, at: TimeValue) => void;
+  /**
    * Formatter for a level's value in the hover readout. The chart never
    * invents a format — without this the raw number is shown, which is honest
    * but rarely what a consumer wants.
    */
   formatValue?: (value: number) => string;
   /**
-   * Provided => clicking the plot reports the date under the pointer, snapped
-   * to the nearest month. The chart does nothing else with it: adding a
+   * Provided => clicking the plot reports the date under the pointer, as the
+   * pick strategy (`pickAt`) resolves it — the nearest month when none is
+   * curried in. The chart does nothing else with it: adding a
    * mutation, moving an as-of, or ignoring it is the consumer's business.
    *
    * NOT fired by a flag click — those are `onSelectMutation`, and the flags sit
    * above the plot so the two never compete for the same pixel.
    */
   onPick?: (at: TimeValue) => void;
+  /**
+   * How a click's raw moment becomes the date `onPick` reports — and where the
+   * hover crosshair sits, so the two agree. `pickDay` (geometry.ts) picks the
+   * whole day under the pointer. BEHAVIOURAL CONFIG, so it is curried into a
+   * variant (`createLevelsTimeline({ pickAt })`), not passed per call site.
+   *
+   * Omitted => the nearest MONTH start, which is what every chart did before
+   * strategies existed. @deprecated as a default: pass a pick strategy.
+   */
+  pickAt?: PickStrategy;
 }
 
 const EMPTY_TRANSFERS: readonly Transfer[] = [];
@@ -164,6 +197,7 @@ const describeTransfer = (
   transfer: Transfer,
   levels: readonly Level[],
   mutations: readonly Mutation[],
+  numbers: ReadonlyMap<string, number>,
 ): string => {
   const labelOf = (id: string): string =>
     find((level: Level) => level.id === id, levels)?.label ?? id;
@@ -171,7 +205,8 @@ const describeTransfer = (
     (mutation: Mutation) => timeOf(mutation.at) === timeOf(transfer.at),
     mutations,
   );
-  const when = flag === undefined ? "" : ` at mutation ${flag.label}`;
+  const when =
+    flag === undefined ? "" : ` at mutation ${numbers.get(flag.id) ?? ""}`;
   const what = (): string => {
     if (transfer.from !== undefined && transfer.to !== undefined) {
       return `moved from ${labelOf(transfer.from)} to ${labelOf(transfer.to)}`;
@@ -258,6 +293,9 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   const frame = () => geometry().frame;
 
   const interactive = () => props.onSelectMutation !== undefined;
+  const draggable = () => props.onMoveMutation !== undefined;
+  /** A flag takes focus when there is anything to DO with it. */
+  const focusable = () => interactive() || draggable();
   const isSelected = (flag: Flag): boolean =>
     props.selectedMutationId === flag.id;
   /** Nothing selected = nothing muted; the chart reads as a plain readout. */
@@ -273,7 +311,12 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       ...map(describeLevel, props.levels),
       ...map(
         (transfer: Transfer) =>
-          describeTransfer(transfer, props.levels, props.mutations),
+          describeTransfer(
+            transfer,
+            props.levels,
+            props.mutations,
+            mutationNumbers(props.mutations),
+          ),
         sortBy((transfer: Transfer) => timeOf(transfer.at), transfers()),
       ),
     ]);
@@ -329,6 +372,12 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       `sui-levels-timeline__${block}`,
       isSelected(flag) ? `sui-levels-timeline__${block}--selected` : "",
       isMuted(flag) ? `sui-levels-timeline__${block}--muted` : "",
+      block === "flag" && draggable()
+        ? "sui-levels-timeline__flag--draggable"
+        : "",
+      block === "flag" && draggingId() === flag.id
+        ? "sui-levels-timeline__flag--dragging"
+        : "",
     ]);
 
   /**
@@ -339,11 +388,117 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
    * unambiguous and survives the same reading.
    */
   const flagLabel = (flag: Flag): string =>
-    isSelected(flag)
-      ? `Mutation ${flag.label}, selected`
-      : `Mutation ${flag.label}`;
+    join(", ", [
+      `Mutation ${flag.label}`,
+      ...(flag.title === "" || flag.title === flag.label ? [] : [flag.title]),
+      isoDayOf(flag.at),
+      ...(isSelected(flag) ? ["selected"] : []),
+    ]);
 
   const select = (flag: Flag): void => props.onSelectMutation?.(flag.id);
+
+  // ── the flag tooltip and the drag ─────────────────────────────────────────
+  //
+  // Hovering (or focusing) a flag shows its exact day and the consumer's list
+  // of what changed there, in the SAME panel the plot's hover readout uses —
+  // same box, same type, placed by the same `placeTooltipX`. While a flag is
+  // being dragged the tooltip stays up and follows it, so the reader sees the
+  // date the flag will land on, clamp included.
+  const [hoveredFlagId, setHoveredFlagId] = createSignal<string>();
+  const [draggingId, setDraggingId] = createSignal<string>();
+  const [tipWidth, setTipWidth] = createSignal(PANEL_MIN_WIDTH);
+  let tipPanel: SVGGElement | undefined;
+
+  const flagById = (id: string | undefined): Flag | undefined =>
+    id === undefined
+      ? undefined
+      : find((one: Flag) => one.id === id, geometry().flags);
+  const tipFlag = (): Flag | undefined =>
+    flagById(draggingId() ?? hoveredFlagId());
+
+  /**
+   * One press on a flag. `moved` flips once the pointer has travelled
+   * `DRAG_THRESHOLD_PX`; until then the press is a click in waiting. `grab` is
+   * where on the flag it was taken, so the flag does not jump to centre itself
+   * under the pointer on the first move.
+   */
+  let press:
+    | {
+        readonly id: string;
+        readonly pointerId: number;
+        readonly startX: number;
+        readonly grab: number;
+        moved: boolean;
+      }
+    | undefined;
+  /** Set when a press ended as a drag, so its trailing click does not select. */
+  let swallowClick = false;
+
+  const move = (id: string, time: number): void => {
+    const current = flagById(id);
+    if (current === undefined || current.at === time) return;
+    props.onMoveMutation?.(id, time);
+  };
+
+  const onFlagPointerDown = (event: PointerEvent, flag: Flag): void => {
+    if (!draggable() || event.button !== 0) return;
+    const x = pointerX(event);
+    if (x === undefined) return;
+    (event.currentTarget as Element).setPointerCapture?.(event.pointerId);
+    press = {
+      id: flag.id,
+      pointerId: event.pointerId,
+      startX: x,
+      grab: x - flag.x,
+      moved: false,
+    };
+    swallowClick = false;
+  };
+
+  const onFlagPointerMove = (event: PointerEvent): void => {
+    if (press === undefined || press.pointerId !== event.pointerId) return;
+    const x = pointerX(event);
+    if (x === undefined) return;
+    if (!press.moved) {
+      if (Math.abs(x - press.startX) < DRAG_THRESHOLD_PX) return;
+      press.moved = true;
+      setDraggingId(press.id);
+    }
+    move(
+      press.id,
+      dragTimeAt(
+        props.mutations,
+        press.id,
+        x - press.grab,
+        props.domain,
+        frame(),
+      ),
+    );
+  };
+
+  const onFlagPointerEnd = (event: PointerEvent): void => {
+    if (press === undefined || press.pointerId !== event.pointerId) return;
+    if (press.moved) {
+      // The click a drag's pointerup produces arrives in this same task. Clear
+      // the flag on the NEXT one, so a click the browser sends elsewhere (or
+      // not at all) can never eat a later, genuine click.
+      swallowClick = true;
+      setTimeout(() => {
+        swallowClick = false;
+      }, 0);
+    }
+    (event.currentTarget as Element).releasePointerCapture?.(event.pointerId);
+    press = undefined;
+    setDraggingId(undefined);
+  };
+
+  const onFlagClick = (flag: Flag): void => {
+    if (swallowClick) {
+      swallowClick = false;
+      return;
+    }
+    select(flag);
+  };
 
   // ── hover and pick ─────────────────────────────────────────────────────────
   //
@@ -355,7 +510,19 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   //
   // The SUI `Tooltip` is the wrong shape too: it wraps a trigger ELEMENT, and
   // the trigger here is a moving pointer position inside an SVG.
-  const [hover, setHover] = createSignal<Hover | undefined>();
+  /**
+   * The hovered POINTER x, not the readout itself. The readout is derived
+   * from it and the current data, so a change made at the hovered date (a
+   * click that adds an event there) updates the table under the still pointer
+   * instead of leaving the pre-click counts on screen until it moves.
+   */
+  const [hoverX, setHoverX] = createSignal<number | undefined>();
+  const hover = createMemo((): Hover | undefined => {
+    const x = hoverX();
+    return x === undefined
+      ? undefined
+      : hoverAt(props.levels, props.domain, x, frame(), props.pickAt);
+  });
   const [panelWidth, setPanelWidth] = createSignal(PANEL_MIN_WIDTH);
   let panel: SVGGElement | undefined;
 
@@ -369,14 +536,16 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   const onPlotMove = (event: PointerEvent): void => {
     const x = pointerX(event);
     if (x === undefined) return;
-    setHover(hoverAt(props.levels, props.domain, x, frame()));
+    setHoverX(x);
   };
 
   const onPlotClick = (event: MouseEvent): void => {
     if (props.onPick === undefined) return;
     const x = pointerX(event);
     if (x === undefined) return;
-    props.onPick(hoverAt(props.levels, props.domain, x, frame()).at);
+    props.onPick(
+      hoverAt(props.levels, props.domain, x, frame(), props.pickAt).at,
+    );
   };
 
   /**
@@ -399,9 +568,12 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
    * panel narrower than its content is placed slightly wrong, never drawn
    * wrong.
    */
-  const widthOfTexts = (selector: string): number => {
-    if (panel === undefined) return 0;
-    const nodes = [...panel.querySelectorAll<SVGTextElement>(selector)];
+  const widthOfTexts = (
+    selector: string,
+    root: SVGGElement | undefined = panel,
+  ): number => {
+    if (root === undefined) return 0;
+    const nodes = [...root.querySelectorAll<SVGTextElement>(selector)];
     const widths = map(
       (node: SVGTextElement) => node.getComputedTextLength?.() ?? 0,
       nodes,
@@ -425,6 +597,32 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
     queueMicrotask(measurePanel);
   });
 
+  /** The flag tooltip's width: its widest line, measured the same way. */
+  const measureTip = (): void => {
+    if (tipPanel === undefined) return;
+    const content = Math.max(
+      widthOfTexts(".sui-levels-timeline__panel-date", tipPanel),
+      widthOfTexts(".sui-levels-timeline__panel-cell", tipPanel),
+    );
+    setTipWidth(Math.max(PANEL_MIN_WIDTH, content + PANEL_PADDING * 2));
+  };
+  createEffect(() => {
+    // Re-measure when the tooltip's CONTENT changes: another flag, or the
+    // dragged one's new date.
+    tipFlag()?.details;
+    tipFlag()?.at;
+    queueMicrotask(measureTip);
+  });
+
+  const tipX = (flag: Flag): number =>
+    placeTooltipX({
+      anchorX: flag.x,
+      tipWidth: tipWidth(),
+      offsetX: PANEL_OFFSET,
+      boundsLeft: frame().plotLeft,
+      boundsRight: frame().plotRight,
+    });
+
   const panelX = (at: Hover): number =>
     placeTooltipX({
       anchorX: at.x,
@@ -441,7 +639,29 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
   const panelHeight = (rows: number): number =>
     PANEL_HEADER_HEIGHT + rows * PANEL_ROW_HEIGHT + PANEL_PADDING;
 
+  /**
+   * Keyboard parity for both jobs a flag does: Enter/Space selects, and — when
+   * the flag is draggable — the arrow keys move it a day, under the same
+   * neighbour clamp a drag obeys.
+   */
   const onFlagKeyDown = (event: KeyboardEvent, flag: Flag): void => {
+    if (
+      draggable() &&
+      (event.key === "ArrowLeft" || event.key === "ArrowRight")
+    ) {
+      event.preventDefault();
+      const step = event.key === "ArrowLeft" ? -DAY_MS : DAY_MS;
+      move(
+        flag.id,
+        clampMutationTime(
+          props.mutations,
+          flag.id,
+          flag.at + step,
+          props.domain,
+        ),
+      );
+      return;
+    }
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     select(flag);
@@ -452,6 +672,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       ref={host}
       class="sui-levels-timeline"
       data-selected-mutation={props.selectedMutationId}
+      data-dragging-mutation={draggingId()}
     >
       {/* The <title> is the graphic's NAME and must stay short: a browser
           paints it as a NATIVE tooltip on hover, and the whole announcement
@@ -533,26 +754,32 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             y2={frame().plotBottom}
           />
 
-          {/* The month axis. Built from DateAxis's own calendar (geometry.ts),
-              so the chart and the axis component agree on where a month is. */}
+          {/* The DATED axis (geometry.ts `datedAxisTicks`): a tick at every
+              flag date — longer, so the exact position reads without a label —
+              and at the span's cadence between. Labels are horizontal exact
+              days, painted only where they clear their neighbours; a tick
+              whose label would collide is drawn bare. */}
           <Index each={geometry().ticks}>
             {(tick) => (
-              <g class="sui-levels-timeline__tick">
+              <g
+                class={
+                  tick().event
+                    ? "sui-levels-timeline__tick sui-levels-timeline__tick--event"
+                    : "sui-levels-timeline__tick"
+                }
+              >
                 <line
                   x1={tick().x}
                   x2={tick().x}
                   y1={frame().plotBottom}
-                  y2={frame().plotBottom + AXIS_TICK_LENGTH}
+                  y2={frame().plotBottom + tick().tickLength}
                 />
-                {/* Every boundary gets a tick; in compact chrome only every
-                    third gets a LABEL, because a full month row does not fit
-                    and overlapping text is worse than none. */}
                 <Show when={tick().showLabel}>
                   <text
                     class="sui-levels-timeline__tick-label"
-                    x={tick().x}
-                    y={frame().axisLabelY}
-                    text-anchor="middle"
+                    x={tick().labelX}
+                    y={tick().labelY}
+                    text-anchor={tick().labelAnchor}
                   >
                     {tick().label}
                   </text>
@@ -577,16 +804,29 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           </Index>
 
           {/* The flags' rules, under everything: a rule locates a change, it
-              does not compete with one. */}
+              does not compete with one. A flag whose box was nudged clear of
+              a neighbour gets a LEADER from the box down to its rule, which
+              stays at the event's true x. */}
           <Index each={geometry().flags}>
             {(flag) => (
-              <line
-                class={flagClass(flag(), "rule")}
-                x1={flag().x}
-                x2={flag().x}
-                y1={flag().ruleTop}
-                y2={flag().ruleBottom}
-              />
+              <>
+                <line
+                  class={flagClass(flag(), "rule")}
+                  x1={flag().x}
+                  x2={flag().x}
+                  y1={flag().ruleTop}
+                  y2={flag().ruleBottom}
+                />
+                <Show when={flag().displaced}>
+                  <line
+                    class={flagClass(flag(), "leader")}
+                    x1={flag().textX}
+                    x2={flag().x}
+                    y1={FLAG_RULE_TOP}
+                    y2={flag().ruleTop}
+                  />
+                </Show>
+              </>
             )}
           </Index>
 
@@ -597,7 +837,9 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
               <path
                 class={flowClass(flow())}
                 d={flow().path}
-                fill={isOpen(flow()) ? `url(#${gradientId(flow())})` : undefined}
+                fill={
+                  isOpen(flow()) ? `url(#${gradientId(flow())})` : undefined
+                }
               />
             )}
           </Index>
@@ -630,7 +872,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           width={frame().plotRight - frame().plotLeft}
           height={frame().plotBottom - frame().plotTop}
           onPointerMove={onPlotMove}
-          onPointerLeave={() => setHover(undefined)}
+          onPointerLeave={() => setHoverX(undefined)}
           onClick={onPlotClick}
         />
 
@@ -666,7 +908,9 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                     x={PANEL_PADDING}
                     y={PANEL_PADDING + 7}
                   >
-                    {monthLabelOf(at().at)}
+                    {props.pickAt === undefined
+                      ? monthLabelOf(at().at)
+                      : isoDayOf(at().at)}
                   </text>
                   <For each={at().rows}>
                     {(row, index) => (
@@ -674,14 +918,18 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                         <text
                           class="sui-levels-timeline__panel-cell"
                           x={PANEL_PADDING}
-                          y={PANEL_HEADER_HEIGHT + index() * PANEL_ROW_HEIGHT + 7}
+                          y={
+                            PANEL_HEADER_HEIGHT + index() * PANEL_ROW_HEIGHT + 7
+                          }
                         >
                           {formatValue(row.value)}
                         </text>
                         <text
                           class="sui-levels-timeline__panel-cell sui-levels-timeline__panel-cell--count"
                           x={panelWidth() - PANEL_PADDING}
-                          y={PANEL_HEADER_HEIGHT + index() * PANEL_ROW_HEIGHT + 7}
+                          y={
+                            PANEL_HEADER_HEIGHT + index() * PANEL_ROW_HEIGHT + 7
+                          }
                         >
                           {row.count}
                         </text>
@@ -699,19 +947,30 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             control, and an unreachable one should not exist. */}
         <Index each={geometry().flags}>
           {(flag) => (
-            // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role="button", tabindex and Enter/Space keyboard parity are wired exactly when onSelectMutation is provided (interactive()); the analyzer cannot see through that runtime guard.
+            // biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive — role="button", tabindex and keyboard parity (Enter/Space selects, arrows move a day) are wired exactly when onSelectMutation or onMoveMutation is provided (focusable()); the pointer hover only shows a tooltip whose content is also in the flag's aria-label. The analyzer cannot see through that runtime guard.
             <g
               class={flagClass(flag(), "flag")}
-              role={interactive() ? "button" : undefined}
-              tabindex={interactive() ? 0 : undefined}
-              aria-label={interactive() ? flagLabel(flag()) : undefined}
+              role={focusable() ? "button" : undefined}
+              tabindex={focusable() ? 0 : undefined}
+              aria-label={focusable() ? flagLabel(flag()) : undefined}
               data-selected={isSelected(flag()) ? "true" : undefined}
-              onClick={interactive() ? () => select(flag()) : undefined}
+              data-mutation-id={flag().id}
+              onClick={focusable() ? () => onFlagClick(flag()) : undefined}
               onKeyDown={
-                interactive()
+                focusable()
                   ? (event: KeyboardEvent) => onFlagKeyDown(event, flag())
                   : undefined
               }
+              onPointerEnter={() => setHoveredFlagId(flag().id)}
+              onPointerLeave={() => setHoveredFlagId(undefined)}
+              onFocus={() => setHoveredFlagId(flag().id)}
+              onBlur={() => setHoveredFlagId(undefined)}
+              onPointerDown={(event: PointerEvent) =>
+                onFlagPointerDown(event, flag())
+              }
+              onPointerMove={onFlagPointerMove}
+              onPointerUp={onFlagPointerEnd}
+              onPointerCancel={onFlagPointerEnd}
             >
               <rect
                 class="sui-levels-timeline__flag-box"
@@ -733,25 +992,69 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
             </g>
           )}
         </Index>
+
+        {/* The flag tooltip: the exact day, then what changed there. Last,
+            so it paints over the flags it describes the neighbours of. */}
+        <Show when={tipFlag()}>
+          {(flag) => (
+            <g
+              ref={tipPanel}
+              class="sui-levels-timeline__flag-tip"
+              transform={`translate(${tipX(flag())} ${FLAG_TIP_TOP})`}
+            >
+              <rect
+                class="sui-levels-timeline__panel-box"
+                x={0}
+                y={0}
+                width={tipWidth()}
+                height={panelHeight(flag().details.length)}
+                rx="3"
+              />
+              <text
+                class="sui-levels-timeline__panel-date"
+                x={PANEL_PADDING}
+                y={PANEL_PADDING + 7}
+              >
+                {isoDayOf(flag().at)}
+              </text>
+              <Index each={flag().details}>
+                {(line, index) => (
+                  <text
+                    class="sui-levels-timeline__panel-cell"
+                    x={PANEL_PADDING}
+                    y={PANEL_HEADER_HEIGHT + index * PANEL_ROW_HEIGHT + 7}
+                  >
+                    {line()}
+                  </text>
+                )}
+              </Index>
+            </g>
+          )}
+        </Show>
       </svg>
     </div>
   );
 };
 
 /**
- * The one PRESENTATIONAL prop, and the reason there is a factory at all.
+ * The two CONFIG props, and the reason there is a factory at all.
  *
  * A value's format is the chart's own editorial voice, not the consumer's
  * data: it never varies between two renders of the same chart, so it is
  * exactly the thing to bake once at definition time rather than repeat at
- * every call site. Everything else the chart takes is data or a callback.
+ * every call site. The pick strategy (`pickAt`) is the same kind of thing for
+ * behaviour — what a click on this chart MEANS never varies per render.
+ * Everything else the chart takes is data or a callback.
  *
  * `cadence` is NOT here on purpose. It is derived from the span (`axisTicks`)
  * and no caller has ever wanted to contradict it, so it is not modelled as
  * configurable at all — see `docs/adr/` and STYLE_GUIDE's minimal variant
  * surface.
  */
-export type LevelsTimelineOverrides = Pick<LevelsTimelineProps, "formatValue">;
+export type LevelsTimelineOverrides = Pick<
+  LevelsTimelineProps,
+  "formatValue" | "pickAt"
+>;
 
 /** What a curried variant's call site still supplies: data and callbacks. */
 export type LevelsTimelineDataProps = Omit<

@@ -176,6 +176,9 @@
       "columnar",
       "paint"
     ],
+    "src/components/ThemedNumberInput/ThemedNumberInput.tsx": [
+      "measured"
+    ],
     "src/components/Treemap/Treemap.tsx": [
       "proportion"
     ],

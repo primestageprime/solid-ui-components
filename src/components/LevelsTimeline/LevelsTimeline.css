@@ -53,6 +53,11 @@
   stroke-width: 1;
 }
 
+/* An event's tick: the exact position of a flag's date, labelled or not. */
+.sui-levels-timeline__tick--event line {
+  stroke: var(--sui-text-muted);
+}
+
 .sui-levels-timeline__tick-label {
   fill: var(--sui-text-muted);
   stroke: none;
@@ -65,10 +70,14 @@
    Selection lights its rule in the accent and mutes the others, so the
    reader's eye is pulled to one column. */
 
+/* Muted ink rather than the border colour: a rule in `--sui-border` at the
+   muted opacity below all but vanished (Peter, 2026-09-24 — make the
+   non-selected rules less invisible). */
 .sui-levels-timeline__rule {
-  stroke: var(--sui-border);
+  stroke: var(--sui-text-muted);
   stroke-width: 1;
   stroke-dasharray: 2 3;
+  opacity: 0.75;
 }
 
 /* Selection is the BRIGHTEST thing on the chart, not the accent — the bands
@@ -79,8 +88,23 @@
   stroke-dasharray: none;
 }
 
+/* A nudged flag's leader: from its box to its rule. Solid and fine, so it
+   reads as "this box belongs to that rule" rather than as another rule. */
+.sui-levels-timeline__leader {
+  stroke: var(--sui-text-muted);
+  stroke-width: 1;
+}
+
+.sui-levels-timeline__leader--selected {
+  stroke: var(--sui-text-primary);
+}
+
+.sui-levels-timeline__leader--muted {
+  opacity: 0.5;
+}
+
 .sui-levels-timeline__rule--muted {
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 /* ---- The un-numbered changes ----
@@ -158,7 +182,29 @@
 }
 
 .sui-levels-timeline__flag--muted {
-  opacity: 0.55;
+  opacity: 0.7;
+}
+
+/* A draggable flag says so, and a dragged one holds the grab. `touch-action`
+   stops a touch drag from scrolling the page instead of moving the flag. */
+.sui-levels-timeline__flag--draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.sui-levels-timeline__flag--draggable[role="button"] {
+  cursor: grab;
+}
+
+.sui-levels-timeline__flag--dragging,
+.sui-levels-timeline__flag--dragging[role="button"] {
+  cursor: grabbing;
+}
+
+/* The flag tooltip borrows the hover panel's box and type; it must never
+   take the pointer from the flag under it. */
+.sui-levels-timeline__flag-tip {
+  pointer-events: none;
 }
 
 /* Only an interactive flag advertises itself as one. */

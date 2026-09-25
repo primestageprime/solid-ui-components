@@ -9,7 +9,8 @@
 import { fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
-import { LevelsTimeline } from "./LevelsTimeline";
+import { LevelsTimeline, createLevelsTimeline } from "./LevelsTimeline";
+import { isoDayOf, pickDay } from "./geometry";
 import type { Level, Mutation, TimeDomain, Transfer } from "./geometry";
 import { filter, flatMap, map } from "../../fn";
 
@@ -136,9 +137,9 @@ describe("LevelsTimeline — rails", () => {
     ].filter((el) => el.closest(".sui-levels-timeline__rail-group") === null);
     expect(continuations.length).toBeGreaterThan(0);
     // Same classes as a band, and no gradient fill to tint it.
-    expect(continuations.some((el) => el.getAttribute("class") === bandClass)).toBe(
-      true,
-    );
+    expect(
+      continuations.some((el) => el.getAttribute("class") === bandClass),
+    ).toBe(true);
     for (const one of continuations) {
       expect(one.getAttribute("fill")).toBeNull();
       expect(one.getAttribute("class")).not.toContain("__ribbon");
@@ -464,13 +465,16 @@ describe("LevelsTimeline — fill-height", () => {
     //
     // Guarded below: an empty `ys` would make the loop vacuous and this test
     // would pass while asserting nothing.
-    const ys = flatMap((el: Element) => {
-      const numbers = map(
-        (m: RegExpMatchArray) => Number(m[0]),
-        [...((el.getAttribute("d") ?? "").matchAll(/-?\d+(?:\.\d+)?/g))],
-      );
-      return filter((_n: number, i: number) => i % 2 === 1, numbers);
-    }, [...container.querySelectorAll(".sui-levels-timeline__rail")]);
+    const ys = flatMap(
+      (el: Element) => {
+        const numbers = map(
+          (m: RegExpMatchArray) => Number(m[0]),
+          [...(el.getAttribute("d") ?? "").matchAll(/-?\d+(?:\.\d+)?/g)],
+        );
+        return filter((_n: number, i: number) => i % 2 === 1, numbers);
+      },
+      [...container.querySelectorAll(".sui-levels-timeline__rail")],
+    );
     expect(ys.length).toBeGreaterThan(0);
     // Every coordinate a band paints is inside the viewBox, top and bottom.
     for (const y of ys) {
@@ -480,7 +484,9 @@ describe("LevelsTimeline — fill-height", () => {
     const axisLabel = container.querySelector(
       ".sui-levels-timeline__tick-label",
     );
-    expect(Number(axisLabel?.getAttribute("y"))).toBeLessThanOrEqual(viewHeight);
+    expect(Number(axisLabel?.getAttribute("y"))).toBeLessThanOrEqual(
+      viewHeight,
+    );
   });
 });
 
@@ -641,11 +647,7 @@ describe("LevelsTimeline — compact chrome in a short box", () => {
     let container!: HTMLElement;
     await withObservedBox(box, () => {
       container = render(() => (
-        <LevelsTimeline
-          levels={BOARD}
-          mutations={MUTATIONS}
-          domain={DOMAIN}
-        />
+        <LevelsTimeline levels={BOARD} mutations={MUTATIONS} domain={DOMAIN} />
       )).container;
     });
     return container;
@@ -696,19 +698,31 @@ describe("LevelsTimeline — compact chrome in a short box", () => {
     expect(Number(surface?.getAttribute("width"))).toBe(w - 14 - plotLeft);
   });
 
-  it("labels the quarters — a one-year domain is Q1..Q4 plus the next Q1", async () => {
+  it("labels the axis with exact days — a one-year domain ticks each month", async () => {
+    // Peter, 2026-09-24: dated labels, the year only on the first and at a
+    // year change; a year's span ticks monthly. The flags fall on month
+    // starts, so every flag date is labelled.
     const container = await renderIn({ width: 800, height: 320 });
     const labels = map(
       (el: Element) => el.textContent,
       [...container.querySelectorAll(".sui-levels-timeline__tick-label")],
     );
-    expect(labels).toEqual([
-      "2025-Q1",
-      "2025-Q2",
-      "2025-Q3",
-      "2025-Q4",
-      "2026-Q1",
-    ]);
+    expect(labels[0]).toBe("2025-01-01");
+    expect(labels).toContain("04-01");
+    expect(labels).toContain("07-01");
+    expect(labels).toContain("10-01");
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__tick"),
+    ).toHaveLength(13);
+  });
+
+  it("paints the date labels flat, and a longer tick at every flag date", async () => {
+    const container = await renderIn({ width: 800, height: 320 });
+    const label = container.querySelector(".sui-levels-timeline__tick-label");
+    expect(label?.getAttribute("transform")).toBeNull();
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__tick--event"),
+    ).toHaveLength(3);
   });
 });
 
@@ -776,10 +790,13 @@ describe("LevelsTimeline — the board's wide short cell", () => {
       height: 260,
     });
     expect([width, height]).toEqual([718, 260]);
-    // Tall enough for full chrome, so every quarter label survives.
+    // A year of months: every tick drawn, labels as many as fit flat.
     expect(
-      container.querySelectorAll(".sui-levels-timeline__tick-label"),
-    ).toHaveLength(5);
+      container.querySelectorAll(".sui-levels-timeline__tick"),
+    ).toHaveLength(13);
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__tick-label").length,
+    ).toBeGreaterThanOrEqual(5);
     expect(
       container.querySelectorAll(
         ".sui-levels-timeline__rail-group .sui-levels-timeline__rail",
@@ -899,7 +916,11 @@ describe("LevelsTimeline — a zero box must never latch", () => {
       ],
       () => {
         container = render(() => (
-          <LevelsTimeline levels={LEVELS} mutations={MUTATIONS} domain={DOMAIN} />
+          <LevelsTimeline
+            levels={LEVELS}
+            mutations={MUTATIONS}
+            domain={DOMAIN}
+          />
         )).container;
       },
     );
@@ -965,7 +986,7 @@ describe("LevelsTimeline — a zero box must never latch", () => {
     expect(host?.tagName.toLowerCase()).toBe("div");
     expect(viewBoxOf(container)).toBe("0 0 2218 134");
   });
-})
+});
 
 describe("LevelsTimeline — updates must not recreate the DOM", () => {
   /** A level set whose VALUE moves, as a consumer's drag moves it. */
@@ -1102,7 +1123,8 @@ describe("LevelsTimeline — the first frame must already be right", () => {
       unobserve() {}
       disconnect() {}
     }
-    globalThis.ResizeObserver = NeverDelivers as unknown as typeof ResizeObserver;
+    globalThis.ResizeObserver =
+      NeverDelivers as unknown as typeof ResizeObserver;
     try {
       const { container } = render(() => (
         <LevelsTimeline levels={LEVELS} mutations={MUTATIONS} domain={DOMAIN} />
@@ -1132,7 +1154,11 @@ describe("LevelsTimeline — the first frame must already be right", () => {
     try {
       const [levels, setLevels] = createSignal(LEVELS);
       const { container } = render(() => (
-        <LevelsTimeline levels={levels()} mutations={MUTATIONS} domain={DOMAIN} />
+        <LevelsTimeline
+          levels={levels()}
+          mutations={MUTATIONS}
+          domain={DOMAIN}
+        />
       ));
       const afterMount = reads;
       const viewBox = container.querySelector("svg")?.getAttribute("viewBox");
@@ -1175,22 +1201,22 @@ describe("LevelsTimeline — the hover readout must not grow", () => {
       proto as unknown as { getBBox?: () => { width: number } }
     )?.getBBox;
     if (proto !== undefined) {
-      (proto as unknown as { getBBox: () => DOMRect }).getBBox =
-        function bbox(this: Element) {
-          const widths = [
-            ...this.querySelectorAll<Element>("rect, text"),
-          ].map((child) =>
+      (proto as unknown as { getBBox: () => DOMRect }).getBBox = function bbox(
+        this: Element,
+      ) {
+        const widths = [...this.querySelectorAll<Element>("rect, text")].map(
+          (child) =>
             child.tagName.toLowerCase() === "rect"
               ? Number(child.getAttribute("width") ?? 0)
               : (child.textContent ?? "").length * 5,
-          );
-          return {
-            x: 0,
-            y: 0,
-            width: widths.length === 0 ? 0 : Math.max(...widths),
-            height: 0,
-          } as DOMRect;
-        };
+        );
+        return {
+          x: 0,
+          y: 0,
+          width: widths.length === 0 ? 0 : Math.max(...widths),
+          height: 0,
+        } as DOMRect;
+      };
     }
     try {
       // Awaited INSIDE the stubbed window: the measurement is deferred a
@@ -1207,7 +1233,8 @@ describe("LevelsTimeline — the hover readout must not grow", () => {
   };
 
   const panelWidthIn = (container: HTMLElement) =>
-    container.querySelector(".sui-levels-timeline__panel-box")
+    container
+      .querySelector(".sui-levels-timeline__panel-box")
       ?.getAttribute("width");
 
   it("holds ONE width across twenty hovers at the same x", async () => {
@@ -1403,5 +1430,276 @@ describe("LevelsTimeline — the value axis is painted", () => {
       [...container.querySelectorAll(".sui-levels-timeline__y-tick-label")],
     );
     for (const x of xs) expect(x).toBeLessThan(plotLeft);
+  });
+});
+
+describe("LevelsTimeline — numbered, hoverable, draggable flags", () => {
+  /** jsdom gives every element a zero-size box; one viewBox unit = one px. */
+  const withSvgBox = (run: () => void) => {
+    const original = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function rect(this: Element) {
+      return this.tagName.toLowerCase() === "svg"
+        ? ({ left: 0, top: 0, width: 640, height: 232 } as DOMRect)
+        : ({ left: 0, top: 0, width: 0, height: 0 } as DOMRect);
+    };
+    try {
+      run();
+    } finally {
+      Element.prototype.getBoundingClientRect = original;
+    }
+  };
+
+  const DATED: readonly Mutation[] = [
+    // A consumer passing DATES as labels — thorcasting's shape.
+    {
+      id: "b",
+      at: new Date("2025-10-15"),
+      label: "10-15",
+      details: ["Person 2"],
+    },
+    {
+      id: "a",
+      at: new Date("2025-09-01"),
+      label: "09-01",
+      details: ["Payroll 1", "Person 3"],
+    },
+    { id: "c", at: new Date("2025-12-01"), label: "12-01" },
+  ];
+  const FALL: TimeDomain = [new Date("2025-08-01"), new Date("2026-01-01")];
+
+  const flagOf = (container: HTMLElement, id: string) =>
+    container.querySelector(`[data-mutation-id="${id}"]`) as Element;
+  const numbersOf = (container: HTMLElement) =>
+    map(
+      (el: Element) => el.textContent,
+      [...container.querySelectorAll(".sui-levels-timeline__flag-label")],
+    );
+
+  it("paints each flag's NUMBER in time order, never the consumer's label", () => {
+    const { container } = render(() => (
+      <LevelsTimeline levels={LEVELS} mutations={DATED} domain={FALL} />
+    ));
+    expect(numbersOf(container)).toEqual(["1", "2", "3"]);
+    const boxes = map(
+      (el: Element) => el.getAttribute("width"),
+      [...container.querySelectorAll(".sui-levels-timeline__flag-box")],
+    );
+    expect(new Set(boxes).size).toBe(1);
+  });
+
+  it("names a flag by number, label and exact day", () => {
+    const { getAllByRole } = render(() => (
+      <LevelsTimeline
+        levels={LEVELS}
+        mutations={DATED}
+        domain={FALL}
+        onSelectMutation={() => {}}
+      />
+    ));
+    expect(getAllByRole("button")[1].getAttribute("aria-label")).toBe(
+      "Mutation 2, 10-15, 2025-10-15",
+    );
+  });
+
+  it("shows the exact day and the changes on hover, and hides them after", () => {
+    const { container } = render(() => (
+      <LevelsTimeline levels={LEVELS} mutations={DATED} domain={FALL} />
+    ));
+    expect(
+      container.querySelector(".sui-levels-timeline__flag-tip"),
+    ).toBeNull();
+    fireEvent.pointerEnter(flagOf(container, "a"));
+    const tip = container.querySelector(".sui-levels-timeline__flag-tip");
+    expect(
+      tip?.querySelector(".sui-levels-timeline__panel-date")?.textContent,
+    ).toBe("2025-09-01");
+    expect(
+      map(
+        (el: Element) => el.textContent,
+        [...(tip?.querySelectorAll(".sui-levels-timeline__panel-cell") ?? [])],
+      ),
+    ).toEqual(["Payroll 1", "Person 3"]);
+    fireEvent.pointerLeave(flagOf(container, "a"));
+    expect(
+      container.querySelector(".sui-levels-timeline__flag-tip"),
+    ).toBeNull();
+  });
+
+  /** A controlled harness: the consumer moves the event when told to. */
+  const renderDraggable = () => {
+    const onSelect = vi.fn();
+    const moves: string[] = [];
+    const [mutations, setMutations] = createSignal<readonly Mutation[]>(DATED);
+    let container!: HTMLElement;
+    withSvgBox(() => {
+      container = render(() => (
+        <LevelsTimeline
+          levels={LEVELS}
+          mutations={mutations()}
+          domain={FALL}
+          onSelectMutation={onSelect}
+          onMoveMutation={(id, at) => {
+            moves.push(`${id}@${isoDayOf(at)}`);
+            setMutations((before) =>
+              map(
+                (one: Mutation) => (one.id === id ? { ...one, at } : one),
+                before,
+              ),
+            );
+          }}
+        />
+      )).container;
+    });
+    return { container, onSelect, moves, mutations };
+  };
+
+  it("drags a flag to a new day, clamped a day short of its neighbour", () => {
+    const { container, onSelect, moves } = renderDraggable();
+    withSvgBox(() => {
+      const flag = flagOf(container, "a");
+      const x = Number(
+        container
+          .querySelector('[data-mutation-id="a"] text')
+          ?.getAttribute("x"),
+      );
+      fireEvent.pointerDown(flag, { button: 0, pointerId: 1, clientX: x });
+      // Far past the 10-15 neighbour.
+      fireEvent.pointerMove(flag, { pointerId: 1, clientX: 600 });
+      expect(
+        container
+          .querySelector(".sui-levels-timeline")
+          ?.getAttribute("data-dragging-mutation"),
+      ).toBe("a");
+      fireEvent.pointerUp(flag, { pointerId: 1, clientX: 600 });
+      fireEvent.click(flag);
+    });
+    expect(moves).toEqual(["a@2025-10-14"]);
+    // The trailing click of a drag does not select.
+    expect(onSelect).not.toHaveBeenCalled();
+    // Still numbered 1: the clamp keeps time order.
+    expect(numbersOf(container)).toEqual(["1", "2", "3"]);
+  });
+
+  it("treats a press that barely moves as a click, which selects", () => {
+    const { container, onSelect, moves } = renderDraggable();
+    withSvgBox(() => {
+      const flag = flagOf(container, "b");
+      fireEvent.pointerDown(flag, { button: 0, pointerId: 1, clientX: 300 });
+      fireEvent.pointerMove(flag, { pointerId: 1, clientX: 301 });
+      fireEvent.pointerUp(flag, { pointerId: 1, clientX: 301 });
+      fireEvent.click(flag);
+    });
+    expect(moves).toEqual([]);
+    expect(onSelect).toHaveBeenCalledWith("b");
+  });
+
+  it("nudges a day with the arrow keys, under the same clamp", () => {
+    const { container, moves } = renderDraggable();
+    fireEvent.keyDown(flagOf(container, "b"), { key: "ArrowLeft" });
+    expect(moves).toEqual(["b@2025-10-14"]);
+  });
+
+  it("draws a leader for a flag nudged off its rule by a close neighbour", () => {
+    const close: readonly Mutation[] = [
+      { id: "a", at: new Date("2025-10-01"), label: "a" },
+      { id: "b", at: new Date("2025-10-02"), label: "b" },
+    ];
+    const { container } = render(() => (
+      <LevelsTimeline levels={LEVELS} mutations={close} domain={FALL} />
+    ));
+    expect(
+      container.querySelectorAll(".sui-levels-timeline__leader"),
+    ).toHaveLength(2);
+  });
+
+  it("does not drag when the consumer cannot move events", () => {
+    const { container } = render(() => (
+      <LevelsTimeline levels={LEVELS} mutations={DATED} domain={FALL} />
+    ));
+    expect(flagOf(container, "a").getAttribute("class")).not.toContain(
+      "--draggable",
+    );
+  });
+});
+
+describe("LevelsTimeline — a curried pick strategy decides what onPick reports", () => {
+  const withSvgBox = (run: () => void) => {
+    const original = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function rect(this: Element) {
+      return this.tagName.toLowerCase() === "svg"
+        ? ({ left: 0, top: 0, width: 640, height: 232 } as DOMRect)
+        : ({ left: 0, top: 0, width: 0, height: 0 } as DOMRect);
+    };
+    try {
+      run();
+    } finally {
+      Element.prototype.getBoundingClientRect = original;
+    }
+  };
+  const surfaceOf = (container: HTMLElement) =>
+    container.querySelector(".sui-levels-timeline__surface") as Element;
+  const DayPickTimeline = createLevelsTimeline({ pickAt: pickDay });
+
+  it("reports the whole DAY with pickDay, and the MONTH without a strategy", () => {
+    const picked: string[] = [];
+    withSvgBox(() => {
+      const byDay = render(() => (
+        <DayPickTimeline
+          levels={LEVELS}
+          mutations={[]}
+          domain={DOMAIN}
+          onPick={(at) => picked.push(`day ${isoDayOf(at)}`)}
+        />
+      )).container;
+      const byMonth = render(() => (
+        <LevelsTimeline
+          levels={LEVELS}
+          mutations={[]}
+          domain={DOMAIN}
+          onPick={(at) => picked.push(`month ${isoDayOf(at)}`)}
+        />
+      )).container;
+      // Mid-plot: x 320 of 640, a moment in early July 2025.
+      fireEvent.click(surfaceOf(byDay), { clientX: 320, clientY: 100 });
+      fireEvent.click(surfaceOf(byMonth), { clientX: 320, clientY: 100 });
+    });
+    expect(picked).toHaveLength(2);
+    const [day, month] = picked;
+    expect(day).toMatch(/^day 2025-0[67]-\d\d$/);
+    expect(day).not.toBe("day 2025-07-01");
+    expect(month).toBe("month 2025-07-01");
+  });
+
+  it("refreshes the hover readout when the data changes under a still pointer", () => {
+    const [levels, setLevels] = createSignal<readonly Level[]>(LEVELS);
+    let container!: HTMLElement;
+    withSvgBox(() => {
+      container = render(() => (
+        <DayPickTimeline levels={levels()} mutations={[]} domain={DOMAIN} />
+      )).container;
+      fireEvent.pointerMove(surfaceOf(container), {
+        clientX: 320,
+        clientY: 100,
+      });
+    });
+    const counts = () =>
+      map(
+        (el: Element) => el.textContent,
+        [
+          ...container.querySelectorAll(
+            ".sui-levels-timeline__panel-cell--count",
+          ),
+        ],
+      );
+    const before = counts();
+    expect(before.length).toBeGreaterThan(0);
+    setLevels(
+      map(
+        (level: Level) => ({ ...level, points: [{ at: DOMAIN[0], count: 9 }] }),
+        LEVELS,
+      ),
+    );
+    expect(counts()).not.toEqual(before);
+    expect(new Set(counts())).toEqual(new Set(["9"]));
   });
 });

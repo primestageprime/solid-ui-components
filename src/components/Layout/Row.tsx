@@ -12,7 +12,7 @@ import "./Layout.css";
 
 export interface RowProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** 4/8/12/16px. Matches Grid and AutoStack, which have carried `md` all along. */
-  gap?: "xs" | "sm" | "md" | "lg";
+  gap?: "xs" | "sm" | "md" | "lg" | "xl";
   align?: "start" | "center" | "end" | "stretch" | "baseline";
   justify?: "start" | "center" | "end" | "between";
   wrap?: boolean;

@@ -25,6 +25,11 @@ import {
   splitProps,
 } from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
+import {
+  INPUT_DEFAULT_WIDTH_MAX,
+  fieldWidthForChars,
+  numberFieldChars,
+} from "../../internal/fieldWidth/fieldWidth";
 import "./ThemedNumberInput.css";
 
 /** Props owned by `ThemedNumberInput`; everything else is kobalte passthrough. */
@@ -78,6 +83,10 @@ export type ThemedNumberInputProps = ThemedNumberInputOwnProps &
   >;
 
 const DEFAULT_STEP = 1;
+
+/** rem of non-text chrome inside the field: stepper column (~2.5rem) + the
+ *  input's left/right padding (12px * 2 = 1.5rem). Same as CurrencyInput's. */
+const NUMBER_CHROME_REM = 4;
 const DEFAULT_SIZE = "md";
 
 /**
@@ -185,6 +194,21 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
   // The size modifier is always emitted (including `--md`), matching Button and
   // Dropdown, so a theme can hook either size without depending on the absence
   // of a class.
+  // A number field NEVER stretches the whole screen (Peter, 2026-09-24). Its
+  // width is capped to the widest value it can show — `max`/`min` as the
+  // field's own `formatOptions` render them — or, with no `max`, to about one
+  // billion. It still shrinks in a narrow column; it only stops growing.
+  const widthRem = () =>
+    fieldWidthForChars(
+      numberFieldChars({
+        max: local.max ?? INPUT_DEFAULT_WIDTH_MAX,
+        min: local.min,
+        step: step(),
+        formatOptions: (rest as KobalteNumberFieldRootProps).formatOptions,
+      }),
+      NUMBER_CHROME_REM,
+    );
+
   const rootClass = () =>
     `sui-number-input sui-number-input--${local.size ?? DEFAULT_SIZE}`;
 
@@ -192,6 +216,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     <KobalteNumberField
       {...(rest as KobalteNumberFieldRootProps)}
       class={rootClass()}
+      style={{ "max-width": `${widthRem()}rem` }}
       name={local.name}
       value={displayText()}
       rawValue={rawValue()}

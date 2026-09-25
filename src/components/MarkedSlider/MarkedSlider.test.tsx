@@ -28,6 +28,29 @@ const DOMAIN: readonly [number, number] = [0, 200];
 const RANGE: readonly [number, number] = [40, 60];
 
 describe("MarkedSlider", () => {
+  it("draws the prior label beside the prior arrow only when asked", () => {
+    const withLabel = render(() => (
+      <MarkedSlider
+        domain={DOMAIN}
+        range={RANGE}
+        prior={44}
+        value={52}
+        priorLabel="44"
+        label="Ana"
+      />
+    ));
+    const text = withLabel.container.querySelector(
+      ".sui-marked-slider__prior-label",
+    );
+    expect(text?.textContent).toBe("44");
+    const without = render(() => (
+      <MarkedSlider domain={DOMAIN} range={RANGE} prior={44} value={52} label="Bo" />
+    ));
+    expect(
+      without.container.querySelector(".sui-marked-slider__prior-label"),
+    ).toBeNull();
+  });
+
   it("paints the track, the allowed range and both arrowheads", () => {
     const { container } = render(() => (
       <MarkedSlider

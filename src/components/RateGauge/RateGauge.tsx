@@ -72,15 +72,21 @@
 import { type Component, type JSX, mergeProps } from "solid-js";
 import {
   type Callout,
+  type CalloutMode,
+  type CornerId,
+  type CornerLabels,
   clampedValue,
   type Domain,
   type GaugeGeometry,
+  widestCornerLabels,
 } from "./geometry";
 import {
   RateGaugeCanvas,
+  type RateGaugeCornerLine,
   type RateGaugeLabelSlot,
   type RateGaugeLine,
 } from "./RateGaugeCanvas";
+import { map } from "../../fn";
 import { EllipsizedHudCaption } from "../Text";
 import { Tooltip } from "../Tooltip";
 
@@ -128,6 +134,27 @@ export interface RateGaugeProps {
    * threshold.
    */
   caution?: number;
+  /**
+   * Which callout layout to draw. `leaders` (the default) is the leader
+   * column — the gauge as it has always been. `corners` sets the words in the
+   * box's right-hand CORNERS with no leaders, so the dial keeps the height:
+   * the value's name, where it stands and the difference on top, the
+   * reference's name and where it stands below (Peter, 2026-09-24).
+   *
+   * Presentational, so it curries: a product ships one gauge of each and its
+   * LAYOUT picks between them at one breakpoint. The gauge never picks.
+   */
+  callouts?: CalloutMode;
+  /**
+   * The WHOLE difference line of the corner layout, given the signed delta
+   * (value minus baseline) and the baseline — so the consumer can say it as a
+   * share as well as an amount.
+   *
+   * Default: `formatDelta`'s line, then the delta as a whole percent of the
+   * baseline in brackets — "+50,000 (50%)" — or just the line when the
+   * baseline is zero.
+   */
+  formatCornerDelta?: (delta: number, baseline: number) => string;
 }
 
 const DEFAULT_BASELINE_LABEL = "Reference";
@@ -164,6 +191,10 @@ const plainDelta = (delta: number): string =>
 const isConsumerText = (callout: Callout): boolean =>
   callout.id === "value" || callout.id === "valueAndBaseline";
 
+/** The corner delta's percentage: a whole percent of the baseline. */
+const percentOf = (delta: number, baseline: number): number =>
+  Math.round((delta / Math.abs(baseline)) * 100);
+
 export const RateGauge: Component<RateGaugeProps> = (props) => {
   const baselineLabel = () => props.baselineLabel ?? DEFAULT_BASELINE_LABEL;
 
@@ -189,6 +220,77 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
           ...relative,
         ];
   };
+
+  /** The corner layout's difference line, in the consumer's words. */
+  const cornerDeltaText = (delta: number, baseline: number): string =>
+    props.formatCornerDelta
+      ? props.formatCornerDelta(delta, baseline)
+      : baseline === 0
+        ? deltaText(delta)
+        : `${deltaText(delta)} (${percentOf(delta, baseline)}%)`;
+
+  /**
+   * The corner blocks' lines, from the DRAWN values like every other word the
+   * gauge says. When the needles coincide the value block names both and the
+   * reference block is empty — the same collapse the leader rows make.
+   */
+  const cornerLinesOf = (
+    drawnValue: number,
+    drawnBaseline: number,
+  ): Readonly<Record<CornerId, readonly RateGaugeCornerLine[]>> =>
+    drawnValue === drawnBaseline
+      ? {
+          value: [
+            { text: `${props.label} = ${baselineLabel()}`, unbounded: true, role: "name" },
+            { text: against(drawnValue), unbounded: false, role: "relative" },
+          ],
+          baseline: [],
+        }
+      : {
+          value: [
+            { text: props.label, unbounded: true, role: "name" },
+            { text: against(drawnValue), unbounded: false, role: "relative" },
+            {
+              text: cornerDeltaText(drawnValue - drawnBaseline, drawnBaseline),
+              unbounded: false,
+              role: "delta",
+            },
+          ],
+          baseline: [
+            { text: baselineLabel(), unbounded: false, role: "name" },
+            { text: against(drawnBaseline), unbounded: false, role: "relative" },
+          ],
+        };
+
+  /**
+   * The strings the corner layout is SIZED to: the widest each line gets
+   * anywhere on the gauge's scale — the value at either end of the domain
+   * (the longest amounts and the longest differences), the current reading,
+   * and the collapse at the baseline. Sized to the worst case rather than the
+   * current words, so the dial keeps one radius while the value moves instead
+   * of breathing with the width of its own labels.
+   */
+  const cornerLabels = (): CornerLabels | undefined => {
+    if (props.callouts !== "corners") return undefined;
+    const baseline = clampedValue(props.domain, props.baseline);
+    const texts = (block: readonly RateGaugeCornerLine[]) =>
+      map((line: RateGaugeCornerLine) => line.text, block);
+    const asLabels = (value: number): CornerLabels => {
+      const lines = cornerLinesOf(value, baseline);
+      return { value: texts(lines.value), baseline: texts(lines.baseline) };
+    };
+    return widestCornerLabels(
+      map(asLabels, [
+        props.domain[0],
+        props.domain[1],
+        baseline,
+        clampedValue(props.domain, props.value),
+      ]),
+    );
+  };
+
+  const cornerLines = (id: CornerId, geometry: GaugeGeometry) =>
+    cornerLinesOf(geometry.drawnValue, geometry.drawnBaseline)[id];
 
   /**
    * The words each callout carries. The delta row is the only formatted one.
@@ -271,6 +373,9 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
       valueText={valueText}
       ariaLabel={props.label}
       renderLabel={renderLabel}
+      callouts={props.callouts}
+      cornerLabels={cornerLabels()}
+      cornerLines={cornerLines}
     />
   );
 };
@@ -278,13 +383,14 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
 /**
  * The presentational half: how the gauge WORDS itself.
  *
- * All three are decisions a product makes once — what the reference needle is
- * called, and the two sentences that carry the units — so they curry at the
- * design-system layer and never appear at a call site.
+ * All of them are decisions a product makes once — what the reference needle
+ * is called, the sentences that carry the units, and whether a narrow box
+ * falls back to corner labels — so they curry at the design-system layer and
+ * never appear at a call site.
  */
 export type RateGaugeOverrides = Pick<
   RateGaugeProps,
-  "baselineLabel" | "formatAgainst" | "formatDelta"
+  "baselineLabel" | "formatAgainst" | "formatDelta" | "callouts" | "formatCornerDelta"
 >;
 
 /**

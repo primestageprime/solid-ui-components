@@ -34,3 +34,11 @@ export const formatCompactNumber = (value: number): string => {
       ? `${formatGroupedNumber(value / 1_000, 1)}k`
       : formatGroupedNumber(value);
 };
+
+// Compact DOLLARS — `$125K`, `$1.2M`, `-$5K` (Peter, 2026-09-24, the payroll
+// board's change sliders). A wrapper rather than a knob on formatCompactNumber,
+// as this module's header asks: the tiers are that function's, and only the
+// currency mark and the uppercase unit are new. The "$" is HARDCODED — Peter's
+// call; i18n comes later — and the sign sits OUTSIDE it.
+export const formatCompactCurrency = (value: number): string =>
+  `${value < 0 ? "-" : ""}$${formatCompactNumber(Math.abs(value)).replace(/k$/, "K")}`;

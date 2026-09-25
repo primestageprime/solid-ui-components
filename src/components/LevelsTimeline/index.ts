@@ -9,6 +9,8 @@
 //     full props. Kept on the published surface because live consumers
 //     (thorcasting-ui, the scenario board) are written against them; a
 //     promotion is not the moment to break a consumer's signature.
+//   • `pickDay` / `PickStrategy` — what a click on the plot reports — and
+//     `abbreviateDates`, the axis's date-row rule, for a consumer's tabs.
 //   • the DATA types it has to construct, and `timeOf` to compare two
 //     `TimeValue`s — they are `Date | number`, so `.getTime()` does not
 //     typecheck on the union and a consumer that hand-rolled the
@@ -30,6 +32,14 @@ export type {
 } from "./LevelsTimeline";
 export * from "./variants";
 export { timeOf } from "./geometry";
+// The click strategy and the date-row abbreviator (2026-09-24). `pickDay` is
+// curried into a variant (`createLevelsTimeline({ pickAt: pickDay })`);
+// `abbreviateDates` labels a consumer's change tabs with the SAME rule the
+// axis uses, so a tab row and the axis never disagree about a year.
+export { abbreviateDates, pickDay } from "./geometry";
+// The fit a held value axis tracks: `createAxisWaterMarks(() => levelsValueFit(levels))`.
+export { levelsValueFit } from "./geometry";
+export type { PickStrategy } from "./geometry";
 export type {
   CountPoint,
   Level,
