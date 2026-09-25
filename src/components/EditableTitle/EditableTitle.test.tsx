@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
 import { EditableTitle } from "./index";
 
 afterEach(cleanup);
@@ -77,6 +78,56 @@ describe("EditableTitle", () => {
     expect(rule).toMatch(/outline-offset:\s*-1px/);
     expect(rule).toMatch(/background:/);
     expect(rule).toMatch(/caret-color:/);
+  });
+
+  it("after Enter the NEW name shows at once, with no frame of the old one, while the parent round-trips", async () => {
+    // A parent that takes the rename a moment later, as a store or server does.
+    const [title, setTitle] = createSignal("Lean 2027");
+    const onChange = (next: string) => {
+      setTimeout(() => setTitle(next), 20);
+    };
+    const { container, getByText } = render(() => (
+      <EditableTitle title={title()} onChange={onChange} />
+    ));
+    fireEvent.click(getByText("Lean 2027"));
+    const input = container.querySelector("input") as HTMLInputElement;
+    fireEvent.input(input, { target: { value: "Lean 2028" } });
+    // Every text the title shows from here on, in order.
+    const seen: string[] = [];
+    const root = container.querySelector(".sui-editable-title")!;
+    const observer = new MutationObserver(() => {
+      const text = root.querySelector(".sui-editable-title__text")?.textContent;
+      if (text) seen.push(text);
+    });
+    observer.observe(root, { childList: true, subtree: true, characterData: true });
+    fireEvent.keyDown(input, { key: "Enter" });
+    // Same tick: already the new name.
+    expect(root.querySelector(".sui-editable-title__text")?.textContent).toBe("Lean 2028");
+    await new Promise((r) => setTimeout(r, 40));
+    observer.disconnect();
+    expect(title()).toBe("Lean 2028");
+    expect(seen).not.toContain("Lean 2027");
+    expect(root.querySelector(".sui-editable-title__text")?.textContent).toBe("Lean 2028");
+  });
+
+  it("a rename the parent never takes falls back to its title", async () => {
+    vi.useFakeTimers();
+    try {
+      const { container, getByText } = render(() => (
+        <EditableTitle title="Kept" onChange={() => {}} />
+      ));
+      fireEvent.click(getByText("Kept"));
+      const input = container.querySelector("input") as HTMLInputElement;
+      fireEvent.input(input, { target: { value: "Refused" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+      const text = () =>
+        container.querySelector(".sui-editable-title__text")?.textContent;
+      expect(text()).toBe("Refused");
+      vi.advanceTimersByTime(2100);
+      expect(text()).toBe("Kept");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("Escape cancels without committing", () => {

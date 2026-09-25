@@ -5806,7 +5806,7 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/EditableTitle/EditableTitle.tsx",
-    "line": 62
+    "line": 73
   },
   {
     "name": "EllipsisText",
