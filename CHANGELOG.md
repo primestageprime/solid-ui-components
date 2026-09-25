@@ -5,6 +5,8 @@
 ### Fixed
 
 - **`SliderField` (and so `MutationSliders`' editable amount) commits what the input holds.** Enter and blur now read the input's own text rather than the tracked draft, and write the formatted value back after every commit, so a change the field never saw an `input` event for (browser autocomplete, IME, a stale hot-reload) is settled and reformatted instead of left on screen as raw text ("44K", "$10"). The input also sets `autocomplete="off"`.
+- **`FillChartFrame` drew its chart body 0px tall** (G12) at every width: its column is `height: 100%`, but the in-flow `FullscreenBox` around it sized to content (~26px), so the body row got 0px and the vertical y-title spilled into the heading. The box now fills too. **`FullscreenBox`: `fill`** (override, default off; curried **`FillFullscreenBox`**) makes the in-flow box fill a parent of definite height and hand it to its first child; a `ChartFrame` with `height: "fill"` uses it. Fixed-height frames and every other `FullscreenBox` are unchanged.
+- **`ChartFrame`: the vertical y-title overflowed up into the header when the body was short** (G13). Its rail now shrinks with the body row and clips (`min-height: 0; overflow: hidden`) instead of spilling.
 
 ## 0.187.0 — 2026-09-25
 

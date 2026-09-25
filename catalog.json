@@ -2996,7 +2996,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 210
+    "line": 219
   },
   {
     "name": "createCheckbox",
@@ -3404,7 +3404,7 @@
     "showcase": "#/fullscreen-box",
     "since": null,
     "file": "src/components/FullscreenBox/FullscreenBox.tsx",
-    "line": 150
+    "line": 160
   },
   {
     "name": "createGhostArc",
@@ -6332,6 +6332,29 @@
     "line": 541
   },
   {
+    "name": "FillFullscreenBox",
+    "depth": 1,
+    "kind": "variant",
+    "family": "FullscreenBox",
+    "variantOf": {
+      "factory": "createFullscreenBox",
+      "overrides": "{ fill: true }"
+    },
+    "overrides": [
+      "escapeCloses",
+      "fill"
+    ],
+    "dataProps": "FullscreenBoxDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "FillFullscreenBox — in flow, fills a parent of definite height and hands it to its first child. FillChartFrame's box. */",
+    "showcase": "#/fullscreen-box",
+    "since": "Unreleased",
+    "file": "src/components/FullscreenBox/FullscreenBox.tsx",
+    "line": 172
+  },
+  {
     "name": "FillPaneRailGrid",
     "depth": 1,
     "kind": "variant",
@@ -6785,7 +6808,8 @@
       "overrides": "{}"
     },
     "overrides": [
-      "escapeCloses"
+      "escapeCloses",
+      "fill"
     ],
     "dataProps": "FullscreenBoxDataProps",
     "summary": "Atomic (Depth 1).",
@@ -6795,7 +6819,7 @@
     "showcase": "#/fullscreen-box",
     "since": "0.183.0",
     "file": "src/components/FullscreenBox/FullscreenBox.tsx",
-    "line": 157
+    "line": 167
   },
   {
     "name": "FullscreenModal",
