@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`BuilderBoard` single column: the Changes panel (C) shows in full.** Stacked, C used to clamp to 236px and scroll inside itself, squashing its dials to their 180px floor. It now takes its natural height (dials at their 260px design height) and the board scrolls instead. Split mode is unchanged. `builderBoardStackedRects(width, cHeight?)` takes C's measured height additively (default `C_STACKED_HEIGHT`, now the pre-layout estimate).
+
 ## 0.198.0 — 2026-09-25
 
 ### Added

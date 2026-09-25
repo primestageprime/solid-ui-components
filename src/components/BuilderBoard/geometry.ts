@@ -146,15 +146,18 @@ const rectsTable = (rects: BuilderBoardRects): readonly string[] => [
 // Below `BUILDER_BOARD_SINGLE_COLUMN_BELOW` the board's OWN width cannot hold
 // C beside the 292px rail (at 390px C got ~50px), and viewport halves leave
 // every card too short to read. So it goes single column (Peter, 2026-09-25:
-// "It should go single column") — A, B, C, D in one scrolling column, each at
-// a stated height:
+// "It should go single column") — A, B, C, D in one scrolling column. A, B and
+// D hold stated heights; C takes its NATURAL height (Peter, 2026-09-25: the
+// Changes panel shows in full and its dials keep their design height — it
+// used to clamp to C_STACKED_HEIGHT, 236px, and squash the dials to their
+// 180px floor while scrolling inside itself):
 //
 //   ┌──────────────────────┐
 //   │ A  STACKED_CHART_HEIGHT │
 //   ├──────────────────────┤ sm
 //   │ B  STACKED_CHART_HEIGHT │
 //   ├──────────────────────┤ sm
-//   │ C  C_STACKED_HEIGHT  │  (scrolls inside its card, as in split)
+//   │ C  its content       │  (natural height — the BOARD scrolls)
 //   ├──────────────────────┤ sm
 //   │ D  D_STACKED_HEIGHT  │  (the rail, full width)
 //   └──────────────────────┘
@@ -177,15 +180,21 @@ export type BuilderBoardLayout = "split" | "stacked";
 export const builderBoardLayoutFor = (width: number): BuilderBoardLayout =>
   width > 0 && width < BUILDER_BOARD_SINGLE_COLUMN_BELOW ? "stacked" : "split";
 
-/** The four rects of the single column at `width` — every card full width. */
-export const builderBoardStackedRects = (width: number): BuilderBoardRects => {
+/** The four rects of the single column at `width` — every card full width.
+ *  C's height is its CONTENT's, which only layout knows: pass the measured
+ *  `cHeight`, or get `C_STACKED_HEIGHT` as the pre-layout estimate (and D
+ *  placed after it). The board draws C at its natural height either way. */
+export const builderBoardStackedRects = (
+  width: number,
+  cHeight: number = C_STACKED_HEIGHT,
+): BuilderBoardRects => {
   const bY = STACKED_CHART_HEIGHT + HALF_GUTTER;
   const cY = bY + STACKED_CHART_HEIGHT + HALF_GUTTER;
-  const dY = cY + C_STACKED_HEIGHT + HALF_GUTTER;
+  const dY = cY + cHeight + HALF_GUTTER;
   return {
     a: { x: 0, y: 0, width, height: STACKED_CHART_HEIGHT },
     b: { x: 0, y: bY, width, height: STACKED_CHART_HEIGHT },
-    c: { x: 0, y: cY, width, height: C_STACKED_HEIGHT },
+    c: { x: 0, y: cY, width, height: cHeight },
     d: { x: 0, y: dY, width, height: D_STACKED_HEIGHT },
   };
 };
@@ -217,6 +226,9 @@ export const observeBuilderBoard = (
   return join("\n", [
     `layout ${layout} (${viewport.width}x${viewport.height})`,
     ...rectsTable(rects),
+    ...(layout === "stacked"
+      ? [`C natural height (${C_STACKED_HEIGHT} is the pre-layout estimate); D follows C; the board scrolls`]
+      : []),
   ]);
 };
 
@@ -274,8 +286,10 @@ export const CHART_MIN_HEIGHT = 220;
  *  292px rail leaves C under ~600px, too narrow for its controls. */
 export const STACK_BELOW_WIDTH = 900;
 
-/** C's height when stacked: a title row + `sm` gap + five 40px control rows.
- *  C scrolls inside its card past that, as it does in split mode. */
+/** C's height when stacked, BEFORE layout: a title row + `sm` gap + five 40px
+ *  control rows. BuilderBoardBelowChart states C at this height; BuilderBoard
+ *  draws C at its natural height and uses this only as the pre-layout
+ *  estimate in `builderBoardStackedRects`. */
 export const C_STACKED_HEIGHT = CARD_TITLE_ROW + GAP_PX.sm + 5 * 40;
 
 /** D's height when stacked: a title row + `sm` gap + the gauge's own natural
