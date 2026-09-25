@@ -294,7 +294,11 @@ export const ScrubChart = <C extends Cell>(
       // host, jsdom); the seed stays until the observer reports a real size.
       const box = el.getBoundingClientRect();
       const width = Math.round(box.width);
-      if (width > 0) setChartWidth(width);
+      if (width > 0) {
+        setChartWidth(width);
+        // Reported from the two measurements only — the seed is a guess.
+        props.onChartWidthChange?.(width);
+      }
       // The HEIGHT needs the same synchronous first read, and for a second
       // reason on top of the first-frame one. `observeSize` defers through
       // `requestAnimationFrame`, and a browser SUSPENDS rAF for a document that
@@ -315,6 +319,7 @@ export const ScrubChart = <C extends Cell>(
       onCleanup(
         observeSize(el, (size) => {
           setChartWidth(size.width);
+          props.onChartWidthChange?.(size.width);
           // Only in fill mode: in the numeric path the height is the caller's
           // and measuring it would be a second, contradicting source of truth.
           //

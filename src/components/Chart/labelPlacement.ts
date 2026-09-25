@@ -220,6 +220,43 @@ export const reserveLabelSpace = (
   };
 };
 
+// ── The right gutter's cap ─────────────────────────────────────────────────
+//
+// A "right" label buys a gutter as wide as its text, which on a narrow chart
+// can eat half the plot (thorcasting at 390px). So the gutter is CAPPED at
+// `MAX_RIGHT_GUTTER_SHARE` of the plot it leaves; past that, every "right"
+// label falls back to "below", where it costs a row of height instead of
+// width. The plot the gutter leaves is the frame less the gutter (the y-axis
+// column is sized from the scales, which do not exist yet — so the cap is
+// measured against the frame, a hair generous). An unmeasured frame (0)
+// keeps the gutter, so nothing changes before the first measurement.
+
+/** The widest share of the plot the right gutter may take. */
+export const MAX_RIGHT_GUTTER_SHARE = 0.25;
+
+/** Whether the right gutter `labels` ask for fits `chartWidth`. */
+export const rightGutterFits = (
+  labels: readonly LabelReservation[],
+  chartWidth: number,
+): boolean => {
+  const gutter = reserveLabelSpace(labels).rightGutter;
+  return (
+    gutter === 0 ||
+    chartWidth <= 0 ||
+    gutter <= MAX_RIGHT_GUTTER_SHARE * (chartWidth - gutter)
+  );
+};
+
+/** Every "right" preference becomes "below" — the gutter's fallback. */
+export const demoteRightLabels = <T extends { readonly placement: LabelZone }>(
+  items: readonly T[],
+): readonly T[] =>
+  map(
+    (item: T): T =>
+      item.placement === "right" ? { ...item, placement: "below" } : item,
+    items,
+  );
+
 /** The extra x-axis height that `belowRows` costs — feeds `xAxisExtraHeight`. */
 export const belowExtraHeight = (rows: number): number =>
   rows * BELOW_ROW_HEIGHT;
