@@ -18,7 +18,15 @@
 // callback (`title` / `onChange`), nothing presentational to freeze. Same
 // data-only exemption as SortableList.
 // ============================================
-import { type Component, Show, createSignal, onMount } from "solid-js";
+import {
+  type Component,
+  Show,
+  createEffect,
+  createSignal,
+  on,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import "./EditableTitle.css";
 
 /** What gesture opens the inline editor.
@@ -59,20 +67,46 @@ export interface EditableTitleProps {
   fill?: boolean;
 }
 
+/** How long a committed name is shown while the parent has not taken it. */
+const PENDING_TIMEOUT_MS = 2000;
+
 export const EditableTitle: Component<EditableTitleProps> = (props) => {
   const [editing, setEditing] = createSignal(false);
   const [draft, setDraft] = createSignal("");
   // Escape cancels: blur must NOT commit the draft. The blur fired by the
   // cancel's own focus-out (or the input unmounting) checks this flag.
   let cancelled = false;
+  // THE COMMITTED NAME, shown until the parent's `title` catches up. Leaving
+  // edit mode renders `title`, and a parent whose rename round-trips (a store,
+  // a server) still holds the OLD one for a moment — the name flashed back
+  // before the new one arrived (Peter, 2026-09-25). So the draft is shown
+  // optimistically, and dropped the moment `title` changes (or already
+  // matches). A parent that never updates (a refused rename) gets the old name
+  // back after PENDING_TIMEOUT_MS rather than showing a name it didn't take.
+  const [pending, setPending] = createSignal<string | undefined>(undefined);
+  let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+  const clearPending = () => {
+    if (pendingTimer !== undefined) clearTimeout(pendingTimer);
+    pendingTimer = undefined;
+    setPending(undefined);
+  };
+  createEffect(on(() => props.title, clearPending, { defer: true }));
+  onCleanup(clearPending);
+  const shown = () => pending() ?? props.title;
   const commit = (value: string) => {
-    setEditing(false);
     const v = value.trim();
-    if (v && v !== props.title) props.onChange?.(v);
+    const renamed = v !== "" && v !== props.title;
+    if (renamed) {
+      setPending(v);
+      pendingTimer = setTimeout(clearPending, PENDING_TIMEOUT_MS);
+    }
+    setEditing(false);
+    if (renamed) props.onChange?.(v);
   };
   // Open the editor (guarded — an inert title with no `onChange` never edits).
   const startEdit = () => {
     if (!props.onChange) return;
+    clearPending();
     setDraft(props.title);
     setEditing(true);
   };
@@ -142,10 +176,10 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
               type="button"
               class="sui-editable-title__text"
               disabled={!props.onChange}
-              aria-label={`Rename ${props.title}`}
+              aria-label={`Rename ${shown()}`}
               onClick={startEdit}
             >
-              {props.title}
+              {shown()}
             </button>
           }
         >
@@ -164,7 +198,7 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
             onClick={onTextClick}
             onDblClick={onTextDblClick}
           >
-            {props.title}
+            {shown()}
           </span>
         </Show>
       </Show>

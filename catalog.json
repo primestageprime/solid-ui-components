@@ -1216,7 +1216,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.47.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 87
+    "line": 92
   },
   {
     "name": "Cell",
@@ -2877,7 +2877,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 984
+    "line": 1003
   },
   {
     "name": "createCell",
@@ -4050,7 +4050,7 @@
     "showcase": "#/scrub-chart",
     "since": "0.44.0",
     "file": "src/components/ScrubChart/ScrubChart.tsx",
-    "line": 1112
+    "line": 1117
   },
   {
     "name": "createSection",
@@ -5806,7 +5806,7 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/EditableTitle/EditableTitle.tsx",
-    "line": 62
+    "line": 73
   },
   {
     "name": "EllipsisText",
@@ -5823,7 +5823,7 @@
     "showcase": null,
     "since": "0.108.0",
     "file": "src/components/DataDisplay/EllipsisText.tsx",
-    "line": 68
+    "line": 69
   },
   {
     "name": "EllipsizedChipLabel",
@@ -6796,7 +6796,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.186.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 1018
+    "line": 1037
   },
   {
     "name": "FullscreenBox",
@@ -12441,7 +12441,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 1006
+    "line": 1025
   },
   {
     "name": "StretchRow",

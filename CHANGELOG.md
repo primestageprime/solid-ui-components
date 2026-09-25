@@ -6,6 +6,21 @@
 
 - **`EllipsisText` looped to "Maximum call stack size exceeded" as a flex item** (G23; thorcasting Coverage, prod Roofer). When the text was clipped only by a flex sibling's share, mounting the tooltip swapped the flex item for a `<button>` that hugged its content, un-clipped it, unmounted the tooltip, and so on. The measured span is now ONE stable host that is always the laid-out element (`min-width: 0`); the tooltip trigger lives inside it as a keyboard-reachable inline span (`tabindex="0"` only while clipped), so mounting it can't change the clip state. A regression test models the squeezed flex row and fails on the old component.
 
+### Changed
+
+- **`CashflowScrubChart`: the right label gutter is capped at 25% of the plot** (G14). Past `MAX_RIGHT_GUTTER_SHARE` of the plot the gutter would leave, every `"right"` label falls back to `"below"`, so a long label on a narrow chart (thorcasting at 390px) no longer eats the plot. Wide charts are unchanged; so is any chart before its frame is measured.
+
+### Added
+
+- **`ScrubChart`: `onChartWidthChange?(width)`** — fires with the frame's measured width whenever it changes.
+
+## 0.193.0 — 2026-09-25
+
+### Fixed
+
+- **`EditableTitle` `fill`: the rename field was invisible as a field** (so `DirtyComboBox`'s rename read as a mere text selection). In `fill` mode the input is exactly its host's size and the host clips, so the default outline — drawn outside the input — was clipped away. The fill field now draws its outline inside (`outline-offset: -1px`) on the input background, with an accent caret and a small text inset.
+- **`EditableTitle`: the old name flashed back after Enter** while a parent's rename round-tripped (a store, a server). The committed name is now shown optimistically until `title` changes; a rename the parent never takes falls back to `title` after 2s. Esc still reverts.
+
 ## 0.192.0 — 2026-09-25
 
 ### Fixed

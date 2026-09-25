@@ -26,7 +26,7 @@
 // rather than hidden. Per-series, so one chart can hold both.
 // ============================================
 
-import { type Component, For, Show, createEffect, createMemo, mergeProps } from "solid-js";
+import { type Component, For, Show, createEffect, createMemo, createSignal, mergeProps } from "solid-js";
 import {
   ScrubChart,
   ScrubChartBand,
@@ -38,7 +38,12 @@ import {
   createScrubChartEmphasis,
   emphasisClassName,
 } from "../ScrubChart";
-import { belowExtraHeight, reserveLabelSpace } from "../Chart/labelPlacement";
+import {
+  belowExtraHeight,
+  demoteRightLabels,
+  reserveLabelSpace,
+  rightGutterFits,
+} from "../Chart/labelPlacement";
 import {
   PRIMARY_LABEL_ID,
   type PrimaryLineLabel,
@@ -248,13 +253,25 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
   //
   // Only an EXPLICIT zone buys space. A chart with no labels, or with "auto"
   // labels alone, reserves nothing and keeps every pixel it had.
+  //
+  // CAPPED (G14): past `MAX_RIGHT_GUTTER_SHARE` of the plot the gutter would
+  // leave, every "right" label falls back to "below" — in the reservation
+  // AND the placement, so the frame and the ladder agree. The frame width is
+  // ScrubChart's measurement; 0 until it lands, which keeps the gutter.
+  const [frameWidth, setFrameWidth] = createSignal(0);
+  const reservations = createMemo(() =>
+    labelReservations(
+      primaryLabel(),
+      props.balanceSeries ?? [],
+      props.markers ?? [],
+    ),
+  );
+  const gutterFits = createMemo(() =>
+    rightGutterFits(reservations(), frameWidth()),
+  );
   const reservedSpace = createMemo(() =>
     reserveLabelSpace(
-      labelReservations(
-        primaryLabel(),
-        props.balanceSeries ?? [],
-        props.markers ?? [],
-      ),
+      gutterFits() ? reservations() : demoteRightLabels(reservations()),
     ),
   );
 
@@ -777,13 +794,14 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       primaryCents: (i: number) => line[i]?.balanceCents,
       cellCount: ctx.cells.length,
     };
-    const labels = labelCandidates(
+    const candidates = labelCandidates(
       primaryLabel(),
       props.balanceSeries ?? [],
       props.markers ?? [],
       ctx.cells,
       labelGeometry,
     );
+    const labels = gutterFits() ? candidates : demoteRightLabels(candidates);
     return (
       <svg
         class="sui-cashflow-scrub-chart__chart sui-cashflow-scrub-chart__label-overlay"
@@ -935,6 +953,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       }
       cellWidth={cellWidth()}
       rightGutter={reservedSpace().rightGutter}
+      onChartWidthChange={setFrameWidth}
       xAxisExtraHeight={belowExtraHeight(reservedSpace().belowRows)}
       // `yDomain` stays the FALLBACK. ScrubChart takes the fitted domain
       // whenever `yFitDomain` returns one, and this computed domain whenever
