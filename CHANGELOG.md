@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.190.0 — 2026-09-25
+
 ### Added
 
 - **`BuilderBoard`: single column below 600px** — the board measures its own width and, under `BUILDER_BOARD_SINGLE_COLUMN_BELOW` (600), draws A, B, C, D in one scrolling column (A/B 240px, C and D at their stacked heights, D full width) instead of viewport halves beside a 292px rail. Pure `builderBoardLayoutFor(width)` and the table `observeBuilderBoard(viewport)`; type `BuilderBoardLayout`. At 600px and wider, and before the board is measured, it draws exactly as before.
