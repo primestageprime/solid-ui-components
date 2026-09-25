@@ -47,3 +47,23 @@ describe("settleTyped — parse, round, clamp", () => {
     ]);
   });
 });
+
+describe("settleTyped — the figures Peter typed (2026-09-24)", () => {
+  it("settles every spelling onto the thousand grid inside the range", () => {
+    const limits = { min: 70_000, max: 110_000, precision: -3 };
+    const typed = ["44K", "44,000", "$44k", "$10", "10", "25", "98,700", "$98.7k", "250k", "104000"];
+    const rows = map(
+      (text: string) => ({
+        text,
+        parsed: parseTyped(text),
+        rounded: roundToPrecision(parseTyped(text) ?? Number.NaN, limits.precision),
+        settled: settleTyped(text, limits),
+      }),
+      typed,
+    );
+    console.table(rows);
+    expect(map((row) => row.settled, rows)).toEqual([
+      70_000, 70_000, 70_000, 70_000, 70_000, 70_000, 99_000, 99_000, 110_000, 104_000,
+    ]);
+  });
+});

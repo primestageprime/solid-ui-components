@@ -12,7 +12,13 @@
 
 ### Fixed
 
+- **`SliderField` (and so `MutationSliders`' editable amount) commits what the input holds.** Enter and blur now read the input's own text rather than the tracked draft, and write the formatted value back after every commit, so a change the field never saw an `input` event for (browser autocomplete, IME, a stale hot-reload) is settled and reformatted instead of left on screen as raw text ("44K", "$10"). The input also sets `autocomplete="off"`.
 - **`OverflowNav` didn't fold on resize** (G16). Natural widths were measured once and cached, so a nav narrowed later (or measured before fonts/layout settled) kept every item inline; and a 0px container bailed instead of folding. Widths are now re-measured on every container resize, when labels/badges/items change, and once `document.fonts` is ready; a 0px (or narrower-than-kebab) container folds everything into the kebab. The decision is the pure, exported-to-tests `overflowNavVisibleCount` (`OverflowNav/fold.ts`). No API change.
+
+### Changed
+
+- **`StackedTimelineChart` is size-responsive** (G17, Peter: "responsive, space-economical charts"). From its own measured box: under 200px tall it draws 3 y ticks (the fixed domain's ends and middle) instead of the scale's 5, with a tighter default inset (4/4/20/32, was 8/8/28/36); under 400px wide it keeps every other caller-supplied x tick and asks the scale for 3. A curried `margin` still wins field by field. The rule is the pure `stackedTimelineLayout` (`StackedTimelineChart/layout.ts`). No new props.
+
 
 ## 0.188.0 — 2026-09-25
 
