@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`LevelsTimeline` printed the same y label on every tick for flat data** (G19) — one level at $100,000 drew five "$100,000"s. A derived value range narrower than 10% of its centre is now widened to exactly that (`padFlatRange`, `MIN_RELATIVE_SPAN`), so the flat rail sits mid-plot on a real scale; and when the consumer's `formatValue` would still print two ticks alike (small values, a pinned domain), the axis asks for fewer, coarser ticks until every label differs. Pinned domains are still never widened.
+
 ## 0.189.0 — 2026-09-25
 
 ### Fixed
