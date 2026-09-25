@@ -14,6 +14,13 @@ export type {
   BuilderBoardDataProps,
 } from "./BuilderBoard";
 export type { RailWidth as BuilderBoardRailWidth } from "./geometry";
+// The single-column breakpoint (the board's own width) and its observation.
+export {
+  BUILDER_BOARD_SINGLE_COLUMN_BELOW,
+  builderBoardLayoutFor,
+  observeBuilderBoard,
+} from "./geometry";
+export type { BuilderBoardLayout } from "./geometry";
 
 // The board BELOW a shell chart (panel A is the shell's), and the pure core
 // the app sizes it — and the chart above it — with. These geometry exports

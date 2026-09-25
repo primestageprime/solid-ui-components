@@ -2831,6 +2831,14 @@ th:has(.tf-th-center) .hud-table__header-content {
    state a viewport; the component under it may not. Two of these are wider
    than the gallery, which is why the bench wraps them in a ScrollXBox.
    SIZE ONLY — every row and column inside is the frame's own. */
+.builder-board-bench__viewport--phone {
+  width: 390px;
+  height: 760px;
+}
+.builder-board-bench__viewport--tablet {
+  width: 768px;
+  height: 900px;
+}
 .builder-board-bench__viewport--laptop {
   width: 1000px;
   height: 600px;

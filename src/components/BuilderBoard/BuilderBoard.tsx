@@ -60,15 +60,33 @@
 // A pixel never crosses into a consumer: the token is resolved in
 // `geometry.ts` and the track is `FillPaneRailGrid`'s.
 // ============================================
-import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Index,
+  Show,
+  createSignal,
+  mergeProps,
+  onCleanup,
+  onMount,
+  splitProps,
+} from "solid-js";
+import { observeSize } from "../../internal/dom/observeSize";
 import {
   FillPaneRailGrid,
   HalfFillColumn,
+  NarrowStack,
+  NoShrinkColumn,
   ScrollFillColumn,
   ViewportColumn,
 } from "../Layout";
 import { FillCardSurface } from "../Surface";
-import { RAIL_WIDTH_PX, type RailWidth } from "./geometry";
+import {
+  RAIL_WIDTH_PX,
+  type RailWidth,
+  builderBoardLayoutFor,
+  builderBoardStackedRects,
+} from "./geometry";
 import { type PanelDSlot, createPanelDBox } from "./panelBox";
 
 export interface BuilderBoardProps {
@@ -102,7 +120,9 @@ export type BuilderBoardDataProps = Omit<
  *  gauge's width. A second token would pick a second grid variant here; the
  *  map is total over `RailWidth` so adding a token without a track fails the
  *  build. */
-const RAIL_GRID: Readonly<Record<RailWidth, Component<{ children?: JSX.Element }>>> = {
+const RAIL_GRID: Readonly<
+  Record<RailWidth, Component<{ children?: JSX.Element }>>
+> = {
   gauge: FillPaneRailGrid,
 };
 
@@ -116,41 +136,107 @@ export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
     "rail",
   ]);
   const Rail = RAIL_GRID[local.rail];
-  // Panel D's box: measured once laid out. Before that, the only size this
-  // board states for D is the rail's width; its height is the viewport's,
-  // which the board cannot see, so it reads 0 until measured.
+  // THE BOARD'S OWN WIDTH picks the layout (geometry.ts,
+  // `builderBoardLayoutFor`): one breakpoint, single column below it. Read
+  // synchronously on mount (a ref-time read is 0, and the observer's first
+  // delivery is frozen in a hidden tab), then on every change. Unmeasured
+  // (0) keeps the split board.
+  const [width, setWidth] = createSignal(0);
+  const measureBoard = (el: HTMLElement): void => {
+    onMount(() => {
+      setWidth(Math.round(el.getBoundingClientRect().width));
+      onCleanup(observeSize(el, (size) => setWidth(size.width)));
+    });
+  };
+  const stacked = () => builderBoardLayoutFor(width()) === "stacked";
+  const stackedRects = () => builderBoardStackedRects(width());
+  // Panel D's box: measured once laid out. Before that, split states only
+  // the rail's width (its height is the viewport's, which the board cannot
+  // see, so 0); stacked states D's own rect.
   const d = createPanelDBox(
     () => local.panelD,
-    () => ({ width: RAIL_WIDTH_PX[local.rail], height: 0 }),
+    () =>
+      stacked()
+        ? stackedRects().d
+        : { width: RAIL_WIDTH_PX[local.rail], height: 0 },
   );
+  const cardC = (): JSX.Element => (
+    <FillCardSurface data-builder-board-panel="c">
+      <ScrollFillColumn>{local.panelC}</ScrollFillColumn>
+    </FillCardSurface>
+  );
+  const cardD = (): JSX.Element => (
+    <FillCardSurface data-builder-board-panel="d" ref={d.ref}>
+      {d.content()}
+    </FillCardSurface>
+  );
+  // The single column, top to bottom. The CARDS are fixed once; only the
+  // heights are read per width, so a resize never remounts a panel.
+  const columnCards: readonly (() => JSX.Element)[] = [
+    () => (
+      <FillCardSurface data-builder-board-panel="a">
+        {local.panelA}
+      </FillCardSurface>
+    ),
+    () => (
+      <FillCardSurface data-builder-board-panel="b">
+        {local.panelB}
+      </FillCardSurface>
+    ),
+    cardC,
+    cardD,
+  ];
+  const columnHeights = (): readonly number[] => {
+    const r = stackedRects();
+    return [r.a.height, r.b.height, r.c.height, r.d.height];
+  };
   return (
-    <ViewportColumn data-builder-board="">
-      {/* THE TOP HALF, HALVED AGAIN. `HalfFillColumn` is `flex: 1 1 0` — the
+    <ViewportColumn
+      data-builder-board=""
+      data-layout={stacked() ? "stacked" : undefined}
+      ref={measureBoard}
+    >
+      <Show
+        when={!stacked()}
+        fallback={
+          // SINGLE COLUMN: the board scrolls; each card holds the height the
+          // core stated (measured geometry, never a literal).
+          <ScrollFillColumn>
+            <NarrowStack>
+              <Index each={columnHeights()}>
+                {(height, i) => (
+                  <NoShrinkColumn style={{ height: `${height()}px` }}>
+                    {columnCards[i]()}
+                  </NoShrinkColumn>
+                )}
+              </Index>
+            </NarrowStack>
+          </ScrollFillColumn>
+        }
+      >
+        {/* THE TOP HALF, HALVED AGAIN. `HalfFillColumn` is `flex: 1 1 0` — the
           zero basis divides the space BEFORE content is consulted, so a tall
           chart beside a short one still gets exactly half. */}
-      <HalfFillColumn data-builder-board-half="top">
-        <HalfFillColumn data-builder-board-panel="a">
-          <FillCardSurface>{local.panelA}</FillCardSurface>
+        <HalfFillColumn data-builder-board-half="top">
+          <HalfFillColumn data-builder-board-panel="a">
+            <FillCardSurface>{local.panelA}</FillCardSurface>
+          </HalfFillColumn>
+          <HalfFillColumn data-builder-board-panel="b">
+            <FillCardSurface>{local.panelB}</FillCardSurface>
+          </HalfFillColumn>
         </HalfFillColumn>
-        <HalfFillColumn data-builder-board-panel="b">
-          <FillCardSurface>{local.panelB}</FillCardSurface>
-        </HalfFillColumn>
-      </HalfFillColumn>
 
-      {/* THE BOTTOM HALF: the pane takes what the rail leaves. The grid's two
+        {/* THE BOTTOM HALF: the pane takes what the rail leaves. The grid's two
           tracks ARE the two cards — a card is a grid item, not a card inside a
           box inside a row — and its `minmax(0, 1fr)` row is what lets the
           cards be shorter than their content. */}
-      <HalfFillColumn data-builder-board-half="bottom">
-        <Rail>
-          <FillCardSurface data-builder-board-panel="c">
-            <ScrollFillColumn>{local.panelC}</ScrollFillColumn>
-          </FillCardSurface>
-          <FillCardSurface data-builder-board-panel="d" ref={d.ref}>
-            {d.content()}
-          </FillCardSurface>
-        </Rail>
-      </HalfFillColumn>
+        <HalfFillColumn data-builder-board-half="bottom">
+          <Rail>
+            {cardC()}
+            {cardD()}
+          </Rail>
+        </HalfFillColumn>
+      </Show>
     </ViewportColumn>
   );
 };

@@ -32,7 +32,7 @@ import { BuilderBoard } from "../../../src/components/BuilderBoard";
 import { StillCashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import {
-  builderBoardTable,
+  observeBuilderBoard,
   type PanelId,
   type Viewport,
 } from "../../../src/components/BuilderBoard/geometry";
@@ -51,10 +51,13 @@ import { NoteText, SectionTitle, TextTitle } from "../../../src/components/Text"
 
 export const meta = { label: "Builder Board" };
 
-type SizeId = "laptop" | "desktop" | "wide";
+type SizeId = "phone" | "tablet" | "laptop" | "desktop" | "wide";
 
-/** The three viewports, as the bench classes in dev/main.css state them. */
+/** The viewports, as the bench classes in dev/main.css state them. The phone
+ *  sits under BUILDER_BOARD_SINGLE_COLUMN_BELOW, so it draws one column. */
 const SIZES: Readonly<Record<SizeId, Viewport>> = {
+  phone: { width: 390, height: 760 },
+  tablet: { width: 768, height: 900 },
   laptop: { width: 1000, height: 600 },
   desktop: { width: 1280, height: 720 },
   wide: { width: 1600, height: 900 },
@@ -66,7 +69,7 @@ const SizePicker = createSegmentedControl({
       value: id,
       label: `${id} ${SIZES[id].width}×${SIZES[id].height}`,
     }),
-    ["laptop", "desktop", "wide"] as const,
+    ["phone", "tablet", "laptop", "desktop", "wide"] as const,
   ),
 });
 
@@ -202,8 +205,8 @@ const BuilderBoardBench: Component = () => {
           </div>
         </ScrollXBox>
 
-        <TextTitle>Model — builderBoardTable({SIZES[size()].width}, {SIZES[size()].height})</TextTitle>
-        <CodeBlock size="sm">{builderBoardTable(SIZES[size()])}</CodeBlock>
+        <TextTitle>Model — observeBuilderBoard({SIZES[size()].width}, {SIZES[size()].height})</TextTitle>
+        <CodeBlock size="sm">{observeBuilderBoard(SIZES[size()])}</CodeBlock>
         <TextTitle>Measured — getBoundingClientRect on the rendered panels</TextTitle>
         <CodeBlock size="sm">{measured()}</CodeBlock>
       </NarrowStack>
