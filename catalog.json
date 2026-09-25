@@ -4152,7 +4152,7 @@
     "showcase": "#/stacked-timeline-chart",
     "since": "0.174.0",
     "file": "src/components/StackedTimelineChart/StackedTimelineChart.tsx",
-    "line": 408
+    "line": 436
   },
   {
     "name": "createStatusBadge",
@@ -5806,7 +5806,7 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/EditableTitle/EditableTitle.tsx",
-    "line": 62
+    "line": 73
   },
   {
     "name": "EllipsisText",
@@ -12210,7 +12210,7 @@
     "showcase": "#/stacked-timeline-chart",
     "since": "0.174.0",
     "file": "src/components/StackedTimelineChart/StackedTimelineChart.tsx",
-    "line": 212
+    "line": 240
   },
   {
     "name": "StarToggle",

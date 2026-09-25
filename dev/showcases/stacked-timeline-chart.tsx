@@ -12,6 +12,8 @@ import {
   type StackedTimelineEvent,
 } from "../../src/components/StackedTimelineChart";
 import { CardSurface } from "../../src/components/Surface";
+import { FillChartFrame } from "../../src/components/ChartFrame";
+import { FixedHeightBox } from "../../src/components/Layout";
 import { CaptionLabel, SectionTitle } from "../../src/components/Text";
 
 const START = new Date("2025-01-01T00:00:00Z");
@@ -92,6 +94,20 @@ export const StackedTimelineChartShowcase: Component = () => {
             />
           </div>
         </CardSurface>
+      </div>
+      <div class="example-group">
+        <h3>In a FillChartFrame, inside a fixed-height box — thorcasting's Work Mix</h3>
+        <FixedHeightBox>
+            <FillChartFrame title="Work Mix" yTitle="Hours">
+              <HoursTimeline
+                series={SERIES}
+                xDomain={[START, END]}
+                yDomain={[0, 80]}
+                rule={{ value: 40, label: "full-time" }}
+                events={events()}
+              />
+            </FillChartFrame>
+        </FixedHeightBox>
       </div>
     </div>
   );
