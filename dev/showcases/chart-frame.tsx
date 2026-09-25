@@ -6,9 +6,11 @@ import { type Component, createSignal } from "solid-js";
 import { StillCashflowScrubChart } from "../../src/components/CashflowScrubChart";
 import {
   ChartFrame,
+  FillChartFrame,
   type ChartYAxisMode,
   chartYAxisModeInfo,
 } from "../../src/components/ChartFrame";
+import { FixedHeightBox } from "../../src/components/Layout";
 import { MutedBody } from "../../src/components/Text";
 import { shellCells } from "./chart-shell";
 
@@ -45,6 +47,14 @@ export const ChartFrameShowcase: Component = () => {
           />
         </ChartFrame>
         <MutedBody>{`yAxisMode = "${mode()}" · fullscreen = ${fullscreen()} · last press: ${lastPress()}`}</MutedBody>
+      </div>
+      <div class="example-group">
+        <h3>FillChartFrame — takes a parent of definite height (here FixedHeightBox, 200px)</h3>
+        <FixedHeightBox>
+          <FillChartFrame title="Payroll" yTitle="Salary ($)">
+            <StillCashflowScrubChart cells={shellCells} chartHeight="fill" scrub={false} />
+          </FillChartFrame>
+        </FixedHeightBox>
       </div>
       <div class="example-group">
         <h3>No y-axis to manage</h3>

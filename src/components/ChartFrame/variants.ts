@@ -11,3 +11,12 @@ export const CHART_FRAME_HEIGHT = 320;
 export const ChartFrame: Component<ChartFrameDataProps> = createChartFrame({
   height: CHART_FRAME_HEIGHT,
 });
+
+/**
+ * The frame that takes its parent's height: for a chart in a panel of
+ * definite height (BuilderBoard's chart row), where a stated px would fight
+ * the panel.
+ */
+export const FillChartFrame: Component<ChartFrameDataProps> = createChartFrame({
+  height: "fill",
+});
