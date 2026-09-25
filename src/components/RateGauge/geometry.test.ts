@@ -1219,7 +1219,9 @@ describe("leader rows stay inside the box (fixed 2026-09-24)", () => {
   it("keeps rows in order a full pitch apart, so leaders cannot cross", () => {
     for (const value of stops) {
       const ys = spanOf(value, 300).g.callouts.map((c) => c.y);
-      ys.slice(1).forEach((y, i) => expect(y - ys[i]).toBeGreaterThanOrEqual(CALLOUT_PITCH - 0.01));
+      ys.slice(1).forEach((y, i) => {
+        expect(y - ys[i]).toBeGreaterThanOrEqual(CALLOUT_PITCH - 0.01);
+      });
     }
   });
 });

@@ -1921,13 +1921,13 @@ describe("MutationSliders — grouping: link (the selection, two triggers)", () 
         onSelectionChange={onSelection}
       />
     ));
-    const valueOf = (label: string) =>
+    const dialValue = (label: string) =>
       Number(view.getByLabelText(label).getAttribute("aria-valuenow"));
     const columnOf = (label: string) =>
       view.container
         .querySelector(`[aria-label="${label}"]`)
         ?.closest(".sui-marked-slider")?.parentElement as HTMLElement;
-    return { ...view, onSelection, valueOf, columnOf };
+    return { ...view, onSelection, dialValue, columnOf };
   };
 
   it("draws no link slot in the default pin mode", () => {
@@ -1966,7 +1966,7 @@ describe("MutationSliders — grouping: link (the selection, two triggers)", () 
   });
 
   it("the link button toggles the SELECTION and snaps the group to the highest", () => {
-    const { container, onSelection, valueOf, columnOf } = mount(["adlai"]);
+    const { container, onSelection, dialValue, columnOf } = mount(["adlai"]);
     // A selected dial shows its (pressed) link so the reader sees the group.
     const adlai = queryButton(container, "Unlink Adlai") as HTMLElement;
     expect(adlai.getAttribute("aria-pressed")).toBe("true");
@@ -1974,8 +1974,8 @@ describe("MutationSliders — grouping: link (the selection, two triggers)", () 
     fireEvent.click(queryButton(container, "Link Flynn") as HTMLElement);
     expect(onSelection).toHaveBeenLastCalledWith(["adlai", "flynn"]);
     // Adlai 52k (ceiling 60k), Flynn 55k → both level at 55k.
-    expect(valueOf("Adlai")).toBe(55_000);
-    expect(valueOf("Flynn")).toBe(55_000);
+    expect(dialValue("Adlai")).toBe(55_000);
+    expect(dialValue("Flynn")).toBe(55_000);
   });
 
   it("the name click is the same toggle", () => {
@@ -1985,19 +1985,19 @@ describe("MutationSliders — grouping: link (the selection, two triggers)", () 
   });
 
   it("moves every selected dial to the SAME amount, re-levelling after a ceiling", () => {
-    const { valueOf, getByLabelText } = mount(["adlai", "flynn"]);
+    const { dialValue, getByLabelText } = mount(["adlai", "flynn"]);
     const flynn = getByLabelText("Flynn");
     const press = (key: string, times: number) => {
       for (let i = 0; i < times; i += 1) fireEvent.keyDown(flynn, { key });
     };
     // Up past Adlai's 60k ceiling (a key moves 2k on this 200k domain).
     press("ArrowUp", 5);
-    expect([valueOf("Flynn"), valueOf("Adlai")]).toEqual([65_000, 60_000]);
+    expect([dialValue("Flynn"), dialValue("Adlai")]).toEqual([65_000, 60_000]);
     // Back down inside Adlai's range: one level again, not the 5k gap a
     // delta move would keep.
     press("ArrowDown", 3);
-    expect([valueOf("Flynn"), valueOf("Adlai")]).toEqual([59_000, 59_000]);
-    expect(valueOf("Peter")).toBe(104_000);
+    expect([dialValue("Flynn"), dialValue("Adlai")]).toEqual([59_000, 59_000]);
+    expect(dialValue("Peter")).toBe(104_000);
   });
 });
 
@@ -2124,9 +2124,9 @@ describe("MutationSliders — precision: the amount edits in place", () => {
       fireEvent.keyDown(input, { key });
       fireEvent.blur(input);
     };
-    const valueOf = (label: string) =>
+    const dialValue = (label: string) =>
       Number(view.getByLabelText(label).getAttribute("aria-valuenow"));
-    return { ...view, field, typeInto, valueOf, onChangeEnd };
+    return { ...view, field, typeInto, dialValue, onChangeEnd };
   };
 
   it("keeps the amount static without a precision", () => {
@@ -2137,27 +2137,27 @@ describe("MutationSliders — precision: the amount edits in place", () => {
   });
 
   it("commits a typed figure rounded to the thousand, then clamped to the range", () => {
-    const { typeInto, valueOf, onChangeEnd } = mount();
+    const { typeInto, dialValue, onChangeEnd } = mount();
     typeInto("Peter", "98,700");
-    expect(valueOf("Peter")).toBe(99_000);
+    expect(dialValue("Peter")).toBe(99_000);
     expect(onChangeEnd).toHaveBeenLastCalledWith("peter", 99_000);
     // Peter's range tops out at 110k.
     typeInto("Peter", "250k");
-    expect(valueOf("Peter")).toBe(110_000);
+    expect(dialValue("Peter")).toBe(110_000);
   });
 
   it("Escape reverts, and an emptied field commits nothing", () => {
-    const { typeInto, valueOf } = mount();
+    const { typeInto, dialValue } = mount();
     typeInto("Peter", "90000", "Escape");
-    expect(valueOf("Peter")).toBe(104_000);
+    expect(dialValue("Peter")).toBe(104_000);
     typeInto("Peter", "");
-    expect(valueOf("Peter")).toBe(104_000);
+    expect(dialValue("Peter")).toBe(104_000);
   });
 
   it("a typed figure moves a linked group to the same level", () => {
-    const { typeInto, valueOf } = mount(["adlai", "flynn"]);
+    const { typeInto, dialValue } = mount(["adlai", "flynn"]);
     typeInto("Flynn", "58000");
-    expect([valueOf("Flynn"), valueOf("Adlai")]).toEqual([58_000, 58_000]);
+    expect([dialValue("Flynn"), dialValue("Adlai")]).toEqual([58_000, 58_000]);
   });
 
   it("a removed entity has no field", () => {
@@ -2193,11 +2193,11 @@ describe("MutationSliders — Reset moves a linked group, unlinking who can't fo
       />
     ));
     fireEvent.click(queryButton(container, "Reset Elaina") as HTMLElement);
-    const valueOf = (label: string) =>
+    const dialValue = (label: string) =>
       Number(getByLabelText(label).getAttribute("aria-valuenow"));
-    expect([valueOf("Elaina"), valueOf("Flynn")]).toEqual([62_000, 62_000]);
+    expect([dialValue("Elaina"), dialValue("Flynn")]).toEqual([62_000, 62_000]);
     expect(selected()).toEqual(["elaina", "flynn"]);
-    expect(valueOf("Peter")).toBe(104_000);
+    expect(dialValue("Peter")).toBe(104_000);
   });
 });
 

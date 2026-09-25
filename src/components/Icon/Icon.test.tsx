@@ -254,13 +254,13 @@ describe("Icon chart-strategy and link glyphs", () => {
   });
 
   it("renders each in both variants", () => {
-    added.forEach((name) =>
-      (["outline", "solid"] as const).forEach((variant) => {
+    for (const name of added) {
+      for (const variant of ["outline", "solid"] as const) {
         const { container } = render(() => <Icon name={name} variant={variant} />);
         expect(
           container.querySelector('[role="img"]')?.getAttribute("aria-label"),
         ).toBe(name);
-      }),
-    );
+      }
+    }
   });
 });

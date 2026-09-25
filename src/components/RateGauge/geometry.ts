@@ -1287,7 +1287,6 @@ const MIN_STUB = 4;
 const leaderExits = (
   anchors: readonly { readonly radius: number; readonly angle: number }[],
   turns: readonly Point[],
-  rows: readonly number[],
   metrics: Metrics,
 ): readonly Point[] => {
   const heightAt = (index: number, radius: number): number =>
@@ -1445,7 +1444,7 @@ const placeCallouts = (
     map((callout: Unplaced) => linesFor(callout.id), ordered),
     metrics,
   );
-  const exitPoints = leaderExits(ordered, turns, rows, metrics);
+  const exitPoints = leaderExits(ordered, turns, metrics);
   const channels = leaderChannels(exitPoints, rows, metrics);
   const bands = markBands(angles, metrics);
   const anchors = map(
