@@ -3182,7 +3182,7 @@
     "showcase": "#/dirty-combo-box",
     "since": "Unreleased",
     "file": "src/components/DirtyComboBox/DirtyComboBox.tsx",
-    "line": 205
+    "line": 363
   },
   {
     "name": "createDistributionSparkline",
@@ -5788,7 +5788,7 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/EditableTitle/EditableTitle.tsx",
-    "line": 51
+    "line": 62
   },
   {
     "name": "EllipsisText",
@@ -10525,7 +10525,7 @@
     "showcase": "#/reserved-width",
     "since": "Unreleased",
     "file": "src/components/ReservedWidth/ReservedWidth.tsx",
-    "line": 31
+    "line": 33
   },
   {
     "name": "ResizableContainer",
@@ -10661,7 +10661,7 @@
     "family": "DirtyComboBox",
     "variantOf": {
       "factory": "createDirtyComboBox",
-      "overrides": "{\n    labels: {\n      reference: \"Baseline\",\n      versus: \"vs\",\n      save: \"Save\",\n      reset: \"Reset to saved\",\n      deleteItem: (label) => `Delete ${label}`,\n    },\n  }"
+      "overrides": "{\n    labels: {\n      reference: \"Baseline\",\n      versus: \"vs\",\n      save: \"Save\",\n      reset: \"Reset to saved\",\n      deleteItem: (label) => `Delete ${label}`,\n      create: \"New scenario\",\n      choose: \"Choose a scenario\",\n      none: \"None\",\n    },\n  }"
     },
     "overrides": [
       "labels"
