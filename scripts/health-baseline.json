@@ -13,6 +13,7 @@
   "brokenDocImports": 0,
   "missingDepthHeaders": 0,
   "componentsWithoutShowcase": 0,
+  "catalogSummaryGaps": 62,
   "_raises": {
     "inlineStyleSrc": {
       "from": 66,

@@ -6424,5 +6424,48 @@
         }
       }
     }
+  },
+  {
+    "at": "2026-09-25T22:18:43.808Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 20,
+      "dotChains": 7,
+      "collectionMethodCalls": 30,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 143,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 62
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 20,
+      "dotChains": 7,
+      "collectionMethodCalls": 30,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 143,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 66,
+          "to": 67,
+          "reason": "ThemedNumberInput caps its own width to the fieldWidthForChars-derived max-width (Peter 2026-09-24: a number field never stretches the whole screen), same measured-category pattern as CurrencyInput/IntervalInput"
+        }
+      }
+    }
   }
 ]

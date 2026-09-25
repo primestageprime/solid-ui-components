@@ -44,6 +44,8 @@ import { run as runShowcaseCoverage } from "./showcase-coverage.mjs";
 import { run as runRenderCoverage } from "./render-coverage.mjs";
 import { run as runDocCoverage } from "./doc-coverage.mjs";
 import { run as runPropRubric } from "./prop-rubric.mjs";
+import { buildExportSurface } from "./export-surface.mjs";
+import { buildCatalog } from "./catalog.mjs";
 import { length, mapValues } from "./fn.mjs";
 import { classify, planBaselineUpdate } from "./health-ratchet.mjs";
 
@@ -204,8 +206,33 @@ const { missing: componentsNeverRendered } = runRenderCoverage();
 // bug — DailyDateAxis and dayCellContext were shipping in the tarball while
 // unreachable from the root barrel, and a Row example taught an import the
 // curried-only policy forbids.
+// The TS Program build behind `buildExportSurface` is the expensive part of
+// both `doc-coverage` and `catalog` (each several seconds). Building it ONCE
+// here and handing it to both keeps `catalogSummaryGaps` below from paying
+// for a second Program build inside an already-slow gate.
+const exportSurface = buildExportSurface({ root });
+
 const { missing: undocumentedExports, broken: brokenDocImports } =
-  runDocCoverage();
+  runDocCoverage({ root, surface: exportSurface });
+
+// Catalog records (scripts/catalog.mjs) with `summary: null` — a curried
+// variant or factory NEVER lands here (its baked overrides are synthesized
+// into a summary by construction), so a non-zero count is exclusively a base
+// primitive/composite with neither a COMPONENTS.md bullet nor a JSDoc
+// comment above its export: real, undiscoverable doc debt for `npm run find`
+// (AGENT_GUIDE.md § push-back protocol, step zero). Baselined 2026-09-25 at
+// 62 (58 primitive, 4 composite) — see `scripts/catalog.test.ts` for the
+// synthesis rule this counts around.
+const catalogRecords = buildCatalog({
+  surface: exportSurface,
+  readSrc: (file) => readFileSync(join(root, file), "utf8"),
+  componentsMd: readFileSync(join(root, "COMPONENTS.md"), "utf8"),
+  changelogSrc: readFileSync(join(root, "CHANGELOG.md"), "utf8"),
+  mainTsxSrc: readFileSync(join(root, "dev/main.tsx"), "utf8"),
+});
+const catalogSummaryGaps = catalogRecords
+  .filter((r) => r.summary === null)
+  .map((r) => `${r.name} (${r.kind}) ${r.file}:${r.line}`);
 
 const missingDepth = [];
 for (const f of walk(
@@ -264,6 +291,7 @@ const detail = {
   brokenDocImports,
   missingDepthHeaders: missingDepth,
   componentsWithoutShowcase,
+  catalogSummaryGaps,
 };
 
 const metrics = mapValues(length, detail);
