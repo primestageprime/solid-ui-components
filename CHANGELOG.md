@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.197.0 — 2026-09-25
+
 ### Added
 
 - **`StackedTimelineChart`: LevelsTimeline's mutation contract** (G24), additive: `mutations` (numbered flags in the top margin, numbered in time order, a rule through the plot; the chart reserves the margin), `selectedMutationId` + `onSelectMutation` (flags become buttons: click, Enter/Space), `onMoveMutation(id, at)` (drag and ←/→ a day, clamped between neighbours and to `xDomain` via `clampMutationTime`), and `pickAt?: PickStrategy` to snap `onPick`. `events`/`selectedEvent` are deprecated in comments and keep working. The flag lane is an internal Depth-1 Chart slot (`Chart/MutationFlags`) over LevelsTimeline's geometry.
