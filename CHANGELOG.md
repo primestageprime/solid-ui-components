@@ -4,6 +4,8 @@
 
 ### Added
 
+- **`ScrubChart`: `chrome?: "own" | "frame"`** (override, default `"own"`, unchanged) — `"frame"` draws none of the chart's own controls (corner y-mode switch / y-fit button, range editor, expand chevron, top action) so a `ChartFrame` + `createYAxisStrategy` drive it through its controlled `yDomain`, `yAxisMode` and `expanded`. Passed through `CashflowScrubChart`, whose factory now curries it.
+- **`FramedCashflowScrubChart`** — curried `chrome: "frame"` + still motion: the cashflow chart inside a `ChartFrame`.
 - **`FillChartFrame`** — curried `createChartFrame({ height: "fill" })`, the frame for a parent of definite height (a BuilderBoard chart panel).
 - **`ChartFrame`: `actions?: JSX.Element`** — the chart's own controls (a Cap field, a span picker) in the header before fullscreen and the y-axis split. Omitted, the header DOM is unchanged.
 - **`createYAxisStrategy`** (`src/hooks`) — ChartFrame's y-axis strategy (auto / autoscale / fixed) over `createAxisWaterMarks`, with its pure `stepYAxis`, `displayedDomain`, `checkLock`, and the headless `observeYAxis` / `formatYAxisRows` (`AXIS_WATER_MARK_HOLD`).

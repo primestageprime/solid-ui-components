@@ -462,6 +462,18 @@ export interface ScrubChartProps<C extends Cell> {
   /** Fires when the user picks a segment of the fit toggle. */
   onYScaleModeChange?: (mode: ScrubChartYScaleMode) => void;
   /**
+   * WHO DRAWS THE CHART'S CONTROLS. `"own"` (the default — today's rendering,
+   * unchanged): the chart draws its y-mode switch or y-fit button in the
+   * origin corner, the fixed-mode range editor, the expand chevron and the
+   * top-right action. `"frame"`: it draws NONE of them — a `ChartFrame`
+   * above it holds the controls, and everything they set arrives here as
+   * controlled props: the domain (`yDomain` / `yFitDomain`, e.g. from
+   * `createYAxisStrategy`), `yAxisMode`, and `expanded`. The corner's
+   * footprint and column go with the controls, so the plot takes the room.
+   * Presentational — curried, never passed at a call site.
+   */
+  chrome?: "own" | "frame";
+  /**
    * The y-axis POLICY the reader picked, shown as a three-segment switch in
    * the axis origin corner: `"auto"` (grow with the data, never shrink),
    * `"fixed"` (hold a range the reader set) or `"autoscale"` (fit the data
@@ -573,6 +585,7 @@ export interface ScrubChartProps<C extends Cell> {
  */
 export type ScrubChartOverrides<C extends Cell> = Pick<
   ScrubChartProps<C>,
+  | "chrome"
   | "chartHeight"
   | "cellWidth"
   | "yAxisWidth"
