@@ -995,7 +995,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 109
+    "line": 141
   },
   {
     "name": "BuilderBoardBelowChart",
@@ -2809,7 +2809,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 158
+    "line": 241
   },
   {
     "name": "createBuilderBoardBelowChart",
