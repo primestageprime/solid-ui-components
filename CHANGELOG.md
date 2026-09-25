@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.185.0 — 2026-09-25
+
 ### Added
 
 - **`DirtyComboBox`** (curried: **`ScenarioComboBox`**, factory `createDirtyComboBox({ labels })`) — a list of things that can be saved or reset, with dirty detection: `[Baseline] vs [name ▾ │ ✓]  ↺`. Pristine shows no save and no reset and the frame hugs its content; dirty slides both out and the frame grows, inside an invisible reservation of the dirty width, so nothing beside it moves. Per-row delete (never the selected row; mouse or Delete/Backspace), a scrolling list, and a combo as wide as the longest name so it never jumps. The words (`labels`) are curried, never passed at a call site. Driven by the pure, exported **`dirtyComboModel`** plus store transitions (`dirtyComboViewOf`, `dirtyComboSelect`, `dirtyComboSave`, `dirtyComboReset`, `dirtyComboRemove`, `dirtyComboEqual`, `dirtyComboWidthCh`).
