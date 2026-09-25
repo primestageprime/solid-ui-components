@@ -1,5 +1,8 @@
 import { fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import {
   CHART_FRAME_HEIGHT,
@@ -11,6 +14,60 @@ import {
 
 const button = (container: HTMLElement, name: string) =>
   container.querySelector<HTMLButtonElement>(`button[aria-label="${name}"]`);
+
+const here = dirname(fileURLToPath(import.meta.url));
+
+/** The declarations of one exact selector in a component stylesheet. */
+const ruleOf = (file: string, selector: string): string => {
+  const css = readFileSync(join(here, "..", file), "utf8");
+  const at = css.indexOf(`${selector} {`);
+  if (at < 0) return "";
+  const block = css.slice(at);
+  return block.slice(0, block.indexOf("}"));
+};
+
+describe("FillChartFrame — the fill chain reaches the body (G11)", () => {
+  // jsdom has no layout, so this asserts the CSS that carries the chain:
+  // parent (definite height) → in-flow FullscreenBox → frame column (100%)
+  // → body row (flex 1). The FullscreenBox link was missing: in flow it was
+  // content-sized, so the column's 100% resolved to ~30px and the body to 0.
+  it("the in-flow fullscreen box fills its parent when the frame fills", () => {
+    const Fill = createChartFrame({ height: "fill" });
+    const { container } = render(() => (
+      <Fill title="T">
+        <span />
+      </Fill>
+    ));
+    const box = container.querySelector(".sui-fullscreen-box")!;
+    expect(box.classList.contains("sui-fullscreen-box--fill")).toBe(true);
+    const rule = ruleOf("FullscreenBox/FullscreenBox.css", ".sui-fullscreen-box--fill");
+    expect(rule).toMatch(/height:\s*100%/);
+    expect(rule).toMatch(/min-height:\s*0/);
+    expect(rule).toMatch(/flex:\s*1 1 0/);
+  });
+
+  it("the y-title rail is clipped to the body, never spilling into the header (G13)", () => {
+    const Fill = createChartFrame({ height: "fill" });
+    const { getByText } = render(() => (
+      <Fill title="T" yTitle="Salary ($)">
+        <span />
+      </Fill>
+    ));
+    const rail = getByText("Salary ($)").parentElement as HTMLElement;
+    expect(parseFloat(rail.style.minHeight)).toBe(0);
+    expect(rail.style.overflow).toBe("hidden");
+  });
+
+  it("a fixed-height frame's box stays content-sized", () => {
+    const { container } = render(() => (
+      <ChartFrame title="T">
+        <span />
+      </ChartFrame>
+    ));
+    const box = container.querySelector(".sui-fullscreen-box")!;
+    expect(box.classList.contains("sui-fullscreen-box--fill")).toBe(false);
+  });
+});
 
 describe("ChartFrame", () => {
   it("draws the title, the vertical y-title and the chart", () => {
