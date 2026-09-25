@@ -17,6 +17,7 @@ export const ICON_GROUPS = {
     "chevron-left",
     "chevron-right",
     "arrow-right",
+    "arrows-up-down",
   ] as const,
   data: [
     "data",
@@ -36,6 +37,9 @@ export const ICON_GROUPS = {
     "zoom-out",
     "shrink",
     "expand",
+    "fit",
+    "fullscreen",
+    "fullscreen-exit",
     "filter",
     "refresh",
     "undo",
@@ -44,7 +48,16 @@ export const ICON_GROUPS = {
     "edit",
     "trash",
   ] as const,
-  ui: ["spinner", "menu", "settings", "gear", "external-link", "bell"] as const,
+  ui: [
+    "spinner",
+    "menu",
+    "settings",
+    "gear",
+    "external-link",
+    "bell",
+    "lock",
+    "link",
+  ] as const,
   auth: ["log-out", "log-in", "user", "agent"] as const,
   cache: [
     "cache-minutes",
@@ -68,6 +81,7 @@ export type IconName =
   | "chevron-left"
   | "chevron-right"
   | "arrow-right"
+  | "arrows-up-down"
   // Data
   | "data"
   | "table"
@@ -87,6 +101,9 @@ export type IconName =
   | "zoom-out"
   | "shrink"
   | "expand"
+  | "fit"
+  | "fullscreen"
+  | "fullscreen-exit"
   | "filter"
   | "refresh"
   | "undo"
@@ -101,6 +118,8 @@ export type IconName =
   | "gear"
   | "external-link"
   | "bell"
+  | "lock"
+  | "link"
   // Auth
   | "log-out"
   | "log-in"
@@ -302,6 +321,28 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
       outline: `<path d="M14 2L9.5 6.5M9.5 3.5v3h3M2 14l4.5-4.5M6.5 12.5v-3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M14 2L9.5 6.5M9.5 3.5v3h3M2 14l4.5-4.5M6.5 12.5v-3h-3" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
+    // Fit the y-axis to the data (Peter's ↗↙): one double-headed diagonal
+    // INSIDE an axis corner, so it never reads as `expand` / `shrink`, whose
+    // arrows run to the viewBox corners and mean the whole view.
+    fit: {
+      outline: `<path d="M2 2v12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M6 10L13 3M10 3h3v3M6 7v3h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M2 2v12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M6 10L13 3M10 3h3v3M6 7v3h3" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+    // Full screen (Peter's reference, 2026-09-25): four rounded L-brackets in
+    // the corners, pointing OUT, the middle open. No arrows — arrows belong
+    // to `fit` (the y-axis) and `expand`/`shrink`.
+    fullscreen: {
+      outline: `<path d="M2 6V3a1 1 0 0 1 1-1h3M10 2h3a1 1 0 0 1 1 1v3M14 10v3a1 1 0 0 1-1 1h-3M6 14H3a1 1 0 0 1-1-1v-3" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M2 6V3a1 1 0 0 1 1-1h3M10 2h3a1 1 0 0 1 1 1v3M14 10v3a1 1 0 0 1-1 1h-3M6 14H3a1 1 0 0 1-1-1v-3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+    // Back to windowed: the same four brackets turned IN, their corners
+    // pointing at the centre.
+    "fullscreen-exit": {
+      outline: `<path d="M2 6h3a1 1 0 0 0 1-1V2M10 2v3a1 1 0 0 0 1 1h3M14 10h-3a1 1 0 0 0-1 1v3M6 14v-3a1 1 0 0 0-1-1H2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M2 6h3a1 1 0 0 0 1-1V2M10 2v3a1 1 0 0 0 1 1h3M14 10h-3a1 1 0 0 0-1 1v3M6 14v-3a1 1 0 0 0-1-1H2" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
     filter: {
       outline: `<path d="M2 3h12L9 8.5V13l-2-1V8.5L2 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M2 3h12L9 8.5V13l-2-1V8.5L2 3z" fill="currentColor"/>`,
@@ -391,9 +432,31 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
       solid: `<path d="M12.54 6.16L14.79 6.31A7 7 0 0 1 14.79 9.69L12.54 9.84A4.9 4.9 0 0 1 11.86 11.02L12.86 13.04A7 7 0 0 1 9.93 14.73L8.68 12.85A4.9 4.9 0 0 1 7.32 12.85L6.07 14.73A7 7 0 0 1 3.14 13.04L4.14 11.02A4.9 4.9 0 0 1 3.46 9.84L1.21 9.69A7 7 0 0 1 1.21 6.31L3.46 6.16A4.9 4.9 0 0 1 4.14 4.98L3.14 2.96A7 7 0 0 1 6.07 1.27L7.32 3.15A4.9 4.9 0 0 1 8.68 3.15L9.93 1.27A7 7 0 0 1 12.86 2.96L11.86 4.98A4.9 4.9 0 0 1 12.54 6.16Z" fill="currentColor"/>
             <circle cx="8" cy="8" r="2.4" fill="var(--sui-bg-primary)"/>`,
     },
+    // Up on the left, down on the right: an axis free to move both ways.
+    "arrows-up-down": {
+      outline: `<path d="M5 14V2M2.5 4.5L5 2l2.5 2.5M11 2v12M8.5 11.5L11 14l2.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M5 14V2M2.5 4.5L5 2l2.5 2.5M11 2v12M8.5 11.5L11 14l2.5-2.5" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
     "external-link": {
       outline: `<path d="M10 2h4v4M14 2L7 9M6 3H3v10h10v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M10 2h4v4M14 2L7 9M6 3H3v10h10v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+
+    // Padlock: a shackle over a body. Solid fills the body and cuts a keyhole.
+    lock: {
+      outline: `<rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+      solid: `<rect x="2.5" y="6.5" width="11" height="8" rx="1.5" fill="currentColor"/>
+            <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="8" cy="10.5" r="1.2" fill="var(--sui-bg-primary)"/>`,
+    },
+
+    // Chain: two interlocked rounded links on the diagonal.
+    link: {
+      outline: `<path d="M7 9a2.5 2.5 0 0 0 3.5 0l2.5-2.5a2.5 2.5 0 0 0-3.5-3.5L8.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <path d="M9 7a2.5 2.5 0 0 0-3.5 0L3 9.5a2.5 2.5 0 0 0 3.5 3.5l1-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M7 9a2.5 2.5 0 0 0 3.5 0l2.5-2.5a2.5 2.5 0 0 0-3.5-3.5L8.5 4" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M9 7a2.5 2.5 0 0 0-3.5 0L3 9.5a2.5 2.5 0 0 0 3.5 3.5l1-1" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
     },
 
     // Bell body with clapper — the notification trigger glyph.

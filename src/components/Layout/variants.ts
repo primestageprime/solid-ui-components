@@ -832,6 +832,20 @@ export const FillStretchRow: Component<RowDataProps> = createRow({
   style: { height: "100%", "min-height": "0" },
 });
 
+/** GutteredFillStretchRow — a `FillStretchRow` with an XL (24px) gap instead
+ *  of `sm` (8px): the same fill chain, with a GUTTER between instruments that
+ *  their own labels may run into.
+ *
+ *  For `MutationSliders` in its `"beside"` readout (Peter, 2026-09-24): the
+ *  change figure sits right of each bar on two lines ("−$100K" over "(100%)",
+ *  ~40px) and runs past the dial's 88px canvas, while the next dial's prior
+ *  label runs left into the same gap. 8px lets the two meet; 24px keeps them
+ *  apart. The row's paging arithmetic uses the matching slot width. */
+export const GutteredFillStretchRow: Component<RowDataProps> = createRow({
+  gap: "xl",
+  style: { height: "100%", "min-height": "0" },
+});
+
 /** GrowCenterColumn — fills the height its parent column has left and CENTRES
  *  its child in it (`flex:1 1 0; min-height:0; justify:center`).
  *

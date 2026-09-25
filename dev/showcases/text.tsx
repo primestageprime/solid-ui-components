@@ -32,6 +32,7 @@ import {
   SuccessBody,
   TextValueHighlightSm,
   TopicTitle,
+  VerticalAxisTitle,
   WarningBody,
 } from "../../src/components/Text";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -56,6 +57,7 @@ const REMAINING: Array<[string, Component<{ children: JSX.Element }>]> = [
   ["ScoreValue", ScoreValue],
   ["FormulaVar", FormulaVar],
   ["MonoDump", MonoDump],
+  ["VerticalAxisTitle", VerticalAxisTitle],
 ];
 
 export const TextShowcase: Component = () => {

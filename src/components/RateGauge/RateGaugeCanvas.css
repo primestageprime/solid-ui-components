@@ -320,3 +320,11 @@
   text-transform: none;
   letter-spacing: 0;
 }
+
+/* A CORNER block's unbounded line (`callouts: "fit"`): right-aligned on the
+   box's right margin, like the SVG text beside it, so the block reads as one
+   ragged-left column. After the trigger rule above, which it overrides. */
+.sui-rate-gauge__label-box--end,
+.sui-rate-gauge__label-box--end .sui-tooltip__trigger {
+  text-align: right;
+}

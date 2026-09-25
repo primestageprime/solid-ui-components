@@ -157,6 +157,19 @@
   fill: var(--sui-danger);
 }
 
+/* ── The prior label ─────────────────────────────────────────────────────
+   The old figure beside the prior arrowhead, right-anchored so it grows
+   LEFT, away from the track. Muted like the arrow it names: it is where the
+   value WAS, and the accent belongs to where it is going. */
+.sui-marked-slider__prior-label {
+  font-family: var(--sui-font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  dominant-baseline: middle;
+  text-anchor: end;
+  fill: var(--sui-text-secondary);
+}
+
 /* ── The two arrowheads ──────────────────────────────────────────────────
    Same shape, mirrored, pointing at the track from opposite sides. The PRIOR
    one is read-only and recedes; the VALUE one is the thing being dragged and

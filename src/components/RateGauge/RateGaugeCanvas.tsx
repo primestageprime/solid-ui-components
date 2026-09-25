@@ -46,6 +46,10 @@ import {
   type Band,
   type Box,
   type Callout,
+  type CalloutMode,
+  type CornerBlock,
+  type CornerId,
+  type CornerLabels,
   COLUMN_TICK_HALF,
   type Domain,
   type GaugeGeometry,
@@ -70,6 +74,17 @@ const LABEL_BOX_HEIGHT = 14;
 export interface RateGaugeLine {
   readonly text: string;
   readonly unbounded: boolean;
+}
+
+/**
+ * One line of a CORNER block (`callouts: "corners"`).
+ *
+ * `role` picks the treatment the same line gets in a leader callout: a name
+ * in its row's tone, a muted `relative` line, or the bold `delta` sentence in
+ * the active tone.
+ */
+export interface RateGaugeCornerLine extends RateGaugeLine {
+  readonly role: "name" | "relative" | "delta";
 }
 
 /**
@@ -107,6 +122,18 @@ export interface RateGaugeCanvasProps {
   ariaLabel: string;
   /** Content for an unbounded line's `<foreignObject>` slot. */
   renderLabel: (slot: RateGaugeLabelSlot) => JSX.Element;
+  /**
+   * `leaders` (default) draws the leader column; `corners` draws the corner
+   * blocks instead. Never chosen here — see `calloutModeFor` in geometry.ts.
+   */
+  callouts?: CalloutMode;
+  /** The corner blocks' strings, for sizing them (only read under `corners`). */
+  cornerLabels?: CornerLabels;
+  /** The lines one corner block carries, given the resolved geometry. */
+  cornerLines?: (
+    id: CornerId,
+    geometry: GaugeGeometry,
+  ) => readonly RateGaugeCornerLine[];
 }
 
 /**
@@ -118,6 +145,15 @@ const bandClass = (band: Band): string =>
   `sui-rate-gauge__band sui-rate-gauge__band--${band.tone} sui-rate-gauge__band--${
     band.lit ? "lit" : "dim"
   }`;
+
+/** A corner line's row: the delta keeps the delta row's tone and weight. */
+const cornerRowClass = (block: CornerBlock, line: RateGaugeCornerLine): string =>
+  `sui-rate-gauge__row sui-rate-gauge__row--${line.role === "delta" ? "delta" : block.id}`;
+
+const cornerTextClass = (line: RateGaugeCornerLine): string =>
+  line.role === "name"
+    ? "sui-rate-gauge__label"
+    : `sui-rate-gauge__label sui-rate-gauge__label--${line.role}`;
 
 const textClass = (callout: Callout, index: number): string =>
   `sui-rate-gauge__label${index === 0 ? "" : " sui-rate-gauge__label--relative"}${
@@ -170,6 +206,8 @@ export function RateGaugeCanvas(props: RateGaugeCanvasProps): JSX.Element {
       caution: props.caution,
       labels: props.labels,
       box: box(),
+      callouts: props.callouts,
+      cornerLabels: props.cornerLabels,
     }),
   );
   const tone = () => geometry().tone;
@@ -306,6 +344,49 @@ export function RateGaugeCanvas(props: RateGaugeCanvasProps): JSX.Element {
             </g>
           )}
         </For>
+
+        {/* The corner blocks, when the box chose them over leaders: no
+            leader, no tick, just the words right-aligned in their corner,
+            each line in the treatment its leader row would have given it. */}
+        <Show when={geometry().corners}>
+          {(corners) => (
+            <For each={corners()}>
+              {(block) => (
+                <Index each={props.cornerLines?.(block.id, geometry()) ?? []}>
+                  {(line, index) => (
+                    <g class={cornerRowClass(block, line())}>
+                      <Show
+                        when={line().unbounded}
+                        fallback={
+                          <text
+                            class={cornerTextClass(line())}
+                            x={block.x}
+                            y={block.lineY[index]}
+                            text-anchor="end"
+                            dominant-baseline="middle"
+                          >
+                            {line().text}
+                          </text>
+                        }
+                      >
+                        <foreignObject
+                          x={block.x - block.width}
+                          y={block.lineY[index] - LABEL_BOX_HEIGHT / 2}
+                          width={block.width}
+                          height={LABEL_BOX_HEIGHT}
+                        >
+                          <div class="sui-rate-gauge__label-box sui-rate-gauge__label-box--end">
+                            {props.renderLabel({ text: line().text })}
+                          </div>
+                        </foreignObject>
+                      </Show>
+                    </g>
+                  )}
+                </Index>
+              )}
+            </For>
+          )}
+        </Show>
       </svg>
     </div>
   );

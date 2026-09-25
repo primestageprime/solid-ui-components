@@ -107,6 +107,7 @@ import { RecentStarredShowcase } from "./showcases/recent-starred";
 import { QuadrantGridShowcase } from "./showcases/quadrant-grid";
 import { RingChartShowcase } from "./showcases/ring-chart";
 import { ChartHeaderShowcase } from "./showcases/chart-header";
+import { ChartFrameShowcase } from "./showcases/chart-frame";
 import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
@@ -646,6 +647,12 @@ const items: Item[] = [
     label: "ChartHeader",
     component: ChartHeaderShowcase,
     tags: ["depth:2", "chart", "indicator"],
+  },
+  {
+    id: "chart-frame",
+    label: "ChartFrame",
+    component: ChartFrameShowcase,
+    tags: ["depth:2", "chart", "container"],
   },
   {
     id: "sparkline",

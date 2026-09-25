@@ -68,7 +68,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 321
+    "line": 337
   },
   {
     "name": "AccentCurrentValueIndicator",
@@ -420,7 +420,7 @@
     "showcase": null,
     "since": "v0.18.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 881
+    "line": 895
   },
   {
     "name": "AppMain",
@@ -1137,7 +1137,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 274
+    "line": 290
   },
   {
     "name": "CardGrid",
@@ -1161,7 +1161,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 897
+    "line": 911
   },
   {
     "name": "CardSurface",
@@ -1365,7 +1365,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 128
+    "line": 140
   },
   {
     "name": "CenteredWrapRow",
@@ -1574,6 +1574,28 @@
     "line": 22
   },
   {
+    "name": "ChartFrame",
+    "depth": 2,
+    "kind": "variant",
+    "family": "ChartFrame",
+    "variantOf": {
+      "factory": "createChartFrame",
+      "overrides": "{\n  height: CHART_FRAME_HEIGHT,\n}"
+    },
+    "overrides": [
+      "height"
+    ],
+    "dataProps": "ChartFrameDataProps",
+    "summary": "Composite (Depth 2), zero CSS.",
+    "notToBeConfusedWith": null,
+    "useFor": "the frame around any chart on a screen.",
+    "notes": "The standard chart frame: a stated in-flow height, the viewport in full screen. */",
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/variants.ts",
+    "line": 11
+  },
+  {
     "name": "ChartHeader",
     "depth": 2,
     "kind": "composite",
@@ -1727,7 +1749,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 921
+    "line": 935
   },
   {
     "name": "ChipLabel",
@@ -1819,7 +1841,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 874
+    "line": 888
   },
   {
     "name": "ClipFillBox",
@@ -2065,7 +2087,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 884
+    "line": 898
   },
   {
     "name": "CompactCard",
@@ -2097,7 +2119,35 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 66
+    "line": 78
+  },
+  {
+    "name": "CompactCurrencyMutationSliders",
+    "depth": 3,
+    "kind": "variant",
+    "family": "MutationSliders",
+    "variantOf": {
+      "factory": "createMutationSliders",
+      "overrides": "{\n    format: formatCompactCurrency,\n    readout: \"beside\",\n    snap: 1_000,\n    grouping: \"link\",\n    precision: -3,\n    itemFrame: ItemTintSurface,\n  }"
+    },
+    "overrides": [
+      "format",
+      "labels",
+      "snap",
+      "readout",
+      "grouping",
+      "precision",
+      "itemFrame"
+    ],
+    "dataProps": "MutationSlidersDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "CompactCurrencyMutationSliders — a row of money in compact dollars (Peter's payroll board, 2026-09-24): `$125K` under the dial, the old amount beside the prior arrowhead, and the difference as `+$5K (4%)`. The amount is editable in place, rounded to the thousand (`precision: -3`), and an item's several dials sit on `ItemTintSurface`. Selected dials are LINKED — a hover link button toggles them, and they move as one level. Locked: `format` is `formatCompactCurrency` — the \"$\" is HARDCODED, Peter's call, i18n comes later — `readout` is `\"beside\"`, and `snap` is whole thousands, so a drag lands on an amount the compact figure can say exactly (Peter, 2026-09-16: \"have the amount snap to whole $k numbers\"). The labels stay neutral; a consumer with its own verbs curries its own row. @example <CompactCurrencyMutationSliders entities={rows()} onChange={setPay} selected={links()} onSelectionChange={setLinks} />",
+    "showcase": "#/mutation-sliders",
+    "since": "Unreleased",
+    "file": "src/components/MutationSliders/variants.ts",
+    "line": 68
   },
   {
     "name": "CompactDropdown",
@@ -2398,7 +2448,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 119
+    "line": 131
   },
   {
     "name": "ContinuousMarkedSlider",
@@ -2929,6 +2979,23 @@
     "since": "0.61.5",
     "file": "src/components/ChartCanvas/ChartCanvas.tsx",
     "line": 66
+  },
+  {
+    "name": "createChartFrame",
+    "depth": 2,
+    "kind": "factory",
+    "family": "ChartFrame",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/ChartFrame.tsx",
+    "line": 188
   },
   {
     "name": "createCheckbox",
@@ -3472,7 +3539,7 @@
     "showcase": null,
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 152
+    "line": 175
   },
   {
     "name": "createHUDPanel",
@@ -3506,7 +3573,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 512
+    "line": 575
   },
   {
     "name": "createKbd",
@@ -3557,7 +3624,7 @@
     "showcase": "#/levels-timeline",
     "since": "0.171.0",
     "file": "src/components/LevelsTimeline/LevelsTimeline.tsx",
-    "line": 771
+    "line": 1074
   },
   {
     "name": "createList",
@@ -3625,7 +3692,7 @@
     "showcase": "#/marked-slider",
     "since": "0.172.0",
     "file": "src/components/MarkedSlider/MarkedSlider.tsx",
-    "line": 418
+    "line": 473
   },
   {
     "name": "createMessageBubble",
@@ -3693,7 +3760,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/MutationSliders.tsx",
-    "line": 606
+    "line": 862
   },
   {
     "name": "createMutationToolbar",
@@ -3931,7 +3998,7 @@
     "showcase": "#/rate-gauge",
     "since": "0.171.0",
     "file": "src/components/RateGauge/RateGauge.tsx",
-    "line": 298
+    "line": 404
   },
   {
     "name": "createRow",
@@ -4676,7 +4743,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 267
+    "line": 283
   },
   {
     "name": "DangerSurface",
@@ -4732,7 +4799,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 357
+    "line": 373
   },
   {
     "name": "DashedDivider",
@@ -5786,7 +5853,7 @@
     "showcase": "#/text",
     "since": "0.171.0",
     "file": "src/components/Text/variants.ts",
-    "line": 299
+    "line": 315
   },
   {
     "name": "EllipsizedNodeLabel",
@@ -6584,7 +6651,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 107
+    "line": 119
   },
   {
     "name": "FormulaProvider",
@@ -6625,7 +6692,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 405
+    "line": 421
   },
   {
     "name": "FormulaVarRow",
@@ -6906,7 +6973,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 843
+    "line": 857
   },
   {
     "name": "GrowCenterRow",
@@ -6932,7 +6999,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 851
+    "line": 865
   },
   {
     "name": "GrowClusterRow",
@@ -7083,6 +7150,32 @@
     "since": null,
     "file": "src/components/Layout/variants.ts",
     "line": 788
+  },
+  {
+    "name": "GutteredFillStretchRow",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createRow",
+      "overrides": "{\n  gap: \"xl\",\n  style: { height: \"100%\", \"min-height\": \"0\" },\n}"
+    },
+    "overrides": [
+      "gap",
+      "align",
+      "justify",
+      "wrap",
+      "fill"
+    ],
+    "dataProps": "RowDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "GutteredFillStretchRow — a `FillStretchRow` with an XL (24px) gap instead of `sm` (8px): the same fill chain, with a GUTTER between instruments that their own labels may run into. For `MutationSliders` in its `\"beside\"` readout (Peter, 2026-09-24): the change figure sits right of each bar on two lines (\"−$100K\" over \"(100%)\", ~40px) and runs past the dial's 88px canvas, while the next dial's prior label runs left into the same gap. 8px lets the two meet; 24px keeps them apart. The row's paging arithmetic uses the matching slot width. */",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 844
   },
   {
     "name": "HalfFillColumn",
@@ -7293,7 +7386,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 411
+    "line": 427
   },
   {
     "name": "HotkeyButton",
@@ -7313,7 +7406,7 @@
     "showcase": null,
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 59
+    "line": 84
   },
   {
     "name": "HUDButtonGroup",
@@ -7426,7 +7519,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 305
+    "line": 306
   },
   {
     "name": "HUDTabs",
@@ -7463,7 +7556,7 @@
     "showcase": "#/icon",
     "since": "v0.6.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 474
+    "line": 537
   },
   {
     "name": "IconClusterRow",
@@ -7581,7 +7674,7 @@
     "showcase": "#/surface",
     "since": "0.118.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 159
+    "line": 171
   },
   {
     "name": "IndentedGhostRow",
@@ -7751,7 +7844,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 345
+    "line": 361
   },
   {
     "name": "InlineAppHeader",
@@ -7774,7 +7867,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 889
+    "line": 903
   },
   {
     "name": "InlineChartErrorOverlay",
@@ -7814,7 +7907,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 520
+    "line": 583
   },
   {
     "name": "InlineSubtleDropdown",
@@ -7878,7 +7971,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 332
+    "line": 348
   },
   {
     "name": "IntCell",
@@ -7945,6 +8038,38 @@
     "since": "0.184.0",
     "file": "src/components/IntervalInput/IntervalInput.tsx",
     "line": 131
+  },
+  {
+    "name": "ItemTintSurface",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Surface",
+    "variantOf": {
+      "factory": "createSurface",
+      "overrides": "{\n  padding: \"none\",\n  radius: \"sm\",\n  bg: \"rgba(var(--sui-accent-rgb), 0.06)\",\n  style: { border: \"none\" },\n}"
+    },
+    "overrides": [
+      "padding",
+      "radius",
+      "bg",
+      "borderColor",
+      "interactive",
+      "shadow",
+      "direction",
+      "align",
+      "gap",
+      "minWidth",
+      "maxWidth"
+    ],
+    "dataProps": "SurfaceDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "ItemTintSurface — the subtle wash behind ONE ITEM's several dials (Peter, 2026-09-24: a person holding two positions in a MutationSliders row). Borderless and padding-free, so a framed run costs exactly the width of its dials and the row's paging arithmetic is unchanged; a faint accent wash, distinct from the selection's `active` ring. `MutationSliders`' `itemFrame`. */",
+    "showcase": "#/surface",
+    "since": "Unreleased",
+    "file": "src/components/Surface/variants.ts",
+    "line": 70
   },
   {
     "name": "Kbd",
@@ -8212,7 +8337,8 @@
       "overrides": "{}"
     },
     "overrides": [
-      "formatValue"
+      "formatValue",
+      "pickAt"
     ],
     "dataProps": "LevelsTimelineDataProps",
     "summary": null,
@@ -8231,7 +8357,8 @@
     "family": "LevelsTimeline",
     "variantOf": null,
     "overrides": [
-      "formatValue"
+      "formatValue",
+      "pickAt"
     ],
     "dataProps": "LevelsTimelineDataProps",
     "summary": "Atomic (Depth 1).",
@@ -8241,7 +8368,7 @@
     "showcase": "#/levels-timeline",
     "since": "0.171.0",
     "file": "src/components/LevelsTimeline/LevelsTimeline.tsx",
-    "line": 187
+    "line": 222
   },
   {
     "name": "LgAvatar",
@@ -8431,7 +8558,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 905
+    "line": 919
   },
   {
     "name": "LooseClusterRow",
@@ -8576,7 +8703,7 @@
     "showcase": "#/marked-slider",
     "since": "0.172.0",
     "file": "src/components/MarkedSlider/MarkedSlider.tsx",
-    "line": 252
+    "line": 306
   },
   {
     "name": "MathFormula",
@@ -8909,7 +9036,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 398
+    "line": 414
   },
   {
     "name": "MultiSelectFilter",
@@ -8954,7 +9081,11 @@
     "overrides": [
       "format",
       "labels",
-      "snap"
+      "snap",
+      "readout",
+      "grouping",
+      "precision",
+      "itemFrame"
     ],
     "dataProps": "MutationSlidersDataProps",
     "summary": "Composite (Depth 3).",
@@ -8964,7 +9095,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/MutationSliders.tsx",
-    "line": 310
+    "line": 401
   },
   {
     "name": "MutationToolbar",
@@ -9246,7 +9377,7 @@
     "showcase": "#/surface",
     "since": "0.129.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 76
+    "line": 88
   },
   {
     "name": "NoteText",
@@ -9302,7 +9433,7 @@
     "showcase": "#/surface",
     "since": "0.112.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 173
+    "line": 185
   },
   {
     "name": "NotificationCenter",
@@ -9407,7 +9538,11 @@
     "overrides": [
       "format",
       "labels",
-      "snap"
+      "snap",
+      "readout",
+      "grouping",
+      "precision",
+      "itemFrame"
     ],
     "dataProps": "MutationSlidersDataProps",
     "summary": null,
@@ -9417,7 +9552,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/variants.ts",
-    "line": 39
+    "line": 41
   },
   {
     "name": "NumberWithUnits",
@@ -9638,7 +9773,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 339
+    "line": 355
   },
   {
     "name": "PairedMutationSliders",
@@ -9958,7 +10093,7 @@
     "showcase": "#/surface",
     "since": "0.113.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 138
+    "line": 150
   },
   {
     "name": "PopoverTooltip",
@@ -10240,7 +10375,9 @@
     "overrides": [
       "baselineLabel",
       "formatAgainst",
-      "formatDelta"
+      "formatDelta",
+      "callouts",
+      "formatCornerDelta"
     ],
     "dataProps": "RateGaugeDataProps",
     "summary": null,
@@ -10261,7 +10398,9 @@
     "overrides": [
       "baselineLabel",
       "formatAgainst",
-      "formatDelta"
+      "formatDelta",
+      "callouts",
+      "formatCornerDelta"
     ],
     "dataProps": "RateGaugeDataProps",
     "summary": "Composite (Depth 2).",
@@ -10271,7 +10410,7 @@
     "showcase": "#/rate-gauge",
     "since": "0.171.0",
     "file": "src/components/RateGauge/RateGauge.tsx",
-    "line": 167
+    "line": 198
   },
   {
     "name": "RecentStarredSidebar",
@@ -10615,7 +10754,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 391
+    "line": 407
   },
   {
     "name": "ScrollBox",
@@ -11059,7 +11198,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 340
+    "line": 356
   },
   {
     "name": "SegmentedControl",
@@ -11925,7 +12064,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 96
+    "line": 108
   },
   {
     "name": "StackedAreaSeries",
@@ -12300,7 +12439,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 341
+    "line": 357
   },
   {
     "name": "SubtleGhostArc",
@@ -12468,7 +12607,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 353
+    "line": 369
   },
   {
     "name": "SwimlaneChart",
@@ -12833,7 +12972,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 370
+    "line": 386
   },
   {
     "name": "TextValueHighlightSm",
@@ -12857,7 +12996,7 @@
     "showcase": "#/text",
     "since": "0.152.0",
     "file": "src/components/Text/variants.ts",
-    "line": 382
+    "line": 398
   },
   {
     "name": "TextValueSuccessSm",
@@ -12881,7 +13020,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 365
+    "line": 381
   },
   {
     "name": "ThemedInput",
@@ -13066,7 +13205,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 861
+    "line": 875
   },
   {
     "name": "TightSpreadRow",
@@ -13434,7 +13573,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 342
+    "line": 358
   },
   {
     "name": "TopRightOverlayBox",
@@ -13676,6 +13815,30 @@
     "since": "v0.9.0",
     "file": "src/components/ValueRenderer/ValueRenderer.tsx",
     "line": 179
+  },
+  {
+    "name": "VerticalAxisTitle",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Text",
+    "variantOf": {
+      "factory": "createText",
+      "overrides": "{\n  variant: \"sublabel\",\n  as: \"span\",\n  style: {\n    \"writing-mode\": \"vertical-rl\",\n    transform: \"rotate(180deg)\",\n    \"white-space\": \"nowrap\",\n  },\n}"
+    },
+    "overrides": [
+      "variant",
+      "color",
+      "as"
+    ],
+    "dataProps": "TextDataProps",
+    "summary": "Sublabel `<span>` written bottom-to-top (`writing-mode: vertical-rl` + `rotate(180deg)`, nowrap).",
+    "notToBeConfusedWith": null,
+    "useFor": "a chart's y-axis title naming the axis and its units (\"Salary ($)\", \"Hours\"), along the plot's left edge — `ChartFrame`'s y-title rail.",
+    "notes": "Vertical axis title — a chart's y-axis name and units (\"Salary ($)\", \"Hours\"), written bottom-to-top along the plot's left edge, the way a printed chart labels its y-axis. `vertical-rl` stacks the glyphs top-down and the 180° turn flips them to read upward; nowrap keeps the title one line, so its height is its text length. Curried as a Text variant rather than a prop on each chart: one rail serves every chart type (ChartFrame).",
+    "showcase": "#/text",
+    "since": "Unreleased",
+    "file": "src/components/Text/variants.ts",
+    "line": 272
   },
   {
     "name": "VerticalButtonGroup",
@@ -14021,7 +14184,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 349
+    "line": 365
   },
   {
     "name": "WeekCalendar",
@@ -14087,7 +14250,7 @@
     "showcase": "#/surface",
     "since": "0.129.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 86
+    "line": 98
   },
   {
     "name": "WideCardGrid",
@@ -14111,7 +14274,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 913
+    "line": 927
   },
   {
     "name": "withCellStyle",

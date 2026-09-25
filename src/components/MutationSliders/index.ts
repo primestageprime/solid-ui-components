@@ -28,8 +28,12 @@ export type {
   MutationSlidersOverrides,
   MutationSlidersDataProps,
   MutationSliderLabels,
+  MutationSlidersReadout,
 } from "./MutationSliders";
-export { NumberMutationSliders } from "./variants";
+export {
+  CompactCurrencyMutationSliders,
+  NumberMutationSliders,
+} from "./variants";
 // THE CANONICAL NAMES ARE THE PLAIN ONES. `Entity`, `Domain` and `ChangeTone`
 // are what a consumer writing an adapter says, and they reach `src/index.ts`
 // unambiguously: verified by grep that no other component's barrel re-exports

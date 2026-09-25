@@ -39,6 +39,13 @@ import {
   SECTOR_RADIUS,
   sectorPath,
   zoneOf,
+  CORNER_BLOCKS,
+  RING_OUTER,
+  leaderConflicts,
+  calloutModeFor,
+  LABEL_LINE_HEIGHT,
+  cornerRingFor,
+  minLeadersWidth,
 } from "./geometry";
 
 const DOMAIN: readonly [number, number] = [-30000, 30000];
@@ -783,25 +790,32 @@ describe("callout placement", () => {
   // neighbour's leader. A common turn circle separates them by construction:
   // every leader stops being radial at the same radius, so the turn points
   // keep the anchors' angular order however close the needles get.
-  it("turns every leader on ONE circle, so the stub varies with the anchor", () => {
+  // Peter, 2026-09-24: leaders are ORTHOGONAL past the stub — radial stub,
+  // then (if the row moved) a vertical channel, then the run. Each stub ends
+  // ON ITS OWN RAY, somewhere between MIN_STUB past its anchor and the turn
+  // circle, so exits near a pole can be spread apart without a bend.
+  it("ends every stub on its own ray, no further out than the turn circle", () => {
     const rows = place(5000, 5400);
-    const turnRadii = rows.map((row) => {
-      const turn = row.points[1];
-      return (
-        Math.round(
-          Math.hypot(
-            turn.x - CENTER_FOR_TEST.cx,
-            turn.y - CENTER_FOR_TEST.cy,
-          ) * 1000,
-        ) / 1000
-      );
-    });
-    expect(new Set(turnRadii).size).toBe(1);
-    // The bracket's anchor is further out than the needle tips, so its stub is
-    // the short one — the lengths differ because the anchors do.
-    const delta = rows.find((row) => row.id === "delta");
-    const value = rows.find((row) => row.id === "value");
-    expect(delta?.stub).toBeLessThan(value?.stub ?? 0);
+    for (const row of rows) {
+      const [anchor, exit] = row.points;
+      const r = Math.hypot(exit.x - CENTER_FOR_TEST.cx, exit.y - CENTER_FOR_TEST.cy);
+      const ra = Math.hypot(anchor.x - CENTER_FOR_TEST.cx, anchor.y - CENTER_FOR_TEST.cy);
+      expect(r).toBeLessThanOrEqual(RING_OUTER * (74 / 64) + 12 + 0.01);
+      expect(r).toBeGreaterThan(ra);
+      const bearing = (p: Point) => Math.atan2(CENTER_FOR_TEST.cy - p.y, p.x - CENTER_FOR_TEST.cx);
+      expect(bearing(exit)).toBeCloseTo(bearing(anchor), 5);
+    }
+  });
+
+  it("is orthogonal past the stub", () => {
+    for (const [baseline, value] of [[5000, 23000], [5000, -8833], [0, 12000]] as const) {
+      for (const row of place(baseline, value)) {
+        for (let i = 1; i + 1 < row.points.length; i += 1) {
+          const [p, q] = [row.points[i], row.points[i + 1]];
+          expect(p.x === q.x || Math.abs(p.y - q.y) < 1e-9).toBe(true);
+        }
+      }
+    }
   });
 
   it("keeps the turn points in the anchors' own angular order", () => {
@@ -1079,5 +1093,187 @@ describe("gaugeGeometry — the printed table", () => {
       gaugeGeometry({ domain: [5, 5], baseline: 5, value: 5 }),
     );
     expect(degenerate).not.toMatch(/NaN/);
+  });
+});
+
+describe("callouts — the leaders/corners breakpoint, and the corner layout", () => {
+  const labels = ["Scenario", "-$2,921/mo", "Baseline", "$35,058/mo", "$37,978/mo"];
+  const cornerLabels = {
+    value: ["Scenario", "$35,058/mo", "-$2,921/mo (-8%)"],
+    baseline: ["Baseline", "$37,978/mo"],
+  };
+  const reading = { domain: [-40000, 40000] as const, baseline: 37978, value: 35058 };
+  const draw = (callouts: "leaders" | "corners", box?: { width: number; height: number }) =>
+    gaugeGeometry({ ...reading, labels, cornerLabels, callouts, box });
+  /** What a layout does: pick by the breakpoint, then draw that gauge. */
+  const picked = (width: number, height: number) => {
+    const box = { width, height };
+    return draw(calloutModeFor(box, labels), box);
+  };
+
+  it("prints box → breakpoint → dial, with the switch point per height", () => {
+    const heights = [200, 300, 350, 400, 450, 500];
+    const widths = [180, 240, 268, 274, 320];
+    const rows = heights.map((height) => ({
+      height,
+      leadersFrom: Math.ceil(minLeadersWidth(height, labels)),
+      ...Object.fromEntries(
+        widths.map((width) => {
+          const g = picked(width, height);
+          return [`@${width}`, `${g.calloutMode} r=${round(g.metrics.ringOuter)}`];
+        }),
+      ),
+    }));
+    // eslint-disable-next-line no-console
+    console.table(rows);
+    expect(rows).toHaveLength(heights.length);
+  });
+
+  it("switches exactly at minLeadersWidth — height/2 plus a constant, not a ratio", () => {
+    const at = Math.ceil(minLeadersWidth(430, labels));
+    expect(calloutModeFor({ width: at, height: 430 }, labels)).toBe("leaders");
+    expect(calloutModeFor({ width: at - 1, height: 430 }, labels)).toBe("corners");
+    const k = (h: number) => minLeadersWidth(h, labels) - h / 2;
+    expect(k(300)).toBeCloseTo(k(500), 0);
+  });
+
+  it("at the breakpoint the leader dial is height-bound", () => {
+    const at = Math.ceil(minLeadersWidth(430, labels));
+    expect(draw("leaders", { width: at, height: 430 }).metrics.ringOuter).toBeCloseTo(
+      draw("leaders", { width: 100000, height: 430 }).metrics.ringOuter,
+    );
+  });
+
+  it("leaves the default identical to explicit leaders, measured or not", () => {
+    for (const box of [undefined, { width: 274, height: 215 }, { width: 200, height: 500 }]) {
+      const plain = gaugeGeometry({ ...reading, labels, box });
+      expect(plain.calloutMode).toBe("leaders");
+      expect(plain.corners).toBeUndefined();
+      expect(gaugeGeometry({ ...reading, labels, cornerLabels, box, callouts: "leaders" })).toEqual(
+        plain,
+      );
+    }
+  });
+
+  it("never picks a mode itself: corners are drawn only when asked for", () => {
+    expect(draw("leaders", { width: 120, height: 500 }).calloutMode).toBe("leaders");
+    expect(draw("corners", { width: 900, height: 200 }).calloutMode).toBe("corners");
+  });
+
+  it("in corners: no leaders, value block on top, baseline block below, dial fills the height", () => {
+    const g = draw("corners", { width: 268, height: 430 });
+    expect(g.callouts).toEqual([]);
+    expect(CORNER_BLOCKS).toEqual({ top: "value", bottom: "baseline" });
+    const [top, bottom] = g.corners ?? [];
+    expect(top).toMatchObject({ id: "value", corner: "top", x: 264 });
+    expect(bottom).toMatchObject({ id: "baseline", corner: "bottom", x: 264 });
+    expect(top.lineY).toHaveLength(3);
+    expect(bottom.lineY[1]).toBeCloseTo(430 - 4 - LABEL_LINE_HEIGHT / 2);
+    expect(g.metrics.ringOuter).toBeCloseTo(
+      cornerRingFor({ width: 10000, height: 430 }, cornerLabels),
+    );
+    expect(JSON.stringify(g)).not.toMatch(/NaN/);
+  });
+
+  it("in corners, a box too narrow for the blocks shrinks the dial, never below its floor", () => {
+    const g = draw("corners", { width: 120, height: 500 });
+    expect(g.metrics.ringOuter).toBeLessThan(
+      cornerRingFor({ width: 10000, height: 500 }, cornerLabels),
+    );
+    expect(g.metrics.ringOuter).toBeGreaterThanOrEqual(18);
+  });
+
+  it("an unmeasured corners gauge draws the default dial on a canvas cut to it", () => {
+    const g = draw("corners");
+    expect(g.metrics.ringOuter).toBeCloseTo(64, 0);
+    expect(g.corners).toHaveLength(2);
+    expect(JSON.stringify(g)).not.toMatch(/NaN/);
+  });
+});
+
+describe("leader rows stay inside the box (fixed 2026-09-24)", () => {
+  const baseline = 37978;
+  const labels = ["Scenario", "-$00,000/mo", "Baseline", "$00,000/mo", "$00,000/mo"];
+  const stops = [-40000, -30000, -20000, 0, 20000, 35057, 37977, 37978, 37979, 40000];
+  const spanOf = (value: number, height: number) => {
+    const g = gaugeGeometry({
+      domain: [-40000, 40000],
+      baseline,
+      value,
+      labels,
+      box: { width: 320, height },
+    });
+    const tops = g.callouts.map((c) => c.lineY[0] - LABEL_LINE_HEIGHT / 2);
+    const bottoms = g.callouts.map((c) => c.lineY[c.lineY.length - 1] + LABEL_LINE_HEIGHT / 2);
+    return { g, top: Math.min(...tops), bottom: Math.max(...bottoms) };
+  };
+
+  it.each([300, 200, 92])("every sweep stop's text is within [0, %i]", (height) => {
+    for (const value of stops) {
+      const { top, bottom } = spanOf(value, height);
+      expect(top).toBeGreaterThanOrEqual(-0.01);
+      expect(bottom).toBeLessThanOrEqual(height + 0.01);
+    }
+  });
+
+  it("keeps rows in order a full pitch apart, so leaders cannot cross", () => {
+    for (const value of stops) {
+      const ys = spanOf(value, 300).g.callouts.map((c) => c.y);
+      ys.slice(1).forEach((y, i) => expect(y - ys[i]).toBeGreaterThanOrEqual(CALLOUT_PITCH - 0.01));
+    }
+  });
+});
+
+describe("leader routing — no crossings, no lines on top of each other", () => {
+  const labels = ["Scenario", "-$00,000/mo", "Baseline", "$00,000/mo", "$00,000/mo"];
+  const boxes = [
+    { width: 274, height: 155 },
+    { width: 274, height: 215 },
+    { width: 320, height: 300 },
+    { width: 322, height: 395 },
+  ];
+  const grid = (step: number) =>
+    Array.from({ length: 80000 / step + 1 }, (_, i) => -40000 + i * step);
+
+  it("the check itself catches a crossing and a close parallel", () => {
+    const p = (x: number, y: number) => ({ x, y });
+    expect(leaderConflicts([[p(0, 0), p(10, 10)], [p(0, 10), p(10, 0)]])[0].kind).toBe("cross");
+    expect(
+      leaderConflicts([
+        [p(0, 0), p(1, 0), p(20, 0)],
+        [p(0, 1), p(1, 1), p(20, 1)],
+      ])[0].kind,
+    ).toBe("close");
+  });
+
+  it("never crosses, over every box × baseline × value (every $5k × $1k)", () => {
+    let readings = 0;
+    for (const box of boxes) {
+      for (const baseline of grid(5000)) {
+        for (const value of grid(1000)) {
+          const g = gaugeGeometry({ domain: [-40000, 40000], baseline, value, labels, box });
+          const conflicts = leaderConflicts(g.callouts.map((c) => c.points));
+          expect(conflicts.filter((c) => c.kind === "cross")).toEqual([]);
+          readings += 1;
+        }
+      }
+    }
+    expect(readings).toBe(4 * 17 * 81);
+  });
+
+  it("keeps parallel runs ≥ 2px apart unless the needles are within ~2.5° of each other", () => {
+    for (const box of boxes) {
+      for (const baseline of grid(5000)) {
+        for (const value of grid(1000)) {
+          const g = gaugeGeometry({ domain: [-40000, 40000], baseline, value, labels, box });
+          const close = leaderConflicts(g.callouts.map((c) => c.points)).filter(
+            (c) => c.kind === "close",
+          );
+          if (close.length > 0) {
+            expect(Math.abs(g.valueAngle - g.baselineAngle)).toBeLessThan(2.5);
+          }
+        }
+      }
+    }
   });
 });

@@ -56,6 +56,31 @@ export function isEditableTarget(el: EventTarget | null): boolean {
   );
 }
 
+/** The parts of a keydown the hotkey guard reads. */
+export interface HotkeyPress {
+  readonly key: string;
+  readonly metaKey: boolean;
+  readonly ctrlKey: boolean;
+  readonly altKey: boolean;
+  readonly target: EventTarget | null;
+}
+
+/**
+ * Whether a key press should fire `hotkey` — the guard, pure, so it prints as
+ * a table (hotkeyFires.test.ts). Not while a text-editing surface has focus
+ * (typing an "a" into a field must not add a row), not with ⌘/Ctrl/Alt held
+ * (those chords belong to the browser and the OS), and only for the hotkey's
+ * own character, case-insensitively.
+ *
+ * Shift is NOT a blocker, as it never was here: Shift+A arrives as `"A"` and
+ * fires `a`, so Caps Lock does not silently disarm every hotkey.
+ */
+export const hotkeyFires = (press: HotkeyPress, hotkey: string): boolean =>
+  !(press.metaKey || press.ctrlKey || press.altKey) &&
+  !isEditableTarget(press.target) &&
+  hotkey !== "" &&
+  press.key.toLowerCase() === hotkey.toLowerCase();
+
 export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
   const merged = mergeProps({ armed: true }, props);
   const [local, others] = splitProps(merged, [
@@ -93,9 +118,7 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (!local.armed || local.disabled) return;
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (isEditableTarget(e.target)) return;
-    if (e.key.toLowerCase() !== (local.hotkey ?? "").toLowerCase()) return;
+    if (!hotkeyFires(e, local.hotkey ?? "")) return;
     e.preventDefault();
     fire(e);
   };

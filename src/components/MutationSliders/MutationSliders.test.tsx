@@ -19,7 +19,7 @@ import {
   vi,
 } from "vitest";
 import { map } from "../../fn";
-import { createSignal } from "solid-js";
+import { type Component, type JSX, createSignal } from "solid-js";
 import {
   type FakeSizer,
   installFakeSizer,
@@ -28,7 +28,10 @@ import {
   rectOf,
 } from "../../test-utils";
 import { MutationSliders, createMutationSliders } from "./MutationSliders";
-import { NumberMutationSliders } from "./variants";
+import {
+  CompactCurrencyMutationSliders,
+  NumberMutationSliders,
+} from "./variants";
 import {
   MIN_DIAL_HEIGHT,
   TRACK_TOP,
@@ -1895,5 +1898,357 @@ describe("createMutationSliders", () => {
       <NumberMutationSliders entities={ONE} onChange={() => {}} />
     ));
     expect(getByText((46_000).toLocaleString())).toBeTruthy();
+  });
+});
+
+describe("MutationSliders — grouping: link (the selection, two triggers)", () => {
+  /** A row that holds its own selection and values, the way a consumer does. */
+  const mount = (initial: readonly string[] = []) => {
+    const [rows, setRows] = createSignal<readonly Entity[]>(FIXTURE);
+    const [selected, setSelected] = createSignal<readonly string[]>(initial);
+    const setValue = (id: string, value: number) =>
+      setRows((before) =>
+        map((row: Entity) => (row.id === id ? { ...row, value } : row), before),
+      );
+    const onSelection = vi.fn((ids: readonly string[]) => setSelected(ids));
+    const view = render(() => (
+      <MutationSliders
+        entities={rows()}
+        domain={DOMAIN}
+        onChange={setValue}
+        grouping="link"
+        selected={selected()}
+        onSelectionChange={onSelection}
+      />
+    ));
+    const valueOf = (label: string) =>
+      Number(view.getByLabelText(label).getAttribute("aria-valuenow"));
+    const columnOf = (label: string) =>
+      view.container
+        .querySelector(`[aria-label="${label}"]`)
+        ?.closest(".sui-marked-slider")?.parentElement as HTMLElement;
+    return { ...view, onSelection, valueOf, columnOf };
+  };
+
+  it("draws no link slot in the default pin mode", () => {
+    const { container } = render(() => (
+      <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
+    ));
+    fireEvent.mouseEnter(
+      container.querySelector('[aria-label="Peter"]')?.closest(".sui-marked-slider")
+        ?.parentElement as HTMLElement,
+    );
+    expect(queryButton(container, "Link Peter")).toBeNull();
+  });
+
+  it("reveals the link button on hover, holding its space when hidden", () => {
+    const { container, columnOf } = mount();
+    expect(queryButton(container, "Link Peter")).toBeNull();
+    const column = columnOf("Peter");
+    const reservedBefore = column.querySelectorAll("button[aria-hidden]").length;
+    fireEvent.mouseEnter(column);
+    expect(queryButton(container, "Link Peter")).toBeTruthy();
+    expect(column.querySelectorAll("button[aria-hidden]").length).toBe(
+      reservedBefore - 1,
+    );
+    fireEvent.mouseLeave(column);
+    expect(queryButton(container, "Link Peter")).toBeNull();
+  });
+
+  it("reveals the link button on focus, and it follows the name in tab order", () => {
+    const { container, getByText } = mount();
+    const name = getByText("Peter").closest("button") as HTMLElement;
+    fireEvent.focusIn(name);
+    const link = queryButton(container, "Link Peter") as HTMLElement;
+    expect(link).toBeTruthy();
+    const order = [...container.querySelectorAll("button, [role=slider]")];
+    expect(order.indexOf(link)).toBe(order.indexOf(name) + 1);
+  });
+
+  it("the link button toggles the SELECTION and snaps the group to the highest", () => {
+    const { container, onSelection, valueOf, columnOf } = mount(["adlai"]);
+    // A selected dial shows its (pressed) link so the reader sees the group.
+    const adlai = queryButton(container, "Unlink Adlai") as HTMLElement;
+    expect(adlai.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.mouseEnter(columnOf("Flynn"));
+    fireEvent.click(queryButton(container, "Link Flynn") as HTMLElement);
+    expect(onSelection).toHaveBeenLastCalledWith(["adlai", "flynn"]);
+    // Adlai 52k (ceiling 60k), Flynn 55k → both level at 55k.
+    expect(valueOf("Adlai")).toBe(55_000);
+    expect(valueOf("Flynn")).toBe(55_000);
+  });
+
+  it("the name click is the same toggle", () => {
+    const { getByText, onSelection } = mount(["adlai"]);
+    fireEvent.click(getByText("Flynn"));
+    expect(onSelection).toHaveBeenLastCalledWith(["adlai", "flynn"]);
+  });
+
+  it("moves every selected dial to the SAME amount, re-levelling after a ceiling", () => {
+    const { valueOf, getByLabelText } = mount(["adlai", "flynn"]);
+    const flynn = getByLabelText("Flynn");
+    const press = (key: string, times: number) => {
+      for (let i = 0; i < times; i += 1) fireEvent.keyDown(flynn, { key });
+    };
+    // Up past Adlai's 60k ceiling (a key moves 2k on this 200k domain).
+    press("ArrowUp", 5);
+    expect([valueOf("Flynn"), valueOf("Adlai")]).toEqual([65_000, 60_000]);
+    // Back down inside Adlai's range: one level again, not the 5k gap a
+    // delta move would keep.
+    press("ArrowDown", 3);
+    expect([valueOf("Flynn"), valueOf("Adlai")]).toEqual([59_000, 59_000]);
+    expect(valueOf("Peter")).toBe(104_000);
+  });
+});
+
+describe("CompactCurrencyMutationSliders — the beside readout", () => {
+  it("prints the old amount by the prior arrow and the diff right of the bar, on two lines", () => {
+    const { container, getByText } = render(() => (
+      <CompactCurrencyMutationSliders
+        entities={[
+          { id: "a", label: "Ana", old: 125_000, value: 130_000, range: [70_000, 130_000] },
+        ]}
+        onChange={() => {}}
+      />
+    ));
+    expect(
+      container.querySelector(".sui-marked-slider__prior-label")?.textContent,
+    ).toBe("$125K");
+    // The amount is an editable field in this curry (precision −3).
+    expect(
+      (container.querySelector('[aria-label="Ana amount"]') as HTMLInputElement).value,
+    ).toBe("$130K");
+    const lines = map(
+      (t: Element) => t.textContent,
+      [...container.querySelectorAll(".sui-marked-slider__delta tspan")],
+    );
+    expect(lines).toEqual(["+$5K", "(4%)"]);
+    expect(getByText("(4%)")).toBeTruthy();
+  });
+
+  it("takes the 24px gutter, and pages by the guttered slot", () => {
+    const { container } = render(() => (
+      <CompactCurrencyMutationSliders
+        entities={[
+          { id: "a", label: "Ana", old: 125_000, value: 130_000, range: [70_000, 130_000] },
+        ]}
+        onChange={() => {}}
+      />
+    ));
+    expect(container.querySelector(".row--gap-xl")).toBeTruthy();
+    expect(container.querySelector(".row--gap-sm")).toBeNull();
+  });
+});
+
+describe("MutationSliders — Reset | Delete split footer", () => {
+  it("keeps the single ⊗ slot when onReset is omitted", () => {
+    const { container } = render(() => (
+      <MutationSliders
+        entities={FIXTURE}
+        domain={DOMAIN}
+        onChange={() => {}}
+        onRemove={() => {}}
+      />
+    ));
+    expect(queryButton(container, "Reset Peter")).toBeNull();
+    expect(queryButton(container, "Remove Peter")).toBeTruthy();
+  });
+
+  it("splits into Reset | Delete, each reporting its own id", () => {
+    const onReset = vi.fn();
+    const onRemove = vi.fn();
+    const onChange = vi.fn();
+    const { container } = render(() => (
+      <MutationSliders
+        entities={FIXTURE}
+        domain={DOMAIN}
+        onChange={onChange}
+        onRemove={onRemove}
+        onRestore={() => {}}
+        onReset={onReset}
+      />
+    ));
+    fireEvent.click(queryButton(container, "Reset Peter") as HTMLElement);
+    fireEvent.click(queryButton(container, "Remove Adlai") as HTMLElement);
+    // Reset is a MOVE back to the prior amount, through onChange — the
+    // consumer's onReset is only for a dial with no prior.
+    expect(onChange).toHaveBeenCalledWith("peter", 90_000);
+    expect(onReset).not.toHaveBeenCalled();
+    expect(onRemove).toHaveBeenCalledWith("adlai");
+    // A removed entity still offers the single Restore, not the pair.
+    expect(queryButton(container, "Reset Joe")).toBeNull();
+    expect(queryButton(container, "Restore Joe")).toBeTruthy();
+  });
+
+  it("disables Reset on an entity that has not moved", () => {
+    const { container } = render(() => (
+      <MutationSliders
+        entities={[{ ...FIXTURE[0], value: FIXTURE[0].old }]}
+        domain={DOMAIN}
+        onChange={() => {}}
+        onRemove={() => {}}
+        onReset={() => {}}
+      />
+    ));
+    expect(
+      (queryButton(container, "Reset Peter") as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+});
+
+describe("MutationSliders — precision: the amount edits in place", () => {
+  const mount = (selected: readonly string[] = []) => {
+    const [rows, setRows] = createSignal<readonly Entity[]>(FIXTURE);
+    const onChangeEnd = vi.fn();
+    const view = render(() => (
+      <MutationSliders
+        entities={rows()}
+        domain={DOMAIN}
+        precision={-3}
+        grouping="link"
+        selected={selected}
+        onChange={(id, value) =>
+          setRows((before) =>
+            map((row: Entity) => (row.id === id ? { ...row, value } : row), before),
+          )
+        }
+        onChangeEnd={onChangeEnd}
+      />
+    ));
+    const field = (label: string) =>
+      view.getByLabelText(`${label} amount`) as HTMLInputElement;
+    const typeInto = (label: string, text: string, key = "Enter") => {
+      const input = field(label);
+      fireEvent.focus(input);
+      fireEvent.input(input, { target: { value: text } });
+      fireEvent.keyDown(input, { key });
+      fireEvent.blur(input);
+    };
+    const valueOf = (label: string) =>
+      Number(view.getByLabelText(label).getAttribute("aria-valuenow"));
+    return { ...view, field, typeInto, valueOf, onChangeEnd };
+  };
+
+  it("keeps the amount static without a precision", () => {
+    const { queryByLabelText } = render(() => (
+      <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
+    ));
+    expect(queryByLabelText("Peter amount")).toBeNull();
+  });
+
+  it("commits a typed figure rounded to the thousand, then clamped to the range", () => {
+    const { typeInto, valueOf, onChangeEnd } = mount();
+    typeInto("Peter", "98,700");
+    expect(valueOf("Peter")).toBe(99_000);
+    expect(onChangeEnd).toHaveBeenLastCalledWith("peter", 99_000);
+    // Peter's range tops out at 110k.
+    typeInto("Peter", "250k");
+    expect(valueOf("Peter")).toBe(110_000);
+  });
+
+  it("Escape reverts, and an emptied field commits nothing", () => {
+    const { typeInto, valueOf } = mount();
+    typeInto("Peter", "90000", "Escape");
+    expect(valueOf("Peter")).toBe(104_000);
+    typeInto("Peter", "");
+    expect(valueOf("Peter")).toBe(104_000);
+  });
+
+  it("a typed figure moves a linked group to the same level", () => {
+    const { typeInto, valueOf } = mount(["adlai", "flynn"]);
+    typeInto("Flynn", "58000");
+    expect([valueOf("Flynn"), valueOf("Adlai")]).toEqual([58_000, 58_000]);
+  });
+
+  it("a removed entity has no field", () => {
+    const { queryByLabelText } = mount();
+    expect(queryByLabelText("Joe amount")).toBeNull();
+  });
+});
+
+describe("MutationSliders — Reset moves a linked group, unlinking who can't follow", () => {
+  it("levels the group at the prior amount and drops a member outside its range", () => {
+    // Elaina and Flynn (55–80k) and Peter (70–110k), linked. Reset Elaina
+    // to her prior 62k: Flynn follows, Peter's 70k floor cannot → unlinks.
+    const [rows, setRows] = createSignal<readonly Entity[]>(FIXTURE);
+    const [selected, setSelected] = createSignal<readonly string[]>([
+      "elaina",
+      "flynn",
+      "peter",
+    ]);
+    const { container, getByLabelText } = render(() => (
+      <MutationSliders
+        entities={rows()}
+        domain={DOMAIN}
+        grouping="link"
+        selected={selected()}
+        onSelectionChange={setSelected}
+        onChange={(id, value) =>
+          setRows((before) =>
+            map((row: Entity) => (row.id === id ? { ...row, value } : row), before),
+          )
+        }
+        onRemove={() => {}}
+        onReset={() => {}}
+      />
+    ));
+    fireEvent.click(queryButton(container, "Reset Elaina") as HTMLElement);
+    const valueOf = (label: string) =>
+      Number(getByLabelText(label).getAttribute("aria-valuenow"));
+    expect([valueOf("Elaina"), valueOf("Flynn")]).toEqual([62_000, 62_000]);
+    expect(selected()).toEqual(["elaina", "flynn"]);
+    expect(valueOf("Peter")).toBe(104_000);
+  });
+});
+
+describe("MutationSliders — items: one person, several dials", () => {
+  const ITEMS: readonly Entity[] = [
+    { ...FIXTURE[0], item: "peter" },
+    { id: "peter-eve", label: "Peter eve", old: 45_000, value: 50_000, range: [40_000, 60_000], item: "peter" },
+    { ...FIXTURE[1], item: "adlai" },
+    { ...FIXTURE[2], item: "elaina" },
+  ];
+  /** A frame the test can find — the bench's tint is a Surface variant. */
+  const Frame: Component<{ children?: JSX.Element }> = (p) => (
+    <section data-testid="item-frame">{p.children}</section>
+  );
+
+  it("frames a run of two or more dials, and leaves single dials bare", () => {
+    const { getAllByTestId } = render(() => (
+      <MutationSliders
+        entities={ITEMS}
+        domain={DOMAIN}
+        onChange={() => {}}
+        itemFrame={Frame}
+      />
+    ));
+    const frames = getAllByTestId("item-frame");
+    expect(frames).toHaveLength(1);
+    expect(frames[0].querySelectorAll('[role="slider"]')).toHaveLength(2);
+  });
+
+  it("draws the same dials, unframed, without an itemFrame", () => {
+    const { container, queryByTestId } = render(() => (
+      <MutationSliders entities={ITEMS} domain={DOMAIN} onChange={() => {}} />
+    ));
+    expect(queryByTestId("item-frame")).toBeNull();
+    expect(container.querySelectorAll('[role="slider"]')).toHaveLength(4);
+  });
+
+  it("pages by whole items — never one of Peter's dials without the other", async () => {
+    const { container } = render(() => (
+      <MutationSliders entities={ITEMS} domain={DOMAIN} onChange={() => {}} />
+    ));
+    const shown = () =>
+      map(
+        (el: Element) => el.getAttribute("aria-label"),
+        [...container.querySelectorAll('[role="slider"]')],
+      );
+    // Room for three dials between the chevrons: Peter's pair + Adlai.
+    await sizer.resizeAll({ width: DIAL_SLOT * 3 + 2 * ARROW_SLOT, height: 300 });
+    expect(shown()).toEqual(["Peter", "Peter eve", "Adlai"]);
+    // One press moves one whole ITEM (Peter's pair), not one dial.
+    fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
+    expect(shown()).toEqual(["Adlai", "Elaina"]);
   });
 });

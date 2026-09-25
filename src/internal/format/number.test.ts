@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatCompactNumber, formatGroupedNumber } from "./number";
+import { map } from "../../fn";
+import {
+  formatCompactCurrency,
+  formatCompactNumber,
+  formatGroupedNumber,
+} from "./number";
 
 describe("formatGroupedNumber", () => {
   it("groups thousands en-US style with no fraction digits by default", () => {
@@ -45,5 +50,16 @@ describe("formatCompactNumber", () => {
     // 999,999 rounds up within the k tier rather than promoting to M —
     // preserved verbatim from CashflowScrubChart's fmtAxisDollars.
     expect(formatCompactNumber(999_999)).toBe("1,000k");
+  });
+});
+
+describe("formatCompactCurrency", () => {
+  it("prints compact dollars with an uppercase unit", () => {
+    const rows = [0, 999, 5_000, 125_000, 125_500, 1_234_567, -5_000];
+    const table = map((value: number) => ({ value, out: formatCompactCurrency(value) }), rows);
+    console.table(table);
+    expect(map((row) => row.out, table)).toEqual([
+      "$0", "$999", "$5K", "$125K", "$125.5K", "$1.2M", "-$5K",
+    ]);
   });
 });

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { Text, createText } from "./Text";
-import { TextLabel, EllipsizedTitle } from "./index";
+import { TextLabel, EllipsizedTitle, VerticalAxisTitle } from "./index";
 
 describe("Text", () => {
   it("renders with the variant class", () => {
@@ -19,6 +19,19 @@ describe("Text", () => {
     const el = container.firstElementChild as HTMLElement;
     const style = el.getAttribute("style") ?? "";
     expect(style).toMatch(/ellipsis/);
+    expect(style).toMatch(/nowrap/);
+  });
+
+  it("VerticalAxisTitle reads bottom-to-top on one line", () => {
+    const { container } = render(() => (
+      <VerticalAxisTitle>Salary ($)</VerticalAxisTitle>
+    ));
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.tagName).toBe("SPAN");
+    expect(el.className).toMatch(/text--sublabel/);
+    const style = el.getAttribute("style") ?? "";
+    expect(style).toMatch(/writing-mode: vertical-rl/);
+    expect(style).toMatch(/rotate\(180deg\)/);
     expect(style).toMatch(/nowrap/);
   });
 

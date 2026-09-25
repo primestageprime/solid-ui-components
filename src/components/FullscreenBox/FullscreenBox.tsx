@@ -23,7 +23,7 @@
 // Escape closes it (a document listener that exists only while it is open,
 // and that ignores an Escape something inside already handled — the chart's
 // inline range editor, a combobox). The top-right CORNER holds the toggle:
-// a default expand/shrink button, or the caller's own through `renderCorner`.
+// a default fullscreen / fullscreen-exit button, or the caller's own through `renderCorner`.
 //
 // Controlled or owned, the split every SUI toggle takes: pass `fullscreen`
 // and the caller owns the state; omit it and the box does, starting in flow.
@@ -71,7 +71,7 @@ export interface FullscreenBoxProps
   /** Fires on every change — the corner button, Escape, or a slot's toggle. */
   onFullscreenChange?: (next: boolean) => void;
   /**
-   * The top-right corner's content. Omit it for the default expand / shrink
+   * The top-right corner's content. Omit it for the default fullscreen / fullscreen-exit
    * button; return `null` for no corner control at all (a caller that
    * toggles from elsewhere).
    */
@@ -86,7 +86,7 @@ const DefaultCorner = (ctx: FullscreenBoxCornerContext): JSX.Element => (
     aria-label={ctx.fullscreen ? "Exit full screen" : "Full screen"}
     onClick={ctx.toggle}
   >
-    <Icon name={ctx.fullscreen ? "shrink" : "expand"} size="sm" />
+    <Icon name={ctx.fullscreen ? "fullscreen-exit" : "fullscreen"} size="sm" />
   </IconOnlyButton>
 );
 

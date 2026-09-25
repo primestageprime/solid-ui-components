@@ -37,6 +37,17 @@ import {
 export const ROW_GAP = 8;
 /** What one dial costs the row: its own canvas plus the gap after it. */
 export const DIAL_SLOT = VIEW_WIDTH + ROW_GAP;
+/**
+ * The WIDER gap of the `"beside"` readout — `GutteredFillStretchRow`'s `xl`
+ * step — whose change figure runs right of each bar into the gap (Peter,
+ * 2026-09-24, option B). The worst figure, "−$100K" over "(100%)", is six
+ * 11px mono glyphs ≈ 40px from DELTA_X (60) — 12px past the canvas — and the
+ * next dial's prior "$110K" (≈33px, right edge at 28) runs 5px back into the
+ * gap: 12 + 5 = 17px of a 24px gap, leaving 7px clear.
+ */
+export const GUTTER_GAP = 24;
+/** What one dial costs a guttered row. */
+export const GUTTERED_DIAL_SLOT = VIEW_WIDTH + GUTTER_GAP;
 /** What one chevron button costs, including its gap. */
 export const ARROW_SLOT = 32;
 /** What the `+` costs, including its gap. */
@@ -108,14 +119,19 @@ export const rowLayout = (
   offset: number,
   adding: boolean,
   slot: number = DIAL_SLOT,
+  gap: number = ROW_GAP,
 ): RowLayout => {
-  const forAdd = adding ? ADD_SLOT : 0;
+  // The chevrons and the `+` pay the row's OWN gap, not the default one — a
+  // guttered row charges each of them 16px more (additive: `gap` is last and
+  // defaults to ROW_GAP, so every existing caller computes what it did).
+  const extra = gap - ROW_GAP;
+  const forAdd = adding ? ADD_SLOT + extra : 0;
   const whole = visibleWindow(width - forAdd, slot, count, offset);
   if (whole.end - whole.start >= count) {
     return { ...whole, capacity: count, paging: false };
   }
   const paged = visibleWindow(
-    width - forAdd - 2 * ARROW_SLOT,
+    width - forAdd - 2 * (ARROW_SLOT + extra),
     slot,
     count,
     offset,
@@ -158,13 +174,13 @@ export interface PinnedValue {
 }
 
 /** An entity's own range, ordered — the only limit a pinned move respects. */
-const ownBand = (entity: Entity): Domain =>
+export const ownBand = (entity: Entity): Domain =>
   entity.range[0] <= entity.range[1]
     ? entity.range
     : [entity.range[1], entity.range[0]];
 
 /** The selected entities that actually have an amount to move. */
-const movable = (
+export const movable = (
   entities: readonly Entity[],
   ids: readonly string[],
 ): readonly Entity[] =>
