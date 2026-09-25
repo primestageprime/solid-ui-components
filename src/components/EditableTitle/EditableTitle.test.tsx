@@ -63,6 +63,22 @@ describe("EditableTitle", () => {
     ).toBe(false);
   });
 
+  it("fill: the field's affordance is drawn INSIDE it, so the clipping host cannot hide it", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { dirname, join } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const css = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "EditableTitle.css"),
+      "utf8",
+    );
+    const at = css.indexOf(".sui-editable-title--fill .sui-editable-title__input {");
+    expect(at).toBeGreaterThan(-1);
+    const rule = css.slice(at, css.indexOf("}", at));
+    expect(rule).toMatch(/outline-offset:\s*-1px/);
+    expect(rule).toMatch(/background:/);
+    expect(rule).toMatch(/caret-color:/);
+  });
+
   it("Escape cancels without committing", () => {
     const onChange = vi.fn();
     const { getByText, container } = render(() => (
