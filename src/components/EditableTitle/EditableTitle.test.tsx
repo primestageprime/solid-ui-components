@@ -43,6 +43,26 @@ describe("EditableTitle", () => {
     expect(inert.container.querySelector("input")).toBeNull();
   });
 
+  it("fill: the whole slot is the click target; default callers are unchanged", () => {
+    const filled = render(() => (
+      <EditableTitle title="Lean" onChange={vi.fn()} fill />
+    ));
+    const root = filled.container.querySelector(".sui-editable-title")!;
+    expect(root.classList.contains("sui-editable-title--fill")).toBe(true);
+    // The target is the flex item that spans the slot — a click anywhere in
+    // it (here, far right of the text) opens the editor.
+    const target = root.querySelector(".sui-editable-title__text")!;
+    expect(target.parentElement).toBe(root);
+    fireEvent.click(target, { clientX: 999 });
+    expect(filled.container.querySelector("input")).toBeTruthy();
+    const plain = render(() => <EditableTitle title="x" onChange={vi.fn()} />);
+    expect(
+      plain.container
+        .querySelector(".sui-editable-title")!
+        .classList.contains("sui-editable-title--fill"),
+    ).toBe(false);
+  });
+
   it("Escape cancels without committing", () => {
     const onChange = vi.fn();
     const { getByText, container } = render(() => (

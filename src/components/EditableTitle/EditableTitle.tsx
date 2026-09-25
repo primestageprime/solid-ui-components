@@ -51,6 +51,12 @@ export interface EditableTitleProps {
    *  should name now (DirtyComboBox's "new"). Read once, at mount; an inert
    *  title (no `onChange`) never opens. Default false (unchanged behavior). */
   autoEdit?: boolean;
+  /** Stretch across the title's slot: the click target covers the blank
+   *  space after the text too (text left-aligned), and the field fills the
+   *  same width. For a title that IS its slot (DirtyComboBox's name, Peter
+   *  2026-09-24); a list-row title keeps the default text-only target so the
+   *  rest of the row stays free for drag. Default false. */
+  fill?: boolean;
 }
 
 export const EditableTitle: Component<EditableTitleProps> = (props) => {
@@ -94,7 +100,13 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
     if (props.editTrigger === "doubleClick") startEdit();
   };
   return (
-    <span class="sui-editable-title">
+    <span
+      class={
+        props.fill
+          ? "sui-editable-title sui-editable-title--fill"
+          : "sui-editable-title"
+      }
+    >
       <Show
         when={!editing()}
         fallback={

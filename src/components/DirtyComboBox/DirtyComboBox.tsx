@@ -231,6 +231,7 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
                       {/* Inert under "None": there is nothing to rename,
                           but the name keeps the same type and place. */}
                       <EditableTitle
+                        fill
                         title={shownLabel()}
                         onChange={
                           props.view.canRename

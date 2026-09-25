@@ -239,6 +239,20 @@ describe("DirtyComboBox parity (onCreate + onRename)", () => {
     expect(dirtyComboViewOf(store()).selectedLabel).toBe("Renamed");
   });
 
+  it("a click on the blank space right of the name enters edit mode", async () => {
+    const { live, field } = mountLive(PAYROLL_STORE);
+    // The rename target is the FILL title: it spans the name slot up to the
+    // caret, so the blank space after the text is part of it.
+    const title = live().querySelector(".sui-editable-title--fill")!;
+    const target = title.querySelector<HTMLElement>(".sui-editable-title__text")!;
+    expect(target.parentElement).toBe(title);
+    fireEvent.click(target, { clientX: 999, clientY: 0 });
+    await tick();
+    expect(field()).toBeTruthy();
+    // …and the field fills the same slot.
+    expect(field()!.closest(".sui-editable-title--fill")).toBe(title);
+  });
+
   it("None leads the menu, carries no trash, and makes the name inert", async () => {
     const { live, button, store } = mountLive(PAYROLL_STORE);
     button("Choose a scenario").click();

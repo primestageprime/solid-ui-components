@@ -13,7 +13,9 @@
 // state the children animate through, and neighbours never move. `widest` is
 // invisible (`visibility: hidden`), inert and hidden from assistive tech —
 // it only reserves; nothing of it is drawn or reachable. The live children
-// sit at the start of the cell, so they hug their own content.
+// sit at the start of the cell, so they hug their own content; the live
+// WRAPPER spans the cell, so a child that asks to fill (EditableTitle's
+// `fill`) can take the reserved width.
 //
 // Pair it with anything whose own box animates (SlideReveal): the animation
 // happens INSIDE the reservation. First caller: DirtyComboBox.
