@@ -553,3 +553,49 @@ describe("StackedTimelineChart size-responsive chrome (G17)", () => {
 		expect(sized(390, 320).labels("x")).toBe(6);
 	});
 });
+
+// G20 — the measured host must never be sized by what is drawn in it. The
+// browser loop was: svg sized from host → host grows to fit svg (+3px
+// baseline gap) → next measurement taller, ~180px/s. jsdom has no layout, so
+// this pins the two things that break the loop: the host's size comes from
+// its PARENT (height:100%, or aspect-ratio from the width), and a run of
+// observations of one size converges on that size.
+describe("StackedTimelineChart never grows its own box (G20)", () => {
+	it("sizes the measured host from its parent, not its content", () => {
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+			/>
+		));
+		const host = container.querySelector(".sui-chart")!
+			.parentElement as HTMLElement;
+		expect(host.style.height).toBe("100%");
+		expect(parseFloat(host.style.minHeight)).toBe(0);
+		expect(host.style.aspectRatio.replace(/\s/g, "")).toBe("640/220");
+	});
+
+	it("a run of resize observations converges: height is stable after N frames", async () => {
+		const restore = installRects((el) =>
+			el.tagName.toLowerCase() === "div"
+				? rectOf({ left: 0, top: 0, width: 917, height: 186 })
+				: null,
+		);
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+			/>
+		));
+		restore();
+		const svg = container.querySelector("svg")!;
+		const heights: string[] = [];
+		for (let frame = 0; frame < 10; frame++) {
+			await sizer.resizeAll({ width: 917, height: 186 });
+			heights.push(svg.getAttribute("height")!);
+		}
+		expect(new Set(heights)).toEqual(new Set(["186"]));
+	});
+});
