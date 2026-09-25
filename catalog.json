@@ -3795,7 +3795,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/OverflowNav/OverflowNav.tsx",
-    "line": 336
+    "line": 346
   },
   {
     "name": "createPairedMutationSliders",
@@ -9698,7 +9698,7 @@
     "dataProps": "OverflowNavDataProps",
     "summary": "Pure Composite (Depth 2).",
     "notToBeConfusedWith": null,
-    "useFor": "top nav bars, breadcrumb-style tab rows, any horizontal nav list that must adapt to a constrained container width without wrapping.",
+    "useFor": "top nav bars, breadcrumb-style tab rows, any horizontal nav list that must adapt to a constrained container width without wrapping. Fold (G16): natural widths are re-measured on every container resize, on item/label/badge changes and once fonts are ready; a 0px container folds every item into the kebab; the rule is the pure `overflowNavVisibleCount` in `fold.ts`.",
     "notes": "Default auto-collapsing nav. */",
     "showcase": null,
     "since": "0.52.0",
