@@ -3506,7 +3506,7 @@
     "showcase": "#/grouped-mutation-sliders",
     "since": "0.176.0",
     "file": "src/components/GroupedMutationSliders/GroupedMutationSliders.tsx",
-    "line": 607
+    "line": 628
   },
   {
     "name": "createHighlightSegments",
@@ -7003,17 +7003,18 @@
     "variantOf": null,
     "overrides": [
       "axes",
-      "labels"
+      "labels",
+      "entityFrame"
     ],
     "dataProps": "GroupedMutationSlidersDataProps",
     "summary": "Composite (Depth 3).",
     "notToBeConfusedWith": null,
-    "useFor": "a before/after editor where each named thing carries THREE OR MORE bounded quantities that move independently and read in captioned families — a pricing board (monthly count × fee, annual count × share), a capacity plan (heads × cost × utilisation). For exactly two, use `PairedMutationSliders`; for one quantity per entity, use `MutationSliders`; for one bounded value, use `Slider`.",
+    "useFor": "a before/after editor where each named thing carries THREE OR MORE bounded quantities that move independently and read in captioned families — a pricing board (monthly count × fee, annual count × share), a capacity plan (heads × cost × utilisation). For exactly two, use `PairedMutationSliders`; for one quantity per entity, use `MutationSliders`; for one bounded value, use `Slider`. `entityFrame?` (Override): a component drawn around each entity's column (name + dials) — curry `ItemTintSurface` for a light background per entity; borderless/padding-free, so paging is unchanged. Omitted, nothing changes. **Consumers set `entityFrame` in their own curry** (e.g. thorcasting's `LicenseSliders`): SUI ships no curried variant with it, because a variant would have to lock `axes`, which fixes each consumer's dial count.",
     "notes": "A row of named entities, each with N differently-united range-banded prior-vs-future dials under one name, in captioned groups. @example <GroupedMutationSliders entities={products()} axes={[ { label: \"#\", group: \"mo\", domain: [0, 500], snap: 1 }, { label: \"$\", group: \"mo\", domain: [0, 600], snap: 1 }, { label: \"#\", group: \"yr\", domain: [0, 500], snap: 1 }, { label: \"%\", group: \"yr\", domain: [50, 100], snap: 1 }, ]} summary={(e) => monthlyEquivalent(e)} onChange={(id, measure, value) => setMeasure(id, measure, value)} />",
     "showcase": "#/grouped-mutation-sliders",
     "since": "0.176.0",
     "file": "src/components/GroupedMutationSliders/GroupedMutationSliders.tsx",
-    "line": 287
+    "line": 299
   },
   {
     "name": "GrowBox",

@@ -94,6 +94,7 @@ import {
   mergeProps,
   onCleanup,
 } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { filter } from "../../fn";
 import { observeSize } from "../../internal/dom/observeSize";
 import { clamp } from "../../internal/math/clamp";
@@ -245,6 +246,17 @@ export interface GroupedMutationSlidersProps {
   onSelectionChange?: (ids: readonly string[]) => void;
   /** Called by the `+` at the end of the row. Omitted, no `+` is drawn. */
   onAdd?: () => void;
+  /**
+   * What each ENTITY's column — its name and all its dials — is drawn inside:
+   * a light background that sets one license config apart from the next
+   * (Peter, 2026-09-25). `MutationSliders`' `itemFrame`, one level up. Omitted,
+   * the row renders exactly as before.
+   *
+   * A component rather than a colour, so the look stays a variant's business.
+   * Use a borderless, padding-free frame (`ItemTintSurface`): the frame then
+   * costs no width and the paging arithmetic is unchanged.
+   */
+  entityFrame?: Component<{ children?: JSX.Element }>;
 }
 
 /**
@@ -258,7 +270,7 @@ export interface GroupedMutationSlidersProps {
  */
 export type GroupedMutationSlidersOverrides = Pick<
   GroupedMutationSlidersProps,
-  "axes" | "labels"
+  "axes" | "labels" | "entityFrame"
 >;
 
 /** What a curried variant exposes: everything except the curried overrides. */
@@ -331,8 +343,8 @@ export const GroupedMutationSliders: Component<GroupedMutationSlidersProps> = (
   };
 
   /** Every axis, resolved against the data once per render pass. */
-  const axes = createMemo((): ResolvedGroupedAxes =>
-    resolveAxes(props.axes, props.entities),
+  const axes = createMemo(
+    (): ResolvedGroupedAxes => resolveAxes(props.axes, props.entities),
   );
 
   /** The captioned runs those axes break into, and whether any is captioned. */
@@ -539,28 +551,37 @@ export const GroupedMutationSliders: Component<GroupedMutationSlidersProps> = (
           and the thumb's DOM node with it — on every step of a drag, which
           drops the pointer capture mid-gesture. */}
       <Index each={visible()}>
-        {(entity) => (
-          <GroupedDial
-            entity={entity()}
-            axes={axes()}
-            runs={runs()}
-            captioned={captioned()}
-            height={dialHeight()}
-            labels={labels()}
-            summary={summaryOf(entity())}
-            selected={isSelected(entity().id)}
-            onSelect={() => toggleSelection(entity().id)}
-            onMeasure={measureDial}
-            onMove={(index, value) => move(entity(), index, value, false)}
-            onCommit={(index, value) => move(entity(), index, value, true)}
-            onRemove={
-              props.onRemove ? () => props.onRemove?.(entity().id) : undefined
-            }
-            onRestore={
-              props.onRestore ? () => props.onRestore?.(entity().id) : undefined
-            }
-          />
-        )}
+        {(entity) => {
+          const dial = () => (
+            <GroupedDial
+              entity={entity()}
+              axes={axes()}
+              runs={runs()}
+              captioned={captioned()}
+              height={dialHeight()}
+              labels={labels()}
+              summary={summaryOf(entity())}
+              selected={isSelected(entity().id)}
+              onSelect={() => toggleSelection(entity().id)}
+              onMeasure={measureDial}
+              onMove={(index, value) => move(entity(), index, value, false)}
+              onCommit={(index, value) => move(entity(), index, value, true)}
+              onRemove={
+                props.onRemove ? () => props.onRemove?.(entity().id) : undefined
+              }
+              onRestore={
+                props.onRestore
+                  ? () => props.onRestore?.(entity().id)
+                  : undefined
+              }
+            />
+          );
+          return (
+            <Show when={props.entityFrame} fallback={dial()}>
+              {(Frame) => <Dynamic component={Frame()}>{dial()}</Dynamic>}
+            </Show>
+          );
+        }}
       </Index>
       <Show when={layout().paging}>
         <CenteredStack>
