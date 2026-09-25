@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`EllipsisText` looped to "Maximum call stack size exceeded" as a flex item** (G23; thorcasting Coverage, prod Roofer). When the text was clipped only by a flex sibling's share, mounting the tooltip swapped the flex item for a `<button>` that hugged its content, un-clipped it, unmounted the tooltip, and so on. The measured span is now ONE stable host that is always the laid-out element (`min-width: 0`); the tooltip trigger lives inside it as a keyboard-reachable inline span (`tabindex="0"` only while clipped), so mounting it can't change the clip state. A regression test models the squeezed flex row and fails on the old component.
+
 ## 0.194.0 — 2026-09-25
 
 ### Changed
