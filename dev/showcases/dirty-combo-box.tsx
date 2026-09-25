@@ -1,6 +1,10 @@
 import { type Component, createMemo, createSignal } from "solid-js";
 import {
   ScenarioComboBox,
+  dirtyComboCreate,
+  dirtyComboRename,
+  dirtyComboUniqueLabel,
+  type DirtyComboSavedItem,
   dirtyComboRemove,
   dirtyComboReset,
   dirtyComboSave,
@@ -16,10 +20,47 @@ import { CurrencyInput } from "../../src/components/CurrencyInput";
 import { MonoDump } from "../../src/components/Text";
 import { ClusterRow, SpacedStack } from "../../src/components/Layout";
 import { TagPill } from "../../src/components/Badge";
+import { map } from "../../src/fn";
+
+const SHAPES = ["circle", "diamond", "square", "pentagon"] as const;
+
+/** Each scenario's chart-line identity (series colour + shape). The fourth is
+ *  refused, as thorcasting refuses a plan it cannot compare. */
+const withIdentity = (
+  item: DirtyComboSavedItem<PayrollConfig>,
+  i: number,
+): DirtyComboSavedItem<PayrollConfig> => ({
+  ...item,
+  color: `var(--sui-series-${(i % 8) + 1})`,
+  shape: SHAPES[i % SHAPES.length],
+  ...(i === 3
+    ? { disabled: true, reason: "Built on another baseline — cannot be compared" }
+    : {}),
+});
+
+const SHOWCASE_STORE: DirtyComboStore<PayrollConfig> = {
+  ...PAYROLL_STORE,
+  items: map(withIdentity, PAYROLL_STORE.items),
+};
 
 export const DirtyComboBoxShowcase: Component = () => {
   const [store, setStore] =
-    createSignal<DirtyComboStore<PayrollConfig>>(PAYROLL_STORE);
+    createSignal<DirtyComboStore<PayrollConfig>>(SHOWCASE_STORE);
+  let created = 0;
+  const create = () =>
+    setStore((s) => {
+      created += 1;
+      const next = dirtyComboCreate(s, {
+        id: `new-${created}`,
+        label: dirtyComboUniqueLabel(s.items, "New scenario"),
+      });
+      // A new scenario takes the next series colour, like a new chart line.
+      const colour = (item: DirtyComboSavedItem<PayrollConfig>, i: number) =>
+        item.id === next.selectedId
+          ? { ...withIdentity(item, i), disabled: undefined, reason: undefined }
+          : item;
+      return { ...next, items: map(colour, next.items) };
+    });
   const view = createMemo(() => dirtyComboViewOf(store()));
   const setEngineer = (engineer: number | undefined) =>
     setStore((s) => ({ ...s, draft: { ...s.draft, engineer: engineer ?? 0 } }));
@@ -43,7 +84,12 @@ export const DirtyComboBoxShowcase: Component = () => {
         one has a trash (Delete/Backspace on a focused row does the same), the
         list scrolls, and the combo is as wide as the LONGEST name, so it never
         jumps. What it draws comes from the pure <code>dirtyComboModel</code>,
-        printed below.
+        printed below. Configured here as thorcasting uses it: a series
+        swatch per row and on the value, a leading "None", a refused row
+        stating its reason, click-anywhere-on-the-name rename (Enter or blur
+        saves, Esc cancels; ▾ alone opens the menu), and — only while dirty —
+        the split [ ↺ │ + ] whose "+" saves the edit as a new scenario and
+        opens its name.
       </p>
 
       <div class="example-group">
@@ -58,6 +104,8 @@ export const DirtyComboBoxShowcase: Component = () => {
               onSave={() => setStore(dirtyComboSave)}
               onReset={() => setStore(dirtyComboReset)}
               onDelete={(id) => setStore((s) => dirtyComboRemove(s, id))}
+              onCreate={create}
+              onRename={(name) => setStore((s) => dirtyComboRename(s, name))}
             />
             {/* A neighbour: it must NOT move when the combo goes dirty. */}
             <TagPill tag={{ label: "neighbour — never moves" }} />

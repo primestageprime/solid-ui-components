@@ -23,12 +23,30 @@
  * path is testable without a browser.
  */
 import { filter, find, map, pipe, some } from "../../fn";
+import type { Shape } from "../Chart/shapes";
 
-/** One row of the list. `label` is what the combo and the menu print. */
+/** One row of the list. `label` is what the combo and the menu print. The
+ *  optional fields are Dropdown's own row fields, passed straight through:
+ *  `color` (+ `shape`) is the swatch tying the row to its chart line, drawn on
+ *  the row AND on the selected value; `disabled` + `reason` refuse a row and
+ *  say why (hover title + screen-reader description). */
 export interface DirtyComboItem {
   id: string;
   label: string;
+  /** The row's identity colour — its chart line's colour. */
+  color?: string;
+  /** The row's identity shape, with `color`. */
+  shape?: Shape;
+  /** The row cannot be chosen. It can still be deleted. */
+  disabled?: boolean;
+  /** Why the row reads as it does — most often why it is disabled. */
+  reason?: string;
 }
+
+/** The synthetic "compare against nothing" row's id. It is offered only when
+ *  the control's labels name it (`labels.none`), and it is never an item: it
+ *  has no config, cannot be saved, reset, renamed or deleted. */
+export const DIRTY_COMBO_NONE_ID = "__dirty-combo-none__";
 
 /** Everything the control draws, derived — never stored. */
 export interface DirtyComboView {
@@ -38,12 +56,19 @@ export interface DirtyComboView {
   canSave: boolean;
   /** Show the reset button. */
   canReset: boolean;
+  /** Offer "new" (the split's second half). Only while dirty: a new item
+   *  that differs from no existing one makes no sense (Peter, 2026-09-24). */
+  canCreate: boolean;
   /** Rows that carry a trash icon: every row except the selected one. */
   deletableIds: string[];
   /** The combo's name width in ch: the longest label, capped at 30. */
   widthCh: number;
   /** The selected row's label, or "" when nothing is selected. */
   selectedLabel: string;
+  /** "None" is selected: nothing is compared. */
+  none: boolean;
+  /** A real row is selected, so it may be renamed. */
+  canRename: boolean;
 }
 
 /** Peter: "comfortably fits 30 characters", ellipsis beyond that. */
@@ -89,13 +114,16 @@ export function dirtyComboModel<C>(
   saved: C,
   equals: (a: C, b: C) => boolean = dirtyComboEqual,
 ): DirtyComboView {
-  const dirty = !equals(draft, saved);
-  const notSelected = (item: DirtyComboItem): boolean => item.id !== selectedId;
   const selected = find((item) => item.id === selectedId, items);
+  // Nothing selected (None, or an id no row carries) has no saved config to
+  // differ from, so it is never dirty.
+  const dirty = selected !== undefined && !equals(draft, saved);
+  const notSelected = (item: DirtyComboItem): boolean => item.id !== selectedId;
   return {
     dirty,
     canSave: dirty,
     canReset: dirty,
+    canCreate: dirty,
     deletableIds: pipe(
       items,
       filter(notSelected),
@@ -103,6 +131,8 @@ export function dirtyComboModel<C>(
     ),
     widthCh: dirtyComboWidthCh(items),
     selectedLabel: selected?.label ?? "",
+    none: selectedId === DIRTY_COMBO_NONE_ID,
+    canRename: selected !== undefined,
   };
 }
 
@@ -136,15 +166,21 @@ export const dirtyComboViewOf = <C>(
     equals,
   );
 
+const isChoosable = <C>(store: DirtyComboStore<C>, id: string): boolean =>
+  find((item) => item.id === id, store.items)?.disabled !== true;
+
 /** Switch to another item. The draft becomes that item's saved config, so
  *  any unsaved edit on the one being left is DISCARDED (no prompt — the same
- *  "no confirm" call Peter made for reset). An unknown id is a no-op. */
+ *  "no confirm" call Peter made for reset). An unknown id or a DISABLED row is
+ *  a no-op (the Dropdown refuses its click too). `DIRTY_COMBO_NONE_ID` selects
+ *  nothing: the draft stays where it was and the view is never dirty. */
 export const dirtyComboSelect = <C>(
   store: DirtyComboStore<C>,
   id: string,
 ): DirtyComboStore<C> => {
+  if (id === DIRTY_COMBO_NONE_ID) return { ...store, selectedId: id };
   const saved = savedOf(store, id);
-  return saved === undefined
+  return saved === undefined || !isChoosable(store, id)
     ? store
     : { ...store, selectedId: id, draft: saved };
 };
@@ -162,6 +198,62 @@ export const dirtyComboSave = <C>(
 export const dirtyComboReset = <C>(
   store: DirtyComboStore<C>,
 ): DirtyComboStore<C> => dirtyComboSelect(store, store.selectedId);
+
+/** What a new item is called and holds. `config` defaults to the current
+ *  DRAFT, so creating while dirty keeps the edit (a "save as new") and the
+ *  item being left keeps its own saved config. */
+export interface DirtyComboNewItem<C> {
+  id: string;
+  label: string;
+  config?: C;
+}
+
+/** Create an item, append it, and select it — pristine, since its saved
+ *  config IS the draft. Refused as a no-op while PRISTINE (the view's
+ *  `canCreate`: a copy of an unedited item is no new item) and for an id
+ *  already in the list. */
+export const dirtyComboCreate = <C>(
+  store: DirtyComboStore<C>,
+  next: DirtyComboNewItem<C>,
+): DirtyComboStore<C> => {
+  if (!dirtyComboViewOf(store).canCreate) return store;
+  if (savedOf(store, next.id) !== undefined) return store;
+  const saved = next.config === undefined ? store.draft : next.config;
+  return {
+    items: [...store.items, { id: next.id, label: next.label, saved }],
+    selectedId: next.id,
+    draft: saved,
+  };
+};
+
+/** Rename the SELECTED item. The name is trimmed; an empty name, or None
+ *  selected, is a no-op. Only the label moves — the draft and the saved
+ *  config do not, so renaming never makes the item dirty. */
+export const dirtyComboRename = <C>(
+  store: DirtyComboStore<C>,
+  name: string,
+): DirtyComboStore<C> => {
+  const label = name.trim();
+  if (label === "" || savedOf(store, store.selectedId) === undefined) {
+    return store;
+  }
+  const relabel = (item: DirtyComboSavedItem<C>): DirtyComboSavedItem<C> =>
+    item.id === store.selectedId ? { ...item, label } : item;
+  return { ...store, items: map(relabel, store.items) };
+};
+
+/** A label no item carries yet: `base`, then `base 2`, `base 3`, … — the
+ *  default name a new item's field opens on. */
+export const dirtyComboUniqueLabel = (
+  items: readonly DirtyComboItem[],
+  base: string,
+): string => {
+  const taken = (label: string): boolean =>
+    some((item) => item.label === label, items);
+  const nth = (n: number): string => (n === 1 ? base : `${base} ${n}`);
+  const firstFree = (n: number): string => (taken(nth(n)) ? firstFree(n + 1) : nth(n));
+  return firstFree(1);
+};
 
 /** Delete a row. The SELECTED row cannot be deleted — refused as a no-op,
  *  the same rule `deletableIds` draws. */

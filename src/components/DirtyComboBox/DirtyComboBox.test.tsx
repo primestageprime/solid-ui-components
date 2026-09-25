@@ -1,9 +1,18 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { render, cleanup } from "@solidjs/testing-library";
+import { render, cleanup, fireEvent } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { ScenarioComboBox } from "./variants";
+import { map } from "../../fn";
 import { createDirtyComboBox } from "./DirtyComboBox";
-import { dirtyComboViewOf, type DirtyComboStore } from "./dirtyComboModel";
+import {
+  DIRTY_COMBO_NONE_ID,
+  dirtyComboCreate,
+  dirtyComboRename,
+  dirtyComboReset,
+  dirtyComboSelect,
+  dirtyComboViewOf,
+  type DirtyComboStore,
+} from "./dirtyComboModel";
 import { PAYROLL_STORE, type PayrollConfig } from "./dirtyComboFixtures";
 
 afterEach(cleanup);
@@ -103,8 +112,10 @@ describe("DirtyComboBox (as ScenarioComboBox)", () => {
       el.dispatchEvent(
         new KeyboardEvent("keydown", { key: "Delete", bubbles: true }),
       );
-    press(options[0]!); // the selected row
-    press(options[2]!);
+    // options[0] is "None" (ScenarioComboBox names it), which is no item.
+    press(options[0]!);
+    press(options[1]!); // the selected row
+    press(options[3]!);
     expect(deleted).toEqual(["s3"]);
   });
 
@@ -112,7 +123,8 @@ describe("DirtyComboBox (as ScenarioComboBox)", () => {
     const [store] = createSignal(PAYROLL_STORE);
     const { container, calls, open } = mount(store());
     await open();
-    (container.querySelectorAll('[role="option"]')[1] as HTMLElement).click();
+    // [0] is "None", [1] the selected row.
+    (container.querySelectorAll('[role="option"]')[2] as HTMLElement).click();
     expect(calls).toEqual(["select:s2"]);
   });
 });
@@ -149,5 +161,132 @@ describe("createDirtyComboBox", () => {
     expect(
       container.querySelector('[aria-label="Remove preset Lean 2027"]'),
     ).toBeTruthy();
+  });
+});
+
+// ── parity: [ reset | new ], click-to-rename, None, disabled, swatch ──────
+
+function mountLive(initial: DirtyComboStore<PayrollConfig>) {
+  const [store, setStore] = createSignal(initial);
+  let n = 0;
+  const { container } = render(() => (
+    <ScenarioComboBox
+      items={store().items}
+      selectedId={store().selectedId}
+      view={dirtyComboViewOf(store())}
+      onSelect={(id) => setStore((s) => dirtyComboSelect(s, id))}
+      onSave={() => {}}
+      onReset={() => setStore(dirtyComboReset)}
+      onDelete={() => {}}
+      onCreate={() =>
+        setStore((s) => dirtyComboCreate(s, { id: `n${++n}`, label: "New scenario" }))
+      }
+      onRename={(name) => setStore((s) => dirtyComboRename(s, name))}
+    />
+  ));
+  // The live control, not the invisible widest-state reservation.
+  const live = () => container.querySelector(".sui-reserved-width__live")!;
+  const button = (label: string) =>
+    live().querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!;
+  const field = () => live().querySelector<HTMLInputElement>("input");
+  return { container, store, live, button, field };
+}
+
+describe("DirtyComboBox parity (onCreate + onRename)", () => {
+  it("pristine: the split is collapsed and inert — new is unreachable", () => {
+    const { button } = mountLive(PAYROLL_STORE);
+    const split = button("New scenario").closest(".sui-slide-reveal");
+    expect(isInert(split)).toBe(true);
+    expect(split?.classList.contains("sui-slide-reveal--open")).toBe(false);
+    expect(button("Reset to saved").closest(".sui-slide-reveal")).toBe(split);
+  });
+
+  it("dirty: the split slides out; reset resets and hides it again", () => {
+    const { button, store } = mountLive(dirtyStore);
+    const split = () => button("New scenario").closest(".sui-slide-reveal");
+    expect(isInert(split())).toBe(false);
+    button("Reset to saved").click();
+    expect(dirtyComboViewOf(store()).dirty).toBe(false);
+    expect(isInert(split())).toBe(true);
+  });
+
+  it("new creates, selects, and opens the name field; Enter names it", async () => {
+    const { button, field, store } = mountLive(dirtyStore);
+    button("New scenario").click();
+    await tick();
+    expect(store().selectedId).toBe("n1");
+    expect(store().draft.engineer).toBe(999); // it kept the edit
+    const input = field()!;
+    expect(input.value).toBe("New scenario");
+    fireEvent.input(input, { target: { value: "Lean 2028" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(dirtyComboViewOf(store()).selectedLabel).toBe("Lean 2028");
+  });
+
+  it("clicking the name renames on blur; Esc cancels", async () => {
+    const { live, field, store } = mountLive(PAYROLL_STORE);
+    const name = () =>
+      live().querySelector<HTMLButtonElement>(".sui-editable-title__text")!;
+    name().click();
+    await tick();
+    fireEvent.input(field()!, { target: { value: "Renamed" } });
+    fireEvent.blur(field()!);
+    expect(dirtyComboViewOf(store()).selectedLabel).toBe("Renamed");
+    name().click();
+    await tick();
+    fireEvent.input(field()!, { target: { value: "Nope" } });
+    fireEvent.keyDown(field()!, { key: "Escape" });
+    expect(dirtyComboViewOf(store()).selectedLabel).toBe("Renamed");
+  });
+
+  it("a click on the blank space right of the name enters edit mode", async () => {
+    const { live, field } = mountLive(PAYROLL_STORE);
+    // The rename target is the FILL title: it spans the name slot up to the
+    // caret, so the blank space after the text is part of it.
+    const title = live().querySelector(".sui-editable-title--fill")!;
+    const target = title.querySelector<HTMLElement>(".sui-editable-title__text")!;
+    expect(target.parentElement).toBe(title);
+    fireEvent.click(target, { clientX: 999, clientY: 0 });
+    await tick();
+    expect(field()).toBeTruthy();
+    // …and the field fills the same slot.
+    expect(field()!.closest(".sui-editable-title--fill")).toBe(title);
+  });
+
+  it("None leads the menu, carries no trash, and makes the name inert", async () => {
+    const { live, button, store } = mountLive(PAYROLL_STORE);
+    button("Choose a scenario").click();
+    await tick();
+    const options = live().querySelectorAll('[role="option"]');
+    expect(options[0]?.textContent).toContain("None");
+    expect(options[0]?.querySelector('[aria-label^="Delete"]')).toBeNull();
+    (options[0] as HTMLElement).click();
+    await tick();
+    expect(store().selectedId).toBe(DIRTY_COMBO_NONE_ID);
+    const name = live().querySelector<HTMLButtonElement>(
+      ".sui-editable-title__text",
+    )!;
+    expect(name.textContent).toBe("None");
+    expect(name.disabled).toBe(true);
+  });
+
+  it("a disabled row states its reason and cannot be picked; swatches draw", async () => {
+    const refused = {
+      ...PAYROLL_STORE,
+      items: map((item: (typeof PAYROLL_STORE.items)[number], i: number) =>
+        i === 1
+          ? { ...item, color: "red", disabled: true, reason: "Other baseline" }
+          : { ...item, color: "blue" },
+      PAYROLL_STORE.items),
+    };
+    const { live, button, store } = mountLive(refused);
+    expect(live().querySelector(".sui-scenario-glyph, svg")).toBeTruthy();
+    button("Choose a scenario").click();
+    await tick();
+    const row = live().querySelectorAll<HTMLElement>('[role="option"]')[2]!;
+    expect(row.getAttribute("aria-disabled")).toBe("true");
+    expect(row.getAttribute("title")).toBe("Other baseline");
+    row.click();
+    expect(store().selectedId).toBe(PAYROLL_STORE.selectedId);
   });
 });

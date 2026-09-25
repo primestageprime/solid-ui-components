@@ -3183,7 +3183,7 @@
     "showcase": "#/dirty-combo-box",
     "since": "0.185.0",
     "file": "src/components/DirtyComboBox/DirtyComboBox.tsx",
-    "line": 205
+    "line": 363
   },
   {
     "name": "createDistributionSparkline",
@@ -4507,7 +4507,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/chart-frame",
-    "since": "Unreleased",
+    "since": "0.186.0",
     "file": "src/components/ChartFrame/YAxisLockDialog.tsx",
     "line": 135
   },
@@ -5806,7 +5806,7 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/EditableTitle/EditableTitle.tsx",
-    "line": 51
+    "line": 62
   },
   {
     "name": "EllipsisText",
@@ -6277,7 +6277,7 @@
     "useFor": null,
     "notes": "The frame that takes its parent's height: for a chart in a panel of definite height (BuilderBoard's chart row), where a stated px would fight the panel.",
     "showcase": "#/chart-frame",
-    "since": "Unreleased",
+    "since": "0.186.0",
     "file": "src/components/ChartFrame/variants.ts",
     "line": 24
   },
@@ -6771,7 +6771,7 @@
     "useFor": null,
     "notes": "FramedCashflowScrubChart — the chart inside a `ChartFrame` (Peter's chart visual language, 2026-09-24): `chrome: \"frame\"`, so it draws none of its own controls — no Auto | Fixed | Fit switch, no range editor, no expand chevron, no top action — and the frame's split button, driven by `createYAxisStrategy`, owns the y-axis. The chart takes what the strategy decides as controlled props: `yMin`/`yMax` (the domain, in cents), `yAxisMode` (still marks out-of-range values in `\"fixed\"`) and `expanded`. Still (`yFitTransition: false`, `expandTransition: false`), like `StillCashflowScrubChart`: the strategy's water marks already ease. */",
     "showcase": "#/cashflow-scrub-chart",
-    "since": "Unreleased",
+    "since": "0.186.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
     "line": 1018
   },
@@ -10589,7 +10589,7 @@
     "showcase": "#/reserved-width",
     "since": "0.185.0",
     "file": "src/components/ReservedWidth/ReservedWidth.tsx",
-    "line": 31
+    "line": 33
   },
   {
     "name": "ResizableContainer",
@@ -10725,7 +10725,7 @@
     "family": "DirtyComboBox",
     "variantOf": {
       "factory": "createDirtyComboBox",
-      "overrides": "{\n    labels: {\n      reference: \"Baseline\",\n      versus: \"vs\",\n      save: \"Save\",\n      reset: \"Reset to saved\",\n      deleteItem: (label) => `Delete ${label}`,\n    },\n  }"
+      "overrides": "{\n    labels: {\n      reference: \"Baseline\",\n      versus: \"vs\",\n      save: \"Save\",\n      reset: \"Reset to saved\",\n      deleteItem: (label) => `Delete ${label}`,\n      create: \"New scenario\",\n      choose: \"Choose a scenario\",\n      none: \"None\",\n    },\n  }"
     },
     "overrides": [
       "labels"
@@ -14538,7 +14538,7 @@
     "useFor": null,
     "notes": "The y-axis lock editor, in the chart language's own words. */",
     "showcase": "#/chart-frame",
-    "since": "Unreleased",
+    "since": "0.186.0",
     "file": "src/components/ChartFrame/variants.ts",
     "line": 29
   }

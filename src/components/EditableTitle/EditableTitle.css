@@ -71,3 +71,19 @@
   outline-offset: 1px;
   border-radius: 2px;
 }
+
+/* `fill`: the title IS its slot. The click target spans the blank space after
+   the text (left-aligned), and the field fills the same width. */
+.sui-editable-title--fill {
+  display: flex;
+  width: 100%;
+}
+.sui-editable-title--fill > .sui-editable-title__text,
+.sui-editable-title--fill > .sui-editable-title__editor {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+.sui-editable-title--fill > .sui-editable-title__editor {
+  display: grid;
+}
