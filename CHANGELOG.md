@@ -10,6 +10,10 @@
 - **`YAxisLockDialogNumber`** — the y-axis lock editor for a COUNT axis (hours, headcount): plain `ThemedNumberInput` fields. `createYAxisLockDialog` gains the `field: "currency" | "number"` Override (type `YAxisLockField`; default `"currency"`, so `YAxisLockDialog` is unchanged).
 - **`BuilderBoard`: `panelD` may be `(box) => JSX`** — the same box-render slot as `BuilderBoardBelowChart` (an accessor of D's measured content box; the rail's width by 0 before layout), so an app can pick its gauge with `calloutModeFor` inside a curried board. A plain element is unchanged. New type `BuilderBoardPanelDSlot`.
 
+### Fixed
+
+- **`LevelsTimeline` printed the same y label on every tick for flat data** (G19) — one level at $100,000 drew five "$100,000"s. A derived value range narrower than 10% of its centre is now widened to exactly that (`padFlatRange`, `MIN_RELATIVE_SPAN`), so the flat rail sits mid-plot on a real scale; and when the consumer's `formatValue` would still print two ticks alike (small values, a pinned domain), the axis asks for fewer, coarser ticks until every label differs. Pinned domains are still never widened.
+
 ## 0.189.0 — 2026-09-25
 
 ### Fixed

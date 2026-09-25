@@ -1468,8 +1468,37 @@ export const valueDomainOf = (
 };
 
 /**
+ * The narrowest a DERIVED value range may be, as a fraction of its centre's
+ * magnitude (G19).
+ *
+ * FLAT data — one salary at $100,000 — has no range, and `openOut` alone
+ * gives it one of ±1: five ticks at $99,999.5, $100,000, … that a currency
+ * formatter prints as five "$100,000"s. A near-flat pair ($100,000 and
+ * $100,400) does the same under a $k formatter. So a derived range narrower
+ * than 10% of its centre is widened, symmetrically, to exactly that.
+ *
+ * PAD, NOT COLLAPSE to one tick: the flat rail keeps a real scale in the
+ * middle of the plot, and a second level arriving doesn't make the axis jump
+ * from one tick to five. The widening is continuous (a range just over the
+ * floor is left alone, one just under it grows to it), so no data change ever
+ * snaps the axis.
+ */
+export const MIN_RELATIVE_SPAN = 0.1;
+
+/** Widen a range narrower than `MIN_RELATIVE_SPAN` of its centre to exactly that. */
+export const padFlatRange = (
+  range: readonly [number, number],
+): readonly [number, number] => {
+  const [lo, hi] = range;
+  const centre = (lo + hi) / 2;
+  const floor = Math.abs(centre) * MIN_RELATIVE_SPAN;
+  if (hi - lo >= floor) return range;
+  return [centre - floor / 2, centre + floor / 2];
+};
+
+/**
  * The y range to draw against: the consumer's, if it gave one, else the
- * levels' own.
+ * levels' own (widened when flat — `padFlatRange` — then nicened).
  *
  * A PINNED domain is what stops the rails reshuffling vertically while a value
  * moves. Derived from the data, the scale follows it — raise one level and
@@ -1488,7 +1517,7 @@ export const valueDomainFor = (
   pinned?: readonly [number, number],
 ): readonly [number, number] =>
   pinned === undefined
-    ? niceValueDomain(valueDomainOf(levels))
+    ? niceValueDomain(padFlatRange(valueDomainOf(levels)))
     : openOut(Math.min(...pinned), Math.max(...pinned));
 
 /**
@@ -1549,16 +1578,25 @@ export const valueTickMarks = (
   yScale: (value: number) => number,
   frame: Frame,
   format: (value: number) => string = String,
-): readonly ValueTick[] =>
-  map(
-    (value: number) => ({
-      key: String(value),
-      value,
-      y: yScale(value),
-      label: format(value),
-    }),
-    valueTicks(yDomain, frame.compact ? COMPACT_Y_TICK_TARGET : Y_TICK_TARGET),
-  );
+): readonly ValueTick[] => {
+  const mark = (value: number): ValueTick => ({
+    key: String(value),
+    value,
+    y: yScale(value),
+    label: format(value),
+  });
+  const distinct = (marks: readonly ValueTick[]): boolean =>
+    new Set(map((m: ValueTick) => m.label, marks)).size === marks.length;
+  // THE FORMATTER HAS A RESOLUTION this file cannot know (G19): a whole-dollar
+  // format prints 11.5 and 12 as "$12" both. Ask for fewer ticks — a coarser
+  // nice step — until every label differs; one tick is always distinct.
+  const target = frame.compact ? COMPACT_Y_TICK_TARGET : Y_TICK_TARGET;
+  for (let count = target; count > 1; count--) {
+    const marks = map(mark, valueTicks(yDomain, count));
+    if (distinct(marks)) return marks;
+  }
+  return map(mark, valueTicks(yDomain, 1));
+};
 
 /**
  * The gutter the axis needs: its longest label, plus the tick and the gap.
