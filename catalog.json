@@ -4152,7 +4152,7 @@
     "showcase": "#/stacked-timeline-chart",
     "since": "0.174.0",
     "file": "src/components/StackedTimelineChart/StackedTimelineChart.tsx",
-    "line": 389
+    "line": 408
   },
   {
     "name": "createStatusBadge",
@@ -12205,12 +12205,12 @@
     "dataProps": "StackedTimelineChartDataProps",
     "summary": "Composite (Depth 2).",
     "notToBeConfusedWith": null,
-    "useFor": "hours or capacity by source over a year with a threshold and dated changes — the Hourly Board's Work Mix; with `columns`, a month's cash by source — the License Board's mix. For levels that are rails rather than bands, use `LevelsTimeline`.",
+    "useFor": "hours or capacity by source over a year with a threshold and dated changes — the Hourly Board's Work Mix; with `columns`, a month's cash by source — the License Board's mix. For levels that are rails rather than bands, use `LevelsTimeline`. Size-responsive chrome (G17), from its measured box: under 200px tall, 3 y ticks (domain ends + middle) and a tighter default inset; under 400px wide, every other caller x tick. A curried `margin` wins. Pure rule: `stackedTimelineLayout` in `layout.ts`. No props.",
     "notes": null,
     "showcase": "#/stacked-timeline-chart",
     "since": "0.174.0",
     "file": "src/components/StackedTimelineChart/StackedTimelineChart.tsx",
-    "line": 206
+    "line": 212
   },
   {
     "name": "StarToggle",

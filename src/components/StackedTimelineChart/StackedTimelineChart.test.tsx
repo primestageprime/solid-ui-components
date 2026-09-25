@@ -510,3 +510,46 @@ describe("createStackedTimelineChart", () => {
 		).not.toContain("C ");
 	});
 });
+
+// G17 — the measured box decides the chrome: 3 y ticks and a tighter inset
+// under 200px tall, every other x label under 400px wide.
+describe("StackedTimelineChart size-responsive chrome (G17)", () => {
+	const sized = (width: number, height: number) => {
+		const restore = installRects((el) =>
+			el.tagName.toLowerCase() === "svg" || el.tagName.toLowerCase() === "div"
+				? rectOf({ left: 0, top: 0, width, height })
+				: null,
+		);
+		const months = Array.from({ length: 12 }, (_, m) =>
+			Date.UTC(2025, m, 1),
+		);
+		const view = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				xTickValues={months}
+			/>
+		));
+		restore();
+		const labels = (axis: "x" | "y") =>
+			view.container.querySelectorAll(
+				`.sui-chart__axis--${axis} .sui-chart__axis-label`,
+			).length;
+		return { labels };
+	};
+
+	it("a tall, wide box keeps 5 y ticks and every month label", () => {
+		const { labels } = sized(1440, 320);
+		expect(labels("y")).toBe(5);
+		expect(labels("x")).toBe(12);
+	});
+
+	it("a short box draws 3 y ticks: the domain's ends and middle", () => {
+		expect(sized(1440, 150).labels("y")).toBe(3);
+	});
+
+	it("a narrow box labels every other month", () => {
+		expect(sized(390, 320).labels("x")).toBe(6);
+	});
+});
