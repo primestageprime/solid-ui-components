@@ -7,6 +7,13 @@
 - **`YAxisLockDialogNumber`** — the y-axis lock editor for a COUNT axis (hours, headcount): plain `ThemedNumberInput` fields. `createYAxisLockDialog` gains the `field: "currency" | "number"` Override (type `YAxisLockField`; default `"currency"`, so `YAxisLockDialog` is unchanged).
 - **`BuilderBoard`: `panelD` may be `(box) => JSX`** — the same box-render slot as `BuilderBoardBelowChart` (an accessor of D's measured content box; the rail's width by 0 before layout), so an app can pick its gauge with `calloutModeFor` inside a curried board. A plain element is unchanged. New type `BuilderBoardPanelDSlot`.
 
+## 0.188.0 — 2026-09-25
+
+### Fixed
+
+- **`FillChartFrame` drew its chart body 0px tall** (G12) at every width: its column is `height: 100%`, but the in-flow `FullscreenBox` around it sized to content (~26px), so the body row got 0px and the vertical y-title spilled into the heading. The box now fills too. **`FullscreenBox`: `fill`** (override, default off; curried **`FillFullscreenBox`**) makes the in-flow box fill a parent of definite height and hand it to its first child; a `ChartFrame` with `height: "fill"` uses it. Fixed-height frames and every other `FullscreenBox` are unchanged.
+- **`ChartFrame`: the vertical y-title overflowed up into the header when the body was short** (G13). Its rail now shrinks with the body row and clips (`min-height: 0; overflow: hidden`) instead of spilling.
+
 ## 0.187.0 — 2026-09-25
 
 ### Added
