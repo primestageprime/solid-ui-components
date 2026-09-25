@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+- **`CashflowScrubChart`: the right label gutter is capped at 25% of the plot** (G14). Past `MAX_RIGHT_GUTTER_SHARE` of the plot the gutter would leave, every `"right"` label falls back to `"below"`, so a long label on a narrow chart (thorcasting at 390px) no longer eats the plot. Wide charts are unchanged; so is any chart before its frame is measured.
+
+### Added
+
+- **`ScrubChart`: `onChartWidthChange?(width)`** — fires with the frame's measured width whenever it changes.
+
 ## 0.193.0 — 2026-09-25
 
 ### Fixed

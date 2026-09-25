@@ -545,6 +545,12 @@ export interface ScrubChartProps<C extends Cell> {
    *  right-zone labels) — the caller states the width it needs. Default 0,
    *  so no existing chart's plot narrows until a caller asks for the room. */
   rightGutter?: number;
+  /** Fires with the frame's measured width in px whenever it changes (after
+   *  the first real measurement). For a caller whose `rightGutter` depends on
+   *  the room there is — `CashflowScrubChart` caps its right-zone labels at a
+   *  share of the plot. The gutter never changes the FRAME width, so this
+   *  cannot loop. */
+  onChartWidthChange?: (width: number) => void;
 
   // ── X-axis (optional) ────────────────────────────────────────────────
 
