@@ -141,7 +141,9 @@ describe("BuilderBoard — panel D's box", () => {
   it("measures nothing for a plain element", () => {
     sizer = installFakeSizer();
     const { container } = board();
-    expect(sizer.observed()).toHaveLength(0);
+    // The board observes its own width (single column); D's card is never
+    // observed for a plain element.
+    expect(sizer.observed()).not.toContain(panel(container, "d"));
     expect(panel(container, "d").textContent).toBe("gauge");
   });
 });

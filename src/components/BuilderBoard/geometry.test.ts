@@ -88,7 +88,28 @@ describe("single column below 600px — the printed observation", () => {
         { width: 1440, height: 900 },
       ],
     );
-    expect(join("\n\n", printed)).toMatchInlineSnapshot();
+    expect(join("\n\n", printed)).toMatchInlineSnapshot(`
+      "layout stacked (390x760)
+      panel            x     y  width  height
+      A cashflow       0     0    390     240
+      B series         0   248    390     240
+      C changes        0   496    390     236
+      D rail           0   740    390     216
+
+      layout split (768x900)
+      panel            x     y  width  height
+      A cashflow       0     0    768     221
+      B series         0   225    768     221
+      C changes        0   454    468     446
+      D rail         476   454    292     446
+
+      layout split (1440x900)
+      panel            x     y  width  height
+      A cashflow       0     0   1440     221
+      B series         0   225   1440     221
+      C changes        0   454   1140     446
+      D rail        1148   454    292     446"
+    `);
   });
 
   it("stacks only a laid-out board narrower than the breakpoint", () => {
