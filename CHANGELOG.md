@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.192.0 — 2026-09-25
+
 ### Fixed
 
 - **`EditableTitle` `fill`: the rename field was invisible as a field** (so `DirtyComboBox`'s rename read as a mere text selection). In `fill` mode the input is exactly its host's size and the host clips, so the default outline — drawn outside the input — was clipped away. The fill field now draws its outline inside (`outline-offset: -1px`) on the input background, with an accent caret and a small text inset.
