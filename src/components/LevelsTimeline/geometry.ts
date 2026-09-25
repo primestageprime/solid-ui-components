@@ -1440,6 +1440,24 @@ export const flowBands = (
 const openOut = (lo: number, hi: number): readonly [number, number] =>
   lo === hi ? [lo - 1, hi + 1] : [lo, hi];
 
+/**
+ * The value extent the rails occupy — the FIT a held axis
+ * (`createAxisWaterMarks`) tracks. Only levels someone ever holds count: a
+ * level with no one in it draws nothing, so it must not stretch the axis.
+ * Null when nothing is drawn.
+ */
+export const levelsValueFit = (
+  levels: readonly Level[],
+): { readonly min: number; readonly max: number } | null => {
+  const values = map(
+    (level: Level) => level.value,
+    filter((level: Level) => maxCountIn(level) > 0, levels),
+  );
+  return values.length === 0
+    ? null
+    : { min: Math.min(...values), max: Math.max(...values) };
+};
+
 /** The levels' own range. No padding — the inset does that job now. */
 export const valueDomainOf = (
   levels: readonly Level[],

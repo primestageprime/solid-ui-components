@@ -32,3 +32,21 @@ export type {
   HighWaterMark,
   HighWaterMarkOptions,
 } from "./createHighWaterMark";
+// The held y-DOMAIN built on it: ceiling AND floor, expand at once, shrink
+// only on reset — plus its pure step and headless observation.
+export {
+  createAxisWaterMarks,
+  createHeldFit,
+  heldDomainOf,
+  holdFitDomain,
+  NO_HELD_DOMAIN,
+  observeAxisWaterMarks,
+} from "./createAxisWaterMarks";
+export type {
+  AxisWaterMarks,
+  FitDomain,
+  HeldDomain,
+  HeldFit,
+  WaterMarkFrame,
+  WaterMarkRow,
+} from "./createAxisWaterMarks";

@@ -37,6 +37,8 @@ export { timeOf } from "./geometry";
 // `abbreviateDates` labels a consumer's change tabs with the SAME rule the
 // axis uses, so a tab row and the axis never disagree about a year.
 export { abbreviateDates, pickDay } from "./geometry";
+// The fit a held value axis tracks: `createAxisWaterMarks(() => levelsValueFit(levels))`.
+export { levelsValueFit } from "./geometry";
 export type { PickStrategy } from "./geometry";
 export type {
   CountPoint,

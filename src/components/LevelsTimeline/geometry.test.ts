@@ -88,6 +88,7 @@ import {
   FLAG_RULE_TOP,
   nudgeFlagCentres,
   weekTicks,
+  levelsValueFit,
   pickDay,
   pickNearestMonth,
   FILLER_LABEL_EXTRA_GAP,
@@ -2485,5 +2486,23 @@ describe("pick strategies — what a click on the plot reports", () => {
     expect(byDay.x).toBe(scale(utc("2026-10-17")));
     // No strategy: the month, exactly as before.
     expect(isoDayOf(hoverAt([], WINDOW, x, frame).at)).toBe("2026-11-01");
+  });
+});
+
+describe("levelsValueFit — what a held value axis tracks", () => {
+  it("spans the levels anyone holds, and ignores empty ones", () => {
+    const levels: readonly Level[] = [
+      { id: "a", label: "a", value: 80_000, points: [{ at: 0, count: 2 }] },
+      { id: "b", label: "b", value: 110_000, points: [{ at: 0, count: 1 }] },
+      {
+        id: "ghost",
+        label: "g",
+        value: 500_000,
+        points: [{ at: 0, count: 0 }],
+      },
+      { id: "none", label: "n", value: 1, points: [] },
+    ];
+    expect(levelsValueFit(levels)).toEqual({ min: 80_000, max: 110_000 });
+    expect(levelsValueFit([])).toBeNull();
   });
 });

@@ -9,6 +9,11 @@
  * `abbreviateDates`, so tab N is flag N and the tab row and the axis agree on
  * when a year is worth writing.
  *
+ * The value axis is HELD (`createAxisWaterMarks` over `levelsValueFit`): it
+ * expands the moment a rail climbs past it and never shrinks on its own, so a
+ * delete or a drag never rescales the plot under the pointer; the shrink
+ * button fits it back to the rails present (Peter, 2026-09-24).
+ *
  * The consumer owns the events. Everything the chart draws is DERIVED from
  * them here, in the pure functions below, so a moved or deleted event takes
  * its rails and ribbons with it. The domain is the consumer's fixed window,
@@ -17,9 +22,12 @@
  * empties the chart.
  */
 import { type Component, createMemo, createSignal } from "solid-js";
+import { GhostButton, IconOnlyButton } from "../../../src/components/Button";
+import { Icon } from "../../../src/components/Icon";
 import {
   abbreviateDates,
   createLevelsTimeline,
+  levelsValueFit,
   pickDay,
 } from "../../../src/components/LevelsTimeline";
 import type {
@@ -29,7 +37,12 @@ import type {
   Transfer,
 } from "../../../src/components/LevelsTimeline";
 import { createMutationToolbar } from "../../../src/components/MutationToolbar";
-import { TightStack } from "../../../src/components/Layout";
+import {
+  ClusterRow,
+  SpreadRow,
+  TightStack,
+} from "../../../src/components/Layout";
+import { createAxisWaterMarks } from "../../../src/hooks";
 import { NoteText, TextTitle } from "../../../src/components/Text";
 import { filter, find, findIndex, flatMap, map, sortBy } from "../../../src/fn";
 
@@ -182,6 +195,32 @@ export const DatedEvents: Component = () => {
   const [events, setEvents] = createSignal(EVENTS);
   const [selected, setSelected] = createSignal<string>();
   const chart = createMemo(() => chartOf(events()));
+  /** Expands with the rails at once; shrinks only when the reader asks. */
+  const payAxis = createAxisWaterMarks(() => levelsValueFit(chart().levels));
+
+  /** Give the LATEST change another $10k — a rail climbs, the axis follows. */
+  const raiseLatest = (): void => {
+    const latest = inOrder(events())[events().length - 1];
+    if (latest === undefined) return;
+    setEvents((before) =>
+      map(
+        (event: PayEvent) =>
+          event.id === latest.id
+            ? {
+                ...event,
+                changes: map(
+                  (change: PayChange) => ({
+                    ...change,
+                    pay: change.pay + 10_000,
+                  }),
+                  event.changes,
+                ),
+              }
+            : event,
+        before,
+      ),
+    );
+  };
 
   const remove = (id: string): void => {
     const tabs = tabsOf(events());
@@ -225,15 +264,29 @@ export const DatedEvents: Component = () => {
         onRemove={remove}
         emptyNote="No changes — click the chart to add one."
       />
-      <TextTitle>
-        Dated events — drag a flag, hover it, click a day to add one
-      </TextTitle>
+      <SpreadRow>
+        <TextTitle>
+          Dated events — drag a flag, hover it, click a day to add one
+        </TextTitle>
+        <ClusterRow>
+          <GhostButton onClick={raiseLatest}>
+            +$10k to the latest change
+          </GhostButton>
+          <IconOnlyButton
+            onClick={payAxis.reset}
+            aria-label="Fit y-axis to current values"
+            title="Fit y-axis to current values"
+          >
+            <Icon name="shrink" size="sm" />
+          </IconOnlyButton>
+        </ClusterRow>
+      </SpreadRow>
       <DatedPayTimeline
         levels={chart().levels}
         transfers={chart().transfers}
         mutations={chart().mutations}
         domain={WINDOW}
-        valueDomain={[70_000, 120_000]}
+        valueDomain={payAxis.domain() ?? undefined}
         selectedMutationId={selected()}
         onSelectMutation={(id) =>
           setSelected((before) => (before === id ? undefined : id))
@@ -244,6 +297,8 @@ export const DatedEvents: Component = () => {
       <NoteText>
         Flags are numbered by time and nudge apart when close; each keeps a tick
         at its exact day on the axis. A flag cannot be dragged past a neighbour.
+        Raise a rail and the value axis grows; delete the 2027 changes and it
+        holds until you press shrink.
       </NoteText>
     </TightStack>
   );
