@@ -129,13 +129,95 @@ export const builderBoardTable = (
   viewport: Viewport,
   rail: RailWidth = "gauge",
 ): string => {
-  const rects = builderBoardRects(viewport, rail);
-  const header = `${"panel".padEnd(12)}${cell("x", 6)}${cell("y", 6)}${cell("width", 7)}${cell("height", 8)}`;
-  const rows = map((id: PanelId) => {
+  return join("\n", rectsTable(builderBoardRects(viewport, rail)));
+};
+
+/** The header and one whole-px row per panel. */
+const rectsTable = (rects: BuilderBoardRects): readonly string[] => [
+  `${"panel".padEnd(12)}${cell("x", 6)}${cell("y", 6)}${cell("width", 7)}${cell("height", 8)}`,
+  ...map((id: PanelId) => {
     const r = rects[id];
     return `${PANEL_NAMES[id].padEnd(12)}${cell(Math.round(r.x), 6)}${cell(Math.round(r.y), 6)}${cell(Math.round(r.width), 7)}${cell(Math.round(r.height), 8)}`;
-  }, PANEL_ORDER);
-  return join("\n", [header, ...rows]);
+  }, PANEL_ORDER),
+];
+
+// ── Single column on a narrow board ──────────────────────────────────────
+//
+// Below `BUILDER_BOARD_SINGLE_COLUMN_BELOW` the board's OWN width cannot hold
+// C beside the 292px rail (at 390px C got ~50px), and viewport halves leave
+// every card too short to read. So it goes single column (Peter, 2026-09-25:
+// "It should go single column") — A, B, C, D in one scrolling column, each at
+// a stated height:
+//
+//   ┌──────────────────────┐
+//   │ A  STACKED_CHART_HEIGHT │
+//   ├──────────────────────┤ sm
+//   │ B  STACKED_CHART_HEIGHT │
+//   ├──────────────────────┤ sm
+//   │ C  C_STACKED_HEIGHT  │  (scrolls inside its card, as in split)
+//   ├──────────────────────┤ sm
+//   │ D  D_STACKED_HEIGHT  │  (the rail, full width)
+//   └──────────────────────┘
+//     the board scrolls
+//
+// ONE breakpoint, on the board's measured width. A width of 0 is "not laid
+// out yet" (first paint, jsdom) and keeps the split board.
+
+/** Narrower than this (the board's own width, px), the board is one column. */
+export const BUILDER_BOARD_SINGLE_COLUMN_BELOW = 600;
+
+/** A and B's height in the single column: a card title row + `sm` gap + a
+ *  plot tall enough to read a line and a three-tick axis. */
+export const STACKED_CHART_HEIGHT = 240;
+
+export type BuilderBoardLayout = "split" | "stacked";
+
+/** THE BREAKPOINT: stacked while the board is laid out and narrower than
+ *  `BUILDER_BOARD_SINGLE_COLUMN_BELOW`; split otherwise (including unmeasured). */
+export const builderBoardLayoutFor = (width: number): BuilderBoardLayout =>
+  width > 0 && width < BUILDER_BOARD_SINGLE_COLUMN_BELOW ? "stacked" : "split";
+
+/** The four rects of the single column at `width` — every card full width. */
+export const builderBoardStackedRects = (width: number): BuilderBoardRects => {
+  const bY = STACKED_CHART_HEIGHT + HALF_GUTTER;
+  const cY = bY + STACKED_CHART_HEIGHT + HALF_GUTTER;
+  const dY = cY + C_STACKED_HEIGHT + HALF_GUTTER;
+  return {
+    a: { x: 0, y: 0, width, height: STACKED_CHART_HEIGHT },
+    b: { x: 0, y: bY, width, height: STACKED_CHART_HEIGHT },
+    c: { x: 0, y: cY, width, height: C_STACKED_HEIGHT },
+    d: { x: 0, y: dY, width, height: D_STACKED_HEIGHT },
+  };
+};
+
+/** The layout the board draws in `viewport`, and its rects. */
+export const builderBoardLayout = (
+  viewport: Viewport,
+  rail: RailWidth = "gauge",
+): { readonly layout: BuilderBoardLayout; readonly rects: BuilderBoardRects } => {
+  const layout = builderBoardLayoutFor(viewport.width);
+  return {
+    layout,
+    rects:
+      layout === "stacked"
+        ? builderBoardStackedRects(viewport.width)
+        : builderBoardRects(viewport, rail),
+  };
+};
+
+/**
+ * The layout as a table — `builderBoardTable`'s rows under a `layout …` line,
+ * for whichever layout `viewport` gets. The headless observation of G11.
+ */
+export const observeBuilderBoard = (
+  viewport: Viewport,
+  rail: RailWidth = "gauge",
+): string => {
+  const { layout, rects } = builderBoardLayout(viewport, rail);
+  return join("\n", [
+    `layout ${layout} (${viewport.width}x${viewport.height})`,
+    ...rectsTable(rects),
+  ]);
 };
 
 // ── The board BELOW a shell chart ─────────────────────────────────────────

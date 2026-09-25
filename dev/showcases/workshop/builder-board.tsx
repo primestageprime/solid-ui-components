@@ -32,11 +32,12 @@ import { BuilderBoard } from "../../../src/components/BuilderBoard";
 import { StillCashflowScrubChart } from "../../../src/components/CashflowScrubChart";
 import type { CashflowCell } from "../../../src/components/CashflowScrubChart";
 import {
-  builderBoardTable,
+  observeBuilderBoard,
   type PanelId,
   type Viewport,
 } from "../../../src/components/BuilderBoard/geometry";
 import { CodeBlock } from "../../../src/components/CodeBlock";
+import { calloutModeFor } from "../../../src/components/RateGauge";
 import {
   GrowCenterColumn,
   GrowFillBox,
@@ -50,10 +51,13 @@ import { NoteText, SectionTitle, TextTitle } from "../../../src/components/Text"
 
 export const meta = { label: "Builder Board" };
 
-type SizeId = "laptop" | "desktop" | "wide";
+type SizeId = "phone" | "tablet" | "laptop" | "desktop" | "wide";
 
-/** The three viewports, as the bench classes in dev/main.css state them. */
+/** The viewports, as the bench classes in dev/main.css state them. The phone
+ *  sits under BUILDER_BOARD_SINGLE_COLUMN_BELOW, so it draws one column. */
 const SIZES: Readonly<Record<SizeId, Viewport>> = {
+  phone: { width: 390, height: 760 },
+  tablet: { width: 768, height: 900 },
   laptop: { width: 1000, height: 600 },
   desktop: { width: 1280, height: 720 },
   wide: { width: 1600, height: 900 },
@@ -65,7 +69,7 @@ const SizePicker = createSegmentedControl({
       value: id,
       label: `${id} ${SIZES[id].width}×${SIZES[id].height}`,
     }),
-    ["laptop", "desktop", "wide"] as const,
+    ["phone", "tablet", "laptop", "desktop", "wide"] as const,
   ),
 });
 
@@ -118,6 +122,9 @@ const measuredTable = (frame: HTMLElement): string => {
 };
 
 /** A panel's stand-in: its name over a centred note. */
+/** The words a gauge in D would say — what `calloutModeFor` sizes against. */
+const GAUGE_LABELS = ["Current $1,240,000", "Baseline $1,100,000"];
+
 const Placeholder: Component<{ title: string; note: string }> = (props) => (
   <>
     <TextTitle>{props.title}</TextTitle>
@@ -188,13 +195,18 @@ const BuilderBoardBench: Component = () => {
               }
               panelB={<Placeholder title="Series" note="panel B — the series being changed; clicking it inserts a time segment" />}
               panelC={<Placeholder title="Changes" note="panel C — the controls; fills what the rail leaves and scrolls inside its card" />}
-              panelD={<Placeholder title="Cash, on average" note="panel D — the gauge, a stated width" />}
+              panelD={(box) => (
+                <Placeholder
+                  title="Cash, on average"
+                  note={`panel D — the gauge, a stated width · box ${box().width}×${box().height} · ${calloutModeFor(box(), GAUGE_LABELS)}`}
+                />
+              )}
             />
           </div>
         </ScrollXBox>
 
-        <TextTitle>Model — builderBoardTable({SIZES[size()].width}, {SIZES[size()].height})</TextTitle>
-        <CodeBlock size="sm">{builderBoardTable(SIZES[size()])}</CodeBlock>
+        <TextTitle>Model — observeBuilderBoard({SIZES[size()].width}, {SIZES[size()].height})</TextTitle>
+        <CodeBlock size="sm">{observeBuilderBoard(SIZES[size()])}</CodeBlock>
         <TextTitle>Measured — getBoundingClientRect on the rendered panels</TextTitle>
         <CodeBlock size="sm">{measured()}</CodeBlock>
       </NarrowStack>

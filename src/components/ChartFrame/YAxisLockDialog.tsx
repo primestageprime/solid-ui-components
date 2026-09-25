@@ -1,6 +1,7 @@
 // ============================================
 // YAxisLockDialog — Composite (Depth 2, zero CSS)
-// Composes PrimaryConfirmationModal + CurrencyInput × 2 + TightStack.
+// Composes PrimaryConfirmationModal + a number field × 2 (CurrencyInput, or
+// ThemedNumberInput for counts) + TightStack.
 //
 // ChartFrame's lock editor: the dialog the Y-axis strategy's `fixed` mode
 // opens (`createYAxisStrategy` → `dialogOpen` / `lock` / `setLock` /
@@ -15,6 +16,7 @@
 // every time the dialog closes, so the next open starts from the lock again.
 // ============================================
 import {
+  type Accessor,
   type Component,
   createEffect,
   createSignal,
@@ -29,6 +31,25 @@ import {
 import { CurrencyInput } from "../CurrencyInput";
 import { TightStack } from "../Layout";
 import { PrimaryConfirmationModal } from "../Modal";
+import { ThemedNumberInput } from "../ThemedNumberInput";
+
+/** The props the dialog gives each of its two fields. */
+export interface YAxisLockFieldProps {
+  name: string;
+  label?: string;
+  value?: Accessor<number | undefined>;
+  onChange?: (value: number | undefined) => void;
+  errorMessage?: string;
+}
+
+/** Which input edits the bounds: money (`"currency"`, CurrencyInput) or a
+ *  plain count (`"number"`, ThemedNumberInput — hours, headcount). */
+export type YAxisLockField = "currency" | "number";
+
+const FIELDS: Readonly<Record<YAxisLockField, Component<YAxisLockFieldProps>>> = {
+  currency: CurrencyInput,
+  number: ThemedNumberInput,
+};
 
 /** Every word the dialog says. Presentational — curried, never inline. */
 export interface YAxisLockDialogLabels {
@@ -54,12 +75,15 @@ export interface YAxisLockDialogProps {
   onClose: () => void;
   /** The words. */
   labels: YAxisLockDialogLabels;
+  /** The input the bounds are typed into. Default `"currency"`. */
+  field?: YAxisLockField;
 }
 
 /** One field's draft: `null` = untouched (read the lock), else the edit. */
 type Edit = { readonly value: number | undefined } | null;
 
 const YAxisLockDialogBase: Component<YAxisLockDialogProps> = (props) => {
+  const Field = FIELDS[props.field ?? "currency"];
   const [minEdit, setMinEdit] = createSignal<Edit>(null);
   const [maxEdit, setMaxEdit] = createSignal<Edit>(null);
   const [tried, setTried] = createSignal(false);
@@ -104,14 +128,14 @@ const YAxisLockDialogBase: Component<YAxisLockDialogProps> = (props) => {
       confirmLabel={props.labels.confirm}
     >
       <TightStack>
-        <CurrencyInput
+        <Field
           name="y-max"
           label={props.labels.max}
           value={max}
           onChange={(value) => setMaxEdit({ value })}
           errorMessage={errorOf("maxError")}
         />
-        <CurrencyInput
+        <Field
           name="y-min"
           label={props.labels.min}
           value={min}
@@ -124,7 +148,7 @@ const YAxisLockDialogBase: Component<YAxisLockDialogProps> = (props) => {
 };
 
 /** Props that are presentational overrides — locked at variant-definition time. */
-export type YAxisLockDialogOverrides = Pick<YAxisLockDialogProps, "labels">;
+export type YAxisLockDialogOverrides = Pick<YAxisLockDialogProps, "labels" | "field">;
 
 /** Props that remain available to consumers of a curried variant. */
 export type YAxisLockDialogDataProps = Omit<

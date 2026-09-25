@@ -7,9 +7,11 @@
 // page could have written. The numbers themselves are geometry.test.ts's.
 // ============================================
 import { render } from "@solidjs/testing-library";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { type FakeSizer, installFakeSizer } from "../../test-utils/fakeSizer";
 import { NATURAL_GAUGE_WIDTH } from "../RateGauge/geometry";
 import { BuilderBoard, createBuilderBoard } from "./BuilderBoard";
+import { C_STACKED_HEIGHT, D_STACKED_HEIGHT } from "./geometry";
 
 const board = () =>
   render(() => (
@@ -106,3 +108,74 @@ describe("BuilderBoard", () => {
     expect(container.querySelector("[data-builder-board]")).not.toBeNull();
   });
 });
+
+describe("BuilderBoard — panel D's box", () => {
+  let sizer: FakeSizer | undefined;
+  afterEach(() => sizer?.restore());
+
+  it("hands a render function the rail width, then the measured box, without remounting", async () => {
+    sizer = installFakeSizer();
+    let mounts = 0;
+    const { container } = render(() => (
+      <BuilderBoard
+        panelA={<span>a</span>}
+        panelB={<span>b</span>}
+        panelC={<span>c</span>}
+        panelD={(box) => {
+          mounts += 1;
+          return <span>{`${box().width}x${box().height}`}</span>;
+        }}
+      />
+    ));
+    const card = panel(container, "d");
+    // jsdom lays nothing out: the stated box is the rail's width, height 0.
+    expect(card.textContent).toBe(`${NATURAL_GAUGE_WIDTH}x0`);
+    Object.defineProperty(card, "clientWidth", { value: 292 });
+    Object.defineProperty(card, "clientHeight", { value: 300 });
+    card.style.padding = "8px";
+    await sizer.resize(card, { width: 292, height: 300 });
+    expect(card.textContent).toBe("276x284");
+    expect(mounts).toBe(1);
+  });
+
+  it("measures nothing for a plain element", () => {
+    sizer = installFakeSizer();
+    const { container } = board();
+    // The board observes its own width (single column); D's card is never
+    // observed for a plain element.
+    expect(sizer.observed()).not.toContain(panel(container, "d"));
+    expect(panel(container, "d").textContent).toBe("gauge");
+  });
+});
+
+describe("BuilderBoard — single column on a narrow board", () => {
+  let sizer: FakeSizer | undefined;
+  afterEach(() => sizer?.restore());
+
+  it("goes single column under 600px and back, without remounting a panel", async () => {
+    sizer = installFakeSizer();
+    const { container } = board();
+    const root = container.querySelector<HTMLElement>("[data-builder-board]")!;
+    expect(root.dataset.layout).toBeUndefined(); // unmeasured: split, as before
+    await sizer.resize(root, { width: 390, height: 760 });
+    expect(root.dataset.layout).toBe("stacked");
+    expect(container.querySelector('[data-builder-board-half="bottom"]')).toBeNull();
+    const heights = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-builder-board-panel]"),
+      (el) => [el.dataset.builderBoardPanel, el.parentElement!.style.height],
+    );
+    expect(heights).toEqual([
+      ["a", "240px"],
+      ["b", "240px"],
+      ["c", `${C_STACKED_HEIGHT}px`],
+      ["d", `${D_STACKED_HEIGHT}px`],
+    ]);
+    const gauge = panel(container, "d").firstElementChild;
+    await sizer.resize(root, { width: 420, height: 760 });
+    expect(panel(container, "d").firstElementChild).toBe(gauge);
+    await sizer.resize(root, { width: 1200, height: 700 });
+    expect(root.dataset.layout).toBeUndefined();
+    expect(container.querySelector('[data-builder-board-half="bottom"]')).toBeTruthy();
+  });
+});
+
