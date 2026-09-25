@@ -68,7 +68,8 @@ import {
   ViewportColumn,
 } from "../Layout";
 import { FillCardSurface } from "../Surface";
-import type { RailWidth } from "./geometry";
+import { RAIL_WIDTH_PX, type RailWidth } from "./geometry";
+import { type PanelDSlot, createPanelDBox } from "./panelBox";
 
 export interface BuilderBoardProps {
   /** The top card: the cashflow the whole scenario resolves to. */
@@ -77,8 +78,13 @@ export interface BuilderBoardProps {
   panelB: JSX.Element;
   /** The bottom-left card: the controls. Scrolls inside its card. */
   panelC: JSX.Element;
-  /** The bottom-right card: the instrument, held to the rail's width. */
-  panelD: JSX.Element;
+  /**
+   * The bottom-right card: the instrument, held to the rail's width. Either
+   * an element, or a render function given an accessor of the card's content
+   * box — for an instrument whose layout depends on it
+   * (`calloutModeFor(box(), labels)`). See panelBox.tsx.
+   */
+  panelD: PanelDSlot;
   /** The width token the rail is held to. Default `gauge`. */
   rail?: RailWidth;
 }
@@ -110,6 +116,13 @@ export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
     "rail",
   ]);
   const Rail = RAIL_GRID[local.rail];
+  // Panel D's box: measured once laid out. Before that, the only size this
+  // board states for D is the rail's width; its height is the viewport's,
+  // which the board cannot see, so it reads 0 until measured.
+  const d = createPanelDBox(
+    () => local.panelD,
+    () => ({ width: RAIL_WIDTH_PX[local.rail], height: 0 }),
+  );
   return (
     <ViewportColumn data-builder-board="">
       {/* THE TOP HALF, HALVED AGAIN. `HalfFillColumn` is `flex: 1 1 0` — the
@@ -133,8 +146,8 @@ export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
           <FillCardSurface data-builder-board-panel="c">
             <ScrollFillColumn>{local.panelC}</ScrollFillColumn>
           </FillCardSurface>
-          <FillCardSurface data-builder-board-panel="d">
-            {local.panelD}
+          <FillCardSurface data-builder-board-panel="d" ref={d.ref}>
+            {d.content()}
           </FillCardSurface>
         </Rail>
       </HalfFillColumn>

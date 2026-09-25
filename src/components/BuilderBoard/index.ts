@@ -21,10 +21,13 @@ export type { RailWidth as BuilderBoardRailWidth } from "./geometry";
 export {
   BuilderBoardBelowChart,
   createBuilderBoardBelowChart,
-  panelBoxOf as builderBoardPanelBoxOf,
 } from "./BuilderBoardBelowChart";
+export { panelBoxOf as builderBoardPanelBoxOf } from "./panelBox";
 export type {
   PanelBox as BuilderBoardPanelBox,
+  PanelDSlot as BuilderBoardPanelDSlot,
+} from "./panelBox";
+export type {
   BuilderBoardBelowChartProps,
   BuilderBoardBelowChartOverrides,
   BuilderBoardBelowChartDataProps,

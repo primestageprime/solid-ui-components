@@ -37,6 +37,7 @@ import {
   type Viewport,
 } from "../../../src/components/BuilderBoard/geometry";
 import { CodeBlock } from "../../../src/components/CodeBlock";
+import { calloutModeFor } from "../../../src/components/RateGauge";
 import {
   GrowCenterColumn,
   GrowFillBox,
@@ -118,6 +119,9 @@ const measuredTable = (frame: HTMLElement): string => {
 };
 
 /** A panel's stand-in: its name over a centred note. */
+/** The words a gauge in D would say — what `calloutModeFor` sizes against. */
+const GAUGE_LABELS = ["Current $1,240,000", "Baseline $1,100,000"];
+
 const Placeholder: Component<{ title: string; note: string }> = (props) => (
   <>
     <TextTitle>{props.title}</TextTitle>
@@ -188,7 +192,12 @@ const BuilderBoardBench: Component = () => {
               }
               panelB={<Placeholder title="Series" note="panel B — the series being changed; clicking it inserts a time segment" />}
               panelC={<Placeholder title="Changes" note="panel C — the controls; fills what the rail leaves and scrolls inside its card" />}
-              panelD={<Placeholder title="Cash, on average" note="panel D — the gauge, a stated width" />}
+              panelD={(box) => (
+                <Placeholder
+                  title="Cash, on average"
+                  note={`panel D — the gauge, a stated width · box ${box().width}×${box().height} · ${calloutModeFor(box(), GAUGE_LABELS)}`}
+                />
+              )}
             />
           </div>
         </ScrollXBox>
