@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`DirtyComboBox`: pending save.** `onSave` may return a promise (its type widens to `() => unknown`, so existing callers still type-check). While it is pending further saves are ignored; past `DIRTY_COMBO_SAVE_SPINNER_DELAY_MS` (200ms) the ✓ becomes a spinner labelled "Saving…" (`labels.saving`, optional). Resolve → the usual collapse; reject → ✓ returns and the draft stays dirty.
+
 ## 0.195.0 — 2026-09-25
 
 ### Fixed

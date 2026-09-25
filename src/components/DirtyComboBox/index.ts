@@ -2,7 +2,10 @@
 // variants (or createDirtyComboBox for a new screen's vocabulary). Every name is
 // qualified with the component's, because src/index.ts is `export *` over
 // every barrel and an ambiguous name resolves to nothing.
-export { createDirtyComboBox } from "./DirtyComboBox";
+export {
+  createDirtyComboBox,
+  DIRTY_COMBO_SAVE_SPINNER_DELAY_MS,
+} from "./DirtyComboBox";
 export type {
   DirtyComboBoxProps,
   DirtyComboBoxLabels,

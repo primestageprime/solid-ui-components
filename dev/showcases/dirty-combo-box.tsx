@@ -17,10 +17,25 @@ import {
   type PayrollConfig,
 } from "../../src/components/DirtyComboBox/dirtyComboFixtures";
 import { CurrencyInput } from "../../src/components/CurrencyInput";
-import { MonoDump } from "../../src/components/Text";
+import { MonoDump, NoteText } from "../../src/components/Text";
 import { ClusterRow, SpacedStack } from "../../src/components/Layout";
 import { TagPill } from "../../src/components/Badge";
 import { map } from "../../src/fn";
+import { createSegmentedControl } from "../../src/components/SegmentedControl";
+
+/** A save that round-trips: `onSave` returns a promise after this delay. */
+const SAVE_LATENCIES = ["100", "800", "2000"] as const;
+const SaveLatencyPicker = createSegmentedControl({
+  options: map(
+    (ms: string) => ({
+      value: ms,
+      label: ms === "2000" ? "2s" : `${ms}ms`,
+    }),
+    [...SAVE_LATENCIES],
+  ),
+});
+const after = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 const SHAPES = ["circle", "diamond", "square", "pentagon"] as const;
 
@@ -44,6 +59,7 @@ const SHOWCASE_STORE: DirtyComboStore<PayrollConfig> = {
 };
 
 export const DirtyComboBoxShowcase: Component = () => {
+  const [latency, setLatency] = createSignal<string>("800");
   const [store, setStore] =
     createSignal<DirtyComboStore<PayrollConfig>>(SHOWCASE_STORE);
   let created = 0;
@@ -101,7 +117,9 @@ export const DirtyComboBoxShowcase: Component = () => {
               selectedId={store().selectedId}
               view={view()}
               onSelect={(id) => setStore((s) => dirtyComboSelect(s, id))}
-              onSave={() => setStore(dirtyComboSave)}
+              onSave={() =>
+                after(Number(latency())).then(() => setStore(dirtyComboSave))
+              }
               onReset={() => setStore(dirtyComboReset)}
               onDelete={(id) => setStore((s) => dirtyComboRemove(s, id))}
               onCreate={create}
@@ -109,6 +127,10 @@ export const DirtyComboBoxShowcase: Component = () => {
             />
             {/* A neighbour: it must NOT move when the combo goes dirty. */}
             <TagPill tag={{ label: "neighbour — never moves" }} />
+          </ClusterRow>
+          <ClusterRow>
+            <NoteText>Save latency</NoteText>
+            <SaveLatencyPicker value={latency()} onValueChange={setLatency} />
           </ClusterRow>
           <CurrencyInput
             name="dirty-combo-draft"

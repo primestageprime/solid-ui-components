@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, cleanup, fireEvent } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { ScenarioComboBox } from "./variants";
@@ -288,5 +288,99 @@ describe("DirtyComboBox parity (onCreate + onRename)", () => {
     expect(row.getAttribute("title")).toBe("Other baseline");
     row.click();
     expect(store().selectedId).toBe(PAYROLL_STORE.selectedId);
+  });
+});
+
+// Pending save (Peter, 2026-09-25): ✓ for the first 200ms, then a spinner
+// labelled "Saving…" until the promise settles; clicks ignored meanwhile.
+describe("DirtyComboBox pending save", () => {
+  const mountSaving = (onSave: () => unknown) => {
+    const { container } = render(() => (
+      <ScenarioComboBox
+        items={dirtyStore.items}
+        selectedId={dirtyStore.selectedId}
+        view={dirtyComboViewOf(dirtyStore)}
+        onSelect={() => {}}
+        onSave={onSave}
+        onReset={() => {}}
+        onDelete={() => {}}
+      />
+    ));
+    const live = () => container.querySelector(".sui-reserved-width__live")!;
+    const saveButton = () =>
+      live().querySelector<HTMLButtonElement>(
+        '[aria-label="Save"], [aria-label="Saving…"]',
+      )!;
+    const spinning = () =>
+      saveButton().getAttribute("aria-label") === "Saving…";
+    return { saveButton, spinning };
+  };
+  const deferred = () => {
+    let resolve!: () => void;
+    let reject!: (e: unknown) => void;
+    const promise = new Promise<void>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+  const flush = () => Promise.resolve().then(() => Promise.resolve());
+
+  it("a 100ms save never shows the spinner", async () => {
+    vi.useFakeTimers();
+    try {
+      const d = deferred();
+      const { saveButton, spinning } = mountSaving(() => d.promise);
+      saveButton().click();
+      vi.advanceTimersByTime(100);
+      expect(spinning()).toBe(false);
+      d.resolve();
+      await flush();
+      vi.advanceTimersByTime(200);
+      expect(spinning()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("an 800ms save shows the spinner at 200ms, ignores clicks, and clears on resolve", async () => {
+    vi.useFakeTimers();
+    try {
+      const d = deferred();
+      const onSave = vi.fn(() => d.promise);
+      const { saveButton, spinning } = mountSaving(onSave);
+      saveButton().click();
+      vi.advanceTimersByTime(199);
+      expect(spinning()).toBe(false);
+      vi.advanceTimersByTime(1);
+      expect(spinning()).toBe(true);
+      saveButton().click();
+      expect(onSave).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(600);
+      d.resolve();
+      await flush();
+      expect(spinning()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a rejected save restores ✓ and accepts the next click", async () => {
+    vi.useFakeTimers();
+    try {
+      const d = deferred();
+      const onSave = vi.fn(() => d.promise);
+      const { saveButton, spinning } = mountSaving(onSave);
+      saveButton().click();
+      vi.advanceTimersByTime(500);
+      expect(spinning()).toBe(true);
+      d.reject(new Error("offline"));
+      await flush();
+      expect(spinning()).toBe(false);
+      saveButton().click();
+      expect(onSave).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
