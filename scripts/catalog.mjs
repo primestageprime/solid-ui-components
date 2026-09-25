@@ -73,8 +73,14 @@ export const kebab = (name) =>
  *  export is not a curried-variant assignment (a base component, a `function`
  *  declaration, …). */
 export const variantAssignmentOf = (src, name) => {
+  // `<T>` between the factory name and `(` is a generic instantiation
+  // (`createHighlightSegments<HighlightSegment>({...})`) — optional so both
+  // forms match. Without it, every generic factory call read as a base
+  // export (kind "primitive") instead of a variant, which is how
+  // `AccentHighlightSegments`/`FaintHighlightSegments` and their siblings
+  // went undetected.
   const re = new RegExp(
-    `export\\s+const\\s+${escapeRegex(name)}\\b[^=]*=\\s*create([A-Za-z0-9_]+)\\(`,
+    `export\\s+const\\s+${escapeRegex(name)}\\b[^=]*=\\s*create([A-Za-z0-9_]+)(?:<[^(]*>)?\\(`,
   );
   const m = re.exec(src);
   if (!m) return null;
@@ -131,7 +137,14 @@ export const precedingCommentOf = (src, name) => {
       continue;
     }
     if (t.startsWith("*") || t.startsWith("/*") || t.endsWith("*/")) {
-      out.unshift(t.replace(/^\/?\*+\/?\s?/, ""));
+      // Strip both the leading `/**`/`*` marker AND a trailing `*/` — a
+      // single-line block comment (`/** Foo. */`) carries both on one line,
+      // and only stripping the leading marker left a stray `*/` on the end
+      // of every such comment's text (visible once this text is promoted
+      // into `summary`, not just kept in `notes`).
+      out.unshift(
+        t.replace(/^\/?\*+\/?\s?/, "").replace(/\s*\*+\/\s*$/, ""),
+      );
       continue;
     }
     break;
@@ -174,6 +187,144 @@ export const notToBeConfusedWithOf = (bullet) => {
     /\b(?:[Nn]ot|not interchangeable with)\s+`([A-Za-z0-9_]+)`[^.;]*[.;]?/g;
   for (const m of bullet.matchAll(re)) out.push(m[0].trim());
   return length(out) > 0 ? out : null;
+};
+
+// ── summary synthesis: a curried variant/factory's baked overrides ARE its
+// description (`FillPaneRailGrid` = `Grid` with `columns: "minmax(0, 1fr)
+// 292px"`), so a variant/factory never needs to fall through to
+// `summary: null` — only a BASE component with no COMPONENTS.md bullet and no
+// JSDoc is a real doc gap. ─────────────────────────────────────────────────
+
+/** Split the raw object-literal text captured by `variantAssignmentOf`
+ *  (`{ tone: "accent", style: {...} }`, braces included) into top-level
+ *  `{key, value}` pairs, respecting nesting and quoting so a comma inside a
+ *  nested `style` object or a template literal doesn't split a pair. Not a
+ *  full TS parser — this only needs to find the top-level commas, which is
+ *  exactly what a depth/quote-aware scan gives for free. A bare spread
+ *  (`...defaults`) or shorthand (`{ foo }`) has no `:` and is dropped; it
+ *  carries no describable value. */
+export const parseTopLevelProps = (argsText) => {
+  let text = argsText.trim();
+  // `variantAssignmentOf`'s `argsText` is everything between the CALL's outer
+  // parens, not just the object literal — a call written
+  // `createFoo(\n  {...},\n)` carries a trailing `,` (and whitespace) after
+  // the object. Take only the first BALANCED `{...}` block (quote-aware, so
+  // a brace inside a string value doesn't miscount) rather than requiring
+  // the trimmed text to itself end in `}`, which that trailing comma broke.
+  if (text.startsWith("{")) {
+    let depth = 0;
+    let q = null;
+    let end = -1;
+    for (let i = 0; i < length(text); i++) {
+      const c = text[i];
+      if (q) {
+        if (c === "\\") {
+          i++;
+          continue;
+        }
+        if (c === q) q = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === "`") {
+        q = c;
+        continue;
+      }
+      if (c === "{") depth++;
+      else if (c === "}") {
+        depth--;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+    if (end !== -1) text = text.slice(1, end);
+  }
+
+  const parts = [];
+  let depth = 0;
+  let quote = null;
+  let current = "";
+  for (let i = 0; i < length(text); i++) {
+    const c = text[i];
+    if (quote) {
+      current += c;
+      if (c === "\\") {
+        i++;
+        if (i < length(text)) current += text[i];
+        continue;
+      }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") {
+      quote = c;
+      current += c;
+      continue;
+    }
+    if (c === "{" || c === "[" || c === "(") {
+      depth++;
+      current += c;
+      continue;
+    }
+    if (c === "}" || c === "]" || c === ")") {
+      depth--;
+      current += c;
+      continue;
+    }
+    if (c === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+      continue;
+    }
+    current += c;
+  }
+  if (current.trim()) parts.push(current);
+
+  const props = [];
+  for (const part of parts) {
+    const t = part.trim();
+    if (!t) continue;
+    const colonIdx = t.indexOf(":");
+    if (colonIdx === -1) continue; // spread/shorthand — no describable value
+    const key = t.slice(0, colonIdx).trim().replace(/^["'`]|["'`]$/g, "");
+    const value = t.slice(colonIdx + 1).trim().replace(/,$/, "");
+    if (key) props.push({ key, value });
+  }
+  return props;
+};
+
+const truncateValue = (v, max = 60) => {
+  const collapsed = v.replace(/\s+/g, " ").trim();
+  return length(collapsed) > max ? `${collapsed.slice(0, max - 1)}…` : collapsed;
+};
+
+/** A one-sentence summary for a curried VARIANT with no COMPONENTS.md bullet
+ *  and no JSDoc of its own: the parent's first sentence (when the base has
+ *  exactly one unambiguous bullet — `parentSummary` is null otherwise, e.g.
+ *  `Grid` collides between `Layout/Grid` and `Chart/Grid`) plus a mechanical
+ *  clause built from the baked overrides TEXT (real values —
+ *  `columns: "minmax(0, 1fr) 292px"`, not just the prop name). */
+export const synthesizeVariantSummary = (baseName, argsText, parentSummary) => {
+  const props = parseTopLevelProps(argsText);
+  const clause =
+    length(props) > 0
+      ? `A \`${baseName}\` variant with ${props
+          .map((p) => `\`${p.key}: ${truncateValue(p.value)}\``)
+          .join(", ")}.`
+      : `A \`${baseName}\` variant with no overrides (the default).`;
+  return parentSummary ? `${parentSummary} ${clause}` : clause;
+};
+
+/** A one-sentence summary for the FACTORY itself (`createGrid`), which has no
+ *  baked values of its own — only the list of prop NAMES it lets a curried
+ *  variant bake (`overridesList`, from the base's `<Base>Overrides` type). */
+export const synthesizeFactorySummary = (baseName, overridesList, parentSummary) => {
+  const clause =
+    overridesList && length(overridesList) > 0
+      ? `Factory behind \`${baseName}\`'s curried variants; bakes \`${overridesList.join("`, `")}\`.`
+      : `Factory behind \`${baseName}\`'s curried variants.`;
+  return parentSummary ? `${parentSummary} ${clause}` : clause;
 };
 
 /** `id: "<slug>"` entries from dev/main.tsx's `items` array, in file order —
@@ -261,9 +412,19 @@ export function buildCatalog({
     }
     const { depth } = parseDeclaredDepth(depthSource);
 
-    // Overrides/DataProps: keyed on the factory suffix for a variant
-    // (`Button` for `createButton`), on the export's own name otherwise.
-    const overridesBase = variant ? variant.factory.replace(/^create/, "") : e.name;
+    // Overrides/DataProps: keyed on the factory suffix (`Button` for
+    // `createButton`) whether that suffix comes from a curried variant's
+    // factory call OR from the export being the factory itself — both name
+    // the SAME `<Base>Overrides`/`<Base>DataProps` types in the base file.
+    // Previously only the variant branch stripped `create`, so every
+    // factory's own record looked up `createGridOverrides` (never declared)
+    // instead of `GridOverrides`, and read `overrides: null` regardless of
+    // what the base file actually exports.
+    const overridesBase = variant
+      ? variant.factory.replace(/^create/, "")
+      : e.kind === "factory"
+        ? e.name.replace(/^create/, "")
+        : e.name;
     const overrideSrc = variant ? depthSource : fileSrc;
     const overrides = overridesOf(overrideSrc, overridesBase);
     const dataProps = hasDataProps(overrideSrc, overridesBase)
@@ -273,6 +434,37 @@ export function buildCatalog({
     const bullet = componentsMdBulletFor(componentsMd, e.name);
     const notes = precedingCommentOf(fileSrc, e.name);
 
+    // Summary priority: (1) the export's own COMPONENTS.md bullet, (2) the
+    // export's own JSDoc, (3) — for a variant or factory only — a summary
+    // synthesized from its baked overrides plus its BASE's bullet (never its
+    // own missing one, so this never fabricates prose for a genuinely
+    // undocumented base component). A base primitive/composite with neither
+    // a bullet nor JSDoc stays `summary: null` — that's the real doc debt.
+    let summary = bullet ? firstSentenceOf(bullet) : null;
+    let summarySource = summary ? "components-md" : null;
+
+    if (summary === null && notes) {
+      summary = firstSentenceOf(notes);
+      summarySource = "jsdoc";
+    }
+
+    if (summary === null && (kind === "variant" || kind === "factory")) {
+      const baseName = overridesBase;
+      const baseBulletCount = length(
+        [...componentsMd.matchAll(new RegExp(`^\\s*- \\*\\*${escapeRegex(baseName)}\\*\\* — `, "mg"))],
+      );
+      // A base name with more than one bullet (e.g. `Grid` — `Layout/Grid`
+      // vs. `Chart/Grid`) is ambiguous: inheriting either summary would
+      // misattribute it, so the synthesized clause stands alone.
+      const baseBullet = baseBulletCount === 1 ? componentsMdBulletFor(componentsMd, baseName) : null;
+      const parentSummary = baseBullet ? firstSentenceOf(baseBullet) : null;
+      summary =
+        kind === "variant"
+          ? synthesizeVariantSummary(baseName, variant.argsText, parentSummary)
+          : synthesizeFactorySummary(baseName, overrides, parentSummary);
+      summarySource = "synthesized";
+    }
+
     return {
       name: e.name,
       depth: depth ?? null,
@@ -281,7 +473,8 @@ export function buildCatalog({
       variantOf: variant ? { factory: variant.factory, overrides: variant.argsText } : null,
       overrides,
       dataProps,
-      summary: bullet ? firstSentenceOf(bullet) : null,
+      summary,
+      summarySource, // "components-md" | "jsdoc" | "synthesized" | "alias" | null
       notToBeConfusedWith: bullet ? notToBeConfusedWithOf(bullet) : null,
       useFor: bullet ? useForOf(bullet) : null,
       notes, // JSDoc immediately preceding the export — searched by `find`
@@ -293,6 +486,39 @@ export function buildCatalog({
       line: e.line,
     };
   });
+
+  // A second, cheap pass: a barrel re-export ALIAS (`export { ButtonGroup as
+  // HUDButtonGroup } from "./components/ButtonGroup"`) resolves, via the
+  // TypeScript checker, to the SAME {file, line} as the name it aliases —
+  // it is not a `create*()` call of its own, so `variantAssignmentOf` (and
+  // therefore every summary path above) correctly finds nothing for it. That
+  // read `HUDButtonGroup`/`HUDModal`/`HUDPage`/… as an undocumented
+  // "primitive" even though `ButtonGroup`/`Modal`/`Page` right beside it is
+  // fully described. An export whose OWN file has no `export const/function
+  // <name>` declaration, sharing a location with one that does, is an alias
+  // by construction — inherit that record's summary rather than leaving a
+  // real name undescribed for a reason that has nothing to do with docs.
+  const byLocation = new Map();
+  for (const r of records) {
+    const key = `${r.file}:${r.line}`;
+    if (!byLocation.has(key)) byLocation.set(key, []);
+    byLocation.get(key).push(r);
+  }
+  for (const group of byLocation.values()) {
+    if (length(group) < 2) continue;
+    const declaredRe = (name) =>
+      new RegExp(`export\\s+(const|function)\\s+${escapeRegex(name)}\\b`);
+    const canonical = group.find((r) => declaredRe(r.name).test(src(r.file)));
+    if (!canonical) continue;
+    for (const r of group) {
+      if (r === canonical || r.summary !== null) continue;
+      if (declaredRe(r.name).test(src(r.file))) continue; // also self-declared
+      r.summary = canonical.summary
+        ? `Alias for \`${canonical.name}\`. ${canonical.summary}`
+        : null;
+      r.summarySource = canonical.summary ? "alias" : null;
+    }
+  }
 
   records.sort((a, b) => a.name.localeCompare(b.name));
   return records;
@@ -436,7 +662,12 @@ if (isMain) {
   }
 
   writeFileSync(CATALOG_PATH, rendered);
+  const byKind = {};
+  for (const r of missingSummary) byKind[r.kind] = (byKind[r.kind] ?? 0) + 1;
   console.log(
-    `catalog.json written: ${length(records)} records, ${length(missingSummary)} with summary: null.`,
+    `catalog.json written: ${length(records)} records, ${length(missingSummary)} with summary: null ` +
+      `(${Object.entries(byKind)
+        .map(([k, n]) => `${k}: ${n}`)
+        .join(", ")}).`,
   );
 }

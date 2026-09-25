@@ -147,8 +147,13 @@ export const brokenImports = (exports, doc) => {
   );
 };
 
-export function run({ root = REPO_ROOT, ...surfaceOpts } = {}) {
-  const surface = buildExportSurface({ root, ...surfaceOpts });
+export function run({ root = REPO_ROOT, surface: providedSurface, ...surfaceOpts } = {}) {
+  // A caller that already paid for a `buildExportSurface()` TS Program build
+  // this process (health.mjs, which also feeds it to catalog.mjs's
+  // `buildCatalog` for the `catalogSummaryGaps` metric) can hand it in here
+  // instead of paying for a second one — additive: omitting `surface` keeps
+  // building it locally, as every existing caller does.
+  const surface = providedSurface ?? buildExportSurface({ root, ...surfaceOpts });
   const doc = readFileSync(join(root, "COMPONENTS.md"), "utf8");
   const documentable = surface.exports.filter((e) => DOCUMENTABLE.has(e.kind));
   return {

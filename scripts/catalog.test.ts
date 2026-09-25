@@ -26,10 +26,14 @@ import {
   kebab,
   notToBeConfusedWithOf,
   overridesOf,
+  parseTopLevelProps,
+  precedingCommentOf,
   rankCatalog,
   run,
   sinceOf,
   changelogSectionsOf,
+  synthesizeFactorySummary,
+  synthesizeVariantSummary,
   useForOf,
   variantAssignmentOf,
 } from "./catalog.mjs";
@@ -171,6 +175,20 @@ describe("npm run find — acceptance queries", () => {
     const names = ranked.map((r) => r.record.name);
     expect(names.slice(0, 3)).toContain("HalfFillColumn");
   });
+
+  // ChartCanvasLg previously had summary: null (no COMPONENTS.md bullet of
+  // its own AND no JSDoc — ChartCanvas.md documents the family in prose
+  // under "ChartCanvas", not per curried variant). The synthesis rule gives
+  // it a summary built from its baked `height: 300` override, so it is now
+  // findable by that value even though nothing was hand-written for it.
+  it('a variant that previously had summary: null (ChartCanvasLg) is now findable by its synthesized "height: 300"', () => {
+    const target = records.find((r) => r.name === "ChartCanvasLg")!;
+    expect(target.summary).not.toBeNull();
+    expect(target.summarySource).toBe("synthesized");
+
+    const ranked = rankCatalog(records, "chart canvas height 300", 10);
+    expect(ranked.map((r) => r.record.name)).toContain("ChartCanvasLg");
+  });
 });
 
 describe("buildCatalog — end-to-end on a tiny fixture surface", () => {
@@ -216,7 +234,212 @@ describe("buildCatalog — end-to-end on a tiny fixture surface", () => {
     expect(primary.variantOf?.factory).toBe("createButton");
     expect(primary.overrides).toEqual(["variant", "size"]);
     expect(primary.dataProps).toBe("ButtonDataProps");
-    expect(primary.summary).toBeNull(); // no COMPONENTS.md entry in this fixture
+    // No COMPONENTS.md entry in this fixture, but the JSDoc immediately
+    // above the export IS taken as the summary (priority 2, ahead of
+    // synthesis) — `summary: null` is no longer possible for a variant with
+    // either a bullet OR a JSDoc comment.
+    expect(primary.summary).toBe("Primary button — default size");
+    expect(primary.summarySource).toBe("jsdoc");
     expect(primary.notes).toContain("Primary button");
+  });
+
+  it("synthesizes a variant summary from its baked overrides when it has NEITHER a bullet NOR a JSDoc comment, inheriting the base's bullet as a lead-in", () => {
+    const surface = {
+      exports: [
+        {
+          name: "createGrid",
+          kind: "factory",
+          file: "src/components/Layout/Grid.tsx",
+          line: 63,
+          dir: "Layout",
+        },
+        {
+          name: "FillPaneRailGrid",
+          kind: "component",
+          file: "src/components/Layout/variants.ts",
+          line: 419,
+          dir: "Layout",
+        },
+      ],
+    };
+    const files: Record<string, string> = {
+      "src/components/Layout/Grid.tsx":
+        "// Grid — Primitive (Depth 1)\n" +
+        'export type GridOverrides = Pick<GridProps, "columns" | "gap">;\n' +
+        "export function createGrid(defaults: GridOverrides) {}\n",
+      "src/components/Layout/variants.ts":
+        "export const FillPaneRailGrid: Component<GridDataProps> = createGrid({\n" +
+        '  columns: "minmax(0, 1fr) 292px",\n' +
+        '  gap: "sm",\n' +
+        "});\n",
+    };
+    const componentsMd =
+      "- **Grid** — A two-dimensional layout primitive with explicit column and row tracks.\n";
+    const records = buildCatalog({
+      surface,
+      readSrc: (f) => files[f],
+      componentsMd,
+      changelogSrc: "",
+      mainTsxSrc: "",
+    });
+    const variant = records.find((r) => r.name === "FillPaneRailGrid")!;
+    expect(variant.summary).toBe(
+      'A two-dimensional layout primitive with explicit column and row tracks. A `Grid` variant with `columns: "minmax(0, 1fr) 292px"`, `gap: "sm"`.',
+    );
+    expect(variant.summarySource).toBe("synthesized");
+
+    const factory = records.find((r) => r.name === "createGrid")!;
+    expect(factory.summary).toBe(
+      "A two-dimensional layout primitive with explicit column and row tracks. Factory behind `Grid`'s curried variants; bakes `columns`, `gap`.",
+    );
+    expect(factory.summarySource).toBe("synthesized");
+  });
+
+  it("a base name with more than one COMPONENTS.md bullet is ambiguous — the synthesized summary stands alone, with no inherited lead-in", () => {
+    const surface = {
+      exports: [
+        {
+          name: "createGrid",
+          kind: "factory",
+          file: "src/components/Layout/Grid.tsx",
+          line: 63,
+          dir: "Layout",
+        },
+        {
+          name: "FillPaneRailGrid",
+          kind: "component",
+          file: "src/components/Layout/variants.ts",
+          line: 419,
+          dir: "Layout",
+        },
+      ],
+    };
+    const files: Record<string, string> = {
+      "src/components/Layout/Grid.tsx": "export function createGrid(defaults) {}\n",
+      "src/components/Layout/variants.ts":
+        'export const FillPaneRailGrid: Component<GridDataProps> = createGrid({\n  columns: "x",\n});\n',
+    };
+    // Two unrelated components both happen to be named "Grid" in the
+    // manifest (Layout's layout primitive and Chart's gridline component).
+    const componentsMd =
+      "- **Grid** — Layout's two-dimensional grid primitive.\n" +
+      "- **Grid** — Chart's background gridline mark.\n";
+    const records = buildCatalog({
+      surface,
+      readSrc: (f) => files[f],
+      componentsMd,
+      changelogSrc: "",
+      mainTsxSrc: "",
+    });
+    const variant = records.find((r) => r.name === "FillPaneRailGrid")!;
+    expect(variant.summary).toBe('A `Grid` variant with `columns: "x"`.');
+  });
+
+  it("a barrel re-export ALIAS (same {file, line} as another export, but no declaration of its own) inherits that export's summary", () => {
+    const surface = {
+      exports: [
+        {
+          name: "ButtonGroup",
+          kind: "component",
+          file: "src/components/ButtonGroup/variants.ts",
+          line: 10,
+          dir: "ButtonGroup",
+        },
+        {
+          // `export { ButtonGroup as HUDButtonGroup } from "./components/ButtonGroup"`
+          // resolves, via the TS checker, to the SAME file/line as ButtonGroup.
+          name: "HUDButtonGroup",
+          kind: "component",
+          file: "src/components/ButtonGroup/variants.ts",
+          line: 10,
+          dir: "ButtonGroup",
+        },
+      ],
+    };
+    const files: Record<string, string> = {
+      "src/components/ButtonGroup/variants.ts":
+        "export const ButtonGroup: Component<ButtonGroupDataProps> = createButtonGroup({});\n",
+    };
+    const componentsMd = "- **ButtonGroup** — Button arrangement container.\n";
+    const records = buildCatalog({
+      surface,
+      readSrc: (f) => files[f],
+      componentsMd,
+      changelogSrc: "",
+      mainTsxSrc: "",
+    });
+    const alias = records.find((r) => r.name === "HUDButtonGroup")!;
+    expect(alias.summary).toBe("Alias for `ButtonGroup`. Button arrangement container.");
+    expect(alias.summarySource).toBe("alias");
+  });
+});
+
+describe("parseTopLevelProps", () => {
+  it("splits top-level key: value pairs, ignoring commas nested inside a `style` object", () => {
+    const props = parseTopLevelProps(
+      '{\n  columns: "x",\n  style: {\n    flex: "1",\n    "min-height": "0",\n  },\n}',
+    );
+    expect(props).toEqual([
+      { key: "columns", value: '"x"' },
+      { key: "style", value: '{\n    flex: "1",\n    "min-height": "0",\n  }' },
+    ]);
+  });
+
+  it("drops a bare spread (no describable value)", () => {
+    expect(parseTopLevelProps("{ ...defaults, tone: \"accent\" }")).toEqual([
+      { key: "tone", value: '"accent"' },
+    ]);
+  });
+
+  it("returns [] for an empty object literal", () => {
+    expect(parseTopLevelProps("{}")).toEqual([]);
+  });
+});
+
+describe("synthesizeVariantSummary / synthesizeFactorySummary", () => {
+  it("renders baked overrides as backtick key:value clauses, with no parent lead-in when parentSummary is null", () => {
+    expect(synthesizeVariantSummary("Grid", '{ columns: "x" }', null)).toBe(
+      'A `Grid` variant with `columns: "x"`.',
+    );
+  });
+
+  it("prefixes the parent's summary when given one", () => {
+    expect(synthesizeVariantSummary("Grid", '{ columns: "x" }', "A grid primitive.")).toBe(
+      'A grid primitive. A `Grid` variant with `columns: "x"`.',
+    );
+  });
+
+  it("names the default variant explicitly when overrides are empty", () => {
+    expect(synthesizeVariantSummary("ButtonGroup", "{}", null)).toBe(
+      "A `ButtonGroup` variant with no overrides (the default).",
+    );
+  });
+
+  it("factory summary bakes prop NAMES only (a factory has no literal values of its own)", () => {
+    expect(synthesizeFactorySummary("Grid", ["columns", "gap"], null)).toBe(
+      "Factory behind `Grid`'s curried variants; bakes `columns`, `gap`.",
+    );
+  });
+});
+
+describe("precedingCommentOf — trailing `*/` on a single-line block comment", () => {
+  it("strips the trailing `*/` marker, not just the leading `/**`", () => {
+    const src =
+      "/** Accent-tone action row — emphasized context. */\n" +
+      'export const AccentActionRow = createActionRow({\n  tone: "accent",\n});\n';
+    expect(precedingCommentOf(src, "AccentActionRow")).toBe(
+      "Accent-tone action row — emphasized context.",
+    );
+  });
+});
+
+describe("variantAssignmentOf — generic factory call", () => {
+  it("matches `create<Factory><Generic>(...)`, not just `create<Factory>(...)`", () => {
+    const src =
+      "export const AccentHighlightSegments: Component<HighlightSegmentsDataProps<HighlightSegment>> =\n" +
+      "  createHighlightSegments<HighlightSegment>({ fillOpacity: 0.22 });\n";
+    const v = variantAssignmentOf(src, "AccentHighlightSegments");
+    expect(v?.factory).toBe("createHighlightSegments");
+    expect(v?.argsText).toContain("fillOpacity: 0.22");
   });
 });
