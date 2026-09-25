@@ -195,6 +195,46 @@ const isConsumerText = (callout: Callout): boolean =>
 const percentOf = (delta: number, baseline: number): number =>
   Math.round((delta / Math.abs(baseline)) * 100);
 
+/** The props the callout texts are built from — what `RateGauge` renders its
+ *  words from, and nothing presentational beyond the wording. */
+export type RateGaugeCalloutLabelProps = Pick<
+  RateGaugeProps,
+  | "domain"
+  | "baseline"
+  | "value"
+  | "label"
+  | "baselineLabel"
+  | "formatAgainst"
+  | "formatDelta"
+>;
+
+/**
+ * EXACTLY the texts RateGauge's leader callouts draw, from the same props —
+ * the ones `calloutModeFor(box, labels)` sizes against. RateGauge builds its
+ * own column from this, so an app that picks leaders vs corners with it can
+ * never drift from what the gauge draws. From the DRAWN (clamped) values:
+ * when the needles coincide, one "label = baseline" row; otherwise the name,
+ * the delta and the baseline's name — then where each stands.
+ */
+export const rateGaugeCalloutLabels = (
+  props: RateGaugeCalloutLabelProps,
+): readonly string[] => {
+  const baselineLabel = props.baselineLabel ?? DEFAULT_BASELINE_LABEL;
+  const against = props.formatAgainst ?? plainAgainst;
+  const deltaText = props.formatDelta ?? plainDelta;
+  const drawnValue = clampedValue(props.domain, props.value);
+  const drawnBaseline = clampedValue(props.domain, props.baseline);
+  const relative = [against(drawnValue), against(drawnBaseline)];
+  return drawnValue === drawnBaseline
+    ? [`${props.label} = ${baselineLabel}`, ...relative]
+    : [
+        props.label,
+        deltaText(drawnValue - drawnBaseline),
+        baselineLabel,
+        ...relative,
+      ];
+};
+
 export const RateGauge: Component<RateGaugeProps> = (props) => {
   const baselineLabel = () => props.baselineLabel ?? DEFAULT_BASELINE_LABEL;
 
@@ -207,19 +247,7 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
     (props.formatDelta ?? plainDelta)(delta);
 
   /** Exactly the strings the callouts will carry, for sizing the column. */
-  const columnTexts = (): readonly string[] => {
-    const drawnValue = clampedValue(props.domain, props.value);
-    const drawnBaseline = clampedValue(props.domain, props.baseline);
-    const relative = [against(drawnValue), against(drawnBaseline)];
-    return drawnValue === drawnBaseline
-      ? [`${props.label} = ${baselineLabel()}`, ...relative]
-      : [
-          props.label,
-          deltaText(drawnValue - drawnBaseline),
-          baselineLabel(),
-          ...relative,
-        ];
-  };
+  const columnTexts = (): readonly string[] => rateGaugeCalloutLabels(props);
 
   /** The corner layout's difference line, in the consumer's words. */
   const cornerDeltaText = (delta: number, baseline: number): string =>

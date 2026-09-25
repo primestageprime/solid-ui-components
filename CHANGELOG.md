@@ -4,7 +4,13 @@
 
 ### Fixed
 
-- **`StackedTimelineChart` grew without bound inside `FillChartFrame`** (G20, thorcasting's Work Mix: ~180px/s in a 186px body). It measured its own root, a `GrowFillBox`, whose height came from its content when the parent was a plain block (FillChartFrame's children slot): svg + the inline-block baseline gap, ~3px taller every frame. The measured host now takes `height: 100%` of its parent (or `aspect-ratio: 640/220` from its width when the parent's height is indefinite) — LevelsTimeline's rule — so the content never sizes it. Still grows and shrinks in a flex column. Present since the chart shipped (0.189.0 too).
+- **`StackedTimelineChart` grew without bound inside `FillChartFrame`** (thorcasting's Work Mix: ~180px/s in a 186px body). It measured its own root, a `GrowFillBox`, whose height came from its content when the parent was a plain block (FillChartFrame's children slot): svg + the inline-block baseline gap, ~3px taller every frame. The measured host now takes `height: 100%` of its parent (or `aspect-ratio: 640/220` from its width when the parent's height is indefinite) — LevelsTimeline's rule — so the content never sizes it. Still grows and shrinks in a flex column. Present since the chart shipped (0.189.0 too).
+
+## 0.191.0 — 2026-09-25
+
+### Added
+
+- **`rateGaugeCalloutLabels(props)`** (type `RateGaugeCalloutLabelProps`) — exactly the texts RateGauge's leader callouts draw, from the same props, for `calloutModeFor(box, labels)`. RateGauge builds its own column from it, so an app's leaders/corners choice can't drift from the gauge (G20).
 
 ## 0.190.0 — 2026-09-25
 
