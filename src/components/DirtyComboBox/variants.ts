@@ -17,5 +17,8 @@ export const ScenarioComboBox: Component<DirtyComboBoxDataProps> =
       save: "Save",
       reset: "Reset to saved",
       deleteItem: (label) => `Delete ${label}`,
+      create: "New scenario",
+      choose: "Choose a scenario",
+      none: "None",
     },
   });

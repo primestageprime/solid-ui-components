@@ -26,6 +26,16 @@
 //     focused row does the same from the keyboard.
 //   • The name is as wide as the LONGEST label (capped near 30 characters,
 //     ellipsised), so the combo never jumps when the selection changes.
+//   • OPT-IN PARITY with thorcasting's scenario chip (Peter, 2026-09-24),
+//     each off unless configured, so the control above is the default:
+//       onCreate → the reset becomes a split [ ↺ | + ] that always stands
+//         (reset DISABLED while pristine, so "new" never slides under the
+//         pointer); "new" selects the created item and opens its name field.
+//       onRename → the name is an EditableTitle (click: a text field; Enter or
+//         blur saves, Esc cancels) and the caret alone opens the menu.
+//       labels.none → a leading "None" row (DIRTY_COMBO_NONE_ID).
+//       item.color/shape → a swatch on the row and the selected value;
+//       item.disabled/reason → Dropdown's own refused row with its reason.
 // ============================================
 import { type Component, Show, mergeProps } from "solid-js";
 import {
@@ -34,7 +44,8 @@ import {
   type DropdownItem,
   type DropdownItemActionProps,
 } from "../Dropdown";
-import { TagPill } from "../Badge";
+import { ScenarioGlyph, TagPill } from "../Badge";
+import { EditableTitle } from "../EditableTitle";
 import { TextSublabel } from "../Text";
 import { Icon } from "../Icon";
 import { IconOnlyButton, SmallGhostButton } from "../Button";
@@ -47,8 +58,12 @@ import {
   LooseClusterRow,
   TightClusterRow,
 } from "../Layout";
-import { map } from "../../fn";
-import type { DirtyComboItem, DirtyComboView } from "./dirtyComboModel";
+import { find, map } from "../../fn";
+import {
+  DIRTY_COMBO_NONE_ID,
+  type DirtyComboItem,
+  type DirtyComboView,
+} from "./dirtyComboModel";
 
 /** The words the control speaks. Presentational: a curry states them once
  *  (`createDirtyComboBox({ labels })`), never a call site. */
@@ -63,6 +78,15 @@ export interface DirtyComboBoxLabels {
   reset: string;
   /** A row trash's accessible name and tooltip, from the row's label. */
   deleteItem: (label: string) => string;
+  /** The "new" half of the [ reset | new ] split's accessible name and
+   *  tooltip. Read only when `onCreate` is given. */
+  create?: string;
+  /** The caret's accessible name and tooltip once the name is a rename
+   *  target (with `onRename`), so the caret alone opens the menu. */
+  choose?: string;
+  /** Names the "compare against nothing" row, which then leads the menu
+   *  (`DIRTY_COMBO_NONE_ID`). Absent: no such row. */
+  none?: string;
 }
 
 export interface DirtyComboBoxProps {
@@ -77,15 +101,70 @@ export interface DirtyComboBoxProps {
   onReset: () => void;
   /** Delete a row. Never called for the selected row. */
   onDelete: (id: string) => void;
+  /** Create an item and select it (`dirtyComboCreate`). Given, the reset
+   *  becomes a split [ ↺ reset | + new ] that always stands — reset disabled
+   *  while pristine — and "new" opens the name field on the new item. */
+  onCreate?: () => void;
+  /** Rename the selected item (`dirtyComboRename`). Given, clicking the name
+   *  turns it into a text field: Enter or blur saves, Esc cancels. */
+  onRename?: (name: string) => void;
 }
 
 const labelOf = (item: DirtyComboItem): string => item.label;
 
+/** The trigger's swatch: the selected row's identity mark, the same one the
+ *  menu draws on its row. Nothing when the row carries no colour. */
+const Swatch: Component<{ item: DirtyComboItem | undefined }> = (props) => (
+  <Show when={props.item?.color}>
+    {(color) => (
+      <ScenarioGlyph
+        color={color()}
+        shape={props.item?.shape ?? "circle"}
+        filled
+        size={8}
+      />
+    )}
+  </Show>
+);
+
 /** The drawn control, in whatever state `view` says. */
 const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
+  // "None" leads the menu when the labels name it.
+  const noneRow = (): DirtyComboItem[] =>
+    props.labels.none === undefined
+      ? []
+      : [{ id: DIRTY_COMBO_NONE_ID, label: props.labels.none }];
+  const menuItems = (): DirtyComboItem[] => [...noneRow(), ...props.items];
+  const selectedItem = () =>
+    find((item) => item.id === props.selectedId, props.items);
+  const shownLabel = () =>
+    props.view.none ? (props.labels.none ?? "") : props.view.selectedLabel;
+  const isDeletable = (id: string) =>
+    id !== props.selectedId && id !== DIRTY_COMBO_NONE_ID;
+
+  // "new" hands the NEXT mounted name field an autoEdit: the caller's create
+  // selects the new item synchronously, the keyed name remounts on it, and
+  // that mount takes (and clears) the flag. A create that selected nothing
+  // must not leave it armed for some later selection, so it is dropped after
+  // the click either way.
+  let nameNext = false;
+  const takeNameNext = (): boolean => {
+    const armed = nameNext;
+    nameNext = false;
+    return armed;
+  };
+  const create = () => {
+    nameNext = true;
+    props.onCreate?.();
+    queueMicrotask(() => {
+      nameNext = false;
+    });
+  };
+
   // The row's trash. The selected row draws nothing: it cannot be deleted.
+  // Nor does "None": it is not an item.
   const DeleteAction: Component<DropdownItemActionProps> = (row) => (
-    <Show when={!row.selected}>
+    <Show when={isDeletable(row.item.id)}>
       <IconOnlyButton
         aria-label={props.labels.deleteItem(row.item.label)}
         title={props.labels.deleteItem(row.item.label)}
@@ -98,7 +177,7 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
 
   // The keyboard twin of the trash, with the same refusal.
   const deleteFromKeyboard = (item: DropdownItem) => {
-    if (item.id !== props.selectedId) props.onDelete(item.id);
+    if (isDeletable(item.id)) props.onDelete(item.id);
   };
 
   return (
@@ -107,7 +186,7 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
         <TagPill tag={{ label: props.labels.reference }} />
         <TextSublabel>{props.labels.versus}</TextSublabel>
         <CompactDropdown
-          items={props.items}
+          items={menuItems()}
           value={props.selectedId}
           onChange={props.onSelect}
           itemAction={DeleteAction}
@@ -116,18 +195,64 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
             // Gapless, so a collapsed save segment leaves no blank space
             // inside the frame after the caret.
             <FlexRow>
-              <SmallGhostButton onClick={state.toggle}>
+              <Show
+                when={props.onRename}
+                fallback={
+                  <SmallGhostButton onClick={state.toggle}>
+                    <TightClusterRow>
+                      <Swatch item={selectedItem()} />
+                      <DropdownFitLabel
+                        label={shownLabel()}
+                        candidates={map(labelOf, menuItems())}
+                      />
+                      <Icon
+                        name={state.open ? "chevron-up" : "chevron-down"}
+                        size="xs"
+                      />
+                    </TightClusterRow>
+                  </SmallGhostButton>
+                }
+              >
+                {/* RENAMEABLE: the name is its own click target (a text
+                    field on click, or at once after "new"), so the caret
+                    alone opens the menu. The name holds the longest label's
+                    width, so opening the field moves nothing. */}
                 <TightClusterRow>
-                  <DropdownFitLabel
-                    label={props.view.selectedLabel}
-                    candidates={map(labelOf, props.items)}
-                  />
-                  <Icon
-                    name={state.open ? "chevron-up" : "chevron-down"}
-                    size="xs"
-                  />
+                  <Swatch item={selectedItem()} />
+                  <ReservedWidth
+                    widest={
+                      <DropdownFitLabel
+                        label=""
+                        candidates={map(labelOf, menuItems())}
+                      />
+                    }
+                  >
+                    <Show when={props.selectedId} keyed>
+                      {/* Inert under "None": there is nothing to rename,
+                          but the name keeps the same type and place. */}
+                      <EditableTitle
+                        title={shownLabel()}
+                        onChange={
+                          props.view.canRename
+                            ? (name) => props.onRename?.(name)
+                            : undefined
+                        }
+                        autoEdit={takeNameNext()}
+                      />
+                    </Show>
+                  </ReservedWidth>
+                  <IconOnlyButton
+                    aria-label={props.labels.choose}
+                    title={props.labels.choose}
+                    onClick={state.toggle}
+                  >
+                    <Icon
+                      name={state.open ? "chevron-up" : "chevron-down"}
+                      size="xs"
+                    />
+                  </IconOnlyButton>
                 </TightClusterRow>
-              </SmallGhostButton>
+              </Show>
               <SlideReveal when={props.view.canSave}>
                 <TightClusterRow>
                   <VerticalDivider />
@@ -144,15 +269,43 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
           )}
         />
       </ClusterRow>
-      <SlideReveal when={props.view.canReset}>
-        <IconOnlyButton
-          aria-label={props.labels.reset}
-          title={props.labels.reset}
-          onClick={props.onReset}
-        >
-          <Icon name="undo" size="sm" />
-        </IconOnlyButton>
-      </SlideReveal>
+      <Show
+        when={props.onCreate}
+        fallback={
+          <SlideReveal when={props.view.canReset}>
+            <IconOnlyButton
+              aria-label={props.labels.reset}
+              title={props.labels.reset}
+              onClick={props.onReset}
+            >
+              <Icon name="undo" size="sm" />
+            </IconOnlyButton>
+          </SlideReveal>
+        }
+      >
+        {/* THE SPLIT [ ↺ reset | + new ] (Peter, 2026-09-24). It always
+            stands, so "new" is there while pristine; reset is DISABLED rather
+            than hidden when there is nothing to reset, so "new" never slides
+            under the pointer (the change sliders' Reset | Delete rule). */}
+        <TightClusterRow>
+          <IconOnlyButton
+            aria-label={props.labels.reset}
+            title={props.labels.reset}
+            disabled={!props.view.canReset}
+            onClick={props.onReset}
+          >
+            <Icon name="undo" size="sm" />
+          </IconOnlyButton>
+          <VerticalDivider />
+          <IconOnlyButton
+            aria-label={props.labels.create}
+            title={props.labels.create}
+            onClick={create}
+          >
+            <Icon name="plus" size="sm" />
+          </IconOnlyButton>
+        </TightClusterRow>
+      </Show>
     </LooseClusterRow>
   );
 };
@@ -182,6 +335,8 @@ export const DirtyComboBox: Component<DirtyComboBoxProps> = (props) => (
         onSave={noop}
         onReset={noop}
         onDelete={noop}
+        onCreate={props.onCreate && noop}
+        onRename={props.onRename && noop}
       />
     }
   >

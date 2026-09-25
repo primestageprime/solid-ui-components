@@ -29,6 +29,20 @@ describe("EditableTitle", () => {
     expect(onChange).toHaveBeenCalledWith("world");
   });
 
+  it("autoEdit opens the editor on mount; an inert title never does", () => {
+    const onChange = vi.fn();
+    const live = render(() => (
+      <EditableTitle title="New scenario" onChange={onChange} autoEdit />
+    ));
+    const input = live.container.querySelector("input") as HTMLInputElement;
+    expect(input.value).toBe("New scenario");
+    fireEvent.input(input, { target: { value: "Lean 2027" } });
+    fireEvent.blur(input);
+    expect(onChange).toHaveBeenCalledWith("Lean 2027");
+    const inert = render(() => <EditableTitle title="x" autoEdit />);
+    expect(inert.container.querySelector("input")).toBeNull();
+  });
+
   it("Escape cancels without committing", () => {
     const onChange = vi.fn();
     const { getByText, container } = render(() => (
