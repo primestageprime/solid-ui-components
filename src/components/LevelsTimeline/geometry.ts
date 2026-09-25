@@ -2342,3 +2342,40 @@ export const hoverAt = (
   const at = pick(timeAtX(domain, x, frame), domain);
   return { at, x: xScaleFor(domain, frame)(at), rows: levelsAt(levels, at) };
 };
+
+// ── G22: keep hold of a dragged flag whose id changes mid-drag ──────────────
+
+/**
+ * What a drag remembers about the flag it pressed: the id captured at
+ * pointerdown, the last time it reported through `onMoveMutation`, and its
+ * position in time order at the press.
+ */
+export interface PressedMutation {
+  readonly id: string;
+  readonly lastAt: number | undefined;
+  readonly index: number;
+}
+
+/**
+ * The id the pressed flag has NOW (G22). A consumer may rebuild its
+ * mutations with new ids on every move (an id derived from the date, a fresh
+ * row per edit); looking the press up by its original id alone then finds
+ * nothing and the drag silently dies. So: the same id if it still exists;
+ * else the mutation sitting at the time last reported (where the consumer
+ * put it); else the one at the pressed index in time order. Undefined only
+ * when the list is empty.
+ */
+export const rekeyPressedMutation = (
+  mutations: readonly Mutation[],
+  pressed: PressedMutation,
+): string | undefined => {
+  if (find((m: Mutation) => m.id === pressed.id, mutations)) return pressed.id;
+  const lastAt = pressed.lastAt;
+  const atLast =
+    lastAt === undefined
+      ? undefined
+      : find((m: Mutation) => timeOf(m.at) === lastAt, mutations);
+  if (atLast !== undefined) return atLast.id;
+  const ordered = inTimeOrder(mutations);
+  return ordered[Math.min(pressed.index, ordered.length - 1)]?.id;
+};

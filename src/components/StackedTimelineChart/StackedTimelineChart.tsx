@@ -53,7 +53,13 @@ import { type Margin, useChart } from "../Chart/context";
 import { seriesPaint } from "../Chart/StackedAreaSeries";
 import { stackBuckets } from "../Chart/stackedArea";
 import { createBox } from "../Layout";
-import { type TimeValue, timeOf } from "../LevelsTimeline/geometry";
+import {
+	type Mutation,
+	type PickStrategy,
+	type TimeValue,
+	timeOf,
+} from "../LevelsTimeline/geometry";
+import { MUTATION_FLAG_LANE, MutationFlags } from "../Chart/MutationFlags";
 import { stackedTimelineLayout, thinTicks } from "./layout";
 
 /** One event on the timeline: a numbered vertical rule at `at`. */
@@ -127,9 +133,37 @@ export interface StackedTimelineChartProps {
 	xTickValues?: readonly number[];
 	/** One captioned rule across the stack. */
 	rule?: StackedTimelineRule;
-	/** One numbered vertical rule each. */
+	/**
+	 * One numbered vertical rule each.
+	 * @deprecated Use `mutations` (LevelsTimeline's contract: numbered flags
+	 * that select and drag). `events` keeps working.
+	 */
 	events?: readonly StackedTimelineEvent[];
 	/**
+	 * LevelsTimeline's mutation contract (G24): each mutation is a NUMBERED
+	 * flag in the top margin (numbered in time order) with a rule through the
+	 * plot. The chart reserves the top margin the flags need.
+	 */
+	mutations?: readonly Mutation[];
+	/** Which mutation is lit; the others mute. */
+	selectedMutationId?: string;
+	/** Provided => the flags are buttons (click, Enter/Space). */
+	onSelectMutation?: (id: string) => void;
+	/**
+	 * Provided => the flags DRAG along x and the arrow keys nudge a day, clamped
+	 * between neighbours and to `xDomain`. Reports the new time; the caller
+	 * moves the mutation. A caller that re-keys a mutation mid-drag keeps the
+	 * drag (G22).
+	 */
+	onMoveMutation?: (id: string, at: TimeValue) => void;
+	/**
+	 * Snaps `onPick`'s date (e.g. `pickDay`). Omitted, `onPick` reports the raw
+	 * date as before.
+	 */
+	pickAt?: PickStrategy;
+	/**
+	 * @deprecated Use `mutations` + `selectedMutationId`.
+	 *
 	 * Which event is SELECTED, as its index in `events`. Its rule goes solid,
 	 * accented and full-strength, and its number takes the accent too; every
 	 * other rule stays dashed and recessive. Out of range, or omitted, selects
@@ -260,7 +294,22 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 	const hover = createMemo(() => props.hoverLabel);
 
 	/* What this box can afford: tick counts, x-label thinning and the inset. */
-	const layout = createMemo(() => stackedTimelineLayout(box(), props.yDomain, props.margin));
+	const layout = createMemo(() => {
+		const base = stackedTimelineLayout(box(), props.yDomain, props.margin);
+		const flagged = (props.mutations?.length ?? 0) > 0;
+		return flagged && base.margin.top < MUTATION_FLAG_LANE
+			? { ...base, margin: { ...base.margin, top: MUTATION_FLAG_LANE } }
+			: base;
+	});
+	const pick = (at: Date): void => {
+		const strategy = props.pickAt;
+		const raw = at.getTime();
+		props.onPick?.(
+			strategy === undefined
+				? at
+				: new Date(strategy(raw, [props.xDomain[0], props.xDomain[1]])),
+		);
+	};
 	const xTicks = createMemo(() => {
 		const values = props.xTickValues;
 		return values === undefined
@@ -311,7 +360,7 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 				xDomain={props.xDomain}
 				yDomain={props.yDomain}
 				margin={layout().margin}
-				onPick={(at) => props.onPick?.(at instanceof Date ? at : new Date(at))}
+				onPick={(at) => pick(at instanceof Date ? at : new Date(at))}
 			>
 				<Grid />
 				<YAxis tickValues={layout().yTickValues} tickFormat={props.yTickFormat} />
@@ -383,6 +432,14 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 						/>
 					)}
 				</Index>
+				<Show when={(props.mutations?.length ?? 0) > 0}>
+					<MutationFlags
+						mutations={props.mutations ?? []}
+						selectedMutationId={props.selectedMutationId}
+						onSelectMutation={props.onSelectMutation}
+						onMoveMutation={props.onMoveMutation}
+					/>
+				</Show>
 				{/* The ghost goes AFTER the real rules, so a hovered month that
 				    already carries one does not paint the ghost underneath it. It
 				    draws only where a pick can be promised: `onPick` to act on it

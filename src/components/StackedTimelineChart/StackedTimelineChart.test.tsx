@@ -599,3 +599,105 @@ describe("StackedTimelineChart never grows its own box (G20)", () => {
 		expect(new Set(heights)).toEqual(new Set(["186"]));
 	});
 });
+
+// G24 — LevelsTimeline's mutation contract.
+describe("StackedTimelineChart mutations (G24)", () => {
+	const MUTATIONS = [
+		{ id: "b", at: new Date("2025-09-01T00:00:00Z"), label: "Raise" },
+		{ id: "a", at: new Date("2025-06-02T00:00:00Z"), label: "Hire" },
+	];
+	const mountFlags = (extra: Record<string, unknown> = {}) =>
+		render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				mutations={MUTATIONS}
+				{...extra}
+			/>
+		));
+	const flags = (container: HTMLElement) =>
+		Array.from(container.querySelectorAll<SVGGElement>(".sui-chart__mutation"));
+
+	it("draws one flag per mutation, numbered in TIME order, inert without handlers", () => {
+		const { container } = mountFlags();
+		const all = flags(container);
+		expect(all.map((f) => f.dataset.mutationId)).toEqual(["a", "b"]);
+		expect(all.map((f) => f.textContent)).toEqual(["1", "2"]);
+		expect(all[0].getAttribute("role")).toBeNull();
+	});
+
+	it("flags are buttons given onSelectMutation; click and Enter select; the selected one is lit", () => {
+		const picked: string[] = [];
+		const onPick = vi.fn();
+		const { container } = mountFlags({
+			selectedMutationId: "b",
+			onSelectMutation: (id: string) => picked.push(id),
+			onPick,
+		});
+		const [a, b] = flags(container);
+		expect(a.getAttribute("role")).toBe("button");
+		expect(b.classList.contains("sui-chart__mutation--selected")).toBe(true);
+		expect(a.classList.contains("sui-chart__mutation--muted")).toBe(true);
+		fireEvent.click(a);
+		fireEvent.keyDown(b, { key: "Enter" });
+		expect(picked).toEqual(["a", "b"]);
+		// A flag click is not a pick on the plot.
+		expect(onPick).not.toHaveBeenCalled();
+	});
+
+	it("arrow keys nudge a day, clamped between neighbours", () => {
+		const moves: Array<[string, number]> = [];
+		const { container } = mountFlags({
+			onMoveMutation: (id: string, at: number) => moves.push([id, at]),
+		});
+		const [a] = flags(container);
+		fireEvent.keyDown(a, { key: "ArrowRight" });
+		expect(moves[0]).toEqual([
+			"a",
+			new Date("2025-06-03T00:00:00Z").getTime(),
+		]);
+	});
+});
+
+describe("StackedTimelineChart drag keeps a re-keyed flag (G22)", () => {
+	it("a consumer that changes the dragged flag's id every move keeps the drag", () => {
+		const restore = installRects((el) =>
+			el.tagName.toLowerCase() === "svg" || el.tagName.toLowerCase() === "div"
+				? rectOf({ left: 0, top: 0, width: 800, height: 300 })
+				: null,
+		);
+		// The id is derived from the date, so every move re-keys it.
+		const keyed = (at: number) => ({ id: `m@${at}`, at, label: "Raise" });
+		const [mutations, setMutations] = createSignal([
+			keyed(Date.UTC(2025, 5, 2)),
+		]);
+		const moves: number[] = [];
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				mutations={mutations()}
+				onMoveMutation={(_id, at) => {
+					moves.push(Number(at));
+					setMutations([keyed(Number(at))]);
+				}}
+			/>
+		));
+		restore();
+		const flag = () =>
+			container.querySelector<SVGGElement>(".sui-chart__mutation")!;
+		const x0 = Number(flag().querySelector("line")!.getAttribute("x1"));
+		const left = 36; // no curried margin: the default inset's left
+		fireEvent.pointerDown(flag(), { pointerId: 1, button: 0, clientX: x0 + left });
+		for (const dx of [20, 40, 60]) {
+			fireEvent.pointerMove(flag(), { pointerId: 1, clientX: x0 + left + dx });
+		}
+		fireEvent.pointerUp(flag(), { pointerId: 1, clientX: x0 + left + 60 });
+		// Three distinct, increasing reports — the drag never died on the new id.
+		expect(moves.length).toBe(3);
+		expect(moves[0]).toBeLessThan(moves[1]);
+		expect(moves[1]).toBeLessThan(moves[2]);
+	});
+});
