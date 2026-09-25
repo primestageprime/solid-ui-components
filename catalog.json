@@ -14586,7 +14586,7 @@
     "useFor": null,
     "notes": "The y-axis lock editor for a COUNT axis (hours, headcount): plain number fields, no currency symbol. */",
     "showcase": "#/chart-frame",
-    "since": "Unreleased",
+    "since": "0.190.0",
     "file": "src/components/ChartFrame/variants.ts",
     "line": 46
   }
