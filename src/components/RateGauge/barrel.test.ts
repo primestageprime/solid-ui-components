@@ -18,4 +18,14 @@ describe("RateGauge barrel — the callout breakpoint", () => {
     ];
     expect(modes).toEqual(["leaders", "corners"]);
   });
+
+  it("publishes rateGaugeCalloutLabels at the root, and calloutModeFor takes its output", () => {
+    const labels = sui.rateGaugeCalloutLabels({
+      domain: [-40000, 40000],
+      baseline: 5000,
+      value: 23000,
+      label: "Scenario A",
+    });
+    expect(sui.calloutModeFor({ width: 600, height: 200 }, labels)).toBe("leaders");
+  });
 });

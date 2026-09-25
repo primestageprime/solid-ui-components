@@ -12,11 +12,12 @@
 // Clients import `RateDial` (or curry their own units once with
 // `createRateGauge`); `RateGauge` itself is exported for the case where every
 // override is already being passed explicitly.
-export { RateGauge, createRateGauge } from "./RateGauge";
+export { RateGauge, createRateGauge, rateGaugeCalloutLabels } from "./RateGauge";
 export type {
   RateGaugeProps,
   RateGaugeOverrides,
   RateGaugeDataProps,
+  RateGaugeCalloutLabelProps,
 } from "./RateGauge";
 export { RateDial } from "./variants";
 export type { Domain as RateGaugeDomain } from "./geometry";
