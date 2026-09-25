@@ -14,6 +14,11 @@
 // that don't fit into a trailing kebab overflow menu, re-evaluated
 // on container resize.
 //
+// Fold rules live in the pure `overflowNavVisibleCount` (./fold.ts). Natural
+// widths are RE-MEASURED on every container resize, when items/labels/badges
+// change, and once web fonts settle (G16: widths cached once went stale, so a
+// narrowed nav kept every tab inline; a 0px container never folded at all).
+//
 // Two optional extras:
 // - Closable items (`closable: true` + the nav's `onClose(id)`) render
 //   a trailing close button beside the NavLink. Closing is the app's
@@ -41,7 +46,8 @@ import { TightNoShrinkClusterRow } from "../Layout/variants";
 import { Button } from "../Button/Button";
 import { PopoverMenu, type PopoverMenuItem } from "../PopoverMenu/PopoverMenu";
 import { observeSize } from "../../internal/dom/observeSize";
-import { map, find } from "../../fn";
+import { map, find, some } from "../../fn";
+import { overflowNavVisibleCount } from "./fold";
 
 export interface OverflowNavItem {
   /** Stable id — used as the PopoverMenu select id when this item overflows. */
@@ -128,51 +134,56 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
   const recompute = () => {
     if (!containerRef) return;
     const widths = naturalWidths();
-    const total = props.items.length;
-    if (widths.length !== total) return; // Wait for measurement pass.
-
-    const containerWidth = containerRef.clientWidth;
-    if (containerWidth <= 0) return;
-
-    // An explicit overflow list means the kebab is always there, so its
-    // reserve always applies.
-    const kebabForced = explicitOverflow().length > 0;
-
-    // First, check if everything fits without any kebab.
-    let runningWidth = 0;
-    const g = gapPx();
-    for (let i = 0; i < total; i++) {
-      runningWidth += widths[i];
-      if (i > 0) runningWidth += g;
-    }
-    if (runningWidth <= containerWidth - (kebabForced ? KEBAB_RESERVE_PX : 0)) {
-      setVisibleCount(total);
-      return;
-    }
-
-    // Otherwise, fit as many leading items as we can while reserving the kebab.
-    const budget = containerWidth - KEBAB_RESERVE_PX;
-    let count = 0;
-    let acc = 0;
-    for (let i = 0; i < total; i++) {
-      const next = acc + widths[i] + (i > 0 ? g : 0);
-      if (next > budget) break;
-      acc = next;
-      count = i + 1;
-    }
-    setVisibleCount(count);
+    if (widths.length !== props.items.length) return; // Wait for measurement pass.
+    const count = overflowNavVisibleCount({
+      containerWidth: containerRef.clientWidth,
+      itemWidths: widths,
+      gapPx: gapPx(),
+      kebabReservePx: KEBAB_RESERVE_PX,
+      // An explicit overflow list means the kebab is always there, so its
+      // reserve always applies.
+      kebabForced: explicitOverflow().length > 0,
+    });
+    if (count !== null) setVisibleCount(count);
   };
 
-  // Measure each rendered NavLink's offsetWidth. Called after items mount and
-  // whenever the items array changes (label/badge edits change widths).
+  // Is item i on the page right now? A folded item's ref is left behind,
+  // detached, and would measure 0.
+  const rendered = (i: number): boolean =>
+    i < visibleCount() && itemRefs[i]?.isConnected === true;
+
+  // Measure every RENDERED item's natural width, keeping the last known width
+  // for folded ones (a detached ref measures 0, which would read as "fits").
   const measure = () => {
+    const previous = naturalWidths();
     const widths: number[] = [];
     for (let i = 0; i < props.items.length; i++) {
       const el = itemRefs[i];
-      widths.push(el ? el.offsetWidth : 0);
+      widths.push(rendered(i) && el ? el.offsetWidth : (previous[i] ?? 0));
     }
     setNaturalWidths(widths);
     recompute();
+  };
+
+  // Render everything inline for one frame, then measure all and fold again.
+  const remeasureAll = () => {
+    setVisibleCount(props.items.length);
+    if (isServer) return;
+    requestAnimationFrame(measure);
+  };
+
+  // A container resize re-measures what is on the page (fonts, theme or a
+  // hidden-then-shown parent change natural widths without any prop
+  // changing). A FOLDED item never measured (0) can only be measured inline,
+  // so that case unfolds for one frame first.
+  const onResize = () => {
+    const widths = naturalWidths();
+    const unknownFolded = some(
+      (w: number, i: number) => w <= 0 && !rendered(i),
+      widths,
+    );
+    if (unknownFolded) remeasureAll();
+    else measure();
   };
 
   onMount(() => {
@@ -180,29 +191,28 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
     // Items are rendered inline (visibleCount starts at items.length) → measure all.
     // Use rAF so layout has settled before reading offsetWidth.
     requestAnimationFrame(measure);
+    // Web fonts change every label's width once they load.
+    document.fonts?.ready.then(() => remeasureAll());
   });
 
   // Re-measure when items change. We bump visibleCount to items.length so all
   // items render inline for the next measurement frame, then trim again.
   createEffect(() => {
-    const len = props.items.length;
-    // Closability changes an item's width; the kebab's presence changes the budget.
-    // Reading every flag (and the explicit list's length) subscribes to them.
-    map((item) => item.closable, props.items);
+    // Labels, badges and closability change an item's width; the kebab's
+    // presence changes the budget. Reading them subscribes to them.
+    map((item) => [item.label, item.badge, item.closable], props.items);
     explicitOverflow().length;
-    setVisibleCount(len);
-    if (isServer) return;
-    requestAnimationFrame(measure);
+    remeasureAll();
   });
 
-  // ResizeObserver on the container → recompute (uses cached widths).
+  // ResizeObserver on the container → re-measure + recompute.
   createEffect(() => {
     if (isServer) return;
     const el = containerRef;
     if (!el) return;
     // observeSize subsumes the hand-rolled rAF coalescing, and adds the
     // change-guard this observer lacked.
-    onCleanup(observeSize(el, () => recompute()));
+    onCleanup(observeSize(el, onResize));
   });
 
   // Items that fit inline.

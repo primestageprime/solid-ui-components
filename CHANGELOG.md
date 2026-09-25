@@ -7,6 +7,12 @@
 - **`YAxisLockDialogNumber`** — the y-axis lock editor for a COUNT axis (hours, headcount): plain `ThemedNumberInput` fields. `createYAxisLockDialog` gains the `field: "currency" | "number"` Override (type `YAxisLockField`; default `"currency"`, so `YAxisLockDialog` is unchanged).
 - **`BuilderBoard`: `panelD` may be `(box) => JSX`** — the same box-render slot as `BuilderBoardBelowChart` (an accessor of D's measured content box; the rail's width by 0 before layout), so an app can pick its gauge with `calloutModeFor` inside a curried board. A plain element is unchanged. New type `BuilderBoardPanelDSlot`.
 
+## 0.189.0 — 2026-09-25
+
+### Fixed
+
+- **`OverflowNav` didn't fold on resize** (G16). Natural widths were measured once and cached, so a nav narrowed later (or measured before fonts/layout settled) kept every item inline; and a 0px container bailed instead of folding. Widths are now re-measured on every container resize, when labels/badges/items change, and once `document.fonts` is ready; a 0px (or narrower-than-kebab) container folds everything into the kebab. The decision is the pure, exported-to-tests `overflowNavVisibleCount` (`OverflowNav/fold.ts`). No API change.
+
 ## 0.188.0 — 2026-09-25
 
 ### Fixed
