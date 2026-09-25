@@ -9,10 +9,14 @@
 import { readFileSync } from "node:fs";
 import { join as joinPath } from "node:path";
 import { describe, expect, it } from "vitest";
+import { join, map } from "../../fn";
 import { NATURAL_GAUGE_WIDTH } from "../RateGauge/geometry";
 import {
+  BUILDER_BOARD_SINGLE_COLUMN_BELOW,
+  builderBoardLayoutFor,
   builderBoardRects,
   builderBoardTable,
+  observeBuilderBoard,
   GAP_PX,
   HALF_GUTTER,
   PAIR_GUTTER,
@@ -71,6 +75,49 @@ describe("builderBoardTable — the printed observation", () => {
     expect(lines[2]).toMatch(/^B series\s+0\s+200\s+1439\s+196$/);
     expect(lines[3]).toMatch(/^C changes\s+0\s+405\s+1139\s+397$/);
     expect(lines[4]).toMatch(/^D rail\s+1147\s+405\s+292\s+397$/);
+  });
+});
+
+describe("single column below 600px — the printed observation", () => {
+  it("prints phone, tablet and desktop", () => {
+    const printed = map(
+      (v: { width: number; height: number }) => observeBuilderBoard(v),
+      [
+        { width: 390, height: 760 },
+        { width: 768, height: 900 },
+        { width: 1440, height: 900 },
+      ],
+    );
+    expect(join("\n\n", printed)).toMatchInlineSnapshot(`
+      "layout stacked (390x760)
+      panel            x     y  width  height
+      A cashflow       0     0    390     240
+      B series         0   248    390     240
+      C changes        0   496    390     236
+      D rail           0   740    390     216
+
+      layout split (768x900)
+      panel            x     y  width  height
+      A cashflow       0     0    768     221
+      B series         0   225    768     221
+      C changes        0   454    468     446
+      D rail         476   454    292     446
+
+      layout split (1440x900)
+      panel            x     y  width  height
+      A cashflow       0     0   1440     221
+      B series         0   225   1440     221
+      C changes        0   454   1140     446
+      D rail        1148   454    292     446"
+    `);
+  });
+
+  it("stacks only a laid-out board narrower than the breakpoint", () => {
+    expect(BUILDER_BOARD_SINGLE_COLUMN_BELOW).toBe(600);
+    expect(builderBoardLayoutFor(0)).toBe("split"); // unmeasured: as before
+    expect(builderBoardLayoutFor(390)).toBe("stacked");
+    expect(builderBoardLayoutFor(599)).toBe("stacked");
+    expect(builderBoardLayoutFor(600)).toBe("split");
   });
 });
 

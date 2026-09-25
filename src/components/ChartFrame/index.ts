@@ -8,6 +8,7 @@ export type {
   YAxisLockDialogDataProps,
   YAxisLockDialogLabels,
   YAxisLockDialogOverrides,
+  YAxisLockField,
 } from "./YAxisLockDialog";
 export * from "./variants";
 export {

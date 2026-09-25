@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
 import type { YAxisDomain } from "../../hooks/createYAxisStrategy";
-import { YAxisLockDialog } from "./index";
+import { YAxisLockDialog, YAxisLockDialogNumber } from "./index";
 
 /** The visible inputs, Max first (the dialog's order). */
 const field = (name: "y-max" | "y-min") =>
@@ -60,5 +60,31 @@ describe("YAxisLockDialog", () => {
     fireEvent.click(confirmButton());
     expect(onLock).not.toHaveBeenCalled();
     expect(screen.getAllByText("Enter a number")).toHaveLength(2);
+  });
+});
+
+describe("YAxisLockDialogNumber — a count axis", () => {
+  it("edits plain numbers: seeded, no currency symbol, and the same validation", () => {
+    const onLock = vi.fn();
+    const [open, setOpen] = createSignal(false);
+    render(() => (
+      <YAxisLockDialogNumber
+        open={open()}
+        lock={[10, 40]}
+        onLock={onLock}
+        onClose={() => setOpen(false)}
+      />
+    ));
+    setOpen(true);
+    expect(field("y-max").value).toBe("40");
+    expect(field("y-min").value).toBe("10");
+    expect(document.querySelector(".sui-currency-input")).toBeNull();
+    type(field("y-min"), "50");
+    fireEvent.click(confirmButton());
+    expect(onLock).not.toHaveBeenCalled();
+    expect(screen.getByText("Max must be greater than min")).toBeTruthy();
+    type(field("y-min"), "5");
+    fireEvent.click(confirmButton());
+    expect(onLock).toHaveBeenCalledWith([5, 40]);
   });
 });
