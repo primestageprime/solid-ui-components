@@ -87,3 +87,18 @@
 .sui-editable-title--fill > .sui-editable-title__editor {
   display: grid;
 }
+
+/* `fill`'s field must LOOK like a field. The input is exactly the size of its
+   host, and the host clips (`overflow: hidden`), so the default outline —
+   drawn OUTSIDE the input at offset 1px — was clipped away entirely: the
+   rename showed as selected text with no input affordance (Peter,
+   2026-09-25). Here it is drawn INSIDE (negative offset), on the field
+   background, with an accent caret and a little text inset. */
+.sui-editable-title--fill .sui-editable-title__input {
+  outline-offset: -1px;
+  background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.6));
+  caret-color: var(--sui-accent);
+  padding: 0 4px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
