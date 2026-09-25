@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.187.0 — 2026-09-25
+
 ### Added
 
 - **`DirtyComboBox` parity with thorcasting's scenario chip** (each opt-in; unconfigured, the control is unchanged): `onCreate` turns the reset into a split `[ ↺ │ + ]` shown only while dirty (it slides in with ✓) whose "+" creates, selects and opens the new item's name field; `onRename` makes the name click-to-rename (Enter or blur saves, Esc cancels) with the caret as the menu button; `labels.none` leads the menu with "None" (`DIRTY_COMBO_NONE_ID`); `DirtyComboItem` gains `color`/`shape` (a swatch on the row and the selected value) and `disabled`/`reason`. Model: `dirtyComboCreate`, `dirtyComboRename`, `dirtyComboUniqueLabel`; the view gains `canCreate`, `none` and `canRename`; `dirtyComboCreate` is refused while pristine. **`ScenarioComboBox` now names all three**, so its menu leads with "None".
