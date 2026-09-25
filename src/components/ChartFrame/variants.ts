@@ -25,17 +25,23 @@ export const FillChartFrame: Component<ChartFrameDataProps> = createChartFrame({
   height: "fill",
 });
 
-/** The y-axis lock editor, in the chart language's own words. */
+/** The chart language's words for the lock editor, shared by both fields. */
+const Y_AXIS_LOCK_LABELS = {
+  title: "Lock the y-axis",
+  description:
+    "The axis stays at this range until you change it or pick another mode.",
+  confirm: "Lock",
+  max: "Y max",
+  min: "Y min",
+  notANumber: "Enter a number",
+  notAboveMin: "Max must be greater than min",
+} as const;
+
+/** The y-axis lock editor for a money axis: CurrencyInput fields. */
 export const YAxisLockDialog: Component<YAxisLockDialogDataProps> =
-  createYAxisLockDialog({
-    labels: {
-      title: "Lock the y-axis",
-      description:
-        "The axis stays at this range until you change it or pick another mode.",
-      confirm: "Lock",
-      max: "Y max",
-      min: "Y min",
-      notANumber: "Enter a number",
-      notAboveMin: "Max must be greater than min",
-    },
-  });
+  createYAxisLockDialog({ labels: Y_AXIS_LOCK_LABELS });
+
+/** The y-axis lock editor for a COUNT axis (hours, headcount): plain
+ *  number fields, no currency symbol. */
+export const YAxisLockDialogNumber: Component<YAxisLockDialogDataProps> =
+  createYAxisLockDialog({ labels: Y_AXIS_LOCK_LABELS, field: "number" });
