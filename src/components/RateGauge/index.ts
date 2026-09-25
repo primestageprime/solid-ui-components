@@ -20,3 +20,12 @@ export type {
 } from "./RateGauge";
 export { RateDial } from "./variants";
 export type { Domain as RateGaugeDomain } from "./geometry";
+// The second exception: the leaders/corners BREAKPOINT. A gauge inside a
+// measured panel can't pick its own callout layout (it is the layout's call,
+// at one breakpoint), so the app measures the panel and asks this. The rest of
+// geometry.ts stays private. Types under qualified names, as above.
+export { calloutModeFor } from "./geometry";
+export type {
+  Box as RateGaugeBox,
+  CalloutMode as RateGaugeCalloutMode,
+} from "./geometry";

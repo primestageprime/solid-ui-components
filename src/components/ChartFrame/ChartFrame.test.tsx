@@ -110,4 +110,28 @@ describe("ChartFrame", () => {
     fireEvent.click(locked);
     expect(onMode).toHaveBeenCalledWith("fixed");
   });
+
+  it("draws actions before fullscreen and the y-axis split, and nothing extra without them", () => {
+    const { container } = render(() => (
+      <ChartFrame title="Work mix" yAxisMode="auto" actions={<input aria-label="Cap" />}>
+        <span />
+      </ChartFrame>
+    ));
+    const cap = container.querySelector('input[aria-label="Cap"]')!;
+    const full = button(container, "Full screen")!;
+    // Cap precedes fullscreen in document order.
+    expect(cap.compareDocumentPosition(full) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // Without actions the header row is title + button group, as before.
+    const bare = render(() => (
+      <ChartFrame title="Work mix">
+        <span />
+      </ChartFrame>
+    ));
+    const header = bare.container.querySelector(".sui-fullscreen-box")!.firstElementChild!
+      .firstElementChild as HTMLElement;
+    expect(header.children).toHaveLength(2);
+    expect(header.children[1].querySelector('button[aria-label="Full screen"]')).toBeTruthy();
+    expect(header.children[1].querySelector("input")).toBeNull();
+  });
 });

@@ -43,6 +43,14 @@ import { Tooltip } from "../Tooltip";
 export interface MutationToolbarChange {
   readonly id: string;
   readonly label: string;
+  /**
+   * Opt THIS chip out of `onRemove`: it draws no × at all (not a disabled
+   * one) and Delete on it does nothing — a change the app can't delete, such
+   * as a hire flag. Default `true`. The chip keeps its own constant width
+   * either way: a removable chip always reserves its × (the × only fades in),
+   * and this one never has it, so hovering never reflows the row.
+   */
+  readonly removable?: boolean;
 }
 
 /** The toolbar's words. Presentational, so they are curried, never inline. */
@@ -120,6 +128,7 @@ export const MutationToolbar: Component<MutationToolbarProps> = (props) => {
             (change: MutationToolbarChange) => ({
               value: change.id,
               label: change.label,
+              removable: change.removable,
             }),
             props.changes,
           )}

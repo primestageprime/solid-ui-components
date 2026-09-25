@@ -1017,7 +1017,7 @@
     "showcase": null,
     "since": "0.183.0",
     "file": "src/components/BuilderBoard/BuilderBoardBelowChart.tsx",
-    "line": 147
+    "line": 225
   },
   {
     "name": "BulkActionBar",
@@ -1203,7 +1203,8 @@
     "variantOf": null,
     "overrides": [
       "yFitTransition",
-      "expandTransition"
+      "expandTransition",
+      "chrome"
     ],
     "dataProps": "CashflowScrubChartDataProps",
     "summary": "Domain Composite (Depth 3).",
@@ -1593,7 +1594,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/variants.ts",
-    "line": 11
+    "line": 15
   },
   {
     "name": "ChartHeader",
@@ -2128,7 +2129,7 @@
     "family": "MutationSliders",
     "variantOf": {
       "factory": "createMutationSliders",
-      "overrides": "{\n    format: formatCompactCurrency,\n    readout: \"beside\",\n    snap: 1_000,\n    grouping: \"link\",\n    precision: -3,\n    itemFrame: ItemTintSurface,\n  }"
+      "overrides": "{\n    format: formatCompactCurrency,\n    readout: \"beside\",\n    snap: 1_000,\n    grouping: \"link\",\n    precision: -3,\n    itemFrame: ItemTintSurface,\n    labels: { remove: \"Delete\" },\n  }"
     },
     "overrides": [
       "format",
@@ -2143,11 +2144,11 @@
     "summary": null,
     "notToBeConfusedWith": null,
     "useFor": null,
-    "notes": "CompactCurrencyMutationSliders — a row of money in compact dollars (Peter's payroll board, 2026-09-24): `$125K` under the dial, the old amount beside the prior arrowhead, and the difference as `+$5K (4%)`. The amount is editable in place, rounded to the thousand (`precision: -3`), and an item's several dials sit on `ItemTintSurface`. Selected dials are LINKED — a hover link button toggles them, and they move as one level. Locked: `format` is `formatCompactCurrency` — the \"$\" is HARDCODED, Peter's call, i18n comes later — `readout` is `\"beside\"`, and `snap` is whole thousands, so a drag lands on an amount the compact figure can say exactly (Peter, 2026-09-16: \"have the amount snap to whole $k numbers\"). The labels stay neutral; a consumer with its own verbs curries its own row. @example <CompactCurrencyMutationSliders entities={rows()} onChange={setPay} selected={links()} onSelectionChange={setLinks} />",
+    "notes": "CompactCurrencyMutationSliders — a row of money in compact dollars (Peter's payroll board, 2026-09-24): `$125K` under the dial, the old amount beside the prior arrowhead, and the difference as `+$5K (4%)`. The amount is editable in place, rounded to the thousand (`precision: -3`), and an item's several dials sit on `ItemTintSurface`. Selected dials are LINKED — a hover link button toggles them, and they move as one level. Locked: `format` is `formatCompactCurrency` — the \"$\" is HARDCODED, Peter's call, i18n comes later — `readout` is `\"beside\"`, and `snap` is whole thousands, so a drag lands on an amount the compact figure can say exactly (Peter, 2026-09-16: \"have the amount snap to whole $k numbers\"). The footer verb is \"Delete\" (payroll board, 2026-09-24: a line removed from a scenario is deleted, not \"removed\"); the other labels stay neutral, and a consumer with its own verbs curries its own row. @example <CompactCurrencyMutationSliders entities={rows()} onChange={setPay} selected={links()} onSelectionChange={setLinks} />",
     "showcase": "#/mutation-sliders",
     "since": "0.185.0",
     "file": "src/components/MutationSliders/variants.ts",
-    "line": 68
+    "line": 70
   },
   {
     "name": "CompactDropdown",
@@ -2825,7 +2826,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/BuilderBoard/BuilderBoardBelowChart.tsx",
-    "line": 138
+    "line": 216
   },
   {
     "name": "createButton",
@@ -2876,7 +2877,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 983
+    "line": 984
   },
   {
     "name": "createCell",
@@ -2995,7 +2996,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 188
+    "line": 210
   },
   {
     "name": "createCheckbox",
@@ -3777,7 +3778,7 @@
     "showcase": "#/mutation-toolbar",
     "since": "0.174.0",
     "file": "src/components/MutationToolbar/MutationToolbar.tsx",
-    "line": 196
+    "line": 205
   },
   {
     "name": "createOverflowNav",
@@ -4049,7 +4050,7 @@
     "showcase": "#/scrub-chart",
     "since": "0.44.0",
     "file": "src/components/ScrubChart/ScrubChart.tsx",
-    "line": 1104
+    "line": 1112
   },
   {
     "name": "createSection",
@@ -4492,6 +4493,23 @@
     "since": null,
     "file": "src/components/ProgressCard/ProgressCard.tsx",
     "line": 196
+  },
+  {
+    "name": "createYAxisLockDialog",
+    "depth": null,
+    "kind": "factory",
+    "family": "ChartFrame",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/YAxisLockDialog.tsx",
+    "line": 135
   },
   {
     "name": "Crosshair",
@@ -6242,6 +6260,28 @@
     "line": 20
   },
   {
+    "name": "FillChartFrame",
+    "depth": 2,
+    "kind": "variant",
+    "family": "ChartFrame",
+    "variantOf": {
+      "factory": "createChartFrame",
+      "overrides": "{\n  height: \"fill\",\n}"
+    },
+    "overrides": [
+      "height"
+    ],
+    "dataProps": "ChartFrameDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The frame that takes its parent's height: for a chart in a panel of definite height (BuilderBoard's chart row), where a stated px would fight the panel.",
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/variants.ts",
+    "line": 24
+  },
+  {
     "name": "FillColumn",
     "depth": 0,
     "kind": "variant",
@@ -6710,6 +6750,30 @@
     "since": null,
     "file": "src/components/MathFormula/MathFormula.tsx",
     "line": 232
+  },
+  {
+    "name": "FramedCashflowScrubChart",
+    "depth": 3,
+    "kind": "variant",
+    "family": "CashflowScrubChart",
+    "variantOf": {
+      "factory": "createCashflowScrubChart",
+      "overrides": "{\n    chrome: \"frame\",\n    yFitTransition: false,\n    expandTransition: false,\n  }"
+    },
+    "overrides": [
+      "yFitTransition",
+      "expandTransition",
+      "chrome"
+    ],
+    "dataProps": "CashflowScrubChartDataProps",
+    "summary": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "FramedCashflowScrubChart — the chart inside a `ChartFrame` (Peter's chart visual language, 2026-09-24): `chrome: \"frame\"`, so it draws none of its own controls — no Auto | Fixed | Fit switch, no range editor, no expand chevron, no top action — and the frame's split button, driven by `createYAxisStrategy`, owns the y-axis. The chart takes what the strategy decides as controlled props: `yMin`/`yMax` (the domain, in cents), `yAxisMode` (still marks out-of-range values in `\"fixed\"`) and `expanded`. Still (`yFitTransition: false`, `expandTransition: false`), like `StillCashflowScrubChart`: the strategy's water marks already ease. */",
+    "showcase": "#/cashflow-scrub-chart",
+    "since": "Unreleased",
+    "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
+    "line": 1018
   },
   {
     "name": "FullscreenBox",
@@ -9114,7 +9178,7 @@
     "showcase": "#/mutation-toolbar",
     "since": "0.174.0",
     "file": "src/components/MutationToolbar/MutationToolbar.tsx",
-    "line": 109
+    "line": 117
   },
   {
     "name": "MutedBody",
@@ -11027,7 +11091,7 @@
     "notToBeConfusedWith": [
       "not `Button`: at rest it is the glyph on a plain SCRIM, with no border and no ring, and it strokes in `--sui-accent` — the same token the default series line takes, so the control names the line it rescales."
     ],
-    "useFor": "linked chart + axis pairings where the chart needs to show the big picture while the axis is the user's zoomed-in detail view.",
+    "useFor": "linked chart + axis pairings where the chart needs to show the big picture while the axis is the user's zoomed-in detail view. **`chrome?: \"own\" | \"frame\"`** (override, default `\"own\"` — today's rendering, unchanged): `\"frame\"` draws NONE of the chart's own controls — no y-axis-mode switch or y-fit button in the origin corner (and no corner footprint or column: the plot takes the room), no fixed-mode range editor, no expand chevron, no top action — because a `ChartFrame` above holds them; the chart still follows `yDomain` / `yFitDomain`, `yAxisMode` and `expanded` as controlled props. Curry it (`createScrubChart({ chrome: \"frame\" })`); the shipped curry is `FramedCashflowScrubChart`.",
     "notes": null,
     "showcase": "#/scrub-chart",
     "since": "0.44.0",
@@ -12342,7 +12406,8 @@
     },
     "overrides": [
       "yFitTransition",
-      "expandTransition"
+      "expandTransition",
+      "chrome"
     ],
     "dataProps": "CashflowScrubChartDataProps",
     "summary": null,
@@ -12352,7 +12417,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 1005
+    "line": 1006
   },
   {
     "name": "StretchRow",
@@ -14454,5 +14519,27 @@
     "since": "v0.16.0",
     "file": "src/components/Chart/Axes.tsx",
     "line": 164
+  },
+  {
+    "name": "YAxisLockDialog",
+    "depth": null,
+    "kind": "variant",
+    "family": "ChartFrame",
+    "variantOf": {
+      "factory": "createYAxisLockDialog",
+      "overrides": "{\n    labels: {\n      title: \"Lock the y-axis\",\n      description:\n        \"The axis stays at this range until you change it or pick another mode.\",\n      confirm: \"Lock\",\n      max: \"Y max\",\n      min: \"Y min\",\n      notANumber: \"Enter a number\",\n      notAboveMin: \"Max must be greater than min\",\n    },\n  }"
+    },
+    "overrides": [
+      "labels"
+    ],
+    "dataProps": "YAxisLockDialogDataProps",
+    "summary": "Composite (Depth 2), zero CSS.",
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The y-axis lock editor, in the chart language's own words. */",
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/variants.ts",
+    "line": 29
   }
 ]

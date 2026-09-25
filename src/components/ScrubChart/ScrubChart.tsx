@@ -144,6 +144,11 @@ export const ScrubChart = <C extends Cell>(
   // when the container owns the height.
   const expandable = () =>
     !filling() && props.chartHeightExpanded !== undefined;
+  // `chrome: "frame"` hands every control to the frame above: the chart
+  // still FOLLOWS `expanded`/`yAxisMode`/the domain, it just draws no
+  // control for them. `"own"` (the default) is unchanged.
+  const ownChrome = () => props.chrome !== "frame";
+  const expandControl = () => ownChrome() && expandable();
   const [ownedExpanded, setOwnedExpanded] = createSignal(false);
   // Controlled when the caller passes `expanded`; owned otherwise — the same
   // split `yScaleMode` takes.
@@ -175,6 +180,7 @@ export const ScrubChart = <C extends Cell>(
   // caller states an `onClick`, in which case the button is the caller's and
   // the chart never leaves the frame.
   const topAction = (): ScrubChartTopAction | null => {
+    if (!ownChrome()) return null;
     if (props.topAction === undefined || props.topAction === false) return null;
     return props.topAction === true ? {} : props.topAction;
   };
@@ -243,7 +249,7 @@ export const ScrubChart = <C extends Cell>(
   // for `Y_FIT_COLUMN` instead: the column carries a gutter that moves the y
   // labels right of the y-fit button, and the row needs no such gutter.
   const yFitFootprint = () =>
-    originCorner() || expandable() ? CORNER_FOOTPRINT : 0;
+    originCorner() || expandControl() ? CORNER_FOOTPRINT : 0;
 
   // ── The origin corner ────────────────────────────────────────────────
   // ONE control holds the corner where the axes meet. `yAxisMode` (the
@@ -251,10 +257,11 @@ export const ScrubChart = <C extends Cell>(
   // y-fit button. Either way the corner's guarantees — row footprint, column
   // width, label floor — follow `originCorner()`, so no caller can get a
   // control without the room it needs.
-  const axisModeOn = () => props.yAxisMode !== undefined;
-  const originCorner = () => axisModeOn() || props.yFitDomain != null;
+  const axisModeOn = () => ownChrome() && props.yAxisMode !== undefined;
+  const yFitControl = () => ownChrome() && props.yFitDomain != null;
+  const originCorner = () => axisModeOn() || yFitControl();
   const originColumn = () =>
-    axisModeOn() ? Y_AXIS_MODE_COLUMN : props.yFitDomain ? Y_FIT_COLUMN : 0;
+    axisModeOn() ? Y_AXIS_MODE_COLUMN : yFitControl() ? Y_FIT_COLUMN : 0;
 
   // Chart pixel width is measured via ResizeObserver on the frame.
   const [chartWidth, setChartWidth] = createSignal(DEFAULT_CHART_WIDTH);
@@ -628,6 +635,7 @@ export const ScrubChart = <C extends Cell>(
   // so it never covers the mode switch. The editor is seeded from the domain
   // on screen and closes on apply, cancel, or leaving fixed mode.
   const rangeEditable = () =>
+    ownChrome() &&
     props.yAxisMode === "fixed" &&
     props.onYRangeChange !== undefined &&
     yScale() != null;
@@ -1005,7 +1013,7 @@ export const ScrubChart = <C extends Cell>(
               />
             </div>
           </Show>
-          <Show when={!axisModeOn() && props.yFitDomain}>
+          <Show when={!axisModeOn() && yFitControl()}>
             <ScrubChartYFitControl
               mode={yScaleMode}
               onSelect={selectYScaleMode}
@@ -1016,7 +1024,7 @@ export const ScrubChart = <C extends Cell>(
             It mirrors the y-fit button across the frame: same size, same
             inset, same level on the x-axis row, pinned to the RIGHT edge, so
             a chart that shows both keeps the two apart. */}
-          <Show when={expandable()}>
+          <Show when={expandControl()}>
             <ScrubChartExpandControl
               expanded={expanded}
               onToggle={toggleExpanded}

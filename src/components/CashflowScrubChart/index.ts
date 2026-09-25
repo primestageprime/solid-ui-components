@@ -1,5 +1,6 @@
 export {
   CashflowScrubChart,
+  FramedCashflowScrubChart,
   StillCashflowScrubChart,
   createCashflowScrubChart,
 } from "./CashflowScrubChart";

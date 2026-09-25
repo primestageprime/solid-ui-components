@@ -7,6 +7,19 @@
 - **`DirtyComboBox` parity with thorcasting's scenario chip** (each opt-in; unconfigured, the control is unchanged): `onCreate` turns the reset into a split `[ ↺ │ + ]` shown only while dirty (it slides in with ✓) whose "+" creates, selects and opens the new item's name field; `onRename` makes the name click-to-rename (Enter or blur saves, Esc cancels) with the caret as the menu button; `labels.none` leads the menu with "None" (`DIRTY_COMBO_NONE_ID`); `DirtyComboItem` gains `color`/`shape` (a swatch on the row and the selected value) and `disabled`/`reason`. Model: `dirtyComboCreate`, `dirtyComboRename`, `dirtyComboUniqueLabel`; the view gains `canCreate`, `none` and `canRename`; `dirtyComboCreate` is refused while pristine. **`ScenarioComboBox` now names all three**, so its menu leads with "None".
 - **`EditableTitle`: `autoEdit`** — opens the editor at mount, focused with the text selected.
 - **`EditableTitle`: `fill`** — the click target spans the whole slot (blank space after the text included, text left-aligned) and the field fills the same width. `DirtyComboBox`'s rename uses it: everything from the name's left edge to the ▾ renames. **`ReservedWidth`**: the live wrapper now spans the reserved cell, so a filling child can use it (inline content still hugs the start).
+- **`ScrubChart`: `chrome?: "own" | "frame"`** (override, default `"own"`, unchanged) — `"frame"` draws none of the chart's own controls (corner y-mode switch / y-fit button, range editor, expand chevron, top action) so a `ChartFrame` + `createYAxisStrategy` drive it through its controlled `yDomain`, `yAxisMode` and `expanded`. Passed through `CashflowScrubChart`, whose factory now curries it.
+- **`FramedCashflowScrubChart`** — curried `chrome: "frame"` + still motion: the cashflow chart inside a `ChartFrame`.
+- **`FillChartFrame`** — curried `createChartFrame({ height: "fill" })`, the frame for a parent of definite height (a BuilderBoard chart panel).
+- **`ChartFrame`: `actions?: JSX.Element`** — the chart's own controls (a Cap field, a span picker) in the header before fullscreen and the y-axis split. Omitted, the header DOM is unchanged.
+- **`createYAxisStrategy`** (`src/hooks`) — ChartFrame's y-axis strategy (auto / autoscale / fixed) over `createAxisWaterMarks`, with its pure `stepYAxis`, `displayedDomain`, `checkLock`, and the headless `observeYAxis` / `formatYAxisRows` (`AXIS_WATER_MARK_HOLD`).
+- **`YAxisLockDialog`** (factory `createYAxisLockDialog({ labels })`) — the lock editor: `PrimaryConfirmationModal` + two `CurrencyInput`s, min < max with per-field errors, fields seeded from the lock at open.
+- **`calloutModeFor`** (+ types `RateGaugeBox`, `RateGaugeCalloutMode`) exported from the RateGauge barrel and the root — the leaders/corners breakpoint.
+- **`BuilderBoardBelowChart`: `panelD` may be `(box) => JSX`** — an accessor of D's measured content box (`BuilderBoardPanelBox`, pure `builderBoardPanelBoxOf`), so an app can pick its gauge with `calloutModeFor` inside a curried board. A plain element is unchanged.
+- **`MutationToolbarChange.removable?: boolean`** (default `true`) — `false` draws no × on that chip and ignores Delete.
+
+### Changed
+
+- **`CompactCurrencyMutationSliders`** says "Delete" (`labels.remove`) instead of "Remove".
 
 ## 0.185.0 — 2026-09-25
 

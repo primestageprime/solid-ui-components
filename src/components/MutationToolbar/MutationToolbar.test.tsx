@@ -161,6 +161,24 @@ describe("MutationToolbar", () => {
     expect(bare.container.querySelector(".sui-segmented__remove")).toBeNull();
   });
 
+  it("draws no × on a chip marked removable: false, and Delete on it does nothing", () => {
+    const onRemove = vi.fn();
+    const { container, getByRole } = render(() => (
+      <MutationToolbar
+        title="Changes"
+        changes={[...CHANGES, { id: "hire", label: "Hire · Oct 6", removable: false }]}
+        selected="june"
+        onSelect={() => {}}
+        emptyNote="none"
+        onRemove={onRemove}
+      />
+    ));
+    expect(container.querySelectorAll(".sui-segmented__remove").length).toBe(2);
+    const hire = getByRole("radio", { name: "Hire · Oct 6" });
+    fireEvent.keyDown(hire, { key: "Delete" });
+    expect(onRemove).not.toHaveBeenCalled();
+  });
+
   it("removing a chip does not also select it", () => {
     const onSelect = vi.fn();
     const { container } = render(() => (
