@@ -190,22 +190,30 @@ const edit = (store: DirtyComboStore<Cfg>, x: number): DirtyComboStore<Cfg> => (
 });
 
 describe("new / rename / none / disabled", () => {
-  it("[+] while pristine, then name it", () => {
-    const s0 = PARITY_STORE;
+  it("new is refused while pristine", () => {
+    expect(dirtyComboViewOf(PARITY_STORE).canCreate).toBe(false);
+    expect(
+      dirtyComboCreate(PARITY_STORE, { id: "n1", label: "New scenario" }),
+    ).toBe(PARITY_STORE);
+  });
+
+  it("new while dirty, then name it", () => {
+    const s0 = edit(PARITY_STORE, 9);
+    expect(dirtyComboViewOf(s0).canCreate).toBe(true);
     const s1 = dirtyComboCreate(s0, {
       id: "n1",
       label: dirtyComboUniqueLabel(s0.items, "New scenario"),
     });
     const s2 = dirtyComboRename(s1, "  Lean 2027  ");
     expect(printPath([
-      ["start", s0],
+      ["edit x=9", s0],
       ["+ (create)", s1],
       ["Enter 'Lean…'", s2],
     ])).toMatchInlineSnapshot(`
       "step              sel    label          draft  state  rename  items (label=saved)
-      start             a      Alpha          1      clean  yes     Alpha=1 Bravo=2 Charlie=3
-      + (create)        n1     New scenario   1      clean  yes     Alpha=1 Bravo=2 Charlie=3 New scenario=1
-      Enter 'Lean…'     n1     Lean 2027      1      clean  yes     Alpha=1 Bravo=2 Charlie=3 Lean 2027=1"
+      edit x=9          a      Alpha          9      dirty  yes     Alpha=1 Bravo=2 Charlie=3
+      + (create)        n1     New scenario   9      clean  yes     Alpha=1 Bravo=2 Charlie=3 New scenario=9
+      Enter 'Lean…'     n1     Lean 2027      9      clean  yes     Alpha=1 Bravo=2 Charlie=3 Lean 2027=9"
     `);
   });
 
@@ -233,9 +241,8 @@ describe("new / rename / none / disabled", () => {
   });
 
   it("refuses a duplicate id, an empty name, and a rename under None", () => {
-    expect(dirtyComboCreate(PARITY_STORE, { id: "b", label: "B2" })).toBe(
-      PARITY_STORE,
-    );
+    const dirty = edit(PARITY_STORE, 9);
+    expect(dirtyComboCreate(dirty, { id: "b", label: "B2" })).toBe(dirty);
     expect(dirtyComboRename(PARITY_STORE, "   ")).toBe(PARITY_STORE);
     const none = dirtyComboSelect(PARITY_STORE, DIRTY_COMBO_NONE_ID);
     expect(dirtyComboRename(none, "X")).toBe(none);

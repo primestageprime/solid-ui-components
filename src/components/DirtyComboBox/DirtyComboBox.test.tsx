@@ -193,24 +193,29 @@ function mountLive(initial: DirtyComboStore<PayrollConfig>) {
 }
 
 describe("DirtyComboBox parity (onCreate + onRename)", () => {
-  it("the split always stands; reset is disabled while pristine", () => {
+  it("pristine: the split is collapsed and inert — new is unreachable", () => {
     const { button } = mountLive(PAYROLL_STORE);
-    expect(button("New scenario")).toBeTruthy();
-    expect(button("Reset to saved").disabled).toBe(true);
+    const split = button("New scenario").closest(".sui-slide-reveal");
+    expect(isInert(split)).toBe(true);
+    expect(split?.classList.contains("sui-slide-reveal--open")).toBe(false);
+    expect(button("Reset to saved").closest(".sui-slide-reveal")).toBe(split);
   });
 
-  it("reset enables once dirty and resets", () => {
+  it("dirty: the split slides out; reset resets and hides it again", () => {
     const { button, store } = mountLive(dirtyStore);
-    expect(button("Reset to saved").disabled).toBe(false);
+    const split = () => button("New scenario").closest(".sui-slide-reveal");
+    expect(isInert(split())).toBe(false);
     button("Reset to saved").click();
     expect(dirtyComboViewOf(store()).dirty).toBe(false);
+    expect(isInert(split())).toBe(true);
   });
 
   it("new creates, selects, and opens the name field; Enter names it", async () => {
-    const { button, field, store } = mountLive(PAYROLL_STORE);
+    const { button, field, store } = mountLive(dirtyStore);
     button("New scenario").click();
     await tick();
     expect(store().selectedId).toBe("n1");
+    expect(store().draft.engineer).toBe(999); // it kept the edit
     const input = field()!;
     expect(input.value).toBe("New scenario");
     fireEvent.input(input, { target: { value: "Lean 2028" } });

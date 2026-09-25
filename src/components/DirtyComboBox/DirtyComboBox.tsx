@@ -28,9 +28,9 @@
 //     ellipsised), so the combo never jumps when the selection changes.
 //   • OPT-IN PARITY with thorcasting's scenario chip (Peter, 2026-09-24),
 //     each off unless configured, so the control above is the default:
-//       onCreate → the reset becomes a split [ ↺ | + ] that always stands
-//         (reset DISABLED while pristine, so "new" never slides under the
-//         pointer); "new" selects the created item and opens its name field.
+//       onCreate → the reset becomes a split [ ↺ | + ], shown only while
+//         dirty (it slides in with ✓); "new" selects the created item and
+//         opens its name field.
 //       onRename → the name is an EditableTitle (click: a text field; Enter or
 //         blur saves, Esc cancels) and the caret alone opens the menu.
 //       labels.none → a leading "None" row (DIRTY_COMBO_NONE_ID).
@@ -283,28 +283,29 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
           </SlideReveal>
         }
       >
-        {/* THE SPLIT [ ↺ reset | + new ] (Peter, 2026-09-24). It always
-            stands, so "new" is there while pristine; reset is DISABLED rather
-            than hidden when there is nothing to reset, so "new" never slides
-            under the pointer (the change sliders' Reset | Delete rule). */}
-        <TightClusterRow>
-          <IconOnlyButton
-            aria-label={props.labels.reset}
-            title={props.labels.reset}
-            disabled={!props.view.canReset}
-            onClick={props.onReset}
-          >
-            <Icon name="undo" size="sm" />
-          </IconOnlyButton>
-          <VerticalDivider />
-          <IconOnlyButton
-            aria-label={props.labels.create}
-            title={props.labels.create}
-            onClick={create}
-          >
-            <Icon name="plus" size="sm" />
-          </IconOnlyButton>
-        </TightClusterRow>
+        {/* THE SPLIT [ ↺ reset | + new ] (Peter, 2026-09-24). Shown ONLY
+            while dirty — a new item that differs from no existing one makes
+            no sense — so it slides in with the ✓ segment, inside the same
+            ReservedWidth, and nothing outside the control moves. */}
+        <SlideReveal when={props.view.canCreate}>
+          <TightClusterRow>
+            <IconOnlyButton
+              aria-label={props.labels.reset}
+              title={props.labels.reset}
+              onClick={props.onReset}
+            >
+              <Icon name="undo" size="sm" />
+            </IconOnlyButton>
+            <VerticalDivider />
+            <IconOnlyButton
+              aria-label={props.labels.create}
+              title={props.labels.create}
+              onClick={create}
+            >
+              <Icon name="plus" size="sm" />
+            </IconOnlyButton>
+          </TightClusterRow>
+        </SlideReveal>
       </Show>
     </LooseClusterRow>
   );
@@ -315,6 +316,7 @@ const widestView = (view: DirtyComboView): DirtyComboView => ({
   ...view,
   canSave: true,
   canReset: true,
+  canCreate: true,
 });
 
 const noop = () => {};

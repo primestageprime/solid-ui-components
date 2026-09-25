@@ -56,6 +56,9 @@ export interface DirtyComboView {
   canSave: boolean;
   /** Show the reset button. */
   canReset: boolean;
+  /** Offer "new" (the split's second half). Only while dirty: a new item
+   *  that differs from no existing one makes no sense (Peter, 2026-09-24). */
+  canCreate: boolean;
   /** Rows that carry a trash icon: every row except the selected one. */
   deletableIds: string[];
   /** The combo's name width in ch: the longest label, capped at 30. */
@@ -120,6 +123,7 @@ export function dirtyComboModel<C>(
     dirty,
     canSave: dirty,
     canReset: dirty,
+    canCreate: dirty,
     deletableIds: pipe(
       items,
       filter(notSelected),
@@ -205,11 +209,14 @@ export interface DirtyComboNewItem<C> {
 }
 
 /** Create an item, append it, and select it — pristine, since its saved
- *  config IS the draft. An id already in the list is refused as a no-op. */
+ *  config IS the draft. Refused as a no-op while PRISTINE (the view's
+ *  `canCreate`: a copy of an unedited item is no new item) and for an id
+ *  already in the list. */
 export const dirtyComboCreate = <C>(
   store: DirtyComboStore<C>,
   next: DirtyComboNewItem<C>,
 ): DirtyComboStore<C> => {
+  if (!dirtyComboViewOf(store).canCreate) return store;
   if (savedOf(store, next.id) !== undefined) return store;
   const saved = next.config === undefined ? store.draft : next.config;
   return {
