@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.186.0 — 2026-09-25
+
 ### Added
 
 - **`ScrubChart`: `chrome?: "own" | "frame"`** (override, default `"own"`, unchanged) — `"frame"` draws none of the chart's own controls (corner y-mode switch / y-fit button, range editor, expand chevron, top action) so a `ChartFrame` + `createYAxisStrategy` drive it through its controlled `yDomain`, `yAxisMode` and `expanded`. Passed through `CashflowScrubChart`, whose factory now curries it.
