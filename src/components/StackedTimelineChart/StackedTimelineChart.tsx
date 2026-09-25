@@ -2,7 +2,8 @@
 // their box, with a captioned horizontal rule, one numbered vertical rule per
 // event, a hover readout and a pick. Composes `Chart` + `Grid` + `XAxis` /
 // `YAxis` + `StackedAreaSeries` + `ReferenceLine` + `ChartTooltip` (all
-// Structural, Depth 1) inside a `GrowFillBox` (Layout, Depth 1). Owns no CSS.
+// Structural, Depth 1) inside a measured `createBox` host (Layout, Depth 1)
+// that is never sized by its content (see `MeasuredHost`). Owns no CSS.
 //
 // WHY IT EXISTS: `Chart` takes its width and height in PIXELS — it has no
 // "fill" and measures nothing — so every screen that wants a chart to take the
@@ -51,7 +52,7 @@ import {
 import { type Margin, useChart } from "../Chart/context";
 import { seriesPaint } from "../Chart/StackedAreaSeries";
 import { stackBuckets } from "../Chart/stackedArea";
-import { GrowFillBox } from "../Layout";
+import { createBox } from "../Layout";
 import { type TimeValue, timeOf } from "../LevelsTimeline/geometry";
 import { stackedTimelineLayout, thinTicks } from "./layout";
 
@@ -203,6 +204,33 @@ export interface StackedTimelineChartProps {
 	yTickFormat?: (value: number) => string;
 }
 
+/**
+ * The box the chart MEASURES. Its size must never depend on what is drawn in
+ * it, or measuring it is a feedback loop: the svg is sized from the box, the
+ * box grows to fit the svg (plus the inline-block baseline gap, ~3px), and the
+ * next measurement is taller — thorcasting's Work Mix grew ~180px/s inside a
+ * 186px FillChartFrame body (G20). It was a `GrowFillBox`, whose height came
+ * from its CONTENT whenever its parent was a plain block (FillChartFrame's
+ * children slot is one).
+ *
+ * LevelsTimeline's proven rule instead: `height: 100%` takes a parent of
+ * definite height (a stretched flex item, a sized box) regardless of content;
+ * where the height is indefinite, `aspect-ratio` supplies one from the WIDTH.
+ * Either way the content never sizes the box. `flex` still grows it inside a
+ * flex column, and `min-height: 0` lets it shrink.
+ */
+const MeasuredHost = createBox({
+	grow: true,
+	style: {
+		"flex-basis": "0%",
+		"min-height": "0",
+		"min-width": "0",
+		width: "100%",
+		height: "100%",
+		"aspect-ratio": "640 / 220",
+	},
+});
+
 /** What an unmeasured chart draws at: a plausible card, never zero. */
 export const STACKED_TIMELINE_FALLBACK_SIZE = {
 	width: 640,
@@ -276,7 +304,7 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 		bucket.to - bucket.from;
 
 	return (
-		<GrowFillBox ref={frame}>
+		<MeasuredHost ref={frame}>
 			<Chart
 				width={box().width}
 				height={box().height}
@@ -376,7 +404,7 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 					)}
 				</Show>
 			</Chart>
-		</GrowFillBox>
+		</MeasuredHost>
 	);
 };
 

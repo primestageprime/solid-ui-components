@@ -4152,7 +4152,7 @@
     "showcase": "#/stacked-timeline-chart",
     "since": "0.174.0",
     "file": "src/components/StackedTimelineChart/StackedTimelineChart.tsx",
-    "line": 408
+    "line": 436
   },
   {
     "name": "createStatusBadge",
@@ -12210,7 +12210,7 @@
     "showcase": "#/stacked-timeline-chart",
     "since": "0.174.0",
     "file": "src/components/StackedTimelineChart/StackedTimelineChart.tsx",
-    "line": 212
+    "line": 240
   },
   {
     "name": "StarToggle",
