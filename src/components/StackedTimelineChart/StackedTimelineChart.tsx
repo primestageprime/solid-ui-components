@@ -17,6 +17,11 @@
 // reading is never stored — jsdom and hidden tabs measure everything as zero —
 // so an unmeasured chart draws at `FALLBACK_SIZE` rather than blank.
 //
+// SIZE-RESPONSIVE CHROME (G17): the measured box also decides what the chart
+// can afford — 3 y ticks and a tighter inset under 200px tall, every other x
+// label under 400px wide. The rule is the pure `stackedTimelineLayout`
+// (./layout.ts); no prop turns it on.
+//
 // THE PICK IS NOT SNAPPED. The chart does not know whose calendar it is on, so
 // `onPick` reports the raw date and the caller snaps (to an ISO week, a month,
 // whatever its grid is) — the same contract `Chart.onPick` states.
@@ -48,6 +53,7 @@ import { seriesPaint } from "../Chart/StackedAreaSeries";
 import { stackBuckets } from "../Chart/stackedArea";
 import { GrowFillBox } from "../Layout";
 import { type TimeValue, timeOf } from "../LevelsTimeline/geometry";
+import { stackedTimelineLayout, thinTicks } from "./layout";
 
 /** One event on the timeline: a numbered vertical rule at `at`. */
 export interface StackedTimelineEvent {
@@ -225,6 +231,15 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 
 	const hover = createMemo(() => props.hoverLabel);
 
+	/* What this box can afford: tick counts, x-label thinning and the inset. */
+	const layout = createMemo(() => stackedTimelineLayout(box(), props.yDomain, props.margin));
+	const xTicks = createMemo(() => {
+		const values = props.xTickValues;
+		return values === undefined
+			? undefined
+			: thinTicks(values, layout().xLabelStep);
+	});
+
 	/* The bucketed stack, in DATA units. `stackBuckets` reads the same
 	   `valueAt` the band mark reads, so a column and a band can never disagree
 	   about what a series holds at a moment. */
@@ -267,12 +282,16 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 				height={box().height}
 				xDomain={props.xDomain}
 				yDomain={props.yDomain}
-				margin={props.margin}
+				margin={layout().margin}
 				onPick={(at) => props.onPick?.(at instanceof Date ? at : new Date(at))}
 			>
 				<Grid />
-				<YAxis tickFormat={props.yTickFormat} />
-				<XAxis tickValues={props.xTickValues} tickFormat={props.xTickFormat} />
+				<YAxis tickValues={layout().yTickValues} tickFormat={props.yTickFormat} />
+				<XAxis
+					tickCount={layout().xTickCount}
+					tickValues={xTicks()}
+					tickFormat={props.xTickFormat}
+				/>
 				{/* `columns` selects the mark. One prop, so a caller cannot ask for
 				    columns and leave the chart without a bucket grid to draw them on. */}
 				<Show
