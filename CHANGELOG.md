@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`FillChartFrame` drew its chart body 0px tall** (G12) at every width: its column is `height: 100%`, but the in-flow `FullscreenBox` around it sized to content (~26px), so the body row got 0px and the vertical y-title spilled into the heading. The box now fills too. **`FullscreenBox`: `fill`** (override, default off; curried **`FillFullscreenBox`**) makes the in-flow box fill a parent of definite height and hand it to its first child; a `ChartFrame` with `height: "fill"` uses it. Fixed-height frames and every other `FullscreenBox` are unchanged.
+- **`ChartFrame`: the vertical y-title overflowed up into the header when the body was short** (G13). Its rail now shrinks with the body row and clips (`min-height: 0; overflow: hidden`) instead of spilling.
+
 ## 0.187.0 — 2026-09-25
 
 ### Added

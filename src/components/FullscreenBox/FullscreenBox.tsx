@@ -79,6 +79,12 @@ export interface FullscreenBoxProps
   /** Whether Escape closes the box. Default `true`. A presentational
    *  override: lock it with `createFullscreenBox`. */
   escapeCloses?: boolean;
+  /** In flow, FILL a parent of definite height (and a flex column's free
+   *  space) instead of sizing to content, and hand that height to the first
+   *  child — the link a `height: 100%` child needs (FillChartFrame, G11: a
+   *  content-sized box resolved its 100% to ~30px and the chart body to 0).
+   *  Default false: unchanged. */
+  fill?: boolean;
 }
 
 const DefaultCorner = (ctx: FullscreenBoxCornerContext): JSX.Element => (
@@ -99,6 +105,7 @@ const FullscreenBoxBase: Component<FullscreenBoxProps> = (rawProps) => {
     "onFullscreenChange",
     "renderCorner",
     "escapeCloses",
+    "fill",
   ]);
   const [owned, setOwned] = createSignal(false);
   const on = () => local.fullscreen ?? owned();
@@ -124,9 +131,9 @@ const FullscreenBoxBase: Component<FullscreenBoxProps> = (rawProps) => {
 
   return (
     <div
-      class={`sui-fullscreen-box${on() ? " sui-fullscreen-box--on" : ""}${
-        local.class ? ` ${local.class}` : ""
-      }`}
+      class={`sui-fullscreen-box${local.fill ? " sui-fullscreen-box--fill" : ""}${
+        on() ? " sui-fullscreen-box--on" : ""
+      }${local.class ? ` ${local.class}` : ""}`}
       data-fullscreen={on() ? "true" : "false"}
       {...others}
     >
@@ -139,7 +146,10 @@ const FullscreenBoxBase: Component<FullscreenBoxProps> = (rawProps) => {
 };
 
 /** Props that are presentational overrides — locked at variant-definition time. */
-export type FullscreenBoxOverrides = Pick<FullscreenBoxProps, "escapeCloses">;
+export type FullscreenBoxOverrides = Pick<
+  FullscreenBoxProps,
+  "escapeCloses" | "fill"
+>;
 
 /** Props that remain available to consumers of a curried FullscreenBox variant. */
 export type FullscreenBoxDataProps = Omit<
@@ -156,3 +166,8 @@ export function createFullscreenBox(
 /** FullscreenBox — the default variant: Escape closes, default corner button. */
 export const FullscreenBox: Component<FullscreenBoxDataProps> =
   createFullscreenBox({});
+
+/** FillFullscreenBox — in flow, fills a parent of definite height and hands
+ *  it to its first child. FillChartFrame's box. */
+export const FillFullscreenBox: Component<FullscreenBoxDataProps> =
+  createFullscreenBox({ fill: true });
