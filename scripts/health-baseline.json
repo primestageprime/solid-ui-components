@@ -9,11 +9,11 @@
   "showcaseStyleRubricViolations": 0,
   "cssTypedProps": 10,
   "componentsNeverRendered": 17,
-  "undocumentedExports": 143,
+  "undocumentedExports": 113,
   "brokenDocImports": 0,
   "missingDepthHeaders": 0,
   "componentsWithoutShowcase": 0,
-  "catalogSummaryGaps": 62,
+  "catalogSummaryGaps": 45,
   "_raises": {
     "inlineStyleSrc": {
       "from": 66,
