@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.199.0 — 2026-09-27
+
 ### Fixed
 
 - **`ThemedNumberInput` (and `CurrencyInput`, which wraps it): focusing the field selects its whole text, so typing replaces it.** Before, clicking into a field showing "$0.00" and typing "550" produced "$0.00550", which rounds to one cent (thorcasting Import Coverage saved a check as -$0.01). The mouseup ending a click-to-focus is default-prevented once so the browser can't collapse the selection; later clicks place the caret as usual and a drag-select keeps its range. No API change.
