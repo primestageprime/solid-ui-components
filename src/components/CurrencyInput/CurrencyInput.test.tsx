@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { render } from "@solidjs/testing-library";
+import { fireEvent, render } from "@solidjs/testing-library";
+import { typeText } from "../../test-utils";
 import { createSignal } from "solid-js";
 import { CurrencyInput, currencyWidthRem } from "./CurrencyInput";
 // Import the stylesheet as raw text so we can assert the tabular-nums rule
@@ -104,5 +105,41 @@ describe("CurrencyInput", () => {
       container.querySelector(".sui-number-input__input") as HTMLInputElement
     ).value;
     expect(shown.startsWith("$")).toBe(true);
+  });
+});
+
+describe("CurrencyInput — first keystroke replaces the shown amount", () => {
+  // thorcasting Import Coverage: a new amount shows "$0.00"; the user clicked
+  // in, typed "550", and the field read "$0.00550", which rounded to 1 cent
+  // and saved -$0.01. Focus must select the whole masked text.
+  function inputOf(container: HTMLElement): HTMLInputElement {
+    return container.querySelector(".sui-number-input__input") as HTMLInputElement;
+  }
+
+  it("selects the whole masked text when focused", () => {
+    const [v, setV] = createSignal<number | undefined>(0);
+    const { container } = render(() => (
+      <CurrencyInput name="amount" value={v} onChange={setV} />
+    ));
+    const input = inputOf(container);
+    expect(input.value).toBe("$0.00");
+    input.focus();
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe("$0.00".length);
+  });
+
+  it('commits 550 when "550" is typed into a clicked "$0.00" field', () => {
+    const [v, setV] = createSignal<number | undefined>(0);
+    const { container } = render(() => (
+      <CurrencyInput name="amount" value={v} onChange={setV} />
+    ));
+    const input = inputOf(container);
+    fireEvent.mouseDown(input);
+    input.focus();
+    input.setSelectionRange(5, 5); // the browser's click caret, at the end
+    fireEvent.mouseUp(input);
+    typeText(input, "550");
+    fireEvent.blur(input);
+    expect(v()).toBe(550);
   });
 });

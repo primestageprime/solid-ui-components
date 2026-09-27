@@ -181,12 +181,47 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     if (isUnboundedCaretKey(event.key)) event.stopPropagation();
   };
 
-  /** Ref callback — attaches the caret guard for the life of the input. */
-  const guardCaretKeys = (input: HTMLInputElement): void => {
+  // Focus selects the whole text, so the first keystroke REPLACES the shown
+  // value. Left at the caret, typing "550" into a "$0.00" field produced
+  // "$0.00550", which rounds to one cent (thorcasting Import Coverage saved
+  // -$0.01). This is the default, not a prop: no caller wants to append to a
+  // formatted amount.
+  //
+  // A click needs one more step. The browser finishes a click-to-focus by
+  // collapsing the selection to the click point on MOUSEUP, after the focus
+  // handler already selected. So a mousedown on an unfocused input arms a
+  // one-shot: the mouseup that ends that click is default-prevented and
+  // re-selects if the selection was collapsed anyway. A drag-select keeps its
+  // own range, and every later click on the focused field places the caret
+  // as usual.
+  let clickFocusPending = false;
+  const armClickFocus = (event: MouseEvent): void => {
+    clickFocusPending = document.activeElement !== event.currentTarget;
+  };
+  const selectAllOnFocus = (event: FocusEvent): void => {
+    (event.currentTarget as HTMLInputElement).select();
+  };
+  const keepFocusSelection = (event: MouseEvent): void => {
+    if (!clickFocusPending) return;
+    clickFocusPending = false;
+    event.preventDefault();
+    const input = event.currentTarget as HTMLInputElement;
+    if (input.selectionStart === input.selectionEnd) input.select();
+  };
+
+  /** Ref callback — attaches the caret guard and select-on-focus for the
+   *  life of the input. */
+  const wireInput = (input: HTMLInputElement): void => {
     input.addEventListener("keydown", suppressUnboundedJump, true);
-    onCleanup(() =>
-      input.removeEventListener("keydown", suppressUnboundedJump, true),
-    );
+    input.addEventListener("mousedown", armClickFocus);
+    input.addEventListener("focus", selectAllOnFocus);
+    input.addEventListener("mouseup", keepFocusSelection);
+    onCleanup(() => {
+      input.removeEventListener("keydown", suppressUnboundedJump, true);
+      input.removeEventListener("mousedown", armClickFocus);
+      input.removeEventListener("focus", selectAllOnFocus);
+      input.removeEventListener("mouseup", keepFocusSelection);
+    });
   };
 
   const isInvalid = () => Boolean(local.errorMessage);
@@ -235,7 +270,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       <div class="sui-number-input__group">
         <KobalteNumberField.Input
           class="sui-number-input__input"
-          ref={guardCaretKeys}
+          ref={wireInput}
         />
         <div class="sui-number-input__triggers">
           <KobalteNumberField.IncrementTrigger
