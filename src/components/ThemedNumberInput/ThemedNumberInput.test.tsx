@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { ThemedNumberInput } from "./ThemedNumberInput";
-import { installFakeSizer, type FakeSizer } from "../../test-utils";
+import { installFakeSizer, typeText, type FakeSizer } from "../../test-utils";
 
 // Kobalte's NumberField touches ResizeObserver on some builds; jsdom lacks it.
 let sizer: FakeSizer;
@@ -211,5 +211,76 @@ describe("ThemedNumberInput — width cap (never stretches the screen)", () => {
       <ThemedNumberInput name="rpm" max={10_000} />
     ));
     expect(rootWidth(container)).toBe("7.72rem");
+  });
+});
+
+describe("ThemedNumberInput — selects its text on focus", () => {
+  // A field showing "12" that the user clicks into and types "550" must hold
+  // 550, not 12550. Selecting on focus makes the first keystroke replace the
+  // shown value (thorcasting Import Coverage saved -$0.01 from a "$0.00" field
+  // typed into as "$0.00550").
+  function inputOf(container: HTMLElement): HTMLInputElement {
+    return container.querySelector(".sui-number-input__input") as HTMLInputElement;
+  }
+
+  it("selects the whole text when focused", () => {
+    const [value, setValue] = createSignal<number | undefined>(1234);
+    const { container } = render(() => (
+      <ThemedNumberInput name="qty" value={value} onChange={setValue} />
+    ));
+    const input = inputOf(container);
+    input.focus();
+    expect(input.value.length).toBeGreaterThan(0);
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe(input.value.length);
+  });
+
+  it("keeps the selection through the mouseup that ends a click-to-focus", () => {
+    // Browsers collapse a focus-time selection to the click point on mouseup.
+    // The first mouseup after a pointer focus must not be allowed to.
+    const [value, setValue] = createSignal<number | undefined>(1234);
+    const { container } = render(() => (
+      <ThemedNumberInput name="qty" value={value} onChange={setValue} />
+    ));
+    const input = inputOf(container);
+    fireEvent.mouseDown(input);
+    input.focus();
+    input.setSelectionRange(2, 2); // what the browser does on the click
+    expect(fireEvent.mouseUp(input)).toBe(false); // default prevented
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe(input.value.length);
+  });
+
+  it("lets a later click place the caret once the field is focused", () => {
+    const [value, setValue] = createSignal<number | undefined>(1234);
+    const { container } = render(() => (
+      <ThemedNumberInput name="qty" value={value} onChange={setValue} />
+    ));
+    const input = inputOf(container);
+    fireEvent.mouseDown(input);
+    input.focus();
+    fireEvent.mouseUp(input);
+    // Second click, field already focused: the browser's caret placement wins.
+    fireEvent.mouseDown(input);
+    input.setSelectionRange(2, 2);
+    expect(fireEvent.mouseUp(input)).toBe(true);
+    expect(input.selectionStart).toBe(2);
+    expect(input.selectionEnd).toBe(2);
+  });
+
+  it("replaces the shown value with the typed value instead of appending", () => {
+    const [value, setValue] = createSignal<number | undefined>(12);
+    const { container } = render(() => (
+      <ThemedNumberInput name="qty" value={value} onChange={setValue} />
+    ));
+    const input = inputOf(container);
+    expect(input.value).toBe("12");
+    fireEvent.mouseDown(input);
+    input.focus();
+    input.setSelectionRange(2, 2); // the browser's click caret, at the end
+    fireEvent.mouseUp(input);
+    typeText(input, "550");
+    fireEvent.blur(input);
+    expect(value()).toBe(550);
   });
 });

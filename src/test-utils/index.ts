@@ -50,3 +50,4 @@ export {
   type PathPoint,
   type PathCommand,
 } from "./svgPath";
+export { typeText } from "./typing";
