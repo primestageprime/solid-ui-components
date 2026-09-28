@@ -6,7 +6,13 @@
 // StickyGroupHeader: a section divider that pins to the top of its scrolling
 // ancestor (e.g. a long sidebar list grouped by status). Use to keep the
 // group label visible as the user scrolls past its rows.
+// StickyGroupHeader is DEPRECATED (2026-09-28, phase 2 of add/deprecate/
+// delete) — no shipping consumer and no composite above it. Replacement:
+// `SectionLabel` (below) for plain section typography, or the AppShell
+// sidebar group treatment (see dev/showcases/app-shell.tsx) for the
+// sticky-on-scroll behavior specifically.
 // SectionLabel: an uppercased, dimmed label used as section-divider typography.
+// SectionLabel itself is NOT deprecated — only the sticky wrapper is.
 // ============================================
 import { type Component, type JSX, splitProps } from "solid-js";
 import "./StickyGroupHeader.css";
