@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.202.0 — 2026-09-28
+
 ### Fixed
 
 - **`GroupedBucketQueue`: a header or row's DOM node — and any focus on it — no longer gets destroyed by an UNRELATED change elsewhere in the tree.** `flattenGroupHeaders` returns fresh header objects on every call by design (pure, no memoization); iterating that array directly in `<For>` meant every count/collapse/item change looked like an entirely new set of rows, remounting the whole tree — collapsing a header via click/Enter unmounted the very button just pressed (dropping focus to `<body>`), and selecting a row rebuilt every other row's DOM too. Fixed by keying `<For>` on a second memo (`headerKeys`) with a custom `equals` that only fires when the SET or ORDER of keys actually changes; each node reads its current count/label/collapsed state through a reactive `headerByKey` lookup instead. Also: the component now actually fills its parent's height (`.grouped-bucket-queue` was missing `height: 100%` — the one rule `.bucket-queue` has that this component's own docs claimed but didn't implement), and the triage-advance effect now `untrack`s the controlled selection read exactly as `BucketQueue`'s does, instead of resubscribing to every selection change.
