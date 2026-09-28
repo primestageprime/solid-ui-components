@@ -1,4 +1,5 @@
-/* Date/time value renderers (Date, DateTime, MinuteDateTime) plus the shared
+/* Date cell renderers — Atomic (Depth 1).
+ * Date/time value renderers (Date, DateTime, MinuteDateTime) plus the shared
  * date-formatting helpers. Container-agnostic — render equally in a table cell,
  * a definition-list <dd>, or a card slot; each owns its styling via the
  * co-located CSS below. */

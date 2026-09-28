@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed
+
+- **`COMPONENTS.md`: documented the 45 components across Tables (cell renderers, `FieldTable`, `FilterableTable`, `TableQuickFilter`), App shell & stacking (`AppShell`, `AppMain`, `AppNavLink`, `Sidebar`, `SidebarPanel`, `AutoStackRow`/`Item`, `ProportionalStack`/`Item`), Scenario markers (`BaselineDot`, `ScenarioDot`, `ScenarioGlyph`, `CountChip`), Pivot grids (`PivotGrid`, `LinkPivotGrid`, `HeatPivotGrid`), and Singletons (`StatusCard`, `EllipsisText`, `DatePicker`, `GhostRow`, `HotkeyButton`, `NameInput`, `AsyncProgress`, `SectionLabel`, `StickyGroupHeader`, `EpisodeCard`, `EpisodeSelection`, `StaticSplitLayout`, `SwimlaneChartStatic`, `ToastList`, `ToastRegion`) that previously showed `catalogSummaryGaps: null`. Every bullet ends by naming the largest (highest-depth) existing component to reach for first, per Peter's 2026-09-27/28 ruling. `catalogSummaryGaps` 62 → 17, `undocumentedExports` 143 → 124 (baseline updated). Also fixed the strict `(Depth N)` header format on the Table cell-renderer modules and `FieldTable`/`FilterableTable`/`TableQuickFilter` so `npm run catalog` resolves their depth (previously loose-matched only, so `missingDepthHeaders` passed but the catalog read `depth: null`).
+- **`PivotGrid` family**: `HeatPivotGrid`/`LinkPivotGrid` consolidation into one factory with two curried variants is queued (Peter's ruling, 2026-09-27/28) — see `docs/adherence/pivot-grid-consolidation-2026-09-28.md`. No source change in this pass.
+- **`AppNavLink`**: documented the intended usage plus a per-repo consumer-bypass survey — see `docs/adherence/app-nav-link-bypass-2026-09-28.md`.
+
+### Deprecated
+
+- **`FilterableTable`** — replacement: `FieldTable` + `TableQuickFilter`, composed directly (ruled 2026-07-18). Still exported; not removed.
+- **`StickyGroupHeader`** — no shipping consumer, no composite above it. Replacement: `SectionLabel` for plain section typography, or the `AppShell` sidebar group treatment for sticky-on-scroll specifically. Still exported; not removed.
+
 ## 0.202.0 — 2026-09-28
 
 ### Fixed

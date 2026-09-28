@@ -1,5 +1,5 @@
 // ============================================
-// TableQuickFilter — Depth 2 (zero CSS: reuses .hud-table-quickfilter from Table.css)
+// TableQuickFilter — Composite (Depth 2). Zero CSS (reuses .hud-table-quickfilter from Table.css).
 // The client-side filter module, composable with ANY table (ruled 2026-07-18):
 // a fixed toolbar (filter input + shown-of-total count) over whatever the
 // children render from the filtered rows. FilterableTable is this composed

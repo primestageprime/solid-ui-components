@@ -1,5 +1,7 @@
 // ============================================
-// FilterableTable — Depth 2 (zero CSS)
+// FilterableTable — Composite (Depth 2). Zero CSS.
+// DEPRECATED (2026-09-28, phase 2 of add/deprecate/delete) — replacement is
+// `FieldTable` + `TableQuickFilter`, composed directly at the call site.
 // TableQuickFilter composed with BaseTable: the historical convenience wrapper.
 // The filter module itself lives in ./TableQuickFilter and composes with ANY
 // table (ruled 2026-07-18) — reach for it directly with FieldTable etc.

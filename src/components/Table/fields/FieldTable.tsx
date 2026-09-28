@@ -1,5 +1,5 @@
 // ============================================
-// Table fields — FieldTable (Depth 2: composes resolveFields + DataTable)
+// FieldTable — Composite (Depth 2). Composes resolveFields + DataTable.
 // The consumer surface of the fields-as-functions system: data + an ordered
 // fields gesture + a registry. Owns the sui-field-frame and its width-budget
 // vars internally, so a client renders a complete field table without ever
