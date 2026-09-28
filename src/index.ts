@@ -277,6 +277,7 @@ export * from "./components/CashflowScrubChart";
 export * from "./components/WorkProgressCard";
 export * from "./components/SplitQueueList";
 export * from "./components/BucketQueue";
+export * from "./components/GroupedBucketQueue";
 export * from "./components/SortableList";
 export * from "./components/ServiceHealthDot";
 export * from "./components/MutableList";
