@@ -23,6 +23,19 @@ or variant requires justification** that no existing component can do the job:
 agents must push back rather than silently add variants. Full rules:
 [BEST_PRACTICES §1](docs/BEST_PRACTICES.md#1-two-layers-primitives-and-composites) and [§4](docs/BEST_PRACTICES.md#4-minimal-variant-surface--expansion-is-gated), [STYLE_GUIDE › Depth Rules](STYLE_GUIDE.md#depth-rules).
 
+**Prefer the largest existing component that satisfies the use case.** Peter's
+ruling, 2026-09-27: *"Clients should use the largest (highest depth) component
+that satisfies their use case. So while you can always build something out of
+table parts, if a table exists that has all of the fields that you need, prefer
+using that table. While you could always compose a new card, see if the card
+already exists (or at least if there's a layout). The speed of SUI that drops
+hours to minutes is reducing the amount of code/testing by reusing something
+that already works."* `npm run find` (`scripts/catalog.mjs`) ranks search
+results depth-descending among comparable text matches for exactly this reason
+— a finished composite should surface above the parts it's built from. This is
+a search-ORDER rule, not a demotion: Depth-1 Primitives are still full public
+API, and a query that names a part specifically still finds it.
+
 ## Where each doc lives
 
 | Doc | What's in it | Read it when… |

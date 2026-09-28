@@ -5,6 +5,7 @@
 ### Changed
 
 - COMPONENTS.md: the 17 chart parts documented.
+- **`npm run find` now ranks depth-descending among comparably-relevant matches**, and `scripts/catalog.mjs`'s variant/factory summary synthesis now resolves an ambiguous same-named base bullet by FAMILY (the folder a factory lives in) before falling back to name, fixing a case where one family's bullet could leak into an unrelated same-named base's synthesized summary.
 
 ## 0.202.0 — 2026-09-28
 
