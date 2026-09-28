@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.200.0 — 2026-09-28
+
 ### Fixed
 
 - **`Combobox`: Enter picks the highlighted option; Create only via its own row** (thorcasting #111) — Enter used to call `onCreate` for any text that wasn't an EXACT option label, so typing "Roofing" with "Roofing Cash-in Test Group" already listed created a new group instead of picking it. The option list now carries an explicit `Create "<text>"` row (appended only when no option matches the text exactly), so Kobalte's own highlight/select machinery decides: Enter with nothing highlighted yet falls back to the first visible row (real option, if one filters in ahead of Create), an explicit arrow-to-Create-and-Enter always creates, and an exact label match never offers a Create row at all. Single and multi mode both covered; `onCreate` omitted → no Create row, unchanged behavior.
