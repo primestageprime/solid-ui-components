@@ -17,8 +17,12 @@ below verbatim above the task-specific instructions.
 
 **No component above Depth 1 contains anything but existing SUI
 components** — no raw HTML/SVG, no CSS file, no inline `style={}`, no
-third-party primitives outside a Primitive. Before creating any component,
-variant, or prop expansion:
+third-party primitives outside a Primitive. Use the LARGEST existing
+component that satisfies the use case — a table before table parts, a card
+before card parts (`npm run find` ranks depth-descending among comparable
+matches for exactly this); parts stay full public API for when composition
+genuinely needs them, this is a search-order preference, not a demotion.
+Before creating any component, variant, or prop expansion:
 
 1. Run `npm run find -- "<what it does>"` (SUI's component-lookup index —
    search by state model, not the name you imagined). Not in `package.json`

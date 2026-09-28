@@ -3755,7 +3755,7 @@
       "align"
     ],
     "dataProps": "GridDataProps",
-    "summary": "Factory behind `Grid`'s curried variants; bakes `columns`, `gap`, `align`.",
+    "summary": "Layout's bare CSS-grid container, a Layout Primitive (Depth 1) owning `Layout.css`: `columns` supplies `grid-template-columns` (any track list), `gap` (`xs`|`sm`|`md`, default `sm`) and `align` come from the scale. Factory behind `Grid`'s curried variants; bakes `columns`, `gap`, `align`.",
     "summarySource": "synthesized",
     "notToBeConfusedWith": null,
     "useFor": null,

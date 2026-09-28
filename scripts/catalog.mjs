@@ -161,6 +161,63 @@ export const componentsMdBulletFor = (doc, name) => {
   return m ? m[1] : null;
 };
 
+/** Every `## <Section>` heading a `- **name** — ...` bullet for `name` sits
+ *  under, as `{section, bullet}` per occurrence — the ambiguity-aware
+ *  sibling of `componentsMdBulletFor` (which returns only the FIRST match,
+ *  blind to which section it came from). Two entries mean the manifest
+ *  documents two UNRELATED components that happen to share a name under
+ *  different sections (Layout's `Grid` layout primitive vs. Chart's `Grid`
+ *  gridline mark) — exactly the shape `resolveBaseBullet` below needs to
+ *  tell apart. */
+export const componentsMdBulletsFor = (doc, name) => {
+  const re = new RegExp(`^\\s*- \\*\\*${escapeRegex(name)}\\*\\* — (.*)$`);
+  let section = null;
+  const out = [];
+  for (const line of doc.split("\n")) {
+    const h = /^## (.*)$/.exec(line);
+    if (h) {
+      section = h[1].trim();
+      continue;
+    }
+    const m = re.exec(line);
+    if (m) out.push({ section, bullet: m[1] });
+  }
+  return out;
+};
+
+/** Resolve a base component's COMPONENTS.md bullet for `baseFamily` (the
+ *  folder the factory/variant's base lives in, e.g. `Layout` for
+ *  `createGrid`) FIRST — the fix for the ambiguity bug the chart-parts agent
+ *  found: with a base name that has bullets in two unrelated sections
+ *  (Layout's `Grid` vs. Chart's `Grid`), the OLD rule counted bullets BY
+ *  NAME ONLY, so once either section got a `Grid` bullet the OTHER family's
+ *  factory inherited it regardless of which family it actually described —
+ *  Chart's `Grid` bullet leaking into Layout's `createGrid` summary. Only
+ *  when the family match is itself ambiguous (zero or more than one bullet
+ *  attributable to `baseFamily`) does this fall back to plain name lookup
+ *  (the pre-existing single-bullet-only behavior); if THAT is still
+ *  ambiguous (more than one bullet, none resolvable to the family), returns
+ *  `ambiguous: true` so the caller synthesizes from overrides alone and
+ *  marks the summary `(base ambiguous)` instead of guessing which one. */
+export const resolveBaseBullet = (doc, name, baseFamily) => {
+  const occurrences = componentsMdBulletsFor(doc, name);
+  if (length(occurrences) === 0) return { bullet: null, ambiguous: false };
+  if (length(occurrences) === 1) return { bullet: occurrences[0].bullet, ambiguous: false };
+
+  // A section heading occasionally carries a parenthetical qualifier
+  // (`AnimatedSwimlaneChart (public `SwimlaneChart`)`) — strip it before
+  // comparing so the family match isn't defeated by that suffix.
+  const sectionMatches = (section) =>
+    section != null &&
+    baseFamily != null &&
+    section.replace(/\s*\(.*\)\s*$/, "").trim().toLowerCase() === baseFamily.toLowerCase();
+
+  const familyHits = occurrences.filter((o) => sectionMatches(o.section));
+  if (length(familyHits) === 1) return { bullet: familyHits[0].bullet, ambiguous: false };
+
+  return { bullet: null, ambiguous: true };
+};
+
 /** First sentence of a bullet/note, for `summary`. Not a full sentence
  *  tokenizer — splits on the first ". " that isn't immediately inside a
  *  backtick-quoted code span, which is the one shape that recurs in this
@@ -450,18 +507,19 @@ export function buildCatalog({
 
     if (summary === null && (kind === "variant" || kind === "factory")) {
       const baseName = overridesBase;
-      const baseBulletCount = length(
-        [...componentsMd.matchAll(new RegExp(`^\\s*- \\*\\*${escapeRegex(baseName)}\\*\\* — `, "mg"))],
-      );
-      // A base name with more than one bullet (e.g. `Grid` — `Layout/Grid`
-      // vs. `Chart/Grid`) is ambiguous: inheriting either summary would
-      // misattribute it, so the synthesized clause stands alone.
-      const baseBullet = baseBulletCount === 1 ? componentsMdBulletFor(componentsMd, baseName) : null;
+      // Resolve the base's bullet by FAMILY (the folder this factory/variant
+      // lives in, `e.dir`) first, only falling back to a bare name lookup —
+      // and then to "(base ambiguous)" — when the family match is itself
+      // ambiguous. See `resolveBaseBullet` for why: a base name with bullets
+      // in two unrelated sections previously resolved by name alone, so the
+      // WRONG family's bullet could get inherited.
+      const { bullet: baseBullet, ambiguous } = resolveBaseBullet(componentsMd, baseName, e.dir);
       const parentSummary = baseBullet ? firstSentenceOf(baseBullet) : null;
       summary =
         kind === "variant"
           ? synthesizeVariantSummary(baseName, variant.argsText, parentSummary)
           : synthesizeFactorySummary(baseName, overrides, parentSummary);
+      if (ambiguous) summary = `${summary} (base ambiguous)`;
       summarySource = "synthesized";
     }
 
@@ -554,12 +612,33 @@ const textOf = (record, field) => {
   return Array.isArray(v) ? v.join(" ") : String(v);
 };
 
+// Peter's ruling, 2026-09-27: "Clients should use the largest (highest
+// depth) component that satisfies their use case." A finished component
+// (higher `depth`) should outrank its own PARTS when both match a query —
+// `FieldTable` over `FloatCell`/`TableQuickFilter`, `StackedTimelineChart`
+// over `AreaSeries`/`XAxis`. This is a search-order rule, not a demotion of
+// Depth-1 parts — they are still public API and still findable on their own
+// merits (`npm run find -- "float cell"` still finds `FloatCell`).
+//
+// The boost is deliberately SMALL and ONLY ever applied on top of a
+// non-zero text-relevance score — never as a standalone reason to surface a
+// record. A record with no text match scores 0 regardless of depth, so an
+// unrelated Depth-3 component never outranks an unrelated Depth-1 one, and
+// a weak, tangential match at high depth can't leapfrog a strong, on-topic
+// match at low depth (a `Depth-1` exact-name hit — `nameLower` bonus (6) +
+// `FIELD_WEIGHTS.name` (3) = 9 — clears any plausible depth boost on its
+// own). `DEPTH_BOOST` is additive per depth level (max observed depth in
+// this repo is 3), so the total boost tops out around +3 — comparable to a
+// single extra token match, not a field's worth.
+const DEPTH_BOOST = 1;
+
 /** Score one record against a lowercase, tokenised query: sum of (field
  *  weight × token hits in that field), plus a name-substring bonus so an
  *  exact/partial name match still surfaces even when the query is worded
  *  nothing like the prose (`npm run find -- "grid"` should still find
- *  `Grid`). Pure — no I/O — so it's the part pinned by
- *  `scripts/catalog.test.ts`'s two acceptance queries. */
+ *  `Grid`), plus a small depth boost (see `DEPTH_BOOST` above) applied only
+ *  when the record already has SOME text relevance. Pure — no I/O — so it's
+ *  the part pinned by `scripts/catalog.test.ts`'s acceptance queries. */
 export function scoreRecord(record, queryTokens) {
   if (length(queryTokens) === 0) return 0;
   let score = 0;
@@ -571,6 +650,7 @@ export function scoreRecord(record, queryTokens) {
   }
   const nameLower = record.name.toLowerCase();
   if (nameLower.includes(queryTokens.join(" "))) score += 6;
+  if (score > 0 && record.depth != null) score += record.depth * DEPTH_BOOST;
   return score;
 }
 
@@ -591,7 +671,12 @@ export function rankCatalog(records, query, topN = 10) {
   return records
     .map((r) => ({ record: r, score: scoreRecord(r, tokens) }))
     .filter((r) => r.score > 0)
-    .sort((a, b) => b.score - a.score || a.record.name.localeCompare(b.record.name))
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        (b.record.depth ?? -1) - (a.record.depth ?? -1) ||
+        a.record.name.localeCompare(b.record.name),
+    )
     .slice(0, topN);
 }
 
