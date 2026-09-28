@@ -12,6 +12,14 @@ const INITIAL_COUNTRIES: ComboboxOption[] = [
   { value: "br", label: "Brazil" },
 ];
 
+// A near-match: typing "Roofing" is a SUBSTRING of this label, but not an
+// exact match — the historical bug (thorcasting #111) created a duplicate
+// group here instead of picking it.
+const INITIAL_GROUPS: ComboboxOption[] = [
+  { value: "roofing-cashin", label: "Roofing Cash-in Test Group" },
+  { value: "payroll", label: "Payroll" },
+];
+
 const INITIAL_TAGS: ComboboxOption[] = [
   { value: "performance", label: "Performance" },
   { value: "reliability", label: "Reliability" },
@@ -73,6 +81,18 @@ export const ComboboxShowcase: Component = () => {
     setSelectedTags([...selectedTags(), created]);
   };
 
+  // Explicit "Create …" row demo (2026-09-28) — a near-match case.
+  const [groups, setGroups] = createSignal<ComboboxOption[]>(INITIAL_GROUPS);
+  const [group, setGroup] = createSignal<ComboboxOption | null>(null);
+  const addGroup = (label: string) => {
+    const created: ComboboxOption = {
+      value: label.toLowerCase().replace(/\s+/g, "-"),
+      label,
+    };
+    setGroups([...groups(), created]);
+    setGroup(created);
+  };
+
   // Disabled demo — a pre-selected, read-only combobox.
   const [lockedCountry] = createSignal<ComboboxOption | null>(
     INITIAL_COUNTRIES[0],
@@ -115,6 +135,30 @@ export const ComboboxShowcase: Component = () => {
           </div>
         </NarrowStack>
         <Text variant="sublabel">Selected: {country()?.label ?? "(none)"}</Text>
+      </div>
+
+      <div class="example-group">
+        <h3>Explicit "Create …" row (thorcasting #111, 2026-09-28)</h3>
+        <NarrowStack>
+          <div class="text-meta">
+            Type "Roofing" — it's a substring of "Roofing Cash-in Test Group"
+            but not an exact match. Before this fix, Enter always created a
+            new group here. Now the real option is highlighted and offered
+            ABOVE an explicit <code>Create "Roofing"</code> row: Enter picks
+            the option; arrow down to the Create row (or type something that
+            matches nothing) to actually create.
+          </div>
+          <div class="demo-maxw-320">
+            <Combobox
+              placeholder="Search or create group…"
+              options={groups}
+              value={group}
+              onChange={setGroup}
+              onCreate={addGroup}
+            />
+          </div>
+        </NarrowStack>
+        <Text variant="sublabel">Selected: {group()?.label ?? "(none)"}</Text>
       </div>
 
       <div class="example-group">

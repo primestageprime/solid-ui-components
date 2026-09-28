@@ -267,6 +267,14 @@
   cursor: not-allowed;
 }
 
+/* The explicit "Create …" row (comboboxCreateRow.ts) — set apart from real
+   options with a rule above it and an italic label, never both a check
+   indicator (it is never "selected") and this styling at once. */
+.sui-combobox__item--create {
+  font-style: italic;
+  border-top: 1px solid var(--sui-border, rgba(255, 255, 255, 0.12));
+}
+
 .sui-combobox__item-label {
   flex: 1;
   min-width: 0;

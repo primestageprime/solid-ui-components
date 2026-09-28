@@ -26,7 +26,14 @@
 // Combobox.tsx) covers all `sui-combobox__*` classes used here.
 // ============================================
 import { Combobox as KobalteCombobox } from "@kobalte/core/combobox";
-import { type Accessor, createEffect, createSignal, For, Show } from "solid-js";
+import {
+  type Accessor,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Show,
+} from "solid-js";
 import {
   NarrowStack,
   SpreadRow,
@@ -36,7 +43,13 @@ import {
 import { ICON_PATHS } from "../Icon/Icon";
 import { computeBackspaceAction } from "./backspace";
 import type { ComboboxOption, MultiComboboxProps } from "./Combobox";
-import { filter, some } from "../../fn";
+import {
+  comboboxCreateOption,
+  comboboxHasExactMatch,
+  comboboxVisibleRows,
+  isComboboxCreateOption,
+} from "./comboboxCreateRow";
+import { filter, find, some } from "../../fn";
 
 /** Narrowed local props for multi-mode rendering. */
 export type MultiLocal = Pick<
@@ -93,7 +106,30 @@ export const renderMulti = (
     local.onInputChange?.(text);
   };
 
+  // The explicit "Create …" row (comboboxCreateRow.ts): appended only when
+  // `onCreate` is given, the input is non-blank, and the text matches no
+  // option's label exactly — checked against `options` AND the current
+  // `value`, since a selected chip need not still be in `options`. Kobalte's
+  // own default filter and highlight then decide pick vs. create.
+  const optionsWithCreate = createMemo(() => {
+    if (!local.onCreate) return local.options();
+    const text = inputValue();
+    const trimmed = text.trim();
+    const known = [...local.options(), ...(local.value?.() ?? [])];
+    if (trimmed === "" || comboboxHasExactMatch(known, trimmed)) {
+      return local.options();
+    }
+    return [...local.options(), comboboxCreateOption(trimmed)];
+  });
+
   const handleChange = (next: ComboboxOption[]) => {
+    const created = find(isComboboxCreateOption, next);
+    if (created) {
+      const text = inputValue().trim();
+      if (text) local.onCreate?.(text);
+      setInputValue("");
+      return;
+    }
     const removed = filter(
       (prev) => !some((n) => n.value === prev.value, next),
       prevValue(),
@@ -153,21 +189,21 @@ export const renderMulti = (
       setHighlightedChipValue(null);
     }
 
+    // Kobalte highlights a row only once the user presses an arrow key (no
+    // auto-highlight on open or on typing); once highlighted, Kobalte's own
+    // Enter adds it to `value` and `handleChange` above already routes the
+    // synthetic Create row correctly. This only covers the gap: Enter with
+    // NOTHING highlighted yet falls back to adding the first VISIBLE row.
     if (e.key !== "Enter" || !local.onCreate) return;
-    const text = inputValue().trim();
-    if (!text) return;
-    const existsInOptions = some(
-      (opt) => opt.label.toLowerCase() === text.toLowerCase(),
-      local.options(),
-    );
-    const existsInValue = some(
-      (opt) => opt.label.toLowerCase() === text.toLowerCase(),
-      local.value?.() ?? [],
-    );
-    if (existsInOptions || existsInValue) return;
+    if (e.currentTarget.getAttribute("aria-activedescendant")) return;
+    const text = inputValue();
+    if (text.trim() === "") return;
+    const first = comboboxVisibleRows(optionsWithCreate(), text)[0];
+    if (!first) return;
+    const current = local.value?.() ?? [];
+    if (some((opt) => opt.value === first.value, current)) return;
     e.preventDefault();
-    local.onCreate(text);
-    setInputValue("");
+    handleChange([...current, first as ComboboxOption]);
   };
 
   const chipClass = (option: ComboboxOption): string =>
@@ -181,7 +217,7 @@ export const renderMulti = (
       multiple
       removeOnBackspace={false}
       class="sui-combobox sui-combobox--multi"
-      options={local.options()}
+      options={optionsWithCreate() as ComboboxOption[]}
       value={local.value?.() ?? []}
       onChange={handleChange}
       // On the ROOT, not the parts — see the note in ComboboxSingle.tsx.
@@ -192,21 +228,30 @@ export const renderMulti = (
       optionTextValue="label"
       optionLabel="label"
       itemComponent={(itemProps) => (
-        <KobalteCombobox.Item item={itemProps.item} class="sui-combobox__item">
+        <KobalteCombobox.Item
+          item={itemProps.item}
+          class={
+            isComboboxCreateOption(itemProps.item.rawValue)
+              ? "sui-combobox__item sui-combobox__item--create"
+              : "sui-combobox__item"
+          }
+        >
           <span class="sui-combobox__item-label">
             <KobalteCombobox.ItemLabel>
               {itemProps.item.rawValue.label}
             </KobalteCombobox.ItemLabel>
           </span>
-          <KobalteCombobox.ItemIndicator class="sui-combobox__item-indicator">
-            <svg
-              width={14}
-              height={14}
-              viewBox="0 0 16 16"
-              fill="none"
-              innerHTML={ICON_PATHS.check.outline}
-            />
-          </KobalteCombobox.ItemIndicator>
+          <Show when={!isComboboxCreateOption(itemProps.item.rawValue)}>
+            <KobalteCombobox.ItemIndicator class="sui-combobox__item-indicator">
+              <svg
+                width={14}
+                height={14}
+                viewBox="0 0 16 16"
+                fill="none"
+                innerHTML={ICON_PATHS.check.outline}
+              />
+            </KobalteCombobox.ItemIndicator>
+          </Show>
         </KobalteCombobox.Item>
       )}
     >

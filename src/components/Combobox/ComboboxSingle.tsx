@@ -21,10 +21,14 @@
 // Combobox.tsx) covers all `sui-combobox__*` classes used here.
 // ============================================
 import { Combobox as KobalteCombobox } from "@kobalte/core/combobox";
-import { type Accessor, createEffect, createSignal, Show } from "solid-js";
+import { type Accessor, createEffect, createMemo, createSignal, Show } from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
 import type { ComboboxOption, SingleComboboxProps } from "./Combobox";
-import { some } from "../../fn";
+import {
+  comboboxVisibleRows,
+  comboboxWithCreateRow,
+  isComboboxCreateOption,
+} from "./comboboxCreateRow";
 
 /** Narrowed local props for single-mode rendering. */
 export type SingleLocal = Pick<
@@ -58,26 +62,49 @@ export const renderSingle = (
     local.onInputChange?.(text);
   };
 
+  // The explicit "Create …" row (comboboxCreateRow.ts): appended only when
+  // `onCreate` is given, the input is non-blank, and no option's label
+  // matches it exactly. Kobalte's own default filter and highlight then
+  // decide pick vs. create — Enter always takes whatever it highlights.
+  const optionsWithCreate = createMemo(() =>
+    local.onCreate
+      ? comboboxWithCreateRow(local.options(), inputValue())
+      : local.options(),
+  );
+
   const handleChange = (option: ComboboxOption | null) => {
+    if (option && isComboboxCreateOption(option)) {
+      const text = inputValue().trim();
+      if (text) local.onCreate?.(text);
+      setInputValue("");
+      return;
+    }
     local.onChange?.(option);
     if (option) setInputValue(option.label);
     else setInputValue("");
   };
 
+  // Kobalte highlights a row only once the user presses an arrow key (no
+  // auto-highlight on open or on typing — confirmed empirically, not just
+  // assumed); once highlighted, Kobalte's own Enter picks it and
+  // `handleChange` above already routes the synthetic Create row correctly.
+  // This only covers the gap: Enter pressed with NOTHING highlighted yet
+  // (the common case — type, then Enter, no arrowing) falls back to the
+  // first VISIBLE row, i.e. "the highlighted option" the moment there's
+  // exactly one sane candidate. `aria-activedescendant` is the real DOM
+  // signal of whether Kobalte already has a highlight; once set, this gets
+  // entirely out of the way.
   const handleKeyDown = (
     e: KeyboardEvent & { currentTarget: HTMLInputElement },
   ) => {
     if (e.key !== "Enter" || !local.onCreate) return;
-    const text = inputValue().trim();
-    if (!text) return;
-    const exists = some(
-      (opt) => opt.label.toLowerCase() === text.toLowerCase(),
-      local.options(),
-    );
-    if (exists) return;
+    if (e.currentTarget.getAttribute("aria-activedescendant")) return;
+    const text = inputValue();
+    if (text.trim() === "") return;
+    const first = comboboxVisibleRows(optionsWithCreate(), text)[0];
+    if (!first) return;
     e.preventDefault();
-    local.onCreate(text);
-    setInputValue("");
+    handleChange(first as ComboboxOption);
   };
 
   const handleClear = () => {
@@ -89,7 +116,7 @@ export const renderSingle = (
     <KobalteCombobox<ComboboxOption>
       {...(rest as Record<string, unknown>)}
       class="sui-combobox"
-      options={local.options()}
+      options={optionsWithCreate() as ComboboxOption[]}
       value={local.value?.() ?? undefined}
       onChange={handleChange}
       // `disabled` belongs on the ROOT, not the parts. Kobalte splits it into
@@ -104,21 +131,30 @@ export const renderSingle = (
       optionTextValue="label"
       optionLabel="label"
       itemComponent={(itemProps) => (
-        <KobalteCombobox.Item item={itemProps.item} class="sui-combobox__item">
+        <KobalteCombobox.Item
+          item={itemProps.item}
+          class={
+            isComboboxCreateOption(itemProps.item.rawValue)
+              ? "sui-combobox__item sui-combobox__item--create"
+              : "sui-combobox__item"
+          }
+        >
           <span class="sui-combobox__item-label">
             <KobalteCombobox.ItemLabel>
               {itemProps.item.rawValue.label}
             </KobalteCombobox.ItemLabel>
           </span>
-          <KobalteCombobox.ItemIndicator class="sui-combobox__item-indicator">
-            <svg
-              width={14}
-              height={14}
-              viewBox="0 0 16 16"
-              fill="none"
-              innerHTML={ICON_PATHS.check.outline}
-            />
-          </KobalteCombobox.ItemIndicator>
+          <Show when={!isComboboxCreateOption(itemProps.item.rawValue)}>
+            <KobalteCombobox.ItemIndicator class="sui-combobox__item-indicator">
+              <svg
+                width={14}
+                height={14}
+                viewBox="0 0 16 16"
+                fill="none"
+                innerHTML={ICON_PATHS.check.outline}
+              />
+            </KobalteCombobox.ItemIndicator>
+          </Show>
         </KobalteCombobox.Item>
       )}
     >

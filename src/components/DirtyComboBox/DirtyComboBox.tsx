@@ -348,11 +348,15 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
         {/* THE SPLIT [ ↺ reset | + new ] (Peter, 2026-09-24). Shown ONLY
             while dirty — a new item that differs from no existing one makes
             no sense — so it slides in with the ✓ segment, inside the same
-            ReservedWidth, and nothing outside the control moves. */}
+            ReservedWidth, and nothing outside the control moves. ↺ and + are
+            gated INDEPENDENTLY on canReset/canCreate (2026-09-28): a caller
+            with nothing of its own to drop (canReset false) still gets +
+            alone — thorcasting's ScenarioChips no longer has to hide the
+            whole split to hide the reset half. */}
         {/* Hidden while a slow save shows its spinner (Peter, 2026-09-25):
             nothing to reset or fork mid-save. Back on reject. */}
-        <SlideReveal when={props.view.canCreate && saving() !== "spinning"}>
-          <TightClusterRow>
+        <TightClusterRow>
+          <SlideReveal when={props.view.canReset && saving() !== "spinning"}>
             <IconOnlyButton
               aria-label={props.labels.reset}
               title={props.labels.reset}
@@ -360,7 +364,11 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
             >
               <Icon name="undo" size="sm" />
             </IconOnlyButton>
+          </SlideReveal>
+          <Show when={props.view.canReset && props.view.canCreate && saving() !== "spinning"}>
             <VerticalDivider />
+          </Show>
+          <SlideReveal when={props.view.canCreate && saving() !== "spinning"}>
             <IconOnlyButton
               aria-label={props.labels.create}
               title={props.labels.create}
@@ -368,8 +376,8 @@ const DirtyComboBoxBody: Component<DirtyComboBoxProps> = (props) => {
             >
               <Icon name="plus" size="sm" />
             </IconOnlyButton>
-          </TightClusterRow>
-        </SlideReveal>
+          </SlideReveal>
+        </TightClusterRow>
       </Show>
     </LooseClusterRow>
   );
