@@ -12,6 +12,14 @@ subagent's prompt (SUI or a consumer repo) before the task-specific brief;
 covers the composition axiom, the push-back gate, the build loop, and the
 trap list.
 
+### Composing a prototype from a requirement
+
+`.claude/agents/sui-composer.md` — spawn this agent to turn a requirement (a
+sketch description, a screen brief, a user story) into a static prototype on
+a workshop bench, one region at a time, stopping for Peter's reaction after
+each. Never for promoting a settled bench (`/sui-build`, `/promote`) or for
+consumer-repo work.
+
 ### Issue tracker
 
 Tasks are tracked ad hoc in-session for now — there is no external tracker
