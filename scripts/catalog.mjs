@@ -234,6 +234,102 @@ export const useForOf = (bullet) => {
   return m ? m[1].trim() : null;
 };
 
+// ── the "reach for X first" pointer — parsed structurally, not scored ───────
+// Peter's 2026-09-27 ruling ("use the LARGEST component that satisfies the
+// use case") produced 62 new bullets, each a PART pointing UP at the
+// composite(s) that already draw its shape: "... — but reach for
+// `ChannelChart` (a running value inside a banded channel) or
+// `ThroughputChart` (a combo throughput chart) first". The defect PR #234
+// left honest: `npm run find`'s ranker scores plain keyword hits, so the
+// composite's own descriptive vocabulary sitting inside the PART's
+// parenthetical ("bucketed stacked columns with change events" — that's
+// StackedTimelineChart's shape, quoted inside BarSeries' bullet) makes the
+// PART outscore the very composite it's pointing at.
+//
+// The fix has two halves, both below: `parsePreferFirstOf` extracts the
+// pointer as DATA (a `preferFirst: string[]` field), and `stripPreferClauses`
+// removes the same clause from the text `scoreRecord` reads — so a part's
+// score no longer includes its composite's vocabulary, and `rankCatalog`
+// can use the parsed edge as an explicit "rank C above P" signal instead of
+// hoping raw relevance sorts it out.
+//
+// ── phrasings actually observed in COMPONENTS.md (grepped, not invented) ──
+// `reach for` appears 43 times; of those, only two closing words mark an
+// UNCONDITIONAL preference rather than a conditional aside or a reverse
+// (composite → smaller-part) pointer: "... first" (16 occurrences: "reach
+// for `ActionList` first", "reach for `BurndownChart`, `ThroughputChart`,
+// `ChannelChart` or `StackedTimelineChart` first, whichever...") and
+// "... instead" (2: "reach for `ThemedInput` instead", "reach for
+// `NestedList`/`NestedListItem` instead"). `prefer` (bare) never appears.
+// `use \`X\` first` never appears independent of `reach for`. `see \`X\`
+// instead` never appears — the file's few genuine "`X` instead" pointers are
+// all phrased as "reach for `X` instead", already covered above.
+//
+// Deliberately NOT parsed (real phrasings, wrong direction or too
+// conditional to read structurally without guessing intent):
+//   - "reach for `X` directly" — CountBadge/AutoStackRow recommend
+//     THEMSELVES ("reach for `CountBadge` directly only when building your
+//     own trigger"); a self-reference has nothing to rank above.
+//   - "reach for `X` when <condition>" / "only when <condition>" —
+//     DatePicker → `DateRangePicker`, Sidebar ↔ SidebarPanel, PivotGrid →
+//     `HeatPivotGrid`/`LinkPivotGrid`: these are conditional exceptions
+//     ("only when the width must NOT be user-resizable"), several of them
+//     pointing DOWN from a composite to a smaller sibling — the opposite of
+//     the "largest first" rule this parser exists to enforce. Reading past
+//     the condition would misrank an unrelated query.
+//   - "reach for `X` (via `y`) over `Z`" — TagCell's one `over` phrasing;
+//     not one of the four grepped patterns, so left unparsed rather than
+//     inventing a fifth.
+export const PREFER_CLAUSE_RE =
+  /(?:—\s*)?(?:but\s+)?reach for\s+((?:`[A-Za-z0-9]+`(?:\s*\([^)]*\))?(?:\s*,\s*(?:or\s+)?|\s+or\s+|\s*\/\s*)?)+)\s*(first|instead)\b([^.;]*)/gi;
+
+/** The `preferFirst` names a bullet points at via the two unconditional
+ *  phrasings above ("reach for `X` ... first" / "reach for `X` ... instead"),
+ *  excluding a self-reference (a bullet recommending its own name, e.g.
+ *  CountBadge's "reach for `CountBadge` directly" — not matched by
+ *  `PREFER_CLAUSE_RE` anyway since that's the `directly` closing word, kept
+ *  here as a second guard in case a future bullet phrases a self-pointer
+ *  with `first`/`instead`). Backticked names only — prose asides like "the
+ *  typed cell renderer" (EllipsisText) name nothing parseable and are
+ *  skipped, which is correct: there's no `preferFirst` edge to record. */
+export const parsePreferFirstOf = (bullet, ownName) => {
+  const out = [];
+  const seen = new Set();
+  for (const m of bullet.matchAll(PREFER_CLAUSE_RE)) {
+    // Walk the SAME name-then-optional-parenthetical shape the list-matching
+    // half of `PREFER_CLAUSE_RE` consumes, so a backtick-quoted PROP fragment
+    // inside the parenthetical aside (`` `FieldTable` (`fields.textCol`/
+    // `identityLink`) `` — `identityLink` is not a component) is skipped as
+    // part of that aside rather than picked up as a second pointer target. A
+    // naive "every backtick token in the list" scan previously read
+    // `identityLink` out of LongTextCell's aside as if it were a name.
+    for (const nameMatch of m[1].matchAll(
+      /`([A-Za-z0-9]+)`(?:\s*\([^)]*\))?/g,
+    )) {
+      const name = nameMatch[1];
+      if (name === ownName || seen.has(name)) continue;
+      seen.add(name);
+      out.push(name);
+    }
+  }
+  return out;
+};
+
+/** Remove every `PREFER_CLAUSE_RE` match from `text` — the composite's own
+ *  descriptive vocabulary (the parentheticals: "a combo throughput chart",
+ *  "bucketed stacked columns with change events") that otherwise leaks into
+ *  the PART's scored text and inflates its score on the COMPOSITE's own
+ *  query terms (the `BarSeries`/`StackedTimelineChart` defect this file's
+ *  header documents). Only affects what `scoreRecord` reads — `summary` and
+ *  `useFor` as STORED on the record (and therefore `npm run find`'s printed
+ *  line) keep the full sentence, so a reader still sees the pointer. */
+export const stripPreferClauses = (text) =>
+  text
+    .replace(PREFER_CLAUSE_RE, "")
+    .replace(/\s+([.;])/g, "$1") // dangling space before punctuation left by a removed clause
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
 /** Every "Not `X`, ..." / "not interchangeable with `X`" clause — the most
  *  valuable line in the manifest for disambiguating near-miss names. Captures
  *  the referenced name and the surrounding sentence fragment up to the next
@@ -490,6 +586,7 @@ export function buildCatalog({
 
     const bullet = componentsMdBulletFor(componentsMd, e.name);
     const notes = precedingCommentOf(fileSrc, e.name);
+    const preferFirstList = bullet ? parsePreferFirstOf(bullet, e.name) : [];
 
     // Summary priority: (1) the export's own COMPONENTS.md bullet, (2) the
     // export's own JSDoc, (3) — for a variant or factory only — a summary
@@ -533,6 +630,10 @@ export function buildCatalog({
       dataProps,
       summary,
       summarySource, // "components-md" | "jsdoc" | "synthesized" | "alias" | null
+      preferFirst: length(preferFirstList) > 0 ? preferFirstList : null, // names this
+        // record's own bullet points UP at via "reach for `X` ... first/instead"
+        // (see PREFER_CLAUSE_RE above) — used by rankCatalog to rank the
+        // pointed-to composite above this record when both match a query.
       notToBeConfusedWith: bullet ? notToBeConfusedWithOf(bullet) : null,
       useFor: bullet ? useForOf(bullet) : null,
       notes, // JSDoc immediately preceding the export — searched by `find`
@@ -606,10 +707,18 @@ const FIELD_WEIGHTS = {
   name: 3,
 };
 
+// `useFor`/`notes`/`summary` are read here with the "reach for `X` ...
+// first/instead" clause STRIPPED (see `stripPreferClauses` / `PREFER_CLAUSE_RE`
+// above) — a part's own bullet no longer earns score off the composite's
+// vocabulary quoted inside that clause. The record's STORED `useFor`/
+// `summary` (what `npm run find` prints and what `catalog.json` holds) keep
+// the full sentence; only the text this function hands to `scoreRecord` is
+// trimmed.
 const textOf = (record, field) => {
   const v = record[field];
   if (!v) return "";
-  return Array.isArray(v) ? v.join(" ") : String(v);
+  const raw = Array.isArray(v) ? v.join(" ") : String(v);
+  return stripPreferClauses(raw);
 };
 
 // Peter's ruling, 2026-09-27: "Clients should use the largest (highest
@@ -663,21 +772,43 @@ const STOPWORDS = new Set([
   "be", "and", "or", "its", "it", "that", "this", "as", "at", "by",
 ]);
 
+// A `preferFirst` edge is a STRONGER signal than the depth boost: when a
+// query matches both a part P and a composite C that P's own bullet names
+// via "reach for `C` ... first/instead", C ranks above P outright — the
+// pointer says "C already does this", which raw relevance/depth alone can't
+// express (BarSeries can out-SCORE StackedTimelineChart on "stacked bands
+// over time with events" even after `stripPreferClauses` — "stacked totals
+// over time" in BarSeries' own, un-stripped opening clause is legitimately
+// on-topic — so the edge is what actually guarantees the ordering, not the
+// stripping). The edge only fires when C ALSO matched the query (`matched`
+// below, built from every record scoring > 0 before this pass) — a P whose
+// pointed-to C is irrelevant to the query keeps its earned position.
+const applyPreferEdges = (scored) => {
+  const matched = new Set(scored.map((r) => r.record.name));
+  const prefersOver = (a, b) =>
+    Array.isArray(a.record.preferFirst) &&
+    a.record.preferFirst.includes(b.record.name) &&
+    matched.has(b.record.name);
+  return [...scored].sort((a, b) => {
+    if (prefersOver(a, b) && !prefersOver(b, a)) return 1; // a points at b -> b first
+    if (prefersOver(b, a) && !prefersOver(a, b)) return -1;
+    return (
+      b.score - a.score ||
+      (b.record.depth ?? -1) - (a.record.depth ?? -1) ||
+      a.record.name.localeCompare(b.record.name)
+    );
+  });
+};
+
 export function rankCatalog(records, query, topN = 10) {
   const tokens = query
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter((t) => t && !STOPWORDS.has(t));
-  return records
+  const scored = records
     .map((r) => ({ record: r, score: scoreRecord(r, tokens) }))
-    .filter((r) => r.score > 0)
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        (b.record.depth ?? -1) - (a.record.depth ?? -1) ||
-        a.record.name.localeCompare(b.record.name),
-    )
-    .slice(0, topN);
+    .filter((r) => r.score > 0);
+  return applyPreferEdges(scored).slice(0, topN);
 }
 
 // ── the edge: read the real tree ─────────────────────────────────────────────
@@ -723,6 +854,9 @@ if (isMain) {
             `${record.showcase ?? ""}`,
         );
         console.log(`       ${line}`);
+        if (record.preferFirst) {
+          console.log(`       → prefer ${record.preferFirst.join(", ")}`);
+        }
       }
     }
     process.exit(0);

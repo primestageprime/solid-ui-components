@@ -27,6 +27,7 @@ import {
   kebab,
   notToBeConfusedWithOf,
   overridesOf,
+  parsePreferFirstOf,
   parseTopLevelProps,
   precedingCommentOf,
   rankCatalog,
@@ -35,6 +36,7 @@ import {
   scoreRecord,
   sinceOf,
   changelogSectionsOf,
+  stripPreferClauses,
   synthesizeFactorySummary,
   synthesizeVariantSummary,
   useForOf,
@@ -106,6 +108,60 @@ describe("componentsMdBulletFor / firstSentenceOf / useForOf / notToBeConfusedWi
   it("notToBeConfusedWith captures the 'Not `X`' clause", () => {
     const bullet = componentsMdBulletFor(doc, "HalfFillColumn")!;
     expect(notToBeConfusedWithOf(bullet)?.[0]).toContain("ClipFillColumn");
+  });
+});
+
+// Three real COMPONENTS.md bullet fragments (copied verbatim, not
+// paraphrased) covering the shapes `parsePreferFirstOf`/`stripPreferClauses`
+// actually have to handle: a single-name "... first" pointer, a
+// multi-name/parenthetical-aside "... first" list, and the "directly"
+// closing word that must NOT be read as a pointer (self-reference).
+describe("parsePreferFirstOf / stripPreferClauses — real bullet fragments", () => {
+  it("HotkeyButton: a single-name 'reach for `X` first if ...' pointer", () => {
+    const bullet =
+      "Use for: the exact `[c]laim`-style affordance already reused by " +
+      "`ActionList`'s multi-select actions bar — reach for `ActionList` " +
+      "first if the surrounding list already exists; use `HotkeyButton` " +
+      "directly for a standalone keyboard-driven action.";
+    expect(parsePreferFirstOf(bullet, "HotkeyButton")).toEqual(["ActionList"]);
+    // `HotkeyButton` names itself with "directly", which isn't a
+    // `first`/`instead` pointer — the self-reference is excluded either way.
+    const stripped = stripPreferClauses(bullet);
+    expect(stripped).not.toContain("reach for");
+    expect(stripped).not.toContain("if the surrounding list already exists");
+    expect(stripped).toContain("use `HotkeyButton` directly");
+  });
+
+  it("BarSeries: a multi-name list with parenthetical asides, terminated by 'first'", () => {
+    const bullet =
+      "Use for: counts or stacked totals over time or category — but reach " +
+      "for `CompletionTimeline` (bucketed counts with a running total), " +
+      "`StackedTimelineChart` (bucketed stacked columns with change " +
+      "events), or `ChannelChart` (diverging bars under a channel) first.";
+    expect(parsePreferFirstOf(bullet, "BarSeries")).toEqual([
+      "CompletionTimeline",
+      "StackedTimelineChart",
+      "ChannelChart",
+    ]);
+    // The composite's own descriptive vocabulary ("stacked", "events") lived
+    // entirely inside the stripped clause's parentheticals — this is the
+    // exact leak `stripPreferClauses` exists to close.
+    const stripped = stripPreferClauses(bullet);
+    expect(stripped).not.toContain("StackedTimelineChart");
+    expect(stripped).not.toContain("change events");
+    expect(stripped).toContain("counts or stacked totals over time or category");
+  });
+
+  it("CountBadge: 'reach for `X` directly' is a self-reference, not a pointer", () => {
+    const bullet =
+      "Note: `NotificationCenter` already composes this — reach for " +
+      "`CountBadge` directly only when building your own trigger.";
+    expect(parsePreferFirstOf(bullet, "CountBadge")).toEqual([]);
+    // Neither "directly" nor "when" is a parsed terminator, so nothing is
+    // stripped — the sentence stays intact (self-referential text is not
+    // the leak this exists to fix; there's no OTHER component's vocabulary
+    // in it to leak).
+    expect(stripPreferClauses(bullet)).toBe(bullet);
   });
 });
 
@@ -306,84 +362,69 @@ describe("npm run find — acceptance queries", () => {
   });
 
   // Brief-mandated: "stacked bands over time with events" must put the
-  // finished chart (StackedTimelineChart, Depth 2) above its parts
-  // (AreaSeries, XAxis — Depth 1, composed BY it). It does, against those
-  // two — StackedTimelineChart outscores both comfortably (28 vs. 9/10; the
-  // 17 chart-parts COMPONENTS.md bullets that landed via origin/main mid-PR
-  // gave AreaSeries/XAxis real but modest text relevance, and neither
-  // approaches StackedTimelineChart's own long, on-topic bullet).
-  //
-  // It does NOT beat `BarSeries` specifically (36 vs. 28): BarSeries' new
-  // bullet is exceptionally dense in this query's vocabulary — it uses
-  // "stacked" repeatedly and literally recommends `StackedTimelineChart`
-  // ("reach for ... `StackedTimelineChart` ... first"), which the ranker
-  // can't read as a hint AWAY from itself, only as more keyword hits FOR
-  // itself. Closing a 9-point raw-relevance gap (34 vs. 26 pre-boost) with
-  // depth would mean letting a ~9-point boost outweigh real text relevance
-  // — exactly what the brief says not to do ("Do not let depth swamp
-  // relevance"). So this is left honest rather than forced; the intended
-  // RULE is pinned by the synthetic fixtures above, which don't depend on
-  // any particular bullet's prose density.
-  it('"stacked bands over time with events" puts StackedTimelineChart above the parts it composes (AreaSeries, XAxis) — but not above BarSeries, whose own new bullet outscores it on raw text relevance (see comment above; not a depth-rule regression)', () => {
-    const ranked = rankCatalog(records, "stacked bands over time with events", 10);
+  // finished chart (StackedTimelineChart, Depth 2) above the PARTS it
+  // composes — AreaSeries, XAxis, AND `BarSeries`, which PR #234 left as a
+  // documented honest failure (BarSeries' own new bullet, "... but reach for
+  // `CompletionTimeline` ... `StackedTimelineChart` (bucketed stacked
+  // columns with change events) ... first", quoted StackedTimelineChart's
+  // OWN descriptive vocabulary — "stacked", "events" — inside a
+  // parenthetical, so BarSeries out-scored the chart it was pointing away
+  // from). Two changes fix it together: `stripPreferClauses` removes that
+  // parenthetical from BarSeries' SCORED text (see `textOf` above), and the
+  // parsed `preferFirst` edge (`BarSeries.preferFirst` now includes
+  // `"StackedTimelineChart"`) makes `rankCatalog` rank the pointed-to
+  // composite above the part outright once both match — not a case-by-case
+  // score negotiation. StackedTimelineChart now ranks #1 for this query.
+  it('"stacked bands over time with events" puts StackedTimelineChart above every part it composes, including BarSeries (previously left as an honest failure — see PR #234)', () => {
+    const ranked = rankCatalog(records, "stacked bands over time with events", records.length);
     const names = ranked.map((r) => r.record.name);
     const stackedIdx = names.indexOf("StackedTimelineChart");
     expect(stackedIdx).toBeGreaterThanOrEqual(0);
-    const areaSeriesIdx = names.indexOf("AreaSeries");
-    const xAxisIdx = names.indexOf("XAxis");
-    if (areaSeriesIdx !== -1) expect(stackedIdx).toBeLessThan(areaSeriesIdx);
-    if (xAxisIdx !== -1) expect(stackedIdx).toBeLessThan(xAxisIdx);
+    for (const partName of ["AreaSeries", "XAxis", "BarSeries"]) {
+      const partIdx = names.indexOf(partName);
+      if (partIdx !== -1) expect(stackedIdx).toBeLessThan(partIdx);
+    }
   });
 
   // Brief-mandated: "table with typed cells and a quick filter" is meant to
-  // put FieldTable (Depth 2) above its parts FloatCell/TableQuickFilter
-  // (Depth 1). It does NOT, currently — and the depth rule above cannot fix
-  // it, honestly:
-  //   - FieldTable, FloatCell, and TableQuickFilter all have `depth: null`
-  //     (their header comments aren't in the canonical `— <Kind> (Depth N)`
-  //     form `parseDeclaredDepth` requires), so there is no depth signal for
-  //     the boost to apply to.
-  //   - None of the three has a COMPONENTS.md bullet under its OWN name
-  //     (FieldTable is described inside a bullet titled "Table fields
-  //     (fields-as-functions)"; FloatCell inside "Cell renderers";
-  //     TableQuickFilter has no bullet at all) and none has a JSDoc
-  //     immediately above its export — all three are in the 62-record
-  //     `catalogSummaryGaps` this file's header comment already tracks.
-  //   - `TableQuickFilter` outranks `FieldTable` on relevance alone (score 9
-  //     vs. 3 — "table", "quick", AND "filter" all hit TableQuickFilter's
-  //     bare NAME) — before depth is even considered. Making depth swamp
-  //     that gap is exactly the failure mode the brief says to avoid.
-  // Fixing this for real means writing COMPONENTS.md prose (out of scope —
-  // another agent owns that file this session) or adding JSDoc to the three
-  // files (out of scope for a ranking change; see catalog.test.ts's
-  // synthetic fixture above, "with EQUAL text relevance...", which pins the
-  // INTENDED behavior for the day docs land). Documented here instead of
-  // asserted dishonestly; see the PR description for the recommendation
-  // (the real "largest" answer for a table with a quick filter built in is
-  // `FilterableTable`, not `FieldTable` — `FieldTable` has no filter of its
-  // own, `TableQuickFilter` composes with it).
-  it('"table with typed cells and a quick filter" — FieldTable and TableQuickFilter are both findable by SCORE (name-substring hits); neither yet ranks in the top 10, because neither has a COMPONENTS.md bullet or JSDoc for the ranker to weigh — a doc gap, not a ranking bug', () => {
-    const tokens = "table with typed cells and a quick filter"
-      .toLowerCase()
-      .split(/[^a-z0-9]+/)
-      .filter((t) => t && !["a", "and", "with"].includes(t));
-    const fieldTableScore = scoreRecord(records.find((r) => r.name === "FieldTable")!, tokens);
-    const tableQuickFilterScore = scoreRecord(
-      records.find((r) => r.name === "TableQuickFilter")!,
-      tokens,
+  // put FieldTable above the table-cell PARTS it composes. PR #234 left this
+  // as an honest failure: `TableQuickFilter` out-scores `FieldTable` on bare
+  // name hits ("table"/"quick"/"filter" all hit its NAME), and neither
+  // FieldTable nor its cells had a depth signal for `DEPTH_BOOST` to act on
+  // at the time.
+  //
+  // What actually fixes the brief's example is not depth — it's the
+  // `preferFirst` edge: nine of the typed cell renderers' own bullets say
+  // "reach for `FieldTable` (`fields.xCol`) first" (read from COMPONENTS.md,
+  // not hand-picked — `records.filter(r => r.preferFirst?.includes
+  // ("FieldTable"))` below), and `rankCatalog` now ranks FieldTable above
+  // every one of them that matches this query. `TableQuickFilter` itself
+  // still out-scores FieldTable (its OWN bullet never says "reach for
+  // `FieldTable` ... first/instead" — see `PREFER_CLAUSE_RE`'s doc comment
+  // for why that phrasing, specifically, is deliberately left unparsed) —
+  // that's a separate, real gap this PR doesn't claim to close, so this test
+  // asserts only what the parsed edges actually establish: FieldTable above
+  // the cells that point at it.
+  it('"table with typed cells and a quick filter" ranks FieldTable above every table-cell renderer whose own bullet reaches for it first (previously left as an honest failure — see PR #234)', () => {
+    const cellsPointingAtFieldTable = records.filter(
+      (r) => Array.isArray(r.preferFirst) && r.preferFirst.includes("FieldTable"),
     );
-    expect(fieldTableScore).toBeGreaterThan(0);
-    expect(tableQuickFilterScore).toBeGreaterThan(0);
-    // Today TableQuickFilter (bare-name hits on "table", "quick", AND
-    // "filter") outscores FieldTable (bare-name hit on "table" only) — the
-    // brief's desired ordering (FieldTable, the finished component, above
-    // its part) is the opposite of what today's docs support. Depth can't
-    // fix this: both have `depth: null` (non-canonical header comments), so
-    // there is no signal for `DEPTH_BOOST` to act on. Once either gets a
-    // COMPONENTS.md bullet or JSDoc (tracked under `catalogSummaryGaps`),
-    // re-check this — the ranking RULE (see the synthetic fixtures above)
-    // already does the right thing once there's a depth to boost.
-    expect(tableQuickFilterScore).toBeGreaterThan(fieldTableScore);
+    // A regression here means COMPONENTS.md's cell bullets stopped saying
+    // "reach for `FieldTable` ... first" OR the parser stopped reading it —
+    // either way, worth knowing about explicitly rather than the test below
+    // silently vacuously passing on zero cells.
+    expect(cellsPointingAtFieldTable.length).toBeGreaterThan(0);
+
+    const ranked = rankCatalog(records, "table with typed cells and a quick filter", records.length);
+    const names = ranked.map((r) => r.record.name);
+    const fieldTableIdx = names.indexOf("FieldTable");
+    expect(fieldTableIdx).toBeGreaterThanOrEqual(0);
+
+    for (const cell of cellsPointingAtFieldTable) {
+      const cellIdx = names.indexOf(cell.name);
+      if (cellIdx === -1) continue; // this cell's own bullet didn't match the query at all
+      expect(fieldTableIdx).toBeLessThan(cellIdx);
+    }
   });
 
   // ChartCanvasLg previously had summary: null (no COMPONENTS.md bullet of
