@@ -23,9 +23,10 @@ import {
   createMemo,
   createSignal,
   createUniqueId,
+  untrack,
   type JSX,
 } from "solid-js";
-import { filter, find, flatMap, map, pipe } from "../../fn";
+import { every, filter, find, flatMap, map, pipe } from "../../fn";
 import { bucketItems } from "../BucketQueue/bucketing";
 import { createRowKeyboard } from "../BucketQueue/keyboard";
 import { advanceSelection } from "../BucketQueue/selection";
@@ -79,6 +80,29 @@ export function GroupedBucketQueue<T>(
     flattenGroupHeaders(props.groups, countFor, overrides()),
   );
 
+  // `flattenGroupHeaders` returns FRESH header objects on every call — a new
+  // object per node every time ANY count, collapse state, or item changes.
+  // `<For>` reconciles by reference, so iterating `flat()` directly would
+  // treat every one of those as a brand-new row and remount the WHOLE tree
+  // on every change: a collapsed header's own click handler unmounts the
+  // button mid-click (dropping focus to body), and selecting a row elsewhere
+  // rebuilds every other row's DOM node too. `headerKeys` is a second memo
+  // with a custom `equals` that only fires when the SET or ORDER of keys
+  // actually changes (a group added/removed, or the tree reshaped) — `<For>`
+  // iterates THIS, so a row/header's DOM node survives its own count or
+  // collapsed flag changing. `headerByKey` is the reactive lookup each node
+  // reads its current data through.
+  const headerKeys = createMemo(
+    () => map((h: FlatGroupHeader) => h.key, flat()),
+    [],
+    {
+      equals: (a, b) => a.length === b.length && every((k, i) => k === b[i], a),
+    },
+  );
+  const headerByKey = createMemo(
+    () => new Map(map((h: FlatGroupHeader) => [h.key, h] as const, flat())),
+  );
+
   // Select mode / per-row activation — identical branch structure to
   // BucketQueue's, just keyed off a GroupNode leaf instead of a Bucket.
   const selectModeOn = () => props.checkedKeys != null;
@@ -120,7 +144,9 @@ export function GroupedBucketQueue<T>(
     allKeys: () =>
       pipe(
         flat(),
-        filter((h: FlatGroupHeader) => h.isLeaf && !h.collapsed && interactiveIn(h)),
+        filter(
+          (h: FlatGroupHeader) => h.isLeaf && !h.collapsed && interactiveIn(h),
+        ),
         flatMap((h) => itemsIn(h.bucketKey as string)),
         map((it) => props.keyOf(it)),
       ),
@@ -152,9 +178,10 @@ export function GroupedBucketQueue<T>(
   // Triage advance (no motion/animation — this is a plain list, not a water-
   // filled bar): when an item's LEAF bucket changes, and that item was the
   // selection, advance it within its former leaf's ordering exactly as
-  // BucketQueue does. `untrack`-free here because this effect only reacts to
-  // `buckets()`/`flat()`, and reads the controlled selection through the
-  // props object directly rather than a tracked signal read.
+  // BucketQueue does. `untrack` keeps this effect subscribed to `buckets()`
+  // alone (mirrors BucketQueue.tsx): reading the controlled selection
+  // reactively would re-run this on every selection change too, including
+  // the one `onSelect` below emits right here.
   let prevBucketByKey: ReadonlyMap<string, string> = new Map();
   let prevItemKeysByBucket: ReadonlyMap<string, readonly string[]> = new Map();
   createEffect(() => {
@@ -166,24 +193,26 @@ export function GroupedBucketQueue<T>(
         leafBucketKeys(),
       ),
     );
-    const selectedKey = props.selectedKey;
-    const onSelect = props.onSelect;
-    if (selectedKey != null && onSelect != null) {
-      const prevBucket = prevBucketByKey.get(selectedKey);
-      const nextBucket = nextBucketByKey.get(selectedKey);
-      if (prevBucket != null && prevBucket !== nextBucket) {
-        const advance = advanceSelection({
-          selectedKey,
-          before: prevItemKeysByBucket.get(prevBucket) ?? [],
-          after: new Set(nextItemKeysByBucket.get(prevBucket) ?? []),
-        });
-        if (advance.kind !== "keep") {
-          const next = advance.kind === "select" ? advance.key : null;
-          onSelect(next);
-          keyboard.setActiveKey(next);
+    untrack(() => {
+      const selectedKey = props.selectedKey;
+      const onSelect = props.onSelect;
+      if (selectedKey != null && onSelect != null) {
+        const prevBucket = prevBucketByKey.get(selectedKey);
+        const nextBucket = nextBucketByKey.get(selectedKey);
+        if (prevBucket != null && prevBucket !== nextBucket) {
+          const advance = advanceSelection({
+            selectedKey,
+            before: prevItemKeysByBucket.get(prevBucket) ?? [],
+            after: new Set(nextItemKeysByBucket.get(prevBucket) ?? []),
+          });
+          if (advance.kind !== "keep") {
+            const next = advance.kind === "select" ? advance.key : null;
+            onSelect(next);
+            keyboard.setActiveKey(next);
+          }
         }
       }
-    }
+    });
     prevBucketByKey = nextBucketByKey;
     prevItemKeysByBucket = nextItemKeysByBucket;
   });
@@ -195,60 +224,64 @@ export function GroupedBucketQueue<T>(
         rootRef = el;
       }}
     >
-      <For each={flat()}>
-        {(h) => {
+      <For each={headerKeys()}>
+        {(key) => {
+          // The reactive lookup every binding below reads through — this is
+          // what lets the row/header DOM node survive its own count/collapsed
+          // value changing instead of remounting (see `headerByKey` above).
+          const h = () => headerByKey().get(key) as FlatGroupHeader;
           const bodyId = createUniqueId();
           const leafNode = () =>
-            h.isLeaf ? leafByKey().get(h.key) : undefined;
+            h().isLeaf ? leafByKey().get(key) : undefined;
           return (
             <div
-              class={`grouped-bucket-queue__node${h.isLeaf ? " grouped-bucket-queue__node--leaf" : ""}`}
-              data-gbq-node={h.key}
-              style={{ "--gbq-depth": h.depth }}
+              class={`grouped-bucket-queue__node${h().isLeaf ? " grouped-bucket-queue__node--leaf" : ""}`}
+              data-gbq-node={key}
+              style={{ "--gbq-depth": h().depth }}
             >
               <Show
-                when={h.toggleable}
+                when={h().toggleable}
                 fallback={
                   <div class="bucket-queue__header grouped-bucket-queue__header">
                     <span class="bucket-queue__title">
                       <span
-                        class={`bucket-queue__dot bucket-queue__dot--${h.tone ?? "muted"}`}
+                        class={`bucket-queue__dot bucket-queue__dot--${h().tone ?? "muted"}`}
                       />
-                      {h.label}
+                      {h().label}
                     </span>
-                    <span class="bucket-queue__count">{h.count}</span>
+                    <span class="bucket-queue__count">{h().count}</span>
                   </div>
                 }
               >
                 <button
                   type="button"
                   class="bucket-queue__header bucket-queue__header--toggle grouped-bucket-queue__header"
-                  aria-expanded={!h.collapsed}
+                  aria-expanded={!h().collapsed}
                   aria-controls={bodyId}
                   onClick={() =>
                     setOverrides((prev) =>
-                      toggleGroupCollapse(prev, h.key, h.collapsed),
+                      toggleGroupCollapse(prev, key, h().collapsed),
                     )
                   }
                 >
                   <span class="bucket-queue__title">
                     <span
-                      class={`bucket-queue__chevron bucket-queue__chevron--${h.tone ?? "muted"}`}
+                      class={`bucket-queue__chevron bucket-queue__chevron--${h().tone ?? "muted"}`}
                       classList={{
-                        "bucket-queue__chevron--expanded": !h.collapsed,
+                        "bucket-queue__chevron--expanded": !h().collapsed,
                       }}
                       aria-hidden="true"
                     >
                       <Chevron />
                     </span>
-                    {h.label}
+                    {h().label}
                   </span>
-                  <span class="bucket-queue__count">{h.count}</span>
+                  <span class="bucket-queue__count">{h().count}</span>
                 </button>
               </Show>
-              <Show when={h.isLeaf && !h.collapsed}>
+              <Show when={h().isLeaf && !h().collapsed}>
                 <Show
-                  when={h.count > 0}
+                  when={h().count > 0}
                   fallback={
                     <Show when={leafNode()?.emptyLabel != null}>
                       <div class="bucket-queue__empty grouped-bucket-queue__empty">
@@ -261,13 +294,13 @@ export function GroupedBucketQueue<T>(
                     class="bucket-queue__body grouped-bucket-queue__body"
                     id={bodyId}
                     role="listbox"
-                    aria-label={h.label}
+                    aria-label={h().label}
                   >
-                    <For each={itemsIn(h.bucketKey as string)}>
+                    <For each={itemsIn(h().bucketKey as string)}>
                       {(it) => {
                         const key = props.keyOf(it);
-                        const blocked = () => blockedIn(it, h);
-                        const focusable = () => interactiveIn(h);
+                        const blocked = () => blockedIn(it, h());
+                        const focusable = () => interactiveIn(h());
                         const activatable = () => focusable() && !blocked();
                         const selected = () =>
                           props.selectedKey != null &&
@@ -302,7 +335,7 @@ export function GroupedBucketQueue<T>(
                             }
                             classList={{
                               "bucket-queue__row--checked":
-                                checkableIn(h) && checked(),
+                                checkableIn(h()) && checked(),
                               "bucket-queue__row--focused":
                                 props.focusedKey === key,
                               "bucket-queue__row--uncheckable": blocked(),
@@ -310,7 +343,7 @@ export function GroupedBucketQueue<T>(
                             onClick={
                               activatable()
                                 ? (e: MouseEvent) =>
-                                    activate(key, it, h, {
+                                    activate(key, it, h(), {
                                       shift: e.shiftKey,
                                       meta: e.metaKey || e.ctrlKey,
                                     })
@@ -328,7 +361,7 @@ export function GroupedBucketQueue<T>(
                                 : undefined
                             }
                           >
-                            <Show when={checkableIn(h)}>
+                            <Show when={checkableIn(h())}>
                               <span
                                 class="bucket-queue__checkbox"
                                 classList={{

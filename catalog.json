@@ -7613,9 +7613,9 @@
     "useFor": "a filter/config sidebar grouped by more than one facet at once (Direction → Category → Type; region → team → owner) where `BucketQueue`'s one level of buckets isn't enough. Full usage guide: `src/components/GroupedBucketQueue/README.md`.",
     "notes": null,
     "showcase": "#/grouped-bucket-queue",
-    "since": "Unreleased",
+    "since": "0.201.0",
     "file": "src/components/GroupedBucketQueue/GroupedBucketQueue.tsx",
-    "line": 59
+    "line": 60
   },
   {
     "name": "GroupedMutationSliders",

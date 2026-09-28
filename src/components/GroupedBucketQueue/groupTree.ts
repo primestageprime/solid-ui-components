@@ -69,7 +69,9 @@ export function countOf(
   countForBucket: (bucketKey: string) => number,
 ): number {
   if (isLeaf(node)) return countForBucket(node.bucketKey as string);
-  return sum(map((c: GroupNode) => countOf(c, countForBucket), node.children ?? []));
+  return sum(
+    map((c: GroupNode) => countOf(c, countForBucket), node.children ?? []),
+  );
 }
 
 /** One rendered header line, flattened out of the tree in display order. */
