@@ -1620,6 +1620,37 @@ New fixed-width fields (fixed codes, capped numerics) should derive their cap fr
     />
     ```
 
+## GroupedBucketQueue
+- **GroupedBucketQueue** — Composite (Depth 2), composes `BucketQueue`'s row semantics. Where `BucketQueue` has one flat level of always-present buckets, `GroupedBucketQueue` nests a `groups: GroupNode[]` tree of **any depth** — Direction → Category → Type is the motivating shape, but nothing assumes exactly three levels. A `GroupNode` is either a **branch** (`children: GroupNode[]`, a pure header) or a **leaf** (`bucketKey: string`, where `items` land via `bucketOf`); every node shows a header with a **rolled-up count** (a branch's count is the sum of its descendants') and is **collapsible** by default (`collapsible: false` fixes it open; `collapsedByDefault: true` starts it collapsed, exactly like `BucketQueue`'s `Bucket.collapsedByDefault`, and only until the user first toggles it). Collapsing a branch prunes its descendants from the DOM entirely — same rule as a collapsed `BucketQueue` bucket unmounting its rows. Reuses `BucketQueue`'s row semantics **directly** (imports `../BucketQueue/keyboard` and `../BucketQueue/selection` by relative path — `BucketQueue`'s own public surface is untouched) rather than re-deriving them: **selection** (`selectedKey`/`onSelect`, controlled), **roving-tabindex keyboard nav** (`focusedKey`/`onFocusChange`; Up/Down/Home/End walk every visible interactive row depth-first across the whole tree, no wrap — a row hidden behind a collapsed ancestor or inside a collapsed leaf is excluded), and **triage-advance** (when the selected item's LEAF bucket changes — e.g. an external edit re-buckets it — the selection advances to the next survivor in the vacated leaf's prior ordering, and clears when that leaf empties; no transfer *animation*, since this is a plain scrollable list rather than `BucketQueue`'s water-filled bar). Select mode (`checkedKeys` present) and its per-row veto (`isCheckable`/`uncheckableReason`) apply only within a leaf whose `GroupNode.selectable` is true, mirroring `BucketQueue`'s per-bucket `selectable`. Key props: `groups: GroupNode[]`, `items: T[]`, `bucketOf: (item: T) => string` (a LEAF's `bucketKey`), `keyOf`, `renderItem`, `selectedKey?`, `onSelect?`, `focusedKey?`, `onFocusChange?`, `checkedKeys?`, `onToggleCheck?`, `isCheckable?`, `uncheckableReason?`, `scrollToKey?`, `class?`. The pure tree core — `flattenGroupHeaders`, `countOf`, `collectLeafBucketKeys`, `toggleGroupCollapse`, `leafNodesByKey` — is exported for callers that need the grouping/collapse logic outside the component. Use for: a filter/config sidebar grouped by more than one facet at once (Direction → Category → Type; region → team → owner) where `BucketQueue`'s one level of buckets isn't enough. Full usage guide: `src/components/GroupedBucketQueue/README.md`.
+  - Example:
+    ```tsx
+    import { GroupedBucketQueue, type GroupNode } from "solid-ui-components";
+
+    const GROUPS: GroupNode[] = [
+      {
+        key: "revenue", label: "Revenue",
+        children: [
+          {
+            key: "revenue:license", label: "License",
+            children: [
+              { key: "revenue:license:monthly", label: "Monthly fixed", bucketKey: "rev-lic-monthly" },
+            ],
+          },
+        ],
+      },
+    ];
+
+    <GroupedBucketQueue<ConfigRow>
+      groups={GROUPS}
+      items={rows()}
+      bucketOf={(r) => r.bucketKey}
+      keyOf={(r) => r.id}
+      renderItem={(r) => <span>{r.name}</span>}
+      selectedKey={selected()}
+      onSelect={setSelected}
+    />
+    ```
+
 ## MutableList
 - **MutableList** — Composite (Depth 3). Owns `MutableList.css`. A `SortableList` specialized into editable, deletable cards: it composes `<SortableList>` (inheriting the grip, placeholder gap, and live drag-reflow from the headless `createDnDReorder` hook) and supplies a `renderItem` card built from `ClusterRow`/`ContentStack`/`ActionSlot` Layout variants — an inline-editable name button on the left (click → bare `<input>`; Enter commits, Escape reverts, blur commits) and a hover-revealed `IconOnlyButton` × delete on the right. During editing it toggles the enclosing `.sui-sortable-list__row`'s native `draggable` off (interactive zones also carry `draggable={false}`) so the input keeps its caret/selection. Generic over `T`; all props are data/callbacks: `items: T[]` (controlled order), `getId: (item) => string`, `getName: (item) => string`, `onReorder: (orderedIds: string[]) => void`, `onRename: (id, name) => void` (fires only on a changed, non-empty commit — never on unchanged/cleared/Escape), `onDelete: (id) => void` (consumer owns confirmation), `label?`, `renderDetail?: (item) => JSX.Element` (secondary line below the name). NO curried variant by rule — data-only components are already zero-config at the call site. Use for: editable ordered card lists (rename + reorder + delete), e.g. category or line-item managers.
   - Example:

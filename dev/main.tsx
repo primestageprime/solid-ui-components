@@ -100,6 +100,7 @@ import { MultiSelectFilterShowcase } from "./showcases/multi-select-filter";
 import { PickersShowcase } from "./showcases/pickers";
 import { SplitQueueListShowcase } from "./showcases/split-queue-list";
 import { BucketQueueShowcase } from "./showcases/bucket-queue";
+import { GroupedBucketQueueShowcase } from "./showcases/grouped-bucket-queue";
 import { SortableListShowcase } from "./showcases/sortable-list";
 import { ActionListShowcase } from "./showcases/action-list";
 import { MutableListShowcase } from "./showcases/mutable-list";
@@ -821,6 +822,12 @@ const items: Item[] = [
     label: "BucketQueue",
     component: BucketQueueShowcase,
     tags: ["depth:1", "list", "navigation", "container"],
+  },
+  {
+    id: "grouped-bucket-queue",
+    label: "GroupedBucketQueue",
+    component: GroupedBucketQueueShowcase,
+    tags: ["depth:2", "list", "navigation", "container"],
   },
   {
     id: "sortable-list",
