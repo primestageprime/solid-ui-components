@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.201.0 — 2026-09-28
+
 ### Added
 
 - **`GroupedBucketQueue`** — a Composite (Depth 2) nested-header list over `BucketQueue`'s row model, for a sidebar that groups by more than one facet at once (Direction → Category → Type, region → team → owner) where `BucketQueue`'s one flat level of buckets isn't enough. A `groups: GroupNode[]` tree of any depth, each node collapsible with a rolled-up count; reuses `BucketQueue`'s selection, roving-tabindex keyboard navigation, and triage-advance directly (imports `../BucketQueue/keyboard` / `../BucketQueue/selection` by relative path — `BucketQueue`'s own public surface is untouched). See `src/components/GroupedBucketQueue/README.md`.
