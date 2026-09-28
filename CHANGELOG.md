@@ -6,6 +6,18 @@
 
 - COMPONENTS.md: the 17 chart parts documented.
 
+## 0.202.0 — 2026-09-28
+
+### Fixed
+
+- **`GroupedBucketQueue`: a header or row's DOM node — and any focus on it — no longer gets destroyed by an UNRELATED change elsewhere in the tree.** `flattenGroupHeaders` returns fresh header objects on every call by design (pure, no memoization); iterating that array directly in `<For>` meant every count/collapse/item change looked like an entirely new set of rows, remounting the whole tree — collapsing a header via click/Enter unmounted the very button just pressed (dropping focus to `<body>`), and selecting a row rebuilt every other row's DOM too. Fixed by keying `<For>` on a second memo (`headerKeys`) with a custom `equals` that only fires when the SET or ORDER of keys actually changes; each node reads its current count/label/collapsed state through a reactive `headerByKey` lookup instead. Also: the component now actually fills its parent's height (`.grouped-bucket-queue` was missing `height: 100%` — the one rule `.bucket-queue` has that this component's own docs claimed but didn't implement), and the triage-advance effect now `untrack`s the controlled selection read exactly as `BucketQueue`'s does, instead of resubscribing to every selection change.
+
+## 0.201.0 — 2026-09-28
+
+### Added
+
+- **`GroupedBucketQueue`** — a Composite (Depth 2) nested-header list over `BucketQueue`'s row model, for a sidebar that groups by more than one facet at once (Direction → Category → Type, region → team → owner) where `BucketQueue`'s one flat level of buckets isn't enough. A `groups: GroupNode[]` tree of any depth, each node collapsible with a rolled-up count; reuses `BucketQueue`'s selection, roving-tabindex keyboard navigation, and triage-advance directly (imports `../BucketQueue/keyboard` / `../BucketQueue/selection` by relative path — `BucketQueue`'s own public surface is untouched). See `src/components/GroupedBucketQueue/README.md`.
+
 ## 0.200.0 — 2026-09-28
 
 ### Fixed

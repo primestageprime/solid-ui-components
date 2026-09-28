@@ -1,7 +1,7 @@
 {
   "bareHexCss": 0,
   "bareHexTsx": 0,
-  "inlineStyleSrc": 67,
+  "inlineStyleSrc": 68,
   "inlineStyleShowcases": 20,
   "dotChains": 7,
   "collectionMethodCalls": 30,
@@ -16,9 +16,9 @@
   "catalogSummaryGaps": 45,
   "_raises": {
     "inlineStyleSrc": {
-      "from": 66,
-      "to": 67,
-      "reason": "ThemedNumberInput caps its own width to the fieldWidthForChars-derived max-width (Peter 2026-09-24: a number field never stretches the whole screen), same measured-category pattern as CurrencyInput/IntervalInput"
+      "from": 67,
+      "to": 68,
+      "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
     }
   }
 }

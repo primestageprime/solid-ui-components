@@ -1665,6 +1665,16 @@
 /* A FIXED column with a control pinned under the queue — the shape that makes
    an unallocated remainder visible as a band of dead space. The queue itself
    has no height prop here; it takes whatever the column leaves it. */
+/* GroupedBucketQueue has no `height` prop — it fills whatever definite-height
+   flex column its parent gives it, exactly like BucketQueue without one. */
+.grouped-bucket-queue-demo {
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  height: 420px;
+  border: 1px solid var(--sui-border);
+  border-radius: var(--sui-radius-md, 4px);
+}
 .bucket-queue-fill-demo {
   display: flex;
   flex-direction: column;

@@ -7611,6 +7611,24 @@
     "line": 67
   },
   {
+    "name": "GroupedBucketQueue",
+    "depth": 2,
+    "kind": "composite",
+    "family": "GroupedBucketQueue",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2), composes `BucketQueue`'s row semantics.",
+    "summarySource": "components-md",
+    "notToBeConfusedWith": null,
+    "useFor": "a filter/config sidebar grouped by more than one facet at once (Direction → Category → Type; region → team → owner) where `BucketQueue`'s one level of buckets isn't enough. Full usage guide: `src/components/GroupedBucketQueue/README.md`.",
+    "notes": null,
+    "showcase": "#/grouped-bucket-queue",
+    "since": "0.201.0",
+    "file": "src/components/GroupedBucketQueue/GroupedBucketQueue.tsx",
+    "line": 60
+  },
+  {
     "name": "GroupedMutationSliders",
     "depth": 3,
     "kind": "composite",
@@ -8254,7 +8272,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 306
+    "line": 307
   },
   {
     "name": "HUDTabs",

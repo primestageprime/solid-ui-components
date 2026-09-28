@@ -1,0 +1,36 @@
+/* GroupedBucketQueue — nested headers over BucketQueue's row classes (see the
+   import in GroupedBucketQueue.tsx: .bucket-queue__row, __header, __title,
+   __dot, __chevron*, __count, __checkbox*, __content, __body, __empty are all
+   reused as-is). This file owns only what BucketQueue.css has no rule for: a
+   plain vertical list (not a water-filled bar) and per-depth indent. */
+.grouped-bucket-queue {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+.grouped-bucket-queue__node {
+  display: flex;
+  flex-direction: column;
+}
+/* Indent scales with nesting depth — Direction (0) sits flush, Category (1)
+   and Type (2) step in by one unit each. A custom property (set inline per
+   node from `FlatGroupHeader.depth`) rather than N depth classes, since the
+   tree's depth is not fixed at 3. */
+.grouped-bucket-queue__header {
+  padding-left: calc(12px + var(--gbq-depth, 0) * 16px);
+}
+.grouped-bucket-queue__body {
+  padding-left: calc(var(--gbq-depth, 0) * 0px);
+}
+.grouped-bucket-queue__body .bucket-queue__row {
+  padding-left: calc(
+    var(--sui-space-3, 12px) +
+    (var(--gbq-depth, 0) + 1) *
+    16px
+  );
+}
+.grouped-bucket-queue__empty {
+  padding-left: calc(12px + var(--gbq-depth, 0) * 16px);
+}
