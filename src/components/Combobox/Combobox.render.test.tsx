@@ -4,6 +4,8 @@ import { render, cleanup, fireEvent } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { Combobox, type ComboboxOption } from "./Combobox";
 
+const tick = () => new Promise((r) => queueMicrotask(() => r(null)));
+
 afterEach(cleanup);
 
 // Render coverage for the Combobox component itself.
@@ -288,6 +290,162 @@ describe("Combobox — two-step backspace wiring", () => {
     fireEvent.keyDown(input(c), { key: "Escape" });
 
     expect(highlighted(c)).toBeNull();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+// ── Enter picks the highlighted row; create only via the explicit row
+// (thorcasting #111, Peter/Adlai 2026-09-28) ───────────────────────────────
+//
+// Before this fix, Enter called `onCreate` for ANY text that wasn't an EXACT
+// option label — so typing "Roofing" with "Roofing Cash-in Test Group" on
+// screen created a new group instead of picking it. The fix folds "Create …"
+// into the option list as one more row (comboboxCreateRow.ts) so Kobalte's
+// own highlight-and-select machinery decides, rather than a bespoke keydown
+// guard. These tests open the real popup and press real keys — not just the
+// pure-function suite in comboboxCreateRow.test.ts — because the risk here is
+// specifically in the WIRING (does Kobalte still highlight/select the way the
+// pure function assumes).
+describe("Combobox — Enter picks highlighted, creates only via the row", () => {
+  const GROUPS: ComboboxOption[] = [
+    { value: "g1", label: "Roofing Cash-in Test Group" },
+    { value: "g2", label: "Payroll" },
+  ];
+
+  const mountCreatable = () => {
+    const [options] = createSignal(GROUPS);
+    const [value, setValue] = createSignal<ComboboxOption | null>(null);
+    const onChange = vi.fn((v: ComboboxOption | null) => setValue(v));
+    const onCreate = vi.fn();
+    const { container } = render(() => (
+      <Combobox
+        options={options}
+        value={value}
+        onChange={onChange}
+        onCreate={onCreate}
+      />
+    ));
+    const type = async (text: string) => {
+      fireEvent.click(container.querySelector(".sui-combobox__trigger")!);
+      fireEvent.input(input(container), { target: { value: text } });
+      await tick();
+    };
+    // Kobalte portals the listbox to `document.body`, not `container`.
+    const items = () =>
+      [...document.body.querySelectorAll('[role="option"]')] as HTMLElement[];
+    const pressEnter = () =>
+      fireEvent.keyDown(input(container), { key: "Enter" });
+    return { container, onChange, onCreate, type, items, pressEnter };
+  };
+
+  it("offers a Create row alongside a substring match, real option first", async () => {
+    const { items, type } = mountCreatable();
+    await type("Roofing");
+    const labels = items().map((el) => el.textContent);
+    expect(labels[0]).toContain("Roofing Cash-in Test Group");
+    expect(labels.at(-1)).toContain('Create "Roofing"');
+  });
+
+  it("ArrowDown highlights the first visible row (Kobalte's own nav)", async () => {
+    const { container, items, type } = mountCreatable();
+    await type("Roofing");
+    expect(items()[0]?.getAttribute("data-highlighted")).toBeNull();
+    fireEvent.keyDown(input(container), { key: "ArrowDown" });
+    expect(items()[0]?.getAttribute("data-highlighted")).not.toBeNull();
+  });
+
+  it("Enter on a substring match PICKS the option, not create (the historical bug)", async () => {
+    const { onChange, onCreate, type, pressEnter } = mountCreatable();
+    await type("Roofing");
+    pressEnter();
+    expect(onChange).toHaveBeenCalledWith(GROUPS[0]);
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+
+  it("Enter on text matching nothing creates, via the row", async () => {
+    const { onChange, onCreate, type, items, pressEnter } = mountCreatable();
+    await type("Nothing Like It");
+    // The Create row is the only row, so Kobalte highlights it and Enter
+    // selects it — routed to onCreate, never onChange.
+    expect(items()).toHaveLength(1);
+    pressEnter();
+    expect(onCreate).toHaveBeenCalledWith("Nothing Like It");
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("no Create row on an exact label match", async () => {
+    const { items, type } = mountCreatable();
+    await type("Payroll");
+    expect(items()).toHaveLength(1);
+    expect(items()[0]?.textContent).toContain("Payroll");
+  });
+
+  it("arrowing down to the Create row and pressing Enter creates instead of picking", async () => {
+    const { onChange, onCreate, type, pressEnter, container } = mountCreatable();
+    await type("Roofing");
+    fireEvent.keyDown(input(container), { key: "ArrowDown" });
+    fireEvent.keyDown(input(container), { key: "ArrowDown" });
+    pressEnter();
+    expect(onCreate).toHaveBeenCalledWith("Roofing");
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("without onCreate, no Create row is ever offered", async () => {
+    const [options] = createSignal(GROUPS);
+    const [value] = createSignal<ComboboxOption | null>(null);
+    const { container } = render(() => (
+      <Combobox options={options} value={value} />
+    ));
+    fireEvent.click(container.querySelector(".sui-combobox__trigger")!);
+    fireEvent.input(input(container), { target: { value: "Nothing Like It" } });
+    await tick();
+    expect(document.body.querySelectorAll('[role="option"]')).toHaveLength(0);
+  });
+
+  // Multi mode carries the identical Enter/Create fix (ComboboxMulti.tsx).
+  it("multi mode: Enter with no highlight adds the first visible row as a chip", async () => {
+    const [options] = createSignal(GROUPS);
+    const [value, setValue] = createSignal<ComboboxOption[]>([]);
+    const onChange = vi.fn((next: ComboboxOption[]) => setValue(next));
+    const onCreate = vi.fn();
+    const { container } = render(() => (
+      <Combobox
+        multiple
+        options={options}
+        value={value}
+        onChange={onChange}
+        onCreate={onCreate}
+      />
+    ));
+    fireEvent.click(container.querySelector(".sui-combobox__trigger")!);
+    fireEvent.input(input(container), { target: { value: "Roofing" } });
+    await tick();
+    fireEvent.keyDown(input(container), { key: "Enter" });
+    expect(onChange).toHaveBeenCalledWith([GROUPS[0]]);
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+
+  it("multi mode: Enter matching nothing creates via the row", async () => {
+    const [options] = createSignal(GROUPS);
+    const [value] = createSignal<ComboboxOption[]>([]);
+    const onChange = vi.fn();
+    const onCreate = vi.fn();
+    const { container } = render(() => (
+      <Combobox
+        multiple
+        options={options}
+        value={value}
+        onChange={onChange}
+        onCreate={onCreate}
+      />
+    ));
+    fireEvent.click(container.querySelector(".sui-combobox__trigger")!);
+    fireEvent.input(input(container), {
+      target: { value: "Nothing Like It" },
+    });
+    await tick();
+    fireEvent.keyDown(input(container), { key: "Enter" });
+    expect(onCreate).toHaveBeenCalledWith("Nothing Like It");
     expect(onChange).not.toHaveBeenCalled();
   });
 });
