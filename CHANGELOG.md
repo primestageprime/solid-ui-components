@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.203.0 — 2026-09-28
+
 ### Changed
 
 - COMPONENTS.md: the 17 chart parts documented.
