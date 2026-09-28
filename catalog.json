@@ -628,7 +628,7 @@
     "useFor": "any async operation whose duration varies run-to-run but is stable enough historically to estimate — reach for a plain spinner/indeterminate state for a first-ever run with no history.",
     "notes": null,
     "showcase": "#/async-progress",
-    "since": "Unreleased",
+    "since": "0.203.0",
     "file": "src/components/Progress/AsyncProgress.tsx",
     "line": 55
   },
@@ -8405,7 +8405,7 @@
     "useFor": "magnitude-heat pivots (no current consumer — verify need before building against it, per the SUI-start-minimal rule).",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.203.0",
     "file": "src/components/PivotGrid/HeatPivotGrid.tsx",
     "line": 20
   },
@@ -9747,7 +9747,7 @@
     "useFor": "drilldown pivots where every cell always navigates (amygdala/jtf consumers).",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.203.0",
     "file": "src/components/PivotGrid/LinkPivotGrid.tsx",
     "line": 20
   },
@@ -14336,7 +14336,7 @@
     "useFor": "an internal/external caller that needs the static (non-animated) swimlane layout synchronously — reach for the animated `SwimlaneChart` (the public default) for the normal, ticking case.",
     "notes": null,
     "showcase": "#/swimlane-chart",
-    "since": "Unreleased",
+    "since": "0.203.0",
     "file": "src/components/SwimlaneChart/SwimlaneChart.tsx",
     "line": 67
   },
