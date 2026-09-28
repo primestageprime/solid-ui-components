@@ -3409,7 +3409,7 @@
     "showcase": "#/dirty-combo-box",
     "since": "0.185.0",
     "file": "src/components/DirtyComboBox/DirtyComboBox.tsx",
-    "line": 426
+    "line": 434
   },
   {
     "name": "createDistributionSparkline",

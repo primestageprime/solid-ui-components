@@ -194,11 +194,16 @@ function mountLive(initial: DirtyComboStore<PayrollConfig>) {
 
 describe("DirtyComboBox parity (onCreate + onRename)", () => {
   it("pristine: the split is collapsed and inert — new is unreachable", () => {
+    // ↺ and + are two independent SlideReveals (canReset/canCreate gate them
+    // separately — DirtyComboBox split: ↺ independent of + below), both
+    // pristine-collapsed here since the model gives PRISTINE neither flag.
     const { button } = mountLive(PAYROLL_STORE);
-    const split = button("New scenario").closest(".sui-slide-reveal");
-    expect(isInert(split)).toBe(true);
-    expect(split?.classList.contains("sui-slide-reveal--open")).toBe(false);
-    expect(button("Reset to saved").closest(".sui-slide-reveal")).toBe(split);
+    const createReveal = button("New scenario").closest(".sui-slide-reveal");
+    const resetReveal = button("Reset to saved").closest(".sui-slide-reveal");
+    expect(isInert(createReveal)).toBe(true);
+    expect(createReveal?.classList.contains("sui-slide-reveal--open")).toBe(false);
+    expect(isInert(resetReveal)).toBe(true);
+    expect(resetReveal?.classList.contains("sui-slide-reveal--open")).toBe(false);
   });
 
   it("dirty: the split slides out; reset resets and hides it again", () => {
@@ -288,6 +293,67 @@ describe("DirtyComboBox parity (onCreate + onRename)", () => {
     expect(row.getAttribute("title")).toBe("Other baseline");
     row.click();
     expect(store().selectedId).toBe(PAYROLL_STORE.selectedId);
+  });
+});
+
+// ── ↺ follows canReset independently of + (Peter, 2026-09-28) ─────────────
+//
+// Before this fix the split's SlideReveal was gated on `canCreate` alone, so
+// a caller that wanted "no ↺, but keep +" (thorcasting's ScenarioChips, a
+// builder with nothing of its own to drop) had no way to say so: hiding
+// canCreate hid BOTH halves. The four combinations below are the whole truth
+// table for the split; a caller may now set either flag without touching the
+// other.
+describe("DirtyComboBox split: ↺ (canReset) independent of + (canCreate)", () => {
+  const mountSplit = (canReset: boolean, canCreate: boolean) => {
+    const view = { ...dirtyComboViewOf(dirtyStore), canReset, canCreate };
+    const { container } = render(() => (
+      <ScenarioComboBox
+        items={dirtyStore.items}
+        selectedId={dirtyStore.selectedId}
+        view={view}
+        onSelect={() => {}}
+        onSave={() => {}}
+        onReset={() => {}}
+        onDelete={() => {}}
+        onCreate={() => {}}
+      />
+    ));
+    const live = () => container.querySelector(".sui-reserved-width__live")!;
+    const revealOpen = (label: string) => {
+      const reveal = live()
+        .querySelector(`[aria-label="${label}"]`)
+        ?.closest(".sui-slide-reveal");
+      return reveal?.classList.contains("sui-slide-reveal--open") === true;
+    };
+    return {
+      resetShown: () => revealOpen("Reset to saved"),
+      createShown: () => revealOpen("New scenario"),
+    };
+  };
+
+  it("both true: the whole split shows", () => {
+    const { resetShown, createShown } = mountSplit(true, true);
+    expect(resetShown()).toBe(true);
+    expect(createShown()).toBe(true);
+  });
+
+  it("canReset only: ↺ shows, + stays hidden", () => {
+    const { resetShown, createShown } = mountSplit(true, false);
+    expect(resetShown()).toBe(true);
+    expect(createShown()).toBe(false);
+  });
+
+  it("canCreate only: + shows, ↺ stays hidden — the ScenarioChips case", () => {
+    const { resetShown, createShown } = mountSplit(false, true);
+    expect(resetShown()).toBe(false);
+    expect(createShown()).toBe(true);
+  });
+
+  it("neither: the split draws nothing", () => {
+    const { resetShown, createShown } = mountSplit(false, false);
+    expect(resetShown()).toBe(false);
+    expect(createShown()).toBe(false);
   });
 });
 

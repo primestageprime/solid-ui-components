@@ -142,6 +142,32 @@ export const DirtyComboBoxShowcase: Component = () => {
           <MonoDump>{observation()}</MonoDump>
         </SpacedStack>
       </div>
+
+      <div class="example-group">
+        <h3>↺ independent of + (2026-09-28)</h3>
+        <p class="text-meta">
+          canReset and canCreate gate the split's two halves separately now —
+          before this fix, hiding one hid both. thorcasting's ScenarioChips
+          hits exactly this: a builder with nothing of its OWN to drop (no ↺)
+          but that can still save the edit as a new scenario (+).
+        </p>
+        <SpacedStack>
+          <ClusterRow>
+            <ScenarioComboBox
+              items={store().items}
+              selectedId={store().selectedId}
+              view={{ ...view(), canReset: false }}
+              onSelect={(id) => setStore((s) => dirtyComboSelect(s, id))}
+              onSave={() => setStore(dirtyComboSave)}
+              onReset={() => setStore(dirtyComboReset)}
+              onDelete={(id) => setStore((s) => dirtyComboRemove(s, id))}
+              onCreate={create}
+              onRename={(name) => setStore((s) => dirtyComboRename(s, name))}
+            />
+            <TagPill tag={{ label: "canReset: false — no ↺, but + still shows" }} />
+          </ClusterRow>
+        </SpacedStack>
+      </div>
     </div>
   );
 };
