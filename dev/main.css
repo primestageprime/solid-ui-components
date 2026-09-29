@@ -2975,3 +2975,16 @@ th:has(.tf-th-center) .hud-table__header-content {
   min-height: 0;
   height: auto;
 }
+
+/* SvgMarks showcase: each demo <svg> scales to its column, capped at its
+   viewBox width so the marks read at their authored size. */
+.svg-marks-demo {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+}
+
+/* SpanLanes showcase: the framed timeline at a readable width. */
+.span-lanes-demo {
+  max-width: 760px;
+}

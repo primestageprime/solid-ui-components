@@ -1,506 +1,396 @@
 // ============================================
-// JobTimeline — Primitive (Depth 1) DRAFT, bench-local. Owns timeline.css.
+// JobTimeline — the bench's timeline, COMPOSED from SUI (no CSS of its own).
 //
-// The one mark this bench needs that no SUI component draws. It is a
-// CANDIDATE for `/sui-build`, most likely as an extension of
-// `Chart/TimelineBar` rather than a new component: TimelineBar already lays
-// coloured segments in lanes as SVG, and lacks exactly four things this draws —
+//   Chart (time xDomain) + XAxis        the calendar
+//   HatchPattern × tone                 the fill for a wait, in the bar's tone
+//   SpanLanes                           the phased bars, packed into the fewest rows
+//     createSpanRing / createSpanBadge  red outline + ! on the over-capacity job,
+//     createSpanEndLabels               `#3 … $33.8k`, trail dropped when it won't fit
+//     createSpanBadge                   the padlock on a locked job
+//   ReferenceLine × 2                   the drag guides, captioned with their dates
+//   ReferenceLine (horizontal)          the rule over the TBD band (manual mode)
+//   ChartTooltip                        the hovered job's name, phases and warning
 //
-//   1. a LEADING and a TRAILING label per bar (`#3` … `$33.8k`), the trailing
-//      one dropped when the bar is too short to hold it;
-//   2. a HATCHED fill for a segment (a wait), in the bar's own tone;
-//   3. horizontal DRAG with start/end guide lines and their dates, reporting
-//      the drop position (the caller decides what a drop means);
-//   4. an OVER flag: a red outline and a `!` badge.
+// What stays HERE, deliberately (Peter did not approve extracting them):
 //
-// SVG, like TimelineBar: every position is an attribute computed here from the
-// caller's percentages and the measured width; colour, hatch and type live in
-// timeline.css over SUI tokens. No inline styles (the health ratchet counts
-// them in benches). Everything it shows is computed by the caller
+//   DRAG — SpanLanes reports `onSpanPointerDown`; this file captures the
+//   pointer, draws the dragged job from SHIFTED DATA (its segments moved by
+//   the drag's milliseconds) and reports the drop's start instant. What a drop
+//   MEANS (reorder in auto, exact days in manual) is the caller's.
+//
+//   GLIDE — a FLIP over the `[data-span-id]` groups SpanLanes marks: where
+//   each bar was laid (the same pure `layoutSpans` the slot draws with), and
+//   when a render moves it, `el.animate` the translate from there. Not while
+//   dragging, and not under reduced motion.
+//
+// Everything it shows is computed by the caller from the model
 // (`contract-scheduler-model.ts`); it computes no schedule and no money.
 // ============================================
 import {
   type Component,
   For,
-  Index,
   Show,
   createEffect,
+  createMemo,
   createSignal,
   onCleanup,
   onMount,
 } from "solid-js";
-import { observeSize } from "../../../../src/internal/dom/observeSize";
-import type { Bar } from "../contract-scheduler-model";
-import "./timeline.css";
+import {
+  Chart,
+  ChartTooltip,
+  HatchPattern,
+  ReferenceLine,
+  type SpanSegment,
+  SpanLanes,
+  TextSublabel,
+  TightStack,
+  DangerBody,
+  XAxis,
+  createSpanBadge,
+  createSpanEndLabels,
+  createSpanRing,
+  layoutSpans,
+  packSpans,
+  spanRowCount,
+} from "../../../../src";
 
 export type Tone = "doing" | "todo" | "pending";
 
-export interface TimelineItem {
+/** One stretch of a job's bar: a phase worked, or a wait for a crew. */
+export interface JobSegment extends SpanSegment {
+  readonly kind: "work" | "wait";
+  readonly title: string;
+  readonly role: string;
+  readonly days: number;
+  /** For a wait: the jobs holding the crew. */
+  readonly by: readonly number[];
+}
+
+/** One job on the timeline — a `SpanDatum` in the chart's time domain (epoch ms). */
+export interface JobSpan {
   readonly id: number;
   readonly lead: string;
   readonly trail: string;
   readonly name: string;
   readonly tone: Tone;
   readonly locked: boolean;
+  /** Why it is flagged over capacity, or null. */
   readonly over: string | null;
-  readonly row: number;
-  readonly bar: Bar;
-  /** Parked in the TBD band rather than on the calendar. */
-  readonly parked?: boolean;
+  readonly segments: readonly JobSegment[];
 }
 
 export interface JobTimelineProps {
-  readonly items: readonly TimelineItem[];
-  readonly rows: number;
-  readonly parkedRows: number;
-  readonly ticks: readonly { readonly left: number; readonly label: string }[];
+  /** Jobs on the calendar. */
+  readonly spans: readonly JobSpan[];
+  /** Manual mode's unplaced jobs, parked in a TBD band below the calendar. */
+  readonly parked: readonly JobSpan[];
+  /** The calendar window, epoch ms: first day's midnight to the day after the last. */
+  readonly window: readonly [number, number];
+  readonly ticks: readonly number[];
+  readonly tickFormat: (ms: number) => string;
   readonly hoverId: number | null;
   readonly roleLabel: (role: string) => string;
-  /** The date at a position, for the drag guides. */
-  readonly dateAt: (pct: number) => string;
+  /** The working-day date a guide stands on: `edge` "start" or "end" of a span at `ms`. */
+  readonly dateAt: (ms: number, edge: "start" | "end") => string;
   readonly onHover: (id: number | null) => void;
   readonly onOpen: (id: number) => void;
-  /** A bar was dropped with its left edge at `leftPct`. */
-  readonly onDrop: (id: number, leftPct: number) => void;
+  /** A job was dropped with its first instant at `startMs`. */
+  readonly onDrop: (id: number, startMs: number) => void;
 }
 
 const ROW = 34;
-const PAD = 10;
-const BAR_H = 26;
-const TOP = 22; // room above the plot for the drag guides' date labels
-const AXIS = 24;
-const MONO_CH = 7; // rough glyph advance at the label size, for fitting text
+/** Room above the bars for the drag guides' captions. */
+const TOP = 22;
+/** Gap between the calendar rows and the TBD band. */
+const GAP = 22;
+const MARGIN = { top: 4, right: 12, bottom: 26, left: 8 };
+const DRAG_SLOP = 4;
 
+const FILL: Readonly<Record<Tone, string>> = {
+  doing: "var(--sui-accent)",
+  todo: "var(--sui-success)",
+  pending: "var(--sui-warning)",
+};
+const INK: Readonly<Record<Tone, string>> = {
+  doing: "var(--sui-text-primary)",
+  todo: "var(--sui-bg-deep)",
+  pending: "var(--sui-bg-deep)",
+};
 const TONES: readonly Tone[] = ["doing", "todo", "pending"];
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const hatchId = (tone: Tone) => `job-timeline-hatch-${tone}`;
+const paint = (s: SpanSegment, j: JobSpan) =>
+  s.kind === "wait" ? `url(#${hatchId(j.tone)})` : FILL[j.tone];
 
-interface Tip {
-  readonly x: number;
-  readonly y: number;
-  readonly lines: readonly string[];
-  readonly warn: string | null;
+/** The padlock as one stroked path in GlyphBadge's 16-unit box. */
+const LOCK_PATH = "M4 7.5h8v6H4z M5.5 7.5V5a2.5 2.5 0 0 1 5 0v2.5";
+
+const ADORNMENTS = [
+  createSpanRing<JobSpan>({
+    when: (j) => j.over !== null,
+    color: () => "var(--sui-danger)",
+  }),
+  createSpanEndLabels<JobSpan>({
+    lead: (j) => j.lead,
+    trail: (j) => j.trail,
+    color: (j) => INK[j.tone],
+  }),
+  createSpanBadge<JobSpan>({
+    when: (j) => j.locked,
+    glyph: () => ({ path: LOCK_PATH }),
+    color: () => "var(--sui-bg-deep)",
+    glyphColor: () => "var(--sui-text-primary)",
+    ringColor: "var(--sui-text-secondary)",
+    corner: "top-left",
+    size: 15,
+  }),
+  createSpanBadge<JobSpan>({
+    when: (j) => j.over !== null,
+    glyph: () => ({ text: "!" }),
+    color: () => "var(--sui-danger)",
+    glyphColor: () => "var(--sui-text-primary)",
+    corner: "top-right",
+    size: 17,
+  }),
+];
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const extentOf = (j: JobSpan) => ({
+  start: Math.min(...j.segments.map((s) => s.start)),
+  end: Math.max(...j.segments.map((s) => s.end)),
+});
+const shifted = (j: JobSpan, dt: number): JobSpan => ({
+  ...j,
+  segments: j.segments.map((s) => ({
+    ...s,
+    start: s.start + dt,
+    end: s.end + dt,
+  })),
+});
+
+interface Drag {
+  readonly id: number;
+  readonly dt: number;
 }
 
 export const JobTimeline: Component<JobTimelineProps> = (props) => {
-  let host!: SVGSVGElement;
-  const [width, setWidth] = createSignal(700);
-  const [drag, setDrag] = createSignal<{ id: number; left: number } | null>(
-    null,
-  );
-  const [tip, setTip] = createSignal<Tip | null>(null);
+  let host!: HTMLDivElement;
+  const [width, setWidth] = createSignal(720);
+  const [drag, setDrag] = createSignal<Drag | null>(null);
+  /** The click that ends a drag is not an "open". */
+  let swallowClick = false;
 
   onMount(() => {
-    const w = host.getBoundingClientRect().width;
-    if (w > 0) setWidth(w);
-    onCleanup(
-      observeSize(host, () => {
-        const next = host.getBoundingClientRect().width;
-        if (next > 0) setWidth(next);
-      }),
-    );
+    const measure = () => {
+      const w = host.getBoundingClientRect().width;
+      if (w > 0) setWidth(w);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(host);
+    onCleanup(() => ro.disconnect());
   });
 
-  const schedH = () => PAD * 2 + Math.max(1, props.rows) * ROW;
-  const parkH = () => (props.parkedRows ? PAD * 2 + props.parkedRows * ROW : 0);
-  const plotH = () => schedH() + parkH();
-  const px = (pct: number) => (pct / 100) * width();
-  const leftPct = (it: TimelineItem) =>
-    drag()?.id === it.id ? (drag() as { left: number }).left : it.bar.left;
-  const xOf = (it: TimelineItem) => px(leftPct(it));
-  const wOf = (it: TimelineItem) => Math.max(2, px(it.bar.width));
-  const yOf = (it: TimelineItem) =>
-    TOP + (it.parked ? schedH() : 0) + PAD + it.row * ROW + (ROW - BAR_H) / 2;
-  const fits = (it: TimelineItem) =>
-    wOf(it) >= (it.lead.length + it.trail.length) * MONO_CH + 26;
+  const innerWidth = () => width() - MARGIN.left - MARGIN.right;
+  const msPerPx = () =>
+    (props.window[1] - props.window[0]) / Math.max(1, innerWidth());
+  const x = (ms: number) =>
+    ((ms - props.window[0]) / (props.window[1] - props.window[0])) *
+    innerWidth();
 
-  const describe = (
-    it: TimelineItem,
-    segIndex: number | null,
-  ): readonly string[] => {
-    const s = segIndex === null ? undefined : it.bar.segments[segIndex];
-    if (!s) return [`${it.lead} ${it.name}`, it.trail];
-    return s.kind === "work"
-      ? [
-          `${it.lead} ${it.name} · ${s.title}`,
-          `${props.roleLabel(s.role)} · ${plural(s.days, "working day")}`,
-        ]
-      : [
-          `${it.lead} ${it.name} · waiting for ${props.roleLabel(s.role)}`,
-          `${s.by.length ? `busy on ${s.by.map((b) => `#${b}`).join(", ")}` : "a gap you set"} · ${plural(s.days, "day")}`,
-        ];
+  /** The calendar's spans, the dragged one drawn where the pointer has it. */
+  const shown = createMemo(() => {
+    const d = drag();
+    return d
+      ? props.spans.map((j) => (j.id === d.id ? shifted(j, d.dt) : j))
+      : props.spans;
+  });
+  const rows = () => spanRowCount(shown());
+  const parkedTop = () => TOP + rows() * ROW + GAP;
+  const plotHeight = () =>
+    props.parked.length
+      ? parkedTop() + props.parked.length * ROW
+      : TOP + rows() * ROW;
+  const height = () => plotHeight() + MARGIN.top + MARGIN.bottom;
+
+  const dragged = () => {
+    const d = drag();
+    const j = d ? shown().find((s) => s.id === d.id) : undefined;
+    return j ? extentOf(j) : null;
   };
+  const hovered = () =>
+    drag()
+      ? undefined
+      : [...props.spans, ...props.parked].find((j) => j.id === props.hoverId);
 
-  const onMove = (it: TimelineItem, e: PointerEvent) => {
-    if (drag()) return;
-    const r = host.getBoundingClientRect();
-    const seg = (e.target as Element).getAttribute("data-seg");
-    setTip({
-      x: e.clientX - r.left,
-      y: e.clientY - r.top,
-      lines: describe(it, seg === null ? null : Number(seg)),
-      warn: it.over,
-    });
-    if (props.hoverId !== it.id) props.onHover(it.id);
-  };
-
-  const onDown = (it: TimelineItem, e: PointerEvent) => {
-    const el = e.currentTarget as SVGGElement;
-    el.setPointerCapture(e.pointerId);
+  const onPointerDown = (j: JobSpan, e: PointerEvent) => {
+    if (j.locked || e.button !== 0) return;
+    const el = e.currentTarget as Element;
+    el.setPointerCapture?.(e.pointerId);
     const x0 = e.clientX;
+    const { start, end } = extentOf(j);
     let moved = false;
     const move = (ev: PointerEvent) => {
-      if (it.locked) return;
       const dx = ev.clientX - x0;
-      if (!moved && Math.abs(dx) < 4) return;
+      if (!moved && Math.abs(dx) < DRAG_SLOP) return;
       moved = true;
-      setTip(null);
-      setDrag({
-        id: it.id,
-        left: Math.min(
-          100 - it.bar.width,
-          Math.max(0, it.bar.left + (dx / width()) * 100),
-        ),
-      });
+      const dt = Math.min(
+        props.window[1] - end,
+        Math.max(props.window[0] - start, dx * msPerPx()),
+      );
+      setDrag({ id: j.id, dt });
     };
     const up = () => {
-      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointermove", move as EventListener);
       el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
       const d = drag();
-      if (!moved || !d) {
-        setDrag(null);
-        props.onOpen(it.id);
-        return;
+      if (moved && d) {
+        swallowClick = true;
+        // the glide starts from where the bar was let go, not where it began
+        const at = boxes(shown(), TOP).find(([id]) => id === j.id);
+        if (at) last.set(j.id, at[1]);
+        props.onDrop(j.id, start + d.dt);
       }
-      // drop first, then release: the glide starts from where the bar was let go
-      props.onDrop(it.id, d.left);
       setDrag(null);
     };
-    el.addEventListener("pointermove", move);
+    el.addEventListener("pointermove", move as EventListener);
     el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
   };
 
-  // Bars GLIDE to a new place (Peter, 2026-09-29): remember where each bar was
-  // drawn, and when a render moves it, animate the translate from there. Not
-  // while a bar is being dragged (it follows the pointer), and not for a reader
-  // who asked for reduced motion.
+  const onClick = (j: JobSpan) => {
+    if (swallowClick) {
+      swallowClick = false;
+      return;
+    }
+    props.onOpen(j.id);
+  };
+
+  // GLIDE (Peter, 2026-09-29): remember where each bar was laid; when a render
+  // moves one, animate its group from the old place to the new.
+  const geo = { rowHeight: ROW, barHeight: 0.76 };
+  const boxes = (spans: readonly JobSpan[], dy: number) =>
+    layoutSpans(packSpans(spans), x, geo).map(
+      (l) => [l.datum.id, { x: l.box.x, y: l.box.y + dy }] as const,
+    );
   let last = new Map<number, { x: number; y: number }>();
   createEffect(() => {
-    const next = new Map(
-      props.items.map((it) => [it.id, { x: xOf(it), y: yOf(it) }]),
-    );
+    // While a bar follows the pointer, keep the places from before the drag:
+    // the drop then glides every bar that moved, from where it was.
+    if (drag()) return;
+    const next = new Map([
+      ...boxes(props.spans, TOP),
+      ...boxes(props.parked, parkedTop()),
+    ]);
     const still =
       typeof matchMedia === "function" &&
       matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!drag() && !still) {
+    if (!still) {
       for (const [id, at] of next) {
         const was = last.get(id);
         if (!was || (was.x === at.x && was.y === at.y)) continue;
         host
-          ?.querySelector(`[data-job="${id}"]`)
-          ?.animate(
+          ?.querySelector(`[data-span-id="${id}"]`)
+          ?.animate?.(
             [
-              { transform: `translate(${was.x}px, ${was.y}px)` },
-              { transform: `translate(${at.x}px, ${at.y}px)` },
+              { transform: `translate(${was.x - at.x}px, ${was.y - at.y}px)` },
+              { transform: "translate(0px, 0px)" },
             ],
-            {
-              duration: 260,
-              easing: "cubic-bezier(.2,.7,.2,1)",
-            },
+            { duration: 260, easing: "cubic-bezier(.2,.7,.2,1)" },
           );
       }
     }
     last = next;
   });
 
-  const tipBox = (t: Tip) => {
-    const lines = [
-      ...t.lines,
-      ...(t.warn ? [`! ${t.warn} with this stacking`] : []),
-    ];
-    const w = Math.max(...lines.map((l) => l.length)) * 6.4 + 16;
-    const h = lines.length * 15 + 8;
-    const x = Math.max(0, Math.min(t.x + 12, width() - w));
-    const y = Math.max(0, t.y - h - 10);
-    return { lines, w, h, x, y };
-  };
+  const lanes = (data: readonly JobSpan[]) => (
+    <SpanLanes<JobSpan>
+      data={data}
+      paint={paint}
+      adornments={ADORNMENTS}
+      hoveredId={props.hoverId}
+      rowHeight={ROW}
+      describe={(j) =>
+        `${j.lead} ${j.name}, ${j.trail}${j.locked ? ", locked" : ""}${j.over ? `, ${j.over}` : ""}`
+      }
+      onSpanHover={(j) => {
+        if (!drag()) props.onHover(j ? j.id : null);
+      }}
+      onSpanPointerDown={onPointerDown}
+      onSpanClick={onClick}
+    />
+  );
 
   return (
-    <svg
-      ref={host}
-      class="job-timeline"
-      height={TOP + plotH() + AXIS}
-      role="group"
-      aria-label="Job timeline"
-      onPointerLeave={() => {
-        setTip(null);
-        props.onHover(null);
-      }}
-    >
-      <defs>
-        <For each={TONES}>
-          {(tone) => (
-            <pattern
-              id={`job-timeline-hatch-${tone}`}
-              width="7"
-              height="7"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(45)"
-            >
-              <rect
-                class={`job-timeline__hatch-ground--${tone}`}
-                width="7"
-                height="7"
-              />
-              <rect
-                class={`job-timeline__hatch-stripe--${tone}`}
-                width="3"
-                height="7"
-              />
-            </pattern>
-          )}
-        </For>
-        <Index each={props.items}>
-          {(it) => (
-            <clipPath id={`job-timeline-clip-${it().id}`}>
-              <rect width={wOf(it())} height={BAR_H} rx="4" />
-            </clipPath>
-          )}
-        </Index>
-      </defs>
-
-      <line
-        class="job-timeline__baseline"
-        x1="0.5"
-        x2="0.5"
-        y1={TOP}
-        y2={TOP + plotH()}
-      />
-      <Show when={props.parkedRows > 0}>
-        <line
-          class="job-timeline__tbd-rule"
-          x1="0"
-          x2={width()}
-          y1={TOP + schedH()}
-          y2={TOP + schedH()}
-        />
-        <text class="job-timeline__tbd-label" x="8" y={TOP + schedH() + 16}>
-          TBD
-        </text>
-      </Show>
-
-      <Index each={props.items}>
-        {(it) => (
-          <g
-            class={`job-timeline__bar${it().locked ? " job-timeline__bar--locked" : ""}${drag()?.id === it().id ? " job-timeline__bar--dragging" : ""}`}
-            transform={`translate(${xOf(it())},${yOf(it())})`}
-            data-job={it().id}
-            role="button"
-            tabIndex={0}
-            aria-label={`${it().lead} ${it().name}, ${it().trail}${it().locked ? ", locked" : ""}${it().over ? `, ${it().over}` : ""}`}
-            onPointerMove={(e) => onMove(it(), e)}
-            onPointerDown={(e) => onDown(it(), e)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                props.onOpen(it().id);
-              }
-            }}
-          >
-            <Show when={it().over}>
-              <rect
-                class="job-timeline__over"
-                x="-3"
-                y="-3"
-                width={wOf(it()) + 6}
-                height={BAR_H + 6}
-                rx="6"
-              />
-            </Show>
-            <g clip-path={`url(#job-timeline-clip-${it().id})`}>
-              <Index each={it().bar.segments}>
-                {(s, i) => (
-                  <rect
-                    data-seg={i}
-                    class={`job-timeline__${s().kind}--${it().tone}`}
-                    x={(s().left / 100) * wOf(it())}
-                    width={Math.max(1, (s().width / 100) * wOf(it()))}
-                    height={BAR_H}
-                  />
-                )}
-              </Index>
-              <Index each={it().bar.segments}>
-                {(s) => (
-                  <Show when={s().kind === "work" && s().left > 0.01}>
-                    <line
-                      class="job-timeline__seam"
-                      x1={(s().left / 100) * wOf(it())}
-                      x2={(s().left / 100) * wOf(it())}
-                      y1="0"
-                      y2={BAR_H}
-                    />
-                  </Show>
-                )}
-              </Index>
-            </g>
-            <Show when={props.hoverId === it().id}>
-              <rect
-                class="job-timeline__hover"
-                x="-1"
-                y="-1"
-                width={wOf(it()) + 2}
-                height={BAR_H + 2}
-                rx="5"
-              />
-            </Show>
-            <text
-              class={`job-timeline__lead job-timeline__ink--${it().tone}`}
-              x="7"
-              y={BAR_H / 2 + 4}
-            >
-              {it().lead}
-            </text>
-            <Show when={fits(it())}>
-              <text
-                class={`job-timeline__trail job-timeline__ink--${it().tone}`}
-                x={wOf(it()) - 8}
-                y={BAR_H / 2 + 4}
-                text-anchor="end"
-              >
-                {it().trail}
-              </text>
-            </Show>
-            <Show when={it().locked}>
-              <circle class="job-timeline__pin-disc" cx="0" cy="0" r="7.5" />
-              <rect
-                class="job-timeline__pin-glyph"
-                x="-3.5"
-                y="-1"
-                width="7"
-                height="5"
-                rx="1"
-              />
-              <path
-                class="job-timeline__pin-glyph"
-                d="M-2 -1 V-2.6 a2 2 0 0 1 4 0 V-1"
-              />
-            </Show>
-            <Show when={it().over}>
-              <circle
-                class="job-timeline__bang-disc"
-                cx={wOf(it()) + 2}
-                cy="-1"
-                r="8.5"
-              />
-              <text
-                class="job-timeline__bang-mark"
-                x={wOf(it()) + 2}
-                y="3"
-                text-anchor="middle"
-              >
-                !
-              </text>
-            </Show>
+    <div ref={host}>
+      <Chart
+        width={width()}
+        height={height()}
+        xDomain={[new Date(props.window[0]), new Date(props.window[1])]}
+        yDomain={[plotHeight(), 0]}
+        margin={MARGIN}
+      >
+        <defs>
+          <For each={TONES}>
+            {(tone) => <HatchPattern id={hatchId(tone)} color={FILL[tone]} />}
+          </For>
+        </defs>
+        <XAxis tickValues={props.ticks} tickFormat={props.tickFormat} />
+        <g transform={`translate(0, ${TOP})`}>{lanes(shown())}</g>
+        <Show when={props.parked.length > 0}>
+          <ReferenceLine
+            orientation="horizontal"
+            value={parkedTop() - GAP / 2}
+            label="TBD"
+          />
+          <g transform={`translate(0, ${parkedTop()})`}>
+            {lanes(props.parked)}
           </g>
-        )}
-      </Index>
-
-      <Show when={drag()}>
-        {(d) => {
-          const item = () => props.items.find((x) => x.id === d().id);
-          const edges = () => {
-            const it = item();
-            return it ? [d().left, d().left + it.bar.width] : [];
-          };
-          return (
-            <Index each={edges()}>
-              {(pct, i) => {
-                const label = () => props.dateAt(pct());
-                const boxW = () => label().length * 6.6 + 10;
-                const x = () => px(pct());
-                const bx = () => (i === 0 ? x() + 2 : x() - boxW() - 2);
-                return (
-                  <g>
-                    <line
-                      class="job-timeline__guide"
-                      x1={x()}
-                      x2={x()}
-                      y1={TOP - 4}
-                      y2={TOP + plotH()}
-                    />
-                    <rect
-                      class="job-timeline__guide-box"
-                      x={bx()}
-                      y="2"
-                      width={boxW()}
-                      height="16"
-                      rx="3"
-                    />
-                    <text class="job-timeline__guide-text" x={bx() + 5} y="14">
-                      {label()}
-                    </text>
-                  </g>
-                );
-              }}
-            </Index>
-          );
-        }}
-      </Show>
-
-      <line
-        class="job-timeline__axis"
-        x1="0"
-        x2={width()}
-        y1={TOP + plotH()}
-        y2={TOP + plotH()}
-      />
-      <For each={props.ticks}>
-        {(t) => (
-          <text
-            class="job-timeline__tick"
-            x={px(t.left)}
-            y={TOP + plotH() + 15}
-            text-anchor={t.left < 3 ? "start" : "middle"}
-          >
-            {t.label}
-          </text>
-        )}
-      </For>
-
-      <Show when={tip()}>
-        {(t) => {
-          const b = () => tipBox(t());
-          return (
-            <g
-              class="job-timeline__tip"
-              transform={`translate(${b().x},${b().y})`}
-            >
-              <rect
-                class="job-timeline__tip-box"
-                width={b().w}
-                height={b().h}
-                rx="4"
+        </Show>
+        <Show when={dragged()}>
+          {(d) => (
+            <>
+              <ReferenceLine
+                orientation="vertical"
+                value={d().start}
+                label={props.dateAt(d().start, "start")}
               />
-              <Index each={b().lines}>
-                {(line, i) => (
-                  <text
-                    class={
-                      i === 0
-                        ? "job-timeline__tip-title"
-                        : line().startsWith("! ")
-                          ? "job-timeline__tip-warn"
-                          : "job-timeline__tip-detail"
-                    }
-                    x="8"
-                    y={16 + i * 15}
-                  >
-                    {line()}
-                  </text>
+              <ReferenceLine
+                orientation="vertical"
+                value={d().end}
+                label={props.dateAt(d().end, "end")}
+              />
+            </>
+          )}
+        </Show>
+        <ChartTooltip
+          data={hovered() ? [hovered() as JobSpan] : []}
+          x={(j) => extentOf(j).start}
+          maxWidth={320}
+        >
+          {(j) => (
+            <TightStack>
+              <TextSublabel>{`${j.lead} ${j.name} · ${j.trail}`}</TextSublabel>
+              <For each={j.segments}>
+                {(s) => (
+                  <TextSublabel>
+                    {s.kind === "work"
+                      ? `${s.title} · ${props.roleLabel(s.role)} · ${plural(s.days, "working day")}`
+                      : `waiting for ${props.roleLabel(s.role)} · ${s.by.length ? `busy on ${s.by.map((b) => `#${b}`).join(", ")}` : "a gap you set"} · ${plural(s.days, "day")}`}
+                  </TextSublabel>
                 )}
-              </Index>
-            </g>
-          );
-        }}
-      </Show>
-    </svg>
+              </For>
+              <Show when={j.over}>
+                {(w) => (
+                  <DangerBody>{`! ${w()} with this stacking`}</DangerBody>
+                )}
+              </Show>
+            </TightStack>
+          )}
+        </ChartTooltip>
+      </Chart>
+    </div>
   );
 };

@@ -36,3 +36,18 @@ export const PendingBadge: Component<StatusBadgeDataProps> = createStatusBadge({
 export const InfoBadge: Component<StatusBadgeDataProps> = createStatusBadge({
   variant: "info",
 });
+
+// ── Workflow status — what a row IS, over the same tones ──
+// A job's state (todo → doing, or pending on something) reads as its own word;
+// the tone is borrowed from the compliance palette, the meaning is not.
+// `PendingBadge` above already serves the third state.
+
+/** Work under way (blue). */
+export const DoingBadge: Component<StatusBadgeDataProps> = createStatusBadge({
+  variant: "info",
+});
+
+/** Work ready to start (green). */
+export const TodoBadge: Component<StatusBadgeDataProps> = createStatusBadge({
+  variant: "compliant",
+});

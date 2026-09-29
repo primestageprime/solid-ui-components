@@ -8,6 +8,8 @@ import {
   WarningBadge,
   PendingBadge,
   InfoBadge,
+  DoingBadge,
+  TodoBadge,
 } from "../../src/components/Badge/variants";
 import { BaselineDot } from "../../src/components/Badge/BaselineDot";
 import { ScenarioDot } from "../../src/components/Badge/ScenarioDot";
@@ -28,6 +30,14 @@ const TONE_BADGES: Array<[string, Component<{ label?: string }>]> = [
   ["WarningBadge", WarningBadge],
   ["PendingBadge", PendingBadge],
   ["InfoBadge", InfoBadge],
+];
+
+// Workflow status: what a row IS (a job to do, under way, or waiting on
+// something), over the same tones. The word is the job's; the tone is borrowed.
+const WORKFLOW_BADGES: Array<[string, Component<{ label?: string }>]> = [
+  ["TODO", TodoBadge],
+  ["DOING", DoingBadge],
+  ["PENDING", PendingBadge],
 ];
 
 // Scenario identity: colour AND shape, so the series stays distinguishable in
@@ -114,6 +124,19 @@ export const StatusBadgeShowcase: Component = () => {
           <SmStatusBadge variant="warning">warning</SmStatusBadge>
           <SmStatusBadge variant="info">in_progress</SmStatusBadge>
         </ClusterRow>
+      </div>
+
+      <div class="example-group">
+        <h3>Workflow status — TodoBadge / DoingBadge / PendingBadge</h3>
+        <div class="text-meta">
+          A job's state, named for what it means: ready to start (green),
+          under way (blue), waiting on something (amber).
+        </div>
+        <WrappedClusterRow>
+          <For each={WORKFLOW_BADGES}>
+            {([name, Badge]) => <Dynamic component={Badge} label={name} />}
+          </For>
+        </WrappedClusterRow>
       </div>
 
       <div class="example-group">

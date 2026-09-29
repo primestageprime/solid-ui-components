@@ -264,3 +264,17 @@ describe("Icon chart-strategy and link glyphs", () => {
     }
   });
 });
+
+// The scheduler's unlocked state (contract-scheduler, 2026-09-29): an open
+// shackle, so locked and unlocked read as one glyph in two states.
+describe("Icon lock-open", () => {
+  it("is registered beside lock, with the same body and a shackle swung open", () => {
+    const grouped: readonly string[] = Object.values(ICON_GROUPS).flat();
+    expect(grouped).toContain("lock-open");
+    expect(ICON_PATHS["lock-open"].outline).toContain(
+      `<rect x="3" y="7" width="10" height="7"`,
+    );
+    expect(ICON_PATHS["lock-open"].outline).not.toBe(ICON_PATHS.lock.outline);
+    expect(ICON_PATHS["lock-open"].solid).toContain("<");
+  });
+});

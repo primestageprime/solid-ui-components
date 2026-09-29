@@ -50,6 +50,7 @@
 // ============================================
 import { type Component, type JSX, Index, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
+import { some } from "../../fn";
 import {
   GlyphSlotGhostButton,
   PressableLabelButton,
@@ -117,6 +118,8 @@ export interface GroupedDialProps {
   summary: string | null;
   /** Whether the name reads as selected. */
   selected: boolean;
+  /** Draw the entity name over the dials. False for a row that holds one entity whose name is already on screen. */
+  showName: boolean;
   /** The name was clicked. */
   onSelect: () => void;
   /** A dial's box was measured — every dial in a row shares one height. */
@@ -148,6 +151,9 @@ export const GroupedDial: Component<GroupedDialProps> = (props) => {
   };
 
   /** The required line under one dial: what this measure will be. */
+  /** Whether ANY axis in the row plugs in a caption display. */
+  const hasCaptions = (): boolean => some((a) => a.caption !== undefined, props.axes);
+
   const valueReadout = (index: GroupedMeasureIndex): string => {
     const geometry = dial(index);
     const value = geometry?.clampedValue ?? null;
@@ -211,14 +217,16 @@ export const GroupedDial: Component<GroupedDialProps> = (props) => {
           this component inventing key handling, and `aria-pressed` because it
           is a toggle rather than a command. `data-struck` is the removal, which
           the strike says a second time for anyone who cannot see the colour. */}
-      <PressableLabelButton
-        active={props.selected}
-        aria-pressed={props.selected}
-        data-struck={removed() ? "" : undefined}
-        onClick={() => props.onSelect()}
-      >
-        <NowrapLabel>{props.entity.label}</NowrapLabel>
-      </PressableLabelButton>
+      <Show when={props.showName}>
+        <PressableLabelButton
+          active={props.selected}
+          aria-pressed={props.selected}
+          data-struck={removed() ? "" : undefined}
+          onClick={() => props.onSelect()}
+        >
+          <NowrapLabel>{props.entity.label}</NowrapLabel>
+        </PressableLabelButton>
+      </Show>
       {/* The runs. `FillStretchRow` is the same `sm`-gap (8px) fill chain the
           ROW uses, which is why `slotFor` is exactly N dial slots and not a
           second constant that can drift out of step with the Layout variant. */}
@@ -315,6 +323,34 @@ export const GroupedDial: Component<GroupedDialProps> = (props) => {
                         >
                           {metaReadout(index()) || NBSP}
                         </Dynamic>
+                        {/* The measure's CAPTION display, when the consumer
+                            plugged one in (Peter, 2026-09-29). Reserved on a
+                            column without one whenever any axis has one, for
+                            the same reason the meta line above is. */}
+                        <Show when={hasCaptions()}>
+                          <Show
+                            when={props.axes[index()]?.caption}
+                            fallback={
+                              <ReservedMonoMeta data-caption-slot="reserved">
+                                {NBSP}
+                              </ReservedMonoMeta>
+                            }
+                          >
+                            {(caption) => (
+                              <Dynamic
+                                component={caption()}
+                                value={
+                                  props.entity.measures[index()]?.value ?? null
+                                }
+                                prior={
+                                  props.entity.measures[index()]?.prior ?? null
+                                }
+                                entityId={props.entity.id}
+                                measure={index()}
+                              />
+                            )}
+                          </Show>
+                        </Show>
                       </TightCenteredColumn>
                     </Show>
                   )}

@@ -16,21 +16,13 @@
 //                                                      reader's range; the
 //                                                      button opens its editor.
 import { find } from "../../fn";
-import type { IconName } from "../Icon";
+import type { ModeInfo } from "../ModeSplitButton";
 import type { ScrubChartYAxisMode } from "../ScrubChart/types";
 
 export type ChartYAxisMode = ScrubChartYAxisMode;
 
-export interface ChartYAxisModeInfo {
-  readonly mode: ChartYAxisMode;
-  /** The menu row's words. */
-  readonly label: string;
-  readonly icon: IconName;
-  /** The main face's accessible name and tooltip in this mode. */
-  readonly action: string;
-  /** The main face has no action in this mode. */
-  readonly disabled: boolean;
-}
+/** A y-axis mode's row: the `ModeSplitButton` row over the strategy's modes. */
+export type ChartYAxisModeInfo = ModeInfo<ChartYAxisMode>;
 
 /** Menu order: the default first. */
 export const CHART_Y_AXIS_MODES: readonly ChartYAxisModeInfo[] = [

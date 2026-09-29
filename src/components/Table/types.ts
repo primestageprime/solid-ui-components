@@ -65,6 +65,12 @@ export interface BaseTableProps<T>
    */
   fit?: boolean;
   getRowClass?: (row: T, index: number) => string;
+  /**
+   * Rows to light as if hovered, driven from OUTSIDE the table — the other
+   * half of an `onRowHover` cross-highlight (a chart mark hovered → its row
+   * lit). Reactive: read a signal inside it.
+   */
+  highlighted?: (row: T, index: number) => boolean;
   onRowClick?: (row: T, index: number) => void;
   /**
    * Row hover callback for cross-highlighting (e.g. a table row ↔ a chart

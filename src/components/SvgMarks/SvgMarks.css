@@ -1,0 +1,56 @@
+/* SvgMarks — paint shared by the Depth-1 SVG marks in this folder.
+   Positions are SVG attributes computed by each mark from the box it is
+   handed; colour is data (an SVG paint string) passed as an attribute. This
+   file owns only what is NOT data: seams, hover outline and text faces. */
+
+.sui-segment-bar__seam {
+  stroke: color-mix(in srgb, var(--sui-bg-deep) 75%, transparent);
+  stroke-width: 1.5;
+}
+
+.sui-segment-bar__hover {
+  fill: none;
+  stroke: var(--sui-text-primary);
+  stroke-width: 2;
+  visibility: hidden;
+}
+
+.sui-segment-bar[data-hovered] .sui-segment-bar__hover {
+  visibility: visible;
+}
+
+.sui-box-ring {
+  fill: none;
+  stroke-width: 2;
+}
+
+.sui-end-labels__text {
+  font-family: var(--sui-font-mono);
+  font-size: 11.5px;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.sui-end-labels__text--lead {
+  font-weight: 700;
+}
+
+.sui-end-labels__text--trail {
+  font-weight: 500;
+  text-anchor: end;
+}
+
+.sui-glyph-badge__text {
+  font-family: var(--sui-font-family);
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.sui-glyph-badge__path {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

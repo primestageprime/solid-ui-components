@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
-import { Toggle, createToggle, TruthToggle } from "./index";
+import { LeftTruthToggle, Toggle, createToggle, TruthToggle } from "./index";
 
 describe("Toggle", () => {
   it("renders an input[type=checkbox]", () => {
@@ -25,5 +25,14 @@ describe("Toggle", () => {
     const { container } = render(() => <TruthToggle />);
     expect(container.querySelector(".sui-toggle--sm")).toBeTruthy();
     expect(container.querySelector(".sui-toggle--primary")).toBeTruthy();
+  });
+
+  it("LeftTruthToggle is TruthToggle with its label on the left", () => {
+    const { container } = render(() => <LeftTruthToggle label="Full auto" />);
+    expect(container.querySelector(".sui-toggle--sm")).toBeTruthy();
+    const root = container.querySelector(".sui-toggle");
+    expect(root?.firstElementChild?.classList.contains("sui-toggle__label")).toBe(
+      true,
+    );
   });
 });

@@ -13,6 +13,7 @@
 // configuration in exactly the sense ADR-0001 means: the unit, the vocabulary,
 // the grid and the grouping, per measure.
 // ============================================
+import type { Component } from "solid-js";
 import { map } from "../../fn";
 import {
   type Domain,
@@ -106,10 +107,33 @@ export interface GroupedMeasureAxis {
    * STILL across edits.
    */
   readonly domain?: Domain;
+  /**
+   * A DISPLAY COMPONENT drawn under this measure's readouts, handed the dial's
+   * data (`MeasureCaptionProps`) — `× $125 = $1,000` under an hours dial, via
+   * the stock `createFormulaCaption`, or anything else with that props shape.
+   *
+   * PLUGGABLE on purpose (Peter, 2026-09-29): what a measure MEANS beside its
+   * number is the consumer's knowledge, and it is a component rather than a
+   * string so it is built from atoms and styled like everything else. When any
+   * axis in the row has one, every column reserves the line.
+   */
+  readonly caption?: Component<MeasureCaptionProps>;
 }
 
 /** The measures, in reading order. N ≥ 1. */
 export type GroupedMeasureAxes = readonly GroupedMeasureAxis[];
+
+/**
+ * What a measure's CAPTION display is handed: the data of one dial, nothing
+ * formatted. The display decides what to say and how — this component only
+ * decides where it goes (under the dial's readouts).
+ */
+export interface MeasureCaptionProps {
+  readonly value: number | null;
+  readonly prior: number | null;
+  readonly entityId: string;
+  readonly measure: GroupedMeasureIndex;
+}
 
 /** This measure's unit, or the neutral fallback. */
 export const formatOf = (
@@ -156,6 +180,8 @@ export interface ResolvedGroupedAxis {
   readonly dragStep: number;
   /** What one ARROW KEY moves by. Ten of these for a page key. */
   readonly keyStep: number;
+  /** The measure's caption display, if it has one. */
+  readonly caption?: Component<MeasureCaptionProps>;
 }
 
 /** The resolved measures, in reading order. */
@@ -185,6 +211,7 @@ export const resolveAxis = (
     snap: axis.snap,
     dragStep: axis.snap ?? dragStep(domain),
     keyStep: Math.max(niceStep(domain), axis.snap ?? 0),
+    caption: axis.caption,
   };
 };
 

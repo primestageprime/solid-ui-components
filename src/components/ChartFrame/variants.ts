@@ -25,6 +25,15 @@ export const FillChartFrame: Component<ChartFrameDataProps> = createChartFrame({
   height: "fill",
 });
 
+/**
+ * The frame as tall as its chart: for a chart whose height is its data (a
+ * lane chart packed into as many rows as it needs), where a stated px leaves
+ * an empty band under a short schedule.
+ */
+export const ContentChartFrame: Component<ChartFrameDataProps> = createChartFrame({
+  height: "content",
+});
+
 /** The chart language's words for the lock editor, shared by both fields. */
 const Y_AXIS_LOCK_LABELS = {
   title: "Lock the y-axis",

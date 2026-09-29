@@ -257,6 +257,12 @@ export interface GroupedMutationSlidersProps {
    * costs no width and the paging arithmetic is unchanged.
    */
   entityFrame?: Component<{ children?: JSX.Element }>;
+  /**
+   * Draw each entity's name over its dials. Default `true`. Set `false` for a
+   * row that holds ONE entity whose name the surrounding panel already shows —
+   * a detail view — so the name is not said twice.
+   */
+  showNames?: boolean;
 }
 
 /**
@@ -270,7 +276,7 @@ export interface GroupedMutationSlidersProps {
  */
 export type GroupedMutationSlidersOverrides = Pick<
   GroupedMutationSlidersProps,
-  "axes" | "labels" | "entityFrame"
+  "axes" | "labels" | "entityFrame" | "showNames"
 >;
 
 /** What a curried variant exposes: everything except the curried overrides. */
@@ -562,6 +568,7 @@ export const GroupedMutationSliders: Component<GroupedMutationSlidersProps> = (
               labels={labels()}
               summary={summaryOf(entity())}
               selected={isSelected(entity().id)}
+              showName={props.showNames ?? true}
               onSelect={() => toggleSelection(entity().id)}
               onMeasure={measureDial}
               onMove={(index, value) => move(entity(), index, value, false)}

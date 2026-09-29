@@ -1,28 +1,37 @@
 /**
  * Contract Scheduler bench — Peter's contract-job sketches of 2026-09-29,
  * composed. The working prototype of ADR 0028 and its addendum
- * (thorcasting-qbo `docs/adr/0028-…`).
+ * (thorcasting-qbo `docs/adr/0028-…`), and the REFERENCE COMPOSITION for
+ * `docs/handoffs/thorcasting-contract-scheduler.md`.
  *
  * A roofer's season: a job LIST that opens into one job's DIALS, and a
  * TIMELINE of phased bars (solid = work, hashed = waiting for a crew) that
  * reflows in FULL AUTO or holds still in MANUAL, around LOCKED jobs.
  *
- * Component per region, so the reuse is checkable:
+ * Every component comes through the package barrel (`../../../src`), as a
+ * client would import it. Component per region:
  *
- *   Work calendar — `TruthToggle` × (weekends + each holiday)
- *   Timeline      — `ChartFrame` (title + actions slot) holding the bench-local
- *                   `JobTimeline` draft; the mode control is ChartFrame's own
- *                   split-button composition, `IconOnlyButton` + `RightPopoverMenu`
- *   Job list      — `CompactTable` (onRowHover = the cross-highlight),
- *                   `TruthToggle`, `IconOnlyButton` + `Icon lock`, `TextButton`,
- *                   `SmStatusBadge`
- *   Job detail    — `SmallGhostButton` back, `GroupedMutationSliders` (one entity,
- *                   one measure per line, grouped by crew), `SmallGhostButton`
- *                   per line opening a `createYAxisLockDialog` range editor
+ *   Work calendar — `LeftTruthToggle` × (weekends + each holiday)
+ *   Timeline      — `ContentChartFrame` (sized to the packed rows) with a
+ *                   `ModeSplitButton` in a `ButtonGroup` in its actions (Full
+ *                   auto / Manual; the manual face is "Flow once", the auto face
+ *                   disabled), holding `JobTimeline`
+ *                   (`contract-scheduler-kit/timeline.tsx`): `Chart` (time x) +
+ *                   `XAxis` + `HatchPattern` + `SpanLanes` with
+ *                   `createSpanEndLabels` / `createSpanBadge` / `createSpanRing`,
+ *                   `ReferenceLine` drag guides, `ChartTooltip`
+ *   Job list      — `CompactTable` (`onRowHover` + `highlighted` = the
+ *                   cross-highlight with the timeline), `TruthToggle`,
+ *                   `IconOnlyButton` + `Icon lock` / `lock-open`, `TextButton`,
+ *                   `DoingBadge` / `TodoBadge` / `PendingBadge`
+ *   Job detail    — `SmallGhostButton` back, `GroupedMutationSliders` (one
+ *                   entity, `showNames={false}`, a `createFormulaCaption` under
+ *                   each hours dial: `× $95 = $1,330`), `SmallGhostButton` per
+ *                   line opening a `createRangeDialog` range editor
  *
- * BENCH-LOCAL, pending `/sui-build`: `JobTimeline`
- * (`contract-scheduler-kit/timeline.tsx`) — see its header for the four things
- * `TimelineBar` would need to absorb it.
+ * BENCH-LOCAL, on purpose (Peter did not approve extracting them): the DRAG
+ * (shifted data + `onSpanPointerDown`) and the GLIDE (a FLIP over SpanLanes'
+ * `[data-span-id]` groups), both in `contract-scheduler-kit/timeline.tsx`.
  *
  * DEVIATION FROM THE SKETCH, on purpose: a dial's min/max are edited from a
  * small range button under the dials, not by clicking the dial's ends —
@@ -33,61 +42,58 @@
  * `contract-scheduler-model.test.ts` (the ADR's four laws among them).
  */
 import { type Component, For, Show, createMemo, createSignal } from "solid-js";
+import { Dynamic } from "solid-js/web";
 
 import {
-  IconOnlyButton,
-  SmallGhostButton,
-  TextButton,
-} from "../../../src/components/Button";
-import { SmStatusBadge } from "../../../src/components/Badge";
-import {
-  ChartFrame,
-  createYAxisLockDialog,
-} from "../../../src/components/ChartFrame";
-import { GroupedMutationSliders } from "../../../src/components/GroupedMutationSliders";
-import type {
-  GroupedMeasureAxes,
-  GroupedMutationEntity,
-} from "../../../src/components/GroupedMutationSliders";
-import { createIcon } from "../../../src/components/Icon";
-import {
+  ButtonGroup,
+  CardSurface,
   ClusterRow,
+  CompactTable,
+  ContentChartFrame,
   ContentStack,
-  SpreadRow,
-  TightStack,
-  WrapRow,
-} from "../../../src/components/Layout";
-import { RightPopoverMenu } from "../../../src/components/PopoverMenu";
-import { CardSurface } from "../../../src/components/Surface";
-import { CompactTable } from "../../../src/components/Table";
-import type { TableColumn } from "../../../src/components/Table";
-import {
-  createText,
+  DoingBadge,
+  type GroupedMeasureAxes,
+  type GroupedMutationEntity,
+  GroupedMutationSliders,
+  IconOnlyButton,
+  LeftTruthToggle,
+  type ModeInfo,
+  ModeSplitButton,
   MutedBody,
   NoteText,
+  PendingBadge,
   SectionTitle,
+  SmallGhostButton,
+  SpreadRow,
   SteadyMonoValue,
+  type TableColumn,
+  TextButton,
   TextSublabel,
   TextTitle,
-} from "../../../src/components/Text";
-import { TruthToggle } from "../../../src/components/Toggle";
+  TightStack,
+  TodoBadge,
+  TruthToggle,
+  WrapRow,
+  createFormulaCaption,
+  createIcon,
+  createRangeDialog,
+  modeInfo,
+} from "../../../src";
 
 import {
   DEFAULT_ROLES,
   type Job,
+  type JobSchedule,
   type Line,
   type Mode,
   type SchedulerState,
   type WorkCalendar,
-  barOf,
   dragTo,
   endOf,
   estimate,
   flowOnce,
   isoOf,
-  makeAxis,
   overFlags,
-  pack,
   phasesOf,
   sampleJobs,
   schedule,
@@ -100,8 +106,9 @@ import {
   workdays,
 } from "./contract-scheduler-model";
 import {
+  type JobSegment,
+  type JobSpan,
   JobTimeline,
-  type TimelineItem,
   type Tone,
 } from "./contract-scheduler-kit/timeline";
 
@@ -118,21 +125,52 @@ const HOLIDAYS: readonly { readonly iso: string; readonly label: string }[] = [
   { iso: "2026-12-25", label: "Christmas" },
 ];
 
+const DAY = 86_400_000;
+const msOf = (iso: string): number => Date.parse(`${iso}T00:00:00Z`);
+/** The calendar window in epoch ms: FROM's midnight to the day after TO. */
+const WINDOW: readonly [number, number] = [msOf(FROM), msOf(TO) + DAY];
+const TICKS: readonly number[] = [
+  "2026-10-01",
+  "2026-10-15",
+  "2026-11-01",
+  "2026-11-15",
+  "2026-12-01",
+  "2026-12-15",
+].map(msOf);
+
 const ButtonIcon = createIcon({ variant: "outline", size: "sm" });
 const SolidIcon = createIcon({ variant: "solid", size: "sm" });
-const ScreenReaderLabel = createText({ as: "span", class: "sui-sr-only" });
 
 const TONE: Readonly<Record<Job["status"], Tone>> = {
   DOING: "doing",
   TODO: "todo",
   PENDING: "pending",
 };
-const BADGE: Readonly<Record<Job["status"], "info" | "compliant" | "warning">> =
+const STATUS_BADGE = {
+  DOING: DoingBadge,
+  TODO: TodoBadge,
+  PENDING: PendingBadge,
+} as const satisfies Readonly<Record<Job["status"], unknown>>;
+const StatusOf: Component<{ status: Job["status"] }> = (p) => (
+  <Dynamic component={STATUS_BADGE[p.status]} label={p.status} />
+);
+
+const MODES: readonly ModeInfo<Mode>[] = [
   {
-    DOING: "info",
-    TODO: "compliant",
-    PENDING: "warning",
-  };
+    mode: "auto",
+    label: "Full auto — unlocked jobs reflow by order",
+    icon: "arrows-up-down",
+    action: "Unlocked jobs flow automatically",
+    disabled: true,
+  },
+  {
+    mode: "manual",
+    label: "Manual — drag sets exact dates",
+    icon: "fit",
+    action: "Flow once: pack unlocked jobs, keeping their order",
+    disabled: false,
+  },
+];
 
 const k = (n: number): string =>
   n >= 1000
@@ -148,6 +186,14 @@ const short = (iso: string): string =>
   });
 const roleLabel = (id: string): string =>
   ROLES.find((r) => r.id === id)?.label ?? id;
+const rateOf = (id: string | undefined): number | null =>
+  ROLES.find((r) => r.id === id)?.rate ?? null;
+
+/** `× $95 = $1,330` under an hours dial: the role's rate, and what the hours cost. */
+const CostCaption = createFormulaCaption({
+  formatFactor: money,
+  formatResult: money,
+});
 const fmtLine =
   (l: Line) =>
   (v: number): string =>
@@ -159,7 +205,7 @@ const dialOrder = (job: Job): readonly Line[] => [
   ...job.lines.filter((l) => l.unit === "$"),
 ];
 
-const RangeDialogHours = createYAxisLockDialog({
+const RangeDialogHours = createRangeDialog({
   field: "number",
   labels: {
     title: "Line range",
@@ -172,7 +218,7 @@ const RangeDialogHours = createYAxisLockDialog({
     notAboveMin: "Most must be more than fewest",
   },
 });
-const RangeDialogMoney = createYAxisLockDialog({
+const RangeDialogMoney = createRangeDialog({
   field: "currency",
   labels: {
     title: "Line range",
@@ -192,7 +238,19 @@ const ContractScheduler: Component = () => {
     holidays: HOLIDAYS.map((h) => h.iso),
   });
   const days = createMemo(() => workdays(FROM, TO, cal()));
-  const axis = createMemo(() => makeAxis(FROM, TO, days()));
+  /** The first working day at or after an instant (a drop, a guide's start). */
+  const dayAt = (ms: number): number => {
+    const i = days().findIndex((d) => d >= ms - 1);
+    return i < 0 ? days().length - 1 : i;
+  };
+  /** Where a run ending on working day `w` stops: the next working day's start. */
+  const edgeOf = (w: number): number => {
+    const ds = days();
+    const last = ds.length - 1;
+    return w + 1 <= last ? ds[w + 1] : ds[last] + DAY;
+  };
+  const dayMs = (w: number): number =>
+    days()[Math.max(0, Math.min(days().length - 1, w))];
 
   const firstDayOf = (iso: string): number => {
     const t = Date.parse(`${iso}T00:00:00Z`);
@@ -234,16 +292,36 @@ const ContractScheduler: Component = () => {
   );
   const job = (id: number | null) => st().jobs.find((j) => j.id === id);
 
-  // ── timeline items ──────────────────────────────────────────────────────
-  const items = createMemo(() => {
-    const placed = st()
-      .jobs.filter((j) => j.on && sch().byJob[j.id])
-      .map((j) => ({
-        id: j.id,
-        s: startOf(sch(), j.id) as number,
-        e: endOf(sch(), j.id) as number,
-      }));
-    const rows = pack(placed);
+  // ── timeline spans ──────────────────────────────────────────────────────
+  // The model lays each job's phases and waits on WORKING-DAY indices; the
+  // chart is time, so each becomes an instant: a day's midnight, and a run's
+  // end at the next working day's (so a Friday finish covers the weekend).
+  const segmentsOf = (js: JobSchedule): readonly JobSegment[] => [
+    ...js.phases.map(
+      (p): JobSegment => ({
+        kind: "work",
+        start: dayMs(p.s),
+        end: edgeOf(p.e),
+        title: p.label,
+        role: p.role,
+        days: p.days.length,
+        by: [],
+      }),
+    ),
+    ...js.waits.map(
+      (w): JobSegment => ({
+        kind: "wait",
+        start: dayMs(w.s),
+        end: edgeOf(w.e),
+        title: "Waiting",
+        role: w.role,
+        days: w.e - w.s + 1,
+        by: w.by,
+      }),
+    ),
+  ];
+
+  const timeline = createMemo(() => {
     const overText = (id: number): string | null => {
       const f = flags()[id];
       if (!f) return null;
@@ -255,12 +333,7 @@ const ContractScheduler: Component = () => {
         })
         .join("; ");
     };
-    const item = (
-      j: Job,
-      row: number,
-      bar: TimelineItem["bar"],
-      parked = false,
-    ): TimelineItem => ({
+    const spanOf = (j: Job, js: JobSchedule, parked: boolean): JobSpan => ({
       id: j.id,
       lead: `#${j.id}`,
       trail: k(estimate(j, ROLES).value),
@@ -268,98 +341,55 @@ const ContractScheduler: Component = () => {
       tone: TONE[j.status],
       locked: j.locked,
       over: parked ? null : overText(j.id),
-      row,
-      bar,
-      parked,
+      segments: segmentsOf(js),
     });
-    const onCal = rows.map((r) => {
-      const j = job(r.id) as Job;
-      const js = sch().byJob[r.id];
-      return item(j, r.row, barOf(js.phases, js.waits, axis()));
-    });
+    const spans = st()
+      .jobs.filter((j) => j.on && sch().byJob[j.id])
+      .map((j) => spanOf(j, sch().byJob[j.id], false));
     // manual only: unplaced jobs wait in TBD at their natural length, parked at the right edge
-    const parked =
+    const unplaced =
       st().mode === "manual"
         ? st().jobs.filter(
             (j) => j.on && !sch().byJob[j.id] && phasesOf(j).length,
           )
         : [];
     const n = days().length;
-    const tbd = parked.map((j, i) => {
+    const parked = unplaced.map((j) => {
       const len = phasesOf(j).reduce((a, p) => a + p.days, 0);
-      const s0 = Math.max(0, n - 1 - len);
-      let w = s0;
+      let w = Math.max(0, n - 1 - len);
       const phases = phasesOf(j).map((p) => {
         const ds = Array.from({ length: p.days }, () => w++);
         return { ...p, days: ds, s: ds[0], e: ds[ds.length - 1] };
       });
-      return item(j, i, barOf(phases, [], axis()), true);
+      return spanOf(j, { phases, waits: [] }, true);
     });
-    return {
-      list: [...onCal, ...tbd],
-      rows: Math.max(1, ...rows.map((r) => r.row + 1)),
-      parkedRows: tbd.length,
-    };
+    return { spans, parked };
   });
 
-  const ticks = createMemo(() =>
-    [
-      "2026-10-01",
-      "2026-10-15",
-      "2026-11-01",
-      "2026-11-15",
-      "2026-12-01",
-      "2026-12-15",
-    ].map((iso) => ({
-      left: axis().at(iso),
-      label: short(iso),
-    })),
-  );
+  /** A guide's date: the first working day of a start, the last one before an end. */
+  const guideDate = (ms: number, edge: "start" | "end"): string => {
+    const w = dayAt(ms);
+    return short(isoOf(days()[edge === "start" ? w : Math.max(0, w - 1)]));
+  };
 
-  // ── mode control: ChartFrame's split-button composition ─────────────────
+  // ── mode control: ModeSplitButton, the manual face = Flow once ──────────
   const modeActions = () => (
     <ClusterRow>
       <TextSublabel>
         {st().mode === "auto" ? "Full auto" : "Manual"}
       </TextSublabel>
-      <Show
-        when={st().mode === "manual"}
-        fallback={
-          <IconOnlyButton
-            disabled
-            aria-label="Unlocked jobs flow automatically"
-            title="Unlocked jobs flow automatically"
-          >
-            <ButtonIcon name="arrows-up-down" />
-          </IconOnlyButton>
-        }
-      >
-        <IconOnlyButton
-          onClick={() => update((s) => flowOnce(s, ROLES))}
-          aria-label="Flow once: pack unlocked jobs, keeping their order"
-          title="Flow once: pack unlocked jobs, keeping their order"
-        >
-          <ButtonIcon name="fit" />
-        </IconOnlyButton>
-      </Show>
-      <RightPopoverMenu<Mode>
-        trigger={<ScreenReaderLabel>Schedule mode</ScreenReaderLabel>}
-        items={[
-          {
-            id: "auto",
-            label: "Full auto — unlocked jobs reflow by order",
-            icon: "arrows-up-down",
-            active: st().mode === "auto",
-          },
-          {
-            id: "manual",
-            label: "Manual — drag sets exact dates",
-            icon: "fit",
-            active: st().mode === "manual",
-          },
-        ]}
-        onSelect={(m) => update((s) => setMode(s, m, ROLES))}
-      />
+      <ButtonGroup>
+        <ModeSplitButton<Mode>
+          modes={MODES}
+          mode={st().mode}
+          onModeChange={(m) => update((s) => setMode(s, m, ROLES))}
+          onPress={() => {
+            if (!modeInfo(MODES, st().mode).disabled)
+              update((s) => flowOnce(s, ROLES));
+          }}
+          menuLabel="Schedule mode"
+        />
+      </ButtonGroup>
     </ClusterRow>
   );
 
@@ -374,7 +404,7 @@ const ContractScheduler: Component = () => {
           : "Lock against automated changes"
       }
     >
-      <Show when={j.locked} fallback={<ButtonIcon name="lock" />}>
+      <Show when={j.locked} fallback={<ButtonIcon name="lock-open" />}>
         <SolidIcon name="lock" />
       </Show>
     </IconOnlyButton>
@@ -415,9 +445,7 @@ const ContractScheduler: Component = () => {
     {
       id: "status",
       header: "Status",
-      accessor: (j) => (
-        <SmStatusBadge variant={BADGE[j.status]} label={j.status} />
-      ),
+      accessor: (j) => <StatusOf status={j.status} />,
     },
     {
       id: "start",
@@ -452,10 +480,15 @@ const ContractScheduler: Component = () => {
             : `${roleLabel(l.role ?? "").toLowerCase()} hours`,
         format: fmtLine(l),
         snap: l.unit === "$" ? 100 : 1,
+        // hours × the role's rate; a money line is already its own cost
+        caption:
+          l.unit === "h"
+            ? (c) => <CostCaption operand={c.value} factor={rateOf(l.role)} />
+            : undefined,
       }));
     const entity = (): GroupedMutationEntity => ({
       id: String(j().id),
-      label: "Hours & materials",
+      label: j().name,
       measures: lines().map((l) => ({
         prior: l.prior,
         value: l.value,
@@ -477,7 +510,7 @@ const ContractScheduler: Component = () => {
             <ClusterRow>
               {lockButton(j())}
               <TextTitle>{`#${j().id} ${j().name}`}</TextTitle>
-              <SmStatusBadge variant={BADGE[j().status]} label={j().status} />
+              <StatusOf status={j().status} />
             </ClusterRow>
           </TightStack>
           <ClusterRow>
@@ -496,6 +529,7 @@ const ContractScheduler: Component = () => {
         <GroupedMutationSliders
           entities={[entity()]}
           axes={axes()}
+          showNames={false}
           onChange={(_id, m, v) =>
             update((s) => setValue(s, j().id, lines()[m].key, v))
           }
@@ -555,51 +589,46 @@ const ContractScheduler: Component = () => {
 
       <WrapRow>
         <TextSublabel>Work calendar</TextSublabel>
-        <ClusterRow>
-          <TextSublabel>Work weekends</TextSublabel>
-          <TruthToggle
-            aria-label="Work weekends"
-            checked={cal().weekends}
-            onCheckedChange={(on) => setCal((c) => ({ ...c, weekends: on }))}
-          />
-        </ClusterRow>
+        <LeftTruthToggle
+          label="Work weekends"
+          checked={cal().weekends}
+          onCheckedChange={(on) => setCal((c) => ({ ...c, weekends: on }))}
+        />
         <For each={HOLIDAYS}>
           {(h) => (
-            <ClusterRow>
-              <TextSublabel>{`${h.label} off`}</TextSublabel>
-              <TruthToggle
-                aria-label={`${h.label} off`}
-                checked={cal().holidays.includes(h.iso)}
-                onCheckedChange={(on) =>
-                  setCal((c) => ({
-                    ...c,
-                    holidays: on
-                      ? [...c.holidays, h.iso]
-                      : c.holidays.filter((x) => x !== h.iso),
-                  }))
-                }
-              />
-            </ClusterRow>
+            <LeftTruthToggle
+              label={`${h.label} off`}
+              checked={cal().holidays.includes(h.iso)}
+              onCheckedChange={(on) =>
+                setCal((c) => ({
+                  ...c,
+                  holidays: on
+                    ? [...c.holidays, h.iso]
+                    : c.holidays.filter((x) => x !== h.iso),
+                }))
+              }
+            />
           )}
         </For>
       </WrapRow>
 
-      <ChartFrame title="Timeline" actions={modeActions()}>
+      <ContentChartFrame title="Timeline" actions={modeActions()}>
         <JobTimeline
-          items={items().list}
-          rows={items().rows}
-          parkedRows={items().parkedRows}
-          ticks={ticks()}
+          spans={timeline().spans}
+          parked={timeline().parked}
+          window={WINDOW}
+          ticks={TICKS}
+          tickFormat={(ms) => short(isoOf(ms))}
           hoverId={hover()}
           roleLabel={roleLabel}
-          dateAt={(p) => short(isoOf(days()[axis().dayAt(p)]))}
+          dateAt={guideDate}
           onHover={setHover}
           onOpen={setOpenId}
-          onDrop={(id, left) =>
-            update((s) => dragTo(s, id, axis().dayAt(left), ROLES))
+          onDrop={(id, startMs) =>
+            update((s) => dragTo(s, id, dayAt(startMs), ROLES))
           }
         />
-      </ChartFrame>
+      </ContentChartFrame>
 
       <CardSurface>
         <Show
@@ -618,9 +647,7 @@ const ContractScheduler: Component = () => {
                 columns={columns}
                 hoverable
                 onRowHover={(row) => setHover(row ? row.id : null)}
-                getRowClass={(row) =>
-                  row.id === hover() ? "hud-table__row--selected" : ""
-                }
+                highlighted={(row) => row.id === hover()}
               />
               <NoteText>{`Sorted by start · ${st().jobs.filter((j) => j.on).length} of ${st().jobs.length} in this scenario`}</NoteText>
             </TightStack>
