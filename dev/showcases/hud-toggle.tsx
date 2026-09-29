@@ -1,5 +1,5 @@
 import { type Component, createSignal } from "solid-js";
-import { Toggle } from "../../src/components/Toggle";
+import { LeftTruthToggle, Toggle } from "../../src/components/Toggle";
 import { Stack } from "../../src/components/Layout/Stack";
 import { ClusterRow, WrappedClusterRow } from "../../src/components/Layout";
 
@@ -7,6 +7,8 @@ export const ToggleShowcase: Component = () => {
   const [checked, setChecked] = createSignal(false);
   const [minimal, setMinimal] = createSignal(true);
   const [enabled, setEnabled] = createSignal(false);
+  const [weekends, setWeekends] = createSignal(false);
+  const [holiday, setHoliday] = createSignal(true);
 
   return (
     <div class="component-section">
@@ -29,6 +31,30 @@ export const ToggleShowcase: Component = () => {
           onCheckedChange={setEnabled}
         />
         <div class="text-meta">State: {enabled() ? "ON" : "OFF"}</div>
+      </div>
+
+      <div class="example-group">
+        <h3>LeftTruthToggle — label first</h3>
+        <p class="text-meta">
+          TruthToggle with its words before the switch, for a row of labelled
+          switches: each label sits beside its own switch, not the next one.
+        </p>
+        <WrappedClusterRow>
+          <LeftTruthToggle
+            label="Work weekends"
+            checked={weekends()}
+            onCheckedChange={setWeekends}
+          />
+          <LeftTruthToggle
+            label="Thanksgiving off"
+            checked={holiday()}
+            onCheckedChange={setHoliday}
+          />
+        </WrappedClusterRow>
+        <div class="text-meta">
+          Weekends {weekends() ? "worked" : "off"} · Thanksgiving{" "}
+          {holiday() ? "off" : "worked"}
+        </div>
       </div>
 
       <div class="example-group">

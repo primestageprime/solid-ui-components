@@ -3,8 +3,12 @@ export type {
   ChartFrameDataProps,
   ChartFrameOverrides,
 } from "./ChartFrame";
-export { createYAxisLockDialog } from "./YAxisLockDialog";
+export { createRangeDialog, createYAxisLockDialog } from "./YAxisLockDialog";
 export type {
+  RangeDialogDataProps,
+  RangeDialogLabels,
+  RangeDialogOverrides,
+  RangeField,
   YAxisLockDialogDataProps,
   YAxisLockDialogLabels,
   YAxisLockDialogOverrides,

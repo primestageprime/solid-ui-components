@@ -54,6 +54,18 @@
     },
     "src/components/ThreadGroup/ThreadGroup.tsx": {
       "color": "Per-thread caller-driven accent identity colour (ADR 0003)."
+    },
+    "src/components/SvgMarks/BoxRing.tsx": {
+      "color": "SVG mark paint handed in by the caller — colour is data under the box contract (ADR 0003 data-driven paint; ADR 0010 marks)."
+    },
+    "src/components/SvgMarks/EndLabels.tsx": {
+      "color": "SVG mark paint handed in by the caller — colour is data under the box contract (ADR 0003 data-driven paint; ADR 0010 marks)."
+    },
+    "src/components/SvgMarks/GlyphBadge.tsx": {
+      "color": "SVG mark paint handed in by the caller — colour is data under the box contract (ADR 0003 data-driven paint; ADR 0010 marks)."
+    },
+    "src/components/SvgMarks/HatchPattern.tsx": {
+      "color": "SVG mark paint handed in by the caller — colour is data under the box contract (ADR 0003 data-driven paint; ADR 0010 marks)."
     }
   }
 }

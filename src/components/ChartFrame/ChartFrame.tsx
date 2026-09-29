@@ -2,7 +2,7 @@
 // ChartFrame — Composite (Depth 2)
 // Owns zero CSS. Composes FullscreenBox + Layout (Stack/Row/Box variants) +
 // Text (TextTitle, VerticalAxisTitle) + ButtonGroup + IconOnlyButton + Icon +
-// RightPopoverMenu.
+// ModeSplitButton (the y-axis strategy split).
 //
 // Peter's chart visual language (2026-09-24) — EVERY chart has:
 //
@@ -25,18 +25,18 @@
 // does the work — reset its water marks, or open its lock dialog. Full auto's
 // face is DISABLED, not a silent no-op.
 //
-// HEIGHT is stated, never left to the chart: a chart that sizes itself (an
+// HEIGHT is stated, never left to the chart (bar `"content"`, below): a chart that sizes itself (an
 // aspect ratio) would otherwise make the frame ~800px tall at full width. The
 // stated height sits on the FullscreenBox's first child, which fullscreen
 // turns into `flex: 1 1 0` — so the same frame fills the viewport there and
 // comes back to its stated height, with no remount (held marks survive).
+// `"content"` is the one exception, for a chart whose height IS its data (a
+// lane chart packed into as many rows as it needs): no stated height, and the
+// body row grows only when fullscreen gives the column a height to grow into.
 //
-// The ▾ gets its accessible name from the frame: PopoverMenu has no label
-// prop, so the trigger's content is a screen-reader-only span ("Y-axis
-// mode") beside PopoverMenu's own aria-hidden caret.
+// The ▾'s accessible name ("Y-axis mode") is ModeSplitButton's `menuLabel`.
 // ============================================
 import { type Component, type JSX, Show, createSignal, mergeProps } from "solid-js";
-import { map } from "../../fn";
 import { IconOnlyButton } from "../Button";
 import { ButtonGroup } from "../ButtonGroup";
 import { FillFullscreenBox, FullscreenBox } from "../FullscreenBox";
@@ -48,14 +48,9 @@ import {
   createRow,
   createStack,
 } from "../Layout";
-import { type PopoverMenuItem, RightPopoverMenu } from "../PopoverMenu";
-import { TextTitle, VerticalAxisTitle, createText } from "../Text";
-import {
-  CHART_Y_AXIS_MODES,
-  type ChartYAxisMode,
-  type ChartYAxisModeInfo,
-  chartYAxisModeInfo,
-} from "./yAxisModes";
+import { ModeSplitButton } from "../ModeSplitButton";
+import { TextTitle, VerticalAxisTitle } from "../Text";
+import { CHART_Y_AXIS_MODES, type ChartYAxisMode } from "./yAxisModes";
 
 export interface ChartFrameProps {
   /** The chart's name, top left. */
@@ -84,32 +79,37 @@ export interface ChartFrameProps {
   /** The chart. It fills the body. */
   children: JSX.Element;
   /**
-   * The in-flow height: px, or `"fill"` to take a parent of definite height.
+   * The in-flow height: px, `"fill"` to take a parent of definite height, or
+   * `"content"` to be as tall as the chart draws itself.
    * Presentational — curried, never passed at a call site.
    */
-  height: number | "fill";
+  height: number | "fill" | "content";
 }
 
 const ButtonIcon = createIcon({ variant: "outline", size: "sm" });
 
-/** Visually hidden, still announced: the ▾ trigger's accessible name. */
-const ScreenReaderLabel = createText({ as: "span", class: "sui-sr-only" });
+/** The column's stated height: px, the parent's, or none (its content's). */
+const columnHeight = (height: ChartFrameProps["height"]): JSX.CSSProperties =>
+  height === "content"
+    ? {}
+    : { height: height === "fill" ? "100%" : `${height}px`, "min-height": "0" };
 
 /** The header row and the body row, in one column. */
-const frameColumn = (height: number | "fill") =>
-  createStack({
-    gap: "xs",
-    style: {
-      height: height === "fill" ? "100%" : `${height}px`,
-      "min-height": "0",
-    },
-  });
+const frameColumn = (height: ChartFrameProps["height"]) =>
+  createStack({ gap: "xs", style: columnHeight(height) });
 
 /** Rail + chart; takes what the header leaves. */
 const BodyRow = createRow({
   gap: "xs",
   align: "stretch",
   style: { flex: "1 1 0", "min-height": "0" },
+});
+
+/** Rail + chart at the chart's own height; grows only into a fullscreen column. */
+const ContentBodyRow = createRow({
+  gap: "xs",
+  align: "stretch",
+  style: { flex: "1 0 auto" },
 });
 
 /** The y-title, centred down the rail. CLIPPED to the body (G13): the
@@ -121,21 +121,9 @@ const YTitleRail = createStack({
   style: { "min-height": "0", overflow: "hidden" },
 });
 
-const menuItems = (
-  current: ChartYAxisMode,
-): [PopoverMenuItem<ChartYAxisMode>, ...PopoverMenuItem<ChartYAxisMode>[]] =>
-  map(
-    (info: ChartYAxisModeInfo): PopoverMenuItem<ChartYAxisMode> => ({
-      id: info.mode,
-      label: info.label,
-      icon: info.icon,
-      active: info.mode === current,
-    }),
-    [...CHART_Y_AXIS_MODES],
-  ) as [PopoverMenuItem<ChartYAxisMode>, ...PopoverMenuItem<ChartYAxisMode>[]];
-
 const ChartFrameBase: Component<ChartFrameProps> = (props) => {
   const FrameColumn = frameColumn(props.height);
+  const Body = props.height === "content" ? ContentBodyRow : BodyRow;
   // A filling frame's box must fill too, or the column's 100% resolves
   // against a content-sized box and the body gets 0px (G11).
   const Box = props.height === "fill" ? FillFullscreenBox : FullscreenBox;
@@ -146,7 +134,6 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
     props.onFullscreenChange?.(next);
   };
   const fullscreenName = () => (fullscreen() ? "Exit full screen" : "Full screen");
-  const info = () => chartYAxisModeInfo(props.yAxisMode ?? "auto");
 
   const buttons = (): JSX.Element => (
     <ButtonGroup>
@@ -159,21 +146,13 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
       </IconOnlyButton>
       <Show when={props.yAxisMode}>
         {(mode) => (
-          <>
-            <IconOnlyButton
-              onClick={() => props.onYAxisPress?.()}
-              disabled={info().disabled}
-              aria-label={info().action}
-              title={info().action}
-            >
-              <ButtonIcon name={info().icon} />
-            </IconOnlyButton>
-            <RightPopoverMenu
-              trigger={<ScreenReaderLabel>Y-axis mode</ScreenReaderLabel>}
-              items={menuItems(mode())}
-              onSelect={(next) => props.onYAxisModeChange?.(next)}
-            />
-          </>
+          <ModeSplitButton<ChartYAxisMode>
+            modes={CHART_Y_AXIS_MODES}
+            mode={mode()}
+            onPress={() => props.onYAxisPress?.()}
+            onModeChange={(next) => props.onYAxisModeChange?.(next)}
+            menuLabel="Y-axis mode"
+          />
         )}
       </Show>
     </ButtonGroup>
@@ -195,7 +174,7 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
             </ClusterRow>
           </Show>
         </SpreadRow>
-        <BodyRow>
+        <Body>
           <Show when={props.yTitle}>
             {(yTitle) => (
               <YTitleRail>
@@ -204,7 +183,7 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
             )}
           </Show>
           <GrowFillBox>{props.children}</GrowFillBox>
-        </BodyRow>
+        </Body>
       </FrameColumn>
     </Box>
   );

@@ -142,7 +142,8 @@
   transition: background-color 0.15s ease;
 }
 
-.hud-table__row:hover {
+.hud-table__row:hover,
+.hud-table__row--highlighted {
   background-color: rgba(var(--sui-accent-rgb), 0.05);
 }
 

@@ -109,6 +109,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     "fixedLayout",
     "fit",
     "getRowClass",
+    "highlighted",
     "onRowClick",
     "onRowHover",
     "emptyMessage",
@@ -365,6 +366,10 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                   return (
                     <tr
                       class={`hud-table__row ${local.getRowClass?.(row, rowIndex()) || ""}`}
+                      classList={{
+                        "hud-table__row--highlighted":
+                          local.highlighted?.(row, rowIndex()) ?? false,
+                      }}
                       onClick={() => local.onRowClick?.(row, rowIndex())}
                       onMouseEnter={() => local.onRowHover?.(row, rowIndex())}
                       style={clickableCursor(!!local.onRowClick)}

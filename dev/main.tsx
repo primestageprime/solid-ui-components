@@ -113,6 +113,10 @@ import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
 import { RateGaugeShowcase } from "./showcases/rate-gauge";
+import { SvgMarksShowcase } from "./showcases/svg-marks";
+import { SpanLanesShowcase } from "./showcases/span-lanes";
+import { FormulaCaptionShowcase } from "./showcases/formula-caption";
+import { ModeSplitButtonShowcase } from "./showcases/mode-split-button";
 import { MutationToolbarShowcase } from "./showcases/mutation-toolbar";
 import { StackedTimelineChartShowcase } from "./showcases/stacked-timeline-chart";
 import { HighWaterMarkShowcase } from "./showcases/high-water-mark";
@@ -678,6 +682,30 @@ const items: Item[] = [
     label: "RateGauge",
     component: RateGaugeShowcase,
     tags: ["depth:2", "chart", "indicator"],
+  },
+  {
+    id: "svg-marks",
+    label: "SvgMarks",
+    component: SvgMarksShowcase,
+    tags: ["depth:1", "chart"],
+  },
+  {
+    id: "span-lanes",
+    label: "SpanLanes",
+    component: SpanLanesShowcase,
+    tags: ["depth:2", "chart", "time"],
+  },
+  {
+    id: "formula-caption",
+    label: "FormulaCaption",
+    component: FormulaCaptionShowcase,
+    tags: ["depth:2", "text"],
+  },
+  {
+    id: "mode-split-button",
+    label: "ModeSplitButton",
+    component: ModeSplitButtonShowcase,
+    tags: ["depth:2", "form"],
   },
   {
     id: "sprint-selector",

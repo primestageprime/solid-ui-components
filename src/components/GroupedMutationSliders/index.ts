@@ -38,7 +38,11 @@ export type {
   GroupedMutationSlidersDataProps,
   GroupedMutationSliderLabels,
 } from "./GroupedMutationSliders";
-export type { GroupedMeasureAxis, GroupedMeasureAxes } from "./axes";
+export type {
+  GroupedMeasureAxis,
+  GroupedMeasureAxes,
+  MeasureCaptionProps,
+} from "./axes";
 export type {
   GroupRun,
   GroupedMeasure,

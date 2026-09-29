@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### Added
+
+- **`SvgMarks`** — Depth-1 SVG marks on a BOX CONTRACT: each draws inside the `{ x, y, width, height }` it is handed and never positions itself; colour is data. `HatchPattern` (a striped `<pattern>` for `fill="url(#id)"`), `SegmentBar` (a clipped bar of fractional segments with seams and a hover outline), `BoxRing` (an attention ring stood off a box), `GlyphBadge` (a disc with a text or path glyph), `EndLabels` (a lead and a trail label, the trail dropped when it does not fit), each with a `create*` factory where it has overrides, plus the pure geometry (`inflate`, `centerOf`, `segmentRects`, `fitEndLabels`). The folder imports nothing from the HTML components and they import nothing from it.
+- **`SpanLanes`** — a Composite (Depth 2) chart slot drawing SPANS over time as bars of consecutive segments, packed into the fewest rows (`spanExtent`, `packSpans`, `spanRowCount`, `layoutSpans` are the pure core). `paint(segment, datum)` returns any SVG paint (a token or a `HatchPattern` url); `adornments` are pluggable displays handed `{ datum, box, hovered, row }`, with three stock factories: `createSpanEndLabels`, `createSpanBadge`, `createSpanRing`. Hover, click (Enter/Space) and pointer-down are reported with the datum; each span's group carries `data-span-id`. `createSpanLanes` curries `rowHeight` / `barHeight`.
+- **`FormulaCaption`** — a Composite (Depth 2) one-line caption that shows its work (`× $125 = $1,000`), built from Text atoms, with `createFormulaCaption` and the pure `formulaText`. The stock display for `GroupedMutationSliders`' new axis `caption`.
+- **`ModeSplitButton`** — a Composite (Depth 2) split button over a mode: the face shows the current mode's icon and does its action (disabled with a reason when it has none), the ▾ picks the mode. Generic `modes: ModeInfo<M>[]`, `mode`, `onModeChange`, `onPress`, `menuLabel`; `modeInfo` helper. Extracted from `ChartFrame`'s private y-axis composition.
+- **`GroupedMutationSliders`: `axes[i].caption`** (a display component handed `{ value, prior, entityId, measure }`, drawn under the measure's readouts, its line reserved in every column) and **`showNames`** (default `true`; `false` hides the entity name on a one-entity detail row).
+- **`ChartFrame`: `height: "content"`** — the body takes its child's height — and the **`ContentChartFrame`** variant.
+- **`createRangeDialog`** — the general name for `createYAxisLockDialog` (a min/max editor), with `RangeDialogLabels` / `RangeDialogOverrides` / `RangeDialogDataProps` / `RangeField` type aliases. The old names stay.
+- **`BaseTable` (and every table over it): `highlighted?: (row, i) => boolean`** — rows lit as if hovered, driven from outside; the other half of an `onRowHover` cross-highlight.
+- **`LeftTruthToggle`** — `TruthToggle` with its label before the switch.
+- **`DoingBadge`** and **`TodoBadge`** — workflow-named `StatusBadge` variants (info and compliant tones), beside the existing `PendingBadge`.
+- **`Icon`: `lock-open`** — the unlocked padlock, beside `lock`.
+
+### Changed
+
+- **`ChartFrame`'s y-axis mode control now composes `ModeSplitButton`.** Same buttons, labels and behaviour; `ChartYAxisModeInfo` is now `ModeInfo<ChartYAxisMode>`.
+
+### Removed
+
+- **Workshop benches `builder-board`, `license-board` and `solar-sankey`** (dev gallery only; nothing published changes). Hourly Board stays as the one board bench, since it runs on the shared `board-kit` config, and `BuilderBoard` stays in the library.
+
+
 ## 0.203.0 — 2026-09-28
 
 ### Changed

@@ -56,6 +56,7 @@ export const ICON_GROUPS = {
     "external-link",
     "bell",
     "lock",
+    "lock-open",
     "link",
   ] as const,
   auth: ["log-out", "log-in", "user", "agent"] as const,
@@ -119,6 +120,7 @@ export type IconName =
   | "external-link"
   | "bell"
   | "lock"
+  | "lock-open"
   | "link"
   // Auth
   | "log-out"
@@ -448,6 +450,15 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
       solid: `<rect x="2.5" y="6.5" width="11" height="8" rx="1.5" fill="currentColor"/>
             <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="8" cy="10.5" r="1.2" fill="var(--sui-bg-primary)"/>`,
+    },
+
+    // Open padlock: lock's body, the shackle swung up and off its right post.
+    "lock-open": {
+      outline: `<rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
+      solid: `<rect x="2.5" y="6.5" width="11" height="8" rx="1.5" fill="currentColor"/>
+            <path d="M5.5 7V4.5a2.5 2.5 0 0 1 5 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
             <circle cx="8" cy="10.5" r="1.2" fill="var(--sui-bg-primary)"/>`,
     },
 

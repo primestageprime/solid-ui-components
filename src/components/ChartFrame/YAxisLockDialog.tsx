@@ -161,3 +161,15 @@ export function createYAxisLockDialog(
 ): Component<YAxisLockDialogDataProps> {
   return (props) => <YAxisLockDialogBase {...mergeProps(defaults, props)} />;
 }
+
+// ── The same dialog, named for what it is outside a chart ──
+// A min/max editor with per-field errors. The y-axis lock is its first use;
+// a slider's range (the dial's min/max clicks) is the second. Same component,
+// the general name — no fork.
+
+/** A Max-over-Min range editor. Alias of `createYAxisLockDialog`. */
+export const createRangeDialog = createYAxisLockDialog;
+export type RangeDialogLabels = YAxisLockDialogLabels;
+export type RangeDialogOverrides = YAxisLockDialogOverrides;
+export type RangeDialogDataProps = YAxisLockDialogDataProps;
+export type RangeField = YAxisLockField;

@@ -1,4 +1,4 @@
-import type { Component } from "solid-js";
+import { type Component, For, createSignal } from "solid-js";
 import { BaseTable } from "../../src/components/Table";
 import {
   CompactTable,
@@ -7,9 +7,9 @@ import {
   DataTable,
 } from "../../src/components/Table";
 import type { TableColumn } from "../../src/components/Table";
-import { IconOnlyButton } from "../../src/components/Button";
+import { IconOnlyButton, TextButton } from "../../src/components/Button";
 import { Icon } from "../../src/components/Icon";
-import { NarrowStack } from "../../src/components/Layout";
+import { NarrowStack, WrapRow } from "../../src/components/Layout";
 
 const sampleData = [
   {
@@ -224,6 +224,37 @@ const groupedColumns: TableColumn<SensorReading>[] = [
   },
 ];
 
+/** `highlighted` — the other half of an `onRowHover` cross-highlight. Hover a
+ *  name above the table (standing in for a chart mark) and its row lights;
+ *  hover a row and its name reads back. One signal, both directions. */
+const CrossHighlightExample: Component = () => {
+  const [hovered, setHovered] = createSignal<number | null>(null);
+  return (
+    <>
+      <WrapRow>
+        <For each={sampleData.slice(0, 4)}>
+          {(row) => (
+            <TextButton
+              onPointerEnter={() => setHovered(row.id)}
+              onPointerLeave={() => setHovered(null)}
+              onClick={() => setHovered(row.id)}
+            >
+              {row.id === hovered() ? `▸ ${row.vessel}` : row.vessel}
+            </TextButton>
+          )}
+        </For>
+      </WrapRow>
+      <CompactTable
+        data={sampleData.slice(0, 4)}
+        columns={columns}
+        hoverable
+        onRowHover={(row) => setHovered(row ? row.id : null)}
+        highlighted={(row) => row.id === hovered()}
+      />
+    </>
+  );
+};
+
 export const BaseTableShowcase: Component = () => {
   return (
     <div class="component-section">
@@ -376,6 +407,13 @@ export const BaseTableShowcase: Component = () => {
           </div>
         </div>
       </div>
+
+      <h2 class="showcase-heading-gap--lg">Highlighted from outside</h2>
+      <p class="text-meta">
+        <code>highlighted</code> lights rows as if hovered, driven by state the
+        table does not own.
+      </p>
+      <CrossHighlightExample />
 
       <h2 class="showcase-heading-gap--lg">Column Groups</h2>
       <p class="text-meta">

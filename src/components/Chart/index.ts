@@ -74,6 +74,29 @@ export type {
   TimelineBarDataProps,
 } from "./TimelineBar";
 export * from "./TimelineBar.variants";
+export { SpanLanes, createSpanLanes } from "./SpanLanes";
+export type {
+  SpanDisplayProps,
+  SpanLanesDataProps,
+  SpanLanesOverrides,
+  SpanLanesProps,
+} from "./SpanLanes";
+export { layoutSpans, packSpans, spanExtent, spanRowCount } from "./spanLanes";
+export type {
+  Extent as SpanExtent,
+  LaidSegment,
+  LaidSpan,
+  PackedSpan,
+  RowGeometry,
+  SpanDatum,
+  SpanSegment,
+} from "./spanLanes";
+export {
+  createSpanBadge,
+  createSpanEndLabels,
+  createSpanRing,
+} from "./spanAdornments";
+export type { SpanCorner } from "./spanAdornments";
 
 export { PinMarkers, createPinMarkers } from "./PinMarkers";
 export type {

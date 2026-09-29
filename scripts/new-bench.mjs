@@ -7,7 +7,7 @@
 // A Bench (dev/showcases/workshop/<slug>.tsx) is AUTO-DISCOVERED — dev/main.tsx
 // globs `./showcases/workshop/*.tsx` (see workshop-benches.ts) and surfaces
 // every default export as its own row under the Workshop nav link, exactly
-// how `license-board` appears there today. There is no separate nav-edit
+// how `hourly-board` appears there today. There is no separate nav-edit
 // step: writing the file *is* registering it.
 //
 // This reuses `scripts/workshop-lib.mjs` (slug validation, the label

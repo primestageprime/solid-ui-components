@@ -4,7 +4,11 @@ import { fireEvent, render, screen } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
 import type { YAxisDomain } from "../../hooks/createYAxisStrategy";
-import { YAxisLockDialog, YAxisLockDialogNumber } from "./index";
+import {
+  YAxisLockDialog,
+  YAxisLockDialogNumber,
+  createRangeDialog,
+} from "./index";
 
 /** The visible inputs, Max first (the dialog's order). */
 const field = (name: "y-max" | "y-min") =>
@@ -86,5 +90,29 @@ describe("YAxisLockDialogNumber — a count axis", () => {
     type(field("y-min"), "5");
     fireEvent.click(confirmButton());
     expect(onLock).toHaveBeenCalledWith([5, 40]);
+  });
+});
+
+describe("createRangeDialog — the lock editor under its general name", () => {
+  it("renders with the caller's words and lifts a valid range", () => {
+    const RangeDialog = createRangeDialog({
+      field: "number",
+      labels: {
+        title: "Dial range",
+        description: "Where the dial starts and stops.",
+        confirm: "Set",
+        max: "Max hours",
+        min: "Min hours",
+        notANumber: "Enter a number",
+        notAboveMin: "Max must be greater than min",
+      },
+    });
+    const onLock = vi.fn();
+    render(() => (
+      <RangeDialog open lock={[0, 24]} onLock={onLock} onClose={() => {}} />
+    ));
+    expect(screen.getByText("Dial range")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Set" }));
+    expect(onLock).toHaveBeenCalledWith([0, 24]);
   });
 });

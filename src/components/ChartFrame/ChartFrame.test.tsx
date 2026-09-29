@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   CHART_FRAME_HEIGHT,
   ChartFrame,
+  ContentChartFrame,
   type ChartYAxisMode,
   chartYAxisModeInfo,
   createChartFrame,
@@ -190,5 +191,23 @@ describe("ChartFrame", () => {
     expect(header.children).toHaveLength(2);
     expect(header.children[1].querySelector('button[aria-label="Full screen"]')).toBeTruthy();
     expect(header.children[1].querySelector("input")).toBeNull();
+  });
+});
+
+// A chart whose height is its content's (a lane chart that packs into 2–5
+// rows): no stated height, and the body does not flex to fill a column that
+// has none. Contract scheduler, 2026-09-29.
+describe("ContentChartFrame — sized by its chart", () => {
+  it("states no height on the column, and the body row takes its content's height", () => {
+    const { container } = render(() => (
+      <ContentChartFrame title="T">
+        <span />
+      </ContentChartFrame>
+    ));
+    const column = container.querySelector(".sui-fullscreen-box")!
+      .firstElementChild as HTMLElement;
+    expect(column.style.height).toBe("");
+    const body = column.children[1] as HTMLElement;
+    expect(body.style.flex).toBe("1 0 auto");
   });
 });

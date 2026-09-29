@@ -10,9 +10,12 @@ import {
 } from "../../src/components/CashflowScrubChart";
 import { map } from "../../src/fn";
 import { GhostButton } from "../../src/components/Button";
+import { Chart, LineSeries, XAxis, YAxis } from "../../src/components/Chart";
 import {
   ChartFrame,
+  ContentChartFrame,
   FillChartFrame,
+  createRangeDialog,
   YAxisLockDialog,
   YAxisLockDialogNumber,
   type ChartYAxisMode,
@@ -140,6 +143,78 @@ const CapExample: Component = () => {
   );
 };
 
+/** `height: "content"` — the frame is as tall as its chart. The chart's own
+ *  height here is the consumer's (rows × row height in a timeline); the
+ *  button changes it and the frame follows, with no empty band below. */
+const ContentHeightExample: Component = () => {
+  const [tall, setTall] = createSignal(false);
+  const points = [
+    { x: 0, y: 4 },
+    { x: 1, y: 7 },
+    { x: 2, y: 5 },
+    { x: 3, y: 9 },
+  ];
+  return (
+    <>
+      <ContentChartFrame title="Crew load" yTitle="Crews">
+        <Chart
+          width={640}
+          height={tall() ? 220 : 120}
+          xDomain={[0, 3]}
+          yDomain={[0, 10]}
+        >
+          <YAxis tickCount={3} />
+          <XAxis tickCount={4} />
+          <LineSeries data={points} x={(d) => d.x} y={(d) => d.y} />
+        </Chart>
+      </ContentChartFrame>
+      <TightClusterRow>
+        <GhostButton onClick={() => setTall(!tall())}>
+          {tall() ? "Shorter chart" : "Taller chart"}
+        </GhostButton>
+        <MutedBody>{`chart height ${tall() ? 220 : 120}px`}</MutedBody>
+      </TightClusterRow>
+    </>
+  );
+};
+
+/** `createRangeDialog` — the same min/max editor, named for use outside a
+ *  chart: here a slider's allowed range, in hours. */
+const HoursRangeDialog = createRangeDialog({
+  field: "number",
+  labels: {
+    title: "Line range",
+    description: "The fewest and the most hours this could take.",
+    confirm: "Save range",
+    max: "Most hours",
+    min: "Fewest hours",
+    notANumber: "Enter a number",
+    notAboveMin: "Most must be more than fewest",
+  },
+});
+
+const RangeDialogExample: Component = () => {
+  const [open, setOpen] = createSignal(false);
+  const [range, setRange] = createSignal<readonly [number, number]>([8, 24]);
+  return (
+    <>
+      <TightClusterRow>
+        <GhostButton onClick={() => setOpen(true)}>Edit range</GhostButton>
+        <MutedBody>{`range ${range()[0]}–${range()[1]} h`}</MutedBody>
+      </TightClusterRow>
+      <HoursRangeDialog
+        open={open()}
+        lock={[range()[0], range()[1]]}
+        onLock={(next) => {
+          setRange(next);
+          setOpen(false);
+        }}
+        onClose={() => setOpen(false)}
+      />
+    </>
+  );
+};
+
 export const ChartFrameShowcase: Component = () => {
   const [mode, setMode] = createSignal<ChartYAxisMode>("auto");
   const [fullscreen, setFullscreen] = createSignal(false);
@@ -196,6 +271,14 @@ export const ChartFrameShowcase: Component = () => {
             <StillCashflowScrubChart cells={shellCells} chartHeight="fill" scrub={false} />
           </FillChartFrame>
         </FixedHeightBox>
+      </div>
+      <div class="example-group">
+        <h3>ContentChartFrame — the frame sizes to its chart (height: "content")</h3>
+        <ContentHeightExample />
+      </div>
+      <div class="example-group">
+        <h3>createRangeDialog — the lock dialog as a general range editor</h3>
+        <RangeDialogExample />
       </div>
       <div class="example-group">
         <h3>actions — a Cap field before the frame's buttons</h3>

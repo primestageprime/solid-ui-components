@@ -1071,6 +1071,28 @@
     "line": 19
   },
   {
+    "name": "BoxRing",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "SvgMarks",
+    "variantOf": null,
+    "overrides": [
+      "offset",
+      "radius"
+    ],
+    "dataProps": "BoxRingDataProps",
+    "summary": "a stroked ring standing off the box.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "an attention outline (over capacity, invalid).",
+    "notes": null,
+    "showcase": "#/svg-marks",
+    "since": "Unreleased",
+    "file": "src/components/SvgMarks/BoxRing.tsx",
+    "line": 26
+  },
+  {
     "name": "BucketQueue",
     "depth": null,
     "kind": "primitive",
@@ -2642,6 +2664,30 @@
     "line": 467
   },
   {
+    "name": "ContentChartFrame",
+    "depth": 2,
+    "kind": "variant",
+    "family": "ChartFrame",
+    "variantOf": {
+      "factory": "createChartFrame",
+      "overrides": "{\n  height: \"content\",\n}"
+    },
+    "overrides": [
+      "height"
+    ],
+    "dataProps": "ChartFrameDataProps",
+    "summary": "The frame as tall as its chart: for a chart whose height is its data (a lane chart packed into as many rows as it needs), where a stated px leaves an empty band under a short schedule.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The frame as tall as its chart: for a chart whose height is its data (a lane chart packed into as many rows as it needs), where a stated px leaves an empty band under a short schedule.",
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/variants.ts",
+    "line": 33
+  },
+  {
     "name": "ContentStack",
     "depth": 0,
     "kind": "variant",
@@ -3039,7 +3085,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/BaseTable.tsx",
-    "line": 437
+    "line": 442
   },
   {
     "name": "createBatchBar",
@@ -3106,6 +3152,28 @@
     "since": "0.103.0",
     "file": "src/components/Layout/Box.tsx",
     "line": 46
+  },
+  {
+    "name": "createBoxRing",
+    "depth": 1,
+    "kind": "factory",
+    "family": "SvgMarks",
+    "variantOf": null,
+    "overrides": [
+      "offset",
+      "radius"
+    ],
+    "dataProps": "BoxRingDataProps",
+    "summary": "a stroked ring standing off the box. Factory behind `BoxRing`'s curried variants; bakes `offset`, `radius`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/svg-marks",
+    "since": null,
+    "file": "src/components/SvgMarks/BoxRing.tsx",
+    "line": 42
   },
   {
     "name": "createBuilderBoard",
@@ -3360,7 +3428,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 219
+    "line": 198
   },
   {
     "name": "createCheckbox",
@@ -3690,6 +3758,27 @@
     "line": 65
   },
   {
+    "name": "createEndLabels",
+    "depth": 1,
+    "kind": "factory",
+    "family": "SvgMarks",
+    "variantOf": null,
+    "overrides": [
+      "glyph"
+    ],
+    "dataProps": "EndLabelsDataProps",
+    "summary": "a lead label at the box's left and a trail at its right, dropping the trail and then the lead when the box is too short (`fitEndLabels`). Factory behind `EndLabels`'s curried variants; bakes `glyph`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/svg-marks",
+    "since": null,
+    "file": "src/components/SvgMarks/EndLabels.tsx",
+    "line": 67
+  },
+  {
     "name": "createExtractionBoard",
     "depth": 4,
     "kind": "factory",
@@ -3808,6 +3897,29 @@
     "since": null,
     "file": "src/components/DataDisplay/FormulaDecomposition.tsx",
     "line": 185
+  },
+  {
+    "name": "createFormulaCaption",
+    "depth": 2,
+    "kind": "factory",
+    "family": "FormulaCaption",
+    "variantOf": null,
+    "overrides": [
+      "operator",
+      "formatFactor",
+      "formatResult"
+    ],
+    "dataProps": "FormulaCaptionDataProps",
+    "summary": "@example const Cost = createFormulaCaption({ formatFactor: dollars, formatResult: dollars }); const axes = [{ label: \"Prep\", caption: (p) => <Cost operand={p.value} factor={125} /> }];",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "@example const Cost = createFormulaCaption({ formatFactor: dollars, formatResult: dollars }); const axes = [{ label: \"Prep\", caption: (p) => <Cost operand={p.value} factor={125} /> }];",
+    "showcase": "#/formula-caption",
+    "since": "Unreleased",
+    "file": "src/components/FormulaCaption/FormulaCaption.tsx",
+    "line": 50
   },
   {
     "name": "createFormulaResult",
@@ -3960,7 +4072,8 @@
     "overrides": [
       "axes",
       "labels",
-      "entityFrame"
+      "entityFrame",
+      "showNames"
     ],
     "dataProps": "GroupedMutationSlidersDataProps",
     "summary": "Curry a grouped row: lock the axes and the vocabulary once, and the call site is left with data and callbacks.",
@@ -3972,7 +4085,32 @@
     "showcase": "#/grouped-mutation-sliders",
     "since": "0.176.0",
     "file": "src/components/GroupedMutationSliders/GroupedMutationSliders.tsx",
-    "line": 628
+    "line": 635
+  },
+  {
+    "name": "createHatchPattern",
+    "depth": 1,
+    "kind": "factory",
+    "family": "SvgMarks",
+    "variantOf": null,
+    "overrides": [
+      "angle",
+      "stripe",
+      "gap",
+      "groundOpacity",
+      "stripeOpacity"
+    ],
+    "dataProps": "HatchPatternDataProps",
+    "summary": "a `<pattern>` of diagonal stripes, referenced as `url(#id)`. Factory behind `HatchPattern`'s curried variants; bakes `angle`, `stripe`, `gap`, `groundOpacity`, `stripeOpacity`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/svg-marks",
+    "since": null,
+    "file": "src/components/SvgMarks/HatchPattern.tsx",
+    "line": 73
   },
   {
     "name": "createHighlightSegments",
@@ -4054,7 +4192,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 575
+    "line": 586
   },
   {
     "name": "createKbd",
@@ -4559,6 +4697,25 @@
     "line": 97
   },
   {
+    "name": "createRangeDialog",
+    "depth": null,
+    "kind": "factory",
+    "family": "ChartFrame",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "RangeDialogDataProps",
+    "summary": "the same editor as `createYAxisLockDialog`, under the name it has outside a chart: a Max-over-Min range editor with per-field errors.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a slider's range (a dial's min/max click), any `[min, max]` a reader sets by hand.",
+    "notes": "A Max-over-Min range editor. Alias of `createYAxisLockDialog`.",
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/YAxisLockDialog.tsx",
+    "line": 171
+  },
+  {
     "name": "createRateGauge",
     "depth": 2,
     "kind": "factory",
@@ -4678,6 +4835,27 @@
     "line": 148
   },
   {
+    "name": "createSegmentBar",
+    "depth": 1,
+    "kind": "factory",
+    "family": "SvgMarks",
+    "variantOf": null,
+    "overrides": [
+      "radius"
+    ],
+    "dataProps": "SegmentBarDataProps",
+    "summary": "a rounded bar cut into fractional segments (`{ from, to, fill }`, 0–1 of the box), clipped to its own radius with a seam where two segments touch, outlined when `hovered`. Factory behind `SegmentBar`'s curried variants; bakes `radius`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/svg-marks",
+    "since": null,
+    "file": "src/components/SvgMarks/SegmentBar.tsx",
+    "line": 92
+  },
+  {
     "name": "createSegmentedControl",
     "depth": 1,
     "kind": "factory",
@@ -4740,6 +4918,85 @@
     "since": "0.155.0",
     "file": "src/components/Slider/Slider.tsx",
     "line": 418
+  },
+  {
+    "name": "createSpanBadge",
+    "depth": 2,
+    "kind": "factory",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A glyph badge on a corner of the bar, drawn only when `when(datum)` holds — the `!` or the padlock.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "A glyph badge on a corner of the bar, drawn only when `when(datum)` holds — the `!` or the padlock.",
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/spanAdornments.tsx",
+    "line": 46
+  },
+  {
+    "name": "createSpanEndLabels",
+    "depth": 2,
+    "kind": "factory",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "`#3 … $33.8k`: a lead and a trail label on the bar, the trail dropped when it does not fit.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "`#3 … $33.8k`: a lead and a trail label on the bar, the trail dropped when it does not fit.",
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/spanAdornments.tsx",
+    "line": 28
+  },
+  {
+    "name": "createSpanLanes",
+    "depth": 2,
+    "kind": "factory",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": [
+      "rowHeight",
+      "barHeight"
+    ],
+    "dataProps": "SpanLanesDataProps",
+    "summary": "Composite (Depth 2), a `Chart` slot. Factory behind `SpanLanes`'s curried variants; bakes `rowHeight`, `barHeight`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/SpanLanes.tsx",
+    "line": 152
+  },
+  {
+    "name": "createSpanRing",
+    "depth": 2,
+    "kind": "factory",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "An attention ring round the bar, drawn only when `when(datum)` holds.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "An attention ring round the bar, drawn only when `when(datum)` holds.",
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/spanAdornments.tsx",
+    "line": 80
   },
   {
     "name": "createStack",
@@ -6420,6 +6677,30 @@
     "line": 50
   },
   {
+    "name": "DoingBadge",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Badge",
+    "variantOf": {
+      "factory": "createStatusBadge",
+      "overrides": "{\n  variant: \"info\",\n}"
+    },
+    "overrides": [
+      "size"
+    ],
+    "dataProps": "StatusBadgeDataProps",
+    "summary": "Work under way (blue).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Work under way (blue).",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Badge/variants.ts",
+    "line": 46
+  },
+  {
     "name": "DoneCheckbox",
     "depth": 1,
     "kind": "variant",
@@ -6856,6 +7137,27 @@
     "since": "0.52.0",
     "file": "src/components/Feedback/variants.ts",
     "line": 30
+  },
+  {
+    "name": "EndLabels",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "SvgMarks",
+    "variantOf": null,
+    "overrides": [
+      "glyph"
+    ],
+    "dataProps": "EndLabelsDataProps",
+    "summary": "a lead label at the box's left and a trail at its right, dropping the trail and then the lead when the box is too short (`fitEndLabels`).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/svg-marks",
+    "since": "Unreleased",
+    "file": "src/components/SvgMarks/EndLabels.tsx",
+    "line": 28
   },
   {
     "name": "EndSublabel",
@@ -7679,6 +7981,29 @@
     "line": 119
   },
   {
+    "name": "FormulaCaption",
+    "depth": 2,
+    "kind": "composite",
+    "family": "FormulaCaption",
+    "variantOf": null,
+    "overrides": [
+      "operator",
+      "formatFactor",
+      "formatResult"
+    ],
+    "dataProps": "FormulaCaptionDataProps",
+    "summary": "Composite (Depth 2), zero CSS.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a figure's derived total under it (hours × rate, seats × fee).",
+    "notes": null,
+    "showcase": "#/formula-caption",
+    "since": "Unreleased",
+    "file": "src/components/FormulaCaption/FormulaCaption.tsx",
+    "line": 35
+  },
+  {
     "name": "FormulaProvider",
     "depth": 1,
     "kind": "primitive",
@@ -7928,6 +8253,25 @@
     "line": 22
   },
   {
+    "name": "GlyphBadge",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "SvgMarks",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "a disc the size of the box's shorter side with a `{ text }` or `{ path }` glyph at its centre.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "`!`, a padlock, a count.",
+    "notes": null,
+    "showcase": "#/svg-marks",
+    "since": "Unreleased",
+    "file": "src/components/SvgMarks/GlyphBadge.tsx",
+    "line": 31
+  },
+  {
     "name": "GlyphSlotGhostButton",
     "depth": 1,
     "kind": "variant",
@@ -8020,7 +8364,8 @@
     "overrides": [
       "axes",
       "labels",
-      "entityFrame"
+      "entityFrame",
+      "showNames"
     ],
     "dataProps": "GroupedMutationSlidersDataProps",
     "summary": "Composite (Depth 3).",
@@ -8032,7 +8377,7 @@
     "showcase": "#/grouped-mutation-sliders",
     "since": "0.176.0",
     "file": "src/components/GroupedMutationSliders/GroupedMutationSliders.tsx",
-    "line": 299
+    "line": 305
   },
   {
     "name": "GrowBox",
@@ -8332,6 +8677,31 @@
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
     "line": 619
+  },
+  {
+    "name": "HatchPattern",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "SvgMarks",
+    "variantOf": null,
+    "overrides": [
+      "angle",
+      "stripe",
+      "gap",
+      "groundOpacity",
+      "stripeOpacity"
+    ],
+    "dataProps": "HatchPatternDataProps",
+    "summary": "a `<pattern>` of diagonal stripes, referenced as `url(#id)`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "waiting / blocked / tentative stretches.",
+    "notes": null,
+    "showcase": "#/svg-marks",
+    "since": "Unreleased",
+    "file": "src/components/SvgMarks/HatchPattern.tsx",
+    "line": 42
   },
   {
     "name": "HeartbeatSparkline",
@@ -8686,7 +9056,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 307
+    "line": 310
   },
   {
     "name": "HUDTabs",
@@ -8727,7 +9097,7 @@
     "showcase": "#/icon",
     "since": "v0.6.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 537
+    "line": 548
   },
   {
     "name": "IconClusterRow",
@@ -9108,7 +9478,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 583
+    "line": 594
   },
   {
     "name": "InlineSubtleDropdown",
@@ -9548,6 +9918,33 @@
     "since": "0.36.0",
     "file": "src/components/TabbedSidePanel/variants.ts",
     "line": 13
+  },
+  {
+    "name": "LeftTruthToggle",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Toggle",
+    "variantOf": {
+      "factory": "createToggle",
+      "overrides": "{\n  size: \"sm\",\n  color: \"primary\",\n  labelPosition: \"left\",\n}"
+    },
+    "overrides": [
+      "size",
+      "variant",
+      "color",
+      "labelPosition"
+    ],
+    "dataProps": "ToggleDataProps",
+    "summary": "TruthToggle with its label before it: a labelled switch in a toolbar row (\"Full auto ⬤\"), where the words lead and the switch closes the line.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "TruthToggle with its label before it: a labelled switch in a toolbar row (\"Full auto ⬤\"), where the words lead and the switch closes the line.",
+    "showcase": "#/toggle",
+    "since": "Unreleased",
+    "file": "src/components/Toggle/variants.ts",
+    "line": 8
   },
   {
     "name": "Legend",
@@ -10219,6 +10616,25 @@
     "since": "0.25.0",
     "file": "src/components/Modal/variants.ts",
     "line": 13
+  },
+  {
+    "name": "ModeSplitButton",
+    "depth": null,
+    "kind": "primitive",
+    "family": "ModeSplitButton",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2), zero CSS.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/mode-split-button",
+    "since": "Unreleased",
+    "file": "src/components/ModeSplitButton/ModeSplitButton.tsx",
+    "line": 77
   },
   {
     "name": "MoneyCell",
@@ -11277,7 +11693,7 @@
     "useFor": null,
     "notes": "Neutral pending badge.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Badge/variants.ts",
     "line": 31
   },
@@ -12750,6 +13166,27 @@
     "line": 356
   },
   {
+    "name": "SegmentBar",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "SvgMarks",
+    "variantOf": null,
+    "overrides": [
+      "radius"
+    ],
+    "dataProps": "SegmentBarDataProps",
+    "summary": "a rounded bar cut into fractional segments (`{ from, to, fill }`, 0–1 of the box), clipped to its own radius with a seam where two segments touch, outlined when `hovered`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a phased span, a stacked progress bar.",
+    "notes": null,
+    "showcase": "#/svg-marks",
+    "since": "Unreleased",
+    "file": "src/components/SvgMarks/SegmentBar.tsx",
+    "line": 39
+  },
+  {
     "name": "SegmentedControl",
     "depth": 1,
     "kind": "primitive",
@@ -13560,6 +13997,28 @@
     "since": null,
     "file": "src/components/Panel/variants.ts",
     "line": 61
+  },
+  {
+    "name": "SpanLanes",
+    "depth": 2,
+    "kind": "composite",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": [
+      "rowHeight",
+      "barHeight"
+    ],
+    "dataProps": "SpanLanesDataProps",
+    "summary": "Composite (Depth 2), a `Chart` slot.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/SpanLanes.tsx",
+    "line": 81
   },
   {
     "name": "Sparkline",
@@ -15266,6 +15725,30 @@
     "line": 158
   },
   {
+    "name": "TodoBadge",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Badge",
+    "variantOf": {
+      "factory": "createStatusBadge",
+      "overrides": "{\n  variant: \"compliant\",\n}"
+    },
+    "overrides": [
+      "size"
+    ],
+    "dataProps": "StatusBadgeDataProps",
+    "summary": "Work ready to start (green).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Work ready to start (green).",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Badge/variants.ts",
+    "line": 51
+  },
+  {
     "name": "Toggle",
     "depth": 1,
     "kind": "primitive",
@@ -16358,7 +16841,7 @@
     "showcase": "#/chart-frame",
     "since": "0.186.0",
     "file": "src/components/ChartFrame/variants.ts",
-    "line": 41
+    "line": 50
   },
   {
     "name": "YAxisLockDialogNumber",
@@ -16383,6 +16866,6 @@
     "showcase": "#/chart-frame",
     "since": "0.190.0",
     "file": "src/components/ChartFrame/variants.ts",
-    "line": 46
+    "line": 55
   }
 ]

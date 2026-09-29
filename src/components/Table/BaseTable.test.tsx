@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { createSignal } from "solid-js";
 import { render, fireEvent } from "@solidjs/testing-library";
 import { BaseTable } from "./BaseTable";
 import type { TableColumn, TableRowSpan } from "./types";
@@ -186,5 +187,29 @@ describe("BaseTable sorting", () => {
     clickHeader(container, "Score"); // desc
     clickHeader(container, "Score"); // cleared
     expect(names(container)).toEqual(["Charlie", "alice", "Bob"]);
+  });
+});
+
+// Cross-highlight driven from OUTSIDE the table (a chart bar hovered → its
+// row lit), which CSS :hover cannot express. Contract-scheduler, 2026-09-29.
+describe("BaseTable highlighted", () => {
+  it("marks exactly the rows the predicate holds for, and follows it reactively", () => {
+    const [week, setWeek] = createSignal<string | null>("W2");
+    const { container } = render(() => (
+      <BaseTable
+        data={DATA}
+        columns={COLUMNS}
+        highlighted={(row) => row.week === week()}
+      />
+    ));
+    const lit = () =>
+      bodyRows(container).map((r) =>
+        r.classList.contains("hud-table__row--highlighted"),
+      );
+    expect(lit()).toEqual([false, true]);
+    setWeek("W1");
+    expect(lit()).toEqual([true, false]);
+    setWeek(null);
+    expect(lit()).toEqual([false, false]);
   });
 });

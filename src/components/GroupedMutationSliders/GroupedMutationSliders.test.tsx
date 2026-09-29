@@ -745,3 +745,59 @@ describe("GroupedMutationSliders entityFrame", () => {
     expect(container.querySelectorAll('[data-testid="entity-frame"]')).toHaveLength(2);
   });
 });
+
+// ── the pluggable caption slot and the hidden name (2026-09-29) ─────────────
+
+describe("GroupedMutationSliders caption", () => {
+  /** A caption display: whatever the consumer wants, from the data it is handed. */
+  const Calc = (p: { value: number | null; prior: number | null; entityId: string; measure: number }) => (
+    <span data-testid="calc">{`${p.entityId}:${p.measure}:${p.value ?? "—"}×2=${(p.value ?? 0) * 2}`}</span>
+  );
+
+  it("renders an axis's caption component under its dial, handed that measure's data", () => {
+    const axes: GroupedMeasureAxes = [{ ...PAIR_AXES[0], caption: Calc }, PAIR_AXES[1]];
+    const { getAllByTestId } = render(() => (
+      <GroupedMutationSliders
+        entities={[{ id: "a", label: "A", measures: [{ prior: 8, value: 10, range: [0, 80] }, { prior: 50, value: 50, range: [0, 300] }] }]}
+        axes={axes}
+        onChange={() => {}}
+      />
+    ));
+    expect(getAllByTestId("calc").map((n) => n.textContent)).toEqual(["a:0:10×2=20"]);
+  });
+
+  it("reserves the caption line on an axis without one, so every column stands at one height", () => {
+    const axes: GroupedMeasureAxes = [{ ...PAIR_AXES[0], caption: Calc }, PAIR_AXES[1]];
+    const { container } = render(() => (
+      <GroupedMutationSliders
+        entities={[{ id: "a", label: "A", measures: [{ prior: 8, value: 10, range: [0, 80] }, { prior: 50, value: 50, range: [0, 300] }] }]}
+        axes={axes}
+        onChange={() => {}}
+      />
+    ));
+    expect(container.querySelectorAll('[data-caption-slot="reserved"]')).toHaveLength(1);
+  });
+
+  it("draws no caption line at all when no axis has a caption", () => {
+    const { container } = render(() => (
+      <GroupedMutationSliders entities={TWO} axes={LICENCE_AXES} onChange={() => {}} />
+    ));
+    expect(container.querySelectorAll("[data-caption-slot]")).toHaveLength(0);
+  });
+});
+
+describe("GroupedMutationSliders showNames", () => {
+  it("hides the entity name when showNames is false", () => {
+    const { container } = render(() => (
+      <GroupedMutationSliders entities={TWO} axes={LICENCE_AXES} showNames={false} onChange={() => {}} />
+    ));
+    expect(container.querySelectorAll("button[aria-pressed]")).toHaveLength(0);
+  });
+
+  it("shows it by default", () => {
+    const { container } = render(() => (
+      <GroupedMutationSliders entities={TWO} axes={LICENCE_AXES} onChange={() => {}} />
+    ));
+    expect(container.querySelectorAll("button[aria-pressed]").length).toBeGreaterThan(0);
+  });
+});
