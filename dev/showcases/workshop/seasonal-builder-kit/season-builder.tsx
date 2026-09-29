@@ -34,7 +34,6 @@ import {
   TextSublabel,
   TightCenteredColumn,
   TightStack,
-  WarningBody,
   fn,
 } from "../../../../src";
 import {
@@ -108,7 +107,7 @@ export const SeasonBuilder: Component<{
         <TightCenteredColumn>
           <MonoMeta>{brief(season().start, ctx)}</MonoMeta>
           {w().projected ? (
-            <WarningBody>{whenCaption(season(), ctx)}</WarningBody>
+            <MonoMeta tone="warning">{whenCaption(season(), ctx)}</MonoMeta>
           ) : (
             <MonoMeta>{whenCaption(season(), ctx)}</MonoMeta>
           )}
