@@ -10,6 +10,7 @@ import {
   dragTo,
   estimate,
   flowOnce,
+  hourBand,
   layFixed,
   overFlags,
   pack,
@@ -529,5 +530,16 @@ describe("timeline geometry", () => {
     expect(bar.segments.map((s) => s.kind)).toEqual(["work", "work", "wait"]);
     const wait = bar.segments[2];
     expect(wait.left).toBeCloseTo((axis.left(1) / bar.width) * 100);
+  });
+});
+
+describe("hourBand", () => {
+  it("runs from 0 to three times the current hours", () => {
+    expect(hourBand(72)).toEqual([0, 216]);
+  });
+
+  it("never tops out below 8 hours", () => {
+    expect(hourBand(2)).toEqual([0, 8]);
+    expect(hourBand(0)).toEqual([0, 8]);
   });
 });

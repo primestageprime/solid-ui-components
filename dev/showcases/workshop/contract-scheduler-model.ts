@@ -615,6 +615,16 @@ export const setBound = (
   }));
 };
 
+/**
+ * The default range for an hour line: from 0 up to three times its current
+ * hours, and never topping out below 8 h (Peter, 2026-09-29). Wide enough to
+ * move a phase across a day boundary, so dragging a dial visibly reflows it.
+ */
+export const hourBand = (hours: number): readonly [number, number] => [
+  0,
+  Math.max(3 * hours, 8),
+];
+
 // ── the sample firm ─────────────────────────────────────────────────────────
 
 /** Ridgeline Roofing's crews. */
@@ -636,7 +646,7 @@ type Bands = readonly [
   number,
   number,
 ];
-const roofLines = (
+const rawRoofLines = (
   perm: number,
   prep: number,
   mat: number,
@@ -699,6 +709,14 @@ const roofLines = (
     prior: mat,
   },
 ];
+
+/** Every hour line starts on the default band; materials keep their own. */
+const roofLines = (...args: Parameters<typeof rawRoofLines>): readonly Line[] =>
+  rawRoofLines(...args).map((l) => {
+    if (l.unit !== "h") return l;
+    const [min, max] = hourBand(l.value);
+    return { ...l, min, max };
+  });
 
 /** The sample: working-day index of a date in the default calendar is resolved by the bench. */
 export const sampleJobs = (

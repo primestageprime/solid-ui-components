@@ -24,6 +24,7 @@ import {
   For,
   Index,
   Show,
+  createEffect,
   createSignal,
   onCleanup,
   onMount,
@@ -165,13 +166,51 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
       el.removeEventListener("pointermove", move);
       el.removeEventListener("pointerup", up);
       const d = drag();
+      if (!moved || !d) {
+        setDrag(null);
+        props.onOpen(it.id);
+        return;
+      }
+      // drop first, then release: the glide starts from where the bar was let go
+      props.onDrop(it.id, d.left);
       setDrag(null);
-      if (!moved || !d) props.onOpen(it.id);
-      else props.onDrop(it.id, d.left);
     };
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", up);
   };
+
+  // Bars GLIDE to a new place (Peter, 2026-09-29): remember where each bar was
+  // drawn, and when a render moves it, animate the translate from there. Not
+  // while a bar is being dragged (it follows the pointer), and not for a reader
+  // who asked for reduced motion.
+  let last = new Map<number, { x: number; y: number }>();
+  createEffect(() => {
+    const next = new Map(
+      props.items.map((it) => [it.id, { x: xOf(it), y: yOf(it) }]),
+    );
+    const still =
+      typeof matchMedia === "function" &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!drag() && !still) {
+      for (const [id, at] of next) {
+        const was = last.get(id);
+        if (!was || (was.x === at.x && was.y === at.y)) continue;
+        host
+          ?.querySelector(`[data-job="${id}"]`)
+          ?.animate(
+            [
+              { transform: `translate(${was.x}px, ${was.y}px)` },
+              { transform: `translate(${at.x}px, ${at.y}px)` },
+            ],
+            {
+              duration: 260,
+              easing: "cubic-bezier(.2,.7,.2,1)",
+            },
+          );
+      }
+    }
+    last = next;
+  });
 
   const tipBox = (t: Tip) => {
     const lines = [
@@ -254,6 +293,7 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
           <g
             class={`job-timeline__bar${it().locked ? " job-timeline__bar--locked" : ""}${drag()?.id === it().id ? " job-timeline__bar--dragging" : ""}`}
             transform={`translate(${xOf(it())},${yOf(it())})`}
+            data-job={it().id}
             role="button"
             tabIndex={0}
             aria-label={`${it().lead} ${it().name}, ${it().trail}${it().locked ? ", locked" : ""}${it().over ? `, ${it().over}` : ""}`}

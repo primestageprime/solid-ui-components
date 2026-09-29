@@ -16,7 +16,7 @@
  *   Job list      — `CompactTable` (onRowHover = the cross-highlight),
  *                   `TruthToggle`, `IconOnlyButton` + `Icon lock`, `TextButton`,
  *                   `SmStatusBadge`
- *   Job detail    — `GhostButton` back, `GroupedMutationSliders` (one entity,
+ *   Job detail    — `SmallGhostButton` back, `GroupedMutationSliders` (one entity,
  *                   one measure per line, grouped by crew), `SmallGhostButton`
  *                   per line opening a `createYAxisLockDialog` range editor
  *
@@ -35,7 +35,6 @@
 import { type Component, For, Show, createMemo, createSignal } from "solid-js";
 
 import {
-  GhostButton,
   IconOnlyButton,
   SmallGhostButton,
   TextButton,
@@ -439,69 +438,77 @@ const ContractScheduler: Component = () => {
       .reduce((a, j) => a + estimate(j, ROLES).value, 0);
 
   // ── detail ──────────────────────────────────────────────────────────────
-  const detail = (j: Job) => {
-    const lines = dialOrder(j);
-    const axes: GroupedMeasureAxes = lines.map((l) => ({
-      label: l.label,
-      group:
-        l.unit === "$"
-          ? "dollars"
-          : `${roleLabel(l.role ?? "").toLowerCase()} hours`,
-      format: fmtLine(l),
-      snap: l.unit === "$" ? 100 : 1,
-    }));
-    const entity: GroupedMutationEntity = {
-      id: String(j.id),
+  // The detail READS THE JOB THROUGH AN ACCESSOR: `Show` calls its child once,
+  // so a job passed as a value freezes the dials on the job as it was opened —
+  // they snap back after every drag and nothing reaches the timeline.
+  const detail = (j: () => Job) => {
+    const lines = () => dialOrder(j());
+    const axes = (): GroupedMeasureAxes =>
+      lines().map((l) => ({
+        label: l.label,
+        group:
+          l.unit === "$"
+            ? "dollars"
+            : `${roleLabel(l.role ?? "").toLowerCase()} hours`,
+        format: fmtLine(l),
+        snap: l.unit === "$" ? 100 : 1,
+      }));
+    const entity = (): GroupedMutationEntity => ({
+      id: String(j().id),
       label: "Hours & materials",
-      measures: lines.map((l) => ({
+      measures: lines().map((l) => ({
         prior: l.prior,
         value: l.value,
         range: [l.min, l.max] as const,
       })),
-    };
-    const est = estimate(j, ROLES);
-    const start = dateOfDay(startOf(sch(), j.id));
-    const end = dateOfDay(endOf(sch(), j.id));
+    });
+    const est = () => estimate(j(), ROLES);
+    const start = () => dateOfDay(startOf(sch(), j().id));
+    const end = () => dateOfDay(endOf(sch(), j().id));
     return (
       <TightStack>
         <SpreadRow>
           <TightStack>
-            <GhostButton onClick={() => setOpenId(null)}>‹ Back</GhostButton>
             <ClusterRow>
-              {lockButton(j)}
-              <TextTitle>{`#${j.id} ${j.name}`}</TextTitle>
-              <SmStatusBadge variant={BADGE[j.status]} label={j.status} />
+              <SmallGhostButton onClick={() => setOpenId(null)}>
+                ‹ Back
+              </SmallGhostButton>
+            </ClusterRow>
+            <ClusterRow>
+              {lockButton(j())}
+              <TextTitle>{`#${j().id} ${j().name}`}</TextTitle>
+              <SmStatusBadge variant={BADGE[j().status]} label={j().status} />
             </ClusterRow>
           </TightStack>
           <ClusterRow>
             <TightStack>
               <TextSublabel>Start</TextSublabel>
-              <SteadyMonoValue>{start ?? "TBD"}</SteadyMonoValue>
-              <TextSublabel>{end ? `ends ${end}` : " "}</TextSublabel>
+              <SteadyMonoValue>{start() ?? "TBD"}</SteadyMonoValue>
+              <TextSublabel>{end() ? `ends ${end()}` : " "}</TextSublabel>
             </TightStack>
             <TightStack>
               <TextSublabel>Est</TextSublabel>
-              <SteadyMonoValue>{money(est.value)}</SteadyMonoValue>
-              <TextSublabel>{`${k(est.min)} – ${k(est.max)}`}</TextSublabel>
+              <SteadyMonoValue>{money(est().value)}</SteadyMonoValue>
+              <TextSublabel>{`${k(est().min)} – ${k(est().max)}`}</TextSublabel>
             </TightStack>
           </ClusterRow>
         </SpreadRow>
         <GroupedMutationSliders
-          entities={[entity]}
-          axes={axes}
+          entities={[entity()]}
+          axes={axes()}
           onChange={(_id, m, v) =>
-            update((s) => setValue(s, j.id, lines[m].key, v))
+            update((s) => setValue(s, j().id, lines()[m].key, v))
           }
         />
-        <NoteText>{`Crew-days: ${phasesOf(j)
+        <NoteText>{`Crew-days: ${phasesOf(j())
           .map((p) => `${p.label} ${p.days}`)
           .join(" · ")}`}</NoteText>
         <WrapRow>
           <TextSublabel>Ranges</TextSublabel>
-          <For each={lines}>
+          <For each={lines()}>
             {(l) => (
               <SmallGhostButton
-                onClick={() => setRange({ id: j.id, key: l.key })}
+                onClick={() => setRange({ id: j().id, key: l.key })}
                 title={`Edit the ${l.label} range`}
               >
                 {`${l.label} ${fmtLine(l)(l.min)}–${fmtLine(l)(l.max)}`}
@@ -619,7 +626,7 @@ const ContractScheduler: Component = () => {
             </TightStack>
           }
         >
-          {(j) => detail(j())}
+          {(j) => detail(j)}
         </Show>
       </CardSurface>
 
