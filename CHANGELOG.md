@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.204.0 — 2026-09-29
+
 ### Added
 
 - **`SvgMarks`** — Depth-1 SVG marks on a BOX CONTRACT: each draws inside the `{ x, y, width, height }` it is handed and never positions itself; colour is data. `HatchPattern` (a striped `<pattern>` for `fill="url(#id)"`), `SegmentBar` (a clipped bar of fractional segments with seams and a hover outline), `BoxRing` (an attention ring stood off a box), `GlyphBadge` (a disc with a text or path glyph), `EndLabels` (a lead and a trail label, the trail dropped when it does not fit), each with a `create*` factory where it has overrides, plus the pure geometry (`inflate`, `centerOf`, `segmentRects`, `fitEndLabels`). The folder imports nothing from the HTML components and they import nothing from it.
@@ -23,7 +25,6 @@
 ### Removed
 
 - **Workshop benches `builder-board`, `license-board` and `solar-sankey`** (dev gallery only; nothing published changes). Hourly Board stays as the one board bench, since it runs on the shared `board-kit` config, and `BuilderBoard` stays in the library.
-
 
 ## 0.203.0 — 2026-09-28
 
