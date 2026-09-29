@@ -2836,32 +2836,6 @@ th:has(.tf-th-center) .hud-table__header-content {
   height: var(--sui-bench-viewport);
 }
 
-/* Builder Board bench — three STATED viewports, so the frame can be seen at a
-   laptop, a desktop and a wide screen from one gallery page. A bench may
-   state a viewport; the component under it may not. Two of these are wider
-   than the gallery, which is why the bench wraps them in a ScrollXBox.
-   SIZE ONLY — every row and column inside is the frame's own. */
-.builder-board-bench__viewport--phone {
-  width: 390px;
-  height: 760px;
-}
-.builder-board-bench__viewport--tablet {
-  width: 768px;
-  height: 900px;
-}
-.builder-board-bench__viewport--laptop {
-  width: 1000px;
-  height: 600px;
-}
-.builder-board-bench__viewport--desktop {
-  width: 1280px;
-  height: 720px;
-}
-.builder-board-bench__viewport--wide {
-  width: 1600px;
-  height: 900px;
-}
-
 /* Board benches — the gauge's cell. It GROWS and shrinks with the row rather
    than keeping its intrinsic width, so the bottom row stays side by side at
    the widths Peter reviewed (1090px and up) instead of wrapping the gauge
@@ -2917,22 +2891,6 @@ th:has(.tf-th-center) .hud-table__header-content {
   flex-direction: column;
   gap: 8px;
   height: 280px;
-}
-
-/* Solar Sankey bench: the diagram scales to the card, capped for legibility. */
-.solar-sankey-demo svg {
-  display: block;
-  width: 100%;
-  max-width: 900px;
-  height: auto;
-}
-.solar-sankey-demo__figure {
-  font-size: 26px;
-  font-weight: 600;
-}
-.solar-sankey-demo__label {
-  font-size: 15px;
-  fill: var(--sui-text-secondary);
 }
 
 /* ChannelChart fills its box, so the demo gives it one. */

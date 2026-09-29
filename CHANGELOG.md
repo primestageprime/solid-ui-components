@@ -20,6 +20,11 @@
 
 - **`ChartFrame`'s y-axis mode control now composes `ModeSplitButton`.** Same buttons, labels and behaviour; `ChartYAxisModeInfo` is now `ModeInfo<ChartYAxisMode>`.
 
+### Removed
+
+- **Workshop benches `builder-board`, `license-board` and `solar-sankey`** (dev gallery only; nothing published changes). Hourly Board stays as the one board bench, since it runs on the shared `board-kit` config, and `BuilderBoard` stays in the library.
+
+
 ## 0.203.0 — 2026-09-28
 
 ### Changed

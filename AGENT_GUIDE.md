@@ -834,7 +834,7 @@ npm run new:bench     -- <slug> [--label "Nice Label"]
   the PACKAGE BARREL (`../../../src`, the way a Consumer App would) with an
   empty `ViewportColumn` frame. There is no separate nav-registration step —
   benches are auto-discovered via `import.meta.glob` in `dev/main.tsx`
-  (`workshop-benches.ts`), the same way `license-board` appears with no
+  (`workshop-benches.ts`), the same way `hourly-board` appears with no
   manual entry anywhere. Additive sibling of the plain `/workshop` skill
   template (`scripts/workshop-new.mjs` + `workshop-lib.mjs`'s
   `renderBenchTemplate`) — both stay; use whichever shape a bench needs.
