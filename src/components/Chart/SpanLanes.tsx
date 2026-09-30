@@ -20,7 +20,7 @@
 // highlight, open or drag. Each span's group carries `data-span-id` so a
 // consumer can find it (for a glide, for a test) without reaching inside.
 //
-// Geometry is `spanLanes.ts` (pure, tested); this file only draws it.
+// Geometry is `spanLanesGeometry.ts` (pure, tested); this file only draws it.
 // ============================================
 import {
   type Component,
@@ -40,7 +40,7 @@ import {
   type SpanSegment,
   layoutSpans,
   packSpans,
-} from "./spanLanes";
+} from "./spanLanesGeometry";
 
 /** What every adornment is handed: the span, the box its bar occupies, and its state. */
 export interface SpanDisplayProps<T extends SpanDatum> {

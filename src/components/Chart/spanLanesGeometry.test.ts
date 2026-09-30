@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { layoutSpans, packSpans, spanExtent, spanRowCount } from "./spanLanes";
+import { layoutSpans, packSpans, spanExtent, spanRowCount } from "./spanLanesGeometry";
 
 const span = (id: string, ...segs: [number, number, string][]) => ({
   id,

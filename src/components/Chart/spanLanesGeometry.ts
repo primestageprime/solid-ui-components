@@ -1,5 +1,5 @@
 // ============================================
-// spanLanes — the pure core of the `SpanLanes` slot (ADR 0010: a core returns
+// spanLanesGeometry — the pure core of the `SpanLanes` slot (ADR 0010: a core returns
 // DATA, not JSX). No Solid, no DOM, no chart context: the adapter hands in the
 // x mapping and the row geometry and draws what comes back.
 //

@@ -22,7 +22,7 @@ import { BoxRing } from "../SvgMarks/BoxRing";
 import { EndLabels } from "../SvgMarks/EndLabels";
 import { type BadgeGlyph, GlyphBadge } from "../SvgMarks/GlyphBadge";
 import type { SpanDisplayProps } from "./SpanLanes";
-import type { SpanDatum } from "./spanLanes";
+import type { SpanDatum } from "./spanLanesGeometry";
 
 /** `#3 … $33.8k`: a lead and a trail label on the bar, the trail dropped when it does not fit. */
 export function createSpanEndLabels<T extends SpanDatum>(config: {
