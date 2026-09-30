@@ -106,6 +106,11 @@ const TOP = 22;
 const GAP = 22;
 const MARGIN = { top: 4, right: 12, bottom: 26, left: 8 };
 const DRAG_SLOP = 4;
+const GEO = { rowHeight: ROW, barHeight: 0.76 };
+/** A hover must hold this long before the tooltip shows. */
+const TIP_DELAY = 500;
+/** The tooltip's gap below the hovered bar. */
+const TIP_OFFSET = { x: 0, y: 6 };
 
 const FILL: Readonly<Record<Tone, string>> = {
   doing: "var(--sui-accent)",
@@ -219,10 +224,19 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
     const j = d ? shown().find((s) => s.id === d.id) : undefined;
     return j ? extentOf(j) : null;
   };
+  // TOOLTIP (Peter, 2026-09-30): it waits TIP_DELAY ms of a steady hover
+  // before it shows (the bar outline and the table row still light at once),
+  // and it hangs BELOW the hovered bar, never over it.
+  const [tipId, setTipId] = createSignal<number | null>(null);
+  createEffect(() => {
+    const id = drag() ? null : props.hoverId;
+    setTipId(null);
+    if (id == null) return;
+    const t = setTimeout(() => setTipId(id), TIP_DELAY);
+    onCleanup(() => clearTimeout(t));
+  });
   const hovered = () =>
-    drag()
-      ? undefined
-      : [...props.spans, ...props.parked].find((j) => j.id === props.hoverId);
+    [...props.spans, ...props.parked].find((j) => j.id === tipId());
 
   const onPointerDown = (j: JobSpan, e: PointerEvent) => {
     if (j.locked || e.button !== 0) return;
@@ -268,11 +282,22 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
     props.onOpen(j.id);
   };
 
+  const bottomsOf = (spans: readonly JobSpan[], dy: number) =>
+    layoutSpans(packSpans(spans), x, GEO).map(
+      (l) => [l.datum.id, l.box.y + l.box.height + dy] as const,
+    );
+  /** Each bar's bottom edge in plot px (the y scale is the identity). */
+  const bottoms = createMemo(
+    () =>
+      new Map([
+        ...bottomsOf(props.spans, TOP),
+        ...bottomsOf(props.parked, parkedTop()),
+      ]),
+  );
   // GLIDE (Peter, 2026-09-29): remember where each bar was laid; when a render
   // moves one, animate its group from the old place to the new.
-  const geo = { rowHeight: ROW, barHeight: 0.76 };
   const boxes = (spans: readonly JobSpan[], dy: number) =>
-    layoutSpans(packSpans(spans), x, geo).map(
+    layoutSpans(packSpans(spans), x, GEO).map(
       (l) => [l.datum.id, { x: l.box.x, y: l.box.y + dy }] as const,
     );
   let last = new Map<number, { x: number; y: number }>();
@@ -371,6 +396,8 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
         <ChartTooltip
           data={hovered() ? [hovered() as JobSpan] : []}
           x={(j) => extentOf(j).start}
+          y={(j) => bottoms().get(j.id) ?? 0}
+          offset={TIP_OFFSET}
           maxWidth={320}
         >
           {(j) => (

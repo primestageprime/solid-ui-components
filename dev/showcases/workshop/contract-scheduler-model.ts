@@ -14,7 +14,8 @@
  *
  * TWO MODES (the ChartFrame y-axis split-button pattern):
  *   auto    unlocked jobs flow in queue order into free crew time;
- *           dragging an unlocked bar changes the ORDER, never a date.
+ *           dragging an unlocked bar changes the ORDER, never a date: it
+ *           takes the slot of the nearest start at or LEFT of the drop.
  *   manual  every placed job sits on the days stored in its placement;
  *           capacity is NOT enforced (overbooking is allowed and flagged);
  *           `flowOnce` packs the unlocked jobs one time and stays manual.
@@ -73,6 +74,11 @@ export interface Job {
   readonly locked: boolean;
   /** Stored days; `null` = unplaced (TBD in manual). */
   readonly placement: Placement | null;
+  /**
+   * Full auto: the earliest working day the job may start — the date a drag
+   * suggested (ADR 0028's `phase.not_before`). Absent or null = no floor.
+   */
+  readonly notBefore?: number | null;
   readonly lines: readonly Line[];
 }
 
@@ -337,7 +343,7 @@ export const schedule = (
         phases,
         i: 0,
         rem: phases[0]?.hours ?? 0,
-        ready: 0,
+        ready: job.notBefore ?? 0,
         started: false,
         mid: false,
         worked: [],
@@ -503,9 +509,16 @@ export const flowOnce = (
 };
 
 /**
- * A drop at working day `w0`. Auto: the unlocked job moves in the QUEUE to sit
- * before the first job starting at or after `w0`. Manual: the whole job moves
- * so its first day is `w0`, keeping its shape. A locked job does not move.
+ * A drop at working day `w0` SUGGESTS the job's start (Peter, 2026-09-30).
+ * Auto: snap left — the job takes the queue slot of the latest unlocked start
+ * at or before `w0` (ties: the first in queue order), and the jobs from there
+ * reflow behind it. A drop inside its own slot changes nothing; a drop left of
+ * every start goes to the front; a locked job's start is never a slot. The
+ * slot's start also becomes the job's `notBefore` floor, so it starts there
+ * even when its crews are free sooner (the front clears the floor).
+ * Manual: the whole job moves so its first day is `w0`, keeping its shape;
+ * no other job's days change, and any floor is cleared. A locked job does
+ * not move.
  */
 export const dragTo = (
   state: SchedulerState,
@@ -523,19 +536,31 @@ export const dragTo = (
     return replaceJob(state, id, (j) => ({
       ...j,
       placement: cur.map((ds) => ds.map((w) => Math.max(0, w + d))),
+      // the stored days are the truth now; an old auto floor would make the
+      // job jump on the way back to auto
+      notBefore: null,
     }));
   }
+  // Full auto: snap LEFT. The slot is the latest queued start at or before the
+  // drop (the job's own included); ties go to the first in queue order.
   const sch = schedule(state, roles);
+  const starts = state.order
+    .map((x) => [x, startOf(sch, x)] as const)
+    .filter((e): e is readonly [number, number] => e[1] !== undefined)
+    .filter(([, s]) => s <= w0);
+  const slot = Math.max(...starts.map(([, s]) => s));
+  const holders = starts.filter(([, s]) => s === slot).map(([x]) => x);
+  // dropped inside its own slot: nothing to reorder
+  if (holders.includes(id)) return state;
   const others = state.order.filter((x) => x !== id);
-  const at = others.findIndex(
-    (x) => (startOf(sch, x) ?? Number.POSITIVE_INFINITY) >= w0,
-  );
+  // left of every start: the front of the queue
+  const at = holders.length ? others.indexOf(holders[0]) : 0;
+  // …and the slot's start becomes the job's floor, so the suggestion shows
+  // even when its crews are free earlier (none: the floor is cleared)
+  const floor = holders.length ? slot : null;
   return {
-    ...state,
-    order:
-      at < 0
-        ? [...others, id]
-        : [...others.slice(0, at), id, ...others.slice(at)],
+    ...replaceJob(state, id, (j) => ({ ...j, notBefore: floor })),
+    order: [...others.slice(0, at), id, ...others.slice(at)],
   };
 };
 

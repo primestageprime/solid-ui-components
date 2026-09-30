@@ -628,10 +628,11 @@ const ContractScheduler: Component = () => {
         <SectionTitle>Contract Scheduler</SectionTitle>
         <MutedBody>
           Ridgeline Roofing's season. Bars are jobs, drawn phase by phase: solid
-          is work, hashed is waiting for a crew. In Full auto, dragging an
-          unlocked bar changes its place in the queue and everything reflows
-          around locked jobs. In Manual, dragging sets exact dates, overbooking
-          is allowed, and the latest-starting job in a pile-up is outlined red
+          is work, hashed is waiting for a crew. Dragging a bar suggests its
+          start. In Full auto it takes the slot of the nearest job starting at
+          or before the drop, and the queue reflows behind it around locked
+          jobs. In Manual it lands on exactly that day, nothing else moves,
+          overbooking is allowed, and the latest-starting job in a pile-up is outlined red
           with a !. Click a bar or a job name to open it.
         </MutedBody>
       </TightStack>

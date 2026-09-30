@@ -21,7 +21,7 @@ A contract firm's season on one screen: a **job list** that opens into one
 job's **dials** (hours per phase, materials), and a **timeline** of phased bars
 (solid = a phase worked, hatched = waiting for a crew) that reflows in **Full
 auto** or holds still in **Manual**, around **locked** jobs. Dragging a bar
-reorders the queue in Full auto and sets exact working days in Manual; a job
+suggests a start: in Full auto it snaps left to the nearest job's slot and the queue reflows, in Manual it lands on the exact working day; a job
 over its crew's capacity is outlined red with a `!`. It is the UI half of
 thorcasting-qbo ADR 0028 and its 2026-09-29 addendum.
 
@@ -95,10 +95,19 @@ The rules, as rules:
 5. **A placement stores each phase's working days,** not only a start, so a
    pause survives a mode switch.
 6. **Full auto:** unlocked jobs flow in queue order into free crew time;
-   dragging an unlocked bar changes its **order** (it sits before the first job
-   starting at or after the drop), never a date. Capacity is respected.
+   dragging an unlocked bar changes its **order**, never a date: it **snaps
+   left**, taking the queue slot of the latest start at or before the drop
+   (Peter, 2026-09-30: jobs on June 1 and Aug 1, a drop on June 5 takes June
+   1's slot and both shift right behind it). A drop inside its own slot
+   changes nothing, one left of every start goes to the front, and a locked
+   job's start is never a slot. The slot's start also becomes the job's
+   **`notBefore` floor** (the ADR's `phase.not_before`), so the suggestion
+   shows even when the job's crews are free sooner; a front drop clears it.
+   Capacity is respected, so the displaced job shifts right only when it
+   shares a crew with the dragged one.
 7. **Manual:** every placed job sits on its stored days; dragging moves the
-   **whole job** so its first day is the drop day, keeping its shape.
+   **whole job** so its first day is the drop day, keeping its shape. No other
+   job's days change; the rows only repack. A manual drag clears the floor.
    Overbooking is allowed. Unplaced jobs sit in a TBD band.
 8. **Flow once** (manual only): pack the unlocked jobs once, keeping their
    left-to-right order, and stay manual. Idempotent.
@@ -155,7 +164,7 @@ All **ruled by Peter, 2026-09-29**, working through the contract-job sketches:
 - Manual placement is the product; automation (Full auto, Flow once) is paid.
 - **Lock is an explicit button** (list row and detail header); editing a job
   does not lock it; a locked job never moves.
-- Full auto: dragging reorders; locked jobs stay put.
+- Full auto: dragging reorders (snap left to the nearest start, 2026-09-30); locked jobs stay put.
 - Manual allows overbooking, flagged on the latest-starting job.
 - The list is **sorted by start date**; unplaced jobs last.
 - Bars pack into the **fewest rows**.
