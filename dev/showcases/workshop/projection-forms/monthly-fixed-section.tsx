@@ -1,22 +1,32 @@
-import { type Component, createSignal } from "solid-js";
+import { type Component, Show, createSignal } from "solid-js";
 import {
   CurrencyInput,
   DayOfMonthPicker,
   FormComposite,
+  NoteText,
   SegmentedInput,
   SpacedStack,
 } from "../../../../src";
+import {
+  buildMonthlyFixed,
+  landsIn,
+  legacyText,
+  wireFromLegacy,
+  wireText,
+} from "../projection-forms.config";
 import {
   CONFIG_TYPES,
   EXPENSE_CATEGORIES,
   MONTHLY_FIXED,
   REVENUE_CATEGORIES,
   SIDE_OPTIONS,
+  bucketIdFor,
 } from "../projection-forms.fixtures";
 import {
   ChipChoice,
   ConfigFrame,
   ConfigHeader,
+  ConfigOutput,
   LabeledField,
   ScenarioRail,
 } from "./kit";
@@ -32,6 +42,18 @@ export const MonthlyFixedSection: Component = () => {
   const [day, setDay] = createSignal<number | "last">(MONTHLY_FIXED.day);
 
   const categories = () => (side() === "revenue" ? REVENUE_CATEGORIES : EXPENSE_CATEGORIES);
+  // The row this form emits, live. Context mirrors FormContext: bucket from the
+  // Category chip, accounts from the side (payee RTH, cash Columbia Bank).
+  const row = () =>
+    buildMonthlyFixed(
+      { name: name(), amount: amount(), day: day() },
+      {
+        side: side() === "revenue" ? "revenue" : "expense",
+        bucketId: bucketIdFor(side(), category()),
+        mineAccount: "Columbia Bank Checking",
+        counterparty: "RTH",
+      },
+    );
   const show = (action: string) => () =>
     console.table({ action, name: name(), side: side(), category: category(), type: type(), amount: amount(), day: day() });
 
@@ -79,6 +101,18 @@ export const MonthlyFixedSection: Component = () => {
         </SpacedStack>
       }
       rail={<ScenarioRail scenarios={MONTHLY_FIXED.scenarios} />}
+      output={
+        <Show
+          when={type() === MONTHLY_FIXED.type}
+          fallback={<NoteText>{`The ${type()} form is not built on this bench yet.`}</NoteText>}
+        >
+          <ConfigOutput
+            legacyJson={legacyText(row())}
+            wireJson={wireText(wireFromLegacy(row()))}
+            landing={landsIn(row())}
+          />
+        </Show>
+      }
     />
   );
 };

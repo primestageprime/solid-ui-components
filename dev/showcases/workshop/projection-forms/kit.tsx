@@ -18,8 +18,10 @@ import {
   AutoStackRow,
   CardSurface,
   ChipCluster,
+  CodeBlock,
   CompliantBadge,
   DangerButton,
+  InfoBadge,
   InteractiveCard,
   NameInput,
   NoteText,
@@ -33,8 +35,10 @@ import {
   TightStack,
   TrendSparkline,
   ViolationBadge,
+  WarningBadge,
   trendOf,
 } from "../../../../src";
+import type { Landing } from "../projection-forms.config";
 import type { Candidate, ScenarioLine } from "../projection-forms.fixtures";
 
 // ── LabeledField ─────────────────────────────────────────────────────────────
@@ -157,11 +161,51 @@ export const ScenarioRail: Component<{ scenarios: ScenarioLine[] }> = (props) =>
   </TightStack>
 );
 
+// ── ConfigOutput ─────────────────────────────────────────────────────────────
+// What the form emits, live: the row the form saves, the stored config the fold
+// reads, and the builder tab that picks the line up.
+export const ConfigOutput: Component<{
+  legacyJson: string;
+  wireJson: string;
+  landing: Landing;
+}> = (props) => (
+  <TightStack>
+    <TightStack>
+      <TextSublabel>Lands in</TextSublabel>
+      <ChipCluster>
+        <Show
+          when={props.landing.claimed}
+          fallback={<WarningBadge>{props.landing.builder.toUpperCase()}</WarningBadge>}
+        >
+          <InfoBadge>{props.landing.builder.toUpperCase()}</InfoBadge>
+        </Show>
+        <Index each={props.landing.also}>
+          {(also) => <PendingBadge>{`ALSO ${also().toUpperCase()}`}</PendingBadge>}
+        </Index>
+      </ChipCluster>
+      <NoteText>{props.landing.rule}</NoteText>
+    </TightStack>
+    <AutoStackRow breakWidth="52rem">
+      <AutoStackItem>
+        <LabeledField label="Form emits: the row Save writes (legacy triple)">
+          <CodeBlock>{props.legacyJson}</CodeBlock>
+        </LabeledField>
+      </AutoStackItem>
+      <AutoStackItem>
+        <LabeledField label="Stored as: config_json the fold reads (effect, params)">
+          <CodeBlock>{props.wireJson}</CodeBlock>
+        </LabeledField>
+      </AutoStackItem>
+    </AutoStackRow>
+  </TightStack>
+);
+
 // ── ConfigFrame ──────────────────────────────────────────────────────────────
 export const ConfigFrame: Component<{
   header: JSX.Element;
   pane: JSX.Element;
   rail: JSX.Element;
+  output: JSX.Element;
 }> = (props) => (
   <CardSurface>
     <TightStack>
@@ -170,6 +214,7 @@ export const ConfigFrame: Component<{
         <AutoStackItem>{props.pane}</AutoStackItem>
         <AutoStackItem>{props.rail}</AutoStackItem>
       </AutoStackRow>
+      {props.output}
     </TightStack>
   </CardSurface>
 );

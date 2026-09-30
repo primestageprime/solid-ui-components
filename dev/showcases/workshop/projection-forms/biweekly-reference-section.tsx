@@ -15,6 +15,13 @@ import {
   TightStack,
 } from "../../../../src";
 import {
+  buildBiweeklyReference,
+  landsIn,
+  legacyText,
+  wireFromLegacy,
+  wireText,
+} from "../projection-forms.config";
+import {
   BIWEEKLY_REFERENCE,
   CONFIG_TYPES,
   DEFINITION_HELP,
@@ -24,6 +31,7 @@ import {
   ROLE_HELP,
   ROLE_OPTIONS,
   SIDE_OPTIONS,
+  bucketIdFor,
   formatCents,
   perPaycheckCents,
 } from "../projection-forms.fixtures";
@@ -32,6 +40,7 @@ import {
   ChipChoice,
   ConfigFrame,
   ConfigHeader,
+  ConfigOutput,
   LabeledField,
   ScenarioRail,
 } from "./kit";
@@ -57,6 +66,18 @@ export const BiweeklyReferenceSection: Component = () => {
   const echo = () => `= ${formatCents(perPaycheckCents(annual() ?? 0))}/paycheck`;
   const txns = () =>
     showAll() ? BIWEEKLY_REFERENCE.sourceTxns : BIWEEKLY_REFERENCE.sourceTxns.slice(0, PREVIEW_ROWS);
+  // The row this form emits, live (FormContext: bucket from Category, accounts
+  // from side; the payee is the person's name).
+  const row = () =>
+    buildBiweeklyReference(
+      { name: name(), annual: annual(), referenceDate: referenceDate(), role: role() },
+      {
+        side: side() === "revenue" ? "revenue" : "expense",
+        bucketId: bucketIdFor(side(), category()),
+        mineAccount: "Columbia Bank Checking",
+        counterparty: name(),
+      },
+    );
   const show = (action: string) => () =>
     console.table({ action, name: name(), side: side(), category: category(), type: type(), role: role(), pick: pick(), candidate: candidate(), annual: annual(), referenceDate: referenceDate() });
 
@@ -133,6 +154,18 @@ export const BiweeklyReferenceSection: Component = () => {
           </TightStack>
           <ScenarioRail scenarios={BIWEEKLY_REFERENCE.scenarios} />
         </SpacedStack>
+      }
+      output={
+        <Show
+          when={type() === BIWEEKLY_REFERENCE.type}
+          fallback={<NoteText>{`The ${type()} form is not built on this bench yet.`}</NoteText>}
+        >
+          <ConfigOutput
+            legacyJson={legacyText(row())}
+            wireJson={wireText(wireFromLegacy(row()))}
+            landing={landsIn(row())}
+          />
+        </Show>
       }
     />
   );

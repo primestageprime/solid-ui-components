@@ -35,6 +35,13 @@ export const EXPENSE_CATEGORIES: string[] = [
   "Other",
 ];
 
+/** Category label -> bucket id (thorcasting-ui/src/lib/configureModel.ts
+ *  BUCKET_CATALOG). The bucket is what a builder lens reads. */
+export const bucketIdFor = (side: string, label: string): string => {
+  const slug = label.toLowerCase().replace("&", "");
+  return `${side === "revenue" ? "rev" : "exp"}-${slug}`;
+};
+
 /** The fifteen types of the Type chip row, in thorcasting's order. */
 export const CONFIG_TYPES: string[] = [
   "Weekly fixed",
