@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`SpanLanes`: a drag started from `onSpanPointerDown` now works inside a `Chart`.** The Chart's <svg> captured the pointer on every pointerdown (for `DragRangeSelect`) after the span's handler ran, so every move and up went to the svg and the consumer's drag never moved. When `onSpanPointerDown` is set, the span now stops the event reaching the svg; without it nothing changes.
+
 ## 0.204.0 — 2026-09-29
 
 ### Added

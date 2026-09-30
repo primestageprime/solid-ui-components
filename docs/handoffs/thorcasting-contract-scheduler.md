@@ -190,6 +190,12 @@ consumer needs a real list (§7).
   moved by the drag's ms), `ReferenceLine`s at its ends, and on release call
   the model's `dragTo` with the first working day at or after the drop. Swallow
   the click that ends a drag. See `timeline.tsx`.
+  Two traps (2026-09-30, why the bench drag was dead): pass SpanLanes its data
+  through an ACCESSOR (`data={data()}` inside the helper, not
+  `{lanes(shown())}`), or every drag frame re-mounts SpanLanes and tears
+  down the element holding the capture; and use a SUI with the `SpanLanes`
+  fix that stops the span's pointerdown reaching the Chart's svg (which
+  otherwise captures the pointer itself).
 - **Glide** (not extracted): a FLIP over `[data-span-id]` groups — lay the
   spans with the exported `layoutSpans(packSpans(data), x, geo)`, remember each
   box, and `el.animate` the translate from the old box when a render moves it.

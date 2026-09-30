@@ -4977,7 +4977,7 @@
     "showcase": "#/chart",
     "since": "0.204.0",
     "file": "src/components/Chart/SpanLanes.tsx",
-    "line": 152
+    "line": 162
   },
   {
     "name": "createSpanRing",
@@ -14018,7 +14018,7 @@
     "showcase": "#/chart",
     "since": "0.204.0",
     "file": "src/components/Chart/SpanLanes.tsx",
-    "line": 81
+    "line": 83
   },
   {
     "name": "Sparkline",
