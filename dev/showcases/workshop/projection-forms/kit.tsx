@@ -18,8 +18,10 @@ import {
   AutoStackRow,
   CardSurface,
   ChipCluster,
+  CodeBlock,
   CompliantBadge,
   DangerButton,
+  InfoBadge,
   InteractiveCard,
   NameInput,
   NoteText,
@@ -172,4 +174,37 @@ export const ConfigFrame: Component<{
       </AutoStackRow>
     </TightStack>
   </CardSurface>
+);
+
+// ── KindOutput ───────────────────────────────────────────────────────────────
+// What a kind form emits, live: the stored line, what it lowers to, and the
+// builder that claims it.
+export const KindOutput: Component<{
+  lineTitle: string;
+  lineJson: string;
+  loweredJson: string;
+  builder: string;
+  rule: string;
+}> = (props) => (
+  <TightStack>
+    <TightStack>
+      <TextSublabel>Lands in</TextSublabel>
+      <ChipCluster>
+        <InfoBadge>{`${props.builder.toUpperCase()} BUILDER`}</InfoBadge>
+      </ChipCluster>
+      <NoteText>{props.rule}</NoteText>
+    </TightStack>
+    <AutoStackRow breakWidth="52rem">
+      <AutoStackItem>
+        <LabeledField label={props.lineTitle}>
+          <CodeBlock>{props.lineJson}</CodeBlock>
+        </LabeledField>
+      </AutoStackItem>
+      <AutoStackItem>
+        <LabeledField label="Lowers to: the config the fold reads (effect, params)">
+          <CodeBlock>{props.loweredJson}</CodeBlock>
+        </LabeledField>
+      </AutoStackItem>
+    </AutoStackRow>
+  </TightStack>
 );

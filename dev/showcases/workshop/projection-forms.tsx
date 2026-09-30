@@ -6,6 +6,7 @@ import {
   ViewportColumn,
 } from "../../../src";
 import { BiweeklyReferenceSection } from "./projection-forms/biweekly-reference-section";
+import { CascadeSection } from "./projection-forms/cascade-section";
 import { MonthlyFixedSection } from "./projection-forms/monthly-fixed-section";
 
 export const meta = { label: "Projection Forms" };
@@ -20,14 +21,16 @@ const ProjectionFormsBench: Component = () => {
       <ViewportColumn>
         <SectionTitle>Projection Forms</SectionTitle>
         <SpacedStack>
-          <MonthlyFixedSection />
-          <BiweeklyReferenceSection />
+          <CascadeSection />
           <CollapsibleSection
-            title="Approved"
+            title="Reference forms (Monthly fixed, Bi-weekly)"
             collapsed={!approvedOpen()}
             onToggleCollapse={() => setApprovedOpen(!approvedOpen())}
           >
-            {null}
+            <SpacedStack>
+              <MonthlyFixedSection />
+              <BiweeklyReferenceSection />
+            </SpacedStack>
           </CollapsibleSection>
         </SpacedStack>
       </ViewportColumn>
