@@ -179,3 +179,36 @@ export const BIWEEKLY_REFERENCE = {
   ),
   sourceStats: "26 transactions · $2,795.00 each · every 14 days",
 };
+
+// ── Cascade defaults (auto-filled form values) ──────────────────────────────
+// Plausible values for a software company selling seats; the license figures
+// match the engine's own license_tests.rs example (Pro / Acme / $50 a seat).
+import type { HourlyValues, LicenseValues } from "./projection-forms.lines";
+
+export const LICENSE_DEFAULTS: LicenseValues = {
+  product: "Pro",
+  customer: "Acme",
+  paidTo: "Columbia Bank Checking",
+  billing: "monthly",
+  day: 1,
+  month: 1,
+  start: "2026-10-01",
+  until: "",
+  seats: 10,
+  netPerPeriod: 2,
+  priceDollars: 50,
+  annualDiscountPct: 25,
+  costPerSeatDollars: 4,
+  costHost: "AWS",
+};
+
+export const HOURLY_DEFAULTS: HourlyValues = {
+  service: "Design",
+  customer: "Acme",
+  paidTo: "Columbia Bank Checking",
+  dow: 1,
+  rateDollars: 90,
+  hours: 20,
+  start: "2026-10-05",
+  until: "",
+};
