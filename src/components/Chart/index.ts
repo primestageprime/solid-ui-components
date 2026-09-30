@@ -81,7 +81,7 @@ export type {
   SpanLanesOverrides,
   SpanLanesProps,
 } from "./SpanLanes";
-export { layoutSpans, packSpans, spanExtent, spanRowCount } from "./spanLanes";
+export { layoutSpans, packSpans, spanExtent, spanRowCount } from "./spanLanesGeometry";
 export type {
   Extent as SpanExtent,
   LaidSegment,
@@ -90,7 +90,7 @@ export type {
   RowGeometry,
   SpanDatum,
   SpanSegment,
-} from "./spanLanes";
+} from "./spanLanesGeometry";
 export {
   createSpanBadge,
   createSpanEndLabels,
