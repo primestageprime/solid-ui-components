@@ -2946,3 +2946,9 @@ th:has(.tf-th-center) .hud-table__header-content {
 .span-lanes-demo {
   max-width: 760px;
 }
+
+/* Projection Forms bench: geometry only. DayOfMonthPicker has no size prop, so the
+   demo frame sets its cell size (2rem x 7 fits a 360px phone column). */
+.projection-forms-demo {
+  --dom-cell-size: 2rem;
+}
