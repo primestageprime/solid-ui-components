@@ -1088,7 +1088,7 @@
     "useFor": "an attention outline (over capacity, invalid).",
     "notes": null,
     "showcase": "#/svg-marks",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/SvgMarks/BoxRing.tsx",
     "line": 26
   },
@@ -2683,7 +2683,7 @@
     "useFor": null,
     "notes": "The frame as tall as its chart: for a chart whose height is its data (a lane chart packed into as many rows as it needs), where a stated px leaves an empty band under a short schedule.",
     "showcase": "#/chart-frame",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/ChartFrame/variants.ts",
     "line": 33
   },
@@ -3917,7 +3917,7 @@
     "useFor": null,
     "notes": "@example const Cost = createFormulaCaption({ formatFactor: dollars, formatResult: dollars }); const axes = [{ label: \"Prep\", caption: (p) => <Cost operand={p.value} factor={125} /> }];",
     "showcase": "#/formula-caption",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/FormulaCaption/FormulaCaption.tsx",
     "line": 50
   },
@@ -4711,7 +4711,7 @@
     "useFor": "a slider's range (a dial's min/max click), any `[min, max]` a reader sets by hand.",
     "notes": "A Max-over-Min range editor. Alias of `createYAxisLockDialog`.",
     "showcase": "#/chart-frame",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/ChartFrame/YAxisLockDialog.tsx",
     "line": 171
   },
@@ -4934,7 +4934,7 @@
     "useFor": null,
     "notes": "A glyph badge on a corner of the bar, drawn only when `when(datum)` holds — the `!` or the padlock.",
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/Chart/spanAdornments.tsx",
     "line": 46
   },
@@ -4953,7 +4953,7 @@
     "useFor": null,
     "notes": "`#3 … $33.8k`: a lead and a trail label on the bar, the trail dropped when it does not fit.",
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/Chart/spanAdornments.tsx",
     "line": 28
   },
@@ -4975,7 +4975,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/Chart/SpanLanes.tsx",
     "line": 152
   },
@@ -4994,7 +4994,7 @@
     "useFor": null,
     "notes": "An attention ring round the bar, drawn only when `when(datum)` holds.",
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/Chart/spanAdornments.tsx",
     "line": 80
   },
@@ -6696,7 +6696,7 @@
     "useFor": null,
     "notes": "Work under way (blue).",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/Badge/variants.ts",
     "line": 46
   },
@@ -7155,7 +7155,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/svg-marks",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/SvgMarks/EndLabels.tsx",
     "line": 28
   },
@@ -7999,7 +7999,7 @@
     "useFor": "a figure's derived total under it (hours × rate, seats × fee).",
     "notes": null,
     "showcase": "#/formula-caption",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/FormulaCaption/FormulaCaption.tsx",
     "line": 35
   },
@@ -8267,7 +8267,7 @@
     "useFor": "`!`, a padlock, a count.",
     "notes": null,
     "showcase": "#/svg-marks",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/SvgMarks/GlyphBadge.tsx",
     "line": 31
   },
@@ -8699,7 +8699,7 @@
     "useFor": "waiting / blocked / tentative stretches.",
     "notes": null,
     "showcase": "#/svg-marks",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/SvgMarks/HatchPattern.tsx",
     "line": 42
   },
@@ -9942,7 +9942,7 @@
     "useFor": null,
     "notes": "TruthToggle with its label before it: a labelled switch in a toolbar row (\"Full auto ⬤\"), where the words lead and the switch closes the line.",
     "showcase": "#/toggle",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/Toggle/variants.ts",
     "line": 8
   },
@@ -10632,7 +10632,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/mode-split-button",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/ModeSplitButton/ModeSplitButton.tsx",
     "line": 77
   },
@@ -11693,7 +11693,7 @@
     "useFor": null,
     "notes": "Neutral pending badge.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/Badge/variants.ts",
     "line": 31
   },
@@ -13182,7 +13182,7 @@
     "useFor": "a phased span, a stacked progress bar.",
     "notes": null,
     "showcase": "#/svg-marks",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/SvgMarks/SegmentBar.tsx",
     "line": 39
   },
@@ -14016,7 +14016,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/Chart/SpanLanes.tsx",
     "line": 81
   },
@@ -15744,7 +15744,7 @@
     "useFor": null,
     "notes": "Work ready to start (green).",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.204.0",
     "file": "src/components/Badge/variants.ts",
     "line": 51
   },
