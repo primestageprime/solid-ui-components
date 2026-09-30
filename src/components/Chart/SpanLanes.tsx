@@ -19,6 +19,8 @@
 // and pointer-down come back as callbacks with the datum, so a consumer can
 // highlight, open or drag. Each span's group carries `data-span-id` so a
 // consumer can find it (for a glide, for a test) without reaching inside.
+// With `onSpanPointerDown` set, the span OWNS the pointerdown: it stops it
+// reaching the Chart's <svg>, whose capture would otherwise steal the drag.
 //
 // Geometry is `spanLanesGeometry.ts` (pure, tested); this file only draws it.
 // ============================================
@@ -109,7 +111,15 @@ export function SpanLanes<T extends SpanDatum>(
               }
               onPointerEnter={(e) => props.onSpanHover?.(s().datum, e)}
               onPointerLeave={(e) => props.onSpanHover?.(null, e)}
-              onPointerDown={(e) => props.onSpanPointerDown?.(s().datum, e)}
+              onPointerDown={(e) => {
+                if (!props.onSpanPointerDown) return;
+                // A span that reports pointer-down owns the gesture: stop it
+                // reaching the Chart's <svg>, whose own pointerdown captures
+                // the pointer (for DragRangeSelect) and would steal every
+                // move/up from a drag the consumer starts here.
+                e.stopPropagation();
+                props.onSpanPointerDown(s().datum, e);
+              }}
               onClick={(e) => props.onSpanClick?.(s().datum, e)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {

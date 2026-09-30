@@ -158,4 +158,54 @@ describe("SpanLanes", () => {
       container.querySelector('[data-span-id="1"] .sui-glyph-badge'),
     ).toBeNull();
   });
+
+  // Regression (2026-09-30, contract-scheduler bench): the Chart's <svg> also
+  // handles pointerdown (for DragRangeSelect) and captures the pointer. It ran
+  // AFTER the span's handler, stole the capture, and every pointermove/up went
+  // to the svg — a consumer dragging from `onSpanPointerDown` never saw one.
+  it("keeps a drag started from onSpanPointerDown: the Chart does not steal the capture", () => {
+    // jsdom has no pointer capture: emulate it — the last element to capture
+    // is where the browser routes the gesture's move and up.
+    let captor: Element | null = null;
+    const proto = Element.prototype as unknown as Record<string, unknown>;
+    const saved = {
+      set: proto.setPointerCapture,
+      has: proto.hasPointerCapture,
+      release: proto.releasePointerCapture,
+    };
+    proto.setPointerCapture = function (this: Element) {
+      captor = this;
+    };
+    proto.hasPointerCapture = function (this: Element) {
+      return captor === this;
+    };
+    proto.releasePointerCapture = () => {
+      captor = null;
+    };
+    try {
+      const moves: number[] = [];
+      const ups: number[] = [];
+      const onDown = (j: Job, e: PointerEvent) => {
+        const el = e.currentTarget as Element;
+        el.setPointerCapture(e.pointerId);
+        el.addEventListener("pointermove", () => moves.push(j.id));
+        el.addEventListener("pointerup", () => ups.push(j.id));
+      };
+      const { container } = inChart(() => (
+        <SpanLanes data={jobs} paint={paint} onSpanPointerDown={onDown} />
+      ));
+      const g = container.querySelector('[data-span-id="3"]') as SVGGElement;
+      fireEvent.pointerDown(g, { pointerId: 1, clientX: 100, button: 0 });
+      expect(captor).toBe(g);
+      const target = captor as unknown as Element;
+      fireEvent.pointerMove(target, { pointerId: 1, clientX: 140 });
+      fireEvent.pointerUp(target, { pointerId: 1, clientX: 140 });
+      expect(moves).toEqual([3]);
+      expect(ups).toEqual([3]);
+    } finally {
+      proto.setPointerCapture = saved.set;
+      proto.hasPointerCapture = saved.has;
+      proto.releasePointerCapture = saved.release;
+    }
+  });
 });

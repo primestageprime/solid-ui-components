@@ -305,9 +305,12 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
     last = next;
   });
 
-  const lanes = (data: readonly JobSpan[]) => (
+  // DATA AS AN ACCESSOR: `{lanes(shown())}` would re-run the whole call —
+  // a NEW SpanLanes — on every drag frame, tearing down the <g> holding the
+  // pointer capture after the first move (2026-09-30: why drag was dead).
+  const lanes = (data: () => readonly JobSpan[]) => (
     <SpanLanes<JobSpan>
-      data={data}
+      data={data()}
       paint={paint}
       adornments={ADORNMENTS}
       hoveredId={props.hoverId}
@@ -338,7 +341,7 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
           </For>
         </defs>
         <XAxis tickValues={props.ticks} tickFormat={props.tickFormat} />
-        <g transform={`translate(0, ${TOP})`}>{lanes(shown())}</g>
+        <g transform={`translate(0, ${TOP})`}>{lanes(shown)}</g>
         <Show when={props.parked.length > 0}>
           <ReferenceLine
             orientation="horizontal"
@@ -346,7 +349,7 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
             label="TBD"
           />
           <g transform={`translate(0, ${parkedTop()})`}>
-            {lanes(props.parked)}
+            {lanes(() => props.parked)}
           </g>
         </Show>
         <Show when={dragged()}>
