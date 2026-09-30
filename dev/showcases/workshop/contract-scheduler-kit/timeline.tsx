@@ -50,6 +50,7 @@ import {
   createSpanBadge,
   createSpanEndLabels,
   createSpanRing,
+  fitEndLabels,
   layoutSpans,
   packSpans,
   spanRowCount,
@@ -111,6 +112,8 @@ const GEO = { rowHeight: ROW, barHeight: 0.76 };
 const TIP_DELAY = 500;
 /** The tooltip's gap below the hovered bar. */
 const TIP_OFFSET = { x: 0, y: 6 };
+/** EndLabels' default character width (11.5px monospace): the "#N" hit box. */
+const GLYPH = 7;
 
 const FILL: Readonly<Record<Tone, string>> = {
   doing: "var(--sui-accent)",
@@ -224,12 +227,16 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
     const j = d ? shown().find((s) => s.id === d.id) : undefined;
     return j ? extentOf(j) : null;
   };
-  // TOOLTIP (Peter, 2026-09-30): it waits TIP_DELAY ms of a steady hover
-  // before it shows (the bar outline and the table row still light at once),
-  // and it hangs BELOW the hovered bar, never over it.
+  // TOOLTIP (Peter, 2026-09-30): it opens only from the bar's "#N" label,
+  // after TIP_DELAY ms of a steady hover there (the bar outline and the table
+  // row still light at once, from anywhere on the bar), and it hangs BELOW
+  // the bar, never over it. SpanLanes reports hover per bar, not per label,
+  // so the label is hit-tested here from the same pure geometry it is drawn
+  // with (`layoutSpans` + `fitEndLabels`).
+  const [labelId, setLabelId] = createSignal<number | null>(null);
   const [tipId, setTipId] = createSignal<number | null>(null);
   createEffect(() => {
-    const id = drag() ? null : props.hoverId;
+    const id = drag() ? null : labelId();
     setTipId(null);
     if (id == null) return;
     const t = setTimeout(() => setTipId(id), TIP_DELAY);
@@ -296,6 +303,35 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
   );
   // GLIDE (Peter, 2026-09-29): remember where each bar was laid; when a render
   // moves one, animate its group from the old place to the new.
+  /** Each drawn "#N" label's rect in plot px. */
+  const leadsOf = (spans: readonly JobSpan[], dy: number) =>
+    layoutSpans(packSpans(spans), x, GEO).flatMap((l) => {
+      const lead = fitEndLabels(l.box, l.datum.lead, l.datum.trail, GLYPH).lead;
+      return lead
+        ? [
+            {
+              id: l.datum.id,
+              x0: lead.x,
+              x1: lead.x + lead.text.length * GLYPH,
+              y0: l.box.y + dy,
+              y1: l.box.y + l.box.height + dy,
+            },
+          ]
+        : [];
+    });
+  const leads = createMemo(() => [
+    ...leadsOf(props.spans, TOP),
+    ...leadsOf(props.parked, parkedTop()),
+  ]);
+  const onHostMove = (e: PointerEvent) => {
+    const r = host.getBoundingClientRect();
+    const px = e.clientX - r.left - MARGIN.left;
+    const py = e.clientY - r.top - MARGIN.top;
+    const hit = leads().find(
+      (b) => px >= b.x0 && px <= b.x1 && py >= b.y0 && py <= b.y1,
+    );
+    setLabelId(hit ? hit.id : null);
+  };
   const boxes = (spans: readonly JobSpan[], dy: number) =>
     layoutSpans(packSpans(spans), x, GEO).map(
       (l) => [l.datum.id, { x: l.box.x, y: l.box.y + dy }] as const,
@@ -352,7 +388,11 @@ export const JobTimeline: Component<JobTimelineProps> = (props) => {
   );
 
   return (
-    <div ref={host}>
+    <div
+      ref={host}
+      onPointerMove={onHostMove}
+      onPointerLeave={() => setLabelId(null)}
+    >
       <Chart
         width={width()}
         height={height()}
