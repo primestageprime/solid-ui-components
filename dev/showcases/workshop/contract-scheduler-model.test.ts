@@ -429,6 +429,136 @@ describe("dragging", () => {
   });
 });
 
+// Peter, 2026-09-30: dragging a bar SUGGESTS its start date. In full auto the
+// drop snaps to the nearest range start at or LEFT of it and takes that slot;
+// the queue reflows behind it. In manual it lands on the exact day and nothing
+// else moves.
+describe("dragging suggests a start (Peter's June 1 / Aug 1 example)", () => {
+  /** A one-phase job on the seamer (one crew, 8 h a day): `days` long. */
+  const seam = (id: number, days: number, over: Partial<Job> = {}): Job => ({
+    ...job(id),
+    lines: [
+      {
+        key: "seam",
+        label: "Seam",
+        unit: "h",
+        role: "seamer",
+        maxPerDay: 8,
+        min: 0,
+        max: 8 * days * 3,
+        value: 8 * days,
+        prior: 8 * days,
+      },
+    ],
+    ...over,
+  });
+  // One crew, so the queue runs back to back: 1 "June 1" (day 0, 40 days),
+  // 2 "Aug 1" (day 40, 10 days), 3 after them (day 50, 5 days).
+  const june = (): SchedulerState =>
+    state([seam(1, 40), seam(2, 10), seam(3, 5)], { horizon: 80 });
+  const startsOf = (s: SchedulerState) =>
+    Object.fromEntries(
+      Object.entries(daysOf(s)).map(([id, ph]) => [id, ph[0][0]]),
+    );
+
+  it("the fixture starts June 1, Aug 1, then after", () => {
+    expect(startsOf(june())).toEqual({ 1: 0, 2: 40, 3: 50 });
+  });
+
+  it("full auto: a drop on June 5 takes June 1's slot; June 1 and Aug 1 shift right behind it", () => {
+    const next = dragTo(june(), 3, 5, ROLES);
+    expect(next.order).toEqual([3, 1, 2]);
+    // 3 begins on June 1's day; 1 begins after 3 ends; 2 after 1
+    expect(startsOf(next)).toEqual({ 3: 0, 1: 5, 2: 45 });
+  });
+
+  it("full auto: a drop exactly on a start takes that start's slot", () => {
+    const next = dragTo(june(), 3, 40, ROLES);
+    expect(next.order).toEqual([1, 3, 2]);
+    expect(startsOf(next)).toEqual({ 1: 0, 3: 40, 2: 45 });
+  });
+
+  it("full auto: a drop between its own start and the next leaves the queue as it is", () => {
+    const s = june();
+    expect(dragTo(s, 2, 45, ROLES)).toBe(s);
+  });
+
+  it("full auto: a drop left of every start goes to the front; a locked job's start is never a snap target", () => {
+    // a locked job holds the seamer on days 0–9, so job 1 starts on day 10
+    const s = state(
+      [
+        seam(9, 10, { locked: true, placement: [range(0, 10)] }),
+        seam(1, 20),
+        seam(2, 5),
+      ],
+      { horizon: 80 },
+    );
+    expect(startsOf(s)).toEqual({ 9: 0, 1: 10, 2: 30 });
+    const next = dragTo(s, 2, 3, ROLES);
+    expect(next.order).toEqual([2, 1]);
+    // the locked job stays put; 2 flows into the first free day
+    expect(startsOf(next)).toEqual({ 9: 0, 2: 10, 1: 15 });
+  });
+
+  // A queue slot alone is invisible when the dragged job's crew is free (it
+  // would still start on day 0), so the drop also sets a NOT-BEFORE floor at
+  // the slot's start: ADR 0028's `phase.not_before`.
+  const uncontended = (): SchedulerState =>
+    state(
+      [
+        seam(9, 5, { locked: true, placement: [range(0, 5)] }),
+        seam(1, 10), // seamer: waits for the locked job, starts day 5
+        job(2), // roofers: free, starts day 0
+      ],
+      { horizon: 80 },
+    );
+
+  it("full auto: an uncontended drag right still lands on the slot's date", () => {
+    const s = uncontended();
+    expect(startsOf(s)).toEqual({ 9: 0, 1: 5, 2: 0 });
+    const next = dragTo(s, 2, 7, ROLES);
+    expect(next.order).toEqual([2, 1]);
+    expect(next.jobs.find((j) => j.id === 2)?.notBefore).toBe(5);
+    expect(startsOf(next)).toEqual({ 9: 0, 1: 5, 2: 5 });
+  });
+
+  it("full auto: dragging back left of every start clears the floor", () => {
+    const moved = dragTo(uncontended(), 2, 7, ROLES);
+    const back = dragTo(moved, 2, 1, ROLES);
+    expect(back.jobs.find((j) => j.id === 2)?.notBefore ?? null).toBeNull();
+    expect(startsOf(back)[2]).toBe(0);
+  });
+
+  it("laws hold with a floor: auto → manual → auto, and Flow once is idempotent", () => {
+    const s = dragTo(uncontended(), 2, 7, ROLES);
+    expect(daysOf(setMode(setMode(s, "manual", ROLES), "auto", ROLES))).toEqual(
+      daysOf(s),
+    );
+    const once = flowOnce(setMode(s, "manual", ROLES), ROLES);
+    expect(flowOnce(once, ROLES)).toEqual(once);
+  });
+
+  it("manual: a drag clears any floor an auto drag set", () => {
+    const m = setMode(dragTo(uncontended(), 2, 7, ROLES), "manual", ROLES);
+    const next = dragTo(m, 2, 20, ROLES);
+    expect(next.jobs.find((j) => j.id === 2)?.notBefore ?? null).toBeNull();
+    expect(startsOf(next)[2]).toBe(20);
+  });
+
+  it("manual: the job lands on exactly the dropped day and no other job's dates change", () => {
+    const m = setMode(june(), "manual", ROLES);
+    const next = dragTo(m, 3, 5, ROLES);
+    expect(startsOf(next)).toEqual({ 1: 0, 2: 40, 3: 5 });
+    for (const id of [1, 2])
+      expect(next.jobs.find((j) => j.id === id)?.placement).toEqual(
+        m.jobs.find((j) => j.id === id)?.placement,
+      );
+  });
+});
+
+const range = (from: number, n: number): number[] =>
+  Array.from({ length: n }, (_, i) => from + i);
+
 describe("toggleLock", () => {
   it("locks a job where it currently sits and takes it out of the queue", () => {
     const s = seed();
