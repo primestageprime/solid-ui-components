@@ -559,6 +559,52 @@ describe("dragging suggests a start (Peter's June 1 / Aug 1 example)", () => {
 const range = (from: number, n: number): number[] =>
   Array.from({ length: n }, (_, i) => from + i);
 
+// Peter, 2026-09-30: "in manual mode, if I drag one job, no other job's
+// timestamps ever change." Every other job's laid phases (days, start, end)
+// and waits are snapshotted before and after a manual drag.
+describe("a manual drag never changes another job's days", () => {
+  const others = (s: SchedulerState, id: number) => {
+    const sch = schedule(s, ROLES);
+    return Object.fromEntries(
+      Object.entries(sch.byJob)
+        .filter(([k]) => Number(k) !== id)
+        .map(([k, js]) => [
+          k,
+          {
+            phases: js.phases.map((p) => [p.s, p.e, [...p.days]]),
+            waits: js.waits,
+          },
+        ]),
+    );
+  };
+  const manual = () => setMode(seed(), "manual", ROLES);
+  const cases: readonly (readonly [string, number])[] = [
+    ["later, clear of everything", 30],
+    ["onto another job's days (overbooking)", 0],
+    ["onto the locked job's days", 2],
+    ["past the horizon's edge", 39],
+  ];
+  for (const [what, w0] of cases)
+    it(`dragging job 2 ${what}`, () => {
+      const m = manual();
+      expect(others(dragTo(m, 2, w0, ROLES), 2)).toEqual(others(m, 2));
+    });
+
+  // Holidays and weekends are not indices (the calendar maps index → date and
+  // a drag never touches the calendar), so "across a holiday" is any drag
+  // over the others' indices: pinned here for job 3 as well.
+  it("dragging job 3 across the other jobs' days", () => {
+    const m = manual();
+    expect(others(dragTo(m, 3, 12, ROLES), 3)).toEqual(others(m, 3));
+  });
+
+  it("a chain of drags leaves the undragged jobs exactly where they began", () => {
+    const m = manual();
+    const after = [5, 20, 1, 33].reduce((s, w) => dragTo(s, 3, w, ROLES), m);
+    expect(others(after, 3)).toEqual(others(m, 3));
+  });
+});
+
 describe("toggleLock", () => {
   it("locks a job where it currently sits and takes it out of the queue", () => {
     const s = seed();
