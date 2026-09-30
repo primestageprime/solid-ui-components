@@ -11,7 +11,10 @@
  * Every component comes through the package barrel (`../../../src`), as a
  * client would import it. Component per region:
  *
- *   Work calendar — `LeftTruthToggle` × (weekends + each holiday)
+ *   Work calendar — `PopoverTooltip` (tap-open, stays open while toggling)
+ *                   over a `SmallGhostButton` "4 holidays ▾", holding a
+ *                   `CompactTable`: day, date, `TruthToggle` "off" per row
+ *                   (weekends + each holiday)
  *   Timeline      — `ContentChartFrame` (sized to the packed rows) with a
  *                   `ModeSplitButton` in a `ButtonGroup` in its actions (Full
  *                   auto / Manual; the manual face is "Flow once", the auto face
@@ -56,12 +59,12 @@ import {
   type GroupedMutationEntity,
   GroupedMutationSliders,
   IconOnlyButton,
-  LeftTruthToggle,
   type ModeInfo,
   ModeSplitButton,
   MutedBody,
   NoteText,
   PendingBadge,
+  PopoverTooltip,
   SectionTitle,
   SmallGhostButton,
   SpreadRow,
@@ -125,6 +128,14 @@ const HOLIDAYS: readonly { readonly iso: string; readonly label: string }[] = [
   { iso: "2026-12-25", label: "Christmas" },
 ];
 
+/** One row of the work-calendar dropdown: the weekends, or a holiday by its ISO date. */
+interface DayOff {
+  readonly id: string;
+  readonly label: string;
+  readonly date: string;
+}
+const WEEKENDS = "weekends";
+
 const DAY = 86_400_000;
 const msOf = (iso: string): number => Date.parse(`${iso}T00:00:00Z`);
 /** The calendar window in epoch ms: FROM's midnight to the day after TO. */
@@ -184,6 +195,12 @@ const short = (iso: string): string =>
     day: "numeric",
     timeZone: "UTC",
   });
+const plural = (n: number, word: string): string =>
+  `${n} ${word}${n === 1 ? "" : "s"}`;
+const DAYS_OFF: readonly DayOff[] = [
+  { id: WEEKENDS, label: "Weekends", date: "Sat & Sun" },
+  ...HOLIDAYS.map((h) => ({ id: h.iso, label: h.label, date: short(h.iso) })),
+];
 const roleLabel = (id: string): string =>
   ROLES.find((r) => r.id === id)?.label ?? id;
 const rateOf = (id: string | undefined): number | null =>
@@ -291,6 +308,38 @@ const ContractScheduler: Component = () => {
     null,
   );
   const job = (id: number | null) => st().jobs.find((j) => j.id === id);
+
+  // ── work calendar: a dropdown of the days the crews take off ─────────
+  // Every row's switch means "off": weekends off is `!weekends`.
+  const isOff = (d: DayOff): boolean =>
+    d.id === WEEKENDS ? !cal().weekends : cal().holidays.includes(d.id);
+  const setOff = (d: DayOff, off: boolean) =>
+    setCal((c) =>
+      d.id === WEEKENDS
+        ? { ...c, weekends: !off }
+        : {
+            ...c,
+            holidays: off
+              ? [...c.holidays, d.id]
+              : c.holidays.filter((x) => x !== d.id),
+          },
+    );
+  const dayOffColumns: TableColumn<DayOff>[] = [
+    { id: "day", header: "Day", accessor: (d) => d.label },
+    { id: "date", header: "Date", accessor: (d) => d.date },
+    {
+      id: "off",
+      header: "Off",
+      width: "64px",
+      accessor: (d) => (
+        <TruthToggle
+          checked={isOff(d)}
+          aria-label={`${d.label} off`}
+          onCheckedChange={(on) => setOff(d, on)}
+        />
+      ),
+    },
+  ];
 
   // ── timeline spans ──────────────────────────────────────────────────────
   // The model lays each job's phases and waits on WORKING-DAY indices; the
@@ -587,30 +636,27 @@ const ContractScheduler: Component = () => {
         </MutedBody>
       </TightStack>
 
-      <WrapRow>
+      <ClusterRow>
         <TextSublabel>Work calendar</TextSublabel>
-        <LeftTruthToggle
-          label="Work weekends"
-          checked={cal().weekends}
-          onCheckedChange={(on) => setCal((c) => ({ ...c, weekends: on }))}
-        />
-        <For each={HOLIDAYS}>
-          {(h) => (
-            <LeftTruthToggle
-              label={`${h.label} off`}
-              checked={cal().holidays.includes(h.iso)}
-              onCheckedChange={(on) =>
-                setCal((c) => ({
-                  ...c,
-                  holidays: on
-                    ? [...c.holidays, h.iso]
-                    : c.holidays.filter((x) => x !== h.iso),
-                }))
-              }
+        <PopoverTooltip
+          triggerAs="span"
+          placement="bottom-start"
+          content={
+            <CompactTable
+              data={[...DAYS_OFF]}
+              columns={dayOffColumns}
+              hoverable
             />
-          )}
-        </For>
-      </WrapRow>
+          }
+        >
+          <SmallGhostButton>
+            <ClusterRow>
+              {plural(cal().holidays.length, "holiday")}
+              <ButtonIcon name="chevron-down" />
+            </ClusterRow>
+          </SmallGhostButton>
+        </PopoverTooltip>
+      </ClusterRow>
 
       <ContentChartFrame title="Timeline" actions={modeActions()}>
         <JobTimeline

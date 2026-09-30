@@ -41,7 +41,7 @@ the release after 0.203.0.
 
 | Region | Component | Props it needs |
 |---|---|---|
-| Work calendar | `LeftTruthToggle` (new) × weekends + each holiday | `label`, `checked`, `onCheckedChange` |
+| Work calendar | `PopoverTooltip` (`triggerAs="span"`, `placement="bottom-start"`) over a `SmallGhostButton` "4 holidays ▾"; its content a `CompactTable` of day · date · `TruthToggle` (switch = off), weekends first (Peter, 2026-09-30: a dropdown, not a row of toggles) | `content`, `children`; the toggle's `checked`, `onCheckedChange` |
 | Timeline frame | `ContentChartFrame` (new; `ChartFrame` `height: "content"`) | `title`, `actions` — the frame is as tall as the packed rows |
 | Mode control | `ButtonGroup` > `ModeSplitButton<Mode>` (new) | `modes: ModeInfo<Mode>[]` (auto: `disabled: true`, action "Unlocked jobs flow automatically"; manual: action "Flow once: …"), `mode`, `onModeChange`, `onPress` (= Flow once), `menuLabel="Schedule mode"` |
 | Timeline plot | `Chart` with a **Date** `xDomain` (window start → day after its end), `XAxis` (`tickValues` in epoch ms, `tickFormat`) | `width` (measure the container), `height = rows × 34 + margins`, `margin` |
@@ -171,8 +171,9 @@ All **ruled by Peter, 2026-09-29**, working through the contract-job sketches:
 - Dial min/max are edited from a range button, not by clicking the dial's ends
   ("on-dial resizing is too complex").
 
-*Assumed here* (confirm): holidays are a fixed list of four toggles; the
-consumer needs a real list (§7).
+*Assumed here* (confirm): holidays are a fixed list of four, in a dropdown
+whose trigger counts the holidays off (weekends are a row of it but not in
+the count); the consumer needs a real list (§7).
 
 ---
 
