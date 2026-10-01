@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.206.0 — 2026-10-01
+
 ### Added
 
 - **Strips** — four Composites (Depth 2, zero CSS) that larger forms piece together: `LabelStrip` (a name), `AmountStrip` (single, per payment or per year, with the derived payment; a range of min / typical / max; or units × price with units added each period), `CadenceStrip` (annual, quarterly, monthly, semi-monthly, bi-weekly, weekly, daily, once; each carries only its anchor, shown as a compact value that opens its selector in a popover; `allowed` narrows the shapes), and `WindowStrip` ("[start] to [end]"; an open side reads "beginning of time" / "end of time"). Each edits an engine-neutral value (`AmountValue`, `CadenceValue`, `WindowValue`: integer cents, ISO dates) and the rules live in pure exported functions: `setAmountRangeField` keeps `min ≤ typical ≤ max`, `setWindowStart` / `setWindowUntil` keep start ≤ end, `perPaymentCents` derives a per-year payment half-even, `normalizeCadence` keeps the day grid to 28 and offers "last" only for monthly, `offeredShapes` narrows a cadence. Curried variants: `LabelStrip`, `AmountStrip`, `SmallAmountStrip`, `LargeAmountStrip`, `SeatsAmountStrip`, `HoursAmountStrip`, `CadenceStrip`, `RecurringCadenceStrip`, `MonthlyOrAnnualCadenceStrip`, `PayCadenceStrip`, `WindowStrip`, `StartWindowStrip`, `EndWindowStrip`; factories `createLabelStrip`, `createAmountStrip`, `createCadenceStrip`, `createWindowStrip`.
