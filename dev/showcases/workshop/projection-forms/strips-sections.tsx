@@ -9,7 +9,7 @@ import {
   TextLabel,
   TextSublabel,
   TightStack,
-  WideCardGrid,
+  CardGrid,
 } from "../../../../src";
 import {
   CADENCES,
@@ -109,15 +109,22 @@ const WindowVariant: Component<{ title: string; start: WindowValue; fragment: un
 const LabelVariant: Component = () => {
   const [name, setName] = createSignal("Pro licenses");
   return (
-    <WideCardGrid>
-      <For each={LABEL_KEYS}>
-        {(k) => (
-          <Variant title={`Label in ${k.kind}`} json={labelFragment(k.key, name())}>
-            <LabelStrip value={name()} onChange={setName} />
-          </Variant>
-        )}
-      </For>
-    </WideCardGrid>
+    <CardSurface>
+      <SpacedStack>
+        <TextSublabel>One input; the same value is the label in every JSON shape below.</TextSublabel>
+        <LabelStrip value={name()} onChange={setName} />
+        <CardGrid>
+          <For each={LABEL_KEYS}>
+            {(k) => (
+              <TightStack>
+                <TextSublabel>{k.kind}</TextSublabel>
+                <Fragment json={labelFragment(k.key, name())} />
+              </TightStack>
+            )}
+          </For>
+        </CardGrid>
+      </SpacedStack>
+    </CardSurface>
   );
 };
 
@@ -130,21 +137,21 @@ export const CatalogSection: Component = () => (
     <TextLabel>1. Label</TextLabel>
     <LabelVariant />
     <TextLabel>2. Amount</TextLabel>
-    <WideCardGrid>
+    <SpacedStack>
       <For each={amountFragments}>
         {(a) => <AmountVariant title={a.title} start={a.value} fragment={a.fragment} />}
       </For>
-    </WideCardGrid>
+    </SpacedStack>
     <TextLabel>3. Cadence</TextLabel>
-    <WideCardGrid>
+    <SpacedStack>
       <For each={CADENCES}>{(c) => <CadenceVariant id={c.id} label={c.label} anchor={c.anchor} />}</For>
-    </WideCardGrid>
+    </SpacedStack>
     <TextLabel>4. Window</TextLabel>
-    <WideCardGrid>
+    <SpacedStack>
       <For each={windowFragments}>
         {(w) => <WindowVariant title={w.title} start={w.value} fragment={w.fragment} />}
       </For>
-    </WideCardGrid>
+    </SpacedStack>
   </SpacedStack>
 );
 
@@ -240,11 +247,11 @@ export const GallerySection: Component = () => {
       <LabeledField label="View">
         <SegmentedInput options={MODE_OPTIONS} value={mode()} onChange={setMode} />
       </LabeledField>
-      <WideCardGrid>
+      <CardGrid>
         <Index each={FORMS}>
           {(def) => <FormCard def={def()} mode={mode()} side={side()} />}
         </Index>
-      </WideCardGrid>
+      </CardGrid>
     </SpacedStack>
   );
 };
