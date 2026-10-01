@@ -50,6 +50,8 @@ const CADENCE_OPTIONS = [
   { id: "semimonthly", label: "Semi-monthly (1st and 15th)" },
   { id: "monthly", label: "Monthly" },
 ];
+/** Pay periods a year per cadence (the engine's fires per year). */
+const PERIODS = { biweekly: 26, semimonthly: 24, monthly: 12 } as const;
 const PEOPLE_OPTIONS = PEOPLE.map((p) => ({ id: p.id, label: p.name }));
 
 interface Fields {
@@ -62,7 +64,11 @@ const nameOf = (id: string): string => PEOPLE.find((p) => p.id === id)?.name ?? 
 /** The cadence's date control: a reference payday, the day of the month, or
  *  (semi-monthly) nothing to pick: it pays on the 1st and the 15th. */
 const ScheduleFields: Component<Fields> = (props) => (
-  <Show when={props.values().cadence !== "semimonthly"} fallback={<NoteText>Pays on the 1st and the 15th.</NoteText>}>
+  <Show when={props.values().cadence !== "semimonthly"} fallback={
+      <NoteText>
+        Pays on the 1st and the 15th. Engine support on branch feat/semi-monthly-schedule, not yet on main.
+      </NoteText>
+    }>
     <Show
       when={props.values().cadence === "biweekly"}
       fallback={
@@ -183,7 +189,7 @@ const ScenarioCard: Component<Fields> = (props) => {
           </SpacedStack>
           <SpacedStack>
             <TextLabel>A paycheck</TextLabel>
-            <TextValue>{formatCents(perPaycheckCents(v().annualDollars))}</TextValue>
+            <TextValue>{formatCents(perPaycheckCents(v().annualDollars, PERIODS[v().cadence]))}</TextValue>
           </SpacedStack>
         </SpreadRow>
         <CompactCurrencyMutationSliders

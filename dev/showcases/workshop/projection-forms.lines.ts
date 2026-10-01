@@ -235,8 +235,6 @@ export interface SalaryValues {
 }
 
 export const buildSalaryLine = (v: SalaryValues): SalaryLine => {
-  // semimonthly has no engine schedule: the caller prints the gap instead
-  // (salaryEmission), and this line is only the monthly stand-in for landsIn.
   const line: SalaryLine = {
     kind: "salary",
     person: `person:${v.personId}` as PersonRef,
@@ -245,7 +243,12 @@ export const buildSalaryLine = (v: SalaryValues): SalaryLine => {
       recurring:
         v.cadence === "biweekly"
           ? { shape: "biweekly_from", referenceDate: v.referenceDate }
-          : { shape: "day_of_month", day: v.day },
+          : v.cadence === "semimonthly"
+            ? // No arguments: fires on the 1st and 15th (24 a year). Engine support
+              // is on branch feat/semi-monthly-schedule (model/src/config/schedule.rs
+              // `Cadence::SemiMonthly`, legacy id isSemiMonthly), not yet on main.
+              { shape: "semi_monthly" }
+            : { shape: "day_of_month", day: v.day },
     },
     amount: { annual: { cents: toCents(v.annualDollars) } },
   };
@@ -303,38 +306,13 @@ export const licenseEmission = (values: LicenseValues) => {
   return { line, lowered: lowerLicense(line), landing: landsIn(line) };
 };
 
-/** Semi-monthly (the 1st and 15th) is NOT representable in the engine today:
- *  thorcasting-engine/model/src/config/schedule.rs `Cadence` has no twice-a-month
- *  shape (only src/rules/recur.rs `InferredCadence::SemiMonthlyShaped`, a
- *  classifier tag "not yet constructible as a Schedule"), and salary.rs states
- *  exactly one recurring schedule. The closest faithful encoding is two salary
- *  lines, each day_of_month at half the annual figure, but the server refuses a
- *  second open pay line for one person (pay_register_refusal.rs). So the
- *  printed JSON is an explicit gap, with that closest encoding shown labeled. */
-const semiMonthlyGap = (v: SalaryValues): Json => ({
-  not_representable_in_the_engine_yet: "semi-monthly (1st and 15th)",
-  why: "the engine's schedule cadences have no twice-a-month shape, and a salary line states one schedule",
-  closest_encoding_two_lines_each_day_of_month_at_half_the_annual: [1, 15].map((day) =>
-    buildSalaryLine({
-      ...v,
-      cadence: "monthly",
-      day,
-      annualDollars: v.annualDollars / 2,
-    }),
-  ),
-  but: "the server refuses a second open pay line for one person (pay_register_refusal.rs), so this is shown, not saved",
-});
-
 export const salaryEmission = (values: SalaryValues) => {
-  const monthly = buildSalaryLine({ ...values, cadence: values.cadence === "biweekly" ? "biweekly" : "monthly" });
-  const gap = values.cadence === "semimonthly";
+  const line = buildSalaryLine(values);
   return {
-    line: monthly,
-    lineJson: gap ? JSON.stringify(semiMonthlyGap(values), null, 2) : lineText(monthly),
-    loweredJson: gap
-      ? JSON.stringify({ not_lowered: "no stored line exists for semi-monthly yet" }, null, 2)
-      : loweredText(lowerSalary(monthly)),
-    landing: landsIn(monthly),
+    line,
+    lineJson: lineText(line),
+    loweredJson: loweredText(lowerSalary(line)),
+    landing: landsIn(line),
   };
 };
 

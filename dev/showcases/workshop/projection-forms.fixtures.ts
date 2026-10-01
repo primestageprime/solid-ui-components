@@ -69,8 +69,8 @@ export const DEFINITION_HELP =
   "This item has a saved config and a matching import suggestion. Pick which definition to keep — saving reconciles the other.";
 
 /** Whole cents per paycheck: annual / 26, rounded half-even. */
-export const perPaycheckCents = (annualDollars: number): number => {
-  const exact = (annualDollars * 100) / 26;
+export const perPaycheckCents = (annualDollars: number, periods = 26): number => {
+  const exact = (annualDollars * 100) / periods;
   const floor = Math.floor(exact);
   const diff = exact - floor;
   if (diff > 0.5) return floor + 1;
