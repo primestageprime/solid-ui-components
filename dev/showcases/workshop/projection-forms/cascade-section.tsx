@@ -12,7 +12,7 @@ import {
   leafOptions,
   settle,
 } from "../projection-forms.cascade";
-import { HourlyForm } from "./hourly-form";
+import { HourlyLeaf } from "./hourly-views";
 import { LabeledField } from "./kit";
 import { LicenseLeaf, VIEW_OPTIONS } from "./license-views";
 import { SalaryLeaf } from "./salary-views";
@@ -55,7 +55,7 @@ export const CascadeSection: Component = () => {
               />
             </LabeledField>
           </Show>
-          <Show when={leaf() === "license" || leaf() === "salary"}>
+          <Show when={leaf() === "license" || leaf() === "salary" || leaf() === "hourly"}>
             <LabeledField label="View">
               <SegmentedInput options={VIEW_OPTIONS} value={view()} onChange={setView} />
             </LabeledField>
@@ -69,7 +69,7 @@ export const CascadeSection: Component = () => {
             <SalaryLeaf view={view()} />
           </Match>
           <Match when={leaf() === "hourly"}>
-            <HourlyForm />
+            <HourlyLeaf view={view()} />
           </Match>
           <Match when={leaf() !== null}>
             <NoteText>{NOT_BUILT[leaf() as LeafId]}</NoteText>
