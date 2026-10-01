@@ -145,3 +145,14 @@
   font-size: 0.75rem;
   color: var(--sui-text-muted);
 }
+
+/* A field sized from `maxValue` measures in ch, which is the digit of the
+   element's own font, so the root takes the input's font size. Digits are
+   tabular so every one is exactly 1ch wide. */
+.sui-number-input--fit {
+  font-size: 0.875rem;
+}
+
+.sui-number-input--fit .sui-number-input__input {
+  font-variant-numeric: tabular-nums;
+}

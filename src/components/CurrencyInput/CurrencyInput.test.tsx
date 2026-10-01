@@ -46,7 +46,13 @@ describe("CurrencyInput", () => {
         onChange={() => {}}
       />
     ));
-    expect(rootOf(container).style.maxWidth).toBe("12.06rem");
+    // A stated maxValue uses the tight shared rule: the wrapper hugs a field
+    // sized in ch (see fieldWidth.test.ts), not a flat rem cap.
+    expect(rootOf(container).style.width).toBe("fit-content");
+    const field = container.querySelector(".sui-number-input") as HTMLElement;
+    expect(field.className).toContain("sui-number-input--fit");
+    // "$1,000,000.00" = $ + 7 digits + 2 cents (10ch) + 3 separators (1.2ch) + 0.5 slack.
+    expect(field.style.maxWidth).toBe("calc(11.7ch + 3.6rem)");
   });
 
   // -- clearing -------------------------------------------------------

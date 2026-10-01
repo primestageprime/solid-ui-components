@@ -3,7 +3,12 @@ import {
   AccentPanel,
   ChipCluster,
   CompactCurrencyMutationSliders,
-  CurrencyInput,
+  CountInput100,
+  CountInput10K,
+  CurrencyInput100M,
+  CurrencyInput10K,
+  CurrencyInput1B,
+  CurrencyInput1M,
   DatePicker,
   DayOfMonthPicker,
   DayOfWeekPicker,
@@ -18,7 +23,6 @@ import {
   TextSublabel,
   TextTitle,
   TextValue,
-  ThemedNumberInput,
   createGroupedMutationSliders,
   createPairedMutationSliders,
 } from "../../../../src";
@@ -61,7 +65,8 @@ export const LabelStrip: Component<{ value: string; onChange: (v: string) => voi
 );
 
 // ── AMOUNT ──────────────────────────────────────────────────────────────────
-/** A money input sized to the value: `scale` is the largest figure expected. */
+/** A money input from the magnitude variant that fits `scale`, the largest
+ *  figure expected: the field is never wider than that magnitude needs. */
 const Money: Component<{
   name: string;
   label: string;
@@ -69,16 +74,25 @@ const Money: Component<{
   scale: number;
   step: number;
   onChange: (v: number) => void;
-}> = (props) => (
-  <CurrencyInput
-    name={props.name}
-    label={props.label}
-    maxValue={props.scale}
-    step={props.step}
-    value={() => props.value}
-    onChange={(v) => props.onChange(v ?? 0)}
-  />
-);
+}> = (props) => {
+  const Field =
+    props.scale <= 9_999
+      ? CurrencyInput10K
+      : props.scale <= 999_999
+        ? CurrencyInput1M
+        : props.scale <= 99_999_999
+          ? CurrencyInput100M
+          : CurrencyInput1B;
+  return (
+    <Field
+      name={props.name}
+      label={props.label}
+      step={props.step}
+      value={() => props.value}
+      onChange={(v) => props.onChange(v ?? 0)}
+    />
+  );
+};
 
 export const AmountStrip: Component<{
   value: AmountValue;
@@ -117,9 +131,8 @@ export const AmountStrip: Component<{
     </Match>
     <Match when={props.value.id === "units"}>
       <ChipCluster>
-        <ThemedNumberInput
+        <CountInput10K
           name="count"
-          size="sm"
           label={props.value.unit === "seats" ? "Seats" : "Hours"}
           min={0}
           step={props.value.unit === "seats" ? 1 : 0.25}
@@ -127,9 +140,8 @@ export const AmountStrip: Component<{
           onChange={(count) => props.onChange({ count: count ?? 0 })}
         />
         <Show when={props.value.unit === "seats"}>
-          <ThemedNumberInput
+          <CountInput100
             name="net"
-            size="sm"
             label="+ per period"
             value={() => props.value.net}
             onChange={(net) => props.onChange({ net: net ?? 0 })}
@@ -138,7 +150,7 @@ export const AmountStrip: Component<{
         <Money
           name="price"
           label={props.value.unit === "seats" ? "Price per seat ($)" : "Rate per hour ($)"}
-          scale={10_000}
+          scale={9_999}
           step={1}
           value={props.value.price}
           onChange={(price) => props.onChange({ price })}
@@ -239,6 +251,23 @@ export const CadenceStrip: Component<{
 );
 
 // ── WINDOW ──────────────────────────────────────────────────────────────────
+/** One end of the window: its date, or "beginning of time" / "end of time"
+ *  when open. Clicking opens the date picker and an Open button that clears it
+ *  (the key is then omitted from the JSON). */
+const DateEnd: Component<{
+  label: string;
+  empty: string;
+  value: string;
+  onChange: (iso: string) => void;
+}> = (props) => (
+  <AnchorPopover value={props.value === "" ? props.empty : props.value}>
+    <DatePicker aria-label={props.label} value={props.value} onChange={props.onChange} />
+    <SmallButton active={props.value === ""} onClick={() => props.onChange("")}>
+      {props.empty}
+    </SmallButton>
+  </AnchorPopover>
+);
+
 export const WindowStrip: Component<{
   value: WindowValue;
   mode: WindowMode;
@@ -246,8 +275,9 @@ export const WindowStrip: Component<{
 }> = (props) => (
   <ChipCluster>
     <Show when={props.mode !== "end"}>
-      <DatePicker
-        aria-label="Start"
+      <DateEnd
+        label="Start"
+        empty="beginning of time"
         value={props.value.start}
         onChange={(start) => props.onChange({ start })}
       />
@@ -256,8 +286,9 @@ export const WindowStrip: Component<{
       <TextSublabel>to</TextSublabel>
     </Show>
     <Show when={props.mode !== "start"}>
-      <DatePicker
-        aria-label="End"
+      <DateEnd
+        label="End"
+        empty="end of time"
         value={props.value.end}
         onChange={(end) => props.onChange({ end })}
       />
