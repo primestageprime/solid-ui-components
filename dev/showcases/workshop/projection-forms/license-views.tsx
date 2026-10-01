@@ -2,11 +2,11 @@ import { type Component, Show, createSignal } from "solid-js";
 import {
   AccentPanel,
   CurrencyInput,
+  createGroupedMutationSliders,
   DayOfMonthPicker,
   MonthOfYearPicker,
   NameInput,
   NoteText,
-  Slider,
   SpacedStack,
   SpreadRow,
   TextLabel,
@@ -91,9 +91,21 @@ const MinimalFields: Component<Fields> = (props) => {
   );
 };
 
+// The builder's vertical arrow dials, curried once at module level the way
+// thorcasting's Licenses board does it (createGroupedMutationSliders is a
+// factory with no curried variant: axes.length is the measure count).
+const LicenseDials = createGroupedMutationSliders({
+  axes: [
+    { label: "#", domain: [0, 200], snap: 1, format: (n) => `${n}` },
+    { label: "Δ", domain: [-20, 40], snap: 1, format: (n) => (n > 0 ? `+${n}` : `${n}`) },
+    { label: "$", domain: [5, 500], snap: 1, format: (n) => `$${n}` },
+  ],
+});
+
 // SCENARIO: the Licenses builder's card for this line (thorcasting-ui
 // components/screens/licenseBuilderScreen.tsx, lib/seatSubscription): a titled
-// panel, the figure it bills, and a slider for each dial.
+// panel, the figure it bills, and the builder's dials: Seats at start (#),
+// Net new per period (Δ), Price per seat ($).
 const ScenarioCard: Component<Fields> = (props) => {
   const v = () => props.values();
   return (
@@ -109,33 +121,27 @@ const ScenarioCard: Component<Fields> = (props) => {
             <TextValue>{formatCents(Math.round(v().seats * v().priceDollars * 100))}</TextValue>
           </SpacedStack>
         </SpreadRow>
-        <Slider
-          label="Seats at start"
-          editable
-          min={0}
-          max={200}
-          step={1}
-          value={v().seats}
-          onChange={(seats) => props.patch({ seats })}
-        />
-        <Slider
-          label="Net new per period"
-          editable
-          min={-20}
-          max={40}
-          step={1}
-          value={v().netPerPeriod}
-          onChange={(netPerPeriod) => props.patch({ netPerPeriod })}
-        />
-        <Slider
-          label="Price per seat"
-          editable
-          min={5}
-          max={500}
-          step={1}
-          format={(n) => `$${n}`}
-          value={v().priceDollars}
-          onChange={(priceDollars) => props.patch({ priceDollars })}
+        <LicenseDials
+          entities={[
+            {
+              id: "license",
+              label: v().product,
+              measures: [
+                { prior: START.seats, value: v().seats, range: [0, 200] },
+                { prior: START.netPerPeriod, value: v().netPerPeriod, range: [-20, 40] },
+                { prior: START.priceDollars, value: v().priceDollars, range: [5, 500] },
+              ],
+            },
+          ]}
+          onChange={(_id, measure, value) =>
+            props.patch(
+              measure === 0
+                ? { seats: value }
+                : measure === 1
+                  ? { netPerPeriod: value }
+                  : { priceDollars: value },
+            )
+          }
         />
       </SpacedStack>
     </AccentPanel>
