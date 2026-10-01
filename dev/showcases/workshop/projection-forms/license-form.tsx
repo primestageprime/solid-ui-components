@@ -1,4 +1,4 @@
-import { type Component, Show, createSignal } from "solid-js";
+import { type Component, type Accessor, Show } from "solid-js";
 import {
   CurrencyInput,
   DatePicker,
@@ -10,15 +10,16 @@ import {
   SpacedStack,
   ThemedNumberInput,
 } from "../../../../src";
-import { LICENSE_DEFAULTS } from "../projection-forms.fixtures";
 import {
   type Billing,
   type LicenseValues,
-  licenseEmission,
-  lineText,
-  loweredText,
 } from "../projection-forms.lines";
-import { KindOutput, LabeledField } from "./kit";
+import { LabeledField } from "./kit";
+
+export interface Fields {
+  values: Accessor<LicenseValues>;
+  patch: (next: Partial<LicenseValues>) => void;
+}
 
 const BILLING_OPTIONS = [
   { id: "monthly", label: "Monthly" },
@@ -29,10 +30,9 @@ const BILLING_OPTIONS = [
 // in display units: product, customer, the account paid into, billing (which
 // sets the schedule), start/until, seats, net new seats per period, price per
 // seat, the annual discount, and the optional cost to serve.
-export const LicenseForm: Component = () => {
-  const [values, setValues] = createSignal<LicenseValues>(LICENSE_DEFAULTS);
-  const patch = (next: Partial<LicenseValues>) => setValues({ ...values(), ...next });
-  const emission = () => licenseEmission(values());
+export const FullFields: Component<Fields> = (props) => {
+  const values = () => props.values();
+  const patch = props.patch;
   const annual = () => values().billing === "annual";
 
   return (
@@ -141,13 +141,6 @@ export const LicenseForm: Component = () => {
             />
           </SpacedStack>
         }
-      />
-      <KindOutput
-        lineTitle="Stored line: kind license (ADR 0029 LicenseLine)"
-        lineJson={lineText(emission().line)}
-        loweredJson={loweredText(emission().lowered)}
-        builder={emission().landing.builder}
-        rule={emission().landing.rule}
       />
     </SpacedStack>
   );

@@ -212,3 +212,51 @@ export const HOURLY_DEFAULTS: HourlyValues = {
   start: "2026-10-05",
   until: "",
 };
+
+// ── Historicals: past payments the Minimal license view defaults from ───────
+// The ledger carries a date, an amount and a memo; it has no seat count, so the
+// memo is where "10 seats" comes from (thorcasting's Import does the same
+// reading for a License card: defaults, editable).
+export interface Payment {
+  date: string;
+  cents: number;
+  memo: string;
+}
+
+export const LICENSE_HISTORY: Payment[] = [
+  { date: "2026-04-01", cents: 50000, memo: "Pro x 10 seats" },
+  { date: "2026-05-01", cents: 50000, memo: "Pro x 10 seats" },
+  { date: "2026-06-01", cents: 50000, memo: "Pro x 10 seats" },
+  { date: "2026-07-01", cents: 50000, memo: "Pro x 10 seats" },
+  { date: "2026-08-01", cents: 50000, memo: "Pro x 10 seats" },
+  { date: "2026-09-01", cents: 50000, memo: "Pro x 10 seats" },
+];
+
+export interface HistoryDefault<T> {
+  value: T;
+  /** Where the default came from, in a line. */
+  caption: string;
+}
+
+const memoOf = (rows: Payment[]): { product: string; seats: number } => {
+  const found = /^(.+) x (\d+) seats?$/.exec(rows[rows.length - 1]?.memo ?? "");
+  return { product: found?.[1] ?? "License", seats: Number(found?.[2] ?? 1) };
+};
+
+/** The interesting license fields, read off past payments. */
+export const defaultsFromHistory = (rows: Payment[]) => {
+  const { product, seats } = memoOf(rows);
+  const last = rows[rows.length - 1];
+  const day = Number(last?.date.slice(8, 10) ?? 1);
+  const sameDay = rows.filter((r) => Number(r.date.slice(8, 10)) === day).length;
+  const price = (last?.cents ?? 0) / 100 / Math.max(1, seats);
+  return {
+    product: { value: product, caption: `from the memo on the last payment ("${last?.memo}")` },
+    seats: { value: seats, caption: `from the memo: ${seats} seats` },
+    priceDollars: {
+      value: price,
+      caption: `$${((last?.cents ?? 0) / 100).toFixed(2)} last payment ÷ ${seats} seats`,
+    },
+    day: { value: day, caption: `${sameDay} of ${rows.length} payments landed on day ${day}` },
+  };
+};
