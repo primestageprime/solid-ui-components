@@ -1,4 +1,4 @@
-import { type Component, createSignal } from "solid-js";
+import { type Accessor, type Component } from "solid-js";
 import {
   CurrencyInput,
   DatePicker,
@@ -8,22 +8,22 @@ import {
   SpacedStack,
   ThemedNumberInput,
 } from "../../../../src";
-import { HOURLY_DEFAULTS } from "../projection-forms.fixtures";
 import {
   type HourlyValues,
-  hourlyEmission,
-  lineText,
-  loweredText,
 } from "../projection-forms.lines";
-import { KindOutput, LabeledField } from "./kit";
+import { LabeledField } from "./kit";
+
+export interface HourlyFields {
+  values: Accessor<HourlyValues>;
+  patch: (next: Partial<HourlyValues>) => void;
+}
 
 // Revenue > Variable > Hourly. Fields are the kindTypes.generated.ts
 // HourlyServiceLine: service, customer, the account paid into, the weekday it
 // fires, the rate, the hours each fire, and the window.
-export const HourlyForm: Component = () => {
-  const [values, setValues] = createSignal<HourlyValues>(HOURLY_DEFAULTS);
-  const patch = (next: Partial<HourlyValues>) => setValues({ ...values(), ...next });
-  const emission = () => hourlyEmission(values());
+export const HourlyFullFields: Component<HourlyFields> = (props) => {
+  const values = () => props.values();
+  const patch = props.patch;
 
   return (
     <SpacedStack>
@@ -75,13 +75,6 @@ export const HourlyForm: Component = () => {
             </LabeledField>
           </SpacedStack>
         }
-      />
-      <KindOutput
-        lineTitle="Stored line: kind hourly_service (ADR 0029 HourlyServiceLine)"
-        lineJson={lineText(emission().line)}
-        loweredJson={loweredText(emission().lowered)}
-        builder={emission().landing.builder}
-        rule={emission().landing.rule}
       />
     </SpacedStack>
   );
