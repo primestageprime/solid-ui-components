@@ -1,6 +1,7 @@
 import { type Component, type JSX, Match, Show, Switch } from "solid-js";
 import {
   AccentPanel,
+  ChipCluster,
   CompactCurrencyMutationSliders,
   CurrencyInput,
   DatePicker,
@@ -9,8 +10,9 @@ import {
   MonthOfYearPicker,
   NameInput,
   NoteText,
-  RangeAmountGroup,
+  PopoverTooltip,
   SegmentedInput,
+  SmallButton,
   SpacedStack,
   SpreadRow,
   TextSublabel,
@@ -25,6 +27,7 @@ import {
   CADENCES,
   type CadenceId,
   type CadenceValue,
+  STEP,
   type WindowMode,
   type WindowValue,
   derivedPerPayment,
@@ -36,6 +39,18 @@ const PER_OPTIONS = [
   { id: "year", label: "Per year" },
 ];
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** A compact anchor: the value shows as one small button; clicking it opens
+ *  the selector in a popover (SUI PopoverTooltip: tap or click toggles it). */
+export const AnchorPopover: Component<{ value: string; children: JSX.Element }> = (props) => (
+  // The popover portals to the body, so the picker-size class rides on its content.
+  <PopoverTooltip content={<SpacedStack class="projection-forms-demo">{props.children}</SpacedStack>}>
+    {props.value}
+  </PopoverTooltip>
+);
+
 // ── LABEL ───────────────────────────────────────────────────────────────────
 export const LabelStrip: Component<{ value: string; onChange: (v: string) => void }> = (props) => (
   <NameInput
@@ -46,6 +61,25 @@ export const LabelStrip: Component<{ value: string; onChange: (v: string) => voi
 );
 
 // ── AMOUNT ──────────────────────────────────────────────────────────────────
+/** A money input sized to the value: `scale` is the largest figure expected. */
+const Money: Component<{
+  name: string;
+  label: string;
+  value: number;
+  scale: number;
+  step: number;
+  onChange: (v: number) => void;
+}> = (props) => (
+  <CurrencyInput
+    name={props.name}
+    label={props.label}
+    maxValue={props.scale}
+    step={props.step}
+    value={() => props.value}
+    onChange={(v) => props.onChange(v ?? 0)}
+  />
+);
+
 export const AmountStrip: Component<{
   value: AmountValue;
   cadence: CadenceId;
@@ -53,39 +87,40 @@ export const AmountStrip: Component<{
 }> = (props) => (
   <Switch>
     <Match when={props.value.id === "single"}>
-      <SpacedStack>
-        <CurrencyInput
+      <ChipCluster>
+        <Money
           name="amount"
-          label={props.value.per === "year" ? "Amount per year ($)" : "Amount per payment ($)"}
-          step={0.01}
-          value={() => props.value.dollars}
-          onChange={(dollars) => props.onChange({ dollars: dollars ?? 0 })}
+          label={props.value.per === "year" ? "Per year ($)" : "Per payment ($)"}
+          scale={props.value.scale}
+          step={STEP[props.value.precision]}
+          value={props.value.dollars}
+          onChange={(dollars) => props.onChange({ dollars })}
         />
-        <SegmentedInput
-          options={PER_OPTIONS}
-          value={props.value.per}
-          onChange={(per) => props.onChange({ per: per as "payment" | "year" })}
-        />
+        <LabeledField label="Per">
+          <SegmentedInput
+            options={PER_OPTIONS}
+            value={props.value.per}
+            onChange={(per) => props.onChange({ per: per as "payment" | "year" })}
+          />
+        </LabeledField>
         <Show when={props.value.per === "year"}>
           <NoteText>{derivedPerPayment(props.value, props.cadence)}</NoteText>
         </Show>
-      </SpacedStack>
+      </ChipCluster>
     </Match>
     <Match when={props.value.id === "range"}>
-      <RangeAmountGroup
-        name="range"
-        slots={[
-          { label: "Min ($)", value: props.value.min, onChange: (min) => props.onChange({ min: min ?? 0 }) },
-          { label: "Typical ($)", value: props.value.typical, onChange: (typical) => props.onChange({ typical: typical ?? 0 }) },
-          { label: "Max ($)", value: props.value.max, onChange: (max) => props.onChange({ max: max ?? 0 }) },
-        ]}
-      />
+      <ChipCluster>
+        <Money name="min" label="Min ($)" scale={props.value.scale} step={STEP[props.value.precision]} value={props.value.min} onChange={(min) => props.onChange({ min })} />
+        <Money name="typ" label="Typical ($)" scale={props.value.scale} step={STEP[props.value.precision]} value={props.value.typical} onChange={(typical) => props.onChange({ typical })} />
+        <Money name="max" label="Max ($)" scale={props.value.scale} step={STEP[props.value.precision]} value={props.value.max} onChange={(max) => props.onChange({ max })} />
+      </ChipCluster>
     </Match>
     <Match when={props.value.id === "units"}>
-      <SpacedStack>
+      <ChipCluster>
         <ThemedNumberInput
           name="count"
-          label={props.value.unit === "seats" ? "Seats at start" : "Hours per period"}
+          size="sm"
+          label={props.value.unit === "seats" ? "Seats" : "Hours"}
           min={0}
           step={props.value.unit === "seats" ? 1 : 0.25}
           value={() => props.value.count}
@@ -94,79 +129,113 @@ export const AmountStrip: Component<{
         <Show when={props.value.unit === "seats"}>
           <ThemedNumberInput
             name="net"
-            label="Net new per period"
+            size="sm"
+            label="+ per period"
             value={() => props.value.net}
             onChange={(net) => props.onChange({ net: net ?? 0 })}
           />
         </Show>
-        <CurrencyInput
+        <Money
           name="price"
-          label={props.value.unit === "seats" ? "Price per seat ($)" : "Rate ($ per hour)"}
-          step={0.01}
-          value={() => props.value.price}
-          onChange={(price) => props.onChange({ price: price ?? 0 })}
+          label={props.value.unit === "seats" ? "Price per seat ($)" : "Rate per hour ($)"}
+          scale={10_000}
+          step={1}
+          value={props.value.price}
+          onChange={(price) => props.onChange({ price })}
         />
-      </SpacedStack>
+      </ChipCluster>
     </Match>
   </Switch>
 );
 
 // ── CADENCE ─────────────────────────────────────────────────────────────────
+const pad = (n: number): string => `${n}`;
+
+/** The compact text each anchor displays. */
+export const anchorText = (c: CadenceValue): string => {
+  switch (c.id) {
+    case "annual":
+      return `${MONTHS[c.month - 1]} ${pad(c.day)}`;
+    case "quarterly":
+    case "biweekly":
+      return c.ref;
+    case "monthly":
+      return c.last ? "Last day" : `Day ${pad(c.day)}`;
+    case "weekly":
+      return WEEKDAYS[c.dow];
+    case "once":
+      return c.date;
+    case "semimonthly":
+      return "1st and 15th";
+    case "daily":
+      return "Every day";
+  }
+};
+
+const Anchor: Component<{ title: string; value: CadenceValue; children: JSX.Element }> = (props) => (
+  <LabeledField label={props.title}>
+    <AnchorPopover value={anchorText(props.value)}>{props.children}</AnchorPopover>
+  </LabeledField>
+);
+
 export const CadenceStrip: Component<{
   value: CadenceValue;
   allowed: CadenceId[];
   onChange: (next: Partial<CadenceValue>) => void;
 }> = (props) => (
-  <SpacedStack>
+  <ChipCluster>
     <Show when={props.allowed.length > 1}>
-      <SegmentedInput
-        options={CADENCES.filter((c) => props.allowed.includes(c.id))}
-        value={props.value.id}
-        onChange={(id) => props.onChange({ id: id as CadenceId })}
-      />
+      <LabeledField label="Cadence">
+        <SegmentedInput
+          options={CADENCES.filter((c) => props.allowed.includes(c.id))}
+          value={props.value.id}
+          onChange={(id) => props.onChange({ id: id as CadenceId })}
+        />
+      </LabeledField>
     </Show>
     <Switch>
       <Match when={props.value.id === "annual"}>
-        <LabeledField label="Month of year">
-          <MonthOfYearPicker value={props.value.month} onChange={(month) => props.onChange({ month })} />
-        </LabeledField>
-        <LabeledField label="Day of month">
-          <DayOfMonthPicker max={28} value={props.value.day} onChange={(day) => props.onChange({ day })} />
-        </LabeledField>
+        <Anchor title="Month and day" value={props.value}>
+          <SpacedStack>
+            <MonthOfYearPicker value={props.value.month} onChange={(month) => props.onChange({ month })} />
+            <DayOfMonthPicker max={28} value={props.value.day} onChange={(day) => props.onChange({ day })} />
+          </SpacedStack>
+        </Anchor>
       </Match>
       <Match when={props.value.id === "quarterly" || props.value.id === "biweekly"}>
-        <LabeledField label={props.value.id === "quarterly" ? "Reference date" : "Reference payday"}>
+        <Anchor title={props.value.id === "quarterly" ? "Reference date" : "Reference payday"} value={props.value}>
           <DatePicker value={props.value.ref} onChange={(ref) => props.onChange({ ref })} />
-        </LabeledField>
+        </Anchor>
       </Match>
       <Match when={props.value.id === "monthly"}>
-        <LabeledField label="Day of month">
-          <DayOfMonthPicker
-            lastOfMonth
-            value={props.value.last ? "last" : props.value.day}
-            onChange={(day) => props.onChange({ day, last: false })}
-            onSelectLast={() => props.onChange({ last: true })}
-          />
-        </LabeledField>
+        <Anchor title="Day of month" value={props.value}>
+          <SpacedStack>
+            <DayOfMonthPicker
+              max={28}
+              value={props.value.last ? null : props.value.day}
+              onChange={(day) => props.onChange({ day, last: false })}
+            />
+            <SmallButton active={props.value.last} onClick={() => props.onChange({ last: true })}>
+              Last day
+            </SmallButton>
+          </SpacedStack>
+        </Anchor>
       </Match>
       <Match when={props.value.id === "weekly"}>
-        <LabeledField label="Weekday">
+        <Anchor title="Weekday" value={props.value}>
           <DayOfWeekPicker value={props.value.dow} onChange={(dow) => props.onChange({ dow })} />
-        </LabeledField>
+        </Anchor>
       </Match>
       <Match when={props.value.id === "once"}>
-        <LabeledField label="Date">
+        <Anchor title="Date" value={props.value}>
           <DatePicker value={props.value.date} onChange={(date) => props.onChange({ date })} />
-        </LabeledField>
+        </Anchor>
       </Match>
-      <Match when={props.value.id === "semimonthly"}>
-        <NoteText>No anchor: pays on the 1st and the 15th.</NoteText>
-      </Match>
-      <Match when={props.value.id === "daily"}>
-        <NoteText>No anchor: every day.</NoteText>
+      <Match when={props.value.id === "semimonthly" || props.value.id === "daily"}>
+        <NoteText>{anchorText(props.value)} (no anchor)</NoteText>
       </Match>
     </Switch>
-  </SpacedStack>
+  </ChipCluster>
 );
 
 // ── WINDOW ──────────────────────────────────────────────────────────────────
@@ -175,18 +244,25 @@ export const WindowStrip: Component<{
   mode: WindowMode;
   onChange: (next: Partial<WindowValue>) => void;
 }> = (props) => (
-  <SpacedStack>
+  <ChipCluster>
     <Show when={props.mode !== "end"}>
-      <LabeledField label="Start (optional, inclusive)">
-        <DatePicker value={props.value.start} onChange={(start) => props.onChange({ start })} />
-      </LabeledField>
+      <DatePicker
+        aria-label="Start"
+        value={props.value.start}
+        onChange={(start) => props.onChange({ start })}
+      />
+    </Show>
+    <Show when={props.mode === "any"}>
+      <TextSublabel>to</TextSublabel>
     </Show>
     <Show when={props.mode !== "start"}>
-      <LabeledField label="End (optional, exclusive)">
-        <DatePicker value={props.value.end} onChange={(end) => props.onChange({ end })} />
-      </LabeledField>
+      <DatePicker
+        aria-label="End"
+        value={props.value.end}
+        onChange={(end) => props.onChange({ end })}
+      />
     </Show>
-  </SpacedStack>
+  </ChipCluster>
 );
 
 // ── SCENARIO: the builder's vertical dials for the amount ───────────────────

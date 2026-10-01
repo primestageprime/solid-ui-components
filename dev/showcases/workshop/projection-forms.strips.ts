@@ -104,8 +104,15 @@ export const scheduleOf = (c: CadenceValue): Json => {
 export type AmountId = "single" | "range" | "units";
 export type UnitKind = "seats" | "hours";
 
+/** Single's precision: the step of the input, and so how precise a figure is. */
+export type Precision = "cents" | "dollars" | "thousands";
+export const STEP: Record<Precision, number> = { cents: 0.01, dollars: 1, thousands: 1000 };
+
 export interface AmountValue {
   id: AmountId;
+  precision: Precision;
+  /** The largest figure expected: sizes each money input to its value. */
+  scale: number;
   dollars: number;
   per: "payment" | "year";
   min: number;
@@ -119,6 +126,8 @@ export interface AmountValue {
 
 export const AMOUNT_SAMPLE: AmountValue = {
   id: "single",
+  precision: "dollars",
+  scale: 1_000_000,
   dollars: 10000,
   per: "payment",
   min: 8000,
@@ -218,7 +227,7 @@ export const FORMS: FormDef[] = [
   }),
   form("weekly-fixed", "Weekly fixed", "Single + Weekly + —", {
     label: "Cursor",
-    amount: amt({ dollars: 8.02 }),
+    amount: amt({ dollars: 8.02, precision: "cents" }),
     cadence: cad("weekly"),
     window: NO_WINDOW,
   }),
@@ -300,7 +309,7 @@ export const FORMS: FormDef[] = [
   }),
   form("salary", "Salary", "Single per year + Bi-weekly|Semi-monthly|Monthly + —", {
     label: "Michael A Arnold",
-    amount: amt({ dollars: 102891.1, per: "year" }),
+    amount: amt({ dollars: 102891.1, per: "year", precision: "cents" }),
     cadence: cad("biweekly", { ref: "2026-09-04" }),
     window: NO_WINDOW,
   }, {
@@ -398,19 +407,44 @@ export const cadenceFragment = (id: CadenceId): string =>
 
 export const amountFragments: { title: string; value: AmountValue; fragment: Json }[] = [
   {
-    title: "Single, per payment",
-    value: { ...AMOUNT_SAMPLE, id: "single", per: "payment" },
+    title: "Single: cents (.00)",
+    value: { ...AMOUNT_SAMPLE, id: "single", precision: "cents", dollars: 10000.5 },
+    fragment: { amount_cents: 1000050 },
+  },
+  {
+    title: "Single: whole dollars",
+    value: { ...AMOUNT_SAMPLE, id: "single", precision: "dollars" },
     fragment: { amount_cents: 1000000 },
   },
   {
-    title: "Single, per year",
-    value: { ...AMOUNT_SAMPLE, id: "single", per: "year", dollars: 102891.1 },
+    title: "Single: nearest $1,000",
+    value: { ...AMOUNT_SAMPLE, id: "single", precision: "thousands" },
+    fragment: { amount_cents: 1000000 },
+  },
+  {
+    title: "Single: per year (shows each payment)",
+    value: { ...AMOUNT_SAMPLE, id: "single", per: "year", dollars: 102891.1, precision: "cents" },
     fragment: { amount: { annual: { cents: 10289110 } } },
   },
   {
-    title: "Range",
-    value: { ...AMOUNT_SAMPLE, id: "range" },
+    title: "Range at the minimum scale (8k / 10k / 12k)",
+    value: { ...AMOUNT_SAMPLE, id: "range", scale: 100_000 },
     fragment: { amount_cents: 1000000, band: { min_cents: 800000, max_cents: 1200000 } },
+  },
+  {
+    title: "Range at the maximum ($1,000,000,000)",
+    value: {
+      ...AMOUNT_SAMPLE,
+      id: "range",
+      scale: 1_000_000_000,
+      min: 800_000_000,
+      typical: 900_000_000,
+      max: 1_000_000_000,
+    },
+    fragment: {
+      amount_cents: 90000000000,
+      band: { min_cents: 80000000000, max_cents: 100000000000 },
+    },
   },
   {
     title: "Units x price: seats",
