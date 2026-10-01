@@ -6,7 +6,8 @@
 //     -> Fixed | Variable
 //       -> revenue + fixed:    Subscription | License | Retainer
 //       -> revenue + variable: Hourly | Banded amount
-//       -> expense:            (no forms yet)
+//       -> expense + fixed:    Salary | Other recurring
+//       -> expense + variable: Banded amount (not built)
 //
 // Hourly sits under Variable because its bill varies with the hours worked;
 // thorcasting's Hourly builder reads hourly_service lines. Peter's cascade named
@@ -15,7 +16,15 @@ import type { Option } from "./projection-forms.fixtures";
 
 export type SideId = "revenue" | "expense";
 export type AmountId = "fixed" | "variable";
-export type LeafId = "subscription" | "license" | "retainer" | "hourly" | "banded";
+export type LeafId =
+  | "subscription"
+  | "license"
+  | "retainer"
+  | "hourly"
+  | "banded"
+  | "salary"
+  | "otherFixed"
+  | "otherVariable";
 
 export interface CascadeState {
   side: SideId;
@@ -38,6 +47,11 @@ const LEAVES: Record<string, Option[]> = {
     { id: "hourly", label: "Hourly" },
     { id: "banded", label: "Banded amount" },
   ],
+  "expense/fixed": [
+    { id: "salary", label: "Salary" },
+    { id: "otherFixed", label: "Other recurring" },
+  ],
+  "expense/variable": [{ id: "otherVariable", label: "Banded amount" }],
 };
 
 /** The leaves the split below `side` and `amount` offers. */
@@ -52,6 +66,10 @@ export const NOT_BUILT: Record<LeafId, string | null> = {
   retainer:
     "Retainer is not built on this bench yet. thorcasting has no retainer type today: a retainer is a Monthly fixed line in the Support category.",
   hourly: null,
+  salary: null,
+  otherFixed:
+    "Other recurring expenses are not built yet (rent, benefits, subscriptions: thorcasting's plain fixed lines).",
+  otherVariable: "Variable expenses are not built yet.",
   banded:
     "Banded amount is not built on this bench yet (thorcasting's Weekly variable and Monthly variable forms: a min, a typical and a max).",
 };

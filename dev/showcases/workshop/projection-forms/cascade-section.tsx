@@ -15,6 +15,7 @@ import {
 import { HourlyForm } from "./hourly-form";
 import { LabeledField } from "./kit";
 import { LicenseLeaf, VIEW_OPTIONS } from "./license-views";
+import { SalaryLeaf } from "./salary-views";
 
 // The cascade: each split decides what the next one offers, down to a leaf
 // form. Every level stays on screen so the path is visible.
@@ -54,7 +55,7 @@ export const CascadeSection: Component = () => {
               />
             </LabeledField>
           </Show>
-          <Show when={leaf() === "license"}>
+          <Show when={leaf() === "license" || leaf() === "salary"}>
             <LabeledField label="View">
               <SegmentedInput options={VIEW_OPTIONS} value={view()} onChange={setView} />
             </LabeledField>
@@ -63,6 +64,9 @@ export const CascadeSection: Component = () => {
         <Switch>
           <Match when={leaf() === "license"}>
             <LicenseLeaf view={view()} />
+          </Match>
+          <Match when={leaf() === "salary"}>
+            <SalaryLeaf view={view()} />
           </Match>
           <Match when={leaf() === "hourly"}>
             <HourlyForm />

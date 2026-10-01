@@ -33,7 +33,7 @@ describe("cascade", () => {
       "retainer",
     ]);
     expect(leafOptions("revenue", "variable").map((o) => o.id)).toEqual(["hourly", "banded"]);
-    expect(leafOptions("expense", "fixed")).toEqual([]);
+    expect(leafOptions("expense", "fixed").map((o) => o.id)).toEqual(["salary", "otherFixed"]);
   });
 
   it("settle keeps a valid leaf and replaces an invalid one", () => {
@@ -41,7 +41,7 @@ describe("cascade", () => {
     expect(kept.leaf).toBe("license");
     const moved = settle({ side: "revenue", amount: "variable", leaf: "license" });
     expect(moved.leaf).toBe("hourly");
-    expect(settle({ side: "expense", amount: "fixed", leaf: "license" }).leaf).toBeNull();
+    expect(settle({ side: "expense", amount: "fixed", leaf: "license" }).leaf).toBe("salary");
   });
 
   it("prints path -> emitted JSON for the built leaves", () => {

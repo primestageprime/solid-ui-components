@@ -66,7 +66,22 @@ export interface HourlyServiceLine {
   until?: string;
 }
 
-export type StoredKindLine = LicenseLine | HourlyServiceLine;
+export type PersonRef = `person:per-${string}`;
+
+/** kindTypes.generated.ts `SalaryLine` (the `amount` group states exactly one;
+ *  this form states the annual figure). */
+export interface SalaryLine {
+  kind: "salary";
+  person: PersonRef;
+  paid_from: AccountRef;
+  schedule: ScheduleJson;
+  amount: { annual: { cents: number } };
+  label?: string;
+  start?: string;
+  until?: string;
+}
+
+export type StoredKindLine = LicenseLine | HourlyServiceLine | SalaryLine;
 
 /** The config the fold reads: `{effect, params, meta?}`. */
 export interface LoweredConfig {
@@ -203,6 +218,55 @@ export const lowerHourly = (line: HourlyServiceLine): LoweredConfig => {
   return { effect: "fixed_txn", params };
 };
 
+// ── Salary ──────────────────────────────────────────────────────────────────
+
+export type PayCadence = "biweekly" | "monthly";
+
+export interface SalaryValues {
+  /** The person's id, `per-<32 hex>` (people live in the tree, not the line). */
+  personId: string;
+  paidFrom: string;
+  annualDollars: number;
+  cadence: PayCadence;
+  referenceDate: string;
+  day: number;
+  start: string;
+  until: string;
+}
+
+export const buildSalaryLine = (v: SalaryValues): SalaryLine => {
+  const line: SalaryLine = {
+    kind: "salary",
+    person: `person:${v.personId}` as PersonRef,
+    paid_from: account(v.paidFrom),
+    schedule: {
+      recurring:
+        v.cadence === "biweekly"
+          ? { shape: "biweekly_from", referenceDate: v.referenceDate }
+          : { shape: "day_of_month", day: v.day },
+    },
+    amount: { annual: { cents: toCents(v.annualDollars) } },
+  };
+  if (nonEmpty(v.start)) line.start = v.start;
+  if (nonEmpty(v.until)) line.until = v.until;
+  return line;
+};
+
+/** salary.rs `lower`: one fixed_txn leg from the account to the person. */
+export const lowerSalary = (line: SalaryLine): LoweredConfig => {
+  const params: Json = {
+    schedule: line.schedule,
+    leg: {
+      from: line.paid_from.slice("account:".length),
+      to: line.person,
+      amount: line.amount,
+    },
+  };
+  if (line.start !== undefined) params.start = line.start;
+  if (line.until !== undefined) params.until = line.until;
+  return { effect: "fixed_txn", params };
+};
+
 // ── Lands in ────────────────────────────────────────────────────────────────
 
 export interface Landing {
@@ -212,7 +276,13 @@ export interface Landing {
 }
 
 export const landsIn = (line: StoredKindLine): Landing =>
-  line.kind === "license"
+  line.kind === "salary"
+    ? {
+        builder: "Payroll",
+        href: "/builder/payroll",
+        rule: "the line states kind salary (scenarioBoard/fromWorkingRoot.ts filters statesKind('salary'))",
+      }
+    : line.kind === "license"
     ? {
         builder: "Licenses",
         href: "/builder/licenses",
@@ -229,6 +299,11 @@ export const landsIn = (line: StoredKindLine): Landing =>
 export const licenseEmission = (values: LicenseValues) => {
   const line = buildLicenseLine(values);
   return { line, lowered: lowerLicense(line), landing: landsIn(line) };
+};
+
+export const salaryEmission = (values: SalaryValues) => {
+  const line = buildSalaryLine(values);
+  return { line, lowered: lowerSalary(line), landing: landsIn(line) };
 };
 
 export const hourlyEmission = (values: HourlyValues) => {
