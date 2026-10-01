@@ -1,6 +1,7 @@
 import { type Component, For, Index, type JSX, createSignal } from "solid-js";
 import {
   CardSurface,
+  CardGrid,
   CodeBlock,
   NoteText,
   SectionTitle,
@@ -9,40 +10,90 @@ import {
   TextLabel,
   TextSublabel,
   TightStack,
-  CardGrid,
   createGrid,
 } from "../../../../src";
 import {
-  CADENCES,
-  CADENCE_SAMPLE,
-  EXCEPTIONS,
-  FORMS,
-  LABEL_KEYS,
+  AmountStrip,
+  CADENCE_SHAPES,
+  type AmountStripDataProps,
   type AmountValue,
+  type CadenceShape,
+  type CadenceStripDataProps,
   type CadenceValue,
-  type FormDef,
-  type Side,
-  type StripsState,
+  EndWindowStrip,
+  HoursAmountStrip,
+  LabelStrip,
+  LargeAmountStrip,
+  MonthlyOrAnnualCadenceStrip,
+  PERIODS_PER_YEAR,
+  PayCadenceStrip,
+  SeatsAmountStrip,
+  SmallAmountStrip,
+  StartWindowStrip,
+  WindowStrip,
   type WindowValue,
-  amountFragments,
+  cadenceOfShape,
+  createCadenceStrip,
+} from "../../../../src/components/Strips";
+import {
+  LABEL_KEYS,
+  type Side,
+  type StripValues,
+  amountKeys,
   assemble,
-  cadenceFragment,
-  cadenceLabels,
-  ALL_CADENCES,
   labelFragment,
   prettyJson,
-  windowFragments,
-} from "../projection-forms.strips";
+  scheduleOf,
+  unitsKeys,
+  windowKeys,
+} from "../projection-forms.adapter";
 import {
-  AmountDials,
-  AmountStrip,
-  CadenceStrip,
-  LabelStrip,
-  ReadOnly,
-  ScenarioFrame,
-  WindowStrip,
-} from "./strips-ui";
-import { LabeledField } from "./kit";
+  EXCEPTIONS,
+  FORMS,
+  type AmountVariant,
+  ALL_CADENCE_COUNT,
+  type FormDef,
+  cadenceLabels,
+} from "../projection-forms.strips";
+import { AmountDials, ReadOnly, ScenarioFrame } from "./strips-ui";
+import { LabeledField as Labeled } from "./kit";
+
+// ── curries, once ───────────────────────────────────────────────────────────
+const AMOUNT_STRIPS: Record<AmountVariant, Component<AmountStripDataProps>> = {
+  amount: AmountStrip,
+  small: SmallAmountStrip,
+  large: LargeAmountStrip,
+  seats: SeatsAmountStrip,
+  hours: HoursAmountStrip,
+};
+
+const HourlyCadenceStrip = createCadenceStrip({
+  allowed: ["weekly", "biweekly", "semimonthly", "monthly", "daily"],
+});
+
+/** One strip per single cadence shape: a recipe that fixes the cadence. */
+const OnlyCadence: Record<CadenceShape, Component<CadenceStripDataProps>> = {
+  annual: createCadenceStrip({ allowed: ["annual"] }),
+  quarterly: createCadenceStrip({ allowed: ["quarterly"] }),
+  monthly: createCadenceStrip({ allowed: ["monthly"] }),
+  semimonthly: createCadenceStrip({ allowed: ["semimonthly"] }),
+  biweekly: createCadenceStrip({ allowed: ["biweekly"] }),
+  weekly: createCadenceStrip({ allowed: ["weekly"] }),
+  daily: createCadenceStrip({ allowed: ["daily"] }),
+  once: createCadenceStrip({ allowed: ["once"] }),
+};
+
+const cadenceStripFor = (def: FormDef): Component<CadenceStripDataProps> =>
+  def.kind === "license"
+    ? MonthlyOrAnnualCadenceStrip
+    : def.kind === "hourly_service"
+      ? HourlyCadenceStrip
+      : def.kind === "salary"
+        ? PayCadenceStrip
+        : OnlyCadence[def.cadences[0]];
+
+const windowStripFor = (mode: FormDef["window"]) =>
+  mode === "start" ? StartWindowStrip : mode === "end" ? EndWindowStrip : WindowStrip;
 
 /** Gallery cards: 27rem wide at least (min/typical/max at $9,999 need ~410px
  *  on one line), one column on a phone. */
@@ -64,57 +115,79 @@ const Fragment: Component<{ json: string }> = (props) => <CodeBlock>{props.json}
 
 // ── A. STRIP CATALOG ────────────────────────────────────────────────────────
 
-const Variant: Component<{ title: string; children: JSX.Element; json: string }> = (
-  props,
-) => (
+const Variant: Component<{
+  title: string;
+  children: JSX.Element;
+  value: unknown;
+  writes: unknown;
+}> = (props) => (
   <CardSurface>
     <SpacedStack>
       <TextLabel>{props.title}</TextLabel>
       {props.children}
-      <Fragment json={props.json} />
+      <TextSublabel>Strip value (engine-neutral)</TextSublabel>
+      <Fragment json={prettyJson(props.value)} />
+      <TextSublabel>Thorcasting adapter writes</TextSublabel>
+      <Fragment json={prettyJson(props.writes)} />
     </SpacedStack>
   </CardSurface>
 );
 
-/** A variant that holds its own sample state so the control is live. */
-const CadenceVariant: Component<{ id: (typeof CADENCES)[number]["id"]; label: string; anchor: string }> = (
-  props,
-) => {
-  const [value, setValue] = createSignal<CadenceValue>({ ...CADENCE_SAMPLE, id: props.id });
+const AMOUNT_SAMPLES: { title: string; strip: AmountVariant; value: AmountValue; kind: "license" | "hourly_service" | "plain" }[] = [
+  { title: "Single: per payment", strip: "amount", kind: "plain", value: { kind: "single", cents: 1_000_000, per: "payment" } },
+  { title: "Single: per year (shows each payment)", strip: "amount", kind: "plain", value: { kind: "single", cents: 10_289_110, per: "year" } },
+  { title: "Single with cents (up to $9,999)", strip: "small", kind: "plain", value: { kind: "single", cents: 1_000_050, per: "payment" } },
+  { title: "Range: min / typical / max", strip: "small", kind: "plain", value: { kind: "range", min: 800_000, typical: 1_000_000, max: 1_200_000 } },
+  { title: "Range at the maximum ($1,000,000,000, to the thousand)", strip: "large", kind: "plain", value: { kind: "range", min: 80_000_000_000, typical: 90_000_000_000, max: 100_000_000_000 } },
+  { title: "Units x price: seats", strip: "seats", kind: "license", value: { kind: "units", units: 10, unitPrice: 5_000, perPeriod: 2 } },
+  { title: "Units x price: hours", strip: "hours", kind: "hourly_service", value: { kind: "units", units: 20, unitPrice: 9_000, perPeriod: 0 } },
+];
+
+const AmountVariantCard: Component<(typeof AMOUNT_SAMPLES)[number]> = (props) => {
+  const [value, setValue] = createSignal<AmountValue>(props.value);
+  const Strip = AMOUNT_STRIPS[props.strip];
   return (
-    <Variant title={`${props.label} (anchor: ${props.anchor})`} json={cadenceFragment(props.id)}>
-      <CadenceStrip
-        value={value()}
-        allowed={[props.id]}
-        onChange={(next) => setValue({ ...value(), ...next })}
-      />
+    <Variant
+      title={props.title}
+      value={value()}
+      writes={props.kind === "plain" ? amountKeys(value()) : unitsKeys(value(), props.kind)}
+    >
+      <Strip value={value()} onChange={setValue} periodsPerYear={26} />
     </Variant>
   );
 };
 
-const AmountVariant: Component<{ title: string; start: AmountValue; fragment: unknown }> = (props) => {
-  const [value, setValue] = createSignal<AmountValue>(props.start);
+const CadenceVariantCard: Component<{ shape: CadenceShape; label: string; anchor: string }> = (props) => {
+  const [value, setValue] = createSignal<CadenceValue>(cadenceOfShape(props.shape));
+  const Strip = OnlyCadence[props.shape];
   return (
-    <Variant title={props.title} json={prettyJson(props.fragment)}>
-      <AmountStrip
-        value={value()}
-        cadence="biweekly"
-        onChange={(next) => setValue({ ...value(), ...next })}
-      />
+    <Variant
+      title={`${props.label} (anchor: ${props.anchor})`}
+      value={value()}
+      writes={{ schedule: scheduleOf(value()) }}
+    >
+      <Strip value={value()} onChange={setValue} />
     </Variant>
   );
 };
 
-const WindowVariant: Component<{ title: string; start: WindowValue; fragment: unknown }> = (props) => {
-  const [value, setValue] = createSignal<WindowValue>(props.start);
+const WINDOW_SAMPLES: { title: string; value: WindowValue }[] = [
+  { title: "None (the whole line)", value: {} },
+  { title: "Start only (a ray)", value: { start: "2026-10-01" } },
+  { title: "End only (a ray)", value: { until: "2027-06-30" } },
+  { title: "Start and end", value: { start: "2026-10-01", until: "2027-06-30" } },
+];
+
+const WindowVariantCard: Component<(typeof WINDOW_SAMPLES)[number]> = (props) => {
+  const [value, setValue] = createSignal<WindowValue>(props.value);
   return (
-    <Variant title={`Window: ${props.title}`} json={prettyJson(props.fragment)}>
-      <WindowStrip value={value()} mode="any" onChange={(next) => setValue({ ...value(), ...next })} />
+    <Variant title={`Window: ${props.title}`} value={value()} writes={windowKeys(value())}>
+      <WindowStrip value={value()} onChange={setValue} />
     </Variant>
   );
 };
 
-const LabelVariant: Component = () => {
+const LabelCard: Component = () => {
   const [name, setName] = createSignal("Pro licenses");
   return (
     <CardSurface>
@@ -126,7 +199,7 @@ const LabelVariant: Component = () => {
             {(k) => (
               <TightStack>
                 <TextSublabel>{k.kind}</TextSublabel>
-                <Fragment json={labelFragment(k.key, name())} />
+                <Fragment json={prettyJson(labelFragment(k.key, name()))} />
               </TightStack>
             )}
           </For>
@@ -140,25 +213,22 @@ export const CatalogSection: Component = () => (
   <SpacedStack>
     <SectionTitle>A. Strip catalog</SectionTitle>
     <NoteText>
-      Four strips build every simple form. Each variant is live, with the key(s) it writes underneath.
+      The four published strips (SUI Strips). Each variant is live; under it, the
+      engine-neutral value the strip emits and the keys thorcasting's adapter writes from it.
     </NoteText>
-    <TextLabel>1. Label</TextLabel>
-    <LabelVariant />
-    <TextLabel>2. Amount</TextLabel>
+    <TextLabel>1. LabelStrip</TextLabel>
+    <LabelCard />
+    <TextLabel>2. AmountStrip</TextLabel>
     <SpacedStack>
-      <For each={amountFragments}>
-        {(a) => <AmountVariant title={a.title} start={a.value} fragment={a.fragment} />}
-      </For>
+      <For each={AMOUNT_SAMPLES}>{(a) => <AmountVariantCard {...a} />}</For>
     </SpacedStack>
-    <TextLabel>3. Cadence</TextLabel>
+    <TextLabel>3. CadenceStrip</TextLabel>
     <SpacedStack>
-      <For each={CADENCES}>{(c) => <CadenceVariant id={c.id} label={c.label} anchor={c.anchor} />}</For>
+      <For each={CADENCE_SHAPES}>{(c) => <CadenceVariantCard shape={c.shape} label={c.label} anchor={c.anchor} />}</For>
     </SpacedStack>
-    <TextLabel>4. Window</TextLabel>
+    <TextLabel>4. WindowStrip</TextLabel>
     <SpacedStack>
-      <For each={windowFragments}>
-        {(w) => <WindowVariant title={w.title} start={w.value} fragment={w.fragment} />}
-      </For>
+      <For each={WINDOW_SAMPLES}>{(w) => <WindowVariantCard {...w} />}</For>
     </SpacedStack>
   </SpacedStack>
 );
@@ -166,69 +236,63 @@ export const CatalogSection: Component = () => (
 // ── B. FORM GALLERY ─────────────────────────────────────────────────────────
 
 const FormCard: Component<{ def: FormDef; mode: string; side: Side }> = (props) => {
-  const [state, setState] = createSignal<StripsState>(props.def.start);
-  const patch = (next: Partial<StripsState>) => setState({ ...state(), ...next });
-  const json = () => prettyJson(assemble(props.def, state(), props.side));
-  const sideText = () => (props.def.side === "split" ? props.side : `${props.def.side} (fixed by kind)`);
-  const narrowed = () => props.def.cadences.length < ALL_CADENCES.length;
+  const [values, setValues] = createSignal<StripValues>(props.def.start);
+  const patch = (next: Partial<StripValues>) => setValues({ ...values(), ...next });
+  const side = (): Side => (props.def.side === "split" ? props.side : props.def.side);
+  const json = () => prettyJson(assemble(props.def.kind, side(), values()));
+  const AmountS = AMOUNT_STRIPS[props.def.amountVariant];
+  const CadenceS = cadenceStripFor(props.def);
+  const WindowS = windowStripFor(props.def.window);
+  const narrowed = () => props.def.cadences.length < ALL_CADENCE_COUNT;
   return (
     <CardSurface>
       <SpacedStack>
         <TightStack>
           <TextLabel>{props.def.name}</TextLabel>
           <TextSublabel>{`Recipe: ${props.def.recipe}`}</TextSublabel>
-          <TextSublabel>{`Direction: ${sideText()} · kind: ${props.def.kind}`}</TextSublabel>
+          <TextSublabel>
+            {`Direction: ${props.def.side === "split" ? side() : `${props.def.side} (fixed by kind)`} · kind: ${props.def.kind}`}
+          </TextSublabel>
         </TightStack>
         <NoteText>
-          {narrowed()
-            ? `Cadence narrowed from 8 to ${props.def.cadences.length}: ${cadenceLabels(props.def.cadences)}.${props.def.note ? ` ${props.def.note}` : ""}`
-            : `Cadence: ${cadenceLabels(props.def.cadences)}.${props.def.note ? ` ${props.def.note}` : ""}`}
+          {`Cadence ${narrowed() ? `narrowed from 8 to ${props.def.cadences.length}` : "offered"}: ${cadenceLabels(props.def.cadences)}.${props.def.note ? ` ${props.def.note}` : ""}`}
         </NoteText>
         {props.mode === "minimal" ? (
           <SpacedStack>
-            <LabeledField label="1. Label">
-              <LabelStrip value={state().label} onChange={(label) => patch({ label })} />
-            </LabeledField>
-            <LabeledField label="2. Amount">
-              <AmountStrip
-                value={state().amount}
-                cadence={state().cadence.id}
-                onChange={(next) => patch({ amount: { ...state().amount, ...next } })}
+            <LabelStrip value={values().label} onChange={(label) => patch({ label })} />
+            <Labeled label="2. Amount">
+              <AmountS
+                value={values().amount}
+                periodsPerYear={PERIODS_PER_YEAR[values().cadence.shape]}
+                onChange={(amount) => patch({ amount })}
               />
-            </LabeledField>
-            <LabeledField label="3. Cadence">
-              <CadenceStrip
-                value={state().cadence}
-                allowed={props.def.cadences}
-                onChange={(next) => patch({ cadence: { ...state().cadence, ...next } })}
-              />
-            </LabeledField>
-            <LabeledField label="4. Window">
-              <WindowStrip
-                value={state().window}
-                mode={props.def.window}
-                onChange={(next) => patch({ window: { ...state().window, ...next } })}
-              />
-            </LabeledField>
+            </Labeled>
+            <Labeled label="3. Cadence">
+              <CadenceS value={values().cadence} onChange={(cadence) => patch({ cadence })} />
+            </Labeled>
+            <Labeled label="4. Window">
+              <WindowS value={values().window} onChange={(window) => patch({ window })} />
+            </Labeled>
           </SpacedStack>
         ) : (
-          <ScenarioFrame title={state().label}>
+          <ScenarioFrame title={values().label}>
             <AmountDials
-              label={state().label}
-              value={state().amount}
+              label={values().label}
+              value={values().amount}
               start={props.def.start.amount}
-              onChange={(next) => patch({ amount: { ...state().amount, ...next } })}
+              unit={props.def.amountVariant === "hours" ? "hours" : "seats"}
+              onChange={(amount) => patch({ amount })}
             />
             <ReadOnly
               title="Cadence"
-              text={CADENCES.find((c) => c.id === state().cadence.id)?.label ?? ""}
+              text={CADENCE_SHAPES.find((c) => c.shape === values().cadence.shape)?.label ?? ""}
             />
             <ReadOnly
               title="Window"
               text={
-                state().window.start === "" && state().window.end === ""
+                values().window.start === undefined && values().window.until === undefined
                   ? "none"
-                  : `${state().window.start || "…"} to ${state().window.end || "…"}`
+                  : `${values().window.start ?? "beginning of time"} to ${values().window.until ?? "end of time"}`
               }
             />
           </ScenarioFrame>
@@ -246,15 +310,15 @@ export const GallerySection: Component = () => {
     <SpacedStack>
       <SectionTitle>B. Form gallery</SectionTitle>
       <NoteText>
-        Each card stacks the four strips. Direction (money in or out) is this split, not a strip; counterparties
-        and accounts are placeholder labels in the JSON.
+        Each card stacks the four published strips. Direction (money in or out) is this split, not a
+        strip; counterparties and accounts are placeholder labels in the JSON.
       </NoteText>
-      <LabeledField label="Direction (plain forms)">
+      <Labeled label="Direction (plain forms)">
         <SegmentedInput options={SIDE_OPTIONS} value={side()} onChange={(id) => setSide(id as Side)} />
-      </LabeledField>
-      <LabeledField label="View">
+      </Labeled>
+      <Labeled label="View">
         <SegmentedInput options={MODE_OPTIONS} value={mode()} onChange={setMode} />
-      </LabeledField>
+      </Labeled>
       <GalleryGrid>
         <Index each={FORMS}>
           {(def) => <FormCard def={def()} mode={mode()} side={side()} />}
@@ -283,4 +347,3 @@ export const ExceptionsSection: Component = () => (
     </CardSurface>
   </SpacedStack>
 );
-

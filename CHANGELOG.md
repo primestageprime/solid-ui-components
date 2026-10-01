@@ -6,11 +6,14 @@
 
 ### Added
 
+- **Strips** — four Composites (Depth 2, zero CSS) that larger forms piece together: `LabelStrip` (a name), `AmountStrip` (single, per payment or per year, with the derived payment; a range of min / typical / max; or units × price with units added each period), `CadenceStrip` (annual, quarterly, monthly, semi-monthly, bi-weekly, weekly, daily, once; each carries only its anchor, shown as a compact value that opens its selector in a popover; `allowed` narrows the shapes), and `WindowStrip` ("[start] to [end]"; an open side reads "beginning of time" / "end of time"). Each edits an engine-neutral value (`AmountValue`, `CadenceValue`, `WindowValue`: integer cents, ISO dates) and the rules live in pure exported functions: `setAmountRangeField` keeps `min ≤ typical ≤ max`, `setWindowStart` / `setWindowUntil` keep start ≤ end, `perPaymentCents` derives a per-year payment half-even, `normalizeCadence` keeps the day grid to 28 and offers "last" only for monthly, `offeredShapes` narrows a cadence. Curried variants: `LabelStrip`, `AmountStrip`, `SmallAmountStrip`, `LargeAmountStrip`, `SeatsAmountStrip`, `HoursAmountStrip`, `CadenceStrip`, `RecurringCadenceStrip`, `MonthlyOrAnnualCadenceStrip`, `PayCadenceStrip`, `WindowStrip`, `StartWindowStrip`, `EndWindowStrip`; factories `createLabelStrip`, `createAmountStrip`, `createCadenceStrip`, `createWindowStrip`.
+- **`CompactDayOfMonthPicker`** — the 1..28 grid in 2rem cells (the default 3.5rem cells are 392px wide), baked from the picker's own `--dom-cell-size`.
 - **Magnitude-sized number inputs** — six curried variants that bake an expected ceiling so a call site never passes `maxValue`: `CountInput100`, `CountInput10K`, `CurrencyInput10K`, `CurrencyInput1M`, `CurrencyInput100M`, `CurrencyInput1B`. One shared rule (`tightNumberWidth`) sizes them: the widest formatted text in the field's own font (a digit = 1ch, a separator 0.4) plus half a character of slack plus the stepper.
 - **`ThemedNumberInput`: `maxValue?`** — the expected ceiling; sizes the field by the same rule and is the default `max`. Omitted, nothing changes.
 
 ### Changed
 
+- **`CountInput100` / `CountInput10K` are the same height as every other number field** (no longer the toolbar `sm` size). Width still follows `maxValue`.
 - **`CurrencyInput` with a stated `maxValue` is now sized by the tight rule** (about one character of room left of the widest value) instead of the generous `0.62rem` a character; a field with no `maxValue` keeps its $1B cap.
 
 ## 0.205.0 — 2026-09-30

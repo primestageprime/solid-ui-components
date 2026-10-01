@@ -1406,6 +1406,22 @@ Depth-1 SVG marks on the **box contract**: each draws inside a `{ x, y, width, h
     />
     ```
 
+## Strips
+- **LabelStrip / AmountStrip / CadenceStrip / WindowStrip** — four Composites (Depth 2, zero CSS) that larger forms piece together instead of hand-placing smaller fields. Each edits an **engine-neutral value** (integer cents, ISO `YYYY-MM-DD` dates, no wire vocabulary) so any app maps it to its own shape, and the rules live in **pure exported functions** the strips use. Curried variants: `LabelStrip`; `AmountStrip` (to $999,999, whole dollars), `SmallAmountStrip` (to $9,999, cents), `LargeAmountStrip` (to $1B, thousands), `SeatsAmountStrip`, `HoursAmountStrip`; `CadenceStrip` (all eight shapes), `RecurringCadenceStrip` (all but once), `MonthlyOrAnnualCadenceStrip`, `PayCadenceStrip` (bi-weekly, semi-monthly, monthly); `WindowStrip`, `StartWindowStrip`, `EndWindowStrip`. Factories: `createLabelStrip({ label })`, `createAmountStrip({ magnitude, precision, unit })`, `createCadenceStrip({ allowed })`, `createWindowStrip({ mode })`. Data props: `value` and `onChange(value)` (plus `periodsPerYear` on an amount, whose per-year derivation divides by it).
+  - **AmountStrip** edits `AmountValue`: `{ kind: "single", cents, per: "payment" | "year" }` (a per-year amount shows its derived payment), `{ kind: "range", min, typical, max }` (three money fields; `setAmountRangeField` keeps `min ≤ typical ≤ max`, the edited field pushing the others), `{ kind: "units", units, unitPrice, perPeriod }` (units × price, units added each period). It composes the magnitude-sized `CurrencyInput…` / `CountInput…` variants and wraps horizontally.
+  - **CadenceStrip** edits `CadenceValue`: `annual {month, day}`, `quarterly`/`biweekly`/`once` (a date), `monthly` (a day 1..28 or `"last"`), `weekly` (0..6), `semimonthly`, `daily` (no anchor). The anchor shows compact ("Mar 15", "Day 15", "Mon") and opens its selector in a `PopoverTooltip`; only valid anchors are offered (the day grid is `CompactDayOfMonthPicker`, 28 boxes; "Last day" only for monthly). `allowed` narrows the shapes a kind accepts. Pure: `cadenceOfShape`, `normalizeCadence`, `anchorText`, `offeredShapes`, `PERIODS_PER_YEAR`, `CADENCE_SHAPES`.
+  - **WindowStrip** edits `WindowValue` `{ start?, until? }` as "[start] to [end]"; an open side reads "beginning of time" / "end of time" and is absent from the value (neither is the whole line, one is a ray). `setWindowStart` / `setWindowUntil` keep start ≤ end.
+  - **Also pure and exported:** `perPaymentCents(annualCents, periods)` (half-even), `paymentCents`, `unitsTotalCents`, `isOrderedRange`, `isValidWindow`.
+  - Use for: any form that states a label, an amount, a cadence and a window. Use a plain field only for a case the strips do not cover.
+  - Example:
+    ```tsx
+    import { AmountStrip, PayCadenceStrip, WindowStrip } from "solid-ui-components";
+    <AmountStrip value={amount()} onChange={setAmount} periodsPerYear={26} />
+    <PayCadenceStrip value={cadence()} onChange={setCadence} />
+    <WindowStrip value={window()} onChange={setWindow} />
+    ```
+- **CompactDayOfMonthPicker** — Curried variant of `DayOfMonthPicker` (Depth 1): the 1..28 grid in 2rem cells (the default 3.5rem cells are 392px wide), baked from the picker's own `--dom-cell-size`. Use for: a day picker inside a popover or a phone column.
+
 ## Divider
 - **Divider** — Content separator line (own component directory). Key props: `orientation` (`horizontal`|`vertical`), `variant` (`solid`|`dashed`|`dotted`), `spacing` (`sm`|`md`|`lg`). Use for: visual separation between content blocks.
 
