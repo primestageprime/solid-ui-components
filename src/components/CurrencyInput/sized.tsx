@@ -10,7 +10,7 @@
 // the ceiling, so a call site never passes `maxValue` and the field is never
 // wider than its magnitude needs. Named by the ceiling:
 //
-//   CountInput100      counts up to 99        (hours, seats added a period)
+//   CountInput100      counts up to 99        (seats added a period)
 //   CountInput10K      counts up to 9,999     (seats, units)
 //   CurrencyInput10K   money up to $9,999
 //   CurrencyInput1M    money up to $999,999
@@ -37,13 +37,11 @@ const curry = <P extends object>(
 /** Counts up to 99. */
 export const CountInput100 = curry<ThemedNumberInputProps>(ThemedNumberInput, {
   maxValue: 99,
-  size: "sm",
 });
 
 /** Counts up to 9,999. */
 export const CountInput10K = curry<ThemedNumberInputProps>(ThemedNumberInput, {
   maxValue: 9_999,
-  size: "sm",
 });
 
 /** Money up to $9,999. */
