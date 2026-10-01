@@ -369,6 +369,32 @@
     "line": 44
   },
   {
+    "name": "AmountStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createAmountStrip",
+      "overrides": "{ magnitude: \"1M\", precision: \"dollars\" }"
+    },
+    "overrides": [
+      "magnitude",
+      "precision",
+      "unit"
+    ],
+    "dataProps": "AmountStripDataProps",
+    "summary": "Amounts up to $999,999, to the dollar.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Amounts up to $999,999, to the dollar.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 13
+  },
+  {
     "name": "AnchorBox",
     "depth": 0,
     "kind": "variant",
@@ -1242,6 +1268,30 @@
     "since": null,
     "file": "src/components/ProgressCard/variants.ts",
     "line": 12
+  },
+  {
+    "name": "CadenceStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createCadenceStrip",
+      "overrides": "{}"
+    },
+    "overrides": [
+      "allowed"
+    ],
+    "dataProps": "CadenceStripDataProps",
+    "summary": "All eight cadences.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "All eight cadences.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 24
   },
   {
     "name": "CandlestickRenderer",
@@ -2395,6 +2445,28 @@
     "line": 70
   },
   {
+    "name": "CompactDayOfMonthPicker",
+    "depth": 1,
+    "kind": "variant",
+    "family": "DayOfMonthPicker",
+    "variantOf": {
+      "factory": "createDayOfMonthPicker",
+      "overrides": "{\n  style: { \"--dom-cell-size\": \"2rem\" },\n}"
+    },
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Curried variant of `DayOfMonthPicker` (Depth 1): the 1..28 grid in 2rem cells (the default 3.5rem cells are 392px wide), baked from the picker's own `--dom-cell-size`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a day picker inside a popover or a phone column.",
+    "notes": "The 1..28 grid in 2rem cells (seven fit a 360px phone column and a popover), where the default 3.5rem cells run 392px wide. The cell size is the picker's own `--dom-cell-size` var, baked here once.",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/DayOfMonthPicker/variants.ts",
+    "line": 9
+  },
+  {
     "name": "CompactDropdown",
     "depth": 1,
     "kind": "variant",
@@ -2892,7 +2964,7 @@
     "showcase": "#/currency-input",
     "since": "Unreleased",
     "file": "src/components/CurrencyInput/sized.tsx",
-    "line": 44
+    "line": 43
   },
   {
     "name": "CountText",
@@ -2981,6 +3053,29 @@
     "since": "0.141.0",
     "file": "src/components/Feedback/AlertBox.tsx",
     "line": 80
+  },
+  {
+    "name": "createAmountStrip",
+    "depth": null,
+    "kind": "factory",
+    "family": "Strips",
+    "variantOf": null,
+    "overrides": [
+      "magnitude",
+      "precision",
+      "unit"
+    ],
+    "dataProps": "AmountStripDataProps",
+    "summary": "Factory behind `AmountStrip`'s curried variants; bakes `magnitude`, `precision`, `unit`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/AmountStrip.tsx",
+    "line": 129
   },
   {
     "name": "createAnimatedSwimlaneChart",
@@ -3300,6 +3395,27 @@
     "since": null,
     "file": "src/components/ButtonGroup/ButtonGroup.tsx",
     "line": 75
+  },
+  {
+    "name": "createCadenceStrip",
+    "depth": null,
+    "kind": "factory",
+    "family": "Strips",
+    "variantOf": null,
+    "overrides": [
+      "allowed"
+    ],
+    "dataProps": "CadenceStripDataProps",
+    "summary": "Factory behind `CadenceStrip`'s curried variants; bakes `allowed`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/CadenceStrip.tsx",
+    "line": 139
   },
   {
     "name": "createCashflowScrubChart",
@@ -4269,6 +4385,27 @@
     "since": null,
     "file": "src/components/LabeledDivider/LabeledDivider.tsx",
     "line": 63
+  },
+  {
+    "name": "createLabelStrip",
+    "depth": null,
+    "kind": "factory",
+    "family": "Strips",
+    "variantOf": null,
+    "overrides": [
+      "label"
+    ],
+    "dataProps": "LabelStripDataProps",
+    "summary": "Factory behind `LabelStrip`'s curried variants; bakes `label`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/LabelStrip.tsx",
+    "line": 29
   },
   {
     "name": "createLevelsTimeline",
@@ -5494,6 +5631,27 @@
     "line": 182
   },
   {
+    "name": "createWindowStrip",
+    "depth": null,
+    "kind": "factory",
+    "family": "Strips",
+    "variantOf": null,
+    "overrides": [
+      "mode"
+    ],
+    "dataProps": "WindowStripDataProps",
+    "summary": "Factory behind `WindowStrip`'s curried variants; bakes `mode`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/WindowStrip.tsx",
+    "line": 81
+  },
+  {
     "name": "createWorkflowProgressCard",
     "depth": null,
     "kind": "factory",
@@ -5591,7 +5749,7 @@
     "showcase": "#/currency-input",
     "since": "Unreleased",
     "file": "src/components/CurrencyInput/sized.tsx",
-    "line": 60
+    "line": 58
   },
   {
     "name": "CurrencyInput10K",
@@ -5610,7 +5768,7 @@
     "showcase": "#/currency-input",
     "since": "Unreleased",
     "file": "src/components/CurrencyInput/sized.tsx",
-    "line": 50
+    "line": 48
   },
   {
     "name": "CurrencyInput1B",
@@ -5629,7 +5787,7 @@
     "showcase": "#/currency-input",
     "since": "Unreleased",
     "file": "src/components/CurrencyInput/sized.tsx",
-    "line": 65
+    "line": 63
   },
   {
     "name": "CurrencyInput1M",
@@ -5648,7 +5806,7 @@
     "showcase": "#/currency-input",
     "since": "Unreleased",
     "file": "src/components/CurrencyInput/sized.tsx",
-    "line": 55
+    "line": 53
   },
   {
     "name": "CurrentValueIndicator",
@@ -7298,6 +7456,30 @@
     "since": null,
     "file": "src/components/Text/variants.ts",
     "line": 16
+  },
+  {
+    "name": "EndWindowStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createWindowStrip",
+      "overrides": "{ mode: \"end\" }"
+    },
+    "overrides": [
+      "mode"
+    ],
+    "dataProps": "WindowStripDataProps",
+    "summary": "An end only.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "An end only.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 39
   },
   {
     "name": "EndWrapRow",
@@ -9048,6 +9230,32 @@
     "line": 84
   },
   {
+    "name": "HoursAmountStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createAmountStrip",
+      "overrides": "{ magnitude: \"1M\", precision: \"dollars\", unit: \"hours\" }"
+    },
+    "overrides": [
+      "magnitude",
+      "precision",
+      "unit"
+    ],
+    "dataProps": "AmountStripDataProps",
+    "summary": "A units amount counting hours.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "A units amount counting hours.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 21
+  },
+  {
     "name": "HUDButtonGroup",
     "depth": null,
     "kind": "primitive",
@@ -9170,7 +9378,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 310
+    "line": 311
   },
   {
     "name": "HUDTabs",
@@ -9833,6 +10041,30 @@
     "line": 33
   },
   {
+    "name": "LabelStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createLabelStrip",
+      "overrides": "{}"
+    },
+    "overrides": [
+      "label"
+    ],
+    "dataProps": "LabelStripDataProps",
+    "summary": "The name of a line.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The name of a line.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 10
+  },
+  {
     "name": "LabelValueGrid",
     "depth": 1,
     "kind": "variant",
@@ -9857,6 +10089,32 @@
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
     "line": 372
+  },
+  {
+    "name": "LargeAmountStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createAmountStrip",
+      "overrides": "{ magnitude: \"1B\", precision: \"thousands\" }"
+    },
+    "overrides": [
+      "magnitude",
+      "precision",
+      "unit"
+    ],
+    "dataProps": "AmountStripDataProps",
+    "summary": "Amounts up to $1,000,000,000, to the thousand.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Amounts up to $1,000,000,000, to the thousand.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 17
   },
   {
     "name": "LargeModal",
@@ -10850,6 +11108,30 @@
     "line": 143
   },
   {
+    "name": "MonthlyOrAnnualCadenceStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createCadenceStrip",
+      "overrides": "{ allowed: [\"monthly\", \"annual\"] }"
+    },
+    "overrides": [
+      "allowed"
+    ],
+    "dataProps": "CadenceStripDataProps",
+    "summary": "Monthly or annual (a seat plan).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Monthly or annual (a seat plan).",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 30
+  },
+  {
     "name": "MonthOfYearPicker",
     "depth": 1,
     "kind": "primitive",
@@ -11788,6 +12070,30 @@
     "line": 29
   },
   {
+    "name": "PayCadenceStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createCadenceStrip",
+      "overrides": "{ allowed: [\"biweekly\", \"semimonthly\", \"monthly\"] }"
+    },
+    "overrides": [
+      "allowed"
+    ],
+    "dataProps": "CadenceStripDataProps",
+    "summary": "Bi-weekly, semi-monthly or monthly (a pay schedule).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Bi-weekly, semi-monthly or monthly (a pay schedule).",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 32
+  },
+  {
     "name": "PendingBadge",
     "depth": 1,
     "kind": "variant",
@@ -12424,6 +12730,30 @@
     "since": null,
     "file": "src/components/RecentStarred/RecentStarredSidebar.tsx",
     "line": 45
+  },
+  {
+    "name": "RecurringCadenceStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createCadenceStrip",
+      "overrides": "{\n  allowed: [\"annual\", \"quarterly\", \"monthly\", \"semimonthly\", \"biweekly\", \"weekly\", \"daily\"],\n}"
+    },
+    "overrides": [
+      "allowed"
+    ],
+    "dataProps": "CadenceStripDataProps",
+    "summary": "Recurring cadences only: everything but \"once\".",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Recurring cadences only: everything but \"once\".",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 26
   },
   {
     "name": "ReferenceLine",
@@ -13191,6 +13521,32 @@
     "line": 70
   },
   {
+    "name": "SeatsAmountStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createAmountStrip",
+      "overrides": "{ magnitude: \"1M\", precision: \"dollars\", unit: \"seats\" }"
+    },
+    "overrides": [
+      "magnitude",
+      "precision",
+      "unit"
+    ],
+    "dataProps": "AmountStripDataProps",
+    "summary": "A units amount counting seats.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "A units amount counting seats.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 19
+  },
+  {
     "name": "SecondaryButton",
     "depth": 1,
     "kind": "variant",
@@ -13670,6 +14026,32 @@
     "since": "v0.20.0",
     "file": "src/components/SlotFillBar/SlotFillBar.tsx",
     "line": 68
+  },
+  {
+    "name": "SmallAmountStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createAmountStrip",
+      "overrides": "{ magnitude: \"10K\", precision: \"cents\" }"
+    },
+    "overrides": [
+      "magnitude",
+      "precision",
+      "unit"
+    ],
+    "dataProps": "AmountStripDataProps",
+    "summary": "Amounts up to $9,999, with cents.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Amounts up to $9,999, with cents.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 15
   },
   {
     "name": "SmallButton",
@@ -14357,6 +14739,30 @@
     "since": "0.96.0",
     "file": "src/components/RecentStarred/StarToggle.tsx",
     "line": 31
+  },
+  {
+    "name": "StartWindowStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createWindowStrip",
+      "overrides": "{ mode: \"start\" }"
+    },
+    "overrides": [
+      "mode"
+    ],
+    "dataProps": "WindowStripDataProps",
+    "summary": "A start only.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "A start only.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 37
   },
   {
     "name": "StaticSplitLayout",
@@ -16726,6 +17132,30 @@
     "since": null,
     "file": "src/components/Layout/variants.ts",
     "line": 927
+  },
+  {
+    "name": "WindowStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createWindowStrip",
+      "overrides": "{ mode: \"both\" }"
+    },
+    "overrides": [
+      "mode"
+    ],
+    "dataProps": "WindowStripDataProps",
+    "summary": "Start and end.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Start and end.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 35
   },
   {
     "name": "withCellStyle",
