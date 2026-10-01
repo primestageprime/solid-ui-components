@@ -29,6 +29,7 @@ import {
   INPUT_DEFAULT_WIDTH_MAX,
   fieldWidthForChars,
   numberFieldChars,
+  tightNumberWidth,
 } from "../../internal/fieldWidth/fieldWidth";
 import "./ThemedNumberInput.css";
 
@@ -56,6 +57,14 @@ interface ThemedNumberInputOwnProps {
   min?: number;
   /** Largest allowed value — forwarded as kobalte's `maxValue`. */
   max?: number;
+  /**
+   * The largest value this field is EXPECTED to hold. It sizes the field to
+   * that value in the field's own font (the widest formatted text, one digit
+   * = 1ch, plus the stepper) and is the default `max` unless `max` is set.
+   * Omitted, the field is sized exactly as before. Callers use the curried
+   * `CountInput…` / `CurrencyInput…` variants rather than passing this.
+   */
+  maxValue?: number;
   /** Increment/decrement step (default `1`) — forwarded as kobalte's `step`. */
   step?: number;
   /**
@@ -122,6 +131,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     "description",
     "min",
     "max",
+    "maxValue",
     "step",
     "size",
   ]);
@@ -167,8 +177,9 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
   // twin. Passing `maxValue={undefined}` does not remove the merged default,
   // so an unbounded field answered `End` with 9007199254740991 where the user
   // asked only for the caret (dside `sui`#36926).
+  const max = (): number | undefined => local.max ?? local.maxValue;
   const isUnboundedCaretKey = (key: string): boolean =>
-    (key === "End" && local.max === undefined) ||
+    (key === "End" && max() === undefined) ||
     (key === "Home" && local.min === undefined);
 
   // The guard cannot be an `onKeyDown` prop: kobalte reads that prop *instead
@@ -244,20 +255,31 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       NUMBER_CHROME_REM,
     );
 
+  // `maxValue` sizes in ch, so the root carries the input's font size.
+  const fitted = () => local.maxValue !== undefined;
   const rootClass = () =>
-    `sui-number-input sui-number-input--${local.size ?? DEFAULT_SIZE}`;
+    `sui-number-input sui-number-input--${local.size ?? DEFAULT_SIZE}${fitted() ? " sui-number-input--fit" : ""}`;
+  const maxWidth = (): string =>
+    fitted()
+      ? tightNumberWidth({
+          max: local.maxValue as number,
+          min: local.min,
+          step: step(),
+          formatOptions: (rest as KobalteNumberFieldRootProps).formatOptions,
+        })
+      : `${widthRem()}rem`;
 
   return (
     <KobalteNumberField
       {...(rest as KobalteNumberFieldRootProps)}
       class={rootClass()}
-      style={{ "max-width": `${widthRem()}rem` }}
+      style={{ "max-width": maxWidth() }}
       name={local.name}
       value={displayText()}
       rawValue={rawValue()}
       onRawValueChange={handleRawValueChange}
       minValue={local.min}
-      maxValue={local.max}
+      maxValue={max()}
       step={step()}
       validationState={isInvalid() ? "invalid" : "valid"}
     >

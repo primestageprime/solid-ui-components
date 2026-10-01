@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- **Magnitude-sized number inputs** — six curried variants that bake an expected ceiling so a call site never passes `maxValue`: `CountInput100`, `CountInput10K`, `CurrencyInput10K`, `CurrencyInput1M`, `CurrencyInput100M`, `CurrencyInput1B`. One shared rule (`tightNumberWidth`) sizes them: the widest formatted text in the field's own font (a digit = 1ch, a separator 0.4) plus half a character of slack plus the stepper.
+- **`ThemedNumberInput`: `maxValue?`** — the expected ceiling; sizes the field by the same rule and is the default `max`. Omitted, nothing changes.
+
+### Changed
+
+- **`CurrencyInput` with a stated `maxValue` is now sized by the tight rule** (about one character of room left of the widest value) instead of the generous `0.62rem` a character; a field with no `maxValue` keeps its $1B cap.
+
 ## 0.205.0 — 2026-09-30
 
 ### Fixed

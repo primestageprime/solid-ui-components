@@ -193,6 +193,10 @@ const cad = (id: CadenceId, extra: Partial<CadenceValue> = {}): CadenceValue => 
 const amt = (extra: Partial<AmountValue>): AmountValue => ({ ...AMOUNT_SAMPLE, ...extra });
 const ALL: CadenceId[] = CADENCES.map((c) => c.id);
 
+/** The magnitude variant's ceiling that fits a figure. */
+const scaleFor = (figure: number): number =>
+  figure <= 9_999 ? 9_999 : figure <= 999_999 ? 999_999 : figure <= 99_999_999 ? 99_999_999 : 1_000_000_000;
+
 const form = (
   id: string,
   name: string,
@@ -208,7 +212,13 @@ const form = (
   cadences: [start.cadence.id],
   window: "any",
   side: "split",
-  start,
+  start: {
+    ...start,
+    amount: {
+      ...start.amount,
+      scale: scaleFor(start.amount.id === "range" ? start.amount.max : start.amount.dollars),
+    },
+  },
   ...rest,
 });
 

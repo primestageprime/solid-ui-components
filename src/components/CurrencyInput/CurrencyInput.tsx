@@ -76,10 +76,21 @@ export const CurrencyInput: Component<CurrencyInputProps> = (props) => {
   // wrapper, so capping the wrapper's width caps the field. Keeping the cap on
   // the wrapper (not threaded through the Primitive's hardcoded class) leaves
   // ThemedNumberInput untouched.
+  // A STATED maxValue sizes the field by the tight shared rule (one digit =
+  // 1ch in the field's own font; see `tightNumberWidth`), which
+  // ThemedNumberInput applies itself, so the wrapper only hugs it. With no
+  // maxValue the field keeps its generous $1B cap, exactly as before.
+  const fitted = () => local.maxValue !== undefined;
+  const wrapperStyle = () =>
+    fitted()
+      ? { width: "fit-content", "max-width": "100%" }
+      : { "max-width": `${widthRem()}rem` };
+
   return (
-    <div class="sui-currency-input" style={{ "max-width": `${widthRem()}rem` }}>
+    <div class="sui-currency-input" style={wrapperStyle()}>
       <ThemedNumberInput
         {...(rest as ThemedNumberInputProps)}
+        maxValue={local.maxValue}
         // The symbol is ALWAYS "$" (Peter, 2026-09-24: hardcode "$" for now;
         // international currency and i18n come later). `narrowSymbol` is what
         // pins it: the default `symbol` display lets the viewer's LOCALE pick

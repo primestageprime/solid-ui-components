@@ -23,6 +23,8 @@
 // hand-picking a magic rem — see CURRENCY_MAX_DIGITS / currencyMaxChars below
 // and the DatePicker's 10-char ISO width.
 
+import { map, sum } from "../../fn";
+
 /** Per-character advance (rem) for a tabular glyph at the body font size. */
 export const AVG_CHAR_REM = 0.62;
 
@@ -111,4 +113,70 @@ export function numberFieldChars(opts: {
   const extra = Math.max(0, shown - minimumFractionDigits);
   const point = extra > 0 && minimumFractionDigits === 0 ? 1 : 0;
   return widest + extra + point;
+}
+
+// ── The tight number-field rule ─────────────────────────────────────────────
+// ONE rule for every number input that states its expected ceiling
+// (`ThemedNumberInput`/`CurrencyInput` `maxValue`, and the curried count and
+// money variants built on them). Where `fieldWidthForChars` biases HIGH with a
+// flat 0.62rem a character, this one measures in the field's OWN font:
+//
+//   width = (text + 0.5) ch + chrome
+//
+// `ch` is the advance of the digit "0" in the element's font, and the field
+// renders tabular figures, so every digit costs exactly 1ch in any theme font
+// (monospace included). Separators are narrower than a digit, so they count
+// 0.4 (measured: a comma or point is about 0.4 of a digit). The half character
+// of slack, over the input's own 12px padding, leaves about one character of
+// room to the left of the widest value.
+// `chrome` is what is not text: the input's two 12px paddings, the stepper
+// column and the 1px borders (see ThemedNumberInput.css).
+
+/** rem of non-text chrome: 12px + 12px padding, the ~31px stepper, 2px border. */
+export const TIGHT_NUMBER_CHROME_REM = 3.6;
+
+/** Slack after the widest value, in ch. */
+export const TIGHT_NUMBER_SLACK_CH = 0.5;
+
+/** How wide one character of a formatted number reads, in ch: a digit or a
+ *  currency symbol is 1, a grouping comma or decimal point is 0.4. */
+const chOf = (character: string): number =>
+  character === "," || character === "." ? 0.4 : character === "-" ? 0.6 : 1;
+
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+/** The widest formatted text a number field can show, in ch. */
+export function numberFieldTextCh(opts: {
+  max: number;
+  min?: number;
+  step?: number;
+  formatOptions?: Intl.NumberFormatOptions;
+}): number {
+  const format = new Intl.NumberFormat("en-US", opts.formatOptions);
+  const { minimumFractionDigits = 0, maximumFractionDigits = 0 } =
+    format.resolvedOptions();
+  const shown = Math.min(decimalsOf(opts.step ?? 1), maximumFractionDigits);
+  const extra = Math.max(0, shown - minimumFractionDigits);
+  // Digits a fractional step adds beyond the format, plus the point itself.
+  const extraCh = extra + (extra > 0 && minimumFractionDigits === 0 ? 0.4 : 0);
+  const textCh = (value: number): number =>
+    sum(map(chOf, Array.from(format.format(value))));
+  const widest = Math.max(
+    textCh(opts.max),
+    opts.min === undefined ? 0 : textCh(opts.min),
+  );
+  return round2(widest + extraCh);
+}
+
+/** The CSS `max-width` of a number field sized to its expected ceiling. The
+ *  element must carry the input's font size (`.sui-number-input--fit`) so `ch`
+ *  is the digit the input draws. */
+export function tightNumberWidth(opts: {
+  max: number;
+  min?: number;
+  step?: number;
+  formatOptions?: Intl.NumberFormatOptions;
+}): string {
+  const ch = round2(numberFieldTextCh(opts) + TIGHT_NUMBER_SLACK_CH);
+  return `calc(${ch}ch + ${TIGHT_NUMBER_CHROME_REM}rem)`;
 }

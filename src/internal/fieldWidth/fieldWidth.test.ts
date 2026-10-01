@@ -6,6 +6,8 @@ import {
   currencyMaxChars,
   fieldWidthForChars,
   numberFieldChars,
+  numberFieldTextCh,
+  tightNumberWidth,
 } from "./fieldWidth";
 
 describe("fieldWidthForChars", () => {
@@ -68,5 +70,27 @@ describe("numberFieldChars", () => {
         formatOptions: { maximumFractionDigits: 0 },
       }),
     ).toBe(3);
+  });
+});
+
+describe("tightNumberWidth", () => {
+  const usd = { style: "currency", currency: "USD" } as const;
+
+  it("counts a digit and the symbol as 1ch and a separator as 0.4", () => {
+    // "$1,000,000,000.00": $ + 10 digits + 2 cents = 13ch, 3 commas + 1 point = 2ch.
+    expect(numberFieldTextCh({ max: 1_000_000_000, formatOptions: usd })).toBe(14.6);
+    expect(numberFieldTextCh({ max: 9_999 })).toBe(4.4);
+  });
+
+  it("is a calc in ch plus the stepper chrome, with half a ch of slack", () => {
+    expect(tightNumberWidth({ max: 99 })).toBe("calc(2.5ch + 3.6rem)");
+    expect(tightNumberWidth({ max: 1_000_000_000, formatOptions: usd })).toBe(
+      "calc(15.1ch + 3.6rem)",
+    );
+  });
+
+  it("is narrower than the generous rule at the same ceiling", () => {
+    // 15.1ch is about 131px at 7.2px a digit; the generous rule reserves 14.54rem.
+    expect(15.1 * 8.67 + 3.6 * 16).toBeLessThan(14.54 * 16);
   });
 });

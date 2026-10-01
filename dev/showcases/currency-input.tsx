@@ -1,6 +1,12 @@
 import { type Component, createSignal } from "solid-js";
 import {
+  CountInput100,
+  CountInput10K,
   CurrencyInput,
+  CurrencyInput100M,
+  CurrencyInput10K,
+  CurrencyInput1B,
+  CurrencyInput1M,
   currencyWidthRem,
 } from "../../src/components/CurrencyInput";
 import { MoneyCell } from "../../src/components/Table/CellRenderers";
@@ -67,6 +73,28 @@ export const CurrencyInputShowcase: Component = () => {
             onChange={setCapped}
           />
         </div>
+      </div>
+
+      <div class="example-group">
+        <h3>Magnitude variants — sized to the ceiling, one digit a character</h3>
+        <div class="text-meta demo-caption-gap">
+          Six curried fields bake the ceiling so a call site never passes
+          `maxValue`: <code>CountInput100</code> (up to 99),{" "}
+          <code>CountInput10K</code> (9,999), <code>CurrencyInput10K</code>{" "}
+          ($9,999), <code>CurrencyInput1M</code> ($999,999),{" "}
+          <code>CurrencyInput100M</code> ($99,999,999),{" "}
+          <code>CurrencyInput1B</code> ($1,000,000,000). Each is the widest
+          formatted text in its own font plus the stepper and half a character of
+          slack, leaving about one character of room left of the widest value.
+        </div>
+        <Stack gap="xs">
+          <CountInput100 name="c100" label="Counts up to 99" value={() => 12} />
+          <CountInput10K name="c10k" label="Counts up to 9,999" value={() => 1200} />
+          <CurrencyInput10K name="m10k" label="Up to $9,999" value={() => 450} />
+          <CurrencyInput1M name="m1m" label="Up to $999,999" value={() => 102_891.1} />
+          <CurrencyInput100M name="m100m" label="Up to $99,999,999" value={() => 8_000_000} />
+          <CurrencyInput1B name="m1b" label="Up to $1,000,000,000" value={() => 1_000_000_000} />
+        </Stack>
       </div>
 
       <div class="example-group">

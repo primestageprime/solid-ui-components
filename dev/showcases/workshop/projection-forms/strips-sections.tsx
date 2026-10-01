@@ -10,6 +10,7 @@ import {
   TextSublabel,
   TightStack,
   CardGrid,
+  createGrid,
 } from "../../../../src";
 import {
   CADENCES,
@@ -42,6 +43,13 @@ import {
   WindowStrip,
 } from "./strips-ui";
 import { LabeledField } from "./kit";
+
+/** Gallery cards: 27rem wide at least (min/typical/max at $9,999 need ~410px
+ *  on one line), one column on a phone. */
+const GalleryGrid = createGrid({
+  columns: "repeat(auto-fit, minmax(min(100%, 27rem), 1fr))",
+  gap: "sm",
+});
 
 const SIDE_OPTIONS = [
   { id: "revenue", label: "Revenue" },
@@ -247,11 +255,11 @@ export const GallerySection: Component = () => {
       <LabeledField label="View">
         <SegmentedInput options={MODE_OPTIONS} value={mode()} onChange={setMode} />
       </LabeledField>
-      <CardGrid>
+      <GalleryGrid>
         <Index each={FORMS}>
           {(def) => <FormCard def={def()} mode={mode()} side={side()} />}
         </Index>
-      </CardGrid>
+      </GalleryGrid>
     </SpacedStack>
   );
 };
