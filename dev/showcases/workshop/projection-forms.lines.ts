@@ -220,7 +220,7 @@ export const lowerHourly = (line: HourlyServiceLine): LoweredConfig => {
 
 // ── Salary ──────────────────────────────────────────────────────────────────
 
-export type PayCadence = "biweekly" | "monthly";
+export type PayCadence = "biweekly" | "semimonthly" | "monthly";
 
 export interface SalaryValues {
   /** The person's id, `per-<32 hex>` (people live in the tree, not the line). */
@@ -235,6 +235,8 @@ export interface SalaryValues {
 }
 
 export const buildSalaryLine = (v: SalaryValues): SalaryLine => {
+  // semimonthly has no engine schedule: the caller prints the gap instead
+  // (salaryEmission), and this line is only the monthly stand-in for landsIn.
   const line: SalaryLine = {
     kind: "salary",
     person: `person:${v.personId}` as PersonRef,
@@ -301,9 +303,39 @@ export const licenseEmission = (values: LicenseValues) => {
   return { line, lowered: lowerLicense(line), landing: landsIn(line) };
 };
 
+/** Semi-monthly (the 1st and 15th) is NOT representable in the engine today:
+ *  thorcasting-engine/model/src/config/schedule.rs `Cadence` has no twice-a-month
+ *  shape (only src/rules/recur.rs `InferredCadence::SemiMonthlyShaped`, a
+ *  classifier tag "not yet constructible as a Schedule"), and salary.rs states
+ *  exactly one recurring schedule. The closest faithful encoding is two salary
+ *  lines, each day_of_month at half the annual figure, but the server refuses a
+ *  second open pay line for one person (pay_register_refusal.rs). So the
+ *  printed JSON is an explicit gap, with that closest encoding shown labeled. */
+const semiMonthlyGap = (v: SalaryValues): Json => ({
+  not_representable_in_the_engine_yet: "semi-monthly (1st and 15th)",
+  why: "the engine's schedule cadences have no twice-a-month shape, and a salary line states one schedule",
+  closest_encoding_two_lines_each_day_of_month_at_half_the_annual: [1, 15].map((day) =>
+    buildSalaryLine({
+      ...v,
+      cadence: "monthly",
+      day,
+      annualDollars: v.annualDollars / 2,
+    }),
+  ),
+  but: "the server refuses a second open pay line for one person (pay_register_refusal.rs), so this is shown, not saved",
+});
+
 export const salaryEmission = (values: SalaryValues) => {
-  const line = buildSalaryLine(values);
-  return { line, lowered: lowerSalary(line), landing: landsIn(line) };
+  const monthly = buildSalaryLine({ ...values, cadence: values.cadence === "biweekly" ? "biweekly" : "monthly" });
+  const gap = values.cadence === "semimonthly";
+  return {
+    line: monthly,
+    lineJson: gap ? JSON.stringify(semiMonthlyGap(values), null, 2) : lineText(monthly),
+    loweredJson: gap
+      ? JSON.stringify({ not_lowered: "no stored line exists for semi-monthly yet" }, null, 2)
+      : loweredText(lowerSalary(monthly)),
+    landing: landsIn(monthly),
+  };
 };
 
 export const hourlyEmission = (values: HourlyValues) => {
