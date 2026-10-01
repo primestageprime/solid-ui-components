@@ -390,7 +390,7 @@
     "useFor": null,
     "notes": "Amounts up to $999,999, to the dollar.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 13
   },
@@ -1289,7 +1289,7 @@
     "useFor": null,
     "notes": "All eight cadences.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 24
   },
@@ -2462,7 +2462,7 @@
     "useFor": "a day picker inside a popover or a phone column.",
     "notes": "The 1..28 grid in 2rem cells (seven fit a 360px phone column and a popover), where the default 3.5rem cells run 392px wide. The cell size is the picker's own `--dom-cell-size` var, baked here once.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/DayOfMonthPicker/variants.ts",
     "line": 9
   },
@@ -2943,7 +2943,7 @@
     "useFor": null,
     "notes": "Counts up to 99.",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/CurrencyInput/sized.tsx",
     "line": 38
   },
@@ -2962,7 +2962,7 @@
     "useFor": null,
     "notes": "Counts up to 9,999.",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/CurrencyInput/sized.tsx",
     "line": 43
   },
@@ -3073,7 +3073,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/AmountStrip.tsx",
     "line": 129
   },
@@ -3413,7 +3413,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/CadenceStrip.tsx",
     "line": 139
   },
@@ -4403,7 +4403,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/LabelStrip.tsx",
     "line": 29
   },
@@ -5647,7 +5647,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/WindowStrip.tsx",
     "line": 81
   },
@@ -5747,7 +5747,7 @@
     "useFor": null,
     "notes": "Money up to $99,999,999.",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/CurrencyInput/sized.tsx",
     "line": 58
   },
@@ -5766,7 +5766,7 @@
     "useFor": null,
     "notes": "Money up to $9,999.",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/CurrencyInput/sized.tsx",
     "line": 48
   },
@@ -5785,7 +5785,7 @@
     "useFor": null,
     "notes": "Money up to $1,000,000,000.",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/CurrencyInput/sized.tsx",
     "line": 63
   },
@@ -5804,7 +5804,7 @@
     "useFor": null,
     "notes": "Money up to $999,999.",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/CurrencyInput/sized.tsx",
     "line": 53
   },
@@ -7477,7 +7477,7 @@
     "useFor": null,
     "notes": "An end only.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 39
   },
@@ -9251,7 +9251,7 @@
     "useFor": null,
     "notes": "A units amount counting hours.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 21
   },
@@ -10060,7 +10060,7 @@
     "useFor": null,
     "notes": "The name of a line.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 10
   },
@@ -10112,7 +10112,7 @@
     "useFor": null,
     "notes": "Amounts up to $1,000,000,000, to the thousand.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 17
   },
@@ -11127,7 +11127,7 @@
     "useFor": null,
     "notes": "Monthly or annual (a seat plan).",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 30
   },
@@ -12089,7 +12089,7 @@
     "useFor": null,
     "notes": "Bi-weekly, semi-monthly or monthly (a pay schedule).",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 32
   },
@@ -12751,7 +12751,7 @@
     "useFor": null,
     "notes": "Recurring cadences only: everything but \"once\".",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 26
   },
@@ -13542,7 +13542,7 @@
     "useFor": null,
     "notes": "A units amount counting seats.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 19
   },
@@ -14049,7 +14049,7 @@
     "useFor": null,
     "notes": "Amounts up to $9,999, with cents.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 15
   },
@@ -14760,7 +14760,7 @@
     "useFor": null,
     "notes": "A start only.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 37
   },
@@ -17153,7 +17153,7 @@
     "useFor": null,
     "notes": "Start and end.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.206.0",
     "file": "src/components/Strips/variants.ts",
     "line": 35
   },
