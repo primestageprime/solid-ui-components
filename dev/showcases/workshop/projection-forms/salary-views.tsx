@@ -27,9 +27,6 @@ import {
 import {
   type PayCadence,
   type SalaryValues,
-  landsIn,
-  lineText,
-  loweredText,
   salaryEmission,
 } from "../projection-forms.lines";
 import { KindOutput, LabeledField } from "./kit";
@@ -50,6 +47,7 @@ const START: SalaryValues = {
 
 const CADENCE_OPTIONS = [
   { id: "biweekly", label: "Bi-weekly" },
+  { id: "semimonthly", label: "Semi-monthly (1st and 15th)" },
   { id: "monthly", label: "Monthly" },
 ];
 const PEOPLE_OPTIONS = PEOPLE.map((p) => ({ id: p.id, label: p.name }));
@@ -61,26 +59,29 @@ interface Fields {
 
 const nameOf = (id: string): string => PEOPLE.find((p) => p.id === id)?.name ?? id;
 
-/** The cadence's date control: a reference payday, or the day of the month. */
+/** The cadence's date control: a reference payday, the day of the month, or
+ *  (semi-monthly) nothing to pick: it pays on the 1st and the 15th. */
 const ScheduleFields: Component<Fields> = (props) => (
-  <Show
-    when={props.values().cadence === "biweekly"}
-    fallback={
-      <LabeledField label="Day of month">
-        <DayOfMonthPicker
-          max={28}
-          value={props.values().day}
-          onChange={(day) => props.patch({ day })}
+  <Show when={props.values().cadence !== "semimonthly"} fallback={<NoteText>Pays on the 1st and the 15th.</NoteText>}>
+    <Show
+      when={props.values().cadence === "biweekly"}
+      fallback={
+        <LabeledField label="Day of month">
+          <DayOfMonthPicker
+            max={28}
+            value={props.values().day}
+            onChange={(day) => props.patch({ day })}
+          />
+        </LabeledField>
+      }
+    >
+      <LabeledField label="Reference payday">
+        <DatePicker
+          value={props.values().referenceDate}
+          onChange={(referenceDate) => props.patch({ referenceDate })}
         />
       </LabeledField>
-    }
-  >
-    <LabeledField label="Reference payday">
-      <DatePicker
-        value={props.values().referenceDate}
-        onChange={(referenceDate) => props.patch({ referenceDate })}
-      />
-    </LabeledField>
+    </Show>
   </Show>
 );
 
@@ -178,7 +179,7 @@ const ScenarioCard: Component<Fields> = (props) => {
         <SpreadRow>
           <SpacedStack>
             <TextTitle>{nameOf(v().personId)}</TextTitle>
-            <TextSublabel>{v().cadence === "biweekly" ? "bi-weekly" : "monthly"}</TextSublabel>
+            <TextSublabel>{CADENCE_OPTIONS.find((o) => o.id === v().cadence)?.label}</TextSublabel>
           </SpacedStack>
           <SpacedStack>
             <TextLabel>A paycheck</TextLabel>
@@ -208,7 +209,6 @@ export const SalaryLeaf: Component<{ view: string }> = (props) => {
   const patch = (next: Partial<SalaryValues>) => setValues({ ...values(), ...next });
   const fields: Fields = { values, patch };
   const emission = () => salaryEmission(values());
-  const landing = () => landsIn(emission().line);
   return (
     <SpacedStack>
       <Show when={props.view === "minimal"}>
@@ -222,10 +222,10 @@ export const SalaryLeaf: Component<{ view: string }> = (props) => {
       </Show>
       <KindOutput
         lineTitle="Stored line: kind salary (ADR 0029 SalaryLine)"
-        lineJson={lineText(emission().line)}
-        loweredJson={loweredText(emission().lowered)}
-        builder={landing().builder}
-        rule={landing().rule}
+        lineJson={emission().lineJson}
+        loweredJson={emission().loweredJson}
+        builder={emission().landing.builder}
+        rule={emission().landing.rule}
       />
     </SpacedStack>
   );
