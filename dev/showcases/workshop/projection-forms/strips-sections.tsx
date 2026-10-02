@@ -1,4 +1,4 @@
-import { type Component, For, Index, type JSX, createSignal } from "solid-js";
+import { type Component, For, Index, type JSX, Show, createSignal } from "solid-js";
 import {
   CardSurface,
   CardGrid,
@@ -57,6 +57,8 @@ import {
 } from "../projection-forms.strips";
 import { AmountDials, ReadOnly, ScenarioFrame } from "./strips-ui";
 import { LabeledField as Labeled } from "./kit";
+import { HourlyEmployeeCard, PayrollTaxPanel } from "./payroll-cards";
+import { CatalogPayrollCards } from "./payroll-catalog";
 
 // ── curries, once ───────────────────────────────────────────────────────────
 const AMOUNT_STRIPS: Record<AmountVariant, Component<AmountStripDataProps>> = {
@@ -230,10 +232,13 @@ export const CatalogSection: Component = () => (
     <SpacedStack>
       <For each={WINDOW_SAMPLES}>{(w) => <WindowVariantCard {...w} />}</For>
     </SpacedStack>
+    <CatalogPayrollCards />
   </SpacedStack>
 );
 
 // ── B. FORM GALLERY ─────────────────────────────────────────────────────────
+
+const annualOf = (a: AmountValue): number => (a.kind === "single" ? a.cents : 0);
 
 const FormCard: Component<{ def: FormDef; mode: string; side: Side }> = (props) => {
   const [values, setValues] = createSignal<StripValues>(props.def.start);
@@ -298,6 +303,12 @@ const FormCard: Component<{ def: FormDef; mode: string; side: Side }> = (props) 
           </ScenarioFrame>
         )}
         <Fragment json={json()} />
+        <Show when={props.def.kind === "salary"}>
+          <PayrollTaxPanel
+            lineAnnualCents={[annualOf(values().amount)]}
+            periodsPerYear={PERIODS_PER_YEAR[values().cadence.shape]}
+          />
+        </Show>
       </SpacedStack>
     </CardSurface>
   );
@@ -323,6 +334,7 @@ export const GallerySection: Component = () => {
         <Index each={FORMS}>
           {(def) => <FormCard def={def()} mode={mode()} side={side()} />}
         </Index>
+        <HourlyEmployeeCard mode={mode()} />
       </GalleryGrid>
     </SpacedStack>
   );

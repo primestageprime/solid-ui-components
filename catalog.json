@@ -392,7 +392,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 13
+    "line": 15
   },
   {
     "name": "AnchorBox",
@@ -1291,7 +1291,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 24
+    "line": 26
   },
   {
     "name": "CandlestickRenderer",
@@ -4308,6 +4308,25 @@
     "line": 175
   },
   {
+    "name": "createHourlyWageAmountStrip",
+    "depth": null,
+    "kind": "factory",
+    "family": "Strips",
+    "variantOf": null,
+    "overrides": [],
+    "dataProps": "HourlyWageAmountStripDataProps",
+    "summary": "Factory behind `HourlyWageAmountStrip`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/HourlyWageAmountStrip.tsx",
+    "line": 63
+  },
+  {
     "name": "createHUDPanel",
     "depth": 1,
     "kind": "factory",
@@ -4752,6 +4771,25 @@
     "since": null,
     "file": "src/components/ParticipantTimeLabel/ParticipantTimeLabel.tsx",
     "line": 51
+  },
+  {
+    "name": "createPayrollTaxStrip",
+    "depth": null,
+    "kind": "factory",
+    "family": "Strips",
+    "variantOf": null,
+    "overrides": [],
+    "dataProps": "PayrollTaxStripDataProps",
+    "summary": "Factory behind `PayrollTaxStrip`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/PayrollTaxStrip.tsx",
+    "line": 42
   },
   {
     "name": "createPinMarkers",
@@ -7479,7 +7517,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 39
+    "line": 41
   },
   {
     "name": "EndWrapRow",
@@ -9230,6 +9268,28 @@
     "line": 84
   },
   {
+    "name": "HourlyWageAmountStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createHourlyWageAmountStrip",
+      "overrides": "{}"
+    },
+    "overrides": [],
+    "dataProps": "HourlyWageAmountStripDataProps",
+    "summary": "An hourly wage: rate x hours a week, with the estimated annual and each paycheck.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "An hourly wage: rate x hours a week, with the estimated annual and each paycheck.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 44
+  },
+  {
     "name": "HoursAmountStrip",
     "depth": null,
     "kind": "variant",
@@ -9253,7 +9313,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 21
+    "line": 23
   },
   {
     "name": "HUDButtonGroup",
@@ -10062,7 +10122,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 10
+    "line": 12
   },
   {
     "name": "LabelValueGrid",
@@ -10114,7 +10174,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 17
+    "line": 19
   },
   {
     "name": "LargeModal",
@@ -11129,7 +11189,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 30
+    "line": 32
   },
   {
     "name": "MonthOfYearPicker",
@@ -12091,7 +12151,29 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 32
+    "line": 34
+  },
+  {
+    "name": "PayrollTaxStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createPayrollTaxStrip",
+      "overrides": "{}"
+    },
+    "overrides": [],
+    "dataProps": "PayrollTaxStripDataProps",
+    "summary": "The employer payroll tax, read-only.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The employer payroll tax, read-only.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 46
   },
   {
     "name": "PendingBadge",
@@ -12753,7 +12835,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 26
+    "line": 28
   },
   {
     "name": "ReferenceLine",
@@ -13544,7 +13626,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 19
+    "line": 21
   },
   {
     "name": "SecondaryButton",
@@ -14051,7 +14133,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 15
+    "line": 17
   },
   {
     "name": "SmallButton",
@@ -14762,7 +14844,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 37
+    "line": 39
   },
   {
     "name": "StaticSplitLayout",
@@ -17155,7 +17237,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 35
+    "line": 37
   },
   {
     "name": "withCellStyle",

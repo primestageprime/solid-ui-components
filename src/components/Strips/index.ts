@@ -36,3 +36,26 @@ export type {
   AmountRangeField,
   WindowValue,
 } from "./values";
+export { createHourlyWageAmountStrip } from "./HourlyWageAmountStrip";
+export type {
+  HourlyWageAmountStripDataProps,
+  HourlyWageAmountStripOverrides,
+  HourlyWageAmountStripProps,
+} from "./HourlyWageAmountStrip";
+export { createPayrollTaxStrip } from "./PayrollTaxStrip";
+export type {
+  PayrollTaxStripDataProps,
+  PayrollTaxStripOverrides,
+  PayrollTaxStripProps,
+} from "./PayrollTaxStrip";
+export {
+  HOURS_STEP,
+  MAX_HOURS_PER_WEEK,
+  WEEKS_PER_YEAR,
+  derivePayrollTax,
+  hourlyAnnualCents,
+  hourlyPaycheckCents,
+  rateText,
+  setHourlyAnnualCents,
+} from "./payroll";
+export type { HourlyWageValue, PayrollTaxValue } from "./payroll";

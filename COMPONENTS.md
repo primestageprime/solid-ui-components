@@ -1420,6 +1420,14 @@ Depth-1 SVG marks on the **box contract**: each draws inside a `{ x, y, width, h
     <PayCadenceStrip value={cadence()} onChange={setCadence} />
     <WindowStrip value={window()} onChange={setWindow} />
     ```
+- **HourlyWageAmountStrip / PayrollTaxStrip** — two payroll Composites (Depth 2, zero CSS) beside the four strips. Factories `createHourlyWageAmountStrip({})`, `createPayrollTaxStrip({})`; curried `HourlyWageAmountStrip`, `PayrollTaxStrip`. Rules in pure `payroll.ts`.
+  - **HourlyWageAmountStrip** edits `HourlyWageValue` `{ rateCents, hoursPerWeek }` and shows the ESTIMATED annual (rate × hours × 52) and the paycheck for `periodsPerYear` (÷26 / ÷24 / ÷12, half-even). Pure: `hourlyAnnualCents`, `hourlyPaycheckCents`, `setHourlyAnnualCents` (a scenario slider over the annual scales HOURS, keeps the rate, snaps to 0.25 h, caps at 168). Overtime is not modelled. Use for: an hourly employee's amount, beside a salary's per-year `AmountStrip`.
+  - **PayrollTaxStrip** is READ-ONLY (no inputs, no `onChange`): it shows a `PayrollTaxValue` `{ rateBps, baseCents, perYearCents, perPeriodCents, periodsPerYear }` (rate, base, tax per paycheck and per year). Derive the value with `derivePayrollTax(lineAnnualCents[], rateBps, periodsPerYear)`. Use for: employer payroll tax, which is required and not ours to edit.
+  - Example:
+    ```tsx
+    <HourlyWageAmountStrip value={wage()} onChange={setWage} periodsPerYear={26} />
+    <PayrollTaxStrip value={derivePayrollTax([hourlyAnnualCents(wage())], 765, 26)} />
+    ```
 - **CompactDayOfMonthPicker** — Curried variant of `DayOfMonthPicker` (Depth 1): the 1..28 grid in 2rem cells (the default 3.5rem cells are 392px wide), baked from the picker's own `--dom-cell-size`. Use for: a day picker inside a popover or a phone column.
 
 ## Divider

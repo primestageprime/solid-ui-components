@@ -145,7 +145,6 @@ export const cadenceLabels = (ids: CadenceShape[]): string =>
     .join(" | ");
 
 export const EXCEPTIONS: { form: string; why: string }[] = [
-  { form: "Payroll tax", why: "Its amount is a percentage of a salary register, not a figure." },
   { form: "Punch-card package", why: "A cohort of buyers: engine rule runs once, and the engine silently drops it when recurring." },
   { form: "Product sale growth models", why: "Companion rows: price and volume registers plus growth rows." },
   { form: "Subscription population", why: "New and churned customers each period, not a price times a count." },
@@ -154,5 +153,4 @@ export const EXCEPTIONS: { form: string; why: string }[] = [
   { form: "Spend up to", why: "A budget cap, once only; the engine silently drops it when recurring." },
   { form: "Afford when", why: "The date comes from the balance, not a calendar." },
   { form: "Runway ladder", why: "Its money lives inside the schedule." },
-  { form: "Hourly employee", why: "No line kind routes it to a builder." },
 ];
