@@ -2,11 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- **`HourlyWageAmountStrip` and `PayrollTaxStrip`** — two payroll strips (Depth 2, zero CSS). `HourlyWageAmountStrip` edits an `HourlyWageValue` (rate per hour and hours a week) and shows the estimated annual (rate × hours × 52) and the paycheck for the chosen pay cadence (half-even). `PayrollTaxStrip` is read-only: it shows a derived `PayrollTaxValue` (rate, payroll base, tax per paycheck and per year). Pure rules exported: `hourlyAnnualCents`, `hourlyPaycheckCents`, `setHourlyAnnualCents` (scales hours, keeps the rate), `derivePayrollTax`, `rateText`. Factories `createHourlyWageAmountStrip`, `createPayrollTaxStrip`.
+
 ## 0.208.0 — 2026-10-02
 
 ### Added
 
-- **`HourlyWageAmountStrip` and `PayrollTaxStrip`** — two payroll strips (Depth 2, zero CSS). `HourlyWageAmountStrip` edits an `HourlyWageValue` (rate per hour and hours a week) and shows the estimated annual (rate × hours × 52) and the paycheck for the chosen pay cadence (half-even). `PayrollTaxStrip` is read-only: it shows a derived `PayrollTaxValue` (rate, payroll base, tax per paycheck and per year). Pure rules exported: `hourlyAnnualCents`, `hourlyPaycheckCents`, `setHourlyAnnualCents` (scales hours, keeps the rate), `derivePayrollTax`, `rateText`. Factories `createHourlyWageAmountStrip`, `createPayrollTaxStrip`.
 - **`GrowthStrip`** — a Strips Composite (Depth 2, zero CSS) for how units change each period: none, + units per period, or % per period, with an optional churn % and an optional ceiling. Edits an engine-neutral `GrowthValue`; pure tested rules in `growth.ts` (`setGrowthChurn` keeps churn 0..100, `setGrowthCeiling` keeps the ceiling at least the starting units, `nextUnits` / `projectUnits` print units per period). Curried `GrowthStrip`, `SimpleGrowthStrip` and `UnitsGrowthStrip`; factory `createGrowthStrip` (`churn`, `ceiling`, `kinds`). `AmountStrip` gains an additive `perPeriod?: boolean` override and `unit: "units"`, with the variants `SeatsPriceAmountStrip` and `UnitsAmountStrip`; its units value keeps `perPeriod`, so existing callers are unchanged.
 
 ## 0.207.0 — 2026-10-01
