@@ -4347,7 +4347,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.209.0",
     "file": "src/components/Strips/HourlyWageAmountStrip.tsx",
     "line": 63
   },
@@ -4812,7 +4812,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.209.0",
     "file": "src/components/Strips/PayrollTaxStrip.tsx",
     "line": 42
   },
@@ -9336,7 +9336,7 @@
     "useFor": null,
     "notes": "An hourly wage: rate x hours a week, with the estimated annual and each paycheck.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.209.0",
     "file": "src/components/Strips/variants.ts",
     "line": 45
   },
@@ -12224,7 +12224,7 @@
     "useFor": null,
     "notes": "The employer payroll tax, read-only.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.209.0",
     "file": "src/components/Strips/variants.ts",
     "line": 47
   },
