@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`HourlyWageAmountStrip` and `PayrollTaxStrip`** — two payroll strips (Depth 2, zero CSS). `HourlyWageAmountStrip` edits an `HourlyWageValue` (rate per hour and hours a week) and shows the estimated annual (rate × hours × 52) and the paycheck for the chosen pay cadence (half-even). `PayrollTaxStrip` is read-only: it shows a derived `PayrollTaxValue` (rate, payroll base, tax per paycheck and per year). Pure rules exported: `hourlyAnnualCents`, `hourlyPaycheckCents`, `setHourlyAnnualCents` (scales hours, keeps the rate), `derivePayrollTax`, `rateText`. Factories `createHourlyWageAmountStrip`, `createPayrollTaxStrip`.
+
 ## 0.208.0 — 2026-10-02
 
 ### Added

@@ -393,7 +393,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 14
+    "line": 16
   },
   {
     "name": "AnchorBox",
@@ -1292,7 +1292,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 25
+    "line": 27
   },
   {
     "name": "CandlestickRenderer",
@@ -4262,7 +4262,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/GrowthStrip.tsx",
     "line": 101
   },
@@ -4331,6 +4331,25 @@
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
     "line": 175
+  },
+  {
+    "name": "createHourlyWageAmountStrip",
+    "depth": null,
+    "kind": "factory",
+    "family": "Strips",
+    "variantOf": null,
+    "overrides": [],
+    "dataProps": "HourlyWageAmountStripDataProps",
+    "summary": "Factory behind `HourlyWageAmountStrip`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/HourlyWageAmountStrip.tsx",
+    "line": 63
   },
   {
     "name": "createHUDPanel",
@@ -4777,6 +4796,25 @@
     "since": null,
     "file": "src/components/ParticipantTimeLabel/ParticipantTimeLabel.tsx",
     "line": 51
+  },
+  {
+    "name": "createPayrollTaxStrip",
+    "depth": null,
+    "kind": "factory",
+    "family": "Strips",
+    "variantOf": null,
+    "overrides": [],
+    "dataProps": "PayrollTaxStripDataProps",
+    "summary": "Factory behind `PayrollTaxStrip`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/PayrollTaxStrip.tsx",
+    "line": 42
   },
   {
     "name": "createPinMarkers",
@@ -7504,7 +7542,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 40
+    "line": 42
   },
   {
     "name": "EndWrapRow",
@@ -8909,9 +8947,9 @@
     "useFor": null,
     "notes": "How units change each period: none, + units, or %, with churn and a ceiling.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 58
+    "line": 64
   },
   {
     "name": "GrowTightStack",
@@ -9281,6 +9319,28 @@
     "line": 84
   },
   {
+    "name": "HourlyWageAmountStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createHourlyWageAmountStrip",
+      "overrides": "{}"
+    },
+    "overrides": [],
+    "dataProps": "HourlyWageAmountStripDataProps",
+    "summary": "An hourly wage: rate x hours a week, with the estimated annual and each paycheck.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "An hourly wage: rate x hours a week, with the estimated annual and each paycheck.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 45
+  },
+  {
     "name": "HoursAmountStrip",
     "depth": null,
     "kind": "variant",
@@ -9305,7 +9365,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 22
+    "line": 24
   },
   {
     "name": "HUDButtonGroup",
@@ -10114,7 +10174,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 11
+    "line": 13
   },
   {
     "name": "LabelValueGrid",
@@ -10167,7 +10227,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 18
+    "line": 20
   },
   {
     "name": "LargeModal",
@@ -11182,7 +11242,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 31
+    "line": 33
   },
   {
     "name": "MonthOfYearPicker",
@@ -12144,7 +12204,29 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 33
+    "line": 35
+  },
+  {
+    "name": "PayrollTaxStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createPayrollTaxStrip",
+      "overrides": "{}"
+    },
+    "overrides": [],
+    "dataProps": "PayrollTaxStripDataProps",
+    "summary": "The employer payroll tax, read-only.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The employer payroll tax, read-only.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 47
   },
   {
     "name": "PendingBadge",
@@ -12806,7 +12888,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 27
+    "line": 29
   },
   {
     "name": "ReferenceLine",
@@ -13598,7 +13680,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 20
+    "line": 22
   },
   {
     "name": "SeatsPriceAmountStrip",
@@ -13623,9 +13705,9 @@
     "useFor": null,
     "notes": "Units x price with no growth field: a GrowthStrip owns growth (seats).",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 43
+    "line": 49
   },
   {
     "name": "SecondaryButton",
@@ -14001,9 +14083,9 @@
     "useFor": null,
     "notes": "Growth with no churn or ceiling (a product's volume).",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 60
+    "line": 66
   },
   {
     "name": "SimplePanel",
@@ -14159,7 +14241,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 16
+    "line": 18
   },
   {
     "name": "SmallButton",
@@ -14870,7 +14952,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 38
+    "line": 40
   },
   {
     "name": "StaticSplitLayout",
@@ -16704,9 +16786,9 @@
     "useFor": null,
     "notes": "Units x price with no growth field, counting plain units (a product).",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 50
+    "line": 56
   },
   {
     "name": "UnitsGrowthStrip",
@@ -16730,9 +16812,9 @@
     "useFor": null,
     "notes": "Growth that only adds units (none or + units): a seat plan's net new seats.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 62
+    "line": 68
   },
   {
     "name": "Val",
@@ -17316,7 +17398,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 36
+    "line": 38
   },
   {
     "name": "withCellStyle",

@@ -3,8 +3,10 @@
 // ============================================
 import { createAmountStrip } from "./AmountStrip";
 import { createCadenceStrip } from "./CadenceStrip";
+import { createHourlyWageAmountStrip } from "./HourlyWageAmountStrip";
 import { createGrowthStrip } from "./GrowthStrip";
 import { createLabelStrip } from "./LabelStrip";
+import { createPayrollTaxStrip } from "./PayrollTaxStrip";
 import { createWindowStrip } from "./WindowStrip";
 
 /** The name of a line. */
@@ -39,6 +41,10 @@ export const StartWindowStrip = createWindowStrip({ mode: "start" });
 /** An end only. */
 export const EndWindowStrip = createWindowStrip({ mode: "end" });
 
+/** An hourly wage: rate x hours a week, with the estimated annual and each paycheck. */
+export const HourlyWageAmountStrip = createHourlyWageAmountStrip({});
+/** The employer payroll tax, read-only. */
+export const PayrollTaxStrip = createPayrollTaxStrip({});
 /** Units x price with no growth field: a GrowthStrip owns growth (seats). */
 export const SeatsPriceAmountStrip = createAmountStrip({
   magnitude: "1M",
