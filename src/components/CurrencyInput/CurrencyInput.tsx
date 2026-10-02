@@ -30,6 +30,7 @@ import {
   INPUT_DEFAULT_WIDTH_MAX,
   currencyMaxChars,
   fieldWidthForChars,
+  tightNumberWidth,
 } from "../../internal/fieldWidth/fieldWidth";
 import "./CurrencyInput.css";
 
@@ -63,6 +64,12 @@ export function currencyWidthRem(maxValue = INPUT_DEFAULT_WIDTH_MAX): number {
   return fieldWidthForChars(currencyMaxChars(maxValue), CURRENCY_CHROME_REM);
 }
 
+const CURRENCY_FORMAT = (currency?: string): Intl.NumberFormatOptions => ({
+  style: "currency",
+  currency: currency ?? "USD",
+  currencyDisplay: "narrowSymbol",
+});
+
 export const CurrencyInput: Component<CurrencyInputProps> = (props) => {
   const [local, rest] = splitProps(props, ["maxValue", "currency", "max"]);
 
@@ -78,16 +85,30 @@ export const CurrencyInput: Component<CurrencyInputProps> = (props) => {
   // ThemedNumberInput untouched.
   // A STATED maxValue sizes the field by the tight shared rule (one digit =
   // 1ch in the field's own font; see `tightNumberWidth`), which
-  // ThemedNumberInput applies itself, so the wrapper only hugs it. With no
+  // ThemedNumberInput applies itself. The wrapper carries the SAME cap (and,
+  // via `--fit`, the input's font size, so `ch` is the same digit): a wrapper that only
+  // hugged its field still flex-grew across the whole row, leaving invisible
+  // slack between sibling fields. Now a fitted field grows to its max and no
+  // further, so the gap between siblings stays the row's gap. With no
   // maxValue the field keeps its generous $1B cap, exactly as before.
   const fitted = () => local.maxValue !== undefined;
   const wrapperStyle = () =>
     fitted()
-      ? { width: "fit-content", "max-width": "100%" }
+      ? {
+          "max-width": tightNumberWidth({
+            max: local.maxValue as number,
+            min: (rest as ThemedNumberInputProps).min,
+            step: (rest as ThemedNumberInputProps).step,
+            formatOptions: CURRENCY_FORMAT(local.currency),
+          }),
+        }
       : { "max-width": `${widthRem()}rem` };
 
   return (
-    <div class="sui-currency-input" style={wrapperStyle()}>
+    <div
+      class={`sui-currency-input${fitted() ? " sui-currency-input--fit" : ""}`}
+      style={wrapperStyle()}
+    >
       <ThemedNumberInput
         {...(rest as ThemedNumberInputProps)}
         maxValue={local.maxValue}
@@ -95,11 +116,7 @@ export const CurrencyInput: Component<CurrencyInputProps> = (props) => {
         // international currency and i18n come later). `narrowSymbol` is what
         // pins it: the default `symbol` display lets the viewer's LOCALE pick
         // the glyph, so an en-GB or en-CA browser showed "US$".
-        formatOptions={{
-          style: "currency",
-          currency: local.currency ?? "USD",
-          currencyDisplay: "narrowSymbol",
-        }}
+        formatOptions={CURRENCY_FORMAT(local.currency)}
         // Default the numeric ceiling to the width ceiling unless overridden.
         max={local.max ?? maxValue()}
       />

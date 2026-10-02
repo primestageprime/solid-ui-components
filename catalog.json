@@ -5793,7 +5793,7 @@
     "showcase": "#/currency-input",
     "since": "0.68.0",
     "file": "src/components/CurrencyInput/CurrencyInput.tsx",
-    "line": 66
+    "line": 73
   },
   {
     "name": "CurrencyInput100M",

@@ -46,13 +46,27 @@ describe("CurrencyInput", () => {
         onChange={() => {}}
       />
     ));
-    // A stated maxValue uses the tight shared rule: the wrapper hugs a field
-    // sized in ch (see fieldWidth.test.ts), not a flat rem cap.
-    expect(rootOf(container).style.width).toBe("fit-content");
+    // A stated maxValue uses the tight shared rule: a field sized in ch (see
+    // fieldWidth.test.ts), not a flat rem cap.
     const field = container.querySelector(".sui-number-input") as HTMLElement;
     expect(field.className).toContain("sui-number-input--fit");
     // "$1,000,000.00" = $ + 7 digits + 2 cents (10ch) + 3 separators (1.2ch) + 0.5 slack.
     expect(field.style.maxWidth).toBe("calc(11.7ch + 3.6rem)");
+  });
+
+  it("caps the wrapper at its field's width so row slack stays outside the group", () => {
+    const [v] = createSignal<number | undefined>(500);
+    const { container } = render(() => (
+      <CurrencyInput name="fee" maxValue={1_000_000} value={v} onChange={() => {}} />
+    ));
+    const root = rootOf(container);
+    const field = container.querySelector(".sui-number-input") as HTMLElement;
+    // The wrapper flex-grows; without the same cap it took the row's spare
+    // width and the gap between sibling fields grew with it.
+    expect(root.style.maxWidth).toBe(field.style.maxWidth);
+    // `ch` must be the same digit in both, so the wrapper takes the field's font size.
+    expect(root.className).toContain("sui-currency-input--fit");
+    expect(css).toMatch(/\.sui-currency-input--fit\s*\{\s*font-size:\s*0\.875rem/);
   });
 
   // -- clearing -------------------------------------------------------
