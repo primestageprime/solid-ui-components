@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.210.0 — 2026-10-02
+
 ### Fixed
 
 - **`CurrencyInput` with a stated `maxValue`** (and so `CurrencyInput10K` / `1M` / `100M` / `1B`, the Strips' money fields) no longer spreads a row apart. Its wrapper flex-grew across the whole row while the field inside stopped at its max width, so the spare width landed between sibling fields (1052px between the amount and its Per toggle in a 1400px row). The wrapper now carries the field's own cap, so the gap between fields stays the row's gap (4px in a `ChipCluster`) and the spare width goes to the right of the group. No API change.
