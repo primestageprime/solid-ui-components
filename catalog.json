@@ -4262,7 +4262,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/GrowthStrip.tsx",
     "line": 101
   },
@@ -8909,7 +8909,7 @@
     "useFor": null,
     "notes": "How units change each period: none, + units, or %, with churn and a ceiling.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
     "line": 58
   },
@@ -13623,7 +13623,7 @@
     "useFor": null,
     "notes": "Units x price with no growth field: a GrowthStrip owns growth (seats).",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
     "line": 43
   },
@@ -14001,7 +14001,7 @@
     "useFor": null,
     "notes": "Growth with no churn or ceiling (a product's volume).",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
     "line": 60
   },
@@ -16704,7 +16704,7 @@
     "useFor": null,
     "notes": "Units x price with no growth field, counting plain units (a product).",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
     "line": 50
   },
@@ -16730,7 +16730,7 @@
     "useFor": null,
     "notes": "Growth that only adds units (none or + units): a seat plan's net new seats.",
     "showcase": "#/strips",
-    "since": "Unreleased",
+    "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
     "line": 62
   },
