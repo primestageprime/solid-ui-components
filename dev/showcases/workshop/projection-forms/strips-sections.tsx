@@ -21,7 +21,15 @@ import {
   type CadenceStripDataProps,
   type CadenceValue,
   EndWindowStrip,
+  GrowthStrip,
   HoursAmountStrip,
+  SeatsPriceAmountStrip,
+  SimpleGrowthStrip,
+  UnitsAmountStrip,
+  UnitsGrowthStrip,
+  type GrowthValue,
+  growthOfKind,
+  projectUnits,
   LabelStrip,
   LargeAmountStrip,
   MonthlyOrAnnualCadenceStrip,
@@ -67,6 +75,14 @@ const AMOUNT_STRIPS: Record<AmountVariant, Component<AmountStripDataProps>> = {
   large: LargeAmountStrip,
   seats: SeatsAmountStrip,
   hours: HoursAmountStrip,
+  seatsPrice: SeatsPriceAmountStrip,
+  units: UnitsAmountStrip,
+};
+
+const GROWTH_STRIPS = {
+  units: UnitsGrowthStrip,
+  simple: SimpleGrowthStrip,
+  population: GrowthStrip,
 };
 
 const HourlyCadenceStrip = createCadenceStrip({
@@ -85,8 +101,15 @@ const OnlyCadence: Record<CadenceShape, Component<CadenceStripDataProps>> = {
   once: createCadenceStrip({ allowed: ["once"] }),
 };
 
+const SaleCadenceStrip = createCadenceStrip({ allowed: ["daily", "weekly", "monthly"] });
+const SubscriptionCadenceStrip = createCadenceStrip({ allowed: ["weekly", "monthly"] });
+
 const cadenceStripFor = (def: FormDef): Component<CadenceStripDataProps> =>
-  def.kind === "license"
+  def.kind === "product"
+    ? SaleCadenceStrip
+    : def.kind === "subscription"
+      ? SubscriptionCadenceStrip
+      : def.kind === "license"
     ? MonthlyOrAnnualCadenceStrip
     : def.kind === "hourly_service"
       ? HourlyCadenceStrip
@@ -211,6 +234,26 @@ const LabelCard: Component = () => {
   );
 };
 
+const GROWTH_SAMPLES: { title: string; value: GrowthValue }[] = [
+  { title: "None", value: { kind: "none" } },
+  { title: "+ units per period", value: { kind: "units", perPeriod: 12 } },
+  { title: "% per period", value: { kind: "percent", pctPerPeriod: 5 } },
+  { title: "Units with churn and a ceiling", value: { kind: "units", perPeriod: 12, churnPct: 3, ceiling: 130 } },
+];
+
+const GrowthVariantCard: Component<(typeof GROWTH_SAMPLES)[number]> = (props) => {
+  const [value, setValue] = createSignal<GrowthValue>(props.value);
+  const projection = () => {
+    const rows = projectUnits(100, value(), 6);
+    return `${rows.join(" > ")} (from 100 units, 6 periods)`;
+  };
+  return (
+    <Variant title={`Growth: ${props.title}`} value={value()} writes={{ projection: projection() }}>
+      <GrowthStrip value={value()} onChange={setValue} startUnits={100} />
+    </Variant>
+  );
+};
+
 export const CatalogSection: Component = () => (
   <SpacedStack>
     <SectionTitle>A. Strip catalog</SectionTitle>
@@ -227,6 +270,10 @@ export const CatalogSection: Component = () => (
     <TextLabel>3. CadenceStrip</TextLabel>
     <SpacedStack>
       <For each={CADENCE_SHAPES}>{(c) => <CadenceVariantCard shape={c.shape} label={c.label} anchor={c.anchor} />}</For>
+    </SpacedStack>
+    <TextLabel>3b. GrowthStrip (units, price and growth: product sale, subscription, license)</TextLabel>
+    <SpacedStack>
+      <For each={GROWTH_SAMPLES}>{(g) => <GrowthVariantCard {...g} />}</For>
     </SpacedStack>
     <TextLabel>4. WindowStrip</TextLabel>
     <SpacedStack>
@@ -248,6 +295,11 @@ const FormCard: Component<{ def: FormDef; mode: string; side: Side }> = (props) 
   const AmountS = AMOUNT_STRIPS[props.def.amountVariant];
   const CadenceS = cadenceStripFor(props.def);
   const WindowS = windowStripFor(props.def.window);
+  const GrowthS = props.def.growth ? GROWTH_STRIPS[props.def.growth] : undefined;
+  const startUnits = () => {
+    const a = values().amount;
+    return a.kind === "units" ? a.units : 0;
+  };
   const narrowed = () => props.def.cadences.length < ALL_CADENCE_COUNT;
   return (
     <CardSurface>
@@ -275,6 +327,15 @@ const FormCard: Component<{ def: FormDef; mode: string; side: Side }> = (props) 
             <Labeled label="3. Cadence">
               <CadenceS value={values().cadence} onChange={(cadence) => patch({ cadence })} />
             </Labeled>
+            {GrowthS && values().growth ? (
+              <Labeled label="Growth">
+                <GrowthS
+                  value={values().growth as GrowthValue}
+                  startUnits={startUnits()}
+                  onChange={(growth) => patch({ growth })}
+                />
+              </Labeled>
+            ) : null}
             <Labeled label="4. Window">
               <WindowS value={values().window} onChange={(window) => patch({ window })} />
             </Labeled>

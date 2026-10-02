@@ -4,6 +4,7 @@
 import { createAmountStrip } from "./AmountStrip";
 import { createCadenceStrip } from "./CadenceStrip";
 import { createHourlyWageAmountStrip } from "./HourlyWageAmountStrip";
+import { createGrowthStrip } from "./GrowthStrip";
 import { createLabelStrip } from "./LabelStrip";
 import { createPayrollTaxStrip } from "./PayrollTaxStrip";
 import { createWindowStrip } from "./WindowStrip";
@@ -44,3 +45,28 @@ export const EndWindowStrip = createWindowStrip({ mode: "end" });
 export const HourlyWageAmountStrip = createHourlyWageAmountStrip({});
 /** The employer payroll tax, read-only. */
 export const PayrollTaxStrip = createPayrollTaxStrip({});
+/** Units x price with no growth field: a GrowthStrip owns growth (seats). */
+export const SeatsPriceAmountStrip = createAmountStrip({
+  magnitude: "1M",
+  precision: "dollars",
+  unit: "seats",
+  perPeriod: false,
+});
+/** Units x price with no growth field, counting plain units (a product). */
+export const UnitsAmountStrip = createAmountStrip({
+  magnitude: "1M",
+  precision: "dollars",
+  unit: "units",
+  perPeriod: false,
+});
+
+/** How units change each period: none, + units, or %, with churn and a ceiling. */
+export const GrowthStrip = createGrowthStrip({ churn: true, ceiling: true });
+/** Growth with no churn or ceiling (a product's volume). */
+export const SimpleGrowthStrip = createGrowthStrip({ churn: false, ceiling: false });
+/** Growth that only adds units (none or + units): a seat plan's net new seats. */
+export const UnitsGrowthStrip = createGrowthStrip({
+  churn: false,
+  ceiling: false,
+  kinds: ["none", "units"],
+});
