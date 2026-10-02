@@ -31,10 +31,13 @@ export interface AmountStripProps {
   /** The step of each money field (default "dollars"). */
   precision?: Precision;
   /** What a units amount counts (default "seats"). */
-  unit?: "seats" | "hours";
+  unit?: "seats" | "hours" | "units";
+  /** Show the "+ per period" field of a seats / units amount (default true).
+   *  Turn it off when a GrowthStrip owns growth; `perPeriod` stays in the value. */
+  perPeriod?: boolean;
 }
 
-export type AmountStripOverrides = Pick<AmountStripProps, "magnitude" | "precision" | "unit">;
+export type AmountStripOverrides = Pick<AmountStripProps, "magnitude" | "precision" | "unit" | "perPeriod">;
 export type AmountStripDataProps = Omit<AmountStripProps, keyof AmountStripOverrides>;
 
 const PER_OPTIONS = [
@@ -97,13 +100,13 @@ const AmountStripBase: Component<AmountStripProps> = (props) => {
           <ChipCluster>
             <CountInput10K
               name="units"
-              label={props.unit === "hours" ? "Hours" : "Seats"}
+              label={props.unit === "hours" ? "Hours" : props.unit === "units" ? "Units" : "Seats"}
               min={0}
               step={props.unit === "hours" ? 0.25 : 1}
               value={() => v().units}
               onChange={(n) => props.onChange({ ...v(), units: n ?? 0 })}
             />
-            <Show when={props.unit !== "hours"}>
+            <Show when={props.unit !== "hours" && props.perPeriod !== false}>
               <CountInput100
                 name="per-period"
                 label="+ per period"
@@ -113,7 +116,13 @@ const AmountStripBase: Component<AmountStripProps> = (props) => {
             </Show>
             <Money
               name="unit-price"
-              label={props.unit === "hours" ? "Rate per hour ($)" : "Price per seat ($)"}
+              label={
+                props.unit === "hours"
+                  ? "Rate per hour ($)"
+                  : props.unit === "units"
+                    ? "Price per unit ($)"
+                    : "Price per seat ($)"
+              }
               cents={v().unitPrice}
               magnitude="10K"
               precision={precision()}

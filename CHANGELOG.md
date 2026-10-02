@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`GrowthStrip`** — a Strips Composite (Depth 2, zero CSS) for how units change each period: none, + units per period, or % per period, with an optional churn % and an optional ceiling. Edits an engine-neutral `GrowthValue`; pure tested rules in `growth.ts` (`setGrowthChurn` keeps churn 0..100, `setGrowthCeiling` keeps the ceiling at least the starting units, `nextUnits` / `projectUnits` print units per period). Curried `GrowthStrip`, `SimpleGrowthStrip` and `UnitsGrowthStrip`; factory `createGrowthStrip` (`churn`, `ceiling`, `kinds`). `AmountStrip` gains an additive `perPeriod?: boolean` override and `unit: "units"`, with the variants `SeatsPriceAmountStrip` and `UnitsAmountStrip`; its units value keeps `perPeriod`, so existing callers are unchanged.
+
 ## 0.207.0 — 2026-10-01
 
 ### Added
