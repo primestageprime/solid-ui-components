@@ -3,6 +3,12 @@ import {
   AmountStrip,
   CadenceStrip,
   EndWindowStrip,
+  GrowthStrip,
+  SimpleGrowthStrip,
+  UnitsGrowthStrip,
+  SeatsPriceAmountStrip,
+  UnitsAmountStrip,
+  type GrowthValue,
   HoursAmountStrip,
   LabelStrip,
   LargeAmountStrip,
@@ -33,6 +39,9 @@ export const StripsShowcase: Component = () => {
   const [pay, setPay] = createSignal<CadenceValue>({ shape: "semimonthly" });
   const [plan, setPlan] = createSignal<CadenceValue>({ shape: "monthly", anchor: 1 });
   const [window, setWindow] = createSignal<WindowValue>({ until: "2027-06-30" });
+  const [growth, setGrowth] = createSignal<GrowthValue>({ kind: "units", perPeriod: 12, churnPct: 3, ceiling: 500 });
+  const [simple, setSimple] = createSignal<GrowthValue>({ kind: "percent", pctPerPeriod: 5 });
+  const [growUnits, setGrowUnits] = createSignal<AmountValue>({ kind: "units", units: 100, unitPrice: 4_900, perPeriod: 12 });
   const [start, setStart] = createSignal<WindowValue>({});
   const [end, setEnd] = createSignal<WindowValue>({ until: "2027-06-30" });
   const [recurring, setRecurring] = createSignal<CadenceValue>({ shape: "weekly", anchor: 1 });
@@ -120,6 +129,23 @@ export const StripsShowcase: Component = () => {
           <CodeBlock>{show(start())}</CodeBlock>
           <EndWindowStrip value={end()} onChange={setEnd} />
           <CodeBlock>{show(end())}</CodeBlock>
+        </SpacedStack>
+      </div>
+
+      <div class="example-group">
+        <h3>GrowthStrip: none | + units | % per period, with churn and a ceiling</h3>
+        <SpacedStack>
+          <SeatsPriceAmountStrip value={growUnits()} onChange={setGrowUnits} />
+          <GrowthStrip
+            value={growth()}
+            onChange={setGrowth}
+            startUnits={growUnits().kind === "units" ? (growUnits() as { units: number }).units : 0}
+          />
+          <CodeBlock>{show(growth())}</CodeBlock>
+          <SimpleGrowthStrip value={simple()} onChange={setSimple} />
+          <UnitsGrowthStrip value={growth()} onChange={setGrowth} />
+          <CodeBlock>{show(simple())}</CodeBlock>
+          <UnitsAmountStrip value={growUnits()} onChange={setGrowUnits} />
         </SpacedStack>
       </div>
     </div>

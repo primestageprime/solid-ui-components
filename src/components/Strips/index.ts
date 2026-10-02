@@ -36,3 +36,19 @@ export type {
   AmountRangeField,
   WindowValue,
 } from "./values";
+export { createGrowthStrip } from "./GrowthStrip";
+export type { GrowthStripDataProps, GrowthStripOverrides, GrowthStripProps } from "./GrowthStrip";
+export {
+  GROWTH_KINDS,
+  clampCeiling,
+  clampChurnPct,
+  growthOfKind,
+  grossAdded,
+  nextUnits,
+  normalizeGrowth,
+  percentToBp,
+  projectUnits,
+  setGrowthCeiling,
+  setGrowthChurn,
+} from "./growth";
+export type { GrowthKind, GrowthValue } from "./growth";

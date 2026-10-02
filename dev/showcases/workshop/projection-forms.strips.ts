@@ -10,7 +10,8 @@ import {
 import type { Kind, Side, StripValues } from "./projection-forms.adapter";
 
 export type WindowMode = "both" | "start" | "end";
-export type AmountVariant = "amount" | "small" | "large" | "seats" | "hours";
+export type AmountVariant = "amount" | "small" | "large" | "seats" | "hours" | "seatsPrice" | "units";
+export type GrowthVariant = "units" | "simple" | "population";
 
 export interface FormDef {
   id: string;
@@ -24,6 +25,8 @@ export interface FormDef {
   /** The cadences the form's kind or recipe allows (the kind narrows these). */
   cadences: CadenceShape[];
   window: WindowMode;
+  /** Present when the form composes a GrowthStrip. */
+  growth?: GrowthVariant;
   start: StripValues;
   note?: string;
 }
@@ -101,15 +104,45 @@ export const FORMS: FormDef[] = [
   }),
   form("license", "License", "Units x price + Monthly|Annual + start", {
     label: "Pro licenses",
-    amount: { kind: "units", units: 10, unitPrice: 5_000, perPeriod: 2 },
+    amount: { kind: "units", units: 10, unitPrice: 5_000, perPeriod: 0 },
     cadence: monthly(1),
     window: { start: "2026-10-01" },
+    growth: { kind: "units", perPeriod: 2 },
   }, {
     kind: "license",
     side: "revenue",
-    amountVariant: "seats",
+    amountVariant: "seatsPrice",
+    growth: "units",
     cadences: ["monthly", "annual"],
     note: "Kind license: a seat plan bills monthly or annually only, and needs a start.",
+  }),
+  form("product-sale", "Product sale", "Label + Units x price + Weekly|Monthly + Growth + Window", {
+    label: "Widget",
+    amount: { kind: "units", units: 20, unitPrice: 12_500, perPeriod: 0 },
+    cadence: monthly(1),
+    window: none,
+    growth: { kind: "percent", pctPerPeriod: 5 },
+  }, {
+    kind: "product",
+    side: "revenue",
+    amountVariant: "units",
+    growth: "simple",
+    cadences: ["daily", "weekly", "monthly"],
+    note: "Kind product: price x volume; growth is a companion adjust config on its Volume register.",
+  }),
+  form("subscription", "Subscription", "Label + Units x price + Weekly|Monthly + Growth (churn, ceiling) + Window", {
+    label: "Core plan",
+    amount: { kind: "units", units: 120, unitPrice: 4_900, perPeriod: 0 },
+    cadence: monthly(1),
+    window: none,
+    growth: { kind: "units", perPeriod: 12, churnPct: 3, ceiling: 5_000 },
+  }, {
+    kind: "subscription",
+    side: "revenue",
+    amountVariant: "units",
+    growth: "population",
+    cadences: ["weekly", "monthly"],
+    note: "Kind subscription: the engine bills the population, then churns it and admits new customers up to the ceiling.",
   }),
   form("hourly", "Hourly service", "Units x price + recurring + —", {
     label: "Design support",

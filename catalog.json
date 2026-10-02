@@ -380,7 +380,8 @@
     "overrides": [
       "magnitude",
       "precision",
-      "unit"
+      "unit",
+      "perPeriod"
     ],
     "dataProps": "AmountStripDataProps",
     "summary": "Amounts up to $999,999, to the dollar.",
@@ -392,7 +393,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 13
+    "line": 14
   },
   {
     "name": "AnchorBox",
@@ -1291,7 +1292,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 24
+    "line": 25
   },
   {
     "name": "CandlestickRenderer",
@@ -3063,10 +3064,11 @@
     "overrides": [
       "magnitude",
       "precision",
-      "unit"
+      "unit",
+      "perPeriod"
     ],
     "dataProps": "AmountStripDataProps",
-    "summary": "Factory behind `AmountStrip`'s curried variants; bakes `magnitude`, `precision`, `unit`.",
+    "summary": "Factory behind `AmountStrip`'s curried variants; bakes `magnitude`, `precision`, `unit`, `perPeriod`.",
     "summarySource": "synthesized",
     "preferFirst": null,
     "notToBeConfusedWith": null,
@@ -3075,7 +3077,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/AmountStrip.tsx",
-    "line": 129
+    "line": 138
   },
   {
     "name": "createAnimatedSwimlaneChart",
@@ -4240,6 +4242,29 @@
     "since": "0.176.0",
     "file": "src/components/GroupedMutationSliders/GroupedMutationSliders.tsx",
     "line": 635
+  },
+  {
+    "name": "createGrowthStrip",
+    "depth": null,
+    "kind": "factory",
+    "family": "Strips",
+    "variantOf": null,
+    "overrides": [
+      "churn",
+      "ceiling",
+      "kinds"
+    ],
+    "dataProps": "GrowthStripDataProps",
+    "summary": "a fifth Strips Composite (Depth 2, zero CSS): how a count of units changes each period. Factory behind `GrowthStrip`'s curried variants; bakes `churn`, `ceiling`, `kinds`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/GrowthStrip.tsx",
+    "line": 101
   },
   {
     "name": "createHatchPattern",
@@ -7479,7 +7504,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 39
+    "line": 40
   },
   {
     "name": "EndWrapRow",
@@ -8863,6 +8888,32 @@
     "line": 691
   },
   {
+    "name": "GrowthStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createGrowthStrip",
+      "overrides": "{ churn: true, ceiling: true }"
+    },
+    "overrides": [
+      "churn",
+      "ceiling",
+      "kinds"
+    ],
+    "dataProps": "GrowthStripDataProps",
+    "summary": "a fifth Strips Composite (Depth 2, zero CSS): how a count of units changes each period.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "How units change each period: none, + units, or %, with churn and a ceiling.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 58
+  },
+  {
     "name": "GrowTightStack",
     "depth": 0,
     "kind": "variant",
@@ -9241,7 +9292,8 @@
     "overrides": [
       "magnitude",
       "precision",
-      "unit"
+      "unit",
+      "perPeriod"
     ],
     "dataProps": "AmountStripDataProps",
     "summary": "A units amount counting hours.",
@@ -9253,7 +9305,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 21
+    "line": 22
   },
   {
     "name": "HUDButtonGroup",
@@ -10062,7 +10114,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 10
+    "line": 11
   },
   {
     "name": "LabelValueGrid",
@@ -10102,7 +10154,8 @@
     "overrides": [
       "magnitude",
       "precision",
-      "unit"
+      "unit",
+      "perPeriod"
     ],
     "dataProps": "AmountStripDataProps",
     "summary": "Amounts up to $1,000,000,000, to the thousand.",
@@ -10114,7 +10167,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 17
+    "line": 18
   },
   {
     "name": "LargeModal",
@@ -11129,7 +11182,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 30
+    "line": 31
   },
   {
     "name": "MonthOfYearPicker",
@@ -12091,7 +12144,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 32
+    "line": 33
   },
   {
     "name": "PendingBadge",
@@ -12753,7 +12806,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 26
+    "line": 27
   },
   {
     "name": "ReferenceLine",
@@ -13532,7 +13585,8 @@
     "overrides": [
       "magnitude",
       "precision",
-      "unit"
+      "unit",
+      "perPeriod"
     ],
     "dataProps": "AmountStripDataProps",
     "summary": "A units amount counting seats.",
@@ -13544,7 +13598,34 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 19
+    "line": 20
+  },
+  {
+    "name": "SeatsPriceAmountStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createAmountStrip",
+      "overrides": "{\n  magnitude: \"1M\",\n  precision: \"dollars\",\n  unit: \"seats\",\n  perPeriod: false,\n}"
+    },
+    "overrides": [
+      "magnitude",
+      "precision",
+      "unit",
+      "perPeriod"
+    ],
+    "dataProps": "AmountStripDataProps",
+    "summary": "Units x price with no growth field: a GrowthStrip owns growth (seats).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Units x price with no growth field: a GrowthStrip owns growth (seats).",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 43
   },
   {
     "name": "SecondaryButton",
@@ -13899,6 +13980,32 @@
     "line": 206
   },
   {
+    "name": "SimpleGrowthStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createGrowthStrip",
+      "overrides": "{ churn: false, ceiling: false }"
+    },
+    "overrides": [
+      "churn",
+      "ceiling",
+      "kinds"
+    ],
+    "dataProps": "GrowthStripDataProps",
+    "summary": "Growth with no churn or ceiling (a product's volume).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Growth with no churn or ceiling (a product's volume).",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 60
+  },
+  {
     "name": "SimplePanel",
     "depth": 1,
     "kind": "variant",
@@ -14039,7 +14146,8 @@
     "overrides": [
       "magnitude",
       "precision",
-      "unit"
+      "unit",
+      "perPeriod"
     ],
     "dataProps": "AmountStripDataProps",
     "summary": "Amounts up to $9,999, with cents.",
@@ -14051,7 +14159,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 15
+    "line": 16
   },
   {
     "name": "SmallButton",
@@ -14762,7 +14870,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 37
+    "line": 38
   },
   {
     "name": "StaticSplitLayout",
@@ -16574,6 +16682,59 @@
     "line": 148
   },
   {
+    "name": "UnitsAmountStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createAmountStrip",
+      "overrides": "{\n  magnitude: \"1M\",\n  precision: \"dollars\",\n  unit: \"units\",\n  perPeriod: false,\n}"
+    },
+    "overrides": [
+      "magnitude",
+      "precision",
+      "unit",
+      "perPeriod"
+    ],
+    "dataProps": "AmountStripDataProps",
+    "summary": "Units x price with no growth field, counting plain units (a product).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Units x price with no growth field, counting plain units (a product).",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 50
+  },
+  {
+    "name": "UnitsGrowthStrip",
+    "depth": null,
+    "kind": "variant",
+    "family": "Strips",
+    "variantOf": {
+      "factory": "createGrowthStrip",
+      "overrides": "{\n  churn: false,\n  ceiling: false,\n  kinds: [\"none\", \"units\"],\n}"
+    },
+    "overrides": [
+      "churn",
+      "ceiling",
+      "kinds"
+    ],
+    "dataProps": "GrowthStripDataProps",
+    "summary": "Growth that only adds units (none or + units): a seat plan's net new seats.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Growth that only adds units (none or + units): a seat plan's net new seats.",
+    "showcase": "#/strips",
+    "since": "Unreleased",
+    "file": "src/components/Strips/variants.ts",
+    "line": 62
+  },
+  {
     "name": "Val",
     "depth": null,
     "kind": "primitive",
@@ -17155,7 +17316,7 @@
     "showcase": "#/strips",
     "since": "0.207.0",
     "file": "src/components/Strips/variants.ts",
-    "line": 35
+    "line": 36
   },
   {
     "name": "withCellStyle",
