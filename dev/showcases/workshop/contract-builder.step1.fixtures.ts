@@ -63,3 +63,16 @@ export const INTERIOR: JobType = {
 };
 
 export const STEP2: Config = { types: [EXTERIOR, INTERIOR], jobs: [] };
+
+// ── step 3: + furniture ─────────────────────────────────────────────────────
+
+/** Occasional small pieces: mostly none, a few scattered single jobs, one month of two. */
+export const FURNITURE: JobType = {
+  id: "F",
+  name: "Furniture",
+  typical: 1200,
+  //    J  F  M  A  M  J  J  A  S  O  N  D
+  qty: [0, 1, 0, 0, 1, 0, 0, 0, 2, 0, 1, 0],
+};
+
+export const STEP3: Config = { types: [EXTERIOR, INTERIOR, FURNITURE], jobs: [] };
