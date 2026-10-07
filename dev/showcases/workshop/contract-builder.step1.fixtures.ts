@@ -156,3 +156,74 @@ export const STEP4: Config = {
   types: [EXTERIOR, INTERIOR, FURNITURE],
   jobs: EXTERIOR_JOBS,
 };
+
+// ── step 5: + booked interior jobs ──────────────────────────────────────────
+
+const interiorJob = (
+  id: string,
+  name: string,
+  start: string,
+  duration: number,
+  payments: readonly Payment[],
+): Job => ({ id, name, type: "I", use: true, start, duration, payments });
+
+/**
+ * Signed interior work, placed by payment date. An improving year against the
+ * hope: a weak winter and spring (40–60%), climbing to ~80% by autumn, with
+ * ONE month over the hope — August, 115%. November and December hold signed
+ * winter work not yet invoiced: 70% and 50% of a high snow-month hope.
+ */
+export const INTERIOR_JOBS: readonly Job[] = [
+  interiorJob("i-okafor", "Okafor whole-house interior", "2026-01-05", 14, [
+    pay("Deposit", "2026-01-05", 2500),
+    pay("Final", "2026-01-23", 4250),
+  ]),
+  interiorJob("i-basement", "Lindqvist basement", "2026-02-09", 4, [
+    pay("On completion", "2026-02-13", 3500),
+  ]),
+  interiorJob("i-dental", "Dental office repaint", "2026-03-02", 8, [
+    pay("Deposit", "2026-02-25", 2500),
+    pay("Final", "2026-03-12", 4000),
+  ]),
+  interiorJob("i-nursery", "Patel nursery + hall", "2026-03-23", 4, [
+    pay("On completion", "2026-03-27", 2750),
+  ]),
+  interiorJob("i-office", "Grange St offices", "2026-04-13", 8, [
+    pay("Deposit", "2026-04-06", 2000),
+    pay("Final", "2026-04-24", 4000),
+  ]),
+  interiorJob("i-cabinets", "Moreau kitchen cabinets", "2026-05-11", 6, [
+    pay("On completion", "2026-05-19", 4500),
+  ]),
+  interiorJob("i-stair", "Fenwick stairwell", "2026-06-10", 4, [
+    pay("On completion", "2026-06-16", 3500),
+  ]),
+  interiorJob("i-loft", "Mill Lofts unit 4", "2026-07-13", 8, [
+    pay("Deposit", "2026-07-08", 1250),
+    pay("Final", "2026-07-24", 2500),
+  ]),
+  interiorJob("i-salon", "Bloom salon refresh", "2026-08-06", 4, [
+    pay("On completion", "2026-08-12", 3250),
+  ]),
+  interiorJob("i-library", "Branch library reading room", "2026-08-31", 7, [
+    pay("Deposit", "2026-08-27", 2500),
+    pay("Final", "2026-09-09", 5200),
+  ]),
+  interiorJob("i-church", "St. Anne's parish hall", "2026-10-05", 11, [
+    pay("Deposit", "2026-10-01", 3000),
+    pay("Final", "2026-10-20", 5000),
+  ]),
+  interiorJob("i-condo", "Hartley condo building halls", "2026-11-09", 25, [
+    pay("Deposit", "2026-11-04", 3000),
+    pay("Progress", "2026-11-25", 6450),
+    pay("Final", "2026-12-11", 4000),
+  ]),
+  interiorJob("i-den", "Reyes den + dining", "2026-12-14", 4, [
+    pay("On completion", "2026-12-18", 3500),
+  ]),
+];
+
+export const STEP5: Config = {
+  types: [EXTERIOR, INTERIOR, FURNITURE],
+  jobs: [...EXTERIOR_JOBS, ...INTERIOR_JOBS],
+};

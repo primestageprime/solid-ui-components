@@ -29,7 +29,7 @@ import {
   fn,
 } from "../../../src";
 import { PeriodBars, TYPE_COLORS } from "./contract-builder-kit/period-bars";
-import { STEP4 } from "./contract-builder.step1.fixtures";
+import { STEP5 } from "./contract-builder.step1.fixtures";
 import type { JobType } from "./contract-builder-model";
 
 const { map } = fn;
@@ -38,7 +38,7 @@ export const meta = { label: "Contract Builder" };
 
 const legendItems = map(
   (t: JobType, i: number) => ({ color: TYPE_COLORS[i], label: t.name }),
-  STEP4.types,
+  STEP5.types,
 );
 
 const ContractBuilderBench: Component = () => (
@@ -47,22 +47,22 @@ const ContractBuilderBench: Component = () => (
       <ContentStack>
         <TightStack>
           <SectionTitle>Contract Builder</SectionTitle>
-          <TextSublabel>Painter · example data, rebuilt one expectation at a time · step 4: + signed exterior jobs</TextSublabel>
+          <TextSublabel>Painter · example data, rebuilt one expectation at a time · step 5: + signed interior jobs</TextSublabel>
           <MutedBody>
-            Step 4: what a painter expects to bring in each month from
+            Step 5: what a painter expects to bring in each month from
             exterior, interior and furniture work. Exterior = jobs a month × $4,000, a
             smooth seasonal curve peaking at five jobs in July and exactly $0
             in the three snow months — December, January and February.
             Interior = jobs a month × $2,500, the mirror image: a summer low
             of two jobs, rising smoothly through autumn to six jobs through
-            the snow months, then easing back down through spring. Furniture = jobs a month × $1,200, occasional small pieces with no season: none in most months, one job in February, May and November, two in September. Signed EXTERIOR jobs are now booked against the hope, each month's money placed by when its payments land (deposit, progress, final): March 85% of the hope, April 115%, May through October exactly 100%, nothing signed for November or December. Today is October 7, 2026: payments before today are invoiced, later ones are signed but not yet invoiced. Interior and furniture are still expectations only. Measured in dollars
+            the snow months, then easing back down through spring. Furniture = jobs a month × $1,200, occasional small pieces with no season: none in most months, one job in February, May and November, two in September. Signed EXTERIOR jobs are now booked against the hope, each month's money placed by when its payments land (deposit, progress, final): March 85% of the hope, April 115%, May through October exactly 100%, nothing signed for November or December. Today is October 7, 2026: payments before today are invoiced, later ones are signed but not yet invoiced. Signed INTERIOR jobs show an improving year: 40–60% of the hope from January to April, climbing to about 80% by autumn, over the hope only in August (115%), with signed winter work for November (70%) and December (50%) not yet invoiced. Furniture is still an expectation only. Measured in dollars
             (assumption — not yet confirmed). The data is example data.
           </MutedBody>
         </TightStack>
 
         <ContentChartFrame title="Expected revenue, by month" yTitle="Revenue ($)">
           <TightStack>
-            <PeriodBars config={STEP4} />
+            <PeriodBars config={STEP5} />
             <Legend items={legendItems} />
             <MutedBody>
               Outline = expected revenue for one job type. Inside it: solid = invoiced, translucent = signed but not yet invoiced, empty = not yet booked. Hatched above the outline = booked beyond the hope.
