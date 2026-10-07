@@ -46,6 +46,17 @@ describe("contract-builder model — consumption laws", () => {
     expect(ok).toBe(true);
   });
 
+  it("invoiced is a subset of planned, and consumes the projection first", () => {
+    const ok = every(
+      (c: Cell) =>
+        c.invoiced <= c.planned &&
+        c.invoicedWithin + c.plannedWithin === c.within &&
+        c.invoicedWithin === Math.min(c.invoiced, c.projected),
+      allCells(CONFIG),
+    );
+    expect(ok).toBe(true);
+  });
+
   it("an unplanned win and a remainder never share a cell", () => {
     const ok = every(
       (c: Cell) => c.unplanned === 0 || c.remainder === 0,
@@ -67,7 +78,9 @@ describe("contract-builder model — consumption laws", () => {
               use: true,
               start: "2026-01-01",
               duration: 1,
-              payments: [{ label: "p", on: "2026-01-02", amount: planned }],
+              payments: [
+                { label: "p", on: "2026-01-02", amount: planned, invoiced: false },
+              ],
             },
           ],
         },
@@ -123,6 +136,28 @@ describe("contract-builder fixtures — planted signals", () => {
       jobs: map((j) => (j.id === "pemberton" ? { ...j, use: true } : j), CONFIG.jobs),
     };
     expect(plannedOf(used, "O", 6)).toBe(28000);
+  });
+
+  it("June exterior holds a past payment still un-invoiced", () => {
+    expect(cell(CONFIG, "O", 5)).toMatchObject({
+      planned: 13000,
+      invoiced: 7000,
+      invoicedWithin: 7000,
+      plannedWithin: 6000,
+    });
+  });
+
+  it("August exterior is an invoiced overage", () => {
+    expect(cell(CONFIG, "O", 7)).toMatchObject({
+      invoiced: 24000,
+      invoicedWithin: 20000,
+      plannedWithin: 0,
+      unplanned: 4000,
+    });
+  });
+
+  it("future payments are not yet invoiced", () => {
+    expect(cell(CONFIG, "O", 11)).toMatchObject({ planned: 4500, invoiced: 0 });
   });
 
   it("April furniture is an unplanned win", () => {

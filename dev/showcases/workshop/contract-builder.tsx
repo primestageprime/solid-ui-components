@@ -63,11 +63,11 @@ const ContractBuilderBench: Component = () => (
             <PeriodBars config={CONFIG} />
             <Legend items={legendItems} />
             <MutedBody>
-              Outline = what you hoped for. Hatched inside it = booked (a
-              planned win). Solid above it = booked beyond the hope (an
-              unplanned win — the projection was low). Empty outline = still
-              hoped for, not yet booked. Click a bar to log its numbers to the
-              console.
+              Outline = what you hoped for. Inside it: solid = invoiced,
+              translucent = signed but not yet invoiced, empty = still hoped
+              for, not yet booked. Hatched above the outline = booked beyond
+              the hope (an unplanned win — the projection was low), invoiced
+              or not. Click a bar to log its numbers to the console.
             </MutedBody>
           </TightStack>
         </ContentChartFrame>
