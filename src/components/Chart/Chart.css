@@ -79,8 +79,15 @@
 }
 
 /* Series */
+/* The accent is only the DEFAULT stroke: a `stroke` prop lands as an SVG
+   presentation attribute, which loses to ANY author rule (zero specificity
+   included), so an unconditional `stroke` here painted every LineSeries
+   accent whatever its caller passed. `:not([stroke])` steps aside for the
+   prop; `:where()` keeps the rule at zero so a consumer's class still wins. */
 .sui-chart__line {
   fill: none;
+}
+:where(.sui-chart__line:not([stroke])) {
   stroke: var(--sui-accent);
 }
 .sui-chart__area {
