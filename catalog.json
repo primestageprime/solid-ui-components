@@ -16836,6 +16836,27 @@
     "line": 190
   },
   {
+    "name": "ValueHandle",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A draggable GRIP on the top edge of each datum's column, as a Structural Primitive (Depth 1) slot child of `Chart`: the reader drags it up or down to SET that datum's value, or double-clicks the column to type one in.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": [
+      "Not `DragRangeSelect` (an x-range selection the root drives) and not `CurrentValueIndicator` (a readout dot)."
+    ],
+    "useFor": "dragging a bar's or column's top edge to set its value on a chart.",
+    "notes": null,
+    "showcase": "#/chart",
+    "since": null,
+    "file": "src/components/Chart/ValueHandle.tsx",
+    "line": 63
+  },
+  {
     "name": "ValueMatrix",
     "depth": null,
     "kind": "primitive",
