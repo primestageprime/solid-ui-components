@@ -29,7 +29,7 @@ import {
   fn,
 } from "../../../src";
 import { PeriodBars, TYPE_COLORS } from "./contract-builder-kit/period-bars";
-import { CONFIG } from "./contract-builder.fixtures";
+import { STEP1 } from "./contract-builder.step1.fixtures";
 import type { JobType } from "./contract-builder-model";
 
 const { map } = fn;
@@ -38,7 +38,7 @@ export const meta = { label: "Contract Builder" };
 
 const legendItems = map(
   (t: JobType, i: number) => ({ color: TYPE_COLORS[i], label: t.name }),
-  CONFIG.types,
+  STEP1.types,
 );
 
 const ContractBuilderBench: Component = () => (
@@ -47,27 +47,24 @@ const ContractBuilderBench: Component = () => (
       <ContentStack>
         <TightStack>
           <SectionTitle>Contract Builder</SectionTitle>
-          <TextSublabel>Painter · projected vs planned · region 1 of 4</TextSublabel>
+          <TextSublabel>Painter · example data, rebuilt one expectation at a time · step 1: exterior</TextSublabel>
           <MutedBody>
-            Measured in dollars, not job counts (assumption — not yet
-            confirmed). A job's money lands in the month each payment falls —
-            deposit, phase payments, final — not by its start date, and a job
-            paying across three months has no single month to "count" in, so
-            only dollars respect that rule. Projected = jobs a month × typical $
-            per job. The data is example data.
+            Step 1 shows one thing: what an exterior painter expects to bring
+            in each month. Expected = jobs a month × $4,000 per job, on a
+            smooth seasonal curve that peaks at five jobs in July and is
+            exactly $0 in the three snow months — December, January and
+            February. No other job types and no signed jobs yet. Measured in
+            dollars (assumption — not yet confirmed). The data is example
+            data.
           </MutedBody>
         </TightStack>
 
-        <ContentChartFrame title="Booked vs hoped, by month" yTitle="Revenue ($)">
+        <ContentChartFrame title="Exterior: expected revenue, by month" yTitle="Revenue ($)">
           <TightStack>
-            <PeriodBars config={CONFIG} />
+            <PeriodBars config={STEP1} />
             <Legend items={legendItems} />
             <MutedBody>
-              Outline = what you hoped for. Inside it: solid = invoiced,
-              translucent = signed but not yet invoiced, empty = still hoped
-              for, not yet booked. Hatched above the outline = booked beyond
-              the hope (an unplanned win — the projection was low), invoiced
-              or not. Click a bar to log its numbers to the console.
+              Each outline is one month's expected exterior revenue.
             </MutedBody>
           </TightStack>
         </ContentChartFrame>
