@@ -1,0 +1,157 @@
+// ============================================
+// PeriodBars — per month, one bar per job type (O / I / F side by side),
+// Peter's sketch, top right. COMPOSED from SUI, no CSS of its own:
+//
+//   Chart (index x, responsive) + Grid + YAxis + XAxis (month ticks)
+//   HatchPattern x3     one stripe per type colour
+//   BarSeries x3        one per type, offset −⅓ / 0 / +⅓ inside the month;
+//                       segments [within (hatched), unplanned (solid)]
+//   LineSeries x3       the projection as a HOLLOW OUTLINE: three sides of a
+//                       box per bar, NaN between bars. What the outline holds
+//                       and the bar does not fill is the remainder.
+//
+// So: hatched inside the outline = planned win; solid above the outline =
+// unplanned win; empty outline = still hoped for, not booked.
+//
+// A bar click `console.table`s its cell — the headless check on what the bar
+// was drawn from.
+// ============================================
+import { type Component, For, createMemo, createUniqueId } from "solid-js";
+import {
+  BarSeries,
+  Chart,
+  Grid,
+  HatchPattern,
+  LineSeries,
+  XAxis,
+  YAxis,
+  fn,
+} from "../../../../src";
+import {
+  type Cell,
+  type Config,
+  type JobType,
+  MONTHS,
+  MONTH_INDICES,
+  cellsOfType,
+  money,
+  tallest,
+} from "../contract-builder-model";
+
+const { flatMap, map } = fn;
+
+const WIDTH = 960;
+const HEIGHT = 280;
+const MARGIN = { top: 12, right: 12, bottom: 26, left: 52 };
+
+/** Slot per type inside a month, in data units; the bar fills BAND of it. */
+const STEP = 0.3;
+const BAND = 0.86;
+const HALF = (STEP * BAND) / 2;
+
+/** The type colours, in config order. */
+export const TYPE_COLORS: readonly string[] = [
+  "var(--sui-series-1)",
+  "var(--sui-series-2)",
+  "var(--sui-series-3)",
+];
+
+const offsetOf = (i: number): number => (i - 1) * STEP;
+
+interface Pt {
+  readonly x: number;
+  readonly y: number;
+}
+const BREAK: Pt = { x: Number.NaN, y: Number.NaN };
+
+/** Left side, top, right side of each projection box, broken between bars. */
+const outlineOf = (cells: readonly Cell[], offset: number): readonly Pt[] =>
+  flatMap(
+    (c: Cell): Pt[] =>
+      c.projected <= 0
+        ? []
+        : [
+            { x: c.month + offset - HALF, y: 0 },
+            { x: c.month + offset - HALF, y: c.projected },
+            { x: c.month + offset + HALF, y: c.projected },
+            { x: c.month + offset + HALF, y: 0 },
+            BREAK,
+          ],
+    cells,
+  );
+
+/** A round y top a little above the tallest bar. */
+const niceTop = (v: number): number => Math.max(1000, Math.ceil((v * 1.08) / 5000) * 5000);
+
+export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
+  const uid = createUniqueId();
+  const hatchId = (i: number) => `cb-hatch-${uid}-${i}`;
+  const series = createMemo(() =>
+    map(
+      (t: JobType, i: number) => ({
+        t,
+        i,
+        cells: cellsOfType(props.config, t.id),
+      }),
+      props.config.types,
+    ),
+  );
+  const top = createMemo(() => niceTop(tallest(props.config)));
+  return (
+    <Chart
+      responsive
+      width={WIDTH}
+      height={HEIGHT}
+      xDomain={[-0.5, 11.5]}
+      yDomain={[0, top()]}
+      margin={MARGIN}
+    >
+      <defs>
+        <For each={TYPE_COLORS}>
+          {(color, i) => (
+            <HatchPattern
+              id={hatchId(i())}
+              color={color}
+              groundOpacity={0.25}
+              stripeOpacity={0.85}
+            />
+          )}
+        </For>
+      </defs>
+      <Grid tickCount={4} />
+      <YAxis
+        tickValues={[0, top() / 4, top() / 2, (top() * 3) / 4, top()]}
+        tickFormat={money}
+      />
+      <XAxis
+        tickValues={MONTH_INDICES as number[]}
+        tickFormat={(m) => MONTHS[Math.round(m)] ?? ""}
+      />
+      <For each={series()}>
+        {(s) => (
+          <>
+            <BarSeries
+              data={s.cells}
+              x={(c) => c.month + offsetOf(s.i)}
+              step={STEP}
+              bandWidth={BAND}
+              segmentGap={2}
+              segments={(c) => [
+                { value: c.within, fill: `url(#${hatchId(s.i)})`, key: "within" },
+                { value: c.unplanned, fill: TYPE_COLORS[s.i], key: "unplanned" },
+              ]}
+              onBarClick={(c) => console.table([{ ...c, name: s.t.name }])}
+            />
+            <LineSeries
+              data={outlineOf(s.cells, offsetOf(s.i))}
+              x={(p) => p.x}
+              y={(p) => p.y}
+              stroke={TYPE_COLORS[s.i]}
+              strokeWidth={1.5}
+            />
+          </>
+        )}
+      </For>
+    </Chart>
+  );
+};
