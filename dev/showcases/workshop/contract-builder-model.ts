@@ -275,3 +275,36 @@ export const observeProjected = (config: Config, type: TypeId): string =>
       cellsOfType(config, type),
     ),
   ]);
+
+// ── now, missing, and the running divergence ────────────────────────────────
+
+/**
+ * The money hoped for and not got: a past month's unbooked remainder. "Past"
+ * is a month that ENDED before `today`; the current month's remainder is
+ * still hoped for, like any future month's.
+ */
+export const missingOf = (c: Cell, today: string): number =>
+  c.month < monthOf(today) ? c.remainder : 0;
+
+/** `today` as a fractional month on the bars' index axis (bars centre on m). */
+export const monthPosition = (today: string): number => {
+  const [y, m, d] = map(Number, today.split("-"));
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return m - 1 - 0.5 + (d - 1) / days;
+};
+
+/** Σ over every type of booked − hope, in one month. */
+export const monthDelta = (config: Config, month: number): number =>
+  sum(map((c: Cell) => c.delta, periodOf(config, month).cells));
+
+/**
+ * The running divergence from January: Σ over q ≤ m of `monthDelta(q)`. A sum
+ * of pure months — no register carried from one to the next.
+ */
+export const cumulativeDelta = (config: Config, month: number): number =>
+  sum(
+    map(
+      (q: number) => monthDelta(config, q),
+      filter((q: number) => q <= month, MONTH_INDICES),
+    ),
+  );

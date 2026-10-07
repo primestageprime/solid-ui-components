@@ -80,7 +80,7 @@ export const STEP3: Config = { types: [EXTERIOR, INTERIOR, FURNITURE], jobs: [] 
 // ── step 4: + booked exterior jobs ──────────────────────────────────────────
 
 /** The bench's "now": a payment before it is invoiced, on or after it is not. */
-export const TODAY = "2026-10-07";
+export const TODAY = "2026-04-15";
 
 const pay = (label: string, on: string, amount: number): Payment => ({
   label,
@@ -102,7 +102,7 @@ const exteriorJob = (
  *   Mar  $5,100 of  $6,000  (85% — a remainder left empty)
  *   Apr $13,340 of $11,600 (115% — $1,740 above the hope)
  *   May–Oct exactly 100%; Nov–Dec nothing signed yet.
- * October straddles TODAY: $4,000 already invoiced, $7,600 signed but not yet.
+ * Invoiced vs not follows TODAY (moved to 2026-04-15 in step 6).
  */
 export const EXTERIOR_JOBS: readonly Job[] = [
   exteriorJob("alvarez", "Alvarez colonial", "2026-03-16", 12, [

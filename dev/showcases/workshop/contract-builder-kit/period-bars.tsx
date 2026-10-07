@@ -30,6 +30,7 @@ import {
   Grid,
   HatchPattern,
   LineSeries,
+  ReferenceLine,
   XAxis,
   YAxis,
   fn,
@@ -41,7 +42,9 @@ import {
   MONTHS,
   MONTH_INDICES,
   cellsOfType,
+  missingOf,
   money,
+  monthPosition,
   tallest,
 } from "../contract-builder-model";
 
@@ -91,10 +94,21 @@ const outlineOf = (cells: readonly Cell[], offset: number): readonly Pt[] =>
 /** A round y top a little above the tallest bar. */
 const niceTop = (v: number): number => Math.max(1000, Math.ceil((v * 1.08) / 5000) * 5000);
 
-export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
+/** The "missing" mark: money hoped for in a past month and not got. */
+export const MISSING_COLOR = "var(--sui-danger)";
+
+export const PeriodBars: Component<{
+  readonly config: Config;
+  /** ISO "now": the NOW rule, and which months' shortfall is missing. */
+  readonly today: string;
+}> = (props) => {
   const uid = createUniqueId();
   const hatchId = (i: number) => `cb-hatch-${uid}-${i}`;
   const tintId = (i: number) => `cb-tint-${uid}-${i}`;
+  /* Cross-hatch = two stripe patterns crossed: the bar's own segment carries
+     one angle, an overlay BarSeries the other (a pattern has one angle). */
+  const missA = `cb-miss-a-${uid}`;
+  const missB = `cb-miss-b-${uid}`;
   const series = createMemo(() =>
     map(
       (t: JobType, i: number) => ({
@@ -135,6 +149,8 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
             </>
           )}
         </For>
+        <HatchPattern id={missA} color={MISSING_COLOR} angle={45} groundOpacity={0.1} stripeOpacity={0.8} />
+        <HatchPattern id={missB} color={MISSING_COLOR} angle={-45} groundOpacity={0} stripeOpacity={0.8} />
       </defs>
       <Grid tickCount={4} />
       <YAxis
@@ -156,9 +172,22 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
               segments={(c) => [
                 { value: c.invoicedWithin, fill: TYPE_COLORS[s.i], key: "invoiced" },
                 { value: c.plannedWithin, fill: `url(#${tintId(s.i)})`, key: "planned" },
+                { value: missingOf(c, props.today), fill: `url(#${missA})`, key: "missing" },
                 { value: c.unplanned, fill: `url(#${hatchId(s.i)})`, key: "unplanned" },
               ]}
               onBarClick={(c) => console.table([{ ...c, name: s.t.name }])}
+            />
+            {/* The second stripe of the cross. Its spacer is fill "none", which
+                SVG does not hit-test, so clicks still reach the bar beneath. */}
+            <BarSeries
+              data={s.cells}
+              x={(c) => c.month + offsetOf(s.i, s.n)}
+              step={STEP}
+              bandWidth={BAND}
+              segments={(c) => [
+                { value: c.within, fill: "none", key: "spacer" },
+                { value: missingOf(c, props.today), fill: `url(#${missB})`, key: "missing" },
+              ]}
             />
             <LineSeries
               data={outlineOf(s.cells, offsetOf(s.i, s.n))}
@@ -170,6 +199,13 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
           </>
         )}
       </For>
+      <ReferenceLine
+        orientation="vertical"
+        value={monthPosition(props.today)}
+        label="now"
+        stroke="var(--sui-text-primary)"
+        strokeDasharray="4 3"
+      />
     </Chart>
   );
 };
