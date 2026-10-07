@@ -33,3 +33,22 @@ export const EXTERIOR: JobType = {
 };
 
 export const STEP1: Config = { types: [EXTERIOR], jobs: [] };
+
+// ── step 2: + interior ──────────────────────────────────────────────────────
+
+/** Interior's steady baseline, and its level in the snow months. */
+const INTERIOR_BASE = 3;
+const INTERIOR_SNOW = 6;
+
+/** Steady year-round, spiking in the snow months when exterior is $0. */
+export const INTERIOR: JobType = {
+  id: "I",
+  name: "Interior",
+  typical: 2500,
+  qty: map(
+    (_m, i) => (SNOW_MONTHS.includes(i) ? INTERIOR_SNOW : INTERIOR_BASE),
+    Array.from({ length: 12 }),
+  ),
+};
+
+export const STEP2: Config = { types: [EXTERIOR, INTERIOR], jobs: [] };

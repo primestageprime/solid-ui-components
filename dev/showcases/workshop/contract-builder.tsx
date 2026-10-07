@@ -29,7 +29,7 @@ import {
   fn,
 } from "../../../src";
 import { PeriodBars, TYPE_COLORS } from "./contract-builder-kit/period-bars";
-import { STEP1 } from "./contract-builder.step1.fixtures";
+import { STEP2 } from "./contract-builder.step1.fixtures";
 import type { JobType } from "./contract-builder-model";
 
 const { map } = fn;
@@ -38,7 +38,7 @@ export const meta = { label: "Contract Builder" };
 
 const legendItems = map(
   (t: JobType, i: number) => ({ color: TYPE_COLORS[i], label: t.name }),
-  STEP1.types,
+  STEP2.types,
 );
 
 const ContractBuilderBench: Component = () => (
@@ -47,24 +47,25 @@ const ContractBuilderBench: Component = () => (
       <ContentStack>
         <TightStack>
           <SectionTitle>Contract Builder</SectionTitle>
-          <TextSublabel>Painter · example data, rebuilt one expectation at a time · step 1: exterior</TextSublabel>
+          <TextSublabel>Painter · example data, rebuilt one expectation at a time · step 2: exterior + interior</TextSublabel>
           <MutedBody>
-            Step 1 shows one thing: what an exterior painter expects to bring
-            in each month. Expected = jobs a month × $4,000 per job, on a
-            smooth seasonal curve that peaks at five jobs in July and is
-            exactly $0 in the three snow months — December, January and
-            February. No other job types and no signed jobs yet. Measured in
-            dollars (assumption — not yet confirmed). The data is example
-            data.
+            Step 2: what a painter expects to bring in each month from
+            exterior and interior work. Exterior = jobs a month × $4,000, a
+            smooth seasonal curve peaking at five jobs in July and exactly $0
+            in the three snow months — December, January and February.
+            Interior = jobs a month × $2,500, a steady three jobs all year that
+            jumps to six in those same snow months, when the crew moves
+            inside. No furniture and no signed jobs yet. Measured in dollars
+            (assumption — not yet confirmed). The data is example data.
           </MutedBody>
         </TightStack>
 
-        <ContentChartFrame title="Exterior: expected revenue, by month" yTitle="Revenue ($)">
+        <ContentChartFrame title="Expected revenue, by month" yTitle="Revenue ($)">
           <TightStack>
-            <PeriodBars config={STEP1} />
+            <PeriodBars config={STEP2} />
             <Legend items={legendItems} />
             <MutedBody>
-              Each outline is one month's expected exterior revenue.
+              Each outline is one month's expected revenue for one job type.
             </MutedBody>
           </TightStack>
         </ContentChartFrame>
