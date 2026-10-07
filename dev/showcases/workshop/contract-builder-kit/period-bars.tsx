@@ -63,7 +63,8 @@ export const TYPE_COLORS: readonly string[] = [
   "var(--sui-series-3)",
 ];
 
-const offsetOf = (i: number): number => (i - 1) * STEP;
+/** Centre the group: three types sit at −1/0/+1 slots, one type at 0. */
+const offsetOf = (i: number, n: number): number => (i - (n - 1) / 2) * STEP;
 
 interface Pt {
   readonly x: number;
@@ -99,6 +100,7 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
       (t: JobType, i: number) => ({
         t,
         i,
+        n: props.config.types.length,
         cells: cellsOfType(props.config, t.id),
       }),
       props.config.types,
@@ -136,7 +138,7 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
       </defs>
       <Grid tickCount={4} />
       <YAxis
-        tickValues={[0, top() / 4, top() / 2, (top() * 3) / 4, top()]}
+        tickValues={Array.from({ length: top() / 5000 + 1 }, (_v, k) => k * 5000)}
         tickFormat={money}
       />
       <XAxis
@@ -148,7 +150,7 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
           <>
             <BarSeries
               data={s.cells}
-              x={(c) => c.month + offsetOf(s.i)}
+              x={(c) => c.month + offsetOf(s.i, s.n)}
               step={STEP}
               bandWidth={BAND}
               segments={(c) => [
@@ -159,7 +161,7 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
               onBarClick={(c) => console.table([{ ...c, name: s.t.name }])}
             />
             <LineSeries
-              data={outlineOf(s.cells, offsetOf(s.i))}
+              data={outlineOf(s.cells, offsetOf(s.i, s.n))}
               x={(p) => p.x}
               y={(p) => p.y}
               stroke={TYPE_COLORS[s.i]}

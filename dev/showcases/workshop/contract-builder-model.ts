@@ -265,3 +265,13 @@ export const observe = (config: Config): string => {
     join(" ", map((s: string) => pad(s, 12), cells));
   return join("\n", [line(COLUMNS), ...map(line, rows)]);
 };
+
+/** One type's projected $ per month as a two-column text table. */
+export const observeProjected = (config: Config, type: TypeId): string =>
+  join("\n", [
+    `${pad("month", 6)} ${pad("projected", 10)}`,
+    ...map(
+      (c: Cell) => `${pad(MONTHS[c.month], 6)} ${pad(money(c.projected), 10)}`,
+      cellsOfType(config, type),
+    ),
+  ]);

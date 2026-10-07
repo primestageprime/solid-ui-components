@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { every, flatMap, map, pipe } from "../../../src/fn";
 import { CONFIG, TYPES } from "./contract-builder.fixtures";
+import { SNOW_MONTHS, STEP1 } from "./contract-builder.step1.fixtures";
 import {
   type Cell,
   type Config,
   type Period,
   cellOf,
+  cellsOfType,
   monthOf,
   observe,
+  observeProjected,
   periodsOf,
   plannedOf,
 } from "./contract-builder-model";
@@ -162,5 +165,25 @@ describe("contract-builder fixtures — planted signals", () => {
 
   it("April furniture is an unplanned win", () => {
     expect(cell(CONFIG, "F", 3)).toMatchObject({ projected: 2400, unplanned: 1600 });
+  });
+});
+
+describe("contract-builder step 1 — exterior expectation only", () => {
+  it("prints exterior projected per month", () => {
+    const table = observeProjected(STEP1, "O");
+    console.log(`\n${table}\n`);
+    expect(table.split("\n")).toHaveLength(13);
+  });
+
+  it("is exactly $0 in the snow months and peaks in July", () => {
+    const projected = map((c: Cell) => c.projected, cellsOfType(STEP1, "O"));
+    expect(map((m: number) => projected[m], SNOW_MONTHS)).toEqual([0, 0, 0]);
+    expect(Math.max(...projected)).toBe(projected[6]);
+    expect(projected[6]).toBe(20000);
+  });
+
+  it("has nothing but exterior's expectation", () => {
+    expect(map((t) => t.id, STEP1.types)).toEqual(["O"]);
+    expect(STEP1.jobs).toHaveLength(0);
   });
 });
