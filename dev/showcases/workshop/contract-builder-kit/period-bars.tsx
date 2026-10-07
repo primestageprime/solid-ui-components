@@ -7,7 +7,11 @@
 //                       stripeless flat tint (signed, not yet invoiced)
 //   BarSeries x3        one per type, offset −⅓ / 0 / +⅓ inside the month;
 //                       segments [invoiced (solid), planned (tint),
-//                       above the hope (hatched)]
+//                       above the hope (hatched)]. NO `segmentGap`: the
+//                       gap is cut off each lower segment's top, which
+//                       opened a seam under the outline (Peter, 2026-10-07:
+//                       "what's with the weird gap at the top of the bar?").
+//                       Texture and alpha already separate the marks.
 //   LineSeries x3       the projection as a HOLLOW OUTLINE: three sides of a
 //                       box per bar, NaN between bars. What the outline holds
 //                       and the bar does not fill is the remainder.
@@ -147,7 +151,6 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
               x={(c) => c.month + offsetOf(s.i)}
               step={STEP}
               bandWidth={BAND}
-              segmentGap={2}
               segments={(c) => [
                 { value: c.invoicedWithin, fill: TYPE_COLORS[s.i], key: "invoiced" },
                 { value: c.plannedWithin, fill: `url(#${tintId(s.i)})`, key: "planned" },
