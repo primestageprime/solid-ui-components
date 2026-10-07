@@ -29,7 +29,12 @@ import {
   fn,
 } from "../../../src";
 import { CumulativeDivergence } from "./contract-builder-kit/cumulative";
-import { MISSING_COLOR, PeriodBars, TYPE_COLORS } from "./contract-builder-kit/period-bars";
+import {
+  BAR_MARKS,
+  CUMULATIVE_MARKS,
+  PatternLegend,
+} from "./contract-builder-kit/pattern-legend";
+import { PeriodBars, TYPE_COLORS } from "./contract-builder-kit/period-bars";
 import { STEP5, TODAY } from "./contract-builder.step1.fixtures";
 import type { JobType } from "./contract-builder-model";
 
@@ -37,18 +42,10 @@ const { map } = fn;
 
 export const meta = { label: "Contract Builder" };
 
-const legendItems = [
-  ...map(
-    (t: JobType, i: number) => ({ color: TYPE_COLORS[i], label: t.name }),
-    STEP5.types,
-  ),
-  { color: MISSING_COLOR, label: "Missing (past shortfall)" },
-];
-
-const cumulativeLegend = [
-  { color: "var(--sui-success)", label: "Ahead of the total hope" },
-  { color: "var(--sui-danger)", label: "Behind the total hope" },
-];
+const legendItems = map(
+  (t: JobType, i: number) => ({ color: TYPE_COLORS[i], label: t.name }),
+  STEP5.types,
+);
 
 const ContractBuilderBench: Component = () => (
   <div class="component-section component-section--full">
@@ -73,6 +70,7 @@ const ContractBuilderBench: Component = () => (
           <TightStack>
             <PeriodBars config={STEP5} today={TODAY} />
             <Legend items={legendItems} />
+            <PatternLegend items={BAR_MARKS} />
             <MutedBody>
               Outline = expected revenue for one job type. Inside it: solid = invoiced, translucent = signed but not yet invoiced. Red cross-hatch = MISSING: a month that ended before NOW short of its hope — money hoped for and not got. Empty = still hoped for (the current month and later). Hatched above the outline = booked beyond the hope.
             </MutedBody>
@@ -85,7 +83,7 @@ const ContractBuilderBench: Component = () => (
         >
           <TightStack>
             <CumulativeDivergence config={STEP5} today={TODAY} />
-            <Legend items={cumulativeLegend} />
+            <PatternLegend items={CUMULATIVE_MARKS} />
             <MutedBody>
               Each month: the sum since January of booked minus hoped, across
               exterior, interior and furniture together. Above zero the mix is
