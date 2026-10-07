@@ -56,15 +56,15 @@ const ContractBuilderBench: Component = () => (
       <ContentStack>
         <TightStack>
           <SectionTitle>Contract Builder</SectionTitle>
-          <TextSublabel>Painter · example data, rebuilt one expectation at a time · step 6: now = April 15, missing, running divergence</TextSublabel>
+          <TextSublabel>Painter · example data, rebuilt one expectation at a time · step 6b: exterior swings the running total across zero</TextSublabel>
           <MutedBody>
-            Step 6: what a painter expects to bring in each month from
+            Step 6b: what a painter expects to bring in each month from
             exterior, interior and furniture work. Exterior = jobs a month × $4,000, a
             smooth seasonal curve peaking at five jobs in July and exactly $0
             in the three snow months — December, January and February.
             Interior = jobs a month × $2,500, the mirror image: a summer low
             of two jobs, rising smoothly through autumn to six jobs through
-            the snow months, then easing back down through spring. Furniture = jobs a month × $1,200, occasional small pieces with no season: none in most months, one job in February, May and November, two in September. Signed EXTERIOR jobs are now booked against the hope, each month's money placed by when its payments land (deposit, progress, final): March 85% of the hope, April 115%, May through October exactly 100%, nothing signed for November or December. NOW is April 15, 2026 (the dashed rule): payments before it are invoiced, later ones are signed but not yet invoiced. Signed INTERIOR jobs show an improving year: 40–60% of the hope from January to April, climbing to about 80% by autumn, over the hope only in August (115%), with signed winter work for November (70%) and December (50%) not yet invoiced. Furniture is still an expectation only. Measured in dollars
+            the snow months, then easing back down through spring. Furniture = jobs a month × $1,200, occasional small pieces with no season: none in most months, one job in February, May and November, two in September. Signed EXTERIOR jobs, each month's money placed by when its payments land (deposit, progress, final), swing over and under the hope: winter deposits for spring jobs land in January and February against a $0 hope, then March 300%, April 83%, May 150%, June 79%, July 145%, August 58%, September 163%, October 100%, nothing signed for November. NOW is April 15, 2026 (the dashed rule): payments before it are invoiced, later ones are signed but not yet invoiced. Signed INTERIOR jobs show an improving year: 40–60% of the hope from January to April, climbing to about 80% by autumn, over the hope only in August (115%), with signed winter work for November (70%) and December (50%) not yet invoiced. Furniture is still an expectation only. Measured in dollars
             (assumption — not yet confirmed). The data is example data.
           </MutedBody>
         </TightStack>

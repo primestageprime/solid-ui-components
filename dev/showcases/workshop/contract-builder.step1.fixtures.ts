@@ -98,57 +98,56 @@ const exteriorJob = (
 ): Job => ({ id, name, type: "O", use: true, start, duration, payments });
 
 /**
- * Signed exterior work, placed by payment date. Month totals against the hope:
- *   Mar  $5,100 of  $6,000  (85% — a remainder left empty)
- *   Apr $13,340 of $11,600 (115% — $1,740 above the hope)
- *   May–Oct exactly 100%; Nov–Dec nothing signed yet.
- * Invoiced vs not follows TODAY (moved to 2026-04-15 in step 6).
+ * Signed exterior work, placed by payment date (step 6b, Peter: exterior
+ * overperforming should make the running total "hokey-pokey back and forth"
+ * across zero against interior's shortfall). Winter DEPOSITS for spring jobs
+ * land in Jan/Feb against a $0 hope; then the season alternates over and
+ * under:
+ *   Jan $6,000 / Feb $10,000 against $0 (deposits — all above the hope)
+ *   Mar 300%  Apr 83%  May 150%  Jun 79%  Jul 145%  Aug 58%  Sep 163%
+ *   Oct 100%  Nov 0% (nothing signed)  Dec — ($0 hope)
  */
 export const EXTERIOR_JOBS: readonly Job[] = [
-  exteriorJob("alvarez", "Alvarez colonial", "2026-03-16", 12, [
-    pay("Deposit", "2026-03-10", 2000),
-    pay("Final", "2026-04-08", 6000),
+  exteriorJob("westfield", "Westfield Plaza storefronts", "2026-03-09", 15, [
+    pay("Deposit", "2026-01-20", 3000),
+    pay("Final", "2026-03-27", 12000),
   ]),
-  exteriorJob("marsh", "Marsh Rd siding", "2026-03-30", 10, [
-    pay("Deposit", "2026-03-24", 3100),
-    pay("Final", "2026-04-22", 4340),
+  exteriorJob("alvarez", "Alvarez colonial", "2026-03-23", 14, [
+    pay("Deposit", "2026-01-28", 3000),
+    pay("Progress", "2026-03-31", 6000),
+    pay("Final", "2026-04-10", 4000),
   ]),
-  exteriorJob("okafor", "Okafor porch + trim", "2026-05-04", 9, [
-    pay("Deposit", "2026-04-28", 3000),
-    pay("Final", "2026-05-15", 9000),
+  exteriorJob("marsh", "Marsh Rd siding", "2026-04-06", 12, [
+    pay("Deposit", "2026-02-10", 4000),
+    pay("Final", "2026-04-24", 5600),
   ]),
-  exteriorJob("hollis", "Hollis Ave fence", "2026-06-01", 8, [
-    pay("Deposit", "2026-05-27", 7000),
-    pay("Final", "2026-06-12", 8000),
+  exteriorJob("garner", "Garner barn", "2026-05-04", 14, [
+    pay("Deposit", "2026-02-24", 6000),
+    pay("Final", "2026-05-22", 14000),
   ]),
-  exteriorJob("reyes", "Reyes garage", "2026-06-22", 4, [
-    pay("On completion", "2026-06-26", 7200),
+  exteriorJob("okafor", "Okafor porch + trim", "2026-05-25", 4, [
+    pay("On completion", "2026-05-29", 10000),
   ]),
-  exteriorJob("garner", "Garner barn", "2026-07-06", 9, [
-    pay("Deposit", "2026-06-29", 4000),
-    pay("Final", "2026-07-17", 10000),
+  exteriorJob("hollis", "Hollis Ave fence", "2026-06-08", 9, [
+    pay("Deposit", "2026-06-03", 5000),
+    pay("Final", "2026-06-19", 10200),
   ]),
-  exteriorJob("lindqvist", "Lindqvist cedar shake", "2026-07-27", 9, [
-    pay("Deposit", "2026-07-20", 5000),
-    pay("Final", "2026-08-07", 11200),
+  exteriorJob("lindqvist", "Lindqvist cedar shake", "2026-07-06", 15, [
+    pay("Deposit", "2026-07-06", 9000),
+    pay("Final", "2026-07-24", 20000),
   ]),
-  exteriorJob("pemberton", "Pemberton shed + deck", "2026-07-27", 4, [
-    pay("On completion", "2026-07-31", 5000),
+  exteriorJob("reyes", "Reyes garage + trim", "2026-08-10", 4, [
+    pay("On completion", "2026-08-14", 11200),
   ]),
-  exteriorJob("brook", "Brook St Victorian", "2026-08-31", 25, [
-    pay("Deposit", "2026-08-24", 8000),
-    pay("Progress", "2026-09-11", 6000),
-    pay("Final", "2026-10-02", 4000),
+  exteriorJob("brook", "Brook St Victorian", "2026-09-02", 18, [
+    pay("Deposit", "2026-09-02", 8000),
+    pay("Final", "2026-09-25", 18000),
   ]),
-  exteriorJob("dentist", "Dental office exterior", "2026-09-14", 4, [
-    pay("Net 10", "2026-09-18", 6400),
+  exteriorJob("hartley", "Hartley condo trim", "2026-10-05", 4, [
+    pay("On completion", "2026-10-09", 7600),
   ]),
-  exteriorJob("hartley", "Hartley condo trim", "2026-10-05", 9, [
-    pay("Deposit", "2026-09-29", 3600),
-    pay("Final", "2026-10-16", 5600),
-  ]),
-  exteriorJob("mill", "Mill Lofts railings", "2026-10-26", 3, [
-    pay("On completion", "2026-10-30", 2000),
+  exteriorJob("mill", "Mill Lofts railings", "2026-10-26", 2, [
+    pay("On completion", "2026-10-28", 4000),
   ]),
 ];
 
