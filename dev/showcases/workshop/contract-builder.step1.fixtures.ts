@@ -36,19 +36,30 @@ export const STEP1: Config = { types: [EXTERIOR], jobs: [] };
 
 // ── step 2: + interior ──────────────────────────────────────────────────────
 
-/** Interior's steady baseline, and its level in the snow months. */
-const INTERIOR_BASE = 3;
-const INTERIOR_SNOW = 6;
+/** Interior jobs a month at the summer low and through the snow months. */
+const INTERIOR_LOW = 2;
+const INTERIOR_HIGH = 6;
 
-/** Steady year-round, spiking in the snow months when exterior is $0. */
+/** Months from mid-January, around the year: Jan 0, Dec/Feb 1, … Jul 6. */
+const fromJanuary = (month: number): number => Math.min(month, 12 - month);
+
+/**
+ * The mirror of exterior: high through the snow months (within one month of
+ * January), easing down through spring on a half cosine to the summer low by
+ * June, and rising back through autumn the same way.
+ */
+const interiorQty = (month: number): number => {
+  const d = fromJanuary(month);
+  const w = d <= 1 ? 1 : d >= 5 ? 0 : 0.5 * (1 + Math.cos((Math.PI * (d - 1)) / 4));
+  return Math.round((INTERIOR_LOW + (INTERIOR_HIGH - INTERIOR_LOW) * w) * 10) / 10;
+};
+
+/** Low in summer, rising through autumn, high in the snow months. */
 export const INTERIOR: JobType = {
   id: "I",
   name: "Interior",
   typical: 2500,
-  qty: map(
-    (_m, i) => (SNOW_MONTHS.includes(i) ? INTERIOR_SNOW : INTERIOR_BASE),
-    Array.from({ length: 12 }),
-  ),
+  qty: map((_m, i) => interiorQty(i), Array.from({ length: 12 })),
 };
 
 export const STEP2: Config = { types: [EXTERIOR, INTERIOR], jobs: [] };

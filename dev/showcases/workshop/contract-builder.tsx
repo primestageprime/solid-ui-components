@@ -53,9 +53,9 @@ const ContractBuilderBench: Component = () => (
             exterior and interior work. Exterior = jobs a month × $4,000, a
             smooth seasonal curve peaking at five jobs in July and exactly $0
             in the three snow months — December, January and February.
-            Interior = jobs a month × $2,500, a steady three jobs all year that
-            jumps to six in those same snow months, when the crew moves
-            inside. No furniture and no signed jobs yet. Measured in dollars
+            Interior = jobs a month × $2,500, the mirror image: a summer low
+            of two jobs, rising smoothly through autumn to six jobs through
+            the snow months, then easing back down through spring. No furniture and no signed jobs yet. Measured in dollars
             (assumption — not yet confirmed). The data is example data.
           </MutedBody>
         </TightStack>
