@@ -53,9 +53,9 @@ const ContractBuilderBench: Component = () => (
       <ContentStack>
         <TightStack>
           <SectionTitle>Contract Builder</SectionTitle>
-          <TextSublabel>Painter · example data, rebuilt one expectation at a time · step 6b: exterior swings the running total across zero</TextSublabel>
+          <TextSublabel>Painter · example data, rebuilt one expectation at a time · step 8: divergence on top, hopes below</TextSublabel>
           <MutedBody>
-            Step 6b: what a painter expects to bring in each month from
+            The bars (below) are where you set your hopes, month by month — month is the default period. The running divergence (top) is your view of how your planned contracts fulfil those hopes, summed across every job type since January. Step 8: the charts are flipped; the example data is what a painter expects to bring in each month from
             exterior, interior and furniture work. Exterior = jobs a month × $4,000, a
             smooth seasonal curve peaking at five jobs in July and exactly $0
             in the three snow months — December, January and February.
@@ -66,19 +66,8 @@ const ContractBuilderBench: Component = () => (
           </MutedBody>
         </TightStack>
 
-        <ContentChartFrame title="Expected revenue, by month" yTitle="Revenue ($)">
-          <TightStack>
-            <PeriodBars config={STEP5} today={TODAY} />
-            <Legend items={legendItems} />
-            <PatternLegend items={BAR_MARKS} />
-            <MutedBody>
-              Outline = expected revenue for one job type. Inside it: solid = invoiced, translucent = signed but not yet invoiced. Red cross-hatch = MISSING: a month that ended before NOW short of its hope — money hoped for and not got. Empty = still hoped for (the current month and later). Hatched above the outline = booked beyond the hope.
-            </MutedBody>
-          </TightStack>
-        </ContentChartFrame>
-
         <ContentChartFrame
-          title="Running divergence from the total hope"
+          title="How your planned contracts fulfil your hopes"
           yTitle="Booked − hope, cumulative ($)"
         >
           <TightStack>
@@ -91,6 +80,17 @@ const ContractBuilderBench: Component = () => (
               are solid and the line is solid: actual money. From NOW's month
               on the bars are translucent and the line dashed: signed future
               work against the hope, so unsigned months still count as behind.
+            </MutedBody>
+          </TightStack>
+        </ContentChartFrame>
+
+        <ContentChartFrame title="Your hopes, month by month" yTitle="Revenue ($)">
+          <TightStack>
+            <PeriodBars config={STEP5} today={TODAY} />
+            <Legend items={legendItems} />
+            <PatternLegend items={BAR_MARKS} />
+            <MutedBody>
+              Outline = expected revenue for one job type. Inside it: solid = invoiced, translucent = signed but not yet invoiced. Red cross-hatch = MISSING: a month that ended before NOW short of its hope — money hoped for and not got. Empty = still hoped for (the current month and later). Hatched above the outline = booked beyond the hope.
             </MutedBody>
           </TightStack>
         </ContentChartFrame>
