@@ -3,15 +3,18 @@
 // Peter's sketch, top right. COMPOSED from SUI, no CSS of its own:
 //
 //   Chart (index x, responsive) + Grid + YAxis + XAxis (month ticks)
-//   HatchPattern x3     one stripe per type colour
+//   HatchPattern x6     per type colour: a stripe (above the hope) and a
+//                       stripeless flat tint (signed, not yet invoiced)
 //   BarSeries x3        one per type, offset −⅓ / 0 / +⅓ inside the month;
-//                       segments [within (hatched), unplanned (solid)]
+//                       segments [invoiced (solid), planned (tint),
+//                       above the hope (hatched)]
 //   LineSeries x3       the projection as a HOLLOW OUTLINE: three sides of a
 //                       box per bar, NaN between bars. What the outline holds
 //                       and the bar does not fill is the remainder.
 //
-// So: hatched inside the outline = planned win; solid above the outline =
-// unplanned win; empty outline = still hoped for, not booked.
+// So (Peter, 2026-10-07): outline = projected; solid inside it = invoiced;
+// translucent inside it = signed, not yet invoiced; hatched above it = booked
+// beyond the hope (invoiced or not); empty outline = not yet booked.
 //
 // A bar click `console.table`s its cell — the headless check on what the bar
 // was drawn from.
@@ -86,6 +89,7 @@ const niceTop = (v: number): number => Math.max(1000, Math.ceil((v * 1.08) / 500
 export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
   const uid = createUniqueId();
   const hatchId = (i: number) => `cb-hatch-${uid}-${i}`;
+  const tintId = (i: number) => `cb-tint-${uid}-${i}`;
   const series = createMemo(() =>
     map(
       (t: JobType, i: number) => ({
@@ -109,12 +113,20 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
       <defs>
         <For each={TYPE_COLORS}>
           {(color, i) => (
-            <HatchPattern
-              id={hatchId(i())}
-              color={color}
-              groundOpacity={0.25}
-              stripeOpacity={0.85}
-            />
+            <>
+              <HatchPattern
+                id={hatchId(i())}
+                color={color}
+                groundOpacity={0.15}
+                stripeOpacity={0.9}
+              />
+              <HatchPattern
+                id={tintId(i())}
+                color={color}
+                groundOpacity={0.35}
+                stripeOpacity={0}
+              />
+            </>
           )}
         </For>
       </defs>
@@ -137,8 +149,9 @@ export const PeriodBars: Component<{ readonly config: Config }> = (props) => {
               bandWidth={BAND}
               segmentGap={2}
               segments={(c) => [
-                { value: c.within, fill: `url(#${hatchId(s.i)})`, key: "within" },
-                { value: c.unplanned, fill: TYPE_COLORS[s.i], key: "unplanned" },
+                { value: c.invoicedWithin, fill: TYPE_COLORS[s.i], key: "invoiced" },
+                { value: c.plannedWithin, fill: `url(#${tintId(s.i)})`, key: "planned" },
+                { value: c.unplanned, fill: `url(#${hatchId(s.i)})`, key: "unplanned" },
               ]}
               onBarClick={(c) => console.table([{ ...c, name: s.t.name }])}
             />
