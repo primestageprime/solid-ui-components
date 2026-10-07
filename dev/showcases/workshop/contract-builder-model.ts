@@ -25,6 +25,15 @@
  *   shown      = planned + remainder         = max(planned, projected)
  *   delta      = planned − projected         ahead (+) / behind (−), unclamped
  *
+ * INVOICED IS A SUBSET OF PLANNED. A payment is signed-but-not-billed until it
+ * is invoiced. Invoiced money consumes the projection FIRST, so inside the
+ * outline the invoiced part sits at the base and the not-yet-invoiced part
+ * above it:
+ *   invoicedWithin = min(invoiced, projected)
+ *   plannedWithin  = within − invoicedWithin
+ * Money above the projection is one mark whether invoiced or not (Peter did
+ * not say how an invoiced overage differs; assumption, stated in the report).
+ *
  * Every function here is a pure f(config, month) — no registers, nothing
  * carried from one month to the next (Peter, 2026-09-30: "There can be
  * registers for the UI, but not for the projection fold"). A cumulative view
@@ -34,7 +43,8 @@
  *   1. within + unplanned = planned, and within + remainder = projected;
  *   2. unplanned and remainder are never both above zero;
  *   3. a job's money sits in its payment months, not its start month;
- *   4. a job that is not in use contributes nothing.
+ *   4. a job that is not in use contributes nothing;
+ *   5. invoicedWithin + plannedWithin = within.
  */
 import { filter, flatMap, join, map, pipe, sum } from "../../../src/fn";
 
@@ -74,6 +84,8 @@ export interface Payment {
   /** ISO date the money lands. */
   readonly on: string;
   readonly amount: number;
+  /** Billed. Unbilled money is still planned, just not yet invoiced. */
+  readonly invoiced: boolean;
 }
 
 export interface Job {
@@ -101,7 +113,13 @@ export interface Cell {
   readonly month: number;
   readonly projected: number;
   readonly planned: number;
+  /** The invoiced part of `planned`. */
+  readonly invoiced: number;
   readonly within: number;
+  /** Inside the projection and invoiced — the base of the bar. */
+  readonly invoicedWithin: number;
+  /** Inside the projection, signed but not yet invoiced. */
+  readonly plannedWithin: number;
   readonly unplanned: number;
   readonly remainder: number;
   /** max(planned, projected): the height the bar stands to. */
@@ -119,15 +137,23 @@ export const monthOf = (iso: string): number => {
 const paymentsIn = (job: Job, month: number): readonly Payment[] =>
   filter((p: Payment) => monthOf(p.on) === month, job.payments);
 
-/** Planned $ for a type in a month: the in-use jobs' payments that land there. */
-export const plannedOf = (config: Config, type: TypeId, month: number): number =>
+const landing = (config: Config, type: TypeId, month: number): readonly Payment[] =>
   pipe(
     config.jobs,
     filter((j: Job) => j.use && j.type === type),
     flatMap((j: Job) => paymentsIn(j, month)),
-    map((p: Payment) => p.amount),
-    sum,
   );
+
+const total = (ps: readonly Payment[]): number =>
+  sum(map((p: Payment) => p.amount, ps));
+
+/** Planned $ for a type in a month: the in-use jobs' payments that land there. */
+export const plannedOf = (config: Config, type: TypeId, month: number): number =>
+  total(landing(config, type, month));
+
+/** The invoiced part of `plannedOf`. */
+export const invoicedOf = (config: Config, type: TypeId, month: number): number =>
+  total(filter((p: Payment) => p.invoiced, landing(config, type, month)));
 
 /** Projected $ for a type in a month: qty × typical. */
 export const projectedOf = (t: JobType, month: number): number =>
@@ -137,12 +163,18 @@ export const projectedOf = (t: JobType, month: number): number =>
 export const cellOf = (config: Config, t: JobType, month: number): Cell => {
   const projected = projectedOf(t, month);
   const planned = plannedOf(config, t.id, month);
+  const invoiced = invoicedOf(config, t.id, month);
+  const within = Math.min(planned, projected);
+  const invoicedWithin = Math.min(invoiced, projected);
   return {
     type: t.id,
     month,
     projected,
     planned,
-    within: Math.min(planned, projected),
+    invoiced,
+    within,
+    invoicedWithin,
+    plannedWithin: within - invoicedWithin,
     unplanned: Math.max(0, planned - projected),
     remainder: Math.max(0, projected - planned),
     shown: Math.max(planned, projected),
@@ -201,7 +233,9 @@ const COLUMNS = [
   "type",
   "projected",
   "planned",
-  "within",
+  "invoiced",
+  "inv-within",
+  "plan-within",
   "unplanned",
   "remainder",
   "ahead/behind",
@@ -212,7 +246,9 @@ const rowOf = (c: Cell): readonly string[] => [
   c.type,
   money(c.projected),
   money(c.planned),
-  money(c.within),
+  money(c.invoiced),
+  money(c.invoicedWithin),
+  money(c.plannedWithin),
   money(c.unplanned),
   money(c.remainder),
   signed(c.delta),
