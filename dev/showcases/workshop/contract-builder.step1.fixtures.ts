@@ -12,7 +12,7 @@
  * model tests' data; the bench renders this file instead.
  */
 import { map } from "../../../src/fn";
-import type { Config, JobType } from "./contract-builder-model";
+import type { Config, Job, JobType, Payment } from "./contract-builder-model";
 
 /** Jobs a month at the summer peak. */
 const PEAK = 5;
@@ -76,3 +76,83 @@ export const FURNITURE: JobType = {
 };
 
 export const STEP3: Config = { types: [EXTERIOR, INTERIOR, FURNITURE], jobs: [] };
+
+// ── step 4: + booked exterior jobs ──────────────────────────────────────────
+
+/** The bench's "now": a payment before it is invoiced, on or after it is not. */
+export const TODAY = "2026-10-07";
+
+const pay = (label: string, on: string, amount: number): Payment => ({
+  label,
+  on,
+  amount,
+  invoiced: on < TODAY,
+});
+
+const exteriorJob = (
+  id: string,
+  name: string,
+  start: string,
+  duration: number,
+  payments: readonly Payment[],
+): Job => ({ id, name, type: "O", use: true, start, duration, payments });
+
+/**
+ * Signed exterior work, placed by payment date. Month totals against the hope:
+ *   Mar  $5,100 of  $6,000  (85% — a remainder left empty)
+ *   Apr $13,340 of $11,600 (115% — $1,740 above the hope)
+ *   May–Oct exactly 100%; Nov–Dec nothing signed yet.
+ * October straddles TODAY: $4,000 already invoiced, $7,600 signed but not yet.
+ */
+export const EXTERIOR_JOBS: readonly Job[] = [
+  exteriorJob("alvarez", "Alvarez colonial", "2026-03-16", 12, [
+    pay("Deposit", "2026-03-10", 2000),
+    pay("Final", "2026-04-08", 6000),
+  ]),
+  exteriorJob("marsh", "Marsh Rd siding", "2026-03-30", 10, [
+    pay("Deposit", "2026-03-24", 3100),
+    pay("Final", "2026-04-22", 4340),
+  ]),
+  exteriorJob("okafor", "Okafor porch + trim", "2026-05-04", 9, [
+    pay("Deposit", "2026-04-28", 3000),
+    pay("Final", "2026-05-15", 9000),
+  ]),
+  exteriorJob("hollis", "Hollis Ave fence", "2026-06-01", 8, [
+    pay("Deposit", "2026-05-27", 7000),
+    pay("Final", "2026-06-12", 8000),
+  ]),
+  exteriorJob("reyes", "Reyes garage", "2026-06-22", 4, [
+    pay("On completion", "2026-06-26", 7200),
+  ]),
+  exteriorJob("garner", "Garner barn", "2026-07-06", 9, [
+    pay("Deposit", "2026-06-29", 4000),
+    pay("Final", "2026-07-17", 10000),
+  ]),
+  exteriorJob("lindqvist", "Lindqvist cedar shake", "2026-07-27", 9, [
+    pay("Deposit", "2026-07-20", 5000),
+    pay("Final", "2026-08-07", 11200),
+  ]),
+  exteriorJob("pemberton", "Pemberton shed + deck", "2026-07-27", 4, [
+    pay("On completion", "2026-07-31", 5000),
+  ]),
+  exteriorJob("brook", "Brook St Victorian", "2026-08-31", 25, [
+    pay("Deposit", "2026-08-24", 8000),
+    pay("Progress", "2026-09-11", 6000),
+    pay("Final", "2026-10-02", 4000),
+  ]),
+  exteriorJob("dentist", "Dental office exterior", "2026-09-14", 4, [
+    pay("Net 10", "2026-09-18", 6400),
+  ]),
+  exteriorJob("hartley", "Hartley condo trim", "2026-10-05", 9, [
+    pay("Deposit", "2026-09-29", 3600),
+    pay("Final", "2026-10-16", 5600),
+  ]),
+  exteriorJob("mill", "Mill Lofts railings", "2026-10-26", 3, [
+    pay("On completion", "2026-10-30", 2000),
+  ]),
+];
+
+export const STEP4: Config = {
+  types: [EXTERIOR, INTERIOR, FURNITURE],
+  jobs: EXTERIOR_JOBS,
+};
