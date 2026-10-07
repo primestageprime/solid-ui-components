@@ -21,6 +21,7 @@ import {
   ChartTooltip,
   StackedAreaSeries,
   type StackedAreaSeriesData,
+  ValueHandle,
   domainOf,
 } from "../../src/components/Chart";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -502,6 +503,47 @@ export const ChartShowcase: Component = () => {
               title={(d) => `t${d.t}: ${d.v.toFixed(1)}`}
             />
           </Chart>
+
+          <h3 class="showcase-heading-gap">
+            ValueHandle — drag a bar's top edge to set it
+          </h3>
+          <p class="text-meta">
+            One grip per bar. Drag it (or focus it and use the arrow keys) to
+            set the bar, snapped here to whole units with a floor of 0;
+            double-click a bar to reset it to 5. The caller owns the value —
+            the handle only reports the y.
+          </p>
+          {(() => {
+            const [levels, setLevels] = createSignal([3, 6, 4, 8, 2]);
+            const set = (i: number, y: number) =>
+              setLevels((ls) => ls.map((v, k) => (k === i ? Math.max(0, Math.round(y)) : v)));
+            return (
+              <Chart
+                width={640}
+                height={220}
+                xDomain={[-0.5, 4.5]}
+                yDomain={[0, 10]}
+                margin={{ top: 12, right: 16, bottom: 28, left: 36 }}
+              >
+                <Grid tickCount={5} />
+                <YAxis tickCount={5} />
+                <XAxis tickValues={[0, 1, 2, 3, 4]} />
+                <BarSeries data={levels()} x={(_v, i) => i} value={(v) => v} bandWidth={0.6} />
+                <ValueHandle
+                  data={levels()}
+                  x={(_v, i) => i}
+                  width={0.6}
+                  value={(v) => v}
+                  color={() => "var(--sui-accent)"}
+                  label={(_v, i) => `Bar ${i + 1}`}
+                  step={() => 1}
+                  onDrag={(_v, i, y) => set(i, y)}
+                  onDragEnd={(_v, i, y) => set(i, y)}
+                  onDoubleClick={(_v, i) => set(i, 5)}
+                />
+              </Chart>
+            );
+          })()}
 
           <h3 class="showcase-heading-gap">
             Reimplementation — BurndownChart-style
