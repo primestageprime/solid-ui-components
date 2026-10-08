@@ -2,8 +2,9 @@
  * Simple Contract Builder bench — the pure model on top of Contract Builder's.
  *
  * A CONTRACT here is Contract Builder's `Job` plus two things the Jobs table
- * shows: a STATUS (an `Estimate` is a quote; a `Confirmed` job is signed) and a
- * LOCK. A Confirmed job always consumes the hope; an Estimate counts only while
+ * shows: a STATUS (`Planned` — expected, not yet signed; `Confirmed` — signed)
+ * and a LOCK. EVERY contract has an include toggle (Peter, 2026-10-08), and a
+ * contract counts only while
  * its include toggle is on. That rule is `asPlan`: the consumption fold
  * (`contract-builder-model.ts`) only knows `use`, so a contract becomes a job
  * whose `use` says whether it counts.
@@ -11,7 +12,7 @@
  * THE CASH FLOW is a running balance from payment DATES across the year:
  *   actual   payments already invoiced (before NOW) on Confirmed jobs
  *   outlook  everything still expected from NOW on: signed-not-invoiced
- *            payments, the included Estimates' payments, and each future
+ *            payments of included contracts, and each future
  *            month's UNFILLED hope (its remainder after consumption), spread
  *            evenly over that month's days from NOW on.
  * Pure functions of (contracts, hopes, today): nothing carried between days
@@ -29,21 +30,21 @@ import {
   monthOf,
 } from "./contract-builder-model";
 
-export type Status = "Estimate" | "Confirmed";
+export type Status = "Planned" | "Confirmed";
 
 export interface Contract extends Job {
   readonly status: Status;
   readonly locked: boolean;
 }
 
-/** Whether a contract counts toward the plan: Confirmed always, an Estimate when on. */
-export const counts = (c: Contract): boolean => c.status === "Confirmed" || c.use;
+/** Whether a contract counts toward the plan: while its toggle is on, whatever its status. */
+export const counts = (c: Contract): boolean => c.use;
 
 /** The consumption fold's config: contracts become jobs whose `use` is `counts`. */
 export const asPlan = (types: readonly JobType[], contracts: readonly Contract[]): Config => ({
   types,
   jobs: map(
-    (c: Contract): Job => ({ ...c, use: counts(c), estimate: c.status === "Estimate" }),
+    (c: Contract): Job => ({ ...c, use: counts(c), estimate: c.status === "Planned" }),
     contracts,
   ),
 });
@@ -63,7 +64,7 @@ export interface DayFlow {
   readonly day: number;
   /** Invoiced money on Confirmed jobs (only ever before NOW). */
   readonly actual: number;
-  /** Money still expected that day: signed, included estimates, unfilled hope. */
+  /** Money still expected that day: included contracts' unbilled payments, unfilled hope. */
   readonly outlook: number;
 }
 
@@ -105,7 +106,8 @@ export const dailyFlows = (
  * (Peter, 2026-10-08: the dial is a constant across builders): the year's
  * expected revenue averaged per WEEK, less the fixed weekly cost, so 0 is
  * breakeven. "Expected" is exactly what Cash flow (panel A) ends the year at —
- * banked + signed + included estimates + the hope not yet filled.
+ * banked + included contracts' unbilled payments + the hope not yet filled —
+ * per type per month, max(hope, committed).
  */
 export const ratePerWeek = (
   types: readonly JobType[],

@@ -160,12 +160,13 @@ export const plannedOf = (config: Config, type: TypeId, month: number): number =
 export const invoicedOf = (config: Config, type: TypeId, month: number): number =>
   total(filter((p: Payment) => p.invoiced, landing(config, type, month)));
 
-/** The switched-on estimates' part of `plannedOf`. */
+/** The switched-on estimates' UNBILLED part of `plannedOf` (billed money is invoiced, whatever the status). */
 export const estimatedOf = (config: Config, type: TypeId, month: number): number =>
   pipe(
     config.jobs,
     filter((j: Job) => j.use && j.estimate === true && j.type === type),
     flatMap((j: Job) => paymentsIn(j, month)),
+    filter((p: Payment) => !p.invoiced),
     total,
   );
 

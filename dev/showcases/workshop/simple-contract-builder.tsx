@@ -7,15 +7,14 @@
  *      kit's own pairing): the running balance from payment DATES, from an
  *      opening balance, less the fixed weekly cost paid every day (the Hourly
  *      Board's cost model); solid to NOW (invoiced), dashed after (signed +
- *      included estimates + the hope not yet filled).
+ *      included contracts + the hope not yet filled).
  *   B  Running divergence — Contract Builder's `CumulativeDivergence` on the
  *      same plan, with the grow-only axis (`createAxisWaterMarks`) and a fit
  *      button.
  *   C  Changes: `UnderlineTabs` over two views. Contracts = `CompactTable`
  *      like the Contract Scheduler's Jobs list (lock, include `TruthToggle`,
- *      #/name, Type, `PendingBadge` Estimate / `CompliantBadge` Confirmed,
- *      start, est $); a Confirmed row's toggle is on and disabled — it always
- *      counts. Hopes = Contract Builder's `PeriodBars` with its `ValueHandle`
+ *      #/name, Type, `PendingBadge` Planned / `CompliantBadge` Confirmed,
+ *      start, est $); every row's toggle works, Confirmed included. Hopes = Contract Builder's `PeriodBars` with its `ValueHandle`
  *      grips; double-click opens `Modal` + `ThemedNumberInput`.
  *   D  The Hourly Board's dial, unchanged in meaning (a constant across
  *      builders): "Rate, right now" — the year's expected revenue per week less
@@ -29,6 +28,7 @@
 import { type Component, Show, createMemo, createSignal } from "solid-js";
 import {
   BuilderBoard,
+  ContentChartFrame,
   ClusterRow,
   CompactTable,
   CompliantBadge,
@@ -82,6 +82,7 @@ import {
   type TypeId,
   cumulativeFit,
   money,
+  tallest,
   withCount,
 } from "./contract-builder-model";
 import { CumulativeDivergence } from "./contract-builder-kit/cumulative";
@@ -153,10 +154,12 @@ const SimpleContractBuilder: Component = () => {
   const [contracts, setContracts] = createSignal<readonly Contract[]>(CONTRACTS);
   const [tab, setTab] = createSignal<Tab>("contracts");
   const [horizon, setHorizon] = createSignal("365");
-  /** The last day drawn: NOW + the horizon, capped at the data's year end. */
-  const endDay = () => Math.min(DAYS.length - 1, NOW_DAY + Number(horizon()));
+  /** A and B draw the whole year; the horizon scopes ONLY the Hopes bars. */
+  const endDay = () => DAYS.length - 1;
+  /** The Hopes bars' last day: NOW + the horizon, capped at the data's year end. */
+  const hopesEndDay = () => Math.min(DAYS.length - 1, NOW_DAY + Number(horizon()));
   /** The last month drawn, for the month-axis charts. */
-  const lastMonth = () => DAYS[endDay()].start.getUTCMonth();
+  const lastMonth = () => DAYS[hopesEndDay()].start.getUTCMonth();
   const [entry, setEntry] = createSignal<{ type: TypeId; month: number } | null>(null);
 
   /** Replace one contract by id (UI state; the fold stays pure). */
@@ -208,7 +211,9 @@ const SimpleContractBuilder: Component = () => {
   /** The consumption fold's view of the board: hopes + the contracts that count. */
   const plan = createMemo(() => asPlan(hopes(), contracts()));
   /* Grow-only y-axis (Auto-grow | manual shrink), as on Contract Builder. */
-  const divergenceAxis = createAxisWaterMarks(() => cumulativeFit(plan(), lastMonth()));
+  const divergenceAxis = createAxisWaterMarks(() => cumulativeFit(plan()));
+  /* The Hopes bars hold their y-axis too (grow at once, shrink on the fit button). */
+  const barsAxis = createAxisWaterMarks(() => ({ min: 0, max: tallest(plan()) }));
 
   const panelB = (
     <>
@@ -227,7 +232,6 @@ const SimpleContractBuilder: Component = () => {
           config={plan()}
           today={TODAY}
           held={divergenceAxis.domain()}
-          lastMonth={lastMonth()}
         />
       </GrowFillBox>
     </>
@@ -256,13 +260,8 @@ const SimpleContractBuilder: Component = () => {
       width: "64px",
       accessor: (c) => (
         <TruthToggle
-          checked={c.status === "Confirmed" || c.use}
-          disabled={c.status === "Confirmed"}
-          aria-label={
-            c.status === "Confirmed"
-              ? `${c.name} is confirmed and always counts`
-              : `Include ${c.name}`
-          }
+          checked={c.use}
+          aria-label={`Include ${c.name}`}
           onCheckedChange={(on) => edit(c.id, (x) => ({ ...x, use: on }))}
         />
       ),
@@ -285,7 +284,7 @@ const SimpleContractBuilder: Component = () => {
         c.status === "Confirmed" ? (
           <CompliantBadge label="Confirmed" />
         ) : (
-          <PendingBadge label="Estimate" />
+          <PendingBadge label="Planned" />
         ),
     },
     { id: "start", header: "Start", accessor: (c) => c.start },
@@ -304,21 +303,40 @@ const SimpleContractBuilder: Component = () => {
           <>
             <CompactTable data={sorted()} columns={columns} hoverable />
             <NoteText>
-              {`${contracts().filter((c) => c.status === "Confirmed").length} confirmed · ${contracts().filter((c) => c.status === "Estimate" && c.use).length} of ${contracts().filter((c) => c.status === "Estimate").length} estimates included · sorted by start`}
+              {`${contracts().filter((c) => c.use).length} of ${contracts().length} included · ${contracts().filter((c) => c.status === "Confirmed").length} confirmed, ${contracts().filter((c) => c.status === "Planned").length} planned · sorted by start. The scenario takes, per type per month, the larger of the hope and what is committed — so work switched on INSIDE a month's hope moves no money; only work beyond it does. Past months are banked money only.`}
             </NoteText>
           </>
         }
       >
-        <PeriodBars
-          config={plan()}
-          lastMonth={lastMonth()}
-          today={TODAY}
-          onSetCount={(t, m, n) => setCount(t.id, m, n)}
-          onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
-        />
+        <ContentChartFrame
+          title="Hopes, month by month"
+          yTitle="Revenue ($)"
+          actions={
+            <ClusterRow>
+              <SegmentedInput options={HORIZONS} value={horizon()} onChange={setHorizon} />
+              <IconOnlyButton
+                onClick={barsAxis.reset}
+                aria-label="Shrink y-axis to fit current values"
+                title="Shrink y-axis to fit current values"
+              >
+                <Icon name="shrink" size="sm" />
+              </IconOnlyButton>
+            </ClusterRow>
+          }
+        >
+          <PeriodBars
+            config={plan()}
+            lastMonth={lastMonth()}
+            ceiling={barsAxis.domain()?.[1]}
+            today={TODAY}
+            onSetCount={(t, m, n) => setCount(t.id, m, n)}
+            onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
+          />
+        </ContentChartFrame>
         <NoteText>
-          Inside an outline: solid = invoiced, translucent = signed, lighter =
-          a switched-on estimate (it fills the hope last). Drag the top edge of
+          Inside an outline: solid = invoiced, translucent = a Confirmed
+          contract not yet invoiced, lighter = a Planned one (it fills the hope
+          last). The 3m / 6m / 1y control scopes only these bars. Drag the top edge of
           an outline to set that month's hoped-for jobs
           (whole jobs, never below zero — only that month moves); double-click a
           bar to type it.
@@ -357,7 +375,6 @@ const SimpleContractBuilder: Component = () => {
       <SpreadRow>
         <TextTitle>Cash flow — banked to NOW, outlook after</TextTitle>
         <ClusterRow>
-          <SegmentedInput options={HORIZONS} value={horizon()} onChange={setHorizon} />
           <IconOnlyButton
             onClick={ceiling.reset}
             aria-label="Fit y-axis to current values"
