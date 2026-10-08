@@ -90,7 +90,10 @@
 :where(.sui-chart__line:not([stroke])) {
   stroke: var(--sui-accent);
 }
-.sui-chart__area {
+/* The same rule as the line's, for the same reason: an AreaSeries `fill` prop
+   is a presentation attribute, which any author rule beats, so an
+   unconditional `fill` here painted every area accent. */
+:where(.sui-chart__area:not([fill])) {
   fill: var(--sui-accent);
 }
 /* A stacked band is translucent so the grid still reads through the stack,
