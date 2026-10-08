@@ -180,4 +180,29 @@ describe("SegmentedInput — compact (stepper) mode", () => {
     fireEvent.keyDown(stepper, { key: "ArrowLeft" });
     expect(got).toEqual(["month", "day"]);
   });
+
+  it("with a label, names the radiogroup and the stepper by it", () => {
+    const strip = render(() => (
+      <SegmentedInput options={OPTIONS} value="day" onChange={() => {}} label="Status" />
+    ));
+    const caption = strip.container.querySelector(".themed-input-label")!;
+    expect(caption.textContent).toBe("Status");
+    expect(
+      strip.container.querySelector("[role=radiogroup]")!.getAttribute("aria-labelledby"),
+    ).toBe(caption.id);
+    const stepper = render(() => (
+      <SegmentedInput options={OPTIONS} value="day" onChange={() => {}} label="Span" compact />
+    ));
+    const cap2 = stepper.container.querySelector(".themed-input-label")!;
+    expect(
+      stepper.container.querySelector(".sui-segmented-stepper")!.getAttribute("aria-labelledby"),
+    ).toBe(cap2.id);
+  });
+
+  it("without a label renders no caption", () => {
+    const { container } = render(() => (
+      <SegmentedInput options={OPTIONS} value="day" onChange={() => {}} />
+    ));
+    expect(container.querySelector(".themed-input-label")).toBeNull();
+  });
 });

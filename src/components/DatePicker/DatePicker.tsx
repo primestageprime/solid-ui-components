@@ -1,6 +1,7 @@
 // ============================================
 // DatePicker — Atomic (Depth 1)
-// Owns CSS (DatePicker.css), no component imports.
+// Owns CSS (DatePicker.css); imports only the GrowColumn layout variant, for
+// the optional `label` caption (the same shape NameInput uses).
 // A themed date control that ALWAYS DISPLAYS ISO YYYY-MM-DD at a FIXED
 // width, regardless of browser/OS locale.
 //
@@ -12,10 +13,19 @@
 // still works through the native input's segments (the display echoes the
 // committed ISO value live). Width is fixed to the ISO string + icon +
 // padding; the control never flexes to fill its container.
-//   <DatePicker value="2026-06-02" onChange={(iso) => ...} />
+//   <DatePicker value="2026-06-02" onChange={(iso) => ...} label="Start" />
 // Factory: createDatePicker() for curried variants.
 // ============================================
-import { type Component, type JSX, mergeProps, splitProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  createUniqueId,
+  mergeProps,
+  splitProps,
+} from "solid-js";
+import { GrowColumn } from "../Layout/variants";
+import "../Inputs/ThemedInputs.css";
 import "./DatePicker.css";
 
 export interface DatePickerProps
@@ -27,10 +37,12 @@ export interface DatePickerProps
   value: string;
   /** Called with the ISO YYYY-MM-DD string when the date changes. */
   onChange: (iso: string) => void;
+  /** A caption above the control, tied to the native input. Omit for none. */
+  label?: string;
 }
 
 export const DatePicker: Component<DatePickerProps> = (props) => {
-  const [local, others] = splitProps(props, ["value", "onChange", "class"]);
+  const [local, others] = splitProps(props, ["value", "onChange", "class", "label", "id"]);
 
   const rootClass = () =>
     local.class ? `sui-date-picker ${local.class}` : "sui-date-picker";
@@ -40,7 +52,10 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
     local.onChange(e.currentTarget.value);
   };
 
-  return (
+  const generatedId = createUniqueId();
+  const inputId = () => local.id ?? generatedId;
+
+  const picker = (
     <span class={rootClass()}>
       <span
         class="sui-date-picker__display"
@@ -59,8 +74,20 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
         value={local.value}
         onInput={handleInput}
         {...others}
+        id={inputId()}
       />
     </span>
+  );
+
+  return (
+    <Show when={local.label} fallback={picker}>
+      <GrowColumn class="themed-input-group">
+        <label class="themed-input-label" for={inputId()}>
+          {local.label}
+        </label>
+        {picker}
+      </GrowColumn>
+    </Show>
   );
 };
 

@@ -1,6 +1,7 @@
 // ============================================
 // SegmentedInput — Atomic (Depth 1)
-// Owns CSS (SegmentedInput.css), no component imports.
+// Owns CSS (SegmentedInput.css); imports only the GrowColumn layout variant,
+// for the optional `label` caption (the same shape NameInput uses).
 // Single-select segmented control: a horizontal row of
 // connected, keyboard-focusable buttons. The selected
 // segment gets the accent treatment.
@@ -19,10 +20,13 @@ import {
   type Component,
   For,
   type JSX,
+  createUniqueId,
   mergeProps,
   splitProps,
 } from "solid-js";
 import { findIndex } from "../../fn";
+import { GrowColumn } from "../Layout/variants";
+import "../Inputs/ThemedInputs.css";
 import "./SegmentedInput.css";
 
 export interface SegmentedInputOption {
@@ -47,6 +51,8 @@ export interface SegmentedInputProps
    * @default false
    */
   compact?: boolean;
+  /** A caption above the control, naming the group. Omit for none. */
+  label?: string;
 }
 
 /** Horizontal swipe distance (px) required to register a step. */
@@ -59,7 +65,22 @@ export const SegmentedInput: Component<SegmentedInputProps> = (props) => {
     "onChange",
     "class",
     "compact",
+    "label",
   ]);
+  const labelId = createUniqueId();
+
+  /** The control, under its caption when there is one. */
+  const captioned = (control: JSX.Element) =>
+    local.label ? (
+      <GrowColumn class="themed-input-group">
+        <span class="themed-input-label" id={labelId}>
+          {local.label}
+        </span>
+        {control}
+      </GrowColumn>
+    ) : (
+      control
+    );
 
   const currentIndex = () =>
     findIndex((o) => o.id === local.value, local.options);
@@ -109,13 +130,14 @@ export const SegmentedInput: Component<SegmentedInputProps> = (props) => {
       }
     };
 
-    return (
+    return captioned(
       // biome-ignore lint/a11y/useSemanticElements: intentional ARIA segmented/stepper group pattern
       <div
         class={compactClass()}
         role="group"
         tabindex="0"
-        aria-label={current()?.label}
+        aria-label={local.label ? undefined : current()?.label}
+        aria-labelledby={local.label ? labelId : undefined}
         onKeyDown={onKeyDown}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
@@ -142,15 +164,20 @@ export const SegmentedInput: Component<SegmentedInputProps> = (props) => {
         >
           ›
         </button>
-      </div>
+      </div>,
     );
   }
 
   const rootClass = () =>
     local.class ? `sui-segmented ${local.class}` : "sui-segmented";
 
-  return (
-    <div class={rootClass()} role="radiogroup" {...others}>
+  return captioned(
+    <div
+      class={rootClass()}
+      role="radiogroup"
+      aria-labelledby={local.label ? labelId : undefined}
+      {...others}
+    >
       <For each={local.options}>
         {(option) => {
           const selected = () => local.value === option.id;
@@ -172,7 +199,7 @@ export const SegmentedInput: Component<SegmentedInputProps> = (props) => {
           );
         }}
       </For>
-    </div>
+    </div>,
   );
 };
 

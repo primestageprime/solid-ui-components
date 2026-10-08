@@ -56,4 +56,17 @@ describe("DatePicker", () => {
     expect(input.getAttribute("name")).toBe("due");
     expect(input.value).toBe("2026-01-01");
   });
+
+  it("with a label, captions the native input and wraps nothing when omitted", () => {
+    const { container } = render(() => (
+      <DatePicker value="2026-01-01" onChange={() => {}} label="Start" />
+    ));
+    const label = container.querySelector("label.themed-input-label")!;
+    const input = container.querySelector(".sui-date-picker__native")!;
+    expect(label.textContent).toBe("Start");
+    expect(label.getAttribute("for")).toBe(input.id);
+    expect(input.id).not.toBe("");
+    const bare = render(() => <DatePicker value="" onChange={() => {}} />);
+    expect(bare.container.querySelector("label")).toBeNull();
+  });
 });
