@@ -16,14 +16,19 @@
  * `contract-builder-model.test.ts` (which also prints the year as a table).
  * The data is example data, `contract-builder.fixtures.ts`.
  */
-import type { Component } from "solid-js";
+import { type Component, Show, createSignal } from "solid-js";
 import {
   ContentChartFrame,
   ContentStack,
   Legend,
+  Modal,
   MutedBody,
   SectionTitle,
   TextSublabel,
+  IconOnlyButton,
+  InlineMetaIcon,
+  ThemedNumberInput,
+  createAxisWaterMarks,
   TightStack,
   ViewportColumn,
   fn,
@@ -36,7 +41,15 @@ import {
 } from "./contract-builder-kit/pattern-legend";
 import { PeriodBars, TYPE_COLORS } from "./contract-builder-kit/period-bars";
 import { STEP5, TODAY } from "./contract-builder.step1.fixtures";
-import type { JobType } from "./contract-builder-model";
+import {
+  type Config,
+  type JobType,
+  MONTHS,
+  type TypeId,
+  cumulativeFit,
+  tallest,
+  withCount,
+} from "./contract-builder-model";
 
 const { map } = fn;
 
@@ -47,7 +60,45 @@ const legendItems = map(
   STEP5.types,
 );
 
-const ContractBuilderBench: Component = () => (
+/** Shrink a held y-axis to fit the current values (the one manual move). */
+const FitButton: Component<{ readonly onFit: () => void }> = (props) => (
+  <IconOnlyButton
+    onClick={props.onFit}
+    aria-label="Shrink y-axis to fit current values"
+    title="Shrink y-axis to fit current values"
+  >
+    <InlineMetaIcon name="fit" />
+  </IconOnlyButton>
+);
+
+/** Which hope the double-click entry is open on. */
+interface Entry {
+  readonly type: TypeId;
+  readonly month: number;
+}
+
+const ContractBuilderBench: Component = () => {
+  /* The hopes are UI state (the fold stays a pure function of the config):
+     a drag or a typed count replaces the config, and every view recomputes. */
+  const [config, setConfig] = createSignal<Config>(STEP5);
+  const [entry, setEntry] = createSignal<Entry | null>(null);
+  const setCount = (type: TypeId, month: number, count: number) => {
+    const t = config().types.find((x) => x.id === type);
+    if (!t || t.qty[month] === count) return;
+    console.table([{ type, month: MONTHS[month], count, $: count * t.typical }]);
+    setConfig((c) => withCount(c, type, month, count));
+  };
+  /* Both y-axes follow the chart language's default, "Auto-grow | manual
+     shrink": a value past the held extent grows the axis at once; a fall never
+     shrinks it — only the fit button does. Only that mode is offered: the
+     frame's split button would also list "Full auto" and "Locked", and nobody
+     configures them here (Locked has no range editor). Dragging a
+     hope swings both charts, and a re-fitting axis would rescale under the
+     pointer. */
+  const cumAxis = createAxisWaterMarks(() => cumulativeFit(config()));
+  const barsAxis = createAxisWaterMarks(() => ({ min: 0, max: tallest(config()) }));
+  const entryType = () => config().types.find((t) => t.id === entry()?.type);
+  return (
   <div class="component-section component-section--full">
     <ViewportColumn>
       <ContentStack>
@@ -69,9 +120,14 @@ const ContractBuilderBench: Component = () => (
         <ContentChartFrame
           title="How your planned contracts fulfil your hopes"
           yTitle="Booked − hope, cumulative ($)"
+          actions={<FitButton onFit={cumAxis.reset} />}
         >
           <TightStack>
-            <CumulativeDivergence config={STEP5} today={TODAY} />
+            <CumulativeDivergence
+              config={config()}
+              today={TODAY}
+              held={cumAxis.domain()}
+            />
             <PatternLegend items={CUMULATIVE_MARKS} />
             <MutedBody>
               Each month: the sum since January of booked minus hoped, across
@@ -84,19 +140,54 @@ const ContractBuilderBench: Component = () => (
           </TightStack>
         </ContentChartFrame>
 
-        <ContentChartFrame title="Your hopes, month by month" yTitle="Revenue ($)">
+        <ContentChartFrame
+          title="Your hopes, month by month"
+          yTitle="Revenue ($)"
+          actions={<FitButton onFit={barsAxis.reset} />}
+        >
           <TightStack>
-            <PeriodBars config={STEP5} today={TODAY} />
+            <PeriodBars
+              config={config()}
+              today={TODAY}
+              ceiling={barsAxis.domain()?.[1]}
+              onSetCount={(t, m, n) => setCount(t.id, m, n)}
+              onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
+            />
             <Legend items={legendItems} />
             <PatternLegend items={BAR_MARKS} />
             <MutedBody>
-              Outline = expected revenue for one job type. Inside it: solid = invoiced, translucent = signed but not yet invoiced. Red cross-hatch = MISSING: a month that ended before NOW short of its hope — money hoped for and not got. Empty = still hoped for (the current month and later). Hatched above the outline = booked beyond the hope.
+              Drag the top edge of an outline to set that month's hoped-for
+              jobs for that type (whole jobs, never below zero; only that one
+              month moves), or double-click a bar to type the number in. The
+              chart above follows live. Outline = expected revenue for one job type. Inside it: solid = invoiced, translucent = signed but not yet invoiced. Red cross-hatch = MISSING: a month that ended before NOW short of its hope — money hoped for and not got. Empty = still hoped for (the current month and later). Hatched above the outline = booked beyond the hope.
             </MutedBody>
           </TightStack>
         </ContentChartFrame>
       </ContentStack>
     </ViewportColumn>
+    <Show when={entry()}>
+      {(e) => (
+        <Modal
+          open
+          onClose={() => setEntry(null)}
+          title={`${entryType()?.name ?? ""} · ${MONTHS[e().month]}`}
+          subtitle={`Hoped-for jobs at $${(entryType()?.typical ?? 0).toLocaleString()} each`}
+        >
+          <ThemedNumberInput
+            name="hoped-jobs"
+            label="Jobs"
+            min={0}
+            step={1}
+            value={() => entryType()?.qty[e().month]}
+            onChange={(v) => {
+              if (v !== undefined) setCount(e().type, e().month, Math.max(0, Math.round(v)));
+            }}
+          />
+        </Modal>
+      )}
+    </Show>
   </div>
-);
+  );
+};
 
 export default ContractBuilderBench;

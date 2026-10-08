@@ -70,6 +70,11 @@ const span = (values: readonly number[]): readonly [number, number] => {
 export const CumulativeDivergence: Component<{
   readonly config: Config;
   readonly today: string;
+  /**
+   * A HELD y extent (`createAxisWaterMarks`: grows with the data, shrinks
+   * only when the reader asks). Omitted, the axis fits the data both ways.
+   */
+  readonly held?: readonly [number, number] | null;
 }> = (props) => {
   const uid = createUniqueId();
   const aheadTint = `cb-cum-ahead-${uid}`;
@@ -84,7 +89,9 @@ export const CumulativeDivergence: Component<{
       MONTH_INDICES,
     ),
   );
-  const domain = createMemo(() => span(map((p: Point) => p.value, points())));
+  const domain = createMemo(() =>
+    span(props.held ? [...props.held] : map((p: Point) => p.value, points())),
+  );
   const ticks = createMemo(() => {
     const [lo, hi] = domain();
     return Array.from({ length: (hi - lo) / 10000 + 1 }, (_v, k) => lo + k * 10000);

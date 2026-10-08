@@ -12,6 +12,11 @@
 //                       opened a seam under the outline (Peter, 2026-10-07:
 //                       "what's with the weird gap at the top of the bar?").
 //                       Texture and alpha already separate the marks.
+//   ValueHandle x3      a grip on each outline's top edge: drag it to set
+//                       that month's hoped jobs for that type (whole jobs,
+//                       min 0); double-click the column to type a count in.
+//                       `<Index>` over the types so a recompute mid-drag
+//                       does not remount the grip under the pointer.
 //   LineSeries x3       the projection as a HOLLOW OUTLINE: three sides of a
 //                       box per bar, NaN between bars. What the outline holds
 //                       and the bar does not fill is the remainder.
@@ -23,7 +28,14 @@
 // A bar click `console.table`s its cell — the headless check on what the bar
 // was drawn from.
 // ============================================
-import { type Component, For, createMemo, createUniqueId } from "solid-js";
+import {
+  type Component,
+  For,
+  Index,
+  createMemo,
+  createSignal,
+  createUniqueId,
+} from "solid-js";
 import {
   BarSeries,
   Chart,
@@ -31,6 +43,7 @@ import {
   HatchPattern,
   LineSeries,
   ReferenceLine,
+  ValueHandle,
   XAxis,
   YAxis,
   fn,
@@ -42,6 +55,7 @@ import {
   MONTHS,
   MONTH_INDICES,
   cellsOfType,
+  jobsAt,
   missingOf,
   money,
   monthPosition,
@@ -101,7 +115,20 @@ export const PeriodBars: Component<{
   readonly config: Config;
   /** ISO "now": the NOW rule, and which months' shortfall is missing. */
   readonly today: string;
+  /**
+   * A HELD y ceiling (`createAxisWaterMarks`: grows with the tallest bar,
+   * shrinks only when the reader asks). Omitted, the axis fits the bars.
+   */
+  readonly ceiling?: number;
+  /** A grip set one type's hope in one month to `count` whole jobs. */
+  readonly onSetCount?: (type: JobType, month: number, count: number) => void;
+  /** A bar was double-clicked: type a count in. */
+  readonly onEnterCount?: (type: JobType, month: number) => void;
 }> = (props) => {
+  /* The y top is FROZEN while a grip is held: it is derived from the tallest
+     bar, so a drag that grows the tallest bar would rescale the axis under the
+     pointer and the grip would run away from it. */
+  const [frozenTop, setFrozenTop] = createSignal<number | null>(null);
   const uid = createUniqueId();
   const hatchId = (i: number) => `cb-hatch-${uid}-${i}`;
   const tintId = (i: number) => `cb-tint-${uid}-${i}`;
@@ -120,7 +147,8 @@ export const PeriodBars: Component<{
       props.config.types,
     ),
   );
-  const top = createMemo(() => niceTop(tallest(props.config)));
+  const liveTop = createMemo(() => niceTop(props.ceiling ?? tallest(props.config)));
+  const top = () => frozenTop() ?? liveTop();
   return (
     <Chart
       responsive
@@ -161,27 +189,27 @@ export const PeriodBars: Component<{
         tickValues={MONTH_INDICES as number[]}
         tickFormat={(m) => MONTHS[Math.round(m)] ?? ""}
       />
-      <For each={series()}>
+      <Index each={series()}>
         {(s) => (
           <>
             <BarSeries
-              data={s.cells}
-              x={(c) => c.month + offsetOf(s.i, s.n)}
+              data={s().cells}
+              x={(c) => c.month + offsetOf(s().i, s().n)}
               step={STEP}
               bandWidth={BAND}
               segments={(c) => [
-                { value: c.invoicedWithin, fill: TYPE_COLORS[s.i], key: "invoiced" },
-                { value: c.plannedWithin, fill: `url(#${tintId(s.i)})`, key: "planned" },
+                { value: c.invoicedWithin, fill: TYPE_COLORS[s().i], key: "invoiced" },
+                { value: c.plannedWithin, fill: `url(#${tintId(s().i)})`, key: "planned" },
                 { value: missingOf(c, props.today), fill: `url(#${missA})`, key: "missing" },
-                { value: c.unplanned, fill: `url(#${hatchId(s.i)})`, key: "unplanned" },
+                { value: c.unplanned, fill: `url(#${hatchId(s().i)})`, key: "unplanned" },
               ]}
-              onBarClick={(c) => console.table([{ ...c, name: s.t.name }])}
+              onBarClick={(c) => console.table([{ ...c, name: s().t.name }])}
             />
             {/* The second stripe of the cross. Its spacer is fill "none", which
                 SVG does not hit-test, so clicks still reach the bar beneath. */}
             <BarSeries
-              data={s.cells}
-              x={(c) => c.month + offsetOf(s.i, s.n)}
+              data={s().cells}
+              x={(c) => c.month + offsetOf(s().i, s().n)}
               step={STEP}
               bandWidth={BAND}
               segments={(c) => [
@@ -190,15 +218,31 @@ export const PeriodBars: Component<{
               ]}
             />
             <LineSeries
-              data={outlineOf(s.cells, offsetOf(s.i, s.n))}
+              data={outlineOf(s().cells, offsetOf(s().i, s().n))}
               x={(p) => p.x}
               y={(p) => p.y}
-              stroke={TYPE_COLORS[s.i]}
+              stroke={TYPE_COLORS[s().i]}
               strokeWidth={1.5}
+            />
+            <ValueHandle
+              data={s().cells}
+              x={(c) => c.month + offsetOf(s().i, s().n)}
+              width={STEP * BAND}
+              value={(c) => c.projected}
+              color={() => TYPE_COLORS[s().i]}
+              label={(c) => `${s().t.name}, ${MONTHS[c.month]}: hoped jobs`}
+              step={() => s().t.typical}
+              onDragStart={() => setFrozenTop(liveTop())}
+              onDrag={(c, _i, y) => props.onSetCount?.(s().t, c.month, jobsAt(s().t, y))}
+              onDragEnd={(c, _i, y) => {
+                props.onSetCount?.(s().t, c.month, jobsAt(s().t, y));
+                setFrozenTop(null);
+              }}
+              onDoubleClick={(c) => props.onEnterCount?.(s().t, c.month)}
             />
           </>
         )}
-      </For>
+      </Index>
       <ReferenceLine
         orientation="vertical"
         value={monthPosition(props.today)}

@@ -308,3 +308,35 @@ export const cumulativeDelta = (config: Config, month: number): number =>
       filter((q: number) => q <= month, MONTH_INDICES),
     ),
   );
+
+// ── editing a hope ──────────────────────────────────────────────────────────
+
+/** Whole jobs for a dragged dollar value: snapped, never below zero. */
+export const jobsAt = (t: JobType, dollars: number): number =>
+  Math.max(0, Math.round(dollars / t.typical));
+
+/**
+ * The config with ONE type's hope in ONE month set to `count` jobs. Contracts
+ * do not recur, so no other month and no other type moves.
+ */
+export const withCount = (
+  config: Config,
+  type: TypeId,
+  month: number,
+  count: number,
+): Config => ({
+  ...config,
+  types: map(
+    (t: JobType) =>
+      t.id !== type
+        ? t
+        : { ...t, qty: map((q: number, m: number) => (m === month ? count : q), t.qty) },
+    config.types,
+  ),
+});
+
+/** The running divergence's extent across the year, zero included. */
+export const cumulativeFit = (config: Config): { min: number; max: number } => {
+  const values = map((m: number) => cumulativeDelta(config, m), MONTH_INDICES);
+  return { min: Math.min(0, ...values), max: Math.max(0, ...values) };
+};
