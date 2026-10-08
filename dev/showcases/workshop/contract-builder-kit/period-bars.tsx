@@ -33,12 +33,9 @@ import {
   For,
   Index,
   Show,
-  createEffect,
   createMemo,
   createSignal,
   createUniqueId,
-  on,
-  onCleanup,
 } from "solid-js";
 import {
   AreaSeries,
@@ -159,7 +156,7 @@ export const PeriodBars: Component<{
   readonly width?: number;
   /** A MEASURED height, in px (fullscreen); omitted, the stated 280. */
   readonly height?: number;
-  /** Show the per-bar breakdown on hover (debounced). */
+  /** Show the per-bar breakdown on hover (after a short rest). */
   readonly tooltip?: boolean;
   /** A grip set one type's hope in one month to `count` whole jobs. */
   readonly onSetCount?: (type: JobType, month: number, count: number) => void;
@@ -354,12 +351,13 @@ const TIP_DELAY_MS = 250;
 
 /**
  * The per-bar breakdown, in SUI's `ChartTooltip` (portalled into the chart's
- * overlay, nearest datum, flips left/right at the edges). DEBOUNCED here: it
- * appears TIP_DELAY_MS after the pointer enters the plot and then follows it
- * from bar to bar without flicker; it hides the moment the pointer leaves, and
- * while a grip is dragged. It sits BESIDE its bar (x offset past half the bar
- * plus the armed grip's overhang), so it never covers that bar's grip, and at
- * the top of the plot, so a low bar's tooltip is never cut off below it.
+ * overlay, nearest datum, flips left/right at the edges). DELAYED by the
+ * tooltip's own `openDelay`: it appears TIP_DELAY_MS after the pointer enters
+ * the plot and then follows it from bar to bar without flicker; it hides the
+ * moment the pointer leaves, and while a grip is dragged. It sits BESIDE its
+ * bar (x offset past half the bar plus the armed grip's overhang), so it never
+ * covers that bar's grip, and at the top of the plot, so a low bar's tooltip
+ * is never cut off below it.
  */
 const BarTip: Component<{
   readonly points: readonly TipPoint[];
@@ -367,35 +365,14 @@ const BarTip: Component<{
   readonly dragging: boolean;
 }> = (props) => {
   const ctx = useChart();
-  const [shown, setShown] = createSignal(false);
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const stop = () => {
-    if (timer !== undefined) clearTimeout(timer);
-    timer = undefined;
-  };
-  createEffect(
-    on([ctx.hoverX, () => props.dragging], ([hx, dragging]) => {
-      if (hx == null || dragging) {
-        stop();
-        setShown(false);
-        return;
-      }
-      if (!shown() && timer === undefined) {
-        timer = setTimeout(() => {
-          timer = undefined;
-          setShown(true);
-        }, TIP_DELAY_MS);
-      }
-    }),
-  );
-  onCleanup(stop);
   const besideBar = () => Math.abs(ctx.xScale()(HALF) - ctx.xScale()(0)) + 3 + 10;
   return (
     <ChartTooltip
-      data={shown() ? props.points : []}
+      data={props.dragging ? [] : props.points}
       x={(p) => p.x}
       offset={{ x: besideBar(), y: 0 }}
       maxWidth={240}
+      openDelay={TIP_DELAY_MS}
     >
       {(p) => <TipBody p={p} today={props.today} />}
     </ChartTooltip>

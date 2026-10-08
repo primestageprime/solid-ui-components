@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { placeTooltipX } from "./tooltipPlacement";
+import { chartToOverlay, placeTooltipX } from "./tooltipPlacement";
 
 describe("placeTooltipX", () => {
   it("sits to the right of the anchor when it fits", () => {
@@ -61,5 +61,66 @@ describe("placeTooltipX", () => {
     // flipped = 50 - 12 - 1000 = -962, well under boundsLeft (20), so pin to
     // max(boundsLeft, boundsRight - tipWidth) = max(20, -800) = 20.
     expect(x).toBeCloseTo(20, 5);
+  });
+});
+
+describe("chartToOverlay", () => {
+  const box = (left: number, top: number, width: number, height: number) => ({
+    left,
+    top,
+    width,
+    height,
+  });
+
+  it("maps 1:1 when the svg is drawn at its viewBox size", () => {
+    const t = chartToOverlay({
+      viewBoxWidth: 200,
+      viewBoxHeight: 100,
+      svgBox: box(10, 20, 200, 100),
+      overlayBox: box(10, 20, 200, 100),
+    });
+    expect(t).toEqual({ scale: 1, offsetX: 0, offsetY: 0 });
+  });
+
+  it("scales by the svg's on-screen size", () => {
+    const t = chartToOverlay({
+      viewBoxWidth: 200,
+      viewBoxHeight: 100,
+      svgBox: box(0, 0, 400, 200),
+      overlayBox: box(0, 0, 400, 200),
+    });
+    expect(t).toEqual({ scale: 2, offsetX: 0, offsetY: 0 });
+  });
+
+  it("uses the tighter axis and centres the letterbox (xMidYMid meet)", () => {
+    // 400 wide x 100 tall box for a 2:1 viewBox: height binds, scale 1,
+    // the 200px of spare width splits 100 / 100.
+    const t = chartToOverlay({
+      viewBoxWidth: 200,
+      viewBoxHeight: 100,
+      svgBox: box(0, 0, 400, 100),
+      overlayBox: box(0, 0, 400, 100),
+    });
+    expect(t).toEqual({ scale: 1, offsetX: 100, offsetY: 0 });
+  });
+
+  it("adds the svg's own offset inside the overlay (a title above it)", () => {
+    const t = chartToOverlay({
+      viewBoxWidth: 200,
+      viewBoxHeight: 100,
+      svgBox: box(0, 24, 200, 100),
+      overlayBox: box(0, 0, 200, 124),
+    });
+    expect(t).toEqual({ scale: 1, offsetX: 0, offsetY: 24 });
+  });
+
+  it("is the identity for an unmeasured svg", () => {
+    const t = chartToOverlay({
+      viewBoxWidth: 200,
+      viewBoxHeight: 100,
+      svgBox: box(0, 0, 0, 0),
+      overlayBox: box(0, 0, 0, 0),
+    });
+    expect(t).toEqual({ scale: 1, offsetX: 0, offsetY: 0 });
   });
 });

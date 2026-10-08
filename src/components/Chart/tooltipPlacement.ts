@@ -45,3 +45,63 @@ export function placeTooltipX(input: TooltipPlacementInput): number {
   if (flipped >= boundsLeft) return flipped;
   return Math.max(boundsLeft, boundsRight - tipWidth);
 }
+
+/** A DOM box, as far as `chartToOverlay` needs one (a `DOMRect` fits). */
+export interface Box {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+/** Explicit geometry to map chart (viewBox) units onto overlay pixels. */
+export interface ChartToOverlayInput {
+  /** The svg's `viewBox` width — the chart's own `width`. */
+  viewBoxWidth: number;
+  /** The svg's `viewBox` height — the chart's own `height`. */
+  viewBoxHeight: number;
+  /** The svg's on-screen box (`getBoundingClientRect`). */
+  svgBox: Box;
+  /** The overlay's on-screen box — the tooltip's positioning context. */
+  overlayBox: Box;
+}
+
+/** `overlayPx = offset + chartUnits * scale`, per axis. */
+export interface ChartToOverlay {
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+/**
+ * How one chart unit lands on the overlay. The svg's default
+ * `preserveAspectRatio` (xMidYMid meet) scales the viewBox UNIFORMLY by the
+ * tighter axis and centres the slack, so the scale is the smaller of the two
+ * ratios and each offset is the svg's own offset inside the overlay (a title
+ * above it, say) plus half that axis's letterbox.
+ *
+ * An unmeasured (zero-size) svg maps 1:1 at the overlay origin — the identity
+ * the chart had before anything measured, and what jsdom always reports.
+ */
+export function chartToOverlay(input: ChartToOverlayInput): ChartToOverlay {
+  const { viewBoxWidth, viewBoxHeight, svgBox, overlayBox } = input;
+  if (
+    svgBox.width <= 0 ||
+    svgBox.height <= 0 ||
+    viewBoxWidth <= 0 ||
+    viewBoxHeight <= 0
+  ) {
+    return { scale: 1, offsetX: 0, offsetY: 0 };
+  }
+  const scale = Math.min(
+    svgBox.width / viewBoxWidth,
+    svgBox.height / viewBoxHeight,
+  );
+  return {
+    scale,
+    offsetX:
+      svgBox.left - overlayBox.left + (svgBox.width - viewBoxWidth * scale) / 2,
+    offsetY:
+      svgBox.top - overlayBox.top + (svgBox.height - viewBoxHeight * scale) / 2,
+  };
+}

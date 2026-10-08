@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- **`ChartTooltip` `openDelay`** (ms, default 0) — the tooltip opens only after the pointer has rested on the plot that long, then follows it from point to point with no further delay, and closes the moment the pointer leaves. Omitted, every chart behaves exactly as before.
+
+### Fixed
+
+- **`ChartTooltip` lands on the mark at any rendered size.** It positioned in chart (viewBox) units as CSS px, so on a chart drawn larger or smaller than its `width`/`height` (`responsive`, a fill frame) the tooltip drifted away from the hovered point. It now scales by the svg's on-screen box, and also accounts for a `title` above the svg. (Chart's own pointer-to-x mapping still reads px as chart units on a scaled svg; not changed here.)
+
 ## 0.211.0 — 2026-10-08
 
 ### Added

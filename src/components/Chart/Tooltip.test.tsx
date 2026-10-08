@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
 import type { Component } from "solid-js";
 import { Chart } from "./Chart";
@@ -314,5 +314,104 @@ describe("ChartTooltip — y-clamp", () => {
     ));
     setHover!(5);
     expect(tooltipTop(container)).toBeCloseTo(40, 1);
+  });
+});
+
+describe("ChartTooltip — a scaled svg", () => {
+  type Pt = { x: number; y: number };
+
+  // jsdom lays nothing out, so stand the svg up at TWICE its viewBox
+  // (400 x 200 for a 200 x 100 chart) and put a 24px title band above it.
+  // The tooltip must land on the mark in overlay px, not in chart units.
+  it("positions on the mark at the svg's on-screen scale", () => {
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    const { container } = render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <ChartTooltip<Pt>
+          data={[{ x: 5, y: 50 }]}
+          x={(d) => d.x}
+          y={(d) => d.y}
+          offset={{ x: 12, y: -12 }}
+        >
+          {(p) => <span>{String(p.x)}</span>}
+        </ChartTooltip>
+      </Chart>
+    ));
+    const svg = container.querySelector("svg.sui-chart__svg") as Element;
+    const overlay = container.querySelector(".sui-chart__overlay") as Element;
+    const rect = (left: number, top: number, width: number, height: number) =>
+      ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) }) as DOMRect;
+    svg.getBoundingClientRect = () => rect(100, 124, 400, 200);
+    overlay.getBoundingClientRect = () => rect(100, 100, 400, 224);
+    setHover!(5);
+    const el = document.querySelector(".sui-chart__tooltip") as HTMLElement;
+    // Default margin left 36, right 8: innerWidth 156, so x 5 sits at 78 and
+    // the chart-unit anchor is 78 + 36 = 114 -> 228px, +12 offset = 240.
+    expect(parseFloat(el.style.left)).toBeCloseTo(240, 1);
+    // y: margin top 8, innerHeight 64, so yScale(50) = 32 and the point sits
+    // at chart y 40 -> 80px, below a 24px title band, -12 offset = 92.
+    expect(parseFloat(el.style.top)).toBeCloseTo(92, 1);
+  });
+});
+
+describe("ChartTooltip — openDelay", () => {
+  type Pt = { x: number };
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const renderDelayed = (openDelay?: number) => {
+    let setHover: ((x: number | null) => void) | null = null;
+    const Probe: Component = () => {
+      const ctx = useChart();
+      setHover = ctx.setHoverX;
+      return null;
+    };
+    render(() => (
+      <Chart width={200} height={100} xDomain={[0, 10]} yDomain={[0, 100]}>
+        <Probe />
+        <ChartTooltip<Pt>
+          data={[{ x: 2 }, { x: 8 }]}
+          x={(d) => d.x}
+          openDelay={openDelay}
+        >
+          {(p) => <span class="sui-delay-sentinel">{String(p.x)}</span>}
+        </ChartTooltip>
+      </Chart>
+    ));
+    return (x: number | null) => setHover!(x);
+  };
+  const shown = () => document.querySelector(".sui-delay-sentinel")?.textContent ?? null;
+
+  it("opens on the first hover frame by default", () => {
+    const hover = renderDelayed();
+    hover(2);
+    expect(shown()).toBe("2");
+  });
+
+  it("waits openDelay, then follows without re-delaying, and closes at once", () => {
+    vi.useFakeTimers();
+    const hover = renderDelayed(250);
+    hover(2);
+    expect(shown()).toBeNull();
+    vi.advanceTimersByTime(249);
+    expect(shown()).toBeNull();
+    vi.advanceTimersByTime(1);
+    expect(shown()).toBe("2");
+    hover(8);
+    expect(shown()).toBe("8");
+    hover(null);
+    expect(shown()).toBeNull();
+    hover(8);
+    expect(shown()).toBeNull();
+    vi.advanceTimersByTime(250);
+    expect(shown()).toBe("8");
   });
 });
