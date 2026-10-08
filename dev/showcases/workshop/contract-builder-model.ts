@@ -99,6 +99,9 @@ export interface Job {
   /** Working days. */
   readonly duration: number;
   readonly payments: readonly Payment[];
+  /** An unsigned quote that counts only because it is switched on. Drawn
+   *  lighter, and consumes the hope LAST. Omitted: a signed job. */
+  readonly estimate?: boolean;
 }
 
 export interface Config {
@@ -120,6 +123,8 @@ export interface Cell {
   readonly invoicedWithin: number;
   /** Inside the projection, signed but not yet invoiced. */
   readonly plannedWithin: number;
+  /** The part of `plannedWithin` that is estimates (switched-on quotes). */
+  readonly estimateWithin: number;
   readonly unplanned: number;
   readonly remainder: number;
   /** max(planned, projected): the height the bar stands to. */
@@ -155,6 +160,15 @@ export const plannedOf = (config: Config, type: TypeId, month: number): number =
 export const invoicedOf = (config: Config, type: TypeId, month: number): number =>
   total(filter((p: Payment) => p.invoiced, landing(config, type, month)));
 
+/** The switched-on estimates' part of `plannedOf`. */
+export const estimatedOf = (config: Config, type: TypeId, month: number): number =>
+  pipe(
+    config.jobs,
+    filter((j: Job) => j.use && j.estimate === true && j.type === type),
+    flatMap((j: Job) => paymentsIn(j, month)),
+    total,
+  );
+
 /** Projected $ for a type in a month: qty × typical. */
 export const projectedOf = (t: JobType, month: number): number =>
   (t.qty[month] ?? 0) * t.typical;
@@ -166,6 +180,10 @@ export const cellOf = (config: Config, t: JobType, month: number): Cell => {
   const invoiced = invoicedOf(config, t.id, month);
   const within = Math.min(planned, projected);
   const invoicedWithin = Math.min(invoiced, projected);
+  /* Signed money consumes the hope before estimates do, so an estimate sits
+     on top of the signed tint and is the first thing over the hope. */
+  const estimated = estimatedOf(config, t.id, month);
+  const estimateWithin = Math.max(0, within - Math.min(planned - estimated, projected));
   return {
     type: t.id,
     month,
@@ -175,6 +193,7 @@ export const cellOf = (config: Config, t: JobType, month: number): Cell => {
     within,
     invoicedWithin,
     plannedWithin: within - invoicedWithin,
+    estimateWithin,
     unplanned: Math.max(0, planned - projected),
     remainder: Math.max(0, projected - planned),
     shown: Math.max(planned, projected),

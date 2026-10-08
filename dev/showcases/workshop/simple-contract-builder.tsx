@@ -317,7 +317,9 @@ const SimpleContractBuilder: Component = () => {
           onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
         />
         <NoteText>
-          Drag the top edge of an outline to set that month's hoped-for jobs
+          Inside an outline: solid = invoiced, translucent = signed, lighter =
+          a switched-on estimate (it fills the hope last). Drag the top edge of
+          an outline to set that month's hoped-for jobs
           (whole jobs, never below zero — only that month moves); double-click a
           bar to type it.
         </NoteText>

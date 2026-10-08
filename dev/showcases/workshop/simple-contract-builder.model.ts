@@ -42,7 +42,10 @@ export const counts = (c: Contract): boolean => c.status === "Confirmed" || c.us
 /** The consumption fold's config: contracts become jobs whose `use` is `counts`. */
 export const asPlan = (types: readonly JobType[], contracts: readonly Contract[]): Config => ({
   types,
-  jobs: map((c: Contract): Job => ({ ...c, use: counts(c) }), contracts),
+  jobs: map(
+    (c: Contract): Job => ({ ...c, use: counts(c), estimate: c.status === "Estimate" }),
+    contracts,
+  ),
 });
 
 const DAY_MS = 86_400_000;

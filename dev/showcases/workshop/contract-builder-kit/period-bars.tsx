@@ -135,6 +135,7 @@ export const PeriodBars: Component<{
   const uid = createUniqueId();
   const hatchId = (i: number) => `cb-hatch-${uid}-${i}`;
   const tintId = (i: number) => `cb-tint-${uid}-${i}`;
+  const lightId = (i: number) => `cb-light-${uid}-${i}`;
   /* Cross-hatch = two stripe patterns crossed: the bar's own segment carries
      one angle, an overlay BarSeries the other (a pattern has one angle). */
   const missA = `cb-miss-a-${uid}`;
@@ -177,6 +178,12 @@ export const PeriodBars: Component<{
                 groundOpacity={0.35}
                 stripeOpacity={0}
               />
+              <HatchPattern
+                id={lightId(i())}
+                color={color}
+                groundOpacity={0.14}
+                stripeOpacity={0}
+              />
             </>
           )}
         </For>
@@ -202,7 +209,12 @@ export const PeriodBars: Component<{
               bandWidth={BAND}
               segments={(c) => [
                 { value: c.invoicedWithin, fill: TYPE_COLORS[s().i], key: "invoiced" },
-                { value: c.plannedWithin, fill: `url(#${tintId(s().i)})`, key: "planned" },
+                {
+                  value: c.plannedWithin - c.estimateWithin,
+                  fill: `url(#${tintId(s().i)})`,
+                  key: "planned",
+                },
+                { value: c.estimateWithin, fill: `url(#${lightId(s().i)})`, key: "estimate" },
                 { value: missingOf(c, props.today), fill: `url(#${missA})`, key: "missing" },
                 { value: c.unplanned, fill: `url(#${hatchId(s().i)})`, key: "unplanned" },
               ]}
