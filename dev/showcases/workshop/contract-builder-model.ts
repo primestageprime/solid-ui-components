@@ -330,17 +330,29 @@ export const monthPosition = (today: string): number => {
 };
 
 /** Σ over every type of booked − hope, in one month. */
-export const monthDelta = (config: Config, month: number): number =>
-  sum(map((c: Cell) => c.delta, periodOf(config, month).cells));
+export const monthDelta = (config: Config, month: number, today?: string): number =>
+  sum(
+    map(
+      (c: Cell) => (today !== undefined && month >= monthOf(today) ? c.unplanned : c.delta),
+      periodOf(config, month).cells,
+    ),
+  );
 
 /**
  * The running divergence from January: Σ over q ≤ m of `monthDelta(q)`. A sum
  * of pure months — no register carried from one to the next.
+ *
+ * Given `today` (Peter, 2026-10-08), a month counts two ways: up to NOW it is
+ * booked − hope, as it happened; from NOW's month on it is max(0, committed −
+ * hope) per type — unsold hope is not "behind" until its month has passed, and
+ * only work signed BEYOND the hope moves the line (the scenario's own
+ * max(hope, committed)). NOW's month counts as future. Without `today`, every
+ * month is booked − hope.
  */
-export const cumulativeDelta = (config: Config, month: number): number =>
+export const cumulativeDelta = (config: Config, month: number, today?: string): number =>
   sum(
     map(
-      (q: number) => monthDelta(config, q),
+      (q: number) => monthDelta(config, q, today),
       filter((q: number) => q <= month, monthsOf(config)),
     ),
   );
@@ -375,9 +387,10 @@ export const withCount = (
 export const cumulativeFit = (
   config: Config,
   lastMonth = Number.POSITIVE_INFINITY,
+  today?: string,
 ): { min: number; max: number } => {
   const values = map(
-    (m: number) => cumulativeDelta(config, m),
+    (m: number) => cumulativeDelta(config, m, today),
     filter((m: number) => m <= lastMonth, monthsOf(config)),
   );
   return { min: Math.min(0, ...values), max: Math.max(0, ...values) };

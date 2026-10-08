@@ -252,14 +252,16 @@ const SimpleContractBuilder: Component = () => {
   /** The consumption fold's view of the board: hopes + the contracts that count. */
   const plan = createMemo(() => asPlan(hopes(), contracts()));
   /* Grow-only y-axis (Auto-grow | manual shrink), as on Contract Builder. */
-  const divergenceAxis = createAxisWaterMarks(() => cumulativeFit(plan()));
+  const divergenceAxis = createAxisWaterMarks(() =>
+    cumulativeFit(plan(), Number.POSITIVE_INFINITY, TODAY),
+  );
   /* The Hopes bars hold their y-axis too (grow at once, shrink on the fit button). */
   const barsAxis = createAxisWaterMarks(() => ({ min: 0, max: tallest(plan()) }));
 
   const panelB = (
     <>
       <SpreadRow>
-        <TextTitle>How your contracts fulfil your hopes — running, all types</TextTitle>
+        <TextTitle>How your contracts fulfil your hopes — running, all types · up to NOW booked − hope; after, only work beyond the hope</TextTitle>
         <IconOnlyButton
           onClick={divergenceAxis.reset}
           aria-label="Shrink y-axis to fit current values"

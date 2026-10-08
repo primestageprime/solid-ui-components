@@ -95,7 +95,9 @@ const ContractBuilderBench: Component = () => {
      configures them here (Locked has no range editor). Dragging a
      hope swings both charts, and a re-fitting axis would rescale under the
      pointer. */
-  const cumAxis = createAxisWaterMarks(() => cumulativeFit(config()));
+  const cumAxis = createAxisWaterMarks(() =>
+    cumulativeFit(config(), Number.POSITIVE_INFINITY, TODAY),
+  );
   const barsAxis = createAxisWaterMarks(() => ({ min: 0, max: tallest(config()) }));
   const entryType = () => config().types.find((t) => t.id === entry()?.type);
   return (
@@ -134,8 +136,9 @@ const ContractBuilderBench: Component = () => {
               exterior, interior and furniture together. Above zero the mix is
               ahead of the total target, below it behind. Before NOW the bars
               are solid and the line is solid: actual money. From NOW's month
-              on the bars are translucent and the line dashed: signed future
-              work against the hope, so unsigned months still count as behind.
+              on the bars are translucent and the line dashed: only work signed
+              BEYOND a month's hope moves it — unsold hope is not behind until
+              its month has passed (NOW's month counts as future).
             </MutedBody>
           </TightStack>
         </ContentChartFrame>

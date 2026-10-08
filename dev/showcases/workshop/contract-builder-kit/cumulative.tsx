@@ -86,7 +86,7 @@ export const CumulativeDivergence: Component<{
     map(
       (m: number) => ({
         month: m,
-        value: cumulativeDelta(props.config, m),
+        value: cumulativeDelta(props.config, m, props.today),
         past: m < monthOf(props.today),
       }),
       filter((m: number) => m <= last(), monthsOf(props.config)),
