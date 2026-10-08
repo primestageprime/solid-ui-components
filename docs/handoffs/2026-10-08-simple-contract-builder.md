@@ -1,60 +1,75 @@
 # Handoff — Simple Contract Builder → SUI components → thorcasting
 
-Written 2026-10-08 by the manager session before a context clear. Delete this
-file once M0–M10 land; move anything durable to `docs/adr/` first.
+Rewritten 2026-10-08 after M0–M9 landed. Delete this file once M10 lands; move
+anything durable to `docs/adr/` first.
 
 ## Where things stand
 
-Two workshop benches, both on `main` (last commit `c8a8fa3e`), live in Peter's
-gallery (main checkout, port 6006):
+M0 through M9 are done and on `main`. Releases **0.211.0, 0.212.0 and 0.213.0
+are published** (registry latest: 0.213.0). M10 (thorcasting adopts the screen)
+is **deferred until Peter reviews the benches and the consumer handoff**.
 
-- **Simple Contract Builder** — <http://sui.localhost:6006/#/workshop:simple-contract-builder>
+Benches, both on `main`, in the gallery (port 6006), now composed only from the
+SUI barrel:
+
+- Simple Contract Builder — <http://sui.localhost:6006/#/workshop:simple-contract-builder>
   (`dev/showcases/workshop/simple-contract-builder.{tsx,model.ts,fixtures.ts}`).
-  The target design. `BuilderBoard` with four panels:
-  - **A · Cash flow** — `FillChartFrame` + `CashflowScrubChart`; banked (solid)
-    to NOW, outlook (dashed) after; opening balance $25k + fixed cost $5k/wk
-    (**example figures, unconfirmed**); grow-only axis + fit button; fullscreen
-    fills viewport.
-  - **B · How your contracts fulfil your projections** — running Σ(booked −
-    projection) across all types as a zero-split area (green ahead / red
-    behind), solid before NOW, lighter + dashed after; measured to its panel.
-  - **C · Changes** — `UnderlineTabs`: **Contracts** (CompactTable: edit
-    button → Modal form for Locked / Start / Status / Est; include toggle on
-    every row; Type; Confirmed|Planned badge) and **Projections** (per-month
-    bars per type, `ValueHandle` drag + double-click entry, debounced
-    breakdown tooltip, 3m/6m/1y horizon scoped to this chart only).
-  - **D · Rate, right now** — the Hourly board's dial (constant across all
-    builders), leader-line vs corner layout chosen by `calloutModeFor`.
-- **Contract Builder** — <http://sui.localhost:6006/#/workshop:contract-builder>
+  The target design: `BuilderBoard`, panels A cash flow (`FillAutoGrowChartFrame`
+  + `CashflowScrubChart`), B `SignedAreaChart`, C tabs (Contracts via
+  `TableQuickFilter` + `CompactTable`, edit `Modal` with `label?` fields and a
+  footer; Projections via `TargetBarChart` in `ContentAutoGrowChartFrame`), D the
+  rate dial with `calloutModeFor`.
+- Contract Builder — <http://sui.localhost:6006/#/workshop:contract-builder>
   (`contract-builder.tsx`, `contract-builder-model.ts`, `contract-builder-kit/`).
-  The step-by-step bench the simple one reuses (model, `PeriodBars`,
-  `CumulativeDivergence`, `PatternLegend`). Example data: painter, NOW =
-  2026-04-15, projections repeat into 2027.
+  The step-by-step bench; the kit is now `pattern-legend.tsx` (a controlled,
+  collapsible `Legend` with swatches) and `target-bars.ts` (the adapter from the
+  consumption fold to `TargetBarChart` series, the seam a server fills).
 
-### SUI src landed from this work (all merged to main)
+### Landed
 
-| PR | What |
+| Commit | What |
 |---|---|
-| #269 | `LineSeries` `stroke` prop wins over the default accent |
-| #271 | `ValueHandle` (Chart part: drag a mark's top edge; double-click column) |
-| #272 | `AreaSeries` `fill` prop wins over the default accent |
-| #273 | `ValueHandle` grip "arms" (grows/rings) on hover, focus, drag |
-| #274 | `calloutModeFor` picks leaders when the natural dial fits (+ `previous` hysteresis) |
+| 63e9a029 (and 896e8d56) | M0: CHANGELOG lines for #269/#271/#272/#273/#274; released 0.211.0 |
+| 60a0aaac | M1: `ChartTooltip` lands on the mark at any rendered size; `openDelay` |
+| cc2ad787 | M3: `SignedAreaChart` + pure `signedArea.ts` |
+| 01019273 | `ChartFrame` auto-grow-only y-axis override + `FillAutoGrowChartFrame` |
+| f2769532 | release.mjs regenerates `catalog.json` (0.212.0) |
+| 82603d48 | M5: `label?` on `DatePicker` and `SegmentedInput` |
+| 87551ee3 | M6: `Legend` `swatch?`; showcase folds a pattern legend |
+| 48d06b2a + e8e5c9ef | M4: `TargetBarChart` (the second restores the Legend files the first reverted) |
+| 7f1d8dc5 | `HatchPattern` documented as a direct `Chart` child; benches drop raw `<defs>` |
+| 967fe544 | M7: both benches onto the barrel; `ContentAutoGrowChartFrame`; `PeriodBars` and `CumulativeDivergence` deleted |
 
-**None of these is published.** They added no CHANGELOG `## Unreleased`
-lines, so auto-release cut nothing; the registry is still **0.210.0**
-(`NPM_TOKEN=$(gh auth token) npm view @primestageprime/solid-ui-components version --registry=https://npm.pkg.github.com`).
-COMPONENTS.md names the Contract Builder bench as ValueHandle's consumer — a
-bench is not a consumer; fix that line in M0.
+Also: a853caf7 makes the pre-push hook block a stale `catalog.json`.
 
-## Peter's rulings this session (all recorded in MemPalace)
+### Decisions and what was dropped
+
+- **`ChartDefs` was dropped (M2).** An SVG `<pattern>` resolves by id as a
+  direct `Chart` child, and `HatchPattern` already existed, so no wrapper was
+  needed.
+- **`ContentAutoGrowChartFrame` is on `main`, pending the next release.**
+- **M8 (release)** happened as 0.211.0, 0.212.0 and 0.213.0, cut by the
+  auto-release on CHANGELOG lines.
+- Dropped from the benches: the "area" projection mode (no caller) and the
+  bar-click `console.table` (no hook on `TargetBarChart`).
+- Pre-push catalog check: in progress by m0-release at the time of writing.
+
+### M10 and the consumer handoff
+
+M10 is deferred. Its handoff lives in the thorcasting repo, uncommitted:
+`thorcasting/thorcasting-ui/docs/handoff/2026-10-08-simple-contract-builder.md`.
+It specifies the SERVER contract (every series is computed server-side; the SUI
+charts take finished series), the screen spec, the version pin, and what of
+`ContractsBuilderScreen` survives. The next agent starts server-side, from that
+doc's contract section. Open questions for Peter: none.
+
+## Peter's rulings (all recorded in MemPalace)
 
 - **Consumption rule:** a signed job's money lands in the month(s) its
   **payments** fall (deposit, progress, final) — not start date. Measured in $.
 - **Scenario = per type per month, max(projection, committed).** Work switched
   on inside a month's projection moves no money; only work beyond it does.
   Past months are actual banked money only (a missed projection is not cash) —
-  *Peter has not explicitly confirmed the past-month half.*
 - **B's rule:** before NOW, booked − projection; from NOW's month on,
   max(0, committed − projection) — unsold projection isn't "behind" until its
   month passes.
@@ -71,66 +86,18 @@ bench is not a consumer; fix that line in M0.
   **6006** — no worktrees/private ports unless Peter clears it. Fast lane:
   report as soon as it renders; tests/PRs come at promotion.
 
-## The promotion plan (from the `cb-gap-plan` review)
-
-Already SUI (no extraction): BuilderBoard, A, D, tabs, horizon control, entry
-modal. Use `FilterableTable` instead of CompactTable + hand-written "N of M";
-put Save/Cancel in `Modal`'s `footer`; use ChartFrame's y-axis strategy instead
-of three different fit buttons.
-
-New components (need Peter's push-back-gate confirmation):
-
-- **`TargetBarChart`** (Depth 2, from `PeriodBars` + `BarTip`): per period, N
-  series side by side, stacked mark segments inside a hollow target outline,
-  `ValueHandle` grip on the outline, NOW rule, delayed breakdown tooltip;
-  measures itself (no `src/internal/dom/observeSize` import).
-- **`SignedAreaChart`** (Depth 2, from `CumulativeDivergence`): running total
-  filled against zero, one colour per sign, split exactly at crossings, solid
-  before NOW / translucent after.
-- Small: `ChartDefs` slot (Depth 1, so a Composite can carry patterns);
-  `ChartTooltip.openDelay`; `label?` on `DatePicker` + `SegmentedInput`;
-  `LegendItem.swatch?` only if the pattern legend ships in the app.
-- Bug fix, no decision: `ChartTooltip` positions in chart units as CSS px
-  (`Tooltip.tsx:112-127,150`) — scale by the svg's on-screen box.
-
-| M | Work | Agent-min |
-|---|---|---|
-| M0 | CHANGELOG lines for #269/#271/#272/#273/#274 + fix COMPONENTS consumer line → releases 0.211.0 | 8 |
-| M1 | ChartTooltip positioning fix + `openDelay` | 15 |
-| M2 | `ChartDefs` | 12 |
-| M3 | `SignedAreaChart` + pure `signedArea.ts` + showcase + tests | 30 |
-| M4 | `TargetBarChart` + `targetBarGeometry.ts` + showcase + tests | 45 |
-| M5 | `label?` on DatePicker + SegmentedInput | 15 |
-| M6 | Legend `swatch?` (only if needed) | 15 |
-| M7 | Rewire both benches onto the barrel (last) | 20 |
-| M8 | Release; this one ADDS components → catalog-only follow-up PR; verify registry | 10 |
-| M9 | Consumer handoff doc for thorcasting | 25 |
-| M10 | thorcasting bumps `^0.198.0` → new version, adopts | 20+ |
-
-Max 2 agents (A: M1→M4, B: M2→M3→M5). Every src PR must add its CHANGELOG
-Unreleased line.
-
-## Blocked on Peter, in this order
-
-1. **M0** — OK to release the merged src as 0.211.0?
-2. **D1** — does this mockup **replace or extend** thorcasting's
-   `ContractsBuilderScreen` (`/builder/contracts`, dside #41023: won /
-   unapproved / excluded cards + commit panel)? That screen's rule is "every
-   figure comes from the server"; the bench computes everything client-side.
-   Server or client? Blocks M9/M10 and line 2 of every justification.
-3. Approve `TargetBarChart` (+ `ChartDefs`), then `SignedAreaChart`.
-4. Y-axis: full Auto-grow / Full auto / Locked strategy (zero API) vs
-   Auto-grow-only (new ChartFrame override).
-5. Pattern legend on the consumer screen? (No → skip `LegendItem.swatch`.)
-6. `label?` on DatePicker/SegmentedInput; `ChartTooltip.openDelay`.
-7. Example figures: $25k opening balance, $5k/wk fixed cost.
-8. **Workshop fast lane** (approved by Peter) is **blocked**: the auto-mode
-   classifier refused an agent editing `githooks/` pre-push (skip gate for
-   workshop-only pushes) and `scripts/health.mjs` (exclude
-   `dev/showcases/workshop/**`) as a CI bypass. Peter must make those edits,
-   say it explicitly in chat, or add a permission rule. The doc half
-   (`.claude/agents/sui-composer.md`, `.claude/skills/sui-agent-brief`) wasn't
-   started either.
+- **Past months = banked (invoiced) money only: CONFIRMED.** A missed projection
+  is the red cross-hatch and never counts in the scenario.
+- **State map:** won = Confirmed + included; unapproved = Planned + included;
+  excluded = include toggle off. A switched-off contract stays listed, toggle
+  off and dimmed.
+- **D1:** the builder REPLACES thorcasting's `ContractsBuilderScreen`; every
+  series is computed server-side. The server owns the estimate-edit rule. The
+  projection generator and Avg contract value are dropped; the shared frame
+  chart above the board is dropped (panel A replaces it). Add/remove contract
+  stay in the Contracts tab.
+- **Legend:** all six mark kinds, collapsible, the collapsed state a sticky user
+  setting stored by the consumer (SUI keeps no preference).
 
 ## Gotchas learned (also in MemPalace `solid-ui-components/gotchas`)
 
@@ -155,8 +122,33 @@ Unreleased line.
 - Live thorcasting-ui's `builder/slopeGauges.tsx` does **not** call
   `calloutModeFor` yet (TODO SUI G4); `thorcasting-ui-main-ref` is an older
   copy — grep the live repo.
+- `catalog.json` goes stale when `COMPONENTS.md` or a showcase changes and
+  nobody runs `npm run catalog`. `node scripts/catalog.mjs --check` fails red
+  on those runs (stale `since` values after a CHANGELOG move, for one). The
+  pre-push hook now blocks a stale catalog (a853caf7); regenerate in the same
+  commit as the docs change. (In progress by m0-release at the time of writing.)
+- **Stale-index revert (48d06b2a, 2026-10-08).** A commit made from a stale
+  shared index briefly reverted another agent's Legend files; e8e5c9ef
+  restored them byte for byte. In a shared checkout, build the commit from a
+  temporary index (`GIT_INDEX_FILE=... git read-tree origin/main`, add only
+  your paths, commit) so other agents' staged hunks and your own earlier
+  `git add` cannot leak in or out.
+- A release cut can land between your last commit and your push: a CHANGELOG
+  line added under the old Unreleased heading then sits under the released
+  version and never ships (87551ee3, fixed in cb94738c). Re-read the top of
+  CHANGELOG.md after `git fetch`, before committing.
+- **`Chart` pointer mapping, to be fixed.** `pointerDataX` and
+  `pointerDataXClamped` (`src/components/Chart/Chart.tsx`, about lines 239 and
+  250) turn a pointer's `clientX` into plot pixels from the svg's bounding box
+  without scaling to chart units. On a viewBox-scaled (responsive) chart the
+  hover and drag x would be off by the scale factor. `ChartTooltip` had the
+  same fault (fixed in 60a0aaac); the Chart's own mapping appears not to be.
+  Unverified; check on a responsive chart before changing it.
+- Benches that need a `<pattern>` put `HatchPattern` directly in `Chart`; an
+  SVG pattern resolves by id from any child, so no `<defs>` wrapper is needed
+  (7f1d8dc5).
+- `FilterableTable` is deprecated; compose `TableQuickFilter` around a table.
 
 ## Agents
 
-`contract-builder-proto` (sui-composer, opus) is idle and holding, clean tree.
-`cb-gap-plan` (Plan, read-only) is done. No crons running.
+All agents are done; no crons running. The tree is clean after this commit.
