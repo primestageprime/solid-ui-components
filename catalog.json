@@ -1830,7 +1830,7 @@
     "summarySource": "components-md",
     "preferFirst": null,
     "notToBeConfusedWith": null,
-    "useFor": "the frame around any chart on a screen.",
+    "useFor": "the frame around any chart on a screen. `ContentAutoGrowChartFrame` is the content-height twin of `FillAutoGrowChartFrame` (`height: \"content\"`, `yAxisStrategy: \"auto-grow-only\"`): wire `onYAxisPress` to `createAxisWaterMarks(...).reset`.",
     "notes": "The standard chart frame: a stated in-flow height, the viewport in full screen.",
     "showcase": "#/chart-frame",
     "since": "0.185.0",
@@ -2736,6 +2736,31 @@
     "since": null,
     "file": "src/components/Layout/variants.ts",
     "line": 467
+  },
+  {
+    "name": "ContentAutoGrowChartFrame",
+    "depth": 2,
+    "kind": "variant",
+    "family": "ChartFrame",
+    "variantOf": {
+      "factory": "createChartFrame",
+      "overrides": "{ height: \"content\", yAxisStrategy: \"auto-grow-only\" }"
+    },
+    "overrides": [
+      "height",
+      "yAxisStrategy"
+    ],
+    "dataProps": "ChartFrameDataProps",
+    "summary": "The content-height frame whose y-axis only ever AUTO-GROWS: the `FillAutoGrowChartFrame` for a chart that sets its own height (a chart in a scrolling panel).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The content-height frame whose y-axis only ever AUTO-GROWS: the `FillAutoGrowChartFrame` for a chart that sets its own height (a chart in a scrolling panel). Wire `onYAxisPress` to `createAxisWaterMarks(...).reset`.",
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/variants.ts",
+    "line": 51
   },
   {
     "name": "ContentChartFrame",
@@ -17718,7 +17743,7 @@
     "showcase": "#/chart-frame",
     "since": "0.186.0",
     "file": "src/components/ChartFrame/variants.ts",
-    "line": 59
+    "line": 67
   },
   {
     "name": "YAxisLockDialogNumber",
@@ -17743,6 +17768,6 @@
     "showcase": "#/chart-frame",
     "since": "0.190.0",
     "file": "src/components/ChartFrame/variants.ts",
-    "line": 64
+    "line": 72
   }
 ]

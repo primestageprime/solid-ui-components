@@ -1,34 +1,25 @@
 // ============================================
-// PatternLegend — what each MARK means, beside the type-colour Legend. SUI's
-// `Legend` paints a swatch with `background-color` only, so it cannot show a
-// hatch, an outline or a dash (step 7, Peter: "Add in a legend for the
-// different patterns"). Each swatch here is a tiny `Chart` drawing the real
-// mark with the same parts the charts use, in a neutral grey so it reads as a
-// pattern rather than a job type. COMPOSED from SUI, no CSS of its own:
-//
-//   Chart (fixed 22×14, no margin) per swatch
-//   BarSeries + HatchPattern   solid / translucent / hatched / cross-hatch
-//   AreaSeries                 the running divergence's ahead / behind areas
-//   LineSeries                 the projection outline; the running line
-//   ReferenceLine              the dashed NOW rule
-//   LooseWrapRow / TightClusterRow + TextSublabel   the layout and labels
-//
-// The SUI-level fix (an optional `swatch` element per Legend item) is held
-// until promotion.
+// PatternLegend — what each MARK means. SUI's `Legend` takes an optional
+// `swatch` per item, so each swatch here is a tiny `Chart` drawing the real
+// mark (the same parts the charts use) in a neutral grey so it reads as a
+// pattern rather than a job type. The legend folds in `CollapsibleSection`,
+// CONTROLLED: the caller owns `collapsed` (thorcasting stores it as a sticky
+// user preference; the bench just keeps a signal).
 // ============================================
-import { type Component, For, type JSX, createUniqueId } from "solid-js";
+import { type Component, type JSX, createSignal, createUniqueId } from "solid-js";
 import {
   AreaSeries,
   BarSeries,
   Chart,
   HatchPattern,
   LineSeries,
-  LooseWrapRow,
+  CollapsibleSection,
+  Legend,
+  type LegendItem,
   ReferenceLine,
-  TextSublabel,
-  TightClusterRow,
+  fn,
 } from "../../../../src";
-import { MISSING_COLOR } from "./period-bars";
+const MISSING_COLOR = "var(--sui-danger)";
 
 const NEUTRAL = "var(--sui-text-secondary)";
 const W = 22;
@@ -40,6 +31,7 @@ type Mark =
   | "outline"
   | "solid"
   | "translucent"
+  | "lighter"
   | "hatched"
   | "missing"
   | "now"
@@ -99,6 +91,8 @@ const Swatch: Component<{ readonly mark: Mark }> = (props) => {
         return <Block fill={NEUTRAL} />;
       case "translucent":
         return <Block fill={`url(#${id("tint")})`} />;
+      case "lighter":
+        return <Block fill={`url(#${id("light")})`} />;
       case "hatched":
         return <Block fill={`url(#${id("hatch")})`} />;
       case "missing":
@@ -143,6 +137,7 @@ const Swatch: Component<{ readonly mark: Mark }> = (props) => {
   return (
     <Chart width={W} height={H} xDomain={[0, 1]} yDomain={[0, 1]} margin={NO_MARGIN}>
       <HatchPattern id={id("tint")} color={NEUTRAL} groundOpacity={0.4} stripeOpacity={0} />
+      <HatchPattern id={id("light")} color={NEUTRAL} groundOpacity={0.14} stripeOpacity={0} />
       <HatchPattern id={id("hatch")} color={NEUTRAL} groundOpacity={0.15} stripeOpacity={0.9} />
       <HatchPattern id={id("miss-a")} color={MISSING_COLOR} angle={45} groundOpacity={0.1} stripeOpacity={0.8} />
       <HatchPattern id={id("miss-b")} color={MISSING_COLOR} angle={-45} groundOpacity={0} stripeOpacity={0.8} />
@@ -156,27 +151,32 @@ export interface PatternItem {
   readonly label: string;
 }
 
-export const PatternLegend: Component<{ readonly items: readonly PatternItem[] }> = (
-  props,
-) => (
-  <LooseWrapRow>
-    <For each={props.items}>
-      {(item) => (
-        <TightClusterRow>
-          <Swatch mark={item.mark} />
-          <TextSublabel>{item.label}</TextSublabel>
-        </TightClusterRow>
-      )}
-    </For>
-  </LooseWrapRow>
-);
+const legendItemsOf = (items: readonly PatternItem[]): LegendItem[] =>
+  fn.map((item: PatternItem): LegendItem => ({ label: item.label, swatch: <Swatch mark={item.mark} /> }), items);
 
-/** The per-month bars' marks. */
+export const PatternLegend: Component<{
+  readonly items: readonly PatternItem[];
+  readonly title?: string;
+}> = (props) => {
+  const [collapsed, setCollapsed] = createSignal(false);
+  return (
+    <CollapsibleSection
+      title={props.title ?? "Legend"}
+      collapsed={collapsed()}
+      onToggleCollapse={() => setCollapsed((c) => !c)}
+    >
+      <Legend items={legendItemsOf(props.items)} />
+    </CollapsibleSection>
+  );
+};
+
+/** The per-month bars' marks: all six, plus the NOW rule. */
 export const BAR_MARKS: readonly PatternItem[] = [
   { mark: "outline", label: "Outline = projected" },
   { mark: "solid", label: "Solid = invoiced" },
-  { mark: "translucent", label: "Translucent = signed, not yet invoiced" },
-  { mark: "hatched", label: "Hatched = above the projection (unplanned win)" },
+  { mark: "translucent", label: "Translucent = Confirmed, not yet invoiced" },
+  { mark: "lighter", label: "Lighter = Planned" },
+  { mark: "hatched", label: "Hatched = above the projection" },
   { mark: "missing", label: "Red cross-hatch = missing (past shortfall)" },
   { mark: "now", label: "Dashed rule = NOW" },
 ];

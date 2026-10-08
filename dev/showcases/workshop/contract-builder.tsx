@@ -18,57 +18,51 @@
  */
 import { type Component, Show, createSignal } from "solid-js";
 import {
-  ContentChartFrame,
+  ContentAutoGrowChartFrame,
+  SignedAreaChart,
+  TargetBarChart,
   ContentStack,
   Legend,
   Modal,
   MutedBody,
   SectionTitle,
   TextSublabel,
-  IconOnlyButton,
-  InlineMetaIcon,
   ThemedNumberInput,
   createAxisWaterMarks,
   TightStack,
   ViewportColumn,
   fn,
 } from "../../../src";
-import { CumulativeDivergence } from "./contract-builder-kit/cumulative";
 import {
   BAR_MARKS,
   CUMULATIVE_MARKS,
   PatternLegend,
 } from "./contract-builder-kit/pattern-legend";
-import { PeriodBars, TYPE_COLORS } from "./contract-builder-kit/period-bars";
+import { TYPE_COLORS, targetSeries } from "./contract-builder-kit/target-bars";
 import { STEP5, TODAY } from "./contract-builder.step1.fixtures";
 import {
   type Config,
   type JobType,
   MONTHS,
   type TypeId,
+  cumulativeDelta,
   cumulativeFit,
+  jobsAt,
+  monthLabel,
+  monthPosition,
+  monthsOf,
+  money,
   tallest,
   withCount,
 } from "./contract-builder-model";
 
-const { map } = fn;
+const { filter, map } = fn;
 
 export const meta = { label: "Contract Builder" };
 
 const legendItems = map(
   (t: JobType, i: number) => ({ color: TYPE_COLORS[i], label: t.name }),
   STEP5.types,
-);
-
-/** Shrink a held y-axis to fit the current values (the one manual move). */
-const FitButton: Component<{ readonly onFit: () => void }> = (props) => (
-  <IconOnlyButton
-    onClick={props.onFit}
-    aria-label="Shrink y-axis to fit current values"
-    title="Shrink y-axis to fit current values"
-  >
-    <InlineMetaIcon name="fit" />
-  </IconOnlyButton>
 );
 
 /** Which hope the double-click entry is open on. */
@@ -99,6 +93,12 @@ const ContractBuilderBench: Component = () => {
     cumulativeFit(config(), Number.POSITIVE_INFINITY, TODAY),
   );
   const barsAxis = createAxisWaterMarks(() => ({ min: 0, max: tallest(config()) }));
+  const divergence = () =>
+    map((m: number) => ({ x: m, y: cumulativeDelta(config(), m, TODAY) }), monthsOf(config()));
+  const divergenceExtent = (): readonly [number, number] | undefined => {
+    const held = cumAxis.domain();
+    return held ? [Math.min(0, held[0]), Math.max(0, held[1])] : undefined;
+  };
   const entryType = () => config().types.find((t) => t.id === entry()?.type);
   return (
   <div class="component-section component-section--full">
@@ -119,16 +119,20 @@ const ContractBuilderBench: Component = () => {
           </MutedBody>
         </TightStack>
 
-        <ContentChartFrame
+        <ContentAutoGrowChartFrame
           title="How your planned contracts fulfil your hopes"
           yTitle="Booked − hope, cumulative ($)"
-          actions={<FitButton onFit={cumAxis.reset} />}
+          onYAxisPress={cumAxis.reset}
         >
           <TightStack>
-            <CumulativeDivergence
-              config={config()}
-              today={TODAY}
-              held={cumAxis.domain()}
+            <SignedAreaChart
+              data={divergence()}
+              now={monthPosition(TODAY)}
+              xDomain={[-0.5, monthsOf(config()).length - 0.5]}
+              xTickValues={monthsOf(config())}
+              xTickFormat={(m) => monthLabel(Math.round(m))}
+              yTickFormat={money}
+              yDomain={divergenceExtent()}
             />
             <PatternLegend items={CUMULATIVE_MARKS} />
             <MutedBody>
@@ -141,20 +145,26 @@ const ContractBuilderBench: Component = () => {
               its month has passed (NOW's month counts as future).
             </MutedBody>
           </TightStack>
-        </ContentChartFrame>
+        </ContentAutoGrowChartFrame>
 
-        <ContentChartFrame
+        <ContentAutoGrowChartFrame
           title="Your hopes, month by month"
           yTitle="Revenue ($)"
-          actions={<FitButton onFit={barsAxis.reset} />}
+          onYAxisPress={barsAxis.reset}
         >
           <TightStack>
-            <PeriodBars
-              config={config()}
-              today={TODAY}
-              ceiling={barsAxis.domain()?.[1]}
-              onSetCount={(t, m, n) => setCount(t.id, m, n)}
-              onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
+            <TargetBarChart
+              series={targetSeries(config(), TODAY, monthsOf(config()).length - 1)}
+              periods={monthsOf(config())}
+              periodLabel={monthLabel}
+              now={monthPosition(TODAY)}
+              valueFormat={money}
+              yMax={barsAxis.domain()?.[1]}
+              onProjectionChange={(id, month, dollars) => {
+                const t = config().types.find((x) => x.id === id);
+                if (t) setCount(t.id, month, jobsAt(t, dollars));
+              }}
+              onProjectionEnter={(id, month) => setEntry({ type: id as TypeId, month })}
             />
             <Legend items={legendItems} />
             <PatternLegend items={BAR_MARKS} />
@@ -165,7 +175,7 @@ const ContractBuilderBench: Component = () => {
               chart above follows live. Outline = expected revenue for one job type. Inside it: solid = invoiced, translucent = signed but not yet invoiced. Red cross-hatch = MISSING: a month that ended before NOW short of its hope — money hoped for and not got. Empty = still hoped for (the current month and later). Hatched above the outline = booked beyond the hope.
             </MutedBody>
           </TightStack>
-        </ContentChartFrame>
+        </ContentAutoGrowChartFrame>
       </ContentStack>
     </ViewportColumn>
     <Show when={entry()}>

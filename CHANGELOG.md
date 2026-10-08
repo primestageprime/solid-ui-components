@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`ContentAutoGrowChartFrame`** — the content-height twin of `FillAutoGrowChartFrame`: a frame as tall as its chart whose y-axis only ever auto-grows, with one fit button.
+
 ## 0.213.0 — 2026-10-08
 
 ### Added

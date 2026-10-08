@@ -37,7 +37,6 @@ import { observeSize } from "../../../src/internal/dom/observeSize";
 import {
   AnchorFillBox,
   BuilderBoard,
-  ContentChartFrame,
   CurrencyInput,
   FillAutoGrowChartFrame,
   DatePicker,
@@ -46,6 +45,10 @@ import {
   TightStack,
   ClusterRow,
   CompactTable,
+  TableQuickFilter,
+  SignedAreaChart,
+  TargetBarChart,
+  ContentAutoGrowChartFrame,
   CompliantBadge,
   Modal,
   NoteText,
@@ -65,7 +68,6 @@ import {
   CashflowScrubChart,
   type CashflowCell,
   GrowFillBox,
-  Icon,
   IconOnlyButton,
   SpreadRow,
   TextTitle,
@@ -98,15 +100,19 @@ import {
   type JobType,
   monthLabel,
   type TypeId,
+  cumulativeDelta,
   cumulativeFit,
+  jobsAt,
+  monthPosition,
+  monthsOf,
   money,
   tallest,
   withCount,
 } from "./contract-builder-model";
-import { CumulativeDivergence } from "./contract-builder-kit/cumulative";
-import { PeriodBars } from "./contract-builder-kit/period-bars";
+import { BAR_MARKS, PatternLegend } from "./contract-builder-kit/pattern-legend";
+import { targetSeries } from "./contract-builder-kit/target-bars";
 
-const { map } = fn;
+const { filter, map } = fn;
 
 export const meta = { label: "Simple Contract Builder" };
 
@@ -261,6 +267,18 @@ const SimpleContractBuilder: Component = () => {
   /* The Hopes bars hold their y-axis too (grow at once, shrink on the fit button). */
   const barsAxis = createAxisWaterMarks(() => ({ min: 0, max: tallest(plan()) }));
 
+  /* B: the running total, one point per month up to the horizon. */
+  const divergence = createMemo(() =>
+    map(
+      (m: number) => ({ x: m, y: cumulativeDelta(plan(), m, TODAY) }),
+      filter((m: number) => m <= lastMonth(), monthsOf(plan())),
+    ),
+  );
+  const divergenceExtent = (): readonly [number, number] | undefined => {
+    const held = divergenceAxis.domain();
+    return held ? [Math.min(0, held[0]), Math.max(0, held[1])] : undefined;
+  };
+
   /* B fills its panel at the size the panel actually is: measured (SUI's
      loop-safe `observeSize`), not a fixed aspect that grows taller with the
      window and spills out of the card on a wide screen. */
@@ -296,10 +314,14 @@ const SimpleContractBuilder: Component = () => {
       <AnchorFillBox ref={measureB}>
         <Show when={bSize()}>
           {(size) => (
-            <CumulativeDivergence
-              config={plan()}
-              today={TODAY}
-              held={divergenceAxis.domain()}
+            <SignedAreaChart
+              data={divergence()}
+              now={monthPosition(TODAY)}
+              xDomain={[-0.5, lastMonth() + 0.5]}
+              xTickValues={filter((m: number) => m <= lastMonth(), monthsOf(plan()))}
+              xTickFormat={(m) => monthLabel(Math.round(m))}
+              yTickFormat={money}
+              yDomain={divergenceExtent()}
               size={size()}
             />
           )}
@@ -370,45 +392,38 @@ const SimpleContractBuilder: Component = () => {
         when={tab() === "hopes"}
         fallback={
           <>
-            <CompactTable data={sorted()} columns={columns} hoverable />
+            <TableQuickFilter data={sorted()} placeholder="Filter contracts…">
+              {(rows) => <CompactTable data={rows()} columns={columns} hoverable />}
+            </TableQuickFilter>
             <NoteText>
-              {`${contracts().filter((c) => c.use).length} of ${contracts().length} included · ${contracts().filter((c) => c.status === "Confirmed").length} confirmed, ${contracts().filter((c) => c.status === "Planned").length} planned · sorted by start. The scenario takes, per type per month, the larger of the projection and what is committed — so work switched on INSIDE a month's projection moves no money; only work beyond it does. Past months are banked money only.`}
+              {`${contracts().filter((c) => c.status === "Confirmed").length} confirmed, ${contracts().filter((c) => c.status === "Planned").length} planned · sorted by start. The scenario takes, per type per month, the larger of the projection and what is committed — so work switched on INSIDE a month's projection moves no money; only work beyond it does. Past months are banked money only.`}
             </NoteText>
           </>
         }
       >
-        <ContentChartFrame
+        <ContentAutoGrowChartFrame
           title="Projections, month by month"
           yTitle="Revenue ($)"
+          onYAxisPress={barsAxis.reset}
           fullscreen={hopesFull()}
           onFullscreenChange={setHopesFull}
-          actions={
-            <ClusterRow>
-              <SegmentedInput options={HORIZONS} value={horizon()} onChange={setHorizon} />
-              <IconOnlyButton
-                onClick={barsAxis.reset}
-                aria-label="Shrink y-axis to fit current values"
-                title="Shrink y-axis to fit current values"
-              >
-                <Icon name="shrink" size="sm" />
-              </IconOnlyButton>
-            </ClusterRow>
-          }
+          actions={<SegmentedInput options={HORIZONS} value={horizon()} onChange={setHorizon} />}
         >
-          <AnchorFillBox ref={measureHopes}>
-            <PeriodBars
-              config={plan()}
-              lastMonth={lastMonth()}
-              width={hopesBox()?.width}
-              height={hopesFull() && (hopesBox()?.height ?? 0) > 0 ? hopesBox()?.height : undefined}
-              tooltip
-              ceiling={barsAxis.domain()?.[1]}
-              today={TODAY}
-              onSetCount={(t, m, n) => setCount(t.id, m, n)}
-              onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
-            />
-          </AnchorFillBox>
-        </ContentChartFrame>
+          <TargetBarChart
+            series={targetSeries(plan(), TODAY, lastMonth())}
+            periods={filter((m: number) => m <= lastMonth(), monthsOf(plan()))}
+            periodLabel={monthLabel}
+            now={monthPosition(TODAY)}
+            valueFormat={money}
+            yMax={barsAxis.domain()?.[1]}
+            onProjectionChange={(id, month, dollars) => {
+              const t = hopes().find((x) => x.id === id);
+              if (t) setCount(t.id, month, jobsAt(t, dollars));
+            }}
+            onProjectionEnter={(id, month) => setEntry({ type: id as TypeId, month })}
+          />
+        </ContentAutoGrowChartFrame>
+        <PatternLegend items={BAR_MARKS} />
         <NoteText>
           Inside an outline: solid = invoiced, translucent = a Confirmed
           contract not yet invoiced, lighter = a Planned one (it fills the projection
@@ -491,17 +506,31 @@ const SimpleContractBuilder: Component = () => {
       />
       <Show when={editing()}>
         {(c) => (
-          <Modal open onClose={closeEdit} title={`Edit ${c().name}`} subtitle={`#${c().id} · ${TYPE_NAME[c().type]}`}>
+          <Modal
+            open
+            onClose={closeEdit}
+            title={`Edit ${c().name}`}
+            subtitle={`#${c().id} · ${TYPE_NAME[c().type]}`}
+            footer={
+              <ClusterRow>
+                <PrimaryButton onClick={saveEdit}>Save</PrimaryButton>
+                <GhostButton onClick={closeEdit}>Cancel</GhostButton>
+              </ClusterRow>
+            }
+          >
             <TightStack>
               <TruthToggle
                 label="Locked"
                 checked={draft()?.locked ?? false}
                 onCheckedChange={(on) => patch({ locked: on })}
               />
-              <TextSublabel>Start date</TextSublabel>
-              <DatePicker value={draft()?.start ?? ""} onChange={(iso) => iso && patch({ start: iso })} />
-              <TextSublabel>Status</TextSublabel>
+              <DatePicker
+                label="Start"
+                value={draft()?.start ?? ""}
+                onChange={(iso) => iso && patch({ start: iso })}
+              />
               <SegmentedInput
+                label="Status"
                 options={STATUSES}
                 value={draft()?.status ?? "Planned"}
                 onChange={(id) => patch({ status: id as ContractEdit["status"] })}
@@ -520,10 +549,6 @@ const SimpleContractBuilder: Component = () => {
                 A new start moves every payment by the same number of days; a
                 new est scales every payment, keeping each one's share.
               </NoteText>
-              <ClusterRow>
-                <PrimaryButton onClick={saveEdit}>Save</PrimaryButton>
-                <GhostButton onClick={closeEdit}>Cancel</GhostButton>
-              </ClusterRow>
             </TightStack>
           </Modal>
         )}

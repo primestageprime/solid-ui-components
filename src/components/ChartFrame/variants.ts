@@ -43,6 +43,14 @@ export const ContentChartFrame: Component<ChartFrameDataProps> = createChartFram
   height: "content",
 });
 
+/**
+ * The content-height frame whose y-axis only ever AUTO-GROWS: the
+ * `FillAutoGrowChartFrame` for a chart that sets its own height (a chart in
+ * a scrolling panel). Wire `onYAxisPress` to `createAxisWaterMarks(...).reset`.
+ */
+export const ContentAutoGrowChartFrame: Component<ChartFrameDataProps> =
+  createChartFrame({ height: "content", yAxisStrategy: "auto-grow-only" });
+
 /** The chart language's words for the lock editor, shared by both fields. */
 const Y_AXIS_LOCK_LABELS = {
   title: "Lock the y-axis",

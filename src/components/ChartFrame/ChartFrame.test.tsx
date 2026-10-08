@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   CHART_FRAME_HEIGHT,
   ChartFrame,
+  ContentAutoGrowChartFrame,
   ContentChartFrame,
   FillAutoGrowChartFrame,
   type ChartYAxisMode,
@@ -236,5 +237,22 @@ describe("FillAutoGrowChartFrame — the y-axis only auto-grows", () => {
     ));
     expect(container.querySelector(".sui-popover-menu")).toBeNull();
     expect(button(container, chartYAxisModeInfo("fixed").action)).toBeNull();
+  });
+});
+
+describe("ContentAutoGrowChartFrame — content height, auto-grow-only axis", () => {
+  it("is as tall as its chart and draws one fit button wired to onYAxisPress", () => {
+    const onPress = vi.fn();
+    const { container } = render(() => (
+      <ContentAutoGrowChartFrame title="T" onYAxisPress={onPress}>
+        <span />
+      </ContentAutoGrowChartFrame>
+    ));
+    const column = container.querySelector(".sui-fullscreen-box")!
+      .firstElementChild as HTMLElement;
+    expect(column.style.height).toBe("");
+    expect(container.querySelector(".sui-popover-menu")).toBeNull();
+    fireEvent.click(button(container, chartYAxisModeInfo("auto").action)!);
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 });
