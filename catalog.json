@@ -16852,7 +16852,7 @@
     "useFor": "dragging a bar's or column's top edge to set its value on a chart.",
     "notes": null,
     "showcase": "#/chart",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Chart/ValueHandle.tsx",
     "line": 76
   },
