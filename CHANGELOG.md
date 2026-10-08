@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.211.0 — 2026-10-08
+
 ### Added
 
 - **`ValueHandle`** — a Chart part (Depth 1): a draggable grip on the top edge of each datum's column. Drag it to set that datum's value (`onDragStart`, `onDrag`, `onDragEnd`, reported in data units), or double-click the column to type one in. The grip arms on hover, focus and drag: thicker, wider and ringed around its own centre line, so nothing else on the chart moves.
