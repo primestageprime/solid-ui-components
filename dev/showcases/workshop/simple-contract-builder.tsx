@@ -35,6 +35,7 @@ import {
 } from "solid-js";
 import { observeSize } from "../../../src/internal/dom/observeSize";
 import {
+  AnchorBox,
   AnchorFillBox,
   BuilderBoard,
   ContentChartFrame,
@@ -279,6 +280,17 @@ const SimpleContractBuilder: Component = () => {
       onCleanup(observeSize(el, (s) => s.width > 0 && s.height > 0 && setBSize(s)));
     });
   };
+  /* The Projections chart is drawn 1:1 at its measured width (its tooltip
+     positions in chart units, so it must not be viewBox-scaled). */
+  const [hopesWidth, setHopesWidth] = createSignal<number | null>(null);
+  const measureHopes = (el: HTMLDivElement) => {
+    onMount(() => {
+      const w = el.getBoundingClientRect().width;
+      if (w > 0) setHopesWidth(w);
+      onCleanup(observeSize(el, (s) => s.width > 0 && setHopesWidth(s.width)));
+    });
+  };
+
   const panelB = (
     <FillChartFrame
       title="How your contracts fulfil your projections — running, all types"
@@ -398,15 +410,19 @@ const SimpleContractBuilder: Component = () => {
             </ClusterRow>
           }
         >
-          <PeriodBars
-            config={plan()}
-            lastMonth={lastMonth()}
-            hopeAs={hopeView()}
-            ceiling={barsAxis.domain()?.[1]}
-            today={TODAY}
-            onSetCount={(t, m, n) => setCount(t.id, m, n)}
-            onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
-          />
+          <AnchorBox ref={measureHopes}>
+            <PeriodBars
+              config={plan()}
+              lastMonth={lastMonth()}
+              hopeAs={hopeView()}
+              width={hopesWidth() ?? undefined}
+              tooltip
+              ceiling={barsAxis.domain()?.[1]}
+              today={TODAY}
+              onSetCount={(t, m, n) => setCount(t.id, m, n)}
+              onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
+            />
+          </AnchorBox>
         </ContentChartFrame>
         <NoteText>
           Inside an outline: solid = invoiced, translucent = a Confirmed

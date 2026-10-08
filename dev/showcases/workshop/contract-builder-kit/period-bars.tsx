@@ -33,14 +33,23 @@ import {
   For,
   Index,
   Show,
+  createEffect,
   createMemo,
   createSignal,
   createUniqueId,
+  on,
+  onCleanup,
 } from "solid-js";
 import {
   AreaSeries,
   BarSeries,
   Chart,
+  ChartTooltip,
+  SpreadRow,
+  SteadyMonoMeta,
+  TextSublabel,
+  TightStack,
+  useChart,
   Grid,
   HatchPattern,
   LineSeries,
@@ -55,6 +64,7 @@ import {
   type Config,
   type JobType,
   monthLabel,
+  monthName,
   monthsOf,
   cellsOfType,
   jobsAt,
@@ -141,6 +151,14 @@ export const PeriodBars: Component<{
    * the grips on its top edge. Peter is comparing the two.
    */
   readonly hopeAs?: "bars" | "area";
+  /**
+   * A MEASURED width to draw at, in px (the height stays fixed). Given, the
+   * chart is drawn 1:1 — which the hover tooltip needs, since it positions in
+   * chart units; omitted, it scales to its container at a fixed aspect.
+   */
+  readonly width?: number;
+  /** Show the per-bar breakdown on hover (debounced). */
+  readonly tooltip?: boolean;
   /** A grip set one type's hope in one month to `count` whole jobs. */
   readonly onSetCount?: (type: JobType, month: number, count: number) => void;
   /** A bar was double-clicked: type a count in. */
@@ -174,8 +192,8 @@ export const PeriodBars: Component<{
   const top = () => frozenTop() ?? liveTop();
   return (
     <Chart
-      responsive
-      width={WIDTH}
+      responsive={props.width === undefined}
+      width={props.width ?? WIDTH}
       height={HEIGHT}
       xDomain={[-0.5, last() + 0.5]}
       yDomain={[0, top()]}
@@ -288,7 +306,7 @@ export const PeriodBars: Component<{
               width={STEP * BAND}
               value={(c) => c.projected}
               color={() => TYPE_COLORS[s().i]}
-              label={(c) => `${s().t.name}, ${monthLabel(c.month)}: projected jobs`}
+              label={(c) => `${s().t.name}, ${monthName(c.month)}: projected jobs`}
               step={() => s().t.typical}
               onDragStart={() => setFrozenTop(liveTop())}
               onDrag={(c, _i, y) => props.onSetCount?.(s().t, c.month, jobsAt(s().t, y))}
@@ -308,6 +326,105 @@ export const PeriodBars: Component<{
         stroke="var(--sui-text-primary)"
         strokeDasharray="4 3"
       />
+      <Show when={props.tooltip}>
+        <BarTip
+          points={flatMap(
+            (x: { t: JobType; i: number; n: number; cells: readonly Cell[] }) =>
+              map((c: Cell) => ({ c, x: c.month + offsetOf(x.i, x.n), name: x.t.name }), x.cells),
+            series(),
+          )}
+          today={props.today}
+          dragging={frozenTop() !== null}
+        />
+      </Show>
     </Chart>
+  );
+};
+
+interface TipPoint {
+  readonly c: Cell;
+  readonly x: number;
+  readonly name: string;
+}
+
+/** Show after the pointer has rested this long; hide at once. */
+const TIP_DELAY_MS = 250;
+
+/**
+ * The per-bar breakdown, in SUI's `ChartTooltip` (portalled into the chart's
+ * overlay, nearest datum, flips left/right at the edges). DEBOUNCED here: it
+ * appears TIP_DELAY_MS after the pointer enters the plot and then follows it
+ * from bar to bar without flicker; it hides the moment the pointer leaves, and
+ * while a grip is dragged. It sits BESIDE its bar (x offset past half the bar
+ * plus the armed grip's overhang), so it never covers that bar's grip, and at
+ * the top of the plot, so a low bar's tooltip is never cut off below it.
+ */
+const BarTip: Component<{
+  readonly points: readonly TipPoint[];
+  readonly today: string;
+  readonly dragging: boolean;
+}> = (props) => {
+  const ctx = useChart();
+  const [shown, setShown] = createSignal(false);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const stop = () => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = undefined;
+  };
+  createEffect(
+    on([ctx.hoverX, () => props.dragging], ([hx, dragging]) => {
+      if (hx == null || dragging) {
+        stop();
+        setShown(false);
+        return;
+      }
+      if (!shown() && timer === undefined) {
+        timer = setTimeout(() => {
+          timer = undefined;
+          setShown(true);
+        }, TIP_DELAY_MS);
+      }
+    }),
+  );
+  onCleanup(stop);
+  const besideBar = () => Math.abs(ctx.xScale()(HALF) - ctx.xScale()(0)) + 3 + 10;
+  return (
+    <ChartTooltip
+      data={shown() ? props.points : []}
+      x={(p) => p.x}
+      offset={{ x: besideBar(), y: 0 }}
+      maxWidth={240}
+    >
+      {(p) => <TipBody p={p} today={props.today} />}
+    </ChartTooltip>
+  );
+};
+
+const TipRow: Component<{ readonly label: string; readonly value: string }> = (props) => (
+  <SpreadRow>
+    <TextSublabel>{props.label}</TextSublabel>
+    <SteadyMonoMeta>{props.value}</SteadyMonoMeta>
+  </SpreadRow>
+);
+
+const TipBody: Component<{ readonly p: TipPoint; readonly today: string }> = (props) => {
+  const c = () => props.p.c;
+  const notInvoiced = () => c().planned - c().invoiced - c().estimated;
+  const result = () => {
+    const missing = missingOf(c(), props.today);
+    if (c().unplanned > 0) return { label: "Over the projection", value: `+${money(c().unplanned)}` };
+    if (missing > 0) return { label: "Missing", value: money(missing) };
+    if (c().remainder > 0) return { label: "Still projected", value: money(c().remainder) };
+    return { label: "On the projection", value: money(0) };
+  };
+  return (
+    <TightStack>
+      <TextSublabel>{`${props.p.name} · ${monthName(c().month)}`}</TextSublabel>
+      <TipRow label="Projected" value={money(c().projected)} />
+      <TipRow label="Confirmed, invoiced" value={money(c().invoiced)} />
+      <TipRow label="Confirmed, not yet invoiced" value={money(notInvoiced())} />
+      <TipRow label="Planned" value={money(c().estimated)} />
+      <TipRow label={result().label} value={result().value} />
+    </TightStack>
   );
 };

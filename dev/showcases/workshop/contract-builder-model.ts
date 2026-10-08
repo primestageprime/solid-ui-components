@@ -78,6 +78,10 @@ export const monthsOf = (config: Config): readonly number[] => {
   return Array.from({ length: n }, (_v, i) => i);
 };
 
+/** A month index in full, for labels and readouts: `Apr 2027`. */
+export const monthName = (m: number): string =>
+  `${MONTHS[((m % 12) + 12) % 12]} ${YEAR + Math.floor(m / 12)}`;
+
 /** A month index's tick text: the month, with the year on every January after the first. */
 export const monthLabel = (m: number): string => {
   const name = MONTHS[((m % 12) + 12) % 12];
@@ -141,6 +145,8 @@ export interface Cell {
   readonly plannedWithin: number;
   /** The part of `plannedWithin` that is estimates (switched-on quotes). */
   readonly estimateWithin: number;
+  /** All of the month's unbilled estimate money, inside the hope or not. */
+  readonly estimated: number;
   readonly unplanned: number;
   readonly remainder: number;
   /** max(planned, projected): the height the bar stands to. */
@@ -211,6 +217,7 @@ export const cellOf = (config: Config, t: JobType, month: number): Cell => {
     invoicedWithin,
     plannedWithin: within - invoicedWithin,
     estimateWithin,
+    estimated,
     unplanned: Math.max(0, planned - projected),
     remainder: Math.max(0, projected - planned),
     shown: Math.max(planned, projected),
