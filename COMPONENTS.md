@@ -524,7 +524,7 @@ State derivation:
 
     const Labels = createSpanEndLabels<Job>({ lead: (j) => `#${j.id}`, trail: (j) => k(j.total), color: () => "var(--sui-text-primary)" });
     <Chart width={w()} height={spanRowCount(jobs()) * 34 + 24} xDomain={[from, to]} yDomain={[0, 1]}>
-      <defs><HatchPattern id="wait" color="var(--sui-warning)" /></defs>
+      <HatchPattern id="wait" color="var(--sui-warning)" />
       <SpanLanes data={jobs()} paint={(s) => (s.kind === "wait" ? "url(#wait)" : "var(--sui-accent)")} adornments={[Labels]} />
       <XAxis />
     </Chart>
@@ -532,7 +532,7 @@ State derivation:
 
 ## SvgMarks
 Depth-1 SVG marks on the **box contract**: each draws inside a `{ x, y, width, height }` (`SvgBox`) it is handed and never positions itself; colour is data (any SVG paint). The folder imports nothing from the HTML families and they import nothing from it — only chart slots compose these — so it can become its own package later. Pure geometry: `inflate`, `centerOf`, `segmentRects`, `fitEndLabels`.
-- **HatchPattern** — a `<pattern>` of diagonal stripes, referenced as `url(#id)`. Key props: `id`, `color`; overrides `angle`, `stripe`, `gap`, `groundOpacity`, `stripeOpacity`. Factory `createHatchPattern`. Use for: waiting / blocked / tentative stretches.
+- **HatchPattern** — a `<pattern>` of diagonal stripes, referenced as `url(#id)`. Key props: `id`, `color`; overrides `angle`, `stripe`, `gap`, `groundOpacity`, `stripeOpacity`. Factory `createHatchPattern`. Inside a `Chart`, put it as a direct child: an SVG `<pattern>` draws nothing and resolves by id anywhere in the svg, so no `<defs>` wrapper is needed (and a Composite must not write one). `TargetBarChart` does this. Use for: waiting / blocked / tentative stretches.
 - **SegmentBar** — a rounded bar cut into fractional segments (`{ from, to, fill }`, 0–1 of the box), clipped to its own radius with a seam where two segments touch, outlined when `hovered`. Override `radius`. Factory `createSegmentBar`. Use for: a phased span, a stacked progress bar.
 - **BoxRing** — a stroked ring standing off the box. Key props: `box`, `color`; overrides `offset`, `radius`. Factory `createBoxRing`. Use for: an attention outline (over capacity, invalid).
 - **GlyphBadge** — a disc the size of the box's shorter side with a `{ text }` or `{ path }` glyph at its centre. Key props: `box`, `color`, `glyph`, `glyphColor`, `ringColor?`. Use for: `!`, a padlock, a count.

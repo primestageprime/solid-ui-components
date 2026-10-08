@@ -198,34 +198,32 @@ export const PeriodBars: Component<{
       yDomain={[0, top()]}
       margin={MARGIN}
     >
-      <defs>
-        <For each={TYPE_COLORS}>
-          {(color, i) => (
-            <>
-              <HatchPattern
-                id={hatchId(i())}
-                color={color}
-                groundOpacity={0.15}
-                stripeOpacity={0.9}
-              />
-              <HatchPattern
-                id={tintId(i())}
-                color={color}
-                groundOpacity={0.35}
-                stripeOpacity={0}
-              />
-              <HatchPattern
-                id={lightId(i())}
-                color={color}
-                groundOpacity={0.14}
-                stripeOpacity={0}
-              />
-            </>
-          )}
-        </For>
-        <HatchPattern id={missA} color={MISSING_COLOR} angle={45} groundOpacity={0.1} stripeOpacity={0.8} />
-        <HatchPattern id={missB} color={MISSING_COLOR} angle={-45} groundOpacity={0} stripeOpacity={0.8} />
-      </defs>
+      <For each={TYPE_COLORS}>
+        {(color, i) => (
+          <>
+            <HatchPattern
+              id={hatchId(i())}
+              color={color}
+              groundOpacity={0.15}
+              stripeOpacity={0.9}
+            />
+            <HatchPattern
+              id={tintId(i())}
+              color={color}
+              groundOpacity={0.35}
+              stripeOpacity={0}
+            />
+            <HatchPattern
+              id={lightId(i())}
+              color={color}
+              groundOpacity={0.14}
+              stripeOpacity={0}
+            />
+          </>
+        )}
+      </For>
+      <HatchPattern id={missA} color={MISSING_COLOR} angle={45} groundOpacity={0.1} stripeOpacity={0.8} />
+      <HatchPattern id={missB} color={MISSING_COLOR} angle={-45} groundOpacity={0} stripeOpacity={0.8} />
       <Grid tickCount={4} />
       <YAxis
         tickValues={Array.from({ length: top() / 5000 + 1 }, (_v, k) => k * 5000)}

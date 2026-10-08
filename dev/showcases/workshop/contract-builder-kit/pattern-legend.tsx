@@ -142,12 +142,10 @@ const Swatch: Component<{ readonly mark: Mark }> = (props) => {
   };
   return (
     <Chart width={W} height={H} xDomain={[0, 1]} yDomain={[0, 1]} margin={NO_MARGIN}>
-      <defs>
-        <HatchPattern id={id("tint")} color={NEUTRAL} groundOpacity={0.4} stripeOpacity={0} />
-        <HatchPattern id={id("hatch")} color={NEUTRAL} groundOpacity={0.15} stripeOpacity={0.9} />
-        <HatchPattern id={id("miss-a")} color={MISSING_COLOR} angle={45} groundOpacity={0.1} stripeOpacity={0.8} />
-        <HatchPattern id={id("miss-b")} color={MISSING_COLOR} angle={-45} groundOpacity={0} stripeOpacity={0.8} />
-      </defs>
+      <HatchPattern id={id("tint")} color={NEUTRAL} groundOpacity={0.4} stripeOpacity={0} />
+      <HatchPattern id={id("hatch")} color={NEUTRAL} groundOpacity={0.15} stripeOpacity={0.9} />
+      <HatchPattern id={id("miss-a")} color={MISSING_COLOR} angle={45} groundOpacity={0.1} stripeOpacity={0.8} />
+      <HatchPattern id={id("miss-b")} color={MISSING_COLOR} angle={-45} groundOpacity={0} stripeOpacity={0.8} />
       {body()}
     </Chart>
   );
