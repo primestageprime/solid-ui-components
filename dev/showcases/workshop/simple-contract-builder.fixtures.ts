@@ -6,7 +6,7 @@
  * switched on, and every toggle works.
  */
 import { map } from "../../../src/fn";
-import type { Job } from "./contract-builder-model";
+import type { Job, JobType } from "./contract-builder-model";
 import {
   EXTERIOR,
   EXTERIOR_JOBS,
@@ -18,7 +18,15 @@ import {
 import type { Contract } from "./simple-contract-builder.model";
 
 export { TODAY };
-export const TYPES = [EXTERIOR, INTERIOR, FURNITURE] as const;
+/**
+ * The hopes, repeated into 2027 (Peter, 2026-10-08): each type's seasonal
+ * curve — exterior's summer peak, interior's winter plateau, furniture's
+ * occasional pieces — runs a second year unchanged, so a 1y look from NOW
+ * reaches April 2027. 2027 is almost all hope: only the contracts that
+ * already ran into it are booked there.
+ */
+const twoYears = (t: JobType): JobType => ({ ...t, qty: [...t.qty, ...t.qty] });
+export const TYPES = map(twoYears, [EXTERIOR, INTERIOR, FURNITURE]);
 
 /**
  * Billed work is signed work (Peter, 2026-10-08): a contract with ANY invoiced

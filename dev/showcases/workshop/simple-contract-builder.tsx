@@ -86,7 +86,7 @@ import {
 } from "./simple-contract-builder.model";
 import {
   type JobType,
-  MONTHS,
+  monthLabel,
   type TypeId,
   cumulativeFit,
   money,
@@ -125,8 +125,9 @@ const DIAL_WORDING = {
 const LeaderDial = createRateGauge(DIAL_WORDING);
 const CornerDial = createRateGauge({ ...DIAL_WORDING, callouts: "corners" });
 
-/** How far past NOW the board looks — thorcasting's topnav options, its
- *  control (`SegmentedInput`). 2y is left out: the example data is one year. */
+/** How far past NOW the Hopes bars look — thorcasting's topnav options, its
+ *  control (`SegmentedInput`). The hopes run to Dec 2027, so 1y reaches April
+ *  2027; 2y is left out because NOW + 2y would run past the data. */
 const HORIZONS = [
   { id: "91", label: "3m" },
   { id: "182", label: "6m" },
@@ -139,7 +140,7 @@ const TABS = [
   { id: "hopes", label: "Hopes" },
 ];
 
-const DAYS = dailyCells(new Date("2026-01-01T00:00:00Z"), new Date("2026-12-31T00:00:00Z"));
+const DAYS = dailyCells(new Date("2026-01-01T00:00:00Z"), new Date("2027-12-31T00:00:00Z"));
 const NOW_DAY = Math.round(
   (Date.parse(`${TODAY}T00:00:00Z`) - Date.UTC(2026, 0, 1)) / 86_400_000,
 );
@@ -169,7 +170,10 @@ const SimpleContractBuilder: Component = () => {
   /** The Hopes bars' last day: NOW + the horizon, capped at the data's year end. */
   const hopesEndDay = () => Math.min(DAYS.length - 1, NOW_DAY + Number(horizon()));
   /** The last month drawn, for the month-axis charts. */
-  const lastMonth = () => DAYS[hopesEndDay()].start.getUTCMonth();
+  const lastMonth = () => {
+    const at = DAYS[hopesEndDay()].start;
+    return (at.getUTCFullYear() - 2026) * 12 + at.getUTCMonth();
+  };
   const [entry, setEntry] = createSignal<{ type: TypeId; month: number } | null>(null);
 
   /** Replace one contract by id (UI state; the fold stays pure). */
@@ -179,7 +183,7 @@ const SimpleContractBuilder: Component = () => {
   const setCount = (type: TypeId, month: number, count: number) => {
     const t = hopes().find((x) => x.id === type);
     if (!t || t.qty[month] === count) return;
-    console.table([{ type, month: MONTHS[month], count, $: count * t.typical }]);
+    console.table([{ type, month: monthLabel(month), count, $: count * t.typical }]);
     setHopes((ts) => withCount({ types: ts, jobs: [] }, type, month, count).types);
   };
   /* THE EDIT FORM — a draft, applied only on Save. */
@@ -489,7 +493,7 @@ const SimpleContractBuilder: Component = () => {
           <Modal
             open
             onClose={() => setEntry(null)}
-            title={`${entryType()?.name ?? ""} · ${MONTHS[e().month]}`}
+            title={`${entryType()?.name ?? ""} · ${monthLabel(e().month)}`}
             subtitle={`Hoped-for jobs at $${(entryType()?.typical ?? 0).toLocaleString()} each`}
           >
             <ThemedNumberInput

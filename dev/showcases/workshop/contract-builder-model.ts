@@ -68,6 +68,22 @@ export const MONTHS = [
 /** Month indices 0..11 of `YEAR`. */
 export const MONTH_INDICES: readonly number[] = map((_m, i) => i, MONTHS);
 
+/**
+ * The months a config spans: as many as its hopes run. A month index counts
+ * on from January of `YEAR`, so 12 is January of the next year. Contract
+ * Builder's hopes are 12 long; a board that repeats them runs longer.
+ */
+export const monthsOf = (config: Config): readonly number[] => {
+  const n = Math.max(12, ...map((t: JobType) => t.qty.length, config.types));
+  return Array.from({ length: n }, (_v, i) => i);
+};
+
+/** A month index's tick text: the month, with the year on every January after the first. */
+export const monthLabel = (m: number): string => {
+  const name = MONTHS[((m % 12) + 12) % 12];
+  return m >= 12 && m % 12 === 0 ? `${name} '${String(YEAR + m / 12).slice(2)}` : name;
+};
+
 export type TypeId = "O" | "I" | "F";
 
 export interface JobType {
@@ -136,7 +152,7 @@ export interface Cell {
 /** The month (0..11) an ISO date falls in, or −1 outside `YEAR`. */
 export const monthOf = (iso: string): number => {
   const [y, m] = map(Number, iso.split("-"));
-  return y === YEAR ? m - 1 : -1;
+  return y >= YEAR ? (y - YEAR) * 12 + m - 1 : -1;
 };
 
 const paymentsIn = (job: Job, month: number): readonly Payment[] =>
@@ -215,7 +231,7 @@ export const periodOf = (config: Config, month: number): Period => ({
 
 /** The year, month by month. */
 export const periodsOf = (config: Config): readonly Period[] =>
-  map((m: number) => periodOf(config, m), MONTH_INDICES);
+  map((m: number) => periodOf(config, m), monthsOf(config));
 
 /** One type's cells across the year. */
 export const cellsOfType = (config: Config, type: TypeId): readonly Cell[] =>
@@ -325,7 +341,7 @@ export const cumulativeDelta = (config: Config, month: number): number =>
   sum(
     map(
       (q: number) => monthDelta(config, q),
-      filter((q: number) => q <= month, MONTH_INDICES),
+      filter((q: number) => q <= month, monthsOf(config)),
     ),
   );
 
@@ -358,11 +374,11 @@ export const withCount = (
 /** The running divergence's extent across the year, zero included. */
 export const cumulativeFit = (
   config: Config,
-  lastMonth = 11,
+  lastMonth = Number.POSITIVE_INFINITY,
 ): { min: number; max: number } => {
   const values = map(
     (m: number) => cumulativeDelta(config, m),
-    filter((m: number) => m <= lastMonth, MONTH_INDICES),
+    filter((m: number) => m <= lastMonth, monthsOf(config)),
   );
   return { min: Math.min(0, ...values), max: Math.max(0, ...values) };
 };

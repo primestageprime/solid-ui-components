@@ -35,8 +35,8 @@ import {
 } from "../../../../src";
 import {
   type Config,
-  MONTHS,
-  MONTH_INDICES,
+  monthLabel,
+  monthsOf,
   cumulativeDelta,
   money,
   monthOf,
@@ -78,7 +78,7 @@ export const CumulativeDivergence: Component<{
   /** The last month drawn (the horizon); omitted, December. */
   readonly lastMonth?: number;
 }> = (props) => {
-  const last = () => props.lastMonth ?? 11;
+  const last = () => props.lastMonth ?? monthsOf(props.config).length - 1;
   const uid = createUniqueId();
   const aheadTint = `cb-cum-ahead-${uid}`;
   const behindTint = `cb-cum-behind-${uid}`;
@@ -89,15 +89,19 @@ export const CumulativeDivergence: Component<{
         value: cumulativeDelta(props.config, m),
         past: m < monthOf(props.today),
       }),
-      filter((m: number) => m <= last(), MONTH_INDICES),
+      filter((m: number) => m <= last(), monthsOf(props.config)),
     ),
   );
   const domain = createMemo(() =>
     span(props.held ? [...props.held] : map((p: Point) => p.value, points())),
   );
+  /** About five round ticks, whatever the span: $5k, $10k, $25k, $50k… steps. */
   const ticks = createMemo(() => {
     const [lo, hi] = domain();
-    return Array.from({ length: (hi - lo) / 10000 + 1 }, (_v, k) => lo + k * 10000);
+    const raw = (hi - lo) / 5;
+    const step = [5000, 10000, 25000, 50000, 100000].find((x) => x >= raw) ?? 250000;
+    const first = Math.ceil(lo / step) * step;
+    return Array.from({ length: Math.floor((hi - first) / step) + 1 }, (_v, k) => first + k * step);
   });
   /* The dashed outlook starts at the last actual month so the line is
      unbroken where solid hands over to dashed. */
@@ -127,8 +131,8 @@ export const CumulativeDivergence: Component<{
       <Grid tickCount={4} />
       <YAxis tickValues={ticks()} tickFormat={money} />
       <XAxis
-        tickValues={filter((m: number) => m <= last(), MONTH_INDICES)}
-        tickFormat={(m) => MONTHS[Math.round(m)] ?? ""}
+        tickValues={filter((m: number) => m <= last(), monthsOf(props.config))}
+        tickFormat={(m) => monthLabel(Math.round(m))}
       />
       <BarSeries
         data={points()}

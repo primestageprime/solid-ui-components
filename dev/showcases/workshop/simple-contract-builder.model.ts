@@ -24,7 +24,7 @@ import {
   type Job,
   type JobType,
   type Payment,
-  MONTH_INDICES,
+  monthsOf,
   YEAR,
   cellsOfType,
   monthOf,
@@ -52,7 +52,6 @@ export const asPlan = (types: readonly JobType[], contracts: readonly Contract[]
 const DAY_MS = 86_400_000;
 const dayIndex = (iso: string): number =>
   Math.round((Date.parse(`${iso}T00:00:00Z`) - Date.UTC(YEAR, 0, 1)) / DAY_MS);
-export const DAYS_IN_YEAR = 365;
 
 const monthStartDay = (m: number): number =>
   Math.round((Date.UTC(YEAR, m, 1) - Date.UTC(YEAR, 0, 1)) / DAY_MS);
@@ -60,7 +59,7 @@ const monthEndDay = (m: number): number =>
   Math.round((Date.UTC(YEAR, m + 1, 1) - Date.UTC(YEAR, 0, 1)) / DAY_MS);
 
 export interface DayFlow {
-  /** Day of the year, 0 = Jan 1. */
+  /** Day index, 0 = Jan 1 of `YEAR`; the board runs as many months as its hopes. */
   readonly day: number;
   /** Invoiced money on Confirmed jobs (only ever before NOW). */
   readonly actual: number;
@@ -72,7 +71,7 @@ export interface DayFlow {
 const countedPayments = (contracts: readonly Contract[]): readonly Payment[] =>
   flatMap((c: Contract) => (counts(c) ? c.payments : []), contracts);
 
-/** Each day's money across the year. */
+/** Each day's money, across every month the hopes run. */
 export const dailyFlows = (
   types: readonly JobType[],
   contracts: readonly Contract[],
@@ -90,9 +89,13 @@ export const dailyFlows = (
       map((t: JobType) => cellsOfType(plan, t.id)[m].remainder, types),
     );
     return remainder / (to - from);
-  }, MONTH_INDICES);
-  const monthOfDay = (d: number): number => new Date(Date.UTC(YEAR, 0, 1) + d * DAY_MS).getUTCMonth();
-  return Array.from({ length: DAYS_IN_YEAR }, (_v, day): DayFlow => {
+  }, monthsOf(plan));
+  const monthOfDay = (d: number): number => {
+    const at = new Date(Date.UTC(YEAR, 0, 1) + d * DAY_MS);
+    return (at.getUTCFullYear() - YEAR) * 12 + at.getUTCMonth();
+  };
+  const days = monthEndDay(monthsOf(plan).length - 1);
+  return Array.from({ length: days }, (_v, day): DayFlow => {
     const onDay = filter((p: Payment) => dayIndex(p.on) === day, paid);
     const actual = sum(map((p: Payment) => p.amount, filter((p: Payment) => p.invoiced, onDay)));
     const signed = sum(map((p: Payment) => p.amount, filter((p: Payment) => !p.invoiced, onDay)));
@@ -103,8 +106,8 @@ export const dailyFlows = (
 
 /**
  * THE DIAL'S READING — the same one the Hourly Board's "Rate, right now" gives
- * (Peter, 2026-10-08: the dial is a constant across builders): the year's
- * expected revenue averaged per WEEK, less the fixed weekly cost, so 0 is
+ * (Peter, 2026-10-08: the dial is a constant across builders): the expected
+ * revenue over the span the cash flow draws, averaged per WEEK, less the fixed weekly cost, so 0 is
  * breakeven. "Expected" is exactly what Cash flow (panel A) ends the year at —
  * banked + included contracts' unbilled payments + the hope not yet filled —
  * per type per month, max(hope, committed).
@@ -114,9 +117,11 @@ export const ratePerWeek = (
   contracts: readonly Contract[],
   today: string,
   fixedWeeklyCost: number,
-): number =>
-  sum(map((f: DayFlow) => f.actual + f.outlook, dailyFlows(types, contracts, today))) / 52 -
-  fixedWeeklyCost;
+): number => {
+  const flows = dailyFlows(types, contracts, today);
+  /* Averaged over the whole span the cash flow draws, per week. */
+  return sum(map((f: DayFlow) => f.actual + f.outlook, flows)) / (flows.length / 7) - fixedWeeklyCost;
+};
 
 // ── editing a contract ──────────────────────────────────────────────────────
 

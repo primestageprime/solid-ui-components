@@ -52,8 +52,8 @@ import {
   type Cell,
   type Config,
   type JobType,
-  MONTHS,
-  MONTH_INDICES,
+  monthLabel,
+  monthsOf,
   cellsOfType,
   jobsAt,
   missingOf,
@@ -131,7 +131,7 @@ export const PeriodBars: Component<{
      bar, so a drag that grows the tallest bar would rescale the axis under the
      pointer and the grip would run away from it. */
   const [frozenTop, setFrozenTop] = createSignal<number | null>(null);
-  const last = () => props.lastMonth ?? 11;
+  const last = () => props.lastMonth ?? monthsOf(props.config).length - 1;
   const uid = createUniqueId();
   const hatchId = (i: number) => `cb-hatch-${uid}-${i}`;
   const tintId = (i: number) => `cb-tint-${uid}-${i}`;
@@ -196,8 +196,8 @@ export const PeriodBars: Component<{
         tickFormat={money}
       />
       <XAxis
-        tickValues={filter((m: number) => m <= last(), MONTH_INDICES)}
-        tickFormat={(m) => MONTHS[Math.round(m)] ?? ""}
+        tickValues={filter((m: number) => m <= last(), monthsOf(props.config))}
+        tickFormat={(m) => monthLabel(Math.round(m))}
       />
       <Index each={series()}>
         {(s) => (
@@ -245,7 +245,7 @@ export const PeriodBars: Component<{
               width={STEP * BAND}
               value={(c) => c.projected}
               color={() => TYPE_COLORS[s().i]}
-              label={(c) => `${s().t.name}, ${MONTHS[c.month]}: hoped jobs`}
+              label={(c) => `${s().t.name}, ${monthLabel(c.month)}: hoped jobs`}
               step={() => s().t.typical}
               onDragStart={() => setFrozenTop(liveTop())}
               onDrag={(c, _i, y) => props.onSetCount?.(s().t, c.month, jobsAt(s().t, y))}
