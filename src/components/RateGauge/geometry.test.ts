@@ -46,6 +46,9 @@ import {
   LABEL_LINE_HEIGHT,
   cornerRingFor,
   minLeadersWidth,
+  leadersMinWidth,
+  LEADERS_MIN_HEIGHT,
+  CALLOUT_HYSTERESIS,
 } from "./geometry";
 
 const DOMAIN: readonly [number, number] = [-30000, 30000];
@@ -1116,7 +1119,8 @@ describe("callouts — the leaders/corners breakpoint, and the corner layout", (
     const widths = [180, 240, 268, 274, 320];
     const rows = heights.map((height) => ({
       height,
-      leadersFrom: Math.ceil(minLeadersWidth(height, labels)),
+      leadersFrom: Math.ceil(leadersMinWidth(labels)),
+      dialFillsFrom: Math.ceil(minLeadersWidth(height, labels)),
       ...Object.fromEntries(
         widths.map((width) => {
           const g = picked(width, height);
@@ -1129,12 +1133,49 @@ describe("callouts — the leaders/corners breakpoint, and the corner layout", (
     expect(rows).toHaveLength(heights.length);
   });
 
-  it("switches exactly at minLeadersWidth — height/2 plus a constant, not a ratio", () => {
-    const at = Math.ceil(minLeadersWidth(430, labels));
-    expect(calloutModeFor({ width: at, height: 430 }, labels)).toBe("leaders");
-    expect(calloutModeFor({ width: at - 1, height: 430 }, labels)).toBe("corners");
-    const k = (h: number) => minLeadersWidth(h, labels) - h / 2;
-    expect(k(300)).toBeCloseTo(k(500), 0);
+  it("switches where the leader dial reaches its natural size — not where it fills the height", () => {
+    const at = Math.ceil(leadersMinWidth(labels));
+    for (const height of [300, 430, 600]) {
+      expect(calloutModeFor({ width: at, height }, labels)).toBe("leaders");
+      expect(calloutModeFor({ width: at - 1, height }, labels)).toBe("corners");
+      // At the switch, the leader dial is exactly its natural size, column whole.
+      const g = draw("leaders", { width: at, height });
+      expect(g.metrics.ringOuter).toBeGreaterThanOrEqual(RING_OUTER - 0.01);
+    }
+    // A TALL, narrow rail — the case the old "fill the height" rule always
+    // sent to corners — gets leaders once it is wide enough for them.
+    expect(calloutModeFor({ width: at, height: 900 }, labels)).toBe("leaders");
+    // Too short for the natural dial: corners, however wide.
+    expect(calloutModeFor({ width: 2000, height: LEADERS_MIN_HEIGHT - 1 }, labels)).toBe("corners");
+    expect(calloutModeFor({ width: 2000, height: 300 }, labels)).toBe("leaders");
+    expect(calloutModeFor({ width: 120, height: 300 }, labels)).toBe("corners");
+  });
+
+  it("holds leaders for CALLOUT_HYSTERESIS px below the line once showing them", () => {
+    const at = Math.ceil(leadersMinWidth(labels));
+    const box = (width: number) => ({ width, height: 584 });
+    expect(calloutModeFor(box(at - 4), labels)).toBe("corners");
+    expect(calloutModeFor(box(at - 4), labels, "leaders")).toBe("leaders");
+    expect(calloutModeFor(box(at - CALLOUT_HYSTERESIS - 1), labels, "leaders")).toBe("corners");
+    // Corners never get the slack: from corners, leaders only from the line.
+    expect(calloutModeFor(box(at - 1), labels, "corners")).toBe("corners");
+  });
+
+  it("pins the Contract Builder rail (box → mode → dial) at 584px tall", () => {
+    const words = ["Scenario = Baseline", "$331/wk over breakeven", "$331/wk over breakeven"];
+    const rows = [240, 260, 274, 292, 320].map((width) => {
+      const box = { width, height: 584 };
+      const mode = calloutModeFor(box, words);
+      return `${width} ${mode} r=${Math.round(gaugeGeometry({ ...reading, labels: words, callouts: "leaders", box }).metrics.ringOuter)}`;
+    });
+    expect(rows).toEqual([
+      "240 corners r=38",
+      "260 corners r=56",
+      "274 leaders r=68",
+      "292 leaders r=83",
+      "320 leaders r=108",
+    ]);
+    expect(Math.ceil(leadersMinWidth(words))).toBe(270);
   });
 
   it("at the breakpoint the leader dial is height-bound", () => {

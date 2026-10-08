@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calloutModeFor, minLeadersWidth } from "../../../../src/components/RateGauge/geometry";
+import { calloutModeFor, leadersMinWidth } from "../../../../src/components/RateGauge/geometry";
 import { SLOPE_FIXTURE, columnTextsFor } from "./slope-model";
 import {
   CORNER_BOX,
@@ -21,9 +21,16 @@ describe("payroll board — the value sweep", () => {
 
   it("holds each gauge in a box on its own side of the breakpoint", () => {
     const labels = columnTextsFor(SLOPE_FIXTURE.baseline, SLOPE_FIXTURE.scenario);
-    expect(LEADER_BOX.width).toBeGreaterThanOrEqual(minLeadersWidth(LEADER_BOX.height, labels));
+    expect(LEADER_BOX.width).toBeGreaterThanOrEqual(leadersMinWidth(labels));
     expect(calloutModeFor(LEADER_BOX, labels)).toBe("leaders");
-    expect(calloutModeFor(CORNER_BOX, labels)).toBe("corners");
+    // Since SUI's 2026-10-08 breakpoint (leaders whenever the natural dial
+    // fits) the 240×395 demo box is on the LEADERS side for these words; it
+    // still draws the corner gauge, explicitly. Corners need a box narrower
+    // than the breakpoint.
+    expect(calloutModeFor(CORNER_BOX, labels)).toBe("leaders");
+    expect(calloutModeFor({ ...CORNER_BOX, width: leadersMinWidth(labels) - 1 }, labels)).toBe(
+      "corners",
+    );
   });
 
   it("prints value → label boxes → collisions", () => {
