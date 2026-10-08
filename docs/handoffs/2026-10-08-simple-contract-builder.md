@@ -5,8 +5,8 @@ anything durable to `docs/adr/` first.
 
 ## Where things stand
 
-M0 through M9 are done and on `main`. Releases **0.211.0, 0.212.0 and 0.213.0
-are published** (registry latest: 0.213.0). M10 (thorcasting adopts the screen)
+M0 through M9 are done and on `main`. Releases **0.211.0 through 0.214.0
+are published** (registry latest: 0.214.0). M10 (thorcasting adopts the screen)
 is **deferred until Peter reviews the benches and the consumer handoff**.
 
 Benches, both on `main`, in the gallery (port 6006), now composed only from the
@@ -47,8 +47,8 @@ Also: a853caf7 makes the pre-push hook block a stale `catalog.json`.
 - **`ChartDefs` was dropped (M2).** An SVG `<pattern>` resolves by id as a
   direct `Chart` child, and `HatchPattern` already existed, so no wrapper was
   needed.
-- **`ContentAutoGrowChartFrame` is on `main`, pending the next release.**
-- **M8 (release)** happened as 0.211.0, 0.212.0 and 0.213.0, cut by the
+- **`ContentAutoGrowChartFrame`** shipped in 0.214.0.
+- **M8 (release)** happened as 0.211.0 through 0.214.0, cut by the
   auto-release on CHANGELOG lines.
 - Dropped from the benches: the "area" projection mode (no caller) and the
   bar-click `console.table` (no hook on `TargetBarChart`).
