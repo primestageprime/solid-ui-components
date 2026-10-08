@@ -1589,7 +1589,9 @@ const UNBOUNDED_WIDTH = 1_000_000;
 
 /**
  * The narrowest box at which the LEADER layout's dial is height-bound with
- * its label column whole: the unconstrained drawing's own width.
+ * its label column whole: the unconstrained drawing's own width. Not the
+ * breakpoint (see `calloutModeFor`) — the width past which a wider box no
+ * longer grows the dial.
  */
 export const minLeadersWidth = (height: number, labels: readonly string[]): number => {
   const free = metricsFor({ width: UNBOUNDED_WIDTH, height }, labels);
@@ -1597,14 +1599,58 @@ export const minLeadersWidth = (height: number, labels: readonly string[]): numb
 };
 
 /**
- * THE BREAKPOINT a layout picks a gauge by: leaders while the box is at least
- * `minLeadersWidth` wide — the leader column fits beside a dial that fills
- * the height — corners below that. Not a ratio: the threshold is
- * `height / 2` plus a constant the words set (the callout column and its
- * gaps), so a fixed W/H ratio would be right at one height only.
+ * The narrowest box at which the LEADER layout draws its dial at no less than
+ * its NATURAL size (`RING_OUTER`) with its label column whole: `ringOuterFor`
+ * solved for the width at which the width-bound dial reaches `RING_OUTER`.
+ * The words set it — the column, its two gaps, the margins, the callout stub —
+ * and the dial's own natural extent.
  */
-export const calloutModeFor = (box: Box, labels: readonly string[]): CalloutMode =>
-  box.width < minLeadersWidth(box.height, labels) ? "corners" : "leaders";
+export const leadersMinWidth = (labels: readonly string[]): number =>
+  CANVAS_MARGIN * 2 +
+  LABEL_GAP +
+  TEXT_GAP +
+  wantedColumnWidth(labels) +
+  CALLOUT_STUB +
+  RATIO.brace * RING_OUTER;
+
+/** The same, in height: the height-bound dial reaching `RING_OUTER`. */
+export const LEADERS_MIN_HEIGHT = 2 * (RATIO.brace * RING_OUTER + CALLOUT_STUB + CANVAS_MARGIN);
+
+/**
+ * How far past the breakpoint a box must shrink before a layout that is
+ * already showing leaders gives them up — so a resize that hovers on the
+ * line does not flap between the two layouts.
+ */
+export const CALLOUT_HYSTERESIS = 8;
+
+/**
+ * THE BREAKPOINT a layout picks a gauge by (Peter, 2026-10-08: "the layout
+ * should decide which dial to use based on how much space it has"): LEADERS
+ * whenever the leader layout can draw its dial at its natural size or larger
+ * with every callout whole — `leadersMinWidth` wide and `LEADERS_MIN_HEIGHT`
+ * tall — CORNERS below that, where the leader dial would have to shrink under
+ * its natural size to make room for the words.
+ *
+ * It used to demand that the leader dial FILL the box's height, which a tall,
+ * narrow rail (BuilderBoard's panel D at its `gauge` width) can never satisfy:
+ * a tall rail always got corners and leaders appeared only when the window was
+ * short, the reverse of "if there's room".
+ *
+ * `previous` is the mode the layout is showing now. Given `"leaders"`, the box
+ * may be up to `CALLOUT_HYSTERESIS` px short of the breakpoint and still keep
+ * them, so a resize across the line switches once, not on every pixel.
+ */
+export const calloutModeFor = (
+  box: Box,
+  labels: readonly string[],
+  previous?: CalloutMode,
+): CalloutMode => {
+  const slack = previous === "leaders" ? CALLOUT_HYSTERESIS : 0;
+  return box.width + slack >= leadersMinWidth(labels) &&
+    box.height + slack >= LEADERS_MIN_HEIGHT
+    ? "leaders"
+    : "corners";
+};
 
 /**
  * An UNMEASURED corners gauge's canvas: the default dial, cut tight to it and

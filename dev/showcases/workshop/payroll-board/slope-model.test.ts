@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NATURAL_GAUGE_WIDTH } from "../../../../src/components/RateGauge/geometry";
+import { NATURAL_GAUGE_WIDTH, leadersMinWidth } from "../../../../src/components/RateGauge/geometry";
 import {
   amountPerMonth,
   SLOPE_FIXTURE,
@@ -54,15 +54,19 @@ describe("payroll board — slope rail proportions", () => {
     expect(cornerDelta(SLOPE_FIXTURE.baseline, SLOPE_FIXTURE.scenario)).toBe("-$2,921/mo (-8%)");
   });
 
-  it("switches to corners exactly where the leaders stop being height-bound", () => {
+  it("switches to corners exactly where the leader dial drops below its natural size", () => {
+    // SUI's breakpoint (2026-10-08): leaders whenever the leader dial reaches
+    // its natural size with the column whole — not only once it fills the
+    // height — so Peter's tall rail now gets leaders.
     const blocks = cornerBlocks(SLOPE_FIXTURE.baseline, SLOPE_FIXTURE.scenario);
     const at = (width: number) => boxProportions({ width, height: 430 }, LABELS, blocks);
-    const threshold = at(10_000).minLeadersWidth;
+    const threshold = Math.ceil(leadersMinWidth(LABELS));
     expect(at(threshold).calloutMode).toBe("leaders");
-    expect(at(threshold).bound).toBe("height");
     expect(at(threshold - 1).calloutMode).toBe("corners");
-    // The corner ring still fills the height at Peter's 286px rail.
-    expect(at(268).fitBound).toBe("height");
+    // Peter's 286px rail (268 inside the card) now shows leaders.
+    expect(at(268).calloutMode).toBe("leaders");
+    // `minLeadersWidth` is still where a wider box stops growing the dial.
+    expect(at(10_000).minLeadersWidth).toBeGreaterThan(threshold);
   });
 
   it("prints gauge box height → leaders need → mode per rail width", () => {
