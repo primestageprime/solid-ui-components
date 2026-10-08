@@ -133,3 +133,5 @@ export type {
   CurrentValueIndicatorDataProps,
 } from "./CurrentValueIndicator";
 export * from "./CurrentValueIndicator.variants";
+export { ValueHandle } from "./ValueHandle";
+export type { ValueHandleProps, ValueHandleMeta } from "./ValueHandle";

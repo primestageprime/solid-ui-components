@@ -13,6 +13,9 @@
     "src/components/Chart/CurrentValueIndicator.tsx": {
       "color": "Chart series current-value dot colour, caller/series-owned (ADR 0003)."
     },
+    "src/components/Chart/ValueHandle.tsx": {
+      "color": "Grip colour per datum, the series' own caller-owned colour (ADR 0003 data-driven paint)."
+    },
     "src/components/Chart/GhostArc.tsx": {
       "color": "Chart annotation stroke colour, caller-driven (ADR 0003)."
     },
