@@ -10,6 +10,10 @@
 
 - **`ChartTooltip` lands on the mark at any rendered size.** It positioned in chart (viewBox) units as CSS px, so on a chart drawn larger or smaller than its `width`/`height` (`responsive`, a fill frame) the tooltip drifted away from the hovered point. It now scales by the svg's on-screen box, and also accounts for a `title` above the svg. (Chart's own pointer-to-x mapping still reads px as chart units on a scaled svg; not changed here.)
 
+### Added
+
+- **`SignedAreaChart`** — a running total filled against zero (Depth 2, zero CSS): green above, red below, split exactly at each zero crossing, solid before NOW and translucent with a dashed outline after. Pure geometry exported: `signedAreaParts`, `traceSigned`, `signedExtent`.
+
 ## 0.211.0 — 2026-10-08
 
 ### Added

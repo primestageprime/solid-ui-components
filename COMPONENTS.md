@@ -2028,6 +2028,9 @@ Where the constituents live (design decision — prefer siblings of existing fam
 ## ProgressCheck
 - **ProgressCheck** — Three-state progress indicator: empty checkbox (0%), partial fill (1-99%), green check (100%). Key props: `progress` (0-1 number), `size` (`xs`|`sm`|`md`|`lg`|`xl`, default `sm`). SVG-based, matches Icon sizing. Use for: task completion indicators, goal progress, hierarchical rollup status.
 
+## SignedAreaChart
+- **SignedAreaChart** — Composite (Depth 2). A running total filled against zero: one colour per sign (ahead above, behind below), split exactly at each zero crossing (the crossing is interpolated, never a vertical jump), solid before NOW and translucent with a dashed outline after. Composes `Chart`, `Grid`, `XAxis`, `YAxis`, `AreaSeries`, `LineSeries`, `ReferenceLine`; no CSS. Key props: `data` (`{ x, y }[]`, ascending), `now` (x where actual hands over to outlook), `xDomain`; optional `xTickValues`, `xTickFormat`, `yTickFormat`, `yDomain` (a held, grow-only extent; default fits data and zero), `size` (a measured box; default scales to width). Pure core: `signedAreaParts`, `traceSigned`, `signedExtent`. Not `ChannelChart` (draws its own axis and size, band has no meaning against zero). Use for: cumulative ahead/behind against a target, cashflow vs plan.
+
 ## BurndownChart
 - **BurndownChart** — SVG burndown bar chart with dual-axis stacked bars and trendline. Key props: `bars` (array of `BurndownBar` with `planned_complete`, `planned_incomplete`, `unplanned_complete`, `unplanned_incomplete`), `onSegmentClick` (callback with `barIndex` and `BurndownSegmentKind`), `height`. Above zero: green (planned complete) on grey (planned incomplete). Below zero: orange (unplanned complete) on red (unplanned incomplete). Trendline projects remaining planned work to zero with "+Nd" annotation. Uses `--sui-*` CSS variables. Use for: sprint burndown tracking, planned vs actual visualization.
 
