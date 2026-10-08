@@ -35,6 +35,11 @@
 // body row grows only when fullscreen gives the column a height to grow into.
 //
 // The ▾'s accessible name ("Y-axis mode") is ModeSplitButton's `menuLabel`.
+//
+// `yAxisStrategy: "auto-grow-only"` (an Override, Peter 2026-10-08) swaps the
+// split for ONE plain button: the axis only ever auto-grows, so there is no
+// mode to pick, and the face is `auto`'s — "shrink to fit" — reporting
+// `onYAxisPress`. The caller still owns the marks (`createAxisWaterMarks`).
 // ============================================
 import { type Component, type JSX, Show, createSignal, mergeProps } from "solid-js";
 import { IconOnlyButton } from "../Button";
@@ -50,7 +55,11 @@ import {
 } from "../Layout";
 import { ModeSplitButton } from "../ModeSplitButton";
 import { TextTitle, VerticalAxisTitle } from "../Text";
-import { CHART_Y_AXIS_MODES, type ChartYAxisMode } from "./yAxisModes";
+import {
+  CHART_Y_AXIS_MODES,
+  type ChartYAxisMode,
+  chartYAxisModeInfo,
+} from "./yAxisModes";
 
 export interface ChartFrameProps {
   /** The chart's name, top left. */
@@ -84,7 +93,18 @@ export interface ChartFrameProps {
    * Presentational — curried, never passed at a call site.
    */
   height: number | "fill" | "content";
+  /**
+   * The y-axis control. `"split"` (the default) is the mode split button,
+   * drawn when `yAxisMode` is given. `"auto-grow-only"` is ONE fit button,
+   * always drawn: the axis grows with the data and never shrinks on its own,
+   * and the button (`onYAxisPress`) asks the caller to shrink it to fit.
+   * Presentational — curried, never passed at a call site.
+   */
+  yAxisStrategy?: "split" | "auto-grow-only";
 }
+
+/** The one face an auto-grow-only frame draws: `auto`'s fit action. */
+const AUTO_GROW = chartYAxisModeInfo("auto");
 
 const ButtonIcon = createIcon({ variant: "outline", size: "sm" });
 
@@ -144,7 +164,16 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
       >
         <ButtonIcon name={fullscreen() ? "fullscreen-exit" : "fullscreen"} />
       </IconOnlyButton>
-      <Show when={props.yAxisMode}>
+      <Show when={props.yAxisStrategy === "auto-grow-only"}>
+        <IconOnlyButton
+          onClick={() => props.onYAxisPress?.()}
+          aria-label={AUTO_GROW.action}
+          title={AUTO_GROW.action}
+        >
+          <ButtonIcon name={AUTO_GROW.icon} />
+        </IconOnlyButton>
+      </Show>
+      <Show when={props.yAxisStrategy !== "auto-grow-only" && props.yAxisMode}>
         {(mode) => (
           <ModeSplitButton<ChartYAxisMode>
             modes={CHART_Y_AXIS_MODES}
@@ -190,7 +219,10 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
 };
 
 /** Props that are presentational overrides — locked at variant-definition time. */
-export type ChartFrameOverrides = Pick<ChartFrameProps, "height">;
+export type ChartFrameOverrides = Pick<
+  ChartFrameProps,
+  "height" | "yAxisStrategy"
+>;
 
 /** Props that remain available to consumers of a curried ChartFrame variant. */
 export type ChartFrameDataProps = Omit<ChartFrameProps, keyof ChartFrameOverrides>;

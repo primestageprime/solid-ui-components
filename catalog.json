@@ -1822,7 +1822,8 @@
       "overrides": "{\n  height: CHART_FRAME_HEIGHT,\n}"
     },
     "overrides": [
-      "height"
+      "height",
+      "yAxisStrategy"
     ],
     "dataProps": "ChartFrameDataProps",
     "summary": "Composite (Depth 2), zero CSS.",
@@ -1896,7 +1897,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Tooltip.tsx",
-    "line": 76
+    "line": 89
   },
   {
     "name": "Checkbox",
@@ -2746,7 +2747,8 @@
       "overrides": "{\n  height: \"content\",\n}"
     },
     "overrides": [
-      "height"
+      "height",
+      "yAxisStrategy"
     ],
     "dataProps": "ChartFrameDataProps",
     "summary": "The frame as tall as its chart: for a chart whose height is its data (a lane chart packed into as many rows as it needs), where a stated px leaves an empty band under a short schedule.",
@@ -2758,7 +2760,7 @@
     "showcase": "#/chart-frame",
     "since": "0.204.0",
     "file": "src/components/ChartFrame/variants.ts",
-    "line": 33
+    "line": 42
   },
   {
     "name": "ContentStack",
@@ -3572,10 +3574,11 @@
     "family": "ChartFrame",
     "variantOf": null,
     "overrides": [
-      "height"
+      "height",
+      "yAxisStrategy"
     ],
     "dataProps": "ChartFrameDataProps",
-    "summary": "Composite (Depth 2), zero CSS. Factory behind `ChartFrame`'s curried variants; bakes `height`.",
+    "summary": "Composite (Depth 2), zero CSS. Factory behind `ChartFrame`'s curried variants; bakes `height`, `yAxisStrategy`.",
     "summarySource": "synthesized",
     "preferFirst": null,
     "notToBeConfusedWith": null,
@@ -3584,7 +3587,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 198
+    "line": 230
   },
   {
     "name": "createCheckbox",
@@ -7807,6 +7810,31 @@
     "line": 55
   },
   {
+    "name": "FillAutoGrowChartFrame",
+    "depth": 2,
+    "kind": "variant",
+    "family": "ChartFrame",
+    "variantOf": {
+      "factory": "createChartFrame",
+      "overrides": "{ height: \"fill\", yAxisStrategy: \"auto-grow-only\" }"
+    },
+    "overrides": [
+      "height",
+      "yAxisStrategy"
+    ],
+    "dataProps": "ChartFrameDataProps",
+    "summary": "The filling frame whose y-axis only ever AUTO-GROWS: one fit button in place of the mode split, for a chart where Full auto and Locked would mean nothing to its reader (the Contract Builder's cash-flow panel).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The filling frame whose y-axis only ever AUTO-GROWS: one fit button in place of the mode split, for a chart where Full auto and Locked would mean nothing to its reader (the Contract Builder's cash-flow panel). Wire `onYAxisPress` to the caller's `createAxisWaterMarks(...).reset`.",
+    "showcase": "#/chart-frame",
+    "since": "Unreleased",
+    "file": "src/components/ChartFrame/variants.ts",
+    "line": 34
+  },
+  {
     "name": "FillCardSurface",
     "depth": 0,
     "kind": "variant",
@@ -7850,7 +7878,8 @@
       "overrides": "{\n  height: \"fill\",\n}"
     },
     "overrides": [
-      "height"
+      "height",
+      "yAxisStrategy"
     ],
     "dataProps": "ChartFrameDataProps",
     "summary": "The frame that takes its parent's height: for a chart in a panel of definite height (BuilderBoard's chart row), where a stated px would fight the panel.",
@@ -9490,7 +9519,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 311
+    "line": 312
   },
   {
     "name": "HUDTabs",
@@ -14062,6 +14091,27 @@
     "line": 206
   },
   {
+    "name": "SignedAreaChart",
+    "depth": 2,
+    "kind": "composite",
+    "family": "SignedAreaChart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": [
+      "Not `ChannelChart` (draws its own axis and size, band has no meaning against zero)."
+    ],
+    "useFor": "cumulative ahead/behind against a target, cashflow vs plan.",
+    "notes": null,
+    "showcase": "#/signed-area-chart",
+    "since": "Unreleased",
+    "file": "src/components/SignedAreaChart/SignedAreaChart.tsx",
+    "line": 58
+  },
+  {
     "name": "SimpleGrowthStrip",
     "depth": null,
     "kind": "variant",
@@ -17649,7 +17699,7 @@
     "showcase": "#/chart-frame",
     "since": "0.186.0",
     "file": "src/components/ChartFrame/variants.ts",
-    "line": 50
+    "line": 59
   },
   {
     "name": "YAxisLockDialogNumber",
@@ -17674,6 +17724,6 @@
     "showcase": "#/chart-frame",
     "since": "0.190.0",
     "file": "src/components/ChartFrame/variants.ts",
-    "line": 55
+    "line": 64
   }
 ]

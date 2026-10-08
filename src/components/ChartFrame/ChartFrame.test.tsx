@@ -8,6 +8,7 @@ import {
   CHART_FRAME_HEIGHT,
   ChartFrame,
   ContentChartFrame,
+  FillAutoGrowChartFrame,
   type ChartYAxisMode,
   chartYAxisModeInfo,
   createChartFrame,
@@ -209,5 +210,31 @@ describe("ContentChartFrame — sized by its chart", () => {
     expect(column.style.height).toBe("");
     const body = column.children[1] as HTMLElement;
     expect(body.style.flex).toBe("1 0 auto");
+  });
+});
+
+describe("FillAutoGrowChartFrame — the y-axis only auto-grows", () => {
+  it("draws one fit button and no mode menu; the button reports onYAxisPress", () => {
+    const onPress = vi.fn();
+    const { container } = render(() => (
+      <FillAutoGrowChartFrame title="T" onYAxisPress={onPress}>
+        <span />
+      </FillAutoGrowChartFrame>
+    ));
+    expect(container.querySelector(".sui-popover-menu")).toBeNull();
+    const fit = button(container, chartYAxisModeInfo("auto").action)!;
+    expect(fit.querySelector('[aria-label="fit"]')).toBeTruthy();
+    fireEvent.click(fit);
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it("ignores a yAxisMode: there is no mode to pick", () => {
+    const { container } = render(() => (
+      <FillAutoGrowChartFrame title="T" yAxisMode="fixed">
+        <span />
+      </FillAutoGrowChartFrame>
+    ));
+    expect(container.querySelector(".sui-popover-menu")).toBeNull();
+    expect(button(container, chartYAxisModeInfo("fixed").action)).toBeNull();
   });
 });

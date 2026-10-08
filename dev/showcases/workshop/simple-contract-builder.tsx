@@ -39,7 +39,7 @@ import {
   BuilderBoard,
   ContentChartFrame,
   CurrencyInput,
-  FillChartFrame,
+  FillAutoGrowChartFrame,
   DatePicker,
   GhostButton,
   PrimaryButton,
@@ -288,18 +288,10 @@ const SimpleContractBuilder: Component = () => {
   };
 
   const panelB = (
-    <FillChartFrame
+    <FillAutoGrowChartFrame
       title="How your contracts fulfil your projections — running, all types"
       yTitle="Booked − projection, cumulative ($)"
-      actions={
-        <IconOnlyButton
-          onClick={divergenceAxis.reset}
-          aria-label="Shrink y-axis to fit current values"
-          title="Shrink y-axis to fit current values"
-        >
-          <Icon name="shrink" size="sm" />
-        </IconOnlyButton>
-      }
+      onYAxisPress={divergenceAxis.reset}
     >
       <AnchorFillBox ref={measureB}>
         <Show when={bSize()}>
@@ -313,7 +305,7 @@ const SimpleContractBuilder: Component = () => {
           )}
         </Show>
       </AnchorFillBox>
-    </FillChartFrame>
+    </FillAutoGrowChartFrame>
   );
 
   const columns: TableColumn<Contract>[] = [
@@ -459,18 +451,10 @@ const SimpleContractBuilder: Component = () => {
   };
 
   const panelA = (
-    <FillChartFrame
+    <FillAutoGrowChartFrame
       title="Cash flow — banked to NOW, outlook after"
       yTitle="Balance ($)"
-      actions={
-        <IconOnlyButton
-          onClick={ceiling.reset}
-          aria-label="Fit y-axis to current values"
-          title="Fit y-axis to current values"
-        >
-          <Icon name="shrink" size="sm" />
-        </IconOnlyButton>
-      }
+      onYAxisPress={ceiling.reset}
     >
       <AnchorFillBox>
         <CashflowScrubChart
@@ -494,7 +478,7 @@ const SimpleContractBuilder: Component = () => {
           ]}
         />
       </AnchorFillBox>
-    </FillChartFrame>
+    </FillAutoGrowChartFrame>
   );
 
   return (

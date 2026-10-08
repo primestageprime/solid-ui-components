@@ -4,15 +4,13 @@
 
 ### Added
 
+- **`SignedAreaChart`** — a running total filled against zero (Depth 2, zero CSS): green above, red below, split exactly at each zero crossing, solid before NOW and translucent with a dashed outline after. Pure geometry exported: `signedAreaParts`, `traceSigned`, `signedExtent`.
+- **`FillAutoGrowChartFrame`** and the `ChartFrame` Override **`yAxisStrategy: "auto-grow-only"`** — one fit button in place of the y-axis mode split, for a chart whose axis only ever auto-grows. Existing frames (`"split"`, the default) are unchanged.
 - **`ChartTooltip` `openDelay`** (ms, default 0) — the tooltip opens only after the pointer has rested on the plot that long, then follows it from point to point with no further delay, and closes the moment the pointer leaves. Omitted, every chart behaves exactly as before.
 
 ### Fixed
 
 - **`ChartTooltip` lands on the mark at any rendered size.** It positioned in chart (viewBox) units as CSS px, so on a chart drawn larger or smaller than its `width`/`height` (`responsive`, a fill frame) the tooltip drifted away from the hovered point. It now scales by the svg's on-screen box, and also accounts for a `title` above the svg. (Chart's own pointer-to-x mapping still reads px as chart units on a scaled svg; not changed here.)
-
-### Added
-
-- **`SignedAreaChart`** — a running total filled against zero (Depth 2, zero CSS): green above, red below, split exactly at each zero crossing, solid before NOW and translucent with a dashed outline after. Pure geometry exported: `signedAreaParts`, `traceSigned`, `signedExtent`.
 
 ## 0.211.0 — 2026-10-08
 
