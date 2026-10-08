@@ -42,6 +42,12 @@
   flex-shrink: 0;
 }
 
+.sui-legend__mark {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .sui-legend__label {
   white-space: nowrap;
 }

@@ -83,4 +83,17 @@ describe("Legend", () => {
     const items = container.querySelectorAll(".sui-legend__item");
     expect(items.length).toBe(0);
   });
+
+  it("draws an item's swatch element in place of the colour box", () => {
+    const items: LegendItem[] = [
+      { label: "Hatched", swatch: <svg data-testid="mark" /> },
+      { color: "#3b82f6", label: "Plain" },
+    ];
+    const { container } = render(() => <Legend items={items} />);
+    const rows = container.querySelectorAll(".sui-legend__item");
+    expect(rows[0].querySelector(".sui-legend__mark svg")).toBeTruthy();
+    expect(rows[0].querySelector(".sui-legend__swatch")).toBeNull();
+    expect(rows[1].querySelector(".sui-legend__swatch")).toBeTruthy();
+    expect(rows[1].querySelector(".sui-legend__mark")).toBeNull();
+  });
 });

@@ -17,6 +17,7 @@
 import {
   type Component,
   For,
+  Show,
   type JSX,
   mergeProps,
   splitProps,
@@ -25,8 +26,14 @@ import "./Legend.css";
 import { pipe, filter, join } from "../../fn";
 
 export interface LegendItem {
-  /** CSS color string applied to the swatch (any valid CSS color). */
-  color: string;
+  /** CSS color string applied to the swatch (any valid CSS color). Ignored when `swatch` is given. */
+  color?: string;
+  /**
+   * A mark to draw in place of the colour box — a hatch, an outline, a dash:
+   * anything a flat `background-color` cannot show (a tiny `Chart` drawing the
+   * real mark works well). Decorative; the label carries the meaning.
+   */
+  swatch?: JSX.Element;
   /** Human-readable label rendered next to the swatch. */
   label: string;
 }
@@ -108,11 +115,20 @@ export const Legend: Component<LegendProps> = (rawProps) => {
             onMouseEnter={() => local.onItemHover?.(item.label)}
             onMouseLeave={() => local.onItemHover?.(null)}
           >
-            <span
-              class="sui-legend__swatch"
-              style={{ "background-color": item.color }}
-              aria-hidden="true"
-            />
+            <Show
+              when={item.swatch}
+              fallback={
+                <span
+                  class="sui-legend__swatch"
+                  style={{ "background-color": item.color }}
+                  aria-hidden="true"
+                />
+              }
+            >
+              <span class="sui-legend__mark" aria-hidden="true">
+                {item.swatch}
+              </span>
+            </Show>
             <span class="sui-legend__label">{item.label}</span>
           </div>
         )}
