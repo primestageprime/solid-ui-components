@@ -45,7 +45,7 @@
 // an error; the content simply waits for the next merge that does.
 // ============================================
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -251,6 +251,22 @@ const changelogPreview = (body, version, date) => {
   return `+ ## ${version} — ${date}\n+\n${shown.map((l) => `+ ${l}`).join("\n")}${tail}`;
 };
 
+/**
+ * Run `node scripts/catalog.mjs` (the `npm run catalog` command). It needs the
+ * repo's devDependencies (typescript), so the release workflow runs `npm ci`
+ * first when a release is owed.
+ */
+const regenerateCatalog = () => {
+  const script = resolve(repoRoot, "scripts", "catalog.mjs");
+  if (!existsSync(script)) return { ok: false, why: `${script} is missing` };
+  try {
+    execFileSync(process.execPath, [script], { cwd: repoRoot, stdio: "inherit" });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, why: String(error?.message ?? error).split("\n")[0] };
+  }
+};
+
 const main = (argv) => {
   const args = parseArgs(argv);
   const pkgPath = resolve(repoRoot, "package.json");
@@ -301,6 +317,11 @@ const main = (argv) => {
   }
 
   const rolled = rollChangelog(changelog, { version: nextVersion, date });
+  const originals = {
+    changelog,
+    pkg: readFileSync(pkgPath, "utf8"),
+    lock: readFileSync(lockPath, "utf8"),
+  };
   writeFileSync(args.changelogPath, rolled);
 
   headPkg.version = nextVersion;
@@ -314,7 +335,21 @@ const main = (argv) => {
   if (lock.packages?.[""]) lock.packages[""].version = nextVersion;
   writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
 
-  console.log(`\nWrote package.json, package-lock.json and CHANGELOG.md at ${nextVersion}.`);
+  // catalog.json embeds the version and each new entry's `since` (Unreleased
+  // becomes X.Y.0 at the roll), and CI's `catalog --check` compares against it,
+  // so the release commit must carry a regenerated one or its own CI fails
+  // health and publish is skipped. Regenerate AFTER the roll. On any failure put
+  // the three files back and exit non-zero: never leave a half-release.
+  const regen = regenerateCatalog();
+  if (!regen.ok) {
+    writeFileSync(args.changelogPath, originals.changelog);
+    writeFileSync(pkgPath, originals.pkg);
+    writeFileSync(lockPath, originals.lock);
+    console.error(`::error::catalog regeneration failed (${regen.why}); restored package.json, package-lock.json and CHANGELOG.md. Nothing released.`);
+    return 1;
+  }
+
+  console.log(`\nWrote package.json, package-lock.json, CHANGELOG.md and catalog.json at ${nextVersion}.`);
   return 0;
 };
 

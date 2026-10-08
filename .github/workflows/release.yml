@@ -175,6 +175,12 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           node -p "'Reason: ' + require('/tmp/decision.json').reason"
 
+      # Only when a release is owed: release.mjs regenerates catalog.json, and
+      # scripts/catalog.mjs needs typescript. Skipped runs stay seconds long.
+      - name: Install dependencies for the catalog regeneration
+        if: steps.decide.outputs.release == 'true'
+        run: npm ci --ignore-scripts
+
       - name: Bump, roll the changelog, commit, tag and push
         if: steps.decide.outputs.release == 'true'
         env:
@@ -185,9 +191,9 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Only the three files the script writes. Never `git add -A`: a stray
+          # Only the four files the script writes. Never `git add -A`: a stray
           # file from a previous step would ride into the release commit.
-          git add package.json package-lock.json CHANGELOG.md
+          git add package.json package-lock.json CHANGELOG.md catalog.json
           git commit -m "chore(release): ${NEXT}"
 
           # TAG THE SHA, NOT THE BRANCH. `git tag vX.Y.0` with no argument tags
