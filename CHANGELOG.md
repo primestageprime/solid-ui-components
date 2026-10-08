@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Added
+
+- **`ValueHandle`** — a Chart part (Depth 1): a draggable grip on the top edge of each datum's column. Drag it to set that datum's value (`onDragStart`, `onDrag`, `onDragEnd`, reported in data units), or double-click the column to type one in. The grip arms on hover, focus and drag: thicker, wider and ringed around its own centre line, so nothing else on the chart moves.
+
+### Changed
+
+- **`calloutModeFor`** (`RateGauge`) picks leaders when the natural dial fits, and takes an optional `previous` mode so the choice has hysteresis and does not flicker at the boundary.
+
+### Fixed
+
+- **`LineSeries`: the `stroke` prop now wins over the default accent.**
+- **`AreaSeries`: the `fill` prop now wins over the default accent.**
+
 ## 0.210.0 — 2026-10-02
 
 ### Fixed
