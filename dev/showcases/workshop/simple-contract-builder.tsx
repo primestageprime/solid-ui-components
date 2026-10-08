@@ -25,11 +25,21 @@
  * Every number comes from `simple-contract-builder.model.ts` on top of
  * `contract-builder-model.ts`; the data is `simple-contract-builder.fixtures.ts`.
  */
-import { type Component, Show, createMemo, createSignal } from "solid-js";
 import {
+  type Component,
+  Show,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
+import { observeSize } from "../../../src/internal/dom/observeSize";
+import {
+  AnchorFillBox,
   BuilderBoard,
   ContentChartFrame,
   CurrencyInput,
+  FillChartFrame,
   DatePicker,
   GhostButton,
   PrimaryButton,
@@ -258,10 +268,22 @@ const SimpleContractBuilder: Component = () => {
   /* The Hopes bars hold their y-axis too (grow at once, shrink on the fit button). */
   const barsAxis = createAxisWaterMarks(() => ({ min: 0, max: tallest(plan()) }));
 
+  /* B fills its panel at the size the panel actually is: measured (SUI's
+     loop-safe `observeSize`), not a fixed aspect that grows taller with the
+     window and spills out of the card on a wide screen. */
+  const [bSize, setBSize] = createSignal<{ width: number; height: number } | null>(null);
+  const measureB = (el: HTMLDivElement) => {
+    onMount(() => {
+      const box = el.getBoundingClientRect();
+      if (box.width > 0 && box.height > 0) setBSize({ width: box.width, height: box.height });
+      onCleanup(observeSize(el, (s) => s.width > 0 && s.height > 0 && setBSize(s)));
+    });
+  };
   const panelB = (
-    <>
-      <SpreadRow>
-        <TextTitle>How your contracts fulfil your hopes — running, all types · up to NOW booked − hope; after, only work beyond the hope</TextTitle>
+    <FillChartFrame
+      title="How your contracts fulfil your projections — running, all types"
+      yTitle="Booked − projection, cumulative ($)"
+      actions={
         <IconOnlyButton
           onClick={divergenceAxis.reset}
           aria-label="Shrink y-axis to fit current values"
@@ -269,15 +291,21 @@ const SimpleContractBuilder: Component = () => {
         >
           <Icon name="shrink" size="sm" />
         </IconOnlyButton>
-      </SpreadRow>
-      <GrowFillBox>
-        <CumulativeDivergence
-          config={plan()}
-          today={TODAY}
-          held={divergenceAxis.domain()}
-        />
-      </GrowFillBox>
-    </>
+      }
+    >
+      <AnchorFillBox ref={measureB}>
+        <Show when={bSize()}>
+          {(size) => (
+            <CumulativeDivergence
+              config={plan()}
+              today={TODAY}
+              held={divergenceAxis.domain()}
+              size={size()}
+            />
+          )}
+        </Show>
+      </AnchorFillBox>
+    </FillChartFrame>
   );
 
   const columns: TableColumn<Contract>[] = [

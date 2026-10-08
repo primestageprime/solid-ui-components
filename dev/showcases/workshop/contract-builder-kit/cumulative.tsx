@@ -77,6 +77,11 @@ export const CumulativeDivergence: Component<{
   readonly held?: readonly [number, number] | null;
   /** The last month drawn (the horizon); omitted, December. */
   readonly lastMonth?: number;
+  /**
+   * A MEASURED box to draw at, in px. Given, the chart fills exactly that box
+   * (a BuilderBoard panel); omitted, it scales to its width at a fixed aspect.
+   */
+  readonly size?: { readonly width: number; readonly height: number };
 }> = (props) => {
   const last = () => props.lastMonth ?? monthsOf(props.config).length - 1;
   const uid = createUniqueId();
@@ -117,9 +122,9 @@ export const CumulativeDivergence: Component<{
       : `url(#${p.value >= 0 ? aheadTint : behindTint})`;
   return (
     <Chart
-      responsive
-      width={WIDTH}
-      height={HEIGHT}
+      responsive={props.size === undefined}
+      width={props.size?.width ?? WIDTH}
+      height={props.size?.height ?? HEIGHT}
       xDomain={[-0.5, last() + 0.5]}
       yDomain={[domain()[0], domain()[1]]}
       margin={MARGIN}
