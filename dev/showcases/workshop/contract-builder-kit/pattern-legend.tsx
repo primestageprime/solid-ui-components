@@ -157,19 +157,19 @@ export const PatternLegend: Component<{ readonly items: readonly PatternItem[] }
 
 /** The per-month bars' marks. */
 export const BAR_MARKS: readonly PatternItem[] = [
-  { mark: "outline", label: "Outline = hoped for (projected)" },
+  { mark: "outline", label: "Outline = projected" },
   { mark: "solid", label: "Solid = invoiced" },
   { mark: "translucent", label: "Translucent = signed, not yet invoiced" },
-  { mark: "hatched", label: "Hatched = above the hope (unplanned win)" },
+  { mark: "hatched", label: "Hatched = above the projection (unplanned win)" },
   { mark: "missing", label: "Red cross-hatch = missing (past shortfall)" },
   { mark: "now", label: "Dashed rule = NOW" },
 ];
 
 /** The running-divergence chart's marks. */
 export const CUMULATIVE_MARKS: readonly PatternItem[] = [
-  { mark: "ahead", label: "Green = ahead of the total hope" },
-  { mark: "behind", label: "Red = behind the total hope" },
-  { mark: "outlook", label: "Translucent = from NOW on: signed work vs hope" },
+  { mark: "ahead", label: "Green = ahead of the total projection" },
+  { mark: "behind", label: "Red = behind the total projection" },
+  { mark: "outlook", label: "Translucent = from NOW on: signed work vs projection" },
   { mark: "line", label: "Solid line = actual running total" },
   { mark: "dashed", label: "Dashed line = outlook after NOW" },
   { mark: "now", label: "Dashed rule = NOW" },

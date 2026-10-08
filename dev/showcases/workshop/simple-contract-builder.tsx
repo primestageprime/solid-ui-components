@@ -153,7 +153,7 @@ const HOPE_VIEWS = [
 type Tab = "contracts" | "hopes";
 const TABS = [
   { id: "contracts", label: "Contracts" },
-  { id: "hopes", label: "Hopes" },
+  { id: "hopes", label: "Projections" },
 ];
 
 const DAYS = dailyCells(new Date("2026-01-01T00:00:00Z"), new Date("2027-12-31T00:00:00Z"));
@@ -372,13 +372,13 @@ const SimpleContractBuilder: Component = () => {
           <>
             <CompactTable data={sorted()} columns={columns} hoverable />
             <NoteText>
-              {`${contracts().filter((c) => c.use).length} of ${contracts().length} included · ${contracts().filter((c) => c.status === "Confirmed").length} confirmed, ${contracts().filter((c) => c.status === "Planned").length} planned · sorted by start. The scenario takes, per type per month, the larger of the hope and what is committed — so work switched on INSIDE a month's hope moves no money; only work beyond it does. Past months are banked money only.`}
+              {`${contracts().filter((c) => c.use).length} of ${contracts().length} included · ${contracts().filter((c) => c.status === "Confirmed").length} confirmed, ${contracts().filter((c) => c.status === "Planned").length} planned · sorted by start. The scenario takes, per type per month, the larger of the projection and what is committed — so work switched on INSIDE a month's projection moves no money; only work beyond it does. Past months are banked money only.`}
             </NoteText>
           </>
         }
       >
         <ContentChartFrame
-          title="Hopes, month by month"
+          title="Projections, month by month"
           yTitle="Revenue ($)"
           actions={
             <ClusterRow>
@@ -410,9 +410,9 @@ const SimpleContractBuilder: Component = () => {
         </ContentChartFrame>
         <NoteText>
           Inside an outline: solid = invoiced, translucent = a Confirmed
-          contract not yet invoiced, lighter = a Planned one (it fills the hope
+          contract not yet invoiced, lighter = a Planned one (it fills the projection
           last). The 3m / 6m / 1y control scopes only these bars. Drag the top edge of
-          an outline to set that month's hoped-for jobs
+          an outline to set that month's projected jobs
           (whole jobs, never below zero — only that month moves); double-click a
           bar to type it.
         </NoteText>
@@ -537,10 +537,10 @@ const SimpleContractBuilder: Component = () => {
             open
             onClose={() => setEntry(null)}
             title={`${entryType()?.name ?? ""} · ${monthLabel(e().month)}`}
-            subtitle={`Hoped-for jobs at $${(entryType()?.typical ?? 0).toLocaleString()} each`}
+            subtitle={`Projected jobs at $${(entryType()?.typical ?? 0).toLocaleString()} each`}
           >
             <ThemedNumberInput
-              name="hoped-jobs"
+              name="projected-jobs"
               label="Jobs"
               min={0}
               step={1}

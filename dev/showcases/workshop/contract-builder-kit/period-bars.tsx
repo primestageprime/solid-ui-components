@@ -288,7 +288,7 @@ export const PeriodBars: Component<{
               width={STEP * BAND}
               value={(c) => c.projected}
               color={() => TYPE_COLORS[s().i]}
-              label={(c) => `${s().t.name}, ${monthLabel(c.month)}: hoped jobs`}
+              label={(c) => `${s().t.name}, ${monthLabel(c.month)}: projected jobs`}
               step={() => s().t.typical}
               onDragStart={() => setFrozenTop(liveTop())}
               onDrag={(c, _i, y) => props.onSetCount?.(s().t, c.month, jobsAt(s().t, y))}
