@@ -23,13 +23,26 @@
 // and `<For>` keys by identity, so it would remount the grip mid-drag and
 // drop the pointer capture.
 //
+// ARMED: hovering the column (the bar beneath it) or the grip, focusing the
+// grip, or dragging it thickens the grip and rings it — the grip's own rect
+// only, around its centre line, so nothing else moves (`data-armed` marks it).
+//
 // Keyboard: the grip is a `slider`; ArrowUp/ArrowDown report `value ± step`
 // through `onDragEnd`, the same exit a drag takes.
-import { Index, type JSX } from "solid-js";
+import { Index, type JSX, createSignal } from "solid-js";
 import { useChart } from "./context";
 
 /** Grip thickness in px — thick enough to grab, thin enough to read as an edge. */
 const GRIP_PX = 6;
+/**
+ * The ARMED grip — the column is hovered, the grip has keyboard focus, or it is
+ * being dragged: thicker, a little wider each side, and ringed in the primary
+ * text colour. Only the grip's own rect grows, and it grows around its centre
+ * line, so nothing else on the chart moves: an SVG rect is not in a layout
+ * flow, and the value it marks stays exactly where it was.
+ */
+const GRIP_ARMED_PX = 10;
+const GRIP_ARMED_OVERHANG = 3;
 
 export interface ValueHandleMeta {
   readonly clientX: number;
@@ -87,12 +100,17 @@ export function ValueHandle<T>(props: ValueHandleProps<T>): JSX.Element {
       <Index each={props.data}>
         {(item, i) => {
           let dragging = false;
+          const [hovered, setHovered] = createSignal(false);
+          const [focused, setFocused] = createSignal(false);
+          const [held, setHeld] = createSignal(false);
+          const armed = () => hovered() || focused() || held();
           const d = () => item();
           const g = () => geometry(d(), i);
           const down = (e: PointerEvent) => {
             e.stopPropagation();
             e.preventDefault();
             dragging = true;
+            setHeld(true);
             (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
             props.onDragStart?.(d(), i);
           };
@@ -103,6 +121,7 @@ export function ValueHandle<T>(props: ValueHandleProps<T>): JSX.Element {
           const up = (e: PointerEvent) => {
             if (!dragging) return;
             dragging = false;
+            setHeld(false);
             const el = e.currentTarget as Element;
             if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId);
             props.onDragEnd?.(d(), i, dataY(el, e.clientY));
@@ -118,7 +137,11 @@ export function ValueHandle<T>(props: ValueHandleProps<T>): JSX.Element {
             props.onDoubleClick?.(d(), i, { clientX: e.clientX, clientY: e.clientY });
           };
           return (
-            <g class="sui-chart__value-handle">
+            <g
+              class="sui-chart__value-handle"
+              onPointerEnter={() => setHovered(true)}
+              onPointerLeave={() => setHovered(false)}
+            >
               {/* biome-ignore lint/a11y/noStaticElementInteractions: the column is a pointer-only double-click target; the grip below is the keyboard-operable slider */}
               <rect
                 class="sui-chart__value-handle-column"
@@ -136,17 +159,22 @@ export function ValueHandle<T>(props: ValueHandleProps<T>): JSX.Element {
                 aria-label={props.label(d(), i)}
                 aria-valuenow={props.value(d(), i)}
                 aria-orientation="vertical"
-                x={g().left}
-                y={g().top - GRIP_PX / 2}
-                width={g().w}
-                height={GRIP_PX}
-                rx={2}
+                data-armed={armed() ? "" : undefined}
+                x={g().left - (armed() ? GRIP_ARMED_OVERHANG : 0)}
+                y={g().top - (armed() ? GRIP_ARMED_PX : GRIP_PX) / 2}
+                width={g().w + (armed() ? GRIP_ARMED_OVERHANG * 2 : 0)}
+                height={armed() ? GRIP_ARMED_PX : GRIP_PX}
+                rx={armed() ? 3 : 2}
                 fill={props.color(d(), i)}
+                stroke={armed() ? "var(--sui-text-primary)" : undefined}
+                stroke-width={armed() ? 1.5 : undefined}
                 cursor="ns-resize"
                 onPointerDown={down}
                 onPointerMove={move}
                 onPointerUp={up}
                 onKeyDown={key}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
                 onDblClick={dbl}
               />
             </g>

@@ -16854,7 +16854,7 @@
     "showcase": "#/chart",
     "since": null,
     "file": "src/components/Chart/ValueHandle.tsx",
-    "line": 63
+    "line": 76
   },
   {
     "name": "ValueMatrix",
