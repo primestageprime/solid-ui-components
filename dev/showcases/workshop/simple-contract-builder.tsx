@@ -35,7 +35,6 @@ import {
 } from "solid-js";
 import { observeSize } from "../../../src/internal/dom/observeSize";
 import {
-  AnchorBox,
   AnchorFillBox,
   BuilderBoard,
   ContentChartFrame,
@@ -275,12 +274,16 @@ const SimpleContractBuilder: Component = () => {
   };
   /* The Projections chart is drawn 1:1 at its measured width (its tooltip
      positions in chart units, so it must not be viewBox-scaled). */
-  const [hopesWidth, setHopesWidth] = createSignal<number | null>(null);
+  const [hopesBox, setHopesBox] = createSignal<{ width: number; height: number } | null>(null);
+  /* In fullscreen the chart takes the viewport's height; in its card it keeps
+     its stated height (a content-height frame has no height to fill). The
+     frame's fullscreen is controlled so the bench knows which. */
+  const [hopesFull, setHopesFull] = createSignal(false);
   const measureHopes = (el: HTMLDivElement) => {
     onMount(() => {
-      const w = el.getBoundingClientRect().width;
-      if (w > 0) setHopesWidth(w);
-      onCleanup(observeSize(el, (s) => s.width > 0 && setHopesWidth(s.width)));
+      const box = el.getBoundingClientRect();
+      if (box.width > 0) setHopesBox({ width: box.width, height: box.height });
+      onCleanup(observeSize(el, (s) => s.width > 0 && setHopesBox(s)));
     });
   };
 
@@ -385,6 +388,8 @@ const SimpleContractBuilder: Component = () => {
         <ContentChartFrame
           title="Projections, month by month"
           yTitle="Revenue ($)"
+          fullscreen={hopesFull()}
+          onFullscreenChange={setHopesFull}
           actions={
             <ClusterRow>
               <SegmentedInput options={HORIZONS} value={horizon()} onChange={setHorizon} />
@@ -398,18 +403,19 @@ const SimpleContractBuilder: Component = () => {
             </ClusterRow>
           }
         >
-          <AnchorBox ref={measureHopes}>
+          <AnchorFillBox ref={measureHopes}>
             <PeriodBars
               config={plan()}
               lastMonth={lastMonth()}
-              width={hopesWidth() ?? undefined}
+              width={hopesBox()?.width}
+              height={hopesFull() && (hopesBox()?.height ?? 0) > 0 ? hopesBox()?.height : undefined}
               tooltip
               ceiling={barsAxis.domain()?.[1]}
               today={TODAY}
               onSetCount={(t, m, n) => setCount(t.id, m, n)}
               onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
             />
-          </AnchorBox>
+          </AnchorFillBox>
         </ContentChartFrame>
         <NoteText>
           Inside an outline: solid = invoiced, translucent = a Confirmed
@@ -449,20 +455,20 @@ const SimpleContractBuilder: Component = () => {
   );
 
   const panelA = (
-    <>
-      <SpreadRow>
-        <TextTitle>Cash flow — banked to NOW, outlook after</TextTitle>
-        <ClusterRow>
-          <IconOnlyButton
-            onClick={ceiling.reset}
-            aria-label="Fit y-axis to current values"
-            title="Fit y-axis to current values"
-          >
-            <Icon name="shrink" size="sm" />
-          </IconOnlyButton>
-        </ClusterRow>
-      </SpreadRow>
-      <GrowFillBox>
+    <FillChartFrame
+      title="Cash flow — banked to NOW, outlook after"
+      yTitle="Balance ($)"
+      actions={
+        <IconOnlyButton
+          onClick={ceiling.reset}
+          aria-label="Fit y-axis to current values"
+          title="Fit y-axis to current values"
+        >
+          <Icon name="shrink" size="sm" />
+        </IconOnlyButton>
+      }
+    >
+      <AnchorFillBox>
         <CashflowScrubChart
           cells={cells()}
           balanceLineCells={bankedLine()}
@@ -483,8 +489,8 @@ const SimpleContractBuilder: Component = () => {
             },
           ]}
         />
-      </GrowFillBox>
-    </>
+      </AnchorFillBox>
+    </FillChartFrame>
   );
 
   return (

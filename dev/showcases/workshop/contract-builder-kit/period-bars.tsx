@@ -157,6 +157,8 @@ export const PeriodBars: Component<{
    * chart units; omitted, it scales to its container at a fixed aspect.
    */
   readonly width?: number;
+  /** A MEASURED height, in px (fullscreen); omitted, the stated 280. */
+  readonly height?: number;
   /** Show the per-bar breakdown on hover (debounced). */
   readonly tooltip?: boolean;
   /** A grip set one type's hope in one month to `count` whole jobs. */
@@ -194,7 +196,7 @@ export const PeriodBars: Component<{
     <Chart
       responsive={props.width === undefined}
       width={props.width ?? WIDTH}
-      height={HEIGHT}
+      height={props.height ?? HEIGHT}
       xDomain={[-0.5, last() + 0.5]}
       yDomain={[0, top()]}
       margin={MARGIN}
