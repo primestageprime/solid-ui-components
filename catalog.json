@@ -7830,7 +7830,7 @@
     "useFor": null,
     "notes": "The filling frame whose y-axis only ever AUTO-GROWS: one fit button in place of the mode split, for a chart where Full auto and Locked would mean nothing to its reader (the Contract Builder's cash-flow panel). Wire `onYAxisPress` to the caller's `createAxisWaterMarks(...).reset`.",
     "showcase": "#/chart-frame",
-    "since": "Unreleased",
+    "since": "0.212.0",
     "file": "src/components/ChartFrame/variants.ts",
     "line": 34
   },
@@ -14107,7 +14107,7 @@
     "useFor": "cumulative ahead/behind against a target, cashflow vs plan.",
     "notes": null,
     "showcase": "#/signed-area-chart",
-    "since": "Unreleased",
+    "since": "0.212.0",
     "file": "src/components/SignedAreaChart/SignedAreaChart.tsx",
     "line": 58
   },

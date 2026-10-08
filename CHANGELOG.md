@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.212.0 — 2026-10-08
+
 ### Added
 
 - **`SignedAreaChart`** — a running total filled against zero (Depth 2, zero CSS): green above, red below, split exactly at each zero crossing, solid before NOW and translucent with a dashed outline after. Pure geometry exported: `signedAreaParts`, `traceSigned`, `signedExtent`.
