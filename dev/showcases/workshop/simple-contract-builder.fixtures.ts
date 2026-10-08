@@ -79,3 +79,10 @@ export const FIXED_WEEKLY_COST = 5_000;
 
 /** The dial's domain, in $/wk: every job gone is −the fixed cost. */
 export const RATE_DOMAIN: readonly [number, number] = [-5_000, 5_000];
+
+/**
+ * Cash in the bank on January 1. An example figure (not from Peter), like the
+ * Hourly Board's OPENING_BALANCE: enough that the slow snow months dip the
+ * balance without taking it below zero.
+ */
+export const OPENING_BALANCE = 25_000;

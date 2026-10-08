@@ -4,9 +4,10 @@
  * four panels of the Hourly Board bench.
  *
  *   A  Cash flow — `CashflowScrubChart` + `createHighWaterMark` (the board
- *      kit's own pairing): the running balance from payment DATES; solid to
- *      NOW (invoiced), dashed after (signed + included estimates + the hope
- *      not yet filled).
+ *      kit's own pairing): the running balance from payment DATES, from an
+ *      opening balance, less the fixed weekly cost paid every day (the Hourly
+ *      Board's cost model); solid to NOW (invoiced), dashed after (signed +
+ *      included estimates + the hope not yet filled).
  *   B  Running divergence — Contract Builder's `CumulativeDivergence` on the
  *      same plan, with the grow-only axis (`createAxisWaterMarks`) and a fit
  *      button.
@@ -40,8 +41,12 @@ import {
   TruthToggle,
   UnderlineTabs,
   GrowCenterColumn,
+  SegmentedInput,
   createIcon,
+  type BuilderBoardPanelBox,
+  calloutModeFor,
   createRateGauge,
+  rateGaugeCalloutLabels,
   CashflowScrubChart,
   type CashflowCell,
   GrowFillBox,
@@ -57,6 +62,7 @@ import {
 import {
   CONTRACTS,
   FIXED_WEEKLY_COST,
+  OPENING_BALANCE,
   RATE_DOMAIN,
   TODAY,
   TYPES,
@@ -98,11 +104,23 @@ const TYPE_NAME: Readonly<Record<TypeId, string>> = {
 const valueOf = (c: Contract): number => c.payments.reduce((a, p) => a + p.amount, 0);
 
 /** The Hourly Board's dial, word for word: rate against breakeven, in $/wk. */
-const RateDial = createRateGauge({
+const DIAL_WORDING = {
   baselineLabel: "Baseline",
   formatAgainst: againstBreakeven,
   formatDelta: revenueShift,
-});
+};
+/* One gauge of each layout (the gauge never picks its own): the LAYOUT picks,
+   from D's measured box, with `calloutModeFor` (COMPONENTS.md, RateGauge). */
+const LeaderDial = createRateGauge(DIAL_WORDING);
+const CornerDial = createRateGauge({ ...DIAL_WORDING, callouts: "corners" });
+
+/** How far past NOW the board looks — thorcasting's topnav options, its
+ *  control (`SegmentedInput`). 2y is left out: the example data is one year. */
+const HORIZONS = [
+  { id: "91", label: "3m" },
+  { id: "182", label: "6m" },
+  { id: "365", label: "1y" },
+];
 
 type Tab = "contracts" | "hopes";
 const TABS = [
@@ -115,9 +133,12 @@ const NOW_DAY = Math.round(
   (Date.parse(`${TODAY}T00:00:00Z`) - Date.UTC(2026, 0, 1)) / 86_400_000,
 );
 
-/** Running sums of a day series. */
+/** The fixed cost, paid every day of the week (the Hourly Board's cost model). */
+const DAILY_COST = FIXED_WEEKLY_COST / 7;
+
+/** Running sums of a day series, from the opening balance. */
 const running = (values: readonly number[]): number[] => {
-  let total = 0;
+  let total = OPENING_BALANCE;
   return map((v: number) => {
     total += v;
     return total;
@@ -131,6 +152,11 @@ const SimpleContractBuilder: Component = () => {
   const [hopes, setHopes] = createSignal<readonly JobType[]>(TYPES);
   const [contracts, setContracts] = createSignal<readonly Contract[]>(CONTRACTS);
   const [tab, setTab] = createSignal<Tab>("contracts");
+  const [horizon, setHorizon] = createSignal("365");
+  /** The last day drawn: NOW + the horizon, capped at the data's year end. */
+  const endDay = () => Math.min(DAYS.length - 1, NOW_DAY + Number(horizon()));
+  /** The last month drawn, for the month-axis charts. */
+  const lastMonth = () => DAYS[endDay()].start.getUTCMonth();
   const [entry, setEntry] = createSignal<{ type: TypeId; month: number } | null>(null);
 
   /** Replace one contract by id (UI state; the fold stays pure). */
@@ -146,20 +172,21 @@ const SimpleContractBuilder: Component = () => {
   const entryType = () => hopes().find((t) => t.id === entry()?.type);
 
   const flows = createMemo(() => dailyFlows(hopes(), contracts(), TODAY));
-  /** Everything expected, actual and outlook together, as a running balance. */
+  /** Everything expected, actual and outlook together, less the fixed cost, as a running balance. */
   const expected = createMemo(() =>
-    running(map((f: DayFlow) => f.actual + f.outlook, flows())),
+    running(map((f: DayFlow) => f.actual + f.outlook - DAILY_COST, flows())),
   );
-  const banked = createMemo(() => running(map((f: DayFlow) => f.actual, flows())));
+  /** What is actually in the bank: invoiced money less the cost paid. */
+  const banked = createMemo(() => running(map((f: DayFlow) => f.actual - DAILY_COST, flows())));
 
   const cells = createMemo((): CashflowCell[] =>
     map(
       (cell, i: number) => ({
         ...cell,
-        cashflowCents: Math.round((flows()[i].actual + flows()[i].outlook) * 100),
+        cashflowCents: Math.round((flows()[i].actual + flows()[i].outlook - DAILY_COST) * 100),
         balanceCents: Math.round(expected()[i] * 100),
       }),
-      DAYS,
+      DAYS.slice(0, endDay() + 1),
     ),
   );
   /* The SOLID line: money actually banked, up to NOW, and no further — the
@@ -174,12 +201,14 @@ const SimpleContractBuilder: Component = () => {
       cells().slice(0, NOW_DAY + 1),
     ),
   );
-  const ceiling = createHighWaterMark(() => Math.max(0, ...map((v: number) => v * 100, expected())));
+  const ceiling = createHighWaterMark(() =>
+    Math.max(0, ...map((v: number) => v * 100, expected().slice(0, endDay() + 1))),
+  );
 
   /** The consumption fold's view of the board: hopes + the contracts that count. */
   const plan = createMemo(() => asPlan(hopes(), contracts()));
   /* Grow-only y-axis (Auto-grow | manual shrink), as on Contract Builder. */
-  const divergenceAxis = createAxisWaterMarks(() => cumulativeFit(plan()));
+  const divergenceAxis = createAxisWaterMarks(() => cumulativeFit(plan(), lastMonth()));
 
   const panelB = (
     <>
@@ -194,7 +223,12 @@ const SimpleContractBuilder: Component = () => {
         </IconOnlyButton>
       </SpreadRow>
       <GrowFillBox>
-        <CumulativeDivergence config={plan()} today={TODAY} held={divergenceAxis.domain()} />
+        <CumulativeDivergence
+          config={plan()}
+          today={TODAY}
+          held={divergenceAxis.domain()}
+          lastMonth={lastMonth()}
+        />
       </GrowFillBox>
     </>
   );
@@ -277,6 +311,7 @@ const SimpleContractBuilder: Component = () => {
       >
         <PeriodBars
           config={plan()}
+          lastMonth={lastMonth()}
           today={TODAY}
           onSetCount={(t, m, n) => setCount(t.id, m, n)}
           onEnterCount={(t, m) => setEntry({ type: t.id, month: m })}
@@ -292,17 +327,25 @@ const SimpleContractBuilder: Component = () => {
 
   /** THE DIAL: this scenario's rate, against the board as it opened. */
   const rate = createMemo(() => ratePerWeek(hopes(), contracts(), TODAY, FIXED_WEEKLY_COST));
-  const panelD = (
+  const dial = () => ({
+    domain: RATE_DOMAIN,
+    baseline: OPENING_RATE,
+    caution: COMFORTABLE,
+    value: rate(),
+    label: "Scenario",
+  });
+  /* D is a render function: BuilderBoard hands it the card's measured box, and
+     the texts the leaders would draw decide whether they fit. */
+  const panelD = (box: () => BuilderBoardPanelBox) => (
     <>
       <TextTitle>Rate, right now</TextTitle>
       <GrowCenterColumn>
-        <RateDial
-          domain={RATE_DOMAIN}
-          baseline={OPENING_RATE}
-          caution={COMFORTABLE}
-          value={rate()}
-          label="Scenario"
-        />
+        <Show
+          when={calloutModeFor(box(), rateGaugeCalloutLabels({ ...dial(), ...DIAL_WORDING })) === "leaders"}
+          fallback={<CornerDial {...dial()} />}
+        >
+          <LeaderDial {...dial()} />
+        </Show>
       </GrowCenterColumn>
     </>
   );
@@ -311,13 +354,16 @@ const SimpleContractBuilder: Component = () => {
     <>
       <SpreadRow>
         <TextTitle>Cash flow — banked to NOW, outlook after</TextTitle>
-        <IconOnlyButton
-          onClick={ceiling.reset}
-          aria-label="Fit y-axis to current values"
-          title="Fit y-axis to current values"
-        >
-          <Icon name="shrink" size="sm" />
-        </IconOnlyButton>
+        <ClusterRow>
+          <SegmentedInput options={HORIZONS} value={horizon()} onChange={setHorizon} />
+          <IconOnlyButton
+            onClick={ceiling.reset}
+            aria-label="Fit y-axis to current values"
+            title="Fit y-axis to current values"
+          >
+            <Icon name="shrink" size="sm" />
+          </IconOnlyButton>
+        </ClusterRow>
       </SpreadRow>
       <GrowFillBox>
         <CashflowScrubChart

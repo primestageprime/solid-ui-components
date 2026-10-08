@@ -75,7 +75,10 @@ export const CumulativeDivergence: Component<{
    * only when the reader asks). Omitted, the axis fits the data both ways.
    */
   readonly held?: readonly [number, number] | null;
+  /** The last month drawn (the horizon); omitted, December. */
+  readonly lastMonth?: number;
 }> = (props) => {
+  const last = () => props.lastMonth ?? 11;
   const uid = createUniqueId();
   const aheadTint = `cb-cum-ahead-${uid}`;
   const behindTint = `cb-cum-behind-${uid}`;
@@ -86,7 +89,7 @@ export const CumulativeDivergence: Component<{
         value: cumulativeDelta(props.config, m),
         past: m < monthOf(props.today),
       }),
-      MONTH_INDICES,
+      filter((m: number) => m <= last(), MONTH_INDICES),
     ),
   );
   const domain = createMemo(() =>
@@ -113,7 +116,7 @@ export const CumulativeDivergence: Component<{
       responsive
       width={WIDTH}
       height={HEIGHT}
-      xDomain={[-0.5, 11.5]}
+      xDomain={[-0.5, last() + 0.5]}
       yDomain={[domain()[0], domain()[1]]}
       margin={MARGIN}
     >
@@ -124,7 +127,7 @@ export const CumulativeDivergence: Component<{
       <Grid tickCount={4} />
       <YAxis tickValues={ticks()} tickFormat={money} />
       <XAxis
-        tickValues={MONTH_INDICES as number[]}
+        tickValues={filter((m: number) => m <= last(), MONTH_INDICES)}
         tickFormat={(m) => MONTHS[Math.round(m)] ?? ""}
       />
       <BarSeries

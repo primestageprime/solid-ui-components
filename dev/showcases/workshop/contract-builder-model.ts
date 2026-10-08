@@ -336,7 +336,13 @@ export const withCount = (
 });
 
 /** The running divergence's extent across the year, zero included. */
-export const cumulativeFit = (config: Config): { min: number; max: number } => {
-  const values = map((m: number) => cumulativeDelta(config, m), MONTH_INDICES);
+export const cumulativeFit = (
+  config: Config,
+  lastMonth = 11,
+): { min: number; max: number } => {
+  const values = map(
+    (m: number) => cumulativeDelta(config, m),
+    filter((m: number) => m <= lastMonth, MONTH_INDICES),
+  );
   return { min: Math.min(0, ...values), max: Math.max(0, ...values) };
 };

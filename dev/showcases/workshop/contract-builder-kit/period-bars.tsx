@@ -62,7 +62,7 @@ import {
   tallest,
 } from "../contract-builder-model";
 
-const { flatMap, map } = fn;
+const { filter, flatMap, map } = fn;
 
 const WIDTH = 960;
 const HEIGHT = 280;
@@ -120,6 +120,8 @@ export const PeriodBars: Component<{
    * shrinks only when the reader asks). Omitted, the axis fits the bars.
    */
   readonly ceiling?: number;
+  /** The last month drawn (the horizon); omitted, December. */
+  readonly lastMonth?: number;
   /** A grip set one type's hope in one month to `count` whole jobs. */
   readonly onSetCount?: (type: JobType, month: number, count: number) => void;
   /** A bar was double-clicked: type a count in. */
@@ -129,6 +131,7 @@ export const PeriodBars: Component<{
      bar, so a drag that grows the tallest bar would rescale the axis under the
      pointer and the grip would run away from it. */
   const [frozenTop, setFrozenTop] = createSignal<number | null>(null);
+  const last = () => props.lastMonth ?? 11;
   const uid = createUniqueId();
   const hatchId = (i: number) => `cb-hatch-${uid}-${i}`;
   const tintId = (i: number) => `cb-tint-${uid}-${i}`;
@@ -142,7 +145,7 @@ export const PeriodBars: Component<{
         t,
         i,
         n: props.config.types.length,
-        cells: cellsOfType(props.config, t.id),
+        cells: filter((c: Cell) => c.month <= last(), cellsOfType(props.config, t.id)),
       }),
       props.config.types,
     ),
@@ -154,7 +157,7 @@ export const PeriodBars: Component<{
       responsive
       width={WIDTH}
       height={HEIGHT}
-      xDomain={[-0.5, 11.5]}
+      xDomain={[-0.5, last() + 0.5]}
       yDomain={[0, top()]}
       margin={MARGIN}
     >
@@ -186,7 +189,7 @@ export const PeriodBars: Component<{
         tickFormat={money}
       />
       <XAxis
-        tickValues={MONTH_INDICES as number[]}
+        tickValues={filter((m: number) => m <= last(), MONTH_INDICES)}
         tickFormat={(m) => MONTHS[Math.round(m)] ?? ""}
       />
       <Index each={series()}>
