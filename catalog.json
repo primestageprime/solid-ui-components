@@ -13886,7 +13886,7 @@
     "useFor": "mutually-exclusive choices among a small fixed set (view toggles, filters, mode pickers).",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.213.0",
     "file": "src/components/SegmentedInput/SegmentedInput.tsx",
     "line": 61
   },
@@ -15728,7 +15728,7 @@
     "useFor": "projected vs booked per period per category (the Contract Builder's Projections chart).",
     "notes": null,
     "showcase": "#/target-bar-chart",
-    "since": "Unreleased",
+    "since": "0.213.0",
     "file": "src/components/TargetBarChart/TargetBarChart.tsx",
     "line": 157
   },

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.213.0 — 2026-10-08
+
 ### Added
 
 - **`Legend` items accept `swatch?: JSX.Element`** — a mark drawn in place of the colour box, for what a flat `background-color` cannot show (a hatch, an outline, a dash). `LegendItem.color` is now optional (ignored when `swatch` is given). The showcase folds a four-mark pattern legend in a controlled `Section`; the app stores the collapsed preference.
