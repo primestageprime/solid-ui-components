@@ -20,9 +20,11 @@ import {
   type Component,
   Show,
   createEffect,
+  batch,
   createSignal,
   onCleanup,
   splitProps,
+  untrack,
 } from "solid-js";
 import { ICON_PATHS } from "../Icon/Icon";
 import {
@@ -136,7 +138,30 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     "size",
   ]);
 
-  const rawValue = (): number => local.value?.() ?? NaN;
+  // While the input has focus, the field keeps the text the user types.
+  //
+  // A caller that feeds its own state back through `value` (onChange → store
+  // → value) gave kobalte a new `rawValue` after each key. Kobalte then wrote
+  // the FORMATTED amount into the input, with the caret after the cents. From
+  // a blank field, "8" became "$8.00" and the next digits went into the cents
+  // (thorcasting-ui Import Coverage, 2026-10-08).
+  //
+  // So while focused, `rawValue` is the caller's value AT FOCUS, and the
+  // visible text is `focusText`, a signal this component owns that kobalte's
+  // own `onChange` writes. Kobalte stays controlled for the whole focus. An
+  // uncontrolled kobalte keeps a private text that is stale after a clear,
+  // and a controlled "" without a writer refuses every key.
+  //
+  // At blur both go back to the caller. A caller value that changed while
+  // focused (another control set it) shows then, formatted by kobalte's
+  // `rawValue` effect. A blur after a clear shows the caller's value, or a
+  // blank when the caller holds nothing.
+  const [focused, setFocused] = createSignal(false);
+  const [focusValue, setFocusValue] = createSignal<number | undefined>();
+  const [focusText, setFocusText] = createSignal("");
+
+  const rawValue = (): number =>
+    (focused() ? focusValue() : local.value?.()) ?? NaN;
   const handleRawValueChange = (next: number): void => {
     // Kobalte emits `NaN` when the input is cleared; normalize to `undefined`
     // so callers never have to guard on NaN at the form layer.
@@ -170,7 +195,27 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
 
   // `undefined` keeps kobalte uncontrolled, which is what 0.155.0 did: it then
   // owns its own formatted text and this component never re-implements Intl.
-  const displayText = (): string | undefined => (isCleared() ? "" : undefined);
+  //
+  // While focused, `focusText` is the text. Every reader that kobalte reaches
+  // is still a signal this component owns, so #36961 cannot come back.
+  const displayText = (): string | undefined => {
+    if (focused()) return focusText();
+    return isCleared() ? "" : undefined;
+  };
+
+  /** Focus — hold the caller's value and the shown text until blur. */
+  const holdOnFocus = (event: FocusEvent): void => {
+    const input = event.currentTarget as HTMLInputElement;
+    batch(() => {
+      setFocusValue(untrack(() => local.value?.()));
+      setFocusText(input.value);
+      setFocused(true);
+    });
+  };
+  /** Blur — give the field back to the caller's value. */
+  const releaseOnBlur = (): void => {
+    setFocused(false);
+  };
 
   // Kobalte merges a default `maxValue` of `Number.MAX_SAFE_INTEGER`, and its
   // spin-button sends `End` straight to that bound, `Home` to the negative
@@ -220,16 +265,20 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     if (input.selectionStart === input.selectionEnd) input.select();
   };
 
-  /** Ref callback — attaches the caret guard and select-on-focus for the
-   *  life of the input. */
+  /** Ref callback — attaches the caret guard, the focus hold and
+   *  select-on-focus for the life of the input. */
   const wireInput = (input: HTMLInputElement): void => {
     input.addEventListener("keydown", suppressUnboundedJump, true);
     input.addEventListener("mousedown", armClickFocus);
+    input.addEventListener("focus", holdOnFocus);
+    input.addEventListener("blur", releaseOnBlur);
     input.addEventListener("focus", selectAllOnFocus);
     input.addEventListener("mouseup", keepFocusSelection);
     onCleanup(() => {
       input.removeEventListener("keydown", suppressUnboundedJump, true);
       input.removeEventListener("mousedown", armClickFocus);
+      input.removeEventListener("focus", holdOnFocus);
+      input.removeEventListener("blur", releaseOnBlur);
       input.removeEventListener("focus", selectAllOnFocus);
       input.removeEventListener("mouseup", keepFocusSelection);
     });
@@ -276,6 +325,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       style={{ "max-width": maxWidth() }}
       name={local.name}
       value={displayText()}
+      onChange={setFocusText}
       rawValue={rawValue()}
       onRawValueChange={handleRawValueChange}
       minValue={local.min}

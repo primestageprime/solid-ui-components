@@ -16052,7 +16052,7 @@
     "showcase": "#/themed-number-input",
     "since": "v0.7.0",
     "file": "src/components/ThemedNumberInput/ThemedNumberInput.tsx",
-    "line": 124
+    "line": 126
   },
   {
     "name": "ThemedTextarea",

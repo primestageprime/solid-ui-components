@@ -8,6 +8,10 @@
 
 - **`ContentAutoGrowChartFrame`** — the content-height twin of `FillAutoGrowChartFrame`: a frame as tall as its chart whose y-axis only ever auto-grows, with one fit button.
 
+### Fixed
+
+- **`ThemedNumberInput` (and so `CurrencyInput` and every curried number or money field) keeps the text the user types while it has focus.** A controlled caller (`onChange` writes the state that `value` reads) made the field write the formatted amount back after each key, with the caret after the cents. From a blank field, typing `850000` showed `$500008.00`. While focused, the field now holds the caller's value from the moment of focus. At blur it shows the caller's current value, formatted. A caller value that changes while the field has focus shows at blur. A clear while focused still reports `onChange(undefined)` and the field stays blank. No API change. Consumers can remove a focus-hold wrapper (thorcasting-ui `HeldCurrencyInput`).
+
 ## 0.213.0 — 2026-10-08
 
 ### Added
