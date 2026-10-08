@@ -8,6 +8,7 @@
 //
 //   Chart (fixed 22×14, no margin) per swatch
 //   BarSeries + HatchPattern   solid / translucent / hatched / cross-hatch
+//   AreaSeries                 the running divergence's ahead / behind areas
 //   LineSeries                 the projection outline; the running line
 //   ReferenceLine              the dashed NOW rule
 //   LooseWrapRow / TightClusterRow + TextSublabel   the layout and labels
@@ -17,6 +18,7 @@
 // ============================================
 import { type Component, For, type JSX, createUniqueId } from "solid-js";
 import {
+  AreaSeries,
   BarSeries,
   Chart,
   HatchPattern,
@@ -57,6 +59,22 @@ const Block: Component<{ readonly fill: string }> = (props) => (
   />
 );
 
+/** A rising wedge of area, for the running-divergence chart's marks. */
+const SWELL = [
+  { x: 0, y: 0.15 },
+  { x: 1, y: 0.9 },
+];
+const Swell: Component<{ readonly fill: string; readonly opacity: number }> = (props) => (
+  <AreaSeries
+    data={SWELL}
+    x={(p) => p.x}
+    y={(p) => p.y}
+    baseline={0}
+    fill={props.fill}
+    fillOpacity={props.opacity}
+  />
+);
+
 const Swatch: Component<{ readonly mark: Mark }> = (props) => {
   const uid = createUniqueId();
   const id = (k: string) => `cb-legend-${k}-${uid}`;
@@ -91,11 +109,11 @@ const Swatch: Component<{ readonly mark: Mark }> = (props) => {
           </>
         );
       case "ahead":
-        return <Block fill="var(--sui-success)" />;
+        return <Swell fill="var(--sui-success)" opacity={0.55} />;
       case "behind":
-        return <Block fill="var(--sui-danger)" />;
+        return <Swell fill="var(--sui-danger)" opacity={0.55} />;
       case "outlook":
-        return <Block fill={`url(#${id("tint")})`} />;
+        return <Swell fill={NEUTRAL} opacity={0.2} />;
       case "now":
         return (
           <ReferenceLine
@@ -169,7 +187,7 @@ export const BAR_MARKS: readonly PatternItem[] = [
 export const CUMULATIVE_MARKS: readonly PatternItem[] = [
   { mark: "ahead", label: "Green = ahead of the total projection" },
   { mark: "behind", label: "Red = behind the total projection" },
-  { mark: "outlook", label: "Translucent = from NOW on: signed work vs projection" },
+  { mark: "outlook", label: "Lighter = from NOW on: only work beyond the projection" },
   { mark: "line", label: "Solid line = actual running total" },
   { mark: "dashed", label: "Dashed line = outlook after NOW" },
   { mark: "now", label: "Dashed rule = NOW" },

@@ -4,10 +4,10 @@
 // COMPOSED from SUI, no CSS of its own, on the SAME month axis as PeriodBars:
 //
 //   Chart (index x, responsive) + Grid + YAxis + XAxis (month ticks)
-//   BarSeries           one signed bar per month, from the zero baseline:
-//                       ahead above in green, behind below in red
-//   HatchPattern x2     the flat tints for months from NOW on (signed future
-//                       work vs hope), so actual and outlook read apart
+//   AreaSeries x4       the running total filled against zero: green above
+//                       (ahead), red below (behind), split exactly at each
+//                       zero crossing; solid to the last actual month,
+//                       translucent from NOW on (Peter, 2026-10-08)
 //   LineSeries x2       the running total through the bar ends: solid up to
 //                       NOW, dashed after it
 //   ReferenceLine x2    the zero baseline, and NOW
@@ -16,17 +16,14 @@
 // draw their own x axis and size, so they cannot share this month axis or a
 // NOW rule with the bars above, and they have no way to tell actual months
 // from outlook months; their floor/ceiling band has no meaning against a zero
-// baseline. An area shaded by side (DeviationBand / AreaSeries) needs CSS
-// classes or a fill prop that Chart.css still overrides (`.sui-chart__area`,
-// the twin of the LineSeries stroke bug fixed in #269), so the sides are
-// signed bars, whose segment fill works.
+// baseline. The sides are AreaSeries with their own `fill` (which paints since
+// #272 fixed Chart.css's override); DeviationBand would need CSS classes.
 // ============================================
-import { type Component, createMemo, createUniqueId } from "solid-js";
+import { type Component, createMemo } from "solid-js";
 import {
-  BarSeries,
+  AreaSeries,
   Chart,
   Grid,
-  HatchPattern,
   LineSeries,
   ReferenceLine,
   XAxis,
@@ -51,6 +48,11 @@ const MARGIN = { top: 12, right: 12, bottom: 26, left: 52 };
 
 const AHEAD = "var(--sui-success)";
 const BEHIND = "var(--sui-danger)";
+
+interface Vertex {
+  readonly x: number;
+  readonly y: number;
+}
 
 interface Point {
   readonly month: number;
@@ -84,9 +86,6 @@ export const CumulativeDivergence: Component<{
   readonly size?: { readonly width: number; readonly height: number };
 }> = (props) => {
   const last = () => props.lastMonth ?? monthsOf(props.config).length - 1;
-  const uid = createUniqueId();
-  const aheadTint = `cb-cum-ahead-${uid}`;
-  const behindTint = `cb-cum-behind-${uid}`;
   const points = createMemo((): readonly Point[] =>
     map(
       (m: number) => ({
@@ -114,12 +113,33 @@ export const CumulativeDivergence: Component<{
   const outlook = createMemo(() =>
     filter((p: Point) => p.month >= monthOf(props.today) - 1, points()),
   );
-  const fillOf = (p: Point): string =>
-    p.past
-      ? p.value >= 0
-        ? AHEAD
-        : BEHIND
-      : `url(#${p.value >= 0 ? aheadTint : behindTint})`;
+  /*
+   * THE AREA (Peter, 2026-10-08): the running total filled against zero —
+   * green above, red below — split EXACTLY at each zero crossing (a crossing
+   * vertex is inserted between two months of opposite sign), so each side
+   * takes its own colour. Solid up to the last actual month; translucent from
+   * there on, under the dashed outlook line.
+   */
+  const boundary = () => monthOf(props.today) - 1;
+  const traced = createMemo((): readonly Vertex[] => {
+    const ps = points();
+    const out: Vertex[] = [];
+    for (let k = 0; k < ps.length; k++) {
+      const p = ps[k];
+      const prev = ps[k - 1];
+      if (prev && Math.sign(prev.value) * Math.sign(p.value) < 0) {
+        const t = prev.value / (prev.value - p.value);
+        out.push({ x: prev.month + t, y: 0 });
+      }
+      out.push({ x: p.month, y: p.value });
+    }
+    return out;
+  });
+  const part = (side: 1 | -1, past: boolean) => () =>
+    map(
+      (v: Vertex) => ({ x: v.x, y: side > 0 ? Math.max(0, v.y) : Math.min(0, v.y) }),
+      filter((v: Vertex) => (past ? v.x <= boundary() : v.x >= boundary()), traced()),
+    );
   return (
     <Chart
       responsive={props.size === undefined}
@@ -129,23 +149,16 @@ export const CumulativeDivergence: Component<{
       yDomain={[domain()[0], domain()[1]]}
       margin={MARGIN}
     >
-      <defs>
-        <HatchPattern id={aheadTint} color={AHEAD} groundOpacity={0.35} stripeOpacity={0} />
-        <HatchPattern id={behindTint} color={BEHIND} groundOpacity={0.35} stripeOpacity={0} />
-      </defs>
       <Grid tickCount={4} />
       <YAxis tickValues={ticks()} tickFormat={money} />
       <XAxis
         tickValues={filter((m: number) => m <= last(), monthsOf(props.config))}
         tickFormat={(m) => monthLabel(Math.round(m))}
       />
-      <BarSeries
-        data={points()}
-        x={(p) => p.month}
-        bandWidth={0.7}
-        segments={(p) => [{ value: p.value, fill: fillOf(p), key: "cum" }]}
-        onBarClick={(p) => console.table([p])}
-      />
+      <AreaSeries data={part(1, true)()} x={(v) => v.x} y={(v) => v.y} baseline={0} fill={AHEAD} fillOpacity={0.55} />
+      <AreaSeries data={part(-1, true)()} x={(v) => v.x} y={(v) => v.y} baseline={0} fill={BEHIND} fillOpacity={0.55} />
+      <AreaSeries data={part(1, false)()} x={(v) => v.x} y={(v) => v.y} baseline={0} fill={AHEAD} fillOpacity={0.2} />
+      <AreaSeries data={part(-1, false)()} x={(v) => v.x} y={(v) => v.y} baseline={0} fill={BEHIND} fillOpacity={0.2} />
       <LineSeries
         data={actual()}
         x={(p) => p.month}
