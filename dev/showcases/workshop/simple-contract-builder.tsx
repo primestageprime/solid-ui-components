@@ -440,19 +440,23 @@ const SimpleContractBuilder: Component = () => {
   });
   /* D is a render function: BuilderBoard hands it the card's measured box, and
      the texts the leaders would draw decide whether they fit. */
-  const panelD = (box: () => BuilderBoardPanelBox) => (
-    <>
-      <TextTitle>Rate, right now</TextTitle>
-      <GrowCenterColumn>
-        <Show
-          when={calloutModeFor(box(), rateGaugeCalloutLabels({ ...dial(), ...DIAL_WORDING })) === "leaders"}
-          fallback={<CornerDial {...dial()} />}
-        >
-          <LeaderDial {...dial()} />
-        </Show>
-      </GrowCenterColumn>
-    </>
-  );
+  const panelD = (box: () => BuilderBoardPanelBox) => {
+    /* The mode the rail shows now feeds the next decision (`previous`), so a
+       resize hovering on the breakpoint switches once, not on every pixel. */
+    const mode = createMemo<"leaders" | "corners">((previous) =>
+      calloutModeFor(box(), rateGaugeCalloutLabels({ ...dial(), ...DIAL_WORDING }), previous),
+    );
+    return (
+      <>
+        <TextTitle>Rate, right now</TextTitle>
+        <GrowCenterColumn>
+          <Show when={mode() === "leaders"} fallback={<CornerDial {...dial()} />}>
+            <LeaderDial {...dial()} />
+          </Show>
+        </GrowCenterColumn>
+      </>
+    );
+  };
 
   const panelA = (
     <FillChartFrame
