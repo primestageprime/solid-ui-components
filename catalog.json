@@ -3729,7 +3729,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/DatePicker/DatePicker.tsx",
-    "line": 67
+    "line": 94
   },
   {
     "name": "createDayOfMonthPicker",
@@ -5136,7 +5136,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/SegmentedInput/SegmentedInput.tsx",
-    "line": 179
+    "line": 206
   },
   {
     "name": "createSlider",
@@ -6540,7 +6540,7 @@
     "showcase": null,
     "since": "0.68.0",
     "file": "src/components/DatePicker/DatePicker.tsx",
-    "line": 32
+    "line": 44
   },
   {
     "name": "DateRangePicker",
@@ -9519,7 +9519,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 312
+    "line": 313
   },
   {
     "name": "HUDTabs",
@@ -10477,7 +10477,7 @@
     "showcase": "#/legend",
     "since": "0.66.0",
     "file": "src/components/Legend/Legend.tsx",
-    "line": 65
+    "line": 72
   },
   {
     "name": "LevelsRailChart",
@@ -13886,9 +13886,9 @@
     "useFor": "mutually-exclusive choices among a small fixed set (view toggles, filters, mode pickers).",
     "notes": null,
     "showcase": null,
-    "since": null,
+    "since": "0.212.0",
     "file": "src/components/SegmentedInput/SegmentedInput.tsx",
-    "line": 55
+    "line": 61
   },
   {
     "name": "Select",
@@ -15712,6 +15712,25 @@
     "since": null,
     "file": "src/components/Layout/variants.ts",
     "line": 233
+  },
+  {
+    "name": "TargetBarChart",
+    "depth": 2,
+    "kind": "composite",
+    "family": "TargetBarChart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2), zero CSS, no raw SVG/HTML.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "projected vs booked per period per category (the Contract Builder's Projections chart).",
+    "notes": null,
+    "showcase": "#/target-bar-chart",
+    "since": "Unreleased",
+    "file": "src/components/TargetBarChart/TargetBarChart.tsx",
+    "line": 157
   },
   {
     "name": "TextBody",

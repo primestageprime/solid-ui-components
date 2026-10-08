@@ -131,6 +131,7 @@ import { SliderShowcase } from "./showcases/slider";
 import { ExtractionBoardShowcase } from "./showcases/extraction-board";
 import { BurndownChartShowcase } from "./showcases/burndown-chart";
 import { SignedAreaChartShowcase } from "./showcases/signed-area-chart";
+import { TargetBarChartShowcase } from "./showcases/target-bar-chart";
 import { CompletionTimelineShowcase } from "./showcases/completion-timeline";
 import { LevelsTimelineShowcase } from "./showcases/levels-timeline";
 import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
@@ -599,6 +600,12 @@ const items: Item[] = [
     id: "signed-area-chart",
     label: "SignedAreaChart",
     component: SignedAreaChartShowcase,
+    tags: ["depth:2", "chart", "time", "data"],
+  },
+  {
+    id: "target-bar-chart",
+    label: "TargetBarChart",
+    component: TargetBarChartShowcase,
     tags: ["depth:2", "chart", "time", "data"],
   },
   {
