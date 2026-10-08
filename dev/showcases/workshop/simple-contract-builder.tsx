@@ -134,6 +134,12 @@ const HORIZONS = [
   { id: "365", label: "1y" },
 ];
 
+/** How the Hopes chart draws the hope — Peter is comparing the two. */
+const HOPE_VIEWS = [
+  { id: "bars", label: "Bars" },
+  { id: "area", label: "Area" },
+];
+
 type Tab = "contracts" | "hopes";
 const TABS = [
   { id: "contracts", label: "Contracts" },
@@ -165,6 +171,7 @@ const SimpleContractBuilder: Component = () => {
   const [contracts, setContracts] = createSignal<readonly Contract[]>(CONTRACTS);
   const [tab, setTab] = createSignal<Tab>("contracts");
   const [horizon, setHorizon] = createSignal("365");
+  const [hopeView, setHopeView] = createSignal<"bars" | "area">("bars");
   /** A and B draw the whole year; the horizon scopes ONLY the Hopes bars. */
   const endDay = () => DAYS.length - 1;
   /** The Hopes bars' last day: NOW + the horizon, capped at the data's year end. */
@@ -345,6 +352,11 @@ const SimpleContractBuilder: Component = () => {
           yTitle="Revenue ($)"
           actions={
             <ClusterRow>
+              <SegmentedInput
+                options={HOPE_VIEWS}
+                value={hopeView()}
+                onChange={(id) => setHopeView(id as "bars" | "area")}
+              />
               <SegmentedInput options={HORIZONS} value={horizon()} onChange={setHorizon} />
               <IconOnlyButton
                 onClick={barsAxis.reset}
@@ -359,6 +371,7 @@ const SimpleContractBuilder: Component = () => {
           <PeriodBars
             config={plan()}
             lastMonth={lastMonth()}
+            hopeAs={hopeView()}
             ceiling={barsAxis.domain()?.[1]}
             today={TODAY}
             onSetCount={(t, m, n) => setCount(t.id, m, n)}

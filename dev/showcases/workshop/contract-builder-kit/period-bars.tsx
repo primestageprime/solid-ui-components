@@ -32,11 +32,13 @@ import {
   type Component,
   For,
   Index,
+  Show,
   createMemo,
   createSignal,
   createUniqueId,
 } from "solid-js";
 import {
+  AreaSeries,
   BarSeries,
   Chart,
   Grid,
@@ -105,6 +107,16 @@ const outlineOf = (cells: readonly Cell[], offset: number): readonly Pt[] =>
     cells,
   );
 
+/** A hope as steps: flat across each whole month, so the area reads per month. */
+const stepsOf = (cells: readonly Cell[]): readonly Pt[] =>
+  flatMap(
+    (c: Cell): Pt[] => [
+      { x: c.month - 0.5, y: c.projected },
+      { x: c.month + 0.5, y: c.projected },
+    ],
+    cells,
+  );
+
 /** A round y top a little above the tallest bar. */
 const niceTop = (v: number): number => Math.max(1000, Math.ceil((v * 1.08) / 5000) * 5000);
 
@@ -122,6 +134,13 @@ export const PeriodBars: Component<{
   readonly ceiling?: number;
   /** The last month drawn (the horizon); omitted, December. */
   readonly lastMonth?: number;
+  /**
+   * How the HOPE is drawn: `"bars"` (the default) a hollow outline per type per
+   * month; `"area"` each type's hope as a translucent STEPPED area across the
+   * whole month — "this month's target" — with the booked marks over it and
+   * the grips on its top edge. Peter is comparing the two.
+   */
+  readonly hopeAs?: "bars" | "area";
   /** A grip set one type's hope in one month to `count` whole jobs. */
   readonly onSetCount?: (type: JobType, month: number, count: number) => void;
   /** A bar was double-clicked: type a count in. */
@@ -199,6 +218,28 @@ export const PeriodBars: Component<{
         tickValues={filter((m: number) => m <= last(), monthsOf(props.config))}
         tickFormat={(m) => monthLabel(Math.round(m))}
       />
+      <Show when={props.hopeAs === "area"}>
+        <Index each={series()}>
+          {(s) => (
+            <>
+              <AreaSeries
+                data={stepsOf(s().cells)}
+                x={(p) => p.x}
+                y={(p) => p.y}
+                fill={TYPE_COLORS[s().i]}
+                fillOpacity={0.16}
+              />
+              <LineSeries
+                data={stepsOf(s().cells)}
+                x={(p) => p.x}
+                y={(p) => p.y}
+                stroke={TYPE_COLORS[s().i]}
+                strokeWidth={1.5}
+              />
+            </>
+          )}
+        </Index>
+      </Show>
       <Index each={series()}>
         {(s) => (
           <>
@@ -232,13 +273,15 @@ export const PeriodBars: Component<{
                 { value: missingOf(c, props.today), fill: `url(#${missB})`, key: "missing" },
               ]}
             />
-            <LineSeries
-              data={outlineOf(s().cells, offsetOf(s().i, s().n))}
-              x={(p) => p.x}
-              y={(p) => p.y}
-              stroke={TYPE_COLORS[s().i]}
-              strokeWidth={1.5}
-            />
+            <Show when={props.hopeAs !== "area"}>
+              <LineSeries
+                data={outlineOf(s().cells, offsetOf(s().i, s().n))}
+                x={(p) => p.x}
+                y={(p) => p.y}
+                stroke={TYPE_COLORS[s().i]}
+                strokeWidth={1.5}
+              />
+            </Show>
             <ValueHandle
               data={s().cells}
               x={(c) => c.month + offsetOf(s().i, s().n)}
