@@ -29,6 +29,11 @@ import { type Component, Show, createMemo, createSignal } from "solid-js";
 import {
   BuilderBoard,
   ContentChartFrame,
+  CurrencyInput,
+  DatePicker,
+  GhostButton,
+  PrimaryButton,
+  TightStack,
   ClusterRow,
   CompactTable,
   CompliantBadge,
@@ -74,7 +79,10 @@ import {
   type DayFlow,
   asPlan,
   dailyFlows,
+  type ContractEdit,
+  applyEdit,
   ratePerWeek,
+  valueOf,
 } from "./simple-contract-builder.model";
 import {
   type JobType,
@@ -93,7 +101,6 @@ const { map } = fn;
 export const meta = { label: "Simple Contract Builder" };
 
 const ButtonIcon = createIcon({ variant: "outline", size: "sm" });
-const SolidIcon = createIcon({ variant: "solid", size: "sm" });
 
 const TYPE_NAME: Readonly<Record<TypeId, string>> = {
   O: "Exterior",
@@ -101,8 +108,11 @@ const TYPE_NAME: Readonly<Record<TypeId, string>> = {
   F: "Furniture",
 };
 
-/** A contract's value: the sum of its payments. */
-const valueOf = (c: Contract): number => c.payments.reduce((a, p) => a + p.amount, 0);
+/** The Edit form's status choice. */
+const STATUSES = [
+  { id: "Confirmed", label: "Confirmed" },
+  { id: "Planned", label: "Planned" },
+];
 
 /** The Hourly Board's dial, word for word: rate against breakeven, in $/wk. */
 const DIAL_WORDING = {
@@ -172,6 +182,26 @@ const SimpleContractBuilder: Component = () => {
     console.table([{ type, month: MONTHS[month], count, $: count * t.typical }]);
     setHopes((ts) => withCount({ types: ts, jobs: [] }, type, month, count).types);
   };
+  /* THE EDIT FORM — a draft, applied only on Save. */
+  const [editing, setEditing] = createSignal<Contract | null>(null);
+  const [draft, setDraft] = createSignal<ContractEdit | null>(null);
+  const openEdit = (c: Contract) => {
+    setEditing(c);
+    setDraft({ locked: c.locked, start: c.start, status: c.status, est: valueOf(c) });
+  };
+  const closeEdit = () => {
+    setEditing(null);
+    setDraft(null);
+  };
+  const saveEdit = () => {
+    const c = editing();
+    const d = draft();
+    if (c && d) edit(c.id, (x) => applyEdit(x, d, TODAY));
+    closeEdit();
+  };
+  const patch = (change: Partial<ContractEdit>) =>
+    setDraft((d) => (d ? { ...d, ...change } : d));
+
   const entryType = () => hopes().find((t) => t.id === entry()?.type);
 
   const flows = createMemo(() => dailyFlows(hopes(), contracts(), TODAY));
@@ -239,18 +269,16 @@ const SimpleContractBuilder: Component = () => {
 
   const columns: TableColumn<Contract>[] = [
     {
-      id: "lock",
+      id: "edit",
       header: "",
       width: "48px",
       accessor: (c) => (
         <IconOnlyButton
-          onClick={() => edit(c.id, (x) => ({ ...x, locked: !x.locked }))}
-          aria-label={c.locked ? `Unlock ${c.name}` : `Lock ${c.name}`}
-          title={c.locked ? "Locked. Click to unlock." : "Lock against automated changes"}
+          onClick={() => openEdit(c)}
+          aria-label={`Edit ${c.name}`}
+          title={c.locked ? `Edit ${c.name} (locked)` : `Edit ${c.name}`}
         >
-          <Show when={c.locked} fallback={<ButtonIcon name="lock-open" />}>
-            <SolidIcon name="lock" />
-          </Show>
+          <ButtonIcon name="edit" />
         </IconOnlyButton>
       ),
     },
@@ -417,6 +445,45 @@ const SimpleContractBuilder: Component = () => {
         panelC={panelC}
         panelD={panelD}
       />
+      <Show when={editing()}>
+        {(c) => (
+          <Modal open onClose={closeEdit} title={`Edit ${c().name}`} subtitle={`#${c().id} · ${TYPE_NAME[c().type]}`}>
+            <TightStack>
+              <TruthToggle
+                label="Locked"
+                checked={draft()?.locked ?? false}
+                onCheckedChange={(on) => patch({ locked: on })}
+              />
+              <TextSublabel>Start date</TextSublabel>
+              <DatePicker value={draft()?.start ?? ""} onChange={(iso) => iso && patch({ start: iso })} />
+              <TextSublabel>Status</TextSublabel>
+              <SegmentedInput
+                options={STATUSES}
+                value={draft()?.status ?? "Planned"}
+                onChange={(id) => patch({ status: id as ContractEdit["status"] })}
+              />
+              <CurrencyInput
+                name="est"
+                label="Est"
+                min={0}
+                step={100}
+                value={() => draft()?.est}
+                onChange={(v) => {
+                  if (v !== undefined) patch({ est: Math.max(0, v) });
+                }}
+              />
+              <NoteText>
+                A new start moves every payment by the same number of days; a
+                new est scales every payment, keeping each one's share.
+              </NoteText>
+              <ClusterRow>
+                <PrimaryButton onClick={saveEdit}>Save</PrimaryButton>
+                <GhostButton onClick={closeEdit}>Cancel</GhostButton>
+              </ClusterRow>
+            </TightStack>
+          </Modal>
+        )}
+      </Show>
       <Show when={entry()}>
         {(e) => (
           <Modal

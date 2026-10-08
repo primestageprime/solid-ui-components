@@ -117,3 +117,51 @@ export const ratePerWeek = (
 ): number =>
   sum(map((f: DayFlow) => f.actual + f.outlook, dailyFlows(types, contracts, today))) / 52 -
   fixedWeeklyCost;
+
+// ── editing a contract ──────────────────────────────────────────────────────
+
+/** What the Edit form changes. */
+export interface ContractEdit {
+  readonly locked: boolean;
+  readonly start: string;
+  readonly status: Status;
+  /** The contract's value: the sum of its payments. */
+  readonly est: number;
+}
+
+const shiftIso = (iso: string, days: number): string =>
+  new Date(Date.parse(`${iso}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
+
+/** A contract's value: the sum of its payments. */
+export const valueOf = (c: Contract): number => sum(map((p: Payment) => p.amount, c.payments));
+
+/**
+ * Apply an edit. A new START shifts every payment date by the same number of
+ * days (a payment shifted past NOW is no longer invoiced, and one shifted
+ * before it is). A new EST scales every payment by the same factor, so the
+ * deposit / progress / final keep their shares; the last payment takes the
+ * rounding so the payments still sum to the est exactly.
+ */
+export const applyEdit = (c: Contract, e: ContractEdit, today: string): Contract => {
+  const delta = Math.round((Date.parse(`${e.start}T00:00:00Z`) - Date.parse(`${c.start}T00:00:00Z`)) / DAY_MS);
+  const old = valueOf(c);
+  const factor = old > 0 ? e.est / old : 0;
+  const scaled = map((p: Payment) => Math.round(p.amount * factor), c.payments);
+  const drift = e.est - sum(scaled);
+  const last = c.payments.length - 1;
+  return {
+    ...c,
+    locked: e.locked,
+    status: e.status,
+    start: e.start,
+    payments: map((p: Payment, i: number) => {
+      const on = shiftIso(p.on, delta);
+      return {
+        ...p,
+        on,
+        amount: scaled[i] + (i === last ? drift : 0),
+        invoiced: delta === 0 ? p.invoiced : on < today,
+      };
+    }, c.payments),
+  };
+};

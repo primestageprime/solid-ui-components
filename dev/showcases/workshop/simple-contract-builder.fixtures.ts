@@ -1,9 +1,9 @@
 /**
  * Simple Contract Builder bench — example data, reused from Contract Builder:
  * the same three hopes and the same jobs, NOW = April 15, plus four quotes.
- * Status (Peter, 2026-10-08): the first two rows by start and two others are
- * CONFIRMED; every other contract is PLANNED. Every contract starts switched
- * on, and every toggle works.
+ * Status (Peter, 2026-10-08): any contract with an invoiced payment is
+ * CONFIRMED; the rest — future work only — are PLANNED. Every contract starts
+ * switched on, and every toggle works.
  */
 import { map } from "../../../src/fn";
 import type { Job } from "./contract-builder-model";
@@ -20,13 +20,14 @@ import type { Contract } from "./simple-contract-builder.model";
 export { TODAY };
 export const TYPES = [EXTERIOR, INTERIOR, FURNITURE] as const;
 
-/** The Confirmed few: the first two by start, and two others. */
-const CONFIRMED_IDS = new Set(["i-okafor", "i-basement", "westfield", "alvarez"]);
-
+/**
+ * Billed work is signed work (Peter, 2026-10-08): a contract with ANY invoiced
+ * payment is Confirmed; Planned is only for work not yet billed.
+ */
 const contractOf = (j: Job): Contract => ({
   ...j,
   use: true,
-  status: CONFIRMED_IDS.has(j.id) ? "Confirmed" : "Planned",
+  status: j.payments.some((p) => p.invoiced) ? "Confirmed" : "Planned",
   locked: false,
 });
 
