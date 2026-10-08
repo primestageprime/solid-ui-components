@@ -45,6 +45,25 @@ if ! node scripts/gate.mjs --pre-push; then
   exit 1
 fi
 
+# Component catalog freshness — CI's health job runs `npm run catalog -- --check`
+# (.github/workflows/ci.yml), but scripts/gate.mjs has no step for it, so a stale
+# catalog.json (COMPONENTS.md, CHANGELOG.md, dev/main.tsx or src/ edited without
+# `npm run catalog`) only failed in CI. Seven red runs on 2026-10-08 were all
+# this. Unlike the usage manifest below, catalog.json is built purely from THIS
+# repo, so it BLOCKS.
+echo "pre-push: catalog freshness (npm run catalog -- --check)…"
+if ! npm run --silent catalog -- --check; then
+  {
+    echo ""
+    echo "══════════════════════════════════════════════════════════════"
+    echo " ✗ PUSH BLOCKED — catalog.json is stale"
+    echo ""
+    echo "   npm run catalog     # regenerate, then commit catalog.json"
+    echo "══════════════════════════════════════════════════════════════"
+  } >&2
+  exit 1
+fi
+
 # Production usage manifest freshness — does docs/usage-manifest.json still
 # match what the SUI-consuming production repos import (scripts/usage-manifest.mjs)?
 #
