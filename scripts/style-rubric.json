@@ -234,9 +234,6 @@
     ],
     "dev/showcases/dag-chart.tsx": [
       "cssvar"
-    ],
-    "dev/showcases/workshop/animation-lab.tsx": [
-      "cssvar"
     ]
   }
 }
