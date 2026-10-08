@@ -108,3 +108,30 @@ describe("ValueHandle", () => {
     ]);
   });
 });
+
+describe("ValueHandle — armed grip", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("thickens around its centre on hover and focus, and moves nothing else", () => {
+    const { container } = mount(() => [{ x: 0.5, v: 30 }, { x: 1.5, v: 80 }], []);
+    const [a, b] = container.querySelectorAll(".sui-chart__value-handle-grip");
+    const handle = container.querySelector(".sui-chart__value-handle") as Element;
+    const before = { y: Number(a.getAttribute("y")), h: Number(a.getAttribute("height")) };
+    const other = b.outerHTML;
+    fireEvent.pointerEnter(handle);
+    expect(a.hasAttribute("data-armed")).toBe(true);
+    const after = { y: Number(a.getAttribute("y")), h: Number(a.getAttribute("height")) };
+    expect(after.h).toBeGreaterThan(before.h);
+    // Same centre line: the value it marks has not moved.
+    expect(after.y + after.h / 2).toBe(before.y + before.h / 2);
+    expect(b.outerHTML).toBe(other);
+    fireEvent.pointerLeave(handle);
+    expect(a.hasAttribute("data-armed")).toBe(false);
+    fireEvent.focus(a);
+    expect(a.hasAttribute("data-armed")).toBe(true);
+    fireEvent.blur(a);
+    expect(a.hasAttribute("data-armed")).toBe(false);
+  });
+});
