@@ -2758,7 +2758,7 @@
     "useFor": null,
     "notes": "The content-height frame whose y-axis only ever AUTO-GROWS: the `FillAutoGrowChartFrame` for a chart that sets its own height (a chart in a scrolling panel). Wire `onYAxisPress` to `createAxisWaterMarks(...).reset`.",
     "showcase": "#/chart-frame",
-    "since": "Unreleased",
+    "since": "0.214.0",
     "file": "src/components/ChartFrame/variants.ts",
     "line": 51
   },
