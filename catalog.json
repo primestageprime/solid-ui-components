@@ -733,7 +733,7 @@
     "useFor": "a monthly review page's \"where are we, and how did we get here\" chart.",
     "notes": null,
     "showcase": "#/balance-review-chart",
-    "since": "Unreleased",
+    "since": "0.216.0",
     "file": "src/components/BalanceReviewChart/BalanceReviewChart.tsx",
     "line": 104
   },
@@ -14873,7 +14873,7 @@
     "useFor": "a list of cards that each pair a block of figures with one picture.",
     "notes": "SplitCard — scaffolded by `npm run new:variant -- Surface SplitCard --direction=row --align=center --gap=lg --padding=md --radius=md`.",
     "showcase": "#/surface",
-    "since": "Unreleased",
+    "since": "0.216.0",
     "file": "src/components/Surface/variants.ts",
     "line": 196
   },
@@ -17058,7 +17058,7 @@
     "useFor": "the day-by-day variance under a balance plot (`BalanceReviewChart`), or alone (`VarianceStripChart`).",
     "notes": null,
     "showcase": "#/variance-strip",
-    "since": "Unreleased",
+    "since": "0.216.0",
     "file": "src/components/VarianceStrip/VarianceStrip.tsx",
     "line": 67
   },
@@ -17077,7 +17077,7 @@
     "useFor": "a page that wants the variance bars without the balance lines.",
     "notes": null,
     "showcase": "#/variance-strip-chart",
-    "since": "Unreleased",
+    "since": "0.216.0",
     "file": "src/components/VarianceStripChart/VarianceStripChart.tsx",
     "line": 48
   },

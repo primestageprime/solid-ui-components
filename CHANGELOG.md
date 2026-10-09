@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.216.0 — 2026-10-09
+
 ### Added
 
 - **`BalanceReviewChart`** — a composite (Depth 2) for the month as it happened against the forecast made when it began: the actual balance solid, the frozen forecast dashed from the day it was made, the cash floor as the chart's bottom, dots and captions on the largest variance days through the label ladder, each line's end captioned in the right gutter, and `VarianceStrip` under the plot with one crosshair spanning both. The caller states every word and format.
