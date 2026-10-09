@@ -2778,3 +2778,18 @@ th:has(.tf-th-center) .hud-table__header-content {
 .span-lanes-demo {
   max-width: 760px;
 }
+
+/* BalanceReviewChart showcase demo frame — scaffolded by npm run new:component. */
+.balance-review-chart-demo {
+  padding: 16px;
+}
+
+/* VarianceStrip showcase demo frame — scaffolded by npm run new:component. */
+.variance-strip-demo {
+  padding: 16px;
+}
+
+/* VarianceStripChart showcase demo frame — scaffolded by npm run new:component. */
+.variance-strip-chart-demo {
+  padding: 16px;
+}

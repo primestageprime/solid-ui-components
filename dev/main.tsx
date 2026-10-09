@@ -200,8 +200,12 @@ import { AnimatedSwimlaneChartShowcase } from "./showcases/animated-swimlane-cha
 import { RouterDemoShowcase } from "./showcases/router-demo";
 import { SwimlaneNodeCardShowcase } from "./showcases/swimlane-node-card";
 import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
+import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
+import { VarianceStripChartShowcase } from "./showcases/variance-strip-chart";
+import { VarianceStripShowcase } from "./showcases/variance-strip";
+import { BalanceReviewChartShowcase } from "./showcases/balance-review-chart";
 import { ChannelChartShowcase } from "./showcases/channel-chart";
 import { FullscreenBoxShowcase } from "./showcases/fullscreen-box";
 
@@ -222,6 +226,12 @@ const workshopBenchItems = buildWorkshopItems(
 );
 
 const items: Item[] = [
+  {
+    id: "generated-variants",
+    label: "Generated Variants",
+    component: GeneratedVariantsShowcase,
+    tags: ["workshop"],
+  },
   // Workshop: standalone entry, surfaced via the dedicated sidebar link.
   // Tagged "workshop" so the depth-grouped list filters it out.
   {
@@ -1243,6 +1253,24 @@ const items: Item[] = [
     label: "DAG Traversal · Bulk (sandbox)",
     component: DagTraversalBulkSandboxShowcase,
     tags: [],
+  },
+  {
+    id: "balance-review-chart",
+    label: "BalanceReviewChart",
+    component: BalanceReviewChartShowcase,
+    tags: ["depth:1"],
+  },
+  {
+    id: "variance-strip",
+    label: "VarianceStrip",
+    component: VarianceStripShowcase,
+    tags: ["depth:1"],
+  },
+  {
+    id: "variance-strip-chart",
+    label: "VarianceStripChart",
+    component: VarianceStripChartShowcase,
+    tags: ["depth:2"],
   },
   // Generated component entries (npm run new:component) — appended above this line.
   {

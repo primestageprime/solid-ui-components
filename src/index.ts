@@ -331,6 +331,9 @@ export * from "./hooks";
 export * from "./components/GhostRow";
 export * from "./components/ChannelChart";
 export * from "./components/FullscreenBox";
+export * from "./components/BalanceReviewChart";
+export * from "./components/VarianceStrip";
+export * from "./components/VarianceStripChart";
 
 // Choreography — compose + sequence animation effects across components
 // (collapse/expand/fadeIn/fadeOut/slideDown/rollUp/glowIn/settleIn, step/
