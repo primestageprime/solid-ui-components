@@ -18,3 +18,19 @@
 .sui-sparkline--sawtooth .sui-sparkline__line {
   stroke-width: 1.8;
 }
+
+/* Levels the line is read against (floor, goal): a dotted rule across the
+   strip. Stroke colour comes from the prop, as the line's does. */
+.sui-sparkline__rule {
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+/* The end dot: the last value, in the line's colour. It overhangs the rect's
+   right edge by its radius, so the svg must not clip. */
+.sui-sparkline svg {
+  overflow: visible;
+}
+.sui-sparkline__end {
+  r: 3;
+}

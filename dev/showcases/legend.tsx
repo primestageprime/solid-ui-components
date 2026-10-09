@@ -247,6 +247,25 @@ export const LegendShowcase: Component = () => (
     </div>
 
     <div class="example-group">
+      <h3>Line swatches — solid and dashed, in the series' own stroke</h3>
+      <TightStack>
+        <TextSublabel>
+          <code>line: true</code> draws the swatch as a line in <code>color</code>;{" "}
+          <code>line: {"{ dash }"}</code> carries the series' <code>stroke-dasharray</code>,
+          so a dashed forecast reads as dashed here too.
+        </TextSublabel>
+        <Legend
+          items={[
+            { label: "actual balance", color: "var(--sui-text-primary)", line: true },
+            { label: "forecast", color: "var(--sui-text-secondary)", line: { dash: "5 4" } },
+            { label: "cash floor", color: "var(--sui-danger)", line: { dash: "2 4" } },
+            { label: "cash goal", color: "var(--sui-success)" },
+          ]}
+        />
+      </TightStack>
+    </div>
+
+    <div class="example-group">
       <h3>Illustrative — alarm severity (just one use case)</h3>
       <TightStack>
         <TextSublabel>

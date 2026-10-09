@@ -57,4 +57,39 @@ describe("Sparkline", () => {
     expect(lines[0].getAttribute("points")).toBe("0,10.0 80,10.0");
     expect(lines[1].getAttribute("points")).toBe("");
   });
+
+  it("draws floor and goal rules on the line's scale, and folds them into it", () => {
+    const { container } = render(() => (
+      <Sparkline values={[100, 200]} floor={0} goal={400} width={100} height={44} endDot />
+    ));
+    const rules = container.querySelectorAll(".sui-sparkline__rule");
+    expect(rules.length).toBe(2);
+    const floorY = Number(rules[0]!.getAttribute("y1"));
+    const goalY = Number(rules[1]!.getAttribute("y1"));
+    // The scale runs 0..400, so the floor sits at the bottom pad and the
+    // goal at the top pad, with the line between them.
+    expect(floorY).toBeCloseTo(44 - 1.5, 1);
+    expect(goalY).toBeCloseTo(1.5, 1);
+    expect(rules[0]!.getAttribute("stroke")).toBe("var(--sui-danger)");
+    expect(rules[1]!.getAttribute("stroke")).toBe("var(--sui-success)");
+    const pts = container.querySelector(".sui-sparkline__line")!.getAttribute("points")!.split(" ");
+    const lastY = Number(pts[1].split(",")[1]);
+    expect(lastY).toBeGreaterThan(goalY);
+    expect(lastY).toBeLessThan(floorY);
+    const dot = container.querySelector(".sui-sparkline__end")!;
+    expect(dot.getAttribute("cx")).toBe("100");
+    expect(Number(dot.getAttribute("cy"))).toBeCloseTo(lastY, 1);
+    expect(dot.getAttribute("fill")).toBe("var(--sui-accent)");
+  });
+
+  it("draws no rule and no dot unless asked, and none in sawtooth mode", () => {
+    const { container } = render(() => (
+      <>
+        <Sparkline values={[1, 2]} />
+        <Sparkline values={[1, 2]} mode="sawtooth" floor={0} goal={3} endDot />
+      </>
+    ));
+    expect(container.querySelectorAll(".sui-sparkline__rule").length).toBe(0);
+    expect(container.querySelectorAll(".sui-sparkline__end").length).toBe(0);
+  });
 });
