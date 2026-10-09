@@ -1,0 +1,36 @@
+/* ============================================
+   VarianceStrip — Structural (Depth 1)
+   The kind is a MARK, not a hue: filled, hatched, muted. Every colour is a
+   token, so a theme moves the strip with the chart it sits under.
+   ============================================ */
+.sui-variance-strip__bar--revenue {
+  fill: var(--sui-text-primary);
+}
+/* Costs take the hatch pattern as a fill ATTRIBUTE (an id the slot mints);
+   the outline is the stylesheet's. */
+.sui-variance-strip__bar--costs {
+  stroke: var(--sui-text-primary);
+  stroke-width: 1;
+}
+.sui-variance-strip__bar--other {
+  fill: var(--sui-text-muted);
+}
+.sui-variance-strip__hatch line {
+  stroke: var(--sui-text-primary);
+  stroke-width: 1.5;
+}
+.sui-variance-strip__zero {
+  stroke: var(--sui-border);
+}
+.sui-variance-strip__label,
+.sui-variance-strip__title {
+  fill: var(--sui-text-muted);
+  font-family: var(--sui-font-family, inherit);
+  font-size: 11px;
+}
+.sui-variance-strip__title {
+  fill: var(--sui-text-secondary);
+}
+.sui-variance-strip__guide {
+  stroke: var(--sui-text-secondary);
+}
