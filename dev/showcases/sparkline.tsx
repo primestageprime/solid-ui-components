@@ -54,6 +54,15 @@ export const SparklineShowcase: Component = () => (
     </div>
 
     <div class="example-group">
+      <h3>Levels and the end dot — floor, goal, last value</h3>
+      <Row gap="sm" align="center">
+        <Sparkline values={WAVE} floor={0} goal={60} endDot width={160} height={40} />
+        <Sparkline values={WAVE} goal={45} endDot width={160} height={40} color="var(--sui-text-primary)" />
+        <Sparkline values={WAVE} floor={5} width={160} height={40} />
+      </Row>
+    </div>
+
+    <div class="example-group">
       <h3>Inline — embedding inside text</h3>
       <p class="sparkline-demo__caption">
         Throughput last 14 batches:{" "}

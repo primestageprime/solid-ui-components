@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### Added
+
+- **`BalanceReviewChart`** — a composite (Depth 2) for the month as it happened against the forecast made when it began: the actual balance solid, the frozen forecast dashed from the day it was made, the cash floor as the chart's bottom, dots and captions on the largest variance days through the label ladder, each line's end captioned in the right gutter, and `VarianceStrip` under the plot with one crosshair spanning both. The caller states every word and format.
+
+- **`VarianceStrip`** — a Chart slot (Depth 1): one bar per day of variance against a forecast, up is better, with the kind as a mark rather than a hue (revenue filled, costs hatched, other muted). `placement="below"` draws it in the chart's bottom margin under the plot; `placement="plot"` spans the plot. Pure geometry in `varianceStripGeometry`.
+
+- **`VarianceStripChart`** — the strip on its own (Depth 2): a Chart that is nothing but the bars, the x axis, the ± extent and a tooltip.
+
+- **`SplitCard`** — a `Surface` variant that lays a body and an aside side by side, centred, with a large gap: a scenario's words beside its sparkline.
+
+### Changed
+
+- **`Legend` items can draw a LINE swatch.** `line: true` draws the swatch as a line in the item's `color`; `line: { dash }` carries the series' `stroke-dasharray`, so a dashed line reads as dashed in its legend. A `swatch` element still takes precedence.
+
+- **`Sparkline` draws the levels a line is read against.** `floor` and `goal` draw dotted rules across the strip and fold into the scale, so a rule is always on the rect; `endDot` marks the last value in the line's colour. Line mode only; `floorColor` and `goalColor` default to the danger and success tokens.
+
 ## 0.215.0 — 2026-10-08
 
 ### Fixed

@@ -191,3 +191,12 @@ export const NoticeBar = createSurface({
   bg: "rgba(var(--sui-accent-rgb), 0.05)",
   borderColor: "rgba(var(--sui-accent-rgb), 0.3)",
 });
+
+// SplitCard — scaffolded by `npm run new:variant -- Surface SplitCard --direction=row --align=center --gap=lg --padding=md --radius=md`.
+export const SplitCard: Component<SurfaceDataProps> = createSurface({
+  direction: "row",
+  align: "center",
+  gap: "lg",
+  padding: "md",
+  radius: "md",
+});

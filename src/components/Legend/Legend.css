@@ -42,6 +42,18 @@
   flex-shrink: 0;
 }
 
+/* A line swatch: twice the box's width, the box's height, the series' own
+   stroke and dash. Stroke colour is the item's, set as an attribute. */
+.sui-legend__line {
+  width: calc(var(--sui-legend-swatch-size) * 2);
+  height: var(--sui-legend-swatch-size);
+  flex-shrink: 0;
+  overflow: visible;
+}
+.sui-legend__line line {
+  stroke-width: 2;
+}
+
 .sui-legend__mark {
   display: inline-flex;
   align-items: center;

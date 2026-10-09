@@ -11,6 +11,34 @@ const SERIES_ITEMS: LegendItem[] = [
 const styleOf = (el: Element) =>
   (el as HTMLElement).getAttribute("style") ?? "";
 
+describe("Legend line swatches", () => {
+  it("draws a line in the item colour, solid or with the series' dash", () => {
+    const { container } = render(() => (
+      <Legend
+        items={[
+          { color: "#fff", label: "actual", line: true },
+          { color: "#999", label: "forecast", line: { dash: "5 4" } },
+          { color: "#f00", label: "box" },
+        ]}
+      />
+    ));
+    const lines = container.querySelectorAll(".sui-legend__line line");
+    expect(lines.length).toBe(2);
+    expect(lines[0]!.getAttribute("stroke")).toBe("#fff");
+    expect(lines[0]!.getAttribute("stroke-dasharray")).toBeNull();
+    expect(lines[1]!.getAttribute("stroke-dasharray")).toBe("5 4");
+    expect(container.querySelectorAll(".sui-legend__swatch").length).toBe(1);
+  });
+
+  it("gives a custom swatch precedence over a line", () => {
+    const { container } = render(() => (
+      <Legend items={[{ color: "#fff", label: "a", line: true, swatch: <i class="mark" /> }]} />
+    ));
+    expect(container.querySelector(".sui-legend__line")).toBeNull();
+    expect(container.querySelector(".sui-legend__mark .mark")).not.toBeNull();
+  });
+});
+
 describe("Legend", () => {
   it("renders with the expected root class", () => {
     const { container } = render(() => <Legend items={SERIES_ITEMS} />);

@@ -34,9 +34,21 @@ export interface LegendItem {
    * real mark works well). Decorative; the label carries the meaning.
    */
   swatch?: JSX.Element;
+  /**
+   * Draw the swatch as a LINE in `color` instead of a colour box: a legend
+   * for a line chart names its series by the stroke they draw. `true` is a
+   * solid line; `{ dash }` carries the series' own `stroke-dasharray`, so a
+   * dashed forecast reads as dashed in the legend too. Ignored when
+   * `swatch` is given.
+   */
+  line?: boolean | { readonly dash?: string };
   /** Human-readable label rendered next to the swatch. */
   label: string;
 }
+
+/** The `stroke-dasharray` a line swatch draws with, or undefined for solid. */
+const lineDash = (line: LegendItem["line"]): string | undefined =>
+  typeof line === "object" ? line.dash : undefined;
 
 export interface LegendProps
   extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> {
@@ -118,11 +130,27 @@ export const Legend: Component<LegendProps> = (rawProps) => {
             <Show
               when={item.swatch}
               fallback={
-                <span
-                  class="sui-legend__swatch"
-                  style={{ "background-color": item.color }}
-                  aria-hidden="true"
-                />
+                <Show
+                  when={item.line}
+                  fallback={
+                    <span
+                      class="sui-legend__swatch"
+                      style={{ "background-color": item.color }}
+                      aria-hidden="true"
+                    />
+                  }
+                >
+                  <svg class="sui-legend__line" aria-hidden="true">
+                    <line
+                      x1="0"
+                      x2="100%"
+                      y1="50%"
+                      y2="50%"
+                      stroke={item.color}
+                      stroke-dasharray={lineDash(item.line)}
+                    />
+                  </svg>
+                </Show>
               }
             >
               <span class="sui-legend__mark" aria-hidden="true">
