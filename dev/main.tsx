@@ -161,6 +161,7 @@ import { SectionTableShowcase } from "./showcases/section-table";
 import { LayoutVariantsShowcase } from "./showcases/layout-variants";
 import { VariantCoverageShowcase } from "./showcases/variant-coverage";
 import { ChartSlotsShowcase } from "./showcases/chart-slots";
+import { ChartScheduleSlotsShowcase } from "./showcases/chart-schedule-slots";
 import { TableGridsShowcase } from "./showcases/table-grids";
 import { FormsAndInputsShowcase } from "./showcases/forms-and-inputs";
 import { OperatingWeekShowcase } from "./showcases/operating-week";
@@ -1093,6 +1094,12 @@ const items: Item[] = [
     id: "chart-slots",
     label: "Chart slots",
     component: ChartSlotsShowcase,
+    tags: ["depth:1", "chart", "data", "status"],
+  },
+  {
+    id: "chart-schedule-slots",
+    label: "Chart schedule slots",
+    component: ChartScheduleSlotsShowcase,
     tags: ["depth:1", "chart", "data", "status"],
   },
   {

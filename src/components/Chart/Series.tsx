@@ -57,9 +57,11 @@ const buildLine = <T,>(
 	xs: (v: number) => number,
 	ys: (v: number) => number,
 	skipMissing: boolean,
+	step = false,
 ): string => {
 	let path = "";
 	let need = true;
+	let prevY = "";
 	for (const d of data) {
 		const xv = x(d);
 		const yv = y(d);
@@ -69,8 +71,12 @@ const buildLine = <T,>(
 		}
 		const X = xs(xv).toFixed(2);
 		const Y = ys(yv).toFixed(2);
+		// A step holds the previous y until this x, then rises or falls here:
+		// the corner comes before the point, so the line reads as a stair.
+		if (step && !need && prevY !== Y) path += `L${X},${prevY}`;
 		path += need ? `M${X},${Y}` : `L${X},${Y}`;
 		need = false;
+		prevY = Y;
 	}
 	return path;
 };
@@ -80,6 +86,13 @@ export interface LineSeriesProps<T> extends SeriesBase<T> {
 	stroke?: string;
 	strokeWidth?: number;
 	strokeDasharray?: string;
+	/**
+	 * How the path joins its points. `"linear"` (default) draws a straight
+	 * segment between them. `"step"` holds each y until the next x and turns
+	 * there: a running total that changes only when an event lands, drawn as
+	 * the stair it is, with no slope where nothing happened.
+	 */
+	curve?: "linear" | "step";
 	class?: string;
 }
 
@@ -93,6 +106,7 @@ export function LineSeries<T>(props: LineSeriesProps<T>) {
 			ctx.xScale(),
 			ctx.yScale(),
 			props.skipMissing ?? true,
+			props.curve === "step",
 		),
 	);
 	return (

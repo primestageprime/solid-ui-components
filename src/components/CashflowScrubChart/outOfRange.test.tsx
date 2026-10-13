@@ -8,7 +8,7 @@ import {
   outOfRange,
   outOfRangeTable,
   type RangePoint,
-} from "./outOfRange";
+} from "../Chart/outOfRange";
 import { CashflowScrubChart, type CashflowCell } from "./CashflowScrubChart";
 import { dailyCells } from "../DateAxis";
 
