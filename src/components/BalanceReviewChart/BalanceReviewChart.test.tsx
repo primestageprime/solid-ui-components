@@ -5,6 +5,8 @@ import { BalanceReviewChart } from "./BalanceReviewChart";
 const day = (d: number) => new Date(Date.UTC(2026, 8, d));
 const ACTUAL = [1, 2, 3, 4, 5].map((d) => ({ date: day(d), value: 100_000 + d * 1000 }));
 const FORECAST = [3, 4, 5].map((d) => ({ date: day(d), value: 104_000 }));
+/** A flat line: a caption beside its last point crosses it, so the caption falls to the gutter. */
+const FLAT = [1, 2, 3, 4, 5].map((d) => ({ date: day(d), value: 105_000 }));
 const VARIANCE = [
   { date: day(4), value: 1000, kind: "revenue" as const },
   { date: day(5), value: -500, kind: "costs" as const },
@@ -80,6 +82,29 @@ describe("BalanceReviewChart", () => {
     // Three gutter captions, three distinct rows: none sits on another.
     const ys = new Set(texts.map((t) => t.getAttribute("y")));
     expect(ys.size).toBe(3);
+  });
+
+  it("keeps the end captions on their own rows when mark captions fall to the gutter", () => {
+    const { container } = render(() => (
+      <BalanceReviewChart
+        actual={FLAT}
+        forecast={FORECAST}
+        marks={[{ date: day(5), value: 105_000, label: "Sep 5 Regus −$18k" }]}
+        endLabels={{ actual: "$105k today", forecast: "$104k forecast" }}
+        xDomain={[day(1), day(5)]}
+        valueFormat={fmt}
+        size={SIZE}
+      />
+    ));
+    const texts = [...container.querySelectorAll(".sui-chart__label--right")];
+    const today = texts.find((t) => t.textContent === "$105k today")!;
+    const mark = texts.find((t) => t.textContent?.startsWith("Sep 5"))!;
+    // Both reach the gutter; the end caption keeps the row at the line's end.
+    expect(mark).toBeDefined();
+    expect(today.classList.contains("sui-chart__label--right")).toBe(true);
+    const ys = new Set(texts.map((t) => t.getAttribute("y")));
+    expect(ys.size).toBe(texts.length);
+    expect(Number(mark.getAttribute("y"))).not.toBe(Number(today.getAttribute("y")));
   });
 
   it("draws no bracket without a gap caption, or when the ends coincide", () => {

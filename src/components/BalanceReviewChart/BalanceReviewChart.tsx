@@ -144,9 +144,10 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
     map((p: BalanceReviewPoint) => ({ x: p.date.getTime(), y: p.value }), props.actual),
     ...(forecast().length > 0 ? [map((p: BalanceReviewPoint) => ({ x: p.date.getTime(), y: p.value }), forecast())] : []),
   ];
-  /** The label ladder: the marks in the body, the end captions and the gap caption at the right. */
+  /** The label ladder. The end captions and the gap caption go first, so they
+   *  park on their own rows and a mark caption that falls to the gutter stacks
+   *  around them, never the other way round. */
   const labelItems = createMemo(() => [
-    ...map((m: BalanceReviewMark) => ({ ...m, zone: "auto" as const, id: `mark-${m.date.getTime()}` }), props.marks ?? []),
     ...filter(
       (i: { label: string }) => i.label !== "",
       [
@@ -159,6 +160,7 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
         ...(gap() ? [{ date: gap()!.date, value: gapMidpoint(gap()!.from, gap()!.to), label: gap()!.label, zone: "right" as const, id: "end-gap" }] : []),
       ],
     ),
+    ...map((m: BalanceReviewMark) => ({ ...m, zone: "auto" as const, id: `mark-${m.date.getTime()}` }), props.marks ?? []),
   ]);
   const forecastAt = (date: Date): BalanceReviewPoint | null =>
     find((p: BalanceReviewPoint) => sameDay(p.date, date), forecast()) ?? null;
@@ -205,7 +207,7 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
       <LineSeries data={props.actual} x={x} y={(p) => p.value} stroke={actualColor()} strokeWidth={2.25} />
       <PointSeries data={props.marks ?? []} x={x} y={(m) => m.value} radius={4} fill={actualColor()} />
       <Show when={gap()}>
-        {(g) => <GapBracket from={g().from} to={g().to} offset={BRACKET_OFFSET} tick={BRACKET_TICK} stroke={forecastColor()} />}
+        {(g) => <GapBracket from={g().from} to={g().to} offset={BRACKET_OFFSET} tick={BRACKET_TICK} stroke={actualColor()} strokeWidth={1.5} />}
       </Show>
       <ChartLabels
         data={labelItems()}
