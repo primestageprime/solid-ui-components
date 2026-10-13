@@ -12034,7 +12034,7 @@
     "useFor": "a held y domain under a series that leaves it.",
     "notes": null,
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.218.0",
     "file": "src/components/Chart/OutOfRangeMarkers.tsx",
     "line": 36
   },
@@ -12554,7 +12554,7 @@
     "useFor": "\"early\" over a dot, \"under\" below it, a series' end value beside its last point.",
     "notes": null,
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.218.0",
     "file": "src/components/Chart/PointCaptions.tsx",
     "line": 33
   },
@@ -14388,7 +14388,7 @@
     "useFor": "a payment schedule's expected dates against what landed.",
     "notes": null,
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.218.0",
     "file": "src/components/Chart/SlotTrack.tsx",
     "line": 40
   },
@@ -14407,7 +14407,7 @@
     "useFor": null,
     "notes": "One lozenge with a dot, at legend size: a `Legend` item's `swatch`.",
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.218.0",
     "file": "src/components/Chart/SlotTrack.tsx",
     "line": 95
   },
