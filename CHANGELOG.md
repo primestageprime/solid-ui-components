@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.218.0 — 2026-10-13
+
 ### Added
 
 - **`SlotTrack`** — a Chart slot (Depth 1): one lozenge per expected slot on a stated y, as wide as the slot's window, in one of three data states (`filled`, `partial`, `empty`), with an optional count above. `SlotTrackSwatch` is its legend mark. For a payment schedule against what landed.
