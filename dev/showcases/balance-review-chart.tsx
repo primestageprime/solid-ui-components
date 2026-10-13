@@ -15,8 +15,10 @@ export const BalanceReviewChartShowcase: Component = () => (
       <MutedBody>
         The actual balance, solid, against the forecast frozen on the 1st,
         dashed from that day. The floor is the chart's bottom. The largest
-        variance days carry a dot and a caption placed by the label ladder;
-        each line's end is captioned in the right gutter. Under the plot, the
+        variance days carry a dot and a caption placed by the label ladder, clear
+        of every line; each line's end is captioned in the right gutter, and a
+        bracket between the two ends says how far the month landed from the
+        forecast. Under the plot, the
         <code>VarianceStrip</code> draws what each day did that the forecast
         did not, and one crosshair spans both.
       </MutedBody>
@@ -28,7 +30,11 @@ export const BalanceReviewChartShowcase: Component = () => (
           floor={0}
           variance={DAYS}
           marks={MARKS}
-          endLabels={{ actual: `${fmt(BALANCE[BALANCE.length - 1].value)} today`, forecast: `${fmt(FORECAST[FORECAST.length - 1].value)} forecast` }}
+          endLabels={{
+            actual: `${fmt(BALANCE[BALANCE.length - 1].value)} today`,
+            forecast: `${fmt(FORECAST[FORECAST.length - 1].value)} forecast`,
+            gap: `${fmt(BALANCE[BALANCE.length - 1].value - FORECAST[FORECAST.length - 1].value)} vs forecast`,
+          }}
           xDomain={[BALANCE[0].date, BALANCE[BALANCE.length - 1].date]}
           valueFormat={fmt}
           dateFormat={short}

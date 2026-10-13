@@ -124,16 +124,28 @@
 .sui-chart__ref-label {
   fill: var(--sui-chart-tick-color, #c0c0c0);
   font-size: 0.65rem;
+  paint-order: stroke fill;
+  stroke: var(--sui-chart-surface, var(--sui-bg-primary));
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 /* ChartLabels' text. Added with ChannelChart: the slot shipped with no rule,
    so its labels painted the SVG default (black) on every theme. Same tint and
    size as a reference-line caption; `central` because the ladder's box is
    centred on the label's y. */
+/* THE HALO. Every caption wears a stroke in the chart's surface colour,
+   painted under the fill, so text that lands on a line, a rule or a grid
+   line stays readable. A chart on another surface sets
+   `--sui-chart-surface` to match. */
 .sui-chart__label {
   fill: var(--sui-chart-tick-color, #c0c0c0);
   font-size: 0.65rem;
   dominant-baseline: central;
+  paint-order: stroke fill;
+  stroke: var(--sui-chart-surface, var(--sui-bg-primary));
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 /* Crosshair — purely decorative; cursor must pass through to siblings

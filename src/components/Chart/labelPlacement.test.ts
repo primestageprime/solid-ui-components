@@ -733,3 +733,32 @@ describe("the showcase's Labelled lines example", () => {
     expect(zoneOf(results, "pessimistic")).toBe("below");
   });
 });
+
+describe("placeLabels — the right rung packs in two ranks", () => {
+  // A stated "right" caption names a line's end. A caption that fell from the
+  // body rung must not take that end's row, even when its own point sits a
+  // few pixels above the end.
+  const space: ReservedSpace = { rightGutter: NARROW + LABEL_GUTTER_GAP, belowRows: 0 };
+
+  it("keeps a stated caption on its own row when a fallen caption parks above it", () => {
+    const fallen = label("fallen", { placement: "auto", x: 50, y: 48, endY: 48 });
+    const stated = label("stated", { placement: "right", x: 190, y: 50, endY: 50 });
+    // The rule at 48 crosses the fallen caption's body box on both sides.
+    const results = placeLabels([fallen, stated], PLOT, [ruleAt(48)], space);
+    const s = byId(results, "stated") as PlacedLabel;
+    const f = byId(results, "fallen") as PlacedLabel;
+    expect(s.zone).toBe("right");
+    expect(f.zone).toBe("right");
+    expect(s.y).toBe(50);
+    expect(f.y).not.toBe(50);
+    expect(Math.abs(f.y - s.y)).toBeGreaterThanOrEqual(LABEL_ROW_HEIGHT + LABEL_ROW_GAP);
+  });
+
+  it("gives a fallen caption its own row when the stated one leaves it free", () => {
+    const fallen = label("fallen", { placement: "auto", x: 50, y: 20, endY: 20 });
+    const stated = label("stated", { placement: "right", x: 190, y: 80, endY: 80 });
+    const results = placeLabels([fallen, stated], PLOT, [ruleAt(20)], space);
+    expect((byId(results, "fallen") as PlacedLabel).y).toBe(20);
+    expect((byId(results, "stated") as PlacedLabel).y).toBe(80);
+  });
+});

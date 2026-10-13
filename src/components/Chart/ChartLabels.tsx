@@ -27,8 +27,10 @@ import { useChart } from "./context";
 import {
   LABEL_ROW_HEIGHT,
   type ChartLabel,
+  type LabelPoint,
   type LabelZone,
   type PlotRect,
+  type Polyline,
   drawnLabels,
   placeLabels,
   reserveLabelSpace,
@@ -49,6 +51,19 @@ export interface ChartLabelsProps<T> {
   y: (d: T, index: number) => number;
   /** Item → the caller's stated zone. Defaults to `"auto"` for every item. */
   placement?: (d: T, index: number) => LabelZone;
+  /** Every drawn series, in the chart's domain units. A body label may not
+   *  cross one: a caption over a line is unreadable even when no text
+   *  collides. Omitted, the body rung tests against no line. */
+  polylines?: readonly (readonly LabelPoint[])[];
+  /** Extra px a right-gutter label stands past the plot edge, beyond the
+   *  ladder's own gap, so a mark in the gutter (a `GapBracket`) keeps
+   *  clear of the text. Default `0`. */
+  rightInset?: number;
+  /** The right gutter the host already reserved in its margin, in px. The
+   *  ladder's own reservation (the widest explicit `"right"` label) is the
+   *  floor; a wider host gutter lets an `"auto"` caption that cannot sit
+   *  beside its point move into the gutter instead of dropping. */
+  gutterWidth?: number;
   /** Extra class on the wrapping `<g>`, alongside the base
    *  `sui-chart__labels` class. */
   class?: string;
@@ -75,6 +90,13 @@ export function ChartLabels<T>(props: ChartLabelsProps<T>) {
       };
     }, props.data),
   );
+  const polylines = createMemo<readonly Polyline[]>(() =>
+    map(
+      (line: readonly LabelPoint[]) =>
+        map((p: LabelPoint) => ({ x: ctx.xScale()(p.x), y: ctx.yScale()(p.y) }), line),
+      props.polylines ?? [],
+    ),
+  );
   const drawn = createMemo(() => {
     const plot: PlotRect = {
       left: 0,
@@ -82,10 +104,15 @@ export function ChartLabels<T>(props: ChartLabelsProps<T>) {
       right: ctx.innerWidth(),
       bottom: ctx.innerHeight(),
     };
-    const space = reserveLabelSpace(candidates());
-    return drawnLabels(
-      candidates(),
-      placeLabels(candidates(), plot, [], space),
+    const reserved = reserveLabelSpace(candidates());
+    const space = { ...reserved, rightGutter: Math.max(reserved.rightGutter, props.gutterWidth ?? 0) };
+    const inset = props.rightInset ?? 0;
+    return map(
+      (label) =>
+        label.placed.zone === "right" && inset !== 0
+          ? { ...label, placed: { ...label.placed, x: label.placed.x + inset } }
+          : label,
+      drawnLabels(candidates(), placeLabels(candidates(), plot, polylines(), space)),
     );
   });
 

@@ -157,15 +157,20 @@ const firstFreeRow = (
  * @param labels  The gutter labels, in any order.
  * @param plot    The plot rectangle in pixel space.
  * @param metrics The gutter's pixel vocabulary.
+ * @param drawn   Boxes an earlier pack already drew in this gutter. A caller
+ *                that packs in two ranks (explicit captions first, then the
+ *                captions that fell down the ladder) hands the first rank's
+ *                boxes to the second, so the second takes only what is left.
  * @returns The filled rows, top to bottom, and the labels that found no row.
  */
 export const packGutterRows = <Label extends GutterLabel>(
   labels: readonly Label[],
   plot: PlotRect,
   metrics: GutterMetrics,
+  drawn: readonly Box[] = [],
 ): GutterPacking<Label> => {
   const rows: GutterRow<Label>[] = [];
-  const taken: Box[] = [];
+  const taken: Box[] = [...drawn];
   const spilled: Label[] = [];
   const topDown = sortBy(
     (label: Label) => parkedY(label.endY, label.height, plot),
