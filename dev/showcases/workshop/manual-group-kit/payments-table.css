@@ -1,0 +1,16 @@
+/* Bench-local: the section rows read as headers, the group rows as toggles,
+   a discarded row as struck through. */
+.manual-group-payments .mg-row--section td {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  text-align: left;
+}
+.manual-group-payments .mg-row--grp td {
+  cursor: pointer;
+  text-align: left;
+}
+.manual-group-payments .mg-row--gone td {
+  text-decoration: line-through;
+  opacity: 0.6;
+}

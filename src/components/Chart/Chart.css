@@ -359,3 +359,97 @@
   stroke: var(--sui-accent);
   stroke-width: 2;
 }
+
+/* SlotTrack — one lozenge per expected slot. The state is a class, the
+   colours are tokens, so a consumer never paints a slot by hand. */
+.sui-chart__slot rect {
+  fill: var(--sui-chart-surface, var(--sui-bg-primary));
+  stroke-width: 1.5;
+}
+.sui-chart__slot--filled rect {
+  stroke: var(--sui-success);
+}
+.sui-chart__slot--partial rect {
+  stroke: var(--sui-warning);
+}
+.sui-chart__slot--empty rect {
+  fill: none;
+  stroke: var(--sui-text-secondary);
+  stroke-dasharray: 2 2;
+}
+.sui-chart__slot circle {
+  fill: var(--sui-success);
+}
+.sui-chart__slot--partial circle {
+  fill: var(--sui-warning);
+}
+.sui-chart__slot--empty circle {
+  fill: none;
+}
+.sui-chart__slot-caption {
+  fill: var(--sui-chart-tick-color, #c0c0c0);
+  font-size: 0.6rem;
+}
+.sui-chart__slot--partial .sui-chart__slot-caption {
+  fill: var(--sui-warning);
+}
+.sui-chart__slot-swatch {
+  display: block;
+}
+
+/* PointCaptions — a one-word verdict beside its own mark, with the same halo
+   as every other caption. */
+.sui-chart__point-caption {
+  fill: var(--sui-chart-tick-color, #c0c0c0);
+  font-size: 0.6rem;
+  paint-order: stroke fill;
+  stroke: var(--sui-chart-surface, var(--sui-bg-primary));
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.sui-chart__point-caption[data-tone="success"] {
+  fill: var(--sui-success);
+}
+.sui-chart__point-caption[data-tone="warning"] {
+  fill: var(--sui-warning);
+}
+.sui-chart__point-caption[data-tone="danger"] {
+  fill: var(--sui-danger);
+}
+.sui-chart__point-caption[data-tone="accent"] {
+  fill: var(--sui-accent);
+}
+.sui-chart__point-caption[data-tone="muted"] {
+  fill: var(--sui-text-secondary);
+}
+
+/* OutOfRangeMarkers — the chevron and the value take the group's tone. */
+.sui-chart__out-of-range {
+  color: var(--sui-text-secondary);
+}
+.sui-chart__out-of-range[data-tone="success"] {
+  color: var(--sui-success);
+}
+.sui-chart__out-of-range[data-tone="warning"] {
+  color: var(--sui-warning);
+}
+.sui-chart__out-of-range[data-tone="danger"] {
+  color: var(--sui-danger);
+}
+.sui-chart__out-of-range[data-tone="accent"] {
+  color: var(--sui-accent);
+}
+.sui-chart__out-of-range-chevron {
+  fill: currentColor;
+  opacity: 0.85;
+}
+.sui-chart__out-of-range-label {
+  fill: currentColor;
+  font-size: 0.6rem;
+  font-weight: 600;
+  paint-order: stroke fill;
+  stroke: var(--sui-chart-surface, var(--sui-bg-primary));
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}

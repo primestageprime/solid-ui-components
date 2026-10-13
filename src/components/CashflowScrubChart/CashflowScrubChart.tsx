@@ -53,7 +53,7 @@ import {
   markerJoinsLadder,
 } from "./labelCandidates";
 import { RuleMarker } from "./ruleMarker";
-import { type RangePoint, edgeLabelX, outOfRange } from "./outOfRange";
+import { type RangePoint, edgeLabelX, outOfRange } from "../Chart/outOfRange";
 import {
   barFraction,
   buildLineSegments,

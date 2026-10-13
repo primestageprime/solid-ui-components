@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Added
+
+- **`SlotTrack`** — a Chart slot (Depth 1): one lozenge per expected slot on a stated y, as wide as the slot's window, in one of three data states (`filled`, `partial`, `empty`), with an optional count above. `SlotTrackSwatch` is its legend mark. For a payment schedule against what landed.
+
+- **`PointCaptions`** — a Chart slot (Depth 1): a short word pinned a stated distance above or below its point. `ChartLabels` finds a seat; this one has one.
+
+- **`OutOfRangeMarkers`** — a Chart slot (Depth 1): the peak past the plot top and the trough past the plot bottom, each a chevron and a value. The pure core `outOfRange` moves from `CashflowScrubChart` to `Chart` and is exported.
+
+### Changed
+
+- **`LineSeries` draws a stair.** `curve="step"` holds each y until the next x and turns there. The default is unchanged.
+
 ## 0.217.0 — 2026-10-13
 
 ### Added

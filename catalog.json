@@ -593,7 +593,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 132
+    "line": 146
   },
   {
     "name": "AssigneeIcon",
@@ -780,7 +780,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 344
+    "line": 358
   },
   {
     "name": "BaselineClusterRow",
@@ -10689,7 +10689,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 86
+    "line": 99
   },
   {
     "name": "Link",
@@ -12020,6 +12020,25 @@
     "line": 47
   },
   {
+    "name": "OutOfRangeMarkers",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "The value the reader cannot see, as a Structural Primitive (Depth 1) slot child of `Chart`: among `points` (data units) the global peak past the plot top and the global trough past the plot bottom each get a chevron at the edge and `format(value)` beside it, held `edgeLabelX` inside the plot.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a held y domain under a series that leaves it.",
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/OutOfRangeMarkers.tsx",
+    "line": 36
+  },
+  {
     "name": "OverflowNav",
     "depth": 2,
     "kind": "variant",
@@ -12519,6 +12538,27 @@
     "line": 11
   },
   {
+    "name": "PointCaptions",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A short word pinned to a point as a Structural Primitive (Depth 1) slot child of `Chart`: `text(d)` sits `offset` px (6) `above` or `below` its `(x, y)`, the side stated per datum, in a `tone` (src/types.ts) carried as `data-tone`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": [
+      "Not `ChartLabels`, whose ladder finds each caption a free seat and drops what fits nowhere — this one has a stated seat and never moves."
+    ],
+    "useFor": "\"early\" over a dot, \"under\" below it, a series' end value beside its last point.",
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/PointCaptions.tsx",
+    "line": 33
+  },
+  {
     "name": "PointSeries",
     "depth": 1,
     "kind": "primitive",
@@ -12539,7 +12579,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 208
+    "line": 222
   },
   {
     "name": "PopoverMenu",
@@ -13010,7 +13050,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 562
+    "line": 576
   },
   {
     "name": "RemovableItemCard",
@@ -14332,6 +14372,44 @@
     "since": "v0.20.0",
     "file": "src/components/SlotFillBar/SlotFillBar.tsx",
     "line": 68
+  },
+  {
+    "name": "SlotTrack",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A track of expected SLOTS along one y, drawn as a Structural Primitive (Depth 1) slot child of `Chart`: one lozenge per slot, as wide as its window `from`..`to` on the x scale and never narrower than `minWidth` (22px), on the stated `y`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a payment schedule's expected dates against what landed.",
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/SlotTrack.tsx",
+    "line": 40
+  },
+  {
+    "name": "SlotTrackSwatch",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "One lozenge with a dot, at legend size: a `Legend` item's `swatch`.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "One lozenge with a dot, at legend size: a `Legend` item's `swatch`.",
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/SlotTrack.tsx",
+    "line": 95
   },
   {
     "name": "SmallAmountStrip",
