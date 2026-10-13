@@ -10,7 +10,7 @@
 
 - **`BalanceReviewChart` says how far the month landed from the forecast.** `endLabels.gap` draws a `GapBracket` between the two lines' ends and its caption in the gutter, placed by the label ladder beside the end captions so the three never collide.
 
-- **`ChartLabels` keeps body captions off the lines.** `polylines` hands the drawn series to the ladder, so a caption that would cross a line moves to the gutter instead of sitting on the ink. `rightInset` moves gutter text past a mark that stands in the gutter. `gutterWidth` tells the ladder how wide a gutter the host's margin already holds, so a caption that cannot sit beside its point moves into it instead of dropping. All optional; a caller that passes neither draws the same pixels as before.
+- **`ChartLabels` keeps body captions off the lines.** `polylines` hands the drawn series to the ladder, so a caption that would cross a line moves to the gutter instead of sitting on the ink. `rightInset` moves gutter text past a mark that stands in the gutter. `gutterWidth` tells the ladder how wide a gutter the host's margin already holds, so a caption that cannot sit beside its point moves into it instead of dropping. In the gutter, a caption that STATED `"right"` packs before one that fell there from the body rung, so a line's end caption keeps the row at the end. All optional; a caller that passes neither draws the same pixels as before.
 
 - **Chart captions wear a halo.** `.sui-chart__label` and `.sui-chart__ref-label` paint a stroke in the chart's surface colour under the text (`--sui-chart-surface`, falling back to `--sui-bg-primary`), so a caption on a grid line, a rule or a series stays readable.
 

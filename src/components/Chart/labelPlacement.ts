@@ -48,6 +48,7 @@ import {
   type Polyline,
 } from "./labelBoxes";
 import {
+  gutterBox,
   packGutterRows,
   type GutterMetrics,
   type GutterRow,
@@ -382,21 +383,37 @@ const splitLaneOverflow = (
  * `packGutterRows` walks the rows the draw step really uses, so the row it
  * returns needs no second box test. A label leaves this rung for one reason
  * only: every row in the gutter is already taken.
+ *
+ * TWO RANKS. A label that STATED "right" packs first: it names a line's end,
+ * and the reader looks for it at that end. A label that fell here from the
+ * body rung packs second, around what the first rank drew. The packer walks
+ * each rank top-down by y, so without the ranks a fallen caption whose point
+ * sits a few pixels above a line's end took the end's own row and pushed the
+ * end caption down the gutter.
  */
 const runRightRung = (
   labels: readonly LabelCandidate[],
   plot: PlotRect,
   space: ReservedSpace,
 ): RungResult => {
-  const eligible: LabelCandidate[] = [];
+  const stated: LabelCandidate[] = [];
+  const fallen: LabelCandidate[] = [];
   const deferred: LabelCandidate[] = [];
   for (const label of labels) {
     const fits =
       startsAt(label.placement, "right") &&
       label.width + LABEL_GUTTER_GAP <= space.rightGutter;
-    (fits ? eligible : deferred).push(label);
+    if (!fits) deferred.push(label);
+    else if (label.placement === "right") stated.push(label);
+    else fallen.push(label);
   }
-  const { rows, spilled } = packGutterRows(eligible, plot, GUTTER_METRICS);
+  const first = packGutterRows(stated, plot, GUTTER_METRICS);
+  const drawn = map(
+    (row: GutterRow<LabelCandidate>) =>
+      gutterBox(row.label, row.y, plot, LABEL_GUTTER_GAP),
+    first.rows,
+  );
+  const second = packGutterRows(fallen, plot, GUTTER_METRICS, drawn);
   const placed = map(
     (row: GutterRow<LabelCandidate>) => ({
       kind: "placed" as const,
@@ -407,9 +424,9 @@ const runRightRung = (
       anchor: "start" as const,
       lane: row.lane,
     }),
-    rows,
+    [...first.rows, ...second.rows],
   );
-  return { placed, deferred: [...deferred, ...spilled] };
+  return { placed, deferred: [...deferred, ...first.spilled, ...second.spilled] };
 };
 
 /**
