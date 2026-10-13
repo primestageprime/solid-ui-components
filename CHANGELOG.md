@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.217.0 — 2026-10-13
+
 ### Added
 
 - **`GapBracket`** — a Chart slot (Depth 1): a vertical dimension bracket between two y values, standing past the plot's right edge by default, with a caption at its midpoint. Core `buildGapBracket` is pure. For "this far apart" where `ReferenceLine` says "this value".

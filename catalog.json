@@ -8595,7 +8595,7 @@
     "useFor": "\"this far from the forecast / target / floor\" at a line's end.",
     "notes": null,
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.217.0",
     "file": "src/components/Chart/GapBracket.tsx",
     "line": 49
   },
