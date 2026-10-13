@@ -3,17 +3,19 @@
 // ============================================
 // BalanceReviewChart — Composite (Depth 2)
 // Composes Chart + Grid + XAxis + YAxis + LineSeries x2 + PointSeries x2 +
-// ReferenceLine x2 + ChartLabels + Crosshair + ChartTooltip from the Chart
-// family, and VarianceStrip. Draws no SVG and owns no CSS.
+// ReferenceLine x2 + GapBracket + ChartLabels + Crosshair + ChartTooltip from
+// the Chart family, and VarianceStrip. Draws no SVG and owns no CSS.
 //
 // THE MONTH AS IT HAPPENED, AGAINST THE FORECAST MADE WHEN IT BEGAN. The
 // actual balance runs across the window as one solid line. The forecast
 // frozen at the start of the month runs dashed from the day it was made. The
 // cash floor is the chart's bottom, as on every cashflow chart. The largest
 // variance days carry a dot and a caption, placed by the label ladder so
-// they never collide. Under the plot, on the same days, `VarianceStrip`
-// draws what each day did that the forecast did not; one crosshair spans
-// both.
+// they never collide, and never cross a line. In the right gutter a bracket
+// spans the two lines' ends with `endLabels.gap` as its caption: how far the
+// month landed from the forecast. Under the plot, on the same days,
+// `VarianceStrip` draws what each day did that the forecast did not; one
+// crosshair spans both.
 //
 // Not `CashflowScrubChart`, which draws the forecast FORWARD from today with
 // a cone; this looks back. Not `SignedAreaChart`, which draws one running
@@ -29,8 +31,10 @@ import {
   ChartLabels,
   ChartTooltip,
   Crosshair,
+  GapBracket,
   Grid,
   LineSeries,
+  gapMidpoint,
   PointSeries,
   ReferenceLine,
   XAxis,
@@ -71,8 +75,9 @@ export interface BalanceReviewChartProps {
   readonly variance?: readonly BalanceReviewDay[];
   /** Dots with captions on the actual line. */
   readonly marks?: readonly BalanceReviewMark[];
-  /** Captions in the right gutter for each line's end. */
-  readonly endLabels?: { readonly actual?: string; readonly forecast?: string };
+  /** Captions in the right gutter: each line's end, and the gap between
+   *  them. `gap` also draws the bracket that spans the two ends. */
+  readonly endLabels?: { readonly actual?: string; readonly forecast?: string; readonly gap?: string };
   readonly xDomain: readonly [Date, Date];
   readonly valueFormat: (value: number) => string;
   readonly dateFormat?: (date: Date) => string;
@@ -96,6 +101,11 @@ const PLOT_HEIGHT = 300;
 const MARGIN = { top: 18, right: 170, bottom: 34, left: 56 };
 const DAY_MS = 86_400_000;
 const HEADROOM = 1.12;
+/** The bracket stands this far past the plot edge; its ticks are as long. */
+const BRACKET_OFFSET = 4;
+const BRACKET_TICK = 4;
+/** Gutter text stands past the bracket, not under it. */
+const GUTTER_INSET = BRACKET_OFFSET + BRACKET_TICK + 2;
 
 /** The ISO day of a date, the key two points on the same day share. */
 const isoDay = (d: Date): string => d.toISOString().substring(0, 10);
@@ -124,7 +134,17 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
   const floorColor = () => props.colors?.floor ?? "var(--sui-danger)";
   const lastActual = () => props.actual[props.actual.length - 1] ?? null;
   const lastForecast = () => forecast()[forecast().length - 1] ?? null;
-  /** The label ladder: the marks in the body, the two end captions at the right. */
+  /** The bracket needs both ends, a caption, and a gap to span. */
+  const gap = () =>
+    lastActual() && lastForecast() && props.endLabels?.gap && lastActual()!.value !== lastForecast()!.value
+      ? { from: lastActual()!.value, to: lastForecast()!.value, label: props.endLabels.gap, date: lastActual()!.date }
+      : null;
+  /** Every drawn line, for the ladder: a body caption may not cross one. */
+  const polylines = () => [
+    map((p: BalanceReviewPoint) => ({ x: p.date.getTime(), y: p.value }), props.actual),
+    ...(forecast().length > 0 ? [map((p: BalanceReviewPoint) => ({ x: p.date.getTime(), y: p.value }), forecast())] : []),
+  ];
+  /** The label ladder: the marks in the body, the end captions and the gap caption at the right. */
   const labelItems = createMemo(() => [
     ...map((m: BalanceReviewMark) => ({ ...m, zone: "auto" as const, id: `mark-${m.date.getTime()}` }), props.marks ?? []),
     ...filter(
@@ -136,6 +156,7 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
         ...(lastForecast() && props.endLabels?.forecast
           ? [{ date: lastForecast()!.date, value: lastForecast()!.value, label: props.endLabels.forecast, zone: "right" as const, id: "end-forecast" }]
           : []),
+        ...(gap() ? [{ date: gap()!.date, value: gapMidpoint(gap()!.from, gap()!.to), label: gap()!.label, zone: "right" as const, id: "end-gap" }] : []),
       ],
     ),
   ]);
@@ -183,6 +204,9 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
       </Show>
       <LineSeries data={props.actual} x={x} y={(p) => p.value} stroke={actualColor()} strokeWidth={2.25} />
       <PointSeries data={props.marks ?? []} x={x} y={(m) => m.value} radius={4} fill={actualColor()} />
+      <Show when={gap()}>
+        {(g) => <GapBracket from={g().from} to={g().to} offset={BRACKET_OFFSET} tick={BRACKET_TICK} stroke={forecastColor()} />}
+      </Show>
       <ChartLabels
         data={labelItems()}
         id={(i) => i.id}
@@ -191,6 +215,9 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
         x={(i) => i.date.getTime()}
         y={(i) => i.value}
         placement={(i) => i.zone}
+        polylines={polylines()}
+        rightInset={gap() ? GUTTER_INSET : 0}
+        gutterWidth={margin().right - (gap() ? GUTTER_INSET : 0)}
       />
       <Show when={hasStrip()}>
         <VarianceStrip

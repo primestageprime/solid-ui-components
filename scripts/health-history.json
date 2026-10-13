@@ -7699,5 +7699,93 @@
         }
       }
     }
+  },
+  {
+    "at": "2026-10-13T17:27:24.793Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 30,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 11,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 93,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 30,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 93,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-13T17:29:58.212Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 30,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 93,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 30,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 93,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        }
+      }
+    }
   }
 ]

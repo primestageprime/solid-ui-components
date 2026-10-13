@@ -61,4 +61,35 @@ describe("BalanceReviewChart", () => {
     expect(container.textContent).toContain("$104k forecast");
     expect(container.querySelectorAll(".sui-chart__point, circle").length).toBeGreaterThan(0);
   });
+
+  it("spans the two ends with a bracket and captions the gap when asked", () => {
+    const { container } = render(() => (
+      <BalanceReviewChart
+        actual={ACTUAL}
+        forecast={FORECAST}
+        endLabels={{ actual: "$105k today", forecast: "$104k forecast", gap: "+$1k vs forecast" }}
+        xDomain={[day(1), day(5)]}
+        valueFormat={fmt}
+        size={SIZE}
+      />
+    ));
+    expect(container.querySelector(".sui-chart__gap-bracket")).not.toBeNull();
+    expect(container.textContent).toContain("+$1k vs forecast");
+    const texts = [...container.querySelectorAll(".sui-chart__label--right")];
+    expect(texts.length).toBe(3);
+    // Three gutter captions, three distinct rows: none sits on another.
+    const ys = new Set(texts.map((t) => t.getAttribute("y")));
+    expect(ys.size).toBe(3);
+  });
+
+  it("draws no bracket without a gap caption, or when the ends coincide", () => {
+    const none = render(() => (
+      <BalanceReviewChart actual={ACTUAL} forecast={FORECAST} endLabels={{ actual: "a", forecast: "f" }} xDomain={[day(1), day(5)]} valueFormat={fmt} size={SIZE} />
+    ));
+    expect(none.container.querySelector(".sui-chart__gap-bracket")).toBeNull();
+    const same = render(() => (
+      <BalanceReviewChart actual={ACTUAL} forecast={[{ date: day(5), value: 105_000 }]} endLabels={{ gap: "level" }} xDomain={[day(1), day(5)]} valueFormat={fmt} size={SIZE} />
+    ));
+    expect(same.container.querySelector(".sui-chart__gap-bracket")).toBeNull();
+  });
 });

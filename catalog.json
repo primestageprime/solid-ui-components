@@ -735,7 +735,7 @@
     "showcase": "#/balance-review-chart",
     "since": "0.216.0",
     "file": "src/components/BalanceReviewChart/BalanceReviewChart.tsx",
-    "line": 104
+    "line": 114
   },
   {
     "name": "BandRail",
@@ -1894,7 +1894,7 @@
     "showcase": "#/chart",
     "since": "0.169.0",
     "file": "src/components/Chart/ChartLabels.tsx",
-    "line": 61
+    "line": 76
   },
   {
     "name": "ChartTooltip",
@@ -8577,6 +8577,27 @@
     "since": null,
     "file": "src/components/Modal/variants.ts",
     "line": 19
+  },
+  {
+    "name": "GapBracket",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A vertical dimension bracket between two y-domain values (`from`/`to`, either order), drawn as a Structural Primitive (Depth 1) slot child of `Chart`: a stem, a short tick at each end pointing back toward the plot, and an optional `label` captioned at the midpoint to the stem's right.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": [
+      "Not `ReferenceLine`, which marks ONE value;"
+    ],
+    "useFor": "\"this far from the forecast / target / floor\" at a line's end.",
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/GapBracket.tsx",
+    "line": 49
   },
   {
     "name": "GapCell",
