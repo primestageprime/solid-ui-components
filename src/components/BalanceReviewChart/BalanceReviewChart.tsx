@@ -101,8 +101,10 @@ const PLOT_HEIGHT = 300;
 const MARGIN = { top: 18, right: 170, bottom: 34, left: 56 };
 const DAY_MS = 86_400_000;
 const HEADROOM = 1.12;
-/** The bracket stands this far past the plot edge; its ticks are as long. */
-const BRACKET_OFFSET = 4;
+/** The bracket stands this far past the plot edge: clear of the line ends,
+ *  so it reads as a measure beside them and not as a last segment of either
+ *  line. Its ticks point back toward the plot. */
+const BRACKET_OFFSET = 10;
 const BRACKET_TICK = 4;
 /** Gutter text stands past the bracket, not under it. */
 const GUTTER_INSET = BRACKET_OFFSET + BRACKET_TICK + 2;

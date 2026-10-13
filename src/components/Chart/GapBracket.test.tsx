@@ -22,8 +22,8 @@ describe("GapBracket", () => {
 			<GapBracket from={20} to={60} label="40 apart" />
 		));
 		const stem = container.querySelector(".sui-chart__gap-bracket-stem")!;
-		// Plot is 160 wide; offset 4 puts the stem at 164.
-		expect(stem.getAttribute("x1")).toBe("164");
+		// Plot is 160 wide; the default offset 8 puts the stem at 168.
+		expect(stem.getAttribute("x1")).toBe("168");
 		expect(Number(stem.getAttribute("y1"))).toBeLessThan(
 			Number(stem.getAttribute("y2")),
 		);

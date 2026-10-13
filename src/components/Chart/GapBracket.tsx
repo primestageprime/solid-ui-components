@@ -27,7 +27,7 @@ export interface GapBracketProps {
 	readonly to: number;
 	/** The stem's x in the x domain. Omitted, the stem stands past the plot's right edge. */
 	readonly x?: number | Date;
-	/** Px past `x` (or past the plot edge) the stem stands. Default `4`. */
+	/** Px past `x` (or past the plot edge) the stem stands. Default `8`, clear of a line's end. */
 	readonly offset?: number;
 	/** Length of each end tick, toward the plot. Default `4`. */
 	readonly tick?: number;
@@ -54,7 +54,7 @@ export const GapBracket: Component<GapBracketProps> = (props) => {
 				? ctx.innerWidth()
 				: ctx.xScale()(toScalar(props.x));
 		return buildGapBracket({
-			x: base + (props.offset ?? 4),
+			x: base + (props.offset ?? 8),
 			y1: ctx.yScale()(props.from),
 			y2: ctx.yScale()(props.to),
 			tick: props.tick,
