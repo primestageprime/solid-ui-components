@@ -1,71 +1,77 @@
 ---
 name: ship
-description: Release solid-ui-components - bump semver, update CHANGELOG, tag, and auto-publish to GitHub Packages. Use when asked to ship, release, publish, tag, or cut a version of solid-ui-components/SUI.
+description: Release solid-ui-components. Use when asked to ship, release, publish, tag, or cut a version of solid-ui-components/SUI. A minor release is automatic after a merge to main; run the release script only for a patch or a major.
 ---
 
 # Ship solid-ui-components
 
-A release = version bump + CHANGELOG section + commit + tag. Publishing is
-automatic: `publish.yml` triggers on any push to main that touches
-`package.json` and publishes to GitHub Packages (npm.pkg.github.com), then
-dispatches a notification to amygdala-ui.
+A release is a merge to `main`. `.github/workflows/release.yml` cuts the
+version after the merge's CI goes green, and `publish.yml` publishes to
+GitHub Packages after the release commit's CI goes green. The mechanics are
+in `.claude/skills/promote/SKILL.md` § *Release & publish*.
 
-## Procedure
+## Procedure: a minor release, the normal case
 
-1. **Confirm main is green.** `gh run list --limit 3` — the three required
-   checks (test, typecheck, build from `ci.yml`) must be passing on HEAD.
-   If a recent push bypassed branch protection, wait for CI to settle.
-2. **Write the changelog and commit it.** Move the `## [Unreleased]` entries
-   in `CHANGELOG.md` into a new `## X.Y.Z` section (match existing entry style:
-   bold component name, em-dash, behavior summary, code samples where they
-   help). Re-add an empty `## [Unreleased]` heading above it. Check
-   `git log v<last-tag>..HEAD --oneline` for anything the Unreleased section
-   missed — workers sometimes forget changelog entries. Then commit the
-   changelog on its own, before you run the script:
+1. **Leave the entry.** The PR carries its lines under `## Unreleased` in
+   `CHANGELOG.md`, in the file's style: bold name, em dash, what changed.
+   Done when `npm run release:dry` on the branch says it will release and
+   names the version.
+2. **Merge the PR.** `gh pr merge <n> --merge --delete-branch`. Done when
+   `gh run list --limit 3` shows CI running on the merge commit.
+3. **Watch the chain.** CI on the merge → Auto-release → CI on the release
+   commit → Publish to GitHub Packages. Done when
+   `git ls-remote --tags origin vX.Y.0` returns the tag and the Publish run
+   is green.
+
+Auto-release cuts a version when both hold: `## Unreleased` has content, and
+the merge touched `src/**` or a dependency block in `package.json`. A
+docs-only merge with Unreleased content waits for the next shippable merge.
+
+Keep your own release commit and tag off `main` while this chain can fire.
+A manual push races the workflow for the same version: on 2026-10-13 both
+built v0.218.0, the manual push landed first, and the workflow's push was
+rejected. `enforce_admins` is false, so an admin push gets through the branch
+protection that stops the workflow.
+
+## Fallback: a patch, a major, or the workflow disabled
+
+Auto-release only cuts a minor. For anything else, write the changelog
+section and run the script. The script refuses a dirty tree, so the
+changelog commit comes first.
+
+1. **Write the section.** Move the `## Unreleased` entries into a new
+   `## X.Y.Z — YYYY-MM-DD` section, re-add the empty `## Unreleased` heading,
+   and commit: `git add CHANGELOG.md && git commit -m 'docs(changelog): write
+   the X.Y.Z section'`.
+2. **Run the script.** It bumps `package.json` and the lockfile, regenerates
+   nothing else, commits, pushes `main`, tags and pushes the tag. Set
+   `RELEASE_TRAILERS` to your own trailers; the push follows the commit at
+   once, so there is no later amend:
 
 ```bash
-git add CHANGELOG.md && git commit -m 'docs(changelog): write the X.Y.Z section'
+RELEASE_TRAILERS='Co-Authored-By: <model> <noreply@anthropic.com>
+Claude-Session: <session url>' \
+  .claude/skills/ship/scripts/release.sh patch   # or major | X.Y.Z
 ```
 
-   The script does NOT commit the changelog for you. It refuses to run on a
-   dirty working tree, so an uncommitted `CHANGELOG.md` stops the release.
-
-3. **Run the script** (does the mechanical rest — bump, lock sync, commit,
-   push, tag; validates step 2 happened). You MUST set `RELEASE_TRAILERS` to
-   your own session trailers — the script pushes immediately after the commit,
-   so you cannot amend the message later:
-
-```bash
-RELEASE_TRAILERS='Co-Authored-By: Claude <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_XXXXXXXX' \
-  .claude/skills/ship/scripts/release.sh patch   # or minor | major | X.Y.Z
-```
-
-The script puts the value verbatim after a blank line at the end of the
-commit message, and it keeps the newlines. Use your real model name and your
-real session URL; the URL changes every session. When `RELEASE_TRAILERS` is
-unset or empty, the commit message is only `chore: release X.Y.Z`.
-
-4. **Verify**: `gh run watch` the publish run, or check
+   The pre-push hook blocks a push whose `catalog.json` is stale, and the
+   catalog records the version: run `npm run catalog`, amend the release
+   commit with it, then push and tag by hand (`git push && git tag vX.Y.Z &&
+   git push origin vX.Y.Z`).
+3. **Verify.** `gh run watch` the Publish run, or check
    https://github.com/orgs/primestageprime/packages?repo_name=solid-ui-components
 
-## Consumers — who picks this up and how
+## Consumers
 
-- **jtf-ui**: uses `link:../solid-ui-components` and its CI Dockerfile builds
-  the SUI **sibling checkout at main HEAD** — jtf-ui prod gets SUI changes on
-  its next image build regardless of tags. Tags exist for registry consumers
-  and history.
-- **amygdala-ui** (and other registry consumers): pin
-  `@primestageprime/solid-ui-components@X.Y.Z`; the publish workflow's
-  repo-dispatch may open the bump automatically (falls back to manual).
-- Local dev consumers see changes after `pnpm build`/`npm run build` in SUI —
-  long-running vite dev servers serve a STALE dist until restarted with a
-  cache clear.
+- **jtf-ui** links `../solid-ui-components` and its CI image builds SUI from
+  the sibling checkout at `main`, so it gets changes on its next image build
+  without a tag.
+- **amygdala-ui** and other registry consumers pin
+  `@primestageprime/solid-ui-components@X.Y.Z`; the publish workflow
+  dispatches `sui-published` to them.
+- A long-running Vite dev server in a consumer serves a stale `dist` until it
+  restarts with a cache clear.
 
 ## Gotchas
 
-- This repo uses **npm** (package-lock.json + npm publish workflow) — don't
-  pnpm here.
-- `src/styles/global.css` is orphaned (not bundled); global CSS belongs in the
-  theme files (`src/themes/hud.css`, `bronze*.css`, `_baseline.css`).
-- Versioning is manual; there is no release automation beyond publish.yml.
+- This repo uses **npm** (`package-lock.json`, npm publish workflow), not pnpm.
