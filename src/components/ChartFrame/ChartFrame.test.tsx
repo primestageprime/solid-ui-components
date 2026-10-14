@@ -335,21 +335,22 @@ describe("ChartFrame — collapsible", () => {
     expect(button(container, "Collapse chart")).toBeTruthy();
   });
 
-  it("ends the button set, after the y-axis split and after actions", () => {
+  it("sits after fullscreen and actions, before the y-axis split, so the hamburger is rightmost", () => {
     const { container } = render(() => (
       <ChartFrame title="T" yAxisMode="auto" collapsible actions={<input aria-label="Cap" />}>
         <span />
       </ChartFrame>
     ));
-    const group = chevron(container)!.parentElement!;
-    expect(group.lastElementChild).toBe(chevron(container));
+    const follows = (a: Element, b: Element) =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
     const trigger = container.querySelector(".sui-popover-menu__trigger")!;
     const cap = container.querySelector('input[aria-label="Cap"]')!;
-    for (const before of [trigger, cap]) {
-      expect(
-        before.compareDocumentPosition(chevron(container)!) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-    }
+    const full = button(container, "Full screen")!;
+    expect(follows(cap, chevron(container)!)).toBe(true);
+    expect(follows(full, chevron(container)!)).toBe(true);
+    expect(follows(chevron(container)!, trigger)).toBe(true);
+    const buttons = [...container.querySelectorAll("button")];
+    expect(buttons[buttons.length - 1]).toBe(trigger.closest("button") ?? trigger);
   });
 
   it("entering fullscreen expands it; collapsing from fullscreen leaves fullscreen", () => {
