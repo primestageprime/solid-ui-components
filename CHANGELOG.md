@@ -2,10 +2,6 @@
 
 ## Unreleased
 
-## Held for the next release
-
-These entries are merged to `main` but not released (owner, 2026-10-14). `release.mjs` reads only the `## Unreleased` body, so this section cuts no version. To release them, move this body under `## Unreleased`.
-
 ### Added
 
 - **`TreeTable`** — a Composite (Depth 2): a table whose parent rows expand to show the rows they are made of. The caller passes the tree and the open ids; the first column draws NestedList's indent rail and a disclosure chevron. Parent rows show their own aggregate values. Optional checkboxes hold leaf ids, and a parent checks every leaf under it. A header click sorts siblings within each parent.
