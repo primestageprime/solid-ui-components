@@ -374,6 +374,23 @@ describe("ChartFrame — collapsible", () => {
     expect(queryByText("chart")).toBeNull();
   });
 
+  it("a collapsed fill frame's box drops its fill, and gets it back on expand", () => {
+    const Fill = createChartFrame({ height: "fill" });
+    const [collapsed, setCollapsed] = createSignal(true);
+    const { container } = render(() => (
+      <Fill title="T" collapsible collapsed={collapsed()}>
+        <span />
+      </Fill>
+    ));
+    const box = container.querySelector(".sui-fullscreen-box") as HTMLElement;
+    expect(box.style.height).toBe("auto");
+    expect(box.style.flex).toBe("0 0 auto");
+    expect(column(container).style.flex).toBe("0 0 auto");
+    setCollapsed(false);
+    expect(box.style.height).toBe("");
+    expect(column(container).style.height).toBe("100%");
+  });
+
   it("a controlled collapsed frame still shows its chart while fullscreen", () => {
     const { queryByText } = render(() => (
       <ChartFrame title="T" collapsible collapsed fullscreen>

@@ -26,8 +26,9 @@
 // ("Expand chart") and up when it is open ("Collapse chart"). The menu
 // trigger is a hamburger, not a ▾, so the chevron means only this. A
 // collapsed frame keeps its header and does not render its body. Its column
-// drops the stated height, so the frame is as tall as its header. A FILL
-// frame's box still fills its parent: the parent must give back the space.
+// drops the stated height, and so does a FILL frame's box, so the frame is
+// as tall as its header. The parent must still give back the space: a
+// BuilderBoard does that with `panelACollapsed`.
 // `collapsed` is controlled or owned, like `fullscreen`. Fullscreen and
 // collapse never show together: entering fullscreen EXPANDS the frame (a
 // fullscreen header with no chart shows nothing), and the chevron on a
@@ -143,8 +144,10 @@ const columnHeight = (height: ChartFrameProps["height"]): JSX.CSSProperties =>
 const frameColumn = (height: ChartFrameProps["height"]) =>
   createStack({ gap: "xs", style: columnHeight(height) });
 
-/** A collapsed column's height: its header's. Merged over the stated one. */
-const HEADER_ONLY: JSX.CSSProperties = { height: "auto" };
+/** A collapsed frame is as tall as its header. Set on the box AND the
+ *  column: a fill box's CSS gives both `flex: 1 1 0`, and a zero basis in a
+ *  content-sized parent shrinks the frame below its header. */
+const HEADER_ONLY: JSX.CSSProperties = { height: "auto", flex: "0 0 auto" };
 
 /** Rail + chart; takes what the header leaves. */
 const BodyRow = createRow({
@@ -250,6 +253,7 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
     <Box
       fullscreen={fullscreen()}
       onFullscreenChange={setFullscreen}
+      style={collapsed() ? HEADER_ONLY : undefined}
       renderCorner={() => null}
     >
       <FrameColumn style={collapsed() ? HEADER_ONLY : undefined}>
