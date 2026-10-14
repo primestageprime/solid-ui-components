@@ -52,6 +52,18 @@
 // frame does not carry a height of its own, because the app's chrome is what
 // knows how tall the viewport is beneath it.
 //
+// ## A collapsed panel A
+//
+// `panelACollapsed` (owner, 2026-10-14) is for a panel A whose chart frame
+// is collapsed to its header (ChartFrame `collapsible`). The board cannot
+// see the frame's state, so the page passes the same flag to both. Then A
+// is as tall as its content. Single column: A's slot drops its stated
+// height, and B, C and D move up. Split: A's cell drops `flex: 1 1 0`, and B
+// takes the rest of the top half. The halves stay equal, so C and D do not
+// change. Fullscreen is not affected: the frame's box is `position: fixed`,
+// so the slot's height does not hold it, and entering fullscreen expands
+// the frame (`onCollapsedChange(false)`).
+//
 // ## Overrides
 //
 // `rail` is the width token the instrument rail is held to. `gauge` is
@@ -105,6 +117,12 @@ export interface BuilderBoardProps {
    * (`calloutModeFor(box(), labels)`). See panelBox.tsx.
    */
   panelD: PanelDSlot;
+  /**
+   * Panel A is collapsed to its content (a ChartFrame collapsed to its
+   * header). Its slot or cell takes only its content's height, and the
+   * panels below move up. Pass the frame's `collapsed` state. Default false.
+   */
+  panelACollapsed?: boolean;
   /** The width token the rail is held to. Default `gauge`. */
   rail?: RailWidth;
 }
@@ -138,6 +156,13 @@ const StackedChartSlot = stackedSlot(STACKED_CHART_HEIGHT);
 const StackedControlsSlot = stackedSlot(C_STACKED_HEIGHT);
 const StackedRailSlot = stackedSlot(D_STACKED_HEIGHT);
 
+/** A collapsed panel A's slot (single column): its content's height. */
+const CONTENT_HEIGHT_SLOT: JSX.CSSProperties = { height: "auto" };
+
+/** A collapsed panel A's cell (split): its content's height, so B, the
+ *  other `flex: 1 1 0` cell, takes the rest of the top half. */
+const CONTENT_HEIGHT_CELL: JSX.CSSProperties = { flex: "0 0 auto" };
+
 export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
   const props = mergeProps({ rail: "gauge" as const }, rawProps);
   const [local] = splitProps(props, [
@@ -145,6 +170,7 @@ export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
     "panelB",
     "panelC",
     "panelD",
+    "panelACollapsed",
     "rail",
   ]);
   const Rail = RAIL_GRID[local.rail];
@@ -195,7 +221,9 @@ export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
           // core states (geometry.ts), in the slots below.
           <ScrollFillColumn>
             <NarrowStack>
-              <StackedChartSlot>
+              <StackedChartSlot
+                style={local.panelACollapsed ? CONTENT_HEIGHT_SLOT : undefined}
+              >
                 <FillCardSurface data-builder-board-panel="a">
                   {local.panelA}
                 </FillCardSurface>
@@ -215,7 +243,10 @@ export const BuilderBoard: Component<BuilderBoardProps> = (rawProps) => {
           zero basis divides the space BEFORE content is consulted, so a tall
           chart beside a short one still gets exactly half. */}
         <HalfFillColumn data-builder-board-half="top">
-          <HalfFillColumn data-builder-board-panel="a">
+          <HalfFillColumn
+            data-builder-board-panel="a"
+            style={local.panelACollapsed ? CONTENT_HEIGHT_CELL : undefined}
+          >
             <FillCardSurface>{local.panelA}</FillCardSurface>
           </HalfFillColumn>
           <HalfFillColumn data-builder-board-panel="b">

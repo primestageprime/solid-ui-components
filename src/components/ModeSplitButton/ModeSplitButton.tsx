@@ -53,6 +53,12 @@ export interface ModeSplitButtonProps<M extends string> {
   onPress?: () => void;
   /** The ▾'s accessible name ("Y-axis mode", "Schedule mode"). */
   menuLabel: string;
+  /**
+   * The menu trigger's glyph. Default `"chevron-down"` (the ▾). ChartFrame
+   * passes `"menu"`: a hamburger, so a chevron can mean expand / collapse
+   * in the same header.
+   */
+  menuIcon?: IconName;
 }
 
 const ButtonIcon = createIcon({ variant: "outline", size: "sm" });
@@ -92,6 +98,7 @@ export function ModeSplitButton<M extends string>(
         trigger={<ScreenReaderLabel>{props.menuLabel}</ScreenReaderLabel>}
         items={menuItems(props.modes, props.mode)}
         onSelect={(next) => props.onModeChange?.(next)}
+        caretIcon={props.menuIcon}
       />
     </>
   );

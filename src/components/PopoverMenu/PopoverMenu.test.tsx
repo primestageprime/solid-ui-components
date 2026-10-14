@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, fireEvent, cleanup } from "@solidjs/testing-library";
 import { PopoverMenu, RightPopoverMenu } from "./index";
+import { ICON_PATHS, type IconName } from "../Icon/Icon";
 
 // The panel portals to document.body (5081e93: ancestor overflow must not
 // clip it), so panel/header queries go to the body, not the render container;
@@ -122,5 +123,40 @@ describe("PopoverMenu active item", () => {
       false,
     );
     expect(only.hasAttribute("aria-current")).toBe(false);
+  });
+});
+
+/** The markup an inline glyph renders, read back through jsdom. */
+const glyphMarkup = (name: IconName): string => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.innerHTML = ICON_PATHS[name].outline;
+  return svg.innerHTML;
+};
+
+const caretOf = (container: HTMLElement): HTMLElement =>
+  container.querySelector(".sui-popover-menu__caret") as HTMLElement;
+
+describe("PopoverMenu caretIcon", () => {
+  it("draws a chevron that turns over by default", () => {
+    const { container } = render(() => (
+      <PopoverMenu trigger="Account" items={[...ITEMS]} onSelect={() => {}} />
+    ));
+    const caret = caretOf(container);
+    expect(caret.querySelector("svg")?.innerHTML).toBe(glyphMarkup("chevron-down"));
+    expect(caret.classList.contains("sui-popover-menu__caret--still")).toBe(false);
+  });
+
+  it("draws the given glyph, which stays still", () => {
+    const { container } = render(() => (
+      <RightPopoverMenu
+        trigger="Mode"
+        items={[...ITEMS]}
+        onSelect={() => {}}
+        caretIcon="menu"
+      />
+    ));
+    const caret = caretOf(container);
+    expect(caret.querySelector("svg")?.innerHTML).toBe(glyphMarkup("menu"));
+    expect(caret.classList.contains("sui-popover-menu__caret--still")).toBe(true);
   });
 });

@@ -16,6 +16,16 @@ These entries are merged to `main` but not released (owner, 2026-10-14). `releas
 
 - **`BaseTable` controlled sort** — `sort` and `onSortChange`. With `onSortChange` set, the caller owns the sort and the row order, and BaseTable only draws the header state. The sorted header now carries `aria-sort`. Exported type: `TableSort`.
 
+- **`ChartFrame` collapse** — `collapsible`, plus `collapsed` and `onCollapsedChange` (controlled, or owned when `collapsed` is omitted). A chevron ends the button set, after the y-axis split and after `actions`. Collapsed, the frame keeps its header and does not render its body. Entering fullscreen expands it.
+
+- **`BuilderBoard` `panelACollapsed`** — panel A takes only its content's height, and the panels below move up. Pass the `collapsed` state of A's `ChartFrame`. The default is unchanged.
+
+- **`ModeSplitButton` `menuIcon`** and **`PopoverMenu` `caretIcon`** — the menu trigger's glyph. The default stays the ▾.
+
+### Changed
+
+- **`ChartFrame`** — the y-axis mode menu's trigger is a hamburger, not a ▾, so the chevron means only expand and collapse. Its accessible name stays "Y-axis mode".
+
 ## 0.218.0 — 2026-10-13
 
 ### Added
