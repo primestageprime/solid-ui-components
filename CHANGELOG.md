@@ -16,7 +16,7 @@ These entries are merged to `main` but not released (owner, 2026-10-14). `releas
 
 - **`BaseTable` controlled sort** — `sort` and `onSortChange`. With `onSortChange` set, the caller owns the sort and the row order, and BaseTable only draws the header state. The sorted header now carries `aria-sort`. Exported type: `TableSort`.
 
-- **`ChartFrame` collapse** — `collapsible`, plus `collapsed` and `onCollapsedChange` (controlled, or owned when `collapsed` is omitted). A chevron ends the button set, after the y-axis split and after `actions`. Collapsed, the frame keeps its header and does not render its body. Entering fullscreen expands it.
+- **`ChartFrame` collapse** — `collapsible`, plus `collapsed` and `onCollapsedChange` (controlled, or owned when `collapsed` is omitted). A chevron sits after fullscreen and before the y-axis control, so the hamburger stays the rightmost button. Collapsed, the frame keeps its header and does not render its body. Entering fullscreen expands it.
 
 - **`BuilderBoard` `panelACollapsed`** — panel A takes only its content's height, and the panels below move up. Pass the `collapsed` state of A's `ChartFrame`. The default is unchanged.
 

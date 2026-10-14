@@ -21,8 +21,9 @@
 //     action, the ≡ (a hamburger, `menuIcon="menu"`) picks the mode (see
 //     `yAxisModes.ts`).
 //
-// COLLAPSE (owner, 2026-10-14) is opt-in: `collapsible` ends the button set
-// with a chevron. The chevron points down when the frame is collapsed
+// COLLAPSE (owner, 2026-10-14) is opt-in: `collapsible` adds a chevron after
+// fullscreen and before the y-axis control, so the hamburger stays the
+// rightmost button (owner, 2026-10-14). The chevron points down when the frame is collapsed
 // ("Expand chart") and up when it is open ("Collapse chart"). The menu
 // trigger is a hamburger, not a ▾, so the chevron means only this. A
 // collapsed frame keeps its header and does not render its body. Its column
@@ -215,6 +216,16 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
       >
         <ButtonIcon name={fullscreen() ? "fullscreen-exit" : "fullscreen"} />
       </IconOnlyButton>
+      <Show when={props.collapsible}>
+        <IconOnlyButton
+          onClick={toggleCollapsed}
+          aria-expanded={!collapsed()}
+          aria-label={collapseName()}
+          title={collapseName()}
+        >
+          <ButtonIcon name={collapsed() ? "chevron-down" : "chevron-up"} />
+        </IconOnlyButton>
+      </Show>
       <Show when={props.yAxisStrategy === "auto-grow-only"}>
         <IconOnlyButton
           onClick={() => props.onYAxisPress?.()}
@@ -235,16 +246,6 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
             menuIcon="menu"
           />
         )}
-      </Show>
-      <Show when={props.collapsible}>
-        <IconOnlyButton
-          onClick={toggleCollapsed}
-          aria-expanded={!collapsed()}
-          aria-label={collapseName()}
-          title={collapseName()}
-        >
-          <ButtonIcon name={collapsed() ? "chevron-down" : "chevron-up"} />
-        </IconOnlyButton>
       </Show>
     </ButtonGroup>
   );
