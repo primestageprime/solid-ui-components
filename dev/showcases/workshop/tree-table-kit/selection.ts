@@ -2,7 +2,7 @@
 // parent's box is derived from its leaves, so it cannot disagree with them:
 // all leaves in → checked, some → indeterminate, none → unchecked. Checking
 // or unchecking a parent adds or removes every leaf under it.
-import { every, flatMap, some } from "../../../../src/fn";
+import { every, filter, flatMap, some } from "../../../../src/fn";
 
 export type CheckState = "checked" | "indeterminate" | "unchecked";
 
@@ -38,10 +38,8 @@ export const toggleChecked = <T>(
   selected: ReadonlySet<string>,
   opts: TreeSelectionOptions<T>,
 ): Set<string> => {
-  const next = new Set(selected);
-  for (const id of leafIds(row, opts)) {
-    if (checked) next.add(id);
-    else next.delete(id);
-  }
-  return next;
+  const leaves = leafIds(row, opts);
+  const leafSet = new Set(leaves);
+  const others = filter((id: string) => !leafSet.has(id), [...selected]);
+  return new Set(checked ? [...others, ...leaves] : others);
 };

@@ -10,6 +10,7 @@
 //   D  sortable, tree-aware: siblings sort within their parent
 //   E  sortable with BaseTable's own sort: the flat sort breaks the tree
 import { type Component, type JSX, createMemo, createSignal } from "solid-js";
+import { map } from "../../../src/fn";
 import { SmallCheckbox } from "../../../src/components/Checkbox";
 import {
   ClusterRow,
@@ -55,19 +56,50 @@ const tree = { childrenOf: (p: Part) => p.parts, getRowId: (p: Part) => p.id };
 /** A virtual root over every assembly, for the select-all box in the header. */
 const ALL: Part = { id: "__all", name: "All", qty: 1, parts: ASSEMBLIES };
 
-const COMPARE: Record<ColId, (a: Part, b: Part) => number> = {
-  item: (a, b) => a.name.localeCompare(b.name),
-  qty: (a, b) => a.qty - b.qty,
-  unit: (a, b) => unitCost(a) - unitCost(b),
-  line: (a, b) => lineCost(a) - lineCost(b),
+type NumColId = Exclude<ColId, "item">;
+const NUM_IDS: readonly NumColId[] = ["qty", "unit", "line"];
+
+/** One record per number column: its header, its value, and its cell. */
+const NUM: Record<
+  NumColId,
+  {
+    readonly label: string;
+    readonly value: (p: Part) => number;
+    readonly cell: (p: Part) => JSX.Element;
+  }
+> = {
+  qty: {
+    label: "Qty",
+    value: (p) => p.qty,
+    cell: (p) => <IntCell value={p.qty} />,
+  },
+  // On a parent this is the sum of its parts: an aggregate, not a price.
+  unit: {
+    label: "Unit cost",
+    value: unitCost,
+    cell: (p) => <MoneyCell value={unitCost(p)} maxValue={10_000} />,
+  },
+  line: {
+    label: "Line cost",
+    value: lineCost,
+    cell: (p) => <MoneyCell value={lineCost(p)} maxValue={10_000} />,
+  },
 };
 
-const LABEL: Record<ColId, string> = {
-  item: "Item",
-  qty: "Qty",
-  unit: "Unit cost",
-  line: "Line cost",
-};
+const compareBy = (col: ColId): ((a: Part, b: Part) => number) =>
+  col === "item"
+    ? (a, b) => a.name.localeCompare(b.name)
+    : (a, b) => NUM[col].value(a) - NUM[col].value(b);
+
+const numberColumn = (
+  id: NumColId,
+  header: string | JSX.Element = NUM[id].label,
+): TableColumn<Row> => ({
+  id,
+  header,
+  align: "right",
+  accessor: (r) => NUM[id].cell(r.row),
+});
 
 const rowName = (r: Row): JSX.Element =>
   r.hasChildren ? (
@@ -107,27 +139,7 @@ const TreeTableBench: Component = () => {
       </TreeCell>
     ),
   });
-  const numberColumns: TableColumn<Row>[] = [
-    {
-      id: "qty",
-      header: "Qty",
-      align: "right",
-      accessor: (r) => <IntCell value={r.row.qty} />,
-    },
-    // On a parent this is the sum of its parts: an aggregate, not a price.
-    {
-      id: "unit",
-      header: "Unit cost",
-      align: "right",
-      accessor: (r) => <MoneyCell value={unitCost(r.row)} maxValue={10_000} />,
-    },
-    {
-      id: "line",
-      header: "Line cost",
-      align: "right",
-      accessor: (r) => <MoneyCell value={lineCost(r.row)} maxValue={10_000} />,
-    },
-  ];
+  const numberColumns = map((id: NumColId) => numberColumn(id), NUM_IDS);
   const aggregateColumns: TableColumn<Row>[] = [itemColumn(), ...numberColumns];
 
   // --- C: checkboxes -----------------------------------------------------
@@ -169,7 +181,7 @@ const TreeTableBench: Component = () => {
   });
   const sortedRows = createMemo(() => {
     const s = sort();
-    const base = s ? COMPARE[s.col] : undefined;
+    const base = s ? compareBy(s.col) : undefined;
     const compare =
       base && s
         ? (a: Part, b: Part) => (s.dir === "asc" ? base(a, b) : base(b, a))
@@ -178,29 +190,28 @@ const TreeTableBench: Component = () => {
   });
   const sortHeader = (col: ColId): JSX.Element => (
     <SortHeader
-      label={LABEL[col]}
+      label={col === "item" ? "Item" : NUM[col].label}
       dir={sort()?.col === col ? (sort()?.dir ?? null) : null}
       onSort={() => setSort((prev) => nextSort(prev, col))}
     />
   );
   const sortedColumns: TableColumn<Row>[] = [
     { ...itemColumn(), header: sortHeader("item") },
-    ...numberColumns.map((c) => ({ ...c, header: sortHeader(c.id as ColId) })),
+    ...map((id: NumColId) => numberColumn(id, sortHeader(id)), NUM_IDS),
   ];
 
   // --- E: BaseTable's own sort -------------------------------------------
-  const builtInSortColumns: TableColumn<Row>[] = aggregateColumns.map((c) => ({
-    ...c,
-    sortable: true,
-    sortValue: (r: Row) =>
-      c.id === "item"
-        ? r.row.name
-        : c.id === "qty"
-          ? r.row.qty
-          : c.id === "unit"
-            ? unitCost(r.row)
-            : lineCost(r.row),
-  }));
+  const builtInSortColumns: TableColumn<Row>[] = [
+    { ...itemColumn(), sortable: true, sortValue: (r: Row) => r.row.name },
+    ...map(
+      (id: NumColId): TableColumn<Row> => ({
+        ...numberColumn(id),
+        sortable: true,
+        sortValue: (r: Row) => NUM[id].value(r.row),
+      }),
+      NUM_IDS,
+    ),
+  ];
 
   return (
     <div class="component-section component-section--full">
