@@ -3633,7 +3633,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 230
+    "line": 291
   },
   {
     "name": "createCheckbox",
@@ -11259,7 +11259,7 @@
     "showcase": "#/mode-split-button",
     "since": "0.204.0",
     "file": "src/components/ModeSplitButton/ModeSplitButton.tsx",
-    "line": 77
+    "line": 83
   },
   {
     "name": "MoneyCell",
@@ -12642,7 +12642,7 @@
     "showcase": "#/popover-menu",
     "since": "v0.19.0",
     "file": "src/components/PopoverMenu/PopoverMenu.tsx",
-    "line": 88
+    "line": 94
   },
   {
     "name": "PopoverSurface",
@@ -13330,7 +13330,7 @@
     "showcase": "#/popover-menu",
     "since": null,
     "file": "src/components/PopoverMenu/PopoverMenu.tsx",
-    "line": 263
+    "line": 279
   },
   {
     "name": "RingChart",

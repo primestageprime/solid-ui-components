@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- **`ChartFrame` collapse** — `collapsible`, plus `collapsed` and `onCollapsedChange` (controlled, or owned when `collapsed` is omitted). A chevron ends the button set, after the y-axis split and after `actions`. Collapsed, the frame keeps its header and does not render its body. Entering fullscreen expands it.
+
+- **`ModeSplitButton` `menuIcon`** and **`PopoverMenu` `caretIcon`** — the menu trigger's glyph. The default stays the ▾.
+
+### Changed
+
+- **`ChartFrame`** — the y-axis mode menu's trigger is a hamburger, not a ▾, so the chevron means only expand and collapse. Its accessible name stays "Y-axis mode".
+
 ## Held for the next release
 
 These entries are merged to `main` but not released (owner, 2026-10-14). `release.mjs` reads only the `## Unreleased` body, so this section cuts no version. To release them, move this body under `## Unreleased`.
