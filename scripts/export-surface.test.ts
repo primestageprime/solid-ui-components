@@ -138,8 +138,11 @@ describe("export surface — props", () => {
     // attribute, and a 474-row table documents nothing.
     const button = byName("PrimaryButton");
     expect(button.props?.map((p) => p.name).sort()).toEqual([
+      "action",
       "active",
       "loading",
+      "onAction",
+      "once",
       "tone",
     ]);
     expect(button.inherited).toBeGreaterThan(400);
@@ -164,8 +167,11 @@ describe("export surface — props", () => {
     // parameter (`Partial<Omit<ButtonProps, "children">>`) is NOT what a
     // caller of the produced component passes, so it must not be reported.
     expect(factory.props?.map((p) => p.name).sort()).toEqual([
+      "action",
       "active",
       "loading",
+      "onAction",
+      "once",
       "tone",
     ]);
   });
