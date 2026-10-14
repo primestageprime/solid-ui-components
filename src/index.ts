@@ -210,6 +210,7 @@ export * from "./components/Duration";
 export * from "./components/Dropdown";
 export * from "./components/DirtyComboBox";
 export * from "./components/SlideReveal";
+export * from "./components/HeightReveal";
 export * from "./components/ReservedWidth";
 export * from "./components/ResizableContainer";
 export * from "./components/Tooltip";
