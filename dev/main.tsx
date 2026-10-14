@@ -21,6 +21,7 @@ import { TagPill, type PillStats } from "./tag-pill";
 
 // Atomic
 import { BaseTableShowcase } from "./showcases/base-table";
+import { TreeTableShowcase } from "./showcases/tree-table";
 import { TableFieldsShowcase } from "./showcases/table-fields";
 import { ValueMatrixShowcase } from "./showcases/value-matrix";
 import { ButtonShowcase } from "./showcases/button";
@@ -247,6 +248,12 @@ const items: Item[] = [
     label: "BaseTable",
     component: BaseTableShowcase,
     tags: ["depth:1", "table", "data"],
+  },
+  {
+    id: "tree-table",
+    label: "TreeTable",
+    component: TreeTableShowcase,
+    tags: ["depth:2", "table", "data"],
   },
   {
     id: "table-fields",

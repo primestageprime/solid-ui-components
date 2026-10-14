@@ -85,6 +85,7 @@ export * from "./components/HeatStack";
 export * from "./components/HeatStream";
 export * from "./components/HeatStreamGrid";
 export * from "./components/Table";
+export * from "./components/TreeTable";
 // Data-last functional utilities + typed pipe: namespaced (mirrors `fields`).
 // Self-contained, liftable-to-own-package module — see src/fn/README.md.
 export * as fn from "./fn";

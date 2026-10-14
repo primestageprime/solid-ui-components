@@ -40,6 +40,17 @@ object-accumulator reduce usually is not: `PivotTreemap.tsx`'s `outerSlots` and
 cleanly to `sum(pluck(...))` / `sum(map(...))`, because `sum([]) === 0` matches
 a 0 seed exactly. Check what is actually being reduced.
 
+## TreeTable's comparator sort — `collectionMethodCalls` raised 30 → 31
+
+`src/components/TreeTable/flattenTree.ts` sorts siblings with
+`[...roots].sort(compare)`. The comparator puts nulls last in both directions
+and compares strings with `localeCompare` — the same rule as BaseTable's own
+counted `[...data].sort(...)`. `fn` has only the key-based `sortBy`, which
+compares with `<` and cannot express either rule. A comparator helper in `fn`
+(e.g. `sortWith`) would retire both hits, but `fn` is public API (`export * as
+fn`), so it needs its own approval. Raised by name on 2026-10-14; the reason is
+recorded under `_raises` in `scripts/health-baseline.json`.
+
 ## Moving `prepare` to `prepack`
 
 Evaluated and rejected — see
