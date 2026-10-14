@@ -32,6 +32,8 @@
 
 - **`ModeSplitButton` `menuIcon`** and **`PopoverMenu` `caretIcon`** — the menu trigger's glyph. The default stays the ▾.
 
+- **`BaseTable`**, **`TreeTable`** — `flush` drops the frame's corner cutouts and side borders, so a table that fills a panel runs its lines to the panel's edges.
+
 - **`ThreePanelLayout`** — `rightPanelFlush` drops the right panel's inner padding, so its content (a table's row lines) runs to the panel's edges. The content sets its own inset.
 
 ### Changed

@@ -108,6 +108,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     "compact",
     "fixedLayout",
     "fit",
+    "flush",
     "getRowClass",
     "highlighted",
     "onRowClick",
@@ -197,6 +198,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     if (local.compact) classList.push("hud-table--compact");
     if (local.fixedLayout) classList.push("hud-table--fixed");
     if (local.fit) classList.push("hud-table--fit");
+    if (local.flush) classList.push("hud-table--flush");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };

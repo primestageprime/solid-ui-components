@@ -64,6 +64,12 @@ export interface BaseTableProps<T>
    * `fixedLayout` (fixed layout is for one flexing/ellipsized column).
    */
   fit?: boolean;
+  /**
+   * Drop the frame's corner cutouts and its side borders, for a table that
+   * fills a panel edge to edge: the row lines, and the top and bottom lines,
+   * then run to the panel's edges. Defaults to `false`.
+   */
+  flush?: boolean;
   getRowClass?: (row: T, index: number) => string;
   /**
    * Rows to light as if hovered, driven from OUTSIDE the table — the other

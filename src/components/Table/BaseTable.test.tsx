@@ -333,3 +333,12 @@ describe("BaseTable highlighted", () => {
     expect(lit()).toEqual([false, false]);
   });
 });
+
+describe("BaseTable flush", () => {
+  it("marks the frame flush only when flush is set", () => {
+    const flush = render(() => <BaseTable data={DATA} columns={COLUMNS} flush />);
+    expect(flush.container.querySelector(".hud-table.hud-table--flush")).not.toBeNull();
+    const framed = render(() => <BaseTable data={DATA} columns={COLUMNS} />);
+    expect(framed.container.querySelector(".hud-table--flush")).toBeNull();
+  });
+});

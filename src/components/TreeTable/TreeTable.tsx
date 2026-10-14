@@ -63,6 +63,7 @@ export interface TreeTableProps<T extends TableRow>
     | "compact"
     | "fixedLayout"
     | "fit"
+    | "flush"
     | "emptyMessage"
     | "class"
   > {
@@ -236,6 +237,7 @@ export function TreeTable<T extends TableRow>(props: TreeTableProps<T>) {
       compact={props.compact}
       fixedLayout={props.fixedLayout}
       fit={props.fit}
+      flush={props.flush}
       emptyMessage={props.emptyMessage}
       class={props.class}
       sort={sort()}

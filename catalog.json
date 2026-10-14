@@ -3276,7 +3276,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/BaseTable.tsx",
-    "line": 456
+    "line": 458
   },
   {
     "name": "createBatchBar",
@@ -17033,7 +17033,7 @@
     "showcase": "#/tree-table",
     "since": "0.219.0",
     "file": "src/components/TreeTable/TreeTable.tsx",
-    "line": 106
+    "line": 107
   },
   {
     "name": "TrendSparkline",
