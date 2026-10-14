@@ -6,7 +6,7 @@
 //
 // Peter's chart visual language (2026-09-24) — EVERY chart has:
 //
-//   ┌──────────────────────────────────────────── [⤢][⊿][▾] ┐
+//   ┌──────────────────────────────────────────── [⤢][⊿][≡] ┐
 //   │ Title                                                  │
 //   │ S │                                                    │
 //   │ a │  children (the chart; fills the body)              │
@@ -18,7 +18,20 @@
 //     along the left edge (`VerticalAxisTitle`);
 //   * a BUTTON SET, top right: fullscreen, then the Y-axis STRATEGY split
 //     button — the main face shows the current mode's icon and performs its
-//     action, the ▾ picks the mode (see `yAxisModes.ts`).
+//     action, the ≡ (a hamburger, `menuIcon="menu"`) picks the mode (see
+//     `yAxisModes.ts`).
+//
+// COLLAPSE (owner, 2026-10-14) is opt-in: `collapsible` ends the button set
+// with a chevron. The chevron points down when the frame is collapsed
+// ("Expand chart") and up when it is open ("Collapse chart"). The menu
+// trigger is a hamburger, not a ▾, so the chevron means only this. A
+// collapsed frame keeps its header and does not render its body. Its column
+// drops the stated height, so the frame is as tall as its header. A FILL
+// frame's box still fills its parent: the parent must give back the space.
+// `collapsed` is controlled or owned, like `fullscreen`. Fullscreen and
+// collapse never show together: entering fullscreen EXPANDS the frame (a
+// fullscreen header with no chart shows nothing), and the chevron on a
+// fullscreen frame leaves fullscreen and collapses.
 //
 // The frame owns no axis state. The mode is controlled (`yAxisMode` +
 // `onYAxisModeChange`), the main face reports `onYAxisPress`, and the caller
@@ -34,7 +47,7 @@
 // lane chart packed into as many rows as it needs): no stated height, and the
 // body row grows only when fullscreen gives the column a height to grow into.
 //
-// The ▾'s accessible name ("Y-axis mode") is ModeSplitButton's `menuLabel`.
+// The ≡'s accessible name ("Y-axis mode") is ModeSplitButton's `menuLabel`.
 //
 // `yAxisStrategy: "auto-grow-only"` (an Override, Peter 2026-10-08) swaps the
 // split for ONE plain button: the axis only ever auto-grows, so there is no
@@ -85,6 +98,18 @@ export interface ChartFrameProps {
   /** Controlled fullscreen. Omit it and the frame owns the state. */
   fullscreen?: boolean;
   onFullscreenChange?: (next: boolean) => void;
+  /**
+   * Draw the collapse chevron at the end of the button set. Default false:
+   * no chevron, and `collapsed` is ignored.
+   */
+  collapsible?: boolean;
+  /**
+   * Controlled collapse: true shows only the header. Omit it and the frame
+   * owns the state, starting open. Entering fullscreen expands the frame.
+   */
+  collapsed?: boolean;
+  /** The chevron (or entering fullscreen) asked for a new collapse state. */
+  onCollapsedChange?: (next: boolean) => void;
   /** The chart. It fills the body. */
   children: JSX.Element;
   /**
@@ -118,6 +143,9 @@ const columnHeight = (height: ChartFrameProps["height"]): JSX.CSSProperties =>
 const frameColumn = (height: ChartFrameProps["height"]) =>
   createStack({ gap: "xs", style: columnHeight(height) });
 
+/** A collapsed column's height: its header's. Merged over the stated one. */
+const HEADER_ONLY: JSX.CSSProperties = { height: "auto" };
+
 /** Rail + chart; takes what the header leaves. */
 const BodyRow = createRow({
   gap: "xs",
@@ -149,11 +177,31 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
   const Box = props.height === "fill" ? FillFullscreenBox : FullscreenBox;
   const [owned, setOwned] = createSignal(false);
   const fullscreen = () => props.fullscreen ?? owned();
+  const [ownedCollapsed, setOwnedCollapsed] = createSignal(false);
+  // Fullscreen wins: a fullscreen frame always shows its chart.
+  const collapsed = () =>
+    props.collapsible === true &&
+    !fullscreen() &&
+    (props.collapsed ?? ownedCollapsed());
+  const setCollapsed = (next: boolean): void => {
+    if (props.collapsed === undefined) setOwnedCollapsed(next);
+    props.onCollapsedChange?.(next);
+  };
+  /** The chevron. Collapsing a fullscreen frame also leaves fullscreen. */
+  const toggleCollapsed = (): void => {
+    const next = !collapsed();
+    if (next && fullscreen()) setFullscreen(false);
+    setCollapsed(next);
+  };
   const setFullscreen = (next: boolean): void => {
+    const wasCollapsed =
+      props.collapsible === true && (props.collapsed ?? ownedCollapsed());
+    if (next && wasCollapsed) setCollapsed(false);
     if (props.fullscreen === undefined) setOwned(next);
     props.onFullscreenChange?.(next);
   };
   const fullscreenName = () => (fullscreen() ? "Exit full screen" : "Full screen");
+  const collapseName = () => (collapsed() ? "Expand chart" : "Collapse chart");
 
   const buttons = (): JSX.Element => (
     <ButtonGroup>
@@ -181,8 +229,19 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
             onPress={() => props.onYAxisPress?.()}
             onModeChange={(next) => props.onYAxisModeChange?.(next)}
             menuLabel="Y-axis mode"
+            menuIcon="menu"
           />
         )}
+      </Show>
+      <Show when={props.collapsible}>
+        <IconOnlyButton
+          onClick={toggleCollapsed}
+          aria-expanded={!collapsed()}
+          aria-label={collapseName()}
+          title={collapseName()}
+        >
+          <ButtonIcon name={collapsed() ? "chevron-down" : "chevron-up"} />
+        </IconOnlyButton>
       </Show>
     </ButtonGroup>
   );
@@ -193,7 +252,7 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
       onFullscreenChange={setFullscreen}
       renderCorner={() => null}
     >
-      <FrameColumn>
+      <FrameColumn style={collapsed() ? HEADER_ONLY : undefined}>
         <SpreadRow>
           <TextTitle>{props.title}</TextTitle>
           <Show when={props.actions} fallback={buttons()}>
@@ -203,16 +262,18 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
             </ClusterRow>
           </Show>
         </SpreadRow>
-        <Body>
-          <Show when={props.yTitle}>
-            {(yTitle) => (
-              <YTitleRail>
-                <VerticalAxisTitle>{yTitle()}</VerticalAxisTitle>
-              </YTitleRail>
-            )}
-          </Show>
-          <GrowFillBox>{props.children}</GrowFillBox>
-        </Body>
+        <Show when={!collapsed()}>
+          <Body>
+            <Show when={props.yTitle}>
+              {(yTitle) => (
+                <YTitleRail>
+                  <VerticalAxisTitle>{yTitle()}</VerticalAxisTitle>
+                </YTitleRail>
+              )}
+            </Show>
+            <GrowFillBox>{props.children}</GrowFillBox>
+          </Body>
+        </Show>
       </FrameColumn>
     </Box>
   );
