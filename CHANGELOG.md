@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.219.0 — 2026-10-14
+
 ### Added
 
 - **`TreeTable`** — a Composite (Depth 2): a table whose parent rows expand to show the rows they are made of. The caller passes the tree and the open ids; the first column draws NestedList's indent rail and a disclosure chevron. Parent rows show their own aggregate values. Optional checkboxes hold leaf ids, and a parent checks every leaf under it. A header click sorts siblings within each parent.
