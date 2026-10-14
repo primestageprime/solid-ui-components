@@ -36,6 +36,10 @@
 
 - **`ChartFrame`** — the y-axis mode menu's trigger is a hamburger, not a ▾, so the chevron means only expand and collapse. Its accessible name stays "Y-axis mode".
 
+### Fixed
+
+- **`List`** — a compact list keeps an interactive row's 12px inline padding. The compact rule set it to 0, so the row's -12px bleed put its text flush with the list's outer edge.
+
 ## 0.218.0 — 2026-10-13
 
 ### Added
