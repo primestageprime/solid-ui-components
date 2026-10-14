@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`MetricCard` `size`** — `"md" | "lg"`, default `md`. `lg` sets the value at 2.5rem (from 1.5rem) and its units at 1.25rem, for a page's headline figure. The label and the card chrome do not change. Exported type: `MetricCardSize`.
+
 ## 0.219.0 — 2026-10-14
 
 ### Added

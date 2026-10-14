@@ -44,6 +44,12 @@ export const MetricCardShowcase: Component = () => {
         />
       </Row>
 
+      <h3 class="showcase-heading-gap">Size lg (headline figure)</h3>
+      <Row gap="sm" wrap>
+        <MetricCard label="Cash today" value="$412,380" size="lg" />
+        <MetricCard label="Runway" value={14} units="months" size="lg" />
+      </Row>
+
       <h3 class="showcase-heading-gap">Dashboard row</h3>
       <Row gap="sm" wrap>
         <MetricCard label="Missing Metrics" value={3} color="warning" />
