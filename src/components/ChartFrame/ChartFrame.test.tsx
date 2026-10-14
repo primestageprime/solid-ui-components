@@ -3,7 +3,8 @@ import { createSignal } from "solid-js";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { HEIGHT_REVEAL_MS } from "../HeightReveal";
 import { ICON_PATHS, type IconName } from "../Icon/Icon";
 import {
   CHART_FRAME_HEIGHT,
@@ -221,7 +222,9 @@ describe("ContentChartFrame — sized by its chart", () => {
     const column = container.querySelector(".sui-fullscreen-box")!
       .firstElementChild as HTMLElement;
     expect(column.style.height).toBe("");
-    const body = column.children[1] as HTMLElement;
+    // The body row sits in the HeightReveal: reveal > inner > row.
+    const body = column.children[1].firstElementChild!
+      .firstElementChild as HTMLElement;
     expect(body.style.flex).toBe("1 0 auto");
   });
 });
@@ -270,6 +273,10 @@ describe("ContentAutoGrowChartFrame — content height, auto-grow-only axis", ()
 });
 
 describe("ChartFrame — collapsible", () => {
+  // The body unmounts when the HeightReveal's close ends.
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+  const settle = () => vi.advanceTimersByTime(HEIGHT_REVEAL_MS);
   const chevron = (container: HTMLElement) =>
     container.querySelector<HTMLButtonElement>("button[aria-expanded]");
   const column = (container: HTMLElement) =>
@@ -304,13 +311,15 @@ describe("ChartFrame — collapsible", () => {
     expect(shut.getAttribute("aria-expanded")).toBe("false");
     expect(shut.title).toBe("Expand chart");
     expect(shut.querySelector('[aria-label="chevron-down"]')).toBeTruthy();
-    // The header stays; the body (y-title, chart) is gone, and the column
-    // drops its stated height.
+    // The column drops its stated height at once and eases to the header's.
+    // The body (y-title, chart) stays while its row shuts, then unmounts.
+    expect(column(container).style.height).toBe("auto");
+    expect(column(container).classList.contains("stack--size-motion")).toBe(true);
+    expect(queryByText("chart")).toBeTruthy();
+    settle();
     expect(queryByText("Cash flow")).toBeTruthy();
     expect(queryByText("chart")).toBeNull();
     expect(queryByText("Balance ($)")).toBeNull();
-    expect(column(container).children).toHaveLength(1);
-    expect(column(container).style.height).toBe("auto");
 
     fireEvent.click(shut);
     expect(onChange).toHaveBeenLastCalledWith(false);
@@ -362,6 +371,7 @@ describe("ChartFrame — collapsible", () => {
     ));
     const box = container.querySelector(".sui-fullscreen-box")!;
     fireEvent.click(button(container, "Collapse chart")!);
+    settle();
     expect(queryByText("chart")).toBeNull();
 
     fireEvent.click(button(container, "Full screen")!);
@@ -372,6 +382,7 @@ describe("ChartFrame — collapsible", () => {
     fireEvent.click(button(container, "Collapse chart")!);
     expect(box.getAttribute("data-fullscreen")).toBe("false");
     expect(onCollapsed).toHaveBeenLastCalledWith(true);
+    settle();
     expect(queryByText("chart")).toBeNull();
   });
 

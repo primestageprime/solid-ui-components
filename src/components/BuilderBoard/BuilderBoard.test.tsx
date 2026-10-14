@@ -8,8 +8,9 @@
 // ============================================
 import { fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FillAutoGrowChartFrame } from "../ChartFrame";
+import { HEIGHT_REVEAL_MS } from "../HeightReveal";
 import { type FakeSizer, installFakeSizer } from "../../test-utils/fakeSizer";
 import { NATURAL_GAUGE_WIDTH } from "../RateGauge/geometry";
 import { BuilderBoard, createBuilderBoard } from "./BuilderBoard";
@@ -55,8 +56,10 @@ describe("BuilderBoard", () => {
     const b = panel(container, "b");
     expect(a.nextElementSibling).toBe(b);
     expect(a.parentElement?.dataset.builderBoardHalf).toBe("top");
+    // A's cell eases its size when its frame collapses; B's does not.
+    expect(a.className).toBe("stack stack--gap-xs stack--size-motion");
+    expect(b.className).toBe("stack stack--gap-xs");
     for (const cell of [a, b]) {
-      expect(cell.className).toBe("stack stack--gap-xs");
       expect(cell.style.minHeight).toBe("0px");
       const card = cell.firstElementChild as HTMLElement;
       expect(card.className).toMatch(/surface/);
@@ -213,11 +216,14 @@ describe("BuilderBoard — panelACollapsed", () => {
   };
 
   it("split: A's cell takes its content's height and B keeps the fill", () => {
+    vi.useFakeTimers();
     const { container, press, queryByText } = collapsibleBoard();
     const a = panel(container, "a");
     const b = panel(container, "b");
     expect(a.style.flex).toBe("");
     press("Collapse chart");
+    vi.advanceTimersByTime(HEIGHT_REVEAL_MS);
+    vi.useRealTimers();
     expect(queryByText("chart")).toBeNull();
     expect(a.style.flex).toBe("0 0 auto");
     expect(b.style.minHeight).toBe("0px");
