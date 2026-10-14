@@ -23,7 +23,7 @@ import {
   ScrollFillColumn,
   ScrollYBox,
 } from "../Layout/variants";
-import type { TableColumn, TableRow } from "./types";
+import type { TableColumn, TableRow, TableSort } from "./types";
 import {
   type BaseTableProps,
   getCellValue,
@@ -115,30 +115,37 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     "emptyMessage",
     "rowActions",
     "spanRow",
+    "sort",
+    "onSortChange",
     "class",
   ]);
 
-  const [sortColumn, setSortColumn] = createSignal<string | null>(null);
-  const [sortDirection, setSortDirection] = createSignal<SortDirection>(null);
+  // Internal sort state, used only while the caller does not own the sort.
+  const [ownSort, setOwnSort] = createSignal<TableSort | null>(null);
+  const controlled = (): boolean => local.onSortChange !== undefined;
+  const currentSort = (): TableSort | null =>
+    controlled() ? (local.sort ?? null) : ownSort();
+  const sortColumn = (): string | null => currentSort()?.columnId ?? null;
+  const sortDirection = (): SortDirection => currentSort()?.direction ?? null;
+
+  /** none → asc → desc → none, per column. */
+  const nextSort = (columnId: string): TableSort | null => {
+    const now = currentSort();
+    if (now?.columnId !== columnId) return { columnId, direction: "asc" };
+    return now.direction === "asc" ? { columnId, direction: "desc" } : null;
+  };
 
   const handleSort = (columnId: string) => {
     const column = local.columns.find((c) => c.id === columnId);
     if (!column?.sortable) return;
-
-    if (sortColumn() === columnId) {
-      if (sortDirection() === "asc") {
-        setSortDirection("desc");
-      } else if (sortDirection() === "desc") {
-        setSortColumn(null);
-        setSortDirection(null);
-      }
-    } else {
-      setSortColumn(columnId);
-      setSortDirection("asc");
-    }
+    const next = nextSort(columnId);
+    if (local.onSortChange) local.onSortChange(next);
+    else setOwnSort(next);
   };
 
   const sortedData = () => {
+    // A controlling caller hands rows over already in order.
+    if (controlled()) return local.data;
     const col = sortColumn();
     const dir = sortDirection();
     if (!col || !dir) return local.data;
@@ -232,6 +239,13 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
         "text-align": column.align || "left",
       }}
       rowspan={rowspan}
+      aria-sort={
+        sortColumn() === column.id
+          ? sortDirection() === "asc"
+            ? "ascending"
+            : "descending"
+          : undefined
+      }
       onClick={() => handleSort(column.id)}
     >
       <span class="hud-table__header-content">

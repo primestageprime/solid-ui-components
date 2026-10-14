@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## Held for the next release
+
+These entries are merged to `main` but not released (owner, 2026-10-14). `release.mjs` reads only the `## Unreleased` body, so this section cuts no version. To release them, move this body under `## Unreleased`.
+
+### Added
+
+- **`TreeTable`** — a Composite (Depth 2): a table whose parent rows expand to show the rows they are made of. The caller passes the tree and the open ids; the first column draws NestedList's indent rail and a disclosure chevron. Parent rows show their own aggregate values. Optional checkboxes hold leaf ids, and a parent checks every leaf under it. A header click sorts siblings within each parent.
+
+- **`IndentRail`** — a Layout Primitive (Depth 1): NestedList's indent and guide rail around arbitrary content, with no list semantics. It shares NestedList's stylesheet.
+
+- **`DisclosureButton`** and **`ReservedDisclosureButton`** — curried Buttons: a ghost button with no padding, exactly as wide as its chevron, and its hidden twin that keeps the box on a row with nothing to disclose.
+
+- **`BaseTable` controlled sort** — `sort` and `onSortChange`. With `onSortChange` set, the caller owns the sort and the row order, and BaseTable only draws the header state. The sorted header now carries `aria-sort`. Exported type: `TableSort`.
+
 ## 0.218.0 — 2026-10-13
 
 ### Added

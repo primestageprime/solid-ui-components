@@ -3268,7 +3268,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/BaseTable.tsx",
-    "line": 442
+    "line": 456
   },
   {
     "name": "createBatchBar",
@@ -6978,6 +6978,31 @@
     "line": 125
   },
   {
+    "name": "DisclosureButton",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Button",
+    "variantOf": {
+      "factory": "createButton",
+      "overrides": "{\n  variant: \"ghost\",\n  size: \"sm\",\n  style: {\n    padding: \"0\",\n    \"border-width\": \"0\",\n    \"min-width\": \"0\",\n    height: \"24px\",\n    \"line-height\": \"1\",\n  },\n}"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "ButtonDataProps",
+    "summary": "Disclosure button — the chevron of a collapsible row: a ghost button with no padding and no border, 24px tall, so it is exactly as wide as its glyph and the chevron meets its container's content edge.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Disclosure button — the chevron of a collapsible row: a ghost button with no padding and no border, 24px tall, so it is exactly as wide as its glyph and the chevron meets its container's content edge. The box is pinned for the same reason as `GlyphSlotGhostButton`: a glyph change must not move the row. Pass `aria-expanded`, an \"Expand X\" / \"Collapse X\" `aria-label`, and the chevron Icon as the child. See TreeTable.",
+    "showcase": "#/button",
+    "since": "Held for the next release",
+    "file": "src/components/Button/variants.ts",
+    "line": 144
+  },
+  {
     "name": "DismissibleNoticeBanner",
     "depth": 2,
     "kind": "composite",
@@ -9586,7 +9611,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 313
+    "line": 314
   },
   {
     "name": "HUDTabs",
@@ -9804,6 +9829,25 @@
     "since": null,
     "file": "src/components/ThreadGroup/variants.ts",
     "line": 10
+  },
+  {
+    "name": "IndentRail",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Layout",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "NestedList's indent and guide rail without list semantics, for a hierarchy inside a table cell.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a hierarchy where a `listitem` cannot go, e.g. the first cell of a `TreeTable` row. For a hierarchy that IS a list, use `NestedList`.",
+    "notes": "The NestedList indent and guide rail, without list semantics.",
+    "showcase": null,
+    "since": "Held for the next release",
+    "file": "src/components/Layout/IndentRail.tsx",
+    "line": 34
   },
   {
     "name": "InfoAlert",
@@ -13070,6 +13114,31 @@
     "since": "0.35.0",
     "file": "src/components/Card/RemovableItemCard.tsx",
     "line": 23
+  },
+  {
+    "name": "ReservedDisclosureButton",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Button",
+    "variantOf": {
+      "factory": "createButton",
+      "overrides": "{\n    variant: \"ghost\",\n    size: \"sm\",\n    style: {\n      padding: \"0\",\n      \"border-width\": \"0\",\n      \"min-width\": \"0\",\n      height: \"24px\",\n      \"line-height\": \"1\",\n      visibility: \"hidden\",\n    },\n  }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "ButtonDataProps",
+    "summary": "Reserved disclosure slot — a `DisclosureButton` that HOLDS ITS SPACE AND DOES NOTHING (`visibility: hidden`), for a row with nothing to disclose, so its label lines up with its siblings'.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Reserved disclosure slot — a `DisclosureButton` that HOLDS ITS SPACE AND DOES NOTHING (`visibility: hidden`), for a row with nothing to disclose, so its label lines up with its siblings'. As with `ReservedGlyphSlotButton`, `visibility` keeps the box while taking the node out of the accessibility tree and the tab order. Give it the same glyph as the real button.",
+    "showcase": "#/button",
+    "since": "Held for the next release",
+    "file": "src/components/Button/variants.ts",
+    "line": 161
   },
   {
     "name": "ReservedGlyphSlotButton",
@@ -16895,6 +16964,25 @@
     "since": "0.83.2",
     "file": "src/components/Treemap/Treemap.tsx",
     "line": 110
+  },
+  {
+    "name": "TreeTable",
+    "depth": 2,
+    "kind": "composite",
+    "family": "TreeTable",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A table with expandable sub-rows: each parent row expands or collapses the smaller rows it is made of, at any depth.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "expandable rows and sub-rows — an item made of smaller items (assemblies and parts, groups and their members, configs over the rows they cover) that collapse into the parent row, where the members share the parent's columns; a tree table, nested rows, a grouped table with collapsible groups. For a hierarchy with no columns, use `NestedList`.",
+    "notes": null,
+    "showcase": "#/tree-table",
+    "since": "Held for the next release",
+    "file": "src/components/TreeTable/TreeTable.tsx",
+    "line": 106
   },
   {
     "name": "TrendSparkline",

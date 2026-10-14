@@ -134,3 +134,40 @@ export const ReservedGlyphSlotButton: Component<ButtonDataProps> =
     size: "sm",
     style: { height: "24px", "line-height": "1", visibility: "hidden" },
   });
+
+// Disclosure button — the chevron of a collapsible row: a ghost button with
+// no padding and no border, 24px tall, so it is exactly as wide as its glyph
+// and the chevron meets its container's content edge. The box is pinned for
+// the same reason as `GlyphSlotGhostButton`: a glyph change must not move the
+// row. Pass `aria-expanded`, an "Expand X" / "Collapse X" `aria-label`, and
+// the chevron Icon as the child. See TreeTable.
+export const DisclosureButton: Component<ButtonDataProps> = createButton({
+  variant: "ghost",
+  size: "sm",
+  style: {
+    padding: "0",
+    "border-width": "0",
+    "min-width": "0",
+    height: "24px",
+    "line-height": "1",
+  },
+});
+
+// Reserved disclosure slot — a `DisclosureButton` that HOLDS ITS SPACE AND
+// DOES NOTHING (`visibility: hidden`), for a row with nothing to disclose, so
+// its label lines up with its siblings'. As with `ReservedGlyphSlotButton`,
+// `visibility` keeps the box while taking the node out of the accessibility
+// tree and the tab order. Give it the same glyph as the real button.
+export const ReservedDisclosureButton: Component<ButtonDataProps> =
+  createButton({
+    variant: "ghost",
+    size: "sm",
+    style: {
+      padding: "0",
+      "border-width": "0",
+      "min-width": "0",
+      height: "24px",
+      "line-height": "1",
+      visibility: "hidden",
+    },
+  });

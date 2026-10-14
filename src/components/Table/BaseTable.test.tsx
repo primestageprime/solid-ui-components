@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { createSignal } from "solid-js";
 import { render, fireEvent } from "@solidjs/testing-library";
 import { BaseTable } from "./BaseTable";
-import type { TableColumn, TableRowSpan } from "./types";
+import type { TableColumn, TableRowSpan, TableSort } from "./types";
 
 interface Row {
   week: string;
@@ -187,6 +187,126 @@ describe("BaseTable sorting", () => {
     clickHeader(container, "Score"); // desc
     clickHeader(container, "Score"); // cleared
     expect(names(container)).toEqual(["Charlie", "alice", "Bob"]);
+  });
+});
+
+// Controlled sort: the caller owns the sort state AND the row order. BaseTable
+// draws the indicators from `sort` and reports header clicks; it never
+// reorders `data` itself. TreeTable needs this to sort siblings in its tree.
+describe("BaseTable controlled sort", () => {
+  interface CRow {
+    name: string;
+    score: number;
+  }
+  const CCOLUMNS: TableColumn<CRow>[] = [
+    { id: "name", header: "Name", accessor: "name", sortable: true },
+    { id: "score", header: "Score", accessor: "score", sortable: true },
+    { id: "plain", header: "Plain", accessor: () => "-" },
+  ];
+  const CDATA: CRow[] = [
+    { name: "b", score: 2 },
+    { name: "a", score: 1 },
+    { name: "c", score: 3 },
+  ];
+  const names = (container: HTMLElement) =>
+    bodyRows(container).map((r) => r.querySelector("td")?.textContent);
+  const th = (container: HTMLElement, label: string): HTMLElement => {
+    const el = Array.from(container.querySelectorAll("th")).find((h) =>
+      h.textContent?.includes(label),
+    );
+    if (!el) throw new Error(`no header matching ${label}`);
+    return el;
+  };
+
+  it("renders data in the given order and reports the next sort on a header click", () => {
+    const onSortChange = vi.fn();
+    const { container } = render(() => (
+      <BaseTable
+        data={CDATA}
+        columns={CCOLUMNS}
+        sort={{ columnId: "score", direction: "desc" }}
+        onSortChange={onSortChange}
+      />
+    ));
+    expect(names(container)).toEqual(["b", "a", "c"]);
+    fireEvent.click(th(container, "Score"));
+    expect(onSortChange).toHaveBeenLastCalledWith(null);
+    fireEvent.click(th(container, "Name"));
+    expect(onSortChange).toHaveBeenLastCalledWith({
+      columnId: "name",
+      direction: "asc",
+    });
+    expect(names(container)).toEqual(["b", "a", "c"]);
+  });
+
+  it("cycles asc to desc for the sorted column", () => {
+    const onSortChange = vi.fn();
+    const { container } = render(() => (
+      <BaseTable
+        data={CDATA}
+        columns={CCOLUMNS}
+        sort={{ columnId: "name", direction: "asc" }}
+        onSortChange={onSortChange}
+      />
+    ));
+    fireEvent.click(th(container, "Name"));
+    expect(onSortChange).toHaveBeenLastCalledWith({
+      columnId: "name",
+      direction: "desc",
+    });
+  });
+
+  it("ignores a click on a column that is not sortable", () => {
+    const onSortChange = vi.fn();
+    const { container } = render(() => (
+      <BaseTable
+        data={CDATA}
+        columns={CCOLUMNS}
+        sort={null}
+        onSortChange={onSortChange}
+      />
+    ));
+    fireEvent.click(th(container, "Plain"));
+    expect(onSortChange).not.toHaveBeenCalled();
+  });
+
+  it("follows the sort prop for the indicator and aria-sort", () => {
+    const [sort, setSort] = createSignal<TableSort | null>({
+      columnId: "score",
+      direction: "asc",
+    });
+    const { container } = render(() => (
+      <BaseTable
+        data={CDATA}
+        columns={CCOLUMNS}
+        sort={sort()}
+        onSortChange={setSort}
+      />
+    ));
+    expect(th(container, "Score").getAttribute("aria-sort")).toBe("ascending");
+    expect(th(container, "Name").getAttribute("aria-sort")).toBeNull();
+    fireEvent.click(th(container, "Score"));
+    expect(th(container, "Score").getAttribute("aria-sort")).toBe("descending");
+    expect(
+      th(container, "Score").classList.contains(
+        "hud-table__header-cell--sorted",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("BaseTable uncontrolled sort sets aria-sort", () => {
+  it("marks the sorted header", () => {
+    const { container } = render(() => (
+      <BaseTable
+        data={[{ n: 2 }, { n: 1 }]}
+        columns={[{ id: "n", header: "N", accessor: "n", sortable: true }]}
+      />
+    ));
+    const header = container.querySelector("th") as HTMLElement;
+    expect(header.getAttribute("aria-sort")).toBeNull();
+    fireEvent.click(header);
+    expect(header.getAttribute("aria-sort")).toBe("ascending");
   });
 });
 
