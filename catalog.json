@@ -6998,7 +6998,7 @@
     "useFor": null,
     "notes": "Disclosure button — the chevron of a collapsible row: a ghost button with no padding and no border, 24px tall, so it is exactly as wide as its glyph and the chevron meets its container's content edge. The box is pinned for the same reason as `GlyphSlotGhostButton`: a glyph change must not move the row. Pass `aria-expanded`, an \"Expand X\" / \"Collapse X\" `aria-label`, and the chevron Icon as the child. See TreeTable.",
     "showcase": "#/button",
-    "since": "Unreleased",
+    "since": "Held for the next release",
     "file": "src/components/Button/variants.ts",
     "line": 144
   },
@@ -9845,7 +9845,7 @@
     "useFor": "a hierarchy where a `listitem` cannot go, e.g. the first cell of a `TreeTable` row. For a hierarchy that IS a list, use `NestedList`.",
     "notes": "The NestedList indent and guide rail, without list semantics.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "Held for the next release",
     "file": "src/components/Layout/IndentRail.tsx",
     "line": 34
   },
@@ -13136,7 +13136,7 @@
     "useFor": null,
     "notes": "Reserved disclosure slot — a `DisclosureButton` that HOLDS ITS SPACE AND DOES NOTHING (`visibility: hidden`), for a row with nothing to disclose, so its label lines up with its siblings'. As with `ReservedGlyphSlotButton`, `visibility` keeps the box while taking the node out of the accessibility tree and the tab order. Give it the same glyph as the real button.",
     "showcase": "#/button",
-    "since": "Unreleased",
+    "since": "Held for the next release",
     "file": "src/components/Button/variants.ts",
     "line": 161
   },
@@ -16980,7 +16980,7 @@
     "useFor": "expandable rows and sub-rows — an item made of smaller items (assemblies and parts, groups and their members, configs over the rows they cover) that collapse into the parent row, where the members share the parent's columns; a tree table, nested rows, a grouped table with collapsible groups. For a hierarchy with no columns, use `NestedList`.",
     "notes": null,
     "showcase": "#/tree-table",
-    "since": "Unreleased",
+    "since": "Held for the next release",
     "file": "src/components/TreeTable/TreeTable.tsx",
     "line": 106
   },
