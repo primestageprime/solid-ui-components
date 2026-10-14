@@ -465,11 +465,16 @@ const SimpleContractBuilder: Component = () => {
     );
   };
 
+  // A collapses to its header; the board eases B, C and D up with it.
+  const [aCollapsed, setACollapsed] = createSignal(false);
   const panelA = (
     <FillAutoGrowChartFrame
       title="Cash flow — banked to NOW, outlook after"
       yTitle="Balance ($)"
       onYAxisPress={ceiling.reset}
+      collapsible
+      collapsed={aCollapsed()}
+      onCollapsedChange={setACollapsed}
     >
       <AnchorFillBox>
         <CashflowScrubChart
@@ -499,6 +504,7 @@ const SimpleContractBuilder: Component = () => {
   return (
     <div class="component-section component-section--full scenario-board-frame">
       <BuilderBoard
+        panelACollapsed={aCollapsed()}
         panelA={panelA}
         panelB={panelB}
         panelC={panelC}

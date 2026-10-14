@@ -30,6 +30,9 @@
 // drops the stated height, and so does a FILL frame's box, so the frame is
 // as tall as its header. The parent must still give back the space: a
 // BuilderBoard does that with `panelACollapsed`.
+// The collapse ANIMATES (owner, 2026-10-14): the body sits in a HeightReveal,
+// which shuts its row and unmounts the body when the close ends, and the
+// column is a `sizeMotion` Stack, so a stated height eases to the header's.
 // `collapsed` is controlled or owned, like `fullscreen`. Fullscreen and
 // collapse never show together: entering fullscreen EXPANDS the frame (a
 // fullscreen header with no chart shows nothing), and the chevron on a
@@ -60,6 +63,7 @@ import { type Component, type JSX, Show, createSignal, mergeProps } from "solid-
 import { IconOnlyButton } from "../Button";
 import { ButtonGroup } from "../ButtonGroup";
 import { FillFullscreenBox, FullscreenBox } from "../FullscreenBox";
+import { HeightReveal } from "../HeightReveal";
 import { createIcon } from "../Icon";
 import {
   ClusterRow,
@@ -143,7 +147,7 @@ const columnHeight = (height: ChartFrameProps["height"]): JSX.CSSProperties =>
 
 /** The header row and the body row, in one column. */
 const frameColumn = (height: ChartFrameProps["height"]) =>
-  createStack({ gap: "xs", style: columnHeight(height) });
+  createStack({ gap: "xs", sizeMotion: true, style: columnHeight(height) });
 
 /** A collapsed frame is as tall as its header. Set on the box AND the
  *  column: a fill box's CSS gives both `flex: 1 1 0`, and a zero basis in a
@@ -267,7 +271,7 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
             </ClusterRow>
           </Show>
         </SpreadRow>
-        <Show when={!collapsed()}>
+        <HeightReveal when={!collapsed()}>
           <Body>
             <Show when={props.yTitle}>
               {(yTitle) => (
@@ -278,7 +282,7 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
             </Show>
             <GrowFillBox>{props.children}</GrowFillBox>
           </Body>
-        </Show>
+        </HeightReveal>
       </FrameColumn>
     </Box>
   );

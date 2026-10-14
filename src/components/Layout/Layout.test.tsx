@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import layoutCss from "./Layout.css?raw";
-import { Stack, type StackProps } from "./Stack";
+import { Stack, type StackProps, createStack } from "./Stack";
 import { Row } from "./Row";
 import { Box } from "./Box";
 import {
@@ -267,4 +267,20 @@ describe("Stack/Row gap scale", () => {
       );
     });
   }
+});
+
+describe("Stack sizeMotion", () => {
+  it("adds the size-motion class only when asked", () => {
+    const Moving = createStack({ sizeMotion: true });
+    const { container } = render(() => (
+      <>
+        <Moving data-testid="m" />
+        <Stack data-testid="s" />
+      </>
+    ));
+    expect(container.querySelector('[data-testid="m"]')!.className).toBe(
+      "stack stack--size-motion",
+    );
+    expect(container.querySelector('[data-testid="s"]')!.className).toBe("stack");
+  });
 });

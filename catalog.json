@@ -1178,7 +1178,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 166
+    "line": 182
   },
   {
     "name": "BuilderBoardBelowChart",
@@ -1534,7 +1534,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Horizontally-centered column (align:center, sm gap, NO vertical justify) — a content-sized column whose children center on the cross axis.",
@@ -1561,7 +1562,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `align: \"center\"`, `justify: \"center\"`, `gap: \"sm\"`.",
@@ -2121,7 +2123,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "ClipColumn — a flex column that clips its overflow (`overflow: clip`).",
@@ -2173,7 +2176,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "ClipFillColumn — a column that grows to fill its flex parent's leftover height AND clips its overflow: `flex:1 1 auto; min-height:0; overflow:hidden`, `gap:sm`.",
@@ -2200,7 +2204,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "ClipFillColumnFlush — the no-gap sibling of `ClipFillColumn` that ALSO shrinks horizontally: `flex:1; min-width:0; min-height:0; overflow:hidden`, no baked gap.",
@@ -2323,7 +2328,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Plain flex column, no baked gap — a bare vertical stack whose children space themselves (own margins) or sit flush.",
@@ -2821,7 +2827,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `gap: \"xs\"`, `style: { flex: \"1\", \"min-width\": \"0\" }`.",
@@ -2906,7 +2913,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Conversation root — capped reading width and conversation-typography for a multi-participant chat tree.",
@@ -3377,7 +3385,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 272
+    "line": 288
   },
   {
     "name": "createBuilderBoardBelowChart",
@@ -3633,7 +3641,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 296
+    "line": 300
   },
   {
     "name": "createCheckbox",
@@ -5295,10 +5303,11 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
-    "summary": "Flex-column container. Factory behind `Stack`'s curried variants; bakes `gap`, `align`, `justify`, `fill`.",
+    "summary": "Flex-column container. Factory behind `Stack`'s curried variants; bakes `gap`, `align`, `justify`, `fill`, `sizeMotion`.",
     "summarySource": "synthesized",
     "preferFirst": null,
     "notToBeConfusedWith": null,
@@ -5307,7 +5316,7 @@
     "showcase": null,
     "since": "0.46.0",
     "file": "src/components/Layout/Stack.tsx",
-    "line": 71
+    "line": 77
   },
   {
     "name": "createStackedTimelineChart",
@@ -6800,7 +6809,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "\"shrink-wrapped delineated sidebar with chosen cards\" — see DESIGN_LANGUAGE.md.",
@@ -7977,7 +7987,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex column that fills its parent — `flex:1; min-height:0`.",
@@ -8004,7 +8015,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "FillColumnFlush — the no-gap sibling of `FillColumn`: fills its parent's height (`flex:1; min-height:0`) and stacks its children FLUSH (no baked gap, they space themselves via their own margins).",
@@ -8897,7 +8909,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Curried `Stack` that fills the height its parent column has left and CENTRES its child in it (`flex:1 1 0; min-height:0; justify:center`).",
@@ -8980,7 +8993,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "GrowColumn — a column that grows to fill its share of a parent ROW and may shrink past its content (`flex:1; min-width:0`), while stacking its own children.",
@@ -9032,7 +9046,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "GrowStack — a column that grows to fill its share of its parent (`flex:1; min-width:0`) and spaces its children with an `sm` gap.",
@@ -9085,7 +9100,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "GrowTightStack — the `xs`-gap sibling of `GrowStack`: grows to fill its share of a parent ROW, may shrink past its content (`flex:1; min-width:0`), and stacks its children TIGHTLY.",
@@ -9168,7 +9184,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Curried `Stack` taking an EQUAL share of a proportional split (`flex:1 1 0; min-height:0`).",
@@ -9340,6 +9357,25 @@
     "showcase": null,
     "since": "0.84.0",
     "file": "src/components/HeatStreamGrid/HeatStreamGrid.tsx",
+    "line": 37
+  },
+  {
+    "name": "HeightReveal",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "HeightReveal",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a collapsible body that should slide shut, such as ChartFrame's chart.",
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/HeightReveal/HeightReveal.tsx",
     "line": 37
   },
   {
@@ -9611,7 +9647,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 314
+    "line": 315
   },
   {
     "name": "HUDTabs",
@@ -10674,7 +10710,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `align: \"center\"`, `justify: \"center\"`, `gap: \"sm\"`, `style: { padding: \"48px 24px\", \"min-height\": \"200px\", \"text-align\"…`.",
@@ -11097,7 +11134,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `align: \"center\"`, `justify: \"center\"`, `gap: \"sm\"`, `style: { padding: \"32px 16px\", \"min-height\": \"120px\", \"text-align\"…`.",
@@ -11600,7 +11638,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `gap: \"sm\"`.",
@@ -11731,7 +11770,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "NoShrinkColumn — a column that keeps its intrinsic width in a flex ROW (`flex-shrink:0`), while stacking its own children.",
@@ -12142,7 +12182,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "PaddedStack — vertical column with sm gap and inset padding.",
@@ -12213,7 +12254,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Stack variants — named by role / page layout",
@@ -13501,7 +13543,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex column that scrolls its own overflow — `flex:1; min-width:0; overflow:auto`.",
@@ -13553,7 +13596,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "ScrollFillColumn — a column that grows to fill its flex parent's leftover height AND scrolls its own vertical overflow: `flex:1 1 auto; min-height:0; overflow:auto`.",
@@ -14717,7 +14761,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Small, tight, start-aligned column — for dense indicator rows (e.g.",
@@ -14817,7 +14862,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Empty regions — centered stacks with size-specific padding and min-height",
@@ -14906,7 +14952,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "SpacedStack — a plain vertical column at the `md` (12px) gap step, the sibling of TightStack (xs) / NarrowStack (sm) one rung up the scale.",
@@ -16372,7 +16419,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "TightCenteredColumn — a horizontally-centered column with an xs gap (the tight sibling of CenteredColumn).",
@@ -16483,7 +16531,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Stack variants — named by gap",
@@ -17360,7 +17409,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Curried `Stack` that fills a parent of DEFINITE height (`fill` → `height:100%; min-height:0`).",
@@ -17884,7 +17934,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "WrapItemStack — ONE item inside a `WrapRow`, held at its content's NATURAL width (`min-width:0; max-width:100%`, gap:xs).",

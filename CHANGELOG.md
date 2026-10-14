@@ -6,6 +6,14 @@
 
 - **`MetricCard` `size`** — `"md" | "lg"`, default `md`. `lg` sets the value at 2.5rem (from 1.5rem) and its units at 1.25rem, for a page's headline figure. The label and the card chrome do not change. Exported type: `MetricCardSize`.
 
+- **`HeightReveal`** — a Primitive (Depth 1): slides its content open and shut vertically (a `0fr ↔ 1fr` grid row and a fade, 180ms), and unmounts the content when the close ends. Instant under `prefers-reduced-motion`.
+
+- **`Stack` `sizeMotion`** — an Override: the stack's height, flex-grow and flex-basis ease in 180ms, to and from `auto` where the browser supports `interpolate-size`.
+
+### Changed
+
+- **`ChartFrame` collapse** and **`BuilderBoard` `panelACollapsed`** now animate. The chart slides shut and open, the frame eases to its header's height, and BuilderBoard's panels below ease into place. A browser without `interpolate-size` (Firefox and Safari today) still slides the chart, but the frame and panels change size at once.
+
 ## 0.219.0 — 2026-10-14
 
 ### Added

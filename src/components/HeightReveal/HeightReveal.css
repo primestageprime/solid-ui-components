@@ -1,0 +1,37 @@
+/* ============================================
+   HeightReveal — Atomic (Depth 1)
+   The vertical twin of SlideReveal: a one-row grid whose row transitions
+   0fr ↔ 1fr. In a content-sized parent 1fr is the children's own height, so
+   the box grows to exactly what it holds with no measurement. In a parent of
+   definite height the box takes the free space (`flex: 1 1 auto`) and 1fr is
+   all of it. The inner box clips, and it is a flex column so a `flex: 1 1 0`
+   child fills it.
+   ============================================ */
+.sui-height-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  flex: 1 1 auto;
+  min-height: 0;
+  opacity: 0;
+  transition:
+    grid-template-rows 180ms ease-out,
+    opacity 180ms ease-out;
+}
+
+.sui-height-reveal--open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.sui-height-reveal__inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: clip;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-height-reveal {
+    transition: none;
+  }
+}
