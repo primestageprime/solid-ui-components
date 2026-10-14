@@ -10,15 +10,23 @@
 
 - **`Stack` `sizeMotion`** — an Override: the stack's height, flex-grow and flex-basis ease in 180ms, to and from `auto` where the browser supports `interpolate-size`.
 
+- **`createSubmitAction`** and **`Button` `onAction` / `once` / `action`** — a click that sends work. The button shows its spinner and stays disabled while the work runs, and it ignores a second click. With `once`, it stays disabled after one sent run; work that returns `false` leaves it armed. The action waits one paint before it calls the work, so the spinner shows before synchronous work blocks the page. Share one `createSubmitAction` between a button and a keyboard shortcut.
+
+- **`BaseTable`**, **`TreeTable`** — `flush` drops the frame's corner cutouts and side borders, so a table that fills a panel runs its lines to the panel's edges.
+
+- **`ThreePanelLayout`** — `rightPanelFlush` drops the right panel's inner padding, so its content (a table's row lines) runs to the panel's edges. The content sets its own inset.
+
 ### Changed
 
 - **`ChartFrame` collapse** and **`BuilderBoard` `panelACollapsed`** now animate. The chart slides shut and open, the frame eases to its header's height, and BuilderBoard's panels below ease into place. A browser without `interpolate-size` (Firefox and Safari today) still slides the chart, but the frame and panels change size at once.
 
+### Fixed
+
+- **`List`** — a compact list keeps an interactive row's 12px inline padding. The compact rule set it to 0, so the row's -12px bleed put its text flush with the list's outer edge.
+
 ## 0.219.0 — 2026-10-14
 
 ### Added
-
-- **`createSubmitAction`** and **`Button` `onAction` / `once` / `action`** — a click that sends work. The button shows its spinner and stays disabled while the work runs, and it ignores a second click. With `once`, it stays disabled after one sent run; work that returns `false` leaves it armed. The action waits one paint before it calls the work, so the spinner shows before synchronous work blocks the page. Share one `createSubmitAction` between a button and a keyboard shortcut.
 
 - **`TreeTable`** — a Composite (Depth 2): a table whose parent rows expand to show the rows they are made of. The caller passes the tree and the open ids; the first column draws NestedList's indent rail and a disclosure chevron. Parent rows show their own aggregate values. Optional checkboxes hold leaf ids, and a parent checks every leaf under it. A header click sorts siblings within each parent.
 
@@ -34,17 +42,9 @@
 
 - **`ModeSplitButton` `menuIcon`** and **`PopoverMenu` `caretIcon`** — the menu trigger's glyph. The default stays the ▾.
 
-- **`BaseTable`**, **`TreeTable`** — `flush` drops the frame's corner cutouts and side borders, so a table that fills a panel runs its lines to the panel's edges.
-
-- **`ThreePanelLayout`** — `rightPanelFlush` drops the right panel's inner padding, so its content (a table's row lines) runs to the panel's edges. The content sets its own inset.
-
 ### Changed
 
 - **`ChartFrame`** — the y-axis mode menu's trigger is a hamburger, not a ▾, so the chevron means only expand and collapse. Its accessible name stays "Y-axis mode".
-
-### Fixed
-
-- **`List`** — a compact list keeps an interactive row's 12px inline padding. The compact rule set it to 0, so the row's -12px bleed put its text flush with the list's outer edge.
 
 ## 0.218.0 — 2026-10-13
 
