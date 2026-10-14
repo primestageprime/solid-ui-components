@@ -50,7 +50,3 @@ export const unitCost = (p: Part): number =>
   p.parts ? sum(map((c: Part) => c.qty * unitCost(c), p.parts)) : (p.unit ?? 0);
 
 export const lineCost = (p: Part): number => p.qty * unitCost(p);
-
-/** Number of leaf parts under a parent, for the summary line. */
-export const leafCount = (p: Part): number =>
-  p.parts ? sum(map(leafCount, p.parts)) : 1;
