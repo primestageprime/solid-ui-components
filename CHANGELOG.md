@@ -6,6 +6,8 @@
 
 - **`ChartFrame` collapse** — `collapsible`, plus `collapsed` and `onCollapsedChange` (controlled, or owned when `collapsed` is omitted). A chevron ends the button set, after the y-axis split and after `actions`. Collapsed, the frame keeps its header and does not render its body. Entering fullscreen expands it.
 
+- **`BuilderBoard` `panelACollapsed`** — panel A takes only its content's height, and the panels below move up. Pass the `collapsed` state of A's `ChartFrame`. The default is unchanged.
+
 - **`ModeSplitButton` `menuIcon`** and **`PopoverMenu` `caretIcon`** — the menu trigger's glyph. The default stays the ▾.
 
 ### Changed

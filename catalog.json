@@ -1178,7 +1178,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 141
+    "line": 166
   },
   {
     "name": "BuilderBoardBelowChart",
@@ -3377,7 +3377,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 241
+    "line": 272
   },
   {
     "name": "createBuilderBoardBelowChart",
@@ -3633,7 +3633,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 291
+    "line": 295
   },
   {
     "name": "createCheckbox",
