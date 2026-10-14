@@ -59,6 +59,23 @@
   min-height: 0;
 }
 
+/* A stack whose own size animates when it changes (ChartFrame's column, a
+   BuilderBoard slot). `interpolate-size` lets a stated height ease to and
+   from `auto`; a browser without it changes size at once, as before. */
+.stack--size-motion {
+  interpolate-size: allow-keywords;
+  transition:
+    height 180ms ease-out,
+    flex-grow 180ms ease-out,
+    flex-basis 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack--size-motion {
+    transition: none;
+  }
+}
+
 /* Row */
 .row {
   display: flex;
