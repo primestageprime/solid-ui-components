@@ -11,6 +11,7 @@ import { Icon } from "../../../../src/components/Icon";
 import { ClusterRow } from "../../../../src/components/Layout";
 import { NESTED_LIST_MAX_INDENT_STEPS } from "../../../../src/components/Layout/NestedList";
 import type { FlatTreeRow } from "./flatten";
+import "./tree-cell.css";
 
 export interface TreeCellProps {
   readonly flat: FlatTreeRow<unknown>;
@@ -31,6 +32,7 @@ export const TreeCell: Component<TreeCellProps> = (props) => (
     <ClusterRow>
       {props.flat.hasChildren ? (
         <GlyphSlotGhostButton
+          class="tree-cell__toggle"
           aria-expanded={props.flat.expanded}
           aria-label={`${props.flat.expanded ? "Collapse" : "Expand"} ${props.name}`}
           onClick={(e) => {
@@ -45,7 +47,11 @@ export const TreeCell: Component<TreeCellProps> = (props) => (
           />
         </GlyphSlotGhostButton>
       ) : (
-        <ReservedGlyphSlotButton tabindex={-1} aria-hidden="true">
+        <ReservedGlyphSlotButton
+          class="tree-cell__toggle"
+          tabindex={-1}
+          aria-hidden="true"
+        >
           <Icon name="chevron-right" size="xs" />
         </ReservedGlyphSlotButton>
       )}
