@@ -341,14 +341,14 @@ describe("ChartFrame — collapsible", () => {
         <span />
       </ChartFrame>
     ));
-    const after = (a: Element, b: Element) =>
+    const follows = (a: Element, b: Element) =>
       (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
     const trigger = container.querySelector(".sui-popover-menu__trigger")!;
     const cap = container.querySelector('input[aria-label="Cap"]')!;
     const full = button(container, "Full screen")!;
-    expect(after(cap, chevron(container)!)).toBe(true);
-    expect(after(full, chevron(container)!)).toBe(true);
-    expect(after(chevron(container)!, trigger)).toBe(true);
+    expect(follows(cap, chevron(container)!)).toBe(true);
+    expect(follows(full, chevron(container)!)).toBe(true);
+    expect(follows(chevron(container)!, trigger)).toBe(true);
     const buttons = [...container.querySelectorAll("button")];
     expect(buttons[buttons.length - 1]).toBe(trigger.closest("button") ?? trigger);
   });
