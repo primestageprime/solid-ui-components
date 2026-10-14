@@ -18,6 +18,8 @@
 
 ### Added
 
+- **`createSubmitAction`** and **`Button` `onAction` / `once` / `action`** — a click that sends work. The button shows its spinner and stays disabled while the work runs, and it ignores a second click. With `once`, it stays disabled after one sent run; work that returns `false` leaves it armed. The action waits one paint before it calls the work, so the spinner shows before synchronous work blocks the page. Share one `createSubmitAction` between a button and a keyboard shortcut.
+
 - **`TreeTable`** — a Composite (Depth 2): a table whose parent rows expand to show the rows they are made of. The caller passes the tree and the open ids; the first column draws NestedList's indent rail and a disclosure chevron. Parent rows show their own aggregate values. Optional checkboxes hold leaf ids, and a parent checks every leaf under it. A header click sorts siblings within each parent.
 
 - **`IndentRail`** — a Layout Primitive (Depth 1): NestedList's indent and guide rail around arbitrary content, with no list semantics. It shares NestedList's stylesheet.
