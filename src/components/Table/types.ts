@@ -102,6 +102,25 @@ export interface BaseTableProps<T>
    * a column, the row falls back to normal rendering.
    */
   spanRow?: (row: T, rowIndex: number) => TableRowSpan | null;
+  /**
+   * Controlled sort, read only when `onSortChange` is set. The header
+   * indicators and `aria-sort` follow this value. `null` means no sort.
+   */
+  sort?: TableSort | null;
+  /**
+   * Hands the sort to the caller. With this set, a click on a sortable header
+   * reports the next state (none → asc → desc → none) and BaseTable renders
+   * `data` in the order given — it never reorders rows itself. For a caller
+   * whose order is not a flat sort, e.g. `TreeTable`, which sorts siblings
+   * inside each parent. Without it, BaseTable sorts internally as before.
+   */
+  onSortChange?: (next: TableSort | null) => void;
+}
+
+/** A sorted column and its direction, for `BaseTableProps.sort`. */
+export interface TableSort {
+  readonly columnId: string;
+  readonly direction: "asc" | "desc";
 }
 
 /**
@@ -149,6 +168,8 @@ export interface SelectionAction<T> {
  * - `spanRow` / `rowActions` — extra cells that must stay aligned with the
  *   checkbox column's colspan.
  * - `onRowHover` — no hover wiring on the body at all.
+ * - `sort` / `onSortChange` — SelectableTable keeps its own sort state and
+ *   reorders rows itself; a controlled mode needs that renderer rewired.
  *
  * They were silently accepted until 2026-08-04: `SelectableTableProps` extended
  * `BaseTableProps` wholesale while `splitProps` listed only what the renderer
@@ -162,7 +183,9 @@ type SelectableTableOmitted =
   | "fit"
   | "spanRow"
   | "rowActions"
-  | "onRowHover";
+  | "onRowHover"
+  | "sort"
+  | "onSortChange";
 
 export interface SelectableTableProps<T>
   extends Omit<BaseTableProps<T>, SelectableTableOmitted> {
