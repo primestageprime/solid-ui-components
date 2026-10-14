@@ -1,7 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { Button, createButton } from "./Button";
-import { TextButton } from "./variants";
+import {
+  DisclosureButton,
+  ReservedDisclosureButton,
+  TextButton,
+} from "./variants";
 
 describe("Button", () => {
   it("renders with default variant class", () => {
@@ -49,5 +53,32 @@ describe("Button tone matrix", () => {
     const btn = container.querySelector("button");
     expect(btn?.classList.contains("sui-btn--text")).toBe(true);
     expect(btn?.classList.contains("sui-btn--tone-danger")).toBe(true);
+  });
+});
+
+describe("DisclosureButton", () => {
+  it("is a ghost button with no padding, pinned to 24px, and passes ARIA through", () => {
+    const { container } = render(() => (
+      <DisclosureButton aria-expanded={true} aria-label="Collapse Motor">
+        v
+      </DisclosureButton>
+    ));
+    const btn = container.querySelector("button") as HTMLButtonElement;
+    expect(btn.classList.contains("sui-btn--ghost")).toBe(true);
+    expect(btn.style.padding).toBe("0px");
+    expect(btn.style.height).toBe("24px");
+    expect(btn.style.visibility).toBe("");
+    expect(btn.getAttribute("aria-expanded")).toBe("true");
+    expect(btn.getAttribute("aria-label")).toBe("Collapse Motor");
+  });
+
+  it("has a reserved twin with the same box, hidden", () => {
+    const { container } = render(() => (
+      <ReservedDisclosureButton tabindex={-1}>v</ReservedDisclosureButton>
+    ));
+    const btn = container.querySelector("button") as HTMLButtonElement;
+    expect(btn.style.padding).toBe("0px");
+    expect(btn.style.height).toBe("24px");
+    expect(btn.style.visibility).toBe("hidden");
   });
 });
