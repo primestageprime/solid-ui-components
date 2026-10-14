@@ -5576,7 +5576,8 @@
       "fullHeight",
       "leftPanelWidth",
       "rightPanelWidth",
-      "asideMaxHeight"
+      "asideMaxHeight",
+      "rightPanelFlush"
     ],
     "dataProps": "ThreePanelLayoutDataProps",
     "summary": "Curry a ThreePanelLayout with its geometry baked (e.g.",
@@ -5588,7 +5589,7 @@
     "showcase": "#/three-panel-layout",
     "since": "0.104.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
-    "line": 137
+    "line": 145
   },
   {
     "name": "createThresholdRail",
@@ -16354,7 +16355,8 @@
       "fullHeight",
       "leftPanelWidth",
       "rightPanelWidth",
-      "asideMaxHeight"
+      "asideMaxHeight",
+      "rightPanelFlush"
     ],
     "dataProps": "ThreePanelLayoutDataProps",
     "summary": "Atomic (Depth 1).",
@@ -16366,7 +16368,7 @@
     "showcase": "#/three-panel-layout",
     "since": "v0.11.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
-    "line": 84
+    "line": 90
   },
   {
     "name": "ThresholdRail",

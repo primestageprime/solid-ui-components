@@ -32,6 +32,8 @@
 
 - **`ModeSplitButton` `menuIcon`** and **`PopoverMenu` `caretIcon`** — the menu trigger's glyph. The default stays the ▾.
 
+- **`ThreePanelLayout`** — `rightPanelFlush` drops the right panel's inner padding, so its content (a table's row lines) runs to the panel's edges. The content sets its own inset.
+
 ### Changed
 
 - **`ChartFrame`** — the y-axis mode menu's trigger is a hamburger, not a ▾, so the chevron means only expand and collapse. Its accessible name stays "Y-axis mode".
