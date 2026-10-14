@@ -74,3 +74,30 @@ describe("flattenTree", () => {
     expect(flat(new Set())[0]?.row).toBe(tree[0]);
   });
 });
+
+describe("flattenTree with compare", () => {
+  const byIdDesc = (a: Node, b: Node) => b.id.localeCompare(a.id);
+  const sorted = (expanded: ReadonlySet<string>) =>
+    flattenTree(tree, {
+      childrenOf: (n) => n.kids,
+      getRowId: (n) => n.id,
+      expanded,
+      compare: byIdDesc,
+    }).map((r) => r.id);
+
+  it("sorts siblings at every level, and keeps each child under its own parent", () => {
+    expect(sorted(new Set(["a", "a2"]))).toEqual([
+      "c",
+      "b",
+      "a",
+      "a2",
+      "a2x",
+      "a1",
+    ]);
+  });
+
+  it("does not reorder the caller's arrays", () => {
+    sorted(new Set(["a"]));
+    expect(tree.map((n) => n.id)).toEqual(["a", "b", "c"]);
+  });
+});

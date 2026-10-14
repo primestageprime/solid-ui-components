@@ -1,10 +1,18 @@
 // Tree Table bench — a table whose parent rows expand to show the smaller
 // items they are made of. Built from BaseTable parts only: the bench flattens
 // the tree (tree-table-kit/flatten.ts), and the first cell draws the indent
-// and the chevron. Two parent-row forms on the same data, sharing one
-// `expanded` set, so they can be compared row for row.
-import { type Component, createMemo, createSignal } from "solid-js";
+// and the chevron. All tables share one `expanded` set, so they can be
+// compared row for row.
+//
+//   A  aggregate cells on the parent row
+//   B  one spanning summary cell on the parent row
+//   C  checkboxes: a parent checks or unchecks every leaf under it
+//   D  sortable, tree-aware: siblings sort within their parent
+//   E  sortable with BaseTable's own sort: the flat sort breaks the tree
+import { type Component, type JSX, createMemo, createSignal } from "solid-js";
+import { SmallCheckbox } from "../../../src/components/Checkbox";
 import {
+  ClusterRow,
   ContentStack,
   NarrowStack,
   SpreadRow,
@@ -29,11 +37,44 @@ import {
   unitCost,
 } from "./tree-table-kit/data";
 import { type FlatTreeRow, flattenTree } from "./tree-table-kit/flatten";
+import {
+  type CheckState,
+  checkState,
+  leafIds,
+  toggleChecked,
+} from "./tree-table-kit/selection";
+import { type SortState, SortHeader, nextSort } from "./tree-table-kit/sort";
 import { TreeCell } from "./tree-table-kit/tree-cell";
 
 export const meta = { label: "Tree Table" };
 
 type Row = FlatTreeRow<Part>;
+type ColId = "item" | "qty" | "unit" | "line";
+
+const tree = { childrenOf: (p: Part) => p.parts, getRowId: (p: Part) => p.id };
+/** A virtual root over every assembly, for the select-all box in the header. */
+const ALL: Part = { id: "__all", name: "All", qty: 1, parts: ASSEMBLIES };
+
+const COMPARE: Record<ColId, (a: Part, b: Part) => number> = {
+  item: (a, b) => a.name.localeCompare(b.name),
+  qty: (a, b) => a.qty - b.qty,
+  unit: (a, b) => unitCost(a) - unitCost(b),
+  line: (a, b) => lineCost(a) - lineCost(b),
+};
+
+const LABEL: Record<ColId, string> = {
+  item: "Item",
+  qty: "Qty",
+  unit: "Unit cost",
+  line: "Line cost",
+};
+
+const rowName = (r: Row): JSX.Element =>
+  r.hasChildren ? (
+    <TextBody>{r.row.name}</TextBody>
+  ) : (
+    <MutedBody>{r.row.name}</MutedBody>
+  );
 
 const TreeTableBench: Component = () => {
   const [expanded, setExpanded] = createSignal<ReadonlySet<string>>(
@@ -47,43 +88,37 @@ const TreeTableBench: Component = () => {
       return next;
     });
   };
+  const onRowClick = (r: Row): void => {
+    if (r.hasChildren) toggle(r.id);
+  };
 
   const rows = createMemo(() =>
-    flattenTree(ASSEMBLIES, {
-      childrenOf: (p) => p.parts,
-      getRowId: (p) => p.id,
-      expanded: expanded(),
-    }),
+    flattenTree(ASSEMBLIES, { ...tree, expanded: expanded() }),
   );
 
-  const itemColumn: TableColumn<Row> = {
+  // --- columns shared by every table -------------------------------------
+  const itemColumn = (lead?: (r: Row) => JSX.Element): TableColumn<Row> => ({
     id: "item",
     header: "Item",
     accessor: (r) => (
       <TreeCell flat={r} name={r.row.name} onToggle={toggle}>
-        {r.hasChildren ? (
-          <TextBody>{r.row.name}</TextBody>
-        ) : (
-          <MutedBody>{r.row.name}</MutedBody>
-        )}
+        {lead?.(r)}
+        {rowName(r)}
       </TreeCell>
     ),
-  };
-
-  // Form A: the parent row keeps every column and shows an aggregate in each.
-  const aggregateColumns: TableColumn<Row>[] = [
-    itemColumn,
+  });
+  const numberColumns: TableColumn<Row>[] = [
     {
       id: "qty",
       header: "Qty",
       align: "right",
       accessor: (r) => <IntCell value={r.row.qty} />,
     },
+    // On a parent this is the sum of its parts: an aggregate, not a price.
     {
       id: "unit",
       header: "Unit cost",
       align: "right",
-      // On a parent this is the sum of its parts: an aggregate, not a price.
       accessor: (r) => <MoneyCell value={unitCost(r.row)} maxValue={10_000} />,
     },
     {
@@ -93,10 +128,79 @@ const TreeTableBench: Component = () => {
       accessor: (r) => <MoneyCell value={lineCost(r.row)} maxValue={10_000} />,
     },
   ];
+  const aggregateColumns: TableColumn<Row>[] = [itemColumn(), ...numberColumns];
 
-  const onRowClick = (r: Row): void => {
-    if (r.hasChildren) toggle(r.id);
+  // --- C: checkboxes -----------------------------------------------------
+  const [selected, setSelected] = createSignal<ReadonlySet<string>>(
+    new Set(["impeller", "stator"]),
+  );
+  const box = (part: Part, label: string): JSX.Element => {
+    const state = (): CheckState => checkState(part, selected(), tree);
+    return (
+      <SmallCheckbox
+        aria-label={label}
+        checked={state() === "checked"}
+        indeterminate={state() === "indeterminate"}
+        // The row click expands and collapses; a click on the box must not.
+        onClick={(e) => e.stopPropagation()}
+        onCheckedChange={(on) =>
+          setSelected((prev) => toggleChecked(part, on, prev, tree))
+        }
+      />
+    );
   };
+  const checkboxColumns: TableColumn<Row>[] = [
+    {
+      ...itemColumn((r) => box(r.row, `Select ${r.row.name}`)),
+      header: (
+        <ClusterRow>
+          {box(ALL, "Select all")}
+          Item
+        </ClusterRow>
+      ),
+    },
+    ...numberColumns,
+  ];
+
+  // --- D: tree-aware sort ------------------------------------------------
+  const [sort, setSort] = createSignal<SortState<ColId> | null>({
+    col: "line",
+    dir: "desc",
+  });
+  const sortedRows = createMemo(() => {
+    const s = sort();
+    const base = s ? COMPARE[s.col] : undefined;
+    const compare =
+      base && s
+        ? (a: Part, b: Part) => (s.dir === "asc" ? base(a, b) : base(b, a))
+        : undefined;
+    return flattenTree(ASSEMBLIES, { ...tree, expanded: expanded(), compare });
+  });
+  const sortHeader = (col: ColId): JSX.Element => (
+    <SortHeader
+      label={LABEL[col]}
+      dir={sort()?.col === col ? (sort()?.dir ?? null) : null}
+      onSort={() => setSort((prev) => nextSort(prev, col))}
+    />
+  );
+  const sortedColumns: TableColumn<Row>[] = [
+    { ...itemColumn(), header: sortHeader("item") },
+    ...numberColumns.map((c) => ({ ...c, header: sortHeader(c.id as ColId) })),
+  ];
+
+  // --- E: BaseTable's own sort -------------------------------------------
+  const builtInSortColumns: TableColumn<Row>[] = aggregateColumns.map((c) => ({
+    ...c,
+    sortable: true,
+    sortValue: (r: Row) =>
+      c.id === "item"
+        ? r.row.name
+        : c.id === "qty"
+          ? r.row.qty
+          : c.id === "unit"
+            ? unitCost(r.row)
+            : lineCost(r.row),
+  }));
 
   return (
     <div class="component-section component-section--full">
@@ -104,7 +208,7 @@ const TreeTableBench: Component = () => {
       <ContentStack>
         <MutedBody>
           Parent rows hold smaller items. Click a parent row or its chevron to
-          expand or collapse it. Both tables share one expanded set. Indent and
+          expand or collapse it. All tables share one expanded set. Indent and
           guide rail match NestedList: one 12px step per level.
         </MutedBody>
         <NarrowStack>
@@ -146,6 +250,56 @@ const TreeTableBench: Component = () => {
                   }
                 : null
             }
+          />
+        </NarrowStack>
+        <NarrowStack>
+          <SubsectionTitle>
+            C · Checkboxes: a parent checks or unchecks every part under it
+          </SubsectionTitle>
+          <MutedBody>
+            A parent shows a dash when only some of its parts are checked.{" "}
+            {leafIds(ALL, tree).length} parts in all; {selected().size} checked.
+          </MutedBody>
+          <BaseTable
+            data={rows()}
+            columns={checkboxColumns}
+            compact
+            hoverable
+            onRowClick={onRowClick}
+          />
+        </NarrowStack>
+        <NarrowStack>
+          <SubsectionTitle>
+            D · Sortable: siblings sort within their parent
+          </SubsectionTitle>
+          <MutedBody>
+            Parents sort by their totals. Each parent's parts sort among
+            themselves and stay under it. Click a header to cycle ascending,
+            descending, off.
+          </MutedBody>
+          <BaseTable
+            data={sortedRows()}
+            columns={sortedColumns}
+            compact
+            hoverable
+            onRowClick={onRowClick}
+          />
+        </NarrowStack>
+        <NarrowStack>
+          <SubsectionTitle>
+            E · Sortable with BaseTable's own sort (for comparison)
+          </SubsectionTitle>
+          <MutedBody>
+            BaseTable sorts the flat row list, so a sort pulls parts away from
+            their parents. A promoted Tree Table needs the sort to happen before
+            the flatten step.
+          </MutedBody>
+          <BaseTable
+            data={rows()}
+            columns={builtInSortColumns}
+            compact
+            hoverable
+            onRowClick={onRowClick}
           />
         </NarrowStack>
       </ContentStack>

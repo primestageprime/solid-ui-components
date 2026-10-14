@@ -1,0 +1,7 @@
+/* Bench-local: a <button> resets text-transform and letter-spacing, so the
+   sort header button takes them back from the <th>. A promoted Tree Table
+   gets this from BaseTable's own header once sort is controllable there. */
+.tree-sort-header.sui-btn {
+  text-transform: inherit;
+  letter-spacing: inherit;
+}
