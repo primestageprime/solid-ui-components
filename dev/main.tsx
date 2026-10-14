@@ -205,6 +205,7 @@ import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
+import { SectionedListShowcase } from "./showcases/sectioned-list";
 import { VarianceStripChartShowcase } from "./showcases/variance-strip-chart";
 import { VarianceStripShowcase } from "./showcases/variance-strip";
 import { BalanceReviewChartShowcase } from "./showcases/balance-review-chart";
@@ -1285,6 +1286,12 @@ const items: Item[] = [
     label: "VarianceStripChart",
     component: VarianceStripChartShowcase,
     tags: ["depth:2"],
+  },
+  {
+    id: "sectioned-list",
+    label: "SectionedList",
+    component: SectionedListShowcase,
+    tags: ["depth:1"],
   },
   // Generated component entries (npm run new:component) — appended above this line.
   {

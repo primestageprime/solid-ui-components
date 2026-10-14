@@ -1,0 +1,205 @@
+/* ============================================
+ * SectionedList — a dense list in sections for a narrow side pane.
+ *
+ * GEOMETRY: titles and names share ONE left edge (--sui-space-2, 8px). The
+ * collapse chevron sits at the right end of the title bar, after the count,
+ * so it never moves the text. A row is 20px (16px line + 2px top and
+ * bottom); rows touch. A section ends with --sui-space-1 of space and a 1px
+ * rule before the next title bar.
+ *
+ * MUTED: muted names and the count use a mix 60% --sui-text-muted, 40%
+ * --sui-text-secondary. Plain --sui-text-muted (#5d86a2 in HUD) falls under
+ * 4.5:1 on the hover fill; the mix (about #6a93ae) keeps 4.5:1.
+ *
+ * STATUS: a shape per tone, so colour is never the only cue:
+ * success = circle, warning = diamond, neutral = dash. The word follows the
+ * shape unless data-status-labels="false"; screen readers get the word from
+ * a visually hidden span either way.
+ * ============================================ */
+
+.sui-sectioned-list {
+  --sui-sectioned-list-muted: color-mix(
+    in srgb,
+    var(--sui-text-muted) 60%,
+    var(--sui-text-secondary)
+  );
+  --sui-sectioned-list-inset: var(--sui-space-2);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-family: var(--sui-font-family);
+  font-size: 12px;
+  color: var(--sui-text-primary);
+}
+
+.sui-sectioned-list__section + .sui-sectioned-list__section {
+  border-top: 1px solid rgba(var(--sui-accent-rgb), 0.12);
+}
+
+.sui-sectioned-list__heading {
+  margin: 0;
+  font: inherit;
+}
+
+.sui-sectioned-list__title {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sui-space-1-5);
+  width: 100%;
+  padding: var(--sui-space-1) var(--sui-sectioned-list-inset);
+  font-family: var(--sui-font-family);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sui-text-secondary);
+}
+
+.sui-sectioned-list__title--toggle {
+  cursor: pointer;
+}
+
+.sui-sectioned-list__title--toggle:hover {
+  color: var(--sui-text-primary);
+  background: rgba(var(--sui-accent-rgb), 0.08);
+}
+
+.sui-sectioned-list__title--toggle:focus-visible,
+.sui-sectioned-list__row:focus-visible {
+  outline: 2px solid var(--sui-border-focus);
+  outline-offset: -2px;
+}
+
+.sui-sectioned-list__label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sui-sectioned-list__count {
+  flex: 0 0 auto;
+  color: var(--sui-sectioned-list-muted);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.sui-sectioned-list__chevron {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 14px;
+  color: var(--sui-sectioned-list-muted);
+}
+
+.sui-sectioned-list__chevron svg {
+  transition: transform 0.15s ease-out;
+}
+
+.sui-sectioned-list__chevron--open svg {
+  transform: rotate(90deg);
+}
+
+.sui-sectioned-list__rows {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--sui-space-1);
+}
+
+.sui-sectioned-list__row {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--sui-space-2);
+  padding: 2px var(--sui-sectioned-list-inset);
+  line-height: 16px;
+  cursor: pointer;
+}
+
+.sui-sectioned-list__row:hover {
+  background: rgba(var(--sui-accent-rgb), 0.08);
+}
+
+.sui-sectioned-list__row--selected {
+  background: rgba(var(--sui-accent-rgb), 0.14);
+  box-shadow: inset 2px 0 0 var(--sui-accent);
+}
+
+.sui-sectioned-list__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sui-sectioned-list__row--selected .sui-sectioned-list__name {
+  color: var(--sui-accent);
+}
+
+.sui-sectioned-list__row--muted .sui-sectioned-list__name {
+  color: var(--sui-sectioned-list-muted);
+}
+
+.sui-sectioned-list__status {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--sui-text-secondary);
+}
+
+.sui-sectioned-list__status::before {
+  content: "";
+  flex: 0 0 auto;
+}
+
+.sui-sectioned-list__status[data-tone="success"]::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sui-success);
+}
+
+.sui-sectioned-list__status[data-tone="warning"]::before {
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  background: var(--sui-warning);
+}
+
+.sui-sectioned-list__status[data-tone="neutral"]::before {
+  width: 7px;
+  height: 2px;
+  background: var(--sui-text-secondary);
+}
+
+.sui-sectioned-list[data-status-labels="false"] .sui-sectioned-list__status-word {
+  display: none;
+}
+
+.sui-sectioned-list__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.sui-sectioned-list__empty {
+  margin: 0;
+  padding: var(--sui-space-2) var(--sui-sectioned-list-inset);
+  color: var(--sui-sectioned-list-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-sectioned-list__chevron svg {
+    transition: none;
+  }
+}

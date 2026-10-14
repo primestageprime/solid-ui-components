@@ -2595,6 +2595,30 @@
     "line": 10
   },
   {
+    "name": "CompactSectionedList",
+    "depth": 1,
+    "kind": "variant",
+    "family": "SectionedList",
+    "variantOf": {
+      "factory": "createSectionedList",
+      "overrides": "{ statusLabels: false }"
+    },
+    "overrides": [
+      "statusLabels"
+    ],
+    "dataProps": "SectionedListDataProps",
+    "summary": "The status shape only; the word is a screen-reader label.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The status shape only; the word is a screen-reader label. For a pane under ~200px.",
+    "showcase": "#/sectioned-list",
+    "since": "Unreleased",
+    "file": "src/components/SectionedList/variants.ts",
+    "line": 13
+  },
+  {
     "name": "CompactSurface",
     "depth": 0,
     "kind": "variant",
@@ -3428,7 +3452,7 @@
     "showcase": "#/button",
     "since": "0.142.0",
     "file": "src/components/Button/Button.tsx",
-    "line": 85
+    "line": 125
   },
   {
     "name": "createButtonGroup",
@@ -5128,6 +5152,27 @@
     "since": "0.54.0",
     "file": "src/components/Section/Section.tsx",
     "line": 148
+  },
+  {
+    "name": "createSectionedList",
+    "depth": 1,
+    "kind": "factory",
+    "family": "SectionedList",
+    "variantOf": null,
+    "overrides": [
+      "statusLabels"
+    ],
+    "dataProps": "SectionedListDataProps",
+    "summary": "Factory behind `SectionedList`'s curried variants; bakes `statusLabels`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/sectioned-list",
+    "since": "Unreleased",
+    "file": "src/components/SectionedList/SectionedList.tsx",
+    "line": 293
   },
   {
     "name": "createSegmentBar",
@@ -13983,6 +14028,30 @@
     "since": null,
     "file": "src/components/Button/variants.ts",
     "line": 27
+  },
+  {
+    "name": "SectionedList",
+    "depth": 1,
+    "kind": "variant",
+    "family": "SectionedList",
+    "variantOf": {
+      "factory": "createSectionedList",
+      "overrides": "{ statusLabels: true }"
+    },
+    "overrides": [
+      "statusLabels"
+    ],
+    "dataProps": "SectionedListDataProps",
+    "summary": "The status shape plus its word (\"● done\").",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The status shape plus its word (\"● done\").",
+    "showcase": "#/sectioned-list",
+    "since": "Unreleased",
+    "file": "src/components/SectionedList/variants.ts",
+    "line": 9
   },
   {
     "name": "SectionLabel",

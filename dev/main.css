@@ -2793,3 +2793,21 @@ th:has(.tf-th-center) .hud-table__header-content {
 .variance-strip-chart-demo {
   padding: 16px;
 }
+
+/* SectionedList showcase: side-rail widths, side by side. */
+.sectioned-list-demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.sectioned-list-demo {
+  width: 340px;
+  border: 1px solid var(--sui-border);
+  background: var(--sui-bg-primary);
+}
+
+.sectioned-list-demo--narrow {
+  width: 170px;
+}
