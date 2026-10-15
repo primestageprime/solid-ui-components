@@ -48,7 +48,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 72
+    "line": 80
   },
   {
     "name": "AccentCaptionLabel",
@@ -74,7 +74,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 337
+    "line": 345
   },
   {
     "name": "AccentCurrentValueIndicator",
@@ -122,7 +122,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 252
+    "line": 260
   },
   {
     "name": "AccentHighlightSegments",
@@ -1358,7 +1358,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 290
+    "line": 298
   },
   {
     "name": "CardGrid",
@@ -2061,7 +2061,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 83
+    "line": 91
   },
   {
     "name": "ChipNote",
@@ -2410,6 +2410,25 @@
     "line": 898
   },
   {
+    "name": "CompactBucketQueue",
+    "depth": null,
+    "kind": "primitive",
+    "family": "BucketQueue",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "BucketQueue for a narrow side pane: 11px headers, 20px rows (2px x 8px padding, 16px line), 12px text and a 4px gap between buckets.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "BucketQueue for a narrow side pane: 11px headers, 20px rows (2px x 8px padding, 16px line), 12px text and a 4px gap between buckets. Pair its rows with `CompactLabel` (and `TextSublabel` for a muted row).",
+    "showcase": "#/bucket-queue",
+    "since": "Unreleased",
+    "file": "src/components/BucketQueue/variants.tsx",
+    "line": 10
+  },
+  {
     "name": "CompactCard",
     "depth": 0,
     "kind": "variant",
@@ -2543,6 +2562,32 @@
     "since": "0.116.0",
     "file": "src/components/FileDropZone/variants.ts",
     "line": 17
+  },
+  {
+    "name": "CompactLabel",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Text",
+    "variantOf": {
+      "factory": "createText",
+      "overrides": "{\n  variant: \"label\",\n  style: { \"font-size\": \"12px\", \"font-weight\": \"500\", \"line-height\": \"16px\" },\n}"
+    },
+    "overrides": [
+      "variant",
+      "color",
+      "as"
+    ],
+    "dataProps": "TextDataProps",
+    "summary": "`variant=\"label\"` at 12px, weight 500, on a 16px line.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a row name in a dense list, such as `CompactBucketQueue`. `TextLabel` is 16px bold, too big for a narrow pane.",
+    "notes": "A row name in a dense list (CompactBucketQueue): the label colour at 12px, weight 500, on a 16px line. TextLabel is 16px bold, too big for a narrow pane. For a muted row, use TextSublabel (12px, muted).",
+    "showcase": "#/text",
+    "since": "Unreleased",
+    "file": "src/components/Text/variants.ts",
+    "line": 18
   },
   {
     "name": "CompactPanel",
@@ -3047,7 +3092,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 136
+    "line": 144
   },
   {
     "name": "createActionList",
@@ -6062,7 +6107,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 218
+    "line": 226
   },
   {
     "name": "DangerButton",
@@ -6168,7 +6213,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 283
+    "line": 291
   },
   {
     "name": "DangerSurface",
@@ -6228,7 +6273,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 373
+    "line": 381
   },
   {
     "name": "DashedDivider",
@@ -7427,7 +7472,7 @@
     "showcase": "#/text",
     "since": "0.171.0",
     "file": "src/components/Text/variants.ts",
-    "line": 91
+    "line": 99
   },
   {
     "name": "EllipsizedHudCaption",
@@ -7453,7 +7498,7 @@
     "showcase": "#/text",
     "since": "0.171.0",
     "file": "src/components/Text/variants.ts",
-    "line": 315
+    "line": 323
   },
   {
     "name": "EllipsizedNodeLabel",
@@ -7479,7 +7524,7 @@
     "showcase": "#/text",
     "since": "0.171.0",
     "file": "src/components/Text/variants.ts",
-    "line": 117
+    "line": 125
   },
   {
     "name": "EllipsizedTitle",
@@ -7505,7 +7550,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 33
+    "line": 41
   },
   {
     "name": "EmphasisBody",
@@ -7531,7 +7576,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 245
+    "line": 253
   },
   {
     "name": "EmptyState",
@@ -7603,7 +7648,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 16
+    "line": 24
   },
   {
     "name": "EndWindowStrip",
@@ -7803,7 +7848,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 61
+    "line": 69
   },
   {
     "name": "FaintHighlightSegments",
@@ -8303,7 +8348,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 29
+    "line": 37
   },
   {
     "name": "FlexRow",
@@ -8518,7 +8563,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 421
+    "line": 429
   },
   {
     "name": "FormulaVarRow",
@@ -9403,7 +9448,7 @@
     "showcase": "#/text",
     "since": "0.152.0",
     "file": "src/components/Text/variants.ts",
-    "line": 238
+    "line": 246
   },
   {
     "name": "HighlightSegments",
@@ -9450,7 +9495,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 427
+    "line": 435
   },
   {
     "name": "HotkeyButton",
@@ -10020,7 +10065,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 361
+    "line": 369
   },
   {
     "name": "InlineAppHeader",
@@ -10159,7 +10204,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 348
+    "line": 356
   },
   {
     "name": "IntCell",
@@ -11345,7 +11390,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 149
+    "line": 157
   },
   {
     "name": "MonoMeta",
@@ -11371,7 +11416,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 164
+    "line": 172
   },
   {
     "name": "MonoValue",
@@ -11397,7 +11442,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 143
+    "line": 151
   },
   {
     "name": "MonthlyOrAnnualCadenceStrip",
@@ -11466,7 +11511,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 414
+    "line": 422
   },
   {
     "name": "MultiSelectFilter",
@@ -11578,7 +11623,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 68
+    "line": 76
   },
   {
     "name": "MutedEmptyState",
@@ -11869,7 +11914,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 260
+    "line": 268
   },
   {
     "name": "NoticeBar",
@@ -11950,7 +11995,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 45
+    "line": 53
   },
   {
     "name": "NowrapLabel",
@@ -11976,7 +12021,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 53
+    "line": 61
   },
   {
     "name": "NoWrapSublabel",
@@ -12002,7 +12047,7 @@
     "showcase": "#/text",
     "since": "0.104.0",
     "file": "src/components/Text/variants.ts",
-    "line": 23
+    "line": 31
   },
   {
     "name": "NumberMutationSliders",
@@ -12294,7 +12339,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 355
+    "line": 363
   },
   {
     "name": "PairedMutationSliders",
@@ -13232,7 +13277,7 @@
     "showcase": "#/text",
     "since": "0.172.0",
     "file": "src/components/Text/variants.ts",
-    "line": 207
+    "line": 215
   },
   {
     "name": "ReservedWidth",
@@ -13504,7 +13549,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 407
+    "line": 415
   },
   {
     "name": "ScrollBox",
@@ -14046,7 +14091,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 356
+    "line": 364
   },
   {
     "name": "SegmentBar",
@@ -14745,7 +14790,7 @@
     "useFor": null,
     "notes": "Small status dot — for dense rows / inline indicators.",
     "showcase": "#/status-light",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/StatusLight/variants.ts",
     "line": 10
   },
@@ -15445,7 +15490,7 @@
     "showcase": "#/text",
     "since": "0.172.0",
     "file": "src/components/Text/variants.ts",
-    "line": 191
+    "line": 199
   },
   {
     "name": "SteadyMonoValue",
@@ -15471,7 +15516,7 @@
     "showcase": "#/text",
     "since": "0.172.0",
     "file": "src/components/Text/variants.ts",
-    "line": 181
+    "line": 189
   },
   {
     "name": "StickyGroupHeader",
@@ -15633,7 +15678,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 357
+    "line": 365
   },
   {
     "name": "SubtleGhostArc",
@@ -15727,7 +15772,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 230
+    "line": 238
   },
   {
     "name": "SuccessPanel",
@@ -15815,7 +15860,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 369
+    "line": 377
   },
   {
     "name": "SwimlaneChart",
@@ -16233,7 +16278,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 386
+    "line": 394
   },
   {
     "name": "TextValueHighlightSm",
@@ -16259,7 +16304,7 @@
     "showcase": "#/text",
     "since": "0.152.0",
     "file": "src/components/Text/variants.ts",
-    "line": 398
+    "line": 406
   },
   {
     "name": "TextValueSuccessSm",
@@ -16285,7 +16330,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 381
+    "line": 389
   },
   {
     "name": "ThemedInput",
@@ -16921,7 +16966,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 358
+    "line": 366
   },
   {
     "name": "TopRightOverlayBox",
@@ -17343,7 +17388,7 @@
     "showcase": "#/text",
     "since": "0.185.0",
     "file": "src/components/Text/variants.ts",
-    "line": 272
+    "line": 280
   },
   {
     "name": "VerticalButtonGroup",
@@ -17522,7 +17567,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 224
+    "line": 232
   },
   {
     "name": "WarningButton",
@@ -17723,7 +17768,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 365
+    "line": 373
   },
   {
     "name": "WeekCalendar",

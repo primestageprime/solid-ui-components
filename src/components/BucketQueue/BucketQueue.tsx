@@ -336,7 +336,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
 
   return (
     <div
-      class={`bucket-queue${props.class ? ` ${props.class}` : ""}`}
+      class={`bucket-queue${props.density === "compact" ? " bucket-queue--compact" : ""}${props.class ? ` ${props.class}` : ""}`}
       ref={(el) => { rootRef = el; trackRoot(el); }}
       style={props.height != null ? { height: `${props.height}px` } : undefined}
     >

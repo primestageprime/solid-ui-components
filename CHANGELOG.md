@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- **`CompactBucketQueue`** and **`BucketQueue` `density`** (`"comfortable"` | `"compact"`). Compact sets 11px headers, 20px rows, 12px text and a 4px gap between buckets, for a narrow side pane. Rows must share one height: use `SmallStatusLight` for a status, not a badge.
+- **`CompactLabel`** — a 12px label (weight 500, 16px line) for a row name in a dense list.
+
+### Fixed
+
+- **`HeightReveal` (and so `ChartFrame`'s body) is never wider than its parent.** Its grid had an `auto` column, so a wide child (a chart's `<svg width>`) grew the column past the frame, and the chart drew outside the frame, over the next panel. The column is now `minmax(0, 1fr)` and the inner box has `min-width: 0`, so the inner box clips wide content.
+
 ## 0.221.0 — 2026-10-15
 
 ### Added

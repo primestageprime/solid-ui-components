@@ -150,5 +150,9 @@ export interface BucketQueueProps<T> {
   /** Total height in px. Omit to fill the parent (the root is `height:100%`,
    *  so it stretches to a definite-height flex / `height:100%` ancestor). */
   height?: number;
+  /** Row and header density. "compact" (CompactBucketQueue) sets 11px
+   *  headers, 20px rows and 12px text for a narrow side pane. Default
+   *  "comfortable". */
+  density?: "comfortable" | "compact";
   class?: string;
 }
