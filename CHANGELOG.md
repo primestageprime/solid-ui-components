@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`GapBox`** — a Depth 2 composite: the canon placeholder for a missing component. A titled `InfoSurface` holding the JSON of `kind`, `nearest` and the intended `props`. Pure `gapBoxJson` builds the body.
+
 ## 0.218.0 — 2026-10-13
 
 ### Added

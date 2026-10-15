@@ -2793,3 +2793,11 @@ th:has(.tf-th-center) .hud-table__header-content {
 .variance-strip-chart-demo {
   padding: 16px;
 }
+
+/* GapBox showcase demo frame. */
+.gap-box-demo {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

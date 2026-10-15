@@ -2590,3 +2590,6 @@ The renderers family is a set of small, composable components for displaying fie
 
     <VarianceStripChart data={days} valueFormat={short} dateFormat={shortDate} title="variance against the forecast, by day" />
     ```
+
+## GapBox
+- **GapBox** — Composite (Depth 2). The canon placeholder for a component SUI does not have yet: an `InfoSurface` titled `GAP: <title>` holding a small `CodeBlock` of JSON for `{kind, nearest, props}`. Composes `InfoSurface` + `TightStack` + `TextLabel` + `CodeBlock`; no CSS, no inline style. Data-only props, so it is exported directly like `CountChip`: `title` (the missing component's name), `kind` (`"visual"` default | `"behaviour"`), `nearest` (closest existing export, shown as `none` when omitted), `props` (the props the missing thing would take, any JSON). Pure core `gapBoxJson` builds the body text. Use for: a design canon page or a touchstone wherever the layout needs a box standing in for a missing component; replace each one when the component ships. `<GapBox title="LocaleSwitcher" nearest="none" props={{ locales: ["en-US"] }} />`
