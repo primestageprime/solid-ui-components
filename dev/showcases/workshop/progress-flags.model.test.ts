@@ -4,7 +4,7 @@
  * can be checked against numbers.
  */
 import { describe, expect, it } from "vitest";
-import { TOPICS, TOPIC_18 } from "./progress-flags.fixtures";
+import { SCENARIOS, TOPICS, TOPIC_18 } from "./progress-flags.fixtures";
 import {
   MIN_MS,
   actualLine,
@@ -30,21 +30,21 @@ describe("every topic", () => {
 });
 
 describe("tolerance", () => {
-  it("is 100% of planned so far, never under 5 minutes", () => {
+  it("is half the planned minutes so far, never under 5 minutes", () => {
     expect(toleranceOf(0)).toBe(5);
-    expect(toleranceOf(3)).toBe(5);
-    expect(toleranceOf(40)).toBe(40);
-    expect(toleranceOf(40, 0.5)).toBe(20);
+    expect(toleranceOf(6)).toBe(5);
+    expect(toleranceOf(40)).toBe(20);
+    expect(toleranceOf(40, 1)).toBe(40);
   });
 
   it("calls ahead, behind and within", () => {
     expect(verdictOf(10, 30)).toBe("ahead");
-    expect(verdictOf(10, 18)).toBe("within");
-    expect(verdictOf(40, 10, 0.5)).toBe("behind");
+    expect(verdictOf(10, 14)).toBe("within");
+    expect(verdictOf(40, 10)).toBe("behind");
   });
 
   it("cannot call behind at 100%, because the deficit never exceeds what was planned", () => {
-    expect(verdictOf(40, 0)).toBe("within");
+    expect(verdictOf(40, 0, 1)).toBe("within");
   });
 });
 
@@ -100,22 +100,60 @@ describe("topic 18 (M15 rolling bars)", () => {
   });
 });
 
-describe("synthetic traces", () => {
-  it("only show red once the tolerance is under 100%", () => {
-    for (const id of [901, 902]) {
-      const t = TOPICS.find((x) => x.id === id);
-      if (!t) throw new Error(`no topic ${id}`);
-      const at100 = verdictMinutes(intervalsOf(t));
-      const at50 = verdictMinutes(intervalsOf(t, endOf(t), 0.5));
-      console.log(`topic ${id} minutes by verdict at 100%: ${JSON.stringify(at100)}, at 50%: ${JSON.stringify(at50)}`);
-      expect(at100.behind).toBe(0);
-      expect(at50.behind).toBeGreaterThan(0);
-    }
+describe("scenarios", () => {
+  const minutesOf = (name: string) => {
+    const sc = SCENARIOS.find((x) => x.name === name);
+    if (!sc) throw new Error(`no scenario ${name}`);
+    return verdictMinutes(intervalsOf(sc.topic));
+  };
+
+  it("prints the verdict minutes of each", () => {
+    for (const sc of SCENARIOS)
+      console.log(`${sc.name}: ${JSON.stringify(verdictMinutes(intervalsOf(sc.topic)))}`);
   });
 
-  it("steadily behind finishes late", () => {
-    const t = TOPICS.find((x) => x.id === 901);
-    expect(t).toBeDefined();
-    if (t) expect(endOf(t) - startOf(t)).toBeGreaterThan(60 * MIN_MS);
+  it("on target is all blue", () => {
+    const v = minutesOf("On target");
+    expect(v.ahead + v.behind).toBe(0);
+  });
+
+  it("behind is red for its long middle", () => {
+    const v = minutesOf("Behind");
+    expect(v.behind).toBeGreaterThan(100);
+  });
+
+  it("over and under shows all three", () => {
+    const v = minutesOf("Over and under");
+    expect(v.ahead).toBeGreaterThan(0);
+    expect(v.within).toBeGreaterThan(0);
+    expect(v.behind).toBeGreaterThan(0);
+  });
+
+  it("procrastinate is red for most of the span", () => {
+    const v = minutesOf("Procrastinate");
+    expect(v.behind).toBeGreaterThan(v.within + v.ahead);
+  });
+});
+
+describe("receipt durations", () => {
+  const rows = receiptRows(TOPIC_18);
+  it("shows a step's estimate when it starts and estimate plus actual when it ends", () => {
+    const started = rows.find((r) => r.kind === "StepStarted");
+    const done = rows.find((r) => r.kind === "StepDone");
+    expect(started?.estimate).toBe("10m");
+    expect(started?.actual).toBe("");
+    expect(done?.estimate).toBe("10m");
+    expect(done?.actual).toBe("2.7m");
+  });
+
+  it("shows the topic estimate and claim-to-milestone at the Milestone", () => {
+    const m = rows.find((r) => r.kind === "Milestone");
+    expect(m?.estimate).toBe("100m");
+    expect(m?.actual).toBe("21.2m");
+  });
+
+  it("is blank for the rest", () => {
+    const c = rows.find((r) => r.kind === "Claimed");
+    expect([c?.estimate, c?.actual]).toEqual(["", ""]);
   });
 });

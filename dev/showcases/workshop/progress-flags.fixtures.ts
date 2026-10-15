@@ -46,27 +46,32 @@ export interface TopicTrace {
 
 const MIN = 60_000;
 
-/** A synthetic trace: each step is [estimate, actual] minutes, run back to back. */
+/**
+ * A synthetic trace: each step is [estimate, actual] minutes, run back to back
+ * after `idleMin` minutes of nothing following the claim.
+ */
 const synthetic = (
   id: number,
   title: string,
   durations: readonly (readonly [number, number])[],
+  idleMin = 1,
 ): TopicTrace => {
   const t0 = 1_791_600_000_000;
   const total = durations.reduce((n, d) => n + d[0], 0);
-  let cursor = t0 + MIN;
+  let cursor = t0 + idleMin * MIN;
   const steps: Step[] = durations.map(([estimateMin, actual], i) => {
     const startedAt = cursor;
     cursor += actual * MIN;
     return { title: `Step ${i + 1}`, estimateMin, startedAt, doneAt: cursor };
   });
+  const named = (s: Step, i: number): string => `step ${i + 1} ${s.title} (${s.estimateMin}m)`;
   const receipts: Receipt[] = [
     { kind: "Claimed", at: t0, detail: "" },
     { kind: "StepsSet", at: t0 + 1, detail: `${steps.length} steps, ${total}m` },
     { kind: "Estimated", at: t0 + 2, detail: `none -> ${total}m` },
-    ...steps.flatMap((s): Receipt[] => [
-      { kind: "StepStarted", at: s.startedAt ?? t0, detail: s.title },
-      { kind: "StepDone", at: s.doneAt ?? t0, detail: s.title },
+    ...steps.flatMap((s, i): Receipt[] => [
+      { kind: "StepStarted", at: s.startedAt ?? t0, detail: named(s, i) },
+      { kind: "StepDone", at: s.doneAt ?? t0, detail: named(s, i) },
     ]),
     { kind: "Milestone", at: cursor + 1, detail: "" },
   ];
@@ -256,12 +261,25 @@ export const TOPICS: readonly TopicTrace[] = [
       { kind: "Approved", at: 1791558445748, detail: "Bash(npm run check)" },
     ],
   },
-  synthetic(901, "Synthetic: steadily behind", [
-    [10, 14], [10, 19], [10, 24], [10, 30], [10, 36], [10, 44],
-  ]),
-  synthetic(902, "Synthetic: ahead, then behind", [
-    [10, 3], [10, 4], [10, 45], [10, 60], [10, 60], [10, 60],
-  ]),
+  // On target: every step lands near its estimate, so the whole area is blue.
+  synthetic(903, "Synthetic: on target", [[10, 10], [10, 10], [10, 9], [10, 11], [10, 10]], 0),
+  // Behind: every step takes 4 to 8 times its estimate, so the area goes red.
+  synthetic(901, "Synthetic: steadily behind", [[10, 40], [10, 50], [10, 60], [10, 60], [10, 70], [10, 80]]),
+  // Over and under: two fast steps (purple), then a long stall (red), then catching up (blue).
+  synthetic(902, "Synthetic: ahead, then behind", [[10, 3], [10, 3], [10, 100], [10, 40], [10, 10], [10, 10]]),
+  // Procrastinate: 50 idle minutes after the claim, then a burst of steps.
+  synthetic(904, "Synthetic: procrastinate", [[10, 2], [10, 2], [10, 3], [10, 2], [10, 2], [10, 3]], 50),
 ];
 
-export const TOPIC_18 = TOPICS[0] as TopicTrace;
+const byId = (id: number): TopicTrace => TOPICS.find((t) => t.id === id) ?? (TOPICS[0] as TopicTrace);
+
+export const TOPIC_18 = byId(18);
+
+/** The bench's scenarios, in order: a name and the topic that shows it. */
+export const SCENARIOS: readonly { readonly name: string; readonly topic: TopicTrace }[] = [
+  { name: "On target", topic: byId(903) },
+  { name: "Ahead", topic: TOPIC_18 },
+  { name: "Behind", topic: byId(901) },
+  { name: "Over and under", topic: byId(902) },
+  { name: "Procrastinate", topic: byId(904) },
+];

@@ -20,12 +20,17 @@
  * Pure functions of (trace, as-of). Nothing reads the clock.
  */
 import { filter, find, findIndex, flatMap, join, map, sortBy, sum } from "../../../src/fn";
-import type { Receipt, Step, TopicTrace } from "./progress-flags.fixtures";
+import type { Receipt, ReceiptKind, Step, TopicTrace } from "./progress-flags.fixtures";
 
 export const MIN_MS = 60_000;
 
-/** Tolerance as a share of the minutes planned so far (1 = 100%). TUNE HERE. */
-export const TOLERANCE_RATIO = 1;
+/**
+ * Tolerance as a share of the minutes planned so far (1 = 100%). TUNE HERE.
+ * At 100% or more "behind" can never happen: the deficit is at most the
+ * minutes planned so far. Peter's first spec said 100%; 50% is the default so
+ * red is reachable.
+ */
+export const TOLERANCE_RATIO = 0.5;
 /** Tolerance never drops below this many minutes. TUNE HERE. */
 export const TOLERANCE_FLOOR_MIN = 5;
 
@@ -273,17 +278,49 @@ export const clock = (x: number): string =>
 
 export interface ReceiptRow {
   readonly elapsed: string;
-  readonly kind: string;
+  readonly kind: ReceiptKind;
   readonly detail: string;
+  /** Planned duration of the step, or of the topic at its Milestone; "" otherwise. */
+  readonly estimate: string;
+  /** Started-to-done of the step, or claim-to-Milestone; "" otherwise. */
+  readonly actual: string;
 }
 
 const minutesSince = (t0: number, x: number): string => `+${((x - t0) / MIN_MS).toFixed(1)}m`;
 
-/** The topic's receipts as rows: elapsed since the first receipt, kind, detail. */
+const spanMin = (from: number, to: number): string => `${((to - from) / MIN_MS).toFixed(1)}m`;
+
+/** The step a StepStarted/StepDone receipt names: "step 3 ..." is the third. */
+const stepOf = (t: TopicTrace, r: Receipt): Step | undefined => {
+  const n = Number(/^step (\d+)/i.exec(r.detail)?.[1]);
+  return Number.isNaN(n) ? undefined : stepsOf(t)[n - 1];
+};
+
+const durationsOf = (
+  t: TopicTrace,
+  r: Receipt,
+): { readonly estimate: string; readonly actual: string } => {
+  if (r.kind === "Milestone")
+    return { estimate: `${t.estimateMin}m`, actual: spanMin(startOf(t), r.at) };
+  const step = r.kind === "StepStarted" || r.kind === "StepDone" ? stepOf(t, r) : undefined;
+  if (step === undefined) return { estimate: "", actual: "" };
+  const done = r.kind === "StepDone" && step.startedAt !== undefined;
+  return {
+    estimate: `${step.estimateMin}m`,
+    actual: done ? spanMin(step.startedAt ?? r.at, r.at) : "",
+  };
+};
+
+/** The topic's receipts as rows: elapsed since the first receipt, kind, detail, durations. */
 export const receiptRows = (t: TopicTrace): readonly ReceiptRow[] => {
   const t0 = startOf(t);
   return map(
-    (r: Receipt) => ({ elapsed: minutesSince(t0, r.at), kind: r.kind, detail: r.detail }),
+    (r: Receipt): ReceiptRow => ({
+      elapsed: minutesSince(t0, r.at),
+      kind: r.kind,
+      detail: r.detail,
+      ...durationsOf(t, r),
+    }),
     sortBy((r: Receipt) => r.at, t.receipts),
   );
 };
