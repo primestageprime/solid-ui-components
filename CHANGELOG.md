@@ -6,6 +6,8 @@
 
 - **`EndClusterRow`** — a curried `Row`: a cluster packed to the end of its box, centred on the cross axis, 4px gap, and never wrapping. `EndWrapRow` wraps at phone width, which pushes a header's status chip above its avatar.
 
+- **`ThreeSlotRow`** — a Composite (Depth 2): start, centre and end slots on one line, as the grid tracks `auto minmax(0, 1fr) auto`. The centre is centred in the space the other two leave, and its track can shrink to 0 so an `OverflowNav` in it can fold. `createThreeSlotRow({ startWidth })` fixes the start track (`"160px"` for a logo box). Also exported: `threeSlotColumns`. Exported types: `ThreeSlotRowProps`, `ThreeSlotRowDataProps`, `ThreeSlotRowOverrides`.
+
 ## 0.221.0 — 2026-10-15
 
 ### Added

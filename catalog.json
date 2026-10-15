@@ -5592,6 +5592,25 @@
     "line": 145
   },
   {
+    "name": "createThreeSlotRow",
+    "depth": 2,
+    "kind": "factory",
+    "family": "ThreeSlotRow",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "ThreeSlotRowDataProps",
+    "summary": "Composite (Depth 2), `src/components/ThreeSlotRow/`. Factory behind `ThreeSlotRow`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/three-slot-row",
+    "since": "Unreleased",
+    "file": "src/components/ThreeSlotRow/ThreeSlotRow.tsx",
+    "line": 51
+  },
+  {
     "name": "createThresholdRail",
     "depth": 1,
     "kind": "factory",
@@ -16397,6 +16416,28 @@
     "since": "v0.11.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
     "line": 90
+  },
+  {
+    "name": "ThreeSlotRow",
+    "depth": 2,
+    "kind": "variant",
+    "family": "ThreeSlotRow",
+    "variantOf": {
+      "factory": "createThreeSlotRow",
+      "overrides": "{},"
+    },
+    "overrides": null,
+    "dataProps": "ThreeSlotRowDataProps",
+    "summary": "Composite (Depth 2), `src/components/ThreeSlotRow/`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "an app header's \"layout A\" — logo | nav centred in the remaining space | status + user (the Taskmaster canon, 2026-10-15; `AppBar` curries it at a 160px start); any toolbar whose middle must centre between two fixed ends.",
+    "notes": "start | centre | end, with the start track at its content's width (`auto`). For a fixed start width (a 160px logo box), curry your own: `createThreeSlotRow({ startWidth: \"160px\" })` — AppBar does exactly that.",
+    "showcase": "#/three-slot-row",
+    "since": "Unreleased",
+    "file": "src/components/ThreeSlotRow/variants.ts",
+    "line": 11
   },
   {
     "name": "ThresholdRail",

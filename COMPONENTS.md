@@ -2626,3 +2626,12 @@ The renderers family is a set of small, composable components for displaying fie
 
     <VarianceStripChart data={days} valueFormat={short} dateFormat={shortDate} title="variance against the forecast, by day" />
     ```
+
+## ThreeSlotRow
+- **ThreeSlotRow** — Composite (Depth 2), `src/components/ThreeSlotRow/`. Owns no CSS; composes a `Grid` curried at factory time with `ClusterRow` (start), `GrowCenterRow` (centre) and `EndClusterRow` (end). Three slots on one line as the grid tracks `<startWidth> minmax(0, 1fr) auto`: the start and end keep their own width, the centre takes the remainder and centres its content IN THAT REMAINDER, not in the viewport, so a wide start slot moves the centre right instead of overlapping it. The centre track is `minmax(0, 1fr)` rather than `1fr`, so a self-measuring child (an `OverflowNav`) can be squeezed and fold; put a child that should FILL the track in a `GrowBox`. Data props: `start?`, `center?`, `end?` (`JSX.Element`). One Override, curried: `createThreeSlotRow({ startWidth })` (a CSS length; default `auto`). `threeSlotColumns(startWidth?)` returns the track list. Curried variant `ThreeSlotRow` (start at its content width). The base is not exported. Exported types: `ThreeSlotRowProps`, `ThreeSlotRowDataProps`, `ThreeSlotRowOverrides`. Use for: an app header's "layout A" — logo | nav centred in the remaining space | status + user (the Taskmaster canon, 2026-10-15; `AppBar` curries it at a 160px start); any toolbar whose middle must centre between two fixed ends.
+
+    ```tsx
+    const LogoBoxRow = createThreeSlotRow({ startWidth: "160px" });
+    <LogoBoxRow start={<PageTitle>Taskmaster</PageTitle>} center={<GrowBox><OverflowNav items={nav} /></GrowBox>} end={<UserMenu … />} />
+    ```
+

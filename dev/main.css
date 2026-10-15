@@ -2794,3 +2794,11 @@ th:has(.tf-th-center) .hud-table__header-content {
   padding: 16px;
 }
 
+/* ThreeSlotRow showcase demo frame — a bordered strip so the three tracks read. */
+.three-slot-row-demo {
+  padding: 8px 12px;
+  border: 1px solid var(--sui-border);
+}
+.three-slot-row-demo--narrow {
+  max-width: 220px;
+}
