@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- **`Icon` `flipped`** — turns the glyph 180°. A change animates over 200ms (none under reduced motion), so a chevron turns instead of swapping glyphs. Omit it and the icon gets no transition.
+
+### Changed
+
+- **`ChartFrame`'s collapse chevron turns smoothly.** It is now one `chevron-up` that turns 180° when the frame collapses, not a swap to `chevron-down`. The labels and `aria-expanded` do not change.
+
 ### Removed
 
 - **`SectionedList`**, **`CompactSectionedList`** and **`createSectionedList`**, with their types (`SectionedListDataProps`, `SectionedListSection`, `SectionedListItem`, `SectionedListStatus`, `SectionedListStatusTone`). 0.220.0 added them, and no consumer adopted them. The owner chose to keep `BucketQueue` for the side pane instead.

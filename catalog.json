@@ -3641,7 +3641,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 300
+    "line": 301
   },
   {
     "name": "createCheckbox",
@@ -4447,7 +4447,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 586
+    "line": 592
   },
   {
     "name": "createKbd",
@@ -9689,7 +9689,7 @@
     "showcase": "#/icon",
     "since": "v0.6.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 548
+    "line": 551
   },
   {
     "name": "IconClusterRow",
@@ -10089,7 +10089,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 594
+    "line": 600
   },
   {
     "name": "InlineSubtleDropdown",

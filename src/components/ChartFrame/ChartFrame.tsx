@@ -24,7 +24,8 @@
 // COLLAPSE (owner, 2026-10-14) is opt-in: `collapsible` adds a chevron after
 // fullscreen and before the y-axis control, so the hamburger stays the
 // rightmost button (owner, 2026-10-14). The chevron points down when the frame is collapsed
-// ("Expand chart") and up when it is open ("Collapse chart"). The menu
+// ("Expand chart") and up when it is open ("Collapse chart"); it is one
+// glyph that turns 180° (Icon `flipped`), not two glyphs swapped. The menu
 // trigger is a hamburger, not a ▾, so the chevron means only this. A
 // collapsed frame keeps its header and does not render its body. Its column
 // drops the stated height, and so does a FILL frame's box, so the frame is
@@ -227,7 +228,7 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
           aria-label={collapseName()}
           title={collapseName()}
         >
-          <ButtonIcon name={collapsed() ? "chevron-down" : "chevron-up"} />
+          <ButtonIcon name="chevron-up" flipped={collapsed()} />
         </IconOnlyButton>
       </Show>
       <Show when={props.yAxisStrategy === "auto-grow-only"}>

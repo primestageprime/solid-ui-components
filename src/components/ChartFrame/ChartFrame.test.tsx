@@ -302,7 +302,8 @@ describe("ChartFrame — collapsible", () => {
     const open = button(container, "Collapse chart")!;
     expect(open.getAttribute("aria-expanded")).toBe("true");
     expect(open.title).toBe("Collapse chart");
-    expect(open.querySelector('[aria-label="chevron-up"]')).toBeTruthy();
+    const chevron = open.querySelector('[aria-label="chevron-up"]')!;
+    expect(chevron.classList.contains("jtf-icon--flipped")).toBe(false);
     expect(column(container).style.height).toBe(`${CHART_FRAME_HEIGHT}px`);
 
     fireEvent.click(open);
@@ -310,7 +311,9 @@ describe("ChartFrame — collapsible", () => {
     const shut = button(container, "Expand chart")!;
     expect(shut.getAttribute("aria-expanded")).toBe("false");
     expect(shut.title).toBe("Expand chart");
-    expect(shut.querySelector('[aria-label="chevron-down"]')).toBeTruthy();
+    // One chevron turns 180°; it is not swapped for another glyph.
+    expect(shut.querySelector('[aria-label="chevron-up"]')).toBe(chevron);
+    expect(chevron.classList.contains("jtf-icon--flipped")).toBe(true);
     // The column drops its stated height at once and eases to the header's.
     // The body (y-title, chart) stays while its row shuts, then unmounts.
     expect(column(container).style.height).toBe("auto");
