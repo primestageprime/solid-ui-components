@@ -11,6 +11,10 @@
 - **`HeightReveal` holds its content at the open height while it moves.** The box clips the content like a curtain. Before, a child that fills its box (ChartFrame's chart) redrew shorter on every frame and squashed to nothing. The close measures the open height and the next open reuses it; a first open does not hold. The content now sits in a `.sui-height-reveal__content` box.
 - **`ChartFrame`'s collapse chevron turns smoothly.** It is now one `chevron-up` that turns 180° when the frame collapses, not a swap to `chevron-down`. The labels and `aria-expanded` do not change.
 
+### Fixed
+
+- **`BaseTable` / `TreeTable`: a right- or center-aligned column now aligns its header too.** The header cell's content is a flex row, so the cell's `text-align` did not move the label or the sort mark. The `th` now carries `hud-table__header-cell--align-right` or `--align-center`, which justifies them.
+
 ### Removed
 
 - **`SectionedList`**, **`CompactSectionedList`** and **`createSectionedList`**, with their types (`SectionedListDataProps`, `SectionedListSection`, `SectionedListItem`, `SectionedListStatus`, `SectionedListStatusTone`). 0.220.0 added them, and no consumer adopted them. The owner chose to keep `BucketQueue` for the side pane instead.

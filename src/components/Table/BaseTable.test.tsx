@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { createSignal } from "solid-js";
 import { render, fireEvent } from "@solidjs/testing-library";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { BaseTable } from "./BaseTable";
 import type { TableColumn, TableRowSpan, TableSort } from "./types";
 
@@ -340,5 +343,31 @@ describe("BaseTable flush", () => {
     expect(flush.container.querySelector(".hud-table.hud-table--flush")).not.toBeNull();
     const framed = render(() => <BaseTable data={DATA} columns={COLUMNS} />);
     expect(framed.container.querySelector(".hud-table--flush")).toBeNull();
+  });
+});
+
+describe("BaseTable header alignment", () => {
+  it("puts the column's align on the header cell, so its label and sort mark follow it", () => {
+    const columns: TableColumn<Row>[] = [
+      { id: "week", header: "Week", accessor: "week" },
+      { id: "calls", header: "Calls", accessor: "calls", align: "right", sortable: true },
+      { id: "a", header: "A", accessor: "a", align: "center" },
+    ];
+    const { container } = render(() => (
+      <BaseTable data={DATA} columns={columns} />
+    ));
+    const ths = Array.from(container.querySelectorAll("th"));
+    expect(ths.map((t) => t.className.match(/hud-table__header-cell--align-\w+/)?.[0])).toEqual([
+      undefined,
+      "hud-table__header-cell--align-right",
+      "hud-table__header-cell--align-center",
+    ]);
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "Table.css"), "utf8");
+    expect(css).toMatch(
+      /\.hud-table__header-cell--align-right \.hud-table__header-content\s*\{\s*justify-content: flex-end;/,
+    );
+    expect(css).toMatch(
+      /\.hud-table__header-cell--align-center \.hud-table__header-content\s*\{\s*justify-content: center;/,
+    );
   });
 });

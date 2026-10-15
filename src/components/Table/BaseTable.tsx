@@ -233,7 +233,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     rowspan?: number,
   ) => (
     <th
-      class={`hud-table__header-cell ${extraClass || ""} ${column.sortable ? "hud-table__header-cell--sortable" : ""} ${sortColumn() === column.id ? "hud-table__header-cell--sorted" : ""}`}
+      class={`hud-table__header-cell ${extraClass || ""} ${column.sortable ? "hud-table__header-cell--sortable" : ""} ${sortColumn() === column.id ? "hud-table__header-cell--sorted" : ""} ${column.align && column.align !== "left" ? `hud-table__header-cell--align-${column.align}` : ""}`}
       style={{
         width: column.width,
         "max-width": column.width,

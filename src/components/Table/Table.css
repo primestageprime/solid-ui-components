@@ -132,6 +132,16 @@
   gap: 8px;
 }
 
+/* The header content is a flex row, so the th's text-align does not move
+   it: a right or center column justifies its label and sort mark here. */
+.hud-table__header-cell--align-right .hud-table__header-content {
+  justify-content: flex-end;
+}
+
+.hud-table__header-cell--align-center .hud-table__header-content {
+  justify-content: center;
+}
+
 .hud-table__sort-indicator {
   font-size: 10px;
   opacity: 0.8;
