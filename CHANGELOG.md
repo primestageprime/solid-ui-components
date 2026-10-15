@@ -4,6 +4,8 @@
 
 ### Added
 
+- **`PinnedFillColumn`** — a Depth 2 composite: a column that fills its parent with an optional pinned `header`, a middle that takes the leftover height and scrolls, and an optional pinned `footer`. Each bar rests on the 1px theme divider. Adds the Layout variants `PinnedHeaderBox` and `PinnedFooterBox`.
+
 - **`GapBox`** — a Depth 2 composite: the canon placeholder for a missing component. A titled `InfoSurface` holding the JSON of `kind`, `nearest` and the intended `props`. Pure `gapBoxJson` builds the body.
 
 ## 0.218.0 — 2026-10-13

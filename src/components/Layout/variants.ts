@@ -649,6 +649,24 @@ export const NoShrinkScrollBox: Component<BoxDataProps> = createBox({
   style: { "overflow-y": "auto", "min-height": "0" },
 });
 
+/** PinnedHeaderBox — a bar that keeps its height in a flex COLUMN
+ *  (`flex-shrink:0`) and rests on the 1px theme divider
+ *  (`border-bottom: 1px solid var(--sui-border)`). The pinned top of a
+ *  `PinnedFillColumn`: a search box, a "current step" line, a list title that
+ *  stays put while the region below it scrolls. */
+export const PinnedHeaderBox: Component<BoxDataProps> = createBox({
+  shrink: false,
+  style: { "border-bottom": "1px solid var(--sui-border)" },
+});
+
+/** PinnedFooterBox — the bottom sibling of `PinnedHeaderBox`: keeps its height
+ *  and sits under the 1px theme divider (`border-top`). The pinned foot of a
+ *  `PinnedFillColumn`: a composer, a total, a primary action. */
+export const PinnedFooterBox: Component<BoxDataProps> = createBox({
+  shrink: false,
+  style: { "border-top": "1px solid var(--sui-border)" },
+});
+
 /** Flex row that fills its parent — `fill; flex:1; min-height:0`. Holds a
  *  Sidebar beside a ScrollColumn pane. */
 export const PaneRow: Component<RowDataProps> = createRow({

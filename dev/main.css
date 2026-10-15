@@ -2801,3 +2801,10 @@ th:has(.tf-th-center) .hud-table__header-content {
   flex-direction: column;
   gap: 12px;
 }
+
+/* PinnedFillColumn showcase demo frame: a definite height so the middle has something to scroll within. */
+.pinned-fill-column-demo {
+  height: 280px;
+  max-width: 360px;
+  border: 1px solid var(--sui-border);
+}
