@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.221.0 — 2026-10-15
+
 ### Added
 
 - **`Icon` `flipped`** — turns the glyph 180°. A change animates over 200ms (none under reduced motion), so a chevron turns instead of swapping glyphs. Omit it and the icon gets no transition.
