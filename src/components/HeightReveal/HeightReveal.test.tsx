@@ -132,4 +132,11 @@ describe("HeightReveal", () => {
     const content = container.querySelector<HTMLElement>(".sui-height-reveal__content")!;
     expect(content.style.height).toBe("");
   });
+
+  it("is never wider than its parent, so wide content clips instead of drawing outside", () => {
+    // An `auto` column and a `min-width: auto` item let a wide child (a chart's <svg width>)
+    // grow the column past the parent; the chart then drew outside its frame (2026-10-15).
+    expect(css).toMatch(/\.sui-height-reveal\s*\{[^}]*grid-template-columns: minmax\(0, 1fr\);/);
+    expect(css).toMatch(/\.sui-height-reveal__inner\s*\{[^}]*min-width: 0;[^}]*overflow: clip;/);
+  });
 });
