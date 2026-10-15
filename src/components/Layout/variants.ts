@@ -936,3 +936,14 @@ export const ChipGrid: Component<GridDataProps> = createGrid({
   columns: "repeat(auto-fit, minmax(150px, 1fr))",
   gap: "xs",
 });
+
+/** EndClusterRow — a trailing cluster packed to the END of its box, centred on
+ *  the cross axis, xs gap, and NO wrap. The non-wrapping sibling of
+ *  `EndWrapRow`: that one wraps at phone width, which in a fixed-height app
+ *  header pushes the status chip above the avatar and breaks the bar's height.
+ *  The end slot of `ThreeSlotRow` (Taskmaster canon, header layout A). */
+export const EndClusterRow: Component<RowDataProps> = createRow({
+  justify: "end",
+  align: "center",
+  gap: "xs",
+});

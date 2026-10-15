@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`EndClusterRow`** — a curried `Row`: a cluster packed to the end of its box, centred on the cross axis, 4px gap, and never wrapping. `EndWrapRow` wraps at phone width, which pushes a header's status chip above its avatar.
+
 ## 0.221.0 — 2026-10-15
 
 ### Added

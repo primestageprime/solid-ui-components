@@ -7559,6 +7559,34 @@
     "line": 30
   },
   {
+    "name": "EndClusterRow",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createRow",
+      "overrides": "{\n  justify: \"end\",\n  align: \"center\",\n  gap: \"xs\",\n}"
+    },
+    "overrides": [
+      "gap",
+      "align",
+      "justify",
+      "wrap",
+      "fill"
+    ],
+    "dataProps": "RowDataProps",
+    "summary": "Curried `Row` (`justify:end; align:center; gap:xs`), NO wrap: a trailing cluster packed to the end of its box that stays on one line at every width.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "the end slot of an app header (status + user menu); `ThreeSlotRow` composes it.",
+    "notes": "EndClusterRow — a trailing cluster packed to the END of its box, centred on the cross axis, xs gap, and NO wrap. The non-wrapping sibling of `EndWrapRow`: that one wraps at phone width, which in a fixed-height app header pushes the status chip above the avatar and breaks the bar's height. The end slot of `ThreeSlotRow` (Taskmaster canon, header layout A).",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 945
+  },
+  {
     "name": "EndLabels",
     "depth": 1,
     "kind": "primitive",
@@ -7653,7 +7681,7 @@
     "useFor": null,
     "notes": "Right-aligned wrapping row — items pack to the end and wrap. For a trailing action-button cluster that right-aligns and wraps on narrow widths.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Layout/variants.ts",
     "line": 228
   },
