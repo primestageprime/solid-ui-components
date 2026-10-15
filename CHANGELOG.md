@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.220.0 — 2026-10-15
+
 ### Added
 
 - **`SectionedList`** / **`CompactSectionedList`** — a Primitive (Depth 1): a dense list in sections for a narrow side pane. Each section has a full-width title bar (uppercase caption, count at the right end) and one-line rows: a clipped name and an optional status. A section may collapse, with its chevron at the right end of the bar; `defaultOpen` sets its start state, and `open` controls it. A status is a shape per tone (success circle, warning diamond, neutral dash) plus its word; `CompactSectionedList` drops the word. Muted rows hide their status. Titles are headings; the list is one tab stop, and the arrow keys, Home and End move between rows. Factory `createSectionedList`. Exported types: `SectionedListDataProps`, `SectionedListSection`, `SectionedListItem`, `SectionedListStatus`, `SectionedListStatusTone`.

@@ -2614,7 +2614,7 @@
     "useFor": null,
     "notes": "The status shape only; the word is a screen-reader label. For a pane under ~200px.",
     "showcase": "#/sectioned-list",
-    "since": "Unreleased",
+    "since": "0.220.0",
     "file": "src/components/SectionedList/variants.ts",
     "line": 13
   },
@@ -5170,7 +5170,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/sectioned-list",
-    "since": "Unreleased",
+    "since": "0.220.0",
     "file": "src/components/SectionedList/SectionedList.tsx",
     "line": 293
   },
@@ -9420,7 +9420,7 @@
     "useFor": "a collapsible body that should slide shut, such as ChartFrame's chart.",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.220.0",
     "file": "src/components/HeightReveal/HeightReveal.tsx",
     "line": 37
   },
@@ -14049,7 +14049,7 @@
     "useFor": null,
     "notes": "The status shape plus its word (\"● done\").",
     "showcase": "#/sectioned-list",
-    "since": "Unreleased",
+    "since": "0.220.0",
     "file": "src/components/SectionedList/variants.ts",
     "line": 9
   },
