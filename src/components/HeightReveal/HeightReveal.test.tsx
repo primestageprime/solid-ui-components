@@ -95,4 +95,41 @@ describe("HeightReveal", () => {
       /prefers-reduced-motion: reduce\)\s*\{\s*\.sui-height-reveal\s*\{\s*transition: none/,
     );
   });
+
+  it("holds its children at the open height while it moves, so a chart clips instead of squashing", () => {
+    vi.useFakeTimers();
+    const [open, setOpen] = createSignal(true);
+    const { container } = render(() => (
+      <HeightReveal when={open()}>
+        <span>body</span>
+      </HeightReveal>
+    ));
+    const content = container.querySelector<HTMLElement>(".sui-height-reveal__content")!;
+    // jsdom does no layout: give the open content a height.
+    Object.defineProperty(content, "offsetHeight", { configurable: true, value: 240 });
+    expect(content.style.height).toBe("");
+
+    setOpen(false);
+    expect(content.style.height).toBe("240px");
+    vi.advanceTimersByTime(HEIGHT_REVEAL_MS);
+
+    // It opens at the height it last had open, then lets go and fills again.
+    setOpen(true);
+    expect(content.style.height).toBe("240px");
+    vi.advanceTimersByTime(HEIGHT_REVEAL_MS);
+    expect(content.style.height).toBe("");
+  });
+
+  it("holds nothing on a first open, when it has no open height yet", () => {
+    vi.useFakeTimers();
+    const [open, setOpen] = createSignal(false);
+    const { container } = render(() => (
+      <HeightReveal when={open()}>
+        <span>body</span>
+      </HeightReveal>
+    ));
+    setOpen(true);
+    const content = container.querySelector<HTMLElement>(".sui-height-reveal__content")!;
+    expect(content.style.height).toBe("");
+  });
 });

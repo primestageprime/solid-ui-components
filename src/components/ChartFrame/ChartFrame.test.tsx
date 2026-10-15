@@ -223,7 +223,7 @@ describe("ContentChartFrame — sized by its chart", () => {
       .firstElementChild as HTMLElement;
     expect(column.style.height).toBe("");
     // The body row sits in the HeightReveal: reveal > inner > row.
-    const body = column.children[1].firstElementChild!
+    const body = column.querySelector(".sui-height-reveal__content")!
       .firstElementChild as HTMLElement;
     expect(body.style.flex).toBe("1 0 auto");
   });
