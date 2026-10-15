@@ -4,6 +4,8 @@
 
 ### Added
 
+- **`UserMenu`** — a Composite (Depth 2): an avatar that opens a right-aligned account menu. The header line is the email or "Not signed in", the caller's items follow, and the last item is Sign in or Sign out depending on whether `user` is set. An optional `status` line sits under the email. Also exported: `userInitials`, `userMenuItems`, `USER_MENU_SIGN_IN`, `USER_MENU_SIGN_OUT`. Exported types: `UserMenuProps`, `UserMenuUser`.
+
 - **`EndClusterRow`** — a curried `Row`: a cluster packed to the end of its box, centred on the cross axis, 4px gap, and never wrapping. `EndWrapRow` wraps at phone width, which pushes a header's status chip above its avatar.
 
 - **`ThreeSlotRow`** — a Composite (Depth 2): start, centre and end slots on one line, as the grid tracks `auto minmax(0, 1fr) auto`. The centre is centred in the space the other two leave, and its track can shrink to 0 so an `OverflowNav` in it can fold. `createThreeSlotRow({ startWidth })` fixes the start track (`"160px"` for a logo box). Also exported: `threeSlotColumns`. Exported types: `ThreeSlotRowProps`, `ThreeSlotRowDataProps`, `ThreeSlotRowOverrides`.

@@ -2635,3 +2635,9 @@ The renderers family is a set of small, composable components for displaying fie
     <LogoBoxRow start={<PageTitle>Taskmaster</PageTitle>} center={<GrowBox><OverflowNav items={nav} /></GrowBox>} end={<UserMenu … />} />
     ```
 
+## UserMenu
+- **UserMenu** — Composite (Depth 2), `src/components/UserMenu/`. Owns no CSS; composes `RightPopoverMenu`, `SmAvatar`, `TightStack` and `TextSublabel`. The account slot at the end of an app header: an avatar (initials from the name's first two words, the email's first letter when the name is empty, `?` signed out; `imageSrc` draws a photo) that opens a right-aligned menu. Its header line is the email, or "Not signed in"; the caller's `items` come next; the LAST item is always exactly one of Sign in / Sign out, chosen from whether `user` is present, so a call site never assembles that pair. Data props: `user?` (`UserMenuUser` — `{ name, email, imageSrc? }`; omitted = signed out), `items?` (`PopoverMenuItem[]`), `onSelect?(id)` (the caller's items only), `onSignIn()`, `onSignOut()`, `status?` (`JSX.Element` — a second header line; `AppBar` folds its status chip here below 480px). Data-only, so no factory and no curried variant. Also exported: `userInitials(user)`, `userMenuItems(items, signedIn)`, and the reserved ids `USER_MENU_SIGN_IN` / `USER_MENU_SIGN_OUT`. Exported types: `UserMenuProps`, `UserMenuUser`. Known gap: the initials avatar is `aria-hidden`, so the trigger button has no accessible name until `PopoverMenu` takes a trigger label. Use for: the user/account control in an app header (Taskmaster canon, 2026-10-15).
+
+    ```tsx
+    <UserMenu user={me()} items={[{ id: "settings", label: "Settings", icon: "gear" }]} onSelect={openSettings} onSignIn={login} onSignOut={logout} />
+    ```

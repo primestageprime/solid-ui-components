@@ -205,6 +205,7 @@ import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
+import { UserMenuShowcase } from "./showcases/user-menu";
 import { ThreeSlotRowShowcase } from "./showcases/three-slot-row";
 import { VarianceStripChartShowcase } from "./showcases/variance-strip-chart";
 import { VarianceStripShowcase } from "./showcases/variance-strip";
@@ -1291,6 +1292,12 @@ const items: Item[] = [
     id: "three-slot-row",
     label: "ThreeSlotRow",
     component: ThreeSlotRowShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "user-menu",
+    label: "UserMenu",
+    component: UserMenuShowcase,
     tags: ["depth:2"],
   },
   // Generated component entries (npm run new:component) — appended above this line.

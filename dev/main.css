@@ -2802,3 +2802,9 @@ th:has(.tf-th-center) .hud-table__header-content {
 .three-slot-row-demo--narrow {
   max-width: 220px;
 }
+
+/* UserMenu showcase demo frame — a strip like the header end slot. */
+.user-menu-demo {
+  padding: 8px 12px;
+  border: 1px solid var(--sui-border);
+}
