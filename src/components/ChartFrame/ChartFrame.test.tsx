@@ -3,7 +3,9 @@ import { createSignal } from "solid-js";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { HEIGHT_REVEAL_MS } from "../HeightReveal";
+import { ICON_PATHS, type IconName } from "../Icon/Icon";
 import {
   CHART_FRAME_HEIGHT,
   ChartFrame,
@@ -17,6 +19,13 @@ import {
 
 const button = (container: HTMLElement, name: string) =>
   container.querySelector<HTMLButtonElement>(`button[aria-label="${name}"]`);
+
+/** The markup an inline glyph renders, read back through jsdom. */
+const glyphMarkup = (name: IconName): string => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.innerHTML = ICON_PATHS[name].outline;
+  return svg.innerHTML;
+};
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -152,7 +161,7 @@ describe("ChartFrame", () => {
     expect(lock.querySelector('[aria-label="lock"]')).toBeTruthy();
   });
 
-  it("the ▾ has an accessible name and picks a mode", () => {
+  it("the hamburger has an accessible name and picks a mode", () => {
     const onMode = vi.fn();
     const { container } = render(() => (
       <ChartFrame title="T" yAxisMode="auto" onYAxisModeChange={onMode}>
@@ -162,6 +171,10 @@ describe("ChartFrame", () => {
     const trigger = container.querySelector(".sui-popover-menu__trigger")!;
     expect(trigger.textContent).toBe("Y-axis mode");
     expect(trigger.querySelector(".sui-sr-only")).toBeTruthy();
+    // A hamburger, not a ▾: the chevron means expand / collapse here.
+    expect(trigger.querySelector(".sui-popover-menu__caret svg")?.innerHTML).toBe(
+      glyphMarkup("menu"),
+    );
     fireEvent.click(trigger);
     // The menu is portaled to document.body.
     const locked = [...document.querySelectorAll('[role="menuitem"]')].find(
@@ -209,7 +222,9 @@ describe("ContentChartFrame — sized by its chart", () => {
     const column = container.querySelector(".sui-fullscreen-box")!
       .firstElementChild as HTMLElement;
     expect(column.style.height).toBe("");
-    const body = column.children[1] as HTMLElement;
+    // The body row sits in the HeightReveal: reveal > inner > row.
+    const body = column.querySelector(".sui-height-reveal__content")!
+      .firstElementChild as HTMLElement;
     expect(body.style.flex).toBe("1 0 auto");
   });
 });
@@ -254,5 +269,149 @@ describe("ContentAutoGrowChartFrame — content height, auto-grow-only axis", ()
     expect(container.querySelector(".sui-popover-menu")).toBeNull();
     fireEvent.click(button(container, chartYAxisModeInfo("auto").action)!);
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("ChartFrame — collapsible", () => {
+  // The body unmounts when the HeightReveal's close ends.
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+  const settle = () => vi.advanceTimersByTime(HEIGHT_REVEAL_MS);
+  const chevron = (container: HTMLElement) =>
+    container.querySelector<HTMLButtonElement>("button[aria-expanded]");
+  const column = (container: HTMLElement) =>
+    container.querySelector(".sui-fullscreen-box")!.firstElementChild as HTMLElement;
+
+  it("draws no chevron unless collapsible, and ignores collapsed then", () => {
+    const { container, getByText } = render(() => (
+      <ChartFrame title="T" collapsed>
+        <span>chart</span>
+      </ChartFrame>
+    ));
+    expect(chevron(container)).toBeNull();
+    expect(getByText("chart")).toBeTruthy();
+  });
+
+  it("owns its state: the chevron collapses and expands, with labels to match", () => {
+    const onChange = vi.fn();
+    const { container, queryByText } = render(() => (
+      <ChartFrame title="Cash flow" yTitle="Balance ($)" collapsible onCollapsedChange={onChange}>
+        <span>chart</span>
+      </ChartFrame>
+    ));
+    const open = button(container, "Collapse chart")!;
+    expect(open.getAttribute("aria-expanded")).toBe("true");
+    expect(open.title).toBe("Collapse chart");
+    const chevron = open.querySelector('[aria-label="chevron-up"]')!;
+    expect(chevron.classList.contains("jtf-icon--flipped")).toBe(false);
+    expect(column(container).style.height).toBe(`${CHART_FRAME_HEIGHT}px`);
+
+    fireEvent.click(open);
+    expect(onChange).toHaveBeenLastCalledWith(true);
+    const shut = button(container, "Expand chart")!;
+    expect(shut.getAttribute("aria-expanded")).toBe("false");
+    expect(shut.title).toBe("Expand chart");
+    // One chevron turns 180°; it is not swapped for another glyph.
+    expect(shut.querySelector('[aria-label="chevron-up"]')).toBe(chevron);
+    expect(chevron.classList.contains("jtf-icon--flipped")).toBe(true);
+    // The column drops its stated height at once and eases to the header's.
+    // The body (y-title, chart) stays while its row shuts, then unmounts.
+    expect(column(container).style.height).toBe("auto");
+    expect(column(container).classList.contains("stack--size-motion")).toBe(true);
+    expect(queryByText("chart")).toBeTruthy();
+    settle();
+    expect(queryByText("Cash flow")).toBeTruthy();
+    expect(queryByText("chart")).toBeNull();
+    expect(queryByText("Balance ($)")).toBeNull();
+
+    fireEvent.click(shut);
+    expect(onChange).toHaveBeenLastCalledWith(false);
+    expect(queryByText("chart")).toBeTruthy();
+  });
+
+  it("is controlled when collapsed is given: the chevron only reports", () => {
+    const onChange = vi.fn();
+    const [collapsed, setCollapsed] = createSignal(true);
+    const { container, queryByText } = render(() => (
+      <ChartFrame title="T" collapsible collapsed={collapsed()} onCollapsedChange={onChange}>
+        <span>chart</span>
+      </ChartFrame>
+    ));
+    expect(queryByText("chart")).toBeNull();
+    fireEvent.click(button(container, "Expand chart")!);
+    expect(onChange).toHaveBeenCalledWith(false);
+    // The caller has not answered yet, so the frame stays collapsed.
+    expect(queryByText("chart")).toBeNull();
+    setCollapsed(false);
+    expect(queryByText("chart")).toBeTruthy();
+    expect(button(container, "Collapse chart")).toBeTruthy();
+  });
+
+  it("sits after fullscreen and actions, before the y-axis split, so the hamburger is rightmost", () => {
+    const { container } = render(() => (
+      <ChartFrame title="T" yAxisMode="auto" collapsible actions={<input aria-label="Cap" />}>
+        <span />
+      </ChartFrame>
+    ));
+    const follows = (a: Element, b: Element) =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    const trigger = container.querySelector(".sui-popover-menu__trigger")!;
+    const cap = container.querySelector('input[aria-label="Cap"]')!;
+    const full = button(container, "Full screen")!;
+    expect(follows(cap, chevron(container)!)).toBe(true);
+    expect(follows(full, chevron(container)!)).toBe(true);
+    expect(follows(chevron(container)!, trigger)).toBe(true);
+    const buttons = [...container.querySelectorAll("button")];
+    expect(buttons[buttons.length - 1]).toBe(trigger.closest("button") ?? trigger);
+  });
+
+  it("entering fullscreen expands it; collapsing from fullscreen leaves fullscreen", () => {
+    const onCollapsed = vi.fn();
+    const { container, queryByText } = render(() => (
+      <ChartFrame title="T" collapsible onCollapsedChange={onCollapsed}>
+        <span>chart</span>
+      </ChartFrame>
+    ));
+    const box = container.querySelector(".sui-fullscreen-box")!;
+    fireEvent.click(button(container, "Collapse chart")!);
+    settle();
+    expect(queryByText("chart")).toBeNull();
+
+    fireEvent.click(button(container, "Full screen")!);
+    expect(box.getAttribute("data-fullscreen")).toBe("true");
+    expect(onCollapsed).toHaveBeenLastCalledWith(false);
+    expect(queryByText("chart")).toBeTruthy();
+
+    fireEvent.click(button(container, "Collapse chart")!);
+    expect(box.getAttribute("data-fullscreen")).toBe("false");
+    expect(onCollapsed).toHaveBeenLastCalledWith(true);
+    settle();
+    expect(queryByText("chart")).toBeNull();
+  });
+
+  it("a collapsed fill frame's box drops its fill, and gets it back on expand", () => {
+    const Fill = createChartFrame({ height: "fill" });
+    const [collapsed, setCollapsed] = createSignal(true);
+    const { container } = render(() => (
+      <Fill title="T" collapsible collapsed={collapsed()}>
+        <span />
+      </Fill>
+    ));
+    const box = container.querySelector(".sui-fullscreen-box") as HTMLElement;
+    expect(box.style.height).toBe("auto");
+    expect(box.style.flex).toBe("0 0 auto");
+    expect(column(container).style.flex).toBe("0 0 auto");
+    setCollapsed(false);
+    expect(box.style.height).toBe("");
+    expect(column(container).style.height).toBe("100%");
+  });
+
+  it("a controlled collapsed frame still shows its chart while fullscreen", () => {
+    const { queryByText } = render(() => (
+      <ChartFrame title="T" collapsible collapsed fullscreen>
+        <span>chart</span>
+      </ChartFrame>
+    ));
+    expect(queryByText("chart")).toBeTruthy();
   });
 });

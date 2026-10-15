@@ -22,6 +22,9 @@ export {
   NESTED_LIST_MAX_INDENT_STEPS,
 } from "./NestedList";
 export type { NestedListProps, NestedListItemProps } from "./NestedList";
+// The same indent and guide rail without list semantics (e.g. a table cell).
+export { IndentRail } from "./IndentRail";
+export type { IndentRailProps } from "./IndentRail";
 // Responsive side-by-side -> stacked row (the "holy albatross"). No-config shell.
 export { AutoStackRow, AutoStackItem } from "./AutoStack";
 export type { AutoStackRowProps, AutoStackItemProps } from "./AutoStack";

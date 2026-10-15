@@ -47,4 +47,14 @@ describe("ThreePanelLayout", () => {
     const style = container.firstElementChild!.getAttribute("style") ?? "";
     expect(style).toMatch(/--sui-three-panel-aside-max: ?60vh/);
   });
+
+  it("marks the right panel flush only when rightPanelFlush is set", () => {
+    const flush = render(() => (
+      <ThreePanelLayout rightPanelFlush centerPanel={<div>center</div>} rightPanel={<div>right</div>} />
+    ));
+    expect(flush.container.querySelector(".sui-three-panel__right--flush")).not.toBeNull();
+    const padded = render(() => <ThreePanelLayout centerPanel={<div>center</div>} rightPanel={<div>right</div>} />);
+    expect(padded.container.querySelector(".sui-three-panel__right")).not.toBeNull();
+    expect(padded.container.querySelector(".sui-three-panel__right--flush")).toBeNull();
+  });
 });

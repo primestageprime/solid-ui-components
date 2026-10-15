@@ -64,6 +64,17 @@
   color: var(--sui-text-secondary);
 }
 
+/* Size `lg` — a page's headline figure. Only the value and its units grow;
+   the label and the card chrome stay the same as `md`. */
+.sui-metric-card--lg .sui-metric-card__value {
+  font-size: 2.5rem;
+  line-height: 1.1;
+}
+
+.sui-metric-card--lg .sui-metric-card__value-units {
+  font-size: 1.25rem;
+}
+
 /* Color variants — tint the value text only. */
 .sui-metric-card--success .sui-metric-card__value {
   color: var(--sui-success);

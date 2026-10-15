@@ -39,7 +39,7 @@ type PerPayee<T> = Readonly<Record<string, T>>;
 const perPayee = <T,>(v: T): PerPayee<T> => Object.fromEntries(PAYEES.map((p) => [p.key, v]));
 
 const ManualGroupBench: Component = () => {
-  const [payeeKey, setPayeeKey] = createSignal("asa");
+  const [payeeKey, setPayeeKey] = createSignal(PAYEES[0].key);
   const [lookBack, setLookBack] = createSignal("All");
   const [applied, setApplied] = createSignal<PerPayee<readonly string[]>>(perPayee([]));
   const [discarded, setDiscarded] = createSignal<PerPayee<boolean>>(perPayee(false));

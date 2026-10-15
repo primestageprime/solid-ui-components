@@ -50,6 +50,12 @@ export interface PopoverMenuProps<Id extends string = string> {
   align?: "left" | "right";
   /** Trigger button size */
   size?: "sm" | "md";
+  /**
+   * The glyph after the trigger's content. Default `"chevron-down"`, which
+   * turns over while the menu is open. Any other glyph (a `"menu"`
+   * hamburger) stays still.
+   */
+  caretIcon?: IconName;
 }
 
 /** Class list for one menu item — adds the modifier when the item is current. */
@@ -89,7 +95,11 @@ export const PopoverMenu = <Id extends string = string>(
   props: PopoverMenuProps<Id>,
 ) => {
   const merged = mergeProps(
-    { align: "right" as const, size: "md" as const },
+    {
+      align: "right" as const,
+      size: "md" as const,
+      caretIcon: "chevron-down" as IconName,
+    },
     props,
   );
   const [open, setOpen] = createSignal(false);
@@ -198,6 +208,12 @@ export const PopoverMenu = <Id extends string = string>(
     return classes.join(" ");
   };
 
+  /** Only the chevron turns over when open; another glyph stays still. */
+  const caretClass = () =>
+    merged.caretIcon === "chevron-down"
+      ? "sui-popover-menu__caret"
+      : "sui-popover-menu__caret sui-popover-menu__caret--still";
+
   const triggerClass = () =>
     `sui-popover-menu__trigger sui-popover-menu__trigger--${merged.size}`;
 
@@ -211,8 +227,8 @@ export const PopoverMenu = <Id extends string = string>(
       >
         <span class="sui-popover-menu__trigger-content">
           {merged.trigger}
-          <span class="sui-popover-menu__caret">
-            <InlineIcon name="chevron-down" size="xs" />
+          <span class={caretClass()}>
+            <InlineIcon name={merged.caretIcon} size="xs" />
           </span>
         </span>
       </button>

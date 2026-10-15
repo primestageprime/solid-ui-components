@@ -31,6 +31,30 @@ describe("MetricCard — colour modifier", () => {
   });
 });
 
+describe("MetricCard — size modifier", () => {
+  // `md` is the default and must NOT produce a modifier class, for the same
+  // reason as the default colour: the CSS has no `--md` rule.
+  it("emits no modifier for md, whether explicit or omitted", () => {
+    const { container: explicit } = render(() => (
+      <MetricCard label="Cash" value={1} size="md" />
+    ));
+    const { container: omitted } = render(() => (
+      <MetricCard label="Cash" value={1} />
+    ));
+    expect(root(explicit)?.className).toBe("sui-metric-card");
+    expect(root(omitted)?.className).toBe("sui-metric-card");
+  });
+
+  it("emits the lg modifier beside a colour modifier", () => {
+    const { container } = render(() => (
+      <MetricCard label="Cash" value={1} size="lg" color="danger" />
+    ));
+    const cls = root(container)?.className ?? "";
+    expect(cls).toContain("sui-metric-card--lg");
+    expect(cls).toContain("sui-metric-card--danger");
+  });
+});
+
 describe("MetricCard — class composition", () => {
   // A consumer class must be additive. Replacing the base class would drop
   // every style the Primitive owns.

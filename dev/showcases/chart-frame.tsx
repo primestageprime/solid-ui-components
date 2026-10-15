@@ -1,6 +1,6 @@
 // ChartFrame — Peter's chart visual language: title top left, the y-axis
 // title bottom-to-top on the left, fullscreen + the Y-axis strategy split
-// button top right. The frame owns no axis state; this page owns the mode
+// button top right, and an opt-in collapse chevron at the end. The frame owns no axis state; this page owns the mode
 // and prints what each press asked for.
 import { type Component, createMemo, createSignal } from "solid-js";
 import {
@@ -178,6 +178,29 @@ const ContentHeightExample: Component = () => {
   );
 };
 
+/** `collapsible` — the chevron at the end of the button set. Controlled
+ *  here, so the page prints what the frame asked for. */
+const CollapsibleExample: Component = () => {
+  const [mode, setMode] = createSignal<ChartYAxisMode>("auto");
+  const [collapsed, setCollapsed] = createSignal(false);
+  return (
+    <>
+      <ChartFrame
+        title="Cash flow"
+        yTitle="Balance ($)"
+        yAxisMode={mode()}
+        onYAxisModeChange={setMode}
+        collapsible
+        collapsed={collapsed()}
+        onCollapsedChange={setCollapsed}
+      >
+        <StillCashflowScrubChart cells={shellCells} chartHeight="fill" scrub={false} />
+      </ChartFrame>
+      <MutedBody>{`collapsed = ${collapsed()} · full screen expands it`}</MutedBody>
+    </>
+  );
+};
+
 /** `createRangeDialog` — the same min/max editor, named for use outside a
  *  chart: here a slider's allowed range, in hours. */
 const HoursRangeDialog = createRangeDialog({
@@ -226,7 +249,7 @@ export const ChartFrameShowcase: Component = () => {
         Every chart's frame: a title, a y-axis title naming the units, a
         fullscreen button, and the Y-axis strategy split button — the main
         face does the current mode's job (shrink to fit, nothing in Full
-        auto, edit the lock), the ▾ picks the mode. Stated in-flow height
+        auto, edit the lock), the hamburger picks the mode. Stated in-flow height
         (320px); full screen fills the viewport without remounting the chart.
       </p>
       <div class="example-group">
@@ -248,6 +271,10 @@ export const ChartFrameShowcase: Component = () => {
           />
         </ChartFrame>
         <MutedBody>{`yAxisMode = "${mode()}" · fullscreen = ${fullscreen()} · last press: ${lastPress()}`}</MutedBody>
+      </div>
+      <div class="example-group">
+        <h3>collapsible — the chevron hides the chart and keeps the header</h3>
+        <CollapsibleExample />
       </div>
       <div class="example-group">
         <h3>A ScrubChart driven by its frame — createYAxisStrategy + YAxisLockDialog</h3>

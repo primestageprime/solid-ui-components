@@ -7,6 +7,11 @@
 // Updated: absorbs HUDButton's active prop.
 // ============================================
 import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
+import {
+  createSubmitAction,
+  type SubmitAction,
+  type SubmitWork,
+} from "../../hooks/createSubmitAction";
 import "./Button.css";
 
 export interface ButtonProps
@@ -31,6 +36,19 @@ export interface ButtonProps
     | "plain-label";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
+  /**
+   * A SUBMIT: the button runs this work on click, shows the spinner and stays
+   * disabled while it runs, and ignores clicks until it settles. Return
+   * `false` to say the work refused. See `createSubmitAction`.
+   */
+  onAction?: SubmitWork;
+  /** With `onAction`: stay disabled after the work is sent once. */
+  once?: boolean;
+  /**
+   * A shared submit action (`createSubmitAction`), for work that a keyboard
+   * shortcut also runs. The button reads its `pending` and `spent`.
+   */
+  action?: SubmitAction;
   /** Active/selected state (absorbed from HUDButton) */
   active?: boolean;
   /**
@@ -51,14 +69,34 @@ export const Button: Component<ButtonProps> = (props) => {
     "class",
     "children",
     "disabled",
+    "onAction",
+    "once",
+    "action",
+    "onClick",
   ]);
+
+  // The action is fixed at creation, as a Solid component's setup runs once.
+  const action: SubmitAction | undefined =
+    local.action ??
+    (local.onAction
+      ? createSubmitAction(() => local.onAction?.(), { once: local.once })
+      : undefined);
+  const loading = () => (local.loading ?? false) || (action?.pending() ?? false);
+  const disabled = () =>
+    (local.disabled ?? false) || loading() || (action?.spent() ?? false);
+  const onClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (e) => {
+    const handler = local.onClick;
+    if (typeof handler === "function") handler(e);
+    else if (Array.isArray(handler)) handler[0](handler[1], e);
+    if (action) void action.run();
+  };
 
   const classes = () => {
     const classList = ["sui-btn"];
     if (local.variant) classList.push(`sui-btn--${local.variant}`);
     if (local.size) classList.push(`sui-btn--${local.size}`);
     if (local.tone) classList.push(`sui-btn--tone-${local.tone}`);
-    if (local.loading) classList.push("sui-btn--loading");
+    if (loading()) classList.push("sui-btn--loading");
     if (local.active) classList.push("sui-btn--active");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
@@ -67,10 +105,12 @@ export const Button: Component<ButtonProps> = (props) => {
   return (
     <button
       class={classes()}
-      disabled={local.disabled || local.loading}
+      disabled={disabled()}
+      aria-busy={loading() || undefined}
+      onClick={onClick}
       {...others}
     >
-      {local.loading && <span class="sui-btn__spinner" />}
+      {loading() && <span class="sui-btn__spinner" />}
       <span class="sui-btn__content">{local.children}</span>
     </button>
   );
