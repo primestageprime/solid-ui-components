@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Removed
+
+- **`SectionedList`**, **`CompactSectionedList`** and **`createSectionedList`**, with their types (`SectionedListDataProps`, `SectionedListSection`, `SectionedListItem`, `SectionedListStatus`, `SectionedListStatusTone`). 0.220.0 added them, and no consumer adopted them. The owner chose to keep `BucketQueue` for the side pane instead.
+
 ## 0.220.0 — 2026-10-15
 
 ### Added
