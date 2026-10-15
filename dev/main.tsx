@@ -204,6 +204,7 @@ import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
+import { StampedRowShowcase } from "./showcases/stamped-row";
 import { PinnedFillColumnShowcase } from "./showcases/pinned-fill-column";
 import { GapBoxShowcase } from "./showcases/gap-box";
 import { VarianceStripChartShowcase } from "./showcases/variance-strip-chart";
@@ -1291,6 +1292,12 @@ const items: Item[] = [
     id: "pinned-fill-column",
     label: "PinnedFillColumn",
     component: PinnedFillColumnShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "stamped-row",
+    label: "StampedRow",
+    component: StampedRowShowcase,
     tags: ["depth:2"],
   },
   // Generated component entries (npm run new:component) — appended above this line.

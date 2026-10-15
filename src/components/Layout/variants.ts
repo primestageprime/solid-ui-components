@@ -223,6 +223,22 @@ export const NoShrinkClusterRow: Component<RowDataProps> = createRow({
   gap: "sm",
   style: { "flex-shrink": 0 },
 });
+// CompactLineRow — one 22px line (`min-height:22px`): items centred, `sm` gap, no
+// wrap. The row of a dense list where every line holds a glyph, a label and a
+// trailing value (a log, an activity trail). The 40px sibling is `BarLineRow`.
+export const CompactLineRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "sm",
+  style: { "min-height": "22px" },
+});
+// BarLineRow — one 40px line (`min-height:40px`): the `CompactLineRow` shape on a
+// bar's height. The row of a PINNED line — the current step above a scrolling
+// region — which needs the room a list line does not.
+export const BarLineRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "sm",
+  style: { "min-height": "40px" },
+});
 // Right-aligned wrapping row — items pack to the end and wrap. For a trailing
 // action-button cluster that right-aligns and wraps on narrow widths.
 export const EndWrapRow: Component<RowDataProps> = createRow({

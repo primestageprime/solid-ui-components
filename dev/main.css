@@ -2808,3 +2808,9 @@ th:has(.tf-th-center) .hud-table__header-content {
   max-width: 360px;
   border: 1px solid var(--sui-border);
 }
+
+/* StampedRow showcase demo frame: a narrow column so a long label has to ellipsize. */
+.stamped-row-demo {
+  max-width: 320px;
+  padding: 8px 0;
+}
