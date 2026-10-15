@@ -13,7 +13,7 @@ import { type Component, Index, createMemo } from "solid-js";
 import {
   AreaSeries,
   Chart,
-  ContentChartFrame,
+  ContentAutoGrowChartFrame,
   FieldTable,
   Grid,
   Icon,
@@ -21,12 +21,12 @@ import {
   MutedBody,
   NarrowStack,
   PinMarkers,
-  SectionTitle,
   ShapeGlyph,
   Tooltip,
   ViewportColumn,
   XAxis,
   YAxis,
+  createAxisWaterMarks,
   fields,
   fn,
   slotId,
@@ -128,7 +128,7 @@ const RECEIPT_REGISTRY = {
 };
 
 /** One topic's step timeline: area, both lines, flags along the top with drop lines. */
-const StepTimeline: Component<{ readonly topic: TopicTrace }> = (props) => {
+const StepTimeline: Component<{ readonly name: string; readonly topic: TopicTrace }> = (props) => {
   const t0 = () => startOf(props.topic);
   const end = () => endOf(props.topic);
   const estimate = createMemo(() => estimateLine(props.topic));
@@ -141,21 +141,25 @@ const StepTimeline: Component<{ readonly topic: TopicTrace }> = (props) => {
     return last + (last - t0()) * X_PAD;
   };
   const yMax = () => Math.round(totalMin(props.topic) * 1.1);
+  // The y axis only grows; the frame's fit button drops it back to the data.
+  const marks = createAxisWaterMarks(() => ({ min: 0, max: yMax() }));
+  const yDomain = (): [number, number] => marks.domain() ?? [0, yMax()];
   const ticks = () => timeTicks(t0(), xEnd(), tickEvery(xEnd() - t0()));
   const drop = (f: Flag): LevelPoint[] => [
     { x: f.x, y: yMax() },
     { x: f.x, y: f.y },
   ];
   return (
-    <ContentChartFrame
-      title="Planned minutes earned over wall-clock time"
+    <ContentAutoGrowChartFrame
+      title={props.name}
       yTitle="Planned minutes earned"
+      onYAxisPress={marks.reset}
     >
       <Chart
         width={860}
         height={300}
         xDomain={[new Date(t0()), new Date(xEnd())]}
-        yDomain={[0, yMax()]}
+        yDomain={yDomain()}
         margin={{ top: LANE + 12, right: 16, bottom: 34, left: 52 }}
         annotationLaneHeight={LANE}
         responsive
@@ -228,7 +232,7 @@ const StepTimeline: Component<{ readonly topic: TopicTrace }> = (props) => {
           )}
         />
       </Chart>
-    </ContentChartFrame>
+    </ContentAutoGrowChartFrame>
   );
 };
 
@@ -243,9 +247,8 @@ const ProgressFlagsBench: Component = () => (
         <Index each={SCENARIOS}>
           {(sc) => (
             <>
-              <SectionTitle>{sc().name}</SectionTitle>
+              <StepTimeline name={sc().name} topic={sc().topic} />
               <MutedBody>{sc().topic.title}</MutedBody>
-              <StepTimeline topic={sc().topic} />
               {sc().name === "Ahead" && (
                 <FieldTable
                   data={[...receiptRows(sc().topic)]}
