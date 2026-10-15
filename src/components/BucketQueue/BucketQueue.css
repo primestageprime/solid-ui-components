@@ -125,10 +125,10 @@
 }
 
 /* A collapsible, populated bucket's header IS the toggle. The UA button box is
-   reset completely and deliberately: `headH` is measured from bucket 0's
-   header ALONE (see BucketQueue.tsx) and applied to every bucket, so a
-   button's default font-family, padding, margin or border leaking in would
-   mis-size the entire bar — not just this header. `font-family`/`line-height`
+   reset completely and deliberately: each bucket's header is measured for
+   its water-fill height (see measurement.ts), so a button's default
+   font-family, padding, margin or border leaking in would make a toggle
+   header taller than a plain one for no reason. `font-family`/`line-height`
    are named individually rather than via the `font` shorthand, which would
    also wipe the weight, size and letter-spacing the base rule sets. */
 .bucket-queue__header--toggle {

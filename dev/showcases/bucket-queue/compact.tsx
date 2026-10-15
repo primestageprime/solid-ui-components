@@ -18,7 +18,7 @@ interface Group {
 
 const BUCKETS: Bucket[] = [
   { key: "review", label: "To review", tone: "accent" },
-  { key: "drift", label: "Check the drift", tone: "warning" },
+  { key: "drift", label: "Check the drift · confirm the cadence", tone: "warning" },
   { key: "fits", label: "Fits already", tone: "muted", collapsible: true, collapsedByDefault: true },
   { key: "flagged", label: "Flagged", tone: "danger", emptyLabel: "Nothing flagged" },
 ];

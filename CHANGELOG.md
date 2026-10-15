@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- **`BucketQueue` measures each bucket's own header.** It measured bucket 0's header and used that height for every bucket. In a narrow pane a long label wraps onto more lines, so its bucket was too short and its rows scrolled, and a one-line header got a blank strip under it. `naturalHeights` takes an optional `headHeights`.
 - **`HeightReveal` (and so `ChartFrame`'s body) is never wider than its parent.** Its grid had an `auto` column, so a wide child (a chart's `<svg width>`) grew the column past the frame, and the chart drew outside the frame, over the next panel. The column is now `minmax(0, 1fr)` and the inner box has `min-width: 0`, so the inner box clips wide content.
 
 ## 0.221.0 — 2026-10-15
