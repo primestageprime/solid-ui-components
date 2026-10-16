@@ -22,9 +22,11 @@ export interface CountChipProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   label: string;
   /** Force the active visual state regardless of count. */
   active?: boolean;
-  /** Print the number with thousands grouping ("2,594", en-US). Default false:
-   *  the digits print bare, as before. */
+  /** Print the number with the viewer's thousands grouping ("2,594" in en-US).
+   *  Default false: the digits print bare, as before. */
   grouped?: boolean;
+  /** BCP 47 locale for `grouped`. Default: the runtime's own locale. */
+  locale?: string;
 }
 
 export const CountChip: Component<CountChipProps> = (props) => {
@@ -33,6 +35,7 @@ export const CountChip: Component<CountChipProps> = (props) => {
     "label",
     "active",
     "grouped",
+    "locale",
     "class",
   ]);
   const isActive = () => local.active ?? local.count > 0;
@@ -46,7 +49,7 @@ export const CountChip: Component<CountChipProps> = (props) => {
     <span class={cls()} {...others}>
       <span class="sui-count-chip__count">
         <DigitRoller
-          value={local.grouped ? local.count.toLocaleString("en-US") : String(local.count)}
+          value={local.grouped ? local.count.toLocaleString(local.locale) : String(local.count)}
         />
       </span>
       <span class="sui-count-chip__label">{local.label}</span>

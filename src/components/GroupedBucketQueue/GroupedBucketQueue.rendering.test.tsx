@@ -79,8 +79,8 @@ describe("GroupedBucketQueue count override", () => {
       },
     ];
     const { container } = renderQueue([{ id: "a", bucket: "n" }], { groups });
-    expect(headerFor(container, "all:h").textContent).toContain("2,594");
-    expect(headerFor(container, "all").textContent).toContain("2,595");
+    expect(headerFor(container, "all:h").textContent).toContain((2594).toLocaleString());
+    expect(headerFor(container, "all").textContent).toContain((2595).toLocaleString());
     expect(headerFor(container, "all:n").textContent).toContain("1");
   });
 

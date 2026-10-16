@@ -16,13 +16,13 @@ const counts = (c: HTMLElement) =>
 describe("BucketQueue — Bucket.count", () => {
   it("shows the stated count, grouped, with one item loaded and the bucket collapsed", () => {
     const { container } = renderBuckets(HISTORY, [{ id: "1", bucket: "h" }]);
-    expect(counts(container)).toEqual(["0", "2,594"]);
+    expect(counts(container)).toEqual(["0", (2594).toLocaleString()]);
     expect(toggleButton(container)!.getAttribute("aria-expanded")).toBe("false");
   });
 
   it("shows the stated count with nothing loaded", () => {
     const { container } = renderBuckets(HISTORY, []);
-    expect(counts(container)).toEqual(["0", "2,594"]);
+    expect(counts(container)).toEqual(["0", (2594).toLocaleString()]);
   });
 
   it("leaves collapse and the body on the loaded items", () => {
@@ -30,7 +30,7 @@ describe("BucketQueue — Bucket.count", () => {
     expect(container.querySelector('[data-bq-key="1"]')).toBeNull();
     fireEvent.click(toggleButton(container)!);
     expect(container.querySelector('[data-bq-key="1"]')).not.toBeNull();
-    expect(counts(container)).toEqual(["0", "2,594"]);
+    expect(counts(container)).toEqual(["0", (2594).toLocaleString()]);
   });
 
   it("changes nothing when absent: loaded count, ungrouped", () => {
