@@ -27,6 +27,7 @@ import {
   type JSX,
 } from "solid-js";
 import { every, filter, find, flatMap, map, pipe } from "../../fn";
+import { CountChip } from "../Badge/CountChip";
 import { bucketItems } from "../BucketQueue/bucketing";
 import { createRowKeyboard } from "../BucketQueue/keyboard";
 import { advanceSelection } from "../BucketQueue/selection";
@@ -243,13 +244,13 @@ export function GroupedBucketQueue<T>(
                 when={h().toggleable}
                 fallback={
                   <div class="bucket-queue__header grouped-bucket-queue__header">
-                    <span class="bucket-queue__title">
-                      <span
-                        class={`bucket-queue__dot bucket-queue__dot--${h().tone ?? "muted"}`}
-                      />
-                      {h().label}
-                    </span>
-                    <span class="bucket-queue__count">{h().count}</span>
+                    <span class="bucket-queue__title">{h().label}</span>
+                    <CountChip
+                      class={`bucket-queue__count bucket-queue__count--${h().tone ?? "muted"}`}
+                      count={h().shown}
+                      grouped={h().grouped}
+                      label=""
+                    />
                   </div>
                 }
               >
@@ -264,9 +265,12 @@ export function GroupedBucketQueue<T>(
                     )
                   }
                 >
+                  {/* Label first, chevron after it: no leading glyph may push
+                      the label right of its rows' text (BucketHeader.tsx). */}
                   <span class="bucket-queue__title">
+                    {h().label}
                     <span
-                      class={`bucket-queue__chevron bucket-queue__chevron--${h().tone ?? "muted"}`}
+                      class="bucket-queue__chevron"
                       classList={{
                         "bucket-queue__chevron--expanded": !h().collapsed,
                       }}
@@ -274,9 +278,13 @@ export function GroupedBucketQueue<T>(
                     >
                       <Chevron />
                     </span>
-                    {h().label}
                   </span>
-                  <span class="bucket-queue__count">{h().count}</span>
+                  <CountChip
+                    class={`bucket-queue__count bucket-queue__count--${h().tone ?? "muted"}`}
+                    count={h().shown}
+                    grouped={h().grouped}
+                    label=""
+                  />
                 </button>
               </Show>
               <Show when={h().isLeaf && !h().collapsed}>

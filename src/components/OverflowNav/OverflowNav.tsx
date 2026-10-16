@@ -87,6 +87,15 @@ export interface OverflowNavProps {
   gap?: "xs" | "sm";
   /** Vertical alignment of inline items (forwarded to Row). Default `"center"`. */
   align?: "start" | "center" | "end" | "stretch" | "baseline";
+  /**
+   * Where the inline items sit along the row (forwarded to Row). Omitted =>
+   * packed to the start, exactly as before. `"center"` centres them INSIDE the
+   * nav's own box, which still fills its container — the only way to centre a
+   * nav that must measure that container to fold: centring the nav from
+   * outside shrinks its box to its content, so it never sees less room and
+   * never folds. Curried as `CenteredOverflowNav`.
+   */
+  justify?: "center";
   /** Class appended to the outer Row. */
   class?: string;
   /** Passthrough inline style on the outer Row. */
@@ -253,6 +262,7 @@ export const OverflowNav: Component<OverflowNavProps> = (rawProps) => {
       ref={containerRef}
       gap={props.gap}
       align={props.align}
+      justify={props.justify}
       class={props.class}
       style={props.style}
     >
@@ -334,8 +344,11 @@ const KebabGlyph: Component = () => (
   </svg>
 );
 
-/** Layout overrides (gap/align) — locked at variant-definition time. */
-export type OverflowNavOverrides = Pick<OverflowNavProps, "gap" | "align">;
+/** Layout overrides (gap/align/justify) — locked at variant-definition time. */
+export type OverflowNavOverrides = Pick<
+  OverflowNavProps,
+  "gap" | "align" | "justify"
+>;
 
 /** Props available to consumers of a curried OverflowNav variant (`items` is runtime data). */
 export type OverflowNavDataProps = Omit<

@@ -12,7 +12,7 @@ export interface Bucket {
   key: string;
   /** Header label. */
   label: string;
-  /** Dot color beside the label — the ONLY role color (chrome stays neutral). */
+  /** Tints the trailing count chip — the ONLY role color (chrome stays neutral). */
   tone: Tone;
   /** Relative share of the height when the populated buckets overflow their
    *  content. Default 1. */
@@ -26,12 +26,18 @@ export interface Bucket {
    *  bare summary line (label + count). */
   emptyLabel?: JSX.Element;
   /** Let the user collapse this bucket to its summary line and expand it again.
-   *  Its header takes a disclosure chevron IN PLACE OF the tone dot and becomes
+   *  Its header takes a disclosure chevron AFTER the label and becomes
    *  the toggle. Only meaningful while the bucket is POPULATED: an empty bucket
    *  already collapses to its summary line and has nothing to expand into, so
    *  it renders exactly as it does without this flag — no chevron, header
    *  inert. Default false. */
   collapsible?: boolean;
+  /** Count the header chip shows instead of the number of items loaded, for a
+   *  bucket whose rows are paged in (a History pile of 2,594 with none loaded
+   *  yet). DISPLAY ONLY: collapse, the chevron, the body and the sizing all
+   *  keep reading the loaded items. Printed with thousands grouping. Omit it
+   *  and the chip shows the loaded count, ungrouped, exactly as before. */
+  count?: number;
   /** Start collapsed rather than open. IGNORED without `collapsible` — on its
    *  own it would strand this bucket's items behind no affordance at all.
    *  This is only the state BEFORE the user touches the bucket; the first

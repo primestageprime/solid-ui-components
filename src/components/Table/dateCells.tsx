@@ -81,6 +81,35 @@ function formatDatePatternFromParts(parts: DateParts, pattern: string): string {
     .replace("ss", parts.second);
 }
 
+/** Canonical patterns the date cells render by default. Exported so a column
+ *  helper can size a column from the pattern alone (a date's rendered length
+ *  is fixed by its format, not by its value). */
+export const DATE_PATTERN = "YYYY-MM-DD";
+export const DATETIME_PATTERN = "YYYY-MM-DD HH:mm:ss";
+export const MINUTE_DATETIME_PATTERN = "YYYY-MM-DD HH:mm";
+
+/** Parse a cell value to a Date, or null for blank/invalid input — the same
+ *  rule every date cell applies before formatting. */
+export function parseDateValue(
+  value: string | Date | null | undefined,
+): Date | null {
+  if (value == null || value === "") return null;
+  const date = typeof value === "string" ? new Date(value) : value;
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/** The exact text DateCell / DateTimeCell / MinuteDateTimeCell paint for a
+ *  value under a pattern, or null for blank/invalid input. Pure — the column
+ *  helpers use it to measure the longest rendered value when sizing a column. */
+export function formatDateValue(
+  value: string | Date | null | undefined,
+  pattern: string,
+  timeZone?: string,
+): string | null {
+  const date = parseDateValue(value);
+  return date ? formatDatePattern(date, pattern, timeZone) : null;
+}
+
 function formatDatePattern(
   date: Date,
   pattern: string,
@@ -239,8 +268,8 @@ export const DateTimeCell: Component<DateTimeCellProps> = (props) => {
     if (format === "iso") {
       const pattern =
         props.showSeconds !== false
-          ? "YYYY-MM-DD HH:mm:ss"
-          : "YYYY-MM-DD HH:mm";
+          ? DATETIME_PATTERN
+          : MINUTE_DATETIME_PATTERN;
       return formatDatePattern(date, pattern, props.timeZone) + suffix(date);
     }
 

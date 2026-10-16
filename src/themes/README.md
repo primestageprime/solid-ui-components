@@ -80,6 +80,40 @@ Each color comes paired with an `-rgb` triplet for `rgba()` use.
 | `--sui-clip-sm`..`--sui-clip-xl` | Clip-path sizes (HUD-style themes) |
 | `--sui-space-0` through `--sui-space-6` plus `-px`, `-0-5`, `-1-5`, `-2-5` | Spacing scale, identical across themes |
 
+### Optional: `--sui-dense-*` density group
+Component density (list and bucket spacing, header heights, cell and panel
+padding) is a theme choice since 0.223.0. Every consuming rule is written
+`var(--sui-dense-<x>, <legacy px>)`, so a theme that declares **none** of these
+renders exactly as it did before the group existed. `default.css` and `hud.css`
+declare the dense values below; `bronze*`, `stax` and `colorblind` declare
+nothing and keep the legacy spacing. Declare a subset to move only part of the
+UI. `BucketQueue`'s water-fill reads the gap, the bucket overlap and the bucket
+borders back out of the live DOM, so these three can change per theme without
+a JS change.
+
+| Token | Legacy fallback | Dense (`default`, `hud`) | Rules |
+|---|---|---|---|
+| `--sui-dense-section-gap` | `8px` | `0px` | `.bucket-queue` gap; `ThreePanelLayout` aside gap |
+| `--sui-dense-item-gap` | `--sui-space-2` (8px) | `0px` | `SortableList` row gap (under `--sui-sortable-gap`) |
+| `--sui-dense-item-radius` | `--sui-radius-md` | `0` | bucket box, `ActionListItem`, `ActionList` bar, `CollapsiblePanel` tab |
+| `--sui-dense-bucket-border` | `1px` (all sides) | `1px 0` | `.bucket-queue__bucket` border-width |
+| `--sui-dense-bucket-overlap` | `0px` | `-1px` | margin-top of a non-first bucket: one shared divider |
+| `--sui-dense-header-h` | `auto` | `28px` | `min-height` of `.bucket-queue__header`, `.sui-section__header` (never `height`: a wrapped label must grow) |
+| `--sui-dense-row-pad-y` | `6px` rows / `8px` ActionListItem / `10px` List | `4px` | `BucketQueue` header, row, empty strip; `ActionListItem`; `ActionList` bar; `List` item |
+| `--sui-dense-row-pad-x` | `12px` (bar `8px`) | `12px` | the same rules' horizontal padding; `GroupedBucketQueue` indent base |
+| `--sui-dense-row-min-h` | `40px` | `28px` | `ActionListItem` min-height |
+| `--sui-dense-item-border` | `1px` | `0 0 1px` | `ActionListItem` border-width (flush divider) |
+| `--sui-dense-item-divider` | `transparent` | `--sui-border` | `ActionListItem` resting border colour |
+| `--sui-dense-select-bar` | `2px` | `4px` | selected-row left accent bar (`BucketQueue`, `ActionListItem`) |
+| `--sui-dense-panel-pad` | `16px` | `12px` | `Panel` (md), `Surface` padding-md, `ThreePanelLayout` center pad/gap and top-bar inset |
+| `--sui-dense-aside-pad` | `8px` | `0px` | `ThreePanelLayout` left/right padding |
+| `--sui-dense-topbar-h` | `40px` | `32px` | `ThreePanelLayout` top bar |
+| `--sui-dense-cell-pad` | `10px 16px` | `6px 12px` | `.hud-table__cell` |
+| `--sui-dense-head-cell-pad` | `12px 16px` | `8px 12px` | `.hud-table__header-cell` |
+| `--sui-dense-modal-pad` | `16px 20px` | `10px 16px` | `Modal` header and footer |
+| `--sui-dense-modal-body-pad` | `20px` | `16px` | `Modal` body |
+| `--sui-dense-modal-footer-gap` | `12px` | `8px` | `Modal` footer gap |
+
 ### Typography
 | Token | Purpose |
 |---|---|

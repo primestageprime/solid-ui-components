@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * OverflowNav's fold decision, printed as a table: container width × item
  * widths → how many stay inline and which fold into the kebab (G16).

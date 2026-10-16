@@ -1,5 +1,10 @@
 import { type Component, Show, createSignal } from "solid-js";
-import { SelectableTable } from "../../src/components/Table";
+import {
+  SelectableTable,
+  type TableColumn,
+  dateCol,
+  textCol,
+} from "../../src/components/Table";
 import { BulkActionBar } from "../../src/components/BulkActionBar";
 import { ScrollYBox, NarrowStack } from "../../src/components/Layout";
 import { MutedBody } from "../../src/components/Text";
@@ -21,10 +26,20 @@ const sampleData = [
   { id: "r4", vessel: "MV Aurora", imo: "9345678", date: "2026-01-12" },
 ];
 
-const columns = [
-  { id: "vessel", header: "Vessel", accessor: "vessel" as const },
-  { id: "imo", header: "IMO", accessor: "imo" as const, width: "100px" },
-  { id: "date", header: "Date", accessor: "date" as const, width: "120px" },
+interface BerthRow {
+  id: string;
+  vessel: string;
+  imo: string;
+  date: string;
+}
+
+// Renderers throughout; IMO and Date are sized to the data they show. The
+// same columns serve the four-row sample and the 24-row queue, so the sample
+// is the longer set.
+const columns: TableColumn<BerthRow>[] = [
+  textCol("vessel", "Vessel"),
+  textCol("imo", "IMO", { data: QUEUE }),
+  dateCol("date", "Date", { data: QUEUE }),
 ];
 
 export const SelectableTableShowcase: Component = () => {

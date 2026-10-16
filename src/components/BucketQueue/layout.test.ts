@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { allocateHeights, naturalHeights, retainRowHeights } from "./layout";
 
@@ -106,6 +107,59 @@ describe("allocateHeights — fill absorbs the leftover", () => {
     });
     expect(out[0]).toBe(36);
     expect(out[0] + out[1] + 8).toBeCloseTo(available, 6);
+  });
+
+  // A DENSE theme (default / hud since the dense tokens landed) sets the
+  // inter-bucket gap to 0 and overlaps adjacent bucket borders into one shared
+  // divider (margin-top -1px, so the measured gap is -1). The JS used to
+  // mirror `gap: 8px` as a constant, so a fill queue in such a theme ended
+  // 8 + 1 = 9px short of its parent. Both values now arrive measured, and the
+  // fill must land on the pixel either way.
+  it("fills exactly with gap 0 and top/bottom-only borders — no 9px slack", () => {
+    const counts = [4, 3, 2];
+    const available = 700;
+    const borders = 2; // top + bottom, measured from the flush bucket box
+    const nat = naturalHeights({
+      counts,
+      rowHeights: [27, 27, 27],
+      capRows: [null, null, null],
+      hasEmptyLabel: [false, false, false],
+      headH: 28,
+      emptyH: null,
+      rowFallback: 27,
+      borders,
+    });
+    expect(nat).toEqual([28 + 4 * 27 + 2, 28 + 3 * 27 + 2, 28 + 2 * 27 + 2]);
+    const out = allocateHeights({
+      natural: nat, counts, weights, available, gap: 0, fills: [false, false, true],
+    });
+    expect(out[0] + out[1] + out[2]).toBeCloseTo(available, 6);
+  });
+
+  it("fills exactly when the measured gap is NEGATIVE (one shared divider between flush buckets)", () => {
+    const counts = [4, 3, 2];
+    const available = 700;
+    const nat = naturalHeights({
+      counts,
+      rowHeights: [27, 27, 27],
+      capRows: [null, null, null],
+      hasEmptyLabel: [false, false, false],
+      headH: 28,
+      emptyH: null,
+      rowFallback: 27,
+      borders: 2,
+    });
+    const out = allocateHeights({
+      natural: nat, counts, weights, available, gap: -1, fills: [false, false, true],
+    });
+    // Three boxes overlapping by 1px twice span sum - 2.
+    expect(out[0] + out[1] + out[2] - 2).toBeCloseTo(available, 6);
+  });
+
+  it("naturalHeights without a measured border keeps the legacy 2px fallback", () => {
+    const base = { counts: [1], rowHeights: [54], capRows: [null], hasEmptyLabel: [false], headH: 34, emptyH: null, rowFallback: 54 };
+    expect(naturalHeights(base)).toEqual([34 + 54 + 2]);
+    expect(naturalHeights({ ...base, borders: 0 })).toEqual([34 + 54]);
   });
 
   it("leaves the slack unallocated when every fill bucket is empty", () => {

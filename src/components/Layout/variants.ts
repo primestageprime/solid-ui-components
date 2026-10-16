@@ -223,6 +223,22 @@ export const NoShrinkClusterRow: Component<RowDataProps> = createRow({
   gap: "sm",
   style: { "flex-shrink": 0 },
 });
+// CompactLineRow — one 22px line (`min-height:22px`): items centred, `sm` gap, no
+// wrap. The row of a dense list where every line holds a glyph, a label and a
+// trailing value (a log, an activity trail). The 40px sibling is `BarLineRow`.
+export const CompactLineRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "sm",
+  style: { "min-height": "22px" },
+});
+// BarLineRow — one 40px line (`min-height:40px`): the `CompactLineRow` shape on a
+// bar's height. The row of a PINNED line — the current step above a scrolling
+// region — which needs the room a list line does not.
+export const BarLineRow: Component<RowDataProps> = createRow({
+  align: "center",
+  gap: "sm",
+  style: { "min-height": "40px" },
+});
 // Right-aligned wrapping row — items pack to the end and wrap. For a trailing
 // action-button cluster that right-aligns and wraps on narrow widths.
 export const EndWrapRow: Component<RowDataProps> = createRow({
@@ -649,6 +665,24 @@ export const NoShrinkScrollBox: Component<BoxDataProps> = createBox({
   style: { "overflow-y": "auto", "min-height": "0" },
 });
 
+/** PinnedHeaderBox — a bar that keeps its height in a flex COLUMN
+ *  (`flex-shrink:0`) and rests on the 1px theme divider
+ *  (`border-bottom: 1px solid var(--sui-border)`). The pinned top of a
+ *  `PinnedFillColumn`: a search box, a "current step" line, a list title that
+ *  stays put while the region below it scrolls. */
+export const PinnedHeaderBox: Component<BoxDataProps> = createBox({
+  shrink: false,
+  style: { "border-bottom": "1px solid var(--sui-border)" },
+});
+
+/** PinnedFooterBox — the bottom sibling of `PinnedHeaderBox`: keeps its height
+ *  and sits under the 1px theme divider (`border-top`). The pinned foot of a
+ *  `PinnedFillColumn`: a composer, a total, a primary action. */
+export const PinnedFooterBox: Component<BoxDataProps> = createBox({
+  shrink: false,
+  style: { "border-top": "1px solid var(--sui-border)" },
+});
+
 /** Flex row that fills its parent — `fill; flex:1; min-height:0`. Holds a
  *  Sidebar beside a ScrollColumn pane. */
 export const PaneRow: Component<RowDataProps> = createRow({
@@ -934,5 +968,16 @@ export const WideCardGrid: Component<GridDataProps> = createGrid({
 // on a wide screen and collapse toward one-per-row on a phone.
 export const ChipGrid: Component<GridDataProps> = createGrid({
   columns: "repeat(auto-fit, minmax(150px, 1fr))",
+  gap: "xs",
+});
+
+/** EndClusterRow — a trailing cluster packed to the END of its box, centred on
+ *  the cross axis, xs gap, and NO wrap. The non-wrapping sibling of
+ *  `EndWrapRow`: that one wraps at phone width, which in a fixed-height app
+ *  header pushes the status chip above the avatar and breaks the bar's height.
+ *  The end slot of `ThreeSlotRow` (Taskmaster canon, header layout A). */
+export const EndClusterRow: Component<RowDataProps> = createRow({
+  justify: "end",
+  align: "center",
   gap: "xs",
 });

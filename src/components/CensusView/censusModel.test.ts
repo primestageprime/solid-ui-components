@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { bucketOf, CENSUS_BUCKETS } from "./censusModel";
 import type { CensusTable } from "./censusModel";

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { lengthOf } from "./lengthOf";
 
@@ -27,11 +28,9 @@ describe("lengthOf — direct form", () => {
     const obj = { xs: [9, 8, 7] };
     expect(lengthOf("xs", obj)).toBe(obj.xs.length);
   });
-
-  it("rejects a property whose value has no length at compile time", () => {
-    const reversed = () =>
-      // @ts-expect-error `count` is a number; it has no `length`.
-      lengthOf("count", { count: 5 });
-    expect(typeof reversed).toBe("function"); // never invoked; type-only check
-  });
 });
+
+// Type-level: rejects a property whose value has no length. Checked by tsc, never run.
+const _reversed = () =>
+  // @ts-expect-error `count` is a number; it has no `length`.
+  lengthOf("count", { count: 5 });

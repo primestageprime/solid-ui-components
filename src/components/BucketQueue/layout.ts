@@ -11,8 +11,11 @@
 
 import { filter, find, flatMap, map, sum } from "../../fn";
 
-/** Top + bottom border of a bucket box (`.bucket-queue__bucket`, 1px each). */
-const BORDERS = 2;
+/** Pre-measure fallback for a bucket box's top + bottom border
+ *  (`.bucket-queue__bucket`, 1px each). The live value is read from the DOM
+ *  (see ./measurement `borders`): a dense theme keeps both, a theme could
+ *  drop them, and this constant must never be the only copy of the CSS. */
+export const BORDERS_FALLBACK = 2;
 
 export interface NaturalInput {
   /** Item count per bucket; 0 collapses the bucket to its summary line. */
@@ -44,6 +47,11 @@ export interface NaturalInput {
   emptyH: number | null;
   /** Row height for a bucket with no sample of its own AND no sibling's. */
   rowFallback: number;
+  /** MEASURED top + bottom border of a bucket box, px. The CSS owns this
+   *  (`.bucket-queue__bucket`, themable via `--sui-dense-bucket-border`), so
+   *  it is read back from the live DOM rather than mirrored here. Omit for
+   *  the pre-measure fallback. */
+  borders?: number;
 }
 
 /** Each bucket's CONTENT height — what it would take if nothing constrained it.
@@ -58,6 +66,7 @@ export const naturalHeights = ({
   rowFallback,
   collapsed,
   headHeights,
+  borders = BORDERS_FALLBACK,
 }: NaturalInput): number[] => {
   const head = (i: number): number => headHeights?.[i] ?? headH;
   // Fallback chain: this bucket's own sample → the first real sample anywhere
@@ -69,17 +78,17 @@ export const naturalHeights = ({
     // MANUALLY collapsed: the header alone. No empty strip — the bucket is
     // populated, so `emptyLabel` is not what is showing; and `capRows` caps a
     // body that is not rendered.
-    if (collapsed?.[i] === true) return head(i) + BORDERS;
+    if (collapsed?.[i] === true) return head(i) + borders;
     // Empty: the summary line, plus the empty strip if declared. The strip is
     // MEASURED, not assumed to be one row tall — `emptyLabel` is consumer JSX
     // and can wrap. rowH is only the fallback before a strip exists to measure.
     if (c === 0)
-      return head(i) + (hasEmptyLabel[i] ? (emptyH ?? rowH(i)) : 0) + BORDERS;
+      return head(i) + (hasEmptyLabel[i] ? (emptyH ?? rowH(i)) : 0) + borders;
     // `capRows` caps the bucket's NATURAL height, so it holds at the cap and
     // its body scrolls; the weighted water-fill below is unchanged.
     const cap = capRows[i];
     const rows = cap != null ? Math.min(c, Math.max(1, cap)) : c;
-    return head(i) + rows * rowH(i) + BORDERS;
+    return head(i) + rows * rowH(i) + borders;
   }, counts);
 };
 
@@ -115,7 +124,9 @@ export interface AllocateInput {
   weights: number[];
   /** Total height the bar fills. */
   available: number;
-  /** Gap between buckets, px. */
+  /** Gap between buckets, px — the MEASURED row-gap plus any negative
+   *  margin a dense theme uses to overlap two bucket borders into one shared
+   *  divider (so it may be negative; see ./measurement `gap`). */
   gap: number;
   /** `Bucket.fill` per bucket. Once every bucket has been allocated up to its
    *  natural height, whatever is left over is split among the POPULATED fill

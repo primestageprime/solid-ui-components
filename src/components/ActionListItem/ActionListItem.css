@@ -8,21 +8,27 @@
 
    INVARIANT (design principle 3): hover reveals via OPACITY only — never
    display, width, padding, border-width, or font changes. Row geometry is
-   identical at rest and on hover.
+   identical at rest and on hover. Re-checked 2026-10-16 for the dense
+   tokens: the border-width token is set by the THEME at rest, never by
+   :hover; hover and selection change only border-color and box-shadow.
    ============================================ */
 
 .sui-action-list-item {
   /* Row arrangement (flex/align:center/gap:sm) is composed from the ClusterRow
      Layout variant; only the row chrome + sizing lives here. */
   width: 100%;
-  min-height: 40px;
-  padding: var(--sui-space-sm, 8px) var(--sui-space-md, 12px);
+  min-height: var(--sui-dense-row-min-h, 40px);
+  padding: var(--sui-dense-row-pad-y, 8px) var(--sui-dense-row-pad-x, 12px);
   /* Resting rows read as a subtly different background, not an outline; the
      border exists (transparent) so hover can light it with zero geometry
      shift (principle 3). */
   background: var(--sui-bg-secondary);
   border: 1px solid transparent;
-  border-radius: var(--sui-radius-md, 8px);
+  /* A dense theme makes this a flush divider: width `0 0 1px`, colour
+     --sui-border. Legacy keeps the transparent all-round box. */
+  border-width: var(--sui-dense-item-border, 1px);
+  border-color: var(--sui-dense-item-divider, transparent);
+  border-radius: var(--sui-dense-item-radius, var(--sui-radius-md, 8px));
   /* All row text sits in the thematic foreground (cyan in HUD) — never the
      near-white text-primary. Children ride currentColor / inherit. */
   color: var(--sui-accent);
@@ -50,14 +56,17 @@
   user-select: none;
 }
 
-/* Selected: light the (already-present, transparent) accent border and lay a
-   subtle accent wash over the row bg. Both are colour-only changes to existing
-   box-model — zero geometry shift (principle 3), same guarantee as hover. The
-   accent border outranks the hover border via source order + specificity. */
+/* Selected: a left accent BAR (canon 2026-10-15), drawn as an inset
+   box-shadow at the row's left edge — the same treatment as BucketQueue's
+   selected row, and no fill: a persistent wash behind row text reads at too
+   low a contrast once the pointer leaves, and a consumer typically
+   auto-selects a row so that state is almost always on screen. Hover keeps
+   owning the border colour exactly as for an unselected row. A box-shadow
+   is paint, not box-model — zero geometry shift (principle 3). The bar's
+   width is the theme's optional dense token, legacy 2px. */
 .sui-action-list-item--selected,
 .sui-action-list-item--selected:hover {
-  border-color: var(--sui-accent);
-  background: color-mix(in srgb, var(--sui-accent) 12%, var(--sui-bg-secondary));
+  box-shadow: inset var(--sui-dense-select-bar, 2px) 0 0 var(--sui-accent);
 }
 
 /* Row-hover reveals for the child primitives — these mirror the bench, where
@@ -141,9 +150,9 @@
   flex: none;
   align-self: stretch;
   width: 22px;
-  margin: calc(-1 * var(--sui-space-sm, 8px))
-    calc(-1 * var(--sui-space-md, 12px))
-    calc(-1 * var(--sui-space-sm, 8px)) 0;
+  margin: calc(-1 * var(--sui-dense-row-pad-y, 8px))
+    calc(-1 * var(--sui-dense-row-pad-x, 12px))
+    calc(-1 * var(--sui-dense-row-pad-y, 8px)) 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;

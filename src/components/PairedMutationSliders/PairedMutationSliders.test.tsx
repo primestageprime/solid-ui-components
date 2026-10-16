@@ -372,78 +372,42 @@ describe("PairedMutationSliders", () => {
       expect(queryButton(container, "Next entity")).toBeNull();
     });
 
-    it("never splits a pair — the dial count is always even", async () => {
-      const { container } = render(() => (
-        <PairedMutationSliders
-          entities={NINE}
-          axes={AXES}
-          onChange={() => {}}
-          onAdd={() => {}}
-        />
-      ));
-      await sizer.resizeAll({ width: widthFor(3), height: 300 });
-      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(6);
-      expect(queryButton(container, "Previous entity")).toBeTruthy();
-      expect(queryButton(container, "Next entity")).toBeTruthy();
-    });
-
-    it("announces the window in PAIRS, agreeing with its own controls", async () => {
-      // The count is ENTITIES and the dials on screen number twice it, so
-      // "dials 1\u20133 of 9" would be both the wrong noun and the wrong number —
-      // and it would contradict the row's own "Next entity" button.
-      const { container } = render(() => (
-        <PairedMutationSliders
-          entities={NINE}
-          axes={AXES}
-          onChange={() => {}}
-        />
-      ));
-      await sizer.resizeAll({ width: widthFor(3), height: 300 });
-      expect(
-        container.querySelector('[role="group"]')?.getAttribute("aria-label"),
-      ).toBe("pairs 1\u20133 of 9");
-    });
-
-    it("pages by ONE entity, so every neighbouring pair stays reachable", async () => {
+    // How many pairs fit and what the window is called are rows.test.ts
+    // (`rowLayout` with a two-dial slot, `windowLabel`) and pairs.test.ts
+    // (`PAIR_SLOT`). This one mount proves the paired row is wired to them:
+    // the slot is a PAIR, the noun is "pairs", the chevrons page by one
+    // entity, and the + survives the offset.
+    it("integration: paging by whole pairs holds together", async () => {
       const { container, queryByText } = render(() => (
         <PairedMutationSliders
           entities={NINE}
           axes={AXES}
           onChange={() => {}}
+          onAdd={() => {}}
         />
       ));
+      const dials = () => container.querySelectorAll('[role="slider"]').length;
+      const label = () =>
+        container.querySelector('[role="group"]')?.getAttribute("aria-label");
+      // Three pairs: six dials, never an odd count, announced in pairs.
       await sizer.resizeAll({ width: widthFor(3), height: 300 });
+      expect(dials()).toBe(6);
+      expect(queryButton(container, "Previous entity")).toBeTruthy();
+      expect(label()).toBe("pairs 1\u20133 of 9");
+      // Pages by ONE entity.
       expect(queryByText("S0")).toBeTruthy();
       fireEvent.click(queryButton(container, "Next entity") as HTMLElement);
       expect(queryByText("S0")).toBeNull();
       expect(queryByText("S1")).toBeTruthy();
-    });
-
-    it("shows ONE whole pair when the container is far too narrow for any", async () => {
-      const { container } = render(() => (
-        <PairedMutationSliders
-          entities={NINE}
-          axes={AXES}
-          onChange={() => {}}
-        />
-      ));
+      expect(label()).toBe("pairs 2\u20134 of 9");
+      expect(queryButton(container, "Add entity")).toBeTruthy();
+      // Far too narrow for any: ONE whole pair, still two dials.
       await sizer.resizeAll({ width: 30, height: 300 });
-      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(2);
-    });
-
-    it("draws NO chevrons when everything fits", async () => {
-      const { container } = render(() => (
-        <PairedMutationSliders
-          entities={NINE}
-          axes={AXES}
-          onChange={() => {}}
-          onAdd={() => {}}
-        />
-      ));
+      expect(dials()).toBe(2);
+      // Everything fits: no chevrons, the + stays.
       await sizer.resizeAll({ width: widthFor(20), height: 300 });
-      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(18);
+      expect(dials()).toBe(18);
       expect(queryButton(container, "Previous entity")).toBeNull();
-      // The `+` stays whatever the offset — it is the only way to add one.
       expect(queryButton(container, "Add entity")).toBeTruthy();
     });
   });

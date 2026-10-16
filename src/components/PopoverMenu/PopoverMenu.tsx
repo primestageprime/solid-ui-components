@@ -56,6 +56,12 @@ export interface PopoverMenuProps<Id extends string = string> {
    * hamburger) stays still.
    */
   caretIcon?: IconName;
+  /**
+   * Accessible name for the trigger button, applied as its `aria-label`. Use it
+   * when the trigger content is an avatar or icon with no text of its own.
+   * Omit it and the trigger carries no `aria-label`, exactly as before.
+   */
+  triggerLabel?: string;
 }
 
 /** Class list for one menu item — adds the modifier when the item is current. */
@@ -224,6 +230,7 @@ export const PopoverMenu = <Id extends string = string>(
         class={triggerClass()}
         onClick={toggle}
         ref={triggerRef}
+        aria-label={merged.triggerLabel}
       >
         <span class="sui-popover-menu__trigger-content">
           {merged.trigger}

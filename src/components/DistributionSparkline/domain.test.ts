@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { extentDomainOf, p95DomainOf, percentileOf } from "./domain";
 

@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // edge-routing — the curved and rounded-step counterparts to
 // orthogonal-routing.ts, 256 lines with no test until now (dside sui#16434).

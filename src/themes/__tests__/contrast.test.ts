@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { THEMES } from "../manifest";
 import { contrastRatio, over, parseColor, parseTokens } from "./_contrastMath";

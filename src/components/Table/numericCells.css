@@ -42,18 +42,22 @@
   text-align: right;
 }
 
-/* Float Cell */
+/* Float Cell. A number never wraps (ruled 2026-10-16: numbers and dates have
+   a fixed width scaled to the data, so a line break is always a sizing bug,
+   never a layout choice). */
 .sui-value-float {
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 13px;
   color: inherit;
   text-align: right;
+  white-space: nowrap;
 }
 
-/* Int Cell */
+/* Int Cell — nowrap for the same reason as Float. */
 .sui-value-int {
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 13px;
   color: inherit;
   text-align: right;
+  white-space: nowrap;
 }

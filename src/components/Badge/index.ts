@@ -31,8 +31,12 @@ export type {
 } from "./TagPill";
 // StatusChip — the EDITABLE sibling of StatusBadge (inline text edit + select).
 // A separate Badge-family primitive, not a StatusBadge variant. Data-only.
-export { StatusChip } from "./StatusChip";
+export { StatusChip, statusChipWidthCh } from "./StatusChip";
 export type { StatusChipProps } from "./StatusChip";
+// StatusChipDisplay — the READ-ONLY sibling of StatusChip: the same pill and
+// width, nothing to press. Data-only, re-exported as-is.
+export { StatusChipDisplay } from "./StatusChipDisplay";
+export type { StatusChipDisplayProps } from "./StatusChipDisplay";
 // composeTagPairs — pure helper (no component) deciding HOW a flat dim:value tag
 // list becomes split/labeled lozenges. Feeds TagPill / ActionListTag call sites;
 // companion to the family the way deriveInitials is to ParticipantAvatar.

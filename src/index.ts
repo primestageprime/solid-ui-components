@@ -336,6 +336,15 @@ export * from "./components/FullscreenBox";
 export * from "./components/BalanceReviewChart";
 export * from "./components/VarianceStrip";
 export * from "./components/VarianceStripChart";
+export * from "./components/GapBox";
+export * from "./components/PinnedFillColumn";
+export * from "./components/StampedRow";
+export * from "./components/ClampedText";
+export * from "./components/SearchInput";
+export * from "./components/ThreeSlotRow";
+export * from "./components/UserMenu";
+export * from "./components/AppBar";
+export * from "./components/StepTimeline";
 
 // Choreography — compose + sequence animation effects across components
 // (collapse/expand/fadeIn/fadeOut/slideDown/rollUp/glowIn/settleIn, step/

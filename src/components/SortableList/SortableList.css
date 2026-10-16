@@ -14,9 +14,10 @@
 /* Row gap: the DEPRECATED runtime `gap` prop rides in on the --sui-sortable-gap
    custom property (a cssvar bridge, not a raw inline `gap`). The doubled class
    raises specificity above the composed NarrowStack's `.stack--gap-sm`, so this
-   value wins; unset it falls back to the sm (8px) step. */
+   value wins; unset it falls back to the theme's optional dense item gap, then
+   the sm (8px) step. */
 .sui-sortable-list.sui-sortable-list {
-  gap: var(--sui-sortable-gap, var(--sui-space-2));
+  gap: var(--sui-sortable-gap, var(--sui-dense-item-gap, var(--sui-space-2)));
 }
 
 /* The drag-grip affordance — the ⠿ handle that signals the row is draggable.

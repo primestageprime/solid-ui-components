@@ -19,6 +19,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-sizing: border-box;
+  min-height: var(--sui-dense-header-h, auto);
   padding: 12px 16px;
   margin-bottom: 16px;
 }

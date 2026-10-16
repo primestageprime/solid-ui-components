@@ -23,7 +23,20 @@ import {
   TightClusterRow,
 } from "../../src/components/Layout";
 import { TextLabel, MutedBody, PageTitle } from "../../src/components/Text";
-import { BaseTable, type TableColumn } from "../../src/components/Table";
+import {
+  BaseTable,
+  statusCol,
+  type TableColumn,
+  textCol,
+} from "../../src/components/Table";
+
+// Item status → badge variant.
+const ITEM_STATUS = {
+  satisfied: { variant: "success" as const },
+  "in flight": { variant: "active" as const },
+  met: { variant: "success" as const },
+  unmet: { variant: "warning" as const },
+};
 
 interface Dataset {
   id: string;
@@ -512,52 +525,33 @@ export const ProductGridShowcase: Component = () => {
       : isMet(it)
         ? "met"
         : "unmet";
+  // Renderers throughout (canon 2026-10-16). The fixed columns are sized to
+  // the whole dataset (not the filtered rows) so they hold still as the
+  // filter changes; description takes the remainder.
+  const items = dataset().items;
+  const solvedBy = (r: ProductGridItem) => (r.solvedBy ?? []).join(", ");
   const columns: TableColumn<ProductGridItem>[] = [
-    { id: "area", header: "area", accessor: "area" as const, width: "110px" },
-    {
-      id: "focus",
-      header: "focus",
-      accessor: "focus" as const,
-      width: "120px",
-    },
-    {
-      id: "position",
-      header: "line",
-      accessor: (r) => r.position,
-      width: "70px",
-    },
-    {
-      id: "shortName",
-      header: "short name",
-      accessor: "shortName" as const,
-      width: "180px",
-    },
-    {
-      id: "description",
-      header: "description",
-      accessor: "description" as const,
-    },
-    {
-      id: "work",
-      header: "done/doing/todo",
-      accessor: (r) => fmtWork(r),
-      width: "140px",
-      align: "right" as const,
-    },
-    {
-      id: "solvedBy",
-      header: "solved by",
-      accessor: (r) => (r.solvedBy ?? []).join(", ") || "—",
-      width: "180px",
-    },
-    { id: "status", header: "status", accessor: status, width: "100px" },
+    textCol("area", "area", { data: items }),
+    textCol("focus", "focus", { data: items }),
+    textCol("position", "line", { data: items }),
+    textCol("shortName", "short name", { data: items }),
+    textCol("description", "description", { ellipsis: true }),
+    textCol("work", "done/doing/todo", {
+      field: fmtWork,
+      values: ["00 / 00 / 00"],
+      align: "right",
+    }),
+    textCol("solvedBy", "solved by", { field: solvedBy, data: items }),
+    statusCol("status", "status", {
+      field: status,
+      values: Object.keys(ITEM_STATUS),
+      statusMap: ITEM_STATUS,
+    }),
   ];
 
   return (
     <NarrowStack class="product-grid-demo__page">
-      <PageTitle class="product-grid-demo__title">
-        ProductGrid
-      </PageTitle>
+      <PageTitle class="product-grid-demo__title">ProductGrid</PageTitle>
       <MutedBody>
         Each sub-column is a focus within its area. Above-the-line solutions sit
         on top, below-the-line needs at the bottom, with the focus label between

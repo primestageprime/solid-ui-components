@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // MutationSliders readouts — the headless observation.
 //

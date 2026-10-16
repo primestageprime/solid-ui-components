@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // MutationSliders item runs — the headless observation.
 //

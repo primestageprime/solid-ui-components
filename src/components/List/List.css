@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
+  padding: var(--sui-dense-row-pad-y, 10px) 0;
 }
 
 .sui-list--compact .sui-list-item {

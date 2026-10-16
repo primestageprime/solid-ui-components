@@ -1,5 +1,11 @@
 import { type Component, createSignal } from "solid-js";
-import { IntCell, MoneyCell, type TableColumn, TreeTable } from "../../src";
+import {
+  IntCell,
+  MoneyCell,
+  type TableColumn,
+  TreeTable,
+  textCol,
+} from "../../src";
 import { map, sum } from "../../src/fn";
 
 // An item made of smaller items, three levels deep.
@@ -52,7 +58,7 @@ const lineCost = (p: Part): number => p.qty * unitCost(p);
 
 // A parent row shows its own aggregates in every column.
 const COLUMNS: TableColumn<Part>[] = [
-  { id: "item", header: "Item", accessor: "name", sortable: true },
+  textCol("item", "Item", { field: "name", sortable: true }),
   {
     id: "qty",
     header: "Qty",

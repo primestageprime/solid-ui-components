@@ -8,6 +8,7 @@ import { Sparkline } from "../../src/components/Sparkline";
 import { TightStack } from "../../src/components/Layout";
 import { SectionTitle, MutedBody, TextLabel, TextValue } from "../../src/components/Text";
 // GENERATED IMPORTS — npm run new:variant appends below this line.
+import { EndClusterRow } from "../../src/components/Layout";
 import { SplitCard } from "../../src/components/Surface";
 
 export const GeneratedVariantsShowcase: Component = () => (
@@ -18,6 +19,7 @@ export const GeneratedVariantsShowcase: Component = () => (
       on the left, its picture on the right.
     </MutedBody>
     {/* GENERATED DEMOS — npm run new:variant appends below this line. */}
+    <EndClusterRow>EndClusterRow</EndClusterRow>
     <SplitCard>
       <TightStack>
         <TextLabel>Baseline</TextLabel>

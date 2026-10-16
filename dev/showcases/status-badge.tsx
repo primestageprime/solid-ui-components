@@ -11,6 +11,8 @@ import {
   DoingBadge,
   TodoBadge,
 } from "../../src/components/Badge/variants";
+import { StatusChip } from "../../src/components/Badge/StatusChip";
+import { StatusChipDisplay } from "../../src/components/Badge/StatusChipDisplay";
 import { BaselineDot } from "../../src/components/Badge/BaselineDot";
 import { ScenarioDot } from "../../src/components/Badge/ScenarioDot";
 import { ScenarioGlyph } from "../../src/components/Badge/ScenarioGlyph";
@@ -21,6 +23,8 @@ import {
   WrappedClusterRow,
 } from "../../src/components/Layout";
 import { TextUnits, TextValue } from "../../src/components/Text";
+
+const CHIP_OPTIONS = ["todo", "doing", "blocked", "done"];
 
 // The tone-locked curried badges: pick the badge by NAME, never by a variant
 // prop. Each renders its own name so the tone mapping is legible at a glance.
@@ -156,6 +160,35 @@ export const StatusBadgeShowcase: Component = () => {
                 <ScenarioDot color={sc.color} filled={i() === 0} />
                 <ScenarioGlyph color={sc.color} shape={sc.shape} filled={i() === 0} />
                 <TextBody>{sc.name}</TextBody>
+              </ClusterRow>
+            )}
+          </For>
+        </NarrowStack>
+      </div>
+
+      <div class="example-group">
+        <h3>StatusChip and StatusChipDisplay</h3>
+        <NarrowStack>
+          <TextSublabel>
+            StatusChip edits (hover the text or the caret). StatusChipDisplay is
+            the same pill, same width, with nothing to press, for a card that
+            only shows the status:
+          </TextSublabel>
+          <For each={["todo", "doing", "done"]}>
+            {(st) => (
+              <ClusterRow>
+                <StatusChip
+                  status={st}
+                  options={CHIP_OPTIONS}
+                  title={st}
+                  highlight={st === "doing"}
+                  onChange={() => {}}
+                />
+                <StatusChipDisplay
+                  status={st}
+                  options={CHIP_OPTIONS}
+                  highlight={st === "doing"}
+                />
               </ClusterRow>
             )}
           </For>

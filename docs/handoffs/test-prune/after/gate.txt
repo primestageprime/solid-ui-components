@@ -1,0 +1,118 @@
+
+> @primestageprime/solid-ui-components@0.222.0 gate
+> node scripts/gate.mjs
+
+
+▶ test
+
+> @primestageprime/solid-ui-components@0.222.0 test:coverage
+> vitest run --coverage
+
+
+ RUN  v4.1.10 /Users/peter/Documents/clients/PrimeStage/platform/solid-ui-components/.claude/worktrees/test-prune
+      Coverage enabled with v8
+
+Not implemented: navigation to another Document
+
+ Test Files  464 passed (464)
+      Tests  5811 passed (5811)
+   Start at  10:51:24
+   Duration  81.99s (transform 31.55s, setup 6.59s, import 129.64s, tests 65.88s, environment 223.51s)
+
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 90.59% ( 25417/28056 )
+Branches     : 80% ( 9399/11748 )
+Functions    : 90.92% ( 9414/10354 )
+Lines        : 93.01% ( 20158/21672 )
+================================================================================
+
+> @primestageprime/solid-ui-components@0.222.0 execution-coverage
+> node scripts/execution-coverage.mjs
+
+componentsNeverExecuted: 3   (of 295 component modules; 293 measured)
+  src/components/Badge/BaselineDot.tsx
+  src/components/Feedback/InlineChartErrorOverlay.tsx
+  src/components/WorkProgressCard/WorkProgressCard.tsx
+
+✓ At baseline.
+✓ test — passed
+
+▶ lint
+
+> @primestageprime/solid-ui-components@0.222.0 lint:ci
+> node scripts/lint-ci.mjs lint src --error-on-warnings
+
+src/root-exports.contract.ts:221:1 lint/complexity/noUselessEmptyExport  FIXABLE  ━━━━━━━━━━━━━━━━━━
+
+  i This empty export is useless because there's another export or import.
+  
+    219 │ type _Private12 = Root["PairedDial"];
+    220 │ 
+  > 221 │ export {};
+        │ ^^^^^^^^^^
+    222 │ 
+  
+  i This import makes useless the empty export.
+  
+    25 │ // (No runtime: nothing imports this module. The `_`-prefixed bindings exist
+    26 │ // only to give the `satisfies` clauses an expression to sit on.)
+  > 27 │ import * as sui from "./index";
+       │ ^^^^^^
+    28 │ import * as unstable from "./unstable";
+    29 │ import type {
+  
+  i Safe fix: Remove this useless empty export.
+  
+    218 218 │   // @ts-expect-error -- private
+    219 219 │   type _Private12 = Root["PairedDial"];
+    220     │ - 
+    221     │ - export·{};
+    222 220 │   
+  
+
+Checked 1408 files in 520ms. No fixes applied.
+Found 1 info.
+✓ lint — passed
+
+▶ typecheck
+
+> @primestageprime/solid-ui-components@0.222.0 typecheck:dev
+> tsc -p tsconfig.dev.json
+
+✓ typecheck — passed
+
+▶ health
+
+> @primestageprime/solid-ui-components@0.222.0 health
+> node scripts/health.mjs
+
+SUI health check (lower is better; 0 is the goal)
+
+  bareHexCss                  0  = at baseline
+  bareHexTsx                  0  = at baseline
+  inlineStyleSrc             67  = at baseline
+  inlineStyleShowcases       16  = at baseline
+  dotChains                   7  = at baseline
+  collectionMethodCalls      31  = at baseline
+  styleRubricViolations       0  = at baseline
+  showcaseStyleRubricViolations    0  = at baseline
+  cssTypedProps              10  = at baseline
+  componentsNeverRendered    17  = at baseline
+  undocumentedExports        92  = at baseline
+  brokenDocImports            0  = at baseline
+  missingDepthHeaders         0  = at baseline
+  componentsWithoutShowcase    0  = at baseline
+  catalogSummaryGaps          0  = at baseline
+
+✓ No regressions, and every ceiling is tight.
+✓ health — passed
+
+▶ build
+  node_modules resolved from: local checkout (/Users/peter/Documents/clients/PrimeStage/platform/solid-ui-components/.claude/worktrees/test-prune)
+Error: gate: failed to diff throwaway index
+    at applyWorkingTreeInto (file:///Users/peter/Documents/clients/PrimeStage/platform/solid-ui-components/.claude/worktrees/test-prune/scripts/gate.mjs:192:34)
+    at withDetachedWorktree (file:///Users/peter/Documents/clients/PrimeStage/platform/solid-ui-components/.claude/worktrees/test-prune/scripts/gate.mjs:215:5)
+    at file:///Users/peter/Documents/clients/PrimeStage/platform/solid-ui-components/.claude/worktrees/test-prune/scripts/gate.mjs:415:33
+exit=1

@@ -1,3 +1,4 @@
+// @vitest-environment node
 // Headless observation of the growth rules: a table of units over periods.
 import { describe, expect, it } from "vitest";
 import {

@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // MarkedSlider geometry — the headless observation.
 //

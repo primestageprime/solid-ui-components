@@ -1,0 +1,84 @@
+stderr | src/components/Slider/Slider.test.tsx > Slider — type-level enforcement > forbids `editable` beside `valueLabel` at compile time
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/TreeTable/TreeTable.test.tsx > TreeTable — checkboxes > checks every leaf under a parent, and derives the parent states
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/TreeTable/TreeTable.test.tsx > TreeTable — checkboxes > unchecks every leaf when a checked parent is unchecked
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/TreeTable/TreeTable.test.tsx > TreeTable — checkboxes > selects all from the header box, and a box click does not toggle the row
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+
+Not implemented: navigation to another Document
+stderr | src/components/CurrencyInput/sized.test.tsx > magnitude-sized number inputs > each variant mounts a field sized to its baked ceiling
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/Table/BaseTable.test.tsx > BaseTable sorting > sorts strings case-insensitively via localeCompare
+Unrecognized value. Skipped inserting 2021-01-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2020-06-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2022-03-01T00:00:00.000Z
+
+stderr | src/components/Table/BaseTable.test.tsx > BaseTable sorting > sorts numbers ascending and descending
+Unrecognized value. Skipped inserting 2021-01-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2020-06-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2022-03-01T00:00:00.000Z
+
+stderr | src/components/Table/BaseTable.test.tsx > BaseTable sorting > sorts Date values chronologically
+Unrecognized value. Skipped inserting 2021-01-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2020-06-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2022-03-01T00:00:00.000Z
+
+stderr | src/components/Table/BaseTable.test.tsx > BaseTable sorting > keeps null values last on ascending sort
+Unrecognized value. Skipped inserting 2021-01-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2020-06-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2022-03-01T00:00:00.000Z
+
+stderr | src/components/Table/BaseTable.test.tsx > BaseTable sorting > returns to original order on the third click
+Unrecognized value. Skipped inserting 2021-01-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2020-06-01T00:00:00.000Z
+Unrecognized value. Skipped inserting 2022-03-01T00:00:00.000Z
+
+stderr | src/components/SplitQueueList/SplitQueueList.test.tsx > SplitQueueList (deprecated shim over BucketQueue) > fires onSelect from either list
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/SplitQueueList/SplitQueueList.test.tsx > SplitQueueList (deprecated shim over BucketQueue) > toggles checks on unresolved rows in select mode
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/SplitQueueList/SplitQueueList.test.tsx > SplitQueueList (deprecated shim over BucketQueue) > selectMode={false} opts out even with a populated checkedKeys
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/SplitQueueList/SplitQueueList.test.tsx > SplitQueueList (deprecated shim over BucketQueue) > selectMode omitted opts out even with a populated checkedKeys
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/SplitQueueList/SplitQueueList.test.tsx > SplitQueueList (deprecated shim over BucketQueue) > selectMode={true} opts in even with checkedKeys omitted
+computations created outside a `createRoot` or `render` will never be disposed
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/Chart/TimelineBar.test.tsx > TimelineBar — render > skips bars whose lane is missing from explicit lanes prop
+TimelineBar: bar references unknown lane "ghost" — bar skipped
+
+stderr | src/components/Table/fields/combinators.test.tsx > withHint > tooltips the header with a help affordance; header text unchanged
+computations created outside a `createRoot` or `render` will never be disposed
+
+stderr | src/components/Table/fields/combinators.test.tsx > withHint > leaves the accessor untouched
+computations created outside a `createRoot` or `render` will never be disposed
+
+real 74.47
+user 382.10
+sys 65.46
+exit=0

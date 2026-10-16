@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // PairedMutationSliders — the headless observation.
 //

@@ -1,3 +1,4 @@
+// @vitest-environment node
 // The board below a shell chart — the headless observation. Five windows,
 // each printed as a table so a wrong split reads as wrong beside its
 // neighbours, then the invariants each layout keeps. The chart heights fed in

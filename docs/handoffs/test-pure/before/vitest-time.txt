@@ -1,0 +1,4 @@
+Not implemented: navigation to another Document
+real 67.10
+user 332.52
+sys 64.08

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * StackedTimelineChart's size-responsive chrome, printed as a table:
  * box width × height → y ticks, x ticks, x-label step and the inset (G17).

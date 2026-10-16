@@ -562,11 +562,30 @@ step's name and exit status, stops at the first failure, and runs `build` and
 `bundle-budget` inside a detached `git worktree` so the live checkout's Vite
 cache is never touched — safe to run next to Peter's dev server. `npm run gate
 -- --fast` skips `build`; `npm run gate -- --only <step>` runs one step. It is
-also what `githooks/pre-push` runs (`--pre-push`, which additionally
-auto-commits a tightened health baseline instead of costing a manual
-`--update-baseline` round-trip — see `scripts/gate.mjs`'s header). **Never pipe
+also what `githooks/pre-push` runs, but narrower — see *Gate tiers* below.
+**Never pipe
 a gate** into `head` or `echo` regardless — the exit status is the gate, and a
 pipe throws it away.
+
+**Gate tiers.** Three tiers, each broader than the last, so a push stays fast
+without the full suite going unchecked:
+
+| Tier | Runs | Command |
+|---|---|---|
+| push (`githooks/pre-push`) | lint, typecheck, and only the tests that reach your diff | `node scripts/gate.mjs --pre-push` |
+| PR (CI, or locally) | full suite with coverage, execution-coverage, lint, typecheck, health ratchet, build, bundle-budget | `npm run gate` |
+| merge | automatic release | none to run |
+
+`node scripts/affected-tests.mjs` prints the exact test files a push would run
+(`--json` for a machine-readable plan, `--base <ref>` to diff against another
+ref). The set is `vitest list --changed <merge-base of HEAD and origin/main>`,
+plus any test in the component directory of a changed non-code file, or that
+names it (vitest's graph cannot see a stylesheet a test reads as text). It falls
+back to the FULL suite if the merge-base cannot be computed or a file that
+affects everything changed: vitest/vite config, `package.json`, the lockfile,
+`tsconfig*.json`, `src/styles/**`, `src/themes/**`, `src/test-setup.ts`.
+The health ratchet is not in the push tier; a green push is not a green PR, so
+run `npm run gate -- --only health` before opening one.
 
 **Budget for consumer integration.** A first-consumer bench surfaces faults in
 other components that are invisible on their own benches — this board found the
@@ -650,6 +669,19 @@ bundle is ruined anyway. That is what this script is for.
 - **A new component needs a showcase.** `componentsWithoutShowcase` is ratcheted
   at **0**, so shipping one without `dev/showcases/<name>.tsx` fails `health`.
   Same for `missingDepthHeaders`.
+- **A table column always goes through a value renderer.** `bareAccessorColumns`
+  (`scripts/bare-accessor.mjs`) is ratcheted at **0**: an `accessor: "key"`
+  string literal anywhere under `src/` or `dev/` (tests excluded) or in
+  `catalog.json` fails `health`. Use a column helper — `textCol`, `intCol`,
+  `floatCol`, `dateCol`, `dateTimeCol`, `statusCol` from
+  `src/components/Table/columnHelpers.tsx`, passing the rows as `data` so the
+  width is sized to the longest rendered value — or an explicit
+  `accessor: (row) => <Cell …/>`. Peter, 2026-10-16, on the FTIR/SCR demo whose
+  Hour column wrapped "2026-01-15 08:00" onto two lines: "always always using
+  value renderers in tables. Dates should never wrap … fixed width scaled to the
+  size of the data." `BaseTable` also warns once per column in dev mode when a
+  bare keyed accessor paints an ISO date/time (`bareAccessorWarning.ts`), which
+  is what catches a consumer's table outside this walk.
 - **A new export needs to be named in COMPONENTS.md.** `undocumentedExports`
   (`scripts/doc-coverage.mjs`) counts exported components and factories whose
   name appears **nowhere** in the manifest. Ratcheted at a live ceiling (read

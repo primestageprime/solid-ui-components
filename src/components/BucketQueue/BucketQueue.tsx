@@ -41,10 +41,12 @@ import "./BucketQueue.css";
 
 export type { BucketQueueProps, Bucket } from "./types";
 
-// Pre-measure fallback for a row (jsdom / first paint); the header's lives in
-// ./measurement, which owns the elements it applies to.
+// Pre-measure fallback for a row (jsdom / first paint); the header's, the
+// inter-bucket gap's and the bucket border's live in ./measurement, which owns
+// the elements it applies to. The gap and the borders are CSS the theme may
+// change (`--sui-dense-*`), so they are read back from the live DOM rather
+// than mirrored as constants here — a mirror drifted the moment a theme moved.
 const ROW_FALLBACK = 54;
-const GAP = 8;
 
 export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
   let rootRef: HTMLDivElement | undefined;
@@ -110,6 +112,8 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
     headH,
     headHs,
     emptyH,
+    gap,
+    borders,
     trackRoot,
     trackHead,
     trackEmpty,
@@ -142,6 +146,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
       headHeights: map((s) => headHs().get(s.key) ?? null, props.buckets),
       emptyH: emptyH(),
       rowFallback: ROW_FALLBACK,
+      borders: borders(),
     }),
   );
   const heights = createMemo(() =>
@@ -150,7 +155,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
       counts: counts(),
       weights: map((s) => s.weight ?? 1, props.buckets),
       available: props.height ?? availH(),
-      gap: GAP,
+      gap: gap(),
       fills: map((s) => s.fill === true, props.buckets),
       collapsed: collapsed(),
     }),
@@ -358,7 +363,8 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
             >
               <BucketHeader
                 bucket={bucket}
-                count={count()}
+                count={bucket.count ?? count()}
+                grouped={bucket.count !== undefined}
                 toggleable={toggleable()}
                 collapsed={isCollapsed()}
                 bodyId={bodyId}

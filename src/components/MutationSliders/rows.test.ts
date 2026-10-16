@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // MutationSliders row math — the headless observation.
 //

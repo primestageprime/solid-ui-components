@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // Band placement and the arc ring — the pure half.
 //

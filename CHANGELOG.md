@@ -2,6 +2,61 @@
 
 ## Unreleased
 
+### Added
+
+- **`PopoverMenu` takes `triggerLabel`.** Optional string applied as the trigger button's `aria-label`, for an avatar or icon trigger. `RightPopoverMenu` forwards it, and `UserMenu` now passes "Account menu for <name>". Without the prop the trigger is unchanged.
+- **`Bucket.count` and `GroupNode.count`** — an optional number the header chip shows instead of the loaded-item count, printed with the viewer's locale grouping ("2,594" in en-US). Display only: collapse, chevron, body and sizing still read the loaded items. `CountChip` gains optional `grouped` and `locale` props. Without `count` nothing changes.
+- **`StampedRow` and `PinnedStampedRow` take `timeZone`.** An IANA name forwarded to `formatStampTime`, so 08:14Z prints 08:14 with "UTC". Default stays the host zone.
+- **`SearchInput`** — a Depth 2 composite: a 32px search box with the search glyph at the left and a clear cross that shows while there is text. Controlled by `value`; `onClear` empties it and keeps focus in the box. Built on the new Depth 1 `SearchField`, which takes both glyphs as slots.
+
+- **`ClampedText`** — a Depth 1 primitive: body text whose height follows its content between 1 and 6 lines, then scrolls inside. Line counts ride CSS variables read in `lh` units. `createClampedText({ lines })` makes another range; pure `clampLines` cleans one.
+
+- **`StampedRow`** and **`PinnedStampedRow`** — a Depth 2 composite: one timestamped line with a 16px glyph, a label that takes the width and ellipsizes, and a mono `HH:mm` at the right. `kind` (`done`, `active`, `note`, `started`, `completed`) picks the glyph, or pass `icon`. `StampedRow` is the 22px list line, `PinnedStampedRow` the 40px bar. Pure `stampGlyph` and `formatStampTime` carry the logic. Adds the Layout variants `CompactLineRow` and `BarLineRow`.
+
+- **`PinnedFillColumn`** — a Depth 2 composite: a column that fills its parent with an optional pinned `header`, a middle that takes the leftover height and scrolls, and an optional pinned `footer`. Each bar rests on the 1px theme divider. Adds the Layout variants `PinnedHeaderBox` and `PinnedFooterBox`.
+
+- **`GapBox`** — a Depth 2 composite: the canon placeholder for a missing component. A titled `InfoSurface` holding the JSON of `kind`, `nearest` and the intended `props`. Pure `gapBoxJson` builds the body.
+
+- **`FillTextArea`** — a Depth 1 atomic: a themed textarea that takes all the height its flex-column parent has left, with no drag handle. The fill-the-parent sibling of `ThemedTextarea`, which is unchanged.
+
+- **`CollapsiblePanel` can be controlled.** New optional `open` and `onToggle` props: pass `open` and the caller owns the state, so a hotkey can fold the panel. `onToggle(nextOpen)` reports every press, controlled or not. With neither prop it behaves as before.
+
+- **`StatusChipDisplay`** — a Depth 1 atomic: the read-only sibling of `StatusChip`. The same fixed-width pill with a plain label and nothing to press: no button, caret, menu or hover underline. Pure `statusChipWidthCh` is exported so the two share one width rule. `StatusChip` is unchanged.
+
+- **`dateTimeCol` passes `timeZone` through and takes `precision`.** The column helper swallowed the `timeZone` that `DateTimeCell` already supports. It now forwards it, and a new `precision: "minute"` drops the seconds. `dateTimeColWith` can bake both. With neither option the output is unchanged.
+
+- **`useHotkeys` and `createHotkeyScope`** — hooks: one capture-phase window listener dispatches a table of `{ action, keys, scope }` rows to a record of handlers. It ignores editable targets, lets a `"modal"` scope block every lower scope, and reads chords like `"g t"`. The decisions live in the pure `dispatchHotkey`, which takes the clock as a number, and `traceHotkeys` prints a key sequence as a table with no DOM. `HotkeyEntry` and `HotkeyScope` are the table's types. `HotkeyButton` is unchanged.
+
+- **`StepTimeline`** — a Composite (Depth 3): a cumulative count over a day as one band that steps up at each completion, with a numbered flag and rule per event. It is a collapsible `ChartFrame` around a `StackedTimelineChart` with a linear crossing, UTC hour ticks and whole-count y labels; the flags are LevelsTimeline's, through `MutationFlags`. Selection and collapse are controlled. `createStepTimeline({ height })` bakes another height; the `StepTimeline` variant is 200px. Also exported: `hourTicks`, `stepYDomain`, `STEP_TIMELINE_HEIGHT`. Exported types: `StepTimelineProps`, `StepTimelineDataProps`, `StepTimelineOverrides`, `StepTimelinePoint`, `StepTimelineMarker`.
+
+- **`AppBar`** — a Composite (Depth 3): the page-top bar in header layout A. A 160px logo box, the nav centred in the remaining space and folding into a kebab when it runs out, then the status and a `UserMenu`. Below 480px the status moves into the user menu's header. Navigation is controlled (`nav.activeId`, `nav.onSelect`). Also exported: `appBarNavItems`, `APP_BAR_LOGO_WIDTH`, `APP_BAR_FOLD_QUERY`. Exported types: `AppBarProps`, `AppBarNav`, `AppBarNavItem`.
+
+- **`OverflowNav` `justify`** — an Override, `"center"` or unset. It centres the items inside the nav's own box, which still fills its container, so a centred nav can still fold. Curried as **`CenteredOverflowNav`**. Unset, nothing changes.
+
+- **`UserMenu`** — a Composite (Depth 2): an avatar that opens a right-aligned account menu. The header line is the email or "Not signed in", the caller's items follow, and the last item is Sign in or Sign out depending on whether `user` is set. An optional `status` line sits under the email. Also exported: `userInitials`, `userMenuItems`, `USER_MENU_SIGN_IN`, `USER_MENU_SIGN_OUT`. Exported types: `UserMenuProps`, `UserMenuUser`.
+
+- **`EndClusterRow`** — a curried `Row`: a cluster packed to the end of its box, centred on the cross axis, 4px gap, and never wrapping. `EndWrapRow` wraps at phone width, which pushes a header's status chip above its avatar.
+
+- **`ThreeSlotRow`** — a Composite (Depth 2): start, centre and end slots on one line, as the grid tracks `auto minmax(0, 1fr) auto`. The centre is centred in the space the other two leave, and its track can shrink to 0 so an `OverflowNav` in it can fold. `createThreeSlotRow({ startWidth })` fixes the start track (`"160px"` for a logo box). Also exported: `threeSlotColumns`. Exported types: `ThreeSlotRowProps`, `ThreeSlotRowDataProps`, `ThreeSlotRowOverrides`.
+
+- **Column helpers size to the data.** `dateTimeCol`, `dateCol`, `intCol`, `floatCol`, `textCol` and the new `statusCol` take `data` (the rows) or `values` and set the column width to the longest *rendered* value in `ch`, floored at the header, plus cell padding. `dateTimeCol` takes `precision: "minute"` (`YYYY-MM-DD HH:mm`) and both date helpers size from their pattern with no sample, so a date never wraps. Every helper now sets `sortValue` to the raw field (a `sortable` helper column used to sort its JSX) and passes `group`, `ellipsis`, `contained` and `align` through. `columnCh` / `widthForValues` export the sizing rule. Pure formatters `formatDateValue`, `formatIntValue`, `formatFloatValue` and the pattern constants are exported from the cell modules.
+- **Health metric `bareAccessorColumns`** fails on a `TableColumn` literal with a string `accessor` and no renderer under `dev/` or `src/`; `BaseTable` warns once per column in dev mode when a bare-accessor cell paints an ISO date/time.
+
+- **`--sui-dense-*` density tokens (optional theme group).** Every density rule in `BucketQueue`, `GroupedBucketQueue`, `ActionList`, `ActionListItem`, `SortableList`, `CollapsiblePanel`, `ThreePanelLayout`, `Modal`, the tables, `Panel`, `Surface`, `Section` and `List` now reads `var(--sui-dense-<x>, <legacy px>)`. A theme that declares none of them renders exactly as before. Full table, with each fallback and the rules it moves, in `src/themes/README.md`.
+- **`BucketQueue` reads its gap and bucket borders from the live DOM.** The water-fill used to mirror `gap: 8px` and the 2px bucket border as JS constants, so any theme that moved them left a `fill` queue short by `gap × (n − 1)` px. `measurement.ts` now reads the root's computed `row-gap` (plus a non-first bucket's `margin-top`, so a shared divider's −1px counts) and a bucket's top + bottom border widths; the constants stay as pre-measure fallbacks.
+
+### Changed
+
+- **`ThreePanelLayout` stacks with one 16px gutter.** At 900px and below the side panels stack above and below the centre. Their 8px padding and the centre's 16px used to add up to a 24px band (25px measured) with the aside text 8px in from the edge while the centre's sat 16px in. The stacked asides now take the centre's 16px sides, and the left aside gives up its bottom padding and the right its top, so the centre's own 16px is the whole gutter on both sides. CSS only, no API change. Side by side is unchanged.
+
+- **Int and float cells are `white-space: nowrap`**, like the date cells. A number never breaks onto two lines.
+- **Every gallery table uses a column helper or an explicit renderer** — 57 bare-accessor columns across 10 showcases converted; the FTIR/SCR grouped-header demo's Hour column is a minute-precision `dateTimeCol` sized to its data.
+
+- **`default` and `hud` are dense.** Both themes declare the dense values (Peter, 2026-10-15: "make the default theme more dense"): buckets sit flush with top/bottom borders and one shared 1px divider, no gap between buckets or list rows, item radius 0, 28px `min-height` group headers, 4px/12px row padding, a 4px selected bar, 12px panel padding, flush `ThreePanelLayout` asides, a 32px top bar, compact table cells (6/12, head 8/12) and tighter `Modal` padding (10/16, body 16, footer gap 8). `bronze`, `bronze-dark`, `stax` and `colorblind` declare nothing and keep the legacy spacing. Measured in hud at 1280: BucketQueue header 31.5 → 28, row 31 → 27, bucket 96 → 84; ActionListItem 41 → 32; table cell 47 → 29, head cell 37.5 → 29.5; Modal header 66 → 54. Consumers see the change on their next bump; `jtf` links the shared checkout and sees it on rebuild. The flush aside padding is the one most likely to expose side-panel content that relied on the 8px inset.
+- **`BucketQueue` / `GroupedBucketQueue` headers show the count as a `CountChip`** (pill at the right end), in every theme. It keeps the `bucket-queue__count` class, so the collapsed-bucket arrival motion and consumers' selectors still find it. The header aligns its items on the centre line.
+- **`BucketQueue` / `GroupedBucketQueue` headers carry no leading dot; the tone is on the `CountChip`; rows indent past the label** (Peter, 2026-10-16: the dot "inverts my indentation expectation"). The label is the first thing in the header in every theme; a collapsible bucket's chevron follows it and is neutral. The chip takes the bucket tone as a 1px outline plus an 8% wash (`.bucket-queue__count--<tone>`), numerals in the chip's own text colour; `stax` outlines the accent chip in `--sui-accent-dim`. Rows and the empty strip start `--sui-row-indent` (4px) right of the header padding, dense and legacy, compact included. `GroupedBucketQueue`'s per-depth step is 8px (was 16). New stylesheet contracts: `BucketQueue.indent.test.ts` (row text >= 2px right of the label in hud, default and a token-less theme, at every depth) and `BucketQueue.tone.test.ts` (outline >= 3:1 and text contrast over the wash, every theme). The `bucket-queue__dot*` and `bucket-queue__chevron--<tone>` classes are gone.
+- **`ActionListItem` selected state is a left accent bar** (width `--sui-dense-select-bar`, legacy 2px), not an accent border plus a 12% wash, matching `BucketQueue`'s selected row. Hover still owns the border colour; the hover-only-opacity geometry invariant holds. In dense themes the row's border is a flush bottom divider.
+
 ## 0.224.0 — 2026-10-16
 
 ### Added

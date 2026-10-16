@@ -12,7 +12,11 @@
 // observer fires.
 import { render } from "@solidjs/testing-library";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type FakeSizer, installFakeSizer } from "../../test-utils/fakeSizer";
+import {
+  type FakeSizer,
+  installFakeSizer,
+  installFastFrames,
+} from "../../test-utils/fakeSizer";
 import { EllipsisText } from "./EllipsisText";
 
 const NATURAL = 290;
@@ -23,7 +27,10 @@ const restore: (() => void)[] = [];
 
 /** Clipped iff the measured span sits DIRECTLY in the [data-row] flex row. */
 const modelFlexRow = () => {
-  const define = (key: "scrollWidth" | "clientWidth", get: (el: HTMLElement) => number) => {
+  const define = (
+    key: "scrollWidth" | "clientWidth",
+    get: (el: HTMLElement) => number,
+  ) => {
     const before = Object.getOwnPropertyDescriptor(HTMLElement.prototype, key);
     Object.defineProperty(HTMLElement.prototype, key, {
       configurable: true,
@@ -41,12 +48,16 @@ const modelFlexRow = () => {
   );
 };
 
+let slowFrames: () => void;
 beforeEach(() => {
+  // Twenty awaited resizes below; nothing here animates on rAF.
+  slowFrames = installFastFrames();
   sizer = installFakeSizer();
   modelFlexRow();
 });
 afterEach(() => {
   sizer.restore();
+  slowFrames();
   for (const undo of restore.splice(0)) undo();
 });
 
@@ -67,7 +78,9 @@ describe("EllipsisText — one stable host (G23)", () => {
       await sizer.resize(host, { width: SQUEEZED + (frame % 2), height: 20 });
       expect(container.querySelector(".sui-ellipsis-text")).toBe(host);
       expect(host.parentElement?.hasAttribute("data-row")).toBe(true);
-      expect(container.querySelector(".sui-ellipsis-text__trigger")).toBeTruthy();
+      expect(
+        container.querySelector(".sui-ellipsis-text__trigger"),
+      ).toBeTruthy();
     }
   });
 
@@ -78,7 +91,9 @@ describe("EllipsisText — one stable host (G23)", () => {
       </div>
     ));
     const host = container.querySelector<HTMLElement>(".sui-ellipsis-text")!;
-    const trigger = container.querySelector<HTMLElement>(".sui-ellipsis-text__trigger")!;
+    const trigger = container.querySelector<HTMLElement>(
+      ".sui-ellipsis-text__trigger",
+    )!;
     expect(host.contains(trigger)).toBe(true);
     expect(trigger.tagName).toBe("SPAN");
     expect(trigger.tabIndex).toBe(0);

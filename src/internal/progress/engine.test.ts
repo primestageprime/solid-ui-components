@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { createProgressEngine } from "./engine";
 import { P_KNEE, SNAP_MS } from "./estimator";

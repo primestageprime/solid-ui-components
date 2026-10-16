@@ -13,6 +13,7 @@
 export { domStructure, type DomStructureOptions } from "./domStructure";
 export {
   installFakeSizer,
+  installFastFrames,
   type FakeSizer,
   type SizeObservation,
 } from "./fakeSizer";
@@ -51,3 +52,4 @@ export {
   type PathCommand,
 } from "./svgPath";
 export { typeText } from "./typing";
+export { installFramePump, FRAME_MS, type FramePump } from "./framePump";

@@ -30,6 +30,7 @@ import {
   installFakeSizer,
   installRects,
   pointer,
+  installFramePump,
   rectOf,
 } from "../../test-utils";
 
@@ -1722,49 +1723,63 @@ describe("ScrubChart y-domain tween", () => {
   // not hold yet, which is right while the tween runs and wrong once it
   // lands. The assertions read the RENDERED labels, so they outlive any
   // rewrite of the withholding rule.
-  it("renders the max tick's label once the tween settles", async () => {
-    const chart = renderChart({});
-    const values = (): (string | null)[] =>
-      [...chart.container.querySelectorAll(".sui-scrub-chart__label--y")].map(
-        (n) => n.textContent,
-      );
-    fireEvent.click(fitButton(chart.container));
-    await vi.waitFor(() => expect(values()).toContain("10,000"), {
-      timeout: 3000,
-    });
-    // Every tick of the settled domain draws, the max one included.
-    expect(values()).toEqual([
-      "0",
-      "2,000",
-      "4,000",
-      "6,000",
-      "8,000",
-      "10,000",
-    ]);
-    // The max tick sits on `plotTop`, so its label clamps into the frame.
-    const top = [
-      ...chart.container.querySelectorAll(".sui-scrub-chart__label--y"),
-    ].find((n) => n.textContent === "10,000");
-    expect(Number(top?.getAttribute("y"))).toBe(Y_LABEL_HALF_HEIGHT);
+  it("renders the max tick's label once the tween settles", () => {
+    const pump = installFramePump();
+    try {
+      const chart = renderChart({});
+      const values = (): (string | null)[] =>
+        [...chart.container.querySelectorAll(".sui-scrub-chart__label--y")].map(
+          (n) => n.textContent,
+        );
+      fireEvent.click(fitButton(chart.container));
+      // A 240 ms transition on 60 Hz frames: a second of frames is more than
+      // the approach needs, and the loop stops asking once it lands.
+      pump.frames(60);
+      expect(pump.pending()).toBe(0);
+      // Every tick of the settled domain draws, the max one included.
+      expect(values()).toEqual([
+        "0",
+        "2,000",
+        "4,000",
+        "6,000",
+        "8,000",
+        "10,000",
+      ]);
+      // The max tick sits on `plotTop`, so its label clamps into the frame.
+      const top = [
+        ...chart.container.querySelectorAll(".sui-scrub-chart__label--y"),
+      ].find((n) => n.textContent === "10,000");
+      expect(Number(top?.getAttribute("y"))).toBe(Y_LABEL_HALF_HEIGHT);
+    } finally {
+      pump.restore();
+    }
   });
 
   // The destination, not the journey: the screen scale and the target scale
   // must hold the SAME domain at rest. A tween that aimed at the padded
   // domain, or at any other pre-snap value, would settle short of the target
   // and report arrival at the wrong number.
-  it("settles the screen domain on the axis's target domain", async () => {
-    const chart = renderChart({});
-    fireEvent.click(fitButton(chart.container));
-    // `domainOf` reads the SCREEN scale through `yToPlot`.
-    await vi.waitFor(
-      () => expect(domainOf(chart.ctx())[1]).toBeCloseTo(SERIES_MAX, 6),
-      { timeout: 3000 },
-    );
-    const [low, high] = domainOf(chart.ctx());
-    expect(low).toBeCloseTo(0, 6);
-    // 8640 is the padded max of [0, 8000]. The snap lifts it to 10000, and
-    // the tween stops on the snapped number.
-    expect(high).toBeCloseTo(SERIES_MAX, 6);
+  it("settles the screen domain on the axis's target domain", () => {
+    const pump = installFramePump();
+    try {
+      const chart = renderChart({});
+      fireEvent.click(fitButton(chart.container));
+      // Mid-flight, the screen domain is between the two: the tween is real.
+      pump.frames(3);
+      const mid = domainOf(chart.ctx())[1];
+      expect(mid).toBeGreaterThan(VISIBLE_MAX);
+      expect(mid).toBeLessThan(SERIES_MAX);
+      pump.frames(60);
+      expect(pump.pending()).toBe(0);
+      // `domainOf` reads the SCREEN scale through `yToPlot`.
+      const [low, high] = domainOf(chart.ctx());
+      expect(low).toBeCloseTo(0, 6);
+      // 8640 is the padded max of [0, 8000]. The snap lifts it to 10000, and
+      // the tween stops on the snapped number.
+      expect(high).toBeCloseTo(SERIES_MAX, 6);
+    } finally {
+      pump.restore();
+    }
   });
 
   // The browser defect a jsdom test missed. A HIDDEN document runs no
@@ -1926,8 +1941,9 @@ describe("ScrubChart corner control stacking", () => {
     // neither may take a level the other does not. A band is background; a
     // gridline paints over it.
     const { container } = bothCorners();
-    const order = [...container.querySelector(".sui-scrub-chart__frame")!
-      .children];
+    const order = [
+      ...container.querySelector(".sui-scrub-chart__frame")!.children,
+    ];
     const at = (selector: string) =>
       order.findIndex((el) => el.matches(selector));
     expect(at(".sui-scrub-chart__highlights")).toBeLessThan(
