@@ -65,3 +65,27 @@ describe("GroupedBucketQueue rendering", () => {
     expect(selected).toEqual(["a"]);
   });
 });
+
+describe("GroupedBucketQueue count override", () => {
+  it("a leaf's count replaces the loaded count and rolls up into its branches", () => {
+    const groups = [
+      {
+        key: "all",
+        label: "All",
+        children: [
+          { key: "all:h", label: "History", bucketKey: "h", count: 2594 },
+          { key: "all:n", label: "Now", bucketKey: "n" },
+        ],
+      },
+    ];
+    const { container } = renderQueue([{ id: "a", bucket: "n" }], { groups });
+    expect(headerFor(container, "all:h").textContent).toContain((2594).toLocaleString());
+    expect(headerFor(container, "all").textContent).toContain((2595).toLocaleString());
+    expect(headerFor(container, "all:n").textContent).toContain("1");
+  });
+
+  it("changes nothing when no count is stated", () => {
+    const { container } = renderQueue([{ id: "a", bucket: "rev-lic-monthly" }]);
+    expect(headerFor(container, "revenue").querySelector(".bucket-queue__count")!.textContent).toBe("1");
+  });
+});

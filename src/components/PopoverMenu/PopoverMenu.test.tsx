@@ -160,3 +160,27 @@ describe("PopoverMenu caretIcon", () => {
     expect(caret.classList.contains("sui-popover-menu__caret--still")).toBe(true);
   });
 });
+
+describe("PopoverMenu triggerLabel", () => {
+  it("names the trigger with aria-label when stated", () => {
+    const { container } = render(() => (
+      <PopoverMenu trigger={<span>AL</span>} triggerLabel="Account menu for Ada" items={[...ITEMS]} onSelect={() => {}} />
+    ));
+    const t = container.querySelector(".sui-popover-menu__trigger")!;
+    expect(t.getAttribute("aria-label")).toBe("Account menu for Ada");
+  });
+
+  it("carries no aria-label when the prop is absent", () => {
+    const { container } = render(() => (
+      <PopoverMenu trigger="Account" items={[...ITEMS]} onSelect={() => {}} />
+    ));
+    expect(container.querySelector(".sui-popover-menu__trigger")!.hasAttribute("aria-label")).toBe(false);
+  });
+
+  it("RightPopoverMenu forwards it", () => {
+    const { container } = render(() => (
+      <RightPopoverMenu trigger="x" triggerLabel="Menu" items={[...ITEMS]} onSelect={() => {}} />
+    ));
+    expect(container.querySelector(".sui-popover-menu__trigger")!.getAttribute("aria-label")).toBe("Menu");
+  });
+});

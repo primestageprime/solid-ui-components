@@ -68,6 +68,13 @@ export const userInitials = (user: UserMenuUser | undefined): string => {
   return letters === "" ? "?" : letters.toUpperCase();
 };
 
+/** The trigger's accessible name: "Account menu for Ada Lovelace", or "Account menu" when signed out. */
+export const userMenuLabel = (user: UserMenuUser | undefined): string => {
+  if (user === undefined) return "Account menu";
+  const who = user.name.trim() === "" ? user.email : user.name.trim();
+  return who === "" ? "Account menu" : `Account menu for ${who}`;
+};
+
 /** The menu's items: the caller's, then exactly one of Sign in / Sign out. */
 export const userMenuItems = (
   items: readonly PopoverMenuItem[],
@@ -89,6 +96,7 @@ export const UserMenu: Component<UserMenuProps> = (props) => {
   };
   return (
     <RightPopoverMenu
+      triggerLabel={userMenuLabel(props.user)}
       trigger={
         <SmAvatar
           initials={userInitials(props.user)}

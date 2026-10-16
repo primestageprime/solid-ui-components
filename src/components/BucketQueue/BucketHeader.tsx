@@ -36,6 +36,8 @@ const Chevron = (): JSX.Element => (
 export interface BucketHeaderProps {
   bucket: Bucket;
   count: number;
+  /** Print `count` with thousands grouping (set when it is a `Bucket.count` override). */
+  grouped?: boolean;
   /** The bucket can be toggled RIGHT NOW — declared `collapsible` AND
    *  populated. An empty bucket has nothing to expand into, so it renders as
    *  a plain header even when it declares `collapsible`. */
@@ -70,6 +72,7 @@ export function BucketHeader(props: BucketHeaderProps): JSX.Element {
       <CountChip
         class={`bucket-queue__count bucket-queue__count--${props.bucket.tone}`}
         count={props.count}
+        grouped={props.grouped}
         label=""
       />
     </>

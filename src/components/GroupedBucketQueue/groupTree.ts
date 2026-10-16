@@ -9,7 +9,7 @@
 // `bucketOf`). Depth is unbounded — thorcasting's Direction → Category → Type
 // is 3 levels, but nothing here assumes exactly 3.
 import type { JSX } from "solid-js";
-import { map, sum } from "../../fn";
+import { map, some, sum } from "../../fn";
 import type { Tone } from "../../types";
 
 export interface GroupNode {
@@ -33,6 +33,10 @@ export interface GroupNode {
    *  A node with `bucketKey` is a leaf regardless of whether `children` is
    *  also (mistakenly) present — `bucketKey` wins. */
   bucketKey?: string;
+  /** Leaf only: the count the header chip shows instead of the loaded-item
+   *  count (see `Bucket.count`). Display only. Branch headers roll up the
+   *  shown counts of their leaves. Omit for the loaded count. */
+  count?: number;
   /** Leaf only: when the queue is in select mode (`checkedKeys` present),
    *  rows in THIS leaf render the check affordance and a click toggles the
    *  check instead of selecting. Mirrors BucketQueue's `Bucket.selectable`.
@@ -74,6 +78,24 @@ export function countOf(
   );
 }
 
+/** The count a header SHOWS: a leaf's `count` override when stated, else its
+ *  loaded count; a branch sums its children's shown counts. */
+export function shownOf(
+  node: GroupNode,
+  countForBucket: (bucketKey: string) => number,
+): number {
+  if (isLeaf(node)) return node.count ?? countForBucket(node.bucketKey as string);
+  return sum(
+    map((c: GroupNode) => shownOf(c, countForBucket), node.children ?? []),
+  );
+}
+
+/** True when any leaf under `node` states a `count` override. */
+export const hasCountOverride = (node: GroupNode): boolean =>
+  isLeaf(node)
+    ? node.count !== undefined
+    : some(hasCountOverride, node.children ?? []);
+
 /** One rendered header line, flattened out of the tree in display order. */
 export interface FlatGroupHeader {
   key: string;
@@ -81,6 +103,10 @@ export interface FlatGroupHeader {
   tone?: Tone;
   depth: number;
   count: number;
+  /** What the chip shows: `count` unless a leaf under this node states `GroupNode.count`. */
+  shown: number;
+  /** The chip prints `shown` with thousands grouping (an override is in play). */
+  grouped: boolean;
   isLeaf: boolean;
   bucketKey?: string;
   /** Collapsible RIGHT NOW — declared collapsible (default true) AND
@@ -115,6 +141,8 @@ export function flattenGroupHeaders(
       tone: node.tone,
       depth,
       count,
+      shown: shownOf(node, countForBucket),
+      grouped: hasCountOverride(node),
       isLeaf: leaf,
       bucketKey: node.bucketKey,
       toggleable,

@@ -58,4 +58,16 @@ describe("StampedRow", () => {
     const { container } = render(() => <StampedRow label="a very long label" t={at} />);
     expect(container.querySelector('[title="a very long label"]')).not.toBeNull();
   });
+
+  it("prints the time in the stated timeZone, on both densities", () => {
+    const iso = "2026-10-15T08:14:00Z";
+    const list = render(() => <StampedRow label="a" t={iso} timeZone="UTC" />);
+    expect(list.container.textContent).toContain("08:14");
+    cleanup();
+    const pinned = render(() => <PinnedStampedRow label="a" t={iso} timeZone="UTC" />);
+    expect(pinned.container.textContent).toContain("08:14");
+    cleanup();
+    const ny = render(() => <StampedRow label="a" t={iso} timeZone="America/New_York" />);
+    expect(ny.container.textContent).toContain("04:14");
+  });
 });

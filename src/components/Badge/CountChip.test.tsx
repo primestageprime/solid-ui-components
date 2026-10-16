@@ -1,6 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { render } from "@solidjs/testing-library";
+import { describe, it, expect, afterEach } from "vitest";
+import { render, cleanup } from "@solidjs/testing-library";
 import { CountChip } from "./index";
+
+afterEach(cleanup);
 
 describe("CountChip", () => {
   it("renders count + label", () => {
@@ -25,5 +27,15 @@ describe("CountChip", () => {
       <CountChip count={0} label="x" active />
     ));
     expect(container.firstElementChild!.className).toMatch(/--active/);
+  });
+});
+
+describe("CountChip grouped", () => {
+  it("groups in a stated locale and leaves the digits bare by default", () => {
+    const de = render(() => <CountChip count={2594} label="" grouped locale="de-DE" />);
+    expect(de.container.querySelector(".sui-count-chip__count")!.textContent).toBe("2.594");
+    cleanup();
+    const bare = render(() => <CountChip count={2594} label="" />);
+    expect(bare.container.querySelector(".sui-count-chip__count")!.textContent).toBe("2594");
   });
 });
