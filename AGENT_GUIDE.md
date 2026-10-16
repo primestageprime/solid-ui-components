@@ -562,11 +562,30 @@ step's name and exit status, stops at the first failure, and runs `build` and
 `bundle-budget` inside a detached `git worktree` so the live checkout's Vite
 cache is never touched — safe to run next to Peter's dev server. `npm run gate
 -- --fast` skips `build`; `npm run gate -- --only <step>` runs one step. It is
-also what `githooks/pre-push` runs (`--pre-push`, which additionally
-auto-commits a tightened health baseline instead of costing a manual
-`--update-baseline` round-trip — see `scripts/gate.mjs`'s header). **Never pipe
+also what `githooks/pre-push` runs, but narrower — see *Gate tiers* below.
+**Never pipe
 a gate** into `head` or `echo` regardless — the exit status is the gate, and a
 pipe throws it away.
+
+**Gate tiers.** Three tiers, each broader than the last, so a push stays fast
+without the full suite going unchecked:
+
+| Tier | Runs | Command |
+|---|---|---|
+| push (`githooks/pre-push`) | lint, typecheck, and only the tests that reach your diff | `node scripts/gate.mjs --pre-push` |
+| PR (CI, or locally) | full suite with coverage, execution-coverage, lint, typecheck, health ratchet, build, bundle-budget | `npm run gate` |
+| merge | automatic release | none to run |
+
+`node scripts/affected-tests.mjs` prints the exact test files a push would run
+(`--json` for a machine-readable plan, `--base <ref>` to diff against another
+ref). The set is `vitest list --changed <merge-base of HEAD and origin/main>`,
+plus any test in the component directory of a changed non-code file, or that
+names it (vitest's graph cannot see a stylesheet a test reads as text). It falls
+back to the FULL suite if the merge-base cannot be computed or a file that
+affects everything changed: vitest/vite config, `package.json`, the lockfile,
+`tsconfig*.json`, `src/styles/**`, `src/themes/**`, `src/test-setup.ts`.
+The health ratchet is not in the push tier; a green push is not a green PR, so
+run `npm run gate -- --only health` before opening one.
 
 **Budget for consumer integration.** A first-consumer bench surfaces faults in
 other components that are invisible on their own benches — this board found the
