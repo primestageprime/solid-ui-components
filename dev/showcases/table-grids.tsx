@@ -14,6 +14,7 @@ import { ScrollList } from "../../src/components/List";
 import { SelectableTreemap } from "../../src/components/Treemap";
 import { StaticSplitLayout } from "../../src/components/SplitQueueList";
 import type { TableColumn } from "../../src/components/Table/types";
+import { intCol, textCol } from "../../src/components/Table/columnHelpers";
 import {
   GroupBracket,
   type GroupBracketPosition,
@@ -128,44 +129,14 @@ const BRACKET_ROWS: BracketRow[] = RUNS.flatMap(({ terminal, length }, run) => {
   }));
 });
 
+// Renderers throughout (canon 2026-10-16): the vessel column takes the
+// remainder; the fixed columns are sized to the 400-booking data.
 const columns: TableColumn<Booking>[] = [
-  {
-    id: "vessel",
-    header: "Vessel",
-    align: "left",
-    ellipsis: true,
-    contained: true,
-    minWidth: "0",
-    accessor: (r) => r.vessel,
-  },
-  {
-    id: "terminal",
-    header: "Terminal",
-    align: "left",
-    width: "9rem",
-    accessor: (r) => r.terminal,
-  },
-  {
-    id: "category",
-    header: "Category",
-    align: "left",
-    width: "8rem",
-    accessor: (r) => r.category,
-  },
-  {
-    id: "berthHours",
-    header: "Berth h",
-    align: "right",
-    width: "6rem",
-    accessor: (r) => String(r.berthHours),
-  },
-  {
-    id: "teu",
-    header: "TEU",
-    align: "right",
-    width: "7rem",
-    accessor: (r) => r.teu.toLocaleString(),
-  },
+  { ...textCol("vessel", "Vessel", { ellipsis: true, contained: true }), minWidth: "0" },
+  textCol("terminal", "Terminal", { data: BOOKINGS }),
+  textCol("category", "Category", { data: BOOKINGS }),
+  intCol("berthHours", "Berth h", { data: BOOKINGS }),
+  intCol("teu", "TEU", { data: BOOKINGS }),
 ];
 
 // Pivot: terminal × category, cells carrying the totals behind them.

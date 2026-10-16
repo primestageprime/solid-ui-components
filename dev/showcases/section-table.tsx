@@ -14,6 +14,14 @@ import {
   dateCol,
 } from "../../src/components/Table/fields";
 import type { TableColumn } from "../../src/components/Table/types";
+// The plain-column helpers, aliased: `fields` also exports intCol/dateCol
+// (the registry-style factories used by the sortable variant below).
+import {
+  dateCol as plainDateCol,
+  intCol as plainIntCol,
+  textCol,
+} from "../../src/components/Table/columnHelpers";
+import { MoneyCell } from "../../src/components/Table/numericCells";
 import { ContentStack, PageStack } from "../../src/components/Layout";
 import { SubsectionTitle, TextSublabel } from "../../src/components/Text";
 import { ThemedInput } from "../../src/components/Inputs";
@@ -39,15 +47,22 @@ const CUSTOMERS: Customer[] = [
 // Plain table columns for the BOUND unit: `contained` + `minWidth:0` let the
 // name column ellipsize so the fixed-layout table clamps to exactly its
 // container width — which is what keeps the header's record count aligned with
-// the table's right edge.
-const money = (v: number): string =>
-  "$" + (v / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// the table's right edge. Every column renders through a helper or an explicit
+// renderer (canon 2026-10-16); the fixed columns are sized to the data.
+const MAX_REVENUE = 10_000;
 
 const columns: TableColumn<Customer>[] = [
-  { id: "name", header: "Customer", align: "left", ellipsis: true, contained: true, minWidth: "0", accessor: (r) => r.name },
-  { id: "orders", header: "Orders", align: "right", width: "5rem", accessor: (r) => String(r.orders) },
-  { id: "revenue", header: "Revenue", align: "right", width: "9rem", accessor: (r) => money(r.revenueCents) },
-  { id: "since", header: "Since", align: "right", width: "7rem", accessor: (r) => r.since },
+  { ...textCol("name", "Customer", { ellipsis: true, contained: true }), minWidth: "0" },
+  plainIntCol("orders", "Orders", { data: CUSTOMERS }),
+  {
+    id: "revenue",
+    header: "Revenue",
+    align: "right",
+    width: "9rem",
+    sortValue: (r) => r.revenueCents,
+    accessor: (r) => <MoneyCell value={r.revenueCents / 100} maxValue={MAX_REVENUE} />,
+  },
+  plainDateCol("since", "Since", { data: CUSTOMERS, align: "right" }),
 ];
 
 // The field registry for the sortable variant — field types own all geometry,
