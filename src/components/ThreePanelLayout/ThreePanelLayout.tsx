@@ -87,6 +87,14 @@ const resolveGridColumns = (
   return `${left} 1fr ${right}`;
 };
 
+/**
+ * @deprecated Internal primitive. Do not import at call sites: use a named
+ * curried variant (`StandardThreePanel`, `ListDetailThreePanel`,
+ * `InspectorThreePanel`, `SplitThreePanel`), or `createThreePanelLayout` for an
+ * app-level variant. Widths and heights are design decisions baked into a
+ * variant, never call-site props. Phase 2 of the add/deprecate/delete
+ * migration; the root export is removed in phase 3.
+ */
 export const ThreePanelLayout: Component<ThreePanelLayoutProps> = (props) => {
   const rootStyle = (): JSX.CSSProperties => ({
     height: resolveHeight(props.height, props.fullHeight),
