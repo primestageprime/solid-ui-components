@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.225.0 — 2026-10-16
+
 ### Added
 
 - **`PopoverMenu` takes `triggerLabel`.** Optional string applied as the trigger button's `aria-label`, for an avatar or icon trigger. `RightPopoverMenu` forwards it, and `UserMenu` now passes "Account menu for <name>". Without the prop the trigger is unchanged.
