@@ -1,7 +1,7 @@
 // UserMenu — the account slot at the end of an app header.
 import { createSignal, type Component } from "solid-js";
 import { UserMenu } from "../../src/components/UserMenu";
-import { ClusterRow } from "../../src/components/Layout";
+import { EndClusterRow } from "../../src/components/Layout";
 import { CountChip } from "../../src/components/Badge";
 
 const SETTINGS = [{ id: "settings", label: "Settings", icon: "gear" as const }];
@@ -26,7 +26,7 @@ export const UserMenuShowcase: Component = () => {
       <div class="example-group">
         <h3>Signed in / signed out — click the avatar</h3>
         <div class="user-menu-demo">
-          <ClusterRow>
+          <EndClusterRow>
             <UserMenu
               user={user()}
               items={SETTINGS}
@@ -40,7 +40,7 @@ export const UserMenuShowcase: Component = () => {
                 setLast("sign out");
               }}
             />
-          </ClusterRow>
+          </EndClusterRow>
         </div>
         <p class="text-meta">Last action: {last()}</p>
       </div>
@@ -48,7 +48,7 @@ export const UserMenuShowcase: Component = () => {
       <div class="example-group">
         <h3>With a status line (AppBar folds its status here below 480px)</h3>
         <div class="user-menu-demo">
-          <ClusterRow>
+          <EndClusterRow>
             <UserMenu
               user={{ name: "Grace Hopper", email: "grace@example.com" }}
               items={SETTINGS}
@@ -56,7 +56,7 @@ export const UserMenuShowcase: Component = () => {
               onSignIn={() => {}}
               onSignOut={() => {}}
             />
-          </ClusterRow>
+          </EndClusterRow>
         </div>
       </div>
     </div>
