@@ -104,6 +104,33 @@ body {
   --sui-radius-md: 0;
   --sui-radius-lg: 0;
 
+  /* ---- Density (optional --sui-dense-* group, see README.md) ----
+     The dense defaults Peter ruled on 2026-10-15: flush buckets with one
+     shared 1px divider, no gaps between sections or list rows, 28px group
+     headers, a 4px selected bar, emphasis from edges rather than spacing.
+     Declared here and in default.css only; bronze, stax and colorblind keep the
+     legacy spacing by declaring none of these. */
+  --sui-dense-section-gap: 0px;
+  --sui-dense-item-gap: 0px;
+  --sui-dense-item-radius: 0;
+  --sui-dense-bucket-border: 1px 0;
+  --sui-dense-bucket-overlap: -1px;
+  --sui-dense-header-h: 28px;
+  --sui-dense-row-pad-y: 4px;
+  --sui-dense-row-pad-x: 12px;
+  --sui-dense-row-min-h: 28px;
+  --sui-dense-item-border: 0 0 1px;
+  --sui-dense-item-divider: var(--sui-border);
+  --sui-dense-select-bar: 4px;
+  --sui-dense-panel-pad: 12px;
+  --sui-dense-aside-pad: 0px;
+  --sui-dense-topbar-h: 32px;
+  --sui-dense-cell-pad: 6px 12px;
+  --sui-dense-head-cell-pad: 8px 12px;
+  --sui-dense-modal-pad: 10px 16px;
+  --sui-dense-modal-body-pad: 16px;
+  --sui-dense-modal-footer-gap: 8px;
+
   /* ---- Clip Sizes ---- */
   --sui-clip-sm: 8px;
   --sui-clip-md: 12px;
