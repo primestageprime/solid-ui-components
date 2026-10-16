@@ -276,3 +276,19 @@ describe("OverflowNav re-folds on resize (G16)", () => {
     expect(kebab(container)).not.toBeNull();
   });
 });
+
+describe("OverflowNav justify", () => {
+  afterEach(cleanup);
+  const ITEMS = [{ id: "a", label: "A" }];
+
+  it("packs to the start by default — no justify class at all", () => {
+    const { container } = render(() => <OverflowNav items={ITEMS} />);
+    expect(container.firstElementChild!.className).not.toContain("row--justify");
+  });
+
+  it("CenteredOverflowNav centres the items inside its own box", async () => {
+    const { CenteredOverflowNav } = await import("./variants");
+    const { container } = render(() => <CenteredOverflowNav items={ITEMS} />);
+    expect(container.firstElementChild!.className).toContain("row--justify-center");
+  });
+});

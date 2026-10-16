@@ -338,6 +338,7 @@ export * from "./components/VarianceStrip";
 export * from "./components/VarianceStripChart";
 export * from "./components/ThreeSlotRow";
 export * from "./components/UserMenu";
+export * from "./components/AppBar";
 
 // Choreography — compose + sequence animation effects across components
 // (collapse/expand/fadeIn/fadeOut/slideDown/rollUp/glowIn/settleIn, step/

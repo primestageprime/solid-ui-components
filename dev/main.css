@@ -2808,3 +2808,11 @@ th:has(.tf-th-center) .hud-table__header-content {
   padding: 8px 12px;
   border: 1px solid var(--sui-border);
 }
+
+/* AppBar showcase demo frame — a bordered box the bar fills edge to edge. */
+.app-bar-demo {
+  border: 1px solid var(--sui-border);
+}
+.app-bar-demo--phone {
+  max-width: 390px;
+}
