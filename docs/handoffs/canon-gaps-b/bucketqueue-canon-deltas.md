@@ -29,7 +29,8 @@ Peter's sign-off under the expansion gate. The theme pass does not cover it.
 
 ## Visual deltas, for the default-theme density pass
 
-These are to be absorbed by the default-theme density pass, not by a variant.
+These are to be absorbed by the default-theme density pass (`feat/theme-density`, audit in progress),
+not by a variant. Only the count override above remains a `BucketQueue` prop request needing sign-off.
 
 | # | Canon | BucketQueue today |
 |---|---|---|
