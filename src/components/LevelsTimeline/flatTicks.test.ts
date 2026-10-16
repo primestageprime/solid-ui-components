@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * G19 — flat and near-flat levels get DISTINCT y-tick labels. Printed as a
  * table: levels → derived domain → the tick labels a whole-dollar currency

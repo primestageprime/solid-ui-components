@@ -147,19 +147,16 @@ import {
   resolveLabels,
 } from "./labels";
 import {
-  type DialGeometry,
   type Domain,
   type Entity,
   dialHeightFor,
   dragStep,
-  clampToRange,
   dialGeometry,
-  rangeOf,
   niceStep,
   trackDomainOf,
 } from "../MarkedSlider/geometry";
 import type { ReadoutMode } from "./readouts";
-import { applyLinkedMove, resetLinked } from "./links";
+import { type MoveContext, resolveMove, resolveReset } from "./moves";
 import { settleTyped } from "./typed";
 import { type ItemRun, itemLayout, itemRuns } from "./items";
 import {
@@ -167,7 +164,6 @@ import {
   GUTTERED_DIAL_SLOT,
   GUTTER_GAP,
   ROW_GAP,
-  moveTogether,
   pinTo,
   type RowLayout,
   rowLayout,
@@ -430,9 +426,6 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   const [ownSelection, setOwnSelection] = createSignal<readonly string[]>([]);
   const selection = (): readonly string[] => props.selected ?? ownSelection();
   const isSelected = (id: string): boolean => selection().includes(id);
-  /** Pinning needs TWO or more — one selected dial still drags alone. */
-  const isPinned = (id: string): boolean =>
-    selection().length > 1 && isSelected(id);
 
   /** The height to DRAW at: the container's, floored, or the fixed default. */
   const dialHeight = (): number => dialHeightFor(measuredDialHeight());
@@ -607,56 +600,23 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
    */
   const keyStep = (): number => Math.max(niceStep(domain()), props.snap ?? 0);
 
+  /** The row-level facts `resolveMove` and `resolveReset` read. */
+  const moveContext = (): MoveContext => ({
+    entities: props.entities,
+    selection: selection(),
+    grouping: props.grouping,
+  });
+
   /**
-   * WHAT A MOVE MEANS, resolved in one place because it is a fact about the
-   * ROW: an unpinned dial moves itself, a pinned one moves its whole selection
-   * by the delta it travelled.
-   *
-   * The dial reports an intermediate value through `onChange` and a committed
-   * one through `onChangeEnd`, and the two carry different promises:
-   *
-   *   • intermediate — under the pointer, or one arrow key. `onChange` only.
-   *   • committed    — the pointer was released, or the key step finished. The
-   *                    same value already went out as intermediate, so this
-   *                    says only `onChangeEnd`.
-   *
-   * An arrow key therefore emits both, in that order, which is what makes one
-   * key press a whole gesture: it moves AND it persists.
-   *
-   * A pinned move fans out to the whole selection either way: `moveTogether`
-   * is a group decision, and leaving the peers uncommitted would persist the
-   * dragged dial alone.
+   * WHAT A MOVE MEANS is decided in moves.ts (`resolveMove`); this only emits
+   * what it returns. An arrow key calls it twice — intermediate, then
+   * committed — which is what makes one key press a whole gesture: it moves
+   * AND it persists.
    */
   const move = (entity: Entity, next: number, commit: boolean): void => {
-    if (isPinned(entity.id) && props.grouping === "link") {
-      // LINKED: every selected dial to the SAME amount this one reached.
-      emitAll(
-        applyLinkedMove(props.entities, selection(), next),
-        commit ? "commit" : "change",
-      );
-      return;
-    }
-    if (isPinned(entity.id)) {
-      const current: DialGeometry = dialGeometry(
-        domain(),
-        entity,
-        dialHeight(),
-      );
-      // The delta THIS dial travelled, applied to every pinned peer — each
-      // clamped to its own range, so one hitting a ceiling stops there while
-      // the rest carry on.
-      const delta = next - (current.clampedValue ?? next);
-      if (commit) {
-        emitAll(moveTogether(props.entities, selection(), delta), "commit");
-        return;
-      }
-      if (delta !== 0) {
-        emitAll(moveTogether(props.entities, selection(), delta), "change");
-      }
-      return;
-    }
-    if (commit) props.onChangeEnd?.(entity.id, next);
-    else props.onChange(entity.id, next);
+    const shown = dialGeometry(domain(), entity, dialHeight()).clampedValue;
+    const fanout = resolveMove(moveContext(), entity, shown, next, commit);
+    if (fanout) emitAll(fanout.moved, fanout.how);
   };
 
   /**
@@ -679,26 +639,18 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
     move(entity, next, true);
   };
 
-  /**
-   * A per-dial Reset, through the MOVE path. Linked: `resetLinked` decides
-   * who follows and who unlinks. Pinned or alone: the same `move` a key
-   * press takes. No prior amount: the consumer's `onReset`.
-   */
+  /** A per-dial Reset, as `resolveReset` plans it. */
   const resetDial = (entity: Entity): void => {
-    if (entity.old === null) {
+    const plan = resolveReset(moveContext(), domain(), entity);
+    if (plan.kind === "consumer") {
       props.onReset?.(entity.id);
       return;
     }
-    if (props.grouping === "link") {
-      const { moves, unlink } = resetLinked(
-        props.entities,
-        selection(),
-        entity.id,
-      );
-      emitAll(moves, "both");
-      if (unlink.length > 0) {
+    if (plan.kind === "linked") {
+      emitAll(plan.moved, "both");
+      if (plan.unlink.length > 0) {
         const next = filter(
-          (id: string) => !some((gone: string) => gone === id, unlink),
+          (id: string) => !some((gone: string) => gone === id, plan.unlink),
           selection(),
         );
         if (props.selected === undefined) setOwnSelection(next);
@@ -706,55 +658,52 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
       }
       return;
     }
-    const target = clampToRange(rangeOf(domain(), entity), entity.old);
-    move(entity, target, false);
-    move(entity, target, true);
+    move(entity, plan.target, false);
+    move(entity, plan.target, true);
   };
 
   /** One dial of the row. `Index` keys by position — see the render below. */
   const renderDial = (entity: () => Entity): JSX.Element => (
-          <MutationDial
-            entity={entity()}
-            domain={domain()}
-            // ONE height feeds everything: the viewBox, the track path, AND
-            // every value→y mapping behind the range, the arrows, the change
-            // line and the delta label. Omitting it left those five at the
-            // 260px default while the track and the viewBox were at the
-            // measured height, so the bands and arrows bunched into the top
-            // third of a tall dial and the pointer disagreed with all of them.
-            height={dialHeight()}
-            format={format}
-            labels={labels()}
-            readout={props.readout}
-            snap={props.snap}
-            dragStep={step()}
-            keyStep={keyStep()}
-            selected={isSelected(entity().id)}
-            onSelect={() => toggleSelection(entity().id)}
-            onMeasure={measureDial}
-            onMove={(value) => move(entity(), value, false)}
-            onCommit={(value) => move(entity(), value, true)}
-            onRemove={
-              props.onRemove ? () => props.onRemove?.(entity().id) : undefined
-            }
-            onRestore={
-              props.onRestore ? () => props.onRestore?.(entity().id) : undefined
-            }
-            onType={
-              props.precision === undefined
-                ? undefined
-                : (text) => typeIn(entity(), text)
-            }
-            onReset={
-              props.onReset ? () => resetDial(entity()) : undefined
-            }
-            onLink={
-              props.grouping === "link"
-                ? () => toggleSelection(entity().id)
-                : undefined
-            }
-            linked={props.grouping === "link" && isSelected(entity().id)}
-          />
+    <MutationDial
+      entity={entity()}
+      domain={domain()}
+      // ONE height feeds everything: the viewBox, the track path, AND
+      // every value→y mapping behind the range, the arrows, the change
+      // line and the delta label. Omitting it left those five at the
+      // 260px default while the track and the viewBox were at the
+      // measured height, so the bands and arrows bunched into the top
+      // third of a tall dial and the pointer disagreed with all of them.
+      height={dialHeight()}
+      format={format}
+      labels={labels()}
+      readout={props.readout}
+      snap={props.snap}
+      dragStep={step()}
+      keyStep={keyStep()}
+      selected={isSelected(entity().id)}
+      onSelect={() => toggleSelection(entity().id)}
+      onMeasure={measureDial}
+      onMove={(value) => move(entity(), value, false)}
+      onCommit={(value) => move(entity(), value, true)}
+      onRemove={
+        props.onRemove ? () => props.onRemove?.(entity().id) : undefined
+      }
+      onRestore={
+        props.onRestore ? () => props.onRestore?.(entity().id) : undefined
+      }
+      onType={
+        props.precision === undefined
+          ? undefined
+          : (text) => typeIn(entity(), text)
+      }
+      onReset={props.onReset ? () => resetDial(entity()) : undefined}
+      onLink={
+        props.grouping === "link"
+          ? () => toggleSelection(entity().id)
+          : undefined
+      }
+      linked={props.grouping === "link" && isSelected(entity().id)}
+    />
   );
 
   return (

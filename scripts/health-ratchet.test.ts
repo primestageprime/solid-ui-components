@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // Health ratchet guard — a ceiling must never loosen by accident
 // ============================================

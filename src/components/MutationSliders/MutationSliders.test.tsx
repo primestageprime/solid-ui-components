@@ -119,9 +119,9 @@ describe("MutationSliders", () => {
     const { container } = render(() => (
       <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
     ));
-    expect(
-      container.querySelectorAll(".sui-marked-slider__band"),
-    ).toHaveLength(6);
+    expect(container.querySelectorAll(".sui-marked-slider__band")).toHaveLength(
+      6,
+    );
   });
 
   it("draws a prior arrow for every entity and a future arrow for the present ones", () => {
@@ -1105,71 +1105,47 @@ describe("MutationSliders", () => {
     });
 
     describe("pinning", () => {
-      it("does NOTHING on the first selection — one dial still drags alone", () => {
+      // The RULES — who moves, by how much, through which callback — are a
+      // table in moves.test.ts (`resolveMove`) and rows.test.ts (`pinTo`,
+      // `moveTogether`). This one mount proves the name buttons, the key
+      // handler and the two callbacks are wired to them.
+      it("integration: pinning holds together — select, snap, key-move, unpin", () => {
         const onChange = vi.fn();
-        const { container } = render(() => (
-          <MutationSliders entities={THREE} onChange={onChange} />
-        ));
-        fireEvent.click(nameButton(container, "Ana"));
-        expect(onChange).not.toHaveBeenCalled();
-      });
-
-      it("snaps everyone to the HIGHEST the moment the group forms", () => {
-        const onChange = vi.fn();
-        const { container } = render(() => (
-          <MutationSliders entities={THREE} onChange={onChange} />
-        ));
-        fireEvent.click(nameButton(container, "Ana")); // 46_000
-        fireEvent.click(nameButton(container, "Bo")); // 95_000, the highest
-        // Ana rises, clamped to her junior ceiling; Bo is already highest.
-        expect(onChange).toHaveBeenCalledWith("a", 60_000);
-        expect(onChange).not.toHaveBeenCalledWith("b", expect.anything());
-      });
-
-      it("commits the snap, so a board keyed on committed values follows", () => {
         const onChangeEnd = vi.fn();
-        const { container } = render(() => (
-          <MutationSliders
-            entities={THREE}
-            onChange={() => {}}
-            onChangeEnd={onChangeEnd}
-          />
-        ));
-        fireEvent.click(nameButton(container, "Ana"));
-        fireEvent.click(nameButton(container, "Bo"));
-        expect(onChangeEnd).toHaveBeenCalledWith("a", 60_000);
-      });
-
-      it("moves every pinned entity when ONE is dragged by a key", () => {
-        const onChange = vi.fn();
         const { container, getByLabelText } = render(() => (
           <MutationSliders
             entities={[
-              {
-                id: "a",
-                label: "Ana",
-                old: 44_000,
-                value: 50_000,
-                range: JUNIOR,
-              },
-              {
-                id: "b",
-                label: "Bo",
-                old: 90_000,
-                value: 90_000,
-                range: SENIOR,
-              },
+              { ...THREE[0], value: 50_000 }, // Ana, junior
+              { ...THREE[1], value: 90_000 }, // Bo, senior — the highest
+              THREE[2], // Cal, never selected
             ]}
             onChange={onChange}
+            onChangeEnd={onChangeEnd}
           />
         ));
+        // One selection does NOTHING — a lone dial still drags alone.
         fireEvent.click(nameButton(container, "Ana"));
+        expect(onChange).not.toHaveBeenCalled();
+        // The group forms: everyone snaps to the HIGHEST, clamped to their
+        // own band, and the snap is committed too.
+        fireEvent.click(nameButton(container, "Bo"));
+        expect(onChange).toHaveBeenCalledWith("a", 60_000);
+        expect(onChange).not.toHaveBeenCalledWith("b", expect.anything());
+        expect(onChangeEnd).toHaveBeenCalledWith("a", 60_000);
+        // One key moves every pinned peer by the nice step (1_000 on the
+        // derived [40k, 110k] domain), and nobody else. The props are static
+        // here, so Ana still reads 50k and moves to 51k.
+        onChange.mockClear();
+        fireEvent.keyDown(getByLabelText("Bo"), { key: "ArrowUp" });
+        expect(onChange).toHaveBeenCalledWith("b", 91_000);
+        expect(onChange).toHaveBeenCalledWith("a", 51_000);
+        expect(onChange).not.toHaveBeenCalledWith("c", expect.anything());
+        // Dropping back to one UNPINS.
         fireEvent.click(nameButton(container, "Bo"));
         onChange.mockClear();
         fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
-        // niceStep across a [40k,110k] derived domain is 1_000.
-        expect(onChange).toHaveBeenCalledWith("a", 51_000);
-        expect(onChange).toHaveBeenCalledWith("b", 91_000);
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange.mock.calls[0][0]).toBe("a");
       });
 
       it("commits each pinned peer exactly ONCE on a pointer release", () => {
@@ -1211,32 +1187,6 @@ describe("MutationSliders", () => {
         // Both pinned peers, once each — and Cal, who is not selected, never.
         expect(committed).toEqual(["a", "b"]);
       });
-
-      it("leaves UNSELECTED entities completely alone", () => {
-        const onChange = vi.fn();
-        const { container, getByLabelText } = render(() => (
-          <MutationSliders entities={THREE} onChange={onChange} />
-        ));
-        fireEvent.click(nameButton(container, "Ana"));
-        fireEvent.click(nameButton(container, "Bo"));
-        onChange.mockClear();
-        fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
-        expect(onChange).not.toHaveBeenCalledWith("c", expect.anything());
-      });
-
-      it("UNPINS when the group drops back to one", () => {
-        const onChange = vi.fn();
-        const { container, getByLabelText } = render(() => (
-          <MutationSliders entities={THREE} onChange={onChange} />
-        ));
-        fireEvent.click(nameButton(container, "Ana"));
-        fireEvent.click(nameButton(container, "Bo"));
-        fireEvent.click(nameButton(container, "Bo")); // deselect
-        onChange.mockClear();
-        fireEvent.keyDown(getByLabelText("Ana"), { key: "ArrowUp" });
-        expect(onChange).toHaveBeenCalledTimes(1);
-        expect(onChange.mock.calls[0][0]).toBe("a");
-      });
     });
   });
 
@@ -1255,7 +1205,11 @@ describe("MutationSliders", () => {
     // here, which a test that only read `Layout/variants.ts` would not.
     it("renders the two declarations that make one rule serve both parents", () => {
       const { container } = render(() => (
-        <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
+        <MutationSliders
+          entities={FIXTURE}
+          domain={DOMAIN}
+          onChange={() => {}}
+        />
       ));
       const root = container.querySelector('[role="group"]') as HTMLElement;
       // `height: 100%` against a parent of INDEFINITE height computes to
@@ -1391,8 +1345,7 @@ describe("MutationSliders", () => {
           onRestore={() => {}}
         />
       ));
-      const footers = () =>
-        container.querySelectorAll(".sui-btn--ghost");
+      const footers = () => container.querySelectorAll(".sui-btn--ghost");
       expect(footers()).toHaveLength(1);
       setValue(null);
       expect(footers()).toHaveLength(1);
@@ -1540,9 +1493,7 @@ describe("MutationSliders", () => {
       const { container } = render(() => (
         <MutationSliders entities={SOLO} onChange={() => {}} />
       ));
-      const dial = container.querySelector(
-        ".sui-marked-slider",
-      ) as HTMLElement;
+      const dial = container.querySelector(".sui-marked-slider") as HTMLElement;
       expect(sizer.observed()).toContain(dial);
       await sizer.resize(dial, { width: 88, height: 470 });
       expect(drawnHeight(container)).toBe(470);
@@ -1552,9 +1503,7 @@ describe("MutationSliders", () => {
       const { container } = render(() => (
         <MutationSliders entities={SOLO} onChange={() => {}} />
       ));
-      const dial = container.querySelector(
-        ".sui-marked-slider",
-      ) as HTMLElement;
+      const dial = container.querySelector(".sui-marked-slider") as HTMLElement;
       await sizer.resize(dial, { width: 88, height: 470 });
       const d = container
         .querySelector(".sui-marked-slider__track-line")
@@ -1576,9 +1525,7 @@ describe("MutationSliders", () => {
         <MutationSliders entities={SOLO} onChange={() => {}} format={asK} />
       ));
       const label = () =>
-        container.querySelector(
-          ".sui-marked-slider__delta",
-        ) as SVGTextElement;
+        container.querySelector(".sui-marked-slider__delta") as SVGTextElement;
       await sizer.resizeAll({ width: 800, height: 520 });
       const tallX = label().getAttribute("x");
       await sizer.resizeAll({ width: 800, height: 260 });
@@ -1616,124 +1563,70 @@ describe("MutationSliders", () => {
       expect(queryButton(container, "Next dial")).toBeNull();
     });
 
-    it("shows as many whole dials as fit, and grows chevrons", async () => {
-      const { container } = render(() => (
-        <MutationSliders entities={NINE} onChange={() => {}} onAdd={() => {}} />
-      ));
-      await sizer.resizeAll({ width: widthFor(3), height: 300 });
-      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(3);
-      expect(queryButton(container, "Previous dial")).toBeTruthy();
-      expect(queryButton(container, "Next dial")).toBeTruthy();
-    });
-
-    it("draws NO chevrons when everything fits", async () => {
-      const { container } = render(() => (
-        <MutationSliders entities={NINE} onChange={() => {}} onAdd={() => {}} />
-      ));
-      await sizer.resizeAll({ width: widthFor(20), height: 300 });
-      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(9);
-      expect(queryButton(container, "Previous dial")).toBeNull();
-    });
-
-    it("shows ONE dial when the container is far too narrow for any", async () => {
-      // Peter, 2026-09-16: "Minimum of 1 slider."
-      const { container } = render(() => (
-        <MutationSliders entities={NINE} onChange={() => {}} />
-      ));
-      await sizer.resizeAll({ width: 30, height: 300 });
-      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(1);
-    });
-
-    it("pages by ONE dial, so every neighbouring pair stays reachable", async () => {
-      const { container } = render(() => (
-        <MutationSliders entities={NINE} onChange={() => {}} />
-      ));
-      await sizer.resizeAll({ width: widthFor(3), height: 300 });
-      expect(row(container).getAttribute("aria-label")).toBe("dials 1–3 of 9");
-      fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
-      expect(row(container).getAttribute("aria-label")).toBe("dials 2–4 of 9");
-    });
-
-    it("disables the chevron at each end rather than wrapping round", async () => {
-      const { container } = render(() => (
-        <MutationSliders entities={NINE} onChange={() => {}} />
-      ));
-      await sizer.resizeAll({ width: widthFor(3), height: 300 });
-      const prev = () =>
-        queryButton(container, "Previous dial") as HTMLButtonElement;
-      const next = () =>
-        queryButton(container, "Next dial") as HTMLButtonElement;
-      expect(prev().disabled).toBe(true);
-      expect(next().disabled).toBe(false);
-      for (let i = 0; i < 20; i += 1) fireEvent.click(next());
-      expect(next().disabled).toBe(true);
-      expect(prev().disabled).toBe(false);
-      // Twenty clicks on a nine-dial row must not run off the end.
-      expect(row(container).getAttribute("aria-label")).toBe("dials 7–9 of 9");
-    });
-
-    it("keeps the + reachable on the last page", async () => {
-      // Hiding the only way to add someone whenever the row happens to be
-      // scrolled is a dead end the reader has to guess their way out of.
-      const { container } = render(() => (
-        <MutationSliders entities={NINE} onChange={() => {}} onAdd={() => {}} />
-      ));
-      await sizer.resizeAll({ width: widthFor(3), height: 300 });
-      fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
-      expect(queryButton(container, "Add entity")).toBeTruthy();
-    });
-
-    it("announces a single visible dial as `dial 5 of 9`, not `dials 5–5`", async () => {
-      const { container } = render(() => (
-        <MutationSliders entities={NINE} onChange={() => {}} />
-      ));
-      await sizer.resizeAll({ width: 30, height: 300 });
-      fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
-      expect(row(container).getAttribute("aria-label")).toBe("dial 2 of 9");
-    });
-
-    it("settles a stale offset when entities are removed underneath it", async () => {
-      const [people, setPeople] = createSignal<readonly Entity[]>(NINE);
-      const { container } = render(() => (
-        <MutationSliders entities={people()} onChange={() => {}} />
-      ));
-      await sizer.resizeAll({ width: widthFor(3), height: 300 });
-      for (let i = 0; i < 6; i += 1)
-        fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
-      expect(row(container).getAttribute("aria-label")).toBe("dials 7–9 of 9");
-      setPeople(NINE.slice(0, 6));
-      // The window must land on the last full page, not empty the row.
-      expect(row(container).getAttribute("aria-label")).toBe("dials 4–6 of 6");
-      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(3);
-    });
-
-    it("stops paging entirely once few enough entities remain", async () => {
-      // The two-pass rule, from the other side: with the chevrons gone their
-      // 64px comes BACK to the dials, so a width that paged three of nine
-      // shows all four of four — not three of four with a dead pair of arrows.
-      const [people, setPeople] = createSignal<readonly Entity[]>(NINE);
-      const { container } = render(() => (
-        <MutationSliders entities={people()} onChange={() => {}} />
-      ));
-      await sizer.resizeAll({ width: widthFor(3), height: 300 });
-      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(3);
-      setPeople(NINE.slice(0, 4));
-      expect(container.querySelectorAll('[role="slider"]')).toHaveLength(4);
-      expect(queryButton(container, "Next dial")).toBeNull();
-      expect(row(container).getAttribute("aria-label")).toBe("dials 1–4 of 4");
-    });
-
-    it("still lets a visible dial be dragged and removed", async () => {
+    // How many fit, which window shows and what it is called are a table in
+    // rows.test.ts (`visibleWindow`, `rowLayout`, `windowLabel`). This one
+    // mount proves the measured width, the chevrons, the announcement, the +
+    // and the dial ids are wired to it, and that a shrinking entity list
+    // re-settles the window.
+    it("integration: paging holds together — measure, page, settle, re-fit", async () => {
       const onChange = vi.fn();
+      const [people, setPeople] = createSignal<readonly Entity[]>(NINE);
       const { container } = render(() => (
-        <MutationSliders entities={NINE} onChange={onChange} />
+        <MutationSliders
+          entities={people()}
+          onChange={onChange}
+          onAdd={() => {}}
+        />
       ));
-      await sizer.resizeAll({ width: widthFor(3), height: 300 });
-      fireEvent.click(queryButton(container, "Next dial") as HTMLElement);
-      const thumb = container.querySelector('[aria-label="P2"]') as HTMLElement;
-      fireEvent.keyDown(thumb, { key: "ArrowUp" });
-      // The id must be P2's, not the id at visible index 0.
+      const label = () => row(container).getAttribute("aria-label");
+      const dials = () => container.querySelectorAll('[role="slider"]').length;
+      const prev = () =>
+        queryButton(container, "Previous dial") as HTMLButtonElement | null;
+      const next = () =>
+        queryButton(container, "Next dial") as HTMLButtonElement | null;
+
+      // Measured for three (with a third of a dial to spare, so that four of
+      // four fit once the chevrons' room comes back): three whole dials,
+      // chevrons, the first window.
+      await sizer.resizeAll({ width: widthFor(3) + ARROW_SLOT, height: 300 });
+      expect(dials()).toBe(3);
+      expect(label()).toBe("dials 1–3 of 9");
+      expect(prev()?.disabled).toBe(true);
+      expect(next()?.disabled).toBe(false);
+      // Few enough remain that nothing pages: the chevrons' room comes back
+      // to the dials, so four of four show where three of nine did.
+      setPeople(NINE.slice(0, 4));
+      expect(dials()).toBe(4);
+      expect(next()).toBeNull();
+      expect(label()).toBe("dials 1–4 of 4");
+      setPeople(NINE);
+      // Pages by ONE dial; the + stays reachable; the moved dial keeps its id.
+      fireEvent.click(next() as HTMLElement);
+      expect(label()).toBe("dials 2–4 of 9");
+      expect(queryButton(container, "Add entity")).toBeTruthy();
+      fireEvent.keyDown(
+        container.querySelector('[aria-label="P2"]') as HTMLElement,
+        { key: "ArrowUp" },
+      );
       expect(onChange.mock.calls[0][0]).toBe("p2");
+      // Never runs off the end.
+      for (let i = 0; i < 20; i += 1) fireEvent.click(next() as HTMLElement);
+      expect(label()).toBe("dials 7–9 of 9");
+      expect(next()?.disabled).toBe(true);
+      // Entities removed underneath a far offset: the window re-settles on
+      // the last full page rather than emptying the row.
+      setPeople(NINE.slice(0, 6));
+      expect(label()).toBe("dials 4–6 of 6");
+      expect(dials()).toBe(3);
+      // Far too narrow for even one: still one, announced in the singular.
+      // The raw offset carries over (six, from the twenty clicks; the six-row
+      // only CLAMPED it in view), so the single dial is the seventh.
+      setPeople(NINE);
+      await sizer.resizeAll({ width: 30, height: 300 });
+      expect(dials()).toBe(1);
+      expect(label()).toBe("dial 7 of 9");
+      fireEvent.click(next() as HTMLElement);
+      expect(label()).toBe("dial 8 of 9");
     });
   });
 
@@ -1935,8 +1828,9 @@ describe("MutationSliders — grouping: link (the selection, two triggers)", () 
       <MutationSliders entities={FIXTURE} domain={DOMAIN} onChange={() => {}} />
     ));
     fireEvent.mouseEnter(
-      container.querySelector('[aria-label="Peter"]')?.closest(".sui-marked-slider")
-        ?.parentElement as HTMLElement,
+      container
+        .querySelector('[aria-label="Peter"]')
+        ?.closest(".sui-marked-slider")?.parentElement as HTMLElement,
     );
     expect(queryButton(container, "Link Peter")).toBeNull();
   });
@@ -1945,7 +1839,9 @@ describe("MutationSliders — grouping: link (the selection, two triggers)", () 
     const { container, columnOf } = mount();
     expect(queryButton(container, "Link Peter")).toBeNull();
     const column = columnOf("Peter");
-    const reservedBefore = column.querySelectorAll("button[aria-hidden]").length;
+    const reservedBefore = column.querySelectorAll(
+      "button[aria-hidden]",
+    ).length;
     fireEvent.mouseEnter(column);
     expect(queryButton(container, "Link Peter")).toBeTruthy();
     expect(column.querySelectorAll("button[aria-hidden]").length).toBe(
@@ -2006,7 +1902,13 @@ describe("CompactCurrencyMutationSliders — the beside readout", () => {
     const { container, getByText } = render(() => (
       <CompactCurrencyMutationSliders
         entities={[
-          { id: "a", label: "Ana", old: 125_000, value: 130_000, range: [70_000, 130_000] },
+          {
+            id: "a",
+            label: "Ana",
+            old: 125_000,
+            value: 130_000,
+            range: [70_000, 130_000],
+          },
         ]}
         onChange={() => {}}
       />
@@ -2016,7 +1918,8 @@ describe("CompactCurrencyMutationSliders — the beside readout", () => {
     ).toBe("$125K");
     // The amount is an editable field in this curry (precision −3).
     expect(
-      (container.querySelector('[aria-label="Ana amount"]') as HTMLInputElement).value,
+      (container.querySelector('[aria-label="Ana amount"]') as HTMLInputElement)
+        .value,
     ).toBe("$130K");
     const lines = map(
       (t: Element) => t.textContent,
@@ -2030,7 +1933,13 @@ describe("CompactCurrencyMutationSliders — the beside readout", () => {
     const { container } = render(() => (
       <CompactCurrencyMutationSliders
         entities={[
-          { id: "a", label: "Ana", old: 125_000, value: 130_000, range: [70_000, 130_000] },
+          {
+            id: "a",
+            label: "Ana",
+            old: 125_000,
+            value: 130_000,
+            range: [70_000, 130_000],
+          },
         ]}
         onChange={() => {}}
       />
@@ -2045,7 +1954,13 @@ describe("CompactCurrencyMutationSliders — the footer verb", () => {
     const { container } = render(() => (
       <CompactCurrencyMutationSliders
         entities={[
-          { id: "a", label: "Ana", old: 125_000, value: 130_000, range: [70_000, 130_000] },
+          {
+            id: "a",
+            label: "Ana",
+            old: 125_000,
+            value: 130_000,
+            range: [70_000, 130_000],
+          },
         ]}
         onChange={() => {}}
         onRemove={() => {}}
@@ -2125,7 +2040,10 @@ describe("MutationSliders — precision: the amount edits in place", () => {
         selected={selected}
         onChange={(id, value) =>
           setRows((before) =>
-            map((row: Entity) => (row.id === id ? { ...row, value } : row), before),
+            map(
+              (row: Entity) => (row.id === id ? { ...row, value } : row),
+              before,
+            ),
           )
         }
         onChangeEnd={onChangeEnd}
@@ -2180,7 +2098,10 @@ describe("MutationSliders — precision: the amount edits in place", () => {
   // their neighbours read "$110K". A commit must SETTLE the figure and the
   // field must then print it through the row's own `format` — on Enter and
   // on blur alike.
-  describe.each(["Enter", "blur"] as const)("commits on %s and reformats", (how) => {
+  describe.each([
+    "Enter",
+    "blur",
+  ] as const)("commits on %s and reformats", (how) => {
     const mountFormatted = () => {
       const [rows, setRows] = createSignal<readonly Entity[]>(FIXTURE);
       const view = render(() => (
@@ -2191,7 +2112,10 @@ describe("MutationSliders — precision: the amount edits in place", () => {
           format={(n) => `$${n / 1000}K`}
           onChange={(id, value) =>
             setRows((before) =>
-              map((row: Entity) => (row.id === id ? { ...row, value } : row), before),
+              map(
+                (row: Entity) => (row.id === id ? { ...row, value } : row),
+                before,
+              ),
             )
           }
         />
@@ -2247,7 +2171,10 @@ describe("MutationSliders — Reset moves a linked group, unlinking who can't fo
         onSelectionChange={setSelected}
         onChange={(id, value) =>
           setRows((before) =>
-            map((row: Entity) => (row.id === id ? { ...row, value } : row), before),
+            map(
+              (row: Entity) => (row.id === id ? { ...row, value } : row),
+              before,
+            ),
           )
         }
         onRemove={() => {}}
@@ -2266,7 +2193,14 @@ describe("MutationSliders — Reset moves a linked group, unlinking who can't fo
 describe("MutationSliders — items: one person, several dials", () => {
   const ITEMS: readonly Entity[] = [
     { ...FIXTURE[0], item: "peter" },
-    { id: "peter-eve", label: "Peter eve", old: 45_000, value: 50_000, range: [40_000, 60_000], item: "peter" },
+    {
+      id: "peter-eve",
+      label: "Peter eve",
+      old: 45_000,
+      value: 50_000,
+      range: [40_000, 60_000],
+      item: "peter",
+    },
     { ...FIXTURE[1], item: "adlai" },
     { ...FIXTURE[2], item: "elaina" },
   ];
@@ -2307,7 +2241,10 @@ describe("MutationSliders — items: one person, several dials", () => {
         [...container.querySelectorAll('[role="slider"]')],
       );
     // Room for three dials between the chevrons: Peter's pair + Adlai.
-    await sizer.resizeAll({ width: DIAL_SLOT * 3 + 2 * ARROW_SLOT, height: 300 });
+    await sizer.resizeAll({
+      width: DIAL_SLOT * 3 + 2 * ARROW_SLOT,
+      height: 300,
+    });
     expect(shown()).toEqual(["Peter", "Peter eve", "Adlai"]);
     // One press moves one whole ITEM (Peter's pair), not one dial.
     fireEvent.click(queryButton(container, "Next dial") as HTMLElement);

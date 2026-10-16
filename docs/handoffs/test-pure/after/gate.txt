@@ -1,0 +1,113 @@
+
+> @primestageprime/solid-ui-components@0.222.0 gate
+> node scripts/gate.mjs --fast
+
+
+▶ test
+
+> @primestageprime/solid-ui-components@0.222.0 test:coverage
+> vitest run --coverage
+
+
+ RUN  v4.1.10 /Users/peter/Documents/clients/PrimeStage/platform/solid-ui-components/.claude/worktrees/test-pure
+      Coverage enabled with v8
+
+Not implemented: navigation to another Document
+
+ Test Files  466 passed (466)
+      Tests  5825 passed (5825)
+   Start at  11:39:52
+   Duration  76.05s (transform 32.12s, setup 6.51s, import 124.98s, tests 60.74s, environment 206.31s)
+
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 90.6% ( 25432/28068 )
+Branches     : 80.01% ( 9406/11756 )
+Functions    : 90.94% ( 9421/10359 )
+Lines        : 93.02% ( 20166/21679 )
+================================================================================
+
+> @primestageprime/solid-ui-components@0.222.0 execution-coverage
+> node scripts/execution-coverage.mjs
+
+componentsNeverExecuted: 3   (of 295 component modules; 293 measured)
+  src/components/Badge/BaselineDot.tsx
+  src/components/Feedback/InlineChartErrorOverlay.tsx
+  src/components/WorkProgressCard/WorkProgressCard.tsx
+
+✓ At baseline.
+✓ test — passed
+
+▶ lint
+
+> @primestageprime/solid-ui-components@0.222.0 lint:ci
+> node scripts/lint-ci.mjs lint src --error-on-warnings
+
+src/root-exports.contract.ts:221:1 lint/complexity/noUselessEmptyExport  FIXABLE  ━━━━━━━━━━━━━━━━━━
+
+  i This empty export is useless because there's another export or import.
+  
+    219 │ type _Private12 = Root["PairedDial"];
+    220 │ 
+  > 221 │ export {};
+        │ ^^^^^^^^^^
+    222 │ 
+  
+  i This import makes useless the empty export.
+  
+    25 │ // (No runtime: nothing imports this module. The `_`-prefixed bindings exist
+    26 │ // only to give the `satisfies` clauses an expression to sit on.)
+  > 27 │ import * as sui from "./index";
+       │ ^^^^^^
+    28 │ import * as unstable from "./unstable";
+    29 │ import type {
+  
+  i Safe fix: Remove this useless empty export.
+  
+    218 218 │   // @ts-expect-error -- private
+    219 219 │   type _Private12 = Root["PairedDial"];
+    220     │ - 
+    221     │ - export·{};
+    222 220 │   
+  
+
+src/components/MutationSliders/MutationSliders.tsx:430:9 lint/correctness/noUnusedVariables  FIXABLE  ━━━━━━━━━━
+
+  ! This variable isPinned is unused.
+  
+    428 │   const isSelected = (id: string): boolean => selection().includes(id);
+    429 │   /** Pinning needs TWO or more — one selected dial still drags alone. */
+  > 430 │   const isPinned = (id: string): boolean =>
+        │         ^^^^^^^^
+    431 │     selection().length > 1 && isSelected(id);
+    432 │ 
+  
+  i Unused variables are often the result of typos, incomplete refactors, or other sources of bugs.
+  
+  i Unsafe fix: If this is intentional, prepend isPinned with an underscore.
+  
+    428 428 │     const isSelected = (id: string): boolean => selection().includes(id);
+    429 429 │     /** Pinning needs TWO or more — one selected dial still drags alone. */
+    430     │ - ··const·isPinned·=·(id:·string):·boolean·=>
+        430 │ + ··const·_isPinned·=·(id:·string):·boolean·=>
+    431 431 │       selection().length > 1 && isSelected(id);
+    432 432 │   
+  
+
+Checked 1413 files in 395ms. No fixes applied.
+Found 1 warning.
+Found 1 info.
+lint ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some warnings were emitted while running checks.
+  
+
+✗ lint — FAILED (exit 1)
+
+── gate summary ──────────────────────────
+  ✓ test             exit 0
+  ✗ lint             exit 1
+  (build + bundle-budget skipped — --fast)
+
+✗ gate FAILED

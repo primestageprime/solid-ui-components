@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { every, filter, map, sum } from "../../fn";
 import { linearScale } from "./scales";

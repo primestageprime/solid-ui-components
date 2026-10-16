@@ -4894,7 +4894,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/MutationSliders.tsx",
-    "line": 862
+    "line": 811
   },
   {
     "name": "createMutationToolbar",
@@ -5404,7 +5404,7 @@
     "showcase": "#/slider",
     "since": "0.155.0",
     "file": "src/components/Slider/Slider.tsx",
-    "line": 418
+    "line": 356
   },
   {
     "name": "createSpanBadge",
@@ -11906,7 +11906,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/MutationSliders.tsx",
-    "line": 401
+    "line": 397
   },
   {
     "name": "MutationToolbar",
@@ -14935,7 +14935,7 @@
     "showcase": "#/slider",
     "since": "0.155.0",
     "file": "src/components/Slider/Slider.tsx",
-    "line": 295
+    "line": 236
   },
   {
     "name": "SlideReveal",

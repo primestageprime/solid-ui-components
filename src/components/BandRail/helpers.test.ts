@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // The lane and anchor rules are pinned against the two design snapshots in
 // ~/Downloads/thorcastingmocks/thorcasting-trades-module-snapshots.html —

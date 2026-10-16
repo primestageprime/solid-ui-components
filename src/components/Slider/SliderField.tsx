@@ -158,7 +158,10 @@ export const SliderField: Component<SliderFieldProps> = (props) => {
     const current = state();
     const typed = input.value;
     setState(AT_REST);
-    if (current.phase === "editing" || (current.phase === "rest" && typed !== props.value)) {
+    if (
+      current.phase === "editing" ||
+      (current.phase === "rest" && typed !== props.value)
+    ) {
       props.onCommit(typed);
     }
     input.value = text();

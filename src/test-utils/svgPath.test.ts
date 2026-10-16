@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // The parser under the dag-svg routing suites. It is worth its own tests for
 // one reason: every assertion in those suites is only as good as this, and the

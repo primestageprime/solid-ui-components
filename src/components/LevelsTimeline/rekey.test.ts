@@ -1,3 +1,4 @@
+// @vitest-environment node
 /** G22 — a dragged flag survives the consumer re-keying it mid-drag. */
 import { describe, expect, it } from "vitest";
 import { join, map } from "../../fn";

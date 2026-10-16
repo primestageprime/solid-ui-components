@@ -1,3 +1,4 @@
+// @vitest-environment node
 // src/components/AnimatedSwimlaneChart/lanes.test.ts
 import { describe, it, expect } from "vitest";
 import { groupIntoLanes } from "./lanes";

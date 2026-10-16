@@ -1,0 +1,475 @@
+file,tests_before,ms_before,tests_after,ms_after,class,reason,action
+scripts/health-ratchet.test.ts,14,12082,14,6860,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+scripts/doc-coverage.test.ts,17,10031,12,9,a,live-repo describe duplicates the health CI job (brokenDocImports/undocumentedExports ratchets),live block deleted; fixture tests kept; env=node
+src/components/MutationSliders/MutationSliders.test.tsx,139,4790,139,3113,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/GroupedMutationSliders/GroupedMutationSliders.test.tsx,38,2380,38,2084,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Tooltip/PopoverTooltip.test.tsx,14,2203,14,882,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/PairedMutationSliders/PairedMutationSliders.test.tsx,23,1757,23,1151,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChart.test.tsx,92,1655,92,1593,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CashflowScrubChart/CashflowScrubChart.test.tsx,93,1444,93,1230,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SwimlaneChart/SwimlaneChart.test.tsx,10,911,10,890,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/LevelsTimeline/LevelsTimeline.test.tsx,67,901,67,1262,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SwimlaneChart/SwimlaneChart.responsive.test.tsx,9,822,9,807,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CashflowScrubChart/liveToggle.test.tsx,8,586,8,368,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Combobox/Combobox.render.test.tsx,34,559,34,547,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Select/Select.test.tsx,12,528,12,164,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/RateGauge/geometry.test.ts,110,507,110,653,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ChartFrame/YAxisLockDialog.test.tsx,6,504,6,508,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DateRangePicker/DateRangePicker.test.tsx,5,482,5,304,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BuilderBoard/BuilderBoard.test.tsx,12,440,12,360,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/StackedTimelineChart/StackedTimelineChart.test.tsx,30,427,30,413,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DirtyComboBox/DirtyComboBox.test.tsx,22,419,22,343,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataDisplay/EllipsisText.test.tsx,3,406,3,389,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Strips/GrowthStrip.test.tsx,7,387,7,158,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ActionList/ActionList.test.tsx,35,380,35,375,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/themes/__tests__/loader.test.ts,4,368,4,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/MutationToolbar/MutationToolbar.test.tsx,10,358,10,301,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Slider/Slider.test.tsx,35,354,35,391,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Tooltip/Tooltip.test.tsx,8,352,8,237,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/OverflowNav/OverflowNav.test.tsx,11,347,11,364,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CashflowScrubChart/StillCashflowScrubChart.test.tsx,3,344,3,256,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+dev/load-theme.test.ts,9,339,9,206,e,needs DOM or imports root barrel (window at init),keep
+src/components/Chart/SpanLanes.test.tsx,6,330,6,74,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/RangeAmountGroup/RangeAmountGroup.test.tsx,5,315,5,196,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/TreeTable/TreeTable.test.tsx,11,312,11,309,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/TreeDiffChart/TreeDiffChart.test.tsx,16,311,16,246,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/actions.test.tsx,5,310,5,142,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ChannelChart/ChannelChart.test.tsx,8,304,8,235,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/RateGauge/RateGauge.test.tsx,26,268,26,382,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ExtractionBoard/ExtractionBoard.test.tsx,9,263,9,240,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ThemedNumberInput/ThemedNumberInput.typing.test.tsx,5,244,5,107,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DnDHierarchySortBar/DnDHierarchySortBar.sweep.test.tsx,7,230,7,205,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ThemedNumberInput/ThemedNumberInput.test.tsx,18,224,18,237,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CashflowScrubChart/outOfRange.test.tsx,7,222,7,173,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/TargetBarChart/TargetBarChart.test.tsx,3,218,3,53,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartChrome.test.tsx,4,216,4,78,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BalanceReviewChart/BalanceReviewChart.test.tsx,7,215,7,108,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartYRangeEditor.test.tsx,8,213,8,321,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartTopActionControl.test.tsx,18,205,18,231,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Dropdown/Dropdown.test.tsx,36,203,36,174,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/NotificationCenter/NotificationRow.test.tsx,21,203,21,155,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BucketQueue/BucketQueue.scroll.test.tsx,7,198,7,172,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BucketQueue/motion.test.ts,5,193,5,86,e,needs DOM or imports root barrel (window at init),keep
+src/components/CurrencyInput/sized.test.tsx,2,189,2,130,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartCrosshair.test.tsx,9,189,9,96,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DnDHierarchySortBar/DnDHierarchySortBar.deadzone.test.tsx,3,188,3,49,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/MathFormula/MathFormula.test.tsx,4,186,4,86,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CashflowScrubChart/gutterCap.test.tsx,3,181,3,240,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/MarkedSlider/MarkedSlider.test.tsx,13,181,13,205,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/NotificationCenter/NotificationCenter.test.tsx,24,181,24,225,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Auth/ManagedListSection.test.tsx,7,179,7,175,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ChartFrame/ChartFrame.test.tsx,21,173,21,175,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/BaseTable.test.tsx,17,173,17,138,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+scripts/catalog.test.ts,47,172,47,50,e,needs DOM or imports root barrel (window at init),keep
+src/components/Strips/Strips.test.tsx,11,172,11,162,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/internal/animation/choreography.test.ts,7,172,7,159,e,needs DOM or imports root barrel (window at init),keep
+src/components/AreaFocusGrid/AreaFocusGrid.test.tsx,5,171,5,63,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CensusView/CensusView.test.tsx,3,169,3,132,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BuilderBoard/BuilderBoardBelowChart.test.tsx,6,163,6,190,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/GroupedBucketQueue/GroupedBucketQueue.keyboard.test.tsx,5,163,5,75,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/hooks/createSubmitAction.test.ts,5,161,5,13,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Slider/SliderPointer.test.tsx,7,161,7,158,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/HeatStreamGrid/HeatStreamGrid.test.tsx,5,159,5,42,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ConversationTree/ConversationTree.test.tsx,7,157,7,190,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/textCells.test.tsx,8,155,8,33,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BucketQueue/BucketQueue.advance.test.tsx,14,154,14,102,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/IntervalInput/IntervalInput.test.tsx,16,154,16,137,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/FieldTable.test.tsx,11,152,11,150,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/GapBracket.test.tsx,3,149,3,36,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Badge/StatusChip.test.tsx,4,147,4,183,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Slider/SliderField.test.tsx,22,146,22,85,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/SelectableTable.test.tsx,49,146,49,284,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/FilterableTable.test.tsx,10,144,10,131,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CandlestickRenderer/CandlestickRenderer.test.tsx,5,143,5,89,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ResponsiveMoney/ResponsiveMoney.test.tsx,7,143,7,148,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/GroupedBucketQueue/GroupedBucketQueue.rendering.test.tsx,6,142,6,96,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Button/Button.test.tsx,10,140,10,250,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/RateGauge/RateGaugeCanvas.test.tsx,2,140,2,55,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+scripts/usage-manifest.test.ts,43,139,43,204,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/areaFill.test.tsx,2,138,2,161,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DateRangePicker/CalendarGrid.test.tsx,23,136,23,166,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/EditableTitle/EditableTitle.test.tsx,15,135,15,96,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartYAxisModeControl.test.tsx,7,130,7,132,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/MutableList/MutableList.integration.test.tsx,6,128,6,176,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BucketQueue/BucketQueue.rendering.test.tsx,26,127,26,147,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/RateGauge/calloutLabels.test.tsx,2,127,2,70,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/lineStroke.test.tsx,2,125,2,141,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CurrencyInput/CurrencyInput.test.tsx,11,125,11,138,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/Chart.test.tsx,47,122,47,194,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataDisplay/ResultDisplay.test.tsx,13,121,13,58,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Selector/SidebarSelector.test.tsx,9,120,9,57,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Treemap/Treemap.test.tsx,9,120,9,50,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/emphasisColor.test.ts,9,118,9,69,e,needs DOM or imports root barrel (window at init),keep
+src/components/DateAxis/DateAxis.test.tsx,11,116,11,124,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/PivotGrid/PivotGrid.test.tsx,22,114,22,104,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BandRail/BandRail.test.tsx,42,113,42,137,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ThroughputChart/ThroughputChart.test.tsx,6,110,6,68,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CompletionTimeline/CompletionTimeline.test.tsx,5,108,5,67,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/PopoverMenu/PopoverMenu.test.tsx,8,108,8,83,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Panel/Panel.test.tsx,5,107,5,26,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/FilterBar/FilterBar.test.tsx,6,106,6,109,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/TreeDiffChart/TreeDiffCanvas.test.tsx,3,106,3,42,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/selection.test.tsx,8,106,8,53,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/HeatStream/HeatStream.test.tsx,10,105,10,85,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/FullscreenBox/FullscreenBox.test.tsx,6,104,6,54,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/QuickFilter/QuickFilter.test.tsx,3,104,3,21,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataDisplay/DigitRoller.test.tsx,6,102,6,97,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/PivotTreemap/PivotTreemap.test.tsx,13,102,13,52,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartTooltip.test.tsx,5,102,5,57,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/MessageBubble/MessageBubble.test.tsx,6,99,6,32,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartBand.test.tsx,6,99,6,66,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/GroupedBucketQueue/GroupedBucketQueue.advance.test.tsx,3,98,3,55,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BulkActionBar/BulkActionBar.layout.test.tsx,3,95,3,34,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SlotCard/SlotCard.test.tsx,9,95,9,147,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SplitQueueList/SplitQueueList.test.tsx,11,95,11,77,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Auth/DismissibleNoticeBanner.test.tsx,5,94,5,36,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/Tooltip.test.tsx,16,93,16,159,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Checkbox/Checkbox.test.tsx,8,93,8,51,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BucketQueue/BucketQueue.selection.test.tsx,16,92,16,87,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/OutOfRangeMarkers.test.tsx,2,92,2,28,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/HeatStack/HeatStack.test.tsx,5,92,5,60,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/AnimatedSwimlaneChart/AnimatedSwimlaneChart.test.tsx,6,91,6,91,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DagChart/DagChart.test.tsx,11,91,11,42,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Layout/NestedList.test.tsx,17,91,17,46,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ActionList/ActionList.layout.test.tsx,2,90,2,66,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ReservedWidth/ReservedWidth.test.tsx,2,90,2,13,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/GhostPin.test.tsx,10,89,10,63,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DayOfWeekPicker/DayOfWeekPicker.test.tsx,6,89,6,23,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ConnectionStatus/ConnectionStatus.test.tsx,4,88,4,71,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/avg.test.tsx,4,88,4,81,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/ReferenceLine.test.tsx,14,87,14,82,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BucketQueue/BucketQueue.keyboard.test.tsx,16,86,16,91,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BucketQueue/measurement.test.tsx,6,86,6,76,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/TimelineBar.test.tsx,30,86,30,71,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartExpandControl.test.tsx,15,86,15,108,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ChangeRenderer/ChangeRenderer.test.tsx,5,84,5,49,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/ValueHandle.test.tsx,5,83,5,39,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Feedback/Feedback.test.tsx,6,83,6,81,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartMinimizedBar.test.tsx,9,82,9,58,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/CurrentValueIndicator.test.tsx,7,81,7,44,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/HighlightSegments.test.tsx,18,81,18,70,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+dev/showcases/workshop/hourly.config.test.ts,99,81,99,64,e,needs DOM or imports root barrel (window at init),keep
+src/components/BatchBar/BatchBar.test.tsx,13,80,13,63,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Layout/Sidebar.test.tsx,23,80,23,85,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/StatusFlowChart/StatusFlowChart.export.test.tsx,4,80,2,28,b,export describe is type-guaranteed; factory render tests are behaviour,export block deleted; renamed createStatusFlowChart.test.tsx
+src/components/Table/TableQuickFilter.test.tsx,3,80,3,57,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/PinMarkers.test.tsx,18,79,18,109,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Layout/AutoStack.test.tsx,14,79,14,40,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SortableList/SortableList.integration.test.tsx,5,78,5,85,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/SectionTable.test.tsx,11,78,11,102,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataDisplay/NumberWithUnits.test.tsx,9,77,9,51,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/FullscreenBox/escapeWithEditor.test.tsx,1,77,1,117,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Progress/Progress.test.tsx,6,77,6,90,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Strips/PayrollStrips.test.tsx,2,77,2,110,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+scripts/adherence.test.ts,36,76,36,46,e,needs DOM or imports root barrel (window at init),keep
+src/components/BigNumberInput/BigNumberInput.test.tsx,15,76,15,56,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DnDHierarchySortBar/DnDHierarchySortBar.integration.test.tsx,5,76,5,85,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/GroupedBucketQueue/GroupedBucketQueue.identity.test.tsx,3,76,3,80,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataDisplay/StatsTable/StatsTable.test.tsx,12,76,12,50,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Badge/TagPill.test.tsx,4,75,4,22,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DistributionSparkline/DistributionSparkline.test.tsx,13,75,13,39,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/Series.test.tsx,19,73,19,132,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataDisplay/ResultPanel.test.tsx,7,73,7,45,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/name.test.tsx,6,73,6,29,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/WorkerCard/WorkerCard.layout.test.tsx,3,72,3,123,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/ChartLabels.test.tsx,1,71,1,36,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/GhostArc.test.tsx,16,71,16,54,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ThreePanelLayout/ThreePanelLayout.test.tsx,6,71,6,22,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Toast/Toast.test.tsx,6,71,6,61,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Card/Card.test.tsx,8,70,8,48,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BurndownChart/BurndownChart.test.tsx,5,69,5,60,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/MultiSelectFilter/MultiSelectFilter.test.tsx,7,68,7,44,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/EllipsisText.test.tsx,4,68,4,44,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ThreadGroup/ThreadGroup.test.tsx,5,68,5,71,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ValueMatrix/ValueMatrix.test.tsx,5,68,5,98,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Legend/Legend.test.tsx,12,67,12,61,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/TabbedSidePanel/TabbedSidePanel.test.tsx,20,67,20,88,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Alarm/AlarmStripeDefs.test.tsx,8,66,8,44,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataList/DataList.test.tsx,7,66,7,78,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/FileDropZone/FileDropZone.test.tsx,5,65,5,38,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BucketQueue/BucketQueue.headerAction.test.tsx,7,64,7,53,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/DataTableContainer.test.tsx,11,64,11,33,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Modal/Modal.test.tsx,16,63,16,79,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/StatusLight/StatusLight.test.tsx,6,63,6,31,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/WeekCalendar/WeekCalendar.test.tsx,11,63,11,56,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/VarianceStrip/VarianceStrip.test.tsx,3,61,3,50,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+scripts/export-surface.test.ts,16,60,16,48,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/DragRangeSelect.test.tsx,9,60,9,44,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ModeSplitButton/ModeSplitButton.test.tsx,4,60,4,68,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DayOfMonthPicker/DayOfMonthPicker.test.tsx,10,59,10,102,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Heatmap/Heatmap.test.tsx,11,59,11,115,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Icon/Icon.test.tsx,28,59,28,55,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartReferenceLine.test.tsx,7,59,7,87,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/TitledTimeRangeHeader/TitledTimeRangeHeader.test.tsx,5,59,5,31,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Alarm/AlarmBands.test.tsx,10,58,10,42,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DateRangePicker/TimeInputs.test.tsx,7,58,7,64,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SlotFillBar/SlotFillBar.test.tsx,7,58,7,95,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Cell/Cell.test.tsx,6,57,6,34,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/TableSectionHeader.test.tsx,17,57,17,67,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Inputs/Inputs.test.tsx,6,56,6,29,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DateAxis/DailyDateAxis.test.tsx,4,55,4,71,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/LevelsTimeline/geometry.test.ts,171,54,171,90,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/SegmentedControl/SegmentedControl.test.tsx,34,53,34,86,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/int.test.tsx,7,53,7,54,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+scripts/export-usage-report.test.ts,11,52,11,79,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Badge/ScenarioGlyph.test.tsx,5,52,5,25,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/MonthOfYearPicker/MonthOfYearPicker.test.tsx,5,52,5,30,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ProductGrid/ProductGrid.test.tsx,10,52,10,56,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/RingChart/RingChart.test.tsx,5,52,5,33,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SignedAreaChart/SignedAreaChart.test.tsx,2,52,2,49,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CashflowChart/CashflowChart.test.tsx,8,51,8,58,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/FormulaCaption/FormulaCaption.test.tsx,3,50,3,31,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/VarianceStripChart/VarianceStripChart.test.tsx,3,50,3,36,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/date-time.test.tsx,5,50,5,20,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/LabeledDivider/LabeledDivider.layout.test.tsx,2,49,2,39,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Badge/ScenarioDot.test.tsx,4,48,4,200,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BulkActionBar/BulkActionBar.test.tsx,5,48,5,43,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SprintSelector/SprintSelector.test.tsx,5,48,5,63,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/MutationFlags.test.tsx,1,46,1,22,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataDisplay/FormulaDecomposition.test.tsx,3,46,3,25,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DateRangePicker/CalendarHeader.test.tsx,7,45,7,143,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/FormComposite/FormComposite.test.tsx,6,45,6,42,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ParticipantAvatar/AssigneeIcon.test.tsx,9,45,9,32,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/hooks/createTruncationObserver.test.ts,6,44,6,43,e,needs DOM or imports root barrel (window at init),keep
+src/components/Alarm/AlarmOverlay.test.tsx,11,44,11,57,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ChartCanvas/ChartCanvas.test.tsx,5,44,5,28,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DiffPair/DiffPair.layout.test.tsx,2,44,2,65,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ParticipantNameLabel/ParticipantNameLabel.test.tsx,5,44,5,40,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SegmentedInput/SegmentedInput.test.tsx,13,44,13,56,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Surface/Surface.test.tsx,13,44,13,23,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/CellRenderers.test.tsx,15,44,15,62,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Alarm/AlarmHotZones.test.tsx,11,43,11,78,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Layout/Layout.test.tsx,29,43,29,67,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/BaseTable.fit.test.tsx,5,43,5,39,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/list.test.tsx,4,43,4,106,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/BottomSheet/BottomSheet.test.tsx,7,42,7,55,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/StackedAreaSeries.test.tsx,6,42,6,42,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DateRangePicker/calendarUtils.test.ts,27,42,27,25,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/GhostRow/GhostRow.test.tsx,4,42,4,19,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ProgressCheck/ProgressCheck.test.tsx,6,42,6,18,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/linked-count.test.tsx,6,42,6,22,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ActionListItem/ActionListItem.test.tsx,6,41,6,45,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Navigation/Navigation.test.tsx,6,41,6,18,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/themes/__tests__/contract.test.ts,270,40,270,15,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/DateRangePicker/PresetButtons.test.tsx,6,39,6,40,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Fab/Fab.test.tsx,14,39,14,30,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SvgMarks/SvgMarks.test.tsx,9,39,9,28,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ValueRenderer/ValueRenderer.test.tsx,7,39,7,65,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/float.test.tsx,9,39,9,36,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DatePicker/DatePicker.test.tsx,5,38,5,44,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/GapCell.test.tsx,4,38,4,40,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/themes/__tests__/buttonHoverContrast.test.ts,122,38,122,59,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/boundaries.test.ts,6,36,6,37,e,needs DOM or imports root barrel (window at init),keep
+src/components/Layout/AppShell.test.tsx,9,36,9,31,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ParticipantTimeLabel/ParticipantTimeLabel.test.tsx,4,36,4,19,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ProgressCard/ProgressCard.layout.test.tsx,2,36,2,80,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/internal/dom/assertModifierClass.test.ts,6,36,6,37,e,needs DOM or imports root barrel (window at init),keep
+src/components/FormComposite/FormComposite.layout.test.tsx,2,35,2,20,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ServiceHealthDot/ServiceHealthDot.test.tsx,8,35,8,37,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/combinators.test.tsx,10,35,10,37,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/money.test.tsx,4,35,4,66,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/internal/dag-svg/orthogonal-routing.test.ts,26,34,26,44,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/format/number.test.ts,9,34,9,16,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Table/fields/status.test.tsx,5,34,5,21,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/shapes.test.tsx,16,33,16,81,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Markdown/Markdown.test.tsx,9,33,9,51,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Placeholder/Placeholder.test.tsx,6,33,6,20,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrubChart/ScrubChartLabels.test.tsx,1,33,1,44,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/DeviationBandMark.test.tsx,3,32,3,20,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/MutationSliders/readouts.test.ts,3,32,3,17,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/RecentStarred/RecentStarred.test.tsx,8,32,8,33,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/internal/format/money.test.ts,5,32,5,15,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/BucketQueue/density.test.tsx,3,31,3,38,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DragDrop/QuadrantGrid.test.tsx,4,31,4,70,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/LevelsTimeline/flatTicks.test.ts,2,31,2,26,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/SlotTrack.test.tsx,4,30,4,37,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/CollapsiblePanel/CollapsiblePanel.test.tsx,6,30,6,23,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/FormulaCaption/formula.test.ts,3,30,3,32,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ResizableContainer/ResizableContainer.test.tsx,6,30,6,94,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/date.test.tsx,3,30,3,29,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Toggle/Toggle.test.tsx,5,29,5,41,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/internal/dag-svg/edge-routing.test.ts,16,29,16,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Badge/workflowBadges.test.tsx,3,28,3,26,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ButtonGroup/ButtonGroup.test.tsx,5,28,5,24,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/enum.test.tsx,10,28,10,32,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/lineStep.test.tsx,3,27,3,23,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/FocusLabelBand/FocusLabelBand.test.tsx,5,27,5,29,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/duration.test.tsx,4,27,4,20,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/text.test.tsx,8,27,8,31,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/EntityCard/EntityCard.test.tsx,7,26,7,28,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/HotkeyButton/HotkeyButton.test.tsx,8,26,8,68,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Page/Page.test.tsx,4,26,4,14,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ProductGridCard/ProductGridCard.layout.test.tsx,3,26,3,33,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/TreeTable/flattenTree.test.ts,10,26,10,9,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Dot/Dot.test.tsx,3,25,3,43,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/HeightReveal/HeightReveal.test.tsx,8,25,8,62,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Layout/Grid.test.tsx,13,25,13,36,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataDisplay/DateTimeRange.test.tsx,6,24,6,21,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/HeartbeatSparkline/HeartbeatSparkline.test.tsx,5,24,5,29,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ScrollRegion/ScrollRegion.test.tsx,8,24,8,60,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/ActionRow/ActionRow.layout.test.tsx,3,23,3,31,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/LiveHeartbeatTrace/LiveHeartbeatTrace.test.tsx,5,23,5,30,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Sparkline/Sparkline.test.tsx,6,23,6,30,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/aggregate.test.tsx,4,23,4,23,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Table/fields/identity-link.test.tsx,6,23,6,81,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+dev/showcases/workshop-layout.test.ts,25,22,25,13,e,needs DOM or imports root barrel (window at init),keep
+src/components/Chart/stackedArea.test.ts,18,22,18,9,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ChartHeader/ChartHeader.test.tsx,3,22,3,38,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DataDisplay/MetricCard.test.tsx,9,22,9,64,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/internal/geometry/hCurve.test.ts,3,22,3,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/PointCaptions.test.tsx,1,21,1,34,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/GroupBracket/GroupBracket.test.tsx,6,21,6,32,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Kbd/Kbd.test.tsx,5,21,5,25,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/List/List.test.tsx,6,21,6,23,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/test-utils/domStructure.test.tsx,4,20,4,26,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/SlideReveal/SlideReveal.test.tsx,3,20,3,36,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Strips/values.test.ts,11,20,11,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/TruthIndicator/TruthIndicator.test.tsx,6,20,6,45,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/internal/fieldWidth/fieldWidth.test.ts,12,20,12,19,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/testing/jsdomNaNDeclarationShim.test.ts,8,19,8,12,e,needs DOM or imports root barrel (window at init),keep
+src/components/AssigneeChips/AssigneeChips.layout.test.tsx,3,19,3,20,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Badge/CountBadge.test.tsx,2,19,2,28,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Divider/Divider.test.tsx,4,18,4,37,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+dev/workshop-benches.test.ts,5,17,5,11,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/CodeBlock/CodeBlock.test.tsx,4,16,4,12,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Badge/CountChip.test.tsx,4,15,4,15,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DirtyComboBox/dirtyComboModel.test.ts,21,15,21,13,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/MarkedSlider/geometry.test.ts,90,14,90,18,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ParticipantAvatar/initials.test.ts,15,14,15,9,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/TrendSparkline/TrendSparkline.test.tsx,6,14,6,53,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Chart/scales.test.ts,9,13,9,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Combobox/comboboxCreateRow.test.ts,7,13,7,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/MutationSliders/rows.test.ts,37,13,37,15,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ScrubChart/yScaleMode.test.ts,25,13,25,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/BuilderBoard/belowChart.test.ts,5,12,5,10,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/BuilderBoard/geometry.test.ts,10,12,10,13,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/GroupedMutationSliders/groups.test.ts,23,12,23,8,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/InlineText/InlineText.test.tsx,4,12,4,8,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Layout/IndentRail.test.tsx,5,12,5,18,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Tabs/Tabs.test.tsx,4,12,4,27,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/Text/Text.test.tsx,6,12,6,14,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/internal/animation/trajectories.test.ts,49,12,49,31,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+dev/showcases/workshop/rth-receivables.model.test.ts,7,12,7,7,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/themes/__tests__/contrast.test.ts,156,12,156,14,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/hooks/createYAxisStrategy.test.ts,7,11,7,22,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Section/StickyGroupHeader.test.tsx,3,11,3,23,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+dev/showcases/workshop/progress-flags.model.test.ts,22,11,22,12,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+scripts/release.test.ts,28,10,28,6,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/labelPlacement.test.ts,55,10,55,16,e,needs DOM or imports root barrel (window at init),keep
+dev/showcases/workshop/contract-builder-model.test.ts,17,10,17,10,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/fn/findIndex.test.ts,8,9,7,5,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/components/BandRail/bands.test.ts,33,9,33,6,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/HotkeyButton/hotkeyFires.test.ts,2,9,2,3,e,needs DOM or imports root barrel (window at init),keep
+src/components/StackedTimelineChart/layout.test.ts,3,9,3,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Table/fields/resolve.test.tsx,4,9,4,6,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+scripts/build-config.test.ts,14,8,14,7,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/test-utils/svgPath.test.ts,15,8,15,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/WorkProgressCard/cardProgress.test.ts,19,8,19,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/geometry/labelLayout.test.ts,24,8,24,7,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+scripts/render-coverage.test.ts,28,7,28,6,e,needs DOM or imports root barrel (window at init),keep
+src/components/Badge/tagPairs.test.ts,9,7,9,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Duration/Duration.test.tsx,6,7,6,7,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/MutationSliders/links.test.ts,5,7,5,7,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ScrubChart/yDomainTween.test.ts,27,7,27,10,e,needs DOM or imports root barrel (window at init),keep
+src/components/StatusFlowChart/columns.test.ts,19,7,19,7,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Surface/SplitCard.test.tsx,1,7,1,7,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/hooks/createAxisWaterMarks.test.ts,6,6,6,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/hooks/createDnDReorder.test.ts,23,6,23,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+dev/showcases/animation-breakpoints.test.ts,13,6,13,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/deviationBand.test.ts,6,6,6,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/DistributionSparkline/domain.test.ts,12,6,12,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/MutationSliders/items.test.ts,2,6,2,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/SvgMarks/geometry.test.ts,12,6,12,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+dev/showcases/workshop/hourly-board-money.test.ts,10,6,10,3,e,needs DOM or imports root barrel (window at init),keep
+dev/showcases/workshop/board-kit/lens.test.ts,15,6,15,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+scripts/execution-coverage.test.ts,8,5,8,4,e,needs DOM or imports root barrel (window at init),keep
+src/components/ActionList/selection.test.ts,13,5,13,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/BandRail/helpers.test.ts,35,5,35,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/BucketQueue/bucketing.test.ts,5,5,5,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/BucketQueue/transfer.test.ts,8,5,8,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ChannelChart/channelGeometry.test.ts,14,5,14,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/DateAxis/DateAxis.export.test.tsx,3,5,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/components/LevelsTimeline/rekey.test.ts,1,5,1,10,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/NotificationCenter/actions.test.ts,4,5,4,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/OverflowNav/fold.test.ts,1,5,1,10,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Strips/payroll.test.ts,6,5,6,6,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/SwimlaneChart/converter.test.ts,13,5,13,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/SwimlaneChart/layout.test.ts,15,5,15,7,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/TreeDiffChart/route.test.ts,11,5,11,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/dom/observeSize.test.ts,9,5,9,3,e,needs DOM or imports root barrel (window at init),keep
+dev/showcases/workshop/board-kit/model.test.ts,19,5,19,6,e,needs DOM or imports root barrel (window at init),keep
+scripts/bundle-budget-rules.test.ts,10,4,10,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+scripts/workshop-lib.test.ts,8,4,8,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Alarm/alarm.test.ts,14,4,14,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/fn/flatMap.test.ts,7,4,6,2,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/components/BucketQueue/layout.test.ts,28,4,28,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/BucketQueue/styling.test.ts,9,4,9,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/CensusView/censusModel.test.ts,4,4,4,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/gutterPacking.test.ts,9,4,9,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/labelPairing.test.ts,2,4,2,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/spanLanesGeometry.test.ts,9,4,9,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Duration/formatCompactRange.test.ts,11,4,11,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/GroupedMutationSliders/barrel.test.ts,5,4,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/components/MutationSliders/typed.test.ts,3,4,3,6,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/RateGauge/barrel.test.ts,2,4,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/components/Strips/growth.test.ts,10,4,10,6,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/TargetBarChart/targetBarGeometry.test.ts,12,4,12,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/TreeDiffChart/barrel.test.ts,4,4,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/components/TreeDiffChart/kinds.test.ts,8,4,8,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/TreeDiffChart/layout.test.ts,19,4,19,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/pointer/safeSetPointerCapture.test.ts,6,4,6,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/hooks/createHighWaterMark.test.ts,6,3,6,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/fn/every.test.ts,8,3,7,2,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/filter.test.ts,7,3,6,2,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/find.test.ts,9,3,8,2,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/mean.test.ts,3,3,3,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/fn/sortBy.test.ts,10,3,9,3,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/components/AnimatedSwimlaneChart/lanes.test.ts,4,3,4,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/CashflowScrubChart/yDomain.test.ts,9,3,9,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/crosshairMark.test.ts,6,3,6,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Combobox/Combobox.test.tsx,11,3,11,3,e,render behaviour / DOM contract (mounting tests also feed componentsNeverRendered ratchet),keep
+src/components/DateAxis/cells.test.ts,8,3,8,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/GroupedBucketQueue/groupTree.test.ts,11,3,11,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/MathFormula/latexSegments.test.ts,10,3,10,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/PairedMutationSliders/pairs.test.ts,11,3,11,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ScrubChart/createScrubChartEmphasis.test.ts,4,3,4,1,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ScrubChart/emphasis.test.ts,9,3,9,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/SignedAreaChart/signedArea.test.ts,10,3,10,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/StackedTimelineChart/barrel.test.ts,10,3,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/components/SwimlaneChart/helpers.test.ts,19,3,19,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/TreeTable/treeSelection.test.ts,11,3,11,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/geometry/insetSpan.test.ts,5,3,5,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+dev/showcases/workshop/board-kit/money.test.ts,5,3,5,2,e,needs DOM or imports root barrel (window at init),keep
+src/fn/findLast.test.ts,9,2,8,5,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/groupBy.test.ts,7,2,6,3,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/length.test.ts,4,2,3,1,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/lengthOf.test.ts,6,2,5,2,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/map.test.ts,6,2,5,2,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/prop.test.ts,5,2,4,1,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/some.test.ts,8,2,7,6,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/sum.test.ts,3,2,3,1,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/BucketQueue/collapse.test.ts,8,2,8,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/BucketQueue/selection.test.ts,10,2,10,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/ChannelChart/barrel.test.ts,7,2,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/components/Chart/areaBand.test.ts,5,2,5,1,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/gapBracketGeometry.test.ts,3,2,3,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/labelBoxes.test.ts,18,2,18,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/referenceLine.test.ts,6,2,6,1,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/Chart/tooltipPlacement.test.ts,10,2,10,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/DataDisplay/formatDateTimeRange.test.ts,6,2,6,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/components/MarkedSlider/barrel.test.ts,4,2,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/components/PairedMutationSliders/barrel.test.ts,5,2,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/components/SwimlaneChart/geometry.test.ts,3,2,3,1,e,needs DOM or imports root barrel (window at init),keep
+src/components/TreeDiffChart/highlight.test.ts,7,2,7,7,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/animation/breakpoints.test.ts,4,2,4,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/math/clamp.test.ts,6,2,6,3,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/progress/engine.test.ts,8,2,8,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/progress/estimator.test.ts,7,2,7,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/themes/__tests__/manifest.test.ts,3,2,3,2,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/unstable.test.ts,4,1,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/fn/join.test.ts,6,1,5,1,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/pipe.test.ts,8,1,7,1,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/fn/pluck.test.ts,5,1,4,3,b+c,one it() per file wrapped a @ts-expect-error with no runtime assertion; rest is curry behaviour,type check moved to module level; env=node
+src/components/NotificationCenter/NotificationCenter.export.test.tsx,2,1,0,0,b,asserts root-export existence/absence; tsc proves it,deleted; src/root-exports.contract.ts
+src/components/VarianceStrip/varianceStripGeometry.test.ts,4,1,4,5,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)
+src/internal/geometry/hoverPanelHeight.test.ts,5,1,5,4,c,pure-function suite that never touches the DOM,env=node (// @vitest-environment node)

@@ -1,3 +1,4 @@
+// @vitest-environment node
 // The y-axis strategy, read headless: every scripted run prints as a table
 // (the observation), and the reactive wrapper is driven over the REAL
 // `createAxisWaterMarks`.

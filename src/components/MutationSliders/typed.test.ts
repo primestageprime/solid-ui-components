@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // MutationSliders typed amounts — the headless observation.
 //

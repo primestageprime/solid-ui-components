@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { prop } from "./prop";
 
@@ -24,11 +25,9 @@ describe("prop — direct form", () => {
     const obj = { id: "a", n: 1 };
     expect(prop("id", obj)).toBe(prop("id")(obj));
   });
-
-  it("rejects a key that is not on the object at compile time", () => {
-    const reversed = () =>
-      // @ts-expect-error "missing" is not a key of the object.
-      prop("missing", { id: 7 });
-    expect(typeof reversed).toBe("function"); // never invoked; type-only check
-  });
 });
+
+// Type-level: rejects a key that is not on the object. Checked by tsc, never run.
+const _reversed = () =>
+  // @ts-expect-error "missing" is not a key of the object.
+  prop("missing", { id: 7 });

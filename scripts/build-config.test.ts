@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // Build-config guard — the tree-shaking pair
 // ============================================

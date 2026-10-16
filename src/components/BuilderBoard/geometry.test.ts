@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // BuilderBoard geometry — the headless observation.
 //

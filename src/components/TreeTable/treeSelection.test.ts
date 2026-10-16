@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * TreeTable checkbox selection. The selection holds LEAF ids only; a parent's
  * box is derived from its leaves, so a parent can never disagree with them.

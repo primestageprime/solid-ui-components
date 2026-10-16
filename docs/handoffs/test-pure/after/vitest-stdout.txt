@@ -1,0 +1,1 @@
+JSON report written to /Users/peter/Documents/clients/PrimeStage/platform/solid-ui-components/.claude/worktrees/test-pure/docs/handoffs/test-pure/after/vitest.json

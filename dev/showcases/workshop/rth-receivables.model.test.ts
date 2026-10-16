@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * RTH receivables — the expectation model, observed headlessly. Each preset
  * prints its series and per-invoice table, so the numbers can be checked

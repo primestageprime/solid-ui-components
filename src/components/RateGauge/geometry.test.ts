@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // RateGauge geometry — the headless observation.
 //
