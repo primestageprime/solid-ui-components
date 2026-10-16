@@ -132,16 +132,23 @@ export interface FloatCellProps
   locale?: string;
 }
 
+/** The exact text FloatCell paints for a value, or null for a blank. Pure —
+ *  the column helpers measure it to size a column to its data. */
+export function formatFloatValue(
+  value: number | null | undefined,
+  precision = 2,
+  locale = "en-US",
+): string | null {
+  if (value == null) return null;
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: precision,
+    maximumFractionDigits: precision,
+  }).format(value);
+}
+
 export const FloatCell: Component<FloatCellProps> = (props) => {
-  const formatted = () => {
-    if (props.value == null) return null;
-    const precision = props.precision ?? 2;
-    const locale = props.locale || "en-US";
-    return new Intl.NumberFormat(locale, {
-      minimumFractionDigits: precision,
-      maximumFractionDigits: precision,
-    }).format(props.value);
-  };
+  const formatted = () =>
+    formatFloatValue(props.value, props.precision ?? 2, props.locale);
 
   return (
     <Show
@@ -161,14 +168,20 @@ export interface IntCellProps
   locale?: string;
 }
 
+/** The exact text IntCell paints for a value, or null for a blank. Pure —
+ *  the column helpers measure it to size a column to its data. */
+export function formatIntValue(
+  value: number | null | undefined,
+  locale = "en-US",
+): string | null {
+  if (value == null) return null;
+  return new Intl.NumberFormat(locale, {
+    maximumFractionDigits: 0,
+  }).format(Math.round(value));
+}
+
 export const IntCell: Component<IntCellProps> = (props) => {
-  const formatted = () => {
-    if (props.value == null) return null;
-    const locale = props.locale || "en-US";
-    return new Intl.NumberFormat(locale, {
-      maximumFractionDigits: 0,
-    }).format(Math.round(props.value));
-  };
+  const formatted = () => formatIntValue(props.value, props.locale);
 
   return (
     <Show

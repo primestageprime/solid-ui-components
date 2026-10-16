@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- **Column helpers size to the data.** `dateTimeCol`, `dateCol`, `intCol`, `floatCol`, `textCol` and the new `statusCol` take `data` (the rows) or `values` and set the column width to the longest *rendered* value in `ch`, floored at the header, plus cell padding. `dateTimeCol` takes `precision: "minute"` (`YYYY-MM-DD HH:mm`) and both date helpers size from their pattern with no sample, so a date never wraps. Every helper now sets `sortValue` to the raw field (a `sortable` helper column used to sort its JSX) and passes `group`, `ellipsis`, `contained` and `align` through. `columnCh` / `widthForValues` export the sizing rule. Pure formatters `formatDateValue`, `formatIntValue`, `formatFloatValue` and the pattern constants are exported from the cell modules.
+- **Health metric `bareAccessorColumns`** fails on a `TableColumn` literal with a string `accessor` and no renderer under `dev/` or `src/`; `BaseTable` warns once per column in dev mode when a bare-accessor cell paints an ISO date/time.
+
+### Changed
+
+- **Int and float cells are `white-space: nowrap`**, like the date cells. A number never breaks onto two lines.
+- **Every gallery table uses a column helper or an explicit renderer** — 57 bare-accessor columns across 10 showcases converted; the FTIR/SCR grouped-header demo's Hour column is a minute-precision `dateTimeCol` sized to its data.
+
 ## 0.222.0 — 2026-10-16
 
 ### Added
