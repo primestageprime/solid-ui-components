@@ -1,0 +1,92 @@
+/* THROWAWAY evidence overlay for the theme-density audit. NOT part of src/.
+   Injected into the dev gallery AFTER the theme (see shoot.mjs). It encodes the
+   PROPOSED dense defaults: first as tokens on :root, then as the component rules
+   that would have to consume them. Every rule below the token block is a rule
+   that today hard-codes a px value and would move to var(--sui-dense-*, <old px>). */
+:root {
+  --sui-dense-section-gap: 0px;
+  --sui-dense-item-gap: 0px;
+  --sui-dense-item-radius: 0px;
+  --sui-dense-header-h: 28px;
+  --sui-dense-row-pad-y: 4px;
+  --sui-dense-row-pad-x: 12px;
+  --sui-dense-select-bar: 4px;
+  --sui-dense-panel-pad: 12px;
+  --sui-dense-panel-pad-sm: 6px 8px;
+  --sui-dense-cell-pad: 6px 12px;
+  --sui-dense-head-cell-pad: 8px 12px;
+  --sui-dense-modal-head-pad: 10px 16px;
+  --sui-dense-modal-body-pad: 16px;
+  --sui-dense-topbar-h: 32px;
+  --sui-dense-aside-pad: 0px;
+}
+
+/* ---- BucketQueue (BucketQueue.css:9,17-18,27,71,99; JS GAP / BORDERS NOT reachable) ---- */
+.bucket-queue { gap: var(--sui-dense-section-gap); }
+.bucket-queue__bucket {
+  border-width: 1px 0;            /* flush: no side borders, no radius */
+  border-radius: var(--sui-dense-item-radius);
+}
+.bucket-queue__bucket + .bucket-queue__bucket { margin-top: -1px; } /* one shared divider */
+.bucket-queue__header {
+  box-sizing: border-box;
+  min-height: var(--sui-dense-header-h); /* min-height, NOT height: a fixed 28px clipped the wrapped "CHECK THE DRIFT" title in the first capture */
+  padding: var(--sui-dense-row-pad-y) var(--sui-dense-row-pad-x);
+  align-items: center;
+}
+/* CountChip approximation (the real change swaps the <span> for CountChip in BucketHeader.tsx) */
+.bucket-queue__count {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sui-text-muted) 22%, transparent);
+  font-size: 0.75rem;
+  line-height: 16px;
+}
+.bucket-queue__row { padding: var(--sui-dense-row-pad-y) var(--sui-dense-row-pad-x); }
+.bucket-queue__row--selected { box-shadow: inset var(--sui-dense-select-bar) 0 0 var(--sui-accent); }
+
+/* ---- ActionList / ActionListItem / SortableList (ActionListItem.css:18-25,57-61; SortableList.css:19) ---- */
+.sui-sortable-list.sui-sortable-list { gap: var(--sui-dense-item-gap); }
+.sui-action-list-item {
+  min-height: 32px;
+  padding: var(--sui-dense-row-pad-y) var(--sui-dense-row-pad-x);
+  border-radius: var(--sui-dense-item-radius);
+  border-width: 0 0 1px;
+  border-bottom-color: var(--sui-border);
+}
+.sui-action-list-item--selected,
+.sui-action-list-item--selected:hover {
+  border-bottom-color: var(--sui-border);
+  box-shadow: inset var(--sui-dense-select-bar) 0 0 var(--sui-accent);
+}
+.sui-action-list-item__dismiss {
+  margin: calc(-1 * var(--sui-dense-row-pad-y)) calc(-1 * var(--sui-dense-row-pad-x)) calc(-1 * var(--sui-dense-row-pad-y)) 0;
+}
+.sui-sortable-list .sui-sortable-list__row { border-radius: var(--sui-dense-item-radius); }
+
+/* ---- CollapsiblePanel (CollapsiblePanel.css:28,56-57): almost nothing to change ---- */
+.sui-collapsible-panel__tab { margin: 2px 4px; border-radius: var(--sui-dense-item-radius); }
+.sui-collapsible-panel__strip { gap: 4px; padding: 4px 0; }
+
+/* ---- ThreePanelLayout (ThreePanelLayout.css:28-30,55-58,63-68,76-79) ---- */
+.sui-three-panel__top-bar { height: var(--sui-dense-topbar-h); padding: 0 var(--sui-dense-panel-pad); gap: 8px; }
+.sui-three-panel__left, .sui-three-panel__right { padding: var(--sui-dense-aside-pad); gap: var(--sui-dense-section-gap); }
+.sui-three-panel__center { padding: var(--sui-dense-panel-pad); gap: var(--sui-dense-panel-pad); }
+
+/* ---- Modal (Modal.css:56,95,108) ---- */
+.sui-modal__header { padding: var(--sui-dense-modal-head-pad); }
+.sui-modal__body { padding: var(--sui-dense-modal-body-pad); }
+.sui-modal__footer { padding: var(--sui-dense-modal-head-pad); gap: 8px; }
+.sui-modal__close { width: 28px; height: 28px; }
+
+/* ---- Table (Table.css:103,169; "compact" values become the default) ---- */
+.hud-table__header-cell { padding: var(--sui-dense-head-cell-pad); }
+.hud-table__cell { padding: var(--sui-dense-cell-pad); }
+
+/* ---- Panel / Section / List / Surface (not screenshotted; measured only) ---- */
+.sui-panel, .sui-panel--md { padding: var(--sui-dense-panel-pad); }
+.sui-panel--sm { padding: var(--sui-dense-panel-pad-sm); }
+.sui-section__header { padding: 6px 12px; }
+.sui-list-item { padding: 6px 0; }
+.sui-list-item--interactive { padding: 6px 12px; }
+.surface--padding-md { padding: var(--sui-dense-panel-pad); }

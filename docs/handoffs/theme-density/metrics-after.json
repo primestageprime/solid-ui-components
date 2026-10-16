@@ -1,0 +1,117 @@
+{
+  "BucketQueue": {
+    ".bucket-queue": {
+      "height": 460,
+      "rowGap": "0px"
+    },
+    ".bucket-queue__bucket": {
+      "height": 84,
+      "borderTopWidth": "1px",
+      "borderLeftWidth": "0px",
+      "borderTopLeftRadius": "0px",
+      "marginTop": "0px"
+    },
+    ".bucket-queue__header": {
+      "height": 28,
+      "paddingTop": "4px",
+      "paddingLeft": "12px"
+    },
+    ".bucket-queue__row": {
+      "height": 27,
+      "paddingTop": "4px",
+      "paddingLeft": "12px",
+      "borderTopWidth": "1px"
+    }
+  },
+  "CompactBucketQueue": {
+    ".bucket-queue--compact": {
+      "height": 360,
+      "rowGap": "0px"
+    },
+    ".bucket-queue--compact .bucket-queue__bucket": {
+      "height": 72,
+      "borderTopWidth": "1px",
+      "borderLeftWidth": "0px",
+      "borderTopLeftRadius": "0px",
+      "marginTop": "0px"
+    },
+    ".bucket-queue--compact .bucket-queue__header": {
+      "height": 28,
+      "paddingTop": "3px",
+      "paddingLeft": "8px"
+    },
+    ".bucket-queue--compact .bucket-queue__row": {
+      "height": 21,
+      "paddingTop": "2px",
+      "paddingLeft": "8px",
+      "borderTopWidth": "1px"
+    }
+  },
+  "ActionList": {
+    ".sui-sortable-list": {
+      "height": 238,
+      "rowGap": "0px"
+    },
+    ".sui-action-list-item": {
+      "height": 32,
+      "paddingTop": "4px",
+      "paddingLeft": "12px",
+      "borderTopLeftRadius": "0px",
+      "borderBottomWidth": "1px"
+    }
+  },
+  "GroupedBucketQueue": {
+    ".bucket-queue__header": {
+      "height": 28,
+      "paddingTop": "4px",
+      "paddingLeft": "12px"
+    },
+    ".bucket-queue__row": {
+      "height": 27,
+      "paddingTop": "4px",
+      "paddingLeft": "60px",
+      "borderTopWidth": "1px"
+    }
+  },
+  "CollapsiblePanel": {},
+  "ThreePanelLayout": {
+    ".sui-three-panel__top-bar": {
+      "height": 32,
+      "paddingLeft": "12px",
+      "rowGap": "8px"
+    },
+    ".sui-three-panel__left": {
+      "height": 286,
+      "paddingTop": "0px",
+      "rowGap": "0px"
+    },
+    ".sui-three-panel__center": {
+      "height": 286,
+      "paddingTop": "12px",
+      "rowGap": "12px"
+    }
+  },
+  "Modal": {
+    ".sui-modal__header": {
+      "height": 54,
+      "paddingTop": "10px",
+      "paddingLeft": "16px"
+    },
+    ".sui-modal__body": {
+      "height": 50,
+      "paddingTop": "16px"
+    }
+  },
+  "DataTable": {
+    ".hud-table__header-cell": {
+      "height": 29.5,
+      "paddingTop": "8px",
+      "paddingLeft": "12px"
+    },
+    ".hud-table__cell": {
+      "height": 29,
+      "paddingTop": "6px",
+      "paddingLeft": "12px"
+    }
+  }
+}
