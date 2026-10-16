@@ -2823,3 +2823,12 @@ th:has(.tf-th-center) .hud-table__header-content {
   flex-direction: column;
   gap: 8px;
 }
+
+/* SearchInput showcase demo frame. */
+.search-input-demo {
+  max-width: 320px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

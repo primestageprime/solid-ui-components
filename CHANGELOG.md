@@ -4,6 +4,8 @@
 
 ### Added
 
+- **`SearchInput`** — a Depth 2 composite: a 32px search box with the search glyph at the left and a clear cross that shows while there is text. Controlled by `value`; `onClear` empties it and keeps focus in the box. Built on the new Depth 1 `SearchField`, which takes both glyphs as slots.
+
 - **`ClampedText`** — a Depth 1 primitive: body text whose height follows its content between 1 and 6 lines, then scrolls inside. Line counts ride CSS variables read in `lh` units. `createClampedText({ lines })` makes another range; pure `clampLines` cleans one.
 
 - **`StampedRow`** and **`PinnedStampedRow`** — a Depth 2 composite: one timestamped line with a 16px glyph, a label that takes the width and ellipsizes, and a mono `HH:mm` at the right. `kind` (`done`, `active`, `note`, `started`, `completed`) picks the glyph, or pass `icon`. `StampedRow` is the 22px list line, `PinnedStampedRow` the 40px bar. Pure `stampGlyph` and `formatStampTime` carry the logic. Adds the Layout variants `CompactLineRow` and `BarLineRow`.

@@ -204,6 +204,7 @@ import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
+import { SearchInputShowcase } from "./showcases/search-input";
 import { ClampedTextShowcase } from "./showcases/clamped-text";
 import { StampedRowShowcase } from "./showcases/stamped-row";
 import { PinnedFillColumnShowcase } from "./showcases/pinned-fill-column";
@@ -1306,6 +1307,12 @@ const items: Item[] = [
     label: "ClampedText",
     component: ClampedTextShowcase,
     tags: ["depth:1"],
+  },
+  {
+    id: "search-input",
+    label: "SearchInput",
+    component: SearchInputShowcase,
+    tags: ["depth:2"],
   },
   // Generated component entries (npm run new:component) — appended above this line.
   {
