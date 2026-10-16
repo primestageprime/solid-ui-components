@@ -1157,7 +1157,7 @@
     "showcase": "#/bucket-queue",
     "since": "0.111.0",
     "file": "src/components/BucketQueue/BucketQueue.tsx",
-    "line": 49
+    "line": 51
   },
   {
     "name": "BuilderBoard",
@@ -8891,7 +8891,7 @@
     "showcase": "#/grouped-bucket-queue",
     "since": "0.201.0",
     "file": "src/components/GroupedBucketQueue/GroupedBucketQueue.tsx",
-    "line": 60
+    "line": 61
   },
   {
     "name": "GroupedMutationSliders",
