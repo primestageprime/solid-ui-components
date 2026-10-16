@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.222.0 — 2026-10-16
+
 ### Added
 
 - **`CompactBucketQueue`** and **`BucketQueue` `density`** (`"comfortable"` | `"compact"`). Compact sets 11px headers, 20px rows, 12px text and a 4px gap between buckets, for a narrow side pane. Rows must share one height: use `SmallStatusLight` for a status, not a badge.

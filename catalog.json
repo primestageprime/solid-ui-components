@@ -2424,7 +2424,7 @@
     "useFor": null,
     "notes": "BucketQueue for a narrow side pane: 11px headers, 20px rows (2px x 8px padding, 16px line), 12px text and a 4px gap between buckets. Pair its rows with `CompactLabel` (and `TextSublabel` for a muted row).",
     "showcase": "#/bucket-queue",
-    "since": "Unreleased",
+    "since": "0.222.0",
     "file": "src/components/BucketQueue/variants.tsx",
     "line": 10
   },
@@ -2585,7 +2585,7 @@
     "useFor": "a row name in a dense list, such as `CompactBucketQueue`. `TextLabel` is 16px bold, too big for a narrow pane.",
     "notes": "A row name in a dense list (CompactBucketQueue): the label colour at 12px, weight 500, on a 16px line. TextLabel is 16px bold, too big for a narrow pane. For a muted row, use TextSublabel (12px, muted).",
     "showcase": "#/text",
-    "since": "Unreleased",
+    "since": "0.222.0",
     "file": "src/components/Text/variants.ts",
     "line": 18
   },
@@ -14790,7 +14790,7 @@
     "useFor": null,
     "notes": "Small status dot — for dense rows / inline indicators.",
     "showcase": "#/status-light",
-    "since": "Unreleased",
+    "since": "0.222.0",
     "file": "src/components/StatusLight/variants.ts",
     "line": 10
   },
