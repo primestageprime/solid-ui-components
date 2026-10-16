@@ -1,0 +1,71 @@
+/* ============================================
+   SearchField — Atomic Primitive (Depth 1). The chrome of a search box: one
+   32px bordered row — leading glyph, bare text input, clear button — with the
+   focus ring on the whole row. Colours are theme tokens. The input is bare
+   (no border or background of its own) so the row reads as one field.
+   ============================================ */
+
+.sui-search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.6));
+  border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
+  border-radius: var(--sui-radius-sm, 6px);
+  color: var(--sui-text-primary);
+  transition: border-color 0.15s ease;
+}
+
+.sui-search-field:focus-within {
+  border-color: var(--sui-border-focus, var(--sui-accent));
+}
+
+.sui-search-field__leading,
+.sui-search-field__clear {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--sui-text-muted);
+}
+
+.sui-search-field__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-family: var(--sui-font-family, system-ui, sans-serif);
+  font-size: 0.875rem;
+  /* Drop the browser's own clear cross and rounded search styling. */
+  appearance: none;
+}
+
+.sui-search-field__input::-webkit-search-cancel-button,
+.sui-search-field__input::-webkit-search-decoration {
+  appearance: none;
+  display: none;
+}
+
+.sui-search-field__input::placeholder {
+  color: var(--sui-text-muted);
+}
+
+.sui-search-field__clear {
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.sui-search-field__clear:hover,
+.sui-search-field__clear:focus-visible {
+  color: var(--sui-text-primary);
+}

@@ -77,6 +77,31 @@ export type {
   YAxisStep,
   YAxisStrategy,
 } from "./createYAxisStrategy";
+// Keyboard shortcuts from a table of { action, keys, scope }: one capture-phase
+// window listener (`useHotkeys` / `createHotkeyScope`) around a pure dispatcher
+// (`dispatchHotkey`) that ignores editable targets, lets a modal scope block the
+// rest, and reads chords like "g t". `traceHotkeys` prints a key sequence as a table.
+export {
+  createHotkeyScope,
+  useHotkeys,
+} from "./createHotkeyScope";
+export type { HotkeyScopeOptions } from "./createHotkeyScope";
+export {
+  DEFAULT_CHORD_WINDOW_MS,
+  IDLE_CHORD,
+  activeEntries,
+  dispatchHotkey,
+  traceHotkeys,
+} from "./hotkeyDispatch";
+export type {
+  ChordState,
+  DispatchInput,
+  HotkeyEntry,
+  HotkeyOutcome,
+  HotkeyScope,
+  TracePress,
+  TraceRow,
+} from "./hotkeyDispatch";
 // A click that sends work once: pending (spinner + disabled) while the work
 // runs, and optionally spent after it. Button's `action` prop reads it.
 export { createSubmitAction, nextPaint } from "./createSubmitAction";

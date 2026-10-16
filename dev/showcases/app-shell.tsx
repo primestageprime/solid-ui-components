@@ -1,4 +1,4 @@
-import type { Component } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import {
   AppShell,
   AppHeader,
@@ -21,6 +21,7 @@ import {
 import { Button } from "../../src/components/Button/Button";
 import { Icon } from "../../src/components/Icon";
 import { CollapsiblePanel } from "../../src/components/CollapsiblePanel";
+import { SmallOutlinedButton } from "../../src/components/Button";
 import "./app-shell.css";
 
 // Compact inline header — this showcase demonstrates the inline + sm
@@ -51,6 +52,52 @@ const CONTEXT_ROWS = [
   "Threshold 70 kW",
   "Last review 2026-07-21",
 ];
+
+// CollapsiblePanel, controlled: the caller owns `open`, so a button (or a hotkey)
+// outside the panel can fold it, and the panel's own tab asks via onToggle.
+const ControlledCollapsibleDemo: Component = () => {
+  const [open, setOpen] = createSignal(true);
+  return (
+    <div class="example-group">
+      <h3>CollapsiblePanel — controlled (open / onToggle)</h3>
+      <p class="text-meta">
+        Pass <code>open</code> and <code>onToggle</code> and the caller owns
+        the state: the button below folds the panel from outside, and the
+        panel&apos;s own tab and strip report the state they ask for through{" "}
+        <code>onToggle</code>. <code>persistKey</code> is ignored here, because
+        the caller decides what to remember.
+      </p>
+      <Row gap="sm">
+        <SmallOutlinedButton onClick={() => setOpen(!open())}>
+          {open() ? "Collapse from outside" : "Expand from outside"}
+        </SmallOutlinedButton>
+        <TextSublabel>{`open = ${open()}`}</TextSublabel>
+      </Row>
+      <div class="app-shell-demo__frame">
+        <AppShell class="app-shell-demo__fill">
+          <AppMain>
+            <PaneRow>
+              <CollapsiblePanel
+                side="left"
+                label="Assets"
+                open={open()}
+                onToggle={setOpen}
+                class="collapsible-demo__panel"
+              >
+                <ScrollYBox class="collapsible-demo__body">
+                  <TextLabel>Controlled panel</TextLabel>
+                </ScrollYBox>
+              </CollapsiblePanel>
+              <GrowColumn class="collapsible-demo__center">
+                <TextBody>The work area takes the space back when the panel folds.</TextBody>
+              </GrowColumn>
+            </PaneRow>
+          </AppMain>
+        </AppShell>
+      </div>
+    </div>
+  );
+};
 
 export const AppShellShowcase: Component = () => (
   <div class="component-section">
@@ -184,5 +231,7 @@ export const AppShellShowcase: Component = () => (
         </AppShell>
       </div>
     </div>
+
+    <ControlledCollapsibleDemo />
   </div>
 );

@@ -1,5 +1,7 @@
 import type { Component } from "solid-js";
-import { ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
+import { FillTextArea, ThemedInput, ThemedTextarea } from "../../src/components/Inputs";
+import { FillColumn } from "../../src/components/Layout";
+import { TextSublabel } from "../../src/components/Text";
 import { ConstrainedBox, NarrowStack } from "../../src/components/Layout";
 
 export const InputsShowcase: Component = () => {
@@ -36,6 +38,16 @@ export const InputsShowcase: Component = () => {
             />
             <ThemedTextarea placeholder="Without label..." />
           </NarrowStack>
+        </div>
+      </div>
+
+      <div class="example-group">
+        <h3>FillTextArea</h3>
+        <div class="fill-text-area-demo">
+          <FillColumn>
+            <TextSublabel>The column is 200px tall; the notes field takes what the line above leaves.</TextSublabel>
+            <FillTextArea label="Notes" placeholder="Write here…" />
+          </FillColumn>
         </div>
       </div>
     </div>

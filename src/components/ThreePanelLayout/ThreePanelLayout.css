@@ -113,4 +113,26 @@
     border: none;
     max-height: var(--sui-three-panel-aside-max, 200px);
   }
+
+  /* One 16px gutter between stacked panels. The asides carry 8px padding side
+     by side with the 16px centre, so stacked, an aside's bottom padding (8px)
+     and the centre's top padding (16px) added up to a 24px band between them
+     (25px measured), and the aside's text sat 8px from the edge while the
+     centre's sat 16px. Stacked, the asides take the centre's 16px sides, and
+     each gives up the padding edge that faces the centre: the left aside its
+     bottom, the right aside its top. The centre's own 16px is then the whole
+     gutter, on both sides of it. */
+  .sui-three-panel__left {
+    padding: 16px 16px 0;
+  }
+
+  .sui-three-panel__right {
+    padding: 0 16px 16px;
+  }
+
+  /* A flush right panel stays flush stacked: this rule comes after the one
+     above at the same specificity, so it wins. */
+  .sui-three-panel__right--flush {
+    padding: 0;
+  }
 }

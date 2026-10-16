@@ -123,6 +123,7 @@ import { ModeSplitButtonShowcase } from "./showcases/mode-split-button";
 import { MutationToolbarShowcase } from "./showcases/mutation-toolbar";
 import { StackedTimelineChartShowcase } from "./showcases/stacked-timeline-chart";
 import { HighWaterMarkShowcase } from "./showcases/high-water-mark";
+import { HotkeyScopeShowcase } from "./showcases/hotkey-scope";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { BandRailShowcase } from "./showcases/band-rail";
 import { MarkedSliderShowcase } from "./showcases/marked-slider";
@@ -205,6 +206,11 @@ import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
+import { SearchInputShowcase } from "./showcases/search-input";
+import { ClampedTextShowcase } from "./showcases/clamped-text";
+import { StampedRowShowcase } from "./showcases/stamped-row";
+import { PinnedFillColumnShowcase } from "./showcases/pinned-fill-column";
+import { GapBoxShowcase } from "./showcases/gap-box";
 import { VarianceStripChartShowcase } from "./showcases/variance-strip-chart";
 import { VarianceStripShowcase } from "./showcases/variance-strip";
 import { BalanceReviewChartShowcase } from "./showcases/balance-review-chart";
@@ -838,6 +844,12 @@ const items: Item[] = [
     tags: ["depth:2", "chart", "time", "data"],
   },
   {
+    id: "hotkey-scope",
+    label: "useHotkeys",
+    component: HotkeyScopeShowcase,
+    tags: ["depth:1", "hook", "keyboard"],
+  },
+  {
     id: "high-water-mark",
     label: "createHighWaterMark",
     component: HighWaterMarkShowcase,
@@ -1284,6 +1296,36 @@ const items: Item[] = [
     id: "variance-strip-chart",
     label: "VarianceStripChart",
     component: VarianceStripChartShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "gap-box",
+    label: "GapBox",
+    component: GapBoxShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "pinned-fill-column",
+    label: "PinnedFillColumn",
+    component: PinnedFillColumnShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "stamped-row",
+    label: "StampedRow",
+    component: StampedRowShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "clamped-text",
+    label: "ClampedText",
+    component: ClampedTextShowcase,
+    tags: ["depth:1"],
+  },
+  {
+    id: "search-input",
+    label: "SearchInput",
+    component: SearchInputShowcase,
     tags: ["depth:2"],
   },
   // Generated component entries (npm run new:component) — appended above this line.

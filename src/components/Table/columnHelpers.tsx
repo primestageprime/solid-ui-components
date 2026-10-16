@@ -59,17 +59,41 @@ export function intCol<T>(
   };
 }
 
+/** Options only a date-time column has, on top of the shared `ColOpts`. */
+interface DateTimeColOpts<T> extends ColOpts<T, string | null> {
+  /**
+   * IANA zone to show the time in (e.g. "America/Los_Angeles"). Passed straight
+   * to `DateTimeCell`; omitted, the host's zone is used, as before.
+   */
+  timeZone?: string;
+  /**
+   * `"second"` (default) shows `YYYY-MM-DD HH:mm:ss`; `"minute"` drops the
+   * seconds: `YYYY-MM-DD HH:mm`. The 160px default width fits both.
+   */
+  precision?: "minute" | "second";
+}
+
+/** Whether `DateTimeCell` shows seconds for a `precision` (its `showSeconds`, which defaults on). */
+export const showSecondsFor = (precision?: "minute" | "second"): boolean =>
+  precision !== "minute";
+
 export function dateTimeCol<T>(
   id: string,
   header: string,
-  opts?: ColOpts<T, string | null>,
+  opts?: DateTimeColOpts<T>,
 ): TableColumn<T> {
   return {
     id,
     header,
     width: opts?.width ?? "160px",
     sortable: opts?.sortable,
-    accessor: (row) => <DateTimeCell value={resolve(id, opts?.field, row)} />,
+    accessor: (row) => (
+      <DateTimeCell
+        value={resolve(id, opts?.field, row)}
+        timeZone={opts?.timeZone}
+        showSeconds={showSecondsFor(opts?.precision)}
+      />
+    ),
   };
 }
 
@@ -131,11 +155,13 @@ export function intColWith(defaults: { width?: string; sortable?: boolean }) {
 export function dateTimeColWith(defaults: {
   width?: string;
   sortable?: boolean;
+  timeZone?: string;
+  precision?: "minute" | "second";
 }) {
   return <T,>(
     id: string,
     header: string,
-    opts?: ColOpts<T, string | null>,
+    opts?: DateTimeColOpts<T>,
   ): TableColumn<T> => dateTimeCol<T>(id, header, { ...defaults, ...opts });
 }
 

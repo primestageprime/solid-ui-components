@@ -2794,6 +2794,60 @@ th:has(.tf-th-center) .hud-table__header-content {
   padding: 16px;
 }
 
+/* GapBox showcase demo frame. */
+.gap-box-demo {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* PinnedFillColumn showcase demo frame: a definite height so the middle has something to scroll within. */
+.pinned-fill-column-demo {
+  height: 280px;
+  max-width: 360px;
+  border: 1px solid var(--sui-border);
+}
+
+/* StampedRow showcase demo frame: a narrow column so a long label has to ellipsize. */
+.stamped-row-demo {
+  max-width: 320px;
+  padding: 8px 0;
+}
+
+/* ClampedText showcase demo frame: a narrow column so the text wraps. */
+.clamped-text-demo {
+  max-width: 320px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* SearchInput showcase demo frame. */
+.search-input-demo {
+  max-width: 320px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* FillTextArea showcase demo frame: a definite height for the textarea to fill. */
+.fill-text-area-demo {
+  height: 200px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--sui-border);
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* useHotkeys showcase demo frame: a narrow card for the table and the trace. */
+.hotkey-scope-demo {
+  max-width: 420px;
+  padding: 16px;
 
 /* CompactBucketQueue showcase: a comfortable pane beside a narrow compact one. */
 .bucket-queue-compact-demo {

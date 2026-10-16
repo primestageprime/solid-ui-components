@@ -6,6 +6,30 @@
 
 - **`StandardThreePanel`**, **`ListDetailThreePanel`**, **`InspectorThreePanel`**, **`SplitThreePanel`** — named curried variants of `ThreePanelLayout` with aside widths baked from the new `THREE_PANEL_ASIDE_WIDTH` tokens and full height. A size change to a variant is a new named variant or a global change to it, never a call-site prop.
 
+- **`SearchInput`** — a Depth 2 composite: a 32px search box with the search glyph at the left and a clear cross that shows while there is text. Controlled by `value`; `onClear` empties it and keeps focus in the box. Built on the new Depth 1 `SearchField`, which takes both glyphs as slots.
+
+- **`ClampedText`** — a Depth 1 primitive: body text whose height follows its content between 1 and 6 lines, then scrolls inside. Line counts ride CSS variables read in `lh` units. `createClampedText({ lines })` makes another range; pure `clampLines` cleans one.
+
+- **`StampedRow`** and **`PinnedStampedRow`** — a Depth 2 composite: one timestamped line with a 16px glyph, a label that takes the width and ellipsizes, and a mono `HH:mm` at the right. `kind` (`done`, `active`, `note`, `started`, `completed`) picks the glyph, or pass `icon`. `StampedRow` is the 22px list line, `PinnedStampedRow` the 40px bar. Pure `stampGlyph` and `formatStampTime` carry the logic. Adds the Layout variants `CompactLineRow` and `BarLineRow`.
+
+- **`PinnedFillColumn`** — a Depth 2 composite: a column that fills its parent with an optional pinned `header`, a middle that takes the leftover height and scrolls, and an optional pinned `footer`. Each bar rests on the 1px theme divider. Adds the Layout variants `PinnedHeaderBox` and `PinnedFooterBox`.
+
+- **`GapBox`** — a Depth 2 composite: the canon placeholder for a missing component. A titled `InfoSurface` holding the JSON of `kind`, `nearest` and the intended `props`. Pure `gapBoxJson` builds the body.
+
+- **`FillTextArea`** — a Depth 1 atomic: a themed textarea that takes all the height its flex-column parent has left, with no drag handle. The fill-the-parent sibling of `ThemedTextarea`, which is unchanged.
+
+- **`CollapsiblePanel` can be controlled.** New optional `open` and `onToggle` props: pass `open` and the caller owns the state, so a hotkey can fold the panel. `onToggle(nextOpen)` reports every press, controlled or not. With neither prop it behaves as before.
+
+- **`StatusChipDisplay`** — a Depth 1 atomic: the read-only sibling of `StatusChip`. The same fixed-width pill with a plain label and nothing to press: no button, caret, menu or hover underline. Pure `statusChipWidthCh` is exported so the two share one width rule. `StatusChip` is unchanged.
+
+- **`dateTimeCol` passes `timeZone` through and takes `precision`.** The column helper swallowed the `timeZone` that `DateTimeCell` already supports. It now forwards it, and a new `precision: "minute"` drops the seconds. `dateTimeColWith` can bake both. With neither option the output is unchanged.
+
+- **`useHotkeys` and `createHotkeyScope`** — hooks: one capture-phase window listener dispatches a table of `{ action, keys, scope }` rows to a record of handlers. It ignores editable targets, lets a `"modal"` scope block every lower scope, and reads chords like `"g t"`. The decisions live in the pure `dispatchHotkey`, which takes the clock as a number, and `traceHotkeys` prints a key sequence as a table with no DOM. `HotkeyEntry` and `HotkeyScope` are the table's types. `HotkeyButton` is unchanged.
+
+### Changed
+
+- **`ThreePanelLayout` stacks with one 16px gutter.** At 900px and below the side panels stack above and below the centre. Their 8px padding and the centre's 16px used to add up to a 24px band (25px measured) with the aside text 8px in from the edge while the centre's sat 16px in. The stacked asides now take the centre's 16px sides, and the left aside gives up its bottom padding and the right its top, so the centre's own 16px is the whole gutter on both sides. CSS only, no API change. Side by side is unchanged.
+
 ### Deprecated
 
 - **`ThreePanelLayout`** at the package root — use a named variant, or `createThreePanelLayout` for an app-level one. Still works; removed in a later release.

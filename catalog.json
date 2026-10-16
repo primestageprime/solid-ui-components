@@ -238,7 +238,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 307
+    "line": 323
   },
   {
     "name": "ActionWrapRow",
@@ -266,7 +266,7 @@
     "showcase": null,
     "since": "0.118.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 251
+    "line": 267
   },
   {
     "name": "AddFab",
@@ -418,7 +418,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 437
+    "line": 453
   },
   {
     "name": "AnchorFillBox",
@@ -443,7 +443,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 453
+    "line": 469
   },
   {
     "name": "AnimatedSwimlaneChart",
@@ -490,7 +490,7 @@
     "showcase": null,
     "since": "v0.18.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 895
+    "line": 929
   },
   {
     "name": "AppMain",
@@ -757,6 +757,34 @@
     "line": 99
   },
   {
+    "name": "BarLineRow",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createRow",
+      "overrides": "{\n  align: \"center\",\n  gap: \"sm\",\n  style: { \"min-height\": \"40px\" },\n}"
+    },
+    "overrides": [
+      "gap",
+      "align",
+      "justify",
+      "wrap",
+      "fill"
+    ],
+    "dataProps": "RowDataProps",
+    "summary": "BarLineRow — one 40px line (`min-height:40px`): the `CompactLineRow` shape on a bar's height.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "BarLineRow — one 40px line (`min-height:40px`): the `CompactLineRow` shape on a bar's height. The row of a PINNED line — the current step above a scrolling region — which needs the room a list line does not.",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 237
+  },
+  {
     "name": "BarSeries",
     "depth": 1,
     "kind": "primitive",
@@ -883,7 +911,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 277
+    "line": 293
   },
   {
     "name": "BaseTable",
@@ -1384,7 +1412,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 911
+    "line": 945
   },
   {
     "name": "CardSurface",
@@ -2009,7 +2037,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 290
+    "line": 306
   },
   {
     "name": "ChipGrid",
@@ -2035,7 +2063,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 935
+    "line": 969
   },
   {
     "name": "ChipLabel",
@@ -2086,6 +2114,30 @@
     "line": 348
   },
   {
+    "name": "ClampedText",
+    "depth": 1,
+    "kind": "variant",
+    "family": "ClampedText",
+    "variantOf": {
+      "factory": "createClampedText",
+      "overrides": "{\n  lines: { min: 1, max: 6 },\n}"
+    },
+    "overrides": [
+      "lines"
+    ],
+    "dataProps": "ClampedTextDataProps",
+    "summary": "Atomic (Depth 1).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a notes preview, a description, a log message of unknown length. `<ClampedText>{task.notes}</ClampedText>`",
+    "notes": "Body text from 1 to 6 lines tall, then scrolling inside. For notes and descriptions.",
+    "showcase": "#/clamped-text",
+    "since": "Unreleased",
+    "file": "src/components/ClampedText/variants.ts",
+    "line": 10
+  },
+  {
     "name": "ClipBox",
     "depth": 0,
     "kind": "variant",
@@ -2108,7 +2160,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 364
+    "line": 380
   },
   {
     "name": "ClipColumn",
@@ -2136,7 +2188,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 888
+    "line": 922
   },
   {
     "name": "ClipFillBox",
@@ -2161,7 +2213,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 780
+    "line": 814
   },
   {
     "name": "ClipFillColumn",
@@ -2189,7 +2241,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 754
+    "line": 788
   },
   {
     "name": "ClipFillColumnFlush",
@@ -2217,7 +2269,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 765
+    "line": 799
   },
   {
     "name": "ClusterRow",
@@ -2283,7 +2335,7 @@
     "showcase": null,
     "since": "0.26.0",
     "file": "src/components/CollapsiblePanel/CollapsiblePanel.tsx",
-    "line": 43
+    "line": 61
   },
   {
     "name": "CollapsibleSection",
@@ -2407,7 +2459,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 898
+    "line": 932
   },
   {
     "name": "CompactBucketQueue",
@@ -2588,6 +2640,34 @@
     "since": "0.222.0",
     "file": "src/components/Text/variants.ts",
     "line": 18
+  },
+  {
+    "name": "CompactLineRow",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createRow",
+      "overrides": "{\n  align: \"center\",\n  gap: \"sm\",\n  style: { \"min-height\": \"22px\" },\n}"
+    },
+    "overrides": [
+      "gap",
+      "align",
+      "justify",
+      "wrap",
+      "fill"
+    ],
+    "dataProps": "RowDataProps",
+    "summary": "CompactLineRow — one 22px line (`min-height:22px`): items centred, `sm` gap, no wrap.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "CompactLineRow — one 22px line (`min-height:22px`): items centred, `sm` gap, no wrap. The row of a dense list where every line holds a glyph, a label and a trailing value (a log, an activity trail). The 40px sibling is `BarLineRow`.",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 229
   },
   {
     "name": "CompactPanel",
@@ -2807,7 +2887,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 467
+    "line": 483
   },
   {
     "name": "ContentAutoGrowChartFrame",
@@ -3712,6 +3792,27 @@
     "line": 135
   },
   {
+    "name": "createClampedText",
+    "depth": 1,
+    "kind": "factory",
+    "family": "ClampedText",
+    "variantOf": null,
+    "overrides": [
+      "lines"
+    ],
+    "dataProps": "ClampedTextDataProps",
+    "summary": "Atomic (Depth 1). Factory behind `ClampedText`'s curried variants; bakes `lines`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/clamped-text",
+    "since": "Unreleased",
+    "file": "src/components/ClampedText/ClampedText.tsx",
+    "line": 67
+  },
+  {
     "name": "createCodeBlock",
     "depth": 1,
     "kind": "factory",
@@ -3747,7 +3848,7 @@
     "showcase": null,
     "since": "0.26.0",
     "file": "src/components/CollapsiblePanel/CollapsiblePanel.tsx",
-    "line": 106
+    "line": 131
   },
   {
     "name": "createConfirmationModal",
@@ -5390,6 +5491,27 @@
     "line": 493
   },
   {
+    "name": "createStampedRow",
+    "depth": 2,
+    "kind": "factory",
+    "family": "StampedRow",
+    "variantOf": null,
+    "overrides": [
+      "density"
+    ],
+    "dataProps": "StampedRowDataProps",
+    "summary": "Factory behind `StampedRow`'s curried variants; bakes `density`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/stamped-row",
+    "since": null,
+    "file": "src/components/StampedRow/StampedRow.tsx",
+    "line": 89
+  },
+  {
     "name": "createStatusBadge",
     "depth": 1,
     "kind": "factory",
@@ -6868,7 +6990,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 502
+    "line": 518
   },
   {
     "name": "DenseStatusNote",
@@ -7700,7 +7822,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 228
+    "line": 244
   },
   {
     "name": "EntityCard",
@@ -7822,7 +7944,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 318
+    "line": 334
   },
   {
     "name": "FadedNowrapSublabel",
@@ -8046,7 +8168,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 531
+    "line": 547
   },
   {
     "name": "FillColumnFlush",
@@ -8074,7 +8196,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 541
+    "line": 557
   },
   {
     "name": "FillFullscreenBox",
@@ -8130,7 +8252,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 419
+    "line": 435
   },
   {
     "name": "FillPlaceholder",
@@ -8180,7 +8302,26 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 830
+    "line": 864
+  },
+  {
+    "name": "FillTextArea",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Inputs",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a notes field that fills a detail pane. `<FillColumn>…<FillTextArea id=\"task-notes\" label=\"Notes\" value={notes()} onInput={…} /></FillColumn>`",
+    "notes": null,
+    "showcase": "#/inputs",
+    "since": "Unreleased",
+    "file": "src/components/Inputs/FillTextArea.tsx",
+    "line": 23
   },
   {
     "name": "FillWrapRow",
@@ -8211,7 +8352,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 808
+    "line": 842
   },
   {
     "name": "FilterableTable",
@@ -8298,7 +8439,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 602
+    "line": 618
   },
   {
     "name": "FlatThreadGroup",
@@ -8376,7 +8517,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 272
+    "line": 288
   },
   {
     "name": "FloatCell",
@@ -8662,6 +8803,25 @@
     "line": 19
   },
   {
+    "name": "GapBox",
+    "depth": 2,
+    "kind": "composite",
+    "family": "GapBox",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a design canon page or a touchstone wherever the layout needs a box standing in for a missing component; replace each one when the component ships. `<GapBox title=\"LocaleSwitcher\" nearest=\"none\" props={{ locales: [\"en-US\"] }} />`",
+    "notes": null,
+    "showcase": "#/gap-box",
+    "since": "Unreleased",
+    "file": "src/components/GapBox/GapBox.tsx",
+    "line": 38
+  },
+  {
     "name": "GapBracket",
     "depth": 1,
     "kind": "primitive",
@@ -8940,7 +9100,7 @@
     "showcase": null,
     "since": "0.61.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 314
+    "line": 330
   },
   {
     "name": "GrowCenterColumn",
@@ -8968,7 +9128,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 857
+    "line": 891
   },
   {
     "name": "GrowCenterRow",
@@ -8996,7 +9156,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 865
+    "line": 899
   },
   {
     "name": "GrowClusterRow",
@@ -9052,7 +9212,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 667
+    "line": 701
   },
   {
     "name": "GrowFillBox",
@@ -9077,7 +9237,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 575
+    "line": 591
   },
   {
     "name": "GrowStack",
@@ -9105,7 +9265,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 691
+    "line": 725
   },
   {
     "name": "GrowthStrip",
@@ -9159,7 +9319,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 703
+    "line": 737
   },
   {
     "name": "GrowWrapRow",
@@ -9187,7 +9347,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 788
+    "line": 822
   },
   {
     "name": "GutteredFillStretchRow",
@@ -9215,7 +9375,7 @@
     "showcase": null,
     "since": "0.185.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 844
+    "line": 878
   },
   {
     "name": "HalfFillColumn",
@@ -9245,7 +9405,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 619
+    "line": 635
   },
   {
     "name": "HatchPattern",
@@ -10037,7 +10197,7 @@
     "useFor": null,
     "notes": "Status-colored surfaces (card shape + status colors)",
     "showcase": "#/surface",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Surface/variants.ts",
     "line": 40
   },
@@ -10090,7 +10250,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 903
+    "line": 937
   },
   {
     "name": "InlineChartErrorOverlay",
@@ -10451,7 +10611,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 372
+    "line": 388
   },
   {
     "name": "LargeAmountStrip",
@@ -10997,7 +11157,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 919
+    "line": 953
   },
   {
     "name": "LooseClusterRow",
@@ -11053,7 +11213,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 268
+    "line": 284
   },
   {
     "name": "MajorPaneBox",
@@ -11078,7 +11238,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 638
+    "line": 654
   },
   {
     "name": "ManagedListSection",
@@ -11887,7 +12047,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 676
+    "line": 710
   },
   {
     "name": "NoShrinkScrollBox",
@@ -11912,7 +12072,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 647
+    "line": 663
   },
   {
     "name": "NoteCard",
@@ -12299,7 +12459,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 519
+    "line": 535
   },
   {
     "name": "Page",
@@ -12343,7 +12503,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 487
+    "line": 503
   },
   {
     "name": "PageStack",
@@ -12447,7 +12607,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 654
+    "line": 688
   },
   {
     "name": "ParticipantNameLabel",
@@ -12625,6 +12785,99 @@
     "since": "0.102.0",
     "file": "src/components/Chart/PinMarkers.tsx",
     "line": 93
+  },
+  {
+    "name": "PinnedFillColumn",
+    "depth": 2,
+    "kind": "composite",
+    "family": "PinnedFillColumn",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a rail with a pinned search, a centre pane with a pinned current step, a log rail with a pinned step name. `<PinnedFillColumn header={<SearchInput … />}>{list}</PinnedFillColumn>`",
+    "notes": null,
+    "showcase": "#/pinned-fill-column",
+    "since": "Unreleased",
+    "file": "src/components/PinnedFillColumn/PinnedFillColumn.tsx",
+    "line": 31
+  },
+  {
+    "name": "PinnedFooterBox",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createBox",
+      "overrides": "{\n  shrink: false,\n  style: { \"border-top\": \"1px solid var(--sui-border)\" },\n}"
+    },
+    "overrides": [
+      "grow",
+      "shrink"
+    ],
+    "dataProps": "BoxDataProps",
+    "summary": "PinnedFooterBox — the bottom sibling of `PinnedHeaderBox`: keeps its height and sits under the 1px theme divider (`border-top`).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "PinnedFooterBox — the bottom sibling of `PinnedHeaderBox`: keeps its height and sits under the 1px theme divider (`border-top`). The pinned foot of a `PinnedFillColumn`: a composer, a total, a primary action.",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 681
+  },
+  {
+    "name": "PinnedHeaderBox",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createBox",
+      "overrides": "{\n  shrink: false,\n  style: { \"border-bottom\": \"1px solid var(--sui-border)\" },\n}"
+    },
+    "overrides": [
+      "grow",
+      "shrink"
+    ],
+    "dataProps": "BoxDataProps",
+    "summary": "PinnedHeaderBox — a bar that keeps its height in a flex COLUMN (`flex-shrink:0`) and rests on the 1px theme divider (`border-bottom: 1px solid var(--sui-border)`).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "PinnedHeaderBox — a bar that keeps its height in a flex COLUMN (`flex-shrink:0`) and rests on the 1px theme divider (`border-bottom: 1px solid var(--sui-border)`). The pinned top of a `PinnedFillColumn`: a search box, a \"current step\" line, a list title that stays put while the region below it scrolls.",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 673
+  },
+  {
+    "name": "PinnedStampedRow",
+    "depth": 2,
+    "kind": "variant",
+    "family": "StampedRow",
+    "variantOf": {
+      "factory": "createStampedRow",
+      "overrides": "{\n  density: \"pinned\",\n}"
+    },
+    "overrides": [
+      "density"
+    ],
+    "dataProps": "StampedRowDataProps",
+    "summary": "A 40px bar line: the pinned current step above a scrolling region.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "A 40px bar line: the pinned current step above a scrolling region.",
+    "showcase": "#/stamped-row",
+    "since": "Unreleased",
+    "file": "src/components/StampedRow/variants.ts",
+    "line": 15
   },
   {
     "name": "PivotGrid",
@@ -13632,7 +13885,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 344
+    "line": 360
   },
   {
     "name": "ScrollColumn",
@@ -13660,7 +13913,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 729
+    "line": 763
   },
   {
     "name": "ScrollFillBox",
@@ -13685,7 +13938,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 354
+    "line": 370
   },
   {
     "name": "ScrollFillColumn",
@@ -13713,7 +13966,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 744
+    "line": 778
   },
   {
     "name": "ScrollList",
@@ -13765,7 +14018,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 474
+    "line": 490
   },
   {
     "name": "ScrollRegion",
@@ -13865,7 +14118,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 326
+    "line": 342
   },
   {
     "name": "ScrollYBox",
@@ -13890,7 +14143,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 336
+    "line": 352
   },
   {
     "name": "ScrubChart",
@@ -14007,6 +14260,44 @@
     "since": "0.169.0",
     "file": "src/components/ScrubChart/ScrubChartTooltip.tsx",
     "line": 70
+  },
+  {
+    "name": "SearchField",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "SearchInput",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/search-input",
+    "since": "Unreleased",
+    "file": "src/components/SearchInput/SearchField.tsx",
+    "line": 29
+  },
+  {
+    "name": "SearchInput",
+    "depth": 2,
+    "kind": "composite",
+    "family": "SearchInput",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a pinned search at the head of a list rail (`PinnedFillColumn header`), a table quick-filter. `<SearchInput value={q()} onInput={(e) => setQ(e.currentTarget.value)} onClear={() => setQ(\"\")} placeholder=\"Search tasks\" />`",
+    "notes": null,
+    "showcase": "#/search-input",
+    "since": "Unreleased",
+    "file": "src/components/SearchInput/SearchInput.tsx",
+    "line": 19
   },
   {
     "name": "SeatsAmountStrip",
@@ -15390,6 +15681,30 @@
     "line": 274
   },
   {
+    "name": "StampedRow",
+    "depth": 2,
+    "kind": "variant",
+    "family": "StampedRow",
+    "variantOf": {
+      "factory": "createStampedRow",
+      "overrides": "{\n  density: \"list\",\n}"
+    },
+    "overrides": [
+      "density"
+    ],
+    "dataProps": "StampedRowDataProps",
+    "summary": "A 22px list line: glyph, label, mono time.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "A 22px list line: glyph, label, mono time. For a log or activity trail.",
+    "showcase": "#/stamped-row",
+    "since": "Unreleased",
+    "file": "src/components/StampedRow/variants.ts",
+    "line": 10
+  },
+  {
     "name": "StandardThreePanel",
     "depth": 1,
     "kind": "variant",
@@ -15580,7 +15895,26 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/Badge/StatusChip.tsx",
-    "line": 41
+    "line": 54
+  },
+  {
+    "name": "StatusChipDisplay",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Badge",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic Primitive (Depth 1).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a card or list row that shows a status and leaves changing it to the detail view. `<StatusChipDisplay status={task.status} options={STATUSES} highlight={task.status === \"doing\"} />`",
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Badge/StatusChipDisplay.tsx",
+    "line": 27
   },
   {
     "name": "SteadyMonoMeta",
@@ -16168,7 +16502,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 233
+    "line": 249
   },
   {
     "name": "TargetBarChart",
@@ -16524,7 +16858,7 @@
     "summarySource": "components-md",
     "preferFirst": null,
     "notToBeConfusedWith": null,
-    "useFor": "multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies.",
+    "useFor": "multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies. Stacked (≤900px) the panels sit under one 16px gutter: the asides take the centre's 16px sides and drop the padding edge that faces the centre.",
     "notes": "@deprecated Internal primitive. Do not import at call sites: use a named curried variant (`StandardThreePanel`, `ListDetailThreePanel`, `InspectorThreePanel`, `SplitThreePanel`), or `createThreePanelLayout` for an app-level variant. Widths and heights are design decisions baked into a variant, never call-site props. Phase 2 of the add/deprecate/delete migration; the root export is removed in phase 3.",
     "showcase": "#/three-panel-layout",
     "since": "v0.11.0",
@@ -16651,7 +16985,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 875
+    "line": 909
   },
   {
     "name": "TightSpreadRow",
@@ -17107,7 +17441,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 463
+    "line": 479
   },
   {
     "name": "TopSpreadRow",
@@ -17585,7 +17919,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 558
+    "line": 574
   },
   {
     "name": "ViolationBadge",
@@ -17982,7 +18316,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 927
+    "line": 961
   },
   {
     "name": "WindowStrip",
@@ -18110,7 +18444,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 722
+    "line": 756
   },
   {
     "name": "WrappedClusterRow",
@@ -18138,7 +18472,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 300
+    "line": 316
   },
   {
     "name": "WrapRow",
@@ -18166,7 +18500,7 @@
     "showcase": null,
     "since": "0.118.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 238
+    "line": 254
   },
   {
     "name": "XAxis",
