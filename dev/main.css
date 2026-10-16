@@ -2892,3 +2892,16 @@ th:has(.tf-th-center) .hud-table__header-content {
 .bucket-queue-compact-demo__pane--narrow {
   width: 200px;
 }
+
+/* ChartFrame showcase: a parent that eases between a stated height and its
+   content's, as a page that squeezes a FillChartFrame does. */
+.chart-frame-demo-ease-box {
+  min-height: 0;
+  interpolate-size: allow-keywords;
+  transition: height 180ms ease-out;
+}
+
+/* StatusCard showcase: a drawing in the card body, a block so no baseline gap shows under it. */
+.status-card-demo__drawing {
+  display: block;
+}

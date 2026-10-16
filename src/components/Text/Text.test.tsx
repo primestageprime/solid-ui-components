@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { Text, createText } from "./Text";
-import { CompactLabel, TextLabel, EllipsizedTitle, VerticalAxisTitle } from "./index";
+import { CompactLabel, SuccessTag, TextLabel, EllipsizedTitle, VerticalAxisTitle } from "./index";
 
 describe("Text", () => {
   it("renders with the variant class", () => {
@@ -12,6 +12,15 @@ describe("Text", () => {
   it("TextLabel curried variant", () => {
     const { container } = render(() => <TextLabel>label</TextLabel>);
     expect(container.firstElementChild!.className).toMatch(/text--label/);
+  });
+
+  it("SuccessTag is a 10px bold uppercase span in the success tone", () => {
+    const { container } = render(() => <SuccessTag>Recommended</SuccessTag>);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.tagName).toBe("SPAN");
+    expect(el.style.fontSize).toBe("10px");
+    expect(el.style.textTransform).toBe("uppercase");
+    expect(el.style.color).toBe("var(--sui-success)");
   });
 
   it("CompactLabel is a 12px label for a dense row", () => {

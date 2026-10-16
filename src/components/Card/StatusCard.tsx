@@ -8,7 +8,8 @@
 // A 3-row status card:
 //   Row 1: name (ellipsised, hover-full title) + status badge (slot)
 //   Row 2: 2-3 lines of wrapped detail, lighter/smaller, line-clamped with a
-//          "more" affordance that opens a popover with the full text
+//          "more" affordance that opens a popover with the full text; then
+//          an optional drawing (`children`) and the actions
 //   Row 3: a left / center / right meta strip — e.g. claimed-by / progress /
 //          estimate (each a slot)
 // Slots are JSX so consumers wire their own badge, assignee chips, progress,
@@ -56,6 +57,10 @@ export interface StatusCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
   progress?: JSX.Element;
   /** Row 3, right — e.g. estimated (todo/doing) or actual (done). */
   estimate?: JSX.Element;
+  /** A drawing under the description, above the actions: a small gauge, a
+   *  slot strip, a before / after pair. Full card width, content height. A
+   *  click on it selects the card, as a click on the description does. */
+  children?: JSX.Element;
   /** Detail-area actions — buttons etc. rendered at the bottom of the detail
    *  area (row 2), below the description and above the meta row. Clicks are
    *  isolated from the whole-card onSelect. */
@@ -172,6 +177,7 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
       <Show
         when={
           (local.description && local.description.trim().length > 0) ||
+          local.children != null ||
           local.actions != null
         }
       >
@@ -195,6 +201,9 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
                 </Button>
               </Show>
             </ClipFillBox>
+          </Show>
+          <Show when={local.children != null}>
+            <div class="sui-status-card__body">{local.children}</div>
           </Show>
           <Show when={local.actions != null}>
             {/* a11y — click-isolation barrier so action clicks don't bubble to
@@ -255,8 +264,6 @@ export const StatusCard: Component<StatusCardProps> = (props) => {
           </TightNoShrinkClusterRow>
         </ClusterRow>
       </Show>
-
-      {local.children}
     </Surface>
   );
 };

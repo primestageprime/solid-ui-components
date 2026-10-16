@@ -87,6 +87,11 @@ export interface TreeTableProps<T extends TableRow>
   onToggle: (id: string) => void;
   /** Turns on the checkbox column. Omit for a table with no checkboxes. */
   selection?: TreeTableSelection;
+  /**
+   * Called with the row under the pointer, anywhere in the row, and with
+   * `null` when the pointer leaves the body. For a chart cross-highlight.
+   */
+  onRowHover?: (row: T | null) => void;
 }
 
 /** Nulls last; strings by `localeCompare`; everything else numerically. */
@@ -245,6 +250,7 @@ export function TreeTable<T extends TableRow>(props: TreeTableProps<T>) {
       onRowClick={(flat) => {
         if (flat.hasChildren) props.onToggle(flat.id);
       }}
+      onRowHover={(flat) => props.onRowHover?.(flat?.row ?? null)}
     />
   );
 }

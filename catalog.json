@@ -482,7 +482,7 @@
     "useFor": "the top bar of a full-page app with a few top-level views and an account menu.",
     "notes": null,
     "showcase": "#/app-bar",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/AppBar/AppBar.tsx",
     "line": 76
   },
@@ -799,7 +799,7 @@
     "useFor": null,
     "notes": "BarLineRow — one 40px line (`min-height:40px`): the `CompactLineRow` shape on a bar's height. The row of a PINNED line — the current step above a scrolling region — which needs the room a list line does not.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Layout/variants.ts",
     "line": 237
   },
@@ -827,7 +827,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 358
+    "line": 360
   },
   {
     "name": "BaselineClusterRow",
@@ -1618,7 +1618,7 @@
     "useFor": null,
     "notes": "Nav whose items sit CENTRED in its own full-width box — still folding into the kebab when that box gets too narrow. For a header's middle slot (AppBar's nav, \"centred in the available space\").",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/OverflowNav/variants.ts",
     "line": 17
   },
@@ -2178,7 +2178,7 @@
     "useFor": "a notes preview, a description, a log message of unknown length. `<ClampedText>{task.notes}</ClampedText>`",
     "notes": "Body text from 1 to 6 lines tall, then scrolling inside. For notes and descriptions.",
     "showcase": "#/clamped-text",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ClampedText/variants.ts",
     "line": 10
   },
@@ -2436,7 +2436,7 @@
     "useFor": null,
     "notes": "Plain flex column, no baked gap — a bare vertical stack whose children space themselves (own margins) or sit flush. For a wrapper that just needs a flex column context (e.g. a caption above a scroll region) without imposing a gap.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Layout/variants.ts",
     "line": 31
   },
@@ -2710,7 +2710,7 @@
     "useFor": null,
     "notes": "CompactLineRow — one 22px line (`min-height:22px`): items centred, `sm` gap, no wrap. The row of a dense list where every line holds a glyph, a label and a trailing value (a log, an activity trail). The 40px sibling is `BarLineRow`.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Layout/variants.ts",
     "line": 229
   },
@@ -3811,7 +3811,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 301
+    "line": 341
   },
   {
     "name": "createCheckbox",
@@ -3853,7 +3853,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/clamped-text",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ClampedText/ClampedText.tsx",
     "line": 67
   },
@@ -5595,7 +5595,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Card/StatusCard.tsx",
-    "line": 265
+    "line": 272
   },
   {
     "name": "createStatusFlowChart",
@@ -5652,7 +5652,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/step-timeline",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/StepTimeline/StepTimeline.tsx",
     "line": 73
   },
@@ -5838,7 +5838,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/three-slot-row",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreeSlotRow/ThreeSlotRow.tsx",
     "line": 51
   },
@@ -6479,7 +6479,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 381
+    "line": 397
   },
   {
     "name": "DashedDivider",
@@ -6961,7 +6961,7 @@
     "useFor": "right-side values in key-value rows.",
     "notes": null,
     "showcase": "#/data-list",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/DataList/DataList.tsx",
     "line": 127
   },
@@ -7833,7 +7833,7 @@
     "useFor": "the end slot of an app header (status + user menu); `ThreeSlotRow` composes it.",
     "notes": "EndClusterRow — a trailing cluster packed to the END of its box, centred on the cross axis, xs gap, and NO wrap. The non-wrapping sibling of `EndWrapRow`: that one wraps at phone width, which in a fixed-height app header pushes the status chip above the avatar and breaks the bar's height. The end slot of `ThreeSlotRow` (Taskmaster canon, header layout A).",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Layout/variants.ts",
     "line": 979
   },
@@ -7932,7 +7932,7 @@
     "useFor": null,
     "notes": "Right-aligned wrapping row — items pack to the end and wrap. For a trailing action-button cluster that right-aligns and wraps on narrow widths.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Layout/variants.ts",
     "line": 244
   },
@@ -8431,7 +8431,7 @@
     "useFor": "a notes field that fills a detail pane. `<FillColumn>…<FillTextArea id=\"task-notes\" label=\"Notes\" value={notes()} onInput={…} /></FillColumn>`",
     "notes": null,
     "showcase": "#/inputs",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Inputs/FillTextArea.tsx",
     "line": 23
   },
@@ -8816,7 +8816,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 429
+    "line": 445
   },
   {
     "name": "FormulaVarRow",
@@ -8929,7 +8929,7 @@
     "useFor": "a design canon page or a touchstone wherever the layout needs a box standing in for a missing component; replace each one when the component ships. `<GapBox title=\"LocaleSwitcher\" nearest=\"none\" props={{ locales: [\"en-US\"] }} />`",
     "notes": null,
     "showcase": "#/gap-box",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/GapBox/GapBox.tsx",
     "line": 38
   },
@@ -8947,12 +8947,12 @@
     "notToBeConfusedWith": [
       "Not `ReferenceLine`, which marks ONE value;"
     ],
-    "useFor": "\"this far from the forecast / target / floor\" at a line's end.",
+    "useFor": "\"this far from the forecast / target / floor\" at a line's end; a min–max whisker.",
     "notes": null,
     "showcase": "#/chart",
     "since": "0.217.0",
     "file": "src/components/Chart/GapBracket.tsx",
-    "line": 49
+    "line": 53
   },
   {
     "name": "GapCell",
@@ -9694,7 +9694,7 @@
     "showcase": null,
     "since": "0.220.0",
     "file": "src/components/HeightReveal/HeightReveal.tsx",
-    "line": 43
+    "line": 47
   },
   {
     "name": "HighlightBody",
@@ -9767,7 +9767,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 435
+    "line": 451
   },
   {
     "name": "HotkeyButton",
@@ -10309,7 +10309,7 @@
     "useFor": null,
     "notes": "Status-colored surfaces (card shape + status colors)",
     "showcase": "#/surface",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Surface/variants.ts",
     "line": 40
   },
@@ -10337,7 +10337,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 369
+    "line": 385
   },
   {
     "name": "InlineAppHeader",
@@ -10476,7 +10476,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 356
+    "line": 372
   },
   {
     "name": "InspectorThreePanel",
@@ -10503,7 +10503,7 @@
     "useFor": null,
     "notes": "Page with a wide right inspector: 220 left rail, 320 right. Replaces thorcasting CoverageTab.",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 39
   },
@@ -11182,7 +11182,7 @@
     "useFor": null,
     "notes": "List-and-detail page with a wide left column: 320 left, 240 right. Replaces jtf silver-explorer, metric-sleuth; dside TriageView (left only).",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 30
   },
@@ -11841,7 +11841,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 422
+    "line": 438
   },
   {
     "name": "MultiSelectFilter",
@@ -12670,7 +12670,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 363
+    "line": 379
   },
   {
     "name": "PairedMutationSliders",
@@ -12914,7 +12914,7 @@
     "useFor": "a rail with a pinned search, a centre pane with a pinned current step, a log rail with a pinned step name. `<PinnedFillColumn header={<SearchInput … />}>{list}</PinnedFillColumn>`",
     "notes": null,
     "showcase": "#/pinned-fill-column",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/PinnedFillColumn/PinnedFillColumn.tsx",
     "line": 31
   },
@@ -12939,7 +12939,7 @@
     "useFor": null,
     "notes": "PinnedFooterBox — the bottom sibling of `PinnedHeaderBox`: keeps its height and sits under the 1px theme divider (`border-top`). The pinned foot of a `PinnedFillColumn`: a composer, a total, a primary action.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Layout/variants.ts",
     "line": 681
   },
@@ -12964,7 +12964,7 @@
     "useFor": null,
     "notes": "PinnedHeaderBox — a bar that keeps its height in a flex COLUMN (`flex-shrink:0`) and rests on the 1px theme divider (`border-bottom: 1px solid var(--sui-border)`). The pinned top of a `PinnedFillColumn`: a search box, a \"current step\" line, a list title that stays put while the region below it scrolls.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Layout/variants.ts",
     "line": 673
   },
@@ -12988,7 +12988,7 @@
     "useFor": null,
     "notes": "A 40px bar line: the pinned current step above a scrolling region.",
     "showcase": "#/stamped-row",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/StampedRow/variants.ts",
     "line": 15
   },
@@ -13606,7 +13606,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 576
+    "line": 578
   },
   {
     "name": "RemovableItemCard",
@@ -13840,7 +13840,7 @@
     "useFor": "header action menus, account dropdowns (email header + Logout).",
     "notes": "Right-aligned, small trigger — common header use case.",
     "showcase": "#/popover-menu",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/PopoverMenu/PopoverMenu.tsx",
     "line": 286
   },
@@ -13973,7 +13973,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 415
+    "line": 431
   },
   {
     "name": "ScrollBox",
@@ -14389,7 +14389,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/search-input",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/SearchInput/SearchField.tsx",
     "line": 29
   },
@@ -14408,7 +14408,7 @@
     "useFor": "a pinned search at the head of a list rail (`PinnedFillColumn header`), a table quick-filter. `<SearchInput value={q()} onInput={(e) => setQ(e.currentTarget.value)} onClear={() => setQ(\"\")} placeholder=\"Search tasks\" />`",
     "notes": null,
     "showcase": "#/search-input",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/SearchInput/SearchInput.tsx",
     "line": 19
   },
@@ -14553,7 +14553,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 364
+    "line": 380
   },
   {
     "name": "SegmentBar",
@@ -15030,7 +15030,7 @@
     "showcase": "#/chart",
     "since": "0.218.0",
     "file": "src/components/Chart/SlotTrack.tsx",
-    "line": 95
+    "line": 96
   },
   {
     "name": "SmallAmountStrip",
@@ -15644,7 +15644,7 @@
     "useFor": null,
     "notes": "Split page with a half-screen-class left pane: 560 left, 240 right. Replaces diddit index (desktop layout).",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 48
   },
@@ -15813,7 +15813,7 @@
     "useFor": null,
     "notes": "A 22px list line: glyph, label, mono time. For a log or activity trail.",
     "showcase": "#/stamped-row",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/StampedRow/variants.ts",
     "line": 10
   },
@@ -15842,7 +15842,7 @@
     "useFor": null,
     "notes": "Standard list / center / context page: 260 left, 240 right. Replaces jtf metric-explorer, cache-explorer, timesleuth; thorcasting TriageTab (left only).",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 21
   },
@@ -15968,7 +15968,7 @@
     "showcase": "#/status-card",
     "since": "0.84.0",
     "file": "src/components/Card/StatusCard.tsx",
-    "line": 71
+    "line": 76
   },
   {
     "name": "StatusCell",
@@ -16025,7 +16025,7 @@
     "useFor": "a card or list row that shows a status and leaves changing it to the detail view. `<StatusChipDisplay status={task.status} options={STATUSES} highlight={task.status === \"doing\"} />`",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/Badge/StatusChipDisplay.tsx",
     "line": 27
   },
@@ -16099,7 +16099,7 @@
     "useFor": "a task's or run's progress over one day with its start and completion events (the Taskmaster canon's step timeline). For a count over months, use `LevelsTimeline` or `StackedTimelineChart` directly.",
     "notes": "A 200px collapsible step timeline: the Taskmaster canon's task timeline.",
     "showcase": "#/step-timeline",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/StepTimeline/variants.ts",
     "line": 11
   },
@@ -16263,7 +16263,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 365
+    "line": 381
   },
   {
     "name": "SubtleGhostArc",
@@ -16422,6 +16422,32 @@
     "line": 52
   },
   {
+    "name": "SuccessTag",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Text",
+    "variantOf": {
+      "factory": "createText",
+      "overrides": "{\n  variant: \"label\",\n  as: \"span\",\n  color: \"var(--sui-success)\",\n  style: {\n    \"font-size\": \"10px\",\n    \"font-weight\": \"700\",\n    \"line-height\": \"1.2\",\n    \"text-transform\": \"uppercase\",\n    \"letter-spacing\": \"0.06em\",\n  },\n}"
+    },
+    "overrides": [
+      "variant",
+      "color",
+      "as"
+    ],
+    "dataProps": "TextDataProps",
+    "summary": "a 10px, bold, uppercase, letter-spaced `<span>` in `--sui-success`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a positive tag beside a label, such as \"Recommended\" next to an answer inside a button. The tone follows the theme: the colourblind palette paints it blue.",
+    "notes": "A positive tag beside a label — \"Recommended\" next to an answer in a button: 10px, bold, uppercase, letter-spaced, in the success tone. The tone follows the theme, so the colourblind palette paints it blue.",
+    "showcase": "#/text",
+    "since": "0.224.0",
+    "file": "src/components/Text/variants.ts",
+    "line": 358
+  },
+  {
     "name": "SuccessTitle",
     "depth": 0,
     "kind": "variant",
@@ -16445,7 +16471,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 377
+    "line": 393
   },
   {
     "name": "SwimlaneChart",
@@ -16863,7 +16889,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 394
+    "line": 410
   },
   {
     "name": "TextValueHighlightSm",
@@ -16889,7 +16915,7 @@
     "showcase": "#/text",
     "since": "0.152.0",
     "file": "src/components/Text/variants.ts",
-    "line": 406
+    "line": 422
   },
   {
     "name": "TextValueSuccessSm",
@@ -16915,7 +16941,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 389
+    "line": 405
   },
   {
     "name": "ThemedInput",
@@ -17018,7 +17044,7 @@
     "useFor": "an app header's \"layout A\" — logo | nav centred in the remaining space | status + user (the Taskmaster canon, 2026-10-15; `AppBar` curries it at a 160px start); any toolbar whose middle must centre between two fixed ends.",
     "notes": "start | centre | end, with the start track at its content's width (`auto`). For a fixed start width (a 160px logo box), curry your own: `createThreeSlotRow({ startWidth: \"160px\" })` — AppBar does exactly that.",
     "showcase": "#/three-slot-row",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreeSlotRow/variants.ts",
     "line": 11
   },
@@ -17059,6 +17085,25 @@
     "since": "v0.17.0",
     "file": "src/components/ThroughputChart/ThroughputChart.tsx",
     "line": 103
+  },
+  {
+    "name": "TickSeries",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A short vertical tick centred on each point, as a Structural Primitive (Depth 1) slot child of `Chart`: `length` px tall (20) whatever the y scale, `strokeWidth` 2.5, `stroke` per datum or for all (default the chart tick colour), `title` per tick.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "events on a track where a dot would read as a value.",
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "0.224.0",
+    "file": "src/components/Chart/TickSeries.tsx",
+    "line": 27
   },
   {
     "name": "TightCenteredColumn",
@@ -17573,7 +17618,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 366
+    "line": 382
   },
   {
     "name": "TopRightOverlayBox",
@@ -17685,7 +17730,7 @@
     "showcase": "#/tree-table",
     "since": "0.219.0",
     "file": "src/components/TreeTable/TreeTable.tsx",
-    "line": 107
+    "line": 112
   },
   {
     "name": "TrendSparkline",
@@ -17870,7 +17915,7 @@
     "useFor": "the user/account control in an app header (Taskmaster canon, 2026-10-15).",
     "notes": null,
     "showcase": "#/user-menu",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/UserMenu/UserMenu.tsx",
     "line": 91
   },
@@ -18394,7 +18439,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 373
+    "line": 389
   },
   {
     "name": "WeekCalendar",
@@ -18700,6 +18745,25 @@
     "since": "v0.16.0",
     "file": "src/components/Chart/Axes.tsx",
     "line": 95
+  },
+  {
+    "name": "XSpan",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A shaded stretch of the x axis across the full plot height, as a Structural Primitive (Depth 1) slot child of `Chart`: `from` to `to` in data units, clamped to the plot, with no pointer events.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a window with no data or no schedule, a period out of scope.",
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "0.224.0",
+    "file": "src/components/Chart/XSpan.tsx",
+    "line": 30
   },
   {
     "name": "YAxis",

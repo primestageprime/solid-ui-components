@@ -12,6 +12,8 @@
  */
 import { type Component, createSignal } from "solid-js";
 import { StatusCard } from "../../src/components/Card";
+import { SecondaryButton } from "../../src/components/Button";
+import { SuccessTag } from "../../src/components/Text";
 
 const Slot: Component<{ children: any }> = (props) => (
   <div class="status-card-demo__slot">{props.children}</div>
@@ -79,6 +81,24 @@ export const StatusCardShowcase: Component = () => {
               onSelect={() => setSelected((v) => !v)}
               claimedBy={<span>Ryan</span>}
             />
+          </Slot>
+
+          <Slot>
+            <StatusCard
+              name="with a drawing (children)"
+              status={<Pill text="REVIEW" tone="var(--sui-warning)" />}
+              description="A drawing sits under the description, above the actions, at full card width."
+              actions={
+                <SecondaryButton type="button">
+                  Use the 15th <SuccessTag>Recommended</SuccessTag>
+                </SecondaryButton>
+              }
+            >
+              <svg width="100%" height="14" viewBox="0 0 120 14" preserveAspectRatio="none" aria-hidden="true" class="status-card-demo__drawing">
+                <rect x="0" y="4" width="120" height="6" rx="3" fill="var(--sui-border)" />
+                <rect x="0" y="4" width="78" height="6" rx="3" fill="var(--sui-success)" />
+              </svg>
+            </StatusCard>
           </Slot>
 
           <Slot>

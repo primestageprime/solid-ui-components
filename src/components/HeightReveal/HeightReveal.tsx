@@ -16,8 +16,11 @@
 // While the box moves, the children keep the height they had open (owner,
 // 2026-10-15): the box clips them like a curtain. Without the hold, a child
 // that fills its box (a chart) redraws shorter on every frame and squashes.
-// The close measures that height; the next open reuses it. A first open has
-// no height to reuse, so it does not hold.
+// A ResizeObserver records that height while the box is open and at rest;
+// the close holds it and the next open reuses it. A first open has no height
+// to reuse, so it does not hold. The record is taken BEFORE the close, not
+// at it: a parent that shrinks in the same update (a fill ChartFrame drops
+// to its header's height) leaves a filling child no height to measure.
 // ============================================
 import {
   type Component,
@@ -27,6 +30,7 @@ import {
   createSignal,
   on,
   onCleanup,
+  onMount,
 } from "solid-js";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import "./HeightReveal.css";
@@ -46,6 +50,18 @@ export const HeightReveal: Component<HeightRevealProps> = (props) => {
   const [held, setHeld] = createSignal<number | null>(null);
   let content: HTMLDivElement | undefined;
   let openHeight = 0;
+  const recordOpenHeight = () => {
+    if (props.when && held() === null && content && content.offsetHeight > 0) {
+      openHeight = content.offsetHeight;
+    }
+  };
+  onMount(() => {
+    recordOpenHeight();
+    if (typeof ResizeObserver === "undefined" || !content) return;
+    const observer = new ResizeObserver(recordOpenHeight);
+    observer.observe(content);
+    onCleanup(() => observer.disconnect());
+  });
   createEffect(
     on(
       () => props.when,
@@ -62,9 +78,10 @@ export const HeightReveal: Component<HeightRevealProps> = (props) => {
           onCleanup(() => clearTimeout(timer));
           return;
         }
-        // The transition starts from the open layout, so this reads the
-        // open height. A close that interrupts an open keeps the held one.
-        const measured = held() ?? content?.offsetHeight ?? 0;
+        // A close that interrupts an open keeps the held height. Otherwise
+        // the recorded open height wins over a read now, which may already
+        // see the closed layout.
+        const measured = held() ?? (openHeight || content?.offsetHeight || 0);
         if (measured > 0) {
           openHeight = measured;
           setHeld(measured);

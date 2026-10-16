@@ -91,3 +91,32 @@ describe("StatusCard", () => {
     ).toBe(true);
   });
 });
+
+describe("StatusCard children", () => {
+  it("draws its children between the description and the actions", () => {
+    const { container } = render(() => (
+      <StatusCard name="N" description="why" actions={<button type="button">Go</button>}>
+        <svg data-testid="drawing" />
+      </StatusCard>
+    ));
+    const row2 = container.querySelector(".sui-status-card__row2")!;
+    const order = [...row2.children].map((el) => el.className.toString());
+    const body = order.findIndex((c) => c.includes("sui-status-card__body"));
+    expect(body).toBeGreaterThan(order.findIndex((c) => c.includes("sui-status-card__desc-wrap")));
+    expect(body).toBeLessThan(order.findIndex((c) => c.includes("sui-status-card__actions")));
+    expect(row2.querySelector("[data-testid=drawing]")).toBeTruthy();
+    // Once only: not again at the card's end, where children used to go.
+    expect(container.querySelectorAll("[data-testid=drawing]").length).toBe(1);
+  });
+
+  it("shows the detail area for children alone, and a click on them selects the card", () => {
+    const onSelect = vi.fn();
+    const { container } = render(() => (
+      <StatusCard name="N" onSelect={onSelect}>
+        <span>drawing</span>
+      </StatusCard>
+    ));
+    fireEvent.click(container.querySelector(".sui-status-card__body span")!);
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+});

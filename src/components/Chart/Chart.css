@@ -424,6 +424,33 @@
   fill: var(--sui-text-secondary);
 }
 
+/* XSpan — a translucent wash of its tone; a `paint` sets the fill inline. */
+.sui-chart__x-span rect {
+  fill: var(--sui-text-secondary);
+  fill-opacity: 0.12;
+}
+.sui-chart__x-span[data-tone="success"] rect { fill: var(--sui-success); }
+.sui-chart__x-span[data-tone="warning"] rect { fill: var(--sui-warning); }
+.sui-chart__x-span[data-tone="danger"] rect { fill: var(--sui-danger); }
+.sui-chart__x-span[data-tone="accent"] rect { fill: var(--sui-accent); }
+.sui-chart__x-span:not([data-tone]) rect {
+  fill-opacity: 1;
+}
+.sui-chart__x-span-label {
+  fill: var(--sui-text-secondary);
+  font-size: 0.6rem;
+  paint-order: stroke fill;
+  stroke: var(--sui-chart-surface, var(--sui-bg-primary));
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* TickSeries — the chart's tick colour unless the consumer strokes it. */
+.sui-chart__tick {
+  stroke: var(--sui-chart-tick-color, #c0c0c0);
+  stroke-linecap: round;
+}
+
 /* OutOfRangeMarkers — the chevron and the value take the group's tone. */
 .sui-chart__out-of-range {
   color: var(--sui-text-secondary);

@@ -18,7 +18,7 @@
 // ============================================
 import { type Component, createMemo, Show } from "solid-js";
 import { useChart } from "./context";
-import { buildGapBracket } from "./gapBracketGeometry";
+import { type GapBracketTickAlign, buildGapBracket } from "./gapBracketGeometry";
 
 export interface GapBracketProps {
 	/** One end of the gap, in the y domain. */
@@ -29,8 +29,12 @@ export interface GapBracketProps {
 	readonly x?: number | Date;
 	/** Px past `x` (or past the plot edge) the stem stands. Default `8`, clear of a line's end. */
 	readonly offset?: number;
-	/** Length of each end tick, toward the plot. Default `4`. */
+	/** Length of each end tick. Default `4`. */
 	readonly tick?: number;
+	/** `"inward"` (default): each tick runs back toward the plot, a dimension
+	 *  bracket. `"center"`: each tick is centred on the stem, the caps of a
+	 *  min–max whisker; set `offset={0}` to stand the stem on `x`. */
+	readonly tickAlign?: GapBracketTickAlign;
 	/** A caption at the midpoint, right of the stem. */
 	readonly label?: string;
 	/** Stroke paint. Default `currentColor`. */
@@ -58,6 +62,7 @@ export const GapBracket: Component<GapBracketProps> = (props) => {
 			y1: ctx.yScale()(props.from),
 			y2: ctx.yScale()(props.to),
 			tick: props.tick,
+			tickAlign: props.tickAlign,
 		});
 	});
 	const stroke = () => props.stroke ?? "currentColor";

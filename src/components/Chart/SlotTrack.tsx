@@ -64,9 +64,10 @@ export function SlotTrack<T>(props: SlotTrackProps<T>) {
                 height={height()}
                 rx={height() / 2}
               >
-                <Show when={props.title}>
-                  <title>{props.title!(d)}</title>
-                </Show>
+                {/* In the rect's own template, never behind a Show: Solid
+                    compiles a <title> that starts its own template as an HTML
+                    <title>, which the browser takes for the page's title. */}
+                <title>{props.title?.(d) ?? ""}</title>
               </rect>
               <Show when={caption() !== ""}>
                 <text

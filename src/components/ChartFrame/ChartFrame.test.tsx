@@ -401,9 +401,32 @@ describe("ChartFrame — collapsible", () => {
     expect(box.style.height).toBe("auto");
     expect(box.style.flex).toBe("0 0 auto");
     expect(column(container).style.flex).toBe("0 0 auto");
+    // It opens content-sized, so the reveal eases the frame; then it fills.
     setCollapsed(false);
+    expect(box.style.height).toBe("auto");
+    vi.advanceTimersByTime(HEIGHT_REVEAL_MS);
     expect(box.style.height).toBe("");
     expect(column(container).style.height).toBe("100%");
+    // A close takes the content size at once.
+    setCollapsed(true);
+    expect(box.style.height).toBe("auto");
+    expect(column(container).style.flex).toBe("0 0 auto");
+  });
+
+  it("a fill frame's column does not ease its own height; a stated one does", () => {
+    const Fill = createChartFrame({ height: "fill" });
+    const fill = render(() => (
+      <Fill title="T" collapsible>
+        <span />
+      </Fill>
+    ));
+    expect(column(fill.container).classList.contains("stack--size-motion")).toBe(false);
+    const stated = render(() => (
+      <ChartFrame title="T" collapsible>
+        <span />
+      </ChartFrame>
+    ));
+    expect(column(stated.container).classList.contains("stack--size-motion")).toBe(true);
   });
 
   it("a controlled collapsed frame still shows its chart while fullscreen", () => {

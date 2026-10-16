@@ -38,6 +38,10 @@ export { SlotTrack, SlotTrackSwatch } from "./SlotTrack";
 export type { SlotTrackProps, SlotTrackSwatchProps, SlotState } from "./SlotTrack";
 export { PointCaptions } from "./PointCaptions";
 export type { PointCaptionsProps, CaptionSide } from "./PointCaptions";
+export { XSpan } from "./XSpan";
+export type { XSpanProps } from "./XSpan";
+export { TickSeries } from "./TickSeries";
+export type { TickSeriesProps } from "./TickSeries";
 export { OutOfRangeMarkers } from "./OutOfRangeMarkers";
 export type { OutOfRangeMarkersProps, OutOfRangePoint } from "./OutOfRangeMarkers";
 export { outOfRange, edgeLabelX } from "./outOfRange";
@@ -45,7 +49,12 @@ export type { OutOfRange, EdgeMarker, RangePoint } from "./outOfRange";
 export { GapBracket, gapMidpoint } from "./GapBracket";
 export type { GapBracketProps } from "./GapBracket";
 export { buildGapBracket } from "./gapBracketGeometry";
-export type { GapBracketGeometry, GapBracketMark, GapBracketSegment } from "./gapBracketGeometry";
+export type {
+  GapBracketGeometry,
+  GapBracketMark,
+  GapBracketSegment,
+  GapBracketTickAlign,
+} from "./gapBracketGeometry";
 export type { ChartLabelsProps } from "./ChartLabels";
 export { ChartTooltip } from "./Tooltip";
 export type { ChartTooltipProps } from "./Tooltip";
