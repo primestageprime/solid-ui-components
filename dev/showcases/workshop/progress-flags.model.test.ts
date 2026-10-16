@@ -11,6 +11,7 @@ import {
   bandFor,
   endOf,
   estimateLine,
+  flagTip,
   flagsOf,
   intervalsOf,
   observe,
@@ -155,5 +156,33 @@ describe("receipt durations", () => {
   it("is blank for the rest", () => {
     const c = rows.find((r) => r.kind === "Claimed");
     expect([c?.estimate, c?.actual]).toEqual(["", ""]);
+  });
+});
+
+describe("flag tooltip and receipt links", () => {
+  const t0 = startOf(TOPIC_18);
+  it("tells a done step's number, title, estimate, actual and state", () => {
+    const f = flagsOf(TOPIC_18)[0];
+    expect(f && flagTip(f)).toEqual([
+      "Step 1: Rolling bars on SUI, one track width",
+      "Estimated 10m",
+      "Actual 2.7m",
+      "Done",
+    ]);
+  });
+
+  it("has no actual line until the step is done", () => {
+    const f = flagsOf(TOPIC_18, t0 + 12 * MIN_MS)[7];
+    expect(f && flagTip(f)).toEqual([
+      "Step 8: Tick performance, one shared clock",
+      "Estimated 10m",
+      "In progress",
+    ]);
+  });
+
+  it("links step receipts to their flag number", () => {
+    const steps = receiptRows(TOPIC_18).filter((r) => r.step !== undefined);
+    expect(steps.length).toBe(22);
+    expect(steps[0]?.step).toBe(1);
   });
 });

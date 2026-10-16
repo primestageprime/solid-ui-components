@@ -232,6 +232,10 @@ export interface Flag {
   readonly y: number;
   readonly state: FlagState;
   readonly title: string;
+  readonly stepTitle: string;
+  readonly estimateMin: number;
+  /** Started to done, in minutes; undefined until the step is done. */
+  readonly actualMin: number | undefined;
 }
 
 /**
@@ -257,9 +261,23 @@ export const flagsOf = (t: TopicTrace, asOf: number = endOf(t)): readonly Flag[]
       y,
       state,
       title: `${i + 1}. ${s.title} (${s.estimateMin}m, ${state})`,
+      stepTitle: s.title,
+      estimateMin: s.estimateMin,
+      actualMin:
+        done && s.startedAt !== undefined && s.doneAt !== undefined
+          ? Math.round(((s.doneAt - s.startedAt) / MIN_MS) * 10) / 10
+          : undefined,
     };
   }, steps);
 };
+
+/** The tooltip lines of a flag: step, estimate, actual if any, state. */
+export const flagTip = (f: Flag): readonly string[] => [
+  `Step ${f.index}: ${f.stepTitle}`,
+  `Estimated ${f.estimateMin}m`,
+  ...(f.actualMin === undefined ? [] : [`Actual ${f.actualMin}m`]),
+  f.state === "past" ? "Done" : f.state === "current" ? "In progress" : "Planned",
+];
 
 // ---------------------------------------------------------------- the axis
 
@@ -284,6 +302,8 @@ export interface ReceiptRow {
   readonly estimate: string;
   /** Started-to-done of the step, or claim-to-Milestone; "" otherwise. */
   readonly actual: string;
+  /** The 1-based step this receipt is about, for linking to its flag. */
+  readonly step: number | undefined;
 }
 
 const minutesSince = (t0: number, x: number): string => `+${((x - t0) / MIN_MS).toFixed(1)}m`;
@@ -291,9 +311,14 @@ const minutesSince = (t0: number, x: number): string => `+${((x - t0) / MIN_MS).
 const spanMin = (from: number, to: number): string => `${((to - from) / MIN_MS).toFixed(1)}m`;
 
 /** The step a StepStarted/StepDone receipt names: "step 3 ..." is the third. */
-const stepOf = (t: TopicTrace, r: Receipt): Step | undefined => {
+const stepNumberOf = (r: Receipt): number | undefined => {
   const n = Number(/^step (\d+)/i.exec(r.detail)?.[1]);
-  return Number.isNaN(n) ? undefined : stepsOf(t)[n - 1];
+  return Number.isNaN(n) ? undefined : n;
+};
+
+const stepOf = (t: TopicTrace, r: Receipt): Step | undefined => {
+  const n = stepNumberOf(r);
+  return n === undefined ? undefined : stepsOf(t)[n - 1];
 };
 
 const durationsOf = (
@@ -320,6 +345,7 @@ export const receiptRows = (t: TopicTrace): readonly ReceiptRow[] => {
       kind: r.kind,
       detail: r.detail,
       ...durationsOf(t, r),
+      step: stepNumberOf(r),
     }),
     sortBy((r: Receipt) => r.at, t.receipts),
   );

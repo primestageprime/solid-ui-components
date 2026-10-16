@@ -9,7 +9,7 @@
 // each with a thin drop line to its point on the series. The receipts table
 // sits under "Ahead", the one scenario that is a real topic. The model is
 // progress-flags.model.ts; the data is progress-flags.fixtures.ts.
-import { type Component, Index, createMemo } from "solid-js";
+import { type Accessor, type Component, Index, Show, createMemo, createSignal } from "solid-js";
 import {
   AreaSeries,
   Chart,
@@ -21,6 +21,7 @@ import {
   MutedBody,
   NarrowStack,
   PinMarkers,
+  ReferenceLine,
   ShapeGlyph,
   Tooltip,
   ViewportColumn,
@@ -31,7 +32,7 @@ import {
   fn,
   slotId,
 } from "../../../src";
-import type { IconName, Pin } from "../../../src";
+import type { IconName, Id, Pin } from "../../../src";
 import type { ReceiptKind, TopicTrace } from "./progress-flags.fixtures";
 import { SCENARIOS } from "./progress-flags.fixtures";
 import {
@@ -44,6 +45,7 @@ import {
   bandFor,
   clock,
   endOf,
+  flagTip,
   estimateLine,
   flagsOf,
   intervalsOf,
@@ -69,15 +71,18 @@ const LANE = 16;
 /** Room past the last event, as a share of the span, so the last flag is not clipped. */
 const X_PAD = 0.03;
 const DROP_STROKE = "var(--sui-text-muted)";
+const LIT_STROKE = "var(--sui-accent)";
 
 interface FlagPin extends Pin {
   readonly flag: Flag;
 }
 
+const stepId = (n: number): Id => slotId(`step-${n}`);
+
 const flagColor = (f: Flag): string => (f.state === "current" ? CURRENT : PAST);
 
 const pinOf = (f: Flag): FlagPin => ({
-  id: slotId(`step-${f.index}`),
+  id: stepId(f.index),
   x: f.x,
   y: f.y,
   descriptor: { color: flagColor(f), shape: "square", size: FLAG_SIZE },
@@ -89,6 +94,8 @@ const bottomx = (v: BandVertex): number => v.bottom;
 const vx = (v: BandVertex): number => v.x;
 const px = (p: LevelPoint): number => p.x;
 const py = (p: LevelPoint): number => p.y;
+
+type Scenario = (typeof SCENARIOS)[number];
 
 const KIND_ICON: Record<ReceiptKind, IconName> = {
   Claimed: "log-in",
@@ -128,16 +135,29 @@ const RECEIPT_REGISTRY = {
 };
 
 /** One topic's step timeline: area, both lines, flags along the top with drop lines. */
-const StepTimeline: Component<{ readonly name: string; readonly topic: TopicTrace }> = (props) => {
+interface TimelineProps {
+  readonly name: string;
+  readonly topic: TopicTrace;
+  readonly nowMin?: number;
+  /** The step whose flag the pointer is on (or whose row it is on). */
+  readonly hovered: Accessor<Id | undefined>;
+  readonly onHover: (id: Id | undefined) => void;
+  /** The step whose flag was pressed. */
+  readonly selected: Accessor<Id | undefined>;
+  readonly onSelect: (id: Id) => void;
+}
+
+const StepTimeline: Component<TimelineProps> = (props) => {
   const t0 = () => startOf(props.topic);
-  const end = () => endOf(props.topic);
+  const end = () =>
+    props.nowMin === undefined ? endOf(props.topic) : t0() + props.nowMin * MIN_MS;
   const estimate = createMemo(() => estimateLine(props.topic));
   const actual = createMemo(() => actualLine(props.topic, end()));
   const intervals = createMemo(() => intervalsOf(props.topic, end()));
   const flags = createMemo(() => flagsOf(props.topic, end()));
   const pins = createMemo(() => fn.map(pinOf, flags()));
   const xEnd = () => {
-    const last = Math.max(end(), t0() + totalMin(props.topic) * MIN_MS);
+    const last = Math.max(endOf(props.topic), t0() + totalMin(props.topic) * MIN_MS);
     return last + (last - t0()) * X_PAD;
   };
   const yMax = () => Math.round(totalMin(props.topic) * 1.1);
@@ -145,6 +165,12 @@ const StepTimeline: Component<{ readonly name: string; readonly topic: TopicTrac
   const marks = createAxisWaterMarks(() => ({ min: 0, max: yMax() }));
   const yDomain = (): [number, number] => marks.domain() ?? [0, yMax()];
   const ticks = () => timeTicks(t0(), xEnd(), tickEvery(xEnd() - t0()));
+  const lit = (n: number): boolean =>
+    props.hovered() === stepId(n) || props.selected() === stepId(n);
+  const emphasized = createMemo((): ReadonlySet<Id> => {
+    const id = props.hovered();
+    return id === undefined ? new Set<Id>() : new Set<Id>([id]);
+  });
   const drop = (f: Flag): LevelPoint[] => [
     { x: f.x, y: yMax() },
     { x: f.x, y: f.y },
@@ -208,31 +234,78 @@ const StepTimeline: Component<{ readonly name: string; readonly topic: TopicTrac
           strokeWidth={2}
           curve="step"
         />
+        <Show when={props.nowMin !== undefined}>
+          <ReferenceLine
+            orientation="vertical"
+            value={new Date(end())}
+            label="now"
+            stroke={INK}
+            strokeDasharray="4 3"
+          />
+        </Show>
         <Index each={flags()}>
           {(f) => (
             <LineSeries<LevelPoint>
               data={drop(f())}
               x={px}
               y={py}
-              stroke={DROP_STROKE}
-              strokeWidth={1}
+              stroke={lit(f().index) ? LIT_STROKE : DROP_STROKE}
+              strokeWidth={lit(f().index) ? 2 : 1}
             />
           )}
         </Index>
         <PinMarkers<FlagPin>
           data={pins()}
           lane="annotation"
+          selectedId={props.selected()}
+          emphasizedIds={emphasized()}
+          onHover={(pin) => props.onHover(pin?.id)}
+          onClick={(pin) => props.onSelect(pin.id)}
           renderPin={(pin, rc) => (
             <ShapeGlyph
               descriptor={pin.descriptor}
               cx={rc.cx}
               cy={rc.cy}
+              size={FLAG_SIZE}
               hollow={pin.flag.state === "planned"}
+              stroke={rc.selected ? LIT_STROKE : undefined}
+              strokeWidth={rc.selected ? 2 : undefined}
             />
           )}
         />
       </Chart>
     </ContentAutoGrowChartFrame>
+  );
+};
+
+/** One scenario: its framed chart and, for the real topic, the receipts it is built from. */
+const ScenarioSection: Component<{ readonly scenario: Scenario }> = (props) => {
+  const [hovered, setHovered] = createSignal<Id | undefined>(undefined);
+  const [selected, setSelected] = createSignal<Id | undefined>(undefined);
+  return (
+    <>
+      <StepTimeline
+        name={props.scenario.name}
+        topic={props.scenario.topic}
+        nowMin={props.scenario.nowMin}
+        hovered={hovered}
+        onHover={setHovered}
+        selected={selected}
+        onSelect={setSelected}
+      />
+      <MutedBody>{props.scenario.topic.title}</MutedBody>
+      <Show when={props.scenario.name === "Ahead"}>
+        <FieldTable
+          data={[...receiptRows(props.scenario.topic)]}
+          fields={RECEIPT_FIELDS}
+          registry={RECEIPT_REGISTRY}
+          maxRows={14}
+          onRowHover={(row) =>
+            setHovered(row?.step === undefined ? undefined : stepId(row.step))
+          }
+        />
+      </Show>
+    </>
   );
 };
 
@@ -244,22 +317,7 @@ const ProgressFlagsBench: Component = () => (
           Dashed: estimate. Solid: actual. Blue: within tolerance. Purple: ahead
           of it. Red: behind it. Flags: grey done, cyan current, outline planned.
         </MutedBody>
-        <Index each={SCENARIOS}>
-          {(sc) => (
-            <>
-              <StepTimeline name={sc().name} topic={sc().topic} />
-              <MutedBody>{sc().topic.title}</MutedBody>
-              {sc().name === "Ahead" && (
-                <FieldTable
-                  data={[...receiptRows(sc().topic)]}
-                  fields={RECEIPT_FIELDS}
-                  registry={RECEIPT_REGISTRY}
-                  maxRows={14}
-                />
-              )}
-            </>
-          )}
-        </Index>
+        <Index each={SCENARIOS}>{(sc) => <ScenarioSection scenario={sc()} />}</Index>
       </NarrowStack>
     </ViewportColumn>
   </div>

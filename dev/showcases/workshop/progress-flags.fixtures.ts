@@ -276,8 +276,15 @@ const byId = (id: number): TopicTrace => TOPICS.find((t) => t.id === id) ?? (TOP
 export const TOPIC_18 = byId(18);
 
 /** The bench's scenarios, in order: a name and the topic that shows it. */
-export const SCENARIOS: readonly { readonly name: string; readonly topic: TopicTrace }[] = [
+export const SCENARIOS: readonly {
+  readonly name: string;
+  readonly topic: TopicTrace;
+  /** Minutes after the first receipt at which to cut the trace; omitted, it runs to its end. */
+  readonly nowMin?: number;
+}[] = [
   { name: "On target", topic: byId(903) },
+  // In progress: topic 18 cut at +12m, step 7 done, step 8 started, the rest planned.
+  { name: "In progress", topic: TOPIC_18, nowMin: 12 },
   { name: "Ahead", topic: TOPIC_18 },
   { name: "Behind", topic: byId(901) },
   { name: "Over and under", topic: byId(902) },
