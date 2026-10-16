@@ -28,6 +28,85 @@
 
 - **`ThreePanelLayout` stacks with one 16px gutter.** At 900px and below the side panels stack above and below the centre. Their 8px padding and the centre's 16px used to add up to a 24px band (25px measured) with the aside text 8px in from the edge while the centre's sat 16px in. The stacked asides now take the centre's 16px sides, and the left aside gives up its bottom padding and the right its top, so the centre's own 16px is the whole gutter on both sides. CSS only, no API change. Side by side is unchanged.
 
+## 0.222.0 — 2026-10-16
+
+### Added
+
+- **`CompactBucketQueue`** and **`BucketQueue` `density`** (`"comfortable"` | `"compact"`). Compact sets 11px headers, 20px rows, 12px text and a 4px gap between buckets, for a narrow side pane. Rows must share one height: use `SmallStatusLight` for a status, not a badge.
+- **`CompactLabel`** — a 12px label (weight 500, 16px line) for a row name in a dense list.
+
+### Fixed
+
+- **`BucketQueue` measures each bucket's own header.** It measured bucket 0's header and used that height for every bucket. In a narrow pane a long label wraps onto more lines, so its bucket was too short and its rows scrolled, and a one-line header got a blank strip under it. `naturalHeights` takes an optional `headHeights`.
+- **`HeightReveal` (and so `ChartFrame`'s body) is never wider than its parent.** Its grid had an `auto` column, so a wide child (a chart's `<svg width>`) grew the column past the frame, and the chart drew outside the frame, over the next panel. The column is now `minmax(0, 1fr)` and the inner box has `min-width: 0`, so the inner box clips wide content.
+
+## 0.221.0 — 2026-10-15
+
+### Added
+
+- **`Icon` `flipped`** — turns the glyph 180°. A change animates over 200ms (none under reduced motion), so a chevron turns instead of swapping glyphs. Omit it and the icon gets no transition.
+
+### Changed
+
+- **`HeightReveal` holds its content at the open height while it moves.** The box clips the content like a curtain. Before, a child that fills its box (ChartFrame's chart) redrew shorter on every frame and squashed to nothing. The close measures the open height and the next open reuses it; a first open does not hold. The content now sits in a `.sui-height-reveal__content` box.
+- **`ChartFrame`'s collapse chevron turns smoothly.** It is now one `chevron-up` that turns 180° when the frame collapses, not a swap to `chevron-down`. The labels and `aria-expanded` do not change.
+
+### Fixed
+
+- **`BaseTable` / `TreeTable`: a right- or center-aligned column now aligns its header too.** The header cell's content is a flex row, so the cell's `text-align` did not move the label or the sort mark. The `th` now carries `hud-table__header-cell--align-right` or `--align-center`, which justifies them.
+
+### Removed
+
+- **`SectionedList`**, **`CompactSectionedList`** and **`createSectionedList`**, with their types (`SectionedListDataProps`, `SectionedListSection`, `SectionedListItem`, `SectionedListStatus`, `SectionedListStatusTone`). 0.220.0 added them, and no consumer adopted them. The owner chose to keep `BucketQueue` for the side pane instead.
+
+## 0.220.0 — 2026-10-15
+
+### Added
+
+- **`SectionedList`** / **`CompactSectionedList`** — a Primitive (Depth 1): a dense list in sections for a narrow side pane. Each section has a full-width title bar (uppercase caption, count at the right end) and one-line rows: a clipped name and an optional status. A section may collapse, with its chevron at the right end of the bar; `defaultOpen` sets its start state, and `open` controls it. A status is a shape per tone (success circle, warning diamond, neutral dash) plus its word; `CompactSectionedList` drops the word. Muted rows hide their status. Titles are headings; the list is one tab stop, and the arrow keys, Home and End move between rows. Factory `createSectionedList`. Exported types: `SectionedListDataProps`, `SectionedListSection`, `SectionedListItem`, `SectionedListStatus`, `SectionedListStatusTone`.
+
+- **`MetricCard` `size`** — `"md" | "lg"`, default `md`. `lg` sets the value at 2.5rem (from 1.5rem) and its units at 1.25rem, for a page's headline figure. The label and the card chrome do not change. Exported type: `MetricCardSize`.
+
+- **`HeightReveal`** — a Primitive (Depth 1): slides its content open and shut vertically (a `0fr ↔ 1fr` grid row and a fade, 180ms), and unmounts the content when the close ends. Instant under `prefers-reduced-motion`.
+
+- **`Stack` `sizeMotion`** — an Override: the stack's height, flex-grow and flex-basis ease in 180ms, to and from `auto` where the browser supports `interpolate-size`.
+
+- **`createSubmitAction`** and **`Button` `onAction` / `once` / `action`** — a click that sends work. The button shows its spinner and stays disabled while the work runs, and it ignores a second click. With `once`, it stays disabled after one sent run; work that returns `false` leaves it armed. The action waits one paint before it calls the work, so the spinner shows before synchronous work blocks the page. Share one `createSubmitAction` between a button and a keyboard shortcut.
+
+- **`BaseTable`**, **`TreeTable`** — `flush` drops the frame's corner cutouts and side borders, so a table that fills a panel runs its lines to the panel's edges.
+
+- **`ThreePanelLayout`** — `rightPanelFlush` drops the right panel's inner padding, so its content (a table's row lines) runs to the panel's edges. The content sets its own inset.
+
+### Changed
+
+- **`ChartFrame` collapse** and **`BuilderBoard` `panelACollapsed`** now animate. The chart slides shut and open, the frame eases to its header's height, and BuilderBoard's panels below ease into place. A browser without `interpolate-size` (Firefox and Safari today) still slides the chart, but the frame and panels change size at once.
+
+### Fixed
+
+- **`List`** — a compact list keeps an interactive row's 12px inline padding. The compact rule set it to 0, so the row's -12px bleed put its text flush with the list's outer edge.
+
+## 0.219.0 — 2026-10-14
+
+### Added
+
+- **`TreeTable`** — a Composite (Depth 2): a table whose parent rows expand to show the rows they are made of. The caller passes the tree and the open ids; the first column draws NestedList's indent rail and a disclosure chevron. Parent rows show their own aggregate values. Optional checkboxes hold leaf ids, and a parent checks every leaf under it. A header click sorts siblings within each parent.
+
+- **`IndentRail`** — a Layout Primitive (Depth 1): NestedList's indent and guide rail around arbitrary content, with no list semantics. It shares NestedList's stylesheet.
+
+- **`DisclosureButton`** and **`ReservedDisclosureButton`** — curried Buttons: a ghost button with no padding, exactly as wide as its chevron, and its hidden twin that keeps the box on a row with nothing to disclose.
+
+- **`BaseTable` controlled sort** — `sort` and `onSortChange`. With `onSortChange` set, the caller owns the sort and the row order, and BaseTable only draws the header state. The sorted header now carries `aria-sort`. Exported type: `TableSort`.
+
+- **`ChartFrame` collapse** — `collapsible`, plus `collapsed` and `onCollapsedChange` (controlled, or owned when `collapsed` is omitted). A chevron sits after fullscreen and before the y-axis control, so the hamburger stays the rightmost button. Collapsed, the frame keeps its header and does not render its body. Entering fullscreen expands it.
+
+- **`BuilderBoard` `panelACollapsed`** — panel A takes only its content's height, and the panels below move up. Pass the `collapsed` state of A's `ChartFrame`. The default is unchanged.
+
+- **`ModeSplitButton` `menuIcon`** and **`PopoverMenu` `caretIcon`** — the menu trigger's glyph. The default stays the ▾.
+
+### Changed
+
+- **`ChartFrame`** — the y-axis mode menu's trigger is a hamburger, not a ▾, so the chevron means only expand and collapse. Its accessible name stays "Y-axis mode".
+
 ## 0.218.0 — 2026-10-13
 
 ### Added

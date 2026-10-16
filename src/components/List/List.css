@@ -32,6 +32,13 @@
   transition: all 0.2s ease;
 }
 
+/* A compact list keeps the interactive row's inline padding. Without this rule the compact
+   rule above (two classes) beat this one (one class) and set the inline padding to 0, so
+   the -12px bleed put the row's text flush with the list's outer edge. */
+.sui-list--compact .sui-list-item--interactive {
+  padding: 6px 12px;
+}
+
 .sui-list-item__status {
   width: 8px;
   height: 8px;

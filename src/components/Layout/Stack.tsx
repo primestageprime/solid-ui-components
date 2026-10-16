@@ -18,6 +18,10 @@ export interface StackProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Fill the parent's height and forward it through (height:100%; min-height:0)
    *  so a scrolling child — e.g. a `fill` BaseTable — has concrete height. */
   fill?: boolean;
+  /** Animate this stack's own height, flex-grow and flex-basis (180ms,
+   *  instant under reduced motion), `auto` included where the browser
+   *  supports `interpolate-size`. For a box that collapses to its content. */
+  sizeMotion?: boolean;
 }
 
 export const Stack: Component<StackProps> = (props) => {
@@ -26,6 +30,7 @@ export const Stack: Component<StackProps> = (props) => {
     "align",
     "justify",
     "fill",
+    "sizeMotion",
     "class",
     "children",
   ]);
@@ -48,6 +53,7 @@ export const Stack: Component<StackProps> = (props) => {
       classList.push(c);
     }
     if (local.fill) classList.push("stack--fill");
+    if (local.sizeMotion) classList.push("stack--size-motion");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
@@ -62,7 +68,7 @@ export const Stack: Component<StackProps> = (props) => {
 /** Props that are layout overrides — locked at variant-definition time. */
 export type StackOverrides = Pick<
   StackProps,
-  "gap" | "align" | "justify" | "fill"
+  "gap" | "align" | "justify" | "fill" | "sizeMotion"
 >;
 
 /** Props that remain available to consumers of a curried Stack variant. */

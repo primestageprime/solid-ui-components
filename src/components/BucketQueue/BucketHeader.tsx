@@ -107,7 +107,7 @@ export function BucketHeader(props: BucketHeaderProps): JSX.Element {
           toggle button's onClick. This wrapper carries no border/padding of
           its own, so its measured height is just the header's — `headerAction`
           is documented (types.ts) to stay within the header's own line box, so
-          this never changes what bucket 0's header measures for every bucket's
+          this never changes what this bucket's header measures for its
           water-fill allocation (see BucketQueue.tsx / measurement.ts). */}
       <div class="bucket-queue__header-row" ref={props.ref}>
         {Header()}

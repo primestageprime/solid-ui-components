@@ -53,6 +53,12 @@ export interface ThreePanelLayoutProps {
    * property on the root element.
    */
   asideMaxHeight?: string;
+  /**
+   * Drop the right panel's inner padding, so its content (a table's row
+   * lines, say) runs from the panel's border to the layout's edge. The
+   * content then sets its own inset. Defaults to `false`.
+   */
+  rightPanelFlush?: boolean;
   /** Optional class appended to the root `.sui-three-panel` element. */
   class?: string;
 }
@@ -111,7 +117,9 @@ export const ThreePanelLayout: Component<ThreePanelLayoutProps> = (props) => {
         </Show>
         <div class="sui-three-panel__center">{props.centerPanel}</div>
         <Show when={props.rightPanel}>
-          <div class="sui-three-panel__right">{props.rightPanel}</div>
+          <div class={props.rightPanelFlush ? "sui-three-panel__right sui-three-panel__right--flush" : "sui-three-panel__right"}>
+            {props.rightPanel}
+          </div>
         </Show>
       </div>
     </div>
@@ -123,7 +131,7 @@ export const ThreePanelLayout: Component<ThreePanelLayoutProps> = (props) => {
  *  variant, never repeated at call sites). */
 export type ThreePanelLayoutOverrides = Pick<
   ThreePanelLayoutProps,
-  "height" | "fullHeight" | "leftPanelWidth" | "rightPanelWidth" | "asideMaxHeight"
+  "height" | "fullHeight" | "leftPanelWidth" | "rightPanelWidth" | "asideMaxHeight" | "rightPanelFlush"
 >;
 
 /** Props that remain for consumers of a curried variant: the panels. */

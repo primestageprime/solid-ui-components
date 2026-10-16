@@ -5,7 +5,7 @@ export type { DateTimeRangeMode } from "./formatDateTimeRange";
 export { DigitRoller } from "./DigitRoller";
 export type { DigitRollerProps } from "./DigitRoller";
 export { MetricCard } from "./MetricCard";
-export type { MetricCardProps, MetricCardColor } from "./MetricCard";
+export type { MetricCardProps, MetricCardColor, MetricCardSize } from "./MetricCard";
 export { ResultDisplay } from "./ResultDisplay";
 export type { ResultDisplayProps } from "./ResultDisplay";
 export { ResultPanel } from "./ResultPanel";

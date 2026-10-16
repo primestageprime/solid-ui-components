@@ -7877,19 +7877,19 @@
     }
   },
   {
-    "at": "2026-10-15T23:30:38.671Z",
+    "at": "2026-10-14T17:47:42.966Z",
     "metrics": {
       "bareHexCss": 0,
       "bareHexTsx": 0,
       "inlineStyleSrc": 67,
       "inlineStyleShowcases": 16,
       "dotChains": 7,
-      "collectionMethodCalls": 30,
+      "collectionMethodCalls": 31,
       "styleRubricViolations": 0,
       "showcaseStyleRubricViolations": 0,
       "cssTypedProps": 10,
       "componentsNeverRendered": 17,
-      "undocumentedExports": 92,
+      "undocumentedExports": 93,
       "brokenDocImports": 0,
       "missingDepthHeaders": 0,
       "componentsWithoutShowcase": 0,
@@ -7921,63 +7921,68 @@
     }
   },
   {
-    "at": "2026-10-15T23:46:05.698Z",
-    "metrics": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 30,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 0,
-      "catalogSummaryGaps": 0
-    },
-    "baseline": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 30,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 92,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 0,
-      "catalogSummaryGaps": 0,
-      "_raises": {
-        "inlineStyleSrc": {
-          "from": 67,
-          "to": 68,
-          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
-        }
-      }
-    }
-  },
-  {
-    "at": "2026-10-15T23:52:39.279Z",
+    "at": "2026-10-14T23:50:24.456Z",
     "metrics": {
       "bareHexCss": 0,
       "bareHexTsx": 0,
       "inlineStyleSrc": 67,
       "inlineStyleShowcases": 16,
       "dotChains": 8,
+      "collectionMethodCalls": 32,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 93,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
       "collectionMethodCalls": 31,
       "styleRubricViolations": 0,
       "showcaseStyleRubricViolations": 0,
       "cssTypedProps": 10,
       "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
+      "undocumentedExports": 93,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-14T23:53:30.866Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 93,
       "brokenDocImports": 0,
       "missingDepthHeaders": 0,
       "componentsWithoutShowcase": 0,
@@ -7989,12 +7994,12 @@
       "inlineStyleSrc": 67,
       "inlineStyleShowcases": 16,
       "dotChains": 7,
-      "collectionMethodCalls": 30,
+      "collectionMethodCalls": 31,
       "styleRubricViolations": 0,
       "showcaseStyleRubricViolations": 0,
       "cssTypedProps": 10,
       "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
+      "undocumentedExports": 93,
       "brokenDocImports": 0,
       "missingDepthHeaders": 0,
       "componentsWithoutShowcase": 0,
@@ -8004,63 +8009,24 @@
           "from": 67,
           "to": 68,
           "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
         }
       }
     }
   },
   {
-    "at": "2026-10-16T00:00:18.340Z",
+    "at": "2026-10-15T22:47:21.508Z",
     "metrics": {
       "bareHexCss": 0,
       "bareHexTsx": 0,
       "inlineStyleSrc": 67,
       "inlineStyleShowcases": 16,
       "dotChains": 7,
-      "collectionMethodCalls": 30,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 0,
-      "catalogSummaryGaps": 0
-    },
-    "baseline": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 30,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 0,
-      "catalogSummaryGaps": 0,
-      "_raises": {
-        "inlineStyleSrc": {
-          "from": 67,
-          "to": 68,
-          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
-        }
-      }
-    }
-  },
-  {
-    "at": "2026-10-16T00:07:25.399Z",
-    "metrics": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 30,
+      "collectionMethodCalls": 31,
       "styleRubricViolations": 0,
       "showcaseStyleRubricViolations": 0,
       "cssTypedProps": 10,
@@ -8068,51 +8034,7 @@
       "undocumentedExports": 92,
       "brokenDocImports": 0,
       "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 1,
-      "catalogSummaryGaps": 1
-    },
-    "baseline": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 30,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
       "componentsWithoutShowcase": 0,
-      "catalogSummaryGaps": 0,
-      "_raises": {
-        "inlineStyleSrc": {
-          "from": 67,
-          "to": 68,
-          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
-        }
-      }
-    }
-  },
-  {
-    "at": "2026-10-16T00:09:09.662Z",
-    "metrics": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 30,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 1,
       "catalogSummaryGaps": 0
     },
     "baseline": {
@@ -8121,12 +8043,12 @@
       "inlineStyleSrc": 67,
       "inlineStyleShowcases": 16,
       "dotChains": 7,
-      "collectionMethodCalls": 30,
+      "collectionMethodCalls": 31,
       "styleRubricViolations": 0,
       "showcaseStyleRubricViolations": 0,
       "cssTypedProps": 10,
       "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
+      "undocumentedExports": 93,
       "brokenDocImports": 0,
       "missingDepthHeaders": 0,
       "componentsWithoutShowcase": 0,
@@ -8136,24 +8058,29 @@
           "from": 67,
           "to": 68,
           "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
         }
       }
     }
   },
   {
-    "at": "2026-10-16T00:09:36.868Z",
+    "at": "2026-10-16T00:52:49.700Z",
     "metrics": {
       "bareHexCss": 0,
       "bareHexTsx": 0,
       "inlineStyleSrc": 67,
       "inlineStyleShowcases": 16,
       "dotChains": 7,
-      "collectionMethodCalls": 30,
+      "collectionMethodCalls": 31,
       "styleRubricViolations": 0,
       "showcaseStyleRubricViolations": 0,
       "cssTypedProps": 10,
       "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
+      "undocumentedExports": 90,
       "brokenDocImports": 0,
       "missingDepthHeaders": 0,
       "componentsWithoutShowcase": 0,
@@ -8165,12 +8092,12 @@
       "inlineStyleSrc": 67,
       "inlineStyleShowcases": 16,
       "dotChains": 7,
-      "collectionMethodCalls": 30,
+      "collectionMethodCalls": 31,
       "styleRubricViolations": 0,
       "showcaseStyleRubricViolations": 0,
       "cssTypedProps": 10,
       "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
+      "undocumentedExports": 92,
       "brokenDocImports": 0,
       "missingDepthHeaders": 0,
       "componentsWithoutShowcase": 0,
@@ -8180,94 +8107,11 @@
           "from": 67,
           "to": 68,
           "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
-        }
-      }
-    }
-  },
-  {
-    "at": "2026-10-16T00:43:52.303Z",
-    "metrics": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 35,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 0,
-      "catalogSummaryGaps": 0
-    },
-    "baseline": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 30,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 0,
-      "catalogSummaryGaps": 0,
-      "_raises": {
-        "inlineStyleSrc": {
-          "from": 67,
-          "to": 68,
-          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
-        }
-      }
-    }
-  },
-  {
-    "at": "2026-10-16T00:47:44.252Z",
-    "metrics": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 30,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 0,
-      "catalogSummaryGaps": 0
-    },
-    "baseline": {
-      "bareHexCss": 0,
-      "bareHexTsx": 0,
-      "inlineStyleSrc": 67,
-      "inlineStyleShowcases": 16,
-      "dotChains": 7,
-      "collectionMethodCalls": 30,
-      "styleRubricViolations": 0,
-      "showcaseStyleRubricViolations": 0,
-      "cssTypedProps": 10,
-      "componentsNeverRendered": 17,
-      "undocumentedExports": 91,
-      "brokenDocImports": 0,
-      "missingDepthHeaders": 0,
-      "componentsWithoutShowcase": 0,
-      "catalogSummaryGaps": 0,
-      "_raises": {
-        "inlineStyleSrc": {
-          "from": 67,
-          "to": 68,
-          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
         }
       }
     }

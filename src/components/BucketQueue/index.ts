@@ -1,4 +1,5 @@
 export { BucketQueue } from "./BucketQueue";
+export { CompactBucketQueue } from "./variants";
 export type { BucketQueueProps, Bucket } from "./types";
 export { allocateHeights, naturalHeights, retainRowHeights } from "./layout";
 export type { AllocateInput, NaturalInput } from "./layout";

@@ -24,6 +24,14 @@
   );
 }
 
+/* `flush`: no corner cutouts and no side borders, so the lines run to the
+   edges of the panel the table fills. */
+.hud-table.hud-table--flush {
+  clip-path: none;
+  border-left: none;
+  border-right: none;
+}
+
 /* `fill` keeps only its SIZES here (height/min-height are not layout-purity-
    banned) so the composed flex column can fill a definite-height block parent;
    the flex/overflow come from the composed ClipFillColumnFlush + ScrollFillColumn. */
@@ -122,6 +130,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* The header content is a flex row, so the th's text-align does not move
+   it: a right or center column justifies its label and sort mark here. */
+.hud-table__header-cell--align-right .hud-table__header-content {
+  justify-content: flex-end;
+}
+
+.hud-table__header-cell--align-center .hud-table__header-content {
+  justify-content: center;
 }
 
 .hud-table__sort-indicator {

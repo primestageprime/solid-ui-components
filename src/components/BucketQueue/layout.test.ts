@@ -282,3 +282,37 @@ describe("retainRowHeights — a bucket never loses its own measurement", () => 
     expect(out).toEqual(new Map([["configs", 54]]));
   });
 });
+
+// A narrow pane wraps a long bucket label onto more lines than bucket 0's
+// (reported 2026-10-15, thorcasting Import → Manual): one shared header height
+// gave that bucket a line too few, so its rows scrolled, and gave a one-line
+// header a line too many, which showed as a blank strip under it.
+describe("naturalHeights — one header height per bucket", () => {
+  it("sizes each bucket from ITS OWN header height", () => {
+    const out = naturalHeights({
+      ...MIXED,
+      counts: [2, 2, 1],
+      rowHeights: [20, 20, 20],
+      capRows: [null, null, null],
+      hasEmptyLabel: [false, false, false],
+      headHeights: [36, 50, 22],
+    });
+    expect(out).toEqual([36 + 2 * 20 + 2, 50 + 2 * 20 + 2, 22 + 20 + 2]);
+  });
+
+  it("uses its own header height for a collapsed or an empty bucket too", () => {
+    const out = naturalHeights({
+      ...MIXED,
+      counts: [3, 0],
+      rowHeights: [20, null],
+      collapsed: [true, false],
+      headHeights: [22, 36],
+    });
+    expect(out).toEqual([22 + 2, 36 + 2]);
+  });
+
+  it("falls back to the shared header height for a bucket not measured yet", () => {
+    const out = naturalHeights({ ...MIXED, counts: [1, 1], rowHeights: [20, 20], headHeights: [40, null] });
+    expect(out).toEqual([40 + 20 + 2, 32 + 20 + 2]);
+  });
+});

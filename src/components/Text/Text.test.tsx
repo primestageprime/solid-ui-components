@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { Text, createText } from "./Text";
-import { TextLabel, EllipsizedTitle, VerticalAxisTitle } from "./index";
+import { CompactLabel, TextLabel, EllipsizedTitle, VerticalAxisTitle } from "./index";
 
 describe("Text", () => {
   it("renders with the variant class", () => {
@@ -12,6 +12,15 @@ describe("Text", () => {
   it("TextLabel curried variant", () => {
     const { container } = render(() => <TextLabel>label</TextLabel>);
     expect(container.firstElementChild!.className).toMatch(/text--label/);
+  });
+
+  it("CompactLabel is a 12px label for a dense row", () => {
+    const { container } = render(() => <CompactLabel>row</CompactLabel>);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el.className).toMatch(/text--label/);
+    expect(el.style.fontSize).toBe("12px");
+    expect(el.style.fontWeight).toBe("500");
+    expect(el.style.lineHeight).toBe("16px");
   });
 
   it("EllipsizedTitle applies ellipsis style", () => {

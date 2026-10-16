@@ -102,3 +102,11 @@ export type {
   TracePress,
   TraceRow,
 } from "./hotkeyDispatch";
+// A click that sends work once: pending (spinner + disabled) while the work
+// runs, and optionally spent after it. Button's `action` prop reads it.
+export { createSubmitAction, nextPaint } from "./createSubmitAction";
+export type {
+  SubmitAction,
+  SubmitActionOptions,
+  SubmitWork,
+} from "./createSubmitAction";

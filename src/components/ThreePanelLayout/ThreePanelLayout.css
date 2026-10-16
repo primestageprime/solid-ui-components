@@ -80,6 +80,11 @@
   min-width: 0;
 }
 
+/* rightPanelFlush: no inner padding; the content sets its own inset. */
+.sui-three-panel__right--flush {
+  padding: 0;
+}
+
 /* Mobile collapse — single column, side panels capped and borderless.
    The 900px breakpoint matches the downstream $mobile-width. No
    --sui-breakpoint-* tokens exist in the library yet, so the value is

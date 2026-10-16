@@ -5,6 +5,7 @@ import { PipelineDemo } from "./pipeline";
 import { FillDemo } from "./fill";
 import { DiscardStagingDemo } from "./discard";
 import { HeaderActionDemo } from "./headerAction";
+import { CompactDemo } from "./compact";
 
 export const BucketQueueShowcase: Component = () => {
   return (
@@ -213,6 +214,19 @@ export const BucketQueueShowcase: Component = () => {
         the click also toggling the disclosure it sits inside of.
       </p>
       <HeaderActionDemo />
+
+      <SubsectionTitle>
+        CompactBucketQueue — a dense queue for a narrow side pane
+      </SubsectionTitle>
+      <p class="text-meta">
+        Left: <code>BucketQueue</code> at 340px. Right:{" "}
+        <code>CompactBucketQueue</code> at 200px — 11px headers, 20px rows, a
+        4px gap — with <code>CompactLabel</code> names, a{" "}
+        <code>TextSublabel</code> name for the muted bucket, and a <code>SmallStatusLight</code>{" "}
+        status (a badge is taller than the 16px line). No bucket declares <code>fill</code>, so each one ends at its
+        last row. The two share one selection.
+      </p>
+      <CompactDemo />
     </div>
   );
 };

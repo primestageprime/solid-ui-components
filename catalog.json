@@ -48,7 +48,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 72
+    "line": 80
   },
   {
     "name": "AccentCaptionLabel",
@@ -74,7 +74,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 337
+    "line": 345
   },
   {
     "name": "AccentCurrentValueIndicator",
@@ -122,7 +122,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 252
+    "line": 260
   },
   {
     "name": "AccentHighlightSegments",
@@ -1206,7 +1206,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 141
+    "line": 182
   },
   {
     "name": "BuilderBoardBelowChart",
@@ -1386,7 +1386,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 290
+    "line": 298
   },
   {
     "name": "CardGrid",
@@ -1562,7 +1562,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Horizontally-centered column (align:center, sm gap, NO vertical justify) — a content-sized column whose children center on the cross axis.",
@@ -1589,7 +1590,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `align: \"center\"`, `justify: \"center\"`, `gap: \"sm\"`.",
@@ -2087,7 +2089,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 83
+    "line": 91
   },
   {
     "name": "ChipNote",
@@ -2173,7 +2175,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "ClipColumn — a flex column that clips its overflow (`overflow: clip`).",
@@ -2225,7 +2228,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "ClipFillColumn — a column that grows to fill its flex parent's leftover height AND clips its overflow: `flex:1 1 auto; min-height:0; overflow:hidden`, `gap:sm`.",
@@ -2252,7 +2256,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "ClipFillColumnFlush — the no-gap sibling of `ClipFillColumn` that ALSO shrinks horizontally: `flex:1; min-width:0; min-height:0; overflow:hidden`, no baked gap.",
@@ -2375,7 +2380,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Plain flex column, no baked gap — a bare vertical stack whose children space themselves (own margins) or sit flush.",
@@ -2454,6 +2460,25 @@
     "since": null,
     "file": "src/components/Layout/variants.ts",
     "line": 932
+  },
+  {
+    "name": "CompactBucketQueue",
+    "depth": null,
+    "kind": "primitive",
+    "family": "BucketQueue",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "BucketQueue for a narrow side pane: 11px headers, 20px rows (2px x 8px padding, 16px line), 12px text and a 4px gap between buckets.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "BucketQueue for a narrow side pane: 11px headers, 20px rows (2px x 8px padding, 16px line), 12px text and a 4px gap between buckets. Pair its rows with `CompactLabel` (and `TextSublabel` for a muted row).",
+    "showcase": "#/bucket-queue",
+    "since": "0.222.0",
+    "file": "src/components/BucketQueue/variants.tsx",
+    "line": 10
   },
   {
     "name": "CompactCard",
@@ -2589,6 +2614,32 @@
     "since": "0.116.0",
     "file": "src/components/FileDropZone/variants.ts",
     "line": 17
+  },
+  {
+    "name": "CompactLabel",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Text",
+    "variantOf": {
+      "factory": "createText",
+      "overrides": "{\n  variant: \"label\",\n  style: { \"font-size\": \"12px\", \"font-weight\": \"500\", \"line-height\": \"16px\" },\n}"
+    },
+    "overrides": [
+      "variant",
+      "color",
+      "as"
+    ],
+    "dataProps": "TextDataProps",
+    "summary": "`variant=\"label\"` at 12px, weight 500, on a 16px line.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a row name in a dense list, such as `CompactBucketQueue`. `TextLabel` is 16px bold, too big for a narrow pane.",
+    "notes": "A row name in a dense list (CompactBucketQueue): the label colour at 12px, weight 500, on a 16px line. TextLabel is 16px bold, too big for a narrow pane. For a muted row, use TextSublabel (12px, muted).",
+    "showcase": "#/text",
+    "since": "0.222.0",
+    "file": "src/components/Text/variants.ts",
+    "line": 18
   },
   {
     "name": "CompactLineRow",
@@ -2901,7 +2952,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `gap: \"xs\"`, `style: { flex: \"1\", \"min-width\": \"0\" }`.",
@@ -2986,7 +3038,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Conversation root — capped reading width and conversation-typography for a multi-participant chat tree.",
@@ -3119,7 +3172,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 136
+    "line": 144
   },
   {
     "name": "createActionList",
@@ -3348,7 +3401,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/BaseTable.tsx",
-    "line": 442
+    "line": 458
   },
   {
     "name": "createBatchBar",
@@ -3457,7 +3510,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/BuilderBoard/BuilderBoard.tsx",
-    "line": 241
+    "line": 288
   },
   {
     "name": "createBuilderBoardBelowChart",
@@ -3500,7 +3553,7 @@
     "showcase": "#/button",
     "since": "0.142.0",
     "file": "src/components/Button/Button.tsx",
-    "line": 85
+    "line": 125
   },
   {
     "name": "createButtonGroup",
@@ -3713,7 +3766,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 230
+    "line": 301
   },
   {
     "name": "createCheckbox",
@@ -4540,7 +4593,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 586
+    "line": 592
   },
   {
     "name": "createKbd",
@@ -5396,10 +5449,11 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
-    "summary": "Flex-column container. Factory behind `Stack`'s curried variants; bakes `gap`, `align`, `justify`, `fill`.",
+    "summary": "Flex-column container. Factory behind `Stack`'s curried variants; bakes `gap`, `align`, `justify`, `fill`, `sizeMotion`.",
     "summarySource": "synthesized",
     "preferFirst": null,
     "notToBeConfusedWith": null,
@@ -5408,7 +5462,7 @@
     "showcase": null,
     "since": "0.46.0",
     "file": "src/components/Layout/Stack.tsx",
-    "line": 71
+    "line": 77
   },
   {
     "name": "createStackedTimelineChart",
@@ -5689,7 +5743,8 @@
       "fullHeight",
       "leftPanelWidth",
       "rightPanelWidth",
-      "asideMaxHeight"
+      "asideMaxHeight",
+      "rightPanelFlush"
     ],
     "dataProps": "ThreePanelLayoutDataProps",
     "summary": "Curry a ThreePanelLayout with its geometry baked (e.g.",
@@ -5701,7 +5756,7 @@
     "showcase": "#/three-panel-layout",
     "since": "0.104.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
-    "line": 137
+    "line": 145
   },
   {
     "name": "createThresholdRail",
@@ -6174,7 +6229,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 218
+    "line": 226
   },
   {
     "name": "DangerButton",
@@ -6280,7 +6335,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 283
+    "line": 291
   },
   {
     "name": "DangerSurface",
@@ -6340,7 +6395,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 373
+    "line": 381
   },
   {
     "name": "DashedDivider",
@@ -6922,7 +6977,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "\"shrink-wrapped delineated sidebar with chosen cards\" — see DESIGN_LANGUAGE.md.",
@@ -7098,6 +7154,31 @@
     "since": "0.104.0",
     "file": "src/components/DataDisplay/DigitRoller.tsx",
     "line": 125
+  },
+  {
+    "name": "DisclosureButton",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Button",
+    "variantOf": {
+      "factory": "createButton",
+      "overrides": "{\n  variant: \"ghost\",\n  size: \"sm\",\n  style: {\n    padding: \"0\",\n    \"border-width\": \"0\",\n    \"min-width\": \"0\",\n    height: \"24px\",\n    \"line-height\": \"1\",\n  },\n}"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "ButtonDataProps",
+    "summary": "Disclosure button — the chevron of a collapsible row: a ghost button with no padding and no border, 24px tall, so it is exactly as wide as its glyph and the chevron meets its container's content edge.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Disclosure button — the chevron of a collapsible row: a ghost button with no padding and no border, 24px tall, so it is exactly as wide as its glyph and the chevron meets its container's content edge. The box is pinned for the same reason as `GlyphSlotGhostButton`: a glyph change must not move the row. Pass `aria-expanded`, an \"Expand X\" / \"Collapse X\" `aria-label`, and the chevron Icon as the child. See TreeTable.",
+    "showcase": "#/button",
+    "since": "0.219.0",
+    "file": "src/components/Button/variants.ts",
+    "line": 144
   },
   {
     "name": "DismissibleNoticeBanner",
@@ -7513,7 +7594,7 @@
     "showcase": "#/text",
     "since": "0.171.0",
     "file": "src/components/Text/variants.ts",
-    "line": 91
+    "line": 99
   },
   {
     "name": "EllipsizedHudCaption",
@@ -7539,7 +7620,7 @@
     "showcase": "#/text",
     "since": "0.171.0",
     "file": "src/components/Text/variants.ts",
-    "line": 315
+    "line": 323
   },
   {
     "name": "EllipsizedNodeLabel",
@@ -7565,7 +7646,7 @@
     "showcase": "#/text",
     "since": "0.171.0",
     "file": "src/components/Text/variants.ts",
-    "line": 117
+    "line": 125
   },
   {
     "name": "EllipsizedTitle",
@@ -7591,7 +7672,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 33
+    "line": 41
   },
   {
     "name": "EmphasisBody",
@@ -7617,7 +7698,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 245
+    "line": 253
   },
   {
     "name": "EmptyState",
@@ -7689,7 +7770,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 16
+    "line": 24
   },
   {
     "name": "EndWindowStrip",
@@ -7889,7 +7970,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 61
+    "line": 69
   },
   {
     "name": "FaintHighlightSegments",
@@ -8074,7 +8155,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex column that fills its parent — `flex:1; min-height:0`.",
@@ -8101,7 +8183,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "FillColumnFlush — the no-gap sibling of `FillColumn`: fills its parent's height (`flex:1; min-height:0`) and stacks its children FLUSH (no baked gap, they space themselves via their own margins).",
@@ -8406,7 +8489,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 29
+    "line": 37
   },
   {
     "name": "FlexRow",
@@ -8621,7 +8704,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 421
+    "line": 429
   },
   {
     "name": "FormulaVarRow",
@@ -9032,7 +9115,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Curried `Stack` that fills the height its parent column has left and CENTRES its child in it (`flex:1 1 0; min-height:0; justify:center`).",
@@ -9115,7 +9199,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "GrowColumn — a column that grows to fill its share of a parent ROW and may shrink past its content (`flex:1; min-width:0`), while stacking its own children.",
@@ -9167,7 +9252,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "GrowStack — a column that grows to fill its share of its parent (`flex:1; min-width:0`) and spaces its children with an `sm` gap.",
@@ -9220,7 +9306,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "GrowTightStack — the `xs`-gap sibling of `GrowStack`: grows to fill its share of a parent ROW, may shrink past its content (`flex:1; min-width:0`), and stacks its children TIGHTLY.",
@@ -9303,7 +9390,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Curried `Stack` taking an EQUAL share of a proportional split (`flex:1 1 0; min-height:0`).",
@@ -9478,6 +9566,25 @@
     "line": 37
   },
   {
+    "name": "HeightReveal",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "HeightReveal",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a collapsible body that should slide shut, such as ChartFrame's chart.",
+    "notes": null,
+    "showcase": null,
+    "since": "0.220.0",
+    "file": "src/components/HeightReveal/HeightReveal.tsx",
+    "line": 43
+  },
+  {
     "name": "HighlightBody",
     "depth": 0,
     "kind": "variant",
@@ -9501,7 +9608,7 @@
     "showcase": "#/text",
     "since": "0.152.0",
     "file": "src/components/Text/variants.ts",
-    "line": 238
+    "line": 246
   },
   {
     "name": "HighlightSegments",
@@ -9548,7 +9655,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 427
+    "line": 435
   },
   {
     "name": "HotkeyButton",
@@ -9746,7 +9853,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 313
+    "line": 315
   },
   {
     "name": "HUDTabs",
@@ -9787,7 +9894,7 @@
     "showcase": "#/icon",
     "since": "v0.6.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 548
+    "line": 551
   },
   {
     "name": "IconClusterRow",
@@ -9966,6 +10073,25 @@
     "line": 10
   },
   {
+    "name": "IndentRail",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Layout",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "NestedList's indent and guide rail without list semantics, for a hierarchy inside a table cell.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a hierarchy where a `listitem` cannot go, e.g. the first cell of a `TreeTable` row. For a hierarchy that IS a list, use `NestedList`.",
+    "notes": "The NestedList indent and guide rail, without list semantics.",
+    "showcase": null,
+    "since": "0.219.0",
+    "file": "src/components/Layout/IndentRail.tsx",
+    "line": 34
+  },
+  {
     "name": "InfoAlert",
     "depth": null,
     "kind": "variant",
@@ -10099,7 +10225,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 361
+    "line": 369
   },
   {
     "name": "InlineAppHeader",
@@ -10168,7 +10294,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 594
+    "line": 600
   },
   {
     "name": "InlineSubtleDropdown",
@@ -10238,7 +10364,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 348
+    "line": 356
   },
   {
     "name": "IntCell",
@@ -10790,7 +10916,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `align: \"center\"`, `justify: \"center\"`, `gap: \"sm\"`, `style: { padding: \"48px 24px\", \"min-height\": \"200px\", \"text-align\"…`.",
@@ -11213,7 +11340,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `align: \"center\"`, `justify: \"center\"`, `gap: \"sm\"`, `style: { padding: \"32px 16px\", \"min-height\": \"120px\", \"text-align\"…`.",
@@ -11290,7 +11418,7 @@
     "showcase": "#/metric-card",
     "since": "0.123.0",
     "file": "src/components/DataDisplay/MetricCard.tsx",
-    "line": 22
+    "line": 26
   },
   {
     "name": "MetricValueCell",
@@ -11375,7 +11503,7 @@
     "showcase": "#/mode-split-button",
     "since": "0.204.0",
     "file": "src/components/ModeSplitButton/ModeSplitButton.tsx",
-    "line": 77
+    "line": 83
   },
   {
     "name": "MoneyCell",
@@ -11422,7 +11550,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 149
+    "line": 157
   },
   {
     "name": "MonoMeta",
@@ -11448,7 +11576,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 164
+    "line": 172
   },
   {
     "name": "MonoValue",
@@ -11474,7 +11602,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 143
+    "line": 151
   },
   {
     "name": "MonthlyOrAnnualCadenceStrip",
@@ -11543,7 +11671,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 414
+    "line": 422
   },
   {
     "name": "MultiSelectFilter",
@@ -11655,7 +11783,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 68
+    "line": 76
   },
   {
     "name": "MutedEmptyState",
@@ -11716,7 +11844,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex-column container. A `Stack` variant with `gap: \"sm\"`.",
@@ -11847,7 +11976,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "NoShrinkColumn — a column that keeps its intrinsic width in a flex ROW (`flex-shrink:0`), while stacking its own children.",
@@ -11944,7 +12074,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 260
+    "line": 268
   },
   {
     "name": "NoticeBar",
@@ -12025,7 +12155,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 45
+    "line": 53
   },
   {
     "name": "NowrapLabel",
@@ -12051,7 +12181,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 53
+    "line": 61
   },
   {
     "name": "NoWrapSublabel",
@@ -12077,7 +12207,7 @@
     "showcase": "#/text",
     "since": "0.104.0",
     "file": "src/components/Text/variants.ts",
-    "line": 23
+    "line": 31
   },
   {
     "name": "NumberMutationSliders",
@@ -12258,7 +12388,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "PaddedStack — vertical column with sm gap and inset padding.",
@@ -12329,7 +12460,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Stack variants — named by role / page layout",
@@ -12367,7 +12499,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 355
+    "line": 363
   },
   {
     "name": "PairedMutationSliders",
@@ -12851,7 +12983,7 @@
     "showcase": "#/popover-menu",
     "since": "v0.19.0",
     "file": "src/components/PopoverMenu/PopoverMenu.tsx",
-    "line": 88
+    "line": 94
   },
   {
     "name": "PopoverSurface",
@@ -13325,6 +13457,31 @@
     "line": 23
   },
   {
+    "name": "ReservedDisclosureButton",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Button",
+    "variantOf": {
+      "factory": "createButton",
+      "overrides": "{\n    variant: \"ghost\",\n    size: \"sm\",\n    style: {\n      padding: \"0\",\n      \"border-width\": \"0\",\n      \"min-width\": \"0\",\n      height: \"24px\",\n      \"line-height\": \"1\",\n      visibility: \"hidden\",\n    },\n  }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "ButtonDataProps",
+    "summary": "Reserved disclosure slot — a `DisclosureButton` that HOLDS ITS SPACE AND DOES NOTHING (`visibility: hidden`), for a row with nothing to disclose, so its label lines up with its siblings'.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Reserved disclosure slot — a `DisclosureButton` that HOLDS ITS SPACE AND DOES NOTHING (`visibility: hidden`), for a row with nothing to disclose, so its label lines up with its siblings'. As with `ReservedGlyphSlotButton`, `visibility` keeps the box while taking the node out of the accessibility tree and the tab order. Give it the same glyph as the real button.",
+    "showcase": "#/button",
+    "since": "0.219.0",
+    "file": "src/components/Button/variants.ts",
+    "line": 161
+  },
+  {
     "name": "ReservedGlyphSlotButton",
     "depth": 1,
     "kind": "variant",
@@ -13373,7 +13530,7 @@
     "showcase": "#/text",
     "since": "0.172.0",
     "file": "src/components/Text/variants.ts",
-    "line": 207
+    "line": 215
   },
   {
     "name": "ReservedWidth",
@@ -13514,7 +13671,7 @@
     "showcase": "#/popover-menu",
     "since": null,
     "file": "src/components/PopoverMenu/PopoverMenu.tsx",
-    "line": 263
+    "line": 279
   },
   {
     "name": "RingChart",
@@ -13645,7 +13802,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 407
+    "line": 415
   },
   {
     "name": "ScrollBox",
@@ -13685,7 +13842,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Flex column that scrolls its own overflow — `flex:1; min-width:0; overflow:auto`.",
@@ -13737,7 +13895,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "ScrollFillColumn — a column that grows to fill its flex parent's leftover height AND scrolls its own vertical overflow: `flex:1 1 auto; min-height:0; overflow:auto`.",
@@ -14223,7 +14382,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 356
+    "line": 364
   },
   {
     "name": "SegmentBar",
@@ -14922,7 +15081,7 @@
     "useFor": null,
     "notes": "Small status dot — for dense rows / inline indicators.",
     "showcase": "#/status-light",
-    "since": null,
+    "since": "0.222.0",
     "file": "src/components/StatusLight/variants.ts",
     "line": 10
   },
@@ -14939,7 +15098,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Small, tight, start-aligned column — for dense indicator rows (e.g.",
@@ -15039,7 +15199,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Empty regions — centered stacks with size-specific padding and min-height",
@@ -15128,7 +15289,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "SpacedStack — a plain vertical column at the `md` (12px) gap step, the sibling of TightStack (xs) / NarrowStack (sm) one rung up the scale.",
@@ -15662,7 +15824,7 @@
     "showcase": "#/text",
     "since": "0.172.0",
     "file": "src/components/Text/variants.ts",
-    "line": 191
+    "line": 199
   },
   {
     "name": "SteadyMonoValue",
@@ -15688,7 +15850,7 @@
     "showcase": "#/text",
     "since": "0.172.0",
     "file": "src/components/Text/variants.ts",
-    "line": 181
+    "line": 189
   },
   {
     "name": "StickyGroupHeader",
@@ -15850,7 +16012,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 357
+    "line": 365
   },
   {
     "name": "SubtleGhostArc",
@@ -15944,7 +16106,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 230
+    "line": 238
   },
   {
     "name": "SuccessPanel",
@@ -16032,7 +16194,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 369
+    "line": 377
   },
   {
     "name": "SwimlaneChart",
@@ -16450,7 +16612,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 386
+    "line": 394
   },
   {
     "name": "TextValueHighlightSm",
@@ -16476,7 +16638,7 @@
     "showcase": "#/text",
     "since": "0.152.0",
     "file": "src/components/Text/variants.ts",
-    "line": 398
+    "line": 406
   },
   {
     "name": "TextValueSuccessSm",
@@ -16502,7 +16664,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 381
+    "line": 389
   },
   {
     "name": "ThemedInput",
@@ -16572,7 +16734,8 @@
       "fullHeight",
       "leftPanelWidth",
       "rightPanelWidth",
-      "asideMaxHeight"
+      "asideMaxHeight",
+      "rightPanelFlush"
     ],
     "dataProps": "ThreePanelLayoutDataProps",
     "summary": "Atomic (Depth 1).",
@@ -16584,7 +16747,7 @@
     "showcase": "#/three-panel-layout",
     "since": "v0.11.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
-    "line": 84
+    "line": 90
   },
   {
     "name": "ThresholdRail",
@@ -16637,7 +16800,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "TightCenteredColumn — a horizontally-centered column with an xs gap (the tight sibling of CenteredColumn).",
@@ -16748,7 +16912,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Stack variants — named by gap",
@@ -17135,7 +17300,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 358
+    "line": 366
   },
   {
     "name": "TopRightOverlayBox",
@@ -17229,6 +17394,25 @@
     "since": "0.83.2",
     "file": "src/components/Treemap/Treemap.tsx",
     "line": 110
+  },
+  {
+    "name": "TreeTable",
+    "depth": 2,
+    "kind": "composite",
+    "family": "TreeTable",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A table with expandable sub-rows: each parent row expands or collapses the smaller rows it is made of, at any depth.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "expandable rows and sub-rows — an item made of smaller items (assemblies and parts, groups and their members, configs over the rows they cover) that collapse into the parent row, where the members share the parent's columns; a tree table, nested rows, a grouped table with collapsible groups. For a hierarchy with no columns, use `NestedList`.",
+    "notes": null,
+    "showcase": "#/tree-table",
+    "since": "0.219.0",
+    "file": "src/components/TreeTable/TreeTable.tsx",
+    "line": 107
   },
   {
     "name": "TrendSparkline",
@@ -17538,7 +17722,7 @@
     "showcase": "#/text",
     "since": "0.185.0",
     "file": "src/components/Text/variants.ts",
-    "line": 272
+    "line": 280
   },
   {
     "name": "VerticalButtonGroup",
@@ -17606,7 +17790,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "Curried `Stack` that fills a parent of DEFINITE height (`fill` → `height:100%; min-height:0`).",
@@ -17716,7 +17901,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 224
+    "line": 232
   },
   {
     "name": "WarningButton",
@@ -17917,7 +18102,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 365
+    "line": 373
   },
   {
     "name": "WeekCalendar",
@@ -18130,7 +18315,8 @@
       "gap",
       "align",
       "justify",
-      "fill"
+      "fill",
+      "sizeMotion"
     ],
     "dataProps": "StackDataProps",
     "summary": "WrapItemStack — ONE item inside a `WrapRow`, held at its content's NATURAL width (`min-width:0; max-width:100%`, gap:xs).",

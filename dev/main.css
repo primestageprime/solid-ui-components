@@ -2848,4 +2848,20 @@ th:has(.tf-th-center) .hud-table__header-content {
 .hotkey-scope-demo {
   max-width: 420px;
   padding: 16px;
+
+/* CompactBucketQueue showcase: a comfortable pane beside a narrow compact one. */
+.bucket-queue-compact-demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.bucket-queue-compact-demo__pane {
+  width: 340px;
+  height: 360px;
+}
+
+.bucket-queue-compact-demo__pane--narrow {
+  width: 200px;
 }

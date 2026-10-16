@@ -66,8 +66,9 @@ export interface Bucket {
    *  collapse-toggle button (never nested inside it), so clicking the action
    *  activates only the action and never toggles collapse. Sized to fit the
    *  header's own line box (a compact button, e.g. `GlyphSlotGhostButton`) —
-   *  it must not grow the header, because bucket 0's header height is what the
-   *  water-fill measures and applies to every bucket (see BucketQueue.tsx).
+   *  it should not grow the header: each bucket's header is measured for its
+   *  water-fill height, and a taller action only makes this header taller
+   *  (see measurement.ts).
    *  Omit for the plain title + count header, unchanged. */
   headerAction?: JSX.Element;
 }
@@ -150,5 +151,9 @@ export interface BucketQueueProps<T> {
   /** Total height in px. Omit to fill the parent (the root is `height:100%`,
    *  so it stretches to a definite-height flex / `height:100%` ancestor). */
   height?: number;
+  /** Row and header density. "compact" (CompactBucketQueue) sets 11px
+   *  headers, 20px rows and 12px text for a narrow side pane. Default
+   *  "comfortable". */
+  density?: "comfortable" | "compact";
   class?: string;
 }

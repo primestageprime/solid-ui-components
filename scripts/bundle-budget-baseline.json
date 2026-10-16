@@ -1,15 +1,25 @@
 {
   "oneButtonKb": 16,
-  "typicalAppKb": 32,
+  "typicalAppKb": 33,
   "mathKb": 266,
   "dagKb": 120,
-  "ssrOneButtonKb": 1,
+  "ssrOneButtonKb": 2,
   "ssrTypicalKb": 6,
   "_raises": {
     "ssrTypicalKb": {
       "from": 5,
       "to": 6,
       "reason": "InlineText/Text tone=\"highlight\" resolution (TONE_COLOR map + new Tone CSS rules) — deliberate new capability, not bloat"
+    },
+    "typicalAppKb": {
+      "from": 32,
+      "to": 33,
+      "reason": "Button onAction/once/action imports createSubmitAction (spinner + double-click guard), so every Button bundle carries it"
+    },
+    "ssrOneButtonKb": {
+      "from": 1,
+      "to": 2,
+      "reason": "Button onAction/once/action imports createSubmitAction (spinner + double-click guard), so every Button bundle carries it"
     }
   }
 }

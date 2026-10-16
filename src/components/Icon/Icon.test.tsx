@@ -1,3 +1,4 @@
+import { createSignal } from "solid-js";
 import { render } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
 import { Icon, ICON_GROUPS, ICON_PATHS } from "./Icon";
@@ -276,5 +277,28 @@ describe("Icon lock-open", () => {
     );
     expect(ICON_PATHS["lock-open"].outline).not.toBe(ICON_PATHS.lock.outline);
     expect(ICON_PATHS["lock-open"].solid).toContain("<");
+  });
+});
+
+describe("Icon flipped", () => {
+  it("turns the same glyph 180° when flipped, so a change can animate", () => {
+    const [flipped, setFlipped] = createSignal(false);
+    const { container } = render(() => (
+      <Icon name="chevron-up" flipped={flipped()} />
+    ));
+    const el = container.querySelector(".jtf-icon")!;
+    const svg = el.querySelector("svg");
+    expect(el.classList.contains("jtf-icon--turnable")).toBe(true);
+    expect(el.classList.contains("jtf-icon--flipped")).toBe(false);
+    setFlipped(true);
+    expect(el.classList.contains("jtf-icon--flipped")).toBe(true);
+    // The same svg stays, so the transform transitions instead of swapping.
+    expect(el.querySelector("svg")).toBe(svg);
+  });
+
+  it("adds no turn classes when flipped is omitted", () => {
+    const { container } = render(() => <Icon name="chevron-up" />);
+    const el = container.querySelector(".jtf-icon")!;
+    expect(el.classList.contains("jtf-icon--turnable")).toBe(false);
   });
 });

@@ -141,6 +141,9 @@ export interface IconProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   name: IconName;
   variant?: IconVariant;
   size?: IconSize;
+  /** Turn the glyph 180°. A change animates, so a chevron turns instead of
+   *  swapping glyphs. Omit it and the icon gets no transition. */
+  flipped?: boolean;
 }
 
 export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
@@ -550,6 +553,7 @@ export const Icon: Component<IconProps> = (props) => {
     "name",
     "variant",
     "size",
+    "flipped",
     "class",
   ]);
 
@@ -557,6 +561,8 @@ export const Icon: Component<IconProps> = (props) => {
     const classList = ["jtf-icon"];
     classList.push(`jtf-icon--${local.size || "md"}`);
     if (local.name === "spinner") classList.push("jtf-icon--spinning");
+    if (local.flipped !== undefined) classList.push("jtf-icon--turnable");
+    if (local.flipped) classList.push("jtf-icon--flipped");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };

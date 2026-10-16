@@ -2,6 +2,7 @@ import { fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
 import { ModeSplitButton, type ModeInfo, modeInfo } from "./index";
+import { ICON_PATHS, type IconName } from "../Icon/Icon";
 
 type Mode = "auto" | "manual";
 
@@ -79,5 +80,26 @@ describe("ModeSplitButton", () => {
     ]);
     fireEvent.click(items[1]);
     expect(onModeChange).toHaveBeenCalledWith("manual");
+  });
+
+  it("the trigger keeps the ▾ by default and takes menuIcon when given", () => {
+    const glyph = (name: IconName): string => {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.innerHTML = ICON_PATHS[name].outline;
+      return svg.innerHTML;
+    };
+    const caret = (menuIcon?: IconName) => {
+      const { container } = render(() => (
+        <ModeSplitButton
+          modes={MODES}
+          mode="auto"
+          menuLabel="Schedule mode"
+          menuIcon={menuIcon}
+        />
+      ));
+      return container.querySelector(".sui-popover-menu__caret svg")?.innerHTML;
+    };
+    expect(caret()).toBe(glyph("chevron-down"));
+    expect(caret("menu")).toBe(glyph("menu"));
   });
 });

@@ -67,6 +67,11 @@
   transform: rotate(180deg);
 }
 
+/* A non-chevron caret (a hamburger) does not turn over. */
+.sui-popover-menu--open .sui-popover-menu__caret--still {
+  transform: none;
+}
+
 /* ---- Menu panel ----
    Portaled to document.body (see PopoverMenu.tsx) so no ancestor's overflow
    can clip it. Positioned via inline `position: fixed` + measured top/left/right

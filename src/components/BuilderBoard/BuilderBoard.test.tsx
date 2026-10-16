@@ -6,8 +6,11 @@
 // and that every size-bearing declaration is one a variant baked — nothing a
 // page could have written. The numbers themselves are geometry.test.ts's.
 // ============================================
-import { render } from "@solidjs/testing-library";
-import { afterEach, describe, expect, it } from "vitest";
+import { fireEvent, render } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { FillAutoGrowChartFrame } from "../ChartFrame";
+import { HEIGHT_REVEAL_MS } from "../HeightReveal";
 import { type FakeSizer, installFakeSizer } from "../../test-utils/fakeSizer";
 import { NATURAL_GAUGE_WIDTH } from "../RateGauge/geometry";
 import { BuilderBoard, createBuilderBoard } from "./BuilderBoard";
@@ -53,8 +56,10 @@ describe("BuilderBoard", () => {
     const b = panel(container, "b");
     expect(a.nextElementSibling).toBe(b);
     expect(a.parentElement?.dataset.builderBoardHalf).toBe("top");
+    // A's cell eases its size when its frame collapses; B's does not.
+    expect(a.className).toBe("stack stack--gap-xs stack--size-motion");
+    expect(b.className).toBe("stack stack--gap-xs");
     for (const cell of [a, b]) {
-      expect(cell.className).toBe("stack stack--gap-xs");
       expect(cell.style.minHeight).toBe("0px");
       const card = cell.firstElementChild as HTMLElement;
       expect(card.className).toMatch(/surface/);
@@ -179,3 +184,91 @@ describe("BuilderBoard — single column on a narrow board", () => {
   });
 });
 
+
+describe("BuilderBoard — panelACollapsed", () => {
+  let sizer: FakeSizer | undefined;
+  afterEach(() => sizer?.restore());
+
+  /** A page that ties A's frame and the board to one signal, as a consumer does. */
+  const collapsibleBoard = () => {
+    const [collapsed, setCollapsed] = createSignal(false);
+    const view = render(() => (
+      <BuilderBoard
+        panelACollapsed={collapsed()}
+        panelA={
+          <FillAutoGrowChartFrame
+            title="Cash flow"
+            collapsible
+            collapsed={collapsed()}
+            onCollapsedChange={setCollapsed}
+          >
+            <span>chart</span>
+          </FillAutoGrowChartFrame>
+        }
+        panelB={<span>series</span>}
+        panelC={<span>changes</span>}
+        panelD={<span>gauge</span>}
+      />
+    ));
+    const press = (name: string) =>
+      fireEvent.click(view.container.querySelector(`button[aria-label="${name}"]`)!);
+    return { ...view, collapsed, press };
+  };
+
+  it("split: A's cell takes its content's height and B keeps the fill", () => {
+    vi.useFakeTimers();
+    const { container, press, queryByText } = collapsibleBoard();
+    const a = panel(container, "a");
+    const b = panel(container, "b");
+    expect(a.style.flex).toBe("");
+    press("Collapse chart");
+    vi.advanceTimersByTime(HEIGHT_REVEAL_MS);
+    vi.useRealTimers();
+    expect(queryByText("chart")).toBeNull();
+    expect(a.style.flex).toBe("0 0 auto");
+    expect(b.style.minHeight).toBe("0px");
+    expect(b.style.flex).toBe("");
+    // The halves are unchanged: C and D keep their half.
+    for (const half of container.querySelectorAll<HTMLElement>("[data-builder-board-half]")) {
+      expect(half.style.flex).toBe("");
+    }
+    // On expand, Solid sets the variant's `flex: 1 1 0` back. jsdom rejects
+    // the unitless basis and keeps the old value, so a DOM test cannot read
+    // the reset; it can read that the chart came back.
+    press("Expand chart");
+    expect(queryByText("chart")).toBeTruthy();
+  });
+
+  it("single column: A's slot drops its stated height and the rest keep theirs", async () => {
+    sizer = installFakeSizer();
+    const { container, press } = collapsibleBoard();
+    const root = container.querySelector<HTMLElement>("[data-builder-board]")!;
+    await sizer.resize(root, { width: 390, height: 760 });
+    const slotHeight = (id: string) => panel(container, id).parentElement!.style.height;
+    expect(slotHeight("a")).toBe("240px");
+    press("Collapse chart");
+    expect(slotHeight("a")).toBe("auto");
+    expect(slotHeight("b")).toBe("240px");
+    expect(slotHeight("c")).toBe(`${C_STACKED_HEIGHT}px`);
+    expect(slotHeight("d")).toBe(`${D_STACKED_HEIGHT}px`);
+    press("Expand chart");
+    expect(slotHeight("a")).toBe("240px");
+  });
+
+  it("fullscreen from a collapsed A expands the frame and gives the slot back", async () => {
+    sizer = installFakeSizer();
+    const { container, press, collapsed, queryByText } = collapsibleBoard();
+    const root = container.querySelector<HTMLElement>("[data-builder-board]")!;
+    await sizer.resize(root, { width: 390, height: 760 });
+    press("Collapse chart");
+    press("Full screen");
+    const box = container.querySelector(".sui-fullscreen-box") as HTMLElement;
+    expect(box.dataset.fullscreen).toBe("true");
+    expect(collapsed()).toBe(false);
+    expect(queryByText("chart")).toBeTruthy();
+    expect(panel(container, "a").parentElement!.style.height).toBe("240px");
+    press("Exit full screen");
+    expect(box.dataset.fullscreen).toBe("false");
+    expect(queryByText("chart")).toBeTruthy();
+  });
+});

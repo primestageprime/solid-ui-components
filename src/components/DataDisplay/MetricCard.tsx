@@ -6,17 +6,21 @@
 // Labeled value card with optional units and color-tinted value text.
 // When `units` is supplied the value uses the same monospace face as
 // the sibling `NumberWithUnits` Primitive so numeric readouts line up.
+// `size="lg"` sets the value at 2.5rem for a page's headline figure.
 // ============================================
 import { type Component, type JSX, Show, splitProps } from "solid-js";
 import "./MetricCard.css";
 
 export type MetricCardColor = "default" | "success" | "warning" | "danger";
+export type MetricCardSize = "md" | "lg";
 
 export interface MetricCardProps extends JSX.HTMLAttributes<HTMLDivElement> {
   label: string;
   value: string | number;
   units?: string;
   color?: MetricCardColor;
+  /** Value size. Default `md` (1.5rem). `lg` is 2.5rem, for a page's headline figure. */
+  size?: MetricCardSize;
 }
 
 export const MetricCard: Component<MetricCardProps> = (props) => {
@@ -25,6 +29,7 @@ export const MetricCard: Component<MetricCardProps> = (props) => {
     "value",
     "units",
     "color",
+    "size",
     "class",
     "children",
   ]);
@@ -34,6 +39,7 @@ export const MetricCard: Component<MetricCardProps> = (props) => {
     if (local.color && local.color !== "default") {
       classList.push(`sui-metric-card--${local.color}`);
     }
+    if (local.size === "lg") classList.push("sui-metric-card--lg");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };
