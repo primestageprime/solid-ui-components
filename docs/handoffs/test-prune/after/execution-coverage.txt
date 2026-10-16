@@ -1,0 +1,11 @@
+
+> @primestageprime/solid-ui-components@0.222.0 execution-coverage
+> node scripts/execution-coverage.mjs
+
+componentsNeverExecuted: 3   (of 295 component modules; 293 measured)
+  src/components/Badge/BaselineDot.tsx
+  src/components/Feedback/InlineChartErrorOverlay.tsx
+  src/components/WorkProgressCard/WorkProgressCard.tsx
+
+✓ At baseline.
+exit=0

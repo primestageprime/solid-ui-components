@@ -1,0 +1,1452 @@
+
+ RUN  v4.1.10 /Users/peter/Documents/clients/PrimeStage/platform/solid-ui-components/.claude/worktrees/test-prune
+      Coverage enabled with v8
+
+ ✓ src/internal/dom/observeSize.test.ts (9 tests) 5ms
+ ✓ src/internal/dom/assertModifierClass.test.ts (6 tests) 39ms
+ ✓ src/components/ScrubChart/emphasisColor.test.ts (9 tests) 69ms
+ ✓ src/components/Chart/labelPlacement.test.ts (55 tests) 18ms
+ ✓ src/components/ScrubChart/yDomainTween.test.ts (27 tests) 11ms
+ ✓ src/hooks/createTruncationObserver.test.ts (6 tests) 45ms
+ ✓ src/components/BucketQueue/motion.test.ts (5 tests) 88ms
+ ✓ src/testing/jsdomNaNDeclarationShim.test.ts (8 tests) 13ms
+ ✓ dev/load-theme.test.ts (9 tests) 208ms
+ ✓ src/internal/animation/choreography.test.ts (7 tests) 160ms
+stdout | src/components/HotkeyButton/hotkeyFires.test.ts > hotkeyFires — should 'a' fire Add? > fires on the page and on a button, never in a field or with a chord
+┌─────────┬────────────────────────┬───────┐
+│ (index) │ press                  │ fires │
+├─────────┼────────────────────────┼───────┤
+│ 0       │ 'a on body'            │ true  │
+│ 1       │ 'A (shift) on body'    │ true  │
+│ 2       │ 'a on a button'        │ true  │
+│ 3       │ 'a in an input'        │ false │
+│ 4       │ 'a in a textarea'      │ false │
+│ 5       │ 'a in a select'        │ false │
+│ 6       │ 'a in contenteditable' │ false │
+│ 7       │ '⌘a on body'           │ false │
+│ 8       │ 'ctrl+a on body'       │ false │
+│ 9       │ 'alt+a on body'        │ false │
+│ 10      │ 'b on body'            │ false │
+│ 11      │ 'a, no target'         │ true  │
+└─────────┴────────────────────────┴───────┘
+
+ ✓ src/components/HotkeyButton/hotkeyFires.test.ts (2 tests) 4ms
+ ✓ src/components/SwimlaneChart/geometry.test.ts (3 tests) 2ms
+ ✓ dev/showcases/workshop-layout.test.ts (25 tests) 13ms
+ ✓ src/components/MutationSliders/MutationSliders.test.tsx (139 tests) 3114ms
+ ✓ scripts/export-surface.test.ts (16 tests) 6289ms
+ ✓ scripts/health-ratchet.test.ts (14 tests) 6861ms
+     ✓ refuses a bare raise against a real baseline  6857ms
+ ✓ src/components/GroupedMutationSliders/GroupedMutationSliders.test.tsx (38 tests) 2087ms
+     ✓ draws TWO per entity when handed two axes — the paired shape, at N = 2  301ms
+ ✓ src/components/Tooltip/PopoverTooltip.test.tsx (14 tests) 884ms
+ ✓ src/components/PairedMutationSliders/PairedMutationSliders.test.tsx (23 tests) 1153ms
+ ✓ dev/showcases/workshop/hourly-board-money.test.ts (10 tests) 4ms
+ ✓ dev/showcases/workshop/board-kit/money.test.ts (5 tests) 3ms
+ ✓ dev/showcases/workshop/board-kit/model.test.ts (19 tests) 6ms
+ ✓ dev/showcases/workshop/hourly.config.test.ts (99 tests) 67ms
+stdout | src/components/RateGauge/geometry.test.ts > gaugeGeometry — the printed table > prints one row per situation
+┌─────────┬─────────────────────────────┬────────────┬───────────────┬───────────┬────────────┬────────┬──────────────────────────────────────────────────┬───────────┐
+│ (index) │ case                        │ valueAngle │ baselineAngle │ zeroAngle │ zone       │ delta  │ labels                                           │ stubs     │
+├─────────┼─────────────────────────────┼────────────┼───────────────┼───────────┼────────────┼────────┼──────────────────────────────────────────────────┼───────────┤
+│ 0       │ 'above baseline (mockup 1)' │ 69         │ 15            │ 0         │ 'positive' │ 18000  │ 'value@13 > delta@46 > baseline@79'              │ '22,6,22' │
+│ 1       │ 'below baseline (mockup 2)' │ -26.499    │ 15            │ 0         │ 'negative' │ -13833 │ 'baseline@65.243 > delta@98.243 > value@131.243' │ '22,6,22' │
+│ 2       │ 'at the upper clamp'        │ 90         │ 15            │ 0         │ 'positive' │ 25000  │ 'value@13 > delta@46 > baseline@79'              │ '22,6,22' │
+│ 3       │ 'at the lower clamp'        │ -90        │ 15            │ 0         │ 'negative' │ -35000 │ 'baseline@67.742 > delta@134 > value@167'        │ '22,6,22' │
+│ 4       │ 'equal to baseline'         │ 15         │ 15            │ 0         │ 'positive' │ 0      │ 'valueAndBaseline@67.742'                        │ '22'      │
+│ 5       │ 'baseline at zero'          │ 36         │ 0             │ 0         │ 'positive' │ 12000  │ 'value@31.292 > delta@64.292 > baseline@97.292'  │ '22,6,22' │
+└─────────┴─────────────────────────────┴────────────┴───────────────┴───────────┴────────────┴────────┴──────────────────────────────────────────────────┴───────────┘
+
+stdout | src/components/RateGauge/geometry.test.ts > callouts — the leaders/corners breakpoint, and the corner layout > prints box → breakpoint → dial, with the switch point per height
+┌─────────┬────────┬─────────────┬───────────────┬─────────────────────┬─────────────────────┬─────────────────────┬─────────────────────┬─────────────────────┐
+│ (index) │ height │ leadersFrom │ dialFillsFrom │ @180                │ @240                │ @268                │ @274                │ @320                │
+├─────────┼────────┼─────────────┼───────────────┼─────────────────────┼─────────────────────┼─────────────────────┼─────────────────────┼─────────────────────┤
+│ 0       │ 200    │ 182         │ 192           │ 'corners r=58.226'  │ 'leaders r=72.649'  │ 'leaders r=72.649'  │ 'leaders r=72.649'  │ 'leaders r=72.649'  │
+│ 1       │ 300    │ 182         │ 242           │ 'corners r=95.6'    │ 'leaders r=114.162' │ 'leaders r=115.892' │ 'leaders r=115.892' │ 'leaders r=115.892' │
+│ 2       │ 350    │ 182         │ 267           │ 'corners r=115.737' │ 'leaders r=114.162' │ 'leaders r=137.514' │ 'leaders r=137.514' │ 'leaders r=137.514' │
+│ 3       │ 400    │ 182         │ 292           │ 'corners r=136.322' │ 'leaders r=114.162' │ 'leaders r=138.378' │ 'leaders r=143.568' │ 'leaders r=159.135' │
+│ 4       │ 450    │ 182         │ 317           │ 'corners r=143.545' │ 'leaders r=114.162' │ 'leaders r=138.378' │ 'leaders r=143.568' │ 'leaders r=180.757' │
+│ 5       │ 500    │ 182         │ 342           │ 'corners r=143.564' │ 'leaders r=114.162' │ 'leaders r=138.378' │ 'leaders r=143.568' │ 'leaders r=183.351' │
+└─────────┴────────┴─────────────┴───────────────┴─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┴─────────────────────┘
+
+ ✓ src/components/ScrubChart/ScrubChart.test.tsx (92 tests) 1595ms
+     ✓ renders the max tick's label once the tween settles  615ms
+     ✓ settles the screen domain on the axis's target domain  619ms
+ ✓ src/components/SwimlaneChart/SwimlaneChart.test.tsx (10 tests) 891ms
+ ✓ src/components/RateGauge/geometry.test.ts (110 tests) 653ms
+     ✓ never crosses, over every box × baseline × value (every $5k × $1k)  367ms
+ ✓ src/components/CashflowScrubChart/CashflowScrubChart.test.tsx (93 tests) 1231ms
+ ✓ src/components/CashflowScrubChart/liveToggle.test.tsx (8 tests) 369ms
+ ✓ src/components/SwimlaneChart/SwimlaneChart.responsive.test.tsx (9 tests) 809ms
+     ✓ renders a re-entering node twice until its leave animation finishes  496ms
+ ✓ src/components/Select/Select.test.tsx (12 tests) 165ms
+ ✓ src/components/LevelsTimeline/LevelsTimeline.test.tsx (67 tests) 1264ms
+ ✓ src/components/Combobox/Combobox.render.test.tsx (34 tests) 548ms
+ ✓ src/components/DateRangePicker/DateRangePicker.test.tsx (5 tests) 306ms
+ ✓ src/components/ChartFrame/YAxisLockDialog.test.tsx (6 tests) 511ms
+ ✓ src/components/BuilderBoard/BuilderBoard.test.tsx (12 tests) 363ms
+ ✓ src/components/StackedTimelineChart/StackedTimelineChart.test.tsx (30 tests) 416ms
+ ✓ src/components/DirtyComboBox/DirtyComboBox.test.tsx (22 tests) 344ms
+ ✓ src/components/Strips/GrowthStrip.test.tsx (7 tests) 161ms
+ ✓ src/components/DataDisplay/EllipsisText.test.tsx (3 tests) 390ms
+     ✓ settles as a squeezed flex item: clipped, tooltip on, no recursion  386ms
+ ✓ src/components/ActionList/ActionList.test.tsx (35 tests) 377ms
+ ✓ src/components/MutationToolbar/MutationToolbar.test.tsx (10 tests) 303ms
+ ✓ src/components/Tooltip/Tooltip.test.tsx (8 tests) 238ms
+ ✓ src/components/Slider/Slider.test.tsx (35 tests) 392ms
+ ✓ src/components/OverflowNav/OverflowNav.test.tsx (11 tests) 367ms
+ ✓ src/components/Chart/SpanLanes.test.tsx (6 tests) 74ms
+ ✓ src/components/RangeAmountGroup/RangeAmountGroup.test.tsx (5 tests) 198ms
+ ✓ src/components/TreeTable/TreeTable.test.tsx (11 tests) 309ms
+ ✓ src/components/CashflowScrubChart/StillCashflowScrubChart.test.tsx (3 tests) 258ms
+ ✓ src/components/Table/fields/actions.test.tsx (5 tests) 144ms
+ ✓ src/components/TreeDiffChart/TreeDiffChart.test.tsx (16 tests) 247ms
+ ✓ src/components/ChannelChart/ChannelChart.test.tsx (8 tests) 236ms
+ ✓ src/components/ThemedNumberInput/ThemedNumberInput.typing.test.tsx (5 tests) 116ms
+ ✓ src/components/RateGauge/RateGauge.test.tsx (26 tests) 382ms
+ ✓ src/components/DnDHierarchySortBar/DnDHierarchySortBar.sweep.test.tsx (7 tests) 206ms
+ ✓ src/components/ExtractionBoard/ExtractionBoard.test.tsx (9 tests) 242ms
+ ✓ src/components/ThemedNumberInput/ThemedNumberInput.test.tsx (18 tests) 241ms
+ ✓ src/components/TargetBarChart/TargetBarChart.test.tsx (3 tests) 54ms
+ ✓ src/components/BalanceReviewChart/BalanceReviewChart.test.tsx (7 tests) 110ms
+ ✓ src/components/CashflowScrubChart/outOfRange.test.tsx (7 tests) 176ms
+ ✓ src/components/ScrubChart/ScrubChartChrome.test.tsx (4 tests) 79ms
+ ✓ src/components/ScrubChart/ScrubChartTopActionControl.test.tsx (18 tests) 232ms
+ ✓ src/components/ScrubChart/ScrubChartYRangeEditor.test.tsx (8 tests) 321ms
+ ✓ src/components/Dropdown/Dropdown.test.tsx (36 tests) 176ms
+ ✓ src/components/NotificationCenter/NotificationRow.test.tsx (21 tests) 157ms
+ ✓ src/components/MathFormula/MathFormula.test.tsx (4 tests) 87ms
+ ✓ src/components/BucketQueue/BucketQueue.scroll.test.tsx (7 tests) 177ms
+ ✓ src/components/DnDHierarchySortBar/DnDHierarchySortBar.deadzone.test.tsx (3 tests) 51ms
+ ✓ src/components/CashflowScrubChart/gutterCap.test.tsx (3 tests) 240ms
+ ✓ src/components/CurrencyInput/sized.test.tsx (2 tests) 131ms
+ ✓ src/components/ScrubChart/ScrubChartCrosshair.test.tsx (9 tests) 96ms
+ ✓ src/components/Auth/ManagedListSection.test.tsx (7 tests) 176ms
+ ✓ src/components/MarkedSlider/MarkedSlider.test.tsx (13 tests) 209ms
+ ✓ src/components/NotificationCenter/NotificationCenter.test.tsx (24 tests) 226ms
+ ✓ src/components/Table/BaseTable.test.tsx (17 tests) 139ms
+ ✓ src/components/ChartFrame/ChartFrame.test.tsx (21 tests) 176ms
+ ✓ src/components/Strips/Strips.test.tsx (11 tests) 165ms
+ ✓ src/components/AreaFocusGrid/AreaFocusGrid.test.tsx (5 tests) 64ms
+ ✓ src/components/GroupedBucketQueue/GroupedBucketQueue.keyboard.test.tsx (5 tests) 78ms
+ ✓ src/components/CensusView/CensusView.test.tsx (3 tests) 134ms
+ ✓ src/components/HeatStreamGrid/HeatStreamGrid.test.tsx (5 tests) 45ms
+ ✓ src/components/Slider/SliderPointer.test.tsx (7 tests) 159ms
+ ✓ src/components/BuilderBoard/BuilderBoardBelowChart.test.tsx (6 tests) 192ms
+ ✓ src/components/Table/textCells.test.tsx (8 tests) 35ms
+ ✓ src/components/ConversationTree/ConversationTree.test.tsx (7 tests) 192ms
+ ✓ src/components/BucketQueue/BucketQueue.advance.test.tsx (14 tests) 103ms
+ ✓ src/components/IntervalInput/IntervalInput.test.tsx (16 tests) 138ms
+ ✓ src/components/Chart/GapBracket.test.tsx (3 tests) 38ms
+ ✓ src/components/Table/fields/FieldTable.test.tsx (11 tests) 151ms
+ ✓ src/components/Badge/StatusChip.test.tsx (4 tests) 184ms
+ ✓ src/components/Slider/SliderField.test.tsx (22 tests) 90ms
+ ✓ src/components/Table/SelectableTable.test.tsx (49 tests) 286ms
+ ✓ src/components/ResponsiveMoney/ResponsiveMoney.test.tsx (7 tests) 150ms
+ ✓ src/components/Table/FilterableTable.test.tsx (10 tests) 132ms
+ ✓ src/components/CandlestickRenderer/CandlestickRenderer.test.tsx (5 tests) 90ms
+ ✓ src/components/RateGauge/RateGaugeCanvas.test.tsx (2 tests) 57ms
+ ✓ src/components/GroupedBucketQueue/GroupedBucketQueue.rendering.test.tsx (6 tests) 97ms
+ ✓ src/components/Button/Button.test.tsx (10 tests) 251ms
+ ✓ src/components/DateRangePicker/CalendarGrid.test.tsx (23 tests) 167ms
+ ✓ src/components/Chart/areaFill.test.tsx (2 tests) 164ms
+ ✓ src/components/EditableTitle/EditableTitle.test.tsx (15 tests) 98ms
+ ✓ src/components/MutableList/MutableList.integration.test.tsx (6 tests) 178ms
+ ✓ src/components/ScrubChart/ScrubChartYAxisModeControl.test.tsx (7 tests) 134ms
+ ✓ src/components/CurrencyInput/CurrencyInput.test.tsx (11 tests) 139ms
+ ✓ src/components/BucketQueue/BucketQueue.rendering.test.tsx (26 tests) 149ms
+ ✓ src/components/RateGauge/calloutLabels.test.tsx (2 tests) 72ms
+ ✓ src/components/Chart/lineStroke.test.tsx (2 tests) 142ms
+ ✓ src/components/DataDisplay/ResultDisplay.test.tsx (13 tests) 59ms
+ ✓ src/components/Treemap/Treemap.test.tsx (9 tests) 51ms
+ ✓ src/components/Selector/SidebarSelector.test.tsx (9 tests) 58ms
+ ✓ src/components/DateAxis/DateAxis.test.tsx (11 tests) 125ms
+ ✓ src/components/Chart/Chart.test.tsx (47 tests) 194ms
+ ✓ src/components/BandRail/BandRail.test.tsx (42 tests) 139ms
+ ✓ src/components/PivotGrid/PivotGrid.test.tsx (22 tests) 105ms
+ ✓ src/components/StatusLight/StatusLight.test.tsx (6 tests) 35ms
+ ✓ src/components/PopoverMenu/PopoverMenu.test.tsx (8 tests) 84ms
+ ✓ src/components/TreeDiffChart/TreeDiffCanvas.test.tsx (3 tests) 44ms
+ ✓ src/components/CompletionTimeline/CompletionTimeline.test.tsx (5 tests) 69ms
+ ✓ src/components/ThroughputChart/ThroughputChart.test.tsx (6 tests) 68ms
+ ✓ src/components/Panel/Panel.test.tsx (5 tests) 26ms
+ ✓ src/components/Table/fields/selection.test.tsx (8 tests) 55ms
+ ✓ src/components/HeatStream/HeatStream.test.tsx (10 tests) 86ms
+ ✓ src/components/FilterBar/FilterBar.test.tsx (6 tests) 111ms
+ ✓ src/components/FullscreenBox/FullscreenBox.test.tsx (6 tests) 55ms
+ ✓ src/components/QuickFilter/QuickFilter.test.tsx (3 tests) 24ms
+ ✓ src/components/DataDisplay/DigitRoller.test.tsx (6 tests) 100ms
+ ✓ src/components/PivotTreemap/PivotTreemap.test.tsx (13 tests) 53ms
+ ✓ src/components/MessageBubble/MessageBubble.test.tsx (6 tests) 34ms
+ ✓ src/components/GroupedBucketQueue/GroupedBucketQueue.advance.test.tsx (3 tests) 56ms
+ ✓ src/components/ScrubChart/ScrubChartTooltip.test.tsx (5 tests) 58ms
+ ✓ src/components/ScrubChart/ScrubChartBand.test.tsx (6 tests) 68ms
+ ✓ scripts/catalog.test.ts (47 tests) 52ms
+ ✓ src/components/AnimatedSwimlaneChart/AnimatedSwimlaneChart.test.tsx (6 tests) 95ms
+ ✓ src/components/SplitQueueList/SplitQueueList.test.tsx (11 tests) 80ms
+ ✓ src/components/BulkActionBar/BulkActionBar.layout.test.tsx (3 tests) 35ms
+ ✓ src/components/DagChart/DagChart.test.tsx (11 tests) 44ms
+ ✓ src/components/Auth/DismissibleNoticeBanner.test.tsx (5 tests) 38ms
+ ✓ src/components/SlotCard/SlotCard.test.tsx (9 tests) 148ms
+ ✓ src/components/HeatStack/HeatStack.test.tsx (5 tests) 66ms
+ ✓ src/components/Chart/Tooltip.test.tsx (16 tests) 160ms
+ ✓ src/components/Checkbox/Checkbox.test.tsx (8 tests) 52ms
+ ✓ src/components/Layout/NestedList.test.tsx (17 tests) 46ms
+ ✓ src/components/Chart/OutOfRangeMarkers.test.tsx (2 tests) 31ms
+ ✓ src/components/ReservedWidth/ReservedWidth.test.tsx (2 tests) 14ms
+ ✓ src/components/BucketQueue/BucketQueue.selection.test.tsx (16 tests) 87ms
+ ✓ src/components/ActionList/ActionList.layout.test.tsx (2 tests) 67ms
+ ✓ src/components/Chart/GhostPin.test.tsx (10 tests) 64ms
+ ✓ src/components/DayOfWeekPicker/DayOfWeekPicker.test.tsx (6 tests) 24ms
+ ✓ src/components/ConnectionStatus/ConnectionStatus.test.tsx (4 tests) 72ms
+ ✓ src/components/Table/fields/avg.test.tsx (4 tests) 82ms
+ ✓ src/components/BucketQueue/measurement.test.tsx (6 tests) 76ms
+ ✓ src/components/BucketQueue/BucketQueue.keyboard.test.tsx (16 tests) 92ms
+ ✓ src/components/Chart/TimelineBar.test.tsx (30 tests) 72ms
+ ✓ src/components/ChangeRenderer/ChangeRenderer.test.tsx (5 tests) 50ms
+ ✓ src/components/ScrubChart/ScrubChartExpandControl.test.tsx (15 tests) 109ms
+ ✓ src/components/Feedback/Feedback.test.tsx (6 tests) 85ms
+ ✓ src/components/Chart/ValueHandle.test.tsx (5 tests) 39ms
+ ✓ src/components/Chart/CurrentValueIndicator.test.tsx (7 tests) 45ms
+ ✓ src/components/Table/TableQuickFilter.test.tsx (3 tests) 58ms
+ ✓ src/components/ScrubChart/ScrubChartMinimizedBar.test.tsx (9 tests) 61ms
+ ✓ src/components/Layout/AutoStack.test.tsx (14 tests) 42ms
+ ✓ src/components/BatchBar/BatchBar.test.tsx (13 tests) 63ms
+ ✓ src/components/Chart/HighlightSegments.test.tsx (18 tests) 73ms
+ ✓ src/components/Layout/Sidebar.test.tsx (23 tests) 89ms
+ ✓ src/components/Chart/PinMarkers.test.tsx (18 tests) 110ms
+ ✓ src/components/SortableList/SortableList.integration.test.tsx (5 tests) 87ms
+ ✓ src/components/ThreePanelLayout/ThreePanelLayout.test.tsx (6 tests) 23ms
+ ✓ src/components/Strips/PayrollStrips.test.tsx (2 tests) 114ms
+ ✓ src/components/GroupedBucketQueue/GroupedBucketQueue.identity.test.tsx (3 tests) 81ms
+ ✓ src/components/Table/SectionTable.test.tsx (11 tests) 103ms
+ ✓ src/components/DataDisplay/NumberWithUnits.test.tsx (9 tests) 67ms
+ ✓ scripts/adherence.test.ts (36 tests) 47ms
+ ✓ src/components/Progress/Progress.test.tsx (6 tests) 92ms
+ ✓ src/components/DnDHierarchySortBar/DnDHierarchySortBar.integration.test.tsx (5 tests) 87ms
+ ✓ src/components/Badge/TagPill.test.tsx (4 tests) 23ms
+ ✓ src/components/DataDisplay/StatsTable/StatsTable.test.tsx (12 tests) 51ms
+ ✓ src/components/BigNumberInput/BigNumberInput.test.tsx (15 tests) 57ms
+ ✓ src/components/FullscreenBox/escapeWithEditor.test.tsx (1 test) 120ms
+stdout | src/components/LevelsTimeline/geometry.test.ts > axisTicks > prints the drawn-tick table for 3m, 6m, 1y and 2y domains
+
+3m: 16 ticks
+2026-09-01    14  filler  2026-09-01
+2026-09-07    54  filler  ·
+2026-09-14   101  filler  ·
+2026-09-21   149  filler  09-21
+2026-09-28   196  filler  ·
+2026-10-03   229  event   10-03
+2026-10-05   243  filler  ·
+2026-10-12   290  filler  10-12
+2026-10-19   337  filler  ·
+2026-10-26   384  filler  10-26
+2026-11-02   431  filler  ·
+2026-11-09   478  filler  ·
+2026-11-15   518  event   11-15
+2026-11-16   525  filler  ·
+2026-11-23   572  filler  11-23
+2026-11-30   619  filler  ·
+
+6m: 9 ticks
+2026-09-01    14  filler  2026-09-01
+2026-10-01   115  filler  ·
+2026-10-03   122  event   10-03
+2026-11-01   220  filler  ·
+2026-11-15   268  event   11-15
+2026-12-01   322  filler  12-01
+2027-01-01   427  filler  2027-01-01
+2027-02-01   531  filler  02-01
+2027-03-01   626  filler  03-01
+
+1y: 15 ticks
+2026-09-01    14  filler  ·
+2026-10-01    64  filler  ·
+2026-10-03    68  event   2026-10-03
+2026-11-01   116  filler  ·
+2026-11-15   140  event   11-15
+2026-12-01   167  filler  ·
+2027-01-01   219  filler  2027-01-01
+2027-02-01   271  filler  ·
+2027-03-01   317  filler  03-01
+2027-04-01   369  filler  04-01
+2027-05-01   420  filler  ·
+2027-06-01   472  filler  06-01
+2027-07-01   522  filler  ·
+2027-08-01   574  filler  08-01
+2027-09-01   626  filler  09-01
+
+2y: 11 ticks
+2026-09-01    14  filler  ·
+2026-10-01    39  filler  ·
+2026-10-03    41  event   2026-10-03
+2026-11-15    77  event   ·
+2027-01-01   116  filler  ·
+2027-04-01   191  filler  2027-04-01
+2027-07-01   268  filler  07-01
+2027-10-01   345  filler  10-01
+2028-01-01   422  filler  2028-01-01
+2028-04-01   498  filler  04-01
+2028-07-01   574  filler  07-01
+
+stdout | src/components/LevelsTimeline/geometry.test.ts > levelsRailGeometry — the whole observation > prints the table a reader checks the shape against
+┌─────────┬──────────────────────────┬───────────────────┐
+│ (index) │ field                    │ value             │
+├─────────┼──────────────────────────┼───────────────────┤
+│ 0       │ 'peak total'             │ 12                │
+│ 1       │ 'fill width'             │ 7.7               │
+│ 2       │ 'adjacency width'        │ 5.682             │
+│ 3       │ 'perCount (the smaller)' │ 2                 │
+│ 4       │ 'transition'             │ 67.32000000000001 │
+└─────────┴──────────────────────────┴───────────────────┘
+┌─────────┬───────┬─────────┬─────────┬─────────┬───────┬───────┐
+│ (index) │ level │ y       │ x1      │ x2      │ count │ width │
+├─────────┼───────┼─────────┼─────────┼─────────┼───────┼───────┤
+│ 0       │ 'L5'  │ 162.28  │ 34      │ 147.413 │ 3     │ 6     │
+│ 1       │ 'L5'  │ 162.28  │ 212.533 │ 295.007 │ 3     │ 6     │
+│ 2       │ 'L5'  │ 162.28  │ 360.127 │ 444.224 │ 4     │ 8     │
+│ 3       │ 'L5'  │ 162.28  │ 509.344 │ 517.21  │ 4     │ 8     │
+│ 4       │ 'L5'  │ 162.28  │ 582.33  │ 626     │ 5     │ 10    │
+│ 5       │ 'L6'  │ 132.712 │ 34      │ 147.413 │ 4     │ 8     │
+│ 6       │ 'L6'  │ 132.712 │ 212.533 │ 295.007 │ 2     │ 4     │
+│ 7       │ 'L6'  │ 132.712 │ 360.127 │ 444.224 │ 2     │ 4     │
+│ 8       │ 'L6'  │ 132.712 │ 509.344 │ 517.21  │ 2     │ 4     │
+│ 9       │ 'L6'  │ 132.712 │ 582.33  │ 626     │ 2     │ 4     │
+│ 10      │ 'L7'  │ 103.144 │ 34      │ 147.413 │ 2     │ 4     │
+│ 11      │ 'L7'  │ 103.144 │ 212.533 │ 295.007 │ 4     │ 8     │
+│ 12      │ 'L7'  │ 103.144 │ 360.127 │ 444.224 │ 4     │ 8     │
+│ 13      │ 'L7'  │ 103.144 │ 509.344 │ 517.21  │ 3     │ 6     │
+│ 14      │ 'L7'  │ 103.144 │ 582.33  │ 626     │ 3     │ 6     │
+│ 15      │ 'L8'  │ 63.72   │ 360.127 │ 444.224 │ 1     │ 2     │
+│ 16      │ 'L8'  │ 63.72   │ 509.344 │ 517.21  │ 2     │ 4     │
+│ 17      │ 'L8'  │ 63.72   │ 582.33  │ 626     │ 2     │ 4     │
+└─────────┴───────┴─────────┴─────────┴─────────┴───────┴───────┘
+┌─────────┬──────────────────────────┬────────────────┬───────┬─────────┬─────────┬─────────┬─────────┬───────┐
+│ (index) │ flow                     │ kind           │ count │ x0      │ x1      │ srcTop  │ dstTop  │ width │
+├─────────┼──────────────────────────┼────────────────┼───────┼─────────┼─────────┼─────────┼─────────┼───────┤
+│ 0       │ 'l6-l7-1743465600000'    │ 'move'         │ 2     │ 147.413 │ 212.533 │ 128.712 │ 103.144 │ 4     │
+│ 1       │ 'carry-l5-1743465600000' │ 'continuation' │ 0     │ 147.413 │ 212.533 │ 159.28  │ 159.28  │ 6     │
+│ 2       │ 'carry-l6-1743465600000' │ 'carry'        │ 0     │ 147.413 │ 212.533 │ 132.712 │ 130.712 │ 4     │
+│ 3       │ 'carry-l7-1743465600000' │ 'carry'        │ 0     │ 147.413 │ 212.533 │ 101.144 │ 99.144  │ 4     │
+│ 4       │ 'carry-l5-1751328000000' │ 'continuation' │ 0     │ 295.007 │ 360.127 │ 159.28  │ 158.28  │ 6     │
+│ 5       │ 'carry-l6-1751328000000' │ 'continuation' │ 0     │ 295.007 │ 360.127 │ 130.712 │ 130.712 │ 4     │
+│ 6       │ 'carry-l7-1751328000000' │ 'continuation' │ 0     │ 295.007 │ 360.127 │ 99.144  │ 99.144  │ 8     │
+│ 7       │ 'l7-l8-1759276800000'    │ 'move'         │ 1     │ 444.224 │ 509.344 │ 99.144  │ 63.72   │ 2     │
+│ 8       │ 'carry-l5-1759276800000' │ 'continuation' │ 0     │ 444.224 │ 509.344 │ 158.28  │ 158.28  │ 8     │
+│ 9       │ 'carry-l6-1759276800000' │ 'continuation' │ 0     │ 444.224 │ 509.344 │ 130.712 │ 130.712 │ 4     │
+│ 10      │ 'carry-l7-1759276800000' │ 'carry'        │ 0     │ 444.224 │ 509.344 │ 101.144 │ 100.144 │ 6     │
+│ 11      │ 'carry-l8-1759276800000' │ 'carry'        │ 0     │ 444.224 │ 509.344 │ 62.72   │ 61.72   │ 2     │
+│ 12      │ 'carry-l5-1763164800000' │ 'continuation' │ 0     │ 517.21  │ 582.33  │ 158.28  │ 157.28  │ 8     │
+│ 13      │ 'carry-l6-1763164800000' │ 'continuation' │ 0     │ 517.21  │ 582.33  │ 130.712 │ 130.712 │ 4     │
+│ 14      │ 'carry-l7-1763164800000' │ 'continuation' │ 0     │ 517.21  │ 582.33  │ 100.144 │ 100.144 │ 6     │
+│ 15      │ 'carry-l8-1763164800000' │ 'continuation' │ 0     │ 517.21  │ 582.33  │ 61.72   │ 61.72   │ 4     │
+└─────────┴──────────────────────────┴────────────────┴───────┴─────────┴─────────┴─────────┴─────────┴───────┘
+┌─────────┐
+│ (index) │
+├─────────┤
+└─────────┘
+
+stdout | src/components/LevelsTimeline/geometry.test.ts > numbered flags > prints the sketch as a table — flags, then the dated axis
+┌─────────┬─────┬─────────┬──────────────┬───────┬───────┬───────────────────────┐
+│ (index) │ n   │ id      │ date         │ x     │ boxX  │ details               │
+├─────────┼─────┼─────────┼──────────────┼───────┼───────┼───────────────────────┤
+│ 0       │ '1' │ 'start' │ '2026-09-01' │ 23.2  │ 12.7  │ ''                    │
+│ 1       │ '2' │ 'raise' │ '2026-10-03' │ 165   │ 154.5 │ 'Person 2'            │
+│ 2       │ '3' │ 'hire'  │ '2026-11-15' │ 355.6 │ 345.1 │ 'Payroll 1, Person 3' │
+│ 3       │ '4' │ 'early' │ '2027-01-03' │ 572.8 │ 562.3 │ ''                    │
+│ 4       │ '5' │ 'late'  │ '2027-01-10' │ 603.8 │ 593.3 │ ''                    │
+└─────────┴─────┴─────────┴──────────────┴───────┴───────┴───────────────────────┘
+┌─────────┬──────────────┬───────┬───────┬──────────────┐
+│ (index) │ date         │ x     │ event │ label        │
+├─────────┼──────────────┼───────┼───────┼──────────────┤
+│ 0       │ '2026-09-01' │ 23.2  │ true  │ '2026-09-01' │
+│ 1       │ '2026-10-01' │ 156.2 │ false │ '·'          │
+│ 2       │ '2026-10-03' │ 165   │ true  │ '10-03'      │
+│ 3       │ '2026-11-01' │ 293.6 │ false │ '11-01'      │
+│ 4       │ '2026-11-15' │ 355.6 │ true  │ '11-15'      │
+│ 5       │ '2026-12-01' │ 426.5 │ false │ '12-01'      │
+│ 6       │ '2027-01-01' │ 563.9 │ false │ '·'          │
+│ 7       │ '2027-01-03' │ 572.8 │ true  │ '2027-01-03' │
+│ 8       │ '2027-01-10' │ 603.8 │ true  │ '·'          │
+└─────────┴──────────────┴───────┴───────┴──────────────┘
+
+stdout | src/components/LevelsTimeline/geometry.test.ts > pick strategies — what a click on the plot reports > pickDay: the whole day under the pointer, floored, clamped to the domain
+┌─────────┬────────────────────────┬──────────────┐
+│ (index) │ 0                      │ 1            │
+├─────────┼────────────────────────┼──────────────┤
+│ 0       │ '2026-10-17T00:00:00Z' │ '2026-10-17' │
+│ 1       │ '2026-10-17T11:59:00Z' │ '2026-10-17' │
+│ 2       │ '2026-10-17T23:59:59Z' │ '2026-10-17' │
+│ 3       │ '2026-12-31T18:00:00Z' │ '2026-12-31' │
+│ 4       │ '2026-07-10T12:00:00Z' │ '2026-08-01' │
+│ 5       │ '2027-03-10T12:00:00Z' │ '2027-02-01' │
+└─────────┴────────────────────────┴──────────────┘
+
+ ✓ src/components/LevelsTimeline/geometry.test.ts (171 tests) 92ms
+ ✓ src/components/DistributionSparkline/DistributionSparkline.test.tsx (13 tests) 40ms
+ ✓ src/components/Chart/Series.test.tsx (19 tests) 134ms
+ ✓ src/components/DataDisplay/ResultPanel.test.tsx (7 tests) 46ms
+ ✓ src/components/Table/fields/name.test.tsx (6 tests) 31ms
+ ✓ src/components/WorkerCard/WorkerCard.layout.test.tsx (3 tests) 123ms
+ ✓ src/components/Toast/Toast.test.tsx (6 tests) 62ms
+ ✓ src/components/Card/Card.test.tsx (8 tests) 53ms
+ ✓ src/components/Chart/GhostArc.test.tsx (16 tests) 56ms
+ ✓ src/components/Chart/ChartLabels.test.tsx (1 test) 37ms
+ ✓ src/components/MultiSelectFilter/MultiSelectFilter.test.tsx (7 tests) 49ms
+ ✓ src/components/Table/EllipsisText.test.tsx (4 tests) 47ms
+ ✓ src/components/BurndownChart/BurndownChart.test.tsx (5 tests) 62ms
+ ✓ src/components/ThreadGroup/ThreadGroup.test.tsx (5 tests) 74ms
+ ✓ src/components/ValueMatrix/ValueMatrix.test.tsx (5 tests) 100ms
+ ✓ src/components/TabbedSidePanel/TabbedSidePanel.test.tsx (20 tests) 90ms
+ ✓ src/components/Legend/Legend.test.tsx (12 tests) 63ms
+ ✓ src/components/FileDropZone/FileDropZone.test.tsx (5 tests) 39ms
+ ✓ src/components/DataList/DataList.test.tsx (7 tests) 96ms
+ ✓ src/components/Alarm/AlarmStripeDefs.test.tsx (8 tests) 46ms
+ ✓ src/components/Modal/Modal.test.tsx (16 tests) 80ms
+ ✓ src/components/Table/DataTableContainer.test.tsx (11 tests) 35ms
+ ✓ src/components/BucketQueue/BucketQueue.headerAction.test.tsx (7 tests) 54ms
+ ✓ src/components/WeekCalendar/WeekCalendar.test.tsx (11 tests) 57ms
+ ✓ src/components/ModeSplitButton/ModeSplitButton.test.tsx (4 tests) 70ms
+ ✓ src/components/Chart/DragRangeSelect.test.tsx (9 tests) 45ms
+ ✓ src/components/VarianceStrip/VarianceStrip.test.tsx (3 tests) 50ms
+ ✓ src/components/Icon/Icon.test.tsx (28 tests) 56ms
+ ✓ src/components/DayOfMonthPicker/DayOfMonthPicker.test.tsx (10 tests) 103ms
+ ✓ src/components/SlotFillBar/SlotFillBar.test.tsx (7 tests) 96ms
+ ✓ src/components/Alarm/AlarmBands.test.tsx (10 tests) 43ms
+ ✓ src/components/Heatmap/Heatmap.test.tsx (11 tests) 116ms
+ ✓ src/components/TitledTimeRangeHeader/TitledTimeRangeHeader.test.tsx (5 tests) 32ms
+ ✓ src/components/Inputs/Inputs.test.tsx (6 tests) 30ms
+ ✓ src/components/ScrubChart/ScrubChartReferenceLine.test.tsx (7 tests) 88ms
+ ✓ src/components/Table/TableSectionHeader.test.tsx (17 tests) 68ms
+ ✓ src/components/DateRangePicker/TimeInputs.test.tsx (7 tests) 66ms
+ ✓ src/components/DateAxis/DailyDateAxis.test.tsx (4 tests) 73ms
+ ✓ src/components/Cell/Cell.test.tsx (6 tests) 36ms
+ ✓ src/components/SignedAreaChart/SignedAreaChart.test.tsx (2 tests) 51ms
+ ✓ src/components/SegmentedControl/SegmentedControl.test.tsx (34 tests) 87ms
+ ✓ src/components/Table/fields/int.test.tsx (7 tests) 55ms
+ ✓ src/components/MonthOfYearPicker/MonthOfYearPicker.test.tsx (5 tests) 32ms
+ ✓ src/components/Badge/ScenarioGlyph.test.tsx (5 tests) 26ms
+ ✓ src/components/RingChart/RingChart.test.tsx (5 tests) 34ms
+ ✓ src/components/CashflowChart/CashflowChart.test.tsx (8 tests) 59ms
+ ✓ src/components/ProductGrid/ProductGrid.test.tsx (10 tests) 58ms
+ ✓ src/components/VarianceStripChart/VarianceStripChart.test.tsx (3 tests) 37ms
+ ✓ src/components/Table/fields/date-time.test.tsx (5 tests) 21ms
+ ✓ src/components/FormulaCaption/FormulaCaption.test.tsx (3 tests) 31ms
+ ✓ src/components/SprintSelector/SprintSelector.test.tsx (5 tests) 64ms
+ ✓ src/components/LabeledDivider/LabeledDivider.layout.test.tsx (2 tests) 41ms
+ ✓ src/components/BulkActionBar/BulkActionBar.test.tsx (5 tests) 44ms
+ ✓ src/components/Table/fields/list.test.tsx (4 tests) 107ms
+ ✓ src/components/Badge/ScenarioDot.test.tsx (4 tests) 201ms
+ ✓ src/components/DateRangePicker/CalendarHeader.test.tsx (7 tests) 144ms
+ ✓ src/components/ParticipantAvatar/AssigneeIcon.test.tsx (9 tests) 33ms
+ ✓ src/components/Chart/MutationFlags.test.tsx (1 test) 23ms
+ ✓ src/components/Table/fields/linked-count.test.tsx (6 tests) 24ms
+ ✓ src/components/Table/fields/float.test.tsx (9 tests) 38ms
+ ✓ src/components/FormComposite/FormComposite.test.tsx (6 tests) 44ms
+ ✓ src/components/ParticipantNameLabel/ParticipantNameLabel.test.tsx (5 tests) 41ms
+ ✓ src/components/ChartCanvas/ChartCanvas.test.tsx (5 tests) 31ms
+ ✓ src/components/DataDisplay/FormulaDecomposition.test.tsx (3 tests) 26ms
+ ✓ src/components/DiffPair/DiffPair.layout.test.tsx (2 tests) 67ms
+ ✓ src/components/Table/CellRenderers.test.tsx (15 tests) 63ms
+ ✓ src/components/SegmentedInput/SegmentedInput.test.tsx (13 tests) 57ms
+ ✓ src/components/Alarm/AlarmOverlay.test.tsx (11 tests) 59ms
+ ✓ src/components/Table/BaseTable.fit.test.tsx (5 tests) 40ms
+ ✓ src/components/ProgressCheck/ProgressCheck.test.tsx (6 tests) 20ms
+ ✓ src/components/Layout/Layout.test.tsx (29 tests) 69ms
+ ✓ src/components/Alarm/AlarmHotZones.test.tsx (11 tests) 82ms
+stdout | src/components/MutationSliders/readouts.test.ts > readoutsOf — beside (Peter's payroll board) > prints old beside the prior arrow, new below, and the diff right of the bar on two lines
+┌─────────┬───────────┬───────────┬───────┬────────────┬────────────────┐
+│ (index) │ state     │ value     │ meta  │ priorLabel │ deltaLabel     │
+├─────────┼───────────┼───────────┼───────┼────────────┼────────────────┤
+│ 0       │ 'equal'   │ '$125K'   │ ''    │ null       │ null           │
+│ 1       │ 'raise'   │ '$130K'   │ ''    │ '$125K'    │ '+$5K\n(4%)'   │
+│ 2       │ 'cut'     │ '$90K'    │ ''    │ '$100K'    │ '−$10K\n(10%)' │
+│ 3       │ 'tiny'    │ '$125.5K' │ ''    │ '$125K'    │ '+$500\n(<1%)' │
+│ 4       │ 'new'     │ '$80K'    │ 'New' │ null       │ null           │
+│ 5       │ 'removed' │ '—'       │ ''    │ '$90K'     │ null           │
+└─────────┴───────────┴───────────┴───────┴────────────┴────────────────┘
+
+stdout | src/components/MutationSliders/readouts.test.ts > readoutsOf — stacked (the original, unchanged) > prints was-prior beneath and the delta beside the line
+┌─────────┬───────────┬───────────┬─────────────┬────────────┬────────────┐
+│ (index) │ state     │ value     │ meta        │ priorLabel │ deltaLabel │
+├─────────┼───────────┼───────────┼─────────────┼────────────┼────────────┤
+│ 0       │ 'equal'   │ '$125K'   │ ''          │ null       │ null       │
+│ 1       │ 'raise'   │ '$130K'   │ 'was $125K' │ null       │ '+$5K'     │
+│ 2       │ 'cut'     │ '$90K'    │ 'was $100K' │ null       │ '−$10K'    │
+│ 3       │ 'tiny'    │ '$125.5K' │ 'was $125K' │ null       │ '+$500'    │
+│ 4       │ 'new'     │ '$80K'    │ 'New'       │ null       │ null       │
+│ 5       │ 'removed' │ '—'       │ 'was $90K'  │ null       │ null       │
+└─────────┴───────────┴───────────┴─────────────┴────────────┴────────────┘
+
+ ✓ src/components/MutationSliders/readouts.test.ts (3 tests) 19ms
+ ✓ src/components/Surface/Surface.test.tsx (13 tests) 25ms
+ ✓ src/components/BottomSheet/BottomSheet.test.tsx (7 tests) 57ms
+ ✓ src/components/Chart/StackedAreaSeries.test.tsx (6 tests) 44ms
+ ✓ src/components/GhostRow/GhostRow.test.tsx (4 tests) 21ms
+ ✓ src/components/Navigation/Navigation.test.tsx (6 tests) 19ms
+ ✓ src/components/Fab/Fab.test.tsx (14 tests) 31ms
+ ✓ scripts/usage-manifest.test.ts (43 tests) 206ms
+ ✓ src/internal/dag-svg/orthogonal-routing.test.ts (26 tests) 46ms
+ ✓ src/components/ActionListItem/ActionListItem.test.tsx (6 tests) 45ms
+ ✓ src/components/DateRangePicker/PresetButtons.test.tsx (6 tests) 40ms
+ ✓ src/components/Chart/boundaries.test.ts (6 tests) 38ms
+ ✓ src/components/DatePicker/DatePicker.test.tsx (5 tests) 45ms
+ ✓ src/components/SvgMarks/SvgMarks.test.tsx (9 tests) 29ms
+ ✓ src/components/Table/GapCell.test.tsx (4 tests) 41ms
+ ✓ src/components/Table/fields/money.test.tsx (4 tests) 68ms
+ ✓ src/components/ValueRenderer/ValueRenderer.test.tsx (7 tests) 67ms
+ ✓ src/components/ProgressCard/ProgressCard.layout.test.tsx (2 tests) 81ms
+ ✓ src/components/ServiceHealthDot/ServiceHealthDot.test.tsx (8 tests) 38ms
+ ✓ src/themes/__tests__/contract.test.ts (270 tests) 20ms
+ ✓ src/components/ParticipantTimeLabel/ParticipantTimeLabel.test.tsx (4 tests) 21ms
+ ✓ src/components/Layout/AppShell.test.tsx (9 tests) 32ms
+ ✓ src/components/Chart/ReferenceLine.test.tsx (14 tests) 83ms
+ ✓ src/components/Table/fields/status.test.tsx (5 tests) 22ms
+ ✓ src/components/Table/fields/combinators.test.tsx (10 tests) 39ms
+ ✓ src/components/FormComposite/FormComposite.layout.test.tsx (2 tests) 21ms
+ ✓ src/components/Markdown/Markdown.test.tsx (9 tests) 52ms
+ ✓ src/components/Chart/lineStep.test.tsx (3 tests) 23ms
+ ✓ src/components/RecentStarred/RecentStarred.test.tsx (8 tests) 34ms
+ ✓ src/components/Chart/shapes.test.tsx (16 tests) 83ms
+ ✓ src/components/Placeholder/Placeholder.test.tsx (6 tests) 21ms
+ ✓ src/components/ScrubChart/ScrubChartLabels.test.tsx (1 test) 46ms
+ ✓ src/themes/__tests__/buttonHoverContrast.test.ts (122 tests) 60ms
+ ✓ src/components/DragDrop/QuadrantGrid.test.tsx (4 tests) 74ms
+ ✓ src/components/BucketQueue/density.test.tsx (3 tests) 39ms
+ ✓ src/components/CollapsiblePanel/CollapsiblePanel.test.tsx (6 tests) 23ms
+ ✓ src/components/Chart/DeviationBandMark.test.tsx (3 tests) 22ms
+ ✓ src/components/Table/fields/date.test.tsx (3 tests) 30ms
+ ✓ src/components/Toggle/Toggle.test.tsx (5 tests) 41ms
+ ✓ src/components/ResizableContainer/ResizableContainer.test.tsx (6 tests) 96ms
+ ✓ src/components/Chart/SlotTrack.test.tsx (4 tests) 40ms
+ ✓ src/hooks/createSubmitAction.test.ts (5 tests) 14ms
+ ✓ src/components/ButtonGroup/ButtonGroup.test.tsx (5 tests) 26ms
+ ✓ src/components/Badge/workflowBadges.test.tsx (3 tests) 28ms
+ ✓ src/components/Table/fields/enum.test.tsx (10 tests) 34ms
+ ✓ scripts/export-usage-report.test.ts (11 tests) 80ms
+ ✓ src/components/Table/fields/duration.test.tsx (4 tests) 21ms
+ ✓ src/components/FocusLabelBand/FocusLabelBand.test.tsx (5 tests) 30ms
+ ✓ src/components/Table/fields/text.test.tsx (8 tests) 33ms
+stdout | src/components/MarkedSlider/geometry.test.ts > mutationGeometry — the sketch as a table > prints the whole row so it can be read without a browser
+trackDomain (derived): [ 40000, 110000 ]
+┌─────────┬──────────┬────────────────┬────────┬────────────┬────────┬──────────────┬────────────┬────────────┬────────────────────┬────────────────────┬────────────────────┬────────┬───────┬─────────┐
+│ (index) │ id       │ range          │ old    │ clampedOld │ value  │ clampedValue │ changeTone │ deltaLabel │ bandY              │ bandH              │ oldY               │ valueY │ isNew │ removed │
+├─────────┼──────────┼────────────────┼────────┼────────────┼────────┼──────────────┼────────────┼────────────┼────────────────────┼────────────────────┼────────────────────┼────────┼───────┼─────────┤
+│ 0       │ 'peter'  │ '70000–110000' │ 90000  │ 90000      │ 104000 │ 104000       │ 'raise'    │ '+$14k'    │ 118.19999999999999 │ 47.20000000000002  │ 141.8              │ 125.28 │ false │ false   │
+│ 1       │ 'adlai'  │ '40000–60000'  │ 44000  │ 44000      │ 52000  │ 52000        │ 'raise'    │ '+$8k'     │ 177.2              │ 23.600000000000023 │ 196.07999999999998 │ 186.64 │ false │ false   │
+│ 2       │ 'elaina' │ '55000–80000'  │ 62000  │ 62000      │ 80000  │ 80000        │ 'raise'    │ '+$18k'    │ 153.6              │ 29.5               │ 174.84             │ 153.6  │ false │ false   │
+│ 3       │ 'reilly' │ '70000–110000' │ 105000 │ 105000     │ 74000  │ 74000        │ 'cut'      │ '−$31k'    │ 118.19999999999999 │ 47.20000000000002  │ 124.1              │ 160.68 │ false │ false   │
+│ 4       │ 'flynn'  │ '55000–80000'  │ 78000  │ 78000      │ 55000  │ 55000        │ 'cut'      │ '−$23k'    │ 153.6              │ 29.5               │ 155.95999999999998 │ 183.1  │ false │ false   │
+│ 5       │ 'joe'    │ '40000–60000'  │ 48000  │ 48000      │ '—'    │ '—'          │ 'none'     │ '—'        │ 177.2              │ 23.600000000000023 │ 191.36             │ '—'    │ false │ true    │
+│ 6       │ 'nadia'  │ '40000–60000'  │ '—'    │ '—'        │ 45000  │ 45000        │ 'none'     │ '—'        │ 177.2              │ 23.600000000000023 │ '—'                │ 194.9  │ true  │ false   │
+└─────────┴──────────┴────────────────┴────────┴────────────┴────────┴──────────────┴────────────┴────────────┴────────────────────┴────────────────────┴────────────────────┴────────┴───────┴─────────┘
+
+ ✓ src/components/MarkedSlider/geometry.test.ts (90 tests) 20ms
+ ✓ src/components/Page/Page.test.tsx (4 tests) 14ms
+ ✓ src/components/EntityCard/EntityCard.test.tsx (7 tests) 30ms
+ ✓ src/components/ScrollRegion/ScrollRegion.test.tsx (8 tests) 64ms
+ ✓ src/components/ProductGridCard/ProductGridCard.layout.test.tsx (3 tests) 35ms
+ ✓ src/components/HotkeyButton/HotkeyButton.test.tsx (8 tests) 69ms
+ ✓ src/components/Layout/Grid.test.tsx (13 tests) 50ms
+ ✓ src/components/HeightReveal/HeightReveal.test.tsx (8 tests) 62ms
+ ✓ src/components/DataDisplay/DateTimeRange.test.tsx (6 tests) 21ms
+ ✓ scripts/release.test.ts (28 tests) 10ms
+ ✓ src/components/HeartbeatSparkline/HeartbeatSparkline.test.tsx (5 tests) 31ms
+ ✓ src/components/Dot/Dot.test.tsx (3 tests) 45ms
+ ✓ src/components/Table/fields/aggregate.test.tsx (4 tests) 25ms
+ ✓ src/components/LiveHeartbeatTrace/LiveHeartbeatTrace.test.tsx (5 tests) 33ms
+ ✓ src/components/Sparkline/Sparkline.test.tsx (6 tests) 31ms
+ ✓ src/components/Table/fields/identity-link.test.tsx (6 tests) 82ms
+ ✓ src/components/ChartHeader/ChartHeader.test.tsx (3 tests) 41ms
+ ✓ src/components/Kbd/Kbd.test.tsx (5 tests) 26ms
+ ✓ src/components/ActionRow/ActionRow.layout.test.tsx (3 tests) 32ms
+stdout | src/internal/format/number.test.ts > formatCompactCurrency > prints compact dollars with an uppercase unit
+┌─────────┬─────────┬───────────┐
+│ (index) │ value   │ out       │
+├─────────┼─────────┼───────────┤
+│ 0       │ 0       │ '$0'      │
+│ 1       │ 999     │ '$999'    │
+│ 2       │ 5000    │ '$5K'     │
+│ 3       │ 125000  │ '$125K'   │
+│ 4       │ 125500  │ '$125.5K' │
+│ 5       │ 1234567 │ '$1.2M'   │
+│ 6       │ -5000   │ '-$5K'    │
+└─────────┴─────────┴───────────┘
+
+ ✓ src/internal/format/number.test.ts (9 tests) 17ms
+ ✓ src/components/Chart/PointCaptions.test.tsx (1 test) 35ms
+ ✓ src/components/DataDisplay/MetricCard.test.tsx (9 tests) 64ms
+ ✓ src/components/GroupBracket/GroupBracket.test.tsx (6 tests) 33ms
+ ✓ src/components/LevelsTimeline/flatTicks.test.ts (2 tests) 26ms
+ ✓ src/components/SlideReveal/SlideReveal.test.tsx (3 tests) 38ms
+ ✓ src/components/List/List.test.tsx (6 tests) 23ms
+ ✓ src/components/TruthIndicator/TruthIndicator.test.tsx (6 tests) 47ms
+ ✓ src/components/DateRangePicker/calendarUtils.test.ts (27 tests) 27ms
+ ✓ src/test-utils/domStructure.test.tsx (4 tests) 27ms
+ ✓ src/components/GroupedMutationSliders/groups.test.ts (23 tests) 9ms
+ ✓ scripts/build-config.test.ts (14 tests) 8ms
+ ✓ src/components/Badge/CountBadge.test.tsx (2 tests) 30ms
+stdout | src/components/MutationSliders/links.test.ts > link vs pin — where same-level and same-delta part ways > a ceiling splits both; only the link re-levels on the way back
+┌─────────┬───────────────────┬────────┬────────┬────────┬────────┐
+│ (index) │ step              │ pinA   │ pinB   │ linkA  │ linkB  │
+├─────────┼───────────────────┼────────┼────────┼────────┼────────┤
+│ 0       │ 'snap to highest' │ '110k' │ '110k' │ '110k' │ '110k' │
+│ 1       │ 'drag B → 125k'   │ '115k' │ '125k' │ '115k' │ '125k' │
+│ 2       │ 'drag B → 105k'   │ '95k'  │ '105k' │ '105k' │ '105k' │
+└─────────┴───────────────────┴────────┴────────┴────────┴────────┘
+
+stdout | src/components/MutationSliders/links.test.ts > resetLinked — a reset is a move to the prior level > prints who moves where and who unlinks
+┌─────────┬───────────────────────────────────────┬────────────┬───────┬────────────────────────┬────────────┐
+│ (index) │ case                                  │ linked     │ reset │ moves                  │ unlink     │
+├─────────┼───────────────────────────────────────┼────────────┼───────┼────────────────────────┼────────────┤
+│ 0       │ 'all can reach'                       │ 'P1,P2,P3' │ 'P3'  │ 'P1→95k P2→95k P3→95k' │ ''         │
+│ 1       │ "P4's floor is above 95k"             │ 'P2,P3,P4' │ 'P3'  │ 'P2→95k P3→95k'        │ 'P4'       │
+│ 2       │ 'reset dial not linked'               │ 'P1,P2'    │ 'P3'  │ 'P3→95k'               │ ''         │
+│ 3       │ "3 linked, 2 can't reach → dissolves" │ 'P3,P4,P5' │ 'P3'  │ 'P3→95k'               │ 'P3,P4,P5' │
+│ 4       │ 'removed member unlinks'              │ 'P2,P3,P6' │ 'P3'  │ 'P2→95k P3→95k'        │ 'P6'       │
+│ 5       │ 'new dial (no prior): nothing'        │ 'P3,P4'    │ 'P4'  │ ''                     │ ''         │
+└─────────┴───────────────────────────────────────┴────────────┴───────┴────────────────────────┴────────────┘
+
+ ✓ src/components/MutationSliders/links.test.ts (5 tests) 8ms
+ ✓ src/internal/format/money.test.ts (5 tests) 16ms
+ ✓ src/components/AssigneeChips/AssigneeChips.layout.test.tsx (3 tests) 20ms
+ ✓ src/components/Divider/Divider.test.tsx (4 tests) 39ms
+ ✓ src/components/CodeBlock/CodeBlock.test.tsx (4 tests) 13ms
+ ✓ src/internal/fieldWidth/fieldWidth.test.ts (12 tests) 20ms
+ ✓ src/internal/animation/trajectories.test.ts (49 tests) 33ms
+ ✓ src/components/Combobox/comboboxCreateRow.test.ts (7 tests) 3ms
+ ✓ src/components/Badge/CountChip.test.tsx (4 tests) 17ms
+ ✓ src/hooks/createYAxisStrategy.test.ts (7 tests) 25ms
+ ✓ src/components/Layout/IndentRail.test.tsx (5 tests) 19ms
+ ✓ src/components/ParticipantAvatar/initials.test.ts (15 tests) 10ms
+ ✓ src/components/FormulaCaption/formula.test.ts (3 tests) 33ms
+ ✓ src/components/TrendSparkline/TrendSparkline.test.tsx (6 tests) 56ms
+ ✓ src/components/InlineText/InlineText.test.tsx (4 tests) 9ms
+stdout | src/components/Strips/payroll.test.ts > hourly wage > annual is rate x hours x 52 and each paycheck divides half-even
+┌─────────┬───────┬───────┬─────────┬──────────┬─────────────┬─────────┐
+│ (index) │ rate  │ hours │ annual  │ biweekly │ semimonthly │ monthly │
+├─────────┼───────┼───────┼─────────┼──────────┼─────────────┼─────────┤
+│ 0       │ 45    │ 40    │ 9360000 │ 360000   │ 390000      │ 780000  │
+│ 1       │ 33.33 │ 37.5  │ 6499350 │ 249975   │ 270806      │ 541612  │
+│ 2       │ 20    │ 12.25 │ 1274000 │ 49000    │ 53083       │ 106167  │
+│ 3       │ 0     │ 40    │ 0       │ 0        │ 0           │ 0       │
+└─────────┴───────┴───────┴─────────┴──────────┴─────────────┴─────────┘
+
+stdout | src/components/Strips/payroll.test.ts > hourly wage > the annual slider scales hours and keeps the rate
+┌─────────┬──────────┬───────┬──────┬──────────┐
+│ (index) │ ask      │ hours │ rate │ annual   │
+├─────────┼──────────┼───────┼──────┼──────────┤
+│ 0       │ 0        │ 0     │ 4500 │ 0        │
+│ 1       │ 5000000  │ 21.25 │ 4500 │ 4972500  │
+│ 2       │ 9360000  │ 40    │ 4500 │ 9360000  │
+│ 3       │ 12345600 │ 52.75 │ 4500 │ 12343500 │
+│ 4       │ 99999999 │ 168   │ 4500 │ 39312000 │
+└─────────┴──────────┴───────┴──────┴──────────┘
+
+stdout | src/components/Strips/payroll.test.ts > payroll tax > is rate x the payroll base, per year and per period
+┌─────────┬─────────┬──────────┬─────────┬───────────┬─────────┐
+│ (index) │ rate    │ base     │ perYear │ perPeriod │ periods │
+├─────────┼─────────┼──────────┼─────────┼───────────┼─────────┤
+│ 0       │ '7.65%' │ 10289110 │ 787117  │ 30274     │ 26      │
+│ 1       │ '7.65%' │ 19649110 │ 1503157 │ 57814     │ 26      │
+│ 2       │ '6.20%' │ 9360000  │ 580320  │ 48360     │ 12      │
+│ 3       │ '7.65%' │ 0        │ 0       │ 0         │ 26      │
+└─────────┴─────────┴──────────┴─────────┴───────────┴─────────┘
+
+ ✓ src/components/Strips/payroll.test.ts (6 tests) 7ms
+ ✓ src/components/Text/Text.test.tsx (6 tests) 16ms
+stdout | dev/showcases/workshop/progress-flags.model.test.ts > every topic > prints its observation
+
+topic 18: M15 rolling bars on SUI, plus three HUD data bugs (estimate 100m, tolerance 50% of planned, floor 5m)
+
+ESTIMATE: elapsed, earned minutes
+      +0.0m     0
+     +10.0m    10
+     +15.0m    15
+     +25.0m    25
+     +30.0m    30
+     +40.0m    40
+     +50.0m    50
+     +60.0m    60
+     +70.0m    70
+     +80.0m    80
+     +90.0m    90
+    +100.0m   100
+
+ACTUAL: elapsed, earned minutes
+      +0.0m     0
+      +3.6m    10
+      +5.7m    15
+      +7.0m    25
+      +8.7m    30
+      +9.6m    40
+     +10.3m    50
+     +11.2m    60
+     +14.2m    70
+     +17.2m    80
+     +20.7m    90
+     +20.7m   100
+     +21.2m   100
+
+from     to          est   act   tol  verdict
++0.0m    +3.6m         0     0     5  within
++3.6m    +5.7m         0    10     5  ahead
++5.7m    +7.0m         0    15     5  ahead
++7.0m    +8.7m         0    25     5  ahead
++8.7m    +9.6m         0    30     5  ahead
++9.6m    +10.0m        0    40     5  ahead
++10.0m   +10.3m       10    40     5  ahead
++10.3m   +11.2m       10    50     5  ahead
++11.2m   +14.2m       10    60     5  ahead
++14.2m   +15.0m       10    70     5  ahead
++15.0m   +17.2m       15    70   7.5  ahead
++17.2m   +20.7m       15    80   7.5  ahead
++20.7m   +20.7m       15    90   7.5  ahead
++20.7m   +21.2m       15   100   7.5  ahead
+
+minutes by verdict: {"within":3.6,"ahead":17.6,"behind":0}
+
+flag  state     at        earned
+   1  past      +3.6m        10
+   2  past      +5.7m        15
+   3  past      +7.0m        25
+   4  past      +8.7m        30
+   5  past      +9.6m        40
+   6  past      +10.3m       50
+   7  past      +11.2m       60
+   8  past      +14.2m       70
+   9  past      +17.2m       80
+  10  past      +20.7m       90
+  11  past      +20.7m      100
+
+
+topic 4: Wiki (estimate 50m, tolerance 50% of planned, floor 5m)
+
+ESTIMATE: elapsed, earned minutes
+      +0.0m     0
+     +10.0m    10
+     +20.0m    20
+     +35.0m    35
+     +43.0m    43
+     +50.0m    50
+
+ACTUAL: elapsed, earned minutes
+      +0.0m     0
+      +3.1m    10
+      +4.2m    20
+      +5.9m    35
+      +6.4m    43
+      +8.1m    50
+      +8.2m    50
+
+from     to          est   act   tol  verdict
++0.0m    +3.1m         0     0     5  within
++3.1m    +4.2m         0    10     5  ahead
++4.2m    +5.9m         0    20     5  ahead
++5.9m    +6.4m         0    35     5  ahead
++6.4m    +8.1m         0    43     5  ahead
++8.1m    +8.2m         0    50     5  ahead
+
+minutes by verdict: {"within":3.1,"ahead":5.1,"behind":0}
+
+flag  state     at        earned
+   1  past      +3.1m        10
+   2  past      +4.2m        20
+   3  past      +5.9m        35
+   4  past      +6.4m        43
+   5  past      +8.1m        50
+
+
+topic 11: M12 progress bar on Active (estimate 35m, tolerance 50% of planned, floor 5m)
+
+ESTIMATE: elapsed, earned minutes
+      +0.0m     0
+     +35.0m    35
+
+ACTUAL: elapsed, earned minutes
+      +0.0m     0
+     +20.7m    35
+     +20.7m    35
+
+from     to          est   act   tol  verdict
++0.0m    +20.7m        0     0     5  within
+
+minutes by verdict: {"within":20.7,"ahead":0,"behind":0}
+
+flag  state     at        earned
+   1  past      +20.7m       35
+
+
+topic 7: M8 SUI proof topic (ignore) (estimate 2m, tolerance 50% of planned, floor 5m)
+
+ESTIMATE: elapsed, earned minutes
+      +0.0m     0
+      +1.0m     1
+      +2.0m     2
+     +12.0m    12
+     +22.0m    22
+
+ACTUAL: elapsed, earned minutes
+      +0.0m     0
+     +59.6m     1
+    +111.9m     2
+    +124.5m    22
+
+from     to          est   act   tol  verdict
++0.0m    +1.0m         0     0     5  within
++1.0m    +2.0m         1     0     5  within
++2.0m    +12.0m        2     0     5  within
++12.0m   +22.0m       12     0     6  behind
++22.0m   +59.6m       22     0    11  behind
++59.6m   +111.9m      22     1    11  behind
++111.9m  +124.5m      22     2    11  behind
+
+minutes by verdict: {"within":12,"ahead":0,"behind":112.5}
+
+flag  state     at        earned
+   1  past      +59.6m        1
+   2  past      +111.9m       2
+   3  planned   +12.0m       12
+   4  planned   +22.0m       22
+
+
+topic 21: M18 approvals decided only by the project owner (estimate 35m, tolerance 50% of planned, floor 5m)
+
+ESTIMATE: elapsed, earned minutes
+      +0.0m     0
+     +10.0m    10
+     +20.0m    20
+     +30.0m    30
+     +35.0m    35
+
+ACTUAL: elapsed, earned minutes
+      +0.0m     0
+      +2.6m    10
+      +3.1m    20
+      +3.8m    30
+      +4.1m    35
+      +4.2m    35
+
+from     to          est   act   tol  verdict
++0.0m    +2.6m         0     0     5  within
++2.6m    +3.1m         0    10     5  ahead
++3.1m    +3.8m         0    20     5  ahead
++3.8m    +4.1m         0    30     5  ahead
++4.1m    +4.2m         0    35     5  ahead
+
+minutes by verdict: {"within":2.6,"ahead":1.6,"behind":0}
+
+flag  state     at        earned
+   1  past      +2.6m        10
+   2  past      +3.1m        20
+   3  past      +3.8m        30
+   4  past      +4.1m        35
+
+
+topic 903: Synthetic: on target (estimate 50m, tolerance 50% of planned, floor 5m)
+
+ESTIMATE: elapsed, earned minutes
+      +0.0m     0
+     +10.0m    10
+     +20.0m    20
+     +30.0m    30
+     +40.0m    40
+     +50.0m    50
+
+ACTUAL: elapsed, earned minutes
+      +0.0m     0
+     +10.0m    10
+     +20.0m    20
+     +29.0m    30
+     +40.0m    40
+     +50.0m    50
+     +50.0m    50
+
+from     to          est   act   tol  verdict
++0.0m    +10.0m        0     0     5  within
++10.0m   +20.0m       10    10     5  within
++20.0m   +29.0m       20    20    10  within
++29.0m   +30.0m       20    30    10  within
++30.0m   +40.0m       30    30    15  within
++40.0m   +50.0m       40    40    20  within
++50.0m   +50.0m       50    50    25  within
+
+minutes by verdict: {"within":50,"ahead":0,"behind":0}
+
+flag  state     at        earned
+   1  past      +10.0m       10
+   2  past      +20.0m       20
+   3  past      +29.0m       30
+   4  past      +40.0m       40
+   5  past      +50.0m       50
+
+
+topic 901: Synthetic: steadily behind (estimate 60m, tolerance 50% of planned, floor 5m)
+
+ESTIMATE: elapsed, earned minutes
+      +0.0m     0
+     +10.0m    10
+     +20.0m    20
+     +30.0m    30
+     +40.0m    40
+     +50.0m    50
+     +60.0m    60
+
+ACTUAL: elapsed, earned minutes
+      +0.0m     0
+     +41.0m    10
+     +91.0m    20
+    +151.0m    30
+    +211.0m    40
+    +281.0m    50
+    +361.0m    60
+    +361.0m    60
+
+from     to          est   act   tol  verdict
++0.0m    +10.0m        0     0     5  within
++10.0m   +20.0m       10     0     5  behind
++20.0m   +30.0m       20     0    10  behind
++30.0m   +40.0m       30     0    15  behind
++40.0m   +41.0m       40     0    20  behind
++41.0m   +50.0m       40    10    20  behind
++50.0m   +60.0m       50    10    25  behind
++60.0m   +91.0m       60    10    30  behind
++91.0m   +151.0m      60    20    30  behind
++151.0m  +211.0m      60    30    30  within
++211.0m  +281.0m      60    40    30  within
++281.0m  +361.0m      60    50    30  within
++361.0m  +361.0m      60    60    30  within
+
+minutes by verdict: {"within":220,"ahead":0,"behind":141}
+
+flag  state     at        earned
+   1  past      +41.0m       10
+   2  past      +91.0m       20
+   3  past      +151.0m      30
+   4  past      +211.0m      40
+   5  past      +281.0m      50
+   6  past      +361.0m      60
+
+
+topic 902: Synthetic: ahead, then behind (estimate 60m, tolerance 50% of planned, floor 5m)
+
+ESTIMATE: elapsed, earned minutes
+      +0.0m     0
+     +10.0m    10
+     +20.0m    20
+     +30.0m    30
+     +40.0m    40
+     +50.0m    50
+     +60.0m    60
+
+ACTUAL: elapsed, earned minutes
+      +0.0m     0
+      +4.0m    10
+      +7.0m    20
+    +107.0m    30
+    +147.0m    40
+    +157.0m    50
+    +167.0m    60
+    +167.0m    60
+
+from     to          est   act   tol  verdict
++0.0m    +4.0m         0     0     5  within
++4.0m    +7.0m         0    10     5  ahead
++7.0m    +10.0m        0    20     5  ahead
++10.0m   +20.0m       10    20     5  ahead
++20.0m   +30.0m       20    20    10  within
++30.0m   +40.0m       30    20    15  within
++40.0m   +50.0m       40    20    20  within
++50.0m   +60.0m       50    20    25  behind
++60.0m   +107.0m      60    20    30  behind
++107.0m  +147.0m      60    30    30  within
++147.0m  +157.0m      60    40    30  within
++157.0m  +167.0m      60    50    30  within
++167.0m  +167.0m      60    60    30  within
+
+minutes by verdict: {"within":94,"ahead":16,"behind":57}
+
+flag  state     at        earned
+   1  past      +4.0m        10
+   2  past      +7.0m        20
+   3  past      +107.0m      30
+   4  past      +147.0m      40
+   5  past      +157.0m      50
+   6  past      +167.0m      60
+
+
+topic 904: Synthetic: procrastinate (estimate 60m, tolerance 50% of planned, floor 5m)
+
+ESTIMATE: elapsed, earned minutes
+      +0.0m     0
+     +10.0m    10
+     +20.0m    20
+     +30.0m    30
+     +40.0m    40
+     +50.0m    50
+     +60.0m    60
+
+ACTUAL: elapsed, earned minutes
+      +0.0m     0
+     +52.0m    10
+     +54.0m    20
+     +57.0m    30
+     +59.0m    40
+     +61.0m    50
+     +64.0m    60
+     +64.0m    60
+
+from     to          est   act   tol  verdict
++0.0m    +10.0m        0     0     5  within
++10.0m   +20.0m       10     0     5  behind
++20.0m   +30.0m       20     0    10  behind
++30.0m   +40.0m       30     0    15  behind
++40.0m   +50.0m       40     0    20  behind
++50.0m   +52.0m       50     0    25  behind
++52.0m   +54.0m       50    10    25  behind
++54.0m   +57.0m       50    20    25  behind
++57.0m   +59.0m       50    30    25  within
++59.0m   +60.0m       50    40    25  within
++60.0m   +61.0m       60    40    30  within
++61.0m   +64.0m       60    50    30  within
++64.0m   +64.0m       60    60    30  within
+
+minutes by verdict: {"within":17,"ahead":0,"behind":47}
+
+flag  state     at        earned
+   1  past      +52.0m       10
+   2  past      +54.0m       20
+   3  past      +57.0m       30
+   4  past      +59.0m       40
+   5  past      +61.0m       50
+   6  past      +64.0m       60
+
+
+stdout | dev/showcases/workshop/progress-flags.model.test.ts > scenarios > prints the verdict minutes of each
+On target: {"within":50,"ahead":0,"behind":0}
+In progress: {"within":3.6,"ahead":17.6,"behind":0}
+Ahead: {"within":3.6,"ahead":17.6,"behind":0}
+Behind: {"within":220,"ahead":0,"behind":141}
+Over and under: {"within":94,"ahead":16,"behind":57}
+Procrastinate: {"within":17,"ahead":0,"behind":47}
+
+ ✓ dev/showcases/workshop/progress-flags.model.test.ts (22 tests) 13ms
+stdout | dev/showcases/workshop/contract-builder-model.test.ts > contract-builder model — headless observation > prints the year, month × type
+
+       month         type    projected      planned     invoiced   inv-within  plan-within    unplanned    remainder ahead/behind
+         Jan            O           $0           $0           $0           $0           $0           $0           $0           $0
+         Jan            I       $12.5k         $18k         $18k       $12.5k           $0        $5.5k           $0       +$5.5k
+         Jan            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+         Feb            O           $0           $0           $0           $0           $0           $0           $0           $0
+         Feb            I       $12.5k          $9k          $9k          $9k           $0           $0        $3.5k       −$3.5k
+         Feb            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+         Mar            O          $8k           $0           $0           $0           $0           $0          $8k         −$8k
+         Mar            I        $7.5k           $0           $0           $0           $0           $0        $7.5k       −$7.5k
+         Mar            F        $2.4k        $4.2k        $4.2k        $2.4k           $0        $1.8k           $0       +$1.8k
+         Apr            O         $16k          $5k          $5k          $5k           $0           $0         $11k        −$11k
+         Apr            I        $7.5k           $0           $0           $0           $0           $0        $7.5k       −$7.5k
+         Apr            F        $2.4k          $4k          $4k        $2.4k           $0        $1.6k           $0       +$1.6k
+         May            O         $20k         $11k         $11k         $11k           $0           $0          $9k         −$9k
+         May            I          $5k           $0           $0           $0           $0           $0          $5k         −$5k
+         May            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+         Jun            O         $20k         $13k          $7k          $7k          $6k           $0          $7k         −$7k
+         Jun            I          $5k           $0           $0           $0           $0           $0          $5k         −$5k
+         Jun            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+         Jul            O         $20k         $18k         $18k         $18k           $0           $0          $2k         −$2k
+         Jul            I          $5k           $0           $0           $0           $0           $0          $5k         −$5k
+         Jul            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+         Aug            O         $20k         $24k         $24k         $20k           $0          $4k           $0         +$4k
+         Aug            I          $5k           $0           $0           $0           $0           $0          $5k         −$5k
+         Aug            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+         Sep            O         $16k           $0           $0           $0           $0           $0         $16k        −$16k
+         Sep            I        $7.5k          $3k          $3k          $3k           $0           $0        $4.5k       −$4.5k
+         Sep            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+         Oct            O         $12k          $2k           $0           $0          $2k           $0         $10k        −$10k
+         Oct            I        $7.5k           $0           $0           $0           $0           $0        $7.5k       −$7.5k
+         Oct            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+         Nov            O          $8k           $0           $0           $0           $0           $0          $8k         −$8k
+         Nov            I         $10k          $4k           $0           $0          $4k           $0          $6k         −$6k
+         Nov            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+         Dec            O           $0        $4.5k           $0           $0           $0        $4.5k           $0       +$4.5k
+         Dec            I       $12.5k        $3.5k           $0           $0        $3.5k           $0          $9k         −$9k
+         Dec            F        $2.4k           $0           $0           $0           $0           $0        $2.4k       −$2.4k
+
+
+stdout | dev/showcases/workshop/contract-builder-model.test.ts > contract-builder step 1 — exterior expectation only > prints exterior projected per month
+
+ month  projected
+   Jan         $0
+   Feb         $0
+   Mar        $6k
+   Apr     $11.6k
+   May       $16k
+   Jun     $19.2k
+   Jul       $20k
+   Aug     $19.2k
+   Sep       $16k
+   Oct     $11.6k
+   Nov        $6k
+   Dec         $0
+
+
+ ✓ dev/showcases/workshop/contract-builder-model.test.ts (17 tests) 11ms
+ ✓ src/components/CashflowScrubChart/yDomain.test.ts (9 tests) 4ms
+ ✓ dev/workshop-benches.test.ts (5 tests) 12ms
+ ✓ src/components/StatusFlowChart/createStatusFlowChart.test.tsx (2 tests) 29ms
+ ✓ src/components/DirtyComboBox/dirtyComboModel.test.ts (21 tests) 14ms
+ ✓ src/themes/__tests__/contrast.test.ts (156 tests) 15ms
+ ✓ src/components/TreeTable/flattenTree.test.ts (10 tests) 10ms
+ ✓ src/components/AnimatedSwimlaneChart/lanes.test.ts (4 tests) 3ms
+stdout | src/hooks/createAxisWaterMarks.test.ts > observeAxisWaterMarks — the headless table > prints a drag up, a drag down, and a shrink
+┌─────────┬───────┬───────┬───────────┬───────────┬─────────┬─────────┐
+│ (index) │ frame │ reset │ fittedMin │ fittedMax │ heldMin │ heldMax │
+├─────────┼───────┼───────┼───────────┼───────────┼─────────┼─────────┤
+│ 0       │ 0     │ false │ 80000     │ 110000    │ 80000   │ 110000  │
+│ 1       │ 1     │ false │ 80000     │ 125000    │ 80000   │ 125000  │
+│ 2       │ 2     │ false │ 80000     │ 95000     │ 80000   │ 125000  │
+│ 3       │ 3     │ true  │ 80000     │ 95000     │ 80000   │ 95000   │
+│ 4       │ 4     │ false │ null      │ null      │ 80000   │ 95000   │
+└─────────┴───────┴───────┴───────────┴───────────┴─────────┴─────────┘
+
+ ✓ src/hooks/createAxisWaterMarks.test.ts (6 tests) 5ms
+ ✓ src/components/Tabs/Tabs.test.tsx (4 tests) 27ms
+ ✓ src/components/Section/StickyGroupHeader.test.tsx (3 tests) 25ms
+ ✓ src/components/BucketQueue/styling.test.ts (9 tests) 4ms
+ ✓ src/components/BandRail/bands.test.ts (33 tests) 7ms
+ ✓ src/components/VarianceStrip/varianceStripGeometry.test.ts (4 tests) 6ms
+ ✓ src/components/BuilderBoard/belowChart.test.ts (5 tests) 11ms
+stdout | src/components/BuilderBoard/geometry.test.ts > builderBoardTable — the printed observation > prints one row per panel with whole-px numbers
+
+panel            x     y  width  height
+A cashflow       0     0   1439     196
+B series         0   200   1439     196
+C changes        0   405   1139     397
+D rail        1147   405    292     397
+
+
+ ✓ src/components/BuilderBoard/geometry.test.ts (10 tests) 15ms
+ ✓ src/components/BucketQueue/layout.test.ts (28 tests) 5ms
+ ✓ src/components/TreeTable/treeSelection.test.ts (11 tests) 3ms
+ ✓ scripts/render-coverage.test.ts (28 tests) 7ms
+ ✓ src/components/BucketQueue/collapse.test.ts (8 tests) 3ms
+ ✓ scripts/execution-coverage.test.ts (8 tests) 6ms
+ ✓ src/components/Table/fields/resolve.test.tsx (4 tests) 7ms
+stdout | src/components/Chart/stackedArea.test.ts > buildStackedArea > prints the table a reader checks the shape against
+┌─────────┬──────┬────┬────┬────┬───┬───────┬───────┐
+│ (index) │ from │ to │ A  │ B  │ C │ total │ topPx │
+├─────────┼──────┼────┼────┼────┼───┼───────┼───────┤
+│ 0       │ 0    │ 3  │ 12 │ 8  │ 6 │ 26    │ 144   │
+│ 1       │ 3    │ 5  │ 18 │ 8  │ 6 │ 32    │ 108   │
+│ 2       │ 5    │ 8  │ 18 │ 8  │ 0 │ 26    │ 144   │
+│ 3       │ 8    │ 9  │ 14 │ 16 │ 0 │ 30    │ 120   │
+│ 4       │ 9    │ 12 │ 14 │ 16 │ 9 │ 39    │ 66    │
+└─────────┴──────┴────┴────┴────┴───┴───────┴───────┘
+┌─────────┬─────────────────┬───────┐
+│ (index) │ field           │ value │
+├─────────┼─────────────────┼───────┤
+│ 0       │ 'transition px' │ 28    │
+└─────────┴─────────────────┴───────┘
+┌─────────┬──────┬──────┬──────────────────────────┬────────────┐
+│ (index) │ band │ slot │ edgeStart                │ pathLength │
+├─────────┼──────┼──────┼──────────────────────────┼────────────┤
+│ 0       │ 'a'  │ 1    │ 'M 0 228 L 136 228 C 15' │ 113        │
+│ 1       │ 'b'  │ 2    │ 'M 0 180 L 136 180 C 15' │ 189        │
+│ 2       │ 'c'  │ 3    │ 'M 0 144 L 136 144 C 15' │ 262        │
+└─────────┴──────┴──────┴──────────────────────────┴────────────┘
+
+ ✓ src/components/Chart/stackedArea.test.ts (18 tests) 10ms
+ ✓ src/components/BandRail/helpers.test.ts (35 tests) 6ms
+stdout | src/components/MutationSliders/typed.test.ts > roundToPrecision — powers of ten > rounds to 0.01, to units and to thousands
+┌─────────┬──────────┬───────────┬─────────┐
+│ (index) │ value    │ precision │ out     │
+├─────────┼──────────┼───────────┼─────────┤
+│ 0       │ 1234.567 │ 2         │ 1234.57 │
+│ 1       │ 1234.567 │ 0         │ 1235    │
+│ 2       │ 1234.567 │ -3        │ 1000    │
+│ 3       │ -0.005   │ 2         │ 0       │
+│ 4       │ -0.005   │ 0         │ 0       │
+│ 5       │ -0.005   │ -3        │ 0       │
+│ 6       │ 125499   │ 2         │ 125499  │
+│ 7       │ 125499   │ 0         │ 125499  │
+│ 8       │ 125499   │ -3        │ 125000  │
+│ 9       │ 125500   │ 2         │ 125500  │
+│ 10      │ 125500   │ 0         │ 125500  │
+│ 11      │ 125500   │ -3        │ 126000  │
+│ 12      │ 1.005    │ 2         │ 1.01    │
+│ 13      │ 1.005    │ 0         │ 1       │
+│ 14      │ 1.005    │ -3        │ 0       │
+└─────────┴──────────┴───────────┴─────────┘
+
+stdout | src/components/MutationSliders/typed.test.ts > settleTyped — parse, round, clamp > lands every typed figure inside the dial's range on its grid
+┌─────────┬─────────────┬────────┬─────────┐
+│ (index) │ text        │ parsed │ settled │
+├─────────┼─────────────┼────────┼─────────┤
+│ 0       │ '125499'    │ 125499 │ 115500  │
+│ 1       │ '$98,700'   │ 98700  │ 99000   │
+│ 2       │ '98.7k'     │ 98700  │ 99000   │
+│ 3       │ '  90 000 ' │ 90000  │ 90000   │
+│ 4       │ '50000'     │ 50000  │ 70000   │
+│ 5       │ '115400'    │ 115400 │ 115000  │
+│ 6       │ ''          │ null   │ null    │
+│ 7       │ '-'         │ null   │ null    │
+│ 8       │ 'abc'       │ null   │ null    │
+└─────────┴─────────────┴────────┴─────────┘
+
+stdout | src/components/MutationSliders/typed.test.ts > settleTyped — the figures Peter typed (2026-09-24) > settles every spelling onto the thousand grid inside the range
+┌─────────┬──────────┬────────┬─────────┬─────────┐
+│ (index) │ text     │ parsed │ rounded │ settled │
+├─────────┼──────────┼────────┼─────────┼─────────┤
+│ 0       │ '44K'    │ 44000  │ 44000   │ 70000   │
+│ 1       │ '44,000' │ 44000  │ 44000   │ 70000   │
+│ 2       │ '$44k'   │ 44000  │ 44000   │ 70000   │
+│ 3       │ '$10'    │ 10     │ 0       │ 70000   │
+│ 4       │ '10'     │ 10     │ 0       │ 70000   │
+│ 5       │ '25'     │ 25     │ 0       │ 70000   │
+│ 6       │ '98,700' │ 98700  │ 99000   │ 99000   │
+│ 7       │ '$98.7k' │ 98700  │ 99000   │ 99000   │
+│ 8       │ '250k'   │ 250000 │ 250000  │ 110000  │
+│ 9       │ '104000' │ 104000 │ 104000  │ 104000  │
+└─────────┴──────────┴────────┴─────────┴─────────┘
+
+ ✓ src/components/MutationSliders/typed.test.ts (3 tests) 7ms
+ ✓ src/components/ActionList/selection.test.ts (13 tests) 6ms
+ ✓ src/components/Chart/gutterPacking.test.ts (9 tests) 5ms
+ ✓ src/components/Duration/Duration.test.tsx (6 tests) 19ms
+ ✓ src/components/Surface/SplitCard.test.tsx (1 test) 8ms
+ ✓ src/components/SvgMarks/geometry.test.ts (12 tests) 4ms
+ ✓ src/components/OverflowNav/fold.test.ts (1 test) 12ms
+stdout | src/components/MutationSliders/rows.test.ts > the guttered row — the beside readout's 24px gap > pages by the guttered slot and charges the chevrons and + the wider gap
+┌─────────┬───────────────────────────────────┬───────┬─────┬──────────┬────────┐
+│ (index) │ row                               │ start │ end │ capacity │ paging │
+├─────────┼───────────────────────────────────┼───────┼─────┼──────────┼────────┤
+│ 0       │ 'plain, 4 fit'                    │ 0     │ 4   │ 4        │ false  │
+│ 1       │ 'guttered, 4 fit'                 │ 0     │ 4   │ 4        │ false  │
+│ 2       │ 'guttered, 6 in room for 4'       │ 0     │ 3   │ 3        │ true   │
+│ 3       │ 'guttered + add, 4 in room for 4' │ 0     │ 2   │ 2        │ true   │
+└─────────┴───────────────────────────────────┴───────┴─────┴──────────┴────────┘
+
+stdout | src/components/MutationSliders/rows.test.ts > the guttered row — the beside readout's 24px gap > the worst two-line figure clears the next dial's prior label
+┌─────────┬────────────────────┬───────┬────────────────────┬─────────────┬─────┬────────────────────┐
+│ (index) │ figure             │ prior │ intoGapRight       │ intoGapLeft │ gap │ clear              │
+├─────────┼────────────────────┼───────┼────────────────────┼─────────────┼─────┼────────────────────┤
+│ 0       │ 39.599999999999994 │ 33    │ 11.599999999999994 │ 5           │ 24  │ 7.400000000000006  │
+│ 1       │ 39.599999999999994 │ 33    │ 11.599999999999994 │ 5           │ 8   │ -8.599999999999994 │
+└─────────┴────────────────────┴───────┴────────────────────┴─────────────┴─────┴────────────────────┘
+
+ ✓ src/components/MutationSliders/rows.test.ts (37 tests) 18ms
+stdout | src/components/ChannelChart/channelGeometry.test.ts > channelModel — the license-revenue fixture, printed > prints the table a reader checks the shape against
+
+i | key     | lo       | hi       | value    | outside | diff     | tone
+--|---------|----------|----------|----------|---------|----------|-------
+0 | 2026-01 | 2000000  | 4000000  | 3000000  | no      | 0        | inside
+1 | 2026-02 | 4000000  | 8000000  | 9600000  | yes     | 2600000  | over
+2 | 2026-03 | 6000000  | 12000000 | 14900000 | yes     | 1300000  | over
+3 | 2026-04 | 8000000  | 16000000 | 21900000 | yes     | 3000000  | over
+4 | 2026-05 | 10000000 | 20000000 | 21900000 | yes     | -2000000 | over
+5 | 2026-06 | 12000000 | 24000000 | 21900000 | no      | -2000000 | inside
+6 | 2026-07 | 14000000 | 28000000 | 31700000 | yes     | 5800000  | over
+7 | 2026-08 | 16000000 | 32000000 | 33600000 | yes     | -100000  | over
+8 | 2026-09 | 18000000 | 36000000 | 33600000 | no      | -2000000 | inside
+
+
+ ✓ src/components/ChannelChart/channelGeometry.test.ts (14 tests) 6ms
+ ✓ src/components/SwimlaneChart/layout.test.ts (15 tests) 8ms
+stdout | src/components/Strips/values.test.ts > amount rules > a range stays ordered whichever field moves
+┌─────────┬─────────────────────┬─────────┬─────────┬─────────┐
+│ (index) │ name                │ min     │ typical │ max     │
+├─────────┼─────────────────────┼─────────┼─────────┼─────────┤
+│ 0       │ 'min above typical' │ 1100000 │ 1100000 │ 1200000 │
+│ 1       │ 'min above max'     │ 1500000 │ 1500000 │ 1500000 │
+│ 2       │ 'max below typical' │ 800000  │ 900000  │ 900000  │
+│ 3       │ 'max below min'     │ 500000  │ 500000  │ 500000  │
+│ 4       │ 'typical below min' │ 100000  │ 100000  │ 1200000 │
+│ 5       │ 'typical above max' │ 800000  │ 2000000 │ 2000000 │
+└─────────┴─────────────────────┴─────────┴─────────┴─────────┘
+
+stdout | src/components/Strips/values.test.ts > cadence rules > every shape carries only its own anchor and prints compactly
+┌─────────┬───────────────┬─────────────────────────┬────────────────┬─────────┐
+│ (index) │ shape         │ anchor                  │ shown          │ periods │
+├─────────┼───────────────┼─────────────────────────┼────────────────┼─────────┤
+│ 0       │ 'annual'      │ 'month and day'         │ 'Jan 1'        │ 1       │
+│ 1       │ 'quarterly'   │ 'reference date'        │ '2026-01-01'   │ 4       │
+│ 2       │ 'monthly'     │ 'day of month, or last' │ 'Day 1'        │ 12      │
+│ 3       │ 'semimonthly' │ 'none (1st and 15th)'   │ '1st and 15th' │ 24      │
+│ 4       │ 'biweekly'    │ 'reference payday'      │ '2026-01-01'   │ 26      │
+│ 5       │ 'weekly'      │ 'weekday'               │ 'Mon'          │ 52      │
+│ 6       │ 'daily'       │ 'none'                  │ 'Every day'    │ 365     │
+│ 7       │ 'once'        │ 'date'                  │ '2026-01-01'   │ 1       │
+└─────────┴───────────────┴─────────────────────────┴────────────────┴─────────┘
+
+ ✓ src/components/Strips/values.test.ts (11 tests) 6ms
+stdout | src/components/Strips/growth.test.ts > growth projection > prints N periods of units for each growth
+┌─────────┬──────────────────────────────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐
+│ (index) │ growth                       │ p0  │ p1  │ p2  │ p3  │ p4  │ p5  │ p6  │ p7  │ p8  │
+├─────────┼──────────────────────────────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│ 0       │ 'none'                       │ 100 │ 100 │ 100 │ 100 │ 100 │ 100 │ 100 │ 100 │ 100 │
+│ 1       │ '+12 a period'               │ 100 │ 112 │ 124 │ 136 │ 148 │ 160 │ 172 │ 184 │ 196 │
+│ 2       │ '+12, churn 3%'              │ 100 │ 109 │ 118 │ 127 │ 136 │ 144 │ 152 │ 160 │ 168 │
+│ 3       │ '+12, churn 3%, ceiling 130' │ 100 │ 109 │ 118 │ 127 │ 130 │ 130 │ 130 │ 130 │ 130 │
+│ 4       │ '5% a period'                │ 100 │ 105 │ 110 │ 116 │ 122 │ 128 │ 134 │ 141 │ 148 │
+│ 5       │ '-10% a period'              │ 100 │ 90  │ 81  │ 73  │ 66  │ 59  │ 53  │ 48  │ 43  │
+│ 6       │ 'churn 10% alone'            │ 100 │ 90  │ 81  │ 73  │ 66  │ 60  │ 54  │ 49  │ 45  │
+└─────────┴──────────────────────────────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘
+
+ ✓ src/internal/animation/breakpoints.test.ts (4 tests) 3ms
+ ✓ src/components/Strips/growth.test.ts (10 tests) 8ms
+ ✓ src/fn/pipe.test.ts (7 tests) 3ms
+ ✓ src/components/StackedTimelineChart/layout.test.ts (3 tests) 7ms
+ ✓ src/internal/pointer/safeSetPointerCapture.test.ts (6 tests) 7ms
+ ✓ src/components/DataDisplay/formatDateTimeRange.test.ts (6 tests) 5ms
+ ✓ src/internal/geometry/insetSpan.test.ts (5 tests) 3ms
+ ✓ src/components/Chart/referenceLine.test.ts (6 tests) 3ms
+ ✓ src/components/ScrubChart/yScaleMode.test.ts (25 tests) 7ms
+ ✓ src/internal/progress/engine.test.ts (8 tests) 3ms
+ ✓ src/components/WorkProgressCard/cardProgress.test.ts (19 tests) 6ms
+ ✓ src/components/CensusView/censusModel.test.ts (4 tests) 4ms
+ ✓ src/components/SwimlaneChart/helpers.test.ts (19 tests) 4ms
+ ✓ src/components/Chart/labelPairing.test.ts (2 tests) 6ms
+stdout | dev/showcases/workshop/rth-receivables.model.test.ts > Net 30 > prints the series and the invoices
+
+Net 30
+date         actual − expected  moved by
+2026-04-01               $0.00  start
+2026-05-28         −$27,990.00  expected 1151
+2026-06-16               $0.00  paid 1151
+2026-08-23         −$21,060.00  expected 1158, expected 1159
+2026-09-10         −$28,260.00  expected 1163
+2026-09-23         −$28,260.00  last data
+
+invoice invoiced         amount  expected   status   overdue
+1151    2026-04-28   $27,990.00  2026-05-28 paid            
+1158    2026-07-24    $5,220.00  2026-08-23 overdue      31d
+1159    2026-07-24   $15,840.00  2026-08-23 overdue      31d
+1163    2026-08-11    $7,200.00  2026-09-10 overdue      13d
+
+
+stdout | dev/showcases/workshop/rth-receivables.model.test.ts > observed lag (49 days) > prints the series and the invoices
+
+Observed lag 49d
+date         actual − expected  moved by
+2026-04-01               $0.00  start
+2026-06-16               $0.00  expected 1151, paid 1151
+2026-09-11         −$21,060.00  expected 1158, expected 1159
+2026-09-23         −$21,060.00  last data
+
+invoice invoiced         amount  expected   status   overdue
+1151    2026-04-28   $27,990.00  2026-06-16 paid            
+1158    2026-07-24    $5,220.00  2026-09-11 overdue      12d
+1159    2026-07-24   $15,840.00  2026-09-11 overdue      12d
+1163    2026-08-11    $7,200.00  2026-09-29 due             
+
+
+ ✓ dev/showcases/workshop/rth-receivables.model.test.ts (7 tests) 10ms
+ ✓ src/components/TreeDiffChart/layout.test.ts (19 tests) 5ms
+ ✓ src/components/Combobox/Combobox.test.tsx (11 tests) 4ms
+stdout | src/components/MutationSliders/items.test.ts > itemRuns — which dials are one item > groups consecutive dials with one key; unkeyed dials stand alone
+┌─────────┬───────────────────────────────┬───────────────────────┐
+│ (index) │ case                          │ runs                  │
+├─────────┼───────────────────────────────┼───────────────────────┤
+│ 0       │ 'bench: P3 has two positions' │ '0 | 1 | 2,3 | 4 | 5' │
+│ 1       │ 'no keys: every dial alone'   │ '0 | 1 | 2'           │
+│ 2       │ 'key interrupted: two runs'   │ '0 | 1 | 2'           │
+└─────────┴───────────────────────────────┴───────────────────────┘
+
+stdout | src/components/MutationSliders/items.test.ts > itemLayout — pages by whole items, never splitting one > prints which dials each width shows
+┌─────────┬────────────────────────────────────────────────┬───────┬──────────────────────────────────┬────────┐
+│ (index) │ case                                           │ width │ shows                            │ paging │
+├─────────┼────────────────────────────────────────────────┼───────┼──────────────────────────────────┼────────┤
+│ 0       │ 'everything fits (6×112)'                      │ 672   │ 'P1 P2 P3·main P3·evening P4 P5' │ false  │
+│ 1       │ 'room for 3 dials, from 0'                     │ 432   │ 'P1 P2'                          │ true   │
+│ 2       │ 'room for 3 dials, from P2'                    │ 432   │ 'P2 P3·main P3·evening'          │ true   │
+│ 3       │ 'room for 3 dials, from P3'                    │ 432   │ 'P3·main P3·evening P4'          │ true   │
+│ 4       │ 'room for 1 dial, from P3 → P3 alone, clipped' │ 208   │ 'P3·main P3·evening'             │ true   │
+│ 5       │ 'stale offset past the end'                    │ 432   │ 'P4 P5'                          │ true   │
+└─────────┴────────────────────────────────────────────────┴───────┴──────────────────────────────────┴────────┘
+
+ ✓ src/components/MutationSliders/items.test.ts (2 tests) 4ms
+ ✓ src/components/BucketQueue/transfer.test.ts (8 tests) 3ms
+ ✓ src/components/StatusFlowChart/columns.test.ts (19 tests) 9ms
+ ✓ src/components/LevelsTimeline/rekey.test.ts (1 test) 11ms
+ ✓ src/internal/dag-svg/edge-routing.test.ts (16 tests) 5ms
+ ✓ src/themes/__tests__/manifest.test.ts (3 tests) 4ms
+ ✓ src/components/SwimlaneChart/converter.test.ts (13 tests) 6ms
+ ✓ src/components/MathFormula/latexSegments.test.ts (10 tests) 4ms
+ ✓ src/components/Chart/spanLanesGeometry.test.ts (9 tests) 5ms
+ ✓ dev/showcases/animation-breakpoints.test.ts (13 tests) 5ms
+stdout | src/components/TargetBarChart/targetBarGeometry.test.ts > placeBars / targetBarRows (headless observation) > places each series' bar at its period plus its slot offset
+┌─────────┬────────┬────────┬──────┬───────────┬───────┬─────────────┬────────┐
+│ (index) │ series │ period │ x    │ projected │ stack │ standing    │ amount │
+├─────────┼────────┼────────┼──────┼───────────┼───────┼─────────────┼────────┤
+│ 0       │ 'A'    │ 1      │ 0.85 │ 5         │ 0     │ 'remaining' │ 5      │
+│ 1       │ 'B'    │ 1      │ 1.15 │ 7         │ 11    │ 'above'     │ 2      │
+└─────────┴────────┴────────┴──────┴───────────┴───────┴─────────────┴────────┘
+
+ ✓ src/internal/progress/estimator.test.ts (7 tests) 6ms
+ ✓ src/components/SignedAreaChart/signedArea.test.ts (10 tests) 4ms
+ ✓ src/components/TargetBarChart/targetBarGeometry.test.ts (12 tests) 8ms
+ ✓ src/components/Chart/scales.test.ts (9 tests) 4ms
+ ✓ src/components/TreeDiffChart/kinds.test.ts (8 tests) 5ms
+ ✓ src/components/TreeDiffChart/highlight.test.ts (7 tests) 8ms
+ ✓ src/components/Chart/labelBoxes.test.ts (18 tests) 4ms
+ ✓ src/components/Chart/gapBracketGeometry.test.ts (3 tests) 3ms
+ ✓ src/components/Chart/crosshairMark.test.ts (6 tests) 6ms
+ ✓ src/test-utils/svgPath.test.ts (15 tests) 5ms
+ ✓ src/components/GroupedBucketQueue/groupTree.test.ts (11 tests) 4ms
+ ✓ src/hooks/createDnDReorder.test.ts (23 tests) 4ms
+ ✓ dev/showcases/workshop/board-kit/lens.test.ts (15 tests) 5ms
+ ✓ src/internal/geometry/labelLayout.test.ts (24 tests) 9ms
+ ✓ src/components/DateAxis/cells.test.ts (8 tests) 5ms
+ ✓ src/components/Chart/deviationBand.test.ts (6 tests) 4ms
+ ✓ src/components/Badge/tagPairs.test.ts (9 tests) 4ms
+ ✓ scripts/bundle-budget-rules.test.ts (10 tests) 4ms
+ ✓ src/internal/geometry/hoverPanelHeight.test.ts (5 tests) 5ms
+ ✓ src/components/Alarm/alarm.test.ts (14 tests) 4ms
+ ✓ src/components/NotificationCenter/actions.test.ts (4 tests) 3ms
+ ✓ scripts/workshop-lib.test.ts (8 tests) 3ms
+ ✓ src/hooks/createHighWaterMark.test.ts (6 tests) 5ms
+ ✓ src/fn/map.test.ts (5 tests) 3ms
+ ✓ src/components/ScrubChart/emphasis.test.ts (9 tests) 4ms
+ ✓ src/components/Chart/tooltipPlacement.test.ts (10 tests) 3ms
+ ✓ src/components/Duration/formatCompactRange.test.ts (11 tests) 4ms
+ ✓ src/components/Chart/areaBand.test.ts (5 tests) 3ms
+ ✓ src/components/PairedMutationSliders/pairs.test.ts (11 tests) 4ms
+ ✓ src/components/DistributionSparkline/domain.test.ts (12 tests) 5ms
+ ✓ src/fn/sortBy.test.ts (9 tests) 4ms
+ ✓ src/components/ScrubChart/createScrubChartEmphasis.test.ts (4 tests) 3ms
+ ✓ src/components/BucketQueue/selection.test.ts (10 tests) 3ms
+ ✓ src/fn/every.test.ts (7 tests) 3ms
+ ✓ src/components/TreeDiffChart/route.test.ts (11 tests) 5ms
+ ✓ src/themes/__tests__/loader.test.ts (4 tests) 6ms
+ ✓ src/internal/geometry/hCurve.test.ts (3 tests) 4ms
+ ✓ src/internal/math/clamp.test.ts (6 tests) 5ms
+ ✓ src/fn/filter.test.ts (6 tests) 3ms
+ ✓ src/fn/groupBy.test.ts (6 tests) 4ms
+ ✓ src/fn/flatMap.test.ts (6 tests) 3ms
+ ✓ src/fn/findLast.test.ts (8 tests) 7ms
+ ✓ src/fn/find.test.ts (8 tests) 3ms
+ ✓ src/components/BucketQueue/bucketing.test.ts (5 tests) 3ms
+ ✓ scripts/doc-coverage.test.ts (12 tests) 21ms
+ ✓ src/fn/prop.test.ts (4 tests) 3ms
+ ✓ src/fn/lengthOf.test.ts (5 tests) 3ms
+ ✓ src/fn/findIndex.test.ts (7 tests) 6ms
+ ✓ src/fn/some.test.ts (7 tests) 11ms
+ ✓ src/fn/pluck.test.ts (4 tests) 4ms
+ ✓ src/fn/mean.test.ts (3 tests) 4ms
+ ✓ src/fn/sum.test.ts (3 tests) 2ms
+ ✓ src/fn/length.test.ts (3 tests) 2ms
+ ✓ src/fn/join.test.ts (5 tests) 2ms
+
+ Test Files  464 passed (464)
+      Tests  5811 passed (5811)
+   Start at  10:49:27
+   Duration  73.86s (transform 43.43s, setup 5.55s, import 128.40s, tests 56.30s, environment 191.66s)
+
+JSON report written to /Users/peter/Documents/clients/PrimeStage/platform/solid-ui-components/.claude/worktrees/test-prune/docs/handoffs/test-prune/after/vitest.json
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 90.59% ( 25416/28056 )
+Branches     : 80% ( 9399/11748 )
+Functions    : 90.91% ( 9413/10354 )
+Lines        : 93% ( 20157/21672 )
+================================================================================
