@@ -4,6 +4,9 @@
 
 ### Added
 
+- **`PopoverMenu` takes `triggerLabel`.** Optional string applied as the trigger button's `aria-label`, for an avatar or icon trigger. `RightPopoverMenu` forwards it, and `UserMenu` now passes "Account menu for <name>". Without the prop the trigger is unchanged.
+- **`Bucket.count` and `GroupNode.count`** — an optional number the header chip shows instead of the loaded-item count, printed with thousands grouping ("2,594"). Display only: collapse, chevron, body and sizing still read the loaded items. `CountChip` gains an optional `grouped` flag. Without `count` nothing changes.
+- **`StampedRow` and `PinnedStampedRow` take `timeZone`.** An IANA name forwarded to `formatStampTime`, so 08:14Z prints 08:14 with "UTC". Default stays the host zone.
 - **`StandardThreePanel`**, **`ListDetailThreePanel`**, **`InspectorThreePanel`**, **`SplitThreePanel`** — named curried variants of `ThreePanelLayout` with aside widths baked from the new `THREE_PANEL_ASIDE_WIDTH` tokens and full height. A size change to a variant is a new named variant or a global change to it, never a call-site prop.
 
 - **`SearchInput`** — a Depth 2 composite: a 32px search box with the search glyph at the left and a clear cross that shows while there is text. Controlled by `value`; `onClear` empties it and keeps focus in the box. Built on the new Depth 1 `SearchField`, which takes both glyphs as slots.
