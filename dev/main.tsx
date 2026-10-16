@@ -1331,6 +1331,8 @@ const items: Item[] = [
     label: "SearchInput",
     component: SearchInputShowcase,
     tags: ["depth:2"],
+  },
+  {
     id: "three-slot-row",
     label: "ThreeSlotRow",
     component: ThreeSlotRowShowcase,
