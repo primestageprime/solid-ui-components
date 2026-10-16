@@ -1,17 +1,11 @@
 // @vitest-environment node
-import { describe, it, expect, beforeAll } from "vitest";
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { describe, it, expect } from "vitest";
 import {
-  run,
   undocumented,
   mentionedNames,
   brokenImports,
   // @ts-expect-error — plain .mjs module without type declarations
 } from "./doc-coverage.mjs";
-
-const REPO_ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
 type Export = { name: string; kind: string; file: string; line: number };
 
@@ -136,48 +130,9 @@ describe("doc coverage — broken import examples", () => {
   });
 });
 
-describe("doc coverage — against the real manifest", () => {
-  let result: { total: number; missing: string[]; broken: string[] };
-  let doc: string;
-
-  beforeAll(() => {
-    result = run() as { total: number; missing: string[]; broken: string[] };
-    doc = readFileSync(path.join(REPO_ROOT, "COMPONENTS.md"), "utf8");
-  }, 60_000);
-
-  it("measures the whole exported component and factory surface", () => {
-    // Not pinned to an exact number — that is the baseline's job, and pinning
-    // it here would fail every PR that adds a variant.
-    expect(result.total).toBeGreaterThan(500);
-    expect(result.missing.length).toBeLessThan(result.total);
-  });
-
-  // Holds at any backlog size, including 0 — so burning the backlog down does
-  // not require touching this test.
-  it("reports only names that genuinely do not appear in COMPONENTS.md", () => {
-    const stillPresent = result.missing.filter((m) =>
-      new RegExp(`\\b${m.split(" ")[0]}\\b`).test(doc),
-    );
-    expect(stillPresent).toEqual([]);
-  });
-
-  // Ratcheted at 0, so unlike the backlog this one is safe to pin outright.
-  it("has no import example naming a non-export", () => {
-    expect(result.broken).toEqual([]);
-  });
-
-  // The founding cases. Both were exported from src/components/DateAxis/
-  // index.ts but missing from src/index.ts's explicit re-export list, so they
-  // shipped in the tarball while no consumer could import them.
-  it("reaches the DateAxis names the root barrel used to strand", () => {
-    const names = result.missing.map((m) => m.split(" ")[0]);
-    expect(names).not.toContain("DailyDateAxis");
-  });
-
-  it("does not report a name the manifest documents", () => {
-    const names = result.missing.map((m) => m.split(" ")[0]);
-    expect(names).not.toContain("PrimaryButton");
-    expect(names).not.toContain("Combobox");
-    expect(names).not.toContain("createButton");
-  });
-});
+// The live-repo run (buildExportSurface over all of src/ + COMPONENTS.md,
+// ~10 s of TypeScript Program build) is NOT repeated here: the `health` CI job
+// runs `npm run doc-coverage` for real on every PR, with brokenDocImports
+// ratcheted at 0 and undocumentedExports at a live ceiling, and
+// src/root-exports.contract.ts pins the DateAxis names the root once
+// stranded. The pure helpers above are the unit surface.
