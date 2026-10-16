@@ -52,3 +52,4 @@ export {
   type PathCommand,
 } from "./svgPath";
 export { typeText } from "./typing";
+export { installFramePump, FRAME_MS, type FramePump } from "./framePump";
