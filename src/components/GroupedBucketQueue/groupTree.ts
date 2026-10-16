@@ -9,7 +9,7 @@
 // `bucketOf`). Depth is unbounded — thorcasting's Direction → Category → Type
 // is 3 levels, but nothing here assumes exactly 3.
 import type { JSX } from "solid-js";
-import { map, sum } from "../../fn";
+import { map, some, sum } from "../../fn";
 import type { Tone } from "../../types";
 
 export interface GroupNode {
@@ -94,7 +94,7 @@ export function shownOf(
 export const hasCountOverride = (node: GroupNode): boolean =>
   isLeaf(node)
     ? node.count !== undefined
-    : (node.children ?? []).some(hasCountOverride);
+    : some(hasCountOverride, node.children ?? []);
 
 /** One rendered header line, flattened out of the tree in display order. */
 export interface FlatGroupHeader {
