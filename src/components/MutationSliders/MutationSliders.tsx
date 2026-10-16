@@ -426,9 +426,6 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   const [ownSelection, setOwnSelection] = createSignal<readonly string[]>([]);
   const selection = (): readonly string[] => props.selected ?? ownSelection();
   const isSelected = (id: string): boolean => selection().includes(id);
-  /** Pinning needs TWO or more — one selected dial still drags alone. */
-  const isPinned = (id: string): boolean =>
-    selection().length > 1 && isSelected(id);
 
   /** The height to DRAW at: the container's, floored, or the fixed default. */
   const dialHeight = (): number => dialHeightFor(measuredDialHeight());
