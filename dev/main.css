@@ -2843,3 +2843,9 @@ th:has(.tf-th-center) .hud-table__header-content {
   padding: 8px;
   box-sizing: border-box;
 }
+
+/* useHotkeys showcase demo frame: a narrow card for the table and the trace. */
+.hotkey-scope-demo {
+  max-width: 420px;
+  padding: 16px;
+}

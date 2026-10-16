@@ -1019,6 +1019,24 @@ Depth-1 SVG marks on the **box contract**: each draws inside a `{ x, y, width, h
 ## createYAxisStrategy
 - **createYAxisStrategy** — hook (`src/hooks`). The y-axis STRATEGY behind ChartFrame's split button, over `createAxisWaterMarks`: `createYAxisStrategy(fit, marks)` → `{ mode, info, domain, lock, dialogOpen, closeDialog, press, setMode, setLock }`. `auto` holds the marks (grow at once, shrink on `press`), `autoscale` draws the fit, `fixed` draws the reader's lock — seeded with the domain on screen on entry (no jump), edited in `YAxisLockDialog`. Entering `auto` resets the marks (no stale peak). Wire `yAxisMode={axis.mode()} onYAxisModeChange={axis.setMode} onYAxisPress={axis.press}` on the frame and `axis.domain()` into the chart. Pure core, exported and printed as a table: `stepYAxis(state, event, shown)` → `{ state, intent }`, `displayedDomain`, `checkLock(min, max)` (error codes `notANumber` / `notAboveMin`), and the headless observation `observeYAxis(frames, hold = AXIS_WATER_MARK_HOLD)` + `formatYAxisRows`. Types: `YAxisDomain`, `YAxisMode`, `YAxisState`, `YAxisEvent`, `YAxisIntent`, `YAxisStep`, `YAxisLockCheck`, `YAxisLockError`, `YAxisHoldStep`, `YAxisFrame`, `YAxisRow`, `YAxisStrategy`; `INITIAL_Y_AXIS`. Use for: every chart in a ChartFrame whose y-axis the reader manages.
 
+## useHotkeys
+- **useHotkeys** / **createHotkeyScope** — hooks (`src/hooks`). One capture-phase `keydown` listener on the window dispatches a table of `HotkeyEntry` rows (`{ action, keys, scope, verb? }`) to a record of handlers. `useHotkeys(opts)` listens for the life of the owner (a component); `createHotkeyScope(opts)` returns the dispose function (a no-op on the server). Options: `table`, `handlers` (action name to callback, read at key time), `scopes: () => scope[]` (the scopes active right now, read at key time), `chordWindowMs?` (default 1500), `target?` (default the window). The rules are in the pure core `dispatchHotkey({ table, scopes, press, state, now, … })`, which takes the clock as a number and so needs no DOM or timers: ⌘/Ctrl/Alt presses and presses in a text field (`isEditableTarget`) are ignored; **a `"modal"` scope among the active scopes blocks every lower scope**; `keys` is one `KeyboardEvent.key` or a chord such as `"g t"` (the first key is swallowed and waits `chordWindowMs` for the second; if it does not complete the second key acts on its own); matching is exact, so `"N"` is not `"n"`; an action with no handler is skipped so its key stays the browser's. A fired modal entry also stops propagation, so Escape closing a dialog cannot fall through to a list underneath. `traceHotkeys(table, scopes, presses)` runs a key sequence through the dispatcher and returns one row per press (`key`, `at`, `outcome`, `action`, `waiting`) for printing as a table. Exported types: `HotkeyEntry`, `HotkeyScope` (`"global"|"list"|"detail"|"modal"`, or use your own strings), `HotkeyOutcome`, `ChordState`, `TraceRow`. The `HotkeyButton` component draws a hotkey on a button; this owns the table those keys come from, so render the buttons with `armed={false}`. Use for: list navigation, `g`-prefixed chords and a help sheet driven from one table.
+  - Example:
+    ```tsx
+    const HOTKEYS: HotkeyEntry[] = [
+      { action: "new", verb: "new", keys: "n", scope: "global" },
+      { action: "next", verb: "next", keys: "j", scope: "list" },
+      { action: "tasks", keys: "g t", scope: "global" },
+      { action: "closeModal", verb: "close", keys: "Escape", scope: "modal" },
+    ];
+
+    useHotkeys({
+      table: HOTKEYS,
+      handlers: { new: addTask, next: selectNext, tasks: () => navigate("/"), closeModal: closeAll },
+      scopes: () => (anyModalOpen() ? ["modal"] : ["global", "list"]),
+    });
+    ```
+
 ## createHighWaterMark
 
 - **createHighWaterMark** — hook (`src/hooks`). An axis ceiling that **rises with the data and falls only on `reset()`**, the fix for a y-axis that re-fits, and so jitters, on every edit. `createHighWaterMark(peak, { transitionMs? })` takes an accessor for the highest value the axis must show right now and returns `{ ceiling, mark, reset }`: `mark()` is the high-water mark itself, `ceiling()` is what to DRAW — the mark, where a rise SNAPS (an eased rise would let the data poke out of the plot) and the fall after `reset()` EASES, with the same exponential approach and default duration (`DEFAULT_Y_FIT_TRANSITION_MS`, 240 ms) `ScrubChart` gives its fitted axis; `false` snaps, and `prefers-reduced-motion` always snaps. Unit-free: cents for `CashflowScrubChart.yMax`, hours for a `Chart`'s `yDomain`. The pure steps are exported and tested: `nextHighWater`, `stepHighWater`, `isHighWaterSettled`. Pair it with an `IconOnlyButton` carrying `Icon name="shrink"` for the reset. Use for: any chart whose values the reader edits live.

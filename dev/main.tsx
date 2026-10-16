@@ -122,6 +122,7 @@ import { ModeSplitButtonShowcase } from "./showcases/mode-split-button";
 import { MutationToolbarShowcase } from "./showcases/mutation-toolbar";
 import { StackedTimelineChartShowcase } from "./showcases/stacked-timeline-chart";
 import { HighWaterMarkShowcase } from "./showcases/high-water-mark";
+import { HotkeyScopeShowcase } from "./showcases/hotkey-scope";
 import { ThroughputChartShowcase } from "./showcases/throughput-chart";
 import { BandRailShowcase } from "./showcases/band-rail";
 import { MarkedSliderShowcase } from "./showcases/marked-slider";
@@ -834,6 +835,12 @@ const items: Item[] = [
     label: "StackedTimelineChart",
     component: StackedTimelineChartShowcase,
     tags: ["depth:2", "chart", "time", "data"],
+  },
+  {
+    id: "hotkey-scope",
+    label: "useHotkeys",
+    component: HotkeyScopeShowcase,
+    tags: ["depth:1", "hook", "keyboard"],
   },
   {
     id: "high-water-mark",
