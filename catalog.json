@@ -16570,6 +16570,25 @@
     "line": 103
   },
   {
+    "name": "TickSeries",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A short vertical tick centred on each point, as a Structural Primitive (Depth 1) slot child of `Chart`: `length` px tall (20) whatever the y scale, `strokeWidth` 2.5, `stroke` per datum or for all (default the chart tick colour), `title` per tick.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "events on a track where a dot would read as a value.",
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/TickSeries.tsx",
+    "line": 27
+  },
+  {
     "name": "TightCenteredColumn",
     "depth": 0,
     "kind": "variant",
@@ -18190,6 +18209,25 @@
     "since": "v0.16.0",
     "file": "src/components/Chart/Axes.tsx",
     "line": 95
+  },
+  {
+    "name": "XSpan",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Chart",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "A shaded stretch of the x axis across the full plot height, as a Structural Primitive (Depth 1) slot child of `Chart`: `from` to `to` in data units, clamped to the plot, with no pointer events.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a window with no data or no schedule, a period out of scope.",
+    "notes": null,
+    "showcase": "#/chart",
+    "since": "Unreleased",
+    "file": "src/components/Chart/XSpan.tsx",
+    "line": 30
   },
   {
     "name": "YAxis",
