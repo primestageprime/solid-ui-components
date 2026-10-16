@@ -35,11 +35,9 @@ describe("findIndex — direct form", () => {
     const pred = (n: number) => n % 2 === 0;
     expect(findIndex(pred, [1, 2, 3, 4])).toEqual(findIndex(pred)([1, 2, 3, 4]));
   });
-
-  it("rejects reversed argument order at compile time", () => {
-    const reversed = () =>
-      // @ts-expect-error predicate must come first, array second.
-      findIndex([1, 2, 3], (n: number) => n > 1);
-    expect(typeof reversed).toBe("function"); // never invoked; type-only check
-  });
 });
+
+// Type-level: rejects reversed argument order. Checked by tsc, never run.
+const _reversed = () =>
+  // @ts-expect-error predicate must come first, array second.
+  findIndex([1, 2, 3], (n: number) => n > 1);

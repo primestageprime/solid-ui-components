@@ -24,11 +24,9 @@ describe("join — direct form", () => {
   it("direct === curried-then-applied", () => {
     expect(join("-", [1, 2, 3])).toBe(join("-")([1, 2, 3]));
   });
-
-  it("rejects reversed argument order at compile time", () => {
-    const reversed = () =>
-      // @ts-expect-error separator must come first, array second.
-      join(["a", "b"], ", ");
-    expect(typeof reversed).toBe("function"); // never invoked; type-only check
-  });
 });
+
+// Type-level: rejects reversed argument order. Checked by tsc, never run.
+const _reversed = () =>
+  // @ts-expect-error separator must come first, array second.
+  join(["a", "b"], ", ");

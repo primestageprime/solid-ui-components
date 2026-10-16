@@ -32,11 +32,9 @@ describe("flatMap — direct form", () => {
     const fn = (n: number) => [n + 1];
     expect(flatMap(fn, [1, 2, 3])).toEqual(flatMap(fn)([1, 2, 3]));
   });
-
-  it("rejects reversed argument order at compile time", () => {
-    const reversed = () =>
-      // @ts-expect-error fn must come first, array second.
-      flatMap([1, 2, 3], (n: number) => [n]);
-    expect(typeof reversed).toBe("function"); // never invoked; type-only check
-  });
 });
+
+// Type-level: rejects reversed argument order. Checked by tsc, never run.
+const _reversed = () =>
+  // @ts-expect-error fn must come first, array second.
+  flatMap([1, 2, 3], (n: number) => [n]);

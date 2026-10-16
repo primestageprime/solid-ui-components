@@ -28,11 +28,9 @@ describe("map — direct form", () => {
     const fn = (n: number) => n + 1;
     expect(map(fn, [1, 2, 3])).toEqual(map(fn)([1, 2, 3]));
   });
-
-  it("rejects reversed argument order at compile time", () => {
-    const reversed = () =>
-      // @ts-expect-error fn must come first, array second.
-      map([1, 2, 3], (n: number) => n * 2);
-    expect(typeof reversed).toBe("function"); // never invoked; type-only check
-  });
 });
+
+// Type-level: rejects reversed argument order. Checked by tsc, never run.
+const _reversed = () =>
+  // @ts-expect-error fn must come first, array second.
+  map([1, 2, 3], (n: number) => n * 2);

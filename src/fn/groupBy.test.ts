@@ -47,11 +47,9 @@ describe("groupBy — direct form", () => {
       ...groupBy(key)(nums).entries(),
     ]);
   });
-
-  it("rejects reversed argument order at compile time", () => {
-    const reversed = () =>
-      // @ts-expect-error key fn must come first, array second.
-      groupBy([1, 2, 3], (n: number) => n);
-    expect(typeof reversed).toBe("function"); // never invoked; type-only check
-  });
 });
+
+// Type-level: rejects reversed argument order. Checked by tsc, never run.
+const _reversed = () =>
+  // @ts-expect-error key fn must come first, array second.
+  groupBy([1, 2, 3], (n: number) => n);

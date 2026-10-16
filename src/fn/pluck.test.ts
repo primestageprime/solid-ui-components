@@ -29,12 +29,9 @@ describe("pluck — direct form", () => {
     const rows = [{ id: "a" }, { id: "b" }];
     expect(pluck("id", rows)).toEqual(pluck("id")(rows));
   });
-
-  it("rejects reversed argument order at compile time", () => {
-    const rows = [{ id: "a" }];
-    const reversed = () =>
-      // @ts-expect-error key must come first, array second.
-      pluck(rows, "id");
-    expect(typeof reversed).toBe("function"); // never invoked; type-only check
-  });
 });
+
+// Type-level: rejects reversed argument order. Checked by tsc, never run.
+const _reversed = () =>
+  // @ts-expect-error key must come first, array second.
+  pluck([{ id: "a" }], "id");

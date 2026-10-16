@@ -15,11 +15,9 @@ describe("length", () => {
     expect(length([])).toBe(0);
     expect(length("")).toBe(0);
   });
-
-  it("rejects a value with no length at compile time", () => {
-    const reversed = () =>
-      // @ts-expect-error a number has no `length`.
-      length(42);
-    expect(typeof reversed).toBe("function"); // never invoked; type-only check
-  });
 });
+
+// Type-level: rejects a value with no length. Checked by tsc, never run.
+const _reversed = () =>
+  // @ts-expect-error a number has no `length`.
+  length(42);

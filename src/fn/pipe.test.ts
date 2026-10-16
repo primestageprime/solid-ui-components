@@ -45,11 +45,6 @@ describe("pipe", () => {
     expect(out).toBe(11);
   });
 
-  it("catches a mismatched middle stage at compile time", () => {
-    // @ts-expect-error stage 2 outputs number; stage 3 requires a string.
-    pipe(3, (n: number) => n + 1, (s: string) => s.length);
-  });
-
   it("composes array helpers", () => {
     const out = pipe(
       [1, 2, 3, 4],
@@ -59,3 +54,8 @@ describe("pipe", () => {
     expect(out).toEqual([4, 8]);
   });
 });
+
+// Type-level: catches a mismatched middle stage. Checked by tsc, never run.
+const _mismatched = () =>
+  // @ts-expect-error stage 2 outputs number; stage 3 requires a string.
+  pipe(3, (n: number) => n + 1, (s: string) => s.length);
