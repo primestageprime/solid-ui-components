@@ -10,3 +10,9 @@ import type { Component } from "solid-js";
 export const OverflowNav: Component<OverflowNavDataProps> = createOverflowNav(
   {},
 );
+
+/** Nav whose items sit CENTRED in its own full-width box — still folding into
+ *  the kebab when that box gets too narrow. For a header's middle slot
+ *  (AppBar's nav, "centred in the available space"). */
+export const CenteredOverflowNav: Component<OverflowNavDataProps> =
+  createOverflowNav({ justify: "center" });

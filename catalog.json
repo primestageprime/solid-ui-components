@@ -468,6 +468,25 @@
     "line": 10
   },
   {
+    "name": "AppBar",
+    "depth": 3,
+    "kind": "composite",
+    "family": "AppBar",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 3), `src/components/AppBar/`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "the top bar of a full-page app with a few top-level views and an account menu.",
+    "notes": null,
+    "showcase": "#/app-bar",
+    "since": "Unreleased",
+    "file": "src/components/AppBar/AppBar.tsx",
+    "line": 76
+  },
+  {
     "name": "AppHeader",
     "depth": 0,
     "kind": "variant",
@@ -1576,6 +1595,32 @@
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
     "line": 89
+  },
+  {
+    "name": "CenteredOverflowNav",
+    "depth": 2,
+    "kind": "variant",
+    "family": "OverflowNav",
+    "variantOf": {
+      "factory": "createOverflowNav",
+      "overrides": "{ justify: \"center\" }"
+    },
+    "overrides": [
+      "gap",
+      "align",
+      "justify"
+    ],
+    "dataProps": "OverflowNavDataProps",
+    "summary": "Nav whose items sit CENTRED in its own full-width box — still folding into the kebab when that box gets too narrow.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Nav whose items sit CENTRED in its own full-width box — still folding into the kebab when that box gets too narrow. For a header's middle slot (AppBar's nav, \"centred in the available space\").",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/OverflowNav/variants.ts",
+    "line": 17
   },
   {
     "name": "CenteredStack",
@@ -4880,10 +4925,11 @@
     "variantOf": null,
     "overrides": [
       "gap",
-      "align"
+      "align",
+      "justify"
     ],
     "dataProps": "OverflowNavDataProps",
-    "summary": "Pure Composite (Depth 2). Factory behind `OverflowNav`'s curried variants; bakes `gap`, `align`.",
+    "summary": "Pure Composite (Depth 2). Factory behind `OverflowNav`'s curried variants; bakes `gap`, `align`, `justify`.",
     "summarySource": "synthesized",
     "preferFirst": null,
     "notToBeConfusedWith": null,
@@ -4892,7 +4938,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/OverflowNav/OverflowNav.tsx",
-    "line": 346
+    "line": 359
   },
   {
     "name": "createPairedMutationSliders",
@@ -5592,6 +5638,25 @@
     "line": 86
   },
   {
+    "name": "createStepTimeline",
+    "depth": 3,
+    "kind": "factory",
+    "family": "StepTimeline",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "StepTimelineDataProps",
+    "summary": "Composite (Depth 3), `src/components/StepTimeline/`. Factory behind `StepTimeline`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/step-timeline",
+    "since": "Unreleased",
+    "file": "src/components/StepTimeline/StepTimeline.tsx",
+    "line": 73
+  },
+  {
     "name": "createSurface",
     "depth": 0,
     "kind": "factory",
@@ -5757,6 +5822,25 @@
     "since": "0.104.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
     "line": 153
+  },
+  {
+    "name": "createThreeSlotRow",
+    "depth": 2,
+    "kind": "factory",
+    "family": "ThreeSlotRow",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "ThreeSlotRowDataProps",
+    "summary": "Composite (Depth 2), `src/components/ThreeSlotRow/`. Factory behind `ThreeSlotRow`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/three-slot-row",
+    "since": "Unreleased",
+    "file": "src/components/ThreeSlotRow/ThreeSlotRow.tsx",
+    "line": 51
   },
   {
     "name": "createThresholdRail",
@@ -7726,6 +7810,34 @@
     "line": 30
   },
   {
+    "name": "EndClusterRow",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createRow",
+      "overrides": "{\n  justify: \"end\",\n  align: \"center\",\n  gap: \"xs\",\n}"
+    },
+    "overrides": [
+      "gap",
+      "align",
+      "justify",
+      "wrap",
+      "fill"
+    ],
+    "dataProps": "RowDataProps",
+    "summary": "Curried `Row` (`justify:end; align:center; gap:xs`), NO wrap: a trailing cluster packed to the end of its box that stays on one line at every width.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "the end slot of an app header (status + user menu); `ThreeSlotRow` composes it.",
+    "notes": "EndClusterRow — a trailing cluster packed to the END of its box, centred on the cross axis, xs gap, and NO wrap. The non-wrapping sibling of `EndWrapRow`: that one wraps at phone width, which in a fixed-height app header pushes the status chip above the avatar and breaks the bar's height. The end slot of `ThreeSlotRow` (Taskmaster canon, header layout A).",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 979
+  },
+  {
     "name": "EndLabels",
     "depth": 1,
     "kind": "primitive",
@@ -7820,7 +7932,7 @@
     "useFor": null,
     "notes": "Right-aligned wrapping row — items pack to the end and wrap. For a trailing action-button cluster that right-aligns and wraps on narrow widths.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Layout/variants.ts",
     "line": 244
   },
@@ -12397,7 +12509,8 @@
     },
     "overrides": [
       "gap",
-      "align"
+      "align",
+      "justify"
     ],
     "dataProps": "OverflowNavDataProps",
     "summary": "Pure Composite (Depth 2).",
@@ -15969,6 +16082,28 @@
     "line": 189
   },
   {
+    "name": "StepTimeline",
+    "depth": 3,
+    "kind": "variant",
+    "family": "StepTimeline",
+    "variantOf": {
+      "factory": "createStepTimeline",
+      "overrides": "{\n  height: STEP_TIMELINE_HEIGHT,\n}"
+    },
+    "overrides": null,
+    "dataProps": "StepTimelineDataProps",
+    "summary": "Composite (Depth 3), `src/components/StepTimeline/`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a task's or run's progress over one day with its start and completion events (the Taskmaster canon's step timeline). For a count over months, use `LevelsTimeline` or `StackedTimelineChart` directly.",
+    "notes": "A 200px collapsible step timeline: the Taskmaster canon's task timeline.",
+    "showcase": "#/step-timeline",
+    "since": "Unreleased",
+    "file": "src/components/StepTimeline/variants.ts",
+    "line": 11
+  },
+  {
     "name": "StickyGroupHeader",
     "depth": 1,
     "kind": "primitive",
@@ -16866,6 +17001,28 @@
     "line": 98
   },
   {
+    "name": "ThreeSlotRow",
+    "depth": 2,
+    "kind": "variant",
+    "family": "ThreeSlotRow",
+    "variantOf": {
+      "factory": "createThreeSlotRow",
+      "overrides": "{},"
+    },
+    "overrides": null,
+    "dataProps": "ThreeSlotRowDataProps",
+    "summary": "Composite (Depth 2), `src/components/ThreeSlotRow/`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "an app header's \"layout A\" — logo | nav centred in the remaining space | status + user (the Taskmaster canon, 2026-10-15; `AppBar` curries it at a 160px start); any toolbar whose middle must centre between two fixed ends.",
+    "notes": "start | centre | end, with the start track at its content's width (`auto`). For a fixed start width (a 160px logo box), curry your own: `createThreeSlotRow({ startWidth: \"160px\" })` — AppBar does exactly that.",
+    "showcase": "#/three-slot-row",
+    "since": "Unreleased",
+    "file": "src/components/ThreeSlotRow/variants.ts",
+    "line": 11
+  },
+  {
     "name": "ThresholdRail",
     "depth": 1,
     "kind": "primitive",
@@ -17697,6 +17854,25 @@
     "since": "0.208.0",
     "file": "src/components/Strips/variants.ts",
     "line": 68
+  },
+  {
+    "name": "UserMenu",
+    "depth": 2,
+    "kind": "composite",
+    "family": "UserMenu",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2), `src/components/UserMenu/`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "the user/account control in an app header (Taskmaster canon, 2026-10-15).",
+    "notes": null,
+    "showcase": "#/user-menu",
+    "since": "Unreleased",
+    "file": "src/components/UserMenu/UserMenu.tsx",
+    "line": 84
   },
   {
     "name": "Val",

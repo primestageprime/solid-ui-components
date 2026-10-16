@@ -26,6 +26,18 @@
 
 - **`useHotkeys` and `createHotkeyScope`** — hooks: one capture-phase window listener dispatches a table of `{ action, keys, scope }` rows to a record of handlers. It ignores editable targets, lets a `"modal"` scope block every lower scope, and reads chords like `"g t"`. The decisions live in the pure `dispatchHotkey`, which takes the clock as a number, and `traceHotkeys` prints a key sequence as a table with no DOM. `HotkeyEntry` and `HotkeyScope` are the table's types. `HotkeyButton` is unchanged.
 
+- **`StepTimeline`** — a Composite (Depth 3): a cumulative count over a day as one band that steps up at each completion, with a numbered flag and rule per event. It is a collapsible `ChartFrame` around a `StackedTimelineChart` with a linear crossing, UTC hour ticks and whole-count y labels; the flags are LevelsTimeline's, through `MutationFlags`. Selection and collapse are controlled. `createStepTimeline({ height })` bakes another height; the `StepTimeline` variant is 200px. Also exported: `hourTicks`, `stepYDomain`, `STEP_TIMELINE_HEIGHT`. Exported types: `StepTimelineProps`, `StepTimelineDataProps`, `StepTimelineOverrides`, `StepTimelinePoint`, `StepTimelineMarker`.
+
+- **`AppBar`** — a Composite (Depth 3): the page-top bar in header layout A. A 160px logo box, the nav centred in the remaining space and folding into a kebab when it runs out, then the status and a `UserMenu`. Below 480px the status moves into the user menu's header. Navigation is controlled (`nav.activeId`, `nav.onSelect`). Also exported: `appBarNavItems`, `APP_BAR_LOGO_WIDTH`, `APP_BAR_FOLD_QUERY`. Exported types: `AppBarProps`, `AppBarNav`, `AppBarNavItem`.
+
+- **`OverflowNav` `justify`** — an Override, `"center"` or unset. It centres the items inside the nav's own box, which still fills its container, so a centred nav can still fold. Curried as **`CenteredOverflowNav`**. Unset, nothing changes.
+
+- **`UserMenu`** — a Composite (Depth 2): an avatar that opens a right-aligned account menu. The header line is the email or "Not signed in", the caller's items follow, and the last item is Sign in or Sign out depending on whether `user` is set. An optional `status` line sits under the email. Also exported: `userInitials`, `userMenuItems`, `USER_MENU_SIGN_IN`, `USER_MENU_SIGN_OUT`. Exported types: `UserMenuProps`, `UserMenuUser`.
+
+- **`EndClusterRow`** — a curried `Row`: a cluster packed to the end of its box, centred on the cross axis, 4px gap, and never wrapping. `EndWrapRow` wraps at phone width, which pushes a header's status chip above its avatar.
+
+- **`ThreeSlotRow`** — a Composite (Depth 2): start, centre and end slots on one line, as the grid tracks `auto minmax(0, 1fr) auto`. The centre is centred in the space the other two leave, and its track can shrink to 0 so an `OverflowNav` in it can fold. `createThreeSlotRow({ startWidth })` fixes the start track (`"160px"` for a logo box). Also exported: `threeSlotColumns`. Exported types: `ThreeSlotRowProps`, `ThreeSlotRowDataProps`, `ThreeSlotRowOverrides`.
+
 ### Changed
 
 - **`ThreePanelLayout` stacks with one 16px gutter.** At 900px and below the side panels stack above and below the centre. Their 8px padding and the centre's 16px used to add up to a 24px band (25px measured) with the aside text 8px in from the edge while the centre's sat 16px in. The stacked asides now take the centre's 16px sides, and the left aside gives up its bottom padding and the right its top, so the centre's own 16px is the whole gutter on both sides. CSS only, no API change. Side by side is unchanged.

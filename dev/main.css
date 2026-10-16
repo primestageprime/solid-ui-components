@@ -2848,6 +2848,33 @@ th:has(.tf-th-center) .hud-table__header-content {
 .hotkey-scope-demo {
   max-width: 420px;
   padding: 16px;
+/* ThreeSlotRow showcase demo frame — a bordered strip so the three tracks read. */
+.three-slot-row-demo {
+  padding: 8px 12px;
+  border: 1px solid var(--sui-border);
+}
+.three-slot-row-demo--narrow {
+  max-width: 220px;
+}
+
+/* UserMenu showcase demo frame — a strip like the header end slot. */
+.user-menu-demo {
+  padding: 8px 12px;
+  border: 1px solid var(--sui-border);
+}
+
+/* AppBar showcase demo frame — a bordered box the bar fills edge to edge. */
+.app-bar-demo {
+  border: 1px solid var(--sui-border);
+}
+.app-bar-demo--phone {
+  max-width: 390px;
+}
+
+/* StepTimeline showcase demo frame — a column as wide as the canon's centre pane. */
+.step-timeline-demo {
+  max-width: 760px;
+}
 
 /* CompactBucketQueue showcase: a comfortable pane beside a narrow compact one. */
 .bucket-queue-compact-demo {

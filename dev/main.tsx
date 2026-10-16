@@ -211,6 +211,10 @@ import { ClampedTextShowcase } from "./showcases/clamped-text";
 import { StampedRowShowcase } from "./showcases/stamped-row";
 import { PinnedFillColumnShowcase } from "./showcases/pinned-fill-column";
 import { GapBoxShowcase } from "./showcases/gap-box";
+import { StepTimelineShowcase } from "./showcases/step-timeline";
+import { AppBarShowcase } from "./showcases/app-bar";
+import { UserMenuShowcase } from "./showcases/user-menu";
+import { ThreeSlotRowShowcase } from "./showcases/three-slot-row";
 import { VarianceStripChartShowcase } from "./showcases/variance-strip-chart";
 import { VarianceStripShowcase } from "./showcases/variance-strip";
 import { BalanceReviewChartShowcase } from "./showcases/balance-review-chart";
@@ -1327,6 +1331,28 @@ const items: Item[] = [
     label: "SearchInput",
     component: SearchInputShowcase,
     tags: ["depth:2"],
+    id: "three-slot-row",
+    label: "ThreeSlotRow",
+    component: ThreeSlotRowShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "user-menu",
+    label: "UserMenu",
+    component: UserMenuShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "app-bar",
+    label: "AppBar",
+    component: AppBarShowcase,
+    tags: ["depth:3"],
+  },
+  {
+    id: "step-timeline",
+    label: "StepTimeline",
+    component: StepTimelineShowcase,
+    tags: ["depth:3"],
   },
   // Generated component entries (npm run new:component) — appended above this line.
   {
