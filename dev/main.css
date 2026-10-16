@@ -2832,3 +2832,14 @@ th:has(.tf-th-center) .hud-table__header-content {
   flex-direction: column;
   gap: 8px;
 }
+
+/* FillTextArea showcase demo frame: a definite height for the textarea to fill. */
+.fill-text-area-demo {
+  height: 200px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--sui-border);
+  padding: 8px;
+  box-sizing: border-box;
+}

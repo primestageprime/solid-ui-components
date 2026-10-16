@@ -14,6 +14,8 @@
 
 - **`GapBox`** — a Depth 2 composite: the canon placeholder for a missing component. A titled `InfoSurface` holding the JSON of `kind`, `nearest` and the intended `props`. Pure `gapBoxJson` builds the body.
 
+- **`FillTextArea`** — a Depth 1 atomic: a themed textarea that takes all the height its flex-column parent has left, with no drag handle. The fill-the-parent sibling of `ThemedTextarea`, which is unchanged.
+
 ## 0.218.0 — 2026-10-13
 
 ### Added

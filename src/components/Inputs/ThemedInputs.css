@@ -48,3 +48,17 @@
      `rows` or a min-height. */
   resize: vertical;
 }
+
+/* FillTextArea: the textarea takes the height its flex-column group has left.
+   The group is a FillColumnFlush (flex:1; min-height:0), so it already fills
+   its parent; here the textarea fills the group below the label. The parent
+   sets the size, so the drag handle is off. */
+.themed-input-group--fill > .themed-input-label {
+  flex: none;
+}
+
+.themed-textarea--fill {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+}

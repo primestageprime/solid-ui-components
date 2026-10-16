@@ -8222,6 +8222,25 @@
     "line": 864
   },
   {
+    "name": "FillTextArea",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Inputs",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a notes field that fills a detail pane. `<FillColumn>…<FillTextArea id=\"task-notes\" label=\"Notes\" value={notes()} onInput={…} /></FillColumn>`",
+    "notes": null,
+    "showcase": "#/inputs",
+    "since": "Unreleased",
+    "file": "src/components/Inputs/FillTextArea.tsx",
+    "line": 23
+  },
+  {
     "name": "FillWrapRow",
     "depth": 0,
     "kind": "variant",

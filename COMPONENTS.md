@@ -1545,6 +1545,7 @@ Depth-1 SVG marks on the **box contract**: each draws inside a `{ x, y, width, h
     <CurrencyInput name="fee" maxValue={1_000_000} value={amount} onChange={setAmount} />
     ```
 - **ThemedTextarea** — Styled textarea with optional label. Key props: `label`, plus all native `<textarea>` attributes. Use for: themed form textareas.
+- **FillTextArea** — Atomic (Depth 1). The fill-the-parent sibling of `ThemedTextarea`: a themed textarea that takes all the height its flex-column parent has left. The label (if any) keeps its line; the textarea fills the rest, scrolls its own text, and has no drag-resize handle (the parent sets the size). Same chrome and CSS file as `ThemedTextarea`; the group is a `FillColumnFlush`. Key props: `label`, plus all native `<textarea>` attributes (`id`, `value`, `onInput`, …); data-only, so exported directly. Needs a parent that is a flex column with a definite height (`FillColumn`, `PinnedFillColumn`). Use for: a notes field that fills a detail pane. `<FillColumn>…<FillTextArea id="task-notes" label="Notes" value={notes()} onInput={…} /></FillColumn>`
 
 ### Element measurement convention
 
