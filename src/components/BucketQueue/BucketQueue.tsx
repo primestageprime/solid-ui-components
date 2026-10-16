@@ -363,7 +363,8 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
             >
               <BucketHeader
                 bucket={bucket}
-                count={count()}
+                count={bucket.count ?? count()}
+                grouped={bucket.count !== undefined}
                 toggleable={toggleable()}
                 collapsed={isCollapsed()}
                 bodyId={bodyId}

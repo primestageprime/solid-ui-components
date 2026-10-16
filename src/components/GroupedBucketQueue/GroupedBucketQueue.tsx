@@ -247,7 +247,8 @@ export function GroupedBucketQueue<T>(
                     <span class="bucket-queue__title">{h().label}</span>
                     <CountChip
                       class={`bucket-queue__count bucket-queue__count--${h().tone ?? "muted"}`}
-                      count={h().count}
+                      count={h().shown}
+                      grouped={h().grouped}
                       label=""
                     />
                   </div>
@@ -280,7 +281,8 @@ export function GroupedBucketQueue<T>(
                   </span>
                   <CountChip
                     class={`bucket-queue__count bucket-queue__count--${h().tone ?? "muted"}`}
-                    count={h().count}
+                    count={h().shown}
+                    grouped={h().grouped}
                     label=""
                   />
                 </button>

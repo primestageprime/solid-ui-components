@@ -32,6 +32,12 @@ export interface Bucket {
    *  it renders exactly as it does without this flag — no chevron, header
    *  inert. Default false. */
   collapsible?: boolean;
+  /** Count the header chip shows instead of the number of items loaded, for a
+   *  bucket whose rows are paged in (a History pile of 2,594 with none loaded
+   *  yet). DISPLAY ONLY: collapse, the chevron, the body and the sizing all
+   *  keep reading the loaded items. Printed with thousands grouping. Omit it
+   *  and the chip shows the loaded count, ungrouped, exactly as before. */
+  count?: number;
   /** Start collapsed rather than open. IGNORED without `collapsible` — on its
    *  own it would strand this bucket's items behind no affordance at all.
    *  This is only the state BEFORE the user touches the bucket; the first
