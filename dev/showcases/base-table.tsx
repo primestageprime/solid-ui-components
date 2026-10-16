@@ -7,6 +7,7 @@ import {
   DataTable,
 } from "../../src/components/Table";
 import type { TableColumn } from "../../src/components/Table";
+import { dateTimeCol } from "../../src/components/Table";
 import { IconOnlyButton, TextButton } from "../../src/components/Button";
 import { Icon } from "../../src/components/Icon";
 import { NarrowStack, WrapRow } from "../../src/components/Layout";
@@ -255,6 +256,16 @@ const CrossHighlightExample: Component = () => {
   );
 };
 
+// One instant shown four ways by the dateTimeCol column helper.
+const INSTANT = "2026-10-15T14:05:30Z";
+const timeData = [{ id: 1, at: INSTANT }];
+const timeColumns: TableColumn<{ id: number; at: string }>[] = [
+  dateTimeCol("at", "UTC, seconds", { timeZone: "UTC" }),
+  dateTimeCol("at", "UTC, minute", { timeZone: "UTC", precision: "minute" }),
+  dateTimeCol("at", "New York, seconds", { timeZone: "America/New_York" }),
+  dateTimeCol("at", "New York, minute", { timeZone: "America/New_York", precision: "minute" }),
+];
+
 export const BaseTableShowcase: Component = () => {
   return (
     <div class="component-section">
@@ -435,6 +446,14 @@ export const BaseTableShowcase: Component = () => {
           />
         </div>
       </div>
+
+      <h2 class="showcase-heading-gap--lg">dateTimeCol — zone and precision</h2>
+      <p class="text-meta">
+        The same instant, 14:05:30 UTC, in four columns: <code>timeZone</code>{" "}
+        shows it in an IANA zone, and <code>precision: "minute"</code> drops the
+        seconds. With neither it is the host zone, with seconds, as before.
+      </p>
+      <BaseTable data={timeData} columns={timeColumns} compact />
     </div>
   );
 };

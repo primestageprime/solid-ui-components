@@ -20,6 +20,8 @@
 
 - **`StatusChipDisplay`** — a Depth 1 atomic: the read-only sibling of `StatusChip`. The same fixed-width pill with a plain label and nothing to press: no button, caret, menu or hover underline. Pure `statusChipWidthCh` is exported so the two share one width rule. `StatusChip` is unchanged.
 
+- **`dateTimeCol` passes `timeZone` through and takes `precision`.** The column helper swallowed the `timeZone` that `DateTimeCell` already supports. It now forwards it, and a new `precision: "minute"` drops the seconds. `dateTimeColWith` can bake both. With neither option the output is unchanged.
+
 ## 0.218.0 — 2026-10-13
 
 ### Added
