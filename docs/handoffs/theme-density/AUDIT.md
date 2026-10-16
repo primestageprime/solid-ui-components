@@ -166,8 +166,18 @@ read by that code path from the live DOM, or the CSS and the water-fill drift ap
 
 ## 3. Before / after evidence (hud theme, 1280 viewport)
 
-Dev gallery on port 2305 (claimed via `pa`, released at the end). After = same page
-plus `dense-overlay.css` injected. Re-run:
+**Phase 1 update (2026-10-16, Veronica):** the `shots/*-after.png` pairs and
+`metrics-after.json` are now shot from the REAL code on `feat/theme-density`
+(dev gallery on 2305) against origin/main 0.222.0 served from a detached
+worktree on 2306; the overlay is no longer injected (`node shoot.mjs overlay <port>`
+reproduces the audit's original approximation). Real numbers: header 28 (not 29.4
+until the chip was pinned to 19px), row 27, bucket 84, ActionListItem 32, table cell 29,
+head cell 29.5, modal header 54 / body 50, top bar 32; the fill demo's slack is 0 on both
+sides, so the 9px shortfall below is gone. CompactBucketQueue stays 21/21 (it opts out of
+the dense header min-height). The table below is the audit's original overlay reading.
+
+Original audit: dev gallery on port 2305 (claimed via `pa`, released at the end). After
+= same page plus `dense-overlay.css` injected. Re-run:
 `PW=<playwright index.mjs> node shoot.mjs before|after 2305`.
 
 | Component (page) | Before | After | Measured change |

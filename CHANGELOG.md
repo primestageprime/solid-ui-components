@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- **`--sui-dense-*` density tokens (optional theme group).** Every density rule in `BucketQueue`, `GroupedBucketQueue`, `ActionList`, `ActionListItem`, `SortableList`, `CollapsiblePanel`, `ThreePanelLayout`, `Modal`, the tables, `Panel`, `Surface`, `Section` and `List` now reads `var(--sui-dense-<x>, <legacy px>)`. A theme that declares none of them renders exactly as before. Full table, with each fallback and the rules it moves, in `src/themes/README.md`.
+- **`BucketQueue` reads its gap and bucket borders from the live DOM.** The water-fill used to mirror `gap: 8px` and the 2px bucket border as JS constants, so any theme that moved them left a `fill` queue short by `gap × (n − 1)` px. `measurement.ts` now reads the root's computed `row-gap` (plus a non-first bucket's `margin-top`, so a shared divider's −1px counts) and a bucket's top + bottom border widths; the constants stay as pre-measure fallbacks.
+
+### Changed
+
+- **`default` and `hud` are dense.** Both themes declare the dense values (Peter, 2026-10-15: "make the default theme more dense"): buckets sit flush with top/bottom borders and one shared 1px divider, no gap between buckets or list rows, item radius 0, 28px `min-height` group headers, 4px/12px row padding, a 4px selected bar, 12px panel padding, flush `ThreePanelLayout` asides, a 32px top bar, compact table cells (6/12, head 8/12) and tighter `Modal` padding (10/16, body 16, footer gap 8). `bronze`, `bronze-dark`, `stax` and `colorblind` declare nothing and keep the legacy spacing. Measured in hud at 1280: BucketQueue header 31.5 → 28, row 31 → 27, bucket 96 → 84; ActionListItem 41 → 32; table cell 47 → 29, head cell 37.5 → 29.5; Modal header 66 → 54. Consumers see the change on their next bump; `jtf` links the shared checkout and sees it on rebuild. The flush aside padding is the one most likely to expose side-panel content that relied on the 8px inset.
+- **`BucketQueue` / `GroupedBucketQueue` headers show the count as a `CountChip`** (pill at the right end), in every theme. It keeps the `bucket-queue__count` class, so the collapsed-bucket arrival motion and consumers' selectors still find it. The header aligns its items on the centre line.
+- **`ActionListItem` selected state is a left accent bar** (width `--sui-dense-select-bar`, legacy 2px), not an accent border plus a 12% wash, matching `BucketQueue`'s selected row. Hover still owns the border colour; the hover-only-opacity geometry invariant holds. In dense themes the row's border is a flush bottom divider.
+
 ## 0.222.0 — 2026-10-16
 
 ### Added

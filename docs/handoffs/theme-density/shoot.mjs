@@ -1,6 +1,8 @@
-// Evidence capture for the theme-density audit.
-//   PW=<path to playwright/index.mjs> node shoot.mjs <before|after> <port>
-// before: hud theme as shipped. after: same page + dense-overlay.css injected.
+// Evidence capture for the theme-density work.
+//   PW=<path to playwright/index.mjs> node shoot.mjs <before|after|overlay> <port>
+// before: a dev gallery serving origin/main (SUI 0.222.0), hud theme as shipped.
+// after:  a dev gallery serving feat/theme-density — the REAL code, no overlay.
+// overlay: the audit's original "after": the before page + dense-overlay.css injected.
 // Writes shots/<component>-<phase>.png and metrics-<phase>.json (headless numbers).
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -8,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const { chromium } = await import(process.env.PW ?? "playwright");
 const here = dirname(fileURLToPath(import.meta.url));
 const [phase = "before", port = "2305"] = process.argv.slice(2);
-const overlay = phase === "after" ? readFileSync(join(here, "dense-overlay.css"), "utf8") : null;
+const overlay = phase === "overlay" ? readFileSync(join(here, "dense-overlay.css"), "utf8") : null;
 
 // component -> [route, heading text to scroll to, optional click selector, optional anchor selector (centred), optional row selector to select]
 const TARGETS = {
@@ -27,8 +29,11 @@ const PROBES = {
   ".bucket-queue__bucket": ["borderTopWidth", "borderLeftWidth", "borderTopLeftRadius", "marginTop"],
   ".bucket-queue__header": ["paddingTop", "paddingLeft"],
   ".bucket-queue__row": ["paddingTop", "paddingLeft", "borderTopWidth"],
+  ".bucket-queue__row--selected": ["boxShadow"],
+  ".bucket-queue__count": ["display", "borderTopWidth", "fontSize"],
   ".sui-sortable-list": ["rowGap"],
-  ".sui-action-list-item": ["paddingTop", "paddingLeft", "borderTopLeftRadius", "borderBottomWidth"],
+  ".sui-action-list-item": ["paddingTop", "paddingLeft", "borderTopLeftRadius", "borderBottomWidth", "borderLeftWidth"],
+  ".sui-action-list-item--selected": ["boxShadow", "borderColor", "backgroundColor"],
   ".sui-three-panel__top-bar": ["paddingLeft", "rowGap"],
   ".sui-three-panel__left": ["paddingTop", "rowGap"],
   ".sui-three-panel__center": ["paddingTop", "rowGap"],

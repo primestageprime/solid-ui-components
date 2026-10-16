@@ -21,22 +21,32 @@
       "paddingTop": "4px",
       "paddingLeft": "12px",
       "borderTopWidth": "1px"
+    },
+    ".bucket-queue__row--selected": {
+      "height": 27,
+      "boxShadow": "rgb(0, 212, 255) 4px 0px 0px 0px inset"
+    },
+    ".bucket-queue__count": {
+      "height": 19,
+      "display": "flex",
+      "borderTopWidth": "1px",
+      "fontSize": "12px"
     }
   },
   "CompactBucketQueue": {
     ".bucket-queue--compact": {
       "height": 360,
-      "rowGap": "0px"
+      "rowGap": "4px"
     },
     ".bucket-queue--compact .bucket-queue__bucket": {
-      "height": 72,
+      "height": 65,
       "borderTopWidth": "1px",
       "borderLeftWidth": "0px",
       "borderTopLeftRadius": "0px",
       "marginTop": "0px"
     },
     ".bucket-queue--compact .bucket-queue__header": {
-      "height": 28,
+      "height": 21,
       "paddingTop": "3px",
       "paddingLeft": "8px"
     },
@@ -45,19 +55,36 @@
       "paddingTop": "2px",
       "paddingLeft": "8px",
       "borderTopWidth": "1px"
+    },
+    ".bucket-queue--compact .bucket-queue__row--selected": {
+      "height": 21,
+      "boxShadow": "rgb(0, 212, 255) 4px 0px 0px 0px inset"
+    },
+    ".bucket-queue--compact .bucket-queue__count": {
+      "height": 14,
+      "display": "flex",
+      "borderTopWidth": "1px",
+      "fontSize": "11px"
     }
   },
   "ActionList": {
     ".sui-sortable-list": {
-      "height": 238,
-      "rowGap": "0px"
+      "height": 242,
+      "rowGap": "1px"
     },
     ".sui-action-list-item": {
       "height": 32,
       "paddingTop": "4px",
       "paddingLeft": "12px",
       "borderTopLeftRadius": "0px",
-      "borderBottomWidth": "1px"
+      "borderBottomWidth": "1px",
+      "borderLeftWidth": "0px"
+    },
+    ".sui-action-list-item--selected": {
+      "height": 32,
+      "boxShadow": "rgb(0, 212, 255) 4px 0px 0px 0px inset",
+      "borderColor": "rgba(0, 212, 255, 0.3)",
+      "backgroundColor": "rgba(13, 26, 42, 0.8)"
     }
   },
   "GroupedBucketQueue": {
@@ -71,6 +98,16 @@
       "paddingTop": "4px",
       "paddingLeft": "60px",
       "borderTopWidth": "1px"
+    },
+    ".bucket-queue__row--selected": {
+      "height": 27,
+      "boxShadow": "rgb(0, 212, 255) 4px 0px 0px 0px inset"
+    },
+    ".bucket-queue__count": {
+      "height": 19,
+      "display": "flex",
+      "borderTopWidth": "1px",
+      "fontSize": "12px"
     }
   },
   "CollapsiblePanel": {},
@@ -78,7 +115,7 @@
     ".sui-three-panel__top-bar": {
       "height": 32,
       "paddingLeft": "12px",
-      "rowGap": "8px"
+      "rowGap": "12px"
     },
     ".sui-three-panel__left": {
       "height": 286,

@@ -21,6 +21,16 @@
       "paddingTop": "6px",
       "paddingLeft": "12px",
       "borderTopWidth": "1px"
+    },
+    ".bucket-queue__row--selected": {
+      "height": 31,
+      "boxShadow": "rgb(0, 212, 255) 2px 0px 0px 0px inset"
+    },
+    ".bucket-queue__count": {
+      "height": 18,
+      "display": "block",
+      "borderTopWidth": "0px",
+      "fontSize": "15.2px"
     }
   },
   "CompactBucketQueue": {
@@ -45,6 +55,16 @@
       "paddingTop": "2px",
       "paddingLeft": "8px",
       "borderTopWidth": "1px"
+    },
+    ".bucket-queue--compact .bucket-queue__row--selected": {
+      "height": 21,
+      "boxShadow": "rgb(0, 212, 255) 2px 0px 0px 0px inset"
+    },
+    ".bucket-queue--compact .bucket-queue__count": {
+      "height": 14,
+      "display": "block",
+      "borderTopWidth": "0px",
+      "fontSize": "11px"
     }
   },
   "ActionList": {
@@ -57,7 +77,14 @@
       "paddingTop": "8px",
       "paddingLeft": "12px",
       "borderTopLeftRadius": "0px",
-      "borderBottomWidth": "1px"
+      "borderBottomWidth": "1px",
+      "borderLeftWidth": "1px"
+    },
+    ".sui-action-list-item--selected": {
+      "height": 41,
+      "boxShadow": "none",
+      "borderColor": "rgb(0, 212, 255)",
+      "backgroundColor": "color(srgb 0.0435561 0.208186 0.286351 / 0.824)"
     }
   },
   "GroupedBucketQueue": {
@@ -71,6 +98,16 @@
       "paddingTop": "6px",
       "paddingLeft": "60px",
       "borderTopWidth": "1px"
+    },
+    ".bucket-queue__row--selected": {
+      "height": 31,
+      "boxShadow": "rgb(0, 212, 255) 2px 0px 0px 0px inset"
+    },
+    ".bucket-queue__count": {
+      "height": 18,
+      "display": "block",
+      "borderTopWidth": "0px",
+      "fontSize": "15.2px"
     }
   },
   "CollapsiblePanel": {},
