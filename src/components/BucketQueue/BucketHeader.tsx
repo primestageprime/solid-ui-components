@@ -12,6 +12,7 @@
 // chevron becomes that mark, and because it occupies the dot's exact 8px slot
 // every bucket's label stays on the same left edge either way.
 import { Show, type JSX } from "solid-js";
+import { CountChip } from "../Badge/CountChip";
 import type { Bucket } from "./types";
 
 // A function, not a shared element: a single JSX expression evaluates to ONE
@@ -64,7 +65,11 @@ export function BucketHeader(props: BucketHeaderProps): JSX.Element {
         </Show>
         {props.bucket.label}
       </span>
-      <span class="bucket-queue__count">{props.count}</span>
+      {/* The count is a CountChip (canon, 2026-10-15): a pill at the right
+          end, in every theme. It keeps the `bucket-queue__count` class so the
+          arrival motion (./motion) and consumers' selectors still find it;
+          its label slot is empty and hidden (BucketQueue.css). */}
+      <CountChip class="bucket-queue__count" count={props.count} label="" />
     </>
   );
 

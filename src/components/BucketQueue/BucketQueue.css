@@ -53,12 +53,16 @@
   min-width: 0;
 }
 .bucket-queue__count {
-  /* inline-block so it is transformable: a row arriving in a COLLAPSED bucket
-     has no slot to open, so the count is what acknowledges it (see ./motion).
-     `transform` has no effect on a non-replaced inline box. */
-  display: inline-block;
+  /* A CountChip (inline-flex, so it is transformable: a row arriving in a
+     COLLAPSED bucket has no slot to open, so the count is what acknowledges
+     it — see ./motion; `transform` has no effect on a non-replaced inline
+     box). The chip owns its pill chrome and 12px type (CountChip.css); the
+     header only pins the numerals and hides the chip's unused label slot. */
+  flex: none;
   font-variant-numeric: tabular-nums;
-  font-size: 0.95rem;
+}
+.bucket-queue__count .sui-count-chip__label:empty {
+  display: none;
 }
 .bucket-queue__body {
   flex: 1 1 auto;

@@ -27,6 +27,7 @@ import {
   type JSX,
 } from "solid-js";
 import { every, filter, find, flatMap, map, pipe } from "../../fn";
+import { CountChip } from "../Badge/CountChip";
 import { bucketItems } from "../BucketQueue/bucketing";
 import { createRowKeyboard } from "../BucketQueue/keyboard";
 import { advanceSelection } from "../BucketQueue/selection";
@@ -249,7 +250,7 @@ export function GroupedBucketQueue<T>(
                       />
                       {h().label}
                     </span>
-                    <span class="bucket-queue__count">{h().count}</span>
+                    <CountChip class="bucket-queue__count" count={h().count} label="" />
                   </div>
                 }
               >
@@ -276,7 +277,7 @@ export function GroupedBucketQueue<T>(
                     </span>
                     {h().label}
                   </span>
-                  <span class="bucket-queue__count">{h().count}</span>
+                  <CountChip class="bucket-queue__count" count={h().count} label="" />
                 </button>
               </Show>
               <Show when={h().isLeaf && !h().collapsed}>
