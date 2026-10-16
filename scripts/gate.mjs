@@ -6,7 +6,7 @@
 //   node scripts/gate.mjs                 # every job, in ci.yml's order
 //   node scripts/gate.mjs --fast          # same, but skip the two isolated builds
 //   node scripts/gate.mjs --only lint     # one job only (comma-separated ok)
-//   node scripts/gate.mjs --pre-push      # used by githooks/pre-push — see below
+//   node scripts/gate.mjs --pre-push      # used by githooks/pre-push: lint + typecheck + AFFECTED tests only
 //   node scripts/gate.mjs --no-lock       # skip the machine-wide lock (see below)
 //
 // WHY THIS EXISTS
@@ -76,8 +76,9 @@
 // (each is a full build). `--pre-push` implies `--fast`: a pre-push hook that
 // runs ~8 minutes outlives GitHub's SSH idle timeout, so the gate passes
 // and then the push itself is dropped (observed 2026-09-25, twice). CI runs
-// both builds on every push; pre-push keeps the static checks, the tests and
-// the health ratchet.
+// both builds on every push; pre-push keeps lint and typecheck and runs only the
+// AFFECTED tests (see testStepAffected). The full suite, coverage, health ratchet
+// and builds are the PR gate: CI, or plain `npm run gate`.
 //
 // WHY THERE IS A MACHINE-WIDE LOCK
 //
@@ -114,6 +115,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { acquireGateLock } from "./gate-lock.mjs";
+import { planTests } from "./affected-tests.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -320,6 +322,26 @@ function healthStepPrePush(cwd) {
   return 1;
 }
 
+// ── the `--pre-push` test step ──────────────────────────────────────────
+//
+// Push tier = AFFECTED tests only (lint + typecheck + the tests whose import
+// graph reaches the diff). The full suite, coverage, execution-coverage and
+// the health ratchet need a whole-suite run; they stay in plain `npm run gate`
+// and in CI, i.e. at the PR gate. `scripts/affected-tests.mjs` decides the set
+// (and falls back to the FULL suite when the merge-base cannot be computed or a
+// config-level file changed) — run it by hand to see what a push would run.
+// Plain `vitest run`, no coverage: coverage is only meaningful over everything.
+function testStepAffected(cwd) {
+  const plan = planTests({ root: cwd });
+  console.log(`  ${plan.mode === "full" ? "FULL suite" : "affected tests"} — ${plan.reason}`);
+  if (plan.mode === "affected" && plan.files.length === 0) {
+    console.log("  nothing to run — no test file reaches this diff");
+    return 0;
+  }
+  const files = plan.mode === "full" ? [] : plan.files;
+  return run("npx", ["vitest", "run", ...files], { cwd }).status ?? 1;
+}
+
 // ── step list — derived from .github/workflows/ci.yml, same order ───────
 
 const STEPS = [
@@ -378,6 +400,7 @@ const onlyNames = onlyFlagIdx !== -1 ? (argv[onlyFlagIdx + 1] ?? "").split(",").
 
 for (const step of STEPS) {
   if (step.name === "health") step.run = prePush ? healthStepPrePush : healthStepCi;
+  if (step.name === "test" && prePush) step.run = testStepAffected;
 }
 
 if (onlyNames) {
@@ -393,6 +416,9 @@ if (onlyNames) {
 const stepsToRun = STEPS.filter((s) => {
   if (onlyNames) return onlyNames.includes(s.name);
   if ((fast || prePush) && (s.name === "build" || s.name === "bundle-budget")) return false;
+  // Pre-push drops the ratchet: it needs a full coverage run. CI and plain
+  // `gate` still run it; `--pre-push --only health` still reaches healthStepPrePush.
+  if (prePush && s.name === "health") return false;
   return true;
 });
 
@@ -429,7 +455,7 @@ for (const { name, status } of results) {
   console.log(`  ${status === 0 ? "✓" : "✗"} ${name.padEnd(16)} exit ${status}`);
 }
 const skipped = stepsToRun.length < STEPS.length && !onlyNames;
-if (skipped) console.log(prePush ? "  (build + bundle-budget skipped — pre-push gates the static checks and tests; CI runs the isolated builds)" : "  (build + bundle-budget skipped — --fast)");
+if (skipped) console.log(prePush ? "  (build, bundle-budget, health skipped — pre-push gates lint, typecheck and AFFECTED tests; the PR gate (CI / npm run gate) runs the full suite, builds and health)" : "  (build + bundle-budget skipped — --fast)");
 console.log(overall === 0 ? "\n✓ gate passed" : "\n✗ gate FAILED");
 
 process.exit(overall);
