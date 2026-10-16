@@ -10,11 +10,11 @@ const here = dirname(fileURLToPath(import.meta.url));
 const [phase = "before", port = "2305"] = process.argv.slice(2);
 const overlay = phase === "after" ? readFileSync(join(here, "dense-overlay.css"), "utf8") : null;
 
-// component -> [route, heading text to scroll to, optional click selector, optional anchor selector (centred)]
+// component -> [route, heading text to scroll to, optional click selector, optional anchor selector (centred), optional row selector to select]
 const TARGETS = {
   BucketQueue: ["bucket-queue", "Row cards", null, ".bucket-queue"],
   CompactBucketQueue: ["bucket-queue", "CompactBucketQueue", null, ".bucket-queue--compact"],
-  ActionList: ["action-list", "Working list"],
+  ActionList: ["action-list", "Working list", null, null, ".sui-action-list-item--selectable"],
   GroupedBucketQueue: ["grouped-bucket-queue", "Click a row"],
   CollapsiblePanel: ["app-shell", "CollapsiblePanel"],
   ThreePanelLayout: ["three-panel-layout", "Default — all four slots"],
@@ -43,7 +43,7 @@ const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
 await ctx.addInitScript(() => { try { localStorage.setItem("sui-theme", "hud"); } catch {} });
 const p = await ctx.newPage();
 const metrics = {};
-for (const [name, [route, heading, click, anchor]] of Object.entries(TARGETS)) {
+for (const [name, [route, heading, click, anchor, selectRow]] of Object.entries(TARGETS)) {
   await p.goto(`http://localhost:${port}/#/${route}`);
   await p.waitForSelector("h2");
   await p.waitForTimeout(1200);
@@ -54,6 +54,7 @@ for (const [name, [route, heading, click, anchor]] of Object.entries(TARGETS)) {
     el?.scrollIntoView({ block: "start" });
   }, [heading, anchor]);
   if (click) { await p.locator(click).first().click(); }
+  if (selectRow) { await p.locator(selectRow).nth(2).click({ position: { x: 4, y: 4 } }); }
   await p.waitForTimeout(700);
   await p.screenshot({ path: join(here, "shots", `${name}-${phase}.png`) });
   const scoped = Object.fromEntries(Object.entries(PROBES).map(([sel, props]) => [

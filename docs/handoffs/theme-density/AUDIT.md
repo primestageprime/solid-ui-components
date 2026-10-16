@@ -18,8 +18,10 @@ Evidence: `shots/`, `metrics-before.json`, `metrics-after.json`, `dense-overlay.
 2. **Two JS constants mirror CSS and tokens cannot reach them:**
    `BucketQueue.tsx:47 const GAP = 8` (water-fill math) and
    `BucketQueue/layout.ts:15 const BORDERS = 2`. With CSS gap 0 a `fill` queue ends
-   **9px short** (measured: slack 0 -> 9 on the fill demo, `fillprobe` run). This is
-   also a latent bug in today's `density="compact"`: CSS gap 4px, JS still subtracts 8.
+   **9px short** (measured on the fill demo: slack 0 -> 9). Eight px are the `GAP`
+   constant; one px is the overlay's own `margin-top: -1px` shared-divider overlap. By reading
+   the code (not measured), the same mismatch exists in today's `density="compact"`:
+   CSS gap 4px, JS still subtracts 8.
 3. **28px is taller than today's compact.** Canon header 28px vs
    `CompactBucketQueue` header 21px / row 21px. Dense default rows measure 27px.
    So the default will *not* subsume the side-pane compact; see Q2.
@@ -28,16 +30,21 @@ Evidence: `shots/`, `metrics-before.json`, `metrics-after.json`, `dense-overlay.
 5. **`CountChip` header is a TSX change, not a token** (`BucketHeader.tsx`). The overlay
    only approximates it with a pill on `.bucket-queue__count`.
 6. **No consumer uses `CompactBucketQueue` or `BucketQueue density=`.** Deprecating them is free.
-7. **`--sui-space-sm/md/xs` are undefined everywhere.** 8 sites use them with a literal
-   fallback, so they always render the fallback (e.g. `ActionListItem.css:19`). Not
-   a density token; do not mistake it for one.
+7. **`--sui-space-sm/md/xs` are never declared** (fixed-string grep over SUI `src/` and
+   `dev/` and the six consumers' `src/`: no declaration). 8 SUI sites use them with a
+   literal fallback, so they always render the fallback (e.g. `ActionListItem.css:19`).
+   Not a density token; do not mistake it for one.
 
 ### Questions for Peter (one at a time)
 
 - **Q1 — what is "the default theme"?** Three readings: theme id `default`, the loader
-  default (`src/themes/loader.ts:12`, = `hud`), or every theme. **Recommend declare the
-  dense values in `default.css` and `hud.css` only**; `bronze/stax/colorblind` keep
-  today's look (thorcasting, jtf and dside run stax a lot: 8/21/15 refs). Screenshots
+  default (`src/themes/loader.ts:12`, = `hud`), or every theme. Verified defaults:
+  goose `default`; dside and notecards statically import `default.css`; diddit, jtf
+  (unless `VITE_DEFAULT_THEME`) and thorcasting land on `hud`. So **declaring dense
+  values in `default.css` + `hud.css` changes the out-of-the-box look of all six
+  consumers**, and only users who pick `stax`, `bronze*` or `colorblind` stay as today.
+  **Recommend `default.css` + `hud.css` only.** Also part of Q1: does the `CountChip`
+  header apply to every theme (it is a component change) or only these two. Screenshots
   are hud, as asked.
 - **Q2 — does side-pane compact survive?** If 28px header / 27px row is acceptable at
   200px wide, compact is redundant and can be deprecated. If not, `compact` stays as the
@@ -141,12 +148,17 @@ plus `dense-overlay.css` injected. Re-run:
 |---|---|---|---|
 | BucketQueue (`#/bucket-queue`) | `shots/BucketQueue-before.png` | `shots/BucketQueue-after.png` | gap 8->0, header 31.5->28, row 31->27, bucket 96->84, side borders gone |
 | CompactBucketQueue (same page) | `shots/CompactBucketQueue-before.png` | `shots/CompactBucketQueue-after.png` | gap 4->0 only; header 21->28 and 65->72 are an **overlay artifact** (min-height 28 also hits compact) |
-| ActionList (`#/action-list`) | `shots/ActionList-before.png` | `shots/ActionList-after.png` | item 41->32, list gap 1->0, radius 0, 4px bar |
-| GroupedBucketQueue (`#/grouped-bucket-queue`) — the SectionedList replacement (SectionedList removed 0.221.0; BucketQueue is the owner's direction) | `shots/GroupedBucketQueue-before.png` | `shots/GroupedBucketQueue-after.png` | header 31->28, row 31->27 |
+| ActionList (`#/action-list`, 3rd row selected) | `shots/ActionList-before.png` | `shots/ActionList-after.png` | item 41->32, list gap 1->0, selected = 4px left bar instead of a bordered box. Radius is already 0 in hud, so it is not a change here (it would be in `default`, 8px). The actions bar above the list stays a rounded bordered box: `ActionList.css:18-20` is a further rule to move |
+| GroupedBucketQueue (`#/grouped-bucket-queue`) — nested sibling of BucketQueue | `shots/GroupedBucketQueue-before.png` | `shots/GroupedBucketQueue-after.png` | header 31->28, row 31->27 |
 | CollapsiblePanel (`#/app-shell`) | `shots/CollapsiblePanel-before.png` | `shots/CollapsiblePanel-after.png` | near-identical: it has no list/gap density, only a tab and a strip |
 | ThreePanelLayout (`#/three-panel-layout`) | `shots/ThreePanelLayout-before.png` | `shots/ThreePanelLayout-after.png` | top bar 40->32; aside pad/gap 8->0; center 16->12 |
 | Modal (`#/hud-modal`, first button) | `shots/Modal-before.png` | `shots/Modal-after.png` | header 66->54, body 58->50 |
 | DataTable = BaseTable (`#/base-table`) | `shots/DataTable-before.png` | `shots/DataTable-after.png` | head cell 37.5->29.5, cell 47->29 |
+
+**SectionedList's replacement is `BucketQueue`**: CHANGELOG 0.221.0 removed
+`SectionedList`/`CompactSectionedList` ("the owner chose to keep `BucketQueue` for the
+side pane instead"), so the BucketQueue and CompactBucketQueue rows above are the
+SectionedList evidence. `GroupedBucketQueue` is included as the nested variant.
 
 Headless numbers for every probe: `metrics-before.json` vs `metrics-after.json`.
 
@@ -162,17 +174,18 @@ Headless numbers for every probe: `metrics-before.json` vs `metrics-after.json`.
 Version pins (from each `package.json`). Caret on `0.x` allows patch only
 (`^0.216.0` = `>=0.216.0 <0.217.0`), so **only a deliberate bump moves a consumer**,
 except the live link and the branch ref. Usage counts are non-test source lines
-mentioning the component (indicative, includes imports).
+mentioning the component (indicative, includes imports). **jtf is the one consumer hit
+with no version bump at all.**
 
-| Consumer | Pin | Moves when | Themes seen | Affected usage |
+| Consumer | Pin | Moves when | Default theme (verified) | Affected usage |
 |---|---|---|---|---|
-| `goose/goose-ui` | exact 0.152.0 | explicit bump | default (8) | tables 38 (6 `compact`), Section 5 |
-| `diddit/diddit-ui` | exact 0.152.0 | explicit bump | hud 8, bronze 7, default 2 | ActionList 8, List 3, ThreePanelLayout 2, Modal 2 |
-| `thorcasting/thorcasting-ui` | ^0.216.0 | bump past 0.216.x | default 36, stax 8 | **BucketQueue 45**, Modal 14, Panel 16, Section 10, tables 9, ThreePanelLayout 7, `compact` 7. Its `density=` is its own prop, not SUI's |
-| `jtf/jtf-ui` | `link:../solid-ui-components` | **live, on next SUI build** | stax 21, default 18, hud 5 | tables 22, ThreePanelLayout 13, Modal 13, Panel 10, BucketQueue 9 |
-| `dside/dside-ui` | ^0.104.0 (work: ^0.57.0) | bump (far behind) | default 19, stax 15 | **ActionList 30**, CollapsiblePanel 7, Modal 4 |
-| `notecards/notecards-ui` | github branch `fix/button-tone-specificity` | **floats with the branch**, not a release | hud | Modal 3, tables 4 (2 `compact`) |
-| `jtf-rth/jtf-rth-ui` (not in brief) | ^0.151.0 | bump | default/hud/bronze | tables 40 (18 `compact`), Section 22 |
+| `goose/goose-ui` | exact 0.152.0 | explicit bump | `default` (`lib/theme.ts` `DEFAULT`); curated default/hud/stax | tables 38 (6 `compact`), Section 5 |
+| `diddit/diddit-ui` | exact 0.152.0 | explicit bump | SUI loader default = `hud` (`getPersistedTheme()`, nothing persisted) | ActionList 8, List 3, ThreePanelLayout 2, Modal 2 |
+| `thorcasting/thorcasting-ui` | ^0.216.0 | bump past 0.216.x | static `hud.css` + `colorblind.css` (`app.tsx:29-30`) | **BucketQueue 45**, Modal 14, Panel 16, Section 10, tables 9, ThreePanelLayout 7, `compact` 7. Its `density=` is its own prop, not SUI's |
+| `jtf/jtf-ui` | `link:../solid-ui-components` -> symlink `jtf/solid-ui-components` -> `../platform/solid-ui-components`, i.e. **the shared SUI checkout** | **no version bump needed**: as soon as that checkout holds the change and is rebuilt (`dist/`) | persisted, else `VITE_DEFAULT_THEME`, else `hud` (`stores/theme.ts`); curated hud/stax | tables 22, ThreePanelLayout 13, Modal 13, Panel 10, BucketQueue 9 |
+| `dside/dside-ui` | ^0.104.0 (work: ^0.57.0) | bump (far behind) | static `default.css` (`app.tsx:2`) then runtime swap (`lib/themePref.ts`) | **ActionList 30**, CollapsiblePanel 7, Modal 4 |
+| `notecards/notecards-ui` | github branch `fix/button-tone-specificity` | next reinstall that re-resolves the branch (the lockfile pins a commit until then); not a release | static `default.css` (`app.tsx:6`); `loadTheme("hud")` on the proto shell | Modal 3, tables 4 (2 `compact`) |
+| `jtf-rth/jtf-rth-ui` (not in brief) | ^0.151.0 | bump | not checked | tables 40 (18 `compact`), Section 22 |
 
 Expect visible change on upgrade in: ActionList row height and shape (dside, diddit),
 every table's row height (goose, jtf, jtf-rth, thorcasting, notecards), ThreePanelLayout
@@ -195,14 +208,14 @@ theme that omits them is untouched; the dense values switch on per theme.
 
 1. **Add (one PR, one minor release, safe to abandon)**
    - 1a. Zero-visual-change plumbing: JS `GAP`/`BORDERS` read from the DOM; every rule in
-     §2 becomes `var(--sui-dense-*, <legacy>)`; `CountChip` in bucket/grouped headers
-     behind the existing look (additive, so counts look like chips everywhere; confirm in
-     Q1 whether chips are also theme-gated). Add layout test with gap 0 (fill queue
+     §2 becomes `var(--sui-dense-*, <legacy>)`. Add layout test with gap 0 (fill queue
      fills exactly). Document tokens as an optional group in `themes/README.md` and
      `COMPONENTS.md`; run `npm run health`, `test`, `typecheck`, `build`,
      `bundle-budget` and re-baseline only what improves.
-   - 1b. `default.css` + `hud.css` declare the dense values. This is the only visible
-     change; the PR carries these before/after pairs (re-shot from the real code, not the
+   - 1b. `default.css` + `hud.css` declare the dense values, and the bucket/grouped
+     headers swap the bare count for `CountChip` (a visible component change; per Q1
+     either for every theme or gated by a dense token). These are the only visible
+     changes; the PR carries these before/after pairs (re-shot from the real code, not the
      overlay), plus consumer notes from §4.
 2. **Deprecate (per consumer, at their own pace)** — mark `density="compact"`,
    `CompactBucketQueue`, and `compact` on Table/List/Section `@deprecated` in types,
