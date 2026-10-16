@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.223.0 — 2026-10-16
+
 ### Added
 
 - **`StandardThreePanel`**, **`ListDetailThreePanel`**, **`InspectorThreePanel`**, **`SplitThreePanel`** — named curried variants of `ThreePanelLayout` with aside widths baked from the new `THREE_PANEL_ASIDE_WIDTH` tokens and full height. A size change to a variant is a new named variant or a global change to it, never a call-site prop.

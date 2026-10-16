@@ -10231,7 +10231,7 @@
     "useFor": null,
     "notes": "Page with a wide right inspector: 220 left rail, 320 right. Replaces thorcasting CoverageTab.",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 39
   },
@@ -10910,7 +10910,7 @@
     "useFor": null,
     "notes": "List-and-detail page with a wide left column: 320 left, 240 right. Replaces jtf silver-explorer, metric-sleuth; dside TriageView (left only).",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 30
   },
@@ -15240,7 +15240,7 @@
     "useFor": null,
     "notes": "Split page with a half-screen-class left pane: 560 left, 240 right. Replaces diddit index (desktop layout).",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 48
   },
@@ -15414,7 +15414,7 @@
     "useFor": null,
     "notes": "Standard list / center / context page: 260 left, 240 right. Replaces jtf metric-explorer, cache-explorer, timesleuth; thorcasting TriageTab (left only).",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 21
   },
