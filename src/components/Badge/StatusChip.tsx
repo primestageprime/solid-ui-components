@@ -13,6 +13,9 @@
 // committing (the `cancelled` flag guards the blur that follows). `highlight`
 // fills the chip with the accent tint for the active status.
 //
+// To SHOW a status with nothing to press, use StatusChipDisplay (the read-only
+// sibling, same pill and width) rather than StatusChip without an `onChange`.
+//
 // The editable sibling of StatusBadge: StatusBadge is display-only (a compliance
 // enum), StatusChip lets the user rename or pick the status inline. Use
 // StatusBadge to show a status, StatusChip to edit one.
@@ -38,6 +41,16 @@ export interface StatusChipProps {
   title: string;
 }
 
+/**
+ * The chip's fixed width in `ch` of the mono font: the longest of the current
+ * status and every option, plus one for the padding. Pure, and shared with
+ * StatusChipDisplay so a read-only chip lines up with an editable one.
+ */
+export const statusChipWidthCh = (
+  status: string,
+  options: string[] = [],
+): number => Math.max(status.length, ...pluck("length", options)) + 1;
+
 export const StatusChip: Component<StatusChipProps> = (props) => {
   const [editing, setEditing] = createSignal(false);
   const [menuOpen, setMenuOpen] = createSignal(false);
@@ -45,8 +58,7 @@ export const StatusChip: Component<StatusChipProps> = (props) => {
   let cancelled = false;
   const options = () => props.options ?? [];
   // Fixed width: longest option (or current status), in ch of the mono font.
-  const widthCh = () =>
-    Math.max(props.status.length, ...pluck("length", options())) + 1;
+  const widthCh = () => statusChipWidthCh(props.status, options());
   const commit = (value: string) => {
     setEditing(false);
     setMenuOpen(false);

@@ -15617,7 +15617,26 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/Badge/StatusChip.tsx",
-    "line": 41
+    "line": 51
+  },
+  {
+    "name": "StatusChipDisplay",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Badge",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic Primitive (Depth 1).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a card or list row that shows a status and leaves changing it to the detail view. `<StatusChipDisplay status={task.status} options={STATUSES} highlight={task.status === \"doing\"} />`",
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Badge/StatusChipDisplay.tsx",
+    "line": 27
   },
   {
     "name": "SteadyMonoMeta",

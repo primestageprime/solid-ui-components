@@ -110,3 +110,10 @@
 .sui-status-chip__option--current {
   color: var(--sui-accent);
 }
+
+/* StatusChipDisplay: the same pill with nothing to press. The label is a plain
+   span, so it takes no text cursor and never gets the dotted underline the
+   editable chip reveals on hover. */
+.sui-status-chip__text--display {
+  cursor: default;
+}

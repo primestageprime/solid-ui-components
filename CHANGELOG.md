@@ -18,6 +18,8 @@
 
 - **`CollapsiblePanel` can be controlled.** New optional `open` and `onToggle` props: pass `open` and the caller owns the state, so a hotkey can fold the panel. `onToggle(nextOpen)` reports every press, controlled or not. With neither prop it behaves as before.
 
+- **`StatusChipDisplay`** — a Depth 1 atomic: the read-only sibling of `StatusChip`. The same fixed-width pill with a plain label and nothing to press: no button, caret, menu or hover underline. Pure `statusChipWidthCh` is exported so the two share one width rule. `StatusChip` is unchanged.
+
 ## 0.218.0 — 2026-10-13
 
 ### Added
