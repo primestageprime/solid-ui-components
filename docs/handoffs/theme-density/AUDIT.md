@@ -138,6 +138,22 @@ exactly as today. Dense values are declared in `default.css` + `hud.css` (Q1).
 6. `.hud-table--compact`, `.sui-section--compact`, `.sui-list--compact`,
    `.bucket-queue--compact` stay as-is until phase 2.
 
+### Work classes in the plan (from veronica-b's canon-deltas handoff, PR #286)
+
+Of the four BucketQueue canon deltas, three are token/CSS work and one is not:
+
+| Delta | Class | Where |
+|---|---|---|
+| 1. Flush buckets, 1px divider | Token + CSS, **and** the JS `GAP`/`BORDERS` code path | phase 1a/1b |
+| 3. 4px selected bar | Token + CSS | phase 1a/1b |
+| 4. 28px header (chevron, label, count) | Token + CSS (`min-height`) | phase 1a/1b |
+| 2. Count as `CountChip` at the right | **Markup change** in `BucketHeader.tsx`, not CSS; list and review separately from token work | phase 1b, its own commit |
+| (separate) `count?: number` override so a collapsed bucket shows 2,594 with no items loaded | **New prop on a Primitive**: needs Peter's sign-off under the expansion gate; not part of the theme pass | outside this plan |
+
+Rule for the JS mirrors: any dense token that changes a value `BucketQueue.tsx` or
+`layout.ts` also encodes (`GAP`, `BORDERS`, and by extension row/header heights) must be
+read by that code path from the live DOM, or the CSS and the water-fill drift apart.
+
 ## 3. Before / after evidence (hud theme, 1280 viewport)
 
 Dev gallery on port 2305 (claimed via `pa`, released at the end). After = same page
