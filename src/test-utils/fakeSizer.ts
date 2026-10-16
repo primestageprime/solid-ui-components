@@ -141,7 +141,9 @@ export const installFastFrames = (): (() => void) => {
       0,
     ) as unknown as number) as typeof requestAnimationFrame;
   g.cancelAnimationFrame = ((id: number): void =>
-    clearTimeout(id as unknown as ReturnType<typeof setTimeout>)) as typeof cancelAnimationFrame;
+    clearTimeout(
+      id as unknown as ReturnType<typeof setTimeout>,
+    )) as typeof cancelAnimationFrame;
   return () => {
     g.requestAnimationFrame = prevRaf;
     g.cancelAnimationFrame = prevCaf;

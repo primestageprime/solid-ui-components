@@ -1941,8 +1941,9 @@ describe("ScrubChart corner control stacking", () => {
     // neither may take a level the other does not. A band is background; a
     // gridline paints over it.
     const { container } = bothCorners();
-    const order = [...container.querySelector(".sui-scrub-chart__frame")!
-      .children];
+    const order = [
+      ...container.querySelector(".sui-scrub-chart__frame")!.children,
+    ];
     const at = (selector: string) =>
       order.findIndex((el) => el.matches(selector));
     expect(at(".sui-scrub-chart__highlights")).toBeLessThan(
