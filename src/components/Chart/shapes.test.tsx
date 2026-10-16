@@ -142,7 +142,7 @@ describe("ShapeGlyph", () => {
     expect(container.querySelector("path")!.getAttribute("d")).toBe(secondPath);
   });
 
-  it.each(["diamond", "square", "pentagon"] as const)(
+  it.each(["diamond", "square", "pentagon", "cross"] as const)(
     "renders a filled <path> for the built-in shape '%s'",
     (shape) => {
       const { container } = renderSvg({ color: "#fff", shape });
@@ -151,6 +151,14 @@ describe("ShapeGlyph", () => {
       expect(path.getAttribute("fill")).toBe("#fff");
     },
   );
+
+  it("draws the cross as wide as its size, like a circle of that diameter", () => {
+    const { container } = renderSvg({ color: "#fff", shape: "cross", size: 12 });
+    const d = container.querySelector("path")!.getAttribute("d")!;
+    const xs = [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => Number(m[1]));
+    // The path fills the ±8 viewBox, so the scale 12/16 makes it 12 wide.
+    expect(Math.max(...xs) - Math.min(...xs)).toBe(16);
+  });
 
   it("renders a hollow circle (no fill, colour becomes the stroke)", () => {
     const { container } = render(() => (

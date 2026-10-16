@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`Shape` `"cross"`** — a filled × for `ShapeGlyph`, `PinMarkers` and every slot that takes a `Descriptor`. At size 12 it matches a radius-6 point: "nothing here" on a track.
+
 ## 0.225.0 — 2026-10-16
 
 ### Added

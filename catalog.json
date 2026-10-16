@@ -14740,7 +14740,7 @@
     "showcase": "#/chart",
     "since": "0.102.0",
     "file": "src/components/Chart/shapes.tsx",
-    "line": 93
+    "line": 101
   },
   {
     "name": "Sidebar",

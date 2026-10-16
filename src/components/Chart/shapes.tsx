@@ -11,6 +11,7 @@ export type Shape =
   | "diamond"
   | "square"
   | "pentagon"
+  | "cross"
   | "pin"
   | { path: string; viewBox?: [number, number] };
 
@@ -37,6 +38,12 @@ const SQUARE_PATH = "M-6,-6 L6,-6 L6,6 L-6,6 Z";
 // Filled regular pentagon (⬠), apex up; vertices on a radius-7 circle.
 const PENTAGON_PATH =
   "M0,-7 L6.657,-2.163 L4.114,5.663 L-4.114,5.663 L-6.657,-2.163 Z";
+// Filled × (cross), two bars at ±45°: "nothing here" on a track. It fills the
+// whole viewBox (±8), so `size` is its true width, as the convention above
+// says: at size 12 it is as wide as a radius-6 point. (The older shapes reach
+// only ±6–7, so they draw at about 3/4 of `size`.)
+const CROSS_PATH =
+  "M-8,-6.13 L-6.13,-8 L0,-1.87 L6.13,-8 L8,-6.13 L1.87,0 L8,6.13 L6.13,8 L0,1.87 L-6.13,8 L-8,6.13 L-1.87,0 Z";
 const BUILTIN_VIEWBOX: [number, number] = [16, 16];
 
 /** Narrows a Shape to its custom-path variant, or undefined for built-in tags. */
@@ -53,6 +60,7 @@ const isKnownShape = (s: unknown): boolean =>
   s === "diamond" ||
   s === "square" ||
   s === "pentagon" ||
+  s === "cross" ||
   s === "pin" ||
   (typeof s === "object" &&
     s !== null &&
@@ -143,6 +151,17 @@ export const ShapeGlyph: Component<ShapeGlyphProps> = (props) => {
       <Show when={props.descriptor.shape === "square"}>
         <PathScaled
           path={SQUARE_PATH}
+          viewBox={BUILTIN_VIEWBOX}
+          size={size()}
+          color={props.descriptor.color}
+          stroke={stroke()}
+          strokeWidth={strokeWidth()}
+          hollow={props.hollow}
+        />
+      </Show>
+      <Show when={props.descriptor.shape === "cross"}>
+        <PathScaled
+          path={CROSS_PATH}
           viewBox={BUILTIN_VIEWBOX}
           size={size()}
           color={props.descriptor.color}

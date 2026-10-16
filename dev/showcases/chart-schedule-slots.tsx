@@ -11,6 +11,8 @@ import {
   Chart,
   GapBracket,
   Grid,
+  PinMarkers,
+  slotId,
   LineSeries,
   OutOfRangeMarkers,
   PointCaptions,
@@ -134,6 +136,27 @@ const WhiskerChart: Component = () => (
   </Chart>
 );
 
+// A year track: a dot for each year with a payment, and a × for each year
+// with none (PinMarkers, shape "cross", the size of a radius-6 dot).
+const YEARS = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
+const PAID = new Set([2019, 2020, 2022, 2025]);
+
+const YearTrackChart: Component = () => (
+  <Chart width={720} height={70} xDomain={[2018.5, 2025.5]} yDomain={[-1, 1]} margin={{ top: 8, right: 60, bottom: 28, left: 48 }} responsive>
+    <XAxis hideLine tickValues={YEARS} tickFormat={(v) => `${v}`} />
+    <ReferenceLine orientation="horizontal" value={0} opacity={0.4} />
+    <PointSeries data={YEARS.filter((y) => PAID.has(y))} x={(y) => y} y={() => 0} radius={6} fill="var(--sui-accent)" />
+    <PinMarkers
+      data={YEARS.filter((y) => !PAID.has(y)).map((y) => ({
+        id: slotId(String(y)),
+        x: y,
+        y: 0,
+        descriptor: { color: "var(--sui-text-secondary)", shape: "cross" as const, size: 12 },
+      }))}
+    />
+  </Chart>
+);
+
 export const ChartScheduleSlotsShowcase: Component = () => (
   <div class="component-section component-section--full">
     <ContentStack>
@@ -203,6 +226,12 @@ export const ChartScheduleSlotsShowcase: Component = () => (
         median (PointSeries).
       </TextSublabel>
       <WhiskerChart />
+      <SubsectionTitle>A year track, with a × for an empty year</SubsectionTitle>
+      <TextSublabel>
+        A dot for each year with a payment (PointSeries, radius 6), and a ×
+        the same size for each year with none (PinMarkers, shape "cross").
+      </TextSublabel>
+      <YearTrackChart />
     </ContentStack>
   </div>
 );
