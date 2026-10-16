@@ -2,6 +2,8 @@ import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { CountChip } from "./index";
 
+afterEach(cleanup);
+
 describe("CountChip", () => {
   it("renders count + label", () => {
     const { container } = render(() => <CountChip count={3} label="active" />);
