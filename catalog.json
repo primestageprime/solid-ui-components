@@ -15974,7 +15974,7 @@
     "useFor": "a positive tag beside a label, such as \"Recommended\" next to an answer inside a button. The tone follows the theme: the colourblind palette paints it blue.",
     "notes": "A positive tag beside a label — \"Recommended\" next to an answer in a button: 10px, bold, uppercase, letter-spaced, in the success tone. The tone follows the theme, so the colourblind palette paints it blue.",
     "showcase": "#/text",
-    "since": "Unreleased",
+    "since": "0.224.0",
     "file": "src/components/Text/variants.ts",
     "line": 358
   },
@@ -16610,7 +16610,7 @@
     "useFor": "events on a track where a dot would read as a value.",
     "notes": null,
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.224.0",
     "file": "src/components/Chart/TickSeries.tsx",
     "line": 27
   },
@@ -18251,7 +18251,7 @@
     "useFor": "a window with no data or no schedule, a period out of scope.",
     "notes": null,
     "showcase": "#/chart",
-    "since": "Unreleased",
+    "since": "0.224.0",
     "file": "src/components/Chart/XSpan.tsx",
     "line": 30
   },

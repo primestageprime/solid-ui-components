@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.224.0 — 2026-10-16
+
 ### Added
 
 - **`XSpan`** — a Chart slot that shades an x-range across the full plot height, under the series, with no pointer events. It takes a `tone` wash or any SVG `paint` (a `HatchPattern` for a hatch) and an optional top-centre `label`.
