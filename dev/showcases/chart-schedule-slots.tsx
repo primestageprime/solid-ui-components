@@ -9,6 +9,7 @@
 import { type Component, createUniqueId } from "solid-js";
 import {
   Chart,
+  GapBracket,
   Grid,
   LineSeries,
   OutOfRangeMarkers,
@@ -112,6 +113,27 @@ const NoScheduleChart: Component = () => {
   );
 };
 
+// Each month's smallest and largest payment: a min–max whisker with centred
+// caps, over a dot at the month's median.
+const SPREAD: readonly { x: number; min: number; median: number; max: number }[] = [
+  { x: 15, min: 80, median: 140, max: 210 },
+  { x: 45, min: 120, median: 160, max: 180 },
+  { x: 75, min: 40, median: 150, max: 240 },
+  { x: 105, min: 130, median: 150, max: 170 },
+];
+
+const WhiskerChart: Component = () => (
+  <Chart width={720} height={160} xDomain={[0, 120]} yDomain={[0, 260]} margin={{ top: 12, right: 60, bottom: 28, left: 48 }} responsive>
+    <Grid horizontal tickCount={4} />
+    <YAxis hideLine tickCount={4} tickFormat={(v) => `$${v}`} />
+    <XAxis hideLine tickValues={[0, 30, 60, 90, 120]} tickFormat={(v) => `d${v}`} />
+    {SPREAD.map((m) => (
+      <GapBracket from={m.min} to={m.max} x={m.x} offset={0} tick={10} tickAlign="center" stroke="var(--sui-accent)" />
+    ))}
+    <PointSeries data={SPREAD} x={(m) => m.x} y={(m) => m.median} radius={3} fill="var(--sui-accent)" />
+  </Chart>
+);
+
 export const ChartScheduleSlotsShowcase: Component = () => (
   <div class="component-section component-section--full">
     <ContentStack>
@@ -174,6 +196,13 @@ export const ChartScheduleSlotsShowcase: Component = () => (
         (PointCaptions side="below").
       </TextSublabel>
       <NoScheduleChart />
+      <SubsectionTitle>Min–max whiskers</SubsectionTitle>
+      <TextSublabel>
+        A stem from each month's smallest to its largest payment with a cap
+        centred at each end (GapBracket tickAlign="center"), over a dot at the
+        median (PointSeries).
+      </TextSublabel>
+      <WhiskerChart />
     </ContentStack>
   </div>
 );

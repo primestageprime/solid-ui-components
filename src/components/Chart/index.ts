@@ -49,7 +49,12 @@ export type { OutOfRange, EdgeMarker, RangePoint } from "./outOfRange";
 export { GapBracket, gapMidpoint } from "./GapBracket";
 export type { GapBracketProps } from "./GapBracket";
 export { buildGapBracket } from "./gapBracketGeometry";
-export type { GapBracketGeometry, GapBracketMark, GapBracketSegment } from "./gapBracketGeometry";
+export type {
+  GapBracketGeometry,
+  GapBracketMark,
+  GapBracketSegment,
+  GapBracketTickAlign,
+} from "./gapBracketGeometry";
 export type { ChartLabelsProps } from "./ChartLabels";
 export { ChartTooltip } from "./Tooltip";
 export type { ChartTooltipProps } from "./Tooltip";

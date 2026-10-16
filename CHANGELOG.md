@@ -8,6 +8,7 @@
 - **`TickSeries`** — a Chart slot that draws a short vertical tick at each point (`length` 20 px, `strokeWidth` 2.5). Put a `PointCaptions side="below"` beside it for a caption under each tick.
 - **`TreeTable` `onRowHover`** — reports the original row under the pointer, anywhere in the row, and `null` when the pointer leaves the body. It passes BaseTable's `onRowHover` through.
 - **`StatusCard` `children`** — a drawing in the detail area, under the description and above `actions`, at full card width. Before, `children` rendered at the very end of the card, after the meta row. No caller passed any.
+- **`GapBracket` `tickAlign`** (`"inward"` default | `"center"`). `"center"` centres each end tick on the stem, so the bracket draws a min–max whisker with caps.
 - **`SuccessTag`** — a 10px bold uppercase tag in the success tone, for "Recommended" beside an answer.
 
 ### Fixed

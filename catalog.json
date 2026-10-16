@@ -8675,12 +8675,12 @@
     "notToBeConfusedWith": [
       "Not `ReferenceLine`, which marks ONE value;"
     ],
-    "useFor": "\"this far from the forecast / target / floor\" at a line's end.",
+    "useFor": "\"this far from the forecast / target / floor\" at a line's end; a min–max whisker.",
     "notes": null,
     "showcase": "#/chart",
     "since": "0.217.0",
     "file": "src/components/Chart/GapBracket.tsx",
-    "line": 49
+    "line": 53
   },
   {
     "name": "GapCell",

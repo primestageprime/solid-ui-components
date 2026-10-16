@@ -6,10 +6,13 @@
 // no unit. `GapBracket` (GapBracket.tsx) is the `Chart` adapter.
 //
 // The bracket says "this far": one vertical stem between two y positions,
-// a short tick at each end pointing back toward the plot, and the seat for
+// a short tick at each end pointing back toward the plot (or centred on the
+// stem, for a min–max whisker's caps), and the seat for
 // a caption at the stem's midpoint, to its right. A caller that places the
 // caption through the label ladder reads `mid` and draws no caption here.
 // ============================================
+
+export type GapBracketTickAlign = "inward" | "center";
 
 /** Explicit geometry a bracket needs. No scale, no unit, no context. */
 export interface GapBracketGeometry {
@@ -19,8 +22,12 @@ export interface GapBracketGeometry {
 	readonly y1: number;
 	/** The other end. Order does not matter. */
 	readonly y2: number;
-	/** Length of each end tick, toward the plot. Default `4`. */
+	/** Length of each end tick. Default `4`. */
 	readonly tick?: number;
+	/** Where each end tick sits on the stem: `"inward"` (default) runs it
+	 *  from `x - tick` to `x`, back toward the plot, as a dimension bracket
+	 *  does; `"center"` centres it on the stem, as a whisker's cap does. */
+	readonly tickAlign?: GapBracketTickAlign;
 	/** Px the caption seat sits right of the stem. Default `4`. */
 	readonly captionGap?: number;
 }
@@ -36,7 +43,7 @@ export interface GapBracketSegment {
 export interface GapBracketMark {
 	/** The vertical stem, top to bottom. */
 	readonly stem: GapBracketSegment;
-	/** The two end ticks, each from `x - tick` to `x`. */
+	/** The two end ticks: from `x - tick` to `x`, or centred on `x`. */
 	readonly ticks: readonly [GapBracketSegment, GapBracketSegment];
 	/** The stem's vertical midpoint: where a caption centres. */
 	readonly mid: number;
@@ -62,9 +69,10 @@ export function buildGapBracket(geometry: GapBracketGeometry): GapBracketMark {
 	const top = Math.min(geometry.y1, geometry.y2);
 	const bottom = Math.max(geometry.y1, geometry.y2);
 	const mid = (top + bottom) / 2;
+	const centred = geometry.tickAlign === "center";
 	const tickAt = (y: number): GapBracketSegment => ({
-		x1: geometry.x - tick,
-		x2: geometry.x,
+		x1: centred ? geometry.x - tick / 2 : geometry.x - tick,
+		x2: centred ? geometry.x + tick / 2 : geometry.x,
 		y1: y,
 		y2: y,
 	});
