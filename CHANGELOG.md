@@ -2,31 +2,11 @@
 
 ## Unreleased
 
-## 0.224.0 — 2026-10-16
-
-### Added
-
-- **`XSpan`** — a Chart slot that shades an x-range across the full plot height, under the series, with no pointer events. It takes a `tone` wash or any SVG `paint` (a `HatchPattern` for a hatch) and an optional top-centre `label`.
-- **`TickSeries`** — a Chart slot that draws a short vertical tick at each point (`length` 20 px, `strokeWidth` 2.5). Put a `PointCaptions side="below"` beside it for a caption under each tick.
-- **`TreeTable` `onRowHover`** — reports the original row under the pointer, anywhere in the row, and `null` when the pointer leaves the body. It passes BaseTable's `onRowHover` through.
-- **`StatusCard` `children`** — a drawing in the detail area, under the description and above `actions`, at full card width. Before, `children` rendered at the very end of the card, after the meta row. No caller passed any.
-- **`GapBracket` `tickAlign`** (`"inward"` default | `"center"`). `"center"` centres each end tick on the stem, so the bracket draws a min–max whisker with caps.
-- **`SuccessTag`** — a 10px bold uppercase tag in the success tone, for "Recommended" beside an answer.
-
-### Fixed
-
-- **Chart `<title>` tooltips no longer become the page title.** `Chart`'s `title`, and `PointSeries`, `SlotTrack` and `TickSeries` `title`, drew an HTML `<title>`, because Solid compiles a `<title>` behind a `Show` as an HTML element. Chrome then showed a mark's tooltip as the tab title. Each `<title>` is now in its mark's own template, so it is an SVG `<title>`, with empty text when there is no title.
-- **A collapsible `FillChartFrame` slides its chart like the stated-height `ChartFrame`.** In a parent that eases between a px height and `auto`, the chart vanished at once and the empty frame rolled up. A fill frame is now as tall as its content while it moves, and fills its parent again when the open ends. `HeightReveal` records the open height while it is open, so the close holds the chart even when the layout already shrank.
-
-## 0.223.0 — 2026-10-16
-
 ### Added
 
 - **`PopoverMenu` takes `triggerLabel`.** Optional string applied as the trigger button's `aria-label`, for an avatar or icon trigger. `RightPopoverMenu` forwards it, and `UserMenu` now passes "Account menu for <name>". Without the prop the trigger is unchanged.
 - **`Bucket.count` and `GroupNode.count`** — an optional number the header chip shows instead of the loaded-item count, printed with the viewer's locale grouping ("2,594" in en-US). Display only: collapse, chevron, body and sizing still read the loaded items. `CountChip` gains optional `grouped` and `locale` props. Without `count` nothing changes.
 - **`StampedRow` and `PinnedStampedRow` take `timeZone`.** An IANA name forwarded to `formatStampTime`, so 08:14Z prints 08:14 with "UTC". Default stays the host zone.
-- **`StandardThreePanel`**, **`ListDetailThreePanel`**, **`InspectorThreePanel`**, **`SplitThreePanel`** — named curried variants of `ThreePanelLayout` with aside widths baked from the new `THREE_PANEL_ASIDE_WIDTH` tokens and full height. A size change to a variant is a new named variant or a global change to it, never a call-site prop.
-
 - **`SearchInput`** — a Depth 2 composite: a 32px search box with the search glyph at the left and a clear cross that shows while there is text. Controlled by `value`; `onClear` empties it and keeps focus in the box. Built on the new Depth 1 `SearchField`, which takes both glyphs as slots.
 
 - **`ClampedText`** — a Depth 1 primitive: body text whose height follows its content between 1 and 6 lines, then scrolls inside. Line counts ride CSS variables read in `lh` units. `createClampedText({ lines })` makes another range; pure `clampLines` cleans one.
@@ -76,6 +56,28 @@
 - **`BucketQueue` / `GroupedBucketQueue` headers show the count as a `CountChip`** (pill at the right end), in every theme. It keeps the `bucket-queue__count` class, so the collapsed-bucket arrival motion and consumers' selectors still find it. The header aligns its items on the centre line.
 - **`BucketQueue` / `GroupedBucketQueue` headers carry no leading dot; the tone is on the `CountChip`; rows indent past the label** (Peter, 2026-10-16: the dot "inverts my indentation expectation"). The label is the first thing in the header in every theme; a collapsible bucket's chevron follows it and is neutral. The chip takes the bucket tone as a 1px outline plus an 8% wash (`.bucket-queue__count--<tone>`), numerals in the chip's own text colour; `stax` outlines the accent chip in `--sui-accent-dim`. Rows and the empty strip start `--sui-row-indent` (4px) right of the header padding, dense and legacy, compact included. `GroupedBucketQueue`'s per-depth step is 8px (was 16). New stylesheet contracts: `BucketQueue.indent.test.ts` (row text >= 2px right of the label in hud, default and a token-less theme, at every depth) and `BucketQueue.tone.test.ts` (outline >= 3:1 and text contrast over the wash, every theme). The `bucket-queue__dot*` and `bucket-queue__chevron--<tone>` classes are gone.
 - **`ActionListItem` selected state is a left accent bar** (width `--sui-dense-select-bar`, legacy 2px), not an accent border plus a 12% wash, matching `BucketQueue`'s selected row. Hover still owns the border colour; the hover-only-opacity geometry invariant holds. In dense themes the row's border is a flush bottom divider.
+
+## 0.224.0 — 2026-10-16
+
+### Added
+
+- **`XSpan`** — a Chart slot that shades an x-range across the full plot height, under the series, with no pointer events. It takes a `tone` wash or any SVG `paint` (a `HatchPattern` for a hatch) and an optional top-centre `label`.
+- **`TickSeries`** — a Chart slot that draws a short vertical tick at each point (`length` 20 px, `strokeWidth` 2.5). Put a `PointCaptions side="below"` beside it for a caption under each tick.
+- **`TreeTable` `onRowHover`** — reports the original row under the pointer, anywhere in the row, and `null` when the pointer leaves the body. It passes BaseTable's `onRowHover` through.
+- **`StatusCard` `children`** — a drawing in the detail area, under the description and above `actions`, at full card width. Before, `children` rendered at the very end of the card, after the meta row. No caller passed any.
+- **`GapBracket` `tickAlign`** (`"inward"` default | `"center"`). `"center"` centres each end tick on the stem, so the bracket draws a min–max whisker with caps.
+- **`SuccessTag`** — a 10px bold uppercase tag in the success tone, for "Recommended" beside an answer.
+
+### Fixed
+
+- **Chart `<title>` tooltips no longer become the page title.** `Chart`'s `title`, and `PointSeries`, `SlotTrack` and `TickSeries` `title`, drew an HTML `<title>`, because Solid compiles a `<title>` behind a `Show` as an HTML element. Chrome then showed a mark's tooltip as the tab title. Each `<title>` is now in its mark's own template, so it is an SVG `<title>`, with empty text when there is no title.
+- **A collapsible `FillChartFrame` slides its chart like the stated-height `ChartFrame`.** In a parent that eases between a px height and `auto`, the chart vanished at once and the empty frame rolled up. A fill frame is now as tall as its content while it moves, and fills its parent again when the open ends. `HeightReveal` records the open height while it is open, so the close holds the chart even when the layout already shrank.
+
+## 0.223.0 — 2026-10-16
+
+### Added
+
+- **`StandardThreePanel`**, **`ListDetailThreePanel`**, **`InspectorThreePanel`**, **`SplitThreePanel`** — named curried variants of `ThreePanelLayout` with aside widths baked from the new `THREE_PANEL_ASIDE_WIDTH` tokens and full height. A size change to a variant is a new named variant or a global change to it, never a call-site prop.
 
 ### Deprecated
 
