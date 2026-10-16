@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // orthogonalAvoidingObstacles — 281 lines shipped to three Primitives
 // (DagChart, SwimlaneChart via geometry/edge-views, AnimatedSwimlaneChart)

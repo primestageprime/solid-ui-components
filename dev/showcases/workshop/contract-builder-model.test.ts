@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { every, flatMap, map, pipe } from "../../../src/fn";
 import { CONFIG, TYPES } from "./contract-builder.fixtures";

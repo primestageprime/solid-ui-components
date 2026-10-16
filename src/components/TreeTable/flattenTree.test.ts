@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * TreeTable flatten. The table only ever sees the flat rows this returns, so
  * the visible order, the depth that drives the indent, and which rows carry a

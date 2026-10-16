@@ -1,3 +1,4 @@
+// @vitest-environment node
 // Guards the bundle-budget decision layer. These never build anything — see
 // the header of bundle-budget-rules.mjs for why that separation is deliberate.
 import { describe, it, expect } from "vitest";

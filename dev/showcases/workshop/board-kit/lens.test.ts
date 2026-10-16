@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Board Kit — the lens, asserted on its own.
  *

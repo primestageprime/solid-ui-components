@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * DirtyComboBox — the model's claims, asserted without a browser.
  *

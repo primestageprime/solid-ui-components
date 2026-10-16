@@ -1,3 +1,4 @@
+// @vitest-environment node
 // Headless observation of the strip rules: pure functions, printed as tables.
 import { describe, expect, it } from "vitest";
 import {

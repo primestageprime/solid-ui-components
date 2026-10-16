@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { createRoot } from "solid-js";
 import { describe, expect, it } from "vitest";
 import { createScrubChartEmphasis } from "./createScrubChartEmphasis";

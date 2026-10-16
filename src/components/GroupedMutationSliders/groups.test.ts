@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // GroupedMutationSliders — the pure part, asserted without a browser.
 //

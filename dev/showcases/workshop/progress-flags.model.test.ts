@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * progress-flags: the step-timeline model, observed headlessly. Each topic
  * prints both lines, the verdict per interval and the flags, so the picture

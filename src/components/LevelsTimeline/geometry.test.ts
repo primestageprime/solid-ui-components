@@ -1,3 +1,4 @@
+// @vitest-environment node
 // ============================================
 // LevelsTimeline geometry — the headless observation.
 //
