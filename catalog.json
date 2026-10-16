@@ -3153,7 +3153,7 @@
     "showcase": null,
     "since": "v0.18.0",
     "file": "src/components/Badge/CountChip.tsx",
-    "line": 27
+    "line": 32
   },
   {
     "name": "CountInput100",
@@ -5555,7 +5555,7 @@
     "showcase": "#/stamped-row",
     "since": null,
     "file": "src/components/StampedRow/StampedRow.tsx",
-    "line": 89
+    "line": 91
   },
   {
     "name": "createStatusBadge",
@@ -13154,7 +13154,7 @@
     "showcase": "#/popover-menu",
     "since": "v0.19.0",
     "file": "src/components/PopoverMenu/PopoverMenu.tsx",
-    "line": 94
+    "line": 100
   },
   {
     "name": "PopoverSurface",
@@ -13840,9 +13840,9 @@
     "useFor": "header action menus, account dropdowns (email header + Logout).",
     "notes": "Right-aligned, small trigger — common header use case.",
     "showcase": "#/popover-menu",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/PopoverMenu/PopoverMenu.tsx",
-    "line": 279
+    "line": 286
   },
   {
     "name": "RingChart",
@@ -17872,7 +17872,7 @@
     "showcase": "#/user-menu",
     "since": "Unreleased",
     "file": "src/components/UserMenu/UserMenu.tsx",
-    "line": 84
+    "line": 91
   },
   {
     "name": "Val",
