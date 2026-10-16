@@ -60,6 +60,14 @@ describe("ThreePanelLayout stacked gutter (≤900px)", () => {
     expect(center[1]).toBe(16);
   });
 
+  it("keeps a flush right panel flush when stacked", () => {
+    expect(padding(stacked, ".sui-three-panel__right--flush")).toEqual([0, 0, 0, 0]);
+    // and the flush rule comes after the stacked right rule, so it wins at equal specificity
+    expect(stacked.lastIndexOf(".sui-three-panel__right--flush")).toBeGreaterThan(
+      stacked.lastIndexOf(".sui-three-panel__right {"),
+    );
+  });
+
   it("leaves the side-by-side padding alone", () => {
     expect(padding(css.slice(0, css.indexOf("@media")), ".sui-three-panel__left")).toEqual([8, 8, 8, 8]);
     expect(center).toEqual([16, 16, 16, 16]);

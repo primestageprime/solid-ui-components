@@ -129,4 +129,10 @@
   .sui-three-panel__right {
     padding: 0 16px 16px;
   }
+
+  /* A flush right panel stays flush stacked: this rule comes after the one
+     above at the same specificity, so it wins. */
+  .sui-three-panel__right--flush {
+    padding: 0;
+  }
 }
