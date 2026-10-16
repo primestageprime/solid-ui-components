@@ -48,6 +48,7 @@ import { buildExportSurface } from "./export-surface.mjs";
 import { buildCatalog } from "./catalog.mjs";
 import { length, mapValues } from "./fn.mjs";
 import { classify, planBaselineUpdate } from "./health-ratchet.mjs";
+import { findBareAccessors } from "./bare-accessor.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -233,6 +234,36 @@ const catalogRecords = buildCatalog({
 const catalogSummaryGaps = catalogRecords
   .filter((r) => r.summary === null)
   .map((r) => `${r.name} (${r.kind}) ${r.file}:${r.line}`);
+
+// Bare-accessor table columns (Peter ruling 2026-10-16): every TableColumn
+// goes through a value renderer — a column helper (dateTimeCol, intCol, …) or
+// an explicit `accessor: (row) => <Cell …/>` — never `accessor: "key"`, which
+// paints the raw value with no formatting, no width, and (for a date) a line
+// break the moment the column is squeezed. Mechanical definition: an
+// `accessor:` property whose value is a string literal (optionally `as const`),
+// in any .ts/.tsx under dev/ or src/ (tests and .d.ts excluded, comments
+// stripped) and in catalog.json's recorded snippets. Baselined at 0 after the
+// 2026-10-16 showcase conversion (57 sites in 10 files, plus CensusView).
+hits.bareAccessorColumns = [];
+for (const f of [
+  ...walk(
+    join(root, "src"),
+    (p) => /\.tsx?$/.test(p) && !p.includes(".test.") && !p.endsWith(".d.ts"),
+  ),
+  ...walk(
+    join(root, "dev"),
+    (p) => /\.tsx?$/.test(p) && !p.includes(".test.") && !p.endsWith(".d.ts"),
+  ),
+]) {
+  const rel = f.replace(root + "/", "");
+  for (const line of findBareAccessors(stripComments(readFileSync(f, "utf8"))))
+    hits.bareAccessorColumns.push(`${rel}:${line}`);
+}
+if (existsSync(join(root, "catalog.json")))
+  for (const line of findBareAccessors(
+    readFileSync(join(root, "catalog.json"), "utf8"),
+  ))
+    hits.bareAccessorColumns.push(`catalog.json:${line}`);
 
 const missingDepth = [];
 for (const f of walk(

@@ -4,6 +4,7 @@ import { type Component, For, Show, createSignal } from "solid-js";
 import { QuickFilter } from "../QuickFilter";
 import { BaseTable } from "../Table/BaseTable";
 import type { TableColumn } from "../Table/types";
+import { textCol } from "../Table/columnHelpers";
 import { GapCell } from "../Table/GapCell";
 import { InfoPanel } from "../Panel/variants";
 import { StatusBadge } from "../Badge/StatusBadge";
@@ -121,7 +122,12 @@ function buildColumns(): TableColumn<CensusTable>[] {
 /** Group a list of tables into ordered, non-empty buckets. */
 function groupIntoBuckets(
   list: readonly CensusTable[],
-): { id: CensusBucketId; label: string; hint: string; tables: CensusTable[] }[] {
+): {
+  id: CensusBucketId;
+  label: string;
+  hint: string;
+  tables: CensusTable[];
+}[] {
   const by = groupBy(bucketOf, list);
   return pipe(
     CENSUS_BUCKETS,
@@ -132,8 +138,8 @@ function groupIntoBuckets(
 
 /** Columns for the schema sub-table inside the detail panel. */
 const schemaColumns: TableColumn<CensusColumn>[] = [
-  { id: "name", header: "Name", accessor: "name" },
-  { id: "type", header: "Type", accessor: "type" },
+  textCol("name", "Name"),
+  textCol("type", "Type"),
 ];
 
 /** Detail panel content for the selected table. */
@@ -175,15 +181,26 @@ const DetailContent: Component<{
 
       {/* Status badge */}
       <div>
-        <StatusBadge variant={normStatusVariant(t().status)} label={t().status} />
+        <StatusBadge
+          variant={normStatusVariant(t().status)}
+          label={t().status}
+        />
         <Show when={t().keyLabel}>
           {" "}
-          <StatusBadge variant="info" label={t().keyLabel!} title={t().keyTitle ?? undefined} />
+          <StatusBadge
+            variant="info"
+            label={t().keyLabel!}
+            title={t().keyTitle ?? undefined}
+          />
         </Show>
       </div>
 
       {/* Error reason */}
-      <Show when={(t().status === "error" || t().status === "noaccess") && t().error}>
+      <Show
+        when={
+          (t().status === "error" || t().status === "noaccess") && t().error
+        }
+      >
         <DangerBody>{t().error}</DangerBody>
       </Show>
 
@@ -212,11 +229,7 @@ const DetailContent: Component<{
       <Show when={cols().length > 0}>
         <TightStack>
           <MonoMeta>SCHEMA ({cols().length})</MonoMeta>
-          <BaseTable
-            data={cols()}
-            compact
-            columns={schemaColumns}
-          />
+          <BaseTable data={cols()} compact columns={schemaColumns} />
         </TightStack>
       </Show>
 
@@ -234,8 +247,7 @@ export const CensusView: Component<CensusViewProps> = (props) => {
     setLocalSel(t?.key ?? null);
     props.onSelect?.(t);
   };
-  const selected = () =>
-    find((t) => t.key === selKey(), props.tables) ?? null;
+  const selected = () => find((t) => t.key === selKey(), props.tables) ?? null;
 
   return (
     <TopClusterRow class="sui-census-view">
@@ -247,7 +259,9 @@ export const CensusView: Component<CensusViewProps> = (props) => {
         {(filtered) => (
           <div
             class="sui-census-view__buckets"
-            classList={{ "sui-census-view__buckets--grid": !!props.bucketMinWidth }}
+            classList={{
+              "sui-census-view__buckets--grid": !!props.bucketMinWidth,
+            }}
             style={
               props.bucketMinWidth
                 ? { "--sui-census-bucket-min": props.bucketMinWidth }

@@ -2,7 +2,10 @@
    dateCells.tsx so each travels with its own styling into any host — table
    cell, <dd>, card slot. */
 
-/* Date Cell */
+/* Date Cell. Every date renderer is nowrap (ruled 2026-10-16: a date never
+   wraps onto two lines — its column is sized to the rendered length of the
+   data by the column helpers, so a wrap is a sizing bug). The split
+   DateTime variant stacks date over time on purpose; each line is nowrap. */
 .sui-value-date {
   font-family: "JetBrains Mono", "Fira Code", monospace;
   font-size: 12px;

@@ -1,6 +1,7 @@
 import { type Component, JSX } from "solid-js";
 import { StatsTable, type StatsColumn } from "../../src/components/DataDisplay";
 import { NumberWithUnits } from "../../src/components/DataDisplay";
+import { IntCell, StringCell } from "../../src/components/Table";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
@@ -29,8 +30,12 @@ interface EngineRow {
 }
 
 const periodColumns: StatsColumn<PeriodRow>[] = [
-  { header: "Period", accessor: "period" },
-  { header: "Data Points", accessor: "count", align: "right" },
+  { header: "Period", accessor: (r) => <StringCell value={r.period} /> },
+  {
+    header: "Data Points",
+    accessor: (r) => <IntCell value={r.count} />,
+    align: "right",
+  },
   {
     header: "Avg NOx",
     accessor: (r) => (
@@ -87,9 +92,17 @@ const periodRows: PeriodRow[] = [
 ];
 
 const statusColumns: StatsColumn<StatusRow>[] = [
-  { header: "Status", accessor: "status" },
-  { header: "Count", accessor: "count", align: "right" },
-  { header: "Rate", accessor: "rate", align: "right" },
+  { header: "Status", accessor: (r) => <StringCell value={r.status} /> },
+  {
+    header: "Count",
+    accessor: (r) => <IntCell value={r.count} />,
+    align: "right",
+  },
+  {
+    header: "Rate",
+    accessor: (r) => <StringCell value={r.rate} />,
+    align: "right",
+  },
 ];
 
 const statusRows: StatusRow[] = [
@@ -99,7 +112,7 @@ const statusRows: StatusRow[] = [
 ];
 
 const engineColumns: StatsColumn<EngineRow>[] = [
-  { header: "Engine", accessor: "engine" },
+  { header: "Engine", accessor: (r) => <StringCell value={r.engine} /> },
   {
     header: "Power",
     accessor: (r) => <NumberWithUnits value={r.power} units="kW" />,

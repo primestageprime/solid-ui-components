@@ -669,6 +669,19 @@ bundle is ruined anyway. That is what this script is for.
 - **A new component needs a showcase.** `componentsWithoutShowcase` is ratcheted
   at **0**, so shipping one without `dev/showcases/<name>.tsx` fails `health`.
   Same for `missingDepthHeaders`.
+- **A table column always goes through a value renderer.** `bareAccessorColumns`
+  (`scripts/bare-accessor.mjs`) is ratcheted at **0**: an `accessor: "key"`
+  string literal anywhere under `src/` or `dev/` (tests excluded) or in
+  `catalog.json` fails `health`. Use a column helper — `textCol`, `intCol`,
+  `floatCol`, `dateCol`, `dateTimeCol`, `statusCol` from
+  `src/components/Table/columnHelpers.tsx`, passing the rows as `data` so the
+  width is sized to the longest rendered value — or an explicit
+  `accessor: (row) => <Cell …/>`. Peter, 2026-10-16, on the FTIR/SCR demo whose
+  Hour column wrapped "2026-01-15 08:00" onto two lines: "always always using
+  value renderers in tables. Dates should never wrap … fixed width scaled to the
+  size of the data." `BaseTable` also warns once per column in dev mode when a
+  bare keyed accessor paints an ISO date/time (`bareAccessorWarning.ts`), which
+  is what catches a consumer's table outside this walk.
 - **A new export needs to be named in COMPONENTS.md.** `undocumentedExports`
   (`scripts/doc-coverage.mjs`) counts exported components and factories whose
   name appears **nowhere** in the manifest. Ratcheted at a live ceiling (read

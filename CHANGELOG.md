@@ -38,9 +38,15 @@
 
 - **`ThreeSlotRow`** — a Composite (Depth 2): start, centre and end slots on one line, as the grid tracks `auto minmax(0, 1fr) auto`. The centre is centred in the space the other two leave, and its track can shrink to 0 so an `OverflowNav` in it can fold. `createThreeSlotRow({ startWidth })` fixes the start track (`"160px"` for a logo box). Also exported: `threeSlotColumns`. Exported types: `ThreeSlotRowProps`, `ThreeSlotRowDataProps`, `ThreeSlotRowOverrides`.
 
+- **Column helpers size to the data.** `dateTimeCol`, `dateCol`, `intCol`, `floatCol`, `textCol` and the new `statusCol` take `data` (the rows) or `values` and set the column width to the longest *rendered* value in `ch`, floored at the header, plus cell padding. `dateTimeCol` takes `precision: "minute"` (`YYYY-MM-DD HH:mm`) and both date helpers size from their pattern with no sample, so a date never wraps. Every helper now sets `sortValue` to the raw field (a `sortable` helper column used to sort its JSX) and passes `group`, `ellipsis`, `contained` and `align` through. `columnCh` / `widthForValues` export the sizing rule. Pure formatters `formatDateValue`, `formatIntValue`, `formatFloatValue` and the pattern constants are exported from the cell modules.
+- **Health metric `bareAccessorColumns`** fails on a `TableColumn` literal with a string `accessor` and no renderer under `dev/` or `src/`; `BaseTable` warns once per column in dev mode when a bare-accessor cell paints an ISO date/time.
+
 ### Changed
 
 - **`ThreePanelLayout` stacks with one 16px gutter.** At 900px and below the side panels stack above and below the centre. Their 8px padding and the centre's 16px used to add up to a 24px band (25px measured) with the aside text 8px in from the edge while the centre's sat 16px in. The stacked asides now take the centre's 16px sides, and the left aside gives up its bottom padding and the right its top, so the centre's own 16px is the whole gutter on both sides. CSS only, no API change. Side by side is unchanged.
+
+- **Int and float cells are `white-space: nowrap`**, like the date cells. A number never breaks onto two lines.
+- **Every gallery table uses a column helper or an explicit renderer** — 57 bare-accessor columns across 10 showcases converted; the FTIR/SCR grouped-header demo's Hour column is a minute-precision `dateTimeCol` sized to its data.
 
 ### Deprecated
 

@@ -7,12 +7,34 @@ import {
   DataTable,
 } from "../../src/components/Table";
 import type { TableColumn } from "../../src/components/Table";
-import { dateTimeCol } from "../../src/components/Table";
+import {
+  dateTimeCol,
+  floatCol,
+  intCol,
+  statusCol,
+  textCol,
+} from "../../src/components/Table";
 import { IconOnlyButton, TextButton } from "../../src/components/Button";
 import { Icon } from "../../src/components/Icon";
 import { NarrowStack, WrapRow } from "../../src/components/Layout";
 
-const sampleData = [
+interface Vessel {
+  id: number;
+  vessel: string;
+  imo: string;
+  status: string;
+  speed: number;
+}
+
+// Vessel status → badge variant (StatusCell's default map knows "active" only).
+const VESSEL_STATUS = {
+  active: { variant: "success" as const },
+  underway: { variant: "active" as const },
+  berthed: { variant: "inactive" as const },
+  anchored: { variant: "pending" as const },
+};
+
+const sampleData: Vessel[] = [
   {
     id: 1,
     vessel: "MV Northern Star",
@@ -135,27 +157,17 @@ const sampleData = [
   },
 ];
 
-const columns = [
-  {
-    id: "vessel",
-    header: "Vessel",
-    accessor: "vessel" as const,
+// Every column goes through a value renderer (canon, 2026-10-16): the text
+// column takes the remainder; IMO, status and speed are sized to the data.
+const columns: TableColumn<Vessel>[] = [
+  textCol("vessel", "Vessel", { sortable: true }),
+  textCol("imo", "IMO", { data: sampleData }),
+  statusCol("status", "Status", {
+    data: sampleData,
+    statusMap: VESSEL_STATUS,
     sortable: true,
-  },
-  { id: "imo", header: "IMO", accessor: "imo" as const, width: "100px" },
-  {
-    id: "status",
-    header: "Status",
-    accessor: "status" as const,
-    sortable: true,
-  },
-  {
-    id: "speed",
-    header: "Speed (kn)",
-    accessor: "speed" as const,
-    align: "right" as const,
-    sortable: true,
-  },
+  }),
+  floatCol("speed", "Speed (kn)", 1, { data: sampleData, sortable: true }),
 ];
 
 // Column groups demo data
@@ -191,38 +203,44 @@ const groupedData: SensorReading[] = [
   },
 ];
 
+// Sample coverage → badge variant.
+const COVERAGE_STATUS = {
+  full: { variant: "success" as const },
+  partial: { variant: "warning" as const },
+  missing: { variant: "error" as const },
+};
+
+// The Hour column is a minute-precision dateTimeCol sized to its data
+// ("2026-01-15 08:00" → 16ch + padding), so it can never wrap onto two lines
+// the way the bare `accessor: "hour"` it replaced did (Peter, 2026-10-16).
 const groupedColumns: TableColumn<SensorReading>[] = [
-  { id: "hour", header: "Hour", accessor: "hour", sortable: true },
-  {
-    id: "ftir_status",
-    header: "Status",
-    accessor: "ftir_status",
+  dateTimeCol("hour", "Hour", {
+    data: groupedData,
+    precision: "minute",
+    sortable: true,
+  }),
+  statusCol("ftir_status", "Status", {
+    data: groupedData,
+    statusMap: COVERAGE_STATUS,
     group: "FTIR",
     sortable: true,
-  },
-  {
-    id: "ftir_samples",
-    header: "Samples",
-    accessor: "ftir_samples",
+  }),
+  intCol("ftir_samples", "Samples", {
+    data: groupedData,
     group: "FTIR",
-    align: "right",
     sortable: true,
-  },
-  {
-    id: "scr_status",
-    header: "Status",
-    accessor: "scr_status",
+  }),
+  statusCol("scr_status", "Status", {
+    data: groupedData,
+    statusMap: COVERAGE_STATUS,
     group: "SCR",
     sortable: true,
-  },
-  {
-    id: "scr_samples",
-    header: "Samples",
-    accessor: "scr_samples",
+  }),
+  intCol("scr_samples", "Samples", {
+    data: groupedData,
     group: "SCR",
-    align: "right",
     sortable: true,
-  },
+  }),
 ];
 
 /** `highlighted` — the other half of an `onRowHover` cross-highlight. Hover a
@@ -255,16 +273,6 @@ const CrossHighlightExample: Component = () => {
     </>
   );
 };
-
-// One instant shown four ways by the dateTimeCol column helper.
-const INSTANT = "2026-10-15T14:05:30Z";
-const timeData = [{ id: 1, at: INSTANT }];
-const timeColumns: TableColumn<{ id: number; at: string }>[] = [
-  dateTimeCol("at", "UTC, seconds", { timeZone: "UTC" }),
-  dateTimeCol("at", "UTC, minute", { timeZone: "UTC", precision: "minute" }),
-  dateTimeCol("at", "New York, seconds", { timeZone: "America/New_York" }),
-  dateTimeCol("at", "New York, minute", { timeZone: "America/New_York", precision: "minute" }),
-];
 
 export const BaseTableShowcase: Component = () => {
   return (
@@ -343,23 +351,19 @@ export const BaseTableShowcase: Component = () => {
           <p class="text-meta">
             <code>fit</code> packs the table AND its bordered frame to the
             columns' natural width instead of stretching full-width — for a
-            table whose columns are all fixed/capped content (IDs, speed),
-            where a full-width stretch would spread them apart with dead gaps.
-            The frame's right edge should land right after{" "}
-            <strong>Speed</strong>, not at the panel's own edge.
+            table whose columns are all fixed/capped content (IDs, speed), where
+            a full-width stretch would spread them apart with dead gaps. The
+            frame's right edge should land right after <strong>Speed</strong>,
+            not at the panel's own edge.
           </p>
           <BaseTable
             data={sampleData.slice(0, 3)}
             columns={[
-              { id: "id", header: "ID", accessor: "id", width: "3rem" },
-              { id: "imo", header: "IMO", accessor: "imo", width: "6rem" },
-              {
-                id: "speed",
-                header: "Speed",
-                accessor: "speed",
-                align: "right",
-                width: "4rem",
-              },
+              intCol<Vessel>("id", "ID", { data: sampleData.slice(0, 3) }),
+              textCol<Vessel>("imo", "IMO", { data: sampleData.slice(0, 3) }),
+              floatCol<Vessel>("speed", "Speed", 1, {
+                data: sampleData.slice(0, 3),
+              }),
             ]}
             fit
           />
@@ -446,14 +450,6 @@ export const BaseTableShowcase: Component = () => {
           />
         </div>
       </div>
-
-      <h2 class="showcase-heading-gap--lg">dateTimeCol — zone and precision</h2>
-      <p class="text-meta">
-        The same instant, 14:05:30 UTC, in four columns: <code>timeZone</code>{" "}
-        shows it in an IANA zone, and <code>precision: "minute"</code> drops the
-        seconds. With neither it is the host zone, with seconds, as before.
-      </p>
-      <BaseTable data={timeData} columns={timeColumns} compact />
     </div>
   );
 };

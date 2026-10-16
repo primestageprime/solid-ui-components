@@ -14,6 +14,7 @@ import {
 import { TrendSparkline, trendOf } from "../../src/components/TrendSparkline";
 import { StripedTable } from "../../src/components/Table";
 import type { TableColumn } from "../../src/components/Table/types";
+import { textCol } from "../../src/components/Table/columnHelpers";
 import {
   CardGrid,
   ClusterRow,
@@ -110,8 +111,8 @@ const SOURCES: Source[] = [
 const AXIS = p95DomainOf(map(prop("values"), SOURCES));
 
 const columns: TableColumn<Source>[] = [
-  { id: "name", header: "Source", align: "left", width: "10rem", accessor: (r) => r.name },
-  { id: "total", header: "Migrated", align: "right", width: "8rem", accessor: (r) => r.total },
+  textCol("name", "Source", { data: SOURCES }),
+  textCol("total", "Migrated", { data: SOURCES, align: "right" }),
   {
     id: "throughput",
     header: "Rows / tick",
@@ -123,7 +124,7 @@ const columns: TableColumn<Source>[] = [
     ),
     sortValue: (r) => Math.max(...r.values),
   },
-  { id: "shape", header: "Reads as", align: "left", accessor: (r) => r.shape },
+  textCol("shape", "Reads as", { ellipsis: true }),
 ];
 
 const LADDER: Array<[string, string]> = [

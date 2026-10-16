@@ -1,7 +1,20 @@
 import type { Component } from "solid-js";
-import { FilterableTable as QuickFilter } from "../../src/components/Table";
+import {
+  FilterableTable as QuickFilter,
+  type TableColumn,
+  floatCol,
+  textCol,
+} from "../../src/components/Table";
 
-const sampleData = [
+interface Fluid {
+  id: number;
+  name: string;
+  category: string;
+  volume: number;
+  unit: string;
+}
+
+const sampleData: Fluid[] = [
   { id: 1, name: "Fuel Oil", category: "Fuel", volume: 1250.5, unit: "L" },
   { id: 2, name: "Diesel", category: "Fuel", volume: 840.2, unit: "L" },
   { id: 3, name: "Engine Oil", category: "Lubricant", volume: 45.0, unit: "L" },
@@ -22,22 +35,12 @@ const sampleData = [
   },
 ];
 
-const columns = [
-  { id: "name", header: "Name", accessor: "name" as const, sortable: true },
-  {
-    id: "category",
-    header: "Category",
-    accessor: "category" as const,
-    sortable: true,
-  },
-  {
-    id: "volume",
-    header: "Volume",
-    accessor: "volume" as const,
-    align: "right" as const,
-    sortable: true,
-  },
-  { id: "unit", header: "Unit", accessor: "unit" as const, width: "60px" },
+// Renderers throughout (canon 2026-10-16); Volume and Unit size to the data.
+const columns: TableColumn<Fluid>[] = [
+  textCol("name", "Name", { sortable: true }),
+  textCol("category", "Category", { sortable: true }),
+  floatCol("volume", "Volume", 1, { data: sampleData, sortable: true }),
+  textCol("unit", "Unit", { data: sampleData }),
 ];
 
 export const QuickFilterShowcase: Component = () => {

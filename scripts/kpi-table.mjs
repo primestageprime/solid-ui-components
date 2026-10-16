@@ -19,6 +19,9 @@ const HISTORY_PATH = join(root, "scripts", "health-history.json");
 
 // Higher = more regression-prone; breaks ties among the zeros.
 const ZERO_PRIORITY = {
+  // Every new hand-assembled table starts as `accessor: "key"` — the likeliest
+  // zero to regress (ruled 2026-10-16).
+  bareAccessorColumns: 7,
   cssTypedProps: 6,
   bareHexTsx: 5,
   bareHexCss: 4,
