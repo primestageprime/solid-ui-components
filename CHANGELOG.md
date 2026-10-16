@@ -22,6 +22,10 @@
 
 - **`dateTimeCol` passes `timeZone` through and takes `precision`.** The column helper swallowed the `timeZone` that `DateTimeCell` already supports. It now forwards it, and a new `precision: "minute"` drops the seconds. `dateTimeColWith` can bake both. With neither option the output is unchanged.
 
+### Changed
+
+- **`ThreePanelLayout` stacks with one 16px gutter.** At 900px and below the side panels stack above and below the centre. Their 8px padding and the centre's 16px used to add up to a 24px band (25px measured) with the aside text 8px in from the edge while the centre's sat 16px in. The stacked asides now take the centre's 16px sides, and the left aside gives up its bottom padding and the right its top, so the centre's own 16px is the whole gutter on both sides. CSS only, no API change. Side by side is unchanged.
+
 ## 0.218.0 — 2026-10-13
 
 ### Added

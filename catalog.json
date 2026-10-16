@@ -16579,7 +16579,7 @@
     "summarySource": "components-md",
     "preferFirst": null,
     "notToBeConfusedWith": null,
-    "useFor": "multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies.",
+    "useFor": "multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies. Stacked (≤900px) the panels sit under one 16px gutter: the asides take the centre's 16px sides and drop the padding edge that faces the centre.",
     "notes": null,
     "showcase": "#/three-panel-layout",
     "since": "v0.11.0",
