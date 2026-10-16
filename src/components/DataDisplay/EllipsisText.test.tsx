@@ -12,7 +12,11 @@
 // observer fires.
 import { render } from "@solidjs/testing-library";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { type FakeSizer, installFakeSizer } from "../../test-utils/fakeSizer";
+import {
+  type FakeSizer,
+  installFakeSizer,
+  installFastFrames,
+} from "../../test-utils/fakeSizer";
 import { EllipsisText } from "./EllipsisText";
 
 const NATURAL = 290;
@@ -41,12 +45,16 @@ const modelFlexRow = () => {
   );
 };
 
+let slowFrames: () => void;
 beforeEach(() => {
+  // Twenty awaited resizes below; nothing here animates on rAF.
+  slowFrames = installFastFrames();
   sizer = installFakeSizer();
   modelFlexRow();
 });
 afterEach(() => {
   sizer.restore();
+  slowFrames();
   for (const undo of restore.splice(0)) undo();
 });
 

@@ -13,6 +13,7 @@
 export { domStructure, type DomStructureOptions } from "./domStructure";
 export {
   installFakeSizer,
+  installFastFrames,
   type FakeSizer,
   type SizeObservation,
 } from "./fakeSizer";
