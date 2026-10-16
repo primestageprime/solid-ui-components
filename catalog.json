@@ -5471,6 +5471,25 @@
     "line": 86
   },
   {
+    "name": "createStepTimeline",
+    "depth": 3,
+    "kind": "factory",
+    "family": "StepTimeline",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "StepTimelineDataProps",
+    "summary": "Composite (Depth 3), `src/components/StepTimeline/`. Factory behind `StepTimeline`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/step-timeline",
+    "since": "Unreleased",
+    "file": "src/components/StepTimeline/StepTimeline.tsx",
+    "line": 73
+  },
+  {
     "name": "createSurface",
     "depth": 0,
     "kind": "factory",
@@ -15566,6 +15585,28 @@
     "since": "0.172.0",
     "file": "src/components/Text/variants.ts",
     "line": 181
+  },
+  {
+    "name": "StepTimeline",
+    "depth": 3,
+    "kind": "variant",
+    "family": "StepTimeline",
+    "variantOf": {
+      "factory": "createStepTimeline",
+      "overrides": "{\n  height: STEP_TIMELINE_HEIGHT,\n}"
+    },
+    "overrides": null,
+    "dataProps": "StepTimelineDataProps",
+    "summary": "Composite (Depth 3), `src/components/StepTimeline/`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a task's or run's progress over one day with its start and completion events (the Taskmaster canon's step timeline). For a count over months, use `LevelsTimeline` or `StackedTimelineChart` directly.",
+    "notes": "A 200px collapsible step timeline: the Taskmaster canon's task timeline.",
+    "showcase": "#/step-timeline",
+    "since": "Unreleased",
+    "file": "src/components/StepTimeline/variants.ts",
+    "line": 11
   },
   {
     "name": "StickyGroupHeader",

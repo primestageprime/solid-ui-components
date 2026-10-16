@@ -205,6 +205,7 @@ import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
+import { StepTimelineShowcase } from "./showcases/step-timeline";
 import { AppBarShowcase } from "./showcases/app-bar";
 import { UserMenuShowcase } from "./showcases/user-menu";
 import { ThreeSlotRowShowcase } from "./showcases/three-slot-row";
@@ -1305,6 +1306,12 @@ const items: Item[] = [
     id: "app-bar",
     label: "AppBar",
     component: AppBarShowcase,
+    tags: ["depth:3"],
+  },
+  {
+    id: "step-timeline",
+    label: "StepTimeline",
+    component: StepTimelineShowcase,
     tags: ["depth:3"],
   },
   // Generated component entries (npm run new:component) — appended above this line.

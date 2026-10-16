@@ -2816,3 +2816,8 @@ th:has(.tf-th-center) .hud-table__header-content {
 .app-bar-demo--phone {
   max-width: 390px;
 }
+
+/* StepTimeline showcase demo frame — a column as wide as the canon's centre pane. */
+.step-timeline-demo {
+  max-width: 760px;
+}

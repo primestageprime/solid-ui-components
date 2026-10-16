@@ -4,6 +4,8 @@
 
 ### Added
 
+- **`StepTimeline`** — a Composite (Depth 3): a cumulative count over a day as one band that steps up at each completion, with a numbered flag and rule per event. It is a collapsible `ChartFrame` around a `StackedTimelineChart` with a linear crossing, UTC hour ticks and whole-count y labels; the flags are LevelsTimeline's, through `MutationFlags`. Selection and collapse are controlled. `createStepTimeline({ height })` bakes another height; the `StepTimeline` variant is 200px. Also exported: `hourTicks`, `stepYDomain`, `STEP_TIMELINE_HEIGHT`. Exported types: `StepTimelineProps`, `StepTimelineDataProps`, `StepTimelineOverrides`, `StepTimelinePoint`, `StepTimelineMarker`.
+
 - **`AppBar`** — a Composite (Depth 3): the page-top bar in header layout A. A 160px logo box, the nav centred in the remaining space and folding into a kebab when it runs out, then the status and a `UserMenu`. Below 480px the status moves into the user menu's header. Navigation is controlled (`nav.activeId`, `nav.onSelect`). Also exported: `appBarNavItems`, `APP_BAR_LOGO_WIDTH`, `APP_BAR_FOLD_QUERY`. Exported types: `AppBarProps`, `AppBarNav`, `AppBarNavItem`.
 
 - **`OverflowNav` `justify`** — an Override, `"center"` or unset. It centres the items inside the nav's own box, which still fills its container, so a centred nav can still fold. Curried as **`CenteredOverflowNav`**. Unset, nothing changes.
