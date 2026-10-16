@@ -10,6 +10,16 @@ Branch `feat/theme-density` off `origin/main` (SUI 0.222.0). Author: Veronica.
 Evidence: `shots/`, `metrics-before.json`, `metrics-after.json`, `dense-overlay.css`
 (throwaway, injected by `shoot.mjs`, never imported by `src/`).
 
+## Decisions 2026-10-16 (Peter, relayed by team-lead)
+
+- **Q1 answered:** dense values go in `default.css` and `hud.css` only. The `CountChip`
+  header applies in **all** themes (it is a component change, so bronze, stax and
+  colorblind get the chip but keep their current spacing).
+- **Q2 answered:** deprecate `CompactBucketQueue` and the `BucketQueue` `density` prop.
+  Both keep working through phase 2 and are deleted in phase 3. The Table, List and
+  Section `compact` props follow the same path.
+- **Next:** a fresh agent takes phase 1 (§5) from this file. No `src/` change has been made.
+
 ## 0. Headlines
 
 1. **There are no density tokens today.** `themes/README.md` says spacing is
