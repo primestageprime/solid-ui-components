@@ -16,6 +16,8 @@
 
 - **`FillTextArea`** — a Depth 1 atomic: a themed textarea that takes all the height its flex-column parent has left, with no drag handle. The fill-the-parent sibling of `ThemedTextarea`, which is unchanged.
 
+- **`CollapsiblePanel` can be controlled.** New optional `open` and `onToggle` props: pass `open` and the caller owns the state, so a hotkey can fold the panel. `onToggle(nextOpen)` reports every press, controlled or not. With neither prop it behaves as before.
+
 ## 0.218.0 — 2026-10-13
 
 ### Added
