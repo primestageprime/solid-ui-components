@@ -33,8 +33,14 @@ What it does not match, all visual and all `BucketQueue`'s owner's call:
 - the header count is a plain number, not a `CountChip`;
 - the selected row's bar is 2px, not 4px;
 - the header is not the canon's 28px;
-- collapse is component-owned by design, and a count comes from the items it holds (History must load
-  all 2,594 tasks to show 2,594).
+- collapse is component-owned by design (`collapsedByDefault` sets only the start state).
+
+**The one gap that is not visual: a count with no items loaded.** The canon shows History at 2,594
+while collapsed. `BucketQueue` derives each bucket's count from the items it is handed, and an empty
+bucket shows 0. So the touchstone must either load all 2,594 History tasks into `items`, or
+`BucketQueue` needs a new per-bucket `count` override. That override is a prop on a Primitive, so it
+is gated and belongs to the owner. Option (a), the new GroupedCardList, would carry a `count` of its
+own.
 
 ## Deviations from the canon, left for Peter
 
