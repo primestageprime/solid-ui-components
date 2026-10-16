@@ -902,7 +902,7 @@
     "showcase": "#/base-table",
     "since": "v0.16.0",
     "file": "src/components/Table/BaseTable.tsx",
-    "line": 99
+    "line": 100
   },
   {
     "name": "BatchBar",
@@ -1519,7 +1519,7 @@
     "showcase": "#/census-view",
     "since": "0.101.0",
     "file": "src/components/CensusView/CensusView.tsx",
-    "line": 229
+    "line": 242
   },
   {
     "name": "CenteredColumn",
@@ -2339,7 +2339,7 @@
     "useFor": null,
     "notes": "Plain flex column, no baked gap — a bare vertical stack whose children space themselves (own margins) or sit flush. For a wrapper that just needs a flex column context (e.g. a caption above a scroll region) without imposing a gap.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Layout/variants.ts",
     "line": 31
   },
@@ -3321,7 +3321,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/BaseTable.tsx",
-    "line": 458
+    "line": 467
   },
   {
     "name": "createBatchBar",
@@ -6600,7 +6600,7 @@
     "showcase": null,
     "since": "0.127.0",
     "file": "src/components/Table/dateCells.tsx",
-    "line": 125
+    "line": 154
   },
   {
     "name": "DateDivider",
@@ -6681,7 +6681,7 @@
     "showcase": null,
     "since": "v0.14.0",
     "file": "src/components/Table/dateCells.tsx",
-    "line": 203
+    "line": 232
   },
   {
     "name": "DateTimeRange",
@@ -6755,7 +6755,7 @@
     "useFor": "right-side values in key-value rows.",
     "notes": null,
     "showcase": "#/data-list",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/DataList/DataList.tsx",
     "line": 127
   },
@@ -8397,7 +8397,7 @@
     "showcase": null,
     "since": "0.110.0",
     "file": "src/components/Table/numericCells.tsx",
-    "line": 135
+    "line": 149
   },
   {
     "name": "FlowDiffPair",
@@ -10225,7 +10225,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/numericCells.tsx",
-    "line": 164
+    "line": 183
   },
   {
     "name": "InteractiveCard",
@@ -11279,7 +11279,7 @@
     "showcase": null,
     "since": "0.105.0",
     "file": "src/components/Table/numericCells.tsx",
-    "line": 198
+    "line": 211
   },
   {
     "name": "MinuteDateTimeCell",
@@ -11298,7 +11298,7 @@
     "showcase": null,
     "since": "0.157.0",
     "file": "src/components/Table/dateCells.tsx",
-    "line": 329
+    "line": 358
   },
   {
     "name": "Modal",
