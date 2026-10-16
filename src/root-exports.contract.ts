@@ -23,7 +23,8 @@
 // here. Anything that must NOT leak to the root belongs under `// private`.
 //
 // (No runtime: nothing imports this module. The `_`-prefixed bindings exist
-// only to give the `satisfies` clauses an expression to sit on.)
+// only to give the `satisfies` clauses an expression to sit on. The imports
+// make it a module, so no `export {}` is needed.)
 import * as sui from "./index";
 import * as unstable from "./unstable";
 import type {
@@ -217,5 +218,3 @@ type _Private10 = Root["resolveAxis"];
 type _Private11 = Root["PAIR_SLOT"];
 // @ts-expect-error -- private
 type _Private12 = Root["PairedDial"];
-
-export {};
