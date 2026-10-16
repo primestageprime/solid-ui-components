@@ -173,9 +173,9 @@ export const BucketQueueShowcase: Component = () => {
         dominate the queue but has to be openable, because the point of staging
         a discard is being able to look at what you staged and pull it back out
         before committing. The header becomes the toggle, and its disclosure
-        chevron <strong>replaces</strong> the tone dot in the dot&rsquo;s own 8px
-        slot: labels stay on one left edge, and the bucket still carries exactly
-        one role-coloured mark.
+        chevron <strong>follows</strong> the label &mdash; nothing leads a
+        label, so rows always read as indented under it &mdash; and the
+        bucket&rsquo;s one role-coloured mark stays the tinted count chip.
       </p>
       <p class="text-meta">
         <strong>Discard a few, and watch the Suggestions gap close.</strong> The

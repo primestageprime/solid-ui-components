@@ -244,13 +244,12 @@ export function GroupedBucketQueue<T>(
                 when={h().toggleable}
                 fallback={
                   <div class="bucket-queue__header grouped-bucket-queue__header">
-                    <span class="bucket-queue__title">
-                      <span
-                        class={`bucket-queue__dot bucket-queue__dot--${h().tone ?? "muted"}`}
-                      />
-                      {h().label}
-                    </span>
-                    <CountChip class="bucket-queue__count" count={h().count} label="" />
+                    <span class="bucket-queue__title">{h().label}</span>
+                    <CountChip
+                      class={`bucket-queue__count bucket-queue__count--${h().tone ?? "muted"}`}
+                      count={h().count}
+                      label=""
+                    />
                   </div>
                 }
               >
@@ -265,9 +264,12 @@ export function GroupedBucketQueue<T>(
                     )
                   }
                 >
+                  {/* Label first, chevron after it: no leading glyph may push
+                      the label right of its rows' text (BucketHeader.tsx). */}
                   <span class="bucket-queue__title">
+                    {h().label}
                     <span
-                      class={`bucket-queue__chevron bucket-queue__chevron--${h().tone ?? "muted"}`}
+                      class="bucket-queue__chevron"
                       classList={{
                         "bucket-queue__chevron--expanded": !h().collapsed,
                       }}
@@ -275,9 +277,12 @@ export function GroupedBucketQueue<T>(
                     >
                       <Chevron />
                     </span>
-                    {h().label}
                   </span>
-                  <CountChip class="bucket-queue__count" count={h().count} label="" />
+                  <CountChip
+                    class={`bucket-queue__count bucket-queue__count--${h().tone ?? "muted"}`}
+                    count={h().count}
+                    label=""
+                  />
                 </button>
               </Show>
               <Show when={h().isLeaf && !h().collapsed}>

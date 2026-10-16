@@ -1,6 +1,6 @@
 /* GroupedBucketQueue — nested headers over BucketQueue's row classes (see the
    import in GroupedBucketQueue.tsx: .bucket-queue__row, __header, __title,
-   __dot, __chevron*, __count, __checkbox*, __content, __body, __empty are all
+   __chevron*, __count*, __checkbox*, __content, __body, __empty are all
    reused as-is). This file owns only what BucketQueue.css has no rule for: a
    plain vertical list (not a water-filled bar) and per-depth indent. */
 .grouped-bucket-queue {
@@ -17,11 +17,14 @@
 /* Indent scales with nesting depth — Direction (0) sits flush, Category (1)
    and Type (2) step in by one unit each. A custom property (set inline per
    node from `FlatGroupHeader.depth`) rather than N depth classes, since the
-   tree's depth is not fixed at 3. */
+   tree's depth is not fixed at 3. The step is 8px (Peter, 2026-10-16: "it
+   could be half that and still be clear" — it was 16px). A group's rows and
+   empty strip sit one full step past the group's own label, which is what
+   BucketQueue.indent.test.ts holds at >= 2px for every depth. */
 /* The 12px base inset is the row's horizontal padding (BucketQueue.css), so a
    dense theme that moves `--sui-dense-row-pad-x` moves the indent with it. */
 .grouped-bucket-queue__header {
-  padding-left: calc(var(--sui-dense-row-pad-x, 12px) + var(--gbq-depth, 0) * 16px);
+  padding-left: calc(var(--sui-dense-row-pad-x, 12px) + var(--gbq-depth, 0) * 8px);
 }
 .grouped-bucket-queue__body {
   padding-left: calc(var(--gbq-depth, 0) * 0px);
@@ -30,9 +33,9 @@
   padding-left: calc(
     var(--sui-dense-row-pad-x, 12px) +
     (var(--gbq-depth, 0) + 1) *
-    16px
+    8px
   );
 }
 .grouped-bucket-queue__empty {
-  padding-left: calc(var(--sui-dense-row-pad-x, 12px) + var(--gbq-depth, 0) * 16px);
+  padding-left: calc(var(--sui-dense-row-pad-x, 12px) + (var(--gbq-depth, 0) + 1) * 8px);
 }

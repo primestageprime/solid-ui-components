@@ -230,3 +230,11 @@ body {
 .sui-dag__arrow {
   fill: var(--sui-text-secondary);
 }
+
+/* BucketQueue tone chip (BucketQueue.css): the lime accent is 1.7:1 against
+   the off-white panel, so an accent outline would vanish. Use the text-safe
+   darker lime, as every other accent-on-page element in this theme does.
+   Checked by BucketQueue.tone.test.ts (>= 3:1 non-text on every panel). */
+.bucket-queue__count--accent.sui-count-chip {
+  border-color: var(--sui-accent-dim);
+}

@@ -46,11 +46,17 @@ describe("BucketQueue — rendering & sizing", () => {
     expect(buckets[2].textContent).toContain("y");
   });
 
-  it("carries the bucket tone on the dot only (chrome stays neutral)", () => {
+  it("carries the bucket tone on the CountChip only (chrome stays neutral)", () => {
     const { container } = renderQueue([{ id: "1", bucket: "a" }]);
-    expect(container.querySelector(".bucket-queue__dot--success")).toBeTruthy();
-    expect(container.querySelector(".bucket-queue__dot--danger")).toBeTruthy();
-    expect(container.querySelector(".bucket-queue__dot--accent")).toBeTruthy();
+    expect(container.querySelector(".bucket-queue__count--success")).toBeTruthy();
+    expect(container.querySelector(".bucket-queue__count--danger")).toBeTruthy();
+    expect(container.querySelector(".bucket-queue__count--accent")).toBeTruthy();
+    // Nothing leads the label (Peter, 2026-10-16): no dot, so the label's
+    // left edge is the header's padding and its rows indent past it.
+    expect(container.querySelector(".bucket-queue__dot")).toBeNull();
+    for (const title of container.querySelectorAll(".bucket-queue__title")) {
+      expect(title.firstChild?.nodeType).toBe(Node.TEXT_NODE);
+    }
   });
 
   it("renders a bucket's emptyLabel when it has no items", () => {
@@ -195,14 +201,17 @@ describe("BucketQueue — rendering & sizing", () => {
       expect(container.querySelector(".bucket-queue__empty")).toBeNull();
     });
 
-    it("replaces the tone dot with a tone-coloured chevron", () => {
+    it("adds a neutral chevron AFTER the label; the tone stays on the chip", () => {
       const { container } = renderBuckets(COLLAPSIBLE, ITEMS);
       const discard = container.querySelectorAll(".bucket-queue__bucket")[1];
-      expect(discard.querySelector(".bucket-queue__dot")).toBeNull();
-      expect(discard.querySelector(".bucket-queue__chevron--muted")).toBeTruthy();
-      // The other bucket is untouched — still a dot.
+      const title = discard.querySelector(".bucket-queue__title")!;
+      expect(title.firstChild?.nodeType).toBe(Node.TEXT_NODE);
+      expect(title.lastElementChild?.classList.contains("bucket-queue__chevron")).toBe(true);
+      expect(discard.querySelector(".bucket-queue__count--muted")).toBeTruthy();
+      // The other bucket is untouched — no chevron, tone on its chip.
       const alpha = container.querySelectorAll(".bucket-queue__bucket")[0];
-      expect(alpha.querySelector(".bucket-queue__dot--success")).toBeTruthy();
+      expect(alpha.querySelector(".bucket-queue__chevron")).toBeNull();
+      expect(alpha.querySelector(".bucket-queue__count--success")).toBeTruthy();
     });
 
     it("expands on click, and re-collapses on a second click", () => {
@@ -223,7 +232,7 @@ describe("BucketQueue — rendering & sizing", () => {
       const { container } = renderBuckets(COLLAPSIBLE, [{ id: "keep", bucket: "a" }]);
       expect(toggleButton(container)).toBeNull();
       expect(container.querySelector(".bucket-queue__chevron")).toBeNull();
-      expect(container.querySelector(".bucket-queue__dot--muted")).toBeTruthy();
+      expect(container.querySelector(".bucket-queue__count--muted")).toBeTruthy();
       expect(container.querySelector(".bucket-queue__empty")?.textContent).toBe(
         "Nothing discarded",
       );

@@ -1,8 +1,8 @@
 /* BucketQueue — layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE §
    Layout Purity). N always-present buckets stacked as one full-height bar;
    each bucket's height is computed (weighted water-fill), never flex-stretched.
-   Chrome is thematically NEUTRAL — the only role color is a dot beside each
-   bucket label. */
+   Chrome is thematically NEUTRAL — the only role color is the tinted CountChip
+   at the right end of each bucket header (`.bucket-queue__count--<tone>`). */
 .bucket-queue {
   display: flex;
   flex-direction: column;
@@ -63,6 +63,30 @@
   flex: none;
   font-variant-numeric: tabular-nums;
 }
+/* ROLE COLOUR lives ONLY here (Peter, 2026-10-16: "color the box around the
+   numbers"). The box is outlined in the tone and washed with it at 8%; the
+   numerals keep the chip's own text colour, so legibility never depends on
+   the tone (the wash is too faint to move the text contrast — verified by
+   BucketQueue.tone.test.ts across every theme). The outline is checked
+   against the panel at >= 3:1 (non-text contrast) in the same test; a theme
+   whose tone cannot clear that overrides the colour in its own stylesheet
+   (stax: accent -> --sui-accent-dim). muted/default stay the neutral chip. */
+.bucket-queue__count--success.sui-count-chip {
+  border-color: var(--sui-success);
+  background: rgba(var(--sui-success-rgb), 0.08);
+}
+.bucket-queue__count--danger.sui-count-chip {
+  border-color: var(--sui-danger);
+  background: rgba(var(--sui-danger-rgb), 0.08);
+}
+.bucket-queue__count--warning.sui-count-chip {
+  border-color: var(--sui-warning);
+  background: rgba(var(--sui-warning-rgb), 0.08);
+}
+.bucket-queue__count--accent.sui-count-chip {
+  border-color: var(--sui-accent);
+  background: rgba(var(--sui-accent-rgb), 0.08);
+}
 /* Pin the pill to 19px (15px line + 1px padding + 1px border each side) so a
    dense header is exactly its 28px min-height: 19 + 2 * 4px row padding + the
    1px bottom border (the header is border-box). */
@@ -98,6 +122,11 @@
      ./motion.ts) is the border-box height it measured. */
   box-sizing: border-box;
   padding: var(--sui-dense-row-pad-y, 6px) var(--sui-dense-row-pad-x, 12px);
+  /* ROWS INDENT PAST THEIR HEADER'S LABEL (Peter, 2026-10-16): the header
+     label starts at the header's padding; its rows start --sui-row-indent
+     (4px) further in, in every theme, dense or legacy, so the children read
+     as children. BucketQueue.indent.test.ts holds this at >= 2px. */
+  padding-left: calc(var(--sui-dense-row-pad-x, 12px) + var(--sui-row-indent, 4px));
   border-top: 1px solid var(--sui-border-subtle, rgba(127, 127, 127, 0.15));
   /* A row opening from height:0 (the arrival animation, see ./motion.ts)
      animates `height` only — `overflow` itself is not animatable — so without
@@ -126,31 +155,6 @@
    Hover owns the fill, exactly as it does for an unselected row. */
 .bucket-queue__row--selected {
   box-shadow: inset var(--sui-dense-select-bar, 2px) 0 0 var(--sui-accent);
-}
-
-/* Role color lives ONLY in the dot (theme vars). */
-.bucket-queue__dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--sui-text-muted);
-}
-.bucket-queue__dot--success {
-  background: var(--sui-success);
-}
-.bucket-queue__dot--danger {
-  background: var(--sui-danger);
-}
-.bucket-queue__dot--warning {
-  background: var(--sui-warning);
-}
-.bucket-queue__dot--accent {
-  background: var(--sui-accent);
-}
-.bucket-queue__dot--muted,
-.bucket-queue__dot--default {
-  background: var(--sui-text-muted);
 }
 
 /* A collapsible, populated bucket's header IS the toggle. The UA button box is
@@ -209,9 +213,9 @@
   border-bottom: 1px solid var(--sui-border);
 }
 
-/* The disclosure chevron occupies EXACTLY the tone dot's 8px slot, and
-   replaces it — one role-coloured mark per bucket, same place, so a
-   collapsible bucket's label sits on the same left edge as every other. */
+/* The disclosure chevron FOLLOWS the label (never leads it — a leading glyph
+   pushes the label right of its rows, see BucketHeader.tsx). Neutral: the
+   bucket's one role-coloured mark is the CountChip. */
 .bucket-queue__chevron {
   display: inline-flex;
   flex: none;
@@ -225,22 +229,6 @@
 .bucket-queue__chevron--expanded {
   transform: rotate(90deg);
 }
-.bucket-queue__chevron--success {
-  color: var(--sui-success);
-}
-.bucket-queue__chevron--danger {
-  color: var(--sui-danger);
-}
-.bucket-queue__chevron--warning {
-  color: var(--sui-warning);
-}
-.bucket-queue__chevron--accent {
-  color: var(--sui-accent);
-}
-.bucket-queue__chevron--muted,
-.bucket-queue__chevron--default {
-  color: var(--sui-text-muted);
-}
 @media (prefers-reduced-motion: reduce) {
   .bucket-queue__chevron {
     transition: none;
@@ -251,6 +239,8 @@
    `bucket.emptyLabel`). Muted, one line, never a big empty box. */
 .bucket-queue__empty {
   padding: var(--sui-dense-row-pad-y, 6px) var(--sui-dense-row-pad-x, 12px);
+  /* The empty strip is a child of the header too: same indent as a row. */
+  padding-left: calc(var(--sui-dense-row-pad-x, 12px) + var(--sui-row-indent, 4px));
   color: var(--sui-text-muted);
   font-size: 0.85rem;
 }
@@ -355,10 +345,12 @@
 }
 .bucket-queue--compact .bucket-queue__row {
   padding: 2px 8px;
+  padding-left: calc(8px + var(--sui-row-indent, 4px));
   line-height: 16px;
 }
 .bucket-queue--compact .bucket-queue__empty {
   padding: 2px 8px;
+  padding-left: calc(8px + var(--sui-row-indent, 4px));
   font-size: 11px;
   line-height: 16px;
 }
