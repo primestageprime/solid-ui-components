@@ -143,7 +143,8 @@ describe("BucketQueue measurement", () => {
     const count = (cls: string) =>
       observed.filter((el) => el.classList.contains(cls)).length;
     expect(count("bucket-queue__row")).toBe(1);
-    expect(count("bucket-queue__header")).toBe(1);
+    // One header PER BUCKET: a long label wraps, so headers differ in height.
+    expect(count("bucket-queue__header")).toBe(BUCKETS.length);
     expect(count("bucket-queue")).toBe(1);
   });
 });

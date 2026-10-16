@@ -42,12 +42,16 @@ export interface Measurements {
   availH: () => number;
   /** Measured row height per bucket key. */
   rowHs: () => ReadonlyMap<string, number>;
-  /** Measured header height, shared by every bucket. */
+  /** Bucket 0's measured header height: the fallback for a bucket whose
+   *  own header is not measured yet. */
   headH: () => number;
+  /** Measured header height per bucket key. A long label wraps in a narrow
+   *  pane, so one shared height mis-sizes the other buckets. */
+  headHs: () => ReadonlyMap<string, number>;
   /** Measured empty-strip height, or null before one exists to measure. */
   emptyH: () => number | null;
   trackRoot: (el: HTMLDivElement) => void;
-  trackHead: (el: HTMLElement) => void;
+  trackHead: (key: string, el: HTMLElement) => void;
   trackEmpty: (el: HTMLElement) => void;
   trackRow: (key: string, el: HTMLDivElement) => void;
   untrackRow: (key: string, el: HTMLDivElement | undefined) => void;
@@ -55,7 +59,8 @@ export interface Measurements {
 
 export function createMeasurements(deps: MeasurementDeps): Measurements {
   let rootRef: HTMLDivElement | undefined;
-  let headRef: HTMLElement | undefined;
+  // ONE MEASURED HEADER PER BUCKET, for the same reason as the rows below.
+  const headRefs = new Map<string, HTMLElement>();
   let emptyRef: HTMLElement | undefined;
   // ONE MEASURED ROW PER BUCKET, keyed by bucket key. A single global sample
   // silently assumed every bucket's rows were the same height, which a queue is
@@ -67,12 +72,22 @@ export function createMeasurements(deps: MeasurementDeps): Measurements {
   const [availH, setAvailH] = createSignal(deps.height() ?? 0);
   const [rowHs, setRowHs] = createSignal<ReadonlyMap<string, number>>(new Map());
   const [headH, setHeadH] = createSignal(HEADER_FALLBACK);
+  const [headHs, setHeadHs] = createSignal<ReadonlyMap<string, number>>(new Map());
   // null until an empty strip exists to measure; `natural` falls back to a row.
   const [emptyH, setEmptyH] = createSignal<number | null>(null);
 
   const measure = () => {
     if (deps.height() == null && rootRef) setAvailH(rootRef.clientHeight);
-    if (headRef?.offsetHeight) setHeadH(headRef.offsetHeight);
+    const keys = deps.bucketKeys();
+    const head0 = keys.length > 0 ? headRefs.get(keys[0])?.offsetHeight : undefined;
+    if (head0) setHeadH(head0);
+    const liveHeads = new Map(
+      flatMap((key: string) => {
+        const h = headRefs.get(key)?.offsetHeight;
+        return h ? [[key, h] as const] : [];
+      }, keys),
+    );
+    setHeadHs((prev) => retainRowHeights(keys, liveHeads, prev));
     setEmptyH(emptyRef?.offsetHeight || null);
     // Folded over what we already hold, in BUCKET ORDER — see retainRowHeights
     // for why a bucket keeps its last height rather than dropping out.
@@ -93,7 +108,7 @@ export function createMeasurements(deps: MeasurementDeps): Measurements {
   // re-measures — a frame later, like every other write in the library.
   // Fixed slots plus one per BUCKET row — `row:<bucketKey>` — because the row
   // sample is per bucket, not global.
-  type Slot = "root" | "head" | "empty" | `row:${string}`;
+  type Slot = "root" | "empty" | `head:${string}` | `row:${string}`;
   const disposers = new Map<Slot, () => void>();
   let observing = false;
   const observeSlot = (slot: Slot, el: HTMLElement) => {
@@ -143,13 +158,11 @@ export function createMeasurements(deps: MeasurementDeps): Measurements {
   const trackRoot = (el: HTMLDivElement) => {
     rootRef = el;
   };
-  const trackHead = tracker(
-    "head",
-    () => headRef,
-    (el) => {
-      headRef = el;
-    },
-  );
+  const trackHead = (key: string, el: HTMLElement) => {
+    if (headRefs.get(key) === el) return;
+    headRefs.set(key, el);
+    if (observing) observeSlot(`head:${key}`, el);
+  };
   const trackEmpty = tracker(
     "empty",
     () => emptyRef,
@@ -165,10 +178,10 @@ export function createMeasurements(deps: MeasurementDeps): Measurements {
     // the CONTENT metrics. Both are needed — see the note above.
     const fixed: [Slot, HTMLElement | undefined][] = [
       ["root", rootRef],
-      ["head", headRef],
       ["empty", emptyRef],
     ];
     for (const [slot, el] of fixed) if (el) observeSlot(slot, el);
+    for (const [key, el] of headRefs) observeSlot(`head:${key}`, el);
     for (const [key, el] of rowRefs) if (el) observeSlot(`row:${key}`, el);
     // A web font landing after mount re-lays-out the row, which the observers
     // above do catch — but ask directly rather than depend on the timing.
@@ -184,6 +197,7 @@ export function createMeasurements(deps: MeasurementDeps): Measurements {
     availH,
     rowHs,
     headH,
+    headHs,
     emptyH,
     trackRoot,
     trackHead,
