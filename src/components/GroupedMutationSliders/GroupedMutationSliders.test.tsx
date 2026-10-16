@@ -485,7 +485,10 @@ describe("GroupedMutationSliders", () => {
       expect(queryButton(container, "Next entity")).toBeNull();
     });
 
-    it("never splits an entity's dials across a page boundary", () => {
+    // The slot arithmetic is groups.test.ts (`slotFor`) and rows.test.ts;
+    // this one mount proves the grouped row pages by a WHOLE entity and
+    // announces columns, not dials.
+    it("integration: paging by whole entities holds together", async () => {
       const { container } = render(() => (
         <GroupedMutationSliders
           entities={many}
@@ -495,22 +498,14 @@ describe("GroupedMutationSliders", () => {
         />
       ));
       const row = container.querySelector('[role="group"]') as HTMLElement;
-      sizer.resize(row, { width: twoProductsWide, height: 300 });
+      expect(row.getAttribute("aria-label")).toBe("columns 1\u20134 of 4");
+      await sizer.resize(row, { width: twoProductsWide, height: 300 });
       // Whatever fits, it is a MULTIPLE of four dials — never three or five.
       const drawn = container.querySelectorAll('[role="slider"]').length;
-      expect(drawn % 4).toBe(0);
-    });
-
-    it("counts COLUMNS in its window announcement, not dials", () => {
-      const { container } = render(() => (
-        <GroupedMutationSliders
-          entities={many}
-          axes={LICENCE_AXES}
-          onChange={() => {}}
-        />
-      ));
-      const row = container.querySelector('[role="group"]') as HTMLElement;
-      expect(row.getAttribute("aria-label")).toBe("columns 1\u20134 of 4");
+      expect(drawn).toBe(8);
+      expect(row.getAttribute("aria-label")).toBe("columns 1\u20132 of 4");
+      fireEvent.click(queryButton(container, "Next entity") as HTMLElement);
+      expect(row.getAttribute("aria-label")).toBe("columns 2\u20133 of 4");
     });
 
     it("costs one dial slot per measure, so a 4-axis row is twice a 2-axis one", () => {
@@ -675,7 +670,9 @@ describe("GroupedMutationSliders entityFrame", () => {
         entityFrame={Frame}
       />
     ));
-    expect(container.querySelectorAll('[data-testid="entity-frame"]')).toHaveLength(4);
+    expect(
+      container.querySelectorAll('[data-testid="entity-frame"]'),
+    ).toHaveLength(4);
     expect(framesPerEntity(container)).toMatchInlineSnapshot(`
       "Starter: 1 frame, 4 dials
       Team: 1 frame, 4 dials
@@ -686,9 +683,15 @@ describe("GroupedMutationSliders entityFrame", () => {
 
   it("without it, renders no frame and the same DOM as before", () => {
     const plain = render(() => (
-      <GroupedMutationSliders entities={TWO} axes={LICENCE_AXES} onChange={() => {}} />
+      <GroupedMutationSliders
+        entities={TWO}
+        axes={LICENCE_AXES}
+        onChange={() => {}}
+      />
     ));
-    expect(plain.container.querySelector('[data-testid="entity-frame"]')).toBeNull();
+    expect(
+      plain.container.querySelector('[data-testid="entity-frame"]'),
+    ).toBeNull();
     const row = plain.container.querySelector('[role="group"]')!;
     // Each entity's column is a DIRECT child of the row, as it always was.
     const names = row.querySelectorAll("button[aria-pressed]");
@@ -742,7 +745,9 @@ describe("GroupedMutationSliders entityFrame", () => {
     const { container } = render(() => (
       <Framed entities={TWO} onChange={() => {}} />
     ));
-    expect(container.querySelectorAll('[data-testid="entity-frame"]')).toHaveLength(2);
+    expect(
+      container.querySelectorAll('[data-testid="entity-frame"]'),
+    ).toHaveLength(2);
   });
 });
 
@@ -750,37 +755,74 @@ describe("GroupedMutationSliders entityFrame", () => {
 
 describe("GroupedMutationSliders caption", () => {
   /** A caption display: whatever the consumer wants, from the data it is handed. */
-  const Calc = (p: { value: number | null; prior: number | null; entityId: string; measure: number }) => (
+  const Calc = (p: {
+    value: number | null;
+    prior: number | null;
+    entityId: string;
+    measure: number;
+  }) => (
     <span data-testid="calc">{`${p.entityId}:${p.measure}:${p.value ?? "—"}×2=${(p.value ?? 0) * 2}`}</span>
   );
 
   it("renders an axis's caption component under its dial, handed that measure's data", () => {
-    const axes: GroupedMeasureAxes = [{ ...PAIR_AXES[0], caption: Calc }, PAIR_AXES[1]];
+    const axes: GroupedMeasureAxes = [
+      { ...PAIR_AXES[0], caption: Calc },
+      PAIR_AXES[1],
+    ];
     const { getAllByTestId } = render(() => (
       <GroupedMutationSliders
-        entities={[{ id: "a", label: "A", measures: [{ prior: 8, value: 10, range: [0, 80] }, { prior: 50, value: 50, range: [0, 300] }] }]}
+        entities={[
+          {
+            id: "a",
+            label: "A",
+            measures: [
+              { prior: 8, value: 10, range: [0, 80] },
+              { prior: 50, value: 50, range: [0, 300] },
+            ],
+          },
+        ]}
         axes={axes}
         onChange={() => {}}
       />
     ));
-    expect(getAllByTestId("calc").map((n) => n.textContent)).toEqual(["a:0:10×2=20"]);
+    expect(getAllByTestId("calc").map((n) => n.textContent)).toEqual([
+      "a:0:10×2=20",
+    ]);
   });
 
   it("reserves the caption line on an axis without one, so every column stands at one height", () => {
-    const axes: GroupedMeasureAxes = [{ ...PAIR_AXES[0], caption: Calc }, PAIR_AXES[1]];
+    const axes: GroupedMeasureAxes = [
+      { ...PAIR_AXES[0], caption: Calc },
+      PAIR_AXES[1],
+    ];
     const { container } = render(() => (
       <GroupedMutationSliders
-        entities={[{ id: "a", label: "A", measures: [{ prior: 8, value: 10, range: [0, 80] }, { prior: 50, value: 50, range: [0, 300] }] }]}
+        entities={[
+          {
+            id: "a",
+            label: "A",
+            measures: [
+              { prior: 8, value: 10, range: [0, 80] },
+              { prior: 50, value: 50, range: [0, 300] },
+            ],
+          },
+        ]}
         axes={axes}
         onChange={() => {}}
       />
     ));
-    expect(container.querySelectorAll('[data-caption-slot="reserved"]')).toHaveLength(1);
+    expect(
+      container.querySelectorAll('[data-caption-slot="reserved"]'),
+    ).toHaveLength(1);
   });
 
   it("draws no caption line at all when no axis has a caption", () => {
     const { container } = render(() => (
-      <GroupedMutationSliders entities={TWO} axes={LICENCE_AXES} onChange={() => {}} />
+      <GroupedMutationSliders
+        entities={TWO}
+        axes={LICENCE_AXES}
+        onChange={() => {}}
+      />
     ));
     expect(container.querySelectorAll("[data-caption-slot]")).toHaveLength(0);
   });
@@ -789,15 +831,26 @@ describe("GroupedMutationSliders caption", () => {
 describe("GroupedMutationSliders showNames", () => {
   it("hides the entity name when showNames is false", () => {
     const { container } = render(() => (
-      <GroupedMutationSliders entities={TWO} axes={LICENCE_AXES} showNames={false} onChange={() => {}} />
+      <GroupedMutationSliders
+        entities={TWO}
+        axes={LICENCE_AXES}
+        showNames={false}
+        onChange={() => {}}
+      />
     ));
     expect(container.querySelectorAll("button[aria-pressed]")).toHaveLength(0);
   });
 
   it("shows it by default", () => {
     const { container } = render(() => (
-      <GroupedMutationSliders entities={TWO} axes={LICENCE_AXES} onChange={() => {}} />
+      <GroupedMutationSliders
+        entities={TWO}
+        axes={LICENCE_AXES}
+        onChange={() => {}}
+      />
     ));
-    expect(container.querySelectorAll("button[aria-pressed]").length).toBeGreaterThan(0);
+    expect(
+      container.querySelectorAll("button[aria-pressed]").length,
+    ).toBeGreaterThan(0);
   });
 });
