@@ -55,7 +55,7 @@ describe("y range and labels", () => {
 });
 
 describe("adapters", () => {
-  it("maps the series to one band and the markers to mutations with their kind", () => {
+  it("maps the series to one band and the markers to mutations, the kind joining the label", () => {
     expect(stepSeries([{ t: T("08:14"), value: 1 }])).toEqual([
       { id: "steps", label: "Steps done", points: [{ at: T("08:14"), value: 1 }] },
     ]);
@@ -65,8 +65,8 @@ describe("adapters", () => {
         { id: "m2", t: T("08:14"), label: "Step 1" },
       ]),
     ).toEqual([
-      { id: "m1", at: T("08:02"), label: "Step 1", details: ["Step 1 · started"] },
-      { id: "m2", at: T("08:14"), label: "Step 1", details: ["Step 1"] },
+      { id: "m1", at: T("08:02"), label: "Step 1 · started" },
+      { id: "m2", at: T("08:14"), label: "Step 1" },
     ]);
   });
 });

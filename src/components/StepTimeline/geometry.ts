@@ -25,7 +25,7 @@ export interface StepTimelinePoint {
   readonly value: number;
 }
 
-/** One numbered flag: an event at `t`. `kind` is listed in the flag's tooltip. */
+/** One numbered flag: an event at `t`. `kind` joins the flag's announced name. */
 export interface StepTimelineMarker {
   readonly id: string;
   readonly t: TimeValue;
@@ -84,7 +84,9 @@ export const stepSeries = (
   },
 ];
 
-/** The markers as LevelsTimeline mutations: the kind becomes the tooltip's detail line. */
+/** The markers as LevelsTimeline mutations. The kind joins the label ("Step 1 ·
+ *  started"), because the label is what a flag announces: MutationFlags paints
+ *  only the number and has no hover readout. */
 export const stepMutations = (
   markers: readonly StepTimelineMarker[],
 ): Mutation[] =>
@@ -92,11 +94,8 @@ export const stepMutations = (
     (marker: StepTimelineMarker) => ({
       id: marker.id,
       at: marker.t,
-      label: marker.label,
-      details:
-        marker.kind === undefined
-          ? [marker.label]
-          : [`${marker.label} · ${marker.kind}`],
+      label:
+        marker.kind === undefined ? marker.label : `${marker.label} · ${marker.kind}`,
     }),
     markers,
   );

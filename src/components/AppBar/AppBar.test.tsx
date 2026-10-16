@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createSignal } from "solid-js";
 import { cleanup, fireEvent, render } from "@solidjs/testing-library";
 import { AppBar, APP_BAR_FOLD_QUERY, appBarNavItems } from "./AppBar";
 
@@ -62,6 +63,25 @@ describe("AppBar", () => {
     expect(slot("end").querySelector('[data-testid="status"]')).not.toBeNull();
     expect(slot("end").textContent).toContain("AL");
     expect(container.querySelector("header.app-header")).not.toBeNull();
+  });
+
+  it("passes a change in user through to the menu after mount (sign out → Sign in)", () => {
+    const [user, setUser] = createSignal<typeof USER.user | undefined>(USER.user);
+    const { container } = render(() => (
+      <AppBar
+        logo="Logo"
+        nav={{ ...NAV, onSelect: () => {} }}
+        user={{ user: user(), onSignIn: () => {}, onSignOut: () => {} }}
+      />
+    ));
+    const menuTrigger = () =>
+      container.querySelector<HTMLElement>('[data-slot="end"] .sui-popover-menu__trigger')!;
+    expect(menuTrigger().textContent).toContain("AL");
+    setUser(undefined);
+    expect(menuTrigger().textContent).toContain("?");
+    fireEvent.click(menuTrigger());
+    expect(document.body.textContent).toContain("Not signed in");
+    expect(document.body.textContent).toContain("Sign in");
   });
 
   it("reports a nav click through nav.onSelect", () => {

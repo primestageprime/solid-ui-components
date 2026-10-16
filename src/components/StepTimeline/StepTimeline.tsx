@@ -40,7 +40,7 @@ export interface StepTimelineProps {
   title?: JSX.Element;
   /** The cumulative count, ascending by `t`; each value holds until the next point. */
   series: readonly StepTimelinePoint[];
-  /** One numbered flag each, numbered in time order. */
+  /** One numbered flag each, numbered in time order; `kind` joins the flag's announced name. */
   markers: readonly StepTimelineMarker[];
   /** The visible span, the caller's — never derived from the data. */
   domain: readonly [TimeValue, TimeValue];

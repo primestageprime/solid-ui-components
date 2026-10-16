@@ -42,6 +42,15 @@ describe("StepTimeline", () => {
     expect(flags.map((f) => f.textContent?.trim())).toEqual(["1", "2", "3", "4"]);
   });
 
+  it("announces each flag with its label and kind", () => {
+    const { container } = render(() => (
+      <StepTimeline series={SERIES} markers={MARKERS} domain={DOMAIN} onSelect={() => {}} />
+    ));
+    expect(flagButtons(container)[0].getAttribute("aria-label")).toBe(
+      "Mutation 1, Step 1 · started",
+    );
+  });
+
   it("labels the x-axis in UTC hours", () => {
     const { container } = render(() => (
       <StepTimeline series={SERIES} markers={MARKERS} domain={DOMAIN} />
