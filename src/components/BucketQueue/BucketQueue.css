@@ -33,7 +33,9 @@
 .bucket-queue__header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  /* center, not baseline: the count is a CountChip pill, and a pill sits on
+     the label's centre line, not its baseline. */
+  align-items: center;
   gap: 8px;
   flex: none;
   /* min-height, never height: a fixed height clips a wrapped two-line label. */
@@ -60,6 +62,14 @@
      header only pins the numerals and hides the chip's unused label slot. */
   flex: none;
   font-variant-numeric: tabular-nums;
+}
+/* Pin the pill to 19px (15px line + 1px padding + 1px border each side) so a
+   dense header is exactly its 28px min-height: 19 + 2 * 4px row padding + the
+   1px bottom border (the header is border-box). */
+.bucket-queue__count.sui-count-chip {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  line-height: 15px;
 }
 .bucket-queue__count .sui-count-chip__label:empty {
   display: none;
@@ -330,8 +340,18 @@
   font-size: 11px;
   line-height: 14px;
 }
+.bucket-queue--compact .bucket-queue__header {
+  /* Compact keeps its own 21px line; the dense header min-height is not for it. */
+  min-height: 0;
+}
 .bucket-queue--compact .bucket-queue__count {
   font-size: 11px;
+}
+.bucket-queue--compact .bucket-queue__count.sui-count-chip {
+  /* 12px line + 1px border each side = the 14px content box the compact
+     header had before the chip, so compact stays 21px tall. */
+  padding: 0 5px;
+  line-height: 12px;
 }
 .bucket-queue--compact .bucket-queue__row {
   padding: 2px 8px;
