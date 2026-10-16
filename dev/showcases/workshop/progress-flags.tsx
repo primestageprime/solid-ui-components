@@ -13,6 +13,7 @@ import { type Accessor, type Component, Index, Show, createMemo, createSignal } 
 import {
   AreaSeries,
   Chart,
+  ChartTooltip,
   ContentAutoGrowChartFrame,
   FieldTable,
   Grid,
@@ -171,6 +172,9 @@ const StepTimeline: Component<TimelineProps> = (props) => {
     const id = props.hovered();
     return id === undefined ? new Set<Id>() : new Set<Id>([id]);
   });
+  const hoveredFlags = createMemo((): readonly Flag[] =>
+    fn.filter((f: Flag) => props.hovered() === stepId(f.index), flags()),
+  );
   const drop = (f: Flag): LevelPoint[] => [
     { x: f.x, y: yMax() },
     { x: f.x, y: f.y },
@@ -273,6 +277,14 @@ const StepTimeline: Component<TimelineProps> = (props) => {
             />
           )}
         />
+        <ChartTooltip<Flag>
+          data={hoveredFlags()}
+          x={(f) => f.x}
+          y={(f) => f.y}
+          maxWidth={260}
+        >
+          {(f) => fn.join(" · ", flagTip(f))}
+        </ChartTooltip>
       </Chart>
     </ContentAutoGrowChartFrame>
   );
