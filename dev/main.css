@@ -2819,3 +2819,8 @@ th:has(.tf-th-center) .hud-table__header-content {
   interpolate-size: allow-keywords;
   transition: height 180ms ease-out;
 }
+
+/* StatusCard showcase: a drawing in the card body, a block so no baseline gap shows under it. */
+.status-card-demo__drawing {
+  display: block;
+}

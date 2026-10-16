@@ -7,6 +7,8 @@
 - **`XSpan`** — a Chart slot that shades an x-range across the full plot height, under the series, with no pointer events. It takes a `tone` wash or any SVG `paint` (a `HatchPattern` for a hatch) and an optional top-centre `label`.
 - **`TickSeries`** — a Chart slot that draws a short vertical tick at each point (`length` 20 px, `strokeWidth` 2.5). Put a `PointCaptions side="below"` beside it for a caption under each tick.
 - **`TreeTable` `onRowHover`** — reports the original row under the pointer, anywhere in the row, and `null` when the pointer leaves the body. It passes BaseTable's `onRowHover` through.
+- **`StatusCard` `children`** — a drawing in the detail area, under the description and above `actions`, at full card width. Before, `children` rendered at the very end of the card, after the meta row. No caller passed any.
+- **`SuccessTag`** — a 10px bold uppercase tag in the success tone, for "Recommended" beside an answer.
 
 ### Fixed
 

@@ -5427,7 +5427,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Card/StatusCard.tsx",
-    "line": 265
+    "line": 272
   },
   {
     "name": "createStatusFlowChart",
@@ -6273,7 +6273,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 381
+    "line": 397
   },
   {
     "name": "DashedDivider",
@@ -8563,7 +8563,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 429
+    "line": 445
   },
   {
     "name": "FormulaVarRow",
@@ -9495,7 +9495,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 435
+    "line": 451
   },
   {
     "name": "HotkeyButton",
@@ -10065,7 +10065,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 369
+    "line": 385
   },
   {
     "name": "InlineAppHeader",
@@ -10204,7 +10204,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 356
+    "line": 372
   },
   {
     "name": "InspectorThreePanel",
@@ -11569,7 +11569,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 422
+    "line": 438
   },
   {
     "name": "MultiSelectFilter",
@@ -12397,7 +12397,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 363
+    "line": 379
   },
   {
     "name": "PairedMutationSliders",
@@ -13607,7 +13607,7 @@
     "showcase": "#/text",
     "since": "v0.16.0",
     "file": "src/components/Text/variants.ts",
-    "line": 415
+    "line": 431
   },
   {
     "name": "ScrollBox",
@@ -14149,7 +14149,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 364
+    "line": 380
   },
   {
     "name": "SegmentBar",
@@ -15540,7 +15540,7 @@
     "showcase": "#/status-card",
     "since": "0.84.0",
     "file": "src/components/Card/StatusCard.tsx",
-    "line": 71
+    "line": 76
   },
   {
     "name": "StatusCell",
@@ -15794,7 +15794,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 365
+    "line": 381
   },
   {
     "name": "SubtleGhostArc",
@@ -15953,6 +15953,32 @@
     "line": 52
   },
   {
+    "name": "SuccessTag",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Text",
+    "variantOf": {
+      "factory": "createText",
+      "overrides": "{\n  variant: \"label\",\n  as: \"span\",\n  color: \"var(--sui-success)\",\n  style: {\n    \"font-size\": \"10px\",\n    \"font-weight\": \"700\",\n    \"line-height\": \"1.2\",\n    \"text-transform\": \"uppercase\",\n    \"letter-spacing\": \"0.06em\",\n  },\n}"
+    },
+    "overrides": [
+      "variant",
+      "color",
+      "as"
+    ],
+    "dataProps": "TextDataProps",
+    "summary": "a 10px, bold, uppercase, letter-spaced `<span>` in `--sui-success`.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a positive tag beside a label, such as \"Recommended\" next to an answer inside a button. The tone follows the theme: the colourblind palette paints it blue.",
+    "notes": "A positive tag beside a label — \"Recommended\" next to an answer in a button: 10px, bold, uppercase, letter-spaced, in the success tone. The tone follows the theme, so the colourblind palette paints it blue.",
+    "showcase": "#/text",
+    "since": "Unreleased",
+    "file": "src/components/Text/variants.ts",
+    "line": 358
+  },
+  {
     "name": "SuccessTitle",
     "depth": 0,
     "kind": "variant",
@@ -15976,7 +16002,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 377
+    "line": 393
   },
   {
     "name": "SwimlaneChart",
@@ -16394,7 +16420,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 394
+    "line": 410
   },
   {
     "name": "TextValueHighlightSm",
@@ -16420,7 +16446,7 @@
     "showcase": "#/text",
     "since": "0.152.0",
     "file": "src/components/Text/variants.ts",
-    "line": 406
+    "line": 422
   },
   {
     "name": "TextValueSuccessSm",
@@ -16446,7 +16472,7 @@
     "showcase": "#/text",
     "since": null,
     "file": "src/components/Text/variants.ts",
-    "line": 389
+    "line": 405
   },
   {
     "name": "ThemedInput",
@@ -17101,7 +17127,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 366
+    "line": 382
   },
   {
     "name": "TopRightOverlayBox",
@@ -17903,7 +17929,7 @@
     "showcase": "#/text",
     "since": "0.105.0",
     "file": "src/components/Text/variants.ts",
-    "line": 373
+    "line": 389
   },
   {
     "name": "WeekCalendar",

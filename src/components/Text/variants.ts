@@ -352,6 +352,22 @@ export const AccentCaptionLabel = createText({
   },
 });
 
+// A positive tag beside a label — "Recommended" next to an answer in a
+// button: 10px, bold, uppercase, letter-spaced, in the success tone. The
+// tone follows the theme, so the colourblind palette paints it blue.
+export const SuccessTag = createText({
+  variant: "label",
+  as: "span",
+  color: "var(--sui-success)",
+  style: {
+    "font-size": "10px",
+    "font-weight": "700",
+    "line-height": "1.2",
+    "text-transform": "uppercase",
+    "letter-spacing": "0.06em",
+  },
+});
+
 // Inline units — inherits font-size from parent, muted color, left margin
 export const InlineUnits = createText({
   variant: "sublabel",

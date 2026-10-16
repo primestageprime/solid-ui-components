@@ -459,7 +459,7 @@ State derivation:
       ```
 
 ## Card
-- **StatusCard** — Composite (Depth 2, `src/components/Card/StatusCard.tsx`). Composes `Surface` + `Text` + `Button`. A 3-row status card: row 1 is a name (ellipsised) + status badge slot, row 2 is 2–3 lines of wrapped detail with a "more" popover, row 3 is a left/center/right meta strip (claimed-by/progress/estimate slots). All slots are JSX, so the caller wires its own badge/assignee/progress elements. Curried via `createStatusCard`. **Part of `NotificationRow`** — used as-is for a standalone status card, or via `NotificationRow` when it's one row of a feed. Use for: the largest existing status-card component — reach for `NotificationRow` first if the card is one of several in a feed/list, and `StatusCard` directly for a single standalone card.
+- **StatusCard** — Composite (Depth 2, `src/components/Card/StatusCard.tsx`). Composes `Surface` + `Text` + `Button`. A 3-row status card: row 1 is a name (ellipsised) + status badge slot, row 2 is 2–3 lines of wrapped detail with a "more" popover, row 3 is a left/center/right meta strip (claimed-by/progress/estimate slots). `children` is a drawing (a small gauge, a slot strip, a before / after pair) drawn in row 2 under the description and above `actions`, at full card width and content height; a click on it selects the card, as a click on the description does. All slots are JSX, so the caller wires its own badge/assignee/progress elements. Curried via `createStatusCard`. **Part of `NotificationRow`** — used as-is for a standalone status card, or via `NotificationRow` when it's one row of a feed. Use for: the largest existing status-card component — reach for `NotificationRow` first if the card is one of several in a feed/list, and `StatusCard` directly for a single standalone card.
 - **RemovableItemCard** — Composite (Depth 2). Composes `InteractiveCard` (Surface curried variant) + `SpreadRow` (Layout curried variant) + `FlexLabel` (Text curried variant) + `Button` (Atomic Primitive). Interactive card displaying a named item with title, optional remove button, and details slot. Key props: `title`, `active`, `onRemove`, `details`. Use for: selectable list items.
 
 ## Placeholder
@@ -2296,6 +2296,7 @@ Where the constituents live (design decision — prefer siblings of existing fam
   - **TextBody** — `variant="body"`. Use for: paragraph text, descriptions.
   - **TextUnits** — `variant="units"`. Use for: unit labels next to values.
   - **TextSublabel** — `variant="sublabel"`. Use for: secondary labels, footnotes.
+  - **SuccessTag** — a 10px, bold, uppercase, letter-spaced `<span>` in `--sui-success`. Use for: a positive tag beside a label, such as "Recommended" next to an answer inside a button. The tone follows the theme: the colourblind palette paints it blue.
   - **CompactLabel** — `variant="label"` at 12px, weight 500, on a 16px line. Use for: a row name in a dense list, such as `CompactBucketQueue`. `TextLabel` is 16px bold, too big for a narrow pane.
   - **MonoValue** — Monospace value text. Use for: numeric readouts alongside units.
   - **NowrapBody** — Body text that never wraps. Use for: inline formatted values.
