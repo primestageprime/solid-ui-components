@@ -31,6 +31,8 @@ export interface StampedRowProps {
   icon?: IconName;
   /** 22px list line or 40px pinned bar. Locked by the curried variants. */
   density?: StampDensity;
+  /** IANA zone the time prints in (e.g. "UTC"). Default: the host's zone. */
+  timeZone?: string;
 }
 
 /** The glyph each kind draws. `completed` is `done` made solid: the filled check. */
@@ -74,7 +76,7 @@ export const StampedRow: Component<StampedRowProps> = (props) => {
       <Icon name={glyph().name} variant={glyph().variant} size="md" />
       <EllipsizedTitle title={props.label}>{props.label}</EllipsizedTitle>
       <NoShrinkClusterRow>
-        <MonoMeta>{formatStampTime(props.t)}</MonoMeta>
+        <MonoMeta>{formatStampTime(props.t, props.timeZone)}</MonoMeta>
       </NoShrinkClusterRow>
     </Dynamic>
   );

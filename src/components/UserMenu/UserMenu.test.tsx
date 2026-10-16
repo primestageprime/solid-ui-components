@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render } from "@solidjs/testing-library";
-import { UserMenu, userInitials, userMenuItems } from "./UserMenu";
+import { UserMenu, userInitials, userMenuItems, userMenuLabel } from "./UserMenu";
 
 // The panel portals to document.body, so panel queries go to the body.
 afterEach(cleanup);
@@ -108,5 +108,20 @@ describe("UserMenu", () => {
     expect(document.body.querySelector('[data-testid="status"]')?.textContent).toBe(
       "3 open",
     );
+  });
+});
+
+describe("UserMenu trigger name", () => {
+  it("names the trigger for the signed-in user", () => {
+    const { container } = render(() => <UserMenu user={ADA} onSignIn={() => {}} onSignOut={() => {}} />);
+    expect(container.querySelector(".sui-popover-menu__trigger")!.getAttribute("aria-label")).toBe(
+      "Account menu for Ada Lovelace",
+    );
+  });
+  it("falls back to the email, then to a plain name when signed out", () => {
+    expect(userMenuLabel({ name: " ", email: "ada@x.io" })).toBe("Account menu for ada@x.io");
+    expect(userMenuLabel(undefined)).toBe("Account menu");
+    const { container } = render(() => <UserMenu onSignIn={() => {}} onSignOut={() => {}} />);
+    expect(container.querySelector(".sui-popover-menu__trigger")!.getAttribute("aria-label")).toBe("Account menu");
   });
 });
