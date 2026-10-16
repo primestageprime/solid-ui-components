@@ -5634,7 +5634,7 @@
     "showcase": "#/three-panel-layout",
     "since": "0.104.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
-    "line": 145
+    "line": 153
   },
   {
     "name": "createThresholdRail",
@@ -10207,6 +10207,35 @@
     "line": 356
   },
   {
+    "name": "InspectorThreePanel",
+    "depth": 1,
+    "kind": "variant",
+    "family": "ThreePanelLayout",
+    "variantOf": {
+      "factory": "createThreePanelLayout",
+      "overrides": "{\n    height: \"100%\",\n    leftPanelWidth: W.rail,\n    rightPanelWidth: W.inspector,\n  }"
+    },
+    "overrides": [
+      "height",
+      "fullHeight",
+      "leftPanelWidth",
+      "rightPanelWidth",
+      "asideMaxHeight",
+      "rightPanelFlush"
+    ],
+    "dataProps": "ThreePanelLayoutDataProps",
+    "summary": "Page with a wide right inspector: 220 left rail, 320 right.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Page with a wide right inspector: 220 left rail, 320 right. Replaces thorcasting CoverageTab.",
+    "showcase": "#/three-panel-layout",
+    "since": "Unreleased",
+    "file": "src/components/ThreePanelLayout/variants.tsx",
+    "line": 39
+  },
+  {
     "name": "IntCell",
     "depth": 1,
     "kind": "primitive",
@@ -10855,6 +10884,35 @@
     "since": "0.203.0",
     "file": "src/components/PivotGrid/LinkPivotGrid.tsx",
     "line": 20
+  },
+  {
+    "name": "ListDetailThreePanel",
+    "depth": 1,
+    "kind": "variant",
+    "family": "ThreePanelLayout",
+    "variantOf": {
+      "factory": "createThreePanelLayout",
+      "overrides": "{\n    height: \"100%\",\n    leftPanelWidth: W.wideList,\n    rightPanelWidth: W.context,\n  }"
+    },
+    "overrides": [
+      "height",
+      "fullHeight",
+      "leftPanelWidth",
+      "rightPanelWidth",
+      "asideMaxHeight",
+      "rightPanelFlush"
+    ],
+    "dataProps": "ThreePanelLayoutDataProps",
+    "summary": "List-and-detail page with a wide left column: 320 left, 240 right.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "List-and-detail page with a wide left column: 320 left, 240 right. Replaces jtf silver-explorer, metric-sleuth; dside TriageView (left only).",
+    "showcase": "#/three-panel-layout",
+    "since": "Unreleased",
+    "file": "src/components/ThreePanelLayout/variants.tsx",
+    "line": 30
   },
   {
     "name": "ListItem",
@@ -15158,6 +15216,35 @@
     "line": 26
   },
   {
+    "name": "SplitThreePanel",
+    "depth": 1,
+    "kind": "variant",
+    "family": "ThreePanelLayout",
+    "variantOf": {
+      "factory": "createThreePanelLayout",
+      "overrides": "{\n    height: \"100%\",\n    leftPanelWidth: W.split,\n    rightPanelWidth: W.context,\n  }"
+    },
+    "overrides": [
+      "height",
+      "fullHeight",
+      "leftPanelWidth",
+      "rightPanelWidth",
+      "asideMaxHeight",
+      "rightPanelFlush"
+    ],
+    "dataProps": "ThreePanelLayoutDataProps",
+    "summary": "Split page with a half-screen-class left pane: 560 left, 240 right.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Split page with a half-screen-class left pane: 560 left, 240 right. Replaces diddit index (desktop layout).",
+    "showcase": "#/three-panel-layout",
+    "since": "Unreleased",
+    "file": "src/components/ThreePanelLayout/variants.tsx",
+    "line": 48
+  },
+  {
     "name": "SpreadRow",
     "depth": 0,
     "kind": "variant",
@@ -15301,6 +15388,35 @@
     "since": "0.174.0",
     "file": "src/components/StackedTimelineChart/StackedTimelineChart.tsx",
     "line": 274
+  },
+  {
+    "name": "StandardThreePanel",
+    "depth": 1,
+    "kind": "variant",
+    "family": "ThreePanelLayout",
+    "variantOf": {
+      "factory": "createThreePanelLayout",
+      "overrides": "{\n    height: \"100%\",\n    leftPanelWidth: W.list,\n    rightPanelWidth: W.context,\n  }"
+    },
+    "overrides": [
+      "height",
+      "fullHeight",
+      "leftPanelWidth",
+      "rightPanelWidth",
+      "asideMaxHeight",
+      "rightPanelFlush"
+    ],
+    "dataProps": "ThreePanelLayoutDataProps",
+    "summary": "Standard list / center / context page: 260 left, 240 right.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Standard list / center / context page: 260 left, 240 right. Replaces jtf metric-explorer, cache-explorer, timesleuth; thorcasting TriageTab (left only).",
+    "showcase": "#/three-panel-layout",
+    "since": "Unreleased",
+    "file": "src/components/ThreePanelLayout/variants.tsx",
+    "line": 21
   },
   {
     "name": "StarToggle",
@@ -16404,16 +16520,16 @@
       "rightPanelFlush"
     ],
     "dataProps": "ThreePanelLayoutDataProps",
-    "summary": "Atomic (Depth 1).",
+    "summary": "**@deprecated at the root** (phase 2 of add/deprecate/delete; removed in phase 3): internal primitive, use the variants above or `createThreePanelLayout` for an app-level variant.",
     "summarySource": "components-md",
     "preferFirst": null,
     "notToBeConfusedWith": null,
     "useFor": "multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies.",
-    "notes": null,
+    "notes": "@deprecated Internal primitive. Do not import at call sites: use a named curried variant (`StandardThreePanel`, `ListDetailThreePanel`, `InspectorThreePanel`, `SplitThreePanel`), or `createThreePanelLayout` for an app-level variant. Widths and heights are design decisions baked into a variant, never call-site props. Phase 2 of the add/deprecate/delete migration; the root export is removed in phase 3.",
     "showcase": "#/three-panel-layout",
     "since": "v0.11.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
-    "line": 90
+    "line": 98
   },
   {
     "name": "ThresholdRail",
