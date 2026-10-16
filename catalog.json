@@ -3686,7 +3686,7 @@
     "showcase": "#/chart-frame",
     "since": "0.185.0",
     "file": "src/components/ChartFrame/ChartFrame.tsx",
-    "line": 301
+    "line": 341
   },
   {
     "name": "createCheckbox",
@@ -9422,7 +9422,7 @@
     "showcase": null,
     "since": "0.220.0",
     "file": "src/components/HeightReveal/HeightReveal.tsx",
-    "line": 43
+    "line": 47
   },
   {
     "name": "HighlightBody",

@@ -29,11 +29,14 @@
 // trigger is a hamburger, not a ▾, so the chevron means only this. A
 // collapsed frame keeps its header and does not render its body. Its column
 // drops the stated height, and so does a FILL frame's box, so the frame is
-// as tall as its header. The parent must still give back the space: a
+// as tall as its header. A FILL frame is also content-sized while it opens,
+// and fills its parent again when the reveal ends. The parent must still give back the space: a
 // BuilderBoard does that with `panelACollapsed`.
 // The collapse ANIMATES (owner, 2026-10-14): the body sits in a HeightReveal,
 // which shuts its row and unmounts the body when the close ends, and the
 // column is a `sizeMotion` Stack, so a stated height eases to the header's.
+// A fill column has no sizeMotion: the HeightReveal eases the content-sized
+// frame, and a parent that eases to or from `auto` follows it.
 // `collapsed` is controlled or owned, like `fullscreen`. Fullscreen and
 // collapse never show together: entering fullscreen EXPANDS the frame (a
 // fullscreen header with no chart shows nothing), and the chevron on a
@@ -60,11 +63,21 @@
 // mode to pick, and the face is `auto`'s — "shrink to fit" — reporting
 // `onYAxisPress`. The caller still owns the marks (`createAxisWaterMarks`).
 // ============================================
-import { type Component, type JSX, Show, createSignal, mergeProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  createEffect,
+  createSignal,
+  mergeProps,
+  on,
+  onCleanup,
+} from "solid-js";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { IconOnlyButton } from "../Button";
 import { ButtonGroup } from "../ButtonGroup";
 import { FillFullscreenBox, FullscreenBox } from "../FullscreenBox";
-import { HeightReveal } from "../HeightReveal";
+import { HEIGHT_REVEAL_MS, HeightReveal } from "../HeightReveal";
 import { createIcon } from "../Icon";
 import {
   ClusterRow,
@@ -146,14 +159,17 @@ const columnHeight = (height: ChartFrameProps["height"]): JSX.CSSProperties =>
     ? {}
     : { height: height === "fill" ? "100%" : `${height}px`, "min-height": "0" };
 
-/** The header row and the body row, in one column. */
+/** The header row and the body row, in one column. A FILL column does not
+ *  ease its own height: it is content-sized while it moves (CONTENT_SIZED),
+ *  and its HeightReveal does the easing. */
 const frameColumn = (height: ChartFrameProps["height"]) =>
-  createStack({ gap: "xs", sizeMotion: true, style: columnHeight(height) });
+  createStack({ gap: "xs", sizeMotion: height !== "fill", style: columnHeight(height) });
 
-/** A collapsed frame is as tall as its header. Set on the box AND the
- *  column: a fill box's CSS gives both `flex: 1 1 0`, and a zero basis in a
- *  content-sized parent shrinks the frame below its header. */
-const HEADER_ONLY: JSX.CSSProperties = { height: "auto", flex: "0 0 auto" };
+/** The frame as tall as its content: the header alone when collapsed, the
+ *  header plus the moving HeightReveal while a fill frame opens. Set on the
+ *  box AND the column: a fill box's CSS gives both `flex: 1 1 0`, and a zero
+ *  basis in a content-sized parent shrinks the frame below its header. */
+const CONTENT_SIZED: JSX.CSSProperties = { height: "auto", flex: "0 0 auto" };
 
 /** Rail + chart; takes what the header leaves. */
 const BodyRow = createRow({
@@ -192,6 +208,30 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
     props.collapsible === true &&
     !fullscreen() &&
     (props.collapsed ?? ownedCollapsed());
+  // While a FILL frame moves, it sizes to its content, not to its parent:
+  // the header plus a HeightReveal that eases its row around the held chart.
+  // A `100%` height cannot follow a parent that eases to or from `auto` (it
+  // resolves to 0px), and a fill column eased from a `0px` flex basis. Both
+  // made the chart vanish at once and the empty frame roll up (thorcasting,
+  // 2026-10-16). So a close takes the content size at once, and an open keeps
+  // it until the reveal ends, then fills again. A stated-height column eases
+  // its own height, so it follows `collapsed` directly.
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const [contentSized, setContentSized] = createSignal(collapsed());
+  createEffect(
+    on(
+      collapsed,
+      (shut) => {
+        if (shut || props.height !== "fill" || reducedMotion()) {
+          setContentSized(shut);
+          return;
+        }
+        const timer = setTimeout(() => setContentSized(false), HEIGHT_REVEAL_MS);
+        onCleanup(() => clearTimeout(timer));
+      },
+      { defer: true },
+    ),
+  );
   const setCollapsed = (next: boolean): void => {
     if (props.collapsed === undefined) setOwnedCollapsed(next);
     props.onCollapsedChange?.(next);
@@ -259,10 +299,10 @@ const ChartFrameBase: Component<ChartFrameProps> = (props) => {
     <Box
       fullscreen={fullscreen()}
       onFullscreenChange={setFullscreen}
-      style={collapsed() ? HEADER_ONLY : undefined}
+      style={contentSized() ? CONTENT_SIZED : undefined}
       renderCorner={() => null}
     >
-      <FrameColumn style={collapsed() ? HEADER_ONLY : undefined}>
+      <FrameColumn style={contentSized() ? CONTENT_SIZED : undefined}>
         <SpreadRow>
           <TextTitle>{props.title}</TextTitle>
           <Show when={props.actions} fallback={buttons()}>

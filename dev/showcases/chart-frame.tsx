@@ -201,6 +201,29 @@ const CollapsibleExample: Component = () => {
   );
 };
 
+/** A FILL frame in a parent that eases between a stated height (open) and
+ *  its content's (collapsed) — the shape of a page that squeezes the frame
+ *  while a form is open. The chart slides like the stated-height frame's. */
+const FillCollapsibleExample: Component = () => {
+  const [collapsed, setCollapsed] = createSignal(false);
+  return (
+    <>
+      <div class="chart-frame-demo-ease-box" style={collapsed() ? undefined : { height: "320px" }}>
+        <FillChartFrame
+          title="Cash flow"
+          yTitle="Balance ($)"
+          collapsible
+          collapsed={collapsed()}
+          onCollapsedChange={setCollapsed}
+        >
+          <StillCashflowScrubChart cells={shellCells} chartHeight="fill" scrub={false} />
+        </FillChartFrame>
+      </div>
+      <MutedBody>{`collapsed = ${collapsed()} · the parent eases 320px ↔ auto`}</MutedBody>
+    </>
+  );
+};
+
 /** `createRangeDialog` — the same min/max editor, named for use outside a
  *  chart: here a slider's allowed range, in hours. */
 const HoursRangeDialog = createRangeDialog({
@@ -298,6 +321,10 @@ export const ChartFrameShowcase: Component = () => {
             <StillCashflowScrubChart cells={shellCells} chartHeight="fill" scrub={false} />
           </FillChartFrame>
         </FixedHeightBox>
+      </div>
+      <div class="example-group">
+        <h3>FillChartFrame, collapsible — its parent eases between 320px and its content</h3>
+        <FillCollapsibleExample />
       </div>
       <div class="example-group">
         <h3>ContentChartFrame — the frame sizes to its chart (height: "content")</h3>

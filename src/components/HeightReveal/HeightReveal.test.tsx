@@ -120,6 +120,32 @@ describe("HeightReveal", () => {
     expect(content.style.height).toBe("");
   });
 
+  it("holds the height it had open even when the close already sees the closed layout", () => {
+    // A fill ChartFrame shrinks its column in the same update as the close,
+    // so a read at the close finds a filling child at 0px.
+    vi.useFakeTimers();
+    let height = 240;
+    const proto = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+      configurable: true,
+      get: () => height,
+    });
+    try {
+      const [open, setOpen] = createSignal(true);
+      const { container } = render(() => (
+        <HeightReveal when={open()}>
+          <span>body</span>
+        </HeightReveal>
+      ));
+      const content = container.querySelector<HTMLElement>(".sui-height-reveal__content")!;
+      height = 0;
+      setOpen(false);
+      expect(content.style.height).toBe("240px");
+    } finally {
+      if (proto) Object.defineProperty(HTMLElement.prototype, "offsetHeight", proto);
+    }
+  });
+
   it("holds nothing on a first open, when it has no open height yet", () => {
     vi.useFakeTimers();
     const [open, setOpen] = createSignal(false);

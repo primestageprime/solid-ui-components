@@ -8,6 +8,10 @@
 - **`TickSeries`** — a Chart slot that draws a short vertical tick at each point (`length` 20 px, `strokeWidth` 2.5). Put a `PointCaptions side="below"` beside it for a caption under each tick.
 - **`TreeTable` `onRowHover`** — reports the original row under the pointer, anywhere in the row, and `null` when the pointer leaves the body. It passes BaseTable's `onRowHover` through.
 
+### Fixed
+
+- **A collapsible `FillChartFrame` slides its chart like the stated-height `ChartFrame`.** In a parent that eases between a px height and `auto`, the chart vanished at once and the empty frame rolled up. A fill frame is now as tall as its content while it moves, and fills its parent again when the open ends. `HeightReveal` records the open height while it is open, so the close holds the chart even when the layout already shrank.
+
 ## 0.223.0 — 2026-10-16
 
 ### Added
