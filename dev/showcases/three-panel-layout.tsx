@@ -1,6 +1,11 @@
 import type { Component } from "solid-js";
-import { ThreePanelLayout } from "../../src/components/ThreePanelLayout";
-import { NarrowStack } from "../../src/components/Layout";
+import {
+  ThreePanelLayout,
+  StandardThreePanel,
+  ListDetailThreePanel,
+  InspectorThreePanel,
+  SplitThreePanel,
+} from "../../src/components/ThreePanelLayout";
 import { TextBody } from "../../src/components/Text";
 
 // A single frame inside the showcase so each variant renders at a bounded
@@ -42,16 +47,44 @@ const DemoCenter = () => (
   </>
 );
 
+const VARIANTS = [
+  { name: "StandardThreePanel", widths: "260 / 240", use: "list, work area, context pane", V: StandardThreePanel },
+  { name: "ListDetailThreePanel", widths: "320 / 240", use: "list-and-detail, wide left column", V: ListDetailThreePanel },
+  { name: "InspectorThreePanel", widths: "220 / 320", use: "work area with a wide right inspector", V: InspectorThreePanel },
+  { name: "SplitThreePanel", widths: "560 / 240", use: "split view, half-screen-class left pane", V: SplitThreePanel },
+];
+
 export const ThreePanelLayoutShowcase: Component = () => {
   return (
     <div class="component-section">
-      <h2>ThreePanelLayout — Primitive (Depth 0)</h2>
+      <h2>ThreePanelLayout — named variants</h2>
       <p class="text-meta">
-        Owns CSS (ThreePanelLayout.css), no component imports. Top-bar +
-        three-column (left / center / right) page scaffold. Zero-config:
-        required slot is <code>centerPanel</code>; all other slots render
-        conditionally and the grid collapses automatically when a side panel is
-        omitted.
+        The only three-panel layouts to import. Each variant bakes its aside
+        widths (from <code>THREE_PANEL_ASIDE_WIDTH</code>) and full height; you
+        pass only the panels. A size change is a new named variant or a global
+        change to a variant, never a call-site prop.
+      </p>
+
+      {VARIANTS.map(({ name, widths, use, V }) => (
+        <div class="example-group">
+          <h3>{name}</h3>
+          <Frame label={`left / right ${widths} — ${use}`}>
+            <V
+              topBar={<DemoTopBar />}
+              leftPanel={<DemoList title="Left" items={["Item 1", "Item 2", "Item 3"]} />}
+              centerPanel={<DemoCenter />}
+              rightPanel={<DemoList title="Right" items={["Detail 1", "Detail 2"]} />}
+            />
+          </Frame>
+        </div>
+      ))}
+
+      <h2>internal</h2>
+      <p class="text-meta">
+        The sized primitive (Depth 1, owns ThreePanelLayout.css). Deprecated at
+        the package root: apps use a variant above or{" "}
+        <code>createThreePanelLayout</code> for an app-level one. Shown here for
+        the slot behavior only.
       </p>
 
       <div class="example-group">
@@ -118,57 +151,6 @@ export const ThreePanelLayoutShowcase: Component = () => {
             centerPanel={<DemoCenter />}
           />
         </Frame>
-      </div>
-
-      <div class="example-group">
-        <h3>fullHeight alias (height = "100%")</h3>
-        <Frame label="<ThreePanelLayout fullHeight />">
-          <ThreePanelLayout
-            fullHeight
-            topBar={<DemoTopBar />}
-            leftPanel={<DemoList title="Assets" items={["Vessel A"]} />}
-            centerPanel={<DemoCenter />}
-            rightPanel={<DemoList title="Context" items={["Engine #3"]} />}
-          />
-        </Frame>
-      </div>
-
-      <div class="example-group">
-        <h3>Custom panel widths</h3>
-        <Frame label='leftPanelWidth="160px" rightPanelWidth="320px"'>
-          <ThreePanelLayout
-            topBar={<DemoTopBar />}
-            leftPanel={<DemoList title="Narrow" items={["Item 1", "Item 2"]} />}
-            centerPanel={<DemoCenter />}
-            rightPanel={
-              <DemoList
-                title="Wide Context"
-                items={["Details row 1", "Details row 2", "Details row 3"]}
-              />
-            }
-            leftPanelWidth="160px"
-            rightPanelWidth="320px"
-          />
-        </Frame>
-      </div>
-
-      <div class="example-group">
-        <h3>Explicit viewport height (caller-controlled)</h3>
-        <NarrowStack>
-          <Frame label='height="100%"  — wrap in a container to get "viewport minus header"'>
-            <ThreePanelLayout
-              height="100%"
-              topBar={<DemoTopBar />}
-              leftPanel={<DemoList title="Assets" items={["Vessel A"]} />}
-              centerPanel={<DemoCenter />}
-              rightPanel={<DemoList title="Context" items={["Engine #3"]} />}
-            />
-          </Frame>
-          <p class="text-meta">
-            For "viewport minus app header" pass{" "}
-            <code>height="calc(100vh - var(--app-header-height, 64px))"</code>.
-          </p>
-        </NarrowStack>
       </div>
     </div>
   );
