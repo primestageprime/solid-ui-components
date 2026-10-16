@@ -107,6 +107,9 @@ const createExpanded = (initial: readonly string[]) => {
   return { expanded, toggle };
 };
 
+/** Leaf ids whose box the checkbox example locks. */
+const LOCKED: ReadonlySet<string> = new Set(["seal"]);
+
 export const TreeTableShowcase: Component = () => {
   const plain = createExpanded(["pump"]);
   const checked = createExpanded(["pump", "motor"]);
@@ -142,7 +145,9 @@ export const TreeTableShowcase: Component = () => {
         <h3>Checkboxes — a parent checks every part under it</h3>
         <p class="text-meta">
           The selection holds leaf ids. A parent shows a dash when only some of
-          its parts are checked. {selected().size} parts checked.
+          its parts are checked. The shaft seal is locked: its box is disabled,
+          and a click on Pump assembly leaves it alone. {selected().size} parts
+          checked.
         </p>
         <TreeTable
           {...tree}
@@ -150,7 +155,7 @@ export const TreeTableShowcase: Component = () => {
           columns={COLUMNS}
           expanded={checked.expanded()}
           onToggle={checked.toggle}
-          selection={{ selected: selected(), onChange: setSelected }}
+          selection={{ selected: selected(), onChange: setSelected, disabled: LOCKED }}
           compact
           hoverable
         />

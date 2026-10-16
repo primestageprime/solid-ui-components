@@ -40,16 +40,23 @@ import { type FlatTreeRow, flattenTree } from "./flattenTree";
 import {
   type CheckState,
   type TreeShape,
+  allLocked,
   checkState,
   leafIds,
   leafIdsOf,
-  setChecked,
+  toggleLeaves,
 } from "./treeSelection";
 
 /** Controlled checkbox selection: the set of checked LEAF ids. */
 export interface TreeTableSelection {
   readonly selected: ReadonlySet<string>;
   readonly onChange: (next: ReadonlySet<string>) => void;
+  /**
+   * LEAF ids whose box is locked: shown as it is, never changed by a click.
+   * A parent's box is locked when every leaf under it is; otherwise its click
+   * changes only the unlocked leaves.
+   */
+  readonly disabled?: ReadonlySet<string>;
 }
 
 export interface TreeTableProps<T extends TableRow>
@@ -92,6 +99,11 @@ export interface TreeTableProps<T extends TableRow>
    * `null` when the pointer leaves the body. For a chart cross-highlight.
    */
   onRowHover?: (row: T | null) => void;
+  /**
+   * Rows to light as if hovered, driven from outside, over the original row:
+   * a chart mark hovered → its row lit. Reactive: read a signal inside it.
+   */
+  highlighted?: (row: T) => boolean;
 }
 
 /** Nulls last; strings by `localeCompare`; everything else numerically. */
@@ -146,16 +158,21 @@ export function TreeTable<T extends TableRow>(props: TreeTableProps<T>) {
   const box = (leaves: () => readonly string[], label: string): JSX.Element => {
     const selected = (): ReadonlySet<string> =>
       props.selection?.selected ?? new Set<string>();
+    const locked = (): ReadonlySet<string> =>
+      props.selection?.disabled ?? new Set<string>();
     const state = (): CheckState => checkState(leaves(), selected());
     return (
       <SmallCheckbox
         aria-label={label}
         checked={state() === "checked"}
         indeterminate={state() === "indeterminate"}
+        disabled={allLocked(leaves(), locked())}
         // A row click expands and collapses; a click on the box must not.
         onClick={(e) => e.stopPropagation()}
         onCheckedChange={(on) =>
-          props.selection?.onChange(setChecked(leaves(), on, selected()))
+          props.selection?.onChange(
+            toggleLeaves(leaves(), on, selected(), locked()),
+          )
         }
       />
     );
@@ -251,6 +268,7 @@ export function TreeTable<T extends TableRow>(props: TreeTableProps<T>) {
         if (flat.hasChildren) props.onToggle(flat.id);
       }}
       onRowHover={(flat) => props.onRowHover?.(flat?.row ?? null)}
+      highlighted={props.highlighted ? (flat) => props.highlighted?.(flat.row) ?? false : undefined}
     />
   );
 }

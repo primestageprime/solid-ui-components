@@ -44,3 +44,26 @@ export const setChecked = (
   const others = filter((id: string) => !leafSet.has(id), [...selected]);
   return new Set(checked ? [...others, ...leaves] : others);
 };
+
+/**
+ * A box's click, with LOCKED leaves left as they are. Only the unlocked
+ * leaves under the box change. When they already all match `on` (a parent
+ * shows indeterminate because a locked leaf differs), the click flips them
+ * instead, so a box never takes a click that changes nothing.
+ */
+export const toggleLeaves = (
+  leaves: readonly string[],
+  on: boolean,
+  selected: ReadonlySet<string>,
+  disabled: ReadonlySet<string>,
+): ReadonlySet<string> => {
+  const open = filter((id: string) => !disabled.has(id), [...leaves]);
+  const already = every((id: string) => selected.has(id) === on, open);
+  return setChecked(open, already ? !on : on, selected);
+};
+
+/** True when every leaf under a box is locked, so the box is locked too. */
+export const allLocked = (
+  leaves: readonly string[],
+  disabled: ReadonlySet<string>,
+): boolean => leaves.length > 0 && every((id: string) => disabled.has(id), leaves);

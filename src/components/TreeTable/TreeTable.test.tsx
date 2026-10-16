@@ -268,3 +268,49 @@ describe("TreeTable onRowHover", () => {
     expect(onRowHover).toHaveBeenLastCalledWith(null);
   });
 });
+
+describe("TreeTable locked boxes and highlighted rows", () => {
+  const LockedTree = () => {
+    const [selected, setSelected] = createSignal<ReadonlySet<string>>(new Set());
+    return (
+      <TreeTable
+        {...base}
+        data={DATA}
+        expanded={new Set(["pump"])}
+        onToggle={() => {}}
+        selection={{ selected: selected(), onChange: setSelected, disabled: new Set(["seal", "hose"]) }}
+      />
+    );
+  };
+  const boxOf = (c: HTMLElement, label: string) =>
+    c.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)!;
+
+  it("locks a listed leaf's box and leaves the others open", () => {
+    const { container } = render(() => <LockedTree />);
+    expect(boxOf(container, "Select Seal").disabled).toBe(true);
+    expect(boxOf(container, "Select Hose").disabled).toBe(true);
+    expect(boxOf(container, "Select Impeller").disabled).toBe(false);
+    expect(boxOf(container, "Select Pump").disabled).toBe(false);
+  });
+
+  it("a parent's click checks only its unlocked leaves", () => {
+    const { container } = render(() => <LockedTree />);
+    fireEvent.click(boxOf(container, "Select Pump"));
+    expect(boxOf(container, "Select Impeller").checked).toBe(true);
+    expect(boxOf(container, "Select Seal").checked).toBe(false);
+  });
+
+  it("lights the rows `highlighted` names, over the original row", () => {
+    const { container } = render(() => (
+      <TreeTable
+        {...base}
+        data={DATA}
+        expanded={new Set(["pump"])}
+        onToggle={() => {}}
+        highlighted={(p) => p.id === "seal"}
+      />
+    ));
+    expect(rowOf(container, "Seal").classList.contains("hud-table__row--highlighted")).toBe(true);
+    expect(rowOf(container, "Pump").classList.contains("hud-table__row--highlighted")).toBe(false);
+  });
+});

@@ -4,7 +4,14 @@
  * box is derived from its leaves, so a parent can never disagree with them.
  */
 import { describe, expect, it } from "vitest";
-import { checkState, leafIds, leafIdsOf, setChecked } from "./treeSelection";
+import {
+  allLocked,
+  checkState,
+  leafIds,
+  leafIdsOf,
+  setChecked,
+  toggleLeaves,
+} from "./treeSelection";
 
 interface Node {
   readonly id: string;
@@ -65,5 +72,25 @@ describe("setChecked", () => {
     const before = new Set<string>();
     expect(setChecked(["x"], true, before)).not.toBe(before);
     expect(before.size).toBe(0);
+  });
+});
+
+describe("locked leaves", () => {
+  const locked = new Set(["b"]);
+  it("a click changes only the unlocked leaves", () => {
+    expect([...toggleLeaves(["a", "b", "c"], true, new Set(), locked)].sort()).toEqual(["a", "c"]);
+    expect([...toggleLeaves(["a", "b", "c"], false, new Set(["a", "b", "c"]), locked)]).toEqual(["b"]);
+  });
+
+  it("a click that would change nothing flips the unlocked leaves instead", () => {
+    // a and c are in, the locked b is out: the parent shows indeterminate,
+    // and its click turns checked. Checking a and c again changes nothing.
+    expect([...toggleLeaves(["a", "b", "c"], true, new Set(["a", "c"]), locked)]).toEqual([]);
+  });
+
+  it("a box is locked only when every leaf under it is", () => {
+    expect(allLocked(["b"], locked)).toBe(true);
+    expect(allLocked(["a", "b"], locked)).toBe(false);
+    expect(allLocked([], locked)).toBe(false);
   });
 });

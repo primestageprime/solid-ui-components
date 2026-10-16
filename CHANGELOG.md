@@ -5,6 +5,8 @@
 ### Added
 
 - **`Shape` `"cross"`** — a filled × for `ShapeGlyph`, `PinMarkers` and every slot that takes a `Descriptor`. At size 12 it matches a radius-6 point: "nothing here" on a track.
+- **`TreeTable` `highlighted`** — lights rows from outside, over the original row, as BaseTable's.
+- **`TreeTable` `selection.disabled`** — a set of leaf ids whose checkbox is locked. A parent's click changes only its unlocked leaves; a parent whose leaves are all locked is locked too.
 
 ## 0.225.0 — 2026-10-16
 
