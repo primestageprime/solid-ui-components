@@ -249,3 +249,22 @@ describe("TreeTable — sort", () => {
     ]);
   });
 });
+
+describe("TreeTable onRowHover", () => {
+  it("reports the original row on enter and null when the pointer leaves the body", () => {
+    const onRowHover = vi.fn();
+    const { container } = render(() => (
+      <TreeTable
+        {...base}
+        data={DATA}
+        expanded={new Set(["pump"])}
+        onToggle={() => {}}
+        onRowHover={onRowHover}
+      />
+    ));
+    fireEvent.mouseEnter(rowOf(container, "Seal"));
+    expect(onRowHover).toHaveBeenLastCalledWith(DATA[0]!.parts![1]);
+    fireEvent.mouseLeave(container.querySelector("tbody")!);
+    expect(onRowHover).toHaveBeenLastCalledWith(null);
+  });
+});
