@@ -1,7 +1,11 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { SwimlaneChart } from "./SwimlaneChart";
-import { installFakeSizer, type FakeSizer } from "../../test-utils";
+import {
+  installFakeSizer,
+  installFastFrames,
+  type FakeSizer,
+} from "../../test-utils";
 import { widthForDepth } from "./helpers";
 
 // SwimlaneChart's headline feature — collapsing outer rings into "+N" boundary
@@ -24,13 +28,18 @@ const FITS_TWO_RINGS = widthForDepth(2, NODE_W); // 1264 — exact fit
 const FITS_ONE_RING = widthForDepth(1, NODE_W); // 804 — exact fit
 
 let sizer: FakeSizer;
+let slowFrames: (() => void) | undefined;
 
 afterEach(() => {
   cleanup();
   sizer?.restore();
+  slowFrames?.();
+  slowFrames = undefined;
 });
 
 const mount = () => {
+  // The collapse defers on rAF but animates on CSS, so frames can be fast.
+  slowFrames = installFastFrames();
   sizer = installFakeSizer();
   // Five columns spread symmetrically about the centre, so each shrink step has
   // an outer ring to collapse on both sides.
@@ -150,16 +159,31 @@ describe("SwimlaneChart — responsive collapse", () => {
     //
     // This is the first test to observe the transient at all — it needs two
     // container resizes inside 360ms, which was impossible before the sizer.
-    const { container, box } = mount();
-    const count = () => container.querySelectorAll(".probe-node").length;
+    //
+    // The leave timer is a `setTimeout`, so the clock is faked for the whole
+    // gesture rather than slept through: `sizer.resize` awaits a frame that
+    // the sizer's own shim schedules on `setTimeout(0)`, which is why each
+    // resize is advanced past before it is awaited.
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const { container, box } = mount();
+      const count = () => container.querySelectorAll(".probe-node").length;
+      const resize = async (width: number): Promise<void> => {
+        const settled = sizer.resize(box, { width, height: 800 });
+        vi.advanceTimersByTime(1);
+        await settled;
+      };
 
-    await sizer.resize(box, { width: FITS_ONE_RING - 1, height: 800 });
-    expect(count()).toBe(5);
+      await resize(FITS_ONE_RING - 1);
+      expect(count()).toBe(5);
 
-    await sizer.resize(box, { width: FITS_TWO_RINGS, height: 800 });
-    expect(count()).toBe(9); // 5 live + 4 still leaving
+      await resize(FITS_TWO_RINGS);
+      expect(count()).toBe(9); // 5 live + 4 still leaving
 
-    await new Promise((resolve) => setTimeout(resolve, 450));
-    expect(count()).toBe(5);
-  }, 2_000);
+      vi.advanceTimersByTime(450);
+      expect(count()).toBe(5);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

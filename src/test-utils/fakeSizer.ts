@@ -96,7 +96,12 @@ const entryFor = (el: Element, size: ObservedSize): ResizeObserverEntry =>
   }) as unknown as ResizeObserverEntry;
 
 /** One animation frame, then one microtask — the frame lets `observeSize`'s
- *  deferred flush run, the microtask lets Solid settle the resulting render. */
+ *  deferred flush run, the microtask lets Solid settle the resulting render.
+ *
+ *  jsdom runs under `pretendToBeVisual`, which paces rAF at a REAL 60 Hz, so
+ *  every awaited `resize()` is a 16 ms sleep. A test that resizes many times
+ *  and mounts nothing that animates can opt into `installFastFrames()` below
+ *  to take the sleep out. */
 const settle = async (): Promise<void> => {
   await new Promise<void>((resolve) => {
     if (typeof requestAnimationFrame === "function") {
@@ -106,6 +111,43 @@ const settle = async (): Promise<void> => {
     }
   });
   await Promise.resolve();
+};
+
+/**
+ * Replace the global `requestAnimationFrame` / `cancelAnimationFrame` with a
+ * `setTimeout(0)` shim until the returned undo runs. Same contract —
+ * asynchronous, after the current task, cancellable, handed a timestamp —
+ * minus the 16 ms wait, so `sizer.resize()` settles in about a millisecond
+ * (measured 2026-10-16: ten rAF awaits = 170 ms, ten `setTimeout(0)` = 10 ms).
+ *
+ * OPT-IN, NOT PART OF `installFakeSizer`. It was tried as the default and
+ * made the slider suites THREE TIMES SLOWER: a component that animates on a
+ * rAF loop (MarkedSlider's height, ScrubChart's tweens) measures elapsed
+ * time, so a 1 ms frame means fifteen times as many frames — and renders —
+ * to cross the same 240 ms. Use it only in a file whose components defer on
+ * rAF without animating on it (EllipsisText, ResponsiveMoney, SwimlaneChart's
+ * collapse). Call from `beforeEach`, undo from `afterEach`.
+ */
+export const installFastFrames = (): (() => void) => {
+  const g = globalThis as {
+    requestAnimationFrame?: typeof requestAnimationFrame;
+    cancelAnimationFrame?: typeof cancelAnimationFrame;
+  };
+  const prevRaf = g.requestAnimationFrame;
+  const prevCaf = g.cancelAnimationFrame;
+  g.requestAnimationFrame = ((cb: FrameRequestCallback): number =>
+    setTimeout(
+      () => cb(performance.now()),
+      0,
+    ) as unknown as number) as typeof requestAnimationFrame;
+  g.cancelAnimationFrame = ((id: number): void =>
+    clearTimeout(
+      id as unknown as ReturnType<typeof setTimeout>,
+    )) as typeof cancelAnimationFrame;
+  return () => {
+    g.requestAnimationFrame = prevRaf;
+    g.cancelAnimationFrame = prevCaf;
+  };
 };
 
 /**

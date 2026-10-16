@@ -58,9 +58,8 @@ import {
   children,
   splitProps,
 } from "solid-js";
-import { filter } from "../../fn";
-import { clamp } from "../../internal/math/clamp";
 import { SliderField } from "./SliderField";
+import { DEFAULT_STEP, commitTyped, resolveTicks } from "./logic";
 import "./Slider.css";
 
 /** Props owned by `Slider`, whichever node draws the value. */
@@ -195,69 +194,11 @@ type OmitFromEach<T, K extends PropertyKey> = T extends unknown
 /** What a curried variant exposes: everything except the curried overrides. */
 export type SliderDataProps = OmitFromEach<SliderProps, keyof SliderOverrides>;
 
-const DEFAULT_STEP = 1;
-
-/** Shared empty tick list, so a slider without ticks allocates nothing. */
-const NO_TICKS: readonly number[] = [];
+// `DEFAULT_STEP`, `resolveTicks` and `commitTyped` live in logic.ts, where
+// they are tested as tables without a DOM.
 
 /** Half a notch, in CSS. Clamps an end notch inside the track's own bounds. */
 const HALF_NOTCH = "calc(var(--sui-slider-tick-width) / 2)";
-
-/**
- * Every step from `min` to `max`, inclusive, and never one past `max`.
- *
- * A `step` that does not divide the domain evenly simply stops short: a domain
- * of `0..15` by `4` marks 0, 4, 8 and 12, because a notch at 16 would sit off
- * the track and a notch at 15 is not a step.
- */
-const ticksFromStep = (
-  min: number,
-  max: number,
-  step: number,
-): readonly number[] =>
-  Array.from(
-    { length: Math.floor((max - min) / step) + 1 },
-    (_, index) => min + index * step,
-  );
-
-/** Whether a tick names a value the thumb can actually reach. */
-const isInDomain =
-  (min: number, max: number) =>
-  (value: number): boolean =>
-    value >= min && value <= max;
-
-/** The notch values `ticks` asks for, in the consumer's own units. */
-const resolveTicks = (
-  ticks: boolean | readonly number[] | undefined,
-  min: number,
-  max: number,
-  step: number,
-): readonly number[] =>
-  ticks === true
-    ? ticksFromStep(min, max, step)
-    : // What is left is an array, `false` or nothing; the last two mark nothing.
-      filter(
-        isInDomain(min, max),
-        typeof ticks === "object" ? ticks : NO_TICKS,
-      );
-
-/**
- * Pull a typed number onto the domain: clamped to `[min, max]`, then to the
- * nearest step counted FROM `min` — the same grid the thumb moves on, so a
- * typed value can never land where a drag cannot.
- *
- * `toFixed(10)` drops the float noise that `min + n * step` leaves behind on a
- * fractional step (0.1 + 3 * 0.1 is 0.4000000000000001).
- */
-const snapToDomain = (
-  value: number,
-  min: number,
-  max: number,
-  step: number,
-): number => {
-  const onGrid = min + Math.round((clamp(value, min, max) - min) / step) * step;
-  return clamp(Number.parseFloat(onGrid.toFixed(10)), min, max);
-};
 
 /** Position of a value on the track, as a percentage of the domain. */
 const tickPercent = (value: number, min: number, max: number): number =>
@@ -323,16 +264,13 @@ export const Slider: Component<SliderProps> = (props) => {
   // survives the keystroke that produced it. Text that is not a number moves
   // nothing.
   const commitDraft = (raw: string): void => {
-    const typed = Number.parseFloat(raw);
-    if (Number.isFinite(typed)) {
-      const next = snapToDomain(
-        typed,
-        local.min,
-        local.max,
-        local.step ?? DEFAULT_STEP,
-      );
-      if (next !== local.value) local.onChange(next);
-    }
+    const next = commitTyped(raw, {
+      min: local.min,
+      max: local.max,
+      step: local.step,
+      current: local.value,
+    });
+    if (next !== null) local.onChange(next);
   };
 
   // `children` resolves the caller's node ONCE. Reading `local.valueLabel`

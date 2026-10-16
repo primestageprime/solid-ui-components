@@ -157,119 +157,35 @@ describe("Slider", () => {
       (tick) => tick.getAttribute("data-value") ?? "",
     );
 
-  it("renders no ticks when the prop is absent", () => {
-    const { container } = render(() => (
-      <Slider label="Buffer" value={6} onChange={() => {}} min={3} max={18} />
-    ));
-    expect(container.querySelectorAll(".sui-slider__tick")).toHaveLength(0);
-  });
-
-  it("renders no ticks for ticks={false}", () => {
-    const { container } = render(() => (
-      <Slider
-        label="Buffer"
-        value={6}
-        onChange={() => {}}
-        min={3}
-        max={18}
-        ticks={false}
-      />
-    ));
-    expect(container.querySelectorAll(".sui-slider__tick")).toHaveLength(0);
-  });
-
-  it("ticks={true} marks every step from min to max inclusive", () => {
-    const { container } = render(() => (
-      <Slider
-        label="Annual raise"
-        value={3.5}
-        onChange={() => {}}
-        min={0}
-        max={15}
-        step={0.5}
-        ticks
-      />
-    ));
-    // 0, 0.5, … 15 — both ends carry a notch, so the count is steps + 1.
-    expect(ticksOf(container)).toHaveLength(31);
-  });
-
-  it("ticks={true} stops short rather than marking past max", () => {
+  // Which values are notched is a table in logic.test.ts (`resolveTicks`,
+  // `ticksFromStep`). This one mount proves the notches reach the DOM with
+  // their value, their passed state and no accessibility footprint.
+  it("integration: ticks hold together — none by default, one per step, passed, hidden", () => {
+    const [ticks, setTicks] = createSignal<boolean | readonly number[]>(false);
     const { container } = render(() => (
       <Slider
         label="Churn"
-        value={4}
+        value={8}
         onChange={() => {}}
         min={0}
         max={15}
         step={4}
-        ticks
+        ticks={ticks()}
       />
     ));
+    expect(ticksOf(container)).toEqual([]);
+    setTicks(true);
+    // 0, 4, 8, 12 — stops short of 15 rather than marking past max.
     expect(ticksOf(container)).toEqual(["0", "4", "8", "12"]);
-  });
-
-  it("an explicit list marks exactly those values and ignores step", () => {
-    const { container } = render(() => (
-      <Slider
-        label="Months to sample"
-        value={6}
-        onChange={() => {}}
-        min={3}
-        max={24}
-        step={1}
-        ticks={[3, 6, 12, 18, 24]}
-      />
-    ));
-    expect(ticksOf(container)).toEqual(["3", "6", "12", "18", "24"]);
-  });
-
-  it("drops a tick outside the domain instead of pulling it to the edge", () => {
-    const { container } = render(() => (
-      <Slider
-        label="Buffer"
-        value={6}
-        onChange={() => {}}
-        min={3}
-        max={18}
-        ticks={[0, 3, 12, 18, 24]}
-      />
-    ));
-    expect(ticksOf(container)).toEqual(["3", "12", "18"]);
-  });
-
-  it("marks a passed tick apart from one the thumb has not reached", () => {
-    const { container } = render(() => (
-      <Slider
-        label="Buffer"
-        value={10}
-        onChange={() => {}}
-        min={0}
-        max={20}
-        ticks={[0, 10, 20]}
-      />
-    ));
-    const passed = container.querySelectorAll(".sui-slider__tick--passed");
     // The tick under the thumb counts as passed: the fill reaches it.
-    expect(passed).toHaveLength(2);
-  });
-
-  it("hides every tick from the accessibility tree", () => {
-    const { container } = render(() => (
-      <Slider
-        label="Buffer"
-        value={6}
-        onChange={() => {}}
-        min={0}
-        max={20}
-        step={1}
-        ticks
-      />
-    ));
-    const hidden = container.querySelectorAll(
-      '.sui-slider__tick[aria-hidden="true"]',
-    );
-    expect(hidden).toHaveLength(21);
+    expect(
+      container.querySelectorAll(".sui-slider__tick--passed"),
+    ).toHaveLength(3);
+    expect(
+      container.querySelectorAll('.sui-slider__tick[aria-hidden="true"]'),
+    ).toHaveLength(4);
+    setTicks([0, 8, 15, 99]);
+    expect(ticksOf(container)).toEqual(["0", "8", "15"]);
   });
 
   // ── editable readout ──────────────────────────────────────────────────
@@ -317,7 +233,11 @@ describe("Slider", () => {
     expect(editableField(container).getAttribute("type")).toBe("text");
   });
 
-  it("commits a typed value on Enter", () => {
+  // What a typed figure becomes — clamped, snapped, or nothing — is a table
+  // in logic.test.ts (`commitTyped`). This one mount proves the field's
+  // gestures are wired to it: Enter and blur commit, Escape and non-numbers
+  // revert the text, and the same figure commits nothing.
+  it("integration: the editable field holds together — Enter, blur, Escape, revert", () => {
     const onChange = vi.fn();
     const { container } = render(() => (
       <Slider
@@ -326,120 +246,42 @@ describe("Slider", () => {
         onChange={onChange}
         min={3}
         max={18}
+        step={3}
         editable
       />
     ));
     const field = editableField(container);
-    fireEvent.focus(field);
-    fireEvent.input(field, { target: { value: "11" } });
+    const type = (text: string) => {
+      fireEvent.focus(field);
+      fireEvent.input(field, { target: { value: text } });
+    };
+    // Enter commits.
+    type("12");
     fireEvent.keyDown(field, { key: "Enter" });
     fireEvent.blur(field);
-    expect(onChange).toHaveBeenCalledWith(11);
-  });
-
-  it("clamps a typed value to the domain rather than rejecting it", () => {
-    const onChange = vi.fn();
-    const { container } = render(() => (
-      <Slider
-        label="Buffer"
-        value={6}
-        onChange={onChange}
-        min={3}
-        max={18}
-        editable
-      />
-    ));
-    const field = editableField(container);
-    fireEvent.focus(field);
-    fireEvent.input(field, { target: { value: "400" } });
+    expect(onChange).toHaveBeenCalledWith(12);
+    // Blur commits, through the clamp and the snap.
+    onChange.mockClear();
+    type("400");
     fireEvent.blur(field);
     expect(onChange).toHaveBeenCalledWith(18);
-
     onChange.mockClear();
-    fireEvent.focus(field);
-    fireEvent.input(field, { target: { value: "-9" } });
+    type("10");
     fireEvent.blur(field);
-    expect(onChange).toHaveBeenCalledWith(3);
-  });
-
-  // A typed value lands on the same grid the thumb moves on, counted from min.
-  it("snaps a typed value to the step, counted from min", () => {
-    const onChange = vi.fn();
-    const { container } = render(() => (
-      <Slider
-        label="Buffer"
-        value={0}
-        onChange={onChange}
-        min={0}
-        max={100}
-        step={25}
-        editable
-      />
-    ));
-    const field = editableField(container);
-    fireEvent.focus(field);
-    fireEvent.input(field, { target: { value: "63" } });
-    fireEvent.blur(field);
-    expect(onChange).toHaveBeenCalledWith(75);
-  });
-
-  it("reverts and emits nothing for text that is not a number", () => {
-    const onChange = vi.fn();
-    const { container } = render(() => (
-      <Slider
-        label="Buffer"
-        value={6}
-        onChange={onChange}
-        min={3}
-        max={18}
-        editable
-      />
-    ));
-    const field = editableField(container);
-    fireEvent.focus(field);
-    fireEvent.input(field, { target: { value: "soon" } });
-    fireEvent.blur(field);
-    expect(onChange).not.toHaveBeenCalled();
-    expect(field.value).toBe("6");
-  });
-
-  it("Escape abandons the edit", () => {
-    const onChange = vi.fn();
-    const { container } = render(() => (
-      <Slider
-        label="Buffer"
-        value={6}
-        onChange={onChange}
-        min={3}
-        max={18}
-        editable
-      />
-    ));
-    const field = editableField(container);
-    fireEvent.focus(field);
-    fireEvent.input(field, { target: { value: "12" } });
+    expect(onChange).toHaveBeenCalledWith(9);
+    // Escape abandons the edit and the text reverts.
+    onChange.mockClear();
+    type("15");
     fireEvent.keyDown(field, { key: "Escape" });
     expect(onChange).not.toHaveBeenCalled();
     expect(field.value).toBe("6");
-  });
-
-  it("emits nothing when the typed value is the one already held", () => {
-    const onChange = vi.fn();
-    const { container } = render(() => (
-      <Slider
-        label="Buffer"
-        value={6}
-        onChange={onChange}
-        min={3}
-        max={18}
-        editable
-      />
-    ));
-    const field = editableField(container);
-    fireEvent.focus(field);
-    fireEvent.input(field, { target: { value: "6" } });
+    // Text that is not a number reverts too, and the held value says nothing.
+    type("soon");
+    fireEvent.blur(field);
+    type("6");
     fireEvent.blur(field);
     expect(onChange).not.toHaveBeenCalled();
+    expect(field.value).toBe("6");
   });
 
   it("editable emits nothing at mount", () => {
