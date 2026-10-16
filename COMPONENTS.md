@@ -98,7 +98,11 @@ Both built-in themes expose an identical `--sui-space-*` scale for `padding`, `m
 | `--sui-space-5` | `20px` | Loose row spacing |
 | `--sui-space-6` | `24px` | Page gutter, large panel padding |
 
-Spacing does not vary by theme — only the typographic / decorative tokens do. Use literal `px` for border widths (`1px`, `2px`) and `var(--sui-clip-*)` for clip-path inset distances.
+The `--sui-space-*` scale does not vary by theme. Use literal `px` for border widths (`1px`, `2px`) and `var(--sui-clip-*)` for clip-path inset distances.
+
+### Density (`--sui-dense-*`, optional)
+
+Component density is a theme choice. Rules for list rows, bucket boxes, group headers, table cells, panel padding, the `ThreePanelLayout` chrome and `Modal` padding read an optional `--sui-dense-*` token with their legacy value as the `var()` fallback, so a theme that declares none renders as before 0.223.0. `default.css` and `hud.css` declare the dense set (flush buckets with one shared 1px divider, 28px group headers, 4px/12px rows, a 4px selected bar, 12px panel padding, flush asides, 32px top bar, compact table cells, tighter modals). `bronze*`, `stax` and `colorblind` declare nothing. The full token table, with every fallback and the rules each token moves, is in `src/themes/README.md` ("Optional: `--sui-dense-*` density group"). `BucketQueue` reads its gap, bucket overlap and bucket borders from the live DOM, so a theme may change those without any JS mirror.
 
 **Shared types** exported from the library root:
 

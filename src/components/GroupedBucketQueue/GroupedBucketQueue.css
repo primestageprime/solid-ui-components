@@ -18,19 +18,21 @@
    and Type (2) step in by one unit each. A custom property (set inline per
    node from `FlatGroupHeader.depth`) rather than N depth classes, since the
    tree's depth is not fixed at 3. */
+/* The 12px base inset is the row's horizontal padding (BucketQueue.css), so a
+   dense theme that moves `--sui-dense-row-pad-x` moves the indent with it. */
 .grouped-bucket-queue__header {
-  padding-left: calc(12px + var(--gbq-depth, 0) * 16px);
+  padding-left: calc(var(--sui-dense-row-pad-x, 12px) + var(--gbq-depth, 0) * 16px);
 }
 .grouped-bucket-queue__body {
   padding-left: calc(var(--gbq-depth, 0) * 0px);
 }
 .grouped-bucket-queue__body .bucket-queue__row {
   padding-left: calc(
-    var(--sui-space-3, 12px) +
+    var(--sui-dense-row-pad-x, 12px) +
     (var(--gbq-depth, 0) + 1) *
     16px
   );
 }
 .grouped-bucket-queue__empty {
-  padding-left: calc(12px + var(--gbq-depth, 0) * 16px);
+  padding-left: calc(var(--sui-dense-row-pad-x, 12px) + var(--gbq-depth, 0) * 16px);
 }

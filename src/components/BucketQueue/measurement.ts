@@ -13,7 +13,7 @@
 // was on screen at mount.
 import { createSignal, onMount, onCleanup } from "solid-js";
 import { flatMap } from "../../fn";
-import { retainRowHeights } from "./layout";
+import { BORDERS_FALLBACK, retainRowHeights } from "./layout";
 import { observeSize } from "../../internal/dom/observeSize";
 import type { Bucket } from "./types";
 
@@ -26,6 +26,15 @@ const METRIC_BOX: ResizeObserverOptions = { box: "border-box" };
 
 /** Pre-measure fallback for the header (jsdom / first paint). */
 export const HEADER_FALLBACK = 34;
+/** Pre-measure fallback for the inter-bucket gap (`.bucket-queue` row-gap). */
+export const GAP_FALLBACK = 8;
+
+/** A computed length as a number, or null for anything that is not one
+ *  (`normal`, the empty string jsdom hands back, a pre-stylesheet frame). */
+const px = (value: string): number | null => {
+  const n = parseFloat(value);
+  return Number.isFinite(n) ? n : null;
+};
 
 export interface MeasurementDeps {
   /** The declared buckets, in render order. */
@@ -50,6 +59,16 @@ export interface Measurements {
   headHs: () => ReadonlyMap<string, number>;
   /** Measured empty-strip height, or null before one exists to measure. */
   emptyH: () => number | null;
+  /** Measured inter-bucket gap: the root's computed `row-gap` PLUS the
+   *  computed `margin-top` of a non-first bucket, which a dense theme sets to
+   *  -1px so two bucket borders overlap into one shared divider. So this may
+   *  be negative. The CSS owns both values (`--sui-dense-section-gap`,
+   *  `--sui-dense-bucket-overlap`); a JS copy of them is what mis-sized every
+   *  `fill` queue by GAP*(n-1) px once the theme moved. */
+  gap: () => number;
+  /** Measured top + bottom border width of a bucket box
+   *  (`--sui-dense-bucket-border`), for the same reason. */
+  borders: () => number;
   trackRoot: (el: HTMLDivElement) => void;
   trackHead: (key: string, el: HTMLElement) => void;
   trackEmpty: (el: HTMLElement) => void;
@@ -75,9 +94,35 @@ export function createMeasurements(deps: MeasurementDeps): Measurements {
   const [headHs, setHeadHs] = createSignal<ReadonlyMap<string, number>>(new Map());
   // null until an empty strip exists to measure; `natural` falls back to a row.
   const [emptyH, setEmptyH] = createSignal<number | null>(null);
+  const [gap, setGap] = createSignal(GAP_FALLBACK);
+  const [borders, setBorders] = createSignal(BORDERS_FALLBACK);
+
+  // The two box-model values the water-fill needs that are NOT heights: read
+  // from computed style, and only once the root has a layout box at all.
+  // jsdom lays nothing out (every clientHeight is 0) yet reports made-up
+  // computed widths, so without the guard the fallbacks would never hold
+  // where they are the only honest number.
+  const measureBoxModel = (root: HTMLDivElement) => {
+    if (root.clientHeight === 0 && root.clientWidth === 0) return;
+    const buckets = root.children;
+    const rowGap = px(getComputedStyle(root).rowGap);
+    if (rowGap != null) {
+      const second = buckets[1] as HTMLElement | undefined;
+      const overlap = second ? px(getComputedStyle(second).marginTop) ?? 0 : 0;
+      setGap(rowGap + overlap);
+    }
+    const first = buckets[0] as HTMLElement | undefined;
+    if (first) {
+      const cs = getComputedStyle(first);
+      const top = px(cs.borderTopWidth);
+      const bottom = px(cs.borderBottomWidth);
+      if (top != null && bottom != null) setBorders(top + bottom);
+    }
+  };
 
   const measure = () => {
     if (deps.height() == null && rootRef) setAvailH(rootRef.clientHeight);
+    if (rootRef) measureBoxModel(rootRef);
     const keys = deps.bucketKeys();
     const head0 = keys.length > 0 ? headRefs.get(keys[0])?.offsetHeight : undefined;
     if (head0) setHeadH(head0);
@@ -199,6 +244,8 @@ export function createMeasurements(deps: MeasurementDeps): Measurements {
     headH,
     headHs,
     emptyH,
+    gap,
+    borders,
     trackRoot,
     trackHead,
     trackEmpty,

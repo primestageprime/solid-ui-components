@@ -6,7 +6,12 @@
 .bucket-queue {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  /* Dense tokens (optional group, see themes/README.md): every var() carries
+     the legacy value as its fallback, so a theme that declares none of them
+     renders exactly as before. The water-fill reads the live gap, the bucket
+     overlap and the bucket borders back out of the DOM (see measurement.ts),
+     so these may change per theme without touching ./layout. */
+  gap: var(--sui-dense-section-gap, 8px);
   height: 100%;
   min-height: 0;
 }
@@ -15,8 +20,15 @@
   flex-direction: column;
   flex: none; /* height is set inline from the water-fill allocation */
   border: 1px solid var(--sui-border);
-  border-radius: var(--sui-radius-md, 4px);
+  /* A dense theme sets `1px 0` (top/bottom only, flush sides). */
+  border-width: var(--sui-dense-bucket-border, 1px);
+  border-radius: var(--sui-dense-item-radius, var(--sui-radius-md, 4px));
   overflow: hidden;
+}
+/* One SHARED divider between flush buckets: a dense theme sets -1px so the
+   lower bucket's top border sits on the upper one's bottom border. Legacy 0. */
+.bucket-queue__bucket + .bucket-queue__bucket {
+  margin-top: var(--sui-dense-bucket-overlap, 0px);
 }
 .bucket-queue__header {
   display: flex;
@@ -24,7 +36,10 @@
   align-items: baseline;
   gap: 8px;
   flex: none;
-  padding: 6px 12px;
+  /* min-height, never height: a fixed height clips a wrapped two-line label. */
+  box-sizing: border-box;
+  min-height: var(--sui-dense-header-h, auto);
+  padding: var(--sui-dense-row-pad-y, 6px) var(--sui-dense-row-pad-x, 12px);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -68,7 +83,7 @@
      box-sizing so the inline `height` the arrival animation drives (see
      ./motion.ts) is the border-box height it measured. */
   box-sizing: border-box;
-  padding: var(--sui-space-1-5, 6px) var(--sui-space-3, 12px);
+  padding: var(--sui-dense-row-pad-y, 6px) var(--sui-dense-row-pad-x, 12px);
   border-top: 1px solid var(--sui-border-subtle, rgba(127, 127, 127, 0.15));
   /* A row opening from height:0 (the arrival animation, see ./motion.ts)
      animates `height` only — `overflow` itself is not animatable — so without
@@ -96,7 +111,7 @@
    consumer typically auto-selects a row, that state is almost always on screen.
    Hover owns the fill, exactly as it does for an unselected row. */
 .bucket-queue__row--selected {
-  box-shadow: inset 2px 0 0 var(--sui-accent);
+  box-shadow: inset var(--sui-dense-select-bar, 2px) 0 0 var(--sui-accent);
 }
 
 /* Role color lives ONLY in the dot (theme vars). */
@@ -221,7 +236,7 @@
 /* Collapsed strip shown in a bucket with no items (opt-in via
    `bucket.emptyLabel`). Muted, one line, never a big empty box. */
 .bucket-queue__empty {
-  padding: 6px 12px;
+  padding: var(--sui-dense-row-pad-y, 6px) var(--sui-dense-row-pad-x, 12px);
   color: var(--sui-text-muted);
   font-size: 0.85rem;
 }
