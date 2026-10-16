@@ -2,30 +2,9 @@ import { describe, it, expect } from "vitest";
 import { render } from "@solidjs/testing-library";
 import * as sui from "../../index";
 
-// Every other test in this directory imports from "./StatusFlowChart" or
-// "./columns", which is exactly why the suite stayed green while src/index.ts
-// re-exported nothing from this family but the `StatusFlowNode` TYPE. The
-// component, its factory and the three layout helpers COMPONENTS.md describes
-// as "exposed for testing" were all unreachable from the package root.
-//
-// Anything added to src/components/StatusFlowChart/index.ts that consumers are
-// meant to reach needs a line here too.
-describe("package root exports", () => {
-  it("exposes the factory, not the base component", () => {
-    expect(sui.createStatusFlowChart).toBeTypeOf("function");
-    // The curried-only policy: the base must NOT leak to the root, or call
-    // sites can pass their own `columns` and two views of one board disagree
-    // about where a status belongs.
-    expect("StatusFlowChart" in sui).toBe(false);
-  });
-
-  it("exposes the pure layout helpers", () => {
-    expect(sui.pickVisibleCols).toBeTypeOf("function");
-    expect(sui.assignColumns).toBeTypeOf("function");
-    expect(sui.resolveParentStatuses).toBeTypeOf("function");
-  });
-});
-
+// Root-export reachability for this family is pinned by
+// src/root-exports.contract.ts (tsc), not here. This file covers the factory's
+// runtime behaviour.
 describe("createStatusFlowChart", () => {
   const config = {
     columns: [
