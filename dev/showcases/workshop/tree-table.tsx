@@ -14,6 +14,7 @@ import {
   SubsectionTitle,
   type TableColumn,
   TreeTable,
+  textCol,
 } from "../../../src";
 import {
   ASSEMBLIES,
@@ -25,7 +26,7 @@ import {
 export const meta = { label: "Tree Table" };
 
 const COLUMNS: TableColumn<Part>[] = [
-  { id: "item", header: "Item", accessor: "name", sortable: true },
+  textCol("item", "Item", { field: "name", sortable: true }),
   {
     id: "qty",
     header: "Qty",

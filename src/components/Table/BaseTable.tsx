@@ -29,6 +29,7 @@ import {
   getCellValue,
   tableContainerStyle,
 } from "./types";
+import { warnBareDateAccessor } from "./bareAccessorWarning";
 import "./Table.css";
 
 export type SortDirection = "asc" | "desc" | null;
@@ -219,12 +220,20 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
   /** Cell content, optionally inside the size-contained clip block: a
    *  contained column's nowrap content cannot inflate the column minimum, so
    *  the width-model shrink between min and max is real (ruled 2026-07-21). */
-  const cellContent = (row: T, column: TableColumn<T>) =>
-    column.contained ? (
-      <div class="hud-table__contained">{getCellValue(row, column)}</div>
+  const cellContent = (row: T, column: TableColumn<T>) => {
+    const value = getCellValue(row, column);
+    // Dev-only (ruled 2026-10-16): a bare keyed accessor painting an ISO
+    // date/time is a column that should be a dateTimeCol/dateCol — it has no
+    // renderer, no data-sized width, and wraps when squeezed. Statically
+    // replaced, so the whole branch leaves a production bundle.
+    if (import.meta.env?.DEV && typeof column.accessor !== "function")
+      warnBareDateAccessor(column.id, value);
+    return column.contained ? (
+      <div class="hud-table__contained">{value}</div>
     ) : (
-      getCellValue(row, column)
+      value
     );
+  };
 
   /** Render a sortable <th> for a single column */
   const renderColumnTh = (

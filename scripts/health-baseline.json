@@ -14,6 +14,7 @@
   "missingDepthHeaders": 0,
   "componentsWithoutShowcase": 0,
   "catalogSummaryGaps": 0,
+  "bareAccessorColumns": 0,
   "_raises": {
     "inlineStyleSrc": {
       "from": 67,
