@@ -12,6 +12,14 @@ export const TextBody = createText({ variant: "body" });
 export const TextUnits = createText({ variant: "units" });
 export const TextSublabel = createText({ variant: "sublabel" });
 
+/** A row name in a dense list (CompactBucketQueue): the label colour at
+ *  12px, weight 500, on a 16px line. TextLabel is 16px bold, too big for a
+ *  narrow pane. For a muted row, use TextSublabel (12px, muted). */
+export const CompactLabel = createText({
+  variant: "label",
+  style: { "font-size": "12px", "font-weight": "500", "line-height": "16px" },
+});
+
 // Right-aligned sublabel — for counts/metadata in card corners
 export const EndSublabel = createText({
   variant: "sublabel",

@@ -33,8 +33,13 @@ export interface NaturalInput {
    *  rendering only its header, so it is pinned to the summary line with no
    *  empty strip, and its `capRows` is moot. Omit for all-false. */
   collapsed?: boolean[];
-  /** Measured header height. */
+  /** Measured header height: the fallback for a bucket whose own header is
+   *  not measured yet. */
   headH: number;
+  /** Each bucket's OWN measured header height, null before it is measured. A
+   *  long label wraps onto more lines in a narrow pane, so headers differ.
+   *  Omit to give every bucket `headH`. */
+  headHeights?: (number | null)[];
   /** Measured empty-strip height, or null before one exists to measure. */
   emptyH: number | null;
   /** Row height for a bucket with no sample of its own AND no sibling's. */
@@ -52,7 +57,9 @@ export const naturalHeights = ({
   emptyH,
   rowFallback,
   collapsed,
+  headHeights,
 }: NaturalInput): number[] => {
+  const head = (i: number): number => headHeights?.[i] ?? headH;
   // Fallback chain: this bucket's own sample → the first real sample anywhere
   // in the queue → the tuned constant. A sibling's measurement is a guess, but
   // it is a guess drawn from this consumer's actual rows; the constant is not.
@@ -62,17 +69,17 @@ export const naturalHeights = ({
     // MANUALLY collapsed: the header alone. No empty strip — the bucket is
     // populated, so `emptyLabel` is not what is showing; and `capRows` caps a
     // body that is not rendered.
-    if (collapsed?.[i] === true) return headH + BORDERS;
+    if (collapsed?.[i] === true) return head(i) + BORDERS;
     // Empty: the summary line, plus the empty strip if declared. The strip is
     // MEASURED, not assumed to be one row tall — `emptyLabel` is consumer JSX
     // and can wrap. rowH is only the fallback before a strip exists to measure.
     if (c === 0)
-      return headH + (hasEmptyLabel[i] ? (emptyH ?? rowH(i)) : 0) + BORDERS;
+      return head(i) + (hasEmptyLabel[i] ? (emptyH ?? rowH(i)) : 0) + BORDERS;
     // `capRows` caps the bucket's NATURAL height, so it holds at the cap and
     // its body scrolls; the weighted water-fill below is unchanged.
     const cap = capRows[i];
     const rows = cap != null ? Math.min(c, Math.max(1, cap)) : c;
-    return headH + rows * rowH(i) + BORDERS;
+    return head(i) + rows * rowH(i) + BORDERS;
   }, counts);
 };
 

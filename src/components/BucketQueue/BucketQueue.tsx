@@ -108,6 +108,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
     availH,
     rowHs,
     headH,
+    headHs,
     emptyH,
     trackRoot,
     trackHead,
@@ -138,6 +139,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
       hasEmptyLabel: map((s) => s.emptyLabel != null, props.buckets),
       collapsed: collapsed(),
       headH: headH(),
+      headHeights: map((s) => headHs().get(s.key) ?? null, props.buckets),
       emptyH: emptyH(),
       rowFallback: ROW_FALLBACK,
     }),
@@ -336,7 +338,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
 
   return (
     <div
-      class={`bucket-queue${props.class ? ` ${props.class}` : ""}`}
+      class={`bucket-queue${props.density === "compact" ? " bucket-queue--compact" : ""}${props.class ? ` ${props.class}` : ""}`}
       ref={(el) => { rootRef = el; trackRoot(el); }}
       style={props.height != null ? { height: `${props.height}px` } : undefined}
     >
@@ -365,7 +367,7 @@ export function BucketQueue<T>(props: BucketQueueProps<T>): JSX.Element {
                     toggleCollapse(prev, bucket.key, isCollapsed()),
                   )
                 }
-                ref={(el) => { if (i() === 0) trackHead(el); }}
+                ref={(el) => trackHead(bucket.key, el)}
               />
               <Show
                 when={count() > 0 && !isCollapsed()}
