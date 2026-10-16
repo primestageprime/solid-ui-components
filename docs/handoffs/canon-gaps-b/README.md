@@ -18,8 +18,9 @@ The 390 shots hide the gallery's sidebar, so the showcase gets the whole viewpor
 
 ## B3 GroupedCardList was not built
 
-**Peter decided (2026-10-16): the rail uses `BucketQueue`.** The canon's deltas go to its owner as
-`bucketqueue-density-request.md` in this folder.
+**Peter decided (2026-10-16): the rail uses `BucketQueue`.** The mapping, the count gap and the
+visual deltas are in `bucketqueue-canon-deltas.md` in this folder. The visual deltas go to a
+default-theme density pass, not to a variant.
 
 `SectionedList`, its named cousin, was removed in 0.221.0, and the owner chose `BucketQueue` for the
 side pane. In 0.222.0 `BucketQueue` gained a compact density for exactly that pane. A new grouped list
