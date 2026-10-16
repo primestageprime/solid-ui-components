@@ -780,7 +780,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 358
+    "line": 360
   },
   {
     "name": "BaselineClusterRow",
@@ -13240,7 +13240,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Series.tsx",
-    "line": 576
+    "line": 578
   },
   {
     "name": "RemovableItemCard",
@@ -14626,7 +14626,7 @@
     "showcase": "#/chart",
     "since": "0.218.0",
     "file": "src/components/Chart/SlotTrack.tsx",
-    "line": 95
+    "line": 96
   },
   {
     "name": "SmallAmountStrip",

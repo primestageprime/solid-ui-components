@@ -283,9 +283,11 @@ export function PointSeries<T>(props: PointSeriesProps<T>) {
 							stroke-width={props.strokeWidth}
 							data-emphasized={isEmphasized() ? "true" : undefined}
 						>
-							<Show when={props.title}>
-								<title>{props.title!(d)}</title>
-							</Show>
+							{/* In the circle's own template, never behind a Show: Solid
+							    compiles a <title> that starts its own template as an
+							    HTML <title>, which the browser takes for the page's
+							    title. Empty when there is no `title`. */}
+							<title>{props.title?.(d) ?? ""}</title>
 						</circle>
 					);
 				}}

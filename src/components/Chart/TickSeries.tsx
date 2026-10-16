@@ -46,7 +46,10 @@ export function TickSeries<T>(props: TickSeriesProps<T>) {
               style={stroke(d) ? { stroke: stroke(d) } : undefined}
               stroke-width={props.strokeWidth ?? 2.5}
             >
-              {props.title ? <title>{props.title(d)}</title> : null}
+              {/* In the line's own template, never behind a condition: Solid
+                  compiles a <title> that starts its own template as an HTML
+                  <title>, which the browser takes for the page's title. */}
+              <title>{props.title?.(d) ?? ""}</title>
             </line>
           );
         }}

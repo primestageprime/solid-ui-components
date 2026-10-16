@@ -396,9 +396,10 @@ export const Chart: Component<ChartProps> = (props) => {
           onClick={local.onPick === undefined ? undefined : onClick}
           {...(others as JSX.SvgSVGAttributes<SVGSVGElement>)}
         >
-          <Show when={local.title}>
-            <title>{local.title}</title>
-          </Show>
+          {/* In the svg's own template, never behind a Show: Solid compiles a
+              <title> that starts its own template as an HTML <title>, which
+              the browser takes for the page's title. */}
+          <title>{local.title ?? ""}</title>
           <defs>
             <clipPath id={clipId}>
               <rect

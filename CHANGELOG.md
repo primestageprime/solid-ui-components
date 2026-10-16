@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- **Chart `<title>` tooltips no longer become the page title.** `Chart`'s `title`, and `PointSeries`, `SlotTrack` and `TickSeries` `title`, drew an HTML `<title>`, because Solid compiles a `<title>` behind a `Show` as an HTML element. Chrome then showed a mark's tooltip as the tab title. Each `<title>` is now in its mark's own template, so it is an SVG `<title>`, with empty text when there is no title.
+
 - **A collapsible `FillChartFrame` slides its chart like the stated-height `ChartFrame`.** In a parent that eases between a px height and `auto`, the chart vanished at once and the empty frame rolled up. A fill frame is now as tall as its content while it moves, and fills its parent again when the open ends. `HeightReveal` records the open height while it is open, so the close holds the chart even when the layout already shrank.
 
 ## 0.223.0 — 2026-10-16
