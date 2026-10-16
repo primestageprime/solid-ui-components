@@ -3,9 +3,9 @@
    tall when short, grows with its content up to `max` lines, then scrolls
    inside. The counts arrive as --sui-clamped-min / --sui-clamped-max and are
    multiplied by `1lh` (one line of the block's own line-height), so the box is
-   exactly N lines at any type size. The em-based declarations above each `lh`
-   one are the fallback for a browser without the `lh` unit: same 1.5 line
-   height, so it still clamps, just against the em box.
+   exactly N lines at any type size. The em-based declarations are the fallback for a
+   browser without the `lh` unit (the @supports block below upgrades them):
+   same 1.5 line height, so it still clamps, just against the em box.
    Type matches Text's `body` variant (0.875rem, secondary colour).
    ============================================ */
 
@@ -18,7 +18,12 @@
   overflow-wrap: anywhere;
   overflow-y: auto;
   min-height: calc(var(--sui-clamped-min, 1) * 1.5em);
-  min-height: calc(var(--sui-clamped-min, 1) * 1lh);
   max-height: calc(var(--sui-clamped-max, 6) * 1.5em);
-  max-height: calc(var(--sui-clamped-max, 6) * 1lh);
+}
+
+@supports (min-height: 1lh) {
+  .sui-clamped-text {
+    min-height: calc(var(--sui-clamped-min, 1) * 1lh);
+    max-height: calc(var(--sui-clamped-max, 6) * 1lh);
+  }
 }
