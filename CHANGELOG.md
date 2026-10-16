@@ -4,6 +4,8 @@
 
 ### Added
 
+- **`ClampedText`** — a Depth 1 primitive: body text whose height follows its content between 1 and 6 lines, then scrolls inside. Line counts ride CSS variables read in `lh` units. `createClampedText({ lines })` makes another range; pure `clampLines` cleans one.
+
 - **`StampedRow`** and **`PinnedStampedRow`** — a Depth 2 composite: one timestamped line with a 16px glyph, a label that takes the width and ellipsizes, and a mono `HH:mm` at the right. `kind` (`done`, `active`, `note`, `started`, `completed`) picks the glyph, or pass `icon`. `StampedRow` is the 22px list line, `PinnedStampedRow` the 40px bar. Pure `stampGlyph` and `formatStampTime` carry the logic. Adds the Layout variants `CompactLineRow` and `BarLineRow`.
 
 - **`PinnedFillColumn`** — a Depth 2 composite: a column that fills its parent with an optional pinned `header`, a middle that takes the leftover height and scrolls, and an optional pinned `footer`. Each bar rests on the 1px theme divider. Adds the Layout variants `PinnedHeaderBox` and `PinnedFooterBox`.

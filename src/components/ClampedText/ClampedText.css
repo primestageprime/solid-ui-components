@@ -1,0 +1,24 @@
+/* ============================================
+   ClampedText — Atomic Primitive (Depth 1). Body text that is `min` lines
+   tall when short, grows with its content up to `max` lines, then scrolls
+   inside. The counts arrive as --sui-clamped-min / --sui-clamped-max and are
+   multiplied by `1lh` (one line of the block's own line-height), so the box is
+   exactly N lines at any type size. The em-based declarations above each `lh`
+   one are the fallback for a browser without the `lh` unit: same 1.5 line
+   height, so it still clamps, just against the em box.
+   Type matches Text's `body` variant (0.875rem, secondary colour).
+   ============================================ */
+
+.sui-clamped-text {
+  box-sizing: border-box;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--sui-text-secondary);
+  overflow-wrap: anywhere;
+  overflow-y: auto;
+  min-height: calc(var(--sui-clamped-min, 1) * 1.5em);
+  min-height: calc(var(--sui-clamped-min, 1) * 1lh);
+  max-height: calc(var(--sui-clamped-max, 6) * 1.5em);
+  max-height: calc(var(--sui-clamped-max, 6) * 1lh);
+}

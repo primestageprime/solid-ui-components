@@ -2814,3 +2814,12 @@ th:has(.tf-th-center) .hud-table__header-content {
   max-width: 320px;
   padding: 8px 0;
 }
+
+/* ClampedText showcase demo frame: a narrow column so the text wraps. */
+.clamped-text-demo {
+  max-width: 320px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

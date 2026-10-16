@@ -2112,6 +2112,30 @@
     "line": 348
   },
   {
+    "name": "ClampedText",
+    "depth": 1,
+    "kind": "variant",
+    "family": "ClampedText",
+    "variantOf": {
+      "factory": "createClampedText",
+      "overrides": "{\n  lines: { min: 1, max: 6 },\n}"
+    },
+    "overrides": [
+      "lines"
+    ],
+    "dataProps": "ClampedTextDataProps",
+    "summary": "Atomic (Depth 1).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a notes preview, a description, a log message of unknown length. `<ClampedText>{task.notes}</ClampedText>`",
+    "notes": "Body text from 1 to 6 lines tall, then scrolling inside. For notes and descriptions.",
+    "showcase": "#/clamped-text",
+    "since": "Unreleased",
+    "file": "src/components/ClampedText/variants.ts",
+    "line": 10
+  },
+  {
     "name": "ClipBox",
     "depth": 0,
     "kind": "variant",
@@ -3713,6 +3737,27 @@
     "since": null,
     "file": "src/components/Checkbox/Checkbox.tsx",
     "line": 135
+  },
+  {
+    "name": "createClampedText",
+    "depth": 1,
+    "kind": "factory",
+    "family": "ClampedText",
+    "variantOf": null,
+    "overrides": [
+      "lines"
+    ],
+    "dataProps": "ClampedTextDataProps",
+    "summary": "Atomic (Depth 1). Factory behind `ClampedText`'s curried variants; bakes `lines`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/clamped-text",
+    "since": "Unreleased",
+    "file": "src/components/ClampedText/ClampedText.tsx",
+    "line": 67
   },
   {
     "name": "createCodeBlock",
