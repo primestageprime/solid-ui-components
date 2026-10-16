@@ -44,7 +44,8 @@ describe("BucketQueue styling contract", () => {
     // Allow-list: the selected row must declare ONLY box-shadow, never any
     // background-*, background-color, background-image, etc.
     expect(declaredProperties(body)).toEqual(["box-shadow"]);
-    expect(body).toContain("inset 2px 0 0 var(--sui-accent)");
+    // The bar's width is the theme's optional dense token, legacy 2px.
+    expect(body).toContain("inset var(--sui-dense-select-bar, 2px) 0 0 var(--sui-accent)");
   });
 
   // The selected row's accent bar is an `inset 2px` box-shadow drawn at the

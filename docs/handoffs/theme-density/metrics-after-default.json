@@ -1,0 +1,492 @@
+{
+  "BucketQueue": {
+    ".bucket-queue": {
+      "height": 460,
+      "rowGap": "0px"
+    },
+    ".bucket-queue__bucket": {
+      "height": 84,
+      "borderTopWidth": "1px",
+      "borderLeftWidth": "0px",
+      "borderTopLeftRadius": "0px",
+      "marginTop": "0px"
+    },
+    ".bucket-queue__header": {
+      "height": 28,
+      "paddingTop": "4px",
+      "paddingLeft": "12px"
+    },
+    ".bucket-queue__row": {
+      "height": 27,
+      "paddingTop": "4px",
+      "paddingLeft": "16px",
+      "borderTopWidth": "1px"
+    },
+    ".bucket-queue__row--selected": {
+      "height": 27,
+      "boxShadow": "rgb(59, 130, 246) 4px 0px 0px 0px inset"
+    },
+    ".bucket-queue__count": {
+      "height": 19,
+      "display": "flex",
+      "borderTopWidth": "1px",
+      "fontSize": "12px"
+    },
+    "edges": [
+      {
+        "label": "Categorized",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(34, 197, 94)"
+      },
+      {
+        "label": "Suggestions",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(59, 130, 246)"
+      },
+      {
+        "label": "In progress",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Categorized",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(34, 197, 94)"
+      },
+      {
+        "label": "Suggestions",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(59, 130, 246)"
+      },
+      {
+        "label": "In progress",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Inbox",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(59, 130, 246)"
+      },
+      {
+        "label": "Triaged",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "In progress",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(245, 158, 11)"
+      },
+      {
+        "label": "Blocked",
+        "labelLeft": 304,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(244, 121, 121)"
+      },
+      {
+        "label": "Shipped",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(34, 197, 94)"
+      },
+      {
+        "label": "Balances",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(34, 197, 94)"
+      },
+      {
+        "label": "Configs",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(59, 130, 246)"
+      },
+      {
+        "label": "Suggestions",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(59, 130, 246)"
+      },
+      {
+        "label": "Accepted",
+        "labelLeft": 304,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(34, 197, 94)"
+      },
+      {
+        "label": "Discard",
+        "labelLeft": 304,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Suggestions",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(59, 130, 246)"
+      },
+      {
+        "label": "Discard",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "To review",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(59, 130, 246)"
+      },
+      {
+        "label": "Check the drift · confirm the cadence",
+        "labelLeft": 304,
+        "rowLeft": 308,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(245, 158, 11)"
+      },
+      {
+        "label": "Fits already",
+        "labelLeft": 304,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Flagged",
+        "labelLeft": 304,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(244, 121, 121)"
+      },
+      {
+        "label": "To review",
+        "labelLeft": 664,
+        "rowLeft": 668,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(59, 130, 246)"
+      },
+      {
+        "label": "Check the drift · confirm the cadence",
+        "labelLeft": 664,
+        "rowLeft": 668,
+        "delta": 4,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(245, 158, 11)"
+      },
+      {
+        "label": "Fits already",
+        "labelLeft": 664,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Flagged",
+        "labelLeft": 664,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(244, 121, 121)"
+      }
+    ]
+  },
+  "CompactBucketQueue": {
+    ".bucket-queue--compact": {
+      "height": 360,
+      "rowGap": "4px"
+    },
+    ".bucket-queue--compact .bucket-queue__bucket": {
+      "height": 65,
+      "borderTopWidth": "1px",
+      "borderLeftWidth": "0px",
+      "borderTopLeftRadius": "0px",
+      "marginTop": "0px"
+    },
+    ".bucket-queue--compact .bucket-queue__header": {
+      "height": 21,
+      "paddingTop": "3px",
+      "paddingLeft": "8px"
+    },
+    ".bucket-queue--compact .bucket-queue__row": {
+      "height": 21,
+      "paddingTop": "2px",
+      "paddingLeft": "12px",
+      "borderTopWidth": "1px"
+    },
+    ".bucket-queue--compact .bucket-queue__row--selected": {
+      "height": 21,
+      "boxShadow": "rgb(59, 130, 246) 4px 0px 0px 0px inset"
+    },
+    ".bucket-queue--compact .bucket-queue__count": {
+      "height": 14,
+      "display": "flex",
+      "borderTopWidth": "1px",
+      "fontSize": "11px"
+    }
+  },
+  "ActionList": {
+    ".sui-sortable-list": {
+      "height": 242,
+      "rowGap": "1px"
+    },
+    ".sui-action-list-item": {
+      "height": 32,
+      "paddingTop": "4px",
+      "paddingLeft": "12px",
+      "borderTopLeftRadius": "0px",
+      "borderBottomWidth": "1px",
+      "borderLeftWidth": "0px"
+    },
+    ".sui-action-list-item--selected": {
+      "height": 32,
+      "boxShadow": "rgb(59, 130, 246) 4px 0px 0px 0px inset",
+      "borderColor": "rgb(51, 65, 85)",
+      "backgroundColor": "rgb(22, 33, 62)"
+    }
+  },
+  "GroupedBucketQueue": {
+    ".bucket-queue__header": {
+      "height": 28,
+      "paddingTop": "4px",
+      "paddingLeft": "12px"
+    },
+    ".bucket-queue__row": {
+      "height": 27,
+      "paddingTop": "4px",
+      "paddingLeft": "36px",
+      "borderTopWidth": "1px"
+    },
+    ".bucket-queue__row--selected": {
+      "height": 27,
+      "boxShadow": "rgb(59, 130, 246) 4px 0px 0px 0px inset"
+    },
+    ".bucket-queue__count": {
+      "height": 19,
+      "display": "flex",
+      "borderTopWidth": "1px",
+      "fontSize": "12px"
+    },
+    "edges": [
+      {
+        "label": "Revenue",
+        "depth": "0",
+        "labelLeft": 305,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(34, 197, 94)"
+      },
+      {
+        "label": "License",
+        "depth": "1",
+        "labelLeft": 313,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Monthly fixed",
+        "depth": "2",
+        "labelLeft": 321,
+        "rowLeft": 329,
+        "delta": 8,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Annual fixed",
+        "depth": "2",
+        "labelLeft": 321,
+        "rowLeft": 329,
+        "delta": 8,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Contract",
+        "depth": "1",
+        "labelLeft": 313,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Milestone",
+        "depth": "2",
+        "labelLeft": 321,
+        "rowLeft": 329,
+        "delta": 8,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Expense",
+        "depth": "0",
+        "labelLeft": 305,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(244, 121, 121)"
+      },
+      {
+        "label": "Office",
+        "depth": "1",
+        "labelLeft": 313,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Monthly fixed",
+        "depth": "2",
+        "labelLeft": 321,
+        "rowLeft": 329,
+        "delta": 8,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      },
+      {
+        "label": "Salary",
+        "depth": "1",
+        "labelLeft": 313,
+        "rowLeft": null,
+        "delta": null,
+        "leadingGlyph": null,
+        "dots": 0,
+        "chipBorder": "rgb(51, 65, 85)"
+      }
+    ]
+  },
+  "CollapsiblePanel": {},
+  "ThreePanelLayout": {
+    ".sui-three-panel__top-bar": {
+      "height": 32,
+      "paddingLeft": "12px",
+      "rowGap": "12px"
+    },
+    ".sui-three-panel__left": {
+      "height": 286,
+      "paddingTop": "0px",
+      "rowGap": "0px"
+    },
+    ".sui-three-panel__center": {
+      "height": 286,
+      "paddingTop": "12px",
+      "rowGap": "12px"
+    }
+  },
+  "Modal": {
+    ".sui-modal__header": {
+      "height": 56,
+      "paddingTop": "10px",
+      "paddingLeft": "16px"
+    },
+    ".sui-modal__body": {
+      "height": 50,
+      "paddingTop": "16px"
+    }
+  },
+  "DataTable": {
+    ".hud-table__header-cell": {
+      "height": 29.5,
+      "paddingTop": "8px",
+      "paddingLeft": "12px"
+    },
+    ".hud-table__cell": {
+      "height": 29,
+      "paddingTop": "6px",
+      "paddingLeft": "12px"
+    }
+  }
+}

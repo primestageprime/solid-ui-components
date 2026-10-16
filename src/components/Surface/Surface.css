@@ -10,7 +10,7 @@
   padding: 8px;
 }
 .surface--padding-md {
-  padding: 16px;
+  padding: var(--sui-dense-panel-pad, 16px);
 }
 
 .surface--radius-none {

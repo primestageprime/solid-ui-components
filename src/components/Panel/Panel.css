@@ -12,7 +12,7 @@
    chrome lives here now. */
 .sui-panel {
   position: relative;
-  padding: 16px;
+  padding: var(--sui-dense-panel-pad, 16px);
 }
 
 /* Panel sizes */
@@ -23,7 +23,7 @@
   padding: 8px 12px;
 }
 .sui-panel--md {
-  padding: 16px;
+  padding: var(--sui-dense-panel-pad, 16px);
 }
 .sui-panel--lg {
   padding: 24px;

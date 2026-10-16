@@ -1,7 +1,7 @@
 # BucketQueue
 
 A queue of items split across **N always-present buckets**, each with its own
-label, role dot, and count. Items progress from bucket to bucket as their
+label and a count chip tinted in the bucket's tone. Items progress from bucket to bucket as their
 underlying state changes — e.g. suggestions → categorized, or triage → done →
 archived. Built for triage / review / categorization flows. Supersedes
 `SplitQueueList` (see `docs/adr/0004-one-queue-component-and-the-motion-seam.md`).
@@ -88,13 +88,13 @@ function Categorize(props: { initial: Txn[] }) {
 |---|---|---|
 | `key` | `string` | Stable key; `bucketOf` returns one of these. |
 | `label` | `string` | Header label. |
-| `tone` | `Tone` | Dot color beside the label — the ONLY role color; chrome stays neutral. |
+| `tone` | `Tone` | Tints the trailing count chip (outline + wash) — the ONLY role color; chrome stays neutral. Nothing leads the label, and rows indent 4px past it (Peter, 2026-10-16). |
 | `weight?` | `number` | Relative height share when populated buckets overflow. Default 1. |
 | `selectable?` | `boolean` | Rows in this bucket render the check affordance and toggle instead of select when `checkedKeys` is present. Default false. |
 | `emptyLabel?` | `JSX.Element` | Copy for the collapsed strip when this bucket has no items. Omit for the bare summary line. |
 | `capRows?` | `number` | Soft cap in rows — the bucket stops growing past this many rows and its body scrolls. Omit to shrink-wrap to content. |
 | `fill?` | `boolean` | Absorb the leftover height instead of shrink-wrapping to content, so the queue reaches the bottom of its column at any list length. Overrides `capRows` for this bucket; only applies while the bucket is populated. Default false. |
-| `collapsible?` | `boolean` | The user can collapse this bucket to its summary line and expand it again. Its header becomes a button and takes a chevron in place of its tone dot. Only applies while the bucket is populated. Default false. |
+| `collapsible?` | `boolean` | The user can collapse this bucket to its summary line and expand it again. Its header becomes a button and takes a disclosure chevron after the label. Only applies while the bucket is populated. Default false. |
 | `collapsedByDefault?` | `boolean` | Start collapsed. **Ignored without `collapsible`.** Only the state before the user first toggles the bucket. Default false. |
 | `headerAction?` | `JSX.Element` | An action rendered beside the count, as a DOM sibling of the collapse-toggle button — never nested inside it, so clicking it never also toggles collapse. Keep it compact (e.g. `GlyphSlotGhostButton`): it shares the header's own line box. Each bucket's header is measured for its own water-fill height, so a long label that wraps in a narrow pane sizes only its own bucket. |
 
@@ -458,10 +458,11 @@ const buckets: Bucket[] = [
 
 - **The header is the toggle.** It renders as a `<button>` carrying
   `aria-expanded`, so Enter and Space work with no extra wiring. The disclosure
-  chevron **replaces** the tone dot in the same 8px slot, so labels stay on one
-  left edge and the bucket still has exactly one role-coloured mark.
+  chevron **follows** the label (nothing may lead it — a leading glyph pushes
+  the label right of its rows), and the bucket's one role-coloured mark stays
+  the count chip.
 - **It applies only while the bucket is populated.** An empty `collapsible`
-  bucket renders exactly as any other empty bucket — its `emptyLabel`, its dot,
+  bucket renders exactly as any other empty bucket — its `emptyLabel`, its chip,
   and no toggle, because there is nothing to expand into.
 - **`collapsedByDefault` needs `collapsible`.** On its own it is ignored; it
   would otherwise start the bucket collapsed with no way to open it.

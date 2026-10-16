@@ -6,12 +6,17 @@
 //
 // A collapsible AND populated bucket renders its header as the disclosure
 // button; every other bucket keeps the plain div it has always had, so nothing
-// about a non-collapsible queue's markup changes. The chevron REPLACES the
-// tone dot rather than joining it: the component allows exactly one
-// role-coloured mark per bucket (chrome stays neutral — see types.ts), the
-// chevron becomes that mark, and because it occupies the dot's exact 8px slot
-// every bucket's label stays on the same left edge either way.
+// about a non-collapsible queue's markup changes.
+//
+// NOTHING LEADS THE LABEL (Peter, 2026-10-16): a glyph before the label pushed
+// it right of its own rows' text, which reads as the rows being OUTDENTED from
+// their header. So the label is the first thing in the header, in every theme,
+// and the single role-coloured mark per bucket (chrome stays neutral — see
+// types.ts) is the trailing CountChip, which carries the tone as a tinted box
+// (`bucket-queue__count--<tone>`, BucketQueue.css). The disclosure chevron of a
+// collapsible bucket FOLLOWS the label for the same reason.
 import { Show, type JSX } from "solid-js";
+import { CountChip } from "../Badge/CountChip";
 import type { Bucket } from "./types";
 
 // A function, not a shared element: a single JSX expression evaluates to ONE
@@ -46,25 +51,27 @@ export function BucketHeader(props: BucketHeaderProps): JSX.Element {
   const Contents = (): JSX.Element => (
     <>
       <span class="bucket-queue__title">
-        <Show
-          when={props.toggleable}
-          fallback={
-            <span
-              class={`bucket-queue__dot bucket-queue__dot--${props.bucket.tone}`}
-            />
-          }
-        >
+        {props.bucket.label}
+        <Show when={props.toggleable}>
           <span
-            class={`bucket-queue__chevron bucket-queue__chevron--${props.bucket.tone}`}
+            class="bucket-queue__chevron"
             classList={{ "bucket-queue__chevron--expanded": !props.collapsed }}
             aria-hidden="true"
           >
             <Chevron />
           </span>
         </Show>
-        {props.bucket.label}
       </span>
-      <span class="bucket-queue__count">{props.count}</span>
+      {/* The count is a CountChip (canon, 2026-10-15): a pill at the right
+          end, in every theme. It keeps the `bucket-queue__count` class so the
+          arrival motion (./motion) and consumers' selectors still find it;
+          its label slot is empty and hidden (BucketQueue.css). The tone
+          modifier is what colours it — the chip is the bucket's one role mark. */}
+      <CountChip
+        class={`bucket-queue__count bucket-queue__count--${props.bucket.tone}`}
+        count={props.count}
+        label=""
+      />
     </>
   );
 

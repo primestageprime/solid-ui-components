@@ -12,7 +12,7 @@ export interface Bucket {
   key: string;
   /** Header label. */
   label: string;
-  /** Dot color beside the label — the ONLY role color (chrome stays neutral). */
+  /** Tints the trailing count chip — the ONLY role color (chrome stays neutral). */
   tone: Tone;
   /** Relative share of the height when the populated buckets overflow their
    *  content. Default 1. */
@@ -26,7 +26,7 @@ export interface Bucket {
    *  bare summary line (label + count). */
   emptyLabel?: JSX.Element;
   /** Let the user collapse this bucket to its summary line and expand it again.
-   *  Its header takes a disclosure chevron IN PLACE OF the tone dot and becomes
+   *  Its header takes a disclosure chevron AFTER the label and becomes
    *  the toggle. Only meaningful while the bucket is POPULATED: an empty bucket
    *  already collapses to its summary line and has nothing to expand into, so
    *  it renders exactly as it does without this flag — no chevron, header

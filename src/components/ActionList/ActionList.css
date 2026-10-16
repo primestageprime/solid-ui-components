@@ -15,9 +15,9 @@
    intrinsic accent-strip styling. The bar-count's margin-right:auto still pushes
    the action buttons to the right within the ClusterRow. */
 .sui-action-list__bar {
-  padding: var(--sui-space-xs, 6px) var(--sui-space-sm, 8px);
+  padding: var(--sui-dense-row-pad-y, 6px) var(--sui-dense-row-pad-x, 8px);
   border: 1px solid var(--sui-accent);
-  border-radius: var(--sui-radius-md, 8px);
+  border-radius: var(--sui-dense-item-radius, var(--sui-radius-md, 8px));
   /* Flat accent wash over the list's own secondary bg — matches a selected row. */
   background: color-mix(in srgb, var(--sui-accent) 10%, var(--sui-bg-secondary));
   color: var(--sui-accent);
