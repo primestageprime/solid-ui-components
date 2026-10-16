@@ -19,9 +19,15 @@ const block = (source: string, head: string): string => {
   throw new Error(`unbalanced block ${head}`);
 };
 
+/** A length's px: a bare `16px`, or the fallback of a `var(--token, 16px)` (the themes' dense tokens). */
+const px = (value: string): number => {
+  const fallback = /^var\(\s*--[\w-]+\s*,\s*([^)]+)\)$/.exec(value);
+  return parseFloat(fallback ? fallback[1] : value);
+};
+
 /** [top, right, bottom, left] px from a `padding:` shorthand of 1 to 4 values. */
 const sides = (shorthand: string): [number, number, number, number] => {
-  const v = shorthand.trim().split(/\s+/).map((x) => parseFloat(x));
+  const v = shorthand.trim().match(/var\([^)]*\)|\S+/g)!.map(px);
   const [t, r = t, b = t, l = r] = v;
   return [t, r, b, l];
 };
