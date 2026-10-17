@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.228.0 — 2026-10-17
+
 ### Added
 
 - **`FluidListDetailThreePanel`** — fifth curried `ThreePanelLayout` variant: left list `clamp(240px, 22vw, 360px)`, right context `clamp(180px, 15vw, 260px)` (new `THREE_PANEL_ASIDE_WIDTH.fluidList` / `.fluidContext` tokens), and stacked asides uncapped at phone width (`asideMaxHeight: "none"`). Replaces the Taskmaster touchstone's app-level clamp layout.

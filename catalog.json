@@ -8701,7 +8701,7 @@
     "useFor": null,
     "notes": "Fluid list-and-detail page: left list 22vw clamped 240..360, right context 15vw clamped 180..260, and stacked asides uncapped (no 200px max-height, no internal scroll) at phone widths. Replaces the Taskmaster touchstone's hand-written clamp layout.",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.228.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 59
   },
