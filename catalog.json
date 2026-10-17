@@ -4575,10 +4575,10 @@
     "notToBeConfusedWith": null,
     "useFor": null,
     "notes": null,
-    "showcase": null,
+    "showcase": "#/hotkey-button",
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 175
+    "line": 200
   },
   {
     "name": "createHourlyWageAmountStrip",
@@ -4638,7 +4638,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 592
+    "line": 601
   },
   {
     "name": "createKbd",
@@ -8727,6 +8727,31 @@
     "line": 44
   },
   {
+    "name": "FoldingHotkeyButton",
+    "depth": 2,
+    "kind": "variant",
+    "family": "HotkeyButton",
+    "variantOf": {
+      "factory": "createHotkeyButton",
+      "overrides": "{\n  fold: true,\n}"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "HotkeyButtonDataProps",
+    "summary": "A HotkeyButton that is its icon alone at phone width (`HOTKEY_BUTTON_FOLD_QUERY`) and the keyed text button wider.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "A HotkeyButton that is its icon alone at phone width (`HOTKEY_BUTTON_FOLD_QUERY`) and the keyed text button wider. Give it an `icon`; without one it never folds. <FoldingHotkeyButton hotkey=\"c\" icon=\"check\" onTrigger={complete}>Complete</FoldingHotkeyButton>",
+    "showcase": "#/hotkey-button",
+    "since": "Unreleased",
+    "file": "src/components/HotkeyButton/HotkeyButton.tsx",
+    "line": 212
+  },
+  {
     "name": "FormComposite",
     "depth": null,
     "kind": "primitive",
@@ -9817,10 +9842,10 @@
     "notToBeConfusedWith": null,
     "useFor": "the exact `[c]laim`-style affordance already reused by `ActionList`'s multi-select actions bar — reach for `ActionList` first if the surrounding list already exists; use `HotkeyButton` directly for a standalone keyboard-driven action.",
     "notes": null,
-    "showcase": null,
+    "showcase": "#/hotkey-button",
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 84
+    "line": 97
   },
   {
     "name": "HourlyWageAmountStrip",
@@ -10035,7 +10060,7 @@
     "showcase": "#/icon",
     "since": "v0.6.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 551
+    "line": 560
   },
   {
     "name": "IconClusterRow",
@@ -10435,7 +10460,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 600
+    "line": 609
   },
   {
     "name": "InlineSubtleDropdown",

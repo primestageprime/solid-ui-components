@@ -93,3 +93,90 @@ describe("HotkeyButton", () => {
     expect(btn.classList.contains("sui-btn--sm")).toBe(true);
   });
 });
+
+// A `fold` HotkeyButton is its icon alone at phone width (Peter, 2026-10-17:
+// "for the phone button there is no keyboard, so you do not need a hotkey"),
+// and the keyed text button wider. The fold is the AppBar's.
+import { FoldingHotkeyButton, HOTKEY_BUTTON_FOLD_QUERY } from "./index";
+import { APP_BAR_FOLD_QUERY } from "../AppBar/AppBar";
+
+/** Swap jsdom's always-false matchMedia for one that matches `query` only. */
+const withMatchingQuery = (query: string): (() => void) => {
+  const original = window.matchMedia;
+  window.matchMedia = ((q: string) =>
+    ({
+      matches: q === query,
+      media: q,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }) as unknown as MediaQueryList) as typeof window.matchMedia;
+  return () => {
+    window.matchMedia = original;
+  };
+};
+
+describe("HotkeyButton fold", () => {
+  it("folds at the AppBar's phone width", () => {
+    expect(HOTKEY_BUTTON_FOLD_QUERY).toBe(APP_BAR_FOLD_QUERY);
+  });
+
+  it("wider than the fold, a FoldingHotkeyButton is the keyed text button with its icon", () => {
+    const { container } = render(() => (
+      <FoldingHotkeyButton hotkey="c" icon="check" onTrigger={() => {}}>
+        Complete
+      </FoldingHotkeyButton>
+    ));
+    const btn = container.querySelector("button")!;
+    expect(btn.classList.contains("sui-hotkey-btn--folded")).toBe(false);
+    expect(container.querySelector(".sui-hotkey-btn__label")!.textContent).toBe("Complete");
+    expect(container.querySelector(".sui-hotkey-btn__key")!.textContent).toBe("C");
+    expect(container.querySelector(".sui-hotkey-btn__icon")).not.toBeNull();
+    expect(btn.getAttribute("aria-label")).toBeNull();
+  });
+
+  it("at phone width it is the icon alone: no label, no key, no hint, the label as aria-label", () => {
+    const restore = withMatchingQuery(HOTKEY_BUTTON_FOLD_QUERY);
+    try {
+      const onTrigger = vi.fn();
+      const { container } = render(() => (
+        <FoldingHotkeyButton hotkey="z" icon="trash" onTrigger={onTrigger}>
+          Delete
+        </FoldingHotkeyButton>
+      ));
+      const btn = container.querySelector("button")!;
+      expect(btn.classList.contains("sui-hotkey-btn--folded")).toBe(true);
+      expect(container.querySelector(".sui-hotkey-btn__label")).toBeNull();
+      expect(container.querySelector(".sui-hotkey-btn__key")).toBeNull();
+      expect(container.querySelector(".sui-hotkey-btn__hint")).toBeNull();
+      expect(container.querySelector(".sui-hotkey-btn__icon--alone")).not.toBeNull();
+      expect(btn.getAttribute("aria-label")).toBe("Delete");
+      expect(btn.textContent).not.toContain("Delete");
+      fireEvent.click(btn);
+      fireEvent.keyDown(window, { key: "z" });
+      expect(onTrigger).toHaveBeenCalledTimes(2);
+    } finally {
+      restore();
+    }
+  });
+
+  it("without an icon it never folds, and a plain HotkeyButton ignores the fold", () => {
+    const restore = withMatchingQuery(HOTKEY_BUTTON_FOLD_QUERY);
+    try {
+      const { container } = render(() => (
+        <>
+          <FoldingHotkeyButton hotkey="e" onTrigger={() => {}}>
+            Edit
+          </FoldingHotkeyButton>
+          <HotkeyButton hotkey="s" icon="play" onTrigger={() => {}}>
+            Start
+          </HotkeyButton>
+        </>
+      ));
+      const labels = container.querySelectorAll(".sui-hotkey-btn__label");
+      expect(labels.length).toBe(2);
+      expect(container.querySelector(".sui-hotkey-btn--folded")).toBeNull();
+    } finally {
+      restore();
+    }
+  });
+});
