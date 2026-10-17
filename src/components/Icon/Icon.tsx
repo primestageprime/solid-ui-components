@@ -44,6 +44,7 @@ export const ICON_GROUPS = {
     "refresh",
     "undo",
     "download",
+    "play",
     "pause",
     "edit",
     "trash",
@@ -109,6 +110,7 @@ export type IconName =
   | "refresh"
   | "undo"
   | "download"
+  | "play"
   | "pause"
   | "edit"
   | "trash"
@@ -373,6 +375,13 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <path d="M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
       solid: `<path d="M8 2V10M5 7L8 10L11 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
             <path d="M3 12v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+    },
+
+    // A right-pointing triangle — the universal "start / go" glyph, the pair
+    // of `pause` (same 3..13 vertical extent).
+    play: {
+      outline: `<path d="M4.5 3.2v9.6a.5.5 0 00.76.43l7.7-4.8a.5.5 0 000-.86l-7.7-4.8a.5.5 0 00-.76.43Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M4 3.2v9.6a.5.5 0 00.76.43l7.7-4.8a.5.5 0 000-.86l-7.7-4.8A.5.5 0 004 3.2Z" fill="currentColor"/>`,
     },
 
     // Two vertical bars — the universal "paused / on hold" glyph.

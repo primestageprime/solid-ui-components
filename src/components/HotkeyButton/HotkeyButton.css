@@ -19,3 +19,16 @@
   opacity: 0.85;
   font-size: 0.85em;
 }
+
+/* Folded (phone width): the icon is the whole content, so it carries no
+   trailing gap and sits mid-line. The zero-width-space strut keeps the line
+   box at the text height, so a folded button is exactly as tall as its
+   unfolded twin and a row of them never shifts at the fold (measured: 32px
+   against 34px without it). */
+.sui-hotkey-btn--folded::before {
+  content: "\200B";
+}
+.sui-hotkey-btn__icon--alone {
+  margin-right: 0;
+  vertical-align: middle;
+}

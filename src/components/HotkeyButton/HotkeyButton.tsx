@@ -21,7 +21,13 @@ import {
 } from "solid-js";
 import { Button, type ButtonProps } from "../Button/Button";
 import { Icon, type IconName } from "../Icon";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import "./HotkeyButton.css";
+
+/** At or below this width a `fold` HotkeyButton is its icon alone: the same
+ *  phone fold as `APP_BAR_FOLD_QUERY` (a test keeps the two equal; the AppBar
+ *  is not imported here, a Depth 2 control does not depend on a Depth 3 bar). */
+export const HOTKEY_BUTTON_FOLD_QUERY = "(max-width: 480px)";
 
 export interface HotkeyButtonProps extends Omit<ButtonProps, "children"> {
   /** Single character that triggers this button (case-insensitive), e.g. "d". */
@@ -38,6 +44,13 @@ export interface HotkeyButtonProps extends Omit<ButtonProps, "children"> {
    * wires the key themselves).
    */
   armed?: boolean;
+  /**
+   * With an `icon`: at or below `HOTKEY_BUTTON_FOLD_QUERY` (phone width) the
+   * button is the icon alone, the label becoming its `aria-label`, with no key
+   * drawn — a phone has no keyboard (Peter, 2026-10-17). Wider, unchanged.
+   * The key listener still binds while `armed`. See `FoldingHotkeyButton`.
+   */
+  fold?: boolean;
   /** Plain-text label; the first case-insensitive `hotkey` char is emphasized. */
   children: string;
 }
@@ -82,16 +95,22 @@ export const hotkeyFires = (press: HotkeyPress, hotkey: string): boolean =>
   press.key.toLowerCase() === hotkey.toLowerCase();
 
 export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
-  const merged = mergeProps({ armed: true }, props);
+  const merged = mergeProps({ armed: true, fold: false }, props);
   const [local, others] = splitProps(merged, [
     "hotkey",
     "icon",
     "onTrigger",
     "armed",
+    "fold",
     "children",
     "class",
     "disabled",
   ]);
+
+  // The media query is read only for a folding button, so a plain one binds
+  // no matchMedia listener.
+  const narrow = local.fold ? useMediaQuery(HOTKEY_BUTTON_FOLD_QUERY) : () => false;
+  const folded = () => local.fold && !!local.icon && narrow();
 
   // Split the label at the first case-insensitive occurrence of the hotkey so
   // we can wrap just that character. If the char isn't present, we append a
@@ -128,6 +147,7 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
 
   const classes = () => {
     const list = ["sui-hotkey-btn"];
+    if (folded()) list.push("sui-hotkey-btn--folded");
     if (local.class) list.push(local.class);
     return list.join(" ");
   };
@@ -137,16 +157,19 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
       {...others}
       class={classes()}
       disabled={local.disabled}
+      aria-label={folded() ? local.children : others["aria-label"]}
       onClick={fire as JSX.EventHandler<HTMLButtonElement, MouseEvent>}
     >
       {local.icon && (
         <Icon
           name={local.icon}
           variant="outline"
-          size="xs"
-          class="sui-hotkey-btn__icon"
+          size={folded() ? "sm" : "xs"}
+          class={folded() ? "sui-hotkey-btn__icon sui-hotkey-btn__icon--alone" : "sui-hotkey-btn__icon"}
         />
       )}
+      {folded() ? null : (
+      <>
       {/* Rendered tight on one line so the JSX compiler can't insert
           whitespace text nodes between the segments (which would show as a
           gap around the emphasized key, e.g. "D one" instead of "Done"). */}
@@ -159,6 +182,8 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
       </span>
       {segments().hint && (
         <span class="sui-hotkey-btn__hint">[{segments().hint}]</span>
+      )}
+      </>
       )}
     </Button>
   );
@@ -177,3 +202,13 @@ export function createHotkeyButton(
 ): Component<HotkeyButtonDataProps> {
   return (props) => <HotkeyButton {...mergeProps(defaults, props)} />;
 }
+
+/**
+ * A HotkeyButton that is its icon alone at phone width (`HOTKEY_BUTTON_FOLD_QUERY`)
+ * and the keyed text button wider. Give it an `icon`; without one it never folds.
+ *
+ *   <FoldingHotkeyButton hotkey="c" icon="check" onTrigger={complete}>Complete</FoldingHotkeyButton>
+ */
+export const FoldingHotkeyButton: Component<HotkeyButtonDataProps> = createHotkeyButton({
+  fold: true,
+});

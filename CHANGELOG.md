@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+- **`HotkeyButton` `fold`** and **`FoldingHotkeyButton`** — with an `icon`, at or below `HOTKEY_BUTTON_FOLD_QUERY` (`(max-width: 480px)`, the AppBar's phone fold) the button is its icon alone, the label as `aria-label`, no key drawn (a phone has no keyboard); wider it is the keyed text button with its icon. `FoldingHotkeyButton` is the curried `{ fold: true }` form, for a list-detail app's action row. Without `fold` nothing changes.
+- **`Icon` `"play"`** — the start / go triangle, the pair of `pause`.
+- Gallery: a `HotkeyButton` showcase (`hotkey-button`).
+
 ## 0.228.0 — 2026-10-17
 
 ### Added

@@ -302,3 +302,16 @@ describe("Icon flipped", () => {
     expect(el.classList.contains("jtf-icon--turnable")).toBe(false);
   });
 });
+
+// `play` is the pair of `pause`: the start / go glyph, same vertical extent.
+describe("Icon play glyph", () => {
+  it("renders in both variants, and is reachable from the gallery's actions group", () => {
+    expect(ICON_GROUPS.actions).toContain("play");
+    for (const variant of ["outline", "solid"] as const) {
+      const { container } = render(() => <Icon name="play" variant={variant} />);
+      const el = container.querySelector('[role="img"]');
+      expect(el?.getAttribute("aria-label")).toBe("play");
+      expect(el?.querySelector("svg path")?.getAttribute("d")).toBeTruthy();
+    }
+  });
+});
