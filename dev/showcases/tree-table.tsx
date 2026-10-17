@@ -146,8 +146,8 @@ export const TreeTableShowcase: Component = () => {
         <p class="text-meta">
           The selection holds leaf ids. A parent shows a dash when only some of
           its parts are checked. The shaft seal is locked: its box is disabled,
-          and a click on Pump assembly leaves it alone. {selected().size} parts
-          checked.
+          a click on Pump assembly leaves it alone, and a hover on its box says
+          why. {selected().size} parts checked.
         </p>
         <TreeTable
           {...tree}
@@ -155,7 +155,12 @@ export const TreeTableShowcase: Component = () => {
           columns={COLUMNS}
           expanded={checked.expanded()}
           onToggle={checked.toggle}
-          selection={{ selected: selected(), onChange: setSelected, disabled: LOCKED }}
+          selection={{
+            selected: selected(),
+            onChange: setSelected,
+            disabled: LOCKED,
+            disabledReason: () => "Locked: the seal is on back order",
+          }}
           compact
           hoverable
         />

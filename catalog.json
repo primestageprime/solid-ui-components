@@ -17730,7 +17730,7 @@
     "showcase": "#/tree-table",
     "since": "0.219.0",
     "file": "src/components/TreeTable/TreeTable.tsx",
-    "line": 124
+    "line": 132
   },
   {
     "name": "TrendSparkline",

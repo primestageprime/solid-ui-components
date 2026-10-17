@@ -1,7 +1,7 @@
 // ============================================
 // TreeTable — Composite (Depth 2)
 // No CSS. Composes BaseTable, IndentRail, ClusterRow, DisclosureButton,
-// ReservedDisclosureButton, Icon and SmallCheckbox.
+// ReservedDisclosureButton, Icon, SmallCheckbox and Tooltip.
 //
 // A table whose parent rows expand to show the smaller rows they are made of.
 // The caller passes a tree (`data` + `childrenOf`); TreeTable flattens the
@@ -22,10 +22,11 @@
 // Not role="treegrid" — nothing here provides its arrow-key contract (the
 // same reasoning as NestedList's list-not-tree note in COMPONENTS.md).
 // ============================================
-import { type JSX, createMemo, createSignal } from "solid-js";
+import { type JSX, Show, createMemo, createSignal } from "solid-js";
 import { DisclosureButton, ReservedDisclosureButton } from "../Button";
 import { SmallCheckbox } from "../Checkbox";
 import { Icon } from "../Icon";
+import { Tooltip } from "../Tooltip";
 import { ClusterRow, IndentRail } from "../Layout";
 import { BaseTable } from "../Table/BaseTable";
 import {
@@ -57,6 +58,13 @@ export interface TreeTableSelection {
    * changes only the unlocked leaves.
    */
   readonly disabled?: ReadonlySet<string>;
+  /**
+   * Why a locked leaf is locked. For a leaf in `disabled` that has a reason,
+   * a hover on its box shows the reason in a Tooltip, and the box carries it
+   * as `aria-description` (a disabled box takes no focus). Parent boxes show
+   * none.
+   */
+  readonly disabledReason?: (leafId: string) => string | undefined;
 }
 
 export interface TreeTableProps<T extends TableRow>
@@ -155,18 +163,28 @@ export function TreeTable<T extends TableRow>(props: TreeTableProps<T>) {
 
   // Reads `props.selection` inside the reactive state, never a captured copy:
   // the caller hands a new selection object each time the set changes.
-  const box = (leaves: () => readonly string[], label: string): JSX.Element => {
+  const box = (
+    leaves: () => readonly string[],
+    label: string,
+    leafId?: string,
+  ): JSX.Element => {
     const selected = (): ReadonlySet<string> =>
       props.selection?.selected ?? new Set<string>();
     const locked = (): ReadonlySet<string> =>
       props.selection?.disabled ?? new Set<string>();
     const state = (): CheckState => checkState(leaves(), selected());
-    return (
+    // A locked LEAF's reason, if the caller gives one.
+    const reason = (): string | undefined =>
+      leafId !== undefined && locked().has(leafId)
+        ? props.selection?.disabledReason?.(leafId)
+        : undefined;
+    const checkbox = (
       <SmallCheckbox
         aria-label={label}
         checked={state() === "checked"}
         indeterminate={state() === "indeterminate"}
         disabled={allLocked(leaves(), locked())}
+        aria-description={reason()}
         // A row click expands and collapses; a click on the box must not.
         onClick={(e) => e.stopPropagation()}
         onCheckedChange={(on) =>
@@ -175,6 +193,17 @@ export function TreeTable<T extends TableRow>(props: TreeTableProps<T>) {
           )
         }
       />
+    );
+    // A disabled input gets no pointer events of its own, so the Tooltip's
+    // trigger is a span around the box, not the input.
+    return (
+      <Show when={reason()} fallback={checkbox}>
+        {(text) => (
+          <Tooltip content={text()} triggerAs="span">
+            {checkbox}
+          </Tooltip>
+        )}
+      </Show>
     );
   };
 
@@ -208,7 +237,11 @@ export function TreeTable<T extends TableRow>(props: TreeTableProps<T>) {
             </ReservedDisclosureButton>
           )}
           {props.selection
-            ? box(() => leafIds(flat.row, shape), `Select ${label}`)
+            ? box(
+                () => leafIds(flat.row, shape),
+                `Select ${label}`,
+                flat.hasChildren ? undefined : flat.id,
+              )
             : null}
           {content}
         </ClusterRow>

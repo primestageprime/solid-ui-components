@@ -314,3 +314,45 @@ describe("TreeTable locked boxes and highlighted rows", () => {
     expect(rowOf(container, "Pump").classList.contains("hud-table__row--highlighted")).toBe(false);
   });
 });
+
+describe("TreeTable disabledReason", () => {
+  const mount = () =>
+    render(() => (
+      <TreeTable
+        {...base}
+        data={DATA}
+        expanded={new Set(["pump"])}
+        onToggle={() => {}}
+        selection={{
+          selected: new Set<string>(),
+          onChange: () => {},
+          disabled: new Set(["seal", "impeller"]),
+          disabledReason: (id) => (id === "seal" ? "Seal is on back order" : undefined),
+        }}
+      />
+    ));
+  const boxOf = (c: HTMLElement, label: string) =>
+    c.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)!;
+
+  it("wraps a locked leaf's box in a span trigger and describes the box", () => {
+    const { container } = mount();
+    const seal = boxOf(container, "Select Seal");
+    expect(seal.closest("span.sui-tooltip__trigger")).toBeTruthy();
+    expect(seal.getAttribute("aria-description")).toBe("Seal is on back order");
+  });
+
+  it("leaves a locked leaf with no reason, and an open leaf, unwrapped", () => {
+    const { container } = mount();
+    expect(boxOf(container, "Select Impeller").closest(".sui-tooltip__trigger")).toBeNull();
+    expect(boxOf(container, "Select Hose").closest(".sui-tooltip__trigger")).toBeNull();
+    expect(boxOf(container, "Select Hose").hasAttribute("aria-description")).toBe(false);
+  });
+
+  it("shows the reason on a hover over the box", async () => {
+    const { container } = mount();
+    const trigger = boxOf(container, "Select Seal").closest<HTMLElement>(".sui-tooltip__trigger")!;
+    fireEvent.pointerEnter(trigger, { pointerType: "mouse" });
+    await new Promise((r) => setTimeout(r, 300));
+    expect(document.querySelector(".sui-tooltip__content")?.textContent).toContain("Seal is on back order");
+  });
+});
