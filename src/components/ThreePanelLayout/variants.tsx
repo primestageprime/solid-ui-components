@@ -51,3 +51,15 @@ export const SplitThreePanel: Component<ThreePanelLayoutDataProps> =
     leftPanelWidth: W.split,
     rightPanelWidth: W.context,
   });
+
+/** Fluid list-and-detail page: left list 22vw clamped 240..360, right context
+ *  15vw clamped 180..260, and stacked asides uncapped (no 200px max-height,
+ *  no internal scroll) at phone widths.
+ *  Replaces the Taskmaster touchstone's hand-written clamp layout. */
+export const FluidListDetailThreePanel: Component<ThreePanelLayoutDataProps> =
+  createThreePanelLayout({
+    height: "100%",
+    leftPanelWidth: W.fluidList,
+    rightPanelWidth: W.fluidContext,
+    asideMaxHeight: "none",
+  });

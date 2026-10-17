@@ -18,4 +18,8 @@ export const THREE_PANEL_ASIDE_WIDTH = {
   inspector: "320px",
   /** Half-screen-class left pane for a split view. */
   split: "560px",
+  /** Fluid left list column: 22vw clamped to 240..360 (Taskmaster touchstone canon rail). */
+  fluidList: "clamp(240px, 22vw, 360px)",
+  /** Fluid right context column: 15vw clamped to 180..260 (Taskmaster touchstone context rail). */
+  fluidContext: "clamp(180px, 15vw, 260px)",
 } as const;
