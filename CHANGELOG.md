@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.227.0 — 2026-10-17
+
 ### Added
 
 - **`TreeTable` `selection.disabledReason`** — `(leafId) => string | undefined`. A hover on a locked leaf's checkbox shows the reason in a `Tooltip`, and the box carries it as `aria-description`.
