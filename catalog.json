@@ -5821,7 +5821,7 @@
     "showcase": "#/three-panel-layout",
     "since": "0.104.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
-    "line": 153
+    "line": 154
   },
   {
     "name": "createThreeSlotRow",
@@ -8675,6 +8675,35 @@
     "since": null,
     "file": "src/components/DiffPair/variants.ts",
     "line": 11
+  },
+  {
+    "name": "FluidListDetailThreePanel",
+    "depth": 1,
+    "kind": "variant",
+    "family": "ThreePanelLayout",
+    "variantOf": {
+      "factory": "createThreePanelLayout",
+      "overrides": "{\n    height: \"100%\",\n    leftPanelWidth: W.fluidList,\n    rightPanelWidth: W.fluidContext,\n    asideMaxHeight: \"none\",\n  }"
+    },
+    "overrides": [
+      "height",
+      "fullHeight",
+      "leftPanelWidth",
+      "rightPanelWidth",
+      "asideMaxHeight",
+      "rightPanelFlush"
+    ],
+    "dataProps": "ThreePanelLayoutDataProps",
+    "summary": "Fluid list-and-detail page: left list 22vw clamped 240..360, right context 15vw clamped 180..260, and stacked asides uncapped (no 200px max-height, no internal scroll) at phone widths.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Fluid list-and-detail page: left list 22vw clamped 240..360, right context 15vw clamped 180..260, and stacked asides uncapped (no 200px max-height, no internal scroll) at phone widths. Replaces the Taskmaster touchstone's hand-written clamp layout.",
+    "showcase": "#/three-panel-layout",
+    "since": "Unreleased",
+    "file": "src/components/ThreePanelLayout/variants.tsx",
+    "line": 59
   },
   {
     "name": "FocusLabelBand",
@@ -17020,11 +17049,11 @@
     "preferFirst": null,
     "notToBeConfusedWith": null,
     "useFor": "multi-pane investigation pages, tuning pages, anywhere the four-slot shape applies. Stacked (≤900px) the panels sit under one 16px gutter: the asides take the centre's 16px sides and drop the padding edge that faces the centre.",
-    "notes": "@deprecated Internal primitive. Do not import at call sites: use a named curried variant (`StandardThreePanel`, `ListDetailThreePanel`, `InspectorThreePanel`, `SplitThreePanel`), or `createThreePanelLayout` for an app-level variant. Widths and heights are design decisions baked into a variant, never call-site props. Phase 2 of the add/deprecate/delete migration; the root export is removed in phase 3.",
+    "notes": "@deprecated Internal primitive. Do not import at call sites: use a named curried variant (`StandardThreePanel`, `ListDetailThreePanel`, `InspectorThreePanel`, `SplitThreePanel`, `FluidListDetailThreePanel`), or `createThreePanelLayout` for an app-level variant. Widths and heights are design decisions baked into a variant, never call-site props. Phase 2 of the add/deprecate/delete migration; the root export is removed in phase 3.",
     "showcase": "#/three-panel-layout",
     "since": "v0.11.0",
     "file": "src/components/ThreePanelLayout/ThreePanelLayout.tsx",
-    "line": 98
+    "line": 99
   },
   {
     "name": "ThreeSlotRow",
