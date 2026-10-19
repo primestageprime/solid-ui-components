@@ -1,8 +1,8 @@
 /**
- * progress-flags bench: the pure step-timeline model for one diddit topic.
- *
- * x is wall-clock time (epoch ms). y is CUMULATIVE PLANNED MINUTES EARNED: the
- * sum of the estimates of the steps that are done. Two step lines:
+ * ProgressFlags model — Depth 0, pure data. The step-timeline model for one
+ * topic's trace: x is wall-clock time (epoch ms), y is CUMULATIVE PLANNED
+ * MINUTES EARNED, the sum of the estimates of the steps that are done. Two
+ * step lines:
  *
  *   ESTIMATE  steps through every step at its estimated duration, back to back,
  *             starting from the first receipt.
@@ -15,12 +15,59 @@
  * carry the stair corners; the chart draws them with plain linear areas.
  *
  * TOLERANCE is the one place to tune the colouring: `TOLERANCE_RATIO` of the
- * minutes planned so far, never below `TOLERANCE_FLOOR_MIN`.
+ * minutes planned so far, never below `TOLERANCE_FLOOR_MIN`. The curried
+ * component bakes the ratio in (`createProgressFlags`); every function here
+ * takes it as a trailing argument.
  *
- * Pure functions of (trace, as-of). Nothing reads the clock.
+ * Pure functions of (trace, as-of). Nothing reads the clock. Observed headlessly
+ * by `observeProgressFlags`, which prints both lines, the intervals and the
+ * flags as text (model.test.ts prints it for every fixture).
  */
-import { filter, find, findIndex, flatMap, join, map, sortBy, sum } from "../../../src/fn";
-import type { Receipt, ReceiptKind, Step, TopicTrace } from "./progress-flags.fixtures";
+import { filter, find, findIndex, flatMap, join, map, sortBy, sum } from "../../fn";
+
+// ---------------------------------------------------------------- the trace types
+
+/** What happened to a topic, as its tracker records it. */
+export type ProgressTraceReceiptKind =
+  | "Claimed"
+  | "Released"
+  | "Parked"
+  | "Blocked"
+  | "Unblocked"
+  | "Milestone"
+  | "Estimated"
+  | "StepsSet"
+  | "StepStarted"
+  | "StepDone"
+  | "Dismissed"
+  | "Lapsed"
+  | "ApprovalRequested"
+  | "Approved";
+
+export interface ProgressTraceReceipt {
+  readonly kind: ProgressTraceReceiptKind;
+  /** Epoch ms. */
+  readonly at: number;
+  /** Free text; a StepStarted/StepDone receipt names its step as "step N ...". */
+  readonly detail: string;
+}
+
+/** One planned step. No `startedAt`: not begun. No `doneAt`: not finished. */
+export interface ProgressTraceStep {
+  readonly title: string;
+  readonly estimateMin: number;
+  readonly startedAt: number | undefined;
+  readonly doneAt: number | undefined;
+}
+
+/** A topic's trace: its estimate, its steps in order, and every receipt. */
+export interface ProgressTrace {
+  readonly id: number;
+  readonly title: string;
+  readonly estimateMin: number;
+  readonly steps: readonly ProgressTraceStep[];
+  readonly receipts: readonly ProgressTraceReceipt[];
+}
 
 export const MIN_MS = 60_000;
 
@@ -39,14 +86,14 @@ export const toleranceOf = (
   ratio: number = TOLERANCE_RATIO,
 ): number => Math.max(ratio * plannedSoFarMin, TOLERANCE_FLOOR_MIN);
 
-export type Verdict = "within" | "ahead" | "behind";
+export type ProgressVerdict = "within" | "ahead" | "behind";
 
 /** Actual earned minus estimated earned, judged against the tolerance. */
 export const verdictOf = (
   estimateMin: number,
   actualMin: number,
   ratio: number = TOLERANCE_RATIO,
-): Verdict => {
+): ProgressVerdict => {
   const gap = actualMin - estimateMin;
   const tol = toleranceOf(estimateMin, ratio);
   return gap > tol ? "ahead" : gap < -tol ? "behind" : "within";
@@ -55,18 +102,18 @@ export const verdictOf = (
 // ---------------------------------------------------------------- the trace
 
 /** The first receipt: where the estimate clock starts. */
-export const startOf = (t: TopicTrace): number =>
-  Math.min(...map((r: Receipt) => r.at, t.receipts));
+export const startOf = (t: ProgressTrace): number =>
+  Math.min(...map((r: ProgressTraceReceipt) => r.at, t.receipts));
 
-const milestoneOf = (t: TopicTrace): number | undefined =>
-  find((r: Receipt) => r.kind === "Milestone", t.receipts)?.at;
+const milestoneOf = (t: ProgressTrace): number | undefined =>
+  find((r: ProgressTraceReceipt) => r.kind === "Milestone", t.receipts)?.at;
 
 /** Where the trace ends: its Milestone, else its last receipt. */
-export const endOf = (t: TopicTrace): number =>
-  milestoneOf(t) ?? Math.max(...map((r: Receipt) => r.at, t.receipts));
+export const endOf = (t: ProgressTrace): number =>
+  milestoneOf(t) ?? Math.max(...map((r: ProgressTraceReceipt) => r.at, t.receipts));
 
 /** The steps in order; a topic with none is one step as long as its estimate. */
-export const stepsOf = (t: TopicTrace): readonly Step[] =>
+export const stepsOf = (t: ProgressTrace): readonly ProgressTraceStep[] =>
   t.steps.length > 0
     ? t.steps
     : [
@@ -78,12 +125,12 @@ export const stepsOf = (t: TopicTrace): readonly Step[] =>
         },
       ];
 
-export const totalMin = (t: TopicTrace): number =>
-  sum(map((s: Step) => s.estimateMin, stepsOf(t)));
+export const totalMin = (t: ProgressTrace): number =>
+  sum(map((s: ProgressTraceStep) => s.estimateMin, stepsOf(t)));
 
-const cumulative = (steps: readonly Step[]): readonly number[] =>
+const cumulative = (steps: readonly ProgressTraceStep[]): readonly number[] =>
   map(
-    (_s: Step, i: number) => sum(map((s: Step) => s.estimateMin, steps.slice(0, i + 1))),
+    (_s: ProgressTraceStep, i: number) => sum(map((s: ProgressTraceStep) => s.estimateMin, steps.slice(0, i + 1))),
     steps,
   );
 
@@ -95,7 +142,7 @@ export interface LevelPoint {
 }
 
 /** The estimate line: every step at its estimated duration from the start. */
-export const estimateLine = (t: TopicTrace): readonly LevelPoint[] => {
+export const estimateLine = (t: ProgressTrace): readonly LevelPoint[] => {
   const steps = stepsOf(t);
   const t0 = startOf(t);
   return [
@@ -105,10 +152,10 @@ export const estimateLine = (t: TopicTrace): readonly LevelPoint[] => {
 };
 
 /** Steps whose doneAt is on or before `asOf`, in the order they finished. */
-const doneBy = (t: TopicTrace, asOf: number): readonly Step[] =>
+const doneBy = (t: ProgressTrace, asOf: number): readonly ProgressTraceStep[] =>
   sortBy(
-    (s: Step) => s.doneAt ?? 0,
-    filter((s: Step) => s.doneAt !== undefined && s.doneAt <= asOf, stepsOf(t)),
+    (s: ProgressTraceStep) => s.doneAt ?? 0,
+    filter((s: ProgressTraceStep) => s.doneAt !== undefined && s.doneAt <= asOf, stepsOf(t)),
   );
 
 /**
@@ -117,14 +164,14 @@ const doneBy = (t: TopicTrace, asOf: number): readonly Step[] =>
  * Milestone, and a closing point at `asOf` holding the last level.
  */
 export const actualLine = (
-  t: TopicTrace,
+  t: ProgressTrace,
   asOf: number = endOf(t),
 ): readonly LevelPoint[] => {
   const done = doneBy(t, asOf);
   const moves = map(
-    (s: Step, i: number) => ({
+    (s: ProgressTraceStep, i: number) => ({
       x: s.doneAt ?? 0,
-      y: sum(map((d: Step) => d.estimateMin, done.slice(0, i + 1))),
+      y: sum(map((d: ProgressTraceStep) => d.estimateMin, done.slice(0, i + 1))),
     }),
     done,
   );
@@ -157,22 +204,22 @@ export interface BandVertex {
   readonly bottom: number;
 }
 
-export interface Interval {
+export interface ProgressInterval {
   readonly from: number;
   readonly to: number;
   readonly estimate: number;
   readonly actual: number;
-  readonly verdict: Verdict;
+  readonly verdict: ProgressVerdict;
 }
 
 const GAP: BandVertex = { x: Number.NaN, top: Number.NaN, bottom: Number.NaN };
 
 /** The stretches between event times, up to `asOf`, each with its verdict. */
 export const intervalsOf = (
-  t: TopicTrace,
+  t: ProgressTrace,
   asOf: number = endOf(t),
   ratio: number = TOLERANCE_RATIO,
-): readonly Interval[] => {
+): readonly ProgressInterval[] => {
   const est = estimateLine(t);
   const act = actualLine(t, asOf);
   const xs = sortBy(
@@ -182,7 +229,7 @@ export const intervalsOf = (
       [...new Set([...map((p: LevelPoint) => p.x, est), ...map((p: LevelPoint) => p.x, act)])],
     ),
   );
-  return flatMap((from: number, i: number): Interval[] => {
+  return flatMap((from: number, i: number): ProgressInterval[] => {
     const to = xs[i + 1];
     if (to === undefined) return [];
     const estimate = levelAt(est, from);
@@ -196,10 +243,10 @@ export const intervalsOf = (
  * between runs that do not touch (AreaSeries breaks the fill there).
  */
 export const bandFor = (
-  intervals: readonly Interval[],
-  verdict: Verdict,
+  intervals: readonly ProgressInterval[],
+  verdict: ProgressVerdict,
 ): readonly BandVertex[] =>
-  flatMap((iv: Interval, i: number): BandVertex[] => {
+  flatMap((iv: ProgressInterval, i: number): BandVertex[] => {
     if (iv.verdict !== verdict) return [];
     const edge = (x: number): BandVertex => ({ x, top: iv.actual, bottom: iv.estimate });
     const next = intervals[i + 1];
@@ -208,14 +255,14 @@ export const bandFor = (
 
 /** Minutes spent in each verdict, by interval length. */
 export const verdictMinutes = (
-  intervals: readonly Interval[],
-): Readonly<Record<Verdict, number>> => {
-  const of = (v: Verdict): number =>
+  intervals: readonly ProgressInterval[],
+): Readonly<Record<ProgressVerdict, number>> => {
+  const of = (v: ProgressVerdict): number =>
     Math.round(
       sum(
         map(
-          (iv: Interval) => (iv.to - iv.from) / MIN_MS,
-          filter((iv: Interval) => iv.verdict === v, intervals),
+          (iv: ProgressInterval) => (iv.to - iv.from) / MIN_MS,
+          filter((iv: ProgressInterval) => iv.verdict === v, intervals),
         ),
       ) * 10,
     ) / 10;
@@ -224,13 +271,13 @@ export const verdictMinutes = (
 
 // ---------------------------------------------------------------- the flags
 
-export type FlagState = "past" | "current" | "planned";
+export type ProgressFlagState = "past" | "current" | "planned";
 
-export interface Flag {
+export interface ProgressFlag {
   readonly index: number;
   readonly x: number;
   readonly y: number;
-  readonly state: FlagState;
+  readonly state: ProgressFlagState;
   readonly title: string;
   readonly stepTitle: string;
   readonly estimateMin: number;
@@ -243,18 +290,18 @@ export interface Flag {
  * line where it finished; the first started-but-unfinished step is the current
  * one; both it and every unstarted step sit on the ESTIMATE line.
  */
-export const flagsOf = (t: TopicTrace, asOf: number = endOf(t)): readonly Flag[] => {
+export const flagsOf = (t: ProgressTrace, asOf: number = endOf(t)): readonly ProgressFlag[] => {
   const steps = stepsOf(t);
   const t0 = startOf(t);
   const levels = cumulative(steps);
   const currentIndex = findIndex(
-    (s: Step) => s.startedAt !== undefined && s.startedAt <= asOf && (s.doneAt === undefined || s.doneAt > asOf),
+    (s: ProgressTraceStep) => s.startedAt !== undefined && s.startedAt <= asOf && (s.doneAt === undefined || s.doneAt > asOf),
     steps,
   );
-  return map((s: Step, i: number): Flag => {
+  return map((s: ProgressTraceStep, i: number): ProgressFlag => {
     const y = levels[i] ?? 0;
     const done = s.doneAt !== undefined && s.doneAt <= asOf;
-    const state: FlagState = done ? "past" : i === currentIndex ? "current" : "planned";
+    const state: ProgressFlagState = done ? "past" : i === currentIndex ? "current" : "planned";
     return {
       index: i + 1,
       x: done ? (s.doneAt ?? t0) : t0 + y * MIN_MS,
@@ -272,7 +319,7 @@ export const flagsOf = (t: TopicTrace, asOf: number = endOf(t)): readonly Flag[]
 };
 
 /** The tooltip lines of a flag: step, estimate, actual if any, state. */
-export const flagTip = (f: Flag): readonly string[] => [
+export const flagTip = (f: ProgressFlag): readonly string[] => [
   `Step ${f.index}: ${f.stepTitle}`,
   `Estimated ${f.estimateMin}m`,
   ...(f.actualMin === undefined ? [] : [`Actual ${f.actualMin}m`]),
@@ -294,9 +341,9 @@ export const clock = (x: number): string =>
 
 // ---------------------------------------------------------------- the receipts table
 
-export interface ReceiptRow {
+export interface ProgressReceiptRow {
   readonly elapsed: string;
-  readonly kind: ReceiptKind;
+  readonly kind: ProgressTraceReceiptKind;
   readonly detail: string;
   /** Planned duration of the step, or of the topic at its Milestone; "" otherwise. */
   readonly estimate: string;
@@ -311,19 +358,19 @@ const minutesSince = (t0: number, x: number): string => `+${((x - t0) / MIN_MS).
 const spanMin = (from: number, to: number): string => `${((to - from) / MIN_MS).toFixed(1)}m`;
 
 /** The step a StepStarted/StepDone receipt names: "step 3 ..." is the third. */
-const stepNumberOf = (r: Receipt): number | undefined => {
+const stepNumberOf = (r: ProgressTraceReceipt): number | undefined => {
   const n = Number(/^step (\d+)/i.exec(r.detail)?.[1]);
   return Number.isNaN(n) ? undefined : n;
 };
 
-const stepOf = (t: TopicTrace, r: Receipt): Step | undefined => {
+const stepOf = (t: ProgressTrace, r: ProgressTraceReceipt): ProgressTraceStep | undefined => {
   const n = stepNumberOf(r);
   return n === undefined ? undefined : stepsOf(t)[n - 1];
 };
 
 const durationsOf = (
-  t: TopicTrace,
-  r: Receipt,
+  t: ProgressTrace,
+  r: ProgressTraceReceipt,
 ): { readonly estimate: string; readonly actual: string } => {
   if (r.kind === "Milestone")
     return { estimate: `${t.estimateMin}m`, actual: spanMin(startOf(t), r.at) };
@@ -337,17 +384,17 @@ const durationsOf = (
 };
 
 /** The topic's receipts as rows: elapsed since the first receipt, kind, detail, durations. */
-export const receiptRows = (t: TopicTrace): readonly ReceiptRow[] => {
+export const progressReceiptRows = (t: ProgressTrace): readonly ProgressReceiptRow[] => {
   const t0 = startOf(t);
   return map(
-    (r: Receipt): ReceiptRow => ({
+    (r: ProgressTraceReceipt): ProgressReceiptRow => ({
       elapsed: minutesSince(t0, r.at),
       kind: r.kind,
       detail: r.detail,
       ...durationsOf(t, r),
       step: stepNumberOf(r),
     }),
-    sortBy((r: Receipt) => r.at, t.receipts),
+    sortBy((r: ProgressTraceReceipt) => r.at, t.receipts),
   );
 };
 
@@ -362,31 +409,31 @@ const lineTable = (t0: number, label: string, line: readonly LevelPoint[]): stri
     ...map((p: LevelPoint) => `  ${padL(minutesSince(t0, p.x), 9)} ${padL(String(p.y), 5)}`, line),
   ]);
 
-export const intervalTable = (t: TopicTrace, ivs: readonly Interval[]): string => {
+export const intervalTable = (t: ProgressTrace, ivs: readonly ProgressInterval[]): string => {
   const t0 = startOf(t);
   return join("\n", [
     `${padR("from", 9)}${padR("to", 9)}${padL("est", 6)}${padL("act", 6)}${padL("tol", 6)}  verdict`,
     ...map(
-      (iv: Interval) =>
+      (iv: ProgressInterval) =>
         `${padR(minutesSince(t0, iv.from), 9)}${padR(minutesSince(t0, iv.to), 9)}${padL(String(iv.estimate), 6)}${padL(String(iv.actual), 6)}${padL(String(toleranceOf(iv.estimate)), 6)}  ${iv.verdict}`,
       ivs,
     ),
   ]);
 };
 
-export const flagTable = (t: TopicTrace, flags: readonly Flag[]): string => {
+export const flagTable = (t: ProgressTrace, flags: readonly ProgressFlag[]): string => {
   const t0 = startOf(t);
   return join("\n", [
     "flag  state     at        earned",
     ...map(
-      (f: Flag) => `${padL(String(f.index), 4)}  ${padR(f.state, 8)}  ${padR(minutesSince(t0, f.x), 9)} ${padL(String(f.y), 5)}`,
+      (f: ProgressFlag) => `${padL(String(f.index), 4)}  ${padR(f.state, 8)}  ${padR(minutesSince(t0, f.x), 9)} ${padL(String(f.y), 5)}`,
       flags,
     ),
   ]);
 };
 
 /** The whole observation of one topic: both lines, the area, the flags. */
-export const observe = (t: TopicTrace, asOf: number = endOf(t)): string => {
+export const observeProgressFlags = (t: ProgressTrace, asOf: number = endOf(t)): string => {
   const t0 = startOf(t);
   const ivs = intervalsOf(t, asOf);
   return join("\n\n", [

@@ -116,6 +116,7 @@ import { SparklineShowcase } from "./showcases/sparkline";
 import { TrendSparklineShowcase } from "./showcases/trend-sparkline";
 import { DistributionSparklineShowcase } from "./showcases/distribution-sparkline";
 import { RateGaugeShowcase } from "./showcases/rate-gauge";
+import { ProgressFlagsShowcase } from "./showcases/progress-flags";
 import { SvgMarksShowcase } from "./showcases/svg-marks";
 import { SpanLanesShowcase } from "./showcases/span-lanes";
 import { FormulaCaptionShowcase } from "./showcases/formula-caption";
@@ -728,6 +729,12 @@ const items: Item[] = [
     label: "RateGauge",
     component: RateGaugeShowcase,
     tags: ["depth:2", "chart", "indicator"],
+  },
+  {
+    id: "progress-flags",
+    label: "ProgressFlags",
+    component: ProgressFlagsShowcase,
+    tags: ["depth:3", "chart", "indicator"],
   },
   {
     id: "svg-marks",
