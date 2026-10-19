@@ -1,11 +1,11 @@
 // @vitest-environment node
 /**
- * progress-flags: the step-timeline model, observed headlessly. Each topic
+ * ProgressFlags: the step-timeline model, observed headlessly. Each topic
  * prints both lines, the verdict per interval and the flags, so the picture
  * can be checked against numbers.
  */
 import { describe, expect, it } from "vitest";
-import { SCENARIOS, TOPICS, TOPIC_18 } from "./progress-flags.fixtures";
+import { SCENARIOS, TOPICS, TOPIC_18 } from "./fixtures";
 import {
   MIN_MS,
   actualLine,
@@ -15,19 +15,19 @@ import {
   flagTip,
   flagsOf,
   intervalsOf,
-  observe,
-  receiptRows,
+  observeProgressFlags,
+  progressReceiptRows,
   startOf,
   toleranceOf,
   verdictMinutes,
   verdictOf,
-} from "./progress-flags.model";
+} from "./model";
 
 const minutes = (t0: number, x: number): number => Math.round(((x - t0) / MIN_MS) * 10) / 10;
 
 describe("every topic", () => {
   it("prints its observation", () => {
-    for (const t of TOPICS) console.log(`\n${observe(t)}\n`);
+    for (const t of TOPICS) console.log(`\n${observeProgressFlags(t)}\n`);
   });
 });
 
@@ -94,7 +94,7 @@ describe("topic 18 (M15 rolling bars)", () => {
   });
 
   it("lists the receipts with elapsed time", () => {
-    const rows = receiptRows(t);
+    const rows = progressReceiptRows(t);
     expect(rows[0]?.kind).toBe("Claimed");
     expect(rows.filter((r) => r.kind === "Estimated").map((r) => r.detail)).toEqual([
       "none -> 30m", "30m -> 80m", "80m -> 100m",
@@ -138,7 +138,7 @@ describe("scenarios", () => {
 });
 
 describe("receipt durations", () => {
-  const rows = receiptRows(TOPIC_18);
+  const rows = progressReceiptRows(TOPIC_18);
   it("shows a step's estimate when it starts and estimate plus actual when it ends", () => {
     const started = rows.find((r) => r.kind === "StepStarted");
     const done = rows.find((r) => r.kind === "StepDone");
@@ -182,7 +182,7 @@ describe("flag tooltip and receipt links", () => {
   });
 
   it("links step receipts to their flag number", () => {
-    const steps = receiptRows(TOPIC_18).filter((r) => r.step !== undefined);
+    const steps = progressReceiptRows(TOPIC_18).filter((r) => r.step !== undefined);
     expect(steps.length).toBe(22);
     expect(steps[0]?.step).toBe(1);
   });

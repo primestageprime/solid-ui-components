@@ -31,6 +31,7 @@ export * from "./components/MultiSelectFilter";
 export * from "./components/FilterBar";
 export * from "./components/ChartHeader";
 export * from "./components/ChartFrame";
+export * from "./components/ProgressFlags";
 export * from "./components/ModeSplitButton";
 export * from "./components/Sparkline";
 export * from "./components/HeartbeatSparkline";

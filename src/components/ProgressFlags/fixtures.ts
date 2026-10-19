@@ -1,50 +1,21 @@
-/**
- * progress-flags bench fixtures: diddit topics farmed 2026-10-15 from the
- * local diddit SpacetimeDB (receipt, step, topic tables), trimmed to what the
- * chart reads, plus two SYNTHETIC traces (ids 901, 902) because real agents
- * finish 2-6x ahead of estimate and never go behind.
- *
- * Times are epoch ms. Minutes are minutes. A step with no `startedAt` has not
- * begun; no `doneAt` has not finished.
- */
-export type ReceiptKind =
-  | "Claimed"
-  | "Released"
-  | "Parked"
-  | "Blocked"
-  | "Unblocked"
-  | "Milestone"
-  | "Estimated"
-  | "StepsSet"
-  | "StepStarted"
-  | "StepDone"
-  | "Dismissed"
-  | "Lapsed"
-  | "ApprovalRequested"
-  | "Approved";
-
-export interface Receipt {
-  readonly kind: ReceiptKind;
-  readonly at: number;
-  readonly detail: string;
-}
-
-export interface Step {
-  readonly title: string;
-  readonly estimateMin: number;
-  readonly startedAt: number | undefined;
-  readonly doneAt: number | undefined;
-}
-
-export interface TopicTrace {
-  readonly id: number;
-  readonly title: string;
-  readonly estimateMin: number;
-  readonly steps: readonly Step[];
-  readonly receipts: readonly Receipt[];
-}
+// ProgressFlags fixtures — Depth 0, pure data. Shared by model.test.ts,
+// ProgressFlags.test.tsx and the showcase; not exported from the barrel.
+//
+// Topics farmed 2026-10-15 from the local diddit SpacetimeDB (receipt, step,
+// topic tables), trimmed to what the chart reads, plus SYNTHETIC traces (ids
+// 901 to 904) because real agents finish 2-6x ahead of estimate and never go
+// behind.
+//
+// Times are epoch ms. Minutes are minutes. A step with no `startedAt` has not
+// begun; no `doneAt` has not finished.
+import { find, flatMap, map, sum } from "../../fn";
+import type { ProgressTraceReceipt, ProgressTraceStep, ProgressTrace } from "./model";
 
 const MIN = 60_000;
+
+type Duration = readonly [estimateMin: number, actualMin: number];
+
+const estimateOf = (d: Duration): number => d[0];
 
 /**
  * A synthetic trace: each step is [estimate, actual] minutes, run back to back
@@ -53,32 +24,37 @@ const MIN = 60_000;
 const synthetic = (
   id: number,
   title: string,
-  durations: readonly (readonly [number, number])[],
+  durations: readonly Duration[],
   idleMin = 1,
-): TopicTrace => {
+): ProgressTrace => {
   const t0 = 1_791_600_000_000;
-  const total = durations.reduce((n, d) => n + d[0], 0);
-  let cursor = t0 + idleMin * MIN;
-  const steps: Step[] = durations.map(([estimateMin, actual], i) => {
-    const startedAt = cursor;
-    cursor += actual * MIN;
-    return { title: `Step ${i + 1}`, estimateMin, startedAt, doneAt: cursor };
+  const total = sum(map(estimateOf, durations));
+  const startOfStep = (i: number): number =>
+    t0 + idleMin * MIN + sum(map((d: Duration) => d[1], durations.slice(0, i))) * MIN;
+  const stepOf = (d: Duration, i: number): ProgressTraceStep => ({
+    title: `Step ${i + 1}`,
+    estimateMin: d[0],
+    startedAt: startOfStep(i),
+    doneAt: startOfStep(i) + d[1] * MIN,
   });
-  const named = (s: Step, i: number): string => `step ${i + 1} ${s.title} (${s.estimateMin}m)`;
-  const receipts: Receipt[] = [
+  const steps = map(stepOf, durations);
+  const cursor = startOfStep(durations.length);
+  const named = (s: ProgressTraceStep, i: number): string => `step ${i + 1} ${s.title} (${s.estimateMin}m)`;
+  const stepReceipts = (s: ProgressTraceStep, i: number): ProgressTraceReceipt[] => [
+    { kind: "StepStarted", at: s.startedAt ?? t0, detail: named(s, i) },
+    { kind: "StepDone", at: s.doneAt ?? t0, detail: named(s, i) },
+  ];
+  const receipts: ProgressTraceReceipt[] = [
     { kind: "Claimed", at: t0, detail: "" },
     { kind: "StepsSet", at: t0 + 1, detail: `${steps.length} steps, ${total}m` },
     { kind: "Estimated", at: t0 + 2, detail: `none -> ${total}m` },
-    ...steps.flatMap((s, i): Receipt[] => [
-      { kind: "StepStarted", at: s.startedAt ?? t0, detail: named(s, i) },
-      { kind: "StepDone", at: s.doneAt ?? t0, detail: named(s, i) },
-    ]),
+    ...flatMap(stepReceipts, steps),
     { kind: "Milestone", at: cursor + 1, detail: "" },
   ];
   return { id, title, estimateMin: total, steps, receipts };
 };
 
-export const TOPICS: readonly TopicTrace[] = [
+export const TOPICS: readonly ProgressTrace[] = [
   {
     id: 18,
     title: "M15 rolling bars on SUI, plus three HUD data bugs",
@@ -271,17 +247,20 @@ export const TOPICS: readonly TopicTrace[] = [
   synthetic(904, "Synthetic: procrastinate", [[10, 2], [10, 2], [10, 3], [10, 2], [10, 2], [10, 3]], 50),
 ];
 
-const byId = (id: number): TopicTrace => TOPICS.find((t) => t.id === id) ?? (TOPICS[0] as TopicTrace);
+const byId = (id: number): ProgressTrace =>
+  find((t: ProgressTrace) => t.id === id, TOPICS) ?? (TOPICS[0] as ProgressTrace);
 
 export const TOPIC_18 = byId(18);
 
-/** The bench's scenarios, in order: a name and the topic that shows it. */
-export const SCENARIOS: readonly {
+export interface ProgressScenario {
   readonly name: string;
-  readonly topic: TopicTrace;
+  readonly topic: ProgressTrace;
   /** Minutes after the first receipt at which to cut the trace; omitted, it runs to its end. */
   readonly nowMin?: number;
-}[] = [
+}
+
+/** The showcase's scenarios, in order: a name and the topic that shows it. */
+export const SCENARIOS: readonly ProgressScenario[] = [
   { name: "On target", topic: byId(903) },
   // In progress: topic 18 cut at +12m, step 7 done, step 8 started, the rest planned.
   { name: "In progress", topic: TOPIC_18, nowMin: 12 },
