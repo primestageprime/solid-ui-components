@@ -4,8 +4,8 @@
 //
 // The showcase plays the CONSUMER: a tracker that records receipts and steps
 // for a topic. It passes data only (a title, a trace, an as-of cut) to
-// `StepProgressFlags`, the variant SUI ships with the y axis worded "Planned
-// minutes earned" and a tolerance of half the minutes planned so far. Under
+// `ProgressFlags`; the y axis wording and the tolerance (half the minutes
+// planned so far) are the component's own, there is no factory. Under
 // "Ahead", the one real topic, the receipts it is built from sit in a
 // FieldTable; hovering a row lights that step's flag and drop line, and
 // hovering or pressing a flag reports the step number back. That link is the
@@ -23,7 +23,7 @@ import {
   type ProgressTrace,
   type ProgressTraceReceiptKind,
   type ProgressReceiptRow,
-  StepProgressFlags,
+  ProgressFlags,
   progressReceiptRows,
 } from "../../src/components/ProgressFlags";
 import { type ProgressScenario, SCENARIOS } from "../../src/components/ProgressFlags/fixtures";
@@ -82,7 +82,7 @@ const ScenarioSection: Component<{ readonly scenario: ProgressScenario }> = (pro
   };
   return (
     <TightStack>
-      <StepProgressFlags
+      <ProgressFlags
         title={props.scenario.name}
         trace={props.scenario.topic}
         asOf={asOfFor(props.scenario.topic, props.scenario.nowMin)}
@@ -119,7 +119,7 @@ export const ProgressFlagsShowcase: Component = () => (
           <MutedBody>
             Dashed: estimate. Solid: actual. Accent: within tolerance. Purple: ahead of it. Red:
             behind it. Flags: grey done, cyan current, outline planned. Every chart below is
-            `StepProgressFlags` given a title, a trace and (for "In progress") an as-of cut.
+            `ProgressFlags` given a title, a trace and (for "In progress") an as-of cut.
           </MutedBody>
         </TightStack>
         <NarrowStack>

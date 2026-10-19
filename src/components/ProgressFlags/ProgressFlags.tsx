@@ -19,15 +19,16 @@
 // owns no CSS and no intrinsic element. Colours are theme tokens; purple and
 // cyan are mixed from the tokens because the palette has neither.
 //
-// The curried surface is `createProgressFlags` (variants.ts): the y-axis
-// WORDING and the tolerance ratio are presentational and bake once; `title`,
-// `trace`, `asOf` and the hover/select pair are DATA and stay at the call
-// site. Hover and selection are 1-based step numbers, the same numbers the
-// model's receipt rows carry, so a consumer links a table without knowing
-// the chart's slot ids. The model is model.ts; `observeProgressFlags` prints
-// the same picture as text.
+// No factory: every prop is DATA (`title`, `trace`, `asOf`, the hover/select
+// pair), so the base component is already the curried form. The y-axis
+// wording and the tolerance ratio are fixed here (Peter, 2026-10-19: an
+// override exists only once a real caller sets it; expand on demand). Hover
+// and selection are 1-based step numbers, the same numbers the model's
+// receipt rows carry, so a consumer links a table without knowing the
+// chart's slot ids. The model is model.ts; `observeProgressFlags` prints the
+// same picture as text.
 // ============================================
-import { type Component, Index, Show, createMemo, mergeProps } from "solid-js";
+import { type Component, Index, Show, createMemo } from "solid-js";
 import { AreaSeries, Chart, ChartTooltip, Grid, LineSeries, PinMarkers, ReferenceLine, ShapeGlyph, XAxis, YAxis } from "../Chart";
 import { type Id, type Pin, slotId } from "../Chart";
 import { ContentAutoGrowChartFrame } from "../ChartFrame";
@@ -72,6 +73,7 @@ const TICK_CHOICES = [10, 20, 30, 60];
 const FALLBACK_TICK_MIN = 120;
 const TICK_TARGET = 7;
 const Y_HEADROOM = 1.1;
+const Y_TITLE = "Planned minutes earned";
 
 export interface ProgressFlagsProps {
   /** The frame's title: the topic, the scenario, whatever the reader calls it. */
@@ -85,10 +87,6 @@ export interface ProgressFlagsProps {
   /** The 1-based step whose flag was pressed. */
   readonly selectedStep?: number;
   readonly onSelectStep?: (step: number) => void;
-  /** The y-axis title. Presentational: baked by `createProgressFlags`. */
-  readonly yTitle: string;
-  /** Tolerance as a share of the minutes planned so far. Presentational: baked by `createProgressFlags`. */
-  readonly toleranceRatio: number;
 }
 
 interface FlagPin extends Pin {
@@ -125,7 +123,7 @@ export const ProgressFlags: Component<ProgressFlagsProps> = (props) => {
   const end = () => props.asOf ?? endOf(props.trace);
   const estimate = createMemo(() => estimateLine(props.trace));
   const actual = createMemo(() => actualLine(props.trace, end()));
-  const intervals = createMemo(() => intervalsOf(props.trace, end(), props.toleranceRatio));
+  const intervals = createMemo(() => intervalsOf(props.trace, end(), TOLERANCE_RATIO));
   const flags = createMemo(() => flagsOf(props.trace, end()));
   const pins = createMemo(() => map(pinOf, flags()));
   const xEnd = () => {
@@ -151,7 +149,7 @@ export const ProgressFlags: Component<ProgressFlagsProps> = (props) => {
   const hover = (pin: FlagPin | null): void => props.onHoverStep?.(pin?.flag.index);
   const select = (pin: FlagPin): void => props.onSelectStep?.(pin.flag.index);
   return (
-    <ContentAutoGrowChartFrame title={props.title} yTitle={props.yTitle} onYAxisPress={marks.reset}>
+    <ContentAutoGrowChartFrame title={props.title} yTitle={Y_TITLE} onYAxisPress={marks.reset}>
       <Chart
         width={CHART_WIDTH}
         height={CHART_HEIGHT}
@@ -244,24 +242,3 @@ export const ProgressFlags: Component<ProgressFlagsProps> = (props) => {
     </ContentAutoGrowChartFrame>
   );
 };
-
-/**
- * The presentational half: the y-axis wording and the tolerance ratio. A
- * product decides both once, so they curry at the design-system layer and
- * never appear at a call site.
- */
-export type ProgressFlagsOverrides = Pick<ProgressFlagsProps, "yTitle" | "toleranceRatio">;
-
-/** The data half: what a call site still says. */
-export type ProgressFlagsDataProps = Omit<ProgressFlagsProps, keyof ProgressFlagsOverrides>;
-
-/** Bake the wording and the tolerance into a named variant. */
-export function createProgressFlags(defaults: ProgressFlagsOverrides): Component<ProgressFlagsDataProps> {
-  return (props) => {
-    const merged = mergeProps(defaults, props);
-    return <ProgressFlags {...merged} />;
-  };
-}
-
-/** The ratio the library's own variant bakes in; exported so a consumer currying its own can start from it. */
-export const DEFAULT_TOLERANCE_RATIO = TOLERANCE_RATIO;

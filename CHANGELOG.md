@@ -4,7 +4,7 @@
 
 ### Added
 
-- **`ProgressFlags`** (Composite, Depth 3, zero CSS) and its curried variant **`StepProgressFlags`** — one topic's progress as a step timeline: the dashed estimate, the solid actual, the area between them coloured by verdict against a tolerance, and a flag per step along the top with a drop line to its point. `createProgressFlags({ yTitle, toleranceRatio })` bakes the wording and the tolerance; call sites pass a title, a `ProgressTrace`, an optional `asOf` cut, and hover/select as 1-based step numbers. `progressReceiptRows(trace)` gives a receipts table beside it rows that carry the same step numbers; `observeProgressFlags(trace)` prints the picture as text. Promoted from the `progress-flags` workshop bench.
+- **`ProgressFlags`** (Composite, Depth 3, zero CSS) — one topic's progress as a step timeline: the dashed estimate, the solid actual, the area between them coloured by verdict against a tolerance, and a flag per step along the top with a drop line to its point. No factory: every prop is data. Call sites pass a title, a `ProgressTrace`, an optional `asOf` cut, and hover/select as 1-based step numbers. `progressReceiptRows(trace)` gives a receipts table beside it rows that carry the same step numbers; `observeProgressFlags(trace)` prints the picture as text. Promoted from the `progress-flags` workshop bench.
 
 ## 0.222.0 — 2026-10-16
 

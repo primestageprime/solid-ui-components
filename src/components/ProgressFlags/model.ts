@@ -15,9 +15,8 @@
  * carry the stair corners; the chart draws them with plain linear areas.
  *
  * TOLERANCE is the one place to tune the colouring: `TOLERANCE_RATIO` of the
- * minutes planned so far, never below `TOLERANCE_FLOOR_MIN`. The curried
- * component bakes the ratio in (`createProgressFlags`); every function here
- * takes it as a trailing argument.
+ * minutes planned so far, never below `TOLERANCE_FLOOR_MIN`. The component
+ * reads it from here; every function takes it as a trailing argument.
  *
  * Pure functions of (trace, as-of). Nothing reads the clock. Observed headlessly
  * by `observeProgressFlags`, which prints both lines, the intervals and the
