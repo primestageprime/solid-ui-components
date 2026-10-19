@@ -13413,7 +13413,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/progress-flags",
-    "since": "Unreleased",
+    "since": "0.229.0",
     "file": "src/components/ProgressFlags/ProgressFlags.tsx",
     "line": 121
   },
