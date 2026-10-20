@@ -141,6 +141,7 @@ describe("export surface — props", () => {
     expect(button.props?.map((p) => p.name).sort()).toEqual([
       "action",
       "active",
+      "casing",
       "loading",
       "onAction",
       "once",
@@ -170,6 +171,7 @@ describe("export surface — props", () => {
     expect(factory.props?.map((p) => p.name).sort()).toEqual([
       "action",
       "active",
+      "casing",
       "loading",
       "onAction",
       "once",
