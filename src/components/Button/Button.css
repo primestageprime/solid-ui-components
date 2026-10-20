@@ -1,6 +1,12 @@
 /* ============================================
    Button Component — Structural
    ============================================ */
+/* casing="normal": the label as written, whatever casing the theme gives .sui-btn. */
+.sui-btn.sui-btn--normal-case {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .sui-btn {
   display: inline-flex;
   align-items: center;

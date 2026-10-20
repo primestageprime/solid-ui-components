@@ -19,6 +19,9 @@ export interface RowProps extends JSX.HTMLAttributes<HTMLDivElement> {
   /** Fill the parent's width and forward it through (width:100%; min-width:0)
    *  so a scrolling child has concrete width to constrain against. */
   fill?: boolean;
+  /** Every child takes an equal share of the row's width (flex: 1 1 0), so two
+   *  buttons split a toolbar evenly whatever their labels. */
+  equal?: boolean;
 }
 
 export const Row: Component<RowProps> = (props) => {
@@ -28,6 +31,7 @@ export const Row: Component<RowProps> = (props) => {
     "justify",
     "wrap",
     "fill",
+    "equal",
     "class",
     "children",
   ]);
@@ -51,6 +55,7 @@ export const Row: Component<RowProps> = (props) => {
     }
     if (local.wrap) classList.push("row--wrap");
     if (local.fill) classList.push("row--fill");
+    if (local.equal) classList.push("row--equal");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };

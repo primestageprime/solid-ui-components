@@ -2,20 +2,31 @@
 // narrow panel: a fixed time column, a text column that takes the rest and truncates with an
 // ellipsis (or wraps), an empty state, and an optional selected row. No app nouns: the caller
 // says which field is the time and which the text.
+//
+// `variant="plain"` (2026-10-20, the tasklist sketch): no table at all. The title is a plain
+// heading with no count, there are no column headers and no grid; each entry is the time at the
+// left and the text, wrapping, at the right, in airy rows. The default (table) look is unchanged.
+import { For, Show } from "solid-js";
 import { BaseTable } from "../Table/BaseTable";
 import { SectionTable } from "../Table/SectionTable";
 import type { TableColumn, TableRow } from "../Table/types";
+import { SectionTitle } from "../Text/variants";
+import "./LogLineList.css";
 
-/** How `instantOf` is shown in the time column: `time` is the time of day (narrow-safe, the default), `date-time` adds the date, `date` is the date alone. */
-export type LogTimeFormat = "time" | "date-time" | "date";
+/** How the list is drawn: `table` (SectionTable / BaseTable) or `plain` (heading, airy time + text rows). */
+export type LogLineListVariant = "table" | "plain";
+
+/** How `instantOf` is shown in the time column: `time` is the time of day (narrow-safe, the default), `minutes` the time of day without seconds, `date-time` adds the date, `date` is the date alone. */
+export type LogTimeFormat = "time" | "minutes" | "date-time" | "date";
 
 const TIME_OPTIONS: Record<LogTimeFormat, Intl.DateTimeFormatOptions> = {
   time: { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false },
+  minutes: { hour: "2-digit", minute: "2-digit", hour12: false },
   "date-time": { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false },
   date: { year: "numeric", month: "short", day: "numeric" },
 };
 /** Time column width per format, wide enough for the formatted text. */
-const TIME_WIDTH: Record<LogTimeFormat, string> = { time: "5.5rem", "date-time": "9rem", date: "7.5rem" };
+const TIME_WIDTH: Record<LogTimeFormat, string> = { time: "5.5rem", minutes: "4rem", "date-time": "9rem", date: "7.5rem" };
 
 export interface LogLineListProps<T extends TableRow> {
   rows: T[];
@@ -47,6 +58,8 @@ export interface LogLineListProps<T extends TableRow> {
   selectedId?: string | null;
   onSelect?: (id: string) => void;
   rowId?: (row: T) => string;
+  /** `plain` drops the table chrome: heading only, no column headers, wrapped text, no selection. Default `table`. */
+  variant?: LogLineListVariant;
 }
 
 export function LogLineList<T extends TableRow>(props: LogLineListProps<T>) {
@@ -83,6 +96,27 @@ export function LogLineList<T extends TableRow>(props: LogLineListProps<T>) {
     fill: true,
     compact: true,
   };
+  const rowIdOf = (row: T): string => props.rowId?.(row) ?? String((row as { id?: unknown }).id);
+  // The plain variant is a read-only list: no selection (the table variant keeps `selectedId` / `onSelect`).
+  if (props.variant === "plain") {
+    return (
+      <div class="sui-log-lines">
+        <Show when={props.title}>
+          <SectionTitle class="sui-log-lines__title">{props.title}</SectionTitle>
+        </Show>
+        <Show when={props.rows.length > 0} fallback={<span class="sui-log-lines__empty">{props.emptyLabel ?? "No entries"}</span>}>
+          <For each={props.rows}>
+            {(row) => (
+              <div class="sui-log-lines__row" data-row-id={rowIdOf(row)}>
+                <span class="sui-log-lines__time">{timeText(row)}</span>
+                <span class="sui-log-lines__text">{props.textOf(row)}</span>
+              </div>
+            )}
+          </For>
+        </Show>
+      </div>
+    );
+  }
   return props.title ? (
     <SectionTable
       title={props.title}

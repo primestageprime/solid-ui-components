@@ -1,7 +1,7 @@
 {
   "bareHexCss": 0,
   "bareHexTsx": 0,
-  "inlineStyleSrc": 67,
+  "inlineStyleSrc": 69,
   "inlineStyleShowcases": 16,
   "dotChains": 7,
   "collectionMethodCalls": 31,
@@ -18,8 +18,8 @@
   "_raises": {
     "inlineStyleSrc": {
       "from": 67,
-      "to": 68,
-      "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+      "to": 69,
+      "reason": "HatchedProgressBar draws its done and active shares as measured width/left, as StackedProgressBar does (manifested as proportion+measured)"
     },
     "collectionMethodCalls": {
       "from": 30,

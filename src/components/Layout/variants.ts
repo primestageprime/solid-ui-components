@@ -162,6 +162,10 @@ export const IconClusterRow: Component<RowDataProps> = createRow({
 // flex default cross-axis). For a row of equal-height columns/cards where a
 // taller cell makes its neighbours grow to match (e.g. a swimlane of cards).
 export const StretchRow: Component<RowDataProps> = createRow({ gap: "sm" });
+// EqualRow — a flush row whose children each take an EQUAL share of the width
+// (no gap, flex: 1 1 0): a toolbar of two buttons that reads as one tight bar
+// (the tasklist sketch's "Oldest | Create", 2026-10-20).
+export const EqualRow: Component<RowDataProps> = createRow({ equal: true, align: "stretch" });
 // TopSpreadRow — a spread row pinned to the TOP (align:start) rather than
 // centered: a title on the left and a badge on the right that must sit at the
 // first text line even when the title wraps to two lines. The align:start

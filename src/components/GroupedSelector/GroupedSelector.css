@@ -14,3 +14,61 @@
 .sui-grouped-selector__item:focus-visible {
   box-shadow: 0 0 0 2px var(--sui-accent);
 }
+
+/* ---- flush variant: compact group rows, hairlines, an accent bar on the selection ---- */
+.sui-grouped-selector--flush {
+  --sui-grouped-bar: var(--sui-dense-select-bar, 3px);
+}
+
+.sui-grouped-selector--flush .sui-grouped-selector__group {
+  border-bottom: 1px solid var(--sui-border);
+}
+
+/* The header row is the toggle: no glyph, the whole row is the target. */
+.sui-grouped-selector--flush .sui-grouped-selector__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: var(--sui-dense-row-min-h, 28px);
+  padding: var(--sui-dense-row-pad-y, 4px) var(--sui-dense-row-pad-x, 12px);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--sui-border);
+  color: var(--sui-text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset var(--sui-grouped-bar) 0 0 transparent;
+}
+
+.sui-grouped-selector--flush .sui-grouped-selector__header:hover {
+  background-color: rgba(var(--sui-accent-rgb), 0.06);
+}
+
+.sui-grouped-selector--flush .sui-grouped-selector__header:focus-visible {
+  outline: 2px solid var(--sui-accent);
+  outline-offset: -2px;
+}
+
+/* The group that holds the selected item shares its accent bar. */
+.sui-grouped-selector--flush .sui-grouped-selector__group[data-holds-selection] .sui-grouped-selector__header {
+  box-shadow: inset var(--sui-grouped-bar) 0 0 var(--sui-accent);
+}
+
+.sui-grouped-selector--flush .sui-grouped-selector__item {
+  padding: var(--sui-dense-row-pad-y, 4px) var(--sui-dense-row-pad-x, 12px);
+  border-radius: 0;
+  border-bottom: 1px solid var(--sui-border);
+}
+
+.sui-grouped-selector--flush .sui-grouped-selector__item:last-child {
+  border-bottom: 0;
+}
+
+.sui-grouped-selector--flush .sui-grouped-selector__item[aria-selected="true"] {
+  box-shadow: inset var(--sui-grouped-bar) 0 0 var(--sui-accent);
+}

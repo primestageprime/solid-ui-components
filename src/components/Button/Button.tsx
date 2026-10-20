@@ -57,6 +57,9 @@ export interface ButtonProps
    * many dside-ui inline button factories.
    */
   tone?: "accent" | "outline" | "muted" | "danger";
+  /** Label casing: `theme` (default; the hud theme sets small caps) or `normal`, the label as written
+   *  (a sketch's "Oldest", "Create"). Additive: no theme changes. */
+  casing?: "theme" | "normal";
 }
 
 export const Button: Component<ButtonProps> = (props) => {
@@ -66,6 +69,7 @@ export const Button: Component<ButtonProps> = (props) => {
     "loading",
     "active",
     "tone",
+    "casing",
     "class",
     "children",
     "disabled",
@@ -98,6 +102,7 @@ export const Button: Component<ButtonProps> = (props) => {
     if (local.tone) classList.push(`sui-btn--tone-${local.tone}`);
     if (loading()) classList.push("sui-btn--loading");
     if (local.active) classList.push("sui-btn--active");
+    if (local.casing === "normal") classList.push("sui-btn--normal-case");
     if (local.class) classList.push(local.class);
     return classList.join(" ");
   };

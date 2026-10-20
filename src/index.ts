@@ -81,6 +81,7 @@ export * from "./components/SegmentedControl";
 export * from "./components/GroupedSelector";
 export * from "./components/LogLineList";
 export * from "./components/ConfiguredViews";
+export * from "./components/SequenceFlow";
 export * from "./components/SettingsTabs";
 export * from "./components/Progress";
 export * from "./components/ProgressCard";

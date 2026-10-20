@@ -25,8 +25,8 @@ import {
   type PopoverMenuItem,
 } from "../PopoverMenu/PopoverMenu";
 import { SmAvatar } from "../ParticipantAvatar/variants";
-import { TightStack } from "../Layout/variants";
-import { TextSublabel } from "../Text/variants";
+import { TightClusterRow, TightStack } from "../Layout/variants";
+import { TextBody, TextSublabel } from "../Text/variants";
 
 export interface UserMenuUser {
   /** Display name — the avatar's initials come from it. */
@@ -50,6 +50,8 @@ export interface UserMenuProps {
   onSignOut: () => void;
   /** An extra header line under the email (AppBar folds its status here at phone width). */
   status?: JSX.Element;
+  /** Draw the user's name beside the avatar in the trigger (the sketch's "avatar + Peter"). Default false. */
+  showName?: boolean;
 }
 
 /** Reserved ids for the built-in pair; namespaced so a caller's ids cannot collide. */
@@ -98,11 +100,16 @@ export const UserMenu: Component<UserMenuProps> = (props) => {
     <RightPopoverMenu
       triggerLabel={userMenuLabel(props.user)}
       trigger={
-        <SmAvatar
-          initials={userInitials(props.user)}
-          imageSrc={props.user?.imageSrc}
-          alt="User menu"
-        />
+        <TightClusterRow>
+          <SmAvatar
+            initials={userInitials(props.user)}
+            imageSrc={props.user?.imageSrc}
+            alt="User menu"
+          />
+          <Show when={props.showName && props.user?.name}>
+            <TextBody>{props.user?.name}</TextBody>
+          </Show>
+        </TightClusterRow>
       }
       header={
         <TightStack>

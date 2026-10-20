@@ -2,6 +2,7 @@ export {
   ConfiguredCard,
   ConfiguredDetail,
   ConfiguredLog,
+  flowNodesOf,
   whenLabel,
 } from "./ConfiguredViews";
 export type {
@@ -16,12 +17,17 @@ export {
   defineCard,
   defineDetail,
   defineSide,
+  flowSection,
   tableSection,
 } from "../../listDetail/views";
 export type {
   CardConfig,
+  CardLayout,
   DetailConfig,
   DetailSection,
+  FlowNodeSpec,
+  FlowSection,
+  Progress,
   SideConfig,
   StatusMap,
   StatusVariant,

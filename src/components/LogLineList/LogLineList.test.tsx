@@ -64,3 +64,23 @@ describe("LogLineList", () => {
     expect(pre.getByText("12:00:01")).toBeTruthy();
   });
 });
+
+describe("LogLineList plain", () => {
+  it("draws a heading, no column headers, and wrapped time + text rows", () => {
+    const { container, getByText, queryByText } = render(() => (
+      <LogLineList variant="plain" rows={rows} timeOf={(r) => r.at} textOf={(r) => r.msg} title="Logs" />
+    ));
+    expect(getByText("Logs")).toBeTruthy();
+    expect(queryByText("Time")).toBeNull();
+    expect(queryByText(/2 lines/)).toBeNull();
+    expect(container.querySelector("table")).toBeNull();
+    expect(container.querySelectorAll(".sui-log-lines__row").length).toBe(2);
+    expect(getByText("12:00:09")).toBeTruthy();
+  });
+  it("formats an instant without seconds in the minutes format", () => {
+    const { getByText } = render(() => (
+      <LogLineList variant="plain" rows={[{ id: "1", at: "2026-10-20T07:15:42", msg: "x" }]} instantOf={(r) => r.at} timeFormat="minutes" textOf={(r) => r.msg} />
+    ));
+    expect(getByText("07:15")).toBeTruthy();
+  });
+});

@@ -238,7 +238,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 323
+    "line": 327
   },
   {
     "name": "ActionWrapRow",
@@ -266,7 +266,7 @@
     "showcase": null,
     "since": "0.118.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 267
+    "line": 271
   },
   {
     "name": "AddFab",
@@ -418,7 +418,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 453
+    "line": 457
   },
   {
     "name": "AnchorFillBox",
@@ -443,7 +443,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 469
+    "line": 473
   },
   {
     "name": "AnimatedSwimlaneChart",
@@ -509,7 +509,7 @@
     "showcase": null,
     "since": "v0.18.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 929
+    "line": 933
   },
   {
     "name": "AppMain",
@@ -801,7 +801,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 237
+    "line": 241
   },
   {
     "name": "BarSeries",
@@ -855,7 +855,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 214
+    "line": 218
   },
   {
     "name": "BaselineDot",
@@ -902,7 +902,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 187
+    "line": 191
   },
   {
     "name": "BaselineWrapRow",
@@ -930,7 +930,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 293
+    "line": 297
   },
   {
     "name": "BaseTable",
@@ -1431,7 +1431,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 945
+    "line": 949
   },
   {
     "name": "CardSurface",
@@ -1710,7 +1710,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 177
+    "line": 181
   },
   {
     "name": "ChangeRenderer",
@@ -2082,7 +2082,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 306
+    "line": 310
   },
   {
     "name": "ChipGrid",
@@ -2108,7 +2108,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 969
+    "line": 973
   },
   {
     "name": "ChipLabel",
@@ -2205,7 +2205,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 380
+    "line": 384
   },
   {
     "name": "ClipColumn",
@@ -2233,7 +2233,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 922
+    "line": 926
   },
   {
     "name": "ClipFillBox",
@@ -2258,7 +2258,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 814
+    "line": 818
   },
   {
     "name": "ClipFillColumn",
@@ -2286,7 +2286,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 788
+    "line": 792
   },
   {
     "name": "ClipFillColumnFlush",
@@ -2314,7 +2314,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 799
+    "line": 803
   },
   {
     "name": "ClusterRow",
@@ -2504,7 +2504,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 932
+    "line": 936
   },
   {
     "name": "CompactBucketQueue",
@@ -2712,7 +2712,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 229
+    "line": 233
   },
   {
     "name": "CompactPanel",
@@ -2876,11 +2876,11 @@
     "preferFirst": null,
     "notToBeConfusedWith": null,
     "useFor": null,
-    "notes": "One item in the rail, drawn from a CardConfig.",
+    "notes": "One item in the rail, drawn from a CardConfig: a StatusCard, or with `layout: \"row\"` a RowCard (title + who, then the progress bar while anything is done or active).",
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
-    "line": 57
+    "line": 65
   },
   {
     "name": "ConfiguredDetail",
@@ -2899,7 +2899,7 @@
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
-    "line": 100
+    "line": 175
   },
   {
     "name": "ConfiguredLog",
@@ -2918,7 +2918,7 @@
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
-    "line": 163
+    "line": 253
   },
   {
     "name": "ConfirmationModal",
@@ -2989,7 +2989,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 483
+    "line": 487
   },
   {
     "name": "ContentAutoGrowChartFrame",
@@ -3655,7 +3655,7 @@
     "showcase": "#/button",
     "since": "0.142.0",
     "file": "src/components/Button/Button.tsx",
-    "line": 125
+    "line": 130
   },
   {
     "name": "createButtonGroup",
@@ -5307,7 +5307,7 @@
     "showcase": null,
     "since": "0.46.0",
     "file": "src/components/Layout/Row.tsx",
-    "line": 74
+    "line": 79
   },
   {
     "name": "createScrollRegion",
@@ -7131,7 +7131,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 518
+    "line": 522
   },
   {
     "name": "DenseStatusNote",
@@ -7892,7 +7892,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 979
+    "line": 983
   },
   {
     "name": "EndLabels",
@@ -7991,7 +7991,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 244
+    "line": 248
   },
   {
     "name": "EntityCard",
@@ -8049,6 +8049,34 @@
     "since": "0.85.2",
     "file": "src/components/Selector/SidebarSelector.tsx",
     "line": 144
+  },
+  {
+    "name": "EqualRow",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createRow",
+      "overrides": "{ equal: true, align: \"stretch\" }"
+    },
+    "overrides": [
+      "gap",
+      "align",
+      "justify",
+      "wrap",
+      "fill"
+    ],
+    "dataProps": "RowDataProps",
+    "summary": "a flush row whose children each take an equal share of the width (`Row.equal`); two buttons as one toolbar.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "EqualRow — a flush row whose children each take an EQUAL share of the width (no gap, flex: 1 1 0): a toolbar of two buttons that reads as one tight bar (the tasklist sketch's \"Oldest | Create\", 2026-10-20).",
+    "showcase": null,
+    "since": null,
+    "file": "src/components/Layout/variants.ts",
+    "line": 168
   },
   {
     "name": "ExtractionBoard",
@@ -8113,7 +8141,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 334
+    "line": 338
   },
   {
     "name": "FadedNowrapSublabel",
@@ -8337,7 +8365,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 547
+    "line": 551
   },
   {
     "name": "FillColumnFlush",
@@ -8365,7 +8393,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 557
+    "line": 561
   },
   {
     "name": "FillFullscreenBox",
@@ -8421,7 +8449,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 435
+    "line": 439
   },
   {
     "name": "FillPlaceholder",
@@ -8471,7 +8499,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 864
+    "line": 868
   },
   {
     "name": "FillTextArea",
@@ -8521,7 +8549,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 842
+    "line": 846
   },
   {
     "name": "FilterableTable",
@@ -8608,7 +8636,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 618
+    "line": 622
   },
   {
     "name": "FlatThreadGroup",
@@ -8686,7 +8714,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 288
+    "line": 292
   },
   {
     "name": "FloatCell",
@@ -9292,7 +9320,7 @@
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/GroupedSelector/GroupedSelector.tsx",
-    "line": 55
+    "line": 65
   },
   {
     "name": "GrowBox",
@@ -9317,7 +9345,7 @@
     "showcase": null,
     "since": "0.61.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 330
+    "line": 334
   },
   {
     "name": "GrowCenterColumn",
@@ -9345,7 +9373,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 891
+    "line": 895
   },
   {
     "name": "GrowCenterRow",
@@ -9373,7 +9401,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 899
+    "line": 903
   },
   {
     "name": "GrowClusterRow",
@@ -9401,7 +9429,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 201
+    "line": 205
   },
   {
     "name": "GrowColumn",
@@ -9429,7 +9457,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 701
+    "line": 705
   },
   {
     "name": "GrowFillBox",
@@ -9454,7 +9482,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 591
+    "line": 595
   },
   {
     "name": "GrowStack",
@@ -9482,7 +9510,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 725
+    "line": 729
   },
   {
     "name": "GrowthStrip",
@@ -9536,7 +9564,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 737
+    "line": 741
   },
   {
     "name": "GrowWrapRow",
@@ -9564,7 +9592,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 822
+    "line": 826
   },
   {
     "name": "GutteredFillStretchRow",
@@ -9592,7 +9620,7 @@
     "showcase": null,
     "since": "0.185.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 878
+    "line": 882
   },
   {
     "name": "HalfFillColumn",
@@ -9622,7 +9650,26 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 635
+    "line": 639
+  },
+  {
+    "name": "HatchedProgressBar",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "Progress",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1, owns `HatchedProgressBar.css`).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a progress line under a list row or a flow node.",
+    "notes": null,
+    "showcase": null,
+    "since": null,
+    "file": "src/components/Progress/HatchedProgressBar.tsx",
+    "line": 29
   },
   {
     "name": "HatchPattern",
@@ -10070,7 +10117,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 320
+    "line": 321
   },
   {
     "name": "HUDTabs",
@@ -10467,7 +10514,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 937
+    "line": 941
   },
   {
     "name": "InlineChartErrorOverlay",
@@ -10828,7 +10875,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 388
+    "line": 392
   },
   {
     "name": "LargeAmountStrip",
@@ -11365,7 +11412,7 @@
     "variantOf": null,
     "overrides": null,
     "dataProps": null,
-    "summary": "Composed (Depth 2, zero CSS: composes BaseTable / SectionTable).",
+    "summary": "Composed (Depth 2, owns `LogLineList.css` for its `plain` variant only; otherwise composes BaseTable / SectionTable).",
     "summarySource": "components-md",
     "preferFirst": null,
     "notToBeConfusedWith": null,
@@ -11374,7 +11421,7 @@
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/LogLineList/LogLineList.tsx",
-    "line": 52
+    "line": 65
   },
   {
     "name": "LongTextCell",
@@ -11421,7 +11468,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 953
+    "line": 957
   },
   {
     "name": "LooseClusterRow",
@@ -11477,7 +11524,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 284
+    "line": 288
   },
   {
     "name": "MajorPaneBox",
@@ -11502,7 +11549,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 654
+    "line": 658
   },
   {
     "name": "ManagedListSection",
@@ -12283,7 +12330,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 221
+    "line": 225
   },
   {
     "name": "NoShrinkColumn",
@@ -12311,7 +12358,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 710
+    "line": 714
   },
   {
     "name": "NoShrinkScrollBox",
@@ -12336,7 +12383,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 663
+    "line": 667
   },
   {
     "name": "NoteCard",
@@ -12724,7 +12771,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 535
+    "line": 539
   },
   {
     "name": "Page",
@@ -12768,7 +12815,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 503
+    "line": 507
   },
   {
     "name": "PageStack",
@@ -12872,7 +12919,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 688
+    "line": 692
   },
   {
     "name": "ParticipantNameLabel",
@@ -13093,7 +13140,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 681
+    "line": 685
   },
   {
     "name": "PinnedHeaderBox",
@@ -13118,7 +13165,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 673
+    "line": 677
   },
   {
     "name": "PinnedStampedRow",
@@ -14035,6 +14082,25 @@
     "line": 16
   },
   {
+    "name": "RowCard",
+    "depth": 2,
+    "kind": "composite",
+    "family": "Card",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2, `src/components/Card/RowCard.tsx`, owns `RowCard.css` for text marks).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "full-width rows in a rail.",
+    "notes": null,
+    "showcase": null,
+    "since": null,
+    "file": "src/components/Card/RowCard.tsx",
+    "line": 25
+  },
+  {
     "name": "ScenarioComboBox",
     "depth": 2,
     "kind": "variant",
@@ -14169,7 +14235,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 360
+    "line": 364
   },
   {
     "name": "ScrollColumn",
@@ -14197,7 +14263,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 763
+    "line": 767
   },
   {
     "name": "ScrollFillBox",
@@ -14222,7 +14288,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 370
+    "line": 374
   },
   {
     "name": "ScrollFillColumn",
@@ -14250,7 +14316,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 778
+    "line": 782
   },
   {
     "name": "ScrollList",
@@ -14302,7 +14368,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 490
+    "line": 494
   },
   {
     "name": "ScrollRegion",
@@ -14402,7 +14468,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 342
+    "line": 346
   },
   {
     "name": "ScrollYBox",
@@ -14427,7 +14493,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 352
+    "line": 356
   },
   {
     "name": "ScrubChart",
@@ -14874,6 +14940,25 @@
     "since": null,
     "file": "src/components/MessageBubble/variants.ts",
     "line": 10
+  },
+  {
+    "name": "SequenceFlow",
+    "depth": 2,
+    "kind": "composite",
+    "family": "SequenceFlow",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composed (Depth 2, owns `SequenceFlow.css`).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": null,
+    "file": "src/components/SequenceFlow/SequenceFlow.tsx",
+    "line": 78
   },
   {
     "name": "ServiceHealthDot",
@@ -16853,7 +16938,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 249
+    "line": 253
   },
   {
     "name": "TargetBarChart",
@@ -17349,7 +17434,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 192
+    "line": 196
   },
   {
     "name": "TightNoShrinkClusterRow",
@@ -17377,7 +17462,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 909
+    "line": 913
   },
   {
     "name": "TightSpreadRow",
@@ -17782,7 +17867,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 206
+    "line": 210
   },
   {
     "name": "TopicTitle",
@@ -17833,7 +17918,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 479
+    "line": 483
   },
   {
     "name": "TopSpreadRow",
@@ -17861,7 +17946,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 169
+    "line": 173
   },
   {
     "name": "TreeDiffChart",
@@ -18107,7 +18192,7 @@
     "showcase": "#/user-menu",
     "since": "0.225.0",
     "file": "src/components/UserMenu/UserMenu.tsx",
-    "line": 91
+    "line": 93
   },
   {
     "name": "Val",
@@ -18330,7 +18415,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 574
+    "line": 578
   },
   {
     "name": "ViolationBadge",
@@ -18727,7 +18812,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 961
+    "line": 965
   },
   {
     "name": "WindowStrip",
@@ -18855,7 +18940,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 756
+    "line": 760
   },
   {
     "name": "WrappedClusterRow",
@@ -18883,7 +18968,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 316
+    "line": 320
   },
   {
     "name": "WrapRow",
@@ -18911,7 +18996,7 @@
     "showcase": null,
     "since": "0.118.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 254
+    "line": 258
   },
   {
     "name": "XAxis",

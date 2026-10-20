@@ -2,15 +2,39 @@ import { createSignal, type Component } from "solid-js";
 import {
   ConfiguredCard,
   ConfiguredLog,
+  EqualRow,
   GroupedSelector,
+  HatchedProgressBar,
+  HotkeyButton,
   LocalizationSettings,
   LogLineList,
+  RowCard,
   SectionTable,
+  SequenceFlow,
   SharingSettings,
   TextBody,
   type SelectorGroup,
+  type SequenceNode,
 } from "../../src";
 import { defineCard, defineChildren, defineSide } from "../../src/unstable";
+
+/** A sequence as a sketch draws it: three done nodes, the active one, the next. */
+const FLOW: SequenceNode[] = [
+  { id: "n1", label: "Gather", size: "done", progress: { done: 1, total: 1 } },
+  { id: "n2", label: "Group by area", size: "done", progress: { done: 1, total: 1 } },
+  { id: "n3", label: "Draft", size: "done", progress: { done: 1, total: 1 } },
+  {
+    id: "n4",
+    label: "Review wording",
+    size: "active",
+    description: "Read the draft aloud, cut what nobody would miss, and check every link opens.",
+    estimate: "12 min",
+    actual: "3:02",
+    progress: { done: 0, active: 0.25, total: 1 },
+  },
+  { id: "n5", label: "Publish", size: "next", estimate: "2 min" },
+];
+const FLOW_EDGES = ["18 min", "1h 2 min", "3 min"];
 
 type Bird = { id: string; name: string };
 const GROUPS: SelectorGroup<Bird, "pond" | "wood">[] = [
@@ -57,6 +81,72 @@ export const ListDetailPartsShowcase: Component = () => {
           onSelect={setSelected}
           onToggleGroup={(id) => setCollapsed((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]))}
           renderItem={(b) => <TextBody>{b.name}</TextBody>}
+        />
+      </div>
+
+      <h2>GroupedSelector, flush</h2>
+      <p class="text-meta">
+        <code>variant="flush"</code>: compact group rows (title, boxed count), hairlines, no +/- glyph, an accent
+        bar on the selected row and its group. The items here are <code>RowCard</code>s with a{" "}
+        <code>HatchedProgressBar</code> (solid done, hatched active).
+      </p>
+      <div class="example-group">
+        <GroupedSelector
+          variant="flush"
+          groups={GROUPS.map((g) => ({ ...g, collapsed: collapsed().includes(g.id) }))}
+          selectedId={selected()}
+          onSelect={setSelected}
+          onToggleGroup={(id) => setCollapsed((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]))}
+          renderItem={(b, ctx) => (
+            <RowCard
+              name={b.name}
+              aside={ctx.group.title}
+              bar={<HatchedProgressBar done={b.id === "a" ? 2 : 1} active={1} total={4} label={b.name} />}
+            />
+          )}
+        />
+      </div>
+
+      <h2>EqualRow and Button casing</h2>
+      <p class="text-meta">
+        Two buttons split a toolbar evenly (<code>EqualRow</code>); <code>casing="normal"</code> keeps the label as
+        written under a theme that sets caps.
+      </p>
+      <div class="example-group">
+        <EqualRow>
+          <HotkeyButton hotkey="s" icon="arrows-up-down" armed={false} casing="normal">Oldest</HotkeyButton>
+          <HotkeyButton hotkey="n" armed={false} casing="normal">Create</HotkeyButton>
+        </EqualRow>
+      </div>
+
+      <h2>SequenceFlow</h2>
+      <p class="text-meta">
+        An ordered sequence as a flow: done nodes stacked in the left lane, the active node large in the middle
+        (description, estimate / actual, bar, an <code>action</code> slot), next nodes in the right lane, labels on
+        the edges. Lanes share the width 1 : 2 : 1. <code>flowSection()</code> puts one in a ConfiguredDetail.
+      </p>
+      <div class="example-group">
+        <SequenceFlow
+          nodes={FLOW}
+          edgeLabels={FLOW_EDGES}
+          selectedId="n4"
+          action={<HotkeyButton hotkey="c" icon="check" armed={false} casing="normal">Complete</HotkeyButton>}
+        />
+        <SequenceFlow nodes={[] as SequenceNode[]} emptyLabel="No nodes" />
+      </div>
+
+      <h2>LogLineList, plain</h2>
+      <p class="text-meta">
+        <code>variant="plain"</code>: heading only, no column headers, time left and wrapped text right, airy rows;{" "}
+        <code>timeFormat="minutes"</code> drops the seconds.
+      </p>
+      <div class="example-group">
+        <LogLineList
+          variant="plain"
+          rows={LINES}
+          timeOf={(l) => l.at.slice(0, 5)}
+          textOf={(l) => l.text}
+          title="Logs"
         />
       </div>
 

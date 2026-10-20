@@ -1,0 +1,6 @@
+/* ConfiguredViews — the detail's title row: `--lg` is the headline size of a sketch's title line. */
+.sui-configured-detail__title--lg .sui-editable-title__text,
+.sui-configured-detail__title--lg .sui-editable-title__input {
+  font-size: 20px;
+  font-weight: 600;
+}
