@@ -21,9 +21,17 @@ import { rankCatalog, loadTagVocabulary } from "./catalog.mjs";
 import { find, loadLexicon, loadRecords } from "./find.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const bench = JSON.parse(
-  readFileSync(join(root, "scripts", "find-bench.json"), "utf8"),
-).needs;
+// `--file <path>` scores another needs file (scripts/find-bench-real.json:
+// the quoted held-out set alone); items without a `split` count as heldout.
+const fileIdx = process.argv.indexOf("--file");
+const benchPath =
+  fileIdx !== -1
+    ? process.argv[fileIdx + 1]
+    : join(root, "scripts", "find-bench.json");
+const bench = JSON.parse(readFileSync(benchPath, "utf8")).needs.map((n) => ({
+  split: "heldout",
+  ...n,
+}));
 const records = loadRecords();
 const vocab = loadTagVocabulary(root);
 const lexicon = loadLexicon();
