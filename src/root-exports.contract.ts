@@ -132,6 +132,7 @@ const _rootFunctions = [
   // /unstable entry — resolves from THAT entry
   unstable.channelModel,
   unstable.formatChannelTable,
+  unstable.defineListDetail,
 ] satisfies Fn[];
 
 // ── constants that must resolve from the root, with their shape ─────────
@@ -198,6 +199,9 @@ type _Private1 = Root["StatusFlowChart"];
 type _Private2 = Root["channelModel"];
 // @ts-expect-error -- formatChannelTable is /unstable only
 type _Private3 = Root["formatChannelTable"];
+// The list-detail kit is /unstable only.
+// @ts-expect-error -- defineListDetail is /unstable only
+type _PrivateKit = Root["defineListDetail"];
 // GroupedMutationSliders internals
 // @ts-expect-error -- private
 type _Private4 = Root["measureEntities"];

@@ -34,3 +34,9 @@ export type {
 	ChannelPeriod,
 	ChannelRow,
 } from "./components/ChannelChart/channelGeometry";
+
+// ============================================
+// list-detail kit — a config-driven, headless list-and-detail library (store, view state, undo,
+// layered Escape, verb rows). Ported from the singularity scaffold; see src/listDetail/README.md.
+// ============================================
+export * from "./listDetail";
