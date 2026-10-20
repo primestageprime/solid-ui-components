@@ -31,6 +31,25 @@ export type {
 } from "./listkit";
 // Also reachable as `fn.weekStart` from the root; re-exported here so a Node-loadable leaf module needs one import path.
 export { weekStart } from "../fn/weekStart";
+export { defineChildren } from "./children";
+export type {
+  ChildGroup,
+  ChildKind,
+  ChildLogLine,
+  ChildParent,
+  ChildShape,
+  ChildrenConfig,
+} from "./children";
+export { defineCard, defineDetail, defineSide, tableSection } from "./views";
+export type {
+  CardConfig,
+  DetailConfig,
+  DetailSection,
+  SideConfig,
+  StatusMap,
+  StatusVariant,
+  TableSection,
+} from "./views";
 export { editKey, focusById, isTyping, watchFocus } from "./focus";
 export type { WatchFocusOptions } from "./focus";
 export {

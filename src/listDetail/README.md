@@ -43,3 +43,7 @@ These are root exports (SSR-safe), not `/unstable`: `/unstable` stays JSX-free s
 - `LogLineList` — `<LogLineList rows timeOf={(r) => r.at} textOf={(r) => r.msg} title? emptyLabel? wrap? />`: a fixed time column and a truncating (or wrapping) text column for a narrow panel, empty state, optional `selectedId`/`onSelect`.
 - `LocalizationSettings`, `SharingSettings` — the bodies of the two generic settings tabs (stub models persisted in SUI; read `localizationState()` / `sharingState()` in your `dump()`; or pass `value` + `onChange`).
 - Layout: `<ListDetailThreePanel rightWidth="wide" />`: the three-panel with a right panel wide enough for a time + text table (`ListDetailLogThreePanel` is deprecated). `BaseTable`/`SectionTable` take `selectedId` + `onSelect` (+ `rowId`) for a selected row, distinct from hover `highlighted`.
+
+## Views as configuration (gen15)
+
+The panels are data. `defineCard` / `defineDetail` / `defineSide` (and `tableSection`) type a config; the root components `ConfiguredCard` (`item` + config), `ConfiguredDetail` and `ConfiguredLog` (`kit` + config) draw it. `defineChildren({ key, focus?, status, lines, groups })` is the pure progression of an item's ordered children: `child`, `kindOf`, `progress`, `activityAt`, `groupOf`, `pick`, `select`, `cycle`, `advance`. An escape hatch is the plain components underneath (`StatusCard`, `SectionTable`, `LogLineList`).
