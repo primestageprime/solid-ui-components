@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### Added
+
+- **`RowCard`** (Composite, Depth 2) and **`HatchedProgressBar`** (Atomic, Depth 1) — a full-width list row (name, short aside, optional bar slot) and a thin two-tone bar whose done share is solid and whose in-progress share is hatched. `CardConfig.layout "row"`, `CardConfig.progress`, `CardConfig.markerLabel` (the row marker's accessible name) and `defineChildren.progress()` returning `{ done, active, total }` feed them from the list-detail kit with no app change.
+- **`SwimlaneChart` stacked routing** — `routingStyle "stacked"` (same-column edges straight, cross-column edges curved between inner sides), `DAGEdge.label` drawn at each path's midpoint (`edgeLabels`, default on), `fitColumns: false` honouring `columnGap`, `rowOrder "input"`, and `align "start"`. **`StepFlowChart`** is the curried variant (all nodes, fixed gap, stacked, no pan) that `ConfiguredDetail`'s `flowSection()` draws: done lane, active card, next lane, labelled edges; `flowEdgesOf` / `flowColumnOf` / `flowHeightOf` helpers.
+- **`GroupedSelector` `variant="flush"`** — compact group rows, hairlines, no +/- glyph, an accent bar on the selection and its group, a painted scrollbar, and `--sui-grouped-indent` (6px default) for the rows under a header.
+- **`TwoUpGrid`** (Layout) — a 560px-minimum tile grid for a two-column chart page; **`EqualRow`** / `Row.equal`.
+- **`CountChip` `icon`** (and an empty label draws a bare centred count), **`Chart` `titleAlign`**, **`Button` `casing="normal"`**, **`UserMenu` `showName`**, **`LogLineList` `variant="plain"`** and `timeFormat "minutes"` (threaded through `SideConfig`).
+- **`DetailConfig` `titleSize`, `chip`, `subtitle`, `summary`** (icon + sentence) and **toolbar actions** — the primary button in a ruled toolbar row with the caller's extra actions beside it; `action.placement "activeNode"` puts an action on the flow's active card.
+- **List-detail kit** — a created item stays last in its group until the next re-sort (`view.pinnedLast`); a group that a mutation empties (update, primary, remove) folds, while a user's own unfold of a still-empty group is left alone.
+- **Component tags** — every base component file carries a `Tags:` header line from the closed vocabulary in `scripts/tags-vocabulary.json` (facets shows / does / data / role); `catalog.json` records carry `tags` / `tagsSource`, and `npm run find` ranks components for a need phrased like a brief (`npm run find:legacy` keeps the prose ranker; `npm run find:bench` scores both). Health ratchets `untaggedComponents` and `unknownTags` at 0.
+
+### Fixed
+
+- **`EditableTitle`** — the field fits the title box (the host is sized, so text, field and replica share one font), draws an even 1px border on all four sides, keeps an 8ch minimum when empty, and shows its draft live through `onDraft`; `ConfiguredDetail` writes the draft through the kit so the rail row renames while it is typed.
+- **`ConfiguredViews`** — the selected flow node is `aria-current`, not `aria-selected` on a `div`.
+
 ## 0.230.0 — 2026-10-20
 
 ### Added
