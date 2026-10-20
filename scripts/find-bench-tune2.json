@@ -1,0 +1,28 @@
+{
+  "$comment": "Second quoted tuning set for ranker v2 (diddit #4161 round 2): needs quoted from sources NOT used by the held-out split (briefs/tasklist.md v3, briefs/tasklist-v1.md, the v3-g01..g11r1 gaps.json rounds, title + note). Frozen in its own commit before any v2 tuning. Tune the lexicon on find-bench.json's `tuning` split plus this file; never on the held-out split.",
+  "needs": [
+    { "need": "Navigation: Tasks and Retrospective. Retrospective is a second screen of its own (a stub that says what it will show is fine).", "expect": ["Tabs", "AppBar", "AppNavLink", "EmptyState", "Placeholder"], "source": "personae/ui-builder/briefs/tasklist.md:21" },
+    { "need": "A chip shows how many tasks are Doing.", "expect": ["CountChip", "TagPill", "CountBadge", "DoingBadge"], "source": "personae/ui-builder/briefs/tasklist.md:23" },
+    { "need": "The four groups, History, Recent, Doing, Todo, are always shown, even when one is empty.", "expect": ["GroupedSelector", "GroupedBucketQueue", "BucketQueue"], "source": "personae/ui-builder/briefs/tasklist.md:26" },
+    { "need": "Each task card shows its title, its owner, its status and a time or date.", "expect": ["StatusCard", "EntityCard", "StampedRow"], "source": "personae/ui-builder/briefs/tasklist.md:27" },
+    { "need": "Sortable (newest, oldest, title) and collapsible.", "expect": ["GroupedSelector", "CollapsiblePanel", "Sidebar", "SegmentedControl"], "source": "personae/ui-builder/briefs/tasklist.md:28" },
+    { "need": "The task's title is editable.", "expect": ["EditableTitle"], "source": "personae/ui-builder/briefs/tasklist.md:32" },
+    { "need": "Its steps are a table: status, name, started, completed.", "expect": ["FieldTable", "SortableFieldTable", "BaseTable", "SectionTable"], "source": "personae/ui-builder/briefs/tasklist.md:33" },
+    { "need": "Beside the detail, a \"logs\" panel lists the log lines (with times) of the selected step.", "expect": ["LogLineList", "SectionTable", "ListDetailLogThreePanel"], "source": "personae/ui-builder/briefs/tasklist.md:34" },
+    { "need": "It should have a header, a sidebar with tasks, and a detail area.", "expect": ["ListDetailThreePanel", "ThreePanelLayout", "AppShell", "FluidListDetailThreePanel", "StandardThreePanel"], "source": "personae/ui-builder/briefs/tasklist.md:6" },
+    { "need": "I'd like a task management system. It should have a header, a sidebar with tasks,", "expect": ["ListDetailThreePanel", "ThreePanelLayout", "AppShell", "StandardThreePanel"], "source": "personae/ui-builder/briefs/tasklist-v1.md:6" },
+    { "need": "TaskCard: TitleMeta3 sheds owner and date below 260px (container query) and draws a bordered InteractiveCard inside a queue row", "expect": ["StatusCard", "EntityCard", "SlotCard", "ProductGridCard"], "source": "personae/ui-builder/tasklist/v3-g01/gaps.json:2" },
+    { "need": "ControlledGroupedBucketQueue: collapse state is internal (no collapsed/onCollapsedChange) so reload persistence re-keys group nodes", "expect": ["GroupedBucketQueue", "GroupedSelector", "BucketQueue"], "source": "personae/ui-builder/tasklist/v3-g01/gaps.json:3" },
+    { "need": "SelectableRowTable: only highlighted() lights a row; no selected-row state or aria-selected", "expect": ["SelectableTable", "FieldTable", "BaseTable"], "source": "personae/ui-builder/tasklist/v3-g01/gaps.json:5" },
+    { "need": "SettingsUserMenu: AppBar composes it; logged per persona", "expect": ["UserMenu", "AppBar", "PopoverMenu"], "source": "personae/ui-builder/tasklist/v3-g01/gaps.json:6" },
+    { "need": "ShareSettings: SettingsModal Sharing tab", "expect": ["Toggle", "SharingSettings", "Modal"], "source": "personae/ui-builder/tasklist/v3-g01/gaps.json:8" },
+    { "need": "GroupedSidebarSelector: the selector has no group headers, counts or collapse", "expect": ["GroupedSelector", "GroupedBucketQueue", "SidebarSelector", "BucketQueue"], "source": "personae/ui-builder/tasklist/v3-g03/gaps.json:13" },
+    { "need": "WeekGroupedTaskStatusCard: name title, status group chip, claimedBy owner, estimate time; StatusCard is close; a card with a typed time slot would avoid the TextSublabel wrappers", "expect": ["StatusCard", "EntityCard", "SlotCard"], "source": "personae/ui-builder/tasklist/v3-g05/gaps.json:4" },
+    { "need": "RetrospectiveReport: weekly retrospective of completed tasks and step durations; stubbed with EmptyState", "expect": ["EmptyState", "Placeholder", "MutedEmptyState", "FillPlaceholder", "BlockPlaceholder", "GapBox"], "source": "personae/ui-builder/tasklist/v3-g05/gaps.json:5" },
+    { "need": "LogLineList: lines at ISO time, text string; emptyMessage string", "expect": ["LogLineList", "BaseTable", "ActionList"], "source": "personae/ui-builder/tasklist/v3-g07/gaps.json:3" },
+    { "need": "SidebarGroupedList: a rail of collapsible groups with header counts, sort and selection in one component", "expect": ["GroupedSelector", "GroupedBucketQueue", "BucketQueue", "SidebarSelector"], "source": "personae/ui-builder/tasklist/v3-g09r1/gaps.json:3" },
+    { "need": "LogList: time + text lines drawn as a two-column table", "expect": ["LogLineList", "SectionTable", "BaseTable", "FieldTable"], "source": "personae/ui-builder/tasklist/v3-g10r1/gaps.json:4" },
+    { "need": "TaskStatusCard: card canon fits StatusCard; status text is the derived group", "expect": ["StatusCard", "EntityCard"], "source": "personae/ui-builder/tasklist/v3-g10r1/gaps.json:6" },
+    { "need": "TaskStepsTable: rows Step[], columns status,name,started,completed, highlightedRow id", "expect": ["FieldTable", "SortableFieldTable", "SectionTable", "BaseTable", "SelectableTable"], "source": "personae/ui-builder/tasklist/v3-g11r1/gaps.json:3" }
+  ]
+}
