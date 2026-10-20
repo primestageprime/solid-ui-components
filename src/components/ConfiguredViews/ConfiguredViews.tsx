@@ -191,6 +191,7 @@ const StepFlowChart = createSwimlaneChart<FlowNode>({
   columnGap: FLOW_COLUMN_GAP,
   rowGap: FLOW_ROW_GAP,
   rowOrder: "input",
+  align: "start",
   nodeSize: (n: DAGNode<FlowNode>) => (n.data.size === "active" ? FLOW_ACTIVE_SIZE : FLOW_SIDE_SIZE),
   interactive: false,
   arrows: true,
@@ -201,7 +202,8 @@ export const flowHeightOf = (nodes: FlowNode[]): number => {
   const count = (size: FlowNodeSpec["size"]) => filter((n: FlowNode) => n.size === size, nodes).length;
   const rows = Math.max(count("done"), count("next"), 1);
   const stack = (rows - 1) * FLOW_ROW_GAP + FLOW_SIDE_SIZE[1];
-  return Math.max(stack, FLOW_ACTIVE_SIZE[1]) + 2 * FLOW_V_PAD;
+  const centre = count("active") > 0 ? FLOW_ACTIVE_SIZE[1] : FLOW_SIDE_SIZE[1];
+  return Math.max(stack, centre) + 2 * FLOW_V_PAD;
 };
 
 /** One node card: label, and on the active node the description, estimate / actual, bar and action. */

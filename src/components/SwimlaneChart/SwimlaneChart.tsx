@@ -55,6 +55,7 @@ import {
   fitColumnGap,
   fitRows,
   H_PADDING_PX,
+  V_PADDING_PX,
 } from "./helpers";
 import "./SwimlaneChart.css";
 
@@ -357,6 +358,16 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       () => [viewBounds(), containerWidth(), containerHeight()] as const,
       ([bounds, cw, ch]) => {
         if (cw === 0 || ch === 0) return;
+        if (props.align === "start") {
+          // Content's top-left at the container's padding (less when the
+          // content nearly fills the container, so nothing is pushed off the
+          // far edge): the point that lands at the viewport centre is half a
+          // viewport in from there.
+          const padX = Math.max(0, Math.min(H_PADDING_PX, (cw - bounds.width) / 2));
+          const padY = Math.max(0, Math.min(V_PADDING_PX, (ch - bounds.height) / 2));
+          centerOnPoint(bounds.minX - padX + cw / 2, bounds.minY - padY + ch / 2, cw, ch);
+          return;
+        }
         // Anchor DOING (col 0, x=0) to the viewport center. Off-screen
         // overflow is handled by effectiveMaxDepth(): when the container
         // shrinks, outer-ring nodes collapse into boundary badges before

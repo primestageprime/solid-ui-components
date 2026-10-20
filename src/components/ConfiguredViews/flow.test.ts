@@ -34,6 +34,7 @@ describe("flow section helpers", () => {
   it("heights the chart by its tallest column", () => {
     const { nodes } = flowNodesOf(SECTION, JOB);
     expect(flowHeightOf(nodes)).toBe(Math.max(100 + 56, 236) + 48);
-    expect(flowHeightOf([])).toBe(236 + 48);
+    expect(flowHeightOf([])).toBe(56 + 48);
+    expect(flowHeightOf([{ id: "x", label: "x", size: "next" }])).toBe(56 + 48);
   });
 });

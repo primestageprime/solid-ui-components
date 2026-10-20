@@ -82,6 +82,14 @@ export type SwimlaneChartProps<T> = {
    * the gap from its own node widths. Default true.
    */
   fitColumns?: boolean;
+  /**
+   * Where the content sits in the container: `center` (default) pins col 0
+   * to the horizontal centre and the content's middle to the vertical one;
+   * `start` anchors the content's top-left corner at the container's padding,
+   * so a flow with one node sits at its start, not in the middle of an empty
+   * column layout (2026-10-20).
+   */
+  align?: "center" | "start";
   /** Row order within a column: `barycentric` (default, fewer crossings) or `input` (the caller's node order). */
   rowOrder?: "barycentric" | "input";
   /**
@@ -105,7 +113,8 @@ export type SwimlaneChartOverrides =
   | "responsiveCollapse"
   | "fitColumns"
   | "edgeLabels"
-  | "rowOrder";
+  | "rowOrder"
+  | "align";
 
 /** Props that remain available to consumers of a curried SwimlaneChart variant. */
 export type SwimlaneChartDataProps<T> = Omit<

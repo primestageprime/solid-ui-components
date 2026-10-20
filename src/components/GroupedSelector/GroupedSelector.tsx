@@ -100,7 +100,11 @@ export function GroupedSelector<T extends GroupedItem, G extends string>(
               const items = (
                 <Show
                   when={group.items.length > 0}
-                  fallback={<HintText>{props.groupEmptyLabel ?? "Nothing here"}</HintText>}
+                  fallback={
+                    <div class="sui-grouped-selector__empty">
+                      <HintText>{props.groupEmptyLabel ?? "Nothing here"}</HintText>
+                    </div>
+                  }
                 >
                   <For each={group.items}>
                     {(item) => (
