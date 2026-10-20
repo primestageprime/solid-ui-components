@@ -414,3 +414,93 @@ describe("build phases and ask-early (diddit #4163 Decisions #4523, #4524)", () 
     });
   });
 });
+
+describe("the reader on the exact/cousin boundary (readerGate / applyJudge)", () => {
+  const c = (name: string, fit: number, tagCov: number) => ({
+    name,
+    fit,
+    tagCov,
+    wordCov: 1,
+    depth: 2,
+    unexplained: [],
+    defining: [],
+  });
+  const byName = new Map([
+    ["WeekCalendar", { family: "WeekCalendar" }],
+    ["createWeekCalendar", { family: "WeekCalendar" }],
+    ["DayOfMonthPicker", { family: "DayOfMonthPicker" }],
+  ]);
+  it("gates an exact with a thin lead over another family or a low shape coverage; kin do not count as rivals", async () => {
+    const { readerGate } = await import("./find-outcome.mjs");
+    const exact = (pick: unknown, alternatives: unknown[]) => ({
+      outcome: "exact",
+      pick,
+      alternatives,
+      need: { text: "" },
+    });
+    expect(
+      readerGate(
+        exact(c("WeekCalendar", 0.9, 0.7), [c("DayOfMonthPicker", 0.85, 0.5)]),
+        { byName },
+      ),
+    ).toBe(true);
+    expect(
+      readerGate(
+        exact(c("WeekCalendar", 0.9, 0.7), [
+          c("createWeekCalendar", 0.89, 0.7),
+          c("DayOfMonthPicker", 0.5, 0.5),
+        ]),
+        { byName },
+      ),
+    ).toBe(false);
+    expect(readerGate(exact(c("WeekCalendar", 0.9, 0.4), []), { byName })).toBe(
+      true,
+    );
+    expect(
+      readerGate(
+        {
+          outcome: "cousin",
+          pick: c("WeekCalendar", 0.9, 0.4),
+          alternatives: [],
+        },
+        { byName },
+      ),
+    ).toBe(false);
+  });
+  it("a reader's cousin turns the exact into a phase-2 cousin with the pick as placeholder and a gap record", async () => {
+    const { applyJudge } = await import("./find-outcome.mjs");
+    const res = {
+      outcome: "exact",
+      phase: 1,
+      pick: c("WeekCalendar", 0.9, 0.7),
+      alternatives: [c("DayOfMonthPicker", 0.85, 0.5)],
+      need: {
+        text: "a month-grid calendar with the events of each day in its cell",
+        unexplained: ["month"],
+      },
+    };
+    const out = applyJudge(res as never, {
+      outcome: "cousin",
+      pick: "WeekCalendar",
+      confidence: 0.85,
+      why: "weekly, not a month grid",
+    });
+    expect(out.outcome).toBe("cousin");
+    expect(out.phase).toBe(2);
+    expect(out.placeholder).toBe("WeekCalendar");
+    expect(out.gap).toMatchObject({
+      nearest: "WeekCalendar",
+      name: expect.any(String),
+    });
+    expect(out.reader).toMatchObject({ outcome: "cousin", zeroToken: "exact" });
+    // an exact judgment keeps the result; a none makes a GapBox
+    expect(
+      applyJudge(res as never, { outcome: "exact", pick: "WeekCalendar" })
+        .outcome,
+    ).toBe("exact");
+    expect(
+      applyJudge(res as never, { outcome: "none", pick: "WeekCalendar" })
+        .placeholder,
+    ).toBe("GapBox");
+  });
+});

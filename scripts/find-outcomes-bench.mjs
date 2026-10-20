@@ -9,11 +9,21 @@
 // "exact" for a cousin.
 //
 //   node scripts/find-outcomes-bench.mjs [--json] [--misses] [--no-embed]
+//   node scripts/find-outcomes-bench.mjs --reader-batch <dir>   # write the low-margin exacts for a Sonnet reader
+//   node scripts/find-outcomes-bench.mjs --judge <file>         # merge the reader's answers [{id, outcome, pick, confidence, why}] and score both arms
 // ============================================
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { classify, loadContext, OUTCOME } from "./find-outcome.mjs";
+import {
+  applyJudge,
+  classify,
+  loadContext,
+  OUTCOME,
+  readerBatch,
+  readerTokens,
+} from "./find-outcome.mjs";
+import { writeFileSync, mkdirSync } from "node:fs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUTCOMES = ["exact", "cousin", "none"];
@@ -86,9 +96,35 @@ if (isMain) {
     process.exit(0);
   }
   const t0 = Date.now();
-  const results = [];
+  let results = [];
   for (const it of bench) results.push(await classify(it.need, ctx));
   const ms = Date.now() - t0;
+  const opt = (n) =>
+    argv.indexOf(n) === -1 ? null : argv[argv.indexOf(n) + 1];
+  const gated = results
+    .map((r, i) => ({ id: i + 1, r }))
+    .filter(({ r }) => r.readerWanted);
+  if (opt("--reader-batch")) {
+    mkdirSync(opt("--reader-batch"), { recursive: true });
+    const items = gated.map(({ id, r }) => ({ id, ...readerBatch(r, ctx) }));
+    writeFileSync(
+      join(opt("--reader-batch"), "reader.json"),
+      `${JSON.stringify(items, null, 2)}\n`,
+    );
+    console.log(
+      `${items.length} low-margin exacts written to ${join(opt("--reader-batch"), "reader.json")}; ~${items.reduce((a, it) => a + readerTokens(it), 0)} tokens`,
+    );
+    process.exit(0);
+  }
+  let zeroToken = null;
+  if (opt("--judge")) {
+    const judge = JSON.parse(readFileSync(opt("--judge"), "utf8"));
+    zeroToken = results;
+    results = results.map((r, i) => {
+      const j = judge.find((x) => x.id === i + 1);
+      return r.readerWanted && j ? applyJudge(r, j, r.needCtx) : r;
+    });
+  }
   const halves = {
     tuning: bench
       .map((b, i) => [b, results[i], i])
@@ -107,6 +143,20 @@ if (isMain) {
     );
   out.msPerNeed = Math.round(ms / bench.length);
   out.fastPath = results.filter((r) => r.path === "fast").length;
+  out.readerGated = gated.length;
+  out.readerTokens = gated.reduce(
+    (a, { r }) => a + readerTokens(readerBatch(r, ctx)),
+    0,
+  );
+  if (zeroToken) {
+    out.zeroToken = {};
+    for (const [name, rows] of Object.entries(halves))
+      out.zeroToken[name] = scoreOutcomes(
+        rows.map((r) => r[0]),
+        rows.map((r) => zeroToken[r[2]]),
+        familyOf,
+      );
+  }
   if (argv.includes("--json")) {
     console.log(JSON.stringify(out, null, 2));
     process.exit(0);
@@ -124,8 +174,13 @@ if (isMain) {
       );
   }
   console.log(
-    `\n${out.msPerNeed} ms per need, ${out.fastPath}/${bench.length} short-circuited on the fast path, 0 tokens`,
+    `\n${out.msPerNeed} ms per need, ${out.fastPath}/${bench.length} short-circuited on the fast path; ${out.readerGated}/${bench.length} low-margin exacts gated for the reader (~${out.readerTokens} tokens in all, ~${Math.round(out.readerTokens / Math.max(1, out.readerGated))} per call)${zeroToken ? "; reader answers merged" : "; zero-token arm, 0 tokens"}`,
   );
+  if (zeroToken)
+    for (const name of Object.keys(halves))
+      console.log(
+        `  ${name}: zero-token ${out.zeroToken[name].outcomeAccuracy}/${out[name].n} → with reader ${out[name].outcomeAccuracy}/${out[name].n}; cousin→exact ${out.zeroToken[name].matrix.cousin.exact} → ${out[name].matrix.cousin.exact}; exact hidden ${out.zeroToken[name].matrix.exact.cousin + out.zeroToken[name].matrix.exact.none} → ${out[name].matrix.exact.cousin + out[name].matrix.exact.none}`,
+      );
   if (argv.includes("--misses"))
     for (const m of out.all.misses)
       console.log(

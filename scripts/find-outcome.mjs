@@ -50,7 +50,7 @@ import {
   tokenize,
 } from "./find.mjs";
 import { buildBm25 } from "./find-bm25.mjs";
-import { candidateSetLive } from "./find-recall.mjs";
+import { candidateSetLive, entryFor } from "./find-recall.mjs";
 import { createEmbedRanker } from "./find-embed.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -68,6 +68,11 @@ export const OUTCOME = {
   fullWordingTagCov: 0.3, // … to this (inferred tags are noisy: "state" → shows:status)
   commonWord: 15, // a word this many catalog entries use is a common noun ("task"), never defining
   kindPenalty: { factory: 0.05, variant: 0.03 }, // the plain component before its curried kin on a fit tie
+  // the reader gate: an exact whose shape coverage is this low, or whose lead
+  // over a candidate from another family is this thin, is sent to the reader
+  readerTagCov: 0.6,
+  readerMargin: 0.1,
+  readerCandidates: 5,
   fitTagWeight: 0.4,
   k: 20,
 };
@@ -283,6 +288,11 @@ export async function classify(text, ctx, W = OUTCOME) {
     },
     ...extra,
   });
+  const finish = (r) => ({
+    ...r,
+    readerWanted: readerGate(r, { byName }, W),
+    needCtx: need,
+  });
   // 1. exact: the fast path's best-fitting candidate covers the need — stop here
   const fast = find(text, {
     records: ctx.records,
@@ -294,9 +304,11 @@ export async function classify(text, ctx, W = OUTCOME) {
     .map((r) => fitOf(byName.get(r.name), need, ctx, W))
     .sort(byFit);
   if (isExact(fastFits[0]))
-    return result("exact", fastFits[0], fastFits.slice(1), fastFits[0].fit, {
-      path: "fast",
-    });
+    return finish(
+      result("exact", fastFits[0], fastFits.slice(1), fastFits[0].fit, {
+        path: "fast",
+      }),
+    );
   // 2. walk the whole union to the end before settling
   const union = await candidateSetLive(text, { ...ctx, k: W.k }, { k: W.k });
   const walked = union
@@ -304,10 +316,12 @@ export async function classify(text, ctx, W = OUTCOME) {
     .sort(byFit);
   const best = walked[0];
   if (isExact(best))
-    return result("exact", best, walked.slice(1, 6), best.fit, {
-      path: "union",
-      walked: walked.length,
-    });
+    return finish(
+      result("exact", best, walked.slice(1, 6), best.fit, {
+        path: "union",
+        walked: walked.length,
+      }),
+    );
   // cousin: the nearest SHAPE stands in — the best fit among the candidates
   // that carry the need's head noun (a chart for "a pie chart"), else the best fit
   const shaped = walked.filter((c) => c.headHit);
@@ -357,6 +371,104 @@ export async function loadContext({ embed = true } = {}) {
     bm25: buildBm25(records),
     componentsMd,
     embedRanker: embed ? await createEmbedRanker(records) : null,
+  };
+}
+
+// ── The reader on the exact / cousin boundary ───────────────────────────────
+// Peter's priority is correctness over efficiency, and the confusion that
+// hides a missing component is a cousin read as exact (a WeekCalendar for a
+// month grid). The zero-token path cannot tell "month" from "week"; a reader
+// model can, from the full COMPONENTS.md entries. So: the zero-token call
+// stands, and when it says exact with a LOW MARGIN (`readerGate`), the need
+// and its top candidates' entries are written for a Sonnet reader
+// (`readerBatch`), whose judgment `applyJudge` merges. Everything else stays
+// at zero tokens. Scored by scripts/find-outcomes-bench.mjs --reader-batch /
+// --judge.
+
+/** True when the zero-token exact is worth a reader call. Pure. */
+export function readerGate(res, ctx, W = OUTCOME) {
+  if (res.outcome !== "exact" || !res.pick) return false;
+  if (res.pick.tagCov < W.readerTagCov) return true;
+  const family = (n) => ctx.byName.get(n)?.family ?? n;
+  const rival = (res.alternatives ?? []).find(
+    (a) => family(a.name) !== family(res.pick.name),
+  );
+  return rival ? res.pick.fit - rival.fit < W.readerMargin : false;
+}
+
+/** What the reader sees: the need and the top candidates with their full
+ *  entries (COMPONENTS.md bullet, or the JSDoc), ~700 chars each. */
+export function readerBatch(res, ctx, W = OUTCOME) {
+  const names = [res.pick?.name, ...(res.alternatives ?? []).map((a) => a.name)]
+    .filter(Boolean)
+    .slice(0, W.readerCandidates);
+  return {
+    need: res.need.text,
+    zeroToken: { outcome: res.outcome, pick: res.pick?.name ?? null },
+    candidates: names.map((n) => {
+      const r = ctx.byName.get(n);
+      return {
+        name: n,
+        depth: effectiveDepth(r, ctx.records),
+        // a factory / variant entry is a stub ("Curried-variant factory for X"):
+        // the reader needs its family's bullet
+        entry: [
+          entryFor(r, ctx.componentsMd),
+          r.family && r.family !== n
+            ? entryFor(
+                ctx.byName.get(r.family) ?? { name: r.family },
+                ctx.componentsMd,
+              )
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" | ")
+          .slice(0, 900),
+      };
+    }),
+  };
+}
+
+/** Rough token count for a reader item (chars / 4 in, ~60 out). */
+export const readerTokens = (item) =>
+  Math.round(JSON.stringify(item).length / 4) + 60;
+
+/** Merge a reader's judgment `{outcome, pick, confidence, why}` into a
+ *  zero-token result. An exact stays exact (the reader may re-pick); a cousin
+ *  keeps the reader's pick as the placeholder with a gap record; a none
+ *  becomes a GapBox. Pure. */
+export function applyJudge(res, judge, needCtx) {
+  if (!judge || !["exact", "cousin", "none"].includes(judge.outcome))
+    return res;
+  const all = [res.pick, ...(res.alternatives ?? [])].filter(Boolean);
+  const pick = all.find((c) => c.name === judge.pick) ?? res.pick;
+  const reader = { ...judge, zeroToken: res.outcome };
+  if (judge.outcome === "exact")
+    return { ...res, outcome: "exact", phase: PHASE.exact, pick, reader };
+  const need = needCtx ?? {
+    stems: res.need.unexplained,
+    inferred: { tags: [] },
+    text: res.need.text,
+    words: new Map(),
+  };
+  if (judge.outcome === "cousin")
+    return {
+      ...res,
+      outcome: "cousin",
+      phase: PHASE.cousin,
+      pick,
+      placeholder: pick?.name ?? "GapBox",
+      gap: gapRecord(need, pick, "cousin"),
+      reader,
+    };
+  return {
+    ...res,
+    outcome: "none",
+    phase: PHASE.none,
+    pick: null,
+    placeholder: "GapBox",
+    gap: gapRecord(need, pick, "none"),
+    reader,
   };
 }
 
@@ -460,6 +572,14 @@ export const render = (res) => {
     `Outcome: ${res.outcome.toUpperCase()}, phase ${res.phase} (confidence ${res.confidence}, ${res.path} path${res.walked ? `, ${res.walked} candidates walked` : ""})`,
   ];
   lines.push(`Read as: ${res.need.tags.join(", ") || "(no tags)"}`);
+  if (res.readerWanted)
+    lines.push(
+      "Low margin: a reader call is worth it (npm run find:outcome -- ... --reader-batch <file>)",
+    );
+  if (res.reader)
+    lines.push(
+      `Reader: ${res.reader.outcome} (${res.reader.confidence ?? "?"}) — ${res.reader.why ?? ""}; zero-token said ${res.reader.zeroToken}`,
+    );
   if (res.pick)
     lines.push(
       `Pick: ${res.pick.name} depth=${res.pick.depth ?? "?"} tagCov=${res.pick.tagCov} wordCov=${res.pick.wordCov}`,
@@ -504,7 +624,18 @@ if (isMain) {
     process.exit(2);
   }
   const ctx = await loadContext({ embed: !argv.includes("--no-embed") });
-  const res = await classify(text, ctx);
+  let res = await classify(text, ctx);
+  if (opt("--reader-batch") && res.readerWanted)
+    writeFileSync(
+      opt("--reader-batch"),
+      `${JSON.stringify([{ id: 1, ...readerBatch(res, ctx) }], null, 2)}\n`,
+    );
+  if (opt("--judge"))
+    res = applyJudge(
+      res,
+      JSON.parse(readFileSync(opt("--judge"), "utf8"))[0],
+      res.needCtx,
+    );
   const gap = gapsPath ? appendGap(gapsPath, res) : null;
   if (argv.includes("--json"))
     console.log(JSON.stringify({ ...res, gapsEntry: gap }, null, 2));
