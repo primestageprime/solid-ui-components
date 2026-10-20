@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ProportionalStack — Primitive (Depth 0)
+// Tags: shows:panel, does:layout, does:resize, data:list, role:container
 // Flex container whose children declare a `weight`. When all children fit
 // at their natural size, each shrink-wraps to content (no proportional
 // stretching). When the children would overflow the container, they shrink

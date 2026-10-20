@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // DiffPair — Atomic Primitive (Depth 1)
+// Tags: shows:diff, does:view, data:pair, role:row
 // Owns CSS (DiffPair.css). No component imports.
 //
 // Labeled before/after layout with a directional arrow between the two

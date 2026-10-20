@@ -1,5 +1,6 @@
 // ============================================
 // SegmentBar — Primitive (Depth 1). SVG mark; composes no library components.
+// Tags: shows:bar, shows:progress, shows:mark, does:view, data:list, role:slot
 // Owns SvgMarks.css (seam and hover paint).
 //
 // One bar made of consecutive SEGMENTS, drawn inside the box it is handed and

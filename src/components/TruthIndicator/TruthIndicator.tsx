@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // TruthIndicator — Atomic (Depth 1)
+// Tags: shows:status, shows:icon, does:view, data:boolean, role:inline
 // Owns CSS (TruthIndicator.css), no component imports.
 // Boolean indicator: green check for true, red prohibition (circle-with-slash)
 // for false. Read-only by default; click handler optional.

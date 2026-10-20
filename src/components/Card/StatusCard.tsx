@@ -1,5 +1,6 @@
 // ============================================
 // StatusCard — Depth 2
+// Tags: shows:card, shows:status, shows:text, does:click, does:view, data:scalar, role:row
 // Owns CSS (StatusCard.css).
 // Composes Surface (card chrome — border/background/flex column) + Text
 // (labels) + Button (more / popover-close affordances). Only the dense,

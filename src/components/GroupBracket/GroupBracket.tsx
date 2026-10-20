@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // GroupBracket — Atomic (Depth 0)
+// Tags: shows:mark, shows:divider, does:view, data:grouped, role:cell
 // Owns CSS (GroupBracket.css), no component imports.
 // Thin right-edge bracket cue marking which list rows belong to the
 // same contiguous run of a group. Stack N members → one unbroken

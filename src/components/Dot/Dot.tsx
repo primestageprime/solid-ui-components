@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Dot — Atomic (Depth 0)
+// Tags: shows:status, shows:icon, does:view, data:enum, role:inline
 // Owns CSS (Dot.css), no component imports.
 // Generic colored indicator dot — caller supplies any CSS color
 // via the `color` prop. Domain-agnostic; use when the variant set

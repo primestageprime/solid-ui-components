@@ -1,5 +1,6 @@
 // ============================================
 // PayrollTaxStrip — Composite (Depth 2, zero CSS)
+// Tags: shows:field, shows:money, shows:number, does:edit, does:view, data:scalar, role:row
 // Composes SpacedStack, SpreadRow, TextSublabel, TextValue and NoteText.
 // READ-ONLY: employer payroll tax is not optional and not ours to edit, so the
 // strip has no inputs. It shows the rate, the payroll base, and the tax per

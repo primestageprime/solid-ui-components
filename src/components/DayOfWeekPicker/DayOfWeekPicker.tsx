@@ -1,5 +1,6 @@
 // ============================================
 // DayOfWeekPicker — Atomic (Depth 1)
+// Tags: shows:field, shows:date, does:pick, does:multi-select, data:enum, role:control
 // Owns CSS (DayOfWeekPicker.css), no component imports.
 // A 7-cell single-select row for Sun..Sat. Sibling of
 // DayOfMonthPicker; shares its fixed-size `--dom-cell-size`

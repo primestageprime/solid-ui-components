@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Toggle — Atomic (Depth 1)
+// Tags: shows:field, shows:button, does:toggle, data:boolean, role:control
 // Owns CSS (Toggle.css), no component imports.
 // Checkbox toggle switch with label positioning.
 // Updated: absorbs HUDToggle features (variant, color).

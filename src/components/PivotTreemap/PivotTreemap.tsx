@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // PivotTreemap — Pure Composite (Depth 2).
+// Tags: shows:treemap, shows:grid, shows:progress, does:select, does:hover, data:matrix, data:grouped, role:panel
 // Composes Treemap + SlotFillBar + the compact Text/Layout Curried Variants
 // (`ChipLabel`, `EllipsizedChipLabel`, `CountText`, `TightSpreadRow`). Owns
 // zero CSS and zero inline `style={}` — typography for keys/counts lives in

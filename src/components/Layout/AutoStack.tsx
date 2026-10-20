@@ -1,5 +1,6 @@
 // ============================================
 // AutoStackRow / AutoStackItem — Primitive (Depth 1)
+// Tags: shows:panel, does:layout, data:list, role:container
 // Owns CSS (Layout.css). Responsive "holy-albatross" row: children sit SIDE BY
 // SIDE when the container is wider than `breakWidth`, and STACK (each full-width)
 // when it is narrower — with no container query or JS. The row exposes the

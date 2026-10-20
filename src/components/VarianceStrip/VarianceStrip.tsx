@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // VarianceStrip — Structural (Depth 1). SVG chart slot; composes no library
+// Tags: shows:bar, shows:chart, does:view, data:time-series, role:slot
 // components. Owns VarianceStrip.css.
 //
 // ONE BAR PER DAY: what the day's actual movement did that the forecast did

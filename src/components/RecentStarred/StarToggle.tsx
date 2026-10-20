@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // StarToggle — Atomic (Depth 1). Owns RecentStarred.css; composes no library components.
+// Tags: shows:button, shows:icon, does:toggle, data:boolean, role:inline
 import type { Component } from "solid-js";
 import type { RecentStarredItem, RecentStarredStore } from "./store";
 import "./RecentStarred.css";

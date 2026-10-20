@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Page — Atomic (Depth 1)
+// Tags: shows:panel, does:view, does:scroll, data:scalar, role:page
 // Owns CSS (Page.css), no component imports.
 // Page container with scanline and grid overlays.
 // ============================================

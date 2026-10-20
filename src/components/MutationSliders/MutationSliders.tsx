@@ -1,5 +1,6 @@
 // ============================================
 // MutationSliders — Composite (Depth 3)
+// Tags: shows:field, shows:number, shows:diff, does:drag, does:edit, data:list, data:pair, role:panel
 // Composes Layout (CenteredStack, FillStretchRow) + Button (SmallGhostButton)
 // + Icon over the private `MutationDial` (dial.tsx), which is itself a
 // Depth-2 Composite over the `MarkedSlider` Primitive. Depth 3 by the rule —

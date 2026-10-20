@@ -1,5 +1,6 @@
 // ============================================
 // LabelStrip — Composite (Depth 2, zero CSS)
+// Tags: shows:text, shows:field, does:view, data:scalar, role:row
 // Composes NameInput. The name of a line: one input, one string. A consumer
 // writes that same string wherever its shape keeps a label.
 // Factory: createLabelStrip({ label }) for the caption.

@@ -1,5 +1,6 @@
 // ============================================
 // SearchInput — Composite (Depth 2)
+// Tags: shows:field, shows:icon, does:search, does:type, does:filter, data:text, role:header
 // Owns zero CSS files and zero inline style={} (STYLE_GUIDE Layout Purity —
 // composes the SearchField primitive and Icons only).
 // A 32px search box: the search glyph at the left, the text, and a clear cross

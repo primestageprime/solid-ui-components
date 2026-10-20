@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Heatmap + HeatmapMulti — Atomic (Depth 1)
+// Tags: shows:heatmap, shows:grid, does:hover, does:view, data:matrix, role:panel
 // Owns CSS (Heatmap.css), no component imports.
 // Grid cells with status colors, legends, tooltips.
 // ============================================

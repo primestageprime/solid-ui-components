@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // HeatStack — Atomic (Depth 1)
+// Tags: shows:heatmap, shows:bar, does:hover, data:time-series, data:matrix, role:panel
 // Owns CSS (HeatStack.css), no component imports.
 // Vertical stack of items with status cells per key.
 // Earliest items at bottom, latest on top.

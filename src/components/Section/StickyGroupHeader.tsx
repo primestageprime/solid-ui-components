@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // StickyGroupHeader + SectionLabel — Atomic (Depth 1)
+// Tags: shows:header, shows:text, shows:divider, does:scroll, does:view, data:scalar, role:header
 // Owns CSS (StickyGroupHeader.css), no component imports.
 // StickyGroupHeader: a section divider that pins to the top of its scrolling
 // ancestor (e.g. a long sidebar list grouped by status). Use to keep the

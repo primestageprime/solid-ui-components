@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ThemedTextarea — Atomic (Depth 1)
+// Tags: shows:field, shows:text, does:type, does:edit, data:text, role:control
 // Owns CSS (ThemedInputs.css), no component imports.
 // Styled textarea with optional label.
 // ============================================

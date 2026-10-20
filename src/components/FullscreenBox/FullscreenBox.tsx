@@ -2,6 +2,7 @@
 // lastReviewedBy: claude
 // ============================================
 // FullscreenBox — Atomic (Depth 1)
+// Tags: shows:panel, does:expand, does:toggle, data:scalar, role:overlay
 // Owns FullscreenBox.css; composes Icon + IconOnlyButton for the default
 // corner control.
 //

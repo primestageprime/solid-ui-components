@@ -15,6 +15,8 @@
   "missingDepthHeaders": 0,
   "componentsWithoutShowcase": 0,
   "catalogSummaryGaps": 0,
+  "untaggedComponents": 0,
+  "unknownTags": 0,
   "_raises": {
     "inlineStyleSrc": {
       "from": 69,

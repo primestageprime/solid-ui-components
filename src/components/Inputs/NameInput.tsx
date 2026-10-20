@@ -1,5 +1,6 @@
 // ============================================
 // NameInput — Atomic (Depth 1)
+// Tags: shows:field, shows:text, does:type, does:edit, data:text, role:control
 // A text input for ENTITY names (scenario name, option name, a label you're
 // authoring) that suppresses BOTH browser autofill (the "Contact Info" popup)
 // AND password-manager suggestions. Use it for names that are NOT the user's

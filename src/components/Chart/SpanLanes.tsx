@@ -1,5 +1,6 @@
 // ============================================
 // SpanLanes — Composite (Depth 2). Chart slot; composes SegmentBar (SvgMarks).
+// Tags: shows:timeline, shows:bar, does:view, data:schedule, data:grouped, role:slot
 //
 // SPANS over time, each drawn as one bar of consecutive SEGMENTS — a job and
 // its phases, a ticket and its states — and PACKED into the fewest rows: a

@@ -1,5 +1,6 @@
 // ============================================
 // HeightReveal — Atomic (Depth 1)
+// Tags: shows:panel, does:collapse, does:animate, data:boolean, role:container
 // Owns CSS (HeightReveal.css), no component imports.
 // Slides its children open and shut VERTICALLY: its box grows from zero to
 // the children's height (a 0fr ↔ 1fr grid row, nothing measured in JS) while

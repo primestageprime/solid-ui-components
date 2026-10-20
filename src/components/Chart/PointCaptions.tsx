@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // PointCaptions — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:text, shows:mark, does:view, data:list, role:slot
 //
 // A SHORT WORD pinned to a point: "early" above a dot, "under" below it. The
 // seat is stated, not found — the caption sits `offset` px above or below its

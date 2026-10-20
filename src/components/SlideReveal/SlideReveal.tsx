@@ -1,5 +1,6 @@
 // ============================================
 // SlideReveal — Atomic (Depth 1)
+// Tags: shows:panel, shows:button, does:reveal, does:animate, data:boolean, role:inline
 // Owns CSS (SlideReveal.css), no component imports.
 // Slides its children in and out HORIZONTALLY: its box grows from zero to
 // the children's own width (a 0fr ↔ 1fr grid column, nothing measured in JS)

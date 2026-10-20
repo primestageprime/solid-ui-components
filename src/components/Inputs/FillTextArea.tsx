@@ -1,5 +1,6 @@
 // ============================================
 // FillTextArea — Atomic (Depth 1)
+// Tags: shows:field, shows:text, does:type, does:edit, data:text, role:container
 // Owns CSS (ThemedInputs.css, shared with ThemedTextarea), imports only the
 // FillColumnFlush Layout variant.
 // A themed textarea that takes all the height its flex-column parent has left:

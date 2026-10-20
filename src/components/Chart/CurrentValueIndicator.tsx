@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // CurrentValueIndicator — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, does:view, data:scalar, role:slot
 // Pure slot — no internal state; consumer controls the point.
 import { type Component, Show, mergeProps } from "solid-js";
 import { useChart } from "./context";

@@ -1,5 +1,6 @@
 // ============================================
 // ActionList — Composite (Depth 3)
+// Tags: shows:list, shows:card, shows:button, does:select, does:multi-select, does:hotkey, does:bulk, data:list, role:panel
 // Composes SortableList (rowChrome "bare", gap 1) + ActionListItem. Owns only a
 // thin structural CSS file (ActionList.css) for the multi-select actions bar —
 // the wrapper column + the accent-cyan bar strip. Everything else is delegated:

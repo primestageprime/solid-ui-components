@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // QuickFilter — Molecule (Depth 2)
+// Tags: shows:field, does:search, does:filter, does:type, data:list, role:control
 // Composes the ThemedInput primitive (Inputs/) for the search field; owns only
 // its container layout + the compact (dense) sizing overrides in QuickFilter.css.
 // Generic, composition-friendly: a search input that filters a list of items

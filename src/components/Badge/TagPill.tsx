@@ -1,5 +1,6 @@
 // ============================================
 // TagPill — Composed (Depth 2)
+// Tags: shows:chip, shows:badge, shows:count, does:view, does:dismiss, data:scalar, role:inline
 // Owns CSS (TagPill.css) as a deliberate Depth-2 exception (pill chrome is
 // intrinsic). Composes DigitRoller for one case: a PURELY NUMERIC plain
 // label rolls odometer-style when its value changes (numeric counts roll

@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Button — Atomic (Depth 1)
+// Tags: shows:button, shows:icon, does:click, does:submit, data:scalar, role:control
 // Owns CSS (Button.css), no component imports.
 // Multi-variant button with loading spinner.
 // Updated: absorbs HUDButton's active prop.

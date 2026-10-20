@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // MultiSelectFilter — Atomic (Depth 1)
+// Tags: shows:field, shows:chip, does:filter, does:multi-select, data:enum, role:control
 // Owns CSS (MultiSelectFilter.css), no component imports.
 //
 // Responsive multi-select: renders as a horizontal button bar when the

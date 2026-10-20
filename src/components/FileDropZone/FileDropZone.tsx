@@ -1,5 +1,6 @@
 // ============================================
 // FileDropZone — Composite (Depth 2)
+// Tags: shows:field, shows:empty, does:upload, does:drag, data:file, role:container
 // Composes Icon + Text + Layout variants.
 // Exception: owns a minimal structural CSS file (the dashed outline, its
 // drag-over/disabled states, and the density padding) — a dashed drop target

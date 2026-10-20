@@ -1,5 +1,6 @@
 // ============================================
 // YAxisLockDialog — Composite (Depth 2, zero CSS)
+// Tags: shows:dialog, shows:field, does:edit, does:submit, data:range, role:overlay
 // Composes PrimaryConfirmationModal + a number field × 2 (CurrencyInput, or
 // ThemedNumberInput for counts) + TightStack.
 //

@@ -1,4 +1,5 @@
 /* Date cell renderers — Atomic (Depth 1).
+ * Tags: shows:date, shows:text, does:view, data:scalar, role:cell
  * Date/time value renderers (Date, DateTime, MinuteDateTime) plus the shared
  * date-formatting helpers. Container-agnostic — render equally in a table cell,
  * a definition-list <dd>, or a card slot; each owns its styling via the

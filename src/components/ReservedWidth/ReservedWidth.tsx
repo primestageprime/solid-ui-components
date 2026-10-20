@@ -1,5 +1,6 @@
 // ============================================
 // ReservedWidth — Atomic (Depth 1)
+// Tags: shows:panel, does:animate, does:layout, data:scalar, role:container
 // Owns CSS (ReservedWidth.css), no component imports.
 //
 // THE RULE (Peter, 2026-09-24): "When there's an animation like the slide

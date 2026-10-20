@@ -1,5 +1,6 @@
 // ============================================
 // BuilderBoard — Composite (Depth 2)
+// Tags: shows:chart, shows:table, shows:field, does:edit, does:view, data:schedule, data:time-series, role:panel
 //
 // The ONE frame a scenario builder draws its four panels in:
 //

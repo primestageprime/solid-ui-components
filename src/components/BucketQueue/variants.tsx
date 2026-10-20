@@ -1,5 +1,6 @@
 // Curried variants of BucketQueue. BucketQueue is generic over its item type,
 // so a variant is a generic component, not a createX() result.
+// Tags: shows:list, shows:count, shows:status, does:select, does:collapse, data:grouped, data:enum, role:rail
 import type { JSX } from "solid-js";
 import { BucketQueue } from "./BucketQueue";
 import type { BucketQueueProps } from "./types";

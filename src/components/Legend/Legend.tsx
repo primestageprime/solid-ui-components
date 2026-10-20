@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Legend — Atomic (Depth 1)
+// Tags: shows:legend, shows:text, does:view, does:toggle, data:list, role:inline
 // Owns CSS (Legend.css), no component imports.
 //
 // A row (or column) of color-swatch + label pairs. Data-driven: the caller

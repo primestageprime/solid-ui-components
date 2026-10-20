@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Stack — Primitive (Depth 0)
+// Tags: shows:panel, does:layout, data:list, role:container
 // Owns CSS (Layout.css). Flex-column container
 // with gap/align/justify. Factory: createStack().
 // ============================================

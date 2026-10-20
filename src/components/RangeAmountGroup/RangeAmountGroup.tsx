@@ -1,5 +1,6 @@
 // ============================================
 // RangeAmountGroup — Atomic (Depth 2)
+// Tags: shows:field, shows:money, shows:number, does:edit, does:type, data:range, role:section
 // Owns CSS (RangeAmountGroup.css). Composes ThemedNumberInput.
 // A responsive TRIO of labeled amount inputs (min / standard / max):
 // all three on ONE line when there's room, otherwise each on its OWN

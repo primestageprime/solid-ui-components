@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-09-11
 // lastReviewedBy: adlai.arnold
 // DeviationBand — Structural (Depth 1). SVG chart slot; composes no
+// Tags: shows:mark, does:view, data:range, data:series, role:slot
 // library components.
 // ============================================
 // The `Chart` ADAPTER for the deviation-band mark, per

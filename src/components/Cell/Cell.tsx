@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Cell + CellTable + CellRow — Primitive (Depth 0)
+// Tags: shows:table, shows:text, does:view, data:table, role:cell
 // Owns CSS (Cell.css). Table cell/row/table primitives
 // with align/color/weight. Factories: createCell(),
 // createCellTable(), createCellRow().

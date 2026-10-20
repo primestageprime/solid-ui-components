@@ -1,4 +1,6 @@
-/* Table cell renderers — the column-renderer factory. */
+/* Table cell renderers — the column-renderer factory.
+ * Tags: shows:text, does:view, data:scalar, role:cell
+ */
 import type { Component, JSX } from "solid-js";
 import type { CellRendererProps } from "./cellStyle";
 

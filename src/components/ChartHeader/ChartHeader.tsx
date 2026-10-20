@@ -1,5 +1,6 @@
 // ============================================
 // ChartHeader — Composed (Depth 2)
+// Tags: shows:header, shows:count, shows:text, does:view, data:scalar, role:header
 // Owns zero CSS. The standard chart title strip: mono title in accent
 // on the left, muted meta readout on the right, spread across the top
 // of a chart. Born from CompletionTimeline's header (the last inline-

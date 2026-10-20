@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // NavLink — Atomic (Depth 1)
+// Tags: shows:link, shows:text, does:navigate, data:scalar, role:rail
 // Owns CSS (NavLink.css), no component imports.
 // Anchor link with active state, color variants, badge.
 // ============================================

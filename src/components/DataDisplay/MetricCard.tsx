@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // MetricCard — Atomic Primitive (Depth 1)
+// Tags: shows:card, shows:number, shows:text, does:view, data:scalar, role:row
 // Owns CSS (MetricCard.css), no library Primitive imports.
 // Labeled value card with optional units and color-tinted value text.
 // When `units` is supplied the value uses the same monospace face as

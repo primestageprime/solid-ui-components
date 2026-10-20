@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Row — Primitive (Depth 0)
+// Tags: shows:panel, does:layout, data:list, role:container
 // Owns CSS (Layout.css). Flex-row container
 // with gap/align/justify/wrap. Factory: createRow().
 // ============================================

@@ -1,5 +1,6 @@
 // ============================================
 // ClampedText — Atomic (Depth 1)
+// Tags: shows:text, does:truncate, data:text, role:inline
 // Owns ClampedText.css; no component imports.
 // A block of body text whose height follows its content between a minimum and
 // a maximum number of lines. Short text holds the minimum; longer text grows to

@@ -1,5 +1,6 @@
 // ============================================
 // EllipsisText — Composite display Primitive (Depth 2, composes Tooltip)
+// Tags: shows:text, does:truncate, does:hover, data:text, role:cell
 // Owns CSS (EllipsisText.css). Container-agnostic: renders equally in a
 // table <td>, a definition-list <dd>, or a card slot.
 // ============================================

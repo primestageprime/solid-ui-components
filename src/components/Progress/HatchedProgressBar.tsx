@@ -1,5 +1,6 @@
 // ============================================
 // HatchedProgressBar — Atomic (Depth 1)
+// Tags: shows:progress, shows:bar, does:view, data:scalar, role:inline
 // Owns CSS (HatchedProgressBar.css), no component imports.
 // A thin two-tone progress bar: the DONE share is solid accent, the ACTIVE
 // (in-progress) share after it is hatched, the rest is the track. Reads as a

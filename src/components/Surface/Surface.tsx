@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Surface — Primitive (Depth 0)
+// Tags: shows:panel, does:view, does:layout, data:scalar, role:container
 // Owns CSS (Surface.css). Themed container with
 // padding/radius/bg/border. Factory: createSurface().
 // ============================================

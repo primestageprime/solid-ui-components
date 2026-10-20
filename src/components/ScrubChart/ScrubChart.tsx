@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ScrubChart — Composite (Depth 2).
+// Tags: shows:chart, shows:axis, does:zoom, does:drag, does:hover, does:toggle, data:time-series, data:multi-series, role:panel
 // Linear-scale chart paired with a DateAxis (overview + detail).
 //
 //   ┌─ chart frame (renderChart slot) ───────────────────────────────┐

@@ -1,5 +1,6 @@
 // ============================================
 // CodeBlock — Atomic (Depth 1)
+// Tags: shows:code, does:view, data:text, role:container
 // Owns CSS (CodeBlock.css), no component imports.
 // Recessed, dark, monospace block for raw code / JSON.
 //   <CodeBlock>{someString}</CodeBlock>

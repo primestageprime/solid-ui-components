@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // QuadrantGrid — Composite (Depth 2)
+// Tags: shows:grid, shows:card, does:drag, does:reorder, data:grouped, role:panel
 // Owns CSS (QuadrantGrid.css).
 // Generic 2x2 grid with labeled, colored drop zones.
 // ============================================

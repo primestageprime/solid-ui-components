@@ -1,5 +1,6 @@
 // ============================================
 // BulkActionBar — Composite (Depth 2)
+// Tags: shows:button, shows:count, shows:toolbar, does:bulk, does:multi-select, does:submit, data:list, role:toolbar
 // Composes CountChip + Button (PrimaryButton / GhostButton).
 // Owns a minimal structural CSS file (sticky bottom strip / centering /
 // elevation) — a deliberate exception to "Depth 2 = zero CSS" because the

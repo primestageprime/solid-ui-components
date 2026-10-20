@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // WeekCalendar — Composed (Depth 2)
+// Tags: shows:calendar, shows:grid, shows:timeline, does:select, does:view, data:schedule, role:panel
 // Owns CSS (WeekCalendar.css), no component imports.
 // Weekly time-grid: time gutter on the left, day columns with
 // absolute-positioned block slots. Pure layout primitive — the consumer

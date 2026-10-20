@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-09-11
 // lastReviewedBy: adlai.arnold
 // ScrubChartTooltip — Structural (Depth 1). HTML overlay chart mark;
+// Tags: shows:tooltip, does:hover, data:scalar, role:slot
 // composes no library components.
 // ============================================
 // The `ScrubChart` ADAPTER for the hover-tooltip mark, per

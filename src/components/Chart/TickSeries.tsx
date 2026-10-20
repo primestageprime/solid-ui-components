@@ -1,5 +1,6 @@
 // ============================================
 // TickSeries — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, does:view, data:events, role:slot
 //
 // A SHORT VERTICAL TICK at each point, centred on it: an event on a track,
 // where a dot would read as a value. The tick is `length` px tall whatever

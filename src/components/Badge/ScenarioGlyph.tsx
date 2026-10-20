@@ -1,5 +1,6 @@
 // ============================================
 // ScenarioGlyph — Atomic (Depth 1)
+// Tags: shows:badge, shows:icon, does:view, data:enum, role:inline
 // The accent-coloured, filled-or-hollow, SHAPED sibling of ScenarioDot. Where
 // ScenarioDot is always a circle, ScenarioGlyph renders any ShapeGlyph shape
 // (triangle, diamond, square, pentagon, circle, …) so a scenario is

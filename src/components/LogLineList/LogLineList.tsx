@@ -1,4 +1,5 @@
 // LogLineList (Depth 2, composes BaseTable / SectionTable). Time + text rows for a
+// Tags: shows:log, shows:table, shows:date, does:view, does:scroll, data:list, data:events, role:panel
 // narrow panel: a fixed time column, a text column that takes the rest and truncates with an
 // ellipsis (or wraps), an empty state, and an optional selected row. No app nouns: the caller
 // says which field is the time and which the text.

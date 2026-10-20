@@ -1,5 +1,6 @@
 // ============================================
 // IntervalInput — Composite (Depth 2).
+// Tags: shows:field, shows:number, shows:duration, does:edit, does:select, data:schedule, role:control
 // Owns CSS (IntervalInput.css). Composes `ThemedNumberInput` + `Select`
 // (both Atomic Primitives) plus the `Row` Layout primitive and the
 // `TextUnits`/`TextLabel` Text curried variants; uses the shared

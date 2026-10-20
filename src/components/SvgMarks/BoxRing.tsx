@@ -1,5 +1,6 @@
 // ============================================
 // BoxRing — Primitive (Depth 1). SVG mark; composes no library components.
+// Tags: shows:mark, does:view, data:boolean, role:slot
 // Owns SvgMarks.css (stroke width).
 //
 // A rounded outline standing just OFF the box it is handed — the "this one

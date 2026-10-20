@@ -2,6 +2,7 @@
 // lastReviewedBy: frontend
 // ============================================
 // Checkbox — Atomic (Depth 1)
+// Tags: shows:field, does:toggle, data:boolean, role:control
 // Owns CSS (Checkbox.css), no component imports.
 // Native input[type=checkbox] with a styled box + checkmark and
 // optional inline label. Mirrors the Toggle API (size, color,

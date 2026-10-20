@@ -1,5 +1,6 @@
 // ============================================
 // InlineText — Atomic Primitive (Depth 1, styleless)
+// Tags: shows:text, shows:number, does:view, data:scalar, role:cell
 // Owns NO CSS file (styleless-Primitive waiver, per CONTEXT.md — same
 // rationale as Duration / NumberWithUnits). A bare <span> that imposes
 // NO typography of its own: font-size / weight / family all inherit from

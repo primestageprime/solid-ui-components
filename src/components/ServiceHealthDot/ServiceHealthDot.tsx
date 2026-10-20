@@ -1,5 +1,6 @@
 // ============================================
 // ServiceHealthDot — Composite (Depth 2).
+// Tags: shows:status, shows:icon, shows:tooltip, does:hover, data:enum, role:inline
 // 6px heartbeat dot + name label + hover sparkline popover for app-shell navbars.
 //
 // NO curried variant — data-only by design. All props are data or behavioral:

@@ -1,5 +1,6 @@
 // ============================================
 // FieldTable — Composite (Depth 2). Composes resolveFields + DataTable.
+// Tags: shows:table, shows:status, shows:date, shows:money, shows:number, does:sort, does:filter, does:select, does:multi-select, data:table, role:panel
 // The consumer surface of the fields-as-functions system: data + an ordered
 // fields gesture + a registry. Owns the sui-field-frame and its width-budget
 // vars internally, so a client renders a complete field table without ever

@@ -1,4 +1,5 @@
 // ConfiguredViews (Depth 2, composes StatusCard / StatusCell / EditableTitle / SectionTable / HotkeyButton /
+// Tags: shows:card, shows:log, shows:status, does:view, data:scalar, data:list, role:panel
 // LogLineList). The three panels of a list-and-detail app drawn from plain-data configs (see
 // listDetail/views.ts) and a defineListDetail kit: the card in the rail, the centre panel for the selected
 // item, and the right-hand log. The app writes the config; the structure is here. No app nouns.

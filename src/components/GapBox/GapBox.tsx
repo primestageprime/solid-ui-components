@@ -1,5 +1,6 @@
 // ============================================
 // GapBox — Composite (Depth 2)
+// Tags: shows:placeholder, shows:text, does:view, data:text, role:container
 // Owns zero CSS files and zero inline style={} (STYLE_GUIDE Layout Purity —
 // composes curried Primitives only).
 // The canonical "this is a gap" placeholder: a titled InfoSurface holding the

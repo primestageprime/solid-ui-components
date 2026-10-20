@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // DagChart — Structural (Depth 1). SVG chart; renders only internal/dag-svg helpers, no library components.
+// Tags: shows:graph, shows:flow, does:pan, does:zoom, does:click, data:graph, role:panel
 import {
   createMemo,
   createEffect,

@@ -1,4 +1,5 @@
 /* Text cell renderers — Atomic (Depth 1).
+ * Tags: shows:text, does:truncate, does:view, data:text, role:cell
  * Text value renderers (Id, String, LongText). Container-agnostic — render
  * equally in a table cell, a definition-list <dd>, or a card slot; each owns
  * its styling via the co-located CSS below. */

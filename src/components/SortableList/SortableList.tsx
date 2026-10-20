@@ -1,5 +1,6 @@
 // ============================================
 // SortableList — Composite (Depth 2).
+// Tags: shows:list, does:drag, does:reorder, data:list, role:container
 // Vertical drag-and-drop reorder list of full-width rows — the reusable SUI
 // equivalent of dside's todo/BrainstormPane reorder. The vertical sibling of
 // DnDHierarchySortBar: same headless `createDnDReorder` mechanic, but axis "y"

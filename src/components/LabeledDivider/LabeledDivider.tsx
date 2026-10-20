@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // LabeledDivider — Atomic Primitive (Depth 1)
+// Tags: shows:divider, shows:text, does:view, data:scalar, role:row
 // Owns CSS (LabeledDivider.css). Renders a
 // horizontal rule with a centered text label —
 // lines on either side via ::before/::after.

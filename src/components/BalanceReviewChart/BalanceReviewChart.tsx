@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // BalanceReviewChart — Composite (Depth 2)
+// Tags: shows:chart, shows:bar, does:hover, does:view, data:time-series, data:multi-series, role:panel
 // Composes Chart + Grid + XAxis + YAxis + LineSeries x2 + PointSeries x2 +
 // ReferenceLine x2 + GapBracket + ChartLabels + Crosshair + ChartTooltip from
 // the Chart family, and VarianceStrip. Draws no SVG and owns no CSS.

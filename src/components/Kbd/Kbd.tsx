@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Kbd — Atomic (Depth 1)
+// Tags: shows:kbd, shows:text, does:view, data:scalar, role:inline
 // Owns CSS (Kbd.css), no component imports.
 // Renders a <kbd> keyboard hint. Two usage modes:
 //   <Kbd letter="C" rest="onfirm" /> — letter underlined, rest plain.

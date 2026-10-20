@@ -1,5 +1,6 @@
 // ============================================
 // GapCell — Composite (Depth 2) table cell. Zero CSS exception: GapCell.css is
+// Tags: shows:number, shows:diff, does:view, data:pair, role:cell
 // structural only (the 40×4 inline bar geometry + number/percent stack) — no
 // atomic expresses a two-line number+bar cell. Ported from rhinotools'
 // migration app: shows REMAINING work (source − landed) as count + % + a thin

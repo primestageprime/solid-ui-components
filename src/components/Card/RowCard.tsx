@@ -1,5 +1,6 @@
 // ============================================
 // RowCard — Composite (Depth 2)
+// Tags: shows:card, shows:text, shows:progress, does:view, data:scalar, role:row
 // Owns CSS (RowCard.css) for its dividers and text sizes only. Composes
 // BaselineSpreadRow and TightStack (Layout variants) and Text.
 // A full-width LIST ROW, the dense sibling of StatusCard: line 1 is the name

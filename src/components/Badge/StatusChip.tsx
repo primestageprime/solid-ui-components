@@ -1,5 +1,6 @@
 // ============================================
 // StatusChip — Atomic Primitive (Depth 1)
+// Tags: shows:chip, shows:status, does:select, does:edit, data:enum, role:inline
 // Owns CSS (StatusChip.css), no component imports.
 // Placement: lives in src/components/Badge/ as the EDITABLE sibling of StatusBadge
 // (a separate primitive, NOT a StatusBadge variant — it adds inline editing +

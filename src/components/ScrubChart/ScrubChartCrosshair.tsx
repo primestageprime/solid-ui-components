@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-09-11
 // lastReviewedBy: adlai.arnold
 // ScrubChartCrosshair — Structural (Depth 1). SVG chart mark; composes no
+// Tags: shows:mark, does:hover, data:multi-series, role:slot
 // library components.
 // ============================================
 // The `ScrubChart` ADAPTER for the hover-crosshair mark, per

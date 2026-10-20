@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Panel — Atomic (Depth 1)
+// Tags: shows:panel, shows:header, does:view, data:scalar, role:container
 // Owns CSS (Panel.css), no component imports.
 // Container panel with title, corner brackets, glow.
 // Merged from HUDPanel + generic Panel.

@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ConfirmationModal — Depth 2 (zero CSS)
+// Tags: shows:dialog, shows:button, does:submit, does:dismiss, data:text, role:overlay
 // Composes Modal (Atomic) + Button (Atomic).
 // Confirmation dialog with Cancel/Confirm footer.
 // ============================================

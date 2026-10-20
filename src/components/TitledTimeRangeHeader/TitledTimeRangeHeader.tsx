@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // TitledTimeRangeHeader — Atomic Primitive (Depth 1)
+// Tags: shows:header, shows:text, shows:date, shows:duration, does:view, data:range, role:header
 // Owns CSS (TitledTimeRangeHeader.css), no library Primitive imports.
 // Title + optional badge + ISO date range + duration + optional asset
 // chip + optional action slot, optionally wrapped in a link. The pure

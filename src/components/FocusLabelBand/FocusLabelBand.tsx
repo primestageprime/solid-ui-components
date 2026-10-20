@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // FocusLabelBand — Primitive (Depth 1). Atomic.
+// Tags: shows:header, shows:progress, shows:text, does:view, data:scalar, role:header
 // Owns CSS (FocusLabelBand.css), imports no other components.
 //
 // The focus-label cell rendered between the above/below cell stacks of an

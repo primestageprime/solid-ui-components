@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // HeatPivotGrid — Composed (Depth 2). Curried variant that renders PivotGrid (Depth 1).
+// Tags: shows:grid, shows:heatmap, shows:table, does:view, does:hover, data:matrix, role:panel
 import type { JSX } from "solid-js";
 import { PivotGrid, type PivotGridProps } from "./PivotGrid";
 

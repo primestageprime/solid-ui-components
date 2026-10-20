@@ -1,5 +1,6 @@
 // ============================================
 // DismissibleNoticeBanner — Composite (Depth 2)
+// Tags: shows:notice, shows:button, does:dismiss, data:text, role:header
 // Zero CSS. Non-blocking banner shown when the tenant's post-login Action
 // detected another account with the same verified email that is NOT linked
 // to this one (custom id_token claim read via auth.getUnlinkedSiblingHint).

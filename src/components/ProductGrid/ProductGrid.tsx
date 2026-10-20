@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ProductGrid — Pure Composite (Depth 2).
+// Tags: shows:grid, shows:card, shows:progress, does:select, does:view, data:matrix, data:grouped, role:panel
 // Composes AreaFocusGrid + ProductGridCard + FocusLabelBand + StackedProgressBar.
 //
 // (Area × focus) pivot grid. Above-the-line items are solutions whose

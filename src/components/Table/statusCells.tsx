@@ -1,4 +1,5 @@
 /* Status cell renderers — Atomic (Depth 1).
+ * Tags: shows:status, shows:chip, shows:field, does:view, does:toggle, data:enum, data:boolean, role:cell
  * Status-style value renderers (Tag, Status, Checkbox). Container-agnostic —
  * render equally in a table cell, a definition-list <dd>, or a card slot; each
  * owns its styling via the co-located CSS below. */

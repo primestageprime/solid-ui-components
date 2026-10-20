@@ -1,5 +1,6 @@
 // ============================================
 // Sparkline — Atomic (Depth 0)
+// Tags: shows:sparkline, does:view, data:series, role:inline
 // Owns CSS (Sparkline.css), no component imports.
 // Generic inline SVG polyline: arbitrary values → tiny chart strip.
 // Two render modes:

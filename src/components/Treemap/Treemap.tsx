@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Treemap — Atomic Primitive (Depth 1).
+// Tags: shows:treemap, shows:chart, does:hover, does:click, data:grouped, data:tree, role:panel
 // Owns the outer-column × inner-leaf grid layout CSS. No library Primitive
 // imports — renders raw <div> structure styled by Treemap.css.
 //

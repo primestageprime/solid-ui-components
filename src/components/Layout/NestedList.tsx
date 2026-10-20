@@ -1,5 +1,6 @@
 // ============================================
 // NestedList / NestedListItem — Layout Primitive (Depth 1)
+// Tags: shows:list, shows:tree, does:view, does:select, data:tree, role:container
 // Owns CSS (NestedList.css), no component imports.
 //
 // The library's ONE hierarchical-indent primitive: "this row is one level

@@ -2,6 +2,7 @@
 // lastReviewedBy: veronica (design-system)
 // ============================================
 // BatchBar — Atomic (Depth 1)
+// Tags: shows:progress, shows:bar, does:animate, data:scalar, role:inline
 // Owns CSS (BatchBar.css), no component imports.
 //
 // A single horizontal progress bar for one table being extracted by N batches.

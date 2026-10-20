@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Combobox — Atomic (Depth 1)
+// Tags: shows:field, shows:menu, does:search, does:select, does:type, data:list, data:enum, role:control
 // Owns CSS (Combobox.css), no library component imports (wraps Kobalte primitive).
 // Imports ICON_PATHS data from Icon Primitive's sibling dir — data import, not a component import.
 // Unified single- and multi-combobox built on `@kobalte/core/combobox`.

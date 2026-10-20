@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // PivotPills — Atomic (Depth 1).
+// Tags: shows:chip, shows:toolbar, does:select, does:drag, data:enum, role:toolbar
 // Drag-to-reorder pill row that lifts a Dim[] permutation to the caller.
 // Position 0 = outer, position 1 = inner, position 2+ = unused. Drag any
 // pill onto another to swap their slot positions.

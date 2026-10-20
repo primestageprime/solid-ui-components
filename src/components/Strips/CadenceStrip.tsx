@@ -1,5 +1,6 @@
 // ============================================
 // CadenceStrip — Composite (Depth 2, zero CSS)
+// Tags: shows:field, shows:button, does:select, does:edit, data:enum, data:schedule, role:row
 // Composes SegmentedInput, PopoverTooltip, the pickers (CompactDayOfMonthPicker,
 // MonthOfYearPicker, DayOfWeekPicker), DatePicker, SmallButton and ChipCluster.
 // When it pays: the eight shapes (annual, quarterly, monthly, semi-monthly,

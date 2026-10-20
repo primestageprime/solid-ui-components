@@ -1,5 +1,6 @@
 // ============================================
 // GhostRow — Atomic (Depth 1)
+// Tags: shows:text, shows:placeholder, does:click, does:reveal, data:scalar, role:row
 // Owns CSS (GhostRow.css), no component imports.
 // A de-emphasized clickable row: dimmed unless `selected` (data flag, like
 // TagPill's `active`), pointer cursor only when an onClick is wired.

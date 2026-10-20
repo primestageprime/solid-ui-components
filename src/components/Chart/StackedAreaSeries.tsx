@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-09-17
 // lastReviewedBy: adlai.arnold
 // StackedAreaSeries — Structural (Depth 1). SVG chart slot; composes no
+// Tags: shows:chart, does:view, data:multi-series, data:time-series, role:slot
 // library components.
 // ============================================
 // The `Chart` ADAPTER for the stacked-area mark, per

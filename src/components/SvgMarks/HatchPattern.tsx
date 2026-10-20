@@ -1,5 +1,6 @@
 // ============================================
 // HatchPattern — Primitive (Depth 1). SVG mark; composes no library components.
+// Tags: shows:mark, does:view, data:scalar, role:slot
 //
 // A diagonal-stripe `<pattern>` in ONE colour: a faint ground and a stronger
 // stripe, both the given colour at two opacities. Anything in the same SVG can

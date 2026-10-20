@@ -1,4 +1,5 @@
 // GroupedSelector (Depth 2, composes Section + CountChip + ScrollColumn). Renders a
+// Tags: shows:list, shows:count, does:select, does:collapse, data:grouped, role:rail
 // kit's grouped() list as a rail: one collapsible group per entry (title and count chip always
 // shown, collapsed or empty), items drawn by a render prop, the selected item marked and kept in
 // view as j and k walk it. Pass `kit` and everything is wired; the explicit props serve a list

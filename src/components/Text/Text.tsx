@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Text — Primitive (Depth 0)
+// Tags: shows:text, does:view, data:text, role:inline
 // Owns CSS (Text.css). Polymorphic text element
 // with variant/color. Factory: createText().
 // ============================================

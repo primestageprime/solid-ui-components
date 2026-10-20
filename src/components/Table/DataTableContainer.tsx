@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // DataTableContainer — Atomic (Depth 1)
+// Tags: shows:table, shows:panel, does:scroll, data:scalar, role:container
 // Owns CSS (DataTableContainer.css), no component imports.
 // Scrollable container with max-height or flex-fill mode.
 // ============================================

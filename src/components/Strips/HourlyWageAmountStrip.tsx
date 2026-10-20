@@ -1,5 +1,6 @@
 // ============================================
 // HourlyWageAmountStrip — Composite (Depth 2, zero CSS)
+// Tags: shows:field, shows:money, does:edit, does:type, data:scalar, role:row
 // Composes CurrencyInput10K, CountInput10K, ChipCluster and NoteText. An
 // hourly wage: rate per hour and hours a week, with the derived ESTIMATED
 // annual (rate x hours x 52) and the paycheck for the chosen pay cadence

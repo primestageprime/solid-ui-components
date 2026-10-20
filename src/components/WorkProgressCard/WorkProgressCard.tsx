@@ -1,4 +1,5 @@
 // WorkProgressCard — Composed (Depth 1). Composes Surface / Text / Layout variants (each Depth 0).
+// Tags: shows:card, shows:progress, shows:duration, does:view, does:animate, data:scalar, role:row
 // A status-aware work card with a progress bar derived
 // entirely from work metadata. Data-only: the caller passes domain values
 // (status, estimate, actual) and never reasons about colors or proportions —

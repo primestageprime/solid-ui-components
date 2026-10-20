@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // StatusBadge — Atomic (Depth 1)
+// Tags: shows:badge, shows:status, does:view, data:enum, role:inline
 // Owns CSS (StatusBadge.css), no component imports.
 // Compliance-themed status badge with 5 variants.
 // When href is provided, renders as an anchor tag.

@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ConnectionStatus — Composed (Depth 3)
+// Tags: shows:status, shows:sparkline, shows:text, does:view, data:list, data:time-series, role:row
 // Pure Composite: owns zero CSS, composes only curried variants
 // (and one lower-depth Composite, LiveHeartbeatTrace).
 //   - SmallTightStack (Layout curried variant) — outer column

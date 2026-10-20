@@ -1,5 +1,6 @@
 // ============================================
 // ScenarioDot — Atomic (Depth 1)
+// Tags: shows:badge, shows:icon, does:view, data:enum, role:inline
 // Owns CSS (ScenarioDot.css), no component imports.
 // A tiny circular scenario-identity marker: colour = the scenario's accent
 // (given by the consumer), so a scenario is recognisable by the same colour on

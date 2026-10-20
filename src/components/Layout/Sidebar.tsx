@@ -1,5 +1,6 @@
 // ============================================
 // Sidebar — Layout (Depth 1). Resizable, width-persisting side column; composes Stack (Depth 0).
+// Tags: shows:panel, does:resize, does:drag, does:layout, data:scalar, role:rail
 //
 // A fixed-but-draggable vertical column for the side of a two-pane layout.
 // Bakes the layout plumbing (fixed width, flex-shrink:0, full-height stretch,

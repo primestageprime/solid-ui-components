@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // DateRangePicker — Atomic Primitive (Depth 1).
+// Tags: shows:field, shows:date, shows:calendar, does:pick, data:range, role:control
 // Owns `DateRangePicker.css`; wraps `@kobalte/core/popover` (same shape as
 // Combobox/Select/Tooltip/Toast/ThemedNumberInput — see CONTEXT.md's
 // "Kobalte-wrapping Primitive" pattern). Internal sub-components

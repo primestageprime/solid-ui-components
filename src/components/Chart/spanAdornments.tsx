@@ -1,5 +1,6 @@
 // ============================================
 // Span adornments — Composite (Depth 2). Factories that bind the SvgMarks to
+// Tags: shows:mark, shows:badge, does:view, data:scalar, role:slot
 // `SpanLanes`' adornment contract (`SpanDisplayProps`).
 //
 // THE PLUGGABLE-DISPLAY PATTERN. A slot owns WHERE a display goes (the box);

@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Divider — Atomic (Depth 1)
+// Tags: shows:divider, does:view, data:scalar, role:inline
 // Owns CSS (Divider.css), no component imports.
 // Content separator with orientation variants.
 // Moved from Section.

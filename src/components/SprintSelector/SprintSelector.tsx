@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // SprintSelector — Atomic (Depth 1)
+// Tags: shows:field, shows:date, shows:button, does:select, does:navigate, data:enum, data:schedule, role:control
 // Owns CSS (SprintSelector.css), no component imports.
 // Horizontal row of mini stacked bars for week selection.
 // ============================================

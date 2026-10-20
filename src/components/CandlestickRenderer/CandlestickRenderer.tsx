@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // CandlestickRenderer — Atomic (Depth 1)
+// Tags: shows:chart, shows:mark, does:view, data:time-series, data:range, role:slot
 // Owns CSS (CandlestickRenderer.css), no component imports.
 //
 // OHLC (open/high/low/close) + mean visualization rendered as a colored

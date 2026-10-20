@@ -1,4 +1,5 @@
 // StackedTimelineChart — Composite (Depth 2). Stacked bands over time that FILL
+// Tags: shows:chart, shows:bar, shows:timeline, does:hover, does:view, data:time-series, data:multi-series, data:events, role:panel
 // their box, with a captioned horizontal rule, one numbered vertical rule per
 // event, a hover readout and a pick. Composes `Chart` + `Grid` + `XAxis` /
 // `YAxis` + `StackedAreaSeries` + `ReferenceLine` + `ChartTooltip` (all

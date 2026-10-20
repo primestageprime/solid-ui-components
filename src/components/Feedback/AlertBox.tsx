@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // AlertBox — Depth 2 (zero CSS)
+// Tags: shows:notice, shows:status, shows:button, does:view, does:dismiss, data:text, role:section
 // Composes Surface (curried) + Layout (curried) +
 // Text (curried). Status-colored alert with action.
 // ============================================

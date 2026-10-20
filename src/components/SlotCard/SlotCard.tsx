@@ -1,5 +1,6 @@
 // ============================================
 // SlotCard — generic typed-slot card family (Composite, Depth 2, owns CSS)
+// Tags: shows:card, shows:status, shows:text, shows:date, does:select, does:click, does:truncate, data:scalar, role:row
 // ============================================
 //
 // SUI owns layout / style / theme / responsiveness; the client owns runtime

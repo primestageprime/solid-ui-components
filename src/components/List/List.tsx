@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // List + ListItem — Atomic (Depth 1)
+// Tags: shows:list, shows:status, does:select, does:click, data:list, role:container
 // Owns CSS (List.css), no component imports.
 // Status/menu list with dividers, icons, status dots.
 // ============================================

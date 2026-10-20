@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // DragRangeSelect — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, does:drag, does:zoom, does:select, data:range, role:slot
 // Config-only consumer of context.drag.range — the root <Chart> owns the
 // pointer listener, so this slot deliberately attaches none of its own
 // (would clobber dispatch).

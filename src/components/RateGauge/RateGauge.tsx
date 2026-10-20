@@ -1,5 +1,6 @@
 // ============================================
 // RateGauge — Composite (Depth 2)
+// Tags: shows:gauge, shows:number, shows:progress, does:view, data:scalar, role:inline
 //
 // A right-facing half ring — a "D" open to the left — that answers one
 // question: is the rate right now above or below its baseline, and by how

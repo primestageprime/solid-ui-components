@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-10-13
 // lastReviewedBy: adlai.arnold
 // GapBracket — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, shows:number, does:view, data:pair, role:slot
 // ============================================
 // The `Chart` ADAPTER for the dimension bracket, per
 // docs/adr/0010-a-mark-is-a-core-plus-one-adapter-per-context.md.

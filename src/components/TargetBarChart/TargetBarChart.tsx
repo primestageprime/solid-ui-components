@@ -1,5 +1,6 @@
 // ============================================
 // TargetBarChart — Composite (Depth 2). Owns no CSS, draws no raw SVG or HTML.
+// Tags: shows:chart, shows:bar, does:hover, does:view, data:time-series, data:multi-series, data:grouped, role:panel
 // Composes Chart + Grid + XAxis + YAxis + BarSeries x2 + LineSeries +
 // ValueHandle + ReferenceLine + ChartTooltip (Chart parts, Depth 1),
 // HatchPattern (SvgMarks, Depth 1), a measured `createBox` host and the

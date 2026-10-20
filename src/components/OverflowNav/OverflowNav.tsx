@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // OverflowNav — Pure Composite (Depth 2)
+// Tags: shows:tabs, shows:menu, does:navigate, does:select, data:list, role:toolbar
 // Composes Row (Layout Primitive) + NavLink (Atomic Primitive)
 // + PopoverMenu (Atomic Primitive) + Button (Atomic Primitive, the
 // close affordance on closable items).

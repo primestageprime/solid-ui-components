@@ -1,5 +1,6 @@
 // ============================================
 // Tabs Curried Variants — Depth 1 (zero CSS)
+// Tags: shows:tabs, does:navigate, does:select, data:enum, role:header
 // Visual config (variant / orientation / color) is baked; the tab data
 // (tabs / activeTab / onTabChange) stays runtime.
 // ============================================

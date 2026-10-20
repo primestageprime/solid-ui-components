@@ -1,0 +1,777 @@
+{
+  "$comment": "Builder phrasings \u2192 tags from scripts/tags-vocabulary.json, read by scripts/find.mjs (phrases match on word stems, longest phrase first; a vocabulary word in the need already maps to itself, so only synonyms belong here). Tuned against the tuning split of scripts/find-bench.json only; never add a phrase just to make a held-out need pass. Generic words only: no app nouns.",
+  "actions bar": [
+    "shows:toolbar",
+    "does:bulk",
+    "role:toolbar",
+    "shows:button"
+  ],
+  "action bar": [
+    "shows:toolbar",
+    "does:bulk",
+    "role:toolbar",
+    "shows:button"
+  ],
+  "bulk actions": [
+    "does:bulk",
+    "does:multi-select",
+    "shows:toolbar"
+  ],
+  "selected rows": [
+    "does:multi-select",
+    "does:bulk"
+  ],
+  "selected items": [
+    "does:multi-select",
+    "does:bulk"
+  ],
+  "approve": [
+    "does:submit",
+    "does:hotkey"
+  ],
+  "reject": [
+    "does:submit"
+  ],
+  "review": [
+    "does:multi-select",
+    "does:hotkey"
+  ],
+  "searchable": [
+    "does:search",
+    "does:type"
+  ],
+  "dropdown": [
+    "shows:menu",
+    "shows:field",
+    "does:select"
+  ],
+  "create a new one": [
+    "does:type"
+  ],
+  "pick or create": [
+    "does:type",
+    "does:search"
+  ],
+  "freeform": [
+    "does:type"
+  ],
+  "before and after": [
+    "shows:diff",
+    "data:pair"
+  ],
+  "before/after": [
+    "shows:diff",
+    "data:pair"
+  ],
+  "pill": [
+    "shows:badge",
+    "shows:chip",
+    "role:inline"
+  ],
+  "coloured by state": [
+    "shows:status",
+    "data:enum"
+  ],
+  "colored by state": [
+    "shows:status",
+    "data:enum"
+  ],
+  "state": [
+    "shows:status",
+    "data:enum"
+  ],
+  "sidebar": [
+    "role:rail"
+  ],
+  "side panel": [
+    "role:rail",
+    "shows:panel"
+  ],
+  "side column": [
+    "role:rail"
+  ],
+  "left column": [
+    "role:rail"
+  ],
+  "right rail": [
+    "role:rail"
+  ],
+  "workflow": [
+    "data:steps",
+    "shows:flow"
+  ],
+  "step": [
+    "data:steps"
+  ],
+  "stage": [
+    "data:steps",
+    "shows:flow"
+  ],
+  "pipeline": [
+    "shows:flow",
+    "data:steps"
+  ],
+  "animated": [
+    "does:animate"
+  ],
+  "counts": [
+    "shows:count"
+  ],
+  "grouped by": [
+    "data:grouped"
+  ],
+  "groups": [
+    "data:grouped"
+  ],
+  "collapsible": [
+    "does:collapse"
+  ],
+  "owner": [
+    "shows:avatar",
+    "data:participants"
+  ],
+  "assignee": [
+    "shows:avatar",
+    "data:participants"
+  ],
+  "initials": [
+    "shows:avatar",
+    "data:participants"
+  ],
+  "person": [
+    "data:participants"
+  ],
+  "people": [
+    "data:participants"
+  ],
+  "user": [
+    "data:participants"
+  ],
+  "log": [
+    "shows:log",
+    "data:events"
+  ],
+  "timestamped": [
+    "shows:date",
+    "shows:log"
+  ],
+  "timestamp": [
+    "shows:date"
+  ],
+  "newest at the bottom": [
+    "does:scroll"
+  ],
+  "synced": [
+    "does:hover",
+    "does:zoom"
+  ],
+  "linked": [
+    "does:hover"
+  ],
+  "hover guide": [
+    "does:hover",
+    "shows:mark"
+  ],
+  "crosshair": [
+    "does:hover",
+    "shows:mark"
+  ],
+  "drag to zoom": [
+    "does:zoom",
+    "does:drag"
+  ],
+  "zoomed": [
+    "does:zoom"
+  ],
+  "time series": [
+    "data:time-series",
+    "shows:chart"
+  ],
+  "over time": [
+    "data:time-series",
+    "shows:chart"
+  ],
+  "shell": [
+    "role:shell",
+    "does:layout"
+  ],
+  "frame": [
+    "role:shell",
+    "does:layout"
+  ],
+  "layout": [
+    "does:layout"
+  ],
+  "three panel": [
+    "role:shell",
+    "role:page",
+    "shows:panel"
+  ],
+  "list detail": [
+    "role:shell",
+    "role:page",
+    "shows:panel",
+    "shows:log"
+  ],
+  "list on the left": [
+    "role:shell",
+    "role:page",
+    "shows:panel"
+  ],
+  "detail in the centre": [
+    "role:shell",
+    "role:page",
+    "shows:panel"
+  ],
+  "detail in the center": [
+    "role:shell",
+    "role:page",
+    "shows:panel"
+  ],
+  "log rail": [
+    "shows:log",
+    "role:shell"
+  ],
+  "top bar": [
+    "role:header"
+  ],
+  "scrolling body": [
+    "does:scroll",
+    "role:shell"
+  ],
+  "full page": [
+    "role:shell"
+  ],
+  "account menu": [
+    "shows:menu",
+    "shows:avatar"
+  ],
+  "views": [
+    "shows:tabs"
+  ],
+  "sortable": [
+    "does:sort"
+  ],
+  "columns": [
+    "shows:table",
+    "data:table"
+  ],
+  "column": [
+    "shows:table"
+  ],
+  "rows": [
+    "shows:table"
+  ],
+  "expandable": [
+    "does:expand",
+    "shows:tree",
+    "data:tree"
+  ],
+  "child rows": [
+    "shows:tree",
+    "data:tree"
+  ],
+  "sub-rows": [
+    "shows:tree",
+    "data:tree"
+  ],
+  "nested": [
+    "shows:tree",
+    "data:tree"
+  ],
+  "hierarchy": [
+    "shows:tree",
+    "data:tree"
+  ],
+  "kpi": [
+    "shows:number",
+    "shows:card"
+  ],
+  "tile": [
+    "shows:card"
+  ],
+  "big number": [
+    "shows:number"
+  ],
+  "metric": [
+    "shows:number"
+  ],
+  "units": [
+    "shows:number"
+  ],
+  "ring": [
+    "shows:gauge",
+    "shows:chart",
+    "shows:progress"
+  ],
+  "donut": [
+    "shows:gauge",
+    "shows:chart"
+  ],
+  "of total": [
+    "shows:progress"
+  ],
+  "completion": [
+    "shows:progress"
+  ],
+  "bounded": [
+    "data:range",
+    "shows:field"
+  ],
+  "slider": [
+    "shows:field",
+    "shows:number",
+    "does:drag"
+  ],
+  "allowance": [
+    "shows:gauge",
+    "data:range"
+  ],
+  "date range": [
+    "shows:date",
+    "data:range",
+    "does:pick"
+  ],
+  "period": [
+    "shows:date",
+    "data:range"
+  ],
+  "dialog": [
+    "role:overlay"
+  ],
+  "modal": [
+    "shows:dialog",
+    "role:overlay"
+  ],
+  "confirm": [
+    "shows:dialog",
+    "does:submit",
+    "does:dismiss"
+  ],
+  "cancel": [
+    "does:dismiss"
+  ],
+  "notifications": [
+    "shows:toast",
+    "shows:notice"
+  ],
+  "bell": [
+    "shows:badge",
+    "shows:count",
+    "shows:menu",
+    "data:events"
+  ],
+  "unread": [
+    "shows:badge",
+    "shows:count"
+  ],
+  "inbox": [
+    "shows:menu",
+    "data:events"
+  ],
+  "activity feed": [
+    "shows:list",
+    "data:events"
+  ],
+  "tab strip": [
+    "shows:tabs"
+  ],
+  "open/close": [
+    "does:collapse",
+    "does:toggle"
+  ],
+  "open and close": [
+    "does:collapse",
+    "does:toggle"
+  ],
+  "fold": [
+    "does:collapse"
+  ],
+  "detail panel": [
+    "shows:panel",
+    "role:rail"
+  ],
+  "upload": [
+    "data:file",
+    "shows:field"
+  ],
+  "drag a file": [
+    "does:upload",
+    "data:file"
+  ],
+  "burndown": [
+    "shows:chart",
+    "shows:bar",
+    "data:time-series",
+    "data:multi-series"
+  ],
+  "planned versus actual": [
+    "data:multi-series",
+    "shows:chart"
+  ],
+  "sprint": [
+    "data:schedule"
+  ],
+  "stacked bars": [
+    "shows:bar",
+    "shows:chart",
+    "data:multi-series"
+  ],
+  "stacked": [
+    "shows:bar",
+    "data:multi-series"
+  ],
+  "threshold line": [
+    "shows:mark"
+  ],
+  "change events": [
+    "data:events"
+  ],
+  "dated": [
+    "data:events"
+  ],
+  "over a year": [
+    "data:time-series",
+    "shows:timeline"
+  ],
+  "by month": [
+    "data:time-series",
+    "shows:timeline"
+  ],
+  "completeness": [
+    "shows:heatmap",
+    "data:matrix"
+  ],
+  "time window": [
+    "data:time-series"
+  ],
+  "cells": [
+    "shows:grid"
+  ],
+  "pivot": [
+    "shows:grid",
+    "shows:table",
+    "data:matrix"
+  ],
+  "drilldown": [
+    "does:navigate",
+    "shows:link"
+  ],
+  "links to": [
+    "does:navigate",
+    "shows:link"
+  ],
+  "fraction of whole": [
+    "shows:treemap",
+    "data:grouped"
+  ],
+  "by group": [
+    "data:grouped"
+  ],
+  "inline": [
+    "role:inline"
+  ],
+  "table cell": [
+    "role:cell"
+  ],
+  "throughput": [
+    "data:time-series"
+  ],
+  "progress bar": [
+    "shows:progress",
+    "shows:bar"
+  ],
+  "animates": [
+    "does:animate"
+  ],
+  "estimate": [
+    "shows:duration"
+  ],
+  "how long": [
+    "shows:duration"
+  ],
+  "async": [
+    "does:animate",
+    "shows:progress"
+  ],
+  "status card": [
+    "shows:card",
+    "shows:status"
+  ],
+  "multi-step": [
+    "data:steps",
+    "shows:flow",
+    "shows:progress"
+  ],
+  "which step": [
+    "data:steps",
+    "shows:progress"
+  ],
+  "dependencies": [
+    "shows:graph",
+    "data:graph"
+  ],
+  "dag": [
+    "shows:graph",
+    "data:graph"
+  ],
+  "pan and zoom": [
+    "does:pan",
+    "does:zoom"
+  ],
+  "conversation": [
+    "shows:thread",
+    "data:participants"
+  ],
+  "replies": [
+    "shows:thread",
+    "data:tree"
+  ],
+  "avatars": [
+    "shows:avatar",
+    "data:participants"
+  ],
+  "chat": [
+    "shows:thread",
+    "data:participants"
+  ],
+  "message": [
+    "shows:thread",
+    "shows:text"
+  ],
+  "bubble": [
+    "shows:thread",
+    "shows:text",
+    "data:participants"
+  ],
+  "json": [
+    "shows:code",
+    "data:text"
+  ],
+  "payload": [
+    "shows:code",
+    "data:text"
+  ],
+  "note": [
+    "shows:markdown",
+    "data:markdown"
+  ],
+  "editable": [
+    "does:edit",
+    "does:type"
+  ],
+  "turns into a text field": [
+    "does:edit",
+    "does:type",
+    "shows:text"
+  ],
+  "on click": [
+    "does:click"
+  ],
+  "title": [
+    "shows:header",
+    "shows:text"
+  ],
+  "switch": [
+    "does:toggle",
+    "data:boolean",
+    "shows:field"
+  ],
+  "on/off": [
+    "does:toggle",
+    "data:boolean"
+  ],
+  "segmented": [
+    "does:select",
+    "data:enum",
+    "shows:button"
+  ],
+  "single choice": [
+    "does:select",
+    "data:enum"
+  ],
+  "modes": [
+    "data:enum",
+    "does:select"
+  ],
+  "currency": [
+    "shows:money"
+  ],
+  "amount": [
+    "shows:money",
+    "shows:number"
+  ],
+  "input": [
+    "shows:field",
+    "does:type",
+    "does:edit"
+  ],
+  "weekly": [
+    "shows:calendar",
+    "data:schedule"
+  ],
+  "time blocks": [
+    "shows:calendar",
+    "data:schedule"
+  ],
+  "agenda": [
+    "shows:calendar",
+    "data:schedule"
+  ],
+  "tap": [
+    "does:click",
+    "shows:tooltip"
+  ],
+  "touch": [
+    "does:click"
+  ],
+  "header line": [
+    "shows:header",
+    "role:header"
+  ],
+  "window": [
+    "data:range"
+  ],
+  "empty state": [
+    "shows:empty",
+    "shows:icon"
+  ],
+  "nothing here": [
+    "shows:empty"
+  ],
+  "resizable": [
+    "does:resize",
+    "does:drag"
+  ],
+  "drags wider": [
+    "does:resize",
+    "does:drag"
+  ],
+  "search box": [
+    "does:search",
+    "shows:field",
+    "does:filter"
+  ],
+  "filters any": [
+    "does:filter",
+    "does:search"
+  ],
+  "floating action button": [
+    "shows:button",
+    "role:overlay",
+    "shows:icon"
+  ],
+  "fab": [
+    "shows:button",
+    "role:overlay"
+  ],
+  "corner": [
+    "role:overlay"
+  ],
+  "budget": [
+    "shows:gauge",
+    "shows:progress"
+  ],
+  "rate": [
+    "shows:gauge"
+  ],
+  "keyboard shortcut": [
+    "shows:kbd",
+    "does:hotkey"
+  ],
+  "shortcut": [
+    "shows:kbd",
+    "does:hotkey"
+  ],
+  "hint": [
+    "shows:kbd"
+  ],
+  "bottom sheet": [
+    "shows:dialog",
+    "shows:menu",
+    "role:overlay"
+  ],
+  "mobile": [
+    "role:overlay"
+  ],
+  "ordered list": [
+    "shows:list",
+    "does:reorder"
+  ],
+  "drag to reorder": [
+    "does:reorder",
+    "does:drag"
+  ],
+  "settings": [
+    "role:page",
+    "shows:tabs",
+    "shows:field"
+  ],
+  "colours": [
+    "shows:legend"
+  ],
+  "colors": [
+    "shows:legend"
+  ],
+  "axes": [
+    "shows:axis"
+  ],
+  "gridlines": [
+    "shows:mark"
+  ],
+  "card list": [
+    "shows:card",
+    "shows:list"
+  ],
+  "cards": [
+    "shows:card",
+    "shows:list"
+  ],
+  "picking one": [
+    "does:select"
+  ],
+  "main area": [
+    "role:rail"
+  ],
+  "health": [
+    "shows:status",
+    "shows:icon"
+  ],
+  "dot": [
+    "shows:status",
+    "shows:icon"
+  ],
+  "scenario editor": [
+    "shows:field",
+    "shows:number",
+    "does:drag",
+    "does:edit",
+    "shows:diff"
+  ],
+  "sliders": [
+    "shows:field",
+    "shows:number",
+    "does:drag",
+    "does:edit"
+  ],
+  "two sliders": [
+    "data:pair"
+  ],
+  "picker": [
+    "does:pick",
+    "does:select",
+    "shows:field"
+  ],
+  "multi-period": [
+    "shows:date",
+    "data:schedule",
+    "does:navigate"
+  ],
+  "app": [
+    "role:shell"
+  ],
+  "field value": [
+    "shows:text",
+    "data:scalar"
+  ]
+}

@@ -1,5 +1,6 @@
 // ============================================
 // HotkeyButton — Composite (Depth 2)
+// Tags: shows:button, shows:kbd, does:hotkey, does:click, data:scalar, role:control
 // Built on Button. Renders a text label with its hotkey character
 // emphasized (bold + underline) so the keyboard affordance is obvious,
 // and — when `armed` — binds a window-level keydown listener that fires

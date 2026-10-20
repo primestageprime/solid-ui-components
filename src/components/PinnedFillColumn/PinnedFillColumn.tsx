@@ -1,5 +1,6 @@
 // ============================================
 // PinnedFillColumn — Composite (Depth 2)
+// Tags: shows:panel, shows:header, does:scroll, does:view, data:scalar, role:container, role:rail
 // Owns zero CSS files and zero inline style={} (STYLE_GUIDE Layout Purity —
 // composes curried Layout Primitives only).
 // A column that fills its parent: an optional pinned `header`, a middle that

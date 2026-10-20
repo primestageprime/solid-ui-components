@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // StatusLight — Atomic (Depth 1)
+// Tags: shows:status, shows:icon, does:view, data:enum, role:inline
 // Owns CSS (StatusLight.css), no component imports.
 // Small colored indicator dot, optionally pulsing for liveness/keepalive.
 // Factory: createStatusLight().

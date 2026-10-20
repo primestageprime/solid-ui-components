@@ -1,5 +1,6 @@
 // ============================================
 // FormComposite — Composite (Depth 2, zero CSS)
+// Tags: shows:field, shows:money, does:edit, does:submit, data:schedule, role:section
 // Composes the AutoStackRow / AutoStackItem Layout primitives.
 // SLOT-BASED form layout: [[identity][amounts][schedule]] — the fields that
 // don't vary across curried form variants (name + a single amount) group in

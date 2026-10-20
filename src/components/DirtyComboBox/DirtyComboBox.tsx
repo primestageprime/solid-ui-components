@@ -1,5 +1,6 @@
 // ============================================
 // DirtyComboBox — Composite (Depth 2)
+// Tags: shows:field, shows:menu, shows:status, does:select, does:edit, data:enum, role:control
 // Owns no CSS. Composes CompactDropdown (trigger slot + itemAction +
 // onItemDelete + DropdownFitLabel), SlideReveal, ReservedWidth, TagPill,
 // TextSublabel, Icon,

@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // SlotTrack — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, shows:timeline, does:view, data:schedule, role:slot
 //
 // A TRACK of expected slots along one y: one lozenge per slot, as wide as the
 // slot's window on the x scale and never narrower than `minWidth`. The

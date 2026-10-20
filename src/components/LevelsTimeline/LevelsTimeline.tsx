@@ -1,5 +1,6 @@
 // ============================================
 // LevelsTimeline — Atomic (Depth 1).
+// Tags: shows:timeline, shows:bar, shows:chart, does:hover, does:view, data:time-series, data:grouped, role:panel
 // Owns CSS (LevelsTimeline.css). Composes no other component.
 //
 // A horizontal time chart of LEVELS. Each level is a RAIL at a fixed y — a

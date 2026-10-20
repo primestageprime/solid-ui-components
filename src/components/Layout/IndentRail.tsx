@@ -1,5 +1,6 @@
 // ============================================
 // IndentRail — Layout Primitive (Depth 1)
+// Tags: shows:tree, shows:mark, does:view, data:tree, role:cell
 // Shares NestedList.css, imports no component.
 //
 // NestedList's indent — one --sui-space-3 (12px) step per level and a 1px

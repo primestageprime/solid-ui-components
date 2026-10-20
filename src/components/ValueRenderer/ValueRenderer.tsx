@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ValueRenderer — Atomic (Depth 1)
+// Tags: shows:text, shows:number, does:view, data:pair, role:inline
 // Owns CSS (ValueRenderer.css), no component imports.
 //
 // Meta-primitive for labeled label/value layout. Dispatches a value of

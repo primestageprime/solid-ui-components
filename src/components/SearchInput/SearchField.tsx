@@ -1,5 +1,6 @@
 // ============================================
 // SearchField — Atomic (Depth 1)
+// Tags: shows:field, does:search, does:type, data:text, role:control
 // Owns SearchInput.css; no component imports.
 // The field chrome behind SearchInput: one 32px bordered row holding an
 // optional leading slot, a bare text input and, while there is text and an

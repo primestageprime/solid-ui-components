@@ -1,4 +1,5 @@
 // ValueHandle — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, does:drag, does:edit, data:scalar, role:slot
 //
 // A GRIP on the top edge of a column — one per datum — that the reader drags
 // up or down to SET that datum's value, plus a double-click on the column to

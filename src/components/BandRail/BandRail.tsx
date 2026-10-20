@@ -1,5 +1,6 @@
 // ============================================
 // BandRail — Atomic (Depth 1)
+// Tags: shows:gauge, shows:bar, does:drag, does:select, data:range, data:scalar, role:control
 // Owns CSS (BandRail.css), imports no other component.
 // Factory: createBandRail().
 //

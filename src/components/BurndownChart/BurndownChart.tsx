@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // BurndownChart — Composed (Depth 2)
+// Tags: shows:chart, shows:bar, does:hover, does:view, data:time-series, data:multi-series, role:panel
 // Composes Chart + Grid + axes + BarSeries (stacked +/-) + ReferenceLine
 // + LineSeries (trend/projection) from src/components/Chart. Public API
 // preserved from the prior monolithic implementation.

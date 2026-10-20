@@ -1,5 +1,6 @@
 // ============================================
 // AppBar — Composite (Depth 3)
+// Tags: shows:tabs, shows:menu, shows:avatar, does:navigate, data:enum, role:header, role:shell
 // Owns zero CSS files and zero inline style={}. Composes AppHeader + GrowBox
 // (Layout variants), a ThreeSlotRow curried at a 160px start (Depth 2),
 // CenteredOverflowNav (Depth 2), UserMenu (Depth 2) and EndClusterRow.

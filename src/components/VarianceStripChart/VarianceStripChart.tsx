@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // VarianceStripChart — Composite (Depth 2)
+// Tags: shows:chart, shows:bar, does:hover, does:view, data:time-series, role:panel
 // Composes Chart + XAxis + VarianceStrip + Crosshair + ChartTooltip from
 // the Chart family. Draws no SVG and owns no CSS.
 //

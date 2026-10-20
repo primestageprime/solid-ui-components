@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-09-11
 // lastReviewedBy: adlai.arnold
 // ScrubChartLabels — Structural (Depth 1). SVG chart mark; composes no
+// Tags: shows:text, shows:mark, does:view, data:list, role:slot
 // library components.
 // ============================================
 // The `ScrubChart` ADAPTER for the label-ladder mark, per

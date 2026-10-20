@@ -2,6 +2,7 @@
 // lastReviewedBy: claude (SUI gap: Tooltip tap-to-open, thorcasting import proto)
 // ============================================
 // PopoverTooltip — Atomic (Depth 1)
+// Tags: shows:tooltip, does:hover, does:click, data:text, role:overlay
 // Owns CSS (PopoverTooltip.css), no component imports.
 //
 // Kobalte's Tooltip (see Tooltip.tsx) can only be opened by hover or keyboard

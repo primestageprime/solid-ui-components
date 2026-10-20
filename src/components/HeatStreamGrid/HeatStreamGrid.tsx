@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // HeatStreamGrid — Depth 2
+// Tags: shows:heatmap, shows:grid, does:select, does:hover, data:matrix, data:time-series, role:panel
 // Composes HeatStream (Depth 1).
 // Renders a grid table with rows (e.g. assets) and
 // columns (e.g. time windows), each cell containing

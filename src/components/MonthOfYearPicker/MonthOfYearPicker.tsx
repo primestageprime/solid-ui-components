@@ -1,5 +1,6 @@
 // ============================================
 // MonthOfYearPicker — Atomic (Depth 1)
+// Tags: shows:field, shows:date, does:pick, does:multi-select, data:enum, role:control
 // Owns CSS (MonthOfYearPicker.css), no component imports.
 // Compact grid for picking a month of the year (1..12) —
 // the natural sibling of DayOfMonthPicker, same visual

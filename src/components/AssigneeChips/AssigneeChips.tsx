@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // AssigneeChips — Atomic (Depth 1)
+// Tags: shows:chip, shows:avatar, shows:count, does:view, data:participants, data:list, role:inline
 // Owns CSS (AssigneeChips.css), no component imports.
 // Renders a filled cyan pill per id, applying a caller-supplied
 // resolveName to display each label. Promoted from dside-ui.

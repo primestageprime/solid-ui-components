@@ -1,4 +1,5 @@
 // BucketQueue — layout-tagged Primitive (Depth 1; EXEMPT-AS-LAYOUT, STYLE_GUIDE
+// Tags: shows:list, shows:count, shows:status, does:select, does:collapse, data:grouped, data:enum, role:rail
 // § Layout Purity). Owns BucketQueue.css: the weighted water-fill sizes each
 // bucket in JS, which no CSS rule can express. N always-present buckets stacked
 // as one full-height progression bar, bucketing items by `bucketOf`.

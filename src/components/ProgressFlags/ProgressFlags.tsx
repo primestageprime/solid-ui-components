@@ -1,5 +1,6 @@
 // ============================================
 // ProgressFlags — Composite (Depth 3, zero CSS)
+// Tags: shows:chart, shows:progress, shows:mark, does:view, does:hover, data:time-series, data:events, role:panel
 //
 // One topic's progress as a step timeline with a flag per step. Two step
 // lines over wall-clock time: the dashed ESTIMATE steps through every step at

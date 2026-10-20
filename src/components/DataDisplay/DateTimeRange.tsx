@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // DateTimeRange — Composite (Depth 2).
+// Tags: shows:date, shows:text, does:view, data:range, role:inline
 // Owns zero CSS. Composes the `NowrapBody` Text Curried Variant; the
 // pure formatter lives in `formatDateTimeRange.ts` so other Primitives
 // (e.g. `TitledTimeRangeHeader`) can reuse the rule without composing

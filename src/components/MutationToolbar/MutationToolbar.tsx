@@ -1,4 +1,5 @@
 // MutationToolbar — Composite (Depth 2). The header row of a "changes" panel:
+// Tags: shows:toolbar, shows:button, shows:date, does:submit, does:pick, data:schedule, role:toolbar
 // a title, the as-of chips that pick which change is being edited, and the
 // panel's actions. Composes SpreadRow / ClusterRow (Layout), TextTitle /
 // NoteText (Atomic), SegmentedControl and Tooltip (Atomic), the Buttons and Icon —

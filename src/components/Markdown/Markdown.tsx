@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Markdown — Atomic (Depth 1)
+// Tags: shows:markdown, shows:text, does:view, data:markdown, role:container
 // Owns CSS (Markdown.css), no component imports.
 // Tiny markdown viewer supporting h1-h3, ul, **bold**, *italic*, `code`,
 // and paragraph breaks. Extracted from the inline SimpleMarkdown in

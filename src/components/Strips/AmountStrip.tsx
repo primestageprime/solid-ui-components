@@ -1,5 +1,6 @@
 // ============================================
 // AmountStrip — Composite (Depth 2, zero CSS)
+// Tags: shows:field, shows:money, shows:number, does:edit, does:type, data:scalar, role:row
 // Composes CurrencyInput10K/1M/100M/1B, CountInput100/10K, SegmentedInput and
 // ChipCluster. How much: one component, three value shapes.
 //   single  an amount, per payment or per year (shows the derived payment)

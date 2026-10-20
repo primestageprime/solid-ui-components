@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Slider — Atomic (Depth 1)
+// Tags: shows:field, shows:number, does:drag, does:edit, data:scalar, data:range, role:control
 // Owns CSS (Slider.css), which it shares with its own SliderField. It imports
 // no component but that one.
 // Kobalte-backed (@kobalte/core/slider), matching the Combobox / Select /

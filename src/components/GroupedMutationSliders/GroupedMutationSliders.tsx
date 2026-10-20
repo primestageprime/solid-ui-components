@@ -1,5 +1,6 @@
 // ============================================
 // GroupedMutationSliders — Composite (Depth 3)
+// Tags: shows:field, shows:number, shows:diff, does:drag, does:edit, data:grouped, data:list, role:panel
 //
 // PUBLISHED, as of the 2026-09-19 promotion. It has a dedicated showcase
 // (`dev/showcases/grouped-mutation-sliders.tsx`), a catalog entry, a

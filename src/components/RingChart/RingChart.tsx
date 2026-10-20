@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // RingChart — Structural (Depth 1). SVG chart; composes no library components.
+// Tags: shows:gauge, shows:chart, shows:progress, does:view, data:grouped, data:scalar, role:inline
 import { For, Show } from "solid-js";
 import { map } from "../../fn";
 import "./RingChart.css";

@@ -1,4 +1,5 @@
 // SplitQueueList — Composite (Depth 2: renders BucketQueue and
+// Tags: shows:list, shows:count, does:select, data:grouped, role:rail
 // StaticSplitLayout, both Primitives). DEPRECATED — a compile shim over
 // BucketQueue, kept for one release so existing call sites keep working;
 // removed in the next major.

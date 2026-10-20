@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // PivotGrid — Atomic (Depth 1). Owns PivotGrid.css; composes no library components.
+// Tags: shows:grid, shows:table, does:view, data:matrix, role:panel
 import { createMemo, For, type JSX, Show } from "solid-js";
 import "./PivotGrid.css";
 

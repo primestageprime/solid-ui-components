@@ -1,4 +1,5 @@
 // Duration — Atomic Primitive (Depth 1, styleless). Wraps a pure ms→text formatter in a bare <span>.
+// Tags: shows:duration, shows:text, does:view, data:scalar, role:inline
 export interface DurationProps {
   /** Duration in milliseconds */
   ms: number | null | undefined;

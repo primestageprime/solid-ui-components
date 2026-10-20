@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Modal — Atomic (Depth 1)
+// Tags: shows:dialog, does:dismiss, does:submit, data:scalar, role:overlay
 // Owns CSS (Modal.css), no component imports.
 // Portal-based modal with overlay, escape key, size variants.
 // ============================================
