@@ -5,7 +5,6 @@
 // functions over plain data; no store, no signals. No app nouns: the app names the key that holds
 // the children, the status values and the log texts.
 import { every, filter, find, findIndex, flatMap, map } from "../fn";
-import { weekStart } from "../fn/weekStart";
 import { newId } from "./listkit";
 
 /** One line of a child's log. */
@@ -22,14 +21,23 @@ export type ChildShape = {
 
 /** Where an item stands, from its children: none started, some started, all complete. */
 export type ChildKind = "pending" | "current" | "complete";
-/** The four groups an item can fall in; `complete` splits on whether the last completion is this week. */
-export type ChildGroup = "pending" | "current" | "recent" | "history";
+/** What `advance` does when every child is already complete: leave the item as it is, or reopen the last child. */
+export type ChildOnComplete = "stay" | "reopen-last";
 
-export type ChildrenConfig<
-  K extends string,
-  F extends string,
-  G extends string,
-> = {
+/** One bucket for `bucketOf`: an app-chosen id and the test that puts an item in it. No ids are built in. */
+export type Bucket<P, G extends string> = {
+  id: G;
+  when: (item: P, now: Date) => boolean;
+};
+
+/** The id of the first bucket whose `when` holds, else undefined (end the list with `when: () => true` for a catch-all). The app composes its own groups (for example "this week" with `fn.weekStart`) from the facts `defineChildren` supplies. */
+export const bucketOf = <P, G extends string>(
+  item: P,
+  buckets: readonly Bucket<P, G>[],
+  now: Date = new Date(),
+): G | undefined => find((b) => b.when(item, now), buckets)?.id;
+
+export type ChildrenConfig<K extends string, F extends string> = {
   /** The field of the item that holds its children, e.g. "steps". */
   key: K;
   /** The field of the item that remembers the chosen child (optional, absent = none chosen). Default "focus". */
@@ -38,8 +46,8 @@ export type ChildrenConfig<
   status: { pending: string; current: string; complete: string };
   /** The text of the log line each transition writes. */
   lines: { started: string; completed: string; reopened: string };
-  /** The group id each ChildGroup maps to, so `groupOf` returns the app's own ids. */
-  groups: Record<ChildGroup, G>;
+  /** What `advance` does when every child is complete. Default "stay" (no change); "reopen-last" makes the last child current again. */
+  onComplete?: ChildOnComplete;
 };
 
 /** An item that holds children under `K` and a chosen child under `F`; `createdAt` is where its activity time starts. */
@@ -55,11 +63,9 @@ type ChildOf<P, K extends string> = P extends { [k in K]: readonly (infer C)[] }
 const maxIso = (values: (string | null | undefined)[]): string =>
   values.reduce<string>((a, v) => (v && v > a ? v : a), "");
 
-export function defineChildren<
-  K extends string,
-  G extends string,
-  F extends string = "focus",
->(config: ChildrenConfig<K, F, G>) {
+export function defineChildren<K extends string, F extends string = "focus">(
+  config: ChildrenConfig<K, F>,
+) {
   const { status, lines } = config;
   const focusKey = (config.focus ?? "focus") as F;
   const list = <P extends ChildParent<K, F>>(p: P): ChildShape[] =>
@@ -113,18 +119,6 @@ export function defineChildren<
       ...flatMap((c) => [c.startedAt, c.completedAt], list(p)),
     ]);
 
-  /** The item's group: pending, current, or complete split into recent (last completion this local week) and history. */
-  const groupOf = <P extends ChildParent<K, F>>(
-    p: P,
-    now: Date = new Date(),
-  ): G => {
-    const kind = kindOf(p);
-    if (kind !== "complete") return config.groups[kind];
-    const last = maxIso(map((c) => c.completedAt, list(p)));
-    const recent = new Date(last).getTime() >= weekStart(now).getTime();
-    return config.groups[recent ? "recent" : "history"];
-  };
-
   const focused = <P extends ChildParent<K, F>>(
     p: P | undefined,
   ): ChildShape | undefined => {
@@ -176,6 +170,7 @@ export function defineChildren<
     if (!target) {
       const last = cs[cs.length - 1];
       if (!last) return patch<P>(cs, undefined);
+      if (config.onComplete !== "reopen-last") return patch<P>(cs, chosen?.id);
       return patch<P>(
         map(
           (c) =>
@@ -224,7 +219,6 @@ export function defineChildren<
     kindOf,
     progress,
     activityAt,
-    groupOf,
     pick,
     select,
     cycle,

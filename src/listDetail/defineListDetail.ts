@@ -75,7 +75,10 @@ export type ListDetailConfig<
   /** The entities a fresh install starts with; the first visible one is selected. */
   seed: readonly T[];
   /** Undo handlers for the app's own ops, recorded with `actions.record({ op, id, prev })`. */
-  undoers?: Record<string, (entry: UndoEntry, kit: ListDetail<T, G, S, C, XD, XV>) => void>;
+  undoers?: Record<
+    string,
+    (entry: UndoEntry, kit: ListDetail<T, G, S, C, XD, XV>) => void
+  >;
   /** App-owned fields persisted alongside the kit's own. */
   extra?: { data?: XD; view?: XV };
   /** True while an app dialog (beyond the kit's help and settings) is open, so Escape closes it before anything else. */
@@ -276,7 +279,8 @@ export function defineListDetail<
         patchEntity(last.id, { deleted: false } as Partial<T>);
         setInner("view", "selectedId", last.id);
       } else if (config.undoers?.[last.op]) config.undoers[last.op](last, kit);
-      else if (last.op === "primary" && last.prev !== undefined) restore(last.id, last.prev as T);
+      else if (last.op === "primary" && last.prev !== undefined)
+        restore(last.id, last.prev as T);
       actions.commit();
     },
     startEdit(): void {
@@ -328,7 +332,8 @@ export function defineListDetail<
       const before = detach(e);
       const steps = inner.data.history.length;
       config.primary(e, kit);
-      if (inner.data.history.length === steps) actions.record({ op: "primary", id: e.id, prev: before });
+      if (inner.data.history.length === steps)
+        actions.record({ op: "primary", id: e.id, prev: before });
       actions.commit();
     },
     setSearch(search: string): void {
@@ -377,7 +382,13 @@ export function defineListDetail<
     setState,
     actions,
     /** The edit flag and search focus, as signals the app's ui may re-export. */
-    ui: { editing, searchFocused, helpOpen, settingsOpen, modalOpen: anyModalOpen },
+    ui: {
+      editing,
+      searchFocused,
+      helpOpen,
+      settingsOpen,
+      modalOpen: anyModalOpen,
+    },
     /** The live entities, grouped, filtered and sorted for the current view. */
     grouped: (): Group<T, G>[] => groupedList(list(), spec, inner.view),
     visibleIds: ids,

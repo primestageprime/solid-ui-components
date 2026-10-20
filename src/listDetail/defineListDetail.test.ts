@@ -1,24 +1,60 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { defineListDetail, newId, LIST_DETAIL_ACTION_OF, LIST_DETAIL_VERBS } from "./index";
+import {
+  defineListDetail,
+  newId,
+  LIST_DETAIL_ACTION_OF,
+  LIST_DETAIL_VERBS,
+} from "./index";
 
 // Two unrelated entities run through the same kit: the kit names neither.
-type Task = { id: string; title: string; status: "todo" | "done"; deleted?: boolean };
-type Contact = { id: string; name: string; org: "work" | "home" | "club"; age: number; deleted?: boolean };
+type Task = {
+  id: string;
+  title: string;
+  status: "todo" | "done";
+  deleted?: boolean;
+};
+type Contact = {
+  id: string;
+  name: string;
+  org: "work" | "home" | "club";
+  age: number;
+  deleted?: boolean;
+};
 
-type Hook = (t: Task, kit: { actions: { update: (id: string, p: Partial<Task>) => void } }) => void;
-const tasks = (extra: { modalOpen?: () => boolean; closeModal?: () => void; open?: Hook; primary?: Hook } = {}) =>
+type Hook = (
+  t: Task,
+  kit: { actions: { update: (id: string, p: Partial<Task>) => void } },
+) => void;
+const tasks = (
+  extra: {
+    modalOpen?: () => boolean;
+    closeModal?: () => void;
+    open?: Hook;
+    primary?: Hook;
+  } = {},
+) =>
   defineListDetail({
     storageKey: "kit-tasks",
     collection: "tasks",
-    entity: { blank: (): Task => ({ id: newId(), title: "", status: "todo" }), textOf: (t) => t.title },
+    entity: {
+      blank: (): Task => ({ id: newId(), title: "", status: "todo" }),
+      textOf: (t) => t.title,
+    },
     groups: { order: ["todo", "done"] as const, of: (t) => t.status },
-    sorts: { order: ["added", "title"] as const, default: "added", by: { added: () => 0, title: (a, b) => a.title.localeCompare(b.title) } },
+    sorts: {
+      order: ["added", "title"] as const,
+      default: "added",
+      by: { added: () => 0, title: (a, b) => a.title.localeCompare(b.title) },
+    },
     seed: [
       { id: "a", title: "write", status: "todo" },
       { id: "b", title: "ship", status: "todo" },
       { id: "c", title: "rest", status: "done" },
     ] satisfies Task[],
-    undoers: { complete: (e, k) => k.actions.update(e.id, { status: e.prev as Task["status"] }) },
+    undoers: {
+      complete: (e, k) =>
+        k.actions.update(e.id, { status: e.prev as Task["status"] }),
+    },
     ...extra,
   });
 
@@ -26,9 +62,20 @@ const contacts = () =>
   defineListDetail({
     storageKey: "kit-contacts",
     collection: "people",
-    entity: { blank: (): Contact => ({ id: newId(), name: "", org: "work", age: 0 }), textOf: (c) => `${c.name} ${c.org}` },
+    entity: {
+      blank: (): Contact => ({ id: newId(), name: "", org: "work", age: 0 }),
+      textOf: (c) => `${c.name} ${c.org}`,
+    },
     groups: { order: ["work", "home", "club"] as const, of: (c) => c.org },
-    sorts: { order: ["age", "name", "added"] as const, default: "age", by: { age: (a, b) => a.age - b.age, name: (a, b) => a.name.localeCompare(b.name), added: () => 0 } },
+    sorts: {
+      order: ["age", "name", "added"] as const,
+      default: "age",
+      by: {
+        age: (a, b) => a.age - b.age,
+        name: (a, b) => a.name.localeCompare(b.name),
+        added: () => 0,
+      },
+    },
     seed: [
       { id: "p", name: "Ada", org: "work", age: 36 },
       { id: "q", name: "Bo", org: "home", age: 20 },
@@ -160,7 +207,12 @@ describe("defineListDetail with a second, unrelated entity (contacts)", () => {
     expect(d.data.note).toBe("hi");
     expect(d.data.people).toHaveLength(4);
     expect(Object.keys(d).sort()).toEqual(["chrome", "data", "view"]);
-    expect(d.chrome).toEqual({ editing: false, searchFocused: false, helpOpen: false, settingsOpen: false });
+    expect(d.chrome).toEqual({
+      editing: false,
+      searchFocused: false,
+      helpOpen: false,
+      settingsOpen: false,
+    });
   });
 
   it("collapse, search and delete with the three-group order", () => {
@@ -191,10 +243,25 @@ describe("verbs", () => {
     const k = tasks();
     for (const row of LIST_DETAIL_VERBS) {
       const name = LIST_DETAIL_ACTION_OF[row.action];
-      expect(typeof (k.actions as Record<string, unknown>)[name]).toBe("function");
+      expect(typeof (k.actions as Record<string, unknown>)[name]).toBe(
+        "function",
+      );
       expect(typeof k.handlers[row.action]).toBe("function");
     }
-    expect(k.verbs.map((v) => v.keys)).toEqual(["j", "k", "n", "e", "x", "u", "/", "s", "-", "Escape", "?", ","]);
+    expect(k.verbs.map((v) => v.keys)).toEqual([
+      "j",
+      "k",
+      "n",
+      "e",
+      "x",
+      "u",
+      "/",
+      "s",
+      "-",
+      "Escape",
+      "?",
+      ",",
+    ]);
   });
 
   it("each handler changes something observable in the dump", () => {
@@ -240,7 +307,11 @@ describe("verbs", () => {
     expect(JSON.parse(k.dump()).chrome.settingsOpen).toBe(true);
     k.handlers.unwind();
     const c = JSON.parse(k.dump());
-    expect([c.chrome.helpOpen, c.chrome.settingsOpen, c.view.selectedId]).toEqual([false, false, "a"]);
+    expect([
+      c.chrome.helpOpen,
+      c.chrome.settingsOpen,
+      c.view.selectedId,
+    ]).toEqual([false, false, "a"]);
     k.handlers.unwind();
     expect(JSON.parse(k.dump()).view.selectedId).toBe(null);
   });
@@ -250,14 +321,23 @@ describe("verbs", () => {
     const opened: string[] = [];
     const k = tasks({
       modalOpen: () => app,
-      closeModal: () => { app = false; },
-      open: (t) => { opened.push(t.id); },
+      closeModal: () => {
+        app = false;
+      },
+      open: (t) => {
+        opened.push(t.id);
+      },
       primary: (t, kit) => kit.actions.update(t.id, { status: "done" }),
     });
     k.actions.select("a");
     k.handlers.unwind();
     expect(app).toBe(false);
-    expect(k.verbs.map((v) => v.keys).slice(-4)).toEqual(["?", ",", "Enter", "c"]);
+    expect(k.verbs.map((v) => v.keys).slice(-4)).toEqual([
+      "?",
+      ",",
+      "Enter",
+      "c",
+    ]);
     k.handlers.open();
     expect(opened).toEqual(["a"]);
     const before = k.dump();
@@ -269,13 +349,28 @@ describe("verbs", () => {
 
 describe("group titles", () => {
   it("grouped() carries a title: the id by default, the configured heading when given", () => {
-    expect(tasks().grouped().map((g) => g.title)).toEqual(["todo", "done"]);
+    expect(
+      tasks()
+        .grouped()
+        .map((g) => g.title),
+    ).toEqual(["todo", "done"]);
     const k = defineListDetail({
       storageKey: "kit-titled",
       collection: "tasks",
-      entity: { blank: (): Task => ({ id: newId(), title: "", status: "todo" }), textOf: (t) => t.title },
-      groups: { order: ["todo", "done"] as const, of: (t) => t.status, title: (id) => id.toUpperCase() },
-      sorts: { order: ["added"] as const, default: "added", by: { added: () => 0 } },
+      entity: {
+        blank: (): Task => ({ id: newId(), title: "", status: "todo" }),
+        textOf: (t) => t.title,
+      },
+      groups: {
+        order: ["todo", "done"] as const,
+        of: (t) => t.status,
+        title: (id) => id.toUpperCase(),
+      },
+      sorts: {
+        order: ["added"] as const,
+        default: "added",
+        by: { added: () => 0 },
+      },
       seed: [],
     });
     expect(k.grouped().map((g) => g.title)).toEqual(["TODO", "DONE"]);
@@ -283,20 +378,44 @@ describe("group titles", () => {
 });
 
 describe("kit-owned undo snapshots", () => {
-  type Stepped = { id: string; title: string; steps: string[]; deleted?: boolean };
-  const stepped = (primary: (t: Stepped, kit: { actions: { update: (id: string, p: Partial<Stepped>) => void; record: (e: { op: string; id: string; prev?: unknown }) => void } }) => void) =>
+  type Stepped = {
+    id: string;
+    title: string;
+    steps: string[];
+    deleted?: boolean;
+  };
+  const stepped = (
+    primary: (
+      t: Stepped,
+      kit: {
+        actions: {
+          update: (id: string, p: Partial<Stepped>) => void;
+          record: (e: { op: string; id: string; prev?: unknown }) => void;
+        };
+      },
+    ) => void,
+  ) =>
     defineListDetail({
       storageKey: "kit-stepped",
       collection: "items",
-      entity: { blank: (): Stepped => ({ id: newId(), title: "", steps: [] }), textOf: (t) => t.title },
+      entity: {
+        blank: (): Stepped => ({ id: newId(), title: "", steps: [] }),
+        textOf: (t) => t.title,
+      },
       groups: { order: ["all"] as const, of: () => "all" as const },
-      sorts: { order: ["added"] as const, default: "added", by: { added: () => 0 } },
+      sorts: {
+        order: ["added"] as const,
+        default: "added",
+        by: { added: () => 0 },
+      },
       seed: [{ id: "a", title: "one", steps: ["x", "y"] }] satisfies Stepped[],
       primary,
     });
 
   it("a primary verb that records nothing is snapshotted and undone whole", () => {
-    const k = stepped((t, kit) => kit.actions.update(t.id, { steps: [...t.steps, "z"], title: "changed" }));
+    const k = stepped((t, kit) =>
+      kit.actions.update(t.id, { steps: [...t.steps, "z"], title: "changed" }),
+    );
     k.actions.primary();
     expect(k.state.data.items[0].steps).toEqual(["x", "y", "z"]);
     k.actions.undo();
@@ -305,7 +424,10 @@ describe("kit-owned undo snapshots", () => {
   });
 
   it("a verb that mutates the live array in place cannot corrupt the snapshot", () => {
-    const k = stepped((t, kit) => { t.steps.push("z"); kit.actions.update(t.id, { title: "changed" }); });
+    const k = stepped((t, kit) => {
+      t.steps.push("z");
+      kit.actions.update(t.id, { title: "changed" });
+    });
     k.actions.primary();
     k.actions.undo();
     expect(k.state.data.items[0].steps).toEqual(["x", "y"]);

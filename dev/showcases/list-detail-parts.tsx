@@ -29,12 +29,11 @@ const stops = defineChildren({
   key: "stops",
   status: { pending: "idle", current: "live", complete: "over" },
   lines: { started: "Left", completed: "Arrived", reopened: "Back" },
-  groups: { pending: "planned", current: "going", recent: "week", history: "old" },
 });
 const TRIP: Trip = { id: "t", title: "Alps", by: "Ada", createdAt: "2026-01-01T00:00:00.000Z", stops: stops.advance({ id: "t", title: "Alps", by: "Ada", createdAt: "2026-01-01T00:00:00.000Z", stops: [stops.child("s1", { name: "Train" }) as Stop, stops.child("s2", { name: "Hike" }) as Stop] }).stops as Stop[] };
 const TRIP_CARD = defineCard<Trip>({
   title: (t) => t.title,
-  status: { of: (t) => stops.groupOf(t), map: { planned: { label: "Planned", variant: "inactive" }, going: { label: "Going", variant: "active" }, week: { label: "Done", variant: "success" }, old: { label: "Done", variant: "success" } } },
+  status: { of: (t) => stops.kindOf(t), map: { pending: { label: "Planned", variant: "inactive" }, current: { label: "Going", variant: "active" }, complete: { label: "Done", variant: "success" } } },
   detail: (t) => `${stops.progress(t).done} of ${stops.progress(t).total} stops`,
   who: (t) => t.by,
   when: (t) => stops.activityAt(t),
@@ -64,7 +63,7 @@ export const ListDetailPartsShowcase: Component = () => {
       <h2>ConfiguredCard and ConfiguredLog</h2>
       <p class="text-meta">
         An item in the rail and the right-hand log drawn from plain-data configs (<code>defineCard</code>,{" "}
-        <code>defineSide</code>); <code>defineChildren</code> supplies the progress, the group and the log rows.{" "}
+        <code>defineSide</code>); <code>defineChildren</code> supplies the progress, the kind and the log rows.{" "}
         <code>ConfiguredDetail</code> takes a <code>defineDetail</code> config and a kit the same way.
       </p>
       <div class="example-group">

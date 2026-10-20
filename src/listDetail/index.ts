@@ -31,9 +31,10 @@ export type {
 } from "./listkit";
 // Also reachable as `fn.weekStart` from the root; re-exported here so a Node-loadable leaf module needs one import path.
 export { weekStart } from "../fn/weekStart";
-export { defineChildren } from "./children";
+export { bucketOf, defineChildren } from "./children";
 export type {
-  ChildGroup,
+  Bucket,
+  ChildOnComplete,
   ChildKind,
   ChildLogLine,
   ChildParent,

@@ -3,8 +3,20 @@
 // app spreads them into its own HOTKEYS table and writes the literal handler block itself.
 export type ListDetailScope = "global" | "list" | "detail" | "modal";
 export type ListDetailVerb =
-  | "next" | "prev" | "new" | "edit" | "delete" | "undo" | "search" | "sort" | "collapse" | "close"
-  | "help" | "settings" | "open" | "complete";
+  | "next"
+  | "prev"
+  | "new"
+  | "edit"
+  | "delete"
+  | "undo"
+  | "search"
+  | "sort"
+  | "collapse"
+  | "close"
+  | "help"
+  | "settings"
+  | "open"
+  | "complete";
 
 export type ListDetailRow = {
   action: string;

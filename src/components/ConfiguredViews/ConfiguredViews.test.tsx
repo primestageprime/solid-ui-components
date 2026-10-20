@@ -1,6 +1,6 @@
 import { fireEvent, render } from "@solidjs/testing-library";
 import { describe, expect, it, vi } from "vitest";
-import { defineChildren } from "../../listDetail/children";
+import { bucketOf, defineChildren } from "../../listDetail/children";
 import { defineListDetail } from "../../listDetail/defineListDetail";
 import { type ListItem, newId } from "../../listDetail/listkit";
 import {
@@ -37,13 +37,14 @@ const legs = defineChildren({
   focus: "focusLeg",
   status: { pending: "idle", current: "live", complete: "over" },
   lines: { started: "Left", completed: "Arrived", reopened: "Back" },
-  groups: {
-    pending: "planned",
-    current: "going",
-    recent: "week",
-    history: "old",
-  },
 });
+type Where = "planned" | "going" | "done";
+const where = (t: Trip): Where =>
+  bucketOf<Trip, Where>(t, [
+    { id: "planned", when: (x) => legs.kindOf(x) === "pending" },
+    { id: "going", when: (x) => legs.kindOf(x) === "current" },
+    { id: "done", when: () => true },
+  ]) ?? "done";
 const leg = (id: string, name: string): Leg => legs.child(id, { name }) as Leg;
 const SEED: Trip[] = [
   {
@@ -70,8 +71,8 @@ const makeKit = () =>
       textOf: (t: Trip) => t.title,
     },
     groups: {
-      order: ["planned", "going", "week", "old"] as const,
-      of: (t: Trip) => legs.groupOf(t),
+      order: ["planned", "going", "done"] as const,
+      of: (t: Trip) => where(t),
     },
     sorts: {
       order: ["added"] as const,
@@ -85,12 +86,11 @@ const makeKit = () =>
 const STATUS = {
   planned: { label: "Planned", variant: "inactive" },
   going: { label: "Going", variant: "active" },
-  week: { label: "Done", variant: "success" },
-  old: { label: "Done", variant: "success" },
+  done: { label: "Done", variant: "success" },
 } as const;
 const CARD = defineCard<Trip>({
   title: (t) => t.title,
-  status: { of: (t) => legs.groupOf(t), map: STATUS },
+  status: { of: (t) => where(t), map: STATUS },
   detail: (t) => `${legs.progress(t).done} of ${legs.progress(t).total} legs`,
   who: (t) => t.by,
   when: (t) => legs.activityAt(t),

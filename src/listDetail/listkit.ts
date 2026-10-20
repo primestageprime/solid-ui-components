@@ -18,7 +18,11 @@ export type ListView<S extends string = string> = {
 };
 
 /** What the domain supplies: which group an item is in, the group order, the text search looks in, and the sort keys. */
-export type ListSpec<T, G extends string = string, S extends string = string> = {
+export type ListSpec<
+  T,
+  G extends string = string,
+  S extends string = string,
+> = {
   groupOf: (item: T) => G;
   groupOrder: readonly G[];
   /** The heading a group shows (a selector's group header); defaults to the group id. */

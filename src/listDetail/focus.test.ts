@@ -13,7 +13,9 @@ describe("focus and the edit flag", () => {
     stop = watchFocus({ searchId: "s", onLeave: () => left++ });
     const input = document.body.appendChild(document.createElement("input"));
     input.focus();
-    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
     expect(left).toBe(0);
     await Promise.resolve();
     expect(left).toBe(1);
@@ -23,14 +25,20 @@ describe("focus and the edit flag", () => {
   it("Escape outside a field does nothing", async () => {
     let left = 0;
     stop = watchFocus({ searchId: "s", onLeave: () => left++ });
-    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    document.body.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
     await Promise.resolve();
     expect(left).toBe(0);
   });
 
   it("reports focus entering and leaving the search field only", () => {
     const seen: boolean[] = [];
-    stop = watchFocus({ searchId: "s", onLeave: () => {}, onSearchFocus: (f) => seen.push(f) });
+    stop = watchFocus({
+      searchId: "s",
+      onLeave: () => {},
+      onSearchFocus: (f) => seen.push(f),
+    });
     const search = document.body.appendChild(document.createElement("input"));
     search.id = "s";
     const other = document.body.appendChild(document.createElement("input"));
