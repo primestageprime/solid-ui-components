@@ -138,11 +138,11 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
   };
   return (
     <span
-      class={
-        props.fill
-          ? "sui-editable-title sui-editable-title--fill"
-          : "sui-editable-title"
-      }
+      class={[
+        "sui-editable-title",
+        props.fill ? "sui-editable-title--fill" : "",
+        editing() ? "sui-editable-title--editing" : "",
+      ].join(" ").trim()}
     >
       <Show
         when={!editing()}

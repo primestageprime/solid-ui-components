@@ -75,7 +75,8 @@ describe("EditableTitle", () => {
     const at = css.indexOf(".sui-editable-title--fill .sui-editable-title__input {");
     expect(at).toBeGreaterThan(-1);
     const rule = css.slice(at, css.indexOf("}", at));
-    expect(rule).toMatch(/outline-offset:\s*-1px/);
+    // The base field now draws its border as an inset box-shadow (never clipped); fill keeps the inset field look.
+    expect(rule).not.toMatch(/outline-offset:\s*1px/);
     expect(rule).toMatch(/background:/);
     expect(rule).toMatch(/caret-color:/);
   });
@@ -214,6 +215,22 @@ describe("EditableTitle", () => {
     ));
     fireEvent.click(getByText("hello"), { shiftKey: true });
     expect(container.querySelector("input")).toBeNull();
+  });
+});
+
+describe("EditableTitle field border", () => {
+  it("draws a full inset border and keeps the text where the title draws it (padding offset by margin)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { dirname, join } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "EditableTitle.css"), "utf8");
+    const at = css.indexOf(".sui-editable-title__input {");
+    const rule = css.slice(at, css.indexOf("}", at));
+    expect(rule).toMatch(/box-shadow:\s*inset 0 0 0 1px/);
+    expect(rule).toMatch(/padding: var\(--sui-editable-pad-y\) var\(--sui-editable-pad-x\)/);
+    expect(rule).toMatch(/margin: calc\(-1 \* var\(--sui-editable-pad-y\)\) calc\(-1 \* var\(--sui-editable-pad-x\)\)/);
+    const { container } = render(() => <EditableTitle title="x" autoEdit onChange={() => {}} />);
+    expect(container.querySelector(".sui-editable-title--editing")).not.toBeNull();
   });
 });
 

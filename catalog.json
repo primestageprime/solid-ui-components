@@ -2899,7 +2899,7 @@
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
-    "line": 299
+    "line": 301
   },
   {
     "name": "ConfiguredLog",
@@ -2918,7 +2918,7 @@
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
-    "line": 407
+    "line": 409
   },
   {
     "name": "ConfirmationModal",
@@ -16765,7 +16765,7 @@
     "showcase": "#/swimlane-chart",
     "since": "0.203.0",
     "file": "src/components/SwimlaneChart/SwimlaneChart.tsx",
-    "line": 68
+    "line": 69
   },
   {
     "name": "TabbedSidePanel",

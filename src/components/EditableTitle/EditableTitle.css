@@ -65,19 +65,32 @@
   overflow: hidden;
   font: inherit;
 }
+/* The field: a full, even 1px border on all four sides drawn INSIDE its box (an inset shadow, which no
+   ancestor's overflow can clip, unlike the outline it replaces: Peter, 2026-10-20, "only showing 2
+   borders makes the input feel clipped off"), a little padding, and a negative margin of the same size so
+   the text stays exactly where the read-only title draws it when editing starts. */
 .sui-editable-title__input {
+  --sui-editable-pad-y: 2px;
+  --sui-editable-pad-x: 6px;
   grid-area: 1 / 1;
+  box-sizing: content-box;
   width: 100%;
   min-width: 1ch;
   font: inherit;
   line-height: inherit;
   color: inherit;
-  background: transparent;
+  background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.6));
   border: none;
-  padding: 0;
-  outline: 1px solid var(--sui-accent);
-  outline-offset: 1px;
-  border-radius: 2px;
+  padding: var(--sui-editable-pad-y) var(--sui-editable-pad-x);
+  margin: calc(-1 * var(--sui-editable-pad-y)) calc(-1 * var(--sui-editable-pad-x));
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--sui-accent);
+  border-radius: 3px;
+  caret-color: var(--sui-accent);
+}
+/* While editing the host must not clip the field's padding, which sits outside the text box. */
+.sui-editable-title--editing {
+  overflow: visible;
 }
 
 /* `fill`: the title IS its slot. The click target spans the blank space after
@@ -103,10 +116,10 @@
    2026-09-25). Here it is drawn INSIDE (negative offset), on the field
    background, with an accent caret and a little text inset. */
 .sui-editable-title--fill .sui-editable-title__input {
-  outline-offset: -1px;
   background: var(--sui-bg-secondary, rgba(0, 20, 30, 0.6));
   caret-color: var(--sui-accent);
   padding: 0 4px;
+  margin: 0;
   border-radius: 2px;
   box-sizing: border-box;
 }
