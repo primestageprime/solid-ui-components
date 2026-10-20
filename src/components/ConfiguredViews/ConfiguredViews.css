@@ -33,7 +33,7 @@
   border-width: 2px;
 }
 
-.sui-flow-node[aria-selected="true"] {
+.sui-flow-node[aria-current="true"] {
   border-color: var(--sui-accent);
 }
 

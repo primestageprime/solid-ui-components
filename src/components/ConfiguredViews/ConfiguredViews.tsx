@@ -217,7 +217,7 @@ function FlowNodeCard(props: {
 }) {
   const n = () => props.node;
   return (
-    <div class={`sui-flow-node sui-flow-node--${n().size}`} data-node-id={n().id} aria-selected={props.selected}>
+    <div class={`sui-flow-node sui-flow-node--${n().size}`} data-node-id={n().id} aria-current={props.selected ? "true" : undefined}>
       <TightStack>
         <span class="sui-flow-node__label" title={n().label}>
           {n().label}
