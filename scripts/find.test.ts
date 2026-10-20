@@ -255,7 +255,7 @@ describe("benchmark floor (scripts/find-bench.json)", () => {
     expect(s.n).toBe(29);
     expect(s.top1).toBeGreaterThanOrEqual(27);
   });
-  it("the real misses (7 authored + 7 quoted): ranker v2 at least 10/14 top-1, legacy at most 5/14 (5 once FramedCashflowScrubChart counted as a drag-zoom answer)", () => {
+  it("the real misses (7 authored + 7 quoted): ranker v2 at least 10/14 top-1, legacy at most 5/14 (the drag-zoom label is strict again: FramedCashflowScrubChart does not count, diddit #4163)", () => {
     const real = bench.filter((b) => b.miss);
     expect(real.length).toBe(14);
     expect(hits(real, tuned).top1).toBeGreaterThanOrEqual(10);

@@ -631,7 +631,23 @@ export function buildCatalog({
 
     const bullet = componentsMdBulletFor(componentsMd, e.name);
     const notes = precedingCommentOf(fileSrc, e.name);
-    const preferFirstList = bullet ? parsePreferFirstOf(bullet, e.name) : [];
+    let preferFirstList = bullet ? parsePreferFirstOf(bullet, e.name) : [];
+    // A curried variant or factory with no bullet of its own inherits its
+    // BASE's "reach for `X` first" edge: `FramedCashflowScrubChart` is no
+    // less a cashflow chart than `CashflowScrubChart`, so it must not outrank
+    // `ScrubChart` on a generic drag-to-zoom need either (diddit #4163).
+    if (
+      !bullet &&
+      (kind === "variant" || kind === "factory") &&
+      overridesBase
+    ) {
+      const { bullet: baseBullet } = resolveBaseBullet(
+        componentsMd,
+        overridesBase,
+        e.dir,
+      );
+      if (baseBullet) preferFirstList = parsePreferFirstOf(baseBullet, e.name);
+    }
 
     // Summary priority: (1) the export's own COMPONENTS.md bullet, (2) the
     // export's own JSDoc, (3) — for a variant or factory only — a summary

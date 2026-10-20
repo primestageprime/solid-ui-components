@@ -2036,7 +2036,9 @@
     "dataProps": "CashflowScrubChartDataProps",
     "summary": "Domain Composite (Depth 3).",
     "summarySource": "components-md",
-    "preferFirst": null,
+    "preferFirst": [
+      "ScrubChart"
+    ],
     "notToBeConfusedWith": [
       "not `40` like bare ScrubChart), `lineClass?` (CSS class added to every mark of the PRIMARY balance line alongside each mark's base class — the polyline AND the primary dot on the hover crosshair;"
     ],
@@ -5102,7 +5104,9 @@
     "dataProps": "CashflowScrubChartDataProps",
     "summary": "Domain Composite (Depth 3). Factory behind `CashflowScrubChart`'s curried variants; bakes `yFitTransition`, `expandTransition`, `chrome`.",
     "summarySource": "synthesized",
-    "preferFirst": null,
+    "preferFirst": [
+      "ScrubChart"
+    ],
     "notToBeConfusedWith": null,
     "useFor": null,
     "notes": null,
@@ -6172,7 +6176,10 @@
     "dataProps": "GhostRowDataProps",
     "summary": "Atomic (Depth 1, `src/components/GhostRow/GhostRow.tsx`). Factory behind `GhostRow`'s curried variants; bakes `indent`.",
     "summarySource": "synthesized",
-    "preferFirst": null,
+    "preferFirst": [
+      "NestedList",
+      "NestedListItem"
+    ],
     "notToBeConfusedWith": null,
     "useFor": null,
     "notes": null,
@@ -6385,7 +6392,9 @@
     "dataProps": "HotkeyButtonDataProps",
     "summary": "Composite (Depth 2, `src/components/HotkeyButton/HotkeyButton.tsx`). Factory behind `HotkeyButton`'s curried variants; bakes `variant`, `size`.",
     "summarySource": "synthesized",
-    "preferFirst": null,
+    "preferFirst": [
+      "ActionList"
+    ],
     "notToBeConfusedWith": null,
     "useFor": null,
     "notes": null,
@@ -7835,7 +7844,9 @@
     "dataProps": null,
     "summary": "Curried StatusCard — bind common defaults (e.g.",
     "summarySource": "jsdoc",
-    "preferFirst": null,
+    "preferFirst": [
+      "NotificationRow"
+    ],
     "notToBeConfusedWith": null,
     "useFor": null,
     "notes": "Curried StatusCard — bind common defaults (e.g. descriptionLines) once.",
@@ -12404,7 +12415,9 @@
     "dataProps": "CashflowScrubChartDataProps",
     "summary": "FramedCashflowScrubChart — the chart inside a `ChartFrame` (Peter's chart visual language, 2026-09-24): `chrome: \"frame\"`, so it draws none of its own controls — no Auto | Fixed | Fit switch, no range editor, no expand chevron, no top action — and the frame's split button, driven by `createYAxisStrategy`, owns the y-axis.",
     "summarySource": "jsdoc",
-    "preferFirst": null,
+    "preferFirst": [
+      "ScrubChart"
+    ],
     "notToBeConfusedWith": null,
     "useFor": null,
     "notes": "FramedCashflowScrubChart — the chart inside a `ChartFrame` (Peter's chart visual language, 2026-09-24): `chrome: \"frame\"`, so it draws none of its own controls — no Auto | Fixed | Fit switch, no range editor, no expand chevron, no top action — and the frame's split button, driven by `createYAxisStrategy`, owns the y-axis. The chart takes what the strategy decides as controlled props: `yMin`/`yMax` (the domain, in cents), `yAxisMode` (still marks out-of-range values in `\"fixed\"`) and `expanded`. Still (`yFitTransition: false`, `expandTransition: false`), like `StillCashflowScrubChart`: the strategy's water marks already ease.",
@@ -14192,7 +14205,10 @@
     "dataProps": "GhostRowDataProps",
     "summary": "Rail-child form: inset one step under its section heading.",
     "summarySource": "jsdoc",
-    "preferFirst": null,
+    "preferFirst": [
+      "NestedList",
+      "NestedListItem"
+    ],
     "notToBeConfusedWith": null,
     "useFor": null,
     "notes": "Rail-child form: inset one step under its section heading.",
@@ -22598,7 +22614,9 @@
     "dataProps": "CashflowScrubChartDataProps",
     "summary": "StillCashflowScrubChart — the chart that draws its FINAL FRAME AT ONCE, on mount and on every data change (`yFitTransition: false`, `expandTransition: false`).",
     "summarySource": "jsdoc",
-    "preferFirst": null,
+    "preferFirst": [
+      "ScrubChart"
+    ],
     "notToBeConfusedWith": null,
     "useFor": null,
     "notes": "StillCashflowScrubChart — the chart that draws its FINAL FRAME AT ONCE, on mount and on every data change (`yFitTransition: false`, `expandTransition: false`). The default chart eases its fitted y-axis toward each new domain over 240ms, which a reader who PANS wants: the domain moves on every frame and an axis that snapped would flicker. A reader who switches between TABS does not: the chart mounts on one series, the page's fold lands a frame later, and the axis glides between the two while the line redraws under it — so whether anything actually changed is hidden inside the motion (Peter, 2026-09-22: \"distracting, and makes it harder to determine if anything has changed when I change tabs\"). The variant is the additive answer: `CashflowScrubChart` keeps its ease for the panning pages, and a page whose question is \"what changed?\" takes this one.",
