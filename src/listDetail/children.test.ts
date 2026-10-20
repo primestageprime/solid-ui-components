@@ -64,7 +64,10 @@ describe("defineChildren", () => {
     );
     expect(
       phases.progress(project(phase("a", "over"), phase("b", "idle"))),
-    ).toEqual({ done: 1, total: 2 });
+    ).toEqual({ done: 1, active: 0, total: 2 });
+    expect(
+      phases.progress(project(phase("a", "over"), phase("b", "live"), phase("c", "idle"))),
+    ).toEqual({ done: 1, active: 1, total: 3 });
   });
 
   it("bucketOf returns the first matching bucket's id from app-supplied buckets, else undefined", () => {

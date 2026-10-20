@@ -124,10 +124,11 @@ export function defineChildren<K extends string, F extends string = "focus">(
 
   const progress = <P extends ChildParent<K, F>>(
     p: P,
-  ): { done: number; total: number } => {
+  ): { done: number; active: number; total: number } => {
     const cs = list(p);
     return {
       done: filter((c) => c.status === status.complete, cs).length,
+      active: filter((c) => c.status === status.current, cs).length,
       total: cs.length,
     };
   };

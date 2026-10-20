@@ -60,12 +60,43 @@ export const lanesOf = <N extends { size: FlowNodeSpec["size"] }>(nodes: N[]) =>
   };
 };
 
-const Arrow: Component<{ direction: "down" | "right"; label?: string }> = (props) => (
-  <div class={`sui-sequence-flow__edge sui-sequence-flow__edge--${props.direction}`}>
+const Arrow: Component<{ label?: string }> = (props) => (
+  <div class="sui-sequence-flow__edge sui-sequence-flow__edge--down">
     <svg class="sui-sequence-flow__arrow" viewBox="0 0 24 24" aria-hidden="true">
-      <Show when={props.direction === "down"} fallback={<path d="M2 12h18m-5-5 5 5-5 5" />}>
-        <path d="M12 2v18m-5-5 5 5 5-5" />
-      </Show>
+      <path d="M12 2v18m-5-5 5 5 5-5" />
+    </svg>
+    <Show when={props.label}>
+      <Text as="span" class="sui-sequence-flow__edge-label">
+        {props.label}
+      </Text>
+    </Show>
+  </div>
+);
+
+/** The connector leaving a lane: out of the bottom of its last node, curving right into the next lane. The
+ *  curve is a stretched cubic (it spans half the lane plus the gutter), the arrowhead a fixed glyph at its end. */
+const OutEdge: Component<{ label?: string }> = (props) => (
+  <div class="sui-sequence-flow__edge sui-sequence-flow__edge--out" aria-hidden="true">
+    <svg class="sui-sequence-flow__curve" viewBox="0 0 100 48" preserveAspectRatio="none">
+      <path d="M0 0 C0 30 6 40 30 40 L100 40" vector-effect="non-scaling-stroke" />
+    </svg>
+    <svg class="sui-sequence-flow__head" viewBox="0 0 10 10">
+      <path d="M1 1 L8 5 L1 9" />
+    </svg>
+    <Show when={props.label}>
+      <Text as="span" class="sui-sequence-flow__edge-label">
+        {props.label}
+      </Text>
+    </Show>
+  </div>
+);
+
+/** The connector arriving at a lane: out of the previous lane's side, curving up into the first node. */
+const InEdge: Component<{ label?: string }> = (props) => (
+  <div class="sui-sequence-flow__edge sui-sequence-flow__edge--in" aria-hidden="true">
+    <svg class="sui-sequence-flow__curve" viewBox="0 0 44 64">
+      <path d="M0 60 C20 60 22 10 36 10" />
+      <path d="M30 5 L37 10 L30 15" />
     </svg>
     <Show when={props.label}>
       <Text as="span" class="sui-sequence-flow__edge-label">
@@ -147,37 +178,28 @@ export const SequenceFlow: Component<SequenceFlowProps> = (props) => {
                 <>
                   {node(n)}
                   <Show when={i() < lanes().done.length - 1}>
-                    <Arrow direction="down" label={edgeAfter(n.id)} />
+                    <Arrow label={edgeAfter(n.id)} />
                   </Show>
                 </>
               )}
             </For>
+            <Show when={lanes().active || lanes().next.length > 0}>
+              <OutEdge label={edgeAfter(lanes().done[lanes().done.length - 1].id)} />
+            </Show>
           </div>
         </Show>
         <Show when={lanes().active}>
-          {(a) => (
-            <>
-              <Show when={lanes().done.length > 0}>
-                <Arrow direction="right" label={edgeAfter(lanes().done[lanes().done.length - 1].id)} />
-              </Show>
-              <div class="sui-sequence-flow__lane sui-sequence-flow__lane--active">{node(a())}</div>
-            </>
-          )}
+          {(a) => <div class="sui-sequence-flow__lane sui-sequence-flow__lane--active">{node(a())}</div>}
         </Show>
         <Show when={lanes().next.length > 0}>
-          <Show when={lanes().active || lanes().done.length > 0}>
-            <Arrow
-              direction="right"
-              label={edgeAfter((lanes().active ?? lanes().done[lanes().done.length - 1]).id)}
-            />
-          </Show>
           <div class="sui-sequence-flow__lane sui-sequence-flow__lane--next">
+            <Show when={lanes().active}>{(a) => <InEdge label={edgeAfter(a().id)} />}</Show>
             <For each={lanes().next}>
               {(n, i) => (
                 <>
                   {node(n)}
                   <Show when={i() < lanes().next.length - 1}>
-                    <Arrow direction="down" label={edgeAfter(n.id)} />
+                    <Arrow label={edgeAfter(n.id)} />
                   </Show>
                 </>
               )}
