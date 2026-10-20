@@ -53,7 +53,7 @@ export const score = (items, ranker) => {
 };
 
 const argv = process.argv.slice(2);
-const splits = ["tuning", "heldout"];
+const splits = ["tuning", "heldout", "authored"];
 const out = {};
 for (const split of splits) {
   const items = bench.filter((b) => b.split === split);
