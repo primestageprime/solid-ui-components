@@ -154,12 +154,13 @@ describe("ConfiguredCard", () => {
     const { container, getByText } = render(() => (
       <ConfiguredCard
         item={SEED[0]}
-        config={defineCard<Trip>({ layout: "row", title: (t) => t.title, marker: () => "warning", foot: { left: () => "2026-01-01", right: () => "27h" } })}
+        config={defineCard<Trip>({ layout: "row", title: (t) => t.title, marker: () => "warning", markerLabel: () => "Needs attention", foot: { left: () => "2026-01-01", right: () => "27h" } })}
       />
     ));
     expect(container.querySelector(".sui-configured-card__aside .sui-icon, .sui-configured-card__aside svg, .sui-configured-card__aside span")).toBeTruthy();
     expect(getByText("2026-01-01")).toBeTruthy();
     expect(getByText("27h")).toBeTruthy();
+    expect(container.querySelector('[aria-label="Needs attention"]')).toBeTruthy();
   });
 });
 

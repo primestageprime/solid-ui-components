@@ -10,6 +10,7 @@ import type {
   CardConfig,
   DetailConfig,
   DetailSection,
+  FlowNodeSpec,
   FlowSection,
   SideConfig,
   TableSection,
@@ -24,7 +25,8 @@ import { Icon } from "../Icon/Icon";
 import { BaselineSpreadRow, FillColumn, TightClusterRow, TightStack, TopSpreadRow } from "../Layout/variants";
 import { LogLineList } from "../LogLineList/LogLineList";
 import { HatchedProgressBar } from "../Progress/HatchedProgressBar";
-import { SequenceFlow, type SequenceNode } from "../SequenceFlow/SequenceFlow";
+import type { DAGEdge, DAGNode } from "../DagChart/types";
+import { createSwimlaneChart } from "../SwimlaneChart/SwimlaneChart";
 import { SectionTable } from "../Table/SectionTable";
 import { StatusCell } from "../Table/statusCells";
 import { CaptionLabel, SectionTitle } from "../Text/variants";
@@ -80,7 +82,9 @@ export function ConfiguredCard<T>(props: ConfiguredCardProps<T>) {
             <Show when={c().who || c().marker}>
               <span class="sui-configured-card__aside">
                 {c().who?.(props.item)}
-                <Show when={c().marker?.(props.item)}>{(m) => <Icon name={m()} size="sm" />}</Show>
+                <Show when={c().marker?.(props.item)}>
+                  {(m) => <Icon name={m()} size="sm" aria-label={c().markerLabel?.(props.item)} title={c().markerLabel?.(props.item)} />}
+                </Show>
               </span>
             </Show>
           }
@@ -142,11 +146,14 @@ function TableSectionView<T>(props: { section: TableSection<T, object>; item: T 
   );
 }
 
-/** The rows of a flow section as SequenceFlow nodes and edge labels. */
+/** One node of a flow section: the caller's spec plus the row's id. */
+export type FlowNode = FlowNodeSpec & { id: string };
+
+/** The rows of a flow section as nodes and the labels of the edges between consecutive rows. */
 export const flowNodesOf = <T,>(
   section: FlowSection<T, object>,
   item: T,
-): { nodes: SequenceNode[]; edgeLabels: (string | undefined)[] } => {
+): { nodes: FlowNode[]; edgeLabels: (string | undefined)[] } => {
   const rows = section.rowsOf(item);
   const nodes = map((r: object) => ({ ...section.nodeOf(r, item), id: (r as { id: string }).id }), rows);
   const edgeLabels = map(
@@ -156,24 +163,122 @@ export const flowNodesOf = <T,>(
   return { nodes, edgeLabels };
 };
 
+/** Flow nodes as a SwimlaneChart's DAG: one edge per consecutive pair, carrying its label. */
+export const flowEdgesOf = (nodes: FlowNode[], edgeLabels: (string | undefined)[]): DAGEdge[] =>
+  map(
+    (n: FlowNode, i: number) => ({ source: n.id, target: nodes[i + 1].id, label: edgeLabels[i] }),
+    nodes.slice(0, -1),
+  );
+
+/** The signed column of a flow node: done steps left of the centre, the active step at it, next ones right. */
+export const flowColumnOf = (n: FlowNodeSpec): number => (n.size === "done" ? -1 : n.size === "active" ? 0 : 1);
+
+// The flow's geometry, sized so three columns fit the centre panel of a 1280 px list-detail page beside
+// a wide log column (70 + 216 + 216 + 70 = 572 px): small step cards, a wide active card, a 36 px gutter.
+const FLOW_SIDE_SIZE: [number, number] = [140, 56];
+const FLOW_ACTIVE_SIZE: [number, number] = [220, 236];
+const FLOW_GUTTER = 36;
+const FLOW_ROW_GAP = 100;
+const FLOW_V_PAD = 24;
+const FLOW_COLUMN_GAP = (FLOW_ACTIVE_SIZE[0] + FLOW_SIDE_SIZE[0]) / 2 + FLOW_GUTTER;
+
+/** SwimlaneChart curried for a step flow: every node visible, columns at a fixed gap, stacked routing, no pan. */
+const StepFlowChart = createSwimlaneChart<FlowNode>({
+  maxDepth: 99,
+  responsiveCollapse: false,
+  fitColumns: false,
+  centerCol: 0,
+  columnGap: FLOW_COLUMN_GAP,
+  rowGap: FLOW_ROW_GAP,
+  nodeSize: (n: DAGNode<FlowNode>) => (n.data.size === "active" ? FLOW_ACTIVE_SIZE : FLOW_SIDE_SIZE),
+  interactive: false,
+  arrows: true,
+});
+
+/** The chart's height: the tallest column (a stack of small cards, or the active card) plus padding. */
+export const flowHeightOf = (nodes: FlowNode[]): number => {
+  const count = (size: FlowNodeSpec["size"]) => nodes.filter((n) => n.size === size).length;
+  const rows = Math.max(count("done"), count("next"), 1);
+  const stack = (rows - 1) * FLOW_ROW_GAP + FLOW_SIDE_SIZE[1];
+  return Math.max(stack, FLOW_ACTIVE_SIZE[1]) + 2 * FLOW_V_PAD;
+};
+
+/** One node card: label, and on the active node the description, estimate / actual, bar and action. */
+function FlowNodeCard(props: {
+  node: FlowNode;
+  selected: boolean;
+  estimateLabel: string;
+  actualLabel: string;
+  action?: JSX.Element;
+}) {
+  const n = () => props.node;
+  return (
+    <div class={`sui-flow-node sui-flow-node--${n().size}`} data-node-id={n().id} aria-selected={props.selected}>
+      <TightStack>
+        <span class="sui-flow-node__label" title={n().label}>
+          {n().label}
+        </span>
+        <Show when={n().size === "active" && n().description}>
+          <p class="sui-flow-node__description">{n().description}</p>
+        </Show>
+        <Show when={n().size === "active" && (n().estimate || n().actual)}>
+          <BaselineSpreadRow>
+            <span class="sui-flow-node__meta">{n().estimate ? `${props.estimateLabel} ${n().estimate}` : ""}</span>
+            <span class="sui-flow-node__meta">{n().actual ? `${props.actualLabel} ${n().actual}` : ""}</span>
+          </BaselineSpreadRow>
+        </Show>
+        <Show when={n().size === "next" && n().estimate}>
+          <span class="sui-flow-node__meta">{`${props.estimateLabel.toLowerCase()} ${n().estimate}`}</span>
+        </Show>
+        <Show when={n().size !== "next" && n().progress}>
+          {(p) => <HatchedProgressBar done={p().done} active={p().active} total={p().total} label={n().label} />}
+        </Show>
+        <Show when={n().size === "active" && props.action != null}>
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: click-isolation barrier so the action's click does not also select the node. */}
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents: onClick only stops propagation. */}
+          <div class="sui-flow-node__action" onClick={(e) => e.stopPropagation()}>
+            {props.action}
+          </div>
+        </Show>
+      </TightStack>
+    </div>
+  );
+}
+
 function FlowSectionView<T>(props: { section: FlowSection<T, object>; item: T; action?: JSX.Element }) {
   const s = () => props.section;
   const flow = () => flowNodesOf(s(), props.item);
+  const dagNodes = (): DAGNode<FlowNode>[] => map((n: FlowNode) => ({ id: n.id, data: n }), flow().nodes);
+  const dagEdges = (): DAGEdge[] => flowEdgesOf(flow().nodes, flow().edgeLabels);
+  const selectedId = () => s().selectedOf?.(props.item);
   return (
     <TightStack>
       <Show when={s().title}>
         <SectionTitle>{s().title}</SectionTitle>
       </Show>
-      <SequenceFlow
-        nodes={flow().nodes}
-        edgeLabels={flow().edgeLabels}
-        selectedId={s().selectedOf?.(props.item)}
-        onSelect={(id) => s().onSelect?.(props.item, id)}
-        estimateLabel={s().estimateLabel}
-        actualLabel={s().actualLabel}
-        emptyLabel={s().emptyLabel}
-        action={props.action}
-      />
+      <Show
+        when={flow().nodes.length > 0}
+        fallback={<span class="sui-flow-node__empty">{s().emptyLabel ?? "Nothing yet"}</span>}
+      >
+        <div class="sui-configured-flow" style={{ height: `${flowHeightOf(flow().nodes)}px` }}>
+          <StepFlowChart
+            nodes={dagNodes()}
+            edges={dagEdges()}
+            swimlaneFor={(n) => flowColumnOf(n.data)}
+            routingStyle="stacked"
+            onNodeClick={(id) => s().onSelect?.(props.item, id)}
+            renderNode={(n) => (
+              <FlowNodeCard
+                node={n.data}
+                selected={selectedId() === n.id}
+                estimateLabel={s().estimateLabel ?? "Est"}
+                actualLabel={s().actualLabel ?? "Act"}
+                action={n.data.size === "active" ? props.action : undefined}
+              />
+            )}
+          />
+        </div>
+      </Show>
     </TightStack>
   );
 }

@@ -42,6 +42,8 @@ export type CardConfig<T> = {
   when?: (item: T) => string | number | Date;
   /** `layout: "row"` only: an icon at the right of line 1 (a warning triangle on an item that needs attention); undefined for none. */
   marker?: (item: T) => IconName | undefined;
+  /** The marker's accessible name ("Has incident"); without it the glyph's name is read out. */
+  markerLabel?: (item: T) => string;
   /** `layout: "row"` only: a muted second line, `left` text and `right` text spread apart (a date and a duration). Drawn under the progress bar when both are set. */
   foot?: { left?: (item: T) => string; right?: (item: T) => string };
 };
@@ -82,8 +84,9 @@ export type FlowNodeSpec = {
   progress?: Progress;
 };
 
-/** The selected item's children as a sequence flow (SequenceFlow): done nodes, the active node, the next ones,
- *  with a label on each edge. The primary action can sit on the active node (`DetailConfig.action.placement`). */
+/** The selected item's children as a step flow (a SwimlaneChart: done nodes stacked left, the active node large at
+ *  the centre, the next ones right, a label on each edge). The primary action can sit on the active node
+ *  (`DetailConfig.action.placement`). */
 export type FlowSection<T, R> = {
   kind: "flow";
   /** Optional heading; omit for a bare flow. */
