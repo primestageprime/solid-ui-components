@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.231.0 — 2026-10-20
+
 ### Added
 
 - **`RowCard`** (Composite, Depth 2) and **`HatchedProgressBar`** (Atomic, Depth 1) — a full-width list row (name, short aside, optional bar slot) and a thin two-tone bar whose done share is solid and whose in-progress share is hatched. `CardConfig.layout "row"`, `CardConfig.progress`, `CardConfig.markerLabel` (the row marker's accessible name) and `defineChildren.progress()` returning `{ done, active, total }` feed them from the list-detail kit with no app change.

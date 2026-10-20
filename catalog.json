@@ -11219,7 +11219,7 @@
     "useFor": null,
     "notes": "EqualRow — a flush row whose children each take an EQUAL share of the width (no gap, flex: 1 1 0): a toolbar of two buttons that reads as one tight bar (the tasklist sketch's \"Oldest | Create\", 2026-10-20).",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.231.0",
     "file": "src/components/Layout/variants.ts",
     "line": 168
   },
@@ -13364,7 +13364,7 @@
     "useFor": "a progress line under a list row or a flow node.",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.231.0",
     "file": "src/components/Progress/HatchedProgressBar.tsx",
     "line": 30
   },
@@ -19466,7 +19466,7 @@
     "useFor": "full-width rows in a rail.",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.231.0",
     "file": "src/components/Card/RowCard.tsx",
     "line": 26
   },
@@ -24957,7 +24957,7 @@
     "useFor": null,
     "notes": "TwoUpGrid — WideCardGrid for LARGE tiles: cells at least 560px, so a wide centre panel holds two charts side by side and a narrower one stacks them (`min(100%, …)` keeps a phone from overflowing). The two-column chart page of the databrowser sketch (2026-10-20).",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.231.0",
     "file": "src/components/Layout/variants.ts",
     "line": 974
   },
