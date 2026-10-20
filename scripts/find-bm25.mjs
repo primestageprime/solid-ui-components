@@ -38,7 +38,8 @@ export function buildBm25(records, { k1 = 1.2, b = 0.75 } = {}) {
     for (const t of m.keys()) df.set(t, (df.get(t) ?? 0) + 1);
     return m;
   });
-  const idf = (t) => Math.log(1 + (N - (df.get(t) ?? 0) + 0.5) / ((df.get(t) ?? 0) + 0.5));
+  const idf = (t) =>
+    Math.log(1 + (N - (df.get(t) ?? 0) + 0.5) / ((df.get(t) ?? 0) + 0.5));
   return {
     rank(need, top = 10) {
       const q = [...new Set(tokenize(readNeed(need)).map(stem))];
@@ -48,26 +49,50 @@ export function buildBm25(records, { k1 = 1.2, b = 0.75 } = {}) {
         for (const t of q) {
           const f = tf[i].get(t) ?? 0;
           if (!f) continue;
-          s += idf(t) * ((f * (k1 + 1)) / (f + k1 * (1 - b + (b * dl) / avgdl)));
+          s +=
+            idf(t) * ((f * (k1 + 1)) / (f + k1 * (1 - b + (b * dl) / avgdl)));
         }
         return { record: r, score: Math.round(s * 100) / 100 };
       });
       return scored
         .filter((x) => x.score > 0)
-        .sort((a, c) => c.score - a.score || (c.record.depth ?? -1) - (a.record.depth ?? -1) || a.record.name.localeCompare(c.record.name))
+        .sort(
+          (a, c) =>
+            c.score - a.score ||
+            (c.record.depth ?? -1) - (a.record.depth ?? -1) ||
+            a.record.name.localeCompare(c.record.name),
+        )
         .slice(0, top);
     },
   };
 }
 
-const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+const isMain =
+  process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
   const argv = process.argv.slice(2);
   const topIdx = argv.indexOf("--top");
   const top = topIdx !== -1 ? Number(argv[topIdx + 1]) : 5;
-  const query = argv.filter((a, i) => !a.startsWith("--") && i !== topIdx + 1).join(" ");
+  const query = argv
+    .filter((a, i) => !a.startsWith("--") && i !== topIdx + 1)
+    .join(" ");
   const records = JSON.parse(readFileSync(join(root, "catalog.json"), "utf8"));
   const ranked = buildBm25(records).rank(query, top);
-  if (argv.includes("--json")) console.log(JSON.stringify(ranked.map((x) => ({ name: x.record.name, depth: x.record.depth, score: x.score })), null, 2));
-  else for (const [i, x] of ranked.entries()) console.log(`${i + 1}. ${x.record.name} (${x.record.depth ?? "?"}) ${x.score}`);
+  if (argv.includes("--json"))
+    console.log(
+      JSON.stringify(
+        ranked.map((x) => ({
+          name: x.record.name,
+          depth: x.record.depth,
+          score: x.score,
+        })),
+        null,
+        2,
+      ),
+    );
+  else
+    for (const [i, x] of ranked.entries())
+      console.log(
+        `${i + 1}. ${x.record.name} (${x.record.depth ?? "?"}) ${x.score}`,
+      );
 }
