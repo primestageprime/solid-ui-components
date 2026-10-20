@@ -13,7 +13,7 @@
 // chip lists with <Index> or stable keys, not <For> over rebuilt objects
 // (a remount resets the roller's history and it mounts static).
 // ============================================
-import { type Component, type JSX, splitProps } from "solid-js";
+import { type Component, type JSX, Show, splitProps } from "solid-js";
 import { DigitRoller } from "../DataDisplay/DigitRoller";
 import "./CountChip.css";
 
@@ -39,9 +39,11 @@ export const CountChip: Component<CountChipProps> = (props) => {
     "class",
   ]);
   const isActive = () => local.active ?? local.count > 0;
+  const bare = () => local.label === "";
   const cls = () => {
     const c = ["sui-count-chip"];
     if (isActive()) c.push("sui-count-chip--active");
+    if (bare()) c.push("sui-count-chip--bare");
     if (local.class) c.push(local.class);
     return c.join(" ");
   };
@@ -52,7 +54,9 @@ export const CountChip: Component<CountChipProps> = (props) => {
           value={local.grouped ? local.count.toLocaleString(local.locale) : String(local.count)}
         />
       </span>
-      <span class="sui-count-chip__label">{local.label}</span>
+      <Show when={!bare()}>
+        <span class="sui-count-chip__label">{local.label}</span>
+      </Show>
     </span>
   );
 };

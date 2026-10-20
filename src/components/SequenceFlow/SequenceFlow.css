@@ -99,8 +99,9 @@
   color: var(--sui-text-secondary);
 }
 
+/* In-lane arrows centre under the node cards (Peter, 2026-10-20). */
 .sui-sequence-flow__edge--down {
-  padding-left: 24px;
+  justify-content: center;
   height: 28px;
 }
 

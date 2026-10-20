@@ -45,7 +45,9 @@
 }
 /* Fitted editor: a hidden replica of the draft text sizes the grid cell, so the
    input is exactly as wide as its content (same font, live per keystroke). */
+/* An empty draft (a just-created item) still gets a visible, focusable field. */
 .sui-editable-title__editor {
+  min-width: 8ch;
   display: inline-grid;
   align-items: center;
   max-width: 100%;
