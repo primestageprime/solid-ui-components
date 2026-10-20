@@ -2878,7 +2878,7 @@
     "useFor": null,
     "notes": "One item in the rail, drawn from a CardConfig.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
     "line": 57
   },
@@ -2897,7 +2897,7 @@
     "useFor": null,
     "notes": "The centre panel for the selected item, drawn from a DetailConfig.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
     "line": 100
   },
@@ -2916,7 +2916,7 @@
     "useFor": null,
     "notes": "The right panel: the time + text log of the selected item, drawn from a SideConfig.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
     "line": 163
   },
@@ -9290,7 +9290,7 @@
     "useFor": "any grouped, collapsible, selectable rail.",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.230.0",
     "file": "src/components/GroupedSelector/GroupedSelector.tsx",
     "line": 55
   },
@@ -11277,7 +11277,7 @@
     "useFor": null,
     "notes": "@deprecated Use `<ListDetailThreePanel rightWidth=\"wide\" />`: width is configuration on the one list-and-detail variant, not a content-named variant. Same geometry; kept exported until nothing imports it. List-and-detail page whose right panel is a time + text log: 320 left, right 28vw clamped 320..440.",
     "showcase": "#/three-panel-layout",
-    "since": "Unreleased",
+    "since": "0.230.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 91
   },
@@ -11353,7 +11353,7 @@
     "useFor": null,
     "notes": "The Localization settings tab body: a locale choice and a 12-hour toggle, on the persisted stub model or the caller's `value` + `onChange`.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.230.0",
     "file": "src/components/SettingsTabs/SettingsTabs.tsx",
     "line": 34
   },
@@ -11372,7 +11372,7 @@
     "useFor": null,
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.230.0",
     "file": "src/components/LogLineList/LogLineList.tsx",
     "line": 52
   },
@@ -14928,7 +14928,7 @@
     "useFor": null,
     "notes": "The Sharing settings tab body: who can open it and an allow-edit toggle, on the persisted stub model or the caller's `value` + `onChange`.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.230.0",
     "file": "src/components/SettingsTabs/SettingsTabs.tsx",
     "line": 63
   },

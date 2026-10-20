@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.230.0 — 2026-10-20
+
 ### Added
 
 - **List-detail kit typing (gen16)** — `defineChildren().child(id, extra)` is typed by where it lands (the item's own child type, so optional stamps need no `| null` and no cast); exported `ChildrenPatch`, `FocusPatch`, `ChildOf` type the `advance`/`select`/`cycle` patches (assignable to `Partial<item>`); `pickBucket` replaces `bucketOf` (kept as a deprecated alias); `dateTimeCol`/`dateCol`/`dateTimeColWith` readers may return `undefined`; the root also exports `defineCard`, `defineDetail`, `defineSide`, `tableSection` and their config types (still on `/unstable`), so a view-config file imports the builders and the column helpers from one path.
