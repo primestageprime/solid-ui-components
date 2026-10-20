@@ -31,7 +31,7 @@ BucketQueue (1) list count status ~select ~collapse =grouped =enum @rail — a c
 BuilderBoard (2) chart table field ~edit ~view =schedule =time-series @panel — Composite (Depth 2).
 BulkActionBar (2) button count toolbar ~bulk ~multi-select ~submit =list @toolbar — one-row multi-select bulk actions over a grid (e.g.
 BurndownChart (2) chart bar ~hover ~view =time-series =multi-series @panel — sprint burndown tracking, planned vs actual visualization.
-CandlestickRenderer (1) chart mark ~view =time-series =range @slot — price/metric candles, bucket-aggregated statistics (where min/max/avg + open/clo
+CandlestickRenderer (1) mark ~view =time-series =range @slot — price/metric candles, bucket-aggregated statistics (where min/max/avg + open/clo
 CashflowScrubChart (3) chart axis money ~zoom ~drag ~hover =time-series =multi-series @panel — cashflow / coffers visualisations that need both per-day detail (the axis ribbon
 Cell (0) table text ~view =table @cell — building custom table layouts.
 CellRow (0) table text ~view =table @cell — rows in CellTable.

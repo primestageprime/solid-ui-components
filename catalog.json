@@ -1881,7 +1881,6 @@
     "kind": "primitive",
     "family": "CandlestickRenderer",
     "tags": [
-      "shows:chart",
       "shows:mark",
       "does:view",
       "data:time-series",
