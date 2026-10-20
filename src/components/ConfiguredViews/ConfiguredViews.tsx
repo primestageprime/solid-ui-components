@@ -20,7 +20,8 @@ import { StatusCard } from "../Card/StatusCard";
 import { EditableTitle } from "../EditableTitle/EditableTitle";
 import { MutedEmptyState } from "../Feedback/variants";
 import { HotkeyButton } from "../HotkeyButton/HotkeyButton";
-import { FillColumn, TightStack, TopSpreadRow } from "../Layout/variants";
+import { Icon } from "../Icon/Icon";
+import { BaselineSpreadRow, FillColumn, TightClusterRow, TightStack, TopSpreadRow } from "../Layout/variants";
 import { LogLineList } from "../LogLineList/LogLineList";
 import { HatchedProgressBar } from "../Progress/HatchedProgressBar";
 import { SequenceFlow, type SequenceNode } from "../SequenceFlow/SequenceFlow";
@@ -75,11 +76,28 @@ export function ConfiguredCard<T>(props: ConfiguredCardProps<T>) {
       fallback={
         <RowCard
           name={c().title(props.item)}
-          aside={c().who?.(props.item)}
-          bar={
-            <Show when={underway() ? progress() : undefined}>
-              {(p) => <HatchedProgressBar done={p().done} active={p().active} total={p().total} label={c().title(props.item)} />}
+          aside={
+            <Show when={c().who || c().marker}>
+              <span class="sui-configured-card__aside">
+                {c().who?.(props.item)}
+                <Show when={c().marker?.(props.item)}>{(m) => <Icon name={m()} size="sm" />}</Show>
+              </span>
             </Show>
+          }
+          bar={
+            <>
+              <Show when={underway() ? progress() : undefined}>
+                {(p) => <HatchedProgressBar done={p().done} active={p().active} total={p().total} label={c().title(props.item)} />}
+              </Show>
+              <Show when={c().foot}>
+                {(f) => (
+                  <BaselineSpreadRow class="sui-configured-card__foot">
+                    <span>{f().left?.(props.item)}</span>
+                    <span>{f().right?.(props.item)}</span>
+                  </BaselineSpreadRow>
+                )}
+              </Show>
+            </>
           }
         />
       }
@@ -178,6 +196,7 @@ export function ConfiguredDetail<T extends ListItem>(
   const c = () => props.config;
   const selected = (): T | undefined => selectedOf(props.kit);
   const onActiveNode = () => c().action?.placement === "activeNode";
+  const onToolbar = () => c().action?.placement === "toolbar";
   const firstFlow = () => findIndex((s: DetailSection<T>) => s.kind === "flow", c().sections);
   const actionButton = () => (
     <Show when={c().action}>
@@ -186,13 +205,27 @@ export function ConfiguredDetail<T extends ListItem>(
           hotkey={a().hotkey}
           icon={a().icon}
           armed={false}
-          casing={onActiveNode() ? "normal" : undefined}
+          size={onToolbar() ? "sm" : undefined}
+          casing={onActiveNode() || onToolbar() ? "normal" : undefined}
           onTrigger={() => props.kit.actions.primary()}
         >
           {a().label}
         </HotkeyButton>
       )}
     </Show>
+  );
+  /** The ruled toolbar row: the primary button, then the caller's extra actions, compact and normal-case. */
+  const toolbar = (item: T) => (
+    <TightClusterRow class="sui-configured-detail__toolbar">
+      {actionButton()}
+      <For each={c().actions ?? []}>
+        {(a) => (
+          <HotkeyButton hotkey={a.hotkey} icon={a.icon} armed={false} size="sm" casing="normal" onTrigger={() => a.onTrigger(item)}>
+            {a.label}
+          </HotkeyButton>
+        )}
+      </For>
+    </TightClusterRow>
   );
   return (
     <Show
@@ -220,15 +253,25 @@ export function ConfiguredDetail<T extends ListItem>(
                   }
                 />
               </Show>
+              <Show when={c().subtitle?.(item())}>{(s) => <span class="sui-configured-detail__subtitle">{s()}</span>}</Show>
               <Show when={c().chip?.(item())}>{(chip) => <TagPill tag={{ label: chip() }} />}</Show>
             </TopSpreadRow>
+            <Show when={c().summary?.(item())}>
+              {(s) => (
+                <TightClusterRow class={`sui-configured-detail__summary${s().variant ? ` sui-configured-detail__summary--${s().variant}` : ""}`}>
+                  <Show when={s().icon}>{(i) => <Icon name={i()} size="sm" />}</Show>
+                  <span>{s().text}</span>
+                </TightClusterRow>
+              )}
+            </Show>
             <For each={c().facts ?? []}>
               {(f) => (
                 <CaptionLabel>{`${f.label}: ${f.of(item())}`}</CaptionLabel>
               )}
             </For>
-            <Show when={!onActiveNode()}>{actionButton()}</Show>
+            <Show when={!onActiveNode() && !onToolbar()}>{actionButton()}</Show>
           </TightStack>
+          <Show when={onToolbar()}>{toolbar(item())}</Show>
           <For each={c().sections}>
             {(s, i) => (
               <Section

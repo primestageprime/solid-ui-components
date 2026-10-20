@@ -67,6 +67,8 @@ export interface ChartProps {
    * for the caller to measure the container. Default false (fixed pixel size).
    */
   responsive?: boolean;
+  /** Where the title sits: `center` (default) or `start`, flush left over the plot like a tile heading. Additive. */
+  titleAlign?: "center" | "start";
   class?: string;
   style?: JSX.CSSProperties | string;
   children?: JSX.Element;
@@ -132,6 +134,7 @@ export const Chart: Component<ChartProps> = (props) => {
     "margin",
     "annotationLaneHeight",
     "title",
+    "titleAlign",
     "responsive",
     "class",
     "style",
@@ -369,7 +372,7 @@ export const Chart: Component<ChartProps> = (props) => {
         style={local.style as JSX.CSSProperties}
       >
         <Show when={local.title}>
-          <div class="sui-chart__title">{local.title}</div>
+          <div class={`sui-chart__title${local.titleAlign === "start" ? " sui-chart__title--start" : ""}`}>{local.title}</div>
         </Show>
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: a picked x on a
             continuous plot has no keyboard analogue at this altitude — there

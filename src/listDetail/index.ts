@@ -48,7 +48,9 @@ export { defineCard, defineDetail, defineSide, flowSection, tableSection } from 
 export type {
   CardConfig,
   CardLayout,
+  DetailAction,
   DetailConfig,
+  DetailSummary,
   DetailSection,
   FlowNodeSpec,
   FlowSection,

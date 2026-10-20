@@ -15,6 +15,7 @@
 // ============================================
 import { type Component, type JSX, Show, splitProps } from "solid-js";
 import { DigitRoller } from "../DataDisplay/DigitRoller";
+import { Icon, type IconName } from "../Icon/Icon";
 import "./CountChip.css";
 
 export interface CountChipProps extends JSX.HTMLAttributes<HTMLSpanElement> {
@@ -27,6 +28,8 @@ export interface CountChipProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   grouped?: boolean;
   /** BCP 47 locale for `grouped`. Default: the runtime's own locale. */
   locale?: string;
+  /** A glyph before the count (a warning triangle on a count of things that need attention). Additive: no icon, no change. */
+  icon?: IconName;
 }
 
 export const CountChip: Component<CountChipProps> = (props) => {
@@ -36,6 +39,7 @@ export const CountChip: Component<CountChipProps> = (props) => {
     "active",
     "grouped",
     "locale",
+    "icon",
     "class",
   ]);
   const isActive = () => local.active ?? local.count > 0;
@@ -49,6 +53,7 @@ export const CountChip: Component<CountChipProps> = (props) => {
   };
   return (
     <span class={cls()} {...others}>
+      <Show when={local.icon}>{(i) => <Icon name={i()} size="xs" class="sui-count-chip__icon" />}</Show>
       <span class="sui-count-chip__count">
         <DigitRoller
           value={local.grouped ? local.count.toLocaleString(local.locale) : String(local.count)}

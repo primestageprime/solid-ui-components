@@ -23,7 +23,9 @@ export {
 export type {
   CardConfig,
   CardLayout,
+  DetailAction,
   DetailConfig,
+  DetailSummary,
   DetailSection,
   FlowNodeSpec,
   FlowSection,

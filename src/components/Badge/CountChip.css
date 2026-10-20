@@ -35,3 +35,9 @@
   background: var(--sui-bg-elevated);
   color: var(--sui-text-primary, inherit);
 }
+
+/* The optional leading glyph sits on the count's centre line, not the baseline. */
+.sui-count-chip__icon {
+  align-self: center;
+  display: inline-flex;
+}

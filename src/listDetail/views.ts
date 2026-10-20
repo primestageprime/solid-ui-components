@@ -40,7 +40,22 @@ export type CardConfig<T> = {
   who?: (item: T) => string;
   /** An instant (ISO string, epoch ms or Date); shown as the time today, else the short date. */
   when?: (item: T) => string | number | Date;
+  /** `layout: "row"` only: an icon at the right of line 1 (a warning triangle on an item that needs attention); undefined for none. */
+  marker?: (item: T) => IconName | undefined;
+  /** `layout: "row"` only: a muted second line, `left` text and `right` text spread apart (a date and a duration). Drawn under the progress bar when both are set. */
+  foot?: { left?: (item: T) => string; right?: (item: T) => string };
 };
+
+/** A button in the detail's toolbar beside the primary one; it runs the caller's own action on the selected item. */
+export type DetailAction<T> = {
+  hotkey: string;
+  label: string;
+  icon?: IconName;
+  onTrigger: (item: T) => void;
+};
+
+/** A one-line reading of the selected item: an icon and a sentence ("Non-compliant, 1 incident"), coloured by `variant`. */
+export type DetailSummary = { text: string; icon?: IconName; variant?: StatusVariant };
 
 /** A table of rows derived from the selected item (its children), the selected row driven by the app. */
 export type TableSection<T, R> = {
@@ -98,10 +113,17 @@ export type DetailConfig<T> = {
   titleSize?: "md" | "lg";
   /** A short boxed chip at the title's right (an owner, a state). */
   chip?: (item: T) => string;
+  /** Muted text on the title line, after the title and before the chip (a range, a reference). */
+  subtitle?: (item: T) => string;
+  /** The line under the title: an icon and a sentence (a verdict and what drove it). */
+  summary?: (item: T) => DetailSummary | undefined;
   facts?: { label: string; of: (item: T) => string }[];
   /** A button that runs the kit's `primary` verb; its hotkey is bound by the app's key handlers (armed=false).
-   *  `placement: "activeNode"` moves it from under the title onto the active node of the first flow section. */
-  action?: { hotkey: string; label: string; icon?: IconName; placement?: "top" | "activeNode" };
+   *  `placement: "activeNode"` moves it from under the title onto the active node of the first flow section;
+   *  `placement: "toolbar"` draws it compact at the left of a ruled toolbar row, with `actions` beside it. */
+  action?: { hotkey: string; label: string; icon?: IconName; placement?: "top" | "activeNode" | "toolbar" };
+  /** More buttons in the toolbar row (`action.placement: "toolbar"`), after the primary one, each running the caller's own action. */
+  actions?: DetailAction<T>[];
   sections: DetailSection<T>[];
 };
 
