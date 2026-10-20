@@ -8703,7 +8703,7 @@
     "showcase": "#/three-panel-layout",
     "since": "0.228.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
-    "line": 59
+    "line": 78
   },
   {
     "name": "FocusLabelBand",
@@ -10553,7 +10553,7 @@
     "showcase": "#/three-panel-layout",
     "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
-    "line": 39
+    "line": 58
   },
   {
     "name": "IntCell",
@@ -11207,61 +11207,41 @@
   },
   {
     "name": "ListDetailLogThreePanel",
-    "depth": 1,
-    "kind": "variant",
+    "depth": null,
+    "kind": "primitive",
     "family": "ThreePanelLayout",
-    "variantOf": {
-      "factory": "createThreePanelLayout",
-      "overrides": "{\n    height: \"100%\",\n    leftPanelWidth: W.wideList,\n    rightPanelWidth: W.logContext,\n    rightPanelFlush: true,\n    asideMaxHeight: \"none\",\n  }"
-    },
-    "overrides": [
-      "height",
-      "fullHeight",
-      "leftPanelWidth",
-      "rightPanelWidth",
-      "asideMaxHeight",
-      "rightPanelFlush"
-    ],
-    "dataProps": "ThreePanelLayoutDataProps",
-    "summary": "List-and-detail page whose right panel is a time + text log: 320 left, right 28vw clamped 320..440 with its padding dropped (`rightPanelFlush`, so a table's row lines run edge to edge) and stacked asides uncapped at phone widths.",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "@deprecated Use `<ListDetailThreePanel rightWidth=\"wide\" />`: width is configuration on the one list-and-detail variant, not a content-named variant.",
     "summarySource": "jsdoc",
     "preferFirst": null,
     "notToBeConfusedWith": null,
     "useFor": null,
-    "notes": "List-and-detail page whose right panel is a time + text log: 320 left, right 28vw clamped 320..440 with its padding dropped (`rightPanelFlush`, so a table's row lines run edge to edge) and stacked asides uncapped at phone widths. The list-detail standard's one layout (canon/standards/list-detail/v2).",
+    "notes": "@deprecated Use `<ListDetailThreePanel rightWidth=\"wide\" />`: width is configuration on the one list-and-detail variant, not a content-named variant. Same geometry; kept exported until nothing imports it. List-and-detail page whose right panel is a time + text log: 320 left, right 28vw clamped 320..440.",
     "showcase": "#/three-panel-layout",
     "since": "Unreleased",
     "file": "src/components/ThreePanelLayout/variants.tsx",
-    "line": 71
+    "line": 91
   },
   {
     "name": "ListDetailThreePanel",
-    "depth": 1,
-    "kind": "variant",
+    "depth": null,
+    "kind": "primitive",
     "family": "ThreePanelLayout",
-    "variantOf": {
-      "factory": "createThreePanelLayout",
-      "overrides": "{\n    height: \"100%\",\n    leftPanelWidth: W.wideList,\n    rightPanelWidth: W.context,\n  }"
-    },
-    "overrides": [
-      "height",
-      "fullHeight",
-      "leftPanelWidth",
-      "rightPanelWidth",
-      "asideMaxHeight",
-      "rightPanelFlush"
-    ],
-    "dataProps": "ThreePanelLayoutDataProps",
-    "summary": "List-and-detail page with a wide left column: 320 left, 240 right.",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "List-and-detail page with a wide left column: 320 left, right 240 (`rightWidth=\"narrow\"`, the default) or a wide log column (`rightWidth=\"wide\"`: `clamp(320px, 28vw, 440px)`, right panel flush, stacked asides uncapped).",
     "summarySource": "jsdoc",
     "preferFirst": null,
     "notToBeConfusedWith": null,
     "useFor": null,
-    "notes": "List-and-detail page with a wide left column: 320 left, 240 right. Replaces jtf silver-explorer, metric-sleuth; dside TriageView (left only).",
+    "notes": "List-and-detail page with a wide left column: 320 left, right 240 (`rightWidth=\"narrow\"`, the default) or a wide log column (`rightWidth=\"wide\"`: `clamp(320px, 28vw, 440px)`, right panel flush, stacked asides uncapped). Replaces jtf silver-explorer, metric-sleuth; dside TriageView (left only).",
     "showcase": "#/three-panel-layout",
     "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
-    "line": 30
+    "line": 40
   },
   {
     "name": "ListItem",
@@ -11337,7 +11317,7 @@
     "showcase": null,
     "since": "Unreleased",
     "file": "src/components/LogLineList/LogLineList.tsx",
-    "line": 35
+    "line": 52
   },
   {
     "name": "LongTextCell",
@@ -15799,7 +15779,7 @@
     "showcase": "#/three-panel-layout",
     "since": "0.223.0",
     "file": "src/components/ThreePanelLayout/variants.tsx",
-    "line": 48
+    "line": 67
   },
   {
     "name": "SpreadRow",

@@ -10,8 +10,8 @@
 // every consumer. It is never a call-site prop. An agent asked to "make the
 // left column wider" asks which of the two before editing.
 // ============================================
-import type { Component } from "solid-js";
-import { createThreePanelLayout } from "./ThreePanelLayout";
+import { type Component, mergeProps, splitProps } from "solid-js";
+import { createThreePanelLayout, ThreePanelLayout } from "./ThreePanelLayout";
 import type { ThreePanelLayoutDataProps } from "./ThreePanelLayout";
 import { THREE_PANEL_ASIDE_WIDTH as W } from "./tokens";
 
@@ -25,14 +25,33 @@ export const StandardThreePanel: Component<ThreePanelLayoutDataProps> =
     rightPanelWidth: W.context,
   });
 
-/** List-and-detail page with a wide left column: 320 left, 240 right.
+/** How wide the right panel of `ListDetailThreePanel` is: `narrow` is the 240 context pane, `wide` a
+ *  time + text log column (`clamp(320px, 28vw, 440px)`, panel padding dropped, stacked asides uncapped). */
+export type ListDetailRightWidth = "narrow" | "wide";
+
+export interface ListDetailThreePanelProps extends ThreePanelLayoutDataProps {
+  /** Right panel width as configuration, not a new variant: `narrow` (default, 240) or `wide` (a log column). */
+  rightWidth?: ListDetailRightWidth;
+}
+
+/** List-and-detail page with a wide left column: 320 left, right 240 (`rightWidth="narrow"`, the default)
+ *  or a wide log column (`rightWidth="wide"`: `clamp(320px, 28vw, 440px)`, right panel flush, stacked asides uncapped).
  *  Replaces jtf silver-explorer, metric-sleuth; dside TriageView (left only). */
-export const ListDetailThreePanel: Component<ThreePanelLayoutDataProps> =
-  createThreePanelLayout({
-    height: "100%",
-    leftPanelWidth: W.wideList,
-    rightPanelWidth: W.context,
-  });
+export const ListDetailThreePanel: Component<ListDetailThreePanelProps> = (props) => {
+  const [own, rest] = splitProps(props, ["rightWidth"]);
+  const wide = () => own.rightWidth === "wide";
+  return (
+    <ThreePanelLayout
+      {...mergeProps(rest, {
+        height: "100%",
+        leftPanelWidth: W.wideList,
+        get rightPanelWidth() { return wide() ? W.logContext : W.context; },
+        get rightPanelFlush() { return wide(); },
+        get asideMaxHeight() { return wide() ? "none" : undefined; },
+      })}
+    />
+  );
+};
 
 /** Page with a wide right inspector: 220 left rail, 320 right.
  *  Replaces thorcasting CoverageTab. */
@@ -64,15 +83,11 @@ export const FluidListDetailThreePanel: Component<ThreePanelLayoutDataProps> =
     asideMaxHeight: "none",
   });
 
-/** List-and-detail page whose right panel is a time + text log: 320 left, right
- *  28vw clamped 320..440 with its padding dropped (`rightPanelFlush`, so a table's
- *  row lines run edge to edge) and stacked asides uncapped at phone widths.
- *  The list-detail standard's one layout (canon/standards/list-detail/v2). */
-export const ListDetailLogThreePanel: Component<ThreePanelLayoutDataProps> =
-  createThreePanelLayout({
-    height: "100%",
-    leftPanelWidth: W.wideList,
-    rightPanelWidth: W.logContext,
-    rightPanelFlush: true,
-    asideMaxHeight: "none",
-  });
+/**
+ * @deprecated Use `<ListDetailThreePanel rightWidth="wide" />`: width is configuration on the one list-and-detail
+ * variant, not a content-named variant. Same geometry; kept exported until nothing imports it.
+ * List-and-detail page whose right panel is a time + text log: 320 left, right 28vw clamped 320..440.
+ */
+export const ListDetailLogThreePanel: Component<ThreePanelLayoutDataProps> = (props) => (
+  <ListDetailThreePanel {...props} rightWidth="wide" />
+);

@@ -8217,5 +8217,362 @@
         }
       }
     }
+  },
+  {
+    "at": "2026-10-20T05:34:46.338Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 12,
+      "collectionMethodCalls": 44,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T05:35:38.913Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 32,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T05:36:37.609Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T07:17:34.940Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 8,
+      "collectionMethodCalls": 34,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T07:19:16.907Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T07:33:31.578Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 1,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 2
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T07:34:05.899Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
   }
 ]

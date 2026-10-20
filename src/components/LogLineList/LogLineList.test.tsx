@@ -42,4 +42,25 @@ describe("LogLineList", () => {
     fireEvent.click(getByText("started"));
     expect(onSelect).toHaveBeenCalledWith("1");
   });
+
+  it("formats an instant as the time of day by default, narrow-safe", () => {
+    const at = new Date(2026, 9, 20, 14, 5, 9);
+    const { getByText } = render(() => (
+      <LogLineList rows={[{ id: "1", at: at.toISOString(), msg: "x" }]} instantOf={(r) => r.at} textOf={(r) => r.msg} locale="en-GB" />
+    ));
+    expect(getByText("14:05:09")).toBeTruthy();
+  });
+
+  it("date-time shows the date and widens the column; timeOf still wins", () => {
+    const at = new Date(2026, 9, 20, 14, 5, 9);
+    const { container, getByText } = render(() => (
+      <LogLineList rows={[{ id: "1", at: at.toISOString(), msg: "x" }]} instantOf={(r) => r.at} timeFormat="date-time" textOf={(r) => r.msg} locale="en-GB" />
+    ));
+    expect(getByText(/20 Oct/)).toBeTruthy();
+    expect(container.innerHTML).toContain("9rem");
+    const pre = render(() => (
+      <LogLineList rows={rows} timeOf={(r) => r.at} instantOf={() => 0} textOf={(r) => r.msg} />
+    ));
+    expect(pre.getByText("12:00:01")).toBeTruthy();
+  });
 });

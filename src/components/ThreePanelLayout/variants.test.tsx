@@ -59,4 +59,20 @@ describe("ThreePanelLayout curried variants", () => {
     const style = container.firstElementChild!.getAttribute("style") ?? "";
     expect(style).toContain(`${W.list} 1fr 0`);
   });
+
+  it("ListDetailThreePanel rightWidth defaults to narrow (240, capped) and wide is the log column", () => {
+    const style = (el: unknown) => (el as HTMLElement).getAttribute("style") ?? "";
+    const narrow = render(() => (
+      <ListDetailThreePanel leftPanel={<div>l</div>} centerPanel={<div>c</div>} rightPanel={<div>r</div>} />
+    ));
+    expect(style(narrow.container.firstElementChild)).toContain(`${W.wideList} 1fr ${W.context}`);
+    expect(style(narrow.container.firstElementChild)).toContain("--sui-three-panel-aside-max: 200px");
+    expect(narrow.container.querySelector(".sui-three-panel__right--flush")).toBeNull();
+    const wide = render(() => (
+      <ListDetailThreePanel rightWidth="wide" leftPanel={<div>l</div>} centerPanel={<div>c</div>} rightPanel={<div>r</div>} />
+    ));
+    expect(style(wide.container.firstElementChild)).toContain(`${W.wideList} 1fr ${W.logContext}`);
+    expect(style(wide.container.firstElementChild)).toContain("--sui-three-panel-aside-max: none");
+    expect(wide.container.querySelector(".sui-three-panel__right--flush")).not.toBeNull();
+  });
 });

@@ -10,11 +10,11 @@ widths (from `tokens.ts`) and full height. You pass only the panels.
 | Variant | Left / Right | Use for |
 |---|---|---|
 | `StandardThreePanel` | 260 / 240 | list, work area, context pane |
-| `ListDetailThreePanel` | 320 / 240 | list-and-detail with a wide left column |
+| `ListDetailThreePanel` | 320 / 240, or `rightWidth="wide"`: 320 / clamp(320px, 28vw, 440px), right panel flush, stacked asides uncapped | list-and-detail with a wide left column; `rightWidth` (`narrow` default, `wide`) is configuration, not a new variant |
 | `InspectorThreePanel` | 220 / 320 | work area with a wide right inspector |
 | `SplitThreePanel` | 560 / 240 | split view with a half-screen-class left pane |
 | `FluidListDetailThreePanel` | 22vw clamped 240..360 / 15vw clamped 180..260 | fluid list-and-detail; stacked asides uncapped at phone width |
-| `ListDetailLogThreePanel` | 320 / clamp(320px, 28vw, 440px), right panel flush | list-and-detail whose right panel is a time + text log; stacked asides uncapped |
+| `ListDetailLogThreePanel` | deprecated: `<ListDetailThreePanel rightWidth="wide" />` | kept exported until nothing imports it |
 
 ```tsx
 import { StandardThreePanel } from "solid-ui-components";
