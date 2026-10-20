@@ -30,7 +30,10 @@ import { buildBm25 } from "./find-bm25.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-export function candidateSet(need, { records, vocab, lexicon, bm25, embedCands = null, k = 20 }) {
+export function candidateSet(
+  need,
+  { records, vocab, lexicon, bm25, embedCands = null, k = 20 },
+) {
   const out = new Map();
   const add = (name, via, rank) => {
     if (!out.has(name)) out.set(name, { name, via: [], bestRank: rank });
@@ -38,10 +41,15 @@ export function candidateSet(need, { records, vocab, lexicon, bm25, embedCands =
     o.via.push(via);
     o.bestRank = Math.min(o.bestRank, rank);
   };
-  find(need, { records, vocab, lexicon, top: k }).results.forEach((r, i) => add(r.name, "tags", i));
+  find(need, { records, vocab, lexicon, top: k }).results.forEach((r, i) =>
+    add(r.name, "tags", i),
+  );
   bm25.rank(need, k).forEach((r, i) => add(r.record.name, "bm25", i));
-  if (embedCands) embedCands.slice(0, k).forEach((c, i) => add(c.split(" ")[0], "minilm", i));
-  return [...out.values()].sort((a, b) => a.bestRank - b.bestRank || b.via.length - a.via.length);
+  if (embedCands)
+    embedCands.slice(0, k).forEach((c, i) => add(c.split(" ")[0], "minilm", i));
+  return [...out.values()].sort(
+    (a, b) => a.bestRank - b.bestRank || b.via.length - a.via.length,
+  );
 }
 
 export const entryFor = (record, componentsMd) => {
@@ -50,7 +58,8 @@ export const entryFor = (record, componentsMd) => {
   return text.replace(/\s+/g, " ").slice(0, 700);
 };
 
-const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+const isMain =
+  process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
   const argv = process.argv.slice(2);
   const opt = (name, dflt) => {
@@ -67,32 +76,60 @@ if (isMain) {
   const benchPath = opt("--bench", null);
   if (benchPath) {
     const needs = JSON.parse(readFileSync(benchPath, "utf8")).needs;
-    const emb = opt("--embed-cands", null) ? JSON.parse(readFileSync(opt("--embed-cands"), "utf8")) : null;
+    const emb = opt("--embed-cands", null)
+      ? JSON.parse(readFileSync(opt("--embed-cands"), "utf8"))
+      : null;
     const items = needs.map((n, i) => {
-      const cands = candidateSet(n.need, { records, vocab, lexicon, bm25, embedCands: emb ? emb[i].candidates : null, k });
+      const cands = candidateSet(n.need, {
+        records,
+        vocab,
+        lexicon,
+        bm25,
+        embedCands: emb ? emb[i].candidates : null,
+        k,
+      });
       return {
         id: i + 1,
         need: n.need,
-        candidates: cands.map((c) => ({ name: c.name, depth: byName.get(c.name)?.depth ?? null, via: c.via.join("+"), entry: entryFor(byName.get(c.name), componentsMd) })),
+        candidates: cands.map((c) => ({
+          name: c.name,
+          depth: byName.get(c.name)?.depth ?? null,
+          via: c.via.join("+"),
+          entry: entryFor(byName.get(c.name), componentsMd),
+        })),
       };
     });
     const dir = opt("--reader-batch", null);
     if (dir) {
       mkdirSync(dir, { recursive: true });
       const per = Number(opt("--per", 11));
-      for (let b = 0; b * per < items.length; b++) writeFileSync(join(dir, `reader${b + 1}.json`), JSON.stringify(items.slice(b * per, (b + 1) * per)));
-      console.log(`${Math.ceil(items.length / per)} reader batches in ${dir}; mean candidates per need ${(items.reduce((a, x) => a + x.candidates.length, 0) / items.length).toFixed(1)}`);
+      for (let b = 0; b * per < items.length; b++)
+        writeFileSync(
+          join(dir, `reader${b + 1}.json`),
+          JSON.stringify(items.slice(b * per, (b + 1) * per)),
+        );
+      console.log(
+        `${Math.ceil(items.length / per)} reader batches in ${dir}; mean candidates per need ${(items.reduce((a, x) => a + x.candidates.length, 0) / items.length).toFixed(1)}`,
+      );
     }
     // recall of the union itself, when expectations are present
     if (needs[0]?.expect) {
-      const hit = items.filter((it, i) => it.candidates.some((c) => needs[i].expect.includes(c.name))).length;
+      const hit = items.filter((it, i) =>
+        it.candidates.some((c) => needs[i].expect.includes(c.name)),
+      ).length;
       console.log(`union recall: ${hit}/${needs.length}`);
       items.forEach((it, i) => {
-        if (!it.candidates.some((c) => needs[i].expect.includes(c.name))) console.log(`  miss: ${needs[i].need.slice(0, 80)} | expect ${needs[i].expect.join("|")}`);
+        if (!it.candidates.some((c) => needs[i].expect.includes(c.name)))
+          console.log(
+            `  miss: ${needs[i].need.slice(0, 80)} | expect ${needs[i].expect.join("|")}`,
+          );
       });
     }
     process.exit(0);
   }
   const need = argv.filter((a) => !a.startsWith("--")).join(" ");
-  for (const c of candidateSet(need, { records, vocab, lexicon, bm25, k })) console.log(`${c.name} [${c.via.join("+")}]\n    ${entryFor(byName.get(c.name), componentsMd).slice(0, 160)}`);
+  for (const c of candidateSet(need, { records, vocab, lexicon, bm25, k }))
+    console.log(
+      `${c.name} [${c.via.join("+")}]\n    ${entryFor(byName.get(c.name), componentsMd).slice(0, 160)}`,
+    );
 }
