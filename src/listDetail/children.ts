@@ -30,12 +30,15 @@ export type Bucket<P, G extends string> = {
   when: (item: P, now: Date) => boolean;
 };
 
-/** The id of the first bucket whose `when` holds, else undefined (end the list with `when: () => true` for a catch-all). The app composes its own groups (for example "this week" with `fn.weekStart`) from the facts `defineChildren` supplies. */
-export const bucketOf = <P, G extends string>(
+/** The id of the first bucket whose `when` holds, else undefined (end the list with `when: () => true` for a catch-all). The app composes its own groups (for example "this week" with `fn.weekStart`) from the facts `defineChildren` supplies. Named `pickBucket` so it never reads as the root export `bucketOf` (the CensusView helper). */
+export const pickBucket = <P, G extends string>(
   item: P,
   buckets: readonly Bucket<P, G>[],
   now: Date = new Date(),
 ): G | undefined => find((b) => b.when(item, now), buckets)?.id;
+
+/** @deprecated Use `pickBucket`: this name clashes with the root `bucketOf` (the CensusView helper). Same function; kept so gen15 apps keep compiling. */
+export const bucketOf = pickBucket;
 
 export type ChildrenConfig<K extends string, F extends string> = {
   /** The field of the item that holds its children, e.g. "steps". */
@@ -56,9 +59,21 @@ export type ChildParent<K extends string, F extends string> = {
 } & { [k in K]: ChildShape[] } & { [f in F]?: string };
 
 /** The element type of the item's children. */
-type ChildOf<P, K extends string> = P extends { [k in K]: readonly (infer C)[] }
+export type ChildOf<P, K extends string> = P extends {
+  [k in K]: readonly (infer C)[];
+}
   ? C
   : never;
+
+/** What `advance` returns for an item of type `P`: the children array (typed as the item's own) and the focus field. Assignable to `Partial<P>`, so `update(id, CHILDREN.advance(item))` needs no cast. */
+export type ChildrenPatch<
+  P extends ChildParent<K, F>,
+  K extends string,
+  F extends string,
+> = { [k in K]: P[k] } & { [f in F]: string | undefined };
+
+/** What `select` and `cycle` return: only the focus field. Assignable to `Partial<P>`. */
+export type FocusPatch<F extends string> = { [f in F]: string };
 
 const maxIso = (values: (string | null | undefined)[]): string =>
   values.reduce<string>((a, v) => (v && v > a ? v : a), "");
@@ -71,9 +86,7 @@ export function defineChildren<K extends string, F extends string = "focus">(
   const list = <P extends ChildParent<K, F>>(p: P): ChildShape[] =>
     p[config.key] as unknown as ChildShape[];
 
-  type Patch<P extends ChildParent<K, F>> = { [k in K]: P[K] } & {
-    [f in F]: string | undefined;
-  };
+  type Patch<P extends ChildParent<K, F>> = ChildrenPatch<P, K, F>;
   const patch = <P extends ChildParent<K, F>>(
     children: ChildShape[],
     focus: string | undefined,
@@ -86,13 +99,20 @@ export function defineChildren<K extends string, F extends string = "focus">(
     text,
   });
 
-  /** A child ready to add to an item: not started, empty log, plus the app's own fields. */
-  const child = <X extends object>(id: string, extra: X): X & ChildShape => ({
-    ...extra,
-    id,
-    status: status.pending,
-    log: [],
-  });
+  /**
+   * A child ready to add to an item: not started, empty log, plus the app's own fields.
+   * Typed by where it lands: in `steps: [CHILDREN.child(id, { name })]` the result is the item's own child type `C`
+   * and `extra` is checked against `C` minus the progression fields, so no cast and no `| null` on the app's stamps.
+   */
+  function child<C extends ChildShape>(
+    id: string,
+    extra: Omit<C, keyof ChildShape>,
+  ): C;
+  /** @deprecated Untyped by the destination: the result is `X & ChildShape`, whose stamps allow null. Call `child` where its type is known (an item literal, a typed variable) so the first overload applies. */
+  function child<X extends object>(id: string, extra: X): X & ChildShape;
+  function child(id: string, extra: object): ChildShape {
+    return { ...extra, id, status: status.pending, log: [] };
+  }
 
   const kindOf = <P extends ChildParent<K, F>>(p: P): ChildKind => {
     const cs = list(p);
@@ -140,14 +160,14 @@ export function defineChildren<K extends string, F extends string = "focus">(
     focused(p) as unknown as ChildOf<P, K> | undefined;
 
   /** The patch that chooses the child in focus. */
-  const select = (id: string): { [f in F]: string } =>
-    ({ [focusKey]: id }) as { [f in F]: string };
+  const select = (id: string): FocusPatch<F> =>
+    ({ [focusKey]: id }) as FocusPatch<F>;
 
   /** The patch that moves the focus `dir` children along, wrapping; undefined with fewer than two children. */
   const cycle = <P extends ChildParent<K, F>>(
     p: P,
     dir: 1 | -1,
-  ): { [f in F]: string } | undefined => {
+  ): FocusPatch<F> | undefined => {
     const cs = list(p);
     const at = findIndex((c) => c.id === focused(p)?.id, cs);
     return cs.length < 2 || at < 0

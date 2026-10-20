@@ -201,7 +201,9 @@ export function intCol<T>(
   };
 }
 
-export interface DateTimeColOpts<T> extends ColOpts<T, string | null> {
+/** The reader may return `undefined` (an optional stamp such as `startedAt?: string`) as well as `null`: both render as the empty cell. */
+export interface DateTimeColOpts<T>
+  extends ColOpts<T, string | null | undefined> {
   /** `"second"` (default) paints `YYYY-MM-DD HH:mm:ss`; `"minute"` drops the
    *  seconds. The column is sized from the pattern even with no sample. */
   precision?: "second" | "minute";
@@ -224,8 +226,8 @@ export function dateTimeCol<T>(
 ): TableColumn<T> {
   const pattern =
     opts?.precision === "minute" ? MINUTE_DATETIME_PATTERN : DATETIME_PATTERN;
-  const render = (v: string | null) =>
-    formatDateValue(v, pattern, opts?.timeZone);
+  const render = (v: string | null | undefined) =>
+    formatDateValue(v ?? null, pattern, opts?.timeZone);
   // A date's rendered length is fixed by its pattern: with no sample, size
   // from the pattern itself (except the legacy no-opts form, which keeps 160px).
   const fallback =
@@ -241,7 +243,7 @@ export function dateTimeCol<T>(
     sortValue: (row) => resolve(id, opts?.field, row),
     accessor: (row) => (
       <DateTimeCell
-        value={resolve(id, opts?.field, row)}
+        value={resolve(id, opts?.field, row) ?? null}
         showSeconds={showSecondsFor(opts?.precision)}
         timeZone={opts?.timeZone}
       />
@@ -249,7 +251,9 @@ export function dateTimeCol<T>(
   };
 }
 
-export interface DateColOpts<T> extends ColOpts<T, string | null> {
+/** The reader may return `undefined` as well as `null`: both render as the empty cell. */
+export interface DateColOpts<T>
+  extends ColOpts<T, string | null | undefined> {
   /** IANA zone to render in (default: host local). */
   timeZone?: string;
 }
@@ -259,8 +263,8 @@ export function dateCol<T>(
   header: string,
   opts?: DateColOpts<T>,
 ): TableColumn<T> {
-  const render = (v: string | null) =>
-    formatDateValue(v, DATE_PATTERN, opts?.timeZone);
+  const render = (v: string | null | undefined) =>
+    formatDateValue(v ?? null, DATE_PATTERN, opts?.timeZone);
   // Sized from the pattern when there is no sample — a date never wraps.
   // (Before 2026-10-16 dateCol had no default width at all.)
   const fallback = widthForValues([DATE_PATTERN], header);
@@ -273,7 +277,7 @@ export function dateCol<T>(
     sortValue: (row) => resolve(id, opts?.field, row),
     accessor: (row) => (
       <DateCell
-        value={resolve(id, opts?.field, row)}
+        value={resolve(id, opts?.field, row) ?? null}
         timeZone={opts?.timeZone}
       />
     ),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { weekStart } from "../fn/weekStart";
-import { bucketOf, defineChildren, type Bucket } from "./children";
+import { bucketOf, defineChildren, pickBucket, type Bucket } from "./children";
 
 // A project with ordered phases: the module names neither.
 type Phase = {
@@ -197,5 +197,55 @@ describe("defineChildren", () => {
     expect(phases.cycle(p, 1)).toEqual({ focusPhase: "a" });
     expect(phases.cycle(p, -1)).toEqual({ focusPhase: "b" });
     expect(phases.cycle(project(phase("a", "idle")), 1)).toBeUndefined();
+  });
+});
+
+// Typed by the item, not by casts: these lines are checked by `tsc --noEmit` (src/** includes tests).
+describe("defineChildren typing", () => {
+  type Stamped = {
+    id: string;
+    label: string;
+    status: string;
+    startedAt?: string;
+    completedAt?: string;
+    log: { id: string; at: string; text: string }[];
+  };
+  type Run = {
+    id: string;
+    createdAt: string;
+    legs: Stamped[];
+    focusLeg?: string;
+  };
+  const legs = defineChildren({
+    key: "legs",
+    focus: "focusLeg",
+    status: { pending: "idle", current: "live", complete: "over" },
+    lines: { started: "Began", completed: "Ended", reopened: "Again" },
+  });
+  const apply = (run: Run, patch: Partial<Run>): Run => ({ ...run, ...patch });
+
+  it("child() takes the item's own child type (optional stamps without null) and its patches fit Partial<item>", () => {
+    const run: Run = {
+      id: "r",
+      createdAt: T1,
+      legs: [
+        legs.child("l1", { label: "one" }),
+        legs.child("l2", { label: "two" }),
+      ],
+    };
+    const done = apply(run, legs.advance(run, T2));
+    const focused = apply(done, legs.select("l1"));
+    const moved = legs.cycle(focused, 1);
+    expect(moved ? apply(focused, moved).focusLeg : undefined).toBe("l2");
+    const first: Stamped | undefined = legs.pick(done);
+    expect(first?.label).toBe("two");
+    // @ts-expect-error a child missing the app's own field does not type-check
+    const missing: Stamped = legs.child("x", {});
+    expect(missing.id).toBe("x");
+  });
+
+  it("pickBucket is bucketOf under a name that does not clash with the root CensusView helper", () => {
+    expect(pickBucket).toBe(bucketOf);
+    expect(pickBucket({ n: 1 }, [{ id: "all", when: () => true }])).toBe("all");
   });
 });

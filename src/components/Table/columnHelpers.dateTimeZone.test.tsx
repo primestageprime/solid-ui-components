@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
-import { dateTimeCol, dateTimeColWith, showSecondsFor } from "./columnHelpers";
+import { dateCol, dateTimeCol, dateTimeColWith, showSecondsFor } from "./columnHelpers";
 
 afterEach(cleanup);
 
@@ -63,5 +63,21 @@ describe("dateTimeColWith", () => {
     expect(shown(minuteUtc<Row>("at", "At"), ISO)).toBe("2026-10-15 14:05");
     expect(shown(minuteUtc<Row>("at", "At", { precision: "second" }), ISO)).toBe("2026-10-15 14:05:30");
     expect(shown(minuteUtc<Row>("at", "At", { timeZone: "America/New_York" }), ISO)).toBe("2026-10-15 10:05");
+  });
+});
+
+describe("optional stamps", () => {
+  type Opt = { at?: string };
+  it("dateTimeCol and dateCol readers may return undefined and show the empty cell", () => {
+    const text = (col: ReturnType<typeof dateCol<Opt>>): string => {
+      const accessor = col.accessor;
+      if (typeof accessor !== "function") throw new Error("function accessor");
+      const { container } = render(() => <>{accessor({})}</>);
+      const out = container.textContent ?? "";
+      cleanup();
+      return out;
+    };
+    expect(text(dateTimeCol<Opt>("at", "At", { field: (r) => r.at }))).toBe("—");
+    expect(text(dateCol<Opt>("at", "At", { field: (r) => r.at }))).toBe("—");
   });
 });
