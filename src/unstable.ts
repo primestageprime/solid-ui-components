@@ -40,3 +40,6 @@ export type {
 // layered Escape, verb rows). Ported from the singularity scaffold; see src/listDetail/README.md.
 // ============================================
 export * from "./listDetail";
+// The icon vocabulary a view config names (`defineCard`/`defineDetail` action `icon`), so a config file
+// imports its types from this one path. Also on the root via `./components/Icon`.
+export type { IconName } from "./components/Icon/Icon";
