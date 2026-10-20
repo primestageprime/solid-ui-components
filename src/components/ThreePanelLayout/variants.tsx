@@ -63,3 +63,16 @@ export const FluidListDetailThreePanel: Component<ThreePanelLayoutDataProps> =
     rightPanelWidth: W.fluidContext,
     asideMaxHeight: "none",
   });
+
+/** List-and-detail page whose right panel is a time + text log: 320 left, right
+ *  28vw clamped 320..440 with its padding dropped (`rightPanelFlush`, so a table's
+ *  row lines run edge to edge) and stacked asides uncapped at phone widths.
+ *  The list-detail standard's one layout (canon/standards/list-detail/v2). */
+export const ListDetailLogThreePanel: Component<ThreePanelLayoutDataProps> =
+  createThreePanelLayout({
+    height: "100%",
+    leftPanelWidth: W.wideList,
+    rightPanelWidth: W.logContext,
+    rightPanelFlush: true,
+    asideMaxHeight: "none",
+  });

@@ -6,6 +6,7 @@ import {
   InspectorThreePanel,
   SplitThreePanel,
   FluidListDetailThreePanel,
+  ListDetailLogThreePanel,
 } from "../../src/components/ThreePanelLayout";
 import { TextBody } from "../../src/components/Text";
 
@@ -54,6 +55,7 @@ const VARIANTS = [
   { name: "InspectorThreePanel", widths: "220 / 320", use: "work area with a wide right inspector", V: InspectorThreePanel },
   { name: "SplitThreePanel", widths: "560 / 240", use: "split view, half-screen-class left pane", V: SplitThreePanel },
   { name: "FluidListDetailThreePanel", widths: "22vw 240..360 / 15vw 180..260", use: "fluid list-and-detail, stacked asides uncapped on phones", V: FluidListDetailThreePanel },
+  { name: "ListDetailLogThreePanel", widths: "320 / 28vw 320..440 flush", use: "list-and-detail with a time + text log in the right panel", V: ListDetailLogThreePanel },
 ];
 
 export const ThreePanelLayoutShowcase: Component = () => {

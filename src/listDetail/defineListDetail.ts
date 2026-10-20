@@ -51,7 +51,12 @@ export type ListDetailConfig<
     /** All the text a search query may match. */
     textOf: (item: T) => string;
   };
-  groups: { order: readonly G[]; of: (item: T) => G };
+  groups: {
+    order: readonly G[];
+    of: (item: T) => G;
+    /** The heading each group shows in a grouped selector (a map or a function); defaults to the id. */
+    title?: Record<G, string> | ((id: G) => string);
+  };
   sorts: {
     order: readonly S[];
     default: S;
@@ -121,6 +126,10 @@ export function defineListDetail<
   const spec: ListSpec<T, G, S> = {
     groupOf: config.groups.of,
     groupOrder: config.groups.order,
+    groupTitle: (id) => {
+      const t = config.groups.title;
+      return t === undefined ? id : typeof t === "function" ? t(id) : t[id];
+    },
     textOf: config.entity.textOf,
     sorters: config.sorts.by,
     sortOrder: config.sorts.order,

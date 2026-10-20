@@ -39,7 +39,7 @@ export interface TableColumn<T> {
 }
 
 export interface BaseTableProps<T>
-  extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "children"> {
+  extends Omit<JSX.HTMLAttributes<HTMLDivElement>, "children" | "onSelect"> {
   data: T[];
   columns: TableColumn<T>[];
   maxHeight?: string;
@@ -77,6 +77,16 @@ export interface BaseTableProps<T>
    * lit). Reactive: read a signal inside it.
    */
   highlighted?: (row: T, index: number) => boolean;
+  /**
+   * The id of the SELECTED row (lit with an accent bar and `aria-selected`),
+   * distinct from `highlighted`, which is transient hover cross-highlighting.
+   * A row's id is `rowId(row)`, default `row.id`. Reactive.
+   */
+  selectedId?: string | null;
+  /** Called with the row's id when a row is clicked; pair with `selectedId`. */
+  onSelect?: (id: string) => void;
+  /** The id a row answers to for `selectedId` / `onSelect`. Default: `row.id`. */
+  rowId?: (row: T) => string;
   onRowClick?: (row: T, index: number) => void;
   /**
    * Row hover callback for cross-highlighting (e.g. a table row ↔ a chart

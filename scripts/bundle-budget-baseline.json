@@ -1,6 +1,6 @@
 {
   "oneButtonKb": 16,
-  "typicalAppKb": 33,
+  "typicalAppKb": 34,
   "mathKb": 266,
   "dagKb": 120,
   "ssrOneButtonKb": 2,
@@ -12,9 +12,9 @@
       "reason": "InlineText/Text tone=\"highlight\" resolution (TONE_COLOR map + new Tone CSS rules) — deliberate new capability, not bloat"
     },
     "typicalAppKb": {
-      "from": 32,
-      "to": 33,
-      "reason": "Button onAction/once/action imports createSubmitAction (spinner + double-click guard), so every Button bundle carries it"
+      "from": 33,
+      "to": 34,
+      "reason": "BaseTable selected row (selectedId/onSelect/rowId, gen12 diddit #4148): a typical app ships BaseTable; +~60 B of code and CSS crossed the 33 KB rounding step"
     },
     "ssrOneButtonKb": {
       "from": 1,

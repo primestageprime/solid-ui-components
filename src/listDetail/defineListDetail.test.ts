@@ -266,3 +266,18 @@ describe("verbs", () => {
     expect(k.state.data.tasks.find((t) => t.id === "a")?.status).toBe("done");
   });
 });
+
+describe("group titles", () => {
+  it("grouped() carries a title: the id by default, the configured heading when given", () => {
+    expect(tasks().grouped().map((g) => g.title)).toEqual(["todo", "done"]);
+    const k = defineListDetail({
+      storageKey: "kit-titled",
+      collection: "tasks",
+      entity: { blank: (): Task => ({ id: newId(), title: "", status: "todo" }), textOf: (t) => t.title },
+      groups: { order: ["todo", "done"] as const, of: (t) => t.status, title: (id) => id.toUpperCase() },
+      sorts: { order: ["added"] as const, default: "added", by: { added: () => 0 } },
+      seed: [],
+    });
+    expect(k.grouped().map((g) => g.title)).toEqual(["TODO", "DONE"]);
+  });
+});

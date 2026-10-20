@@ -3446,7 +3446,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/BaseTable.tsx",
-    "line": 467
+    "line": 481
   },
   {
     "name": "createBatchBar",
@@ -11185,6 +11185,35 @@
     "since": "0.203.0",
     "file": "src/components/PivotGrid/LinkPivotGrid.tsx",
     "line": 20
+  },
+  {
+    "name": "ListDetailLogThreePanel",
+    "depth": 1,
+    "kind": "variant",
+    "family": "ThreePanelLayout",
+    "variantOf": {
+      "factory": "createThreePanelLayout",
+      "overrides": "{\n    height: \"100%\",\n    leftPanelWidth: W.wideList,\n    rightPanelWidth: W.logContext,\n    rightPanelFlush: true,\n    asideMaxHeight: \"none\",\n  }"
+    },
+    "overrides": [
+      "height",
+      "fullHeight",
+      "leftPanelWidth",
+      "rightPanelWidth",
+      "asideMaxHeight",
+      "rightPanelFlush"
+    ],
+    "dataProps": "ThreePanelLayoutDataProps",
+    "summary": "List-and-detail page whose right panel is a time + text log: 320 left, right 28vw clamped 320..440 with its padding dropped (`rightPanelFlush`, so a table's row lines run edge to edge) and stacked asides uncapped at phone widths.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "List-and-detail page whose right panel is a time + text log: 320 left, right 28vw clamped 320..440 with its padding dropped (`rightPanelFlush`, so a table's row lines run edge to edge) and stacked asides uncapped at phone widths. The list-detail standard's one layout (canon/standards/list-detail/v2).",
+    "showcase": "#/three-panel-layout",
+    "since": null,
+    "file": "src/components/ThreePanelLayout/variants.tsx",
+    "line": 71
   },
   {
     "name": "ListDetailThreePanel",

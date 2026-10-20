@@ -6,6 +6,7 @@ import {
   InspectorThreePanel,
   SplitThreePanel,
   FluidListDetailThreePanel,
+  ListDetailLogThreePanel,
   THREE_PANEL_ASIDE_WIDTH as W,
 } from "./index";
 
@@ -15,6 +16,7 @@ const cases = [
   ["InspectorThreePanel", InspectorThreePanel, "220px", "320px"],
   ["SplitThreePanel", SplitThreePanel, "560px", "240px"],
   ["FluidListDetailThreePanel", FluidListDetailThreePanel, "clamp(240px, 22vw, 360px)", "clamp(180px, 15vw, 260px)"],
+  ["ListDetailLogThreePanel", ListDetailLogThreePanel, "320px", "clamp(320px, 28vw, 440px)"],
 ] as const;
 
 describe("ThreePanelLayout curried variants", () => {

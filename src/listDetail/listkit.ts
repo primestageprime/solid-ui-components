@@ -18,6 +18,8 @@ export type ListView<S extends string = string> = {
 export type ListSpec<T, G extends string = string, S extends string = string> = {
   groupOf: (item: T) => G;
   groupOrder: readonly G[];
+  /** The heading a group shows (a selector's group header); defaults to the group id. */
+  groupTitle?: (id: G) => string;
   /** All the text a search query may match, in one string. */
   textOf: (item: T) => string;
   sorters: Record<S, (a: T, b: T) => number>;
@@ -28,6 +30,8 @@ export type ListSpec<T, G extends string = string, S extends string = string> = 
 
 export type Group<T, G extends string = string> = {
   id: G;
+  /** The group's heading: `spec.groupTitle(id)`, else the id. */
+  title: string;
   count: number;
   collapsed: boolean;
   items: T[];
@@ -96,6 +100,7 @@ export function groupedList<
     );
     return {
       id,
+      title: spec.groupTitle?.(id) ?? id,
       count: inGroup.length,
       collapsed: view.collapsed.includes(id),
       items: inGroup,

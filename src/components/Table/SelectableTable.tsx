@@ -52,6 +52,10 @@ export function SelectableTable<T extends TableRow>(
     "emptyMessage",
     "getRowClass",
     "onRowClick",
+    // BaseTable's single-row selection; this table selects by checkbox, so they are consumed and unused.
+    "selectedId",
+    "onSelect",
+    "rowId",
     "class",
     "getRowId",
     "selectionStore",

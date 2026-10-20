@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+- **`ListDetailLogThreePanel`** — sixth curried `ThreePanelLayout` variant: left 320, right `clamp(320px, 28vw, 440px)` (new `THREE_PANEL_ASIDE_WIDTH.logContext`) with the right panel flush and stacked asides uncapped. For a list-and-detail page whose right panel is a time + text table.
+- **`BaseTable` / `SectionTable` `selectedId` + `onSelect` (+ `rowId`)** — a selected row (`aria-selected`, accent bar), distinct from the hover `highlighted`. `BaseTableProps` no longer extends the DOM `onSelect` event handler.
+- **`/unstable` list-detail kit** — `GroupedSelector` (renders `kit.grouped()`: titled groups with count chips, controlled collapse, selection mark kept in view as j/k move), `LogLineList` (fixed time column + truncating text, empty state), `LocalizationSettings` and `SharingSettings` (generic settings tab bodies over a stub model, `localizationState()` / `sharingState()`), and `groups.title` on `defineListDetail` (each `Group` now carries `title`).
+
 ## 0.229.0 — 2026-10-19
 
 ### Added

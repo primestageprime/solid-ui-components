@@ -14,6 +14,7 @@ widths (from `tokens.ts`) and full height. You pass only the panels.
 | `InspectorThreePanel` | 220 / 320 | work area with a wide right inspector |
 | `SplitThreePanel` | 560 / 240 | split view with a half-screen-class left pane |
 | `FluidListDetailThreePanel` | 22vw clamped 240..360 / 15vw clamped 180..260 | fluid list-and-detail; stacked asides uncapped at phone width |
+| `ListDetailLogThreePanel` | 320 / clamp(320px, 28vw, 440px), right panel flush | list-and-detail whose right panel is a time + text log; stacked asides uncapped |
 
 ```tsx
 import { StandardThreePanel } from "solid-ui-components";

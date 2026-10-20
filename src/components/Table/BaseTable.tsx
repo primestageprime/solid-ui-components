@@ -112,6 +112,9 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     "flush",
     "getRowClass",
     "highlighted",
+    "selectedId",
+    "onSelect",
+    "rowId",
     "onRowClick",
     "onRowHover",
     "emptyMessage",
@@ -388,16 +391,27 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
                       (c) => c.id === span.fromColumnId,
                     );
                   };
+                  const id = (): string | undefined =>
+                    local.rowId?.(row) ?? (row as { id?: string }).id;
+                  const selected = (): boolean =>
+                    local.selectedId != null && local.selectedId === id();
                   return (
                     <tr
                       class={`hud-table__row ${local.getRowClass?.(row, rowIndex()) || ""}`}
                       classList={{
                         "hud-table__row--highlighted":
                           local.highlighted?.(row, rowIndex()) ?? false,
+                        "hud-table__row--selected": selected(),
                       }}
-                      onClick={() => local.onRowClick?.(row, rowIndex())}
+                      aria-selected={
+                        local.selectedId === undefined ? undefined : selected()
+                      }
+                      onClick={() => {
+                        local.onSelect?.(id() as string);
+                        local.onRowClick?.(row, rowIndex());
+                      }}
                       onMouseEnter={() => local.onRowHover?.(row, rowIndex())}
-                      style={clickableCursor(!!local.onRowClick)}
+                      style={clickableCursor(!!local.onRowClick || !!local.onSelect)}
                     >
                       <Show
                         when={spanFromIndex() >= 0}

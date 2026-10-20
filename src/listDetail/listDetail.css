@@ -1,0 +1,15 @@
+/* listDetail — visual marks only (no box-model geometry; layout comes from the Layout family). */
+.sui-grouped-selector__item {
+  cursor: pointer;
+  border-radius: 4px;
+  outline: none;
+}
+
+.sui-grouped-selector__item[aria-selected="true"] {
+  background-color: rgba(var(--sui-accent-rgb), 0.12);
+  box-shadow: inset 3px 0 0 var(--sui-accent);
+}
+
+.sui-grouped-selector__item:focus-visible {
+  box-shadow: 0 0 0 2px var(--sui-accent);
+}

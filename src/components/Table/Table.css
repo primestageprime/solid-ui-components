@@ -165,6 +165,11 @@
   background-color: rgba(var(--sui-accent-rgb), 0.05);
 }
 
+.hud-table__row--selected {
+  background-color: rgba(var(--sui-accent-rgb), 0.12);
+  box-shadow: inset 3px 0 0 var(--sui-accent);
+}
+
 .hud-table__cell {
   padding: var(--sui-dense-cell-pad, 10px 16px);
   font-size: 13px;

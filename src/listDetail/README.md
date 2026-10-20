@@ -32,3 +32,10 @@ export const dump = () => JSON.stringify({ ...kit.dumpObject(), chrome: { ...(ki
   and non-canon apps; the test suite proves every verb row reaches a real action). Call `kit.install()` once at boot.
 - **Pure parts** (`groupedList`, `visibleIds`, `neighbourId`, `neighbourAfterRemove`, `nextInCycle`, `toggled`,
   `unwindLayer`) and DOM parts (`watchFocus`, `focusById`, `editKey`, `isTyping`) are exported separately.
+
+## Components that render the kit (gen12)
+
+- `GroupedSelector` — `<GroupedSelector kit={kit} renderItem={(item, { selected }) => <Card .../>} emptyLabel="..." />` draws `kit.grouped()` as a rail: group header (title from `groups.title`, count chip, collapse through `actions.toggleGroup`), items by `renderItem`, the selected item marked (`aria-selected`, accent bar) and scrolled into view as `j`/`k` move it, click or Enter selects. A `Group` is `{ id, title, count, collapsed, items }`.
+- `LogLineList` — `<LogLineList rows timeOf={(r) => r.at} textOf={(r) => r.msg} title? emptyLabel? wrap? />`: a fixed time column and a truncating (or wrapping) text column for a narrow panel, empty state, optional `selectedId`/`onSelect`.
+- `LocalizationSettings`, `SharingSettings` — the bodies of the two generic settings tabs (stub models persisted in SUI; read `localizationState()` / `sharingState()` in your `dump()`).
+- Layout: `ListDetailLogThreePanel` (root export): the three-panel with a right panel wide enough for a time + text table. `BaseTable`/`SectionTable` take `selectedId` + `onSelect` (+ `rowId`) for a selected row, distinct from hover `highlighted`.
