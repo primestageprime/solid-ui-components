@@ -217,6 +217,22 @@ export function defineListDetail<
   const restore = (id: string, snapshot: T): void =>
     setList((l) => map((e) => (e.id === id ? detach(snapshot) : e), l));
 
+  /** The group ids that hold at least one live entity (search and collapse ignored). */
+  const peopled = (): Set<G> =>
+    new Set(map((e) => config.groups.of(e), live(list())));
+  /** Run a mutation; any group that had members before and has none after folds (Peter, 2026-10-20: "Empty groups are collapsed by default", so a group a review or a delete empties folds the moment it empties). A user's own unfold of a still-empty group is left alone. */
+  const foldingEmptied = (mutate: () => void): void => {
+    const before = peopled();
+    mutate();
+    const after = peopled();
+    const emptied = filter((g) => !after.has(g), [...before]);
+    if (emptied.length === 0) return;
+    setInner("view", "collapsed", (c) => [
+      ...c,
+      ...filter((g) => !c.includes(g), emptied),
+    ]);
+  };
+
   const persist = (): void => {
     if (typeof localStorage === "undefined") return;
     localStorage.setItem(config.storageKey, JSON.stringify(unwrap(inner)));
@@ -257,14 +273,14 @@ export function defineListDetail<
       const id = inner.view.selectedId;
       if (id === null) return;
       const to = neighbourAfterRemove(ids(), id);
-      patchEntity(id, { deleted: true } as Partial<T>);
+      foldingEmptied(() => patchEntity(id, { deleted: true } as Partial<T>));
       setInner("view", "pinnedLast", (p) => filter((x) => x !== id, p));
       actions.record({ op: "remove", id });
       actions.select(to);
     },
-    /** Merge `patch` into the entity with `id`. */
+    /** Merge `patch` into the entity with `id`; a group the patch empties folds. */
     update(id: string, patch: Partial<T>): void {
-      patchEntity(id, patch);
+      foldingEmptied(() => patchEntity(id, patch));
       actions.commit();
     },
     /** Push an undo step; domain actions call it with their own `op`. The entry is deep-copied, so it never aliases the live store. */
@@ -338,7 +354,7 @@ export function defineListDetail<
       if (!e || !config.primary) return;
       const before = detach(e);
       const steps = inner.data.history.length;
-      config.primary(e, kit);
+      foldingEmptied(() => config.primary?.(e, kit));
       if (inner.data.history.length === steps)
         actions.record({ op: "primary", id: e.id, prev: before });
       actions.commit();
