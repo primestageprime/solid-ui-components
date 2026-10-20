@@ -31,7 +31,7 @@ export const dump = () => JSON.stringify({ ...kit.dumpObject(), chrome: { ...(ki
   `handlers: { ... }` in the `useHotkeys` call, so a canon app writes the handler block out (`kit.handlers` serves tests
   and non-canon apps; the test suite proves every verb row reaches a real action). Call `kit.install()` once at boot.
 - **Undo owns its snapshots (gen14)**: `record` deep-copies the entry it is given, and `primary()` snapshots the selected entity before the configured verb runs; when the verb records no step of its own, the kit records one (`op: "primary"`) that `undo` restores whole. A domain verb just changes the entity (`kit.actions.update`): it never copies arrays for undo, and cannot alias the live store.
-- **`ListItem`** = `EntityBase & { title: string }`: the entity shape for apps whose rail, search and cards read `title` (`EntityBase` itself stays `{ id, deleted? }`). `fn.weekStart(date, firstDay = 1)` gives the first instant of the local week for "this week vs earlier" groups.
+- **`ListItem`** = `EntityBase & { title: string }`: the entity shape for apps whose rail, search and cards read `title` (`EntityBase` itself stays `{ id, deleted? }`). `weekStart(date, firstDay = 1)` (also `fn.weekStart`) gives the first instant of the local week for "this week vs earlier" groups.
 - **Pure parts** (`groupedList`, `visibleIds`, `neighbourId`, `neighbourAfterRemove`, `nextInCycle`, `toggled`,
   `unwindLayer`) and DOM parts (`watchFocus`, `focusById`, `editKey`, `isTyping`) are exported separately.
 

@@ -29,6 +29,8 @@ export type {
   ListSpec,
   ListView,
 } from "./listkit";
+// Also reachable as `fn.weekStart` from the root; re-exported here so a Node-loadable leaf module needs one import path.
+export { weekStart } from "../fn/weekStart";
 export { editKey, focusById, isTyping, watchFocus } from "./focus";
 export type { WatchFocusOptions } from "./focus";
 export {
