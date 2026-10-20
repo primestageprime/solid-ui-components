@@ -216,3 +216,18 @@ describe("EditableTitle", () => {
     expect(container.querySelector("input")).toBeNull();
   });
 });
+
+describe("EditableTitle onDraft", () => {
+  it("reports every keystroke while editing, and onChange only on commit", () => {
+    const onDraft = vi.fn();
+    const onChange = vi.fn();
+    const { container } = render(() => <EditableTitle title="" autoEdit onChange={onChange} onDraft={onDraft} />);
+    const input = container.querySelector("input") as HTMLInputElement;
+    fireEvent.input(input, { target: { value: "Th" } });
+    fireEvent.input(input, { target: { value: "This" } });
+    expect(onDraft.mock.calls.map((c) => c[0])).toEqual(["Th", "This"]);
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onChange).toHaveBeenCalledWith("This");
+  });
+});

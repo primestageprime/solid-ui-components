@@ -251,6 +251,11 @@ export function ConfiguredDetail<T extends ListItem>(
                       [c().titleField]: v,
                     } as Partial<T>)
                   }
+                  onDraft={(v) =>
+                    props.kit.actions.update(item().id, {
+                      [c().titleField]: v,
+                    } as Partial<T>)
+                  }
                 />
               </Show>
               <Show when={c().subtitle?.(item())}>{(s) => <span class="sui-configured-detail__subtitle">{s()}</span>}</Show>

@@ -1,52 +1,9 @@
-/* ConfiguredViews — the detail's title row: `--lg` is the headline size of a sketch's title line. */
-.sui-configured-detail__title--lg .sui-editable-title__text,
-.sui-configured-detail__title--lg .sui-editable-title__input {
+/* ConfiguredViews — the detail's title row: `--lg` is the headline size of a sketch's title line.
+   The font goes on the EditableTitle host (not its text or input), so the reading text, the edit field
+   and the hidden replica that sizes the field all inherit the same font; styling the input alone left
+   the replica at the base size and the field 30px too narrow (Peter, 2026-10-20: "the name edit field
+   is still offset"). */
+.sui-configured-detail__title--lg .sui-editable-title {
   font-size: 20px;
   font-weight: 600;
-}
-
-/* The title line's muted subtitle (a range, a reference), sized to the title's text. */
-.sui-configured-detail__subtitle {
-  flex: 1 1 auto;
-  min-width: 0;
-  color: var(--sui-text-secondary);
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* The summary line under the title: an icon and one sentence, tinted by its variant. */
-.sui-configured-detail__summary {
-  color: var(--sui-text-primary);
-  font-size: 13px;
-}
-.sui-configured-detail__summary--error {
-  color: var(--sui-error, var(--sui-text-primary));
-}
-.sui-configured-detail__summary--warning {
-  color: var(--sui-warning, var(--sui-text-primary));
-}
-.sui-configured-detail__summary--success {
-  color: var(--sui-success, var(--sui-text-primary));
-}
-
-/* The ruled toolbar row: a hairline above and below, the compact buttons at the left. */
-.sui-configured-detail__toolbar {
-  padding: 4px 0;
-  border-top: 1px solid var(--sui-border);
-  border-bottom: 1px solid var(--sui-border);
-}
-
-/* A row card's aside holds the who text and the marker icon together. */
-.sui-configured-card__aside {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* A row card's foot: the muted second line, left and right spread apart. */
-.sui-configured-card__foot {
-  color: var(--sui-text-secondary);
-  font-size: 12px;
 }

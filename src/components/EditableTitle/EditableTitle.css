@@ -44,7 +44,11 @@
   text-underline-offset: 3px;
 }
 /* Fitted editor: a hidden replica of the draft text sizes the grid cell, so the
-   input is exactly as wide as its content (same font, live per keystroke). */
+   input is exactly as wide as its content (same font, live per keystroke).
+   Size the title's font on the HOST (.sui-editable-title), never on __input or
+   __text alone: the replica inherits from the editor, and a font set on the
+   input only leaves the replica smaller than the text it measures, so the field
+   is too narrow and the start of the draft scrolls out of view. */
 /* An empty draft (a just-created item) still gets a visible, focusable field. */
 .sui-editable-title__editor {
   min-width: 8ch;
@@ -59,12 +63,14 @@
   visibility: hidden;
   white-space: pre;
   overflow: hidden;
+  font: inherit;
 }
 .sui-editable-title__input {
   grid-area: 1 / 1;
   width: 100%;
   min-width: 1ch;
   font: inherit;
+  line-height: inherit;
   color: inherit;
   background: transparent;
   border: none;
