@@ -281,3 +281,46 @@ describe("promoted cases (scripts/find-regress.json, scripts/find-promote.mjs)",
     expect(lost.map((c) => c.need)).toEqual([]);
   });
 });
+
+describe("three outcomes (scripts/find-outcome.mjs over scripts/find-outcomes-bench.json, frozen at f5f5cfbf)", () => {
+  // Floors from diddit #4163 (2026-10-20), two text retrievers only (no MiniLM, so
+  // the test needs no model). Peter's targets: no exact/cousin confusion that
+  // hides an existing component, and no "exact" for a cousin that is really
+  // none. Lowering a floor is a regression; the four cousin → exact and two
+  // cousin → none (needs with no vocabulary word) are the known misses.
+  it("outcome accuracy ≥ 50/59; no exact ever read as cousin or none; no none ever read as exact; exact pick ≥ 21/23; none ≥ 13/17; cousin → exact ≤ 3", async () => {
+    const { classify, loadContext } = await import("./find-outcome.mjs");
+    const { scoreOutcomes } = await import("./find-outcomes-bench.mjs");
+    const bench = JSON.parse(
+      readFileSync(join(root, "scripts", "find-outcomes-bench.json"), "utf8"),
+    ).needs as { need: string; outcome: string; expect?: string[] }[];
+    const ctx = await loadContext({ embed: false });
+    const results = [];
+    for (const it of bench) results.push(await classify(it.need, ctx));
+    const s = scoreOutcomes(
+      bench,
+      results,
+      (n: string) => ctx.byName.get(n)?.family ?? n,
+    );
+    expect(s.n).toBe(59);
+    expect(s.outcomeAccuracy).toBeGreaterThanOrEqual(50);
+    expect(s.matrix.exact.cousin + s.matrix.exact.none).toBe(0);
+    expect(s.matrix.none.exact).toBe(0);
+    expect(s.matrix.cousin.exact).toBeLessThanOrEqual(3);
+    expect(s.picks.exact.right).toBeGreaterThanOrEqual(21);
+    expect(s.picks.none.right).toBeGreaterThanOrEqual(13);
+    // every result carries the contract
+    for (const r of results) {
+      expect(["exact", "cousin", "none"]).toContain(r.outcome);
+      if (r.outcome !== "exact")
+        expect(r.gap).toMatchObject({
+          name: expect.any(String),
+          description: expect.any(String),
+          nearest: expect.any(String),
+        });
+      if (r.outcome === "none") expect(r.placeholder).toBe("GapBox");
+      // an exact usually short-circuits on the fast path; the union walk may still find one
+      expect(["fast", "union"]).toContain(r.path);
+    }
+  }, 60_000);
+});

@@ -215,15 +215,23 @@ const pascal = (words) =>
 /** The gap record for a cousin / none: a PascalCase name from the need's
  *  defining words plus its head noun, the need as the description, the
  *  placeholder as `nearest`. */
-export function gapRecord(need, best) {
-  const defining = (best?.unexplained ?? need.stems).slice(0, 2);
+export function gapRecord(need, best, outcome = "cousin") {
+  const pool =
+    outcome === "none"
+      ? need.stems
+      : best?.defining?.length
+        ? best.defining
+        : (best?.unexplained ?? need.stems);
   const head = need.inferred.tags.find((t) => t.head)?.tag.split(":")[1];
-  const words = [
-    ...defining,
-    ...(head && !defining.includes(head) ? [head] : []),
-  ];
+  // cousin: "<defining word><head noun>" (PieChart, CandlestickChart); none: the
+  // first two defining words (VideoPlayer, SignaturePad) — its head noun, if any, is a part
+  const words =
+    outcome === "cousin" && head && !pool.includes(head)
+      ? [pool[0] ?? need.stems[0], head]
+      : pool.slice(0, 2);
+  const original = (s) => need.words.get(s) ?? s; // "gantt", not the stem "gant"
   return {
-    name: pascal(words.length ? words : need.stems.slice(0, 2)),
+    name: pascal((words.length ? words : need.stems.slice(0, 2)).map(original)),
     description: need.text.replace(/\s+/g, " ").trim().slice(0, 200),
     nearest: best?.name ?? "none",
     missing: best ? best.unexplained : need.stems,
@@ -238,6 +246,10 @@ const readTheNeed = (text, ctx) => {
     head: inferred.tags.find((t) => t.head) ?? null,
     stems: contentStems(text),
     reached: reachedStems(inferred),
+    // stem → the word as written, for naming a gap ("gantt", not "gant")
+    words: new Map(
+      tokenize(stripNegations(text)).map((w) => [contentStem(w), w]),
+    ),
   };
 };
 
@@ -303,7 +315,7 @@ export async function classify(text, ctx, W = OUTCOME) {
     return result("none", null, walked.slice(0, 3), best ? 1 - best.fit : 1, {
       path: "union",
       walked: walked.length,
-      gap: gapRecord(need, best && best.tagCov > 0 ? best : null),
+      gap: gapRecord(need, best && best.tagCov > 0 ? best : null, "none"),
       placeholder: "GapBox",
     });
   return result(
