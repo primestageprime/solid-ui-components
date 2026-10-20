@@ -272,6 +272,7 @@ export async function classify(text, ctx, W = OUTCOME) {
   const byFit = (a, b) => b.fit - a.fit || (b.depth ?? 0) - (a.depth ?? 0);
   const result = (outcome, pick, alternatives, confidence, extra = {}) => ({
     outcome,
+    phase: PHASE[outcome],
     pick,
     alternatives,
     confidence: Math.round(confidence * 100) / 100,
@@ -359,9 +360,70 @@ export async function loadContext({ embed = true } = {}) {
   };
 }
 
+/** The build phase an outcome lands in (Peter, diddit #4163 Decision #4523:
+ *  "get as far as you can on the easy things, then the close cousins, then
+ *  the bespoke new ones"). The builder runs unattended: phase 1 builds every
+ *  exact with placeholders for the rest; phase 2 extends or composes the
+ *  cousin's nearest component and swaps its placeholder out; phase 3 builds
+ *  the bespoke components, packaged for reuse. */
+export const PHASE = { exact: 1, cousin: 2, none: 3 };
+
+/** The Question the builder posts at the START of phase 1 for every cousin /
+ *  none (Decision #4524: ask early, never block). The manager relays it. */
+export const askText = (g) =>
+  g.outcome === "cousin"
+    ? `Is ${g.nearest} good enough for "${g.need}", or should I build ${g.title}?`
+    : `Nothing in SUI covers "${g.need}". Build ${g.title} as a bespoke component, or is a GapBox good enough for now?`;
+
+/** Mark a gap as asked (the builder posted the Question) or answered. Pure. */
+export const withAsk = (g, askedAt) => ({
+  ...g,
+  askedAt,
+  answer: null,
+  answeredAt: null,
+});
+export const withAnswer = (g, answer, answeredAt) => ({
+  ...g,
+  answer,
+  answeredAt,
+  status: answer === "good enough" ? "accepted" : g.status,
+});
+
+/** What to build in a phase, read right before the phase starts: an item
+ *  answered "good enough" is accepted and skipped; "build" or no answer (the
+ *  person did not reply in time) builds it. Pure, so a test can simulate the
+ *  answers; returns the gaps updated with their decision. */
+export function planPhase(gaps, phase) {
+  const build = [];
+  const skipped = [];
+  const updated = gaps.map((g) => {
+    if (g.phase !== phase || g.status === "built") return g;
+    if (g.answer === "good enough") {
+      const u = { ...g, status: "accepted" };
+      skipped.push(u);
+      return u;
+    }
+    const u = {
+      ...g,
+      status: "building",
+      decision: g.answer === "build" ? "answered: build" : "no answer: build",
+    };
+    build.push(u);
+    return u;
+  });
+  return { build, skipped, gaps: updated };
+}
+
 /** Append a cousin / none result to an app's gaps.json (the sketch-fidelity
  *  shape `{title, kind, nearest, props}` plus `outcome`, `need`, `next`).
  *  Idempotent on `title`. Returns the entry, or null for an exact. */
+const pickAsk = ({ askedAt, answer, answeredAt, status }) => ({
+  ...(askedAt ? { askedAt } : {}),
+  ...(answer ? { answer } : {}),
+  ...(answeredAt ? { answeredAt } : {}),
+  ...(status && status !== "open" ? { status } : {}),
+});
+
 export function appendGap(path, res) {
   if (res.outcome === "exact") return null;
   const list = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : [];
@@ -371,24 +433,31 @@ export function appendGap(path, res) {
     nearest: res.gap.nearest,
     props: null,
     outcome: res.outcome,
+    phase: res.phase,
+    status: "open",
     need: res.gap.description,
     missing: res.gap.missing,
     placeholder: res.placeholder,
     next:
       res.outcome === "cousin"
         ? `gap-filler agent: extend or compose ${res.gap.nearest} into ${res.gap.name}`
-        : `bespoke build: ${res.gap.name}`,
+        : `bespoke build: ${res.gap.name}, packaged for reuse`,
+    askedAt: null,
+    answer: null,
+    answeredAt: null,
   };
   const i = list.findIndex((g) => g.title === entry.title);
+  // a re-run keeps the ask fields the builder already filled in
   if (i === -1) list.push(entry);
-  else list[i] = { ...list[i], ...entry };
+  else list[i] = { ...entry, ...pickAsk(list[i]) };
+  list.sort((a, b) => (a.phase ?? 9) - (b.phase ?? 9));
   writeFileSync(path, `${JSON.stringify(list, null, 2)}\n`);
   return entry;
 }
 
 export const render = (res) => {
   const lines = [
-    `Outcome: ${res.outcome.toUpperCase()} (confidence ${res.confidence}, ${res.path} path${res.walked ? `, ${res.walked} candidates walked` : ""})`,
+    `Outcome: ${res.outcome.toUpperCase()}, phase ${res.phase} (confidence ${res.confidence}, ${res.path} path${res.walked ? `, ${res.walked} candidates walked` : ""})`,
   ];
   lines.push(`Read as: ${res.need.tags.join(", ") || "(no tags)"}`);
   if (res.pick)
@@ -403,7 +472,12 @@ export const render = (res) => {
     lines.push(
       `Placeholder: <GapBox title="${res.gap.name}" nearest="${res.gap.nearest}" />`,
     );
-  if (res.gap) lines.push(`Gap: ${res.gap.name} — ${res.gap.description}`);
+  if (res.gap) {
+    lines.push(`Gap: ${res.gap.name} — ${res.gap.description}`);
+    lines.push(
+      `Ask now, build in phase ${res.phase}: ${askText({ outcome: res.outcome, nearest: res.gap.nearest, need: res.gap.description, title: res.gap.name })}`,
+    );
+  }
   if (res.alternatives?.length)
     lines.push(
       `Alternatives: ${res.alternatives.map((a) => `${a.name} (${a.fit})`).join(", ")}`,

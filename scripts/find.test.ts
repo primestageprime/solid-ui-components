@@ -324,3 +324,93 @@ describe("three outcomes (scripts/find-outcome.mjs over scripts/find-outcomes-be
     }
   }, 60_000);
 });
+
+describe("build phases and ask-early (diddit #4163 Decisions #4523, #4524)", () => {
+  const gap = (title: string, outcome: "cousin" | "none", extra = {}) => ({
+    title,
+    outcome,
+    phase: outcome === "cousin" ? 2 : 3,
+    nearest: outcome === "cousin" ? "ScrubChart" : "none",
+    need: `a ${title}`,
+    status: "open",
+    askedAt: "2026-10-20T10:00:00Z",
+    answer: null,
+    answeredAt: null,
+    ...extra,
+  });
+  it("an outcome maps to its phase: exact 1, cousin 2, none 3", async () => {
+    const { PHASE } = await import("./find-outcome.mjs");
+    expect(PHASE).toEqual({ exact: 1, cousin: 2, none: 3 });
+  });
+  it("'good enough' skips the item and marks it accepted; 'build' and no answer both build", async () => {
+    const { planPhase, withAnswer } = await import("./find-outcome.mjs");
+    const gaps = [
+      withAnswer(
+        gap("CandlestickChart", "cousin"),
+        "good enough",
+        "2026-10-20T10:09:00Z",
+      ),
+      withAnswer(gap("GanttChart", "cousin"), "build", "2026-10-20T10:12:00Z"),
+      gap("PieChart", "cousin"), // unanswered after the timeout
+      gap("MapPins", "none"), // phase 3: not this phase's business
+    ];
+    const p2 = planPhase(gaps, 2);
+    expect(p2.skipped.map((g) => g.title)).toEqual(["CandlestickChart"]);
+    expect(p2.build.map((g) => [g.title, g.decision])).toEqual([
+      ["GanttChart", "answered: build"],
+      ["PieChart", "no answer: build"],
+    ]);
+    expect(p2.gaps.find((g) => g.title === "CandlestickChart")?.status).toBe(
+      "accepted",
+    );
+    expect(p2.gaps.find((g) => g.title === "MapPins")?.status).toBe("open");
+    const p3 = planPhase(p2.gaps, 3);
+    expect(p3.build.map((g) => g.title)).toEqual(["MapPins"]);
+  });
+  it("the Question names the nearest and the gap, and a gaps.json entry carries the ask fields", async () => {
+    const { askText, appendGap } = await import("./find-outcome.mjs");
+    expect(askText(gap("CandlestickChart", "cousin"))).toBe(
+      'Is ScrubChart good enough for "a CandlestickChart", or should I build CandlestickChart?',
+    );
+    const { mkdtempSync, readFileSync: rf } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const path = join(mkdtempSync(join(tmpdir(), "sui-gaps-")), "gaps.json");
+    const res = {
+      outcome: "cousin",
+      phase: 2,
+      placeholder: "ScrubChart",
+      gap: {
+        name: "CandlestickChart",
+        description: "a candlestick chart",
+        nearest: "ScrubChart",
+        missing: ["candlestick"],
+      },
+    };
+    appendGap(path, res as never);
+    let list = JSON.parse(rf(path, "utf8"));
+    expect(list[0]).toMatchObject({
+      title: "CandlestickChart",
+      phase: 2,
+      status: "open",
+      askedAt: null,
+      answer: null,
+      answeredAt: null,
+    });
+    // the builder answers in place; a re-run of find keeps the answer
+    list[0] = {
+      ...list[0],
+      askedAt: "t0",
+      answer: "good enough",
+      answeredAt: "t1",
+    };
+    const { writeFileSync: wf } = await import("node:fs");
+    wf(path, JSON.stringify(list));
+    appendGap(path, res as never);
+    list = JSON.parse(rf(path, "utf8"));
+    expect(list[0]).toMatchObject({
+      askedAt: "t0",
+      answer: "good enough",
+      answeredAt: "t1",
+    });
+  });
+});
