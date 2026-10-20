@@ -85,7 +85,7 @@ export function GroupedSelector<T extends GroupedItem, G extends string>(
   });
 
   return (
-    <ScrollColumn>
+    <ScrollColumn class={props.variant === "flush" ? "sui-grouped-selector__scroll sui-grouped-selector__scroll--flush" : "sui-grouped-selector__scroll"}>
       <div
         ref={root}
         class={props.variant === "flush" ? "sui-grouped-selector sui-grouped-selector--flush" : "sui-grouped-selector"}

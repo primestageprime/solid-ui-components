@@ -72,3 +72,13 @@
 .sui-grouped-selector--flush .sui-grouped-selector__item[aria-selected="true"] {
   box-shadow: inset var(--sui-grouped-bar) 0 0 var(--sui-accent);
 }
+
+/* The flush rail keeps a painted scrollbar: with `scrollbar-width` and `scrollbar-color` back at `auto`
+   the theme's ::-webkit-scrollbar rules apply again (Chromium ignores them while either standard property
+   is set, and then draws an overlay bar that hides at rest); the stable gutter keeps the rows from shifting
+   when the list grows past the panel. */
+.sui-grouped-selector__scroll--flush {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+  scrollbar-gutter: stable;
+}
