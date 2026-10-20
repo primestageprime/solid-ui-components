@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // TabbedSidePanel — Composite (Depth 2)
+// Tags: shows:tabs, shows:panel, does:collapse, does:navigate, does:toggle, data:enum, role:rail
 // Zero CSS. Composes Tabs (vertical) + Row.
 // Tab strip is always visible; active tab's
 // content renders inboard only when isOpen=true.

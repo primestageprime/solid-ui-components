@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ThreadGroup — Atomic Primitive (Depth 1)
+// Tags: shows:thread, shows:avatar, shows:text, does:view, does:collapse, data:list, data:participants, role:section
 // Owns CSS (ThreadGroup.css). Renders the
 // structural block for one author-grouped
 // message thread inside a conversation —

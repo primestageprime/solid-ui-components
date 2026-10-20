@@ -209,6 +209,22 @@ growing pane"` surfaces `FillPaneRailGrid` / `MajorPaneBox` /
 surfaces `HalfFillColumn`. Run this BEFORE step (a) below — it is how you find
 the name to cite.
 
+Since 2026-10-20 (`scripts/find.mjs`) the finder ranks on **tags** first and
+prose second. Every base component file carries a `Tags:` line beside its
+depth header — four closed facets from `scripts/tags-vocabulary.json`
+(`shows:` what is drawn, `does:` the interaction, `data:` the shape fed in,
+`role:` where it sits) — and `npm run find -- "<need>"` turns the need into
+the same tags (vocabulary words directly, builder phrasings through
+`scripts/find-lexicon.json`), scores by how much of the need a record covers,
+and inside the tie band hands the win to the most composed record. The output
+says why (tags hit, words hit, penalties) and what each result is **made of**;
+`--json` gives the same to a script. `scripts/find-bench.json` is the
+benchmark (60 needs phrased like briefs, tuning + held-out split;
+`npm run find:bench`), and `scripts/find.test.ts` pins its floor. The health
+gate ratchets `untaggedComponents` and `unknownTags` at 0: a new component
+must carry a `Tags:` line, and a new word goes into the vocabulary first.
+`npm run find:legacy` is the old prose-only ranker, kept for comparison.
+
 **(a) Name the existing component or variant that covers it** — by name — and
 use it. Search on the *state model* rather than the name you imagined (the
 `sui-gap-analysis` route does exactly this); a component you could not find is

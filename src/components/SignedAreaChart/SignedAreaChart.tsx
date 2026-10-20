@@ -1,5 +1,6 @@
 // ============================================
 // SignedAreaChart — Composed (Depth 2)
+// Tags: shows:chart, does:hover, does:view, data:time-series, data:series, role:panel
 // Composes Chart + Grid + XAxis + YAxis + AreaSeries x4 + LineSeries x2 +
 // ReferenceLine x2 from src/components/Chart. Draws no SVG and owns no CSS.
 //

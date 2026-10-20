@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ResizableContainer — Layout (Depth 0)
+// Tags: shows:panel, does:resize, does:drag, data:scalar, role:container
 // Owns CSS (ResizableContainer.css), no component imports.
 // Container with draggable edge handles for manual resize.
 // ============================================

@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // StatusFlowChart — Composite (Depth 2). Composes SwimlaneChart (Depth 1).
+// Tags: shows:flow, shows:chart, shows:count, does:view, does:hover, data:steps, data:grouped, role:panel
 import {
   createMemo,
   createSignal,

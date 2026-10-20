@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Box — Primitive (Depth 0)
+// Tags: shows:panel, does:layout, data:scalar, role:container
 // Owns CSS (Layout.css). Flex child with
 // grow/shrink control. Factory: createBox().
 // ============================================

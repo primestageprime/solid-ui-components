@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ProductGridCard — Primitive (Depth 1). Atomic.
+// Tags: shows:card, shows:progress, shows:text, does:select, does:click, data:scalar, role:row
 // Owns CSS (ProductGridCard.css), imports no other components.
 //
 // A small selectable card used inside ProductGrid's cell stacks. Renders a

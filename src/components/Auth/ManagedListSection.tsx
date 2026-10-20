@@ -1,5 +1,6 @@
 // ============================================
 // ManagedListSection — Composite (Depth 2)
+// Tags: shows:list, shows:field, shows:button, does:edit, does:submit, data:list, role:section
 // Zero CSS. User-confirmed Auth0 account linking ("add a way to sign in to
 // this account") plus removal of linked methods. Lives in an app's Settings,
 // which is only reachable signed in. Since merge-on-link, linking from

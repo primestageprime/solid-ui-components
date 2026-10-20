@@ -1,5 +1,6 @@
 // ============================================
 // WindowStrip — Composite (Depth 2, zero CSS)
+// Tags: shows:field, shows:date, does:pick, does:edit, data:range, role:row
 // Composes PopoverTooltip, DatePicker, SmallButton, ChipCluster and Text.
 // "[start] to [end]" on one wrapping line. An empty side is open and reads
 // "beginning of time" or "end of time"; neither is the whole line and one is a

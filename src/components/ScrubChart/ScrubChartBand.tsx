@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-09-11
 // lastReviewedBy: adlai.arnold
 // ScrubChartBand — Structural (Depth 1). SVG chart mark; composes no
+// Tags: shows:mark, does:view, data:range, data:series, role:slot
 // library components.
 // ============================================
 // The `ScrubChart` ADAPTER for the deviation-band mark, per

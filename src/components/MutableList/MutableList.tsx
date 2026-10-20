@@ -1,5 +1,6 @@
 // ============================================
 // MutableList — Composite (Depth 3).
+// Tags: shows:list, shows:card, shows:field, does:edit, does:reorder, does:drag, does:dismiss, data:list, role:panel
 // A SortableList specialized into editable, deletable cards. It IS a
 // SortableList: it COMPOSES `<SortableList>` (Depth 2) and supplies a
 // `renderItem` whose card shows an inline-editable NAME on the left and a

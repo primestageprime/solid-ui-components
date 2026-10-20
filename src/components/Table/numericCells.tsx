@@ -1,4 +1,5 @@
 /* Numeric cell renderers — Atomic (Depth 1).
+ * Tags: shows:number, shows:money, shows:duration, does:view, data:scalar, role:cell
  * Numeric value renderers (Money, Duration, Float, Int, MetricValue).
  * Container-agnostic — render equally in a table cell, a definition-list <dd>,
  * or a card slot; each owns its styling via the co-located CSS below. */

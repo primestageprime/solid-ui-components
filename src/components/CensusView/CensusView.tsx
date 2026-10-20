@@ -1,4 +1,5 @@
 // CensusView — Composite (Depth 3). Zero CSS except CensusView.css structural
+// Tags: shows:table, shows:heatmap, shows:count, does:view, does:select, data:matrix, data:table, role:page
 // exception: the two-column grid + sticky detail rail geometry.
 import { type Component, For, Show, createSignal } from "solid-js";
 import { QuickFilter } from "../QuickFilter";

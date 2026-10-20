@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // CollapsiblePanel — Composed (Depth 2)
+// Tags: shows:panel, does:collapse, does:toggle, data:scalar, role:rail
 // Owns CSS (CollapsiblePanel.css), no component imports.
 // A side panel that collapses to a vertical strip with a rotated label.
 // Optionally mirrors collapsed state to localStorage via persistKey.

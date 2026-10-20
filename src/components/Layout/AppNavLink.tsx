@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // AppNavLink — Atomic (Depth 1)
+// Tags: shows:link, shows:text, does:navigate, data:list, role:header
 // Owns CSS (Layout.css). Button-based top-bar nav link with an active state.
 // Pair with AppHeader. Use over the existing <NavLink> when the consumer
 // dispatches navigation through a router callback (onClick) rather than via

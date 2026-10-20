@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ParticipantAvatar — Atomic Primitive (Depth 1)
+// Tags: shows:avatar, does:view, data:participants, role:inline
 // Owns CSS (ParticipantAvatar.css). Renders a
 // circular avatar — image when provided, otherwise
 // initials on a tinted disc.

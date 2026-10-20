@@ -2,6 +2,7 @@
 // lastReviewedBy: peter.stradinger
 // ============================================
 // ExtractionBoard — Composite (Depth 4) swimlane board for an ETL extraction view.
+// Tags: shows:list, shows:progress, shows:status, shows:card, does:view, does:animate, data:grouped, data:steps, role:page
 // (Composes the ./cards vocabulary (Depth 3, via CountChip Depth 2) + Layout variants.)
 // Owns CSS (ExtractionBoard.css). Composes Surface / Text / StatusBadge /
 // Icon / Tooltip / SlotFillBar / BatchBar / CountChip / ProportionalStack.

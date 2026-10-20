@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // WorkerCard — Depth 2 (owns CSS)
+// Tags: shows:card, shows:status, shows:progress, does:view, does:animate, data:list, data:steps, role:row
 // Composes the Surface primitive (card chrome) and Text
 // primitive (name/timer/meta) and hand-rolls only the
 // bespoke status micro-badge + expand/collapse rows.

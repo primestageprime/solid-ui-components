@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // DnDHierarchySortBar — Atomic (Depth 1).
+// Tags: shows:chip, shows:toolbar, does:drag, does:reorder, data:list, role:toolbar
 // Horizontal row of draggable "dimension" pills the user drag-reorders to
 // reorder a tag hierarchy. Controlled: caller owns the order via `items` +
 // `onReorder`. Uses native HTML drag-and-drop via the headless `createDnDReorder`

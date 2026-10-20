@@ -1,5 +1,6 @@
 // ============================================
 // SegmentedInput — Atomic (Depth 1)
+// Tags: shows:button, shows:field, does:select, does:toggle, data:enum, role:control
 // Owns CSS (SegmentedInput.css); imports only the GrowColumn layout variant,
 // for the optional `label` caption (the same shape NameInput uses).
 // Single-select segmented control: a horizontal row of

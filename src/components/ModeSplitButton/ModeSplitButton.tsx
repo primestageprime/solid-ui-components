@@ -1,5 +1,6 @@
 // ============================================
 // ModeSplitButton — Composite (Depth 2, zero CSS)
+// Tags: shows:button, shows:menu, does:click, does:select, data:enum, role:control
 // Composes IconOnlyButton + Icon + RightPopoverMenu + Text (sr-only label).
 //
 // A SPLIT BUTTON OVER A MODE. The face shows the current mode's icon and does

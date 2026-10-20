@@ -12,6 +12,7 @@ import { observeSize } from "../../internal/dom/observeSize";
 
 /**
  * ScrollRegion — Atomic Primitive (Depth 1). Owns `ScrollRegion.css`.
+ * Tags: shows:panel, does:scroll, data:scalar, role:container
  *
  * A self-contained, DYNAMIC scroll affordance. Renders a `position: relative`
  * frame wrapping a scroll container (`overflow-y: auto`) that holds

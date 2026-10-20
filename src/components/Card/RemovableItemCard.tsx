@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // RemovableItemCard — Depth 2 (zero CSS)
+// Tags: shows:card, shows:button, does:select, does:dismiss, data:scalar, role:row
 // Composes Surface (curried: InteractiveCard) +
 // Layout (curried: SpreadRow) + Text (curried:
 // FlexLabel) + Button (Atomic/Depth 1).

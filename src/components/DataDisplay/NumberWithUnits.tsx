@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // NumberWithUnits — Atomic Primitive (Depth 1)
+// Tags: shows:number, shows:text, does:view, data:scalar, role:inline
 // Owns CSS (NumberWithUnits.css), no library Primitive imports.
 // Monospace value paired with a faded units label, baseline-aligned
 // on a single line. Data-driven `color` flows as an inline style on

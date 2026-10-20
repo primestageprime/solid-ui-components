@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Section — Atomic (Depth 1)
+// Tags: shows:panel, shows:header, shows:text, does:collapse, does:view, data:scalar, role:section
 // Owns CSS (Section.css), no component imports.
 // Merged HUDSection + generic Section.
 // Collapsible section with title, subtitle, corner decorations.

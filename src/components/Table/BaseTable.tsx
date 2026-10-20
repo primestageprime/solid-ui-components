@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // BaseTable — Atomic (Depth 1)
+// Tags: shows:table, does:sort, does:scroll, data:table, role:panel
 // Owns CSS (Table.css), no component imports.
 // Sortable table with sticky header, striped rows.
 // Supports optional column groups (colspan headers).

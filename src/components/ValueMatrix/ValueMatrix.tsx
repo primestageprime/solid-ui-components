@@ -1,5 +1,6 @@
 // ============================================
 // ValueMatrix — Composite (Depth 2: composes BaseTable)
+// Tags: shows:grid, shows:table, shows:number, shows:status, does:hover, does:view, data:matrix, role:panel
 // A row-axis × column-axis grid of computed values — NOT a row table: every
 // cell is `value(row, col)`, evaluated across two axes. Treatment follows the
 // 2026-07-17 ruling: consumers configure functions (value, row, col) → Tone

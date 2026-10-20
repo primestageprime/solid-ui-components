@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // AsyncProgress — Depth 1 (owns CSS)
+// Tags: shows:progress, shows:bar, shows:duration, does:animate, data:scalar, role:inline
 // Time-based progress bar that estimates completion
 // from historical max durations stored in localStorage.
 // ============================================

@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // HeatStream — Atomic (Depth 1)
+// Tags: shows:heatmap, shows:timeline, does:hover, data:time-series, role:panel
 // Owns CSS (HeatStream.css), no component imports.
 // Transposed stream: keys flow top-to-bottom (rows),
 // items flow left-to-right (columns, earliest left, latest right).

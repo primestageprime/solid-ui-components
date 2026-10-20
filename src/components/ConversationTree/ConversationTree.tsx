@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ConversationTree — Pure Composite (Depth 2).
+// Tags: shows:thread, shows:tree, shows:avatar, does:view, does:collapse, data:tree, data:participants, role:panel
 // Composes ThreadGroup + ParticipantAvatar +
 // ParticipantNameLabel + ParticipantTimeLabel +
 // LabeledDivider + Duration + MessageBubble +

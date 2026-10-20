@@ -5,6 +5,7 @@
 // Exports factories (`createFormulaResult`, `createGivens`,
 // `createFormula`, `createFormulaPanel`) that return Composites
 // over: ResultDisplay (Atomic Primitive, Depth 1) + NumberWithUnits
+// Tags: shows:formula, shows:number, does:view, data:list, role:section
 // (Atomic Primitive, Depth 1) + DTable (Composite, Depth 2) +
 // MathFormula (Atomic) + StatusBadge (Atomic) + Surface (Atomic) +
 // Layout/Text Curried Variants. Resulting Composites are Depth 2–3

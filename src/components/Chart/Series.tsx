@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // Series (LineSeries / etc.) — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:chart, shows:bar, shows:mark, does:view, data:series, data:time-series, role:slot
 import {
 	type Component,
 	createEffect,

@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // LiveHeartbeatTrace — Composed (Depth 2)
+// Tags: shows:sparkline, shows:status, does:animate, data:time-series, role:cell
 // Composes HeartbeatSparkline (Atomic). Owns the sample buffer + tick timer
 // and derives connection state from the most recent heartbeat timestamp.
 // ============================================

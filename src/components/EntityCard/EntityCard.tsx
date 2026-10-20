@@ -1,5 +1,6 @@
 // ============================================
 // EntityCard — the unified sidebar/list card (Composite, Depth 2, owns CSS)
+// Tags: shows:card, shows:status, shows:text, does:select, does:click, data:scalar, role:row
 // ============================================
 //
 // A region-slot card: SUI owns the layout, grid, selection affordance, and the

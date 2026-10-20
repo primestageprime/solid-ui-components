@@ -1,4 +1,5 @@
 // GroupedBucketQueue — Composite (Depth 2): composes BucketQueue's row/
+// Tags: shows:tree, shows:list, shows:count, does:select, does:collapse, does:filter, data:grouped, data:tree, role:rail
 // selection/keyboard semantics (imported directly from its internal
 // ./keyboard and ./selection modules) over a nested group tree rather than
 // BucketQueue's own flat bucket list. A NESTED-header list over BucketQueue's

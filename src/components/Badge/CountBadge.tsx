@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // CountBadge — Composed (Depth 2)
+// Tags: shows:badge, shows:count, does:view, data:scalar, role:overlay
 // Composes DigitRoller so the count ROLLS on change (counts roll by default —
 // Peter, 2026-07-14). Owns CountBadge.css as a deliberate Depth-2 exception:
 // the corner-pill chrome is intrinsic styling no atomic variant expresses

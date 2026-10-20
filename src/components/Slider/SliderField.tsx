@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Slider/SliderField — Atomic (Depth 1)
+// Tags: shows:field, shows:number, does:type, does:edit, data:scalar, role:control
 // Shares Slider.css with Slider. Imports no other component.
 //
 // The editable readout, on its own. `Slider`'s `editable` path draws one of

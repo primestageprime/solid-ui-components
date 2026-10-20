@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // DateAxis — Atomic (Depth 1).
+// Tags: shows:axis, shows:date, shows:heatmap, does:select, does:drag, data:time-series, role:control
 // Cadence-generic horizontal cell ribbon. One cell per item in `cells`;
 // caller supplies a `renderCell` function that draws each cell's content.
 //

@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-09-11
 // lastReviewedBy: adlai.arnold
 // ScrubChartReferenceLine — Structural (Depth 1). SVG chart mark; composes no
+// Tags: shows:mark, does:view, data:scalar, role:slot
 // library components.
 // ============================================
 // The `ScrubChart` ADAPTER for the reference-line mark, per

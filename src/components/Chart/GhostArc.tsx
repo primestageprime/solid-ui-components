@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // GhostArc — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, does:hover, data:pair, role:slot
 // pointer-events=none so the arc (a preview-only affordance) never
 // intercepts clicks intended for the slots beneath it.
 import { type Component, Show, mergeProps } from "solid-js";

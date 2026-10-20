@@ -1,5 +1,6 @@
 // ============================================
 // ChannelChart — Composite (Depth 2). A band (the CHANNEL) with a running
+// Tags: shows:chart, shows:legend, does:hover, does:view, data:time-series, data:range, role:panel
 // value inside it, optionally stacked above a diverging-bar plot that shares
 // its period axis. Composes `Chart` ×2 + `Grid` + `XAxis` / `YAxis` +
 // `AreaSeries` (with `lower`) + `LineSeries` + `PointSeries` + `BarSeries` +

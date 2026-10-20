@@ -1,5 +1,6 @@
 // ============================================
 // DatePicker — Atomic (Depth 1)
+// Tags: shows:field, shows:date, shows:calendar, does:pick, data:scalar, role:control
 // Owns CSS (DatePicker.css); imports only the GrowColumn layout variant, for
 // the optional `label` caption (the same shape NameInput uses).
 // A themed date control that ALWAYS DISPLAYS ISO YYYY-MM-DD at a FIXED

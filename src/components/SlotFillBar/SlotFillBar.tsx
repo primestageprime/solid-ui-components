@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // SlotFillBar — Atomic (Depth 1)
+// Tags: shows:progress, shows:bar, shows:status, does:animate, data:list, data:steps, role:inline
 // Owns CSS (SlotFillBar.css), no component imports.
 // A fill-from-left progress bar for a queue / pipeline of equal-sized work
 // slots that move through todo → doing → done. Two distinct transitions:

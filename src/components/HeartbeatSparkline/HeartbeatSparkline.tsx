@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // HeartbeatSparkline — Atomic (Depth 1)
+// Tags: shows:sparkline, shows:progress, does:view, data:time-series, role:inline
 // Owns CSS (HeartbeatSparkline.css), no component imports.
 // Rectangular sparkline showing % of heartbeat-timeout used over time.
 // 0 = fresh heartbeat, 1 = timeout reached.

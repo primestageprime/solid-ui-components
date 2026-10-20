@@ -2,6 +2,7 @@
 // lastReviewedBy: claude
 // ============================================
 // BuilderBoardBelowChart — Composite (Depth 2)
+// Tags: shows:table, shows:field, does:edit, data:schedule, data:list, role:panel
 //
 // The BuilderBoard for a page that sits BELOW the app shell's persistent
 // chart. Panel A is the shell's chart — one instance that never remounts

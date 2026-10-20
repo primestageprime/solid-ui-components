@@ -1,5 +1,6 @@
 // ============================================
 // ActionListItem — Composite (Depth 2)
+// Tags: shows:card, shows:status, shows:button, does:select, does:hotkey, data:scalar, role:row
 // Owns CSS (ActionListItem.css) as a DELIBERATE Depth-2 exception: the row is
 // pure structural geometry (the flex layout, the transparent-border hover
 // outline that lights with zero geometry shift, the tone opacity, and the

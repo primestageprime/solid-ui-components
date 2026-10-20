@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ResultPanel — Composite (Depth 2, zero CSS).
+// Tags: shows:number, shows:formula, does:view, data:scalar, role:section
 // Composes ResultDisplay (Atomic Primitive, Depth 1) +
 // FormulaProvider (from MathFormula, Atomic) + NarrowStack
 // (Layout Curried Variant).

@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // InlineChartErrorOverlay — Atomic (Depth 1)
+// Tags: shows:notice, shows:chart, does:view, data:text, role:overlay
 // Owns CSS (InlineChartErrorOverlay.css), no component imports.
 // Overlay for chart areas with title and subtitle.
 // ============================================

@@ -1,0 +1,41 @@
+{
+  "$comment": "Closed tag vocabulary for the `Tags:` header line every base component file carries (scripts/catalog.mjs parses it; scripts/health.mjs ratchets `untaggedComponents` and `unknownTags`). Four facets, generic words only: no app nouns, no domain names. Composition level is the existing depth header, not a tag. Add a word here before using it in a header.",
+  "facets": {
+    "shows": {
+      "what": "What the reader sees drawn.",
+      "values": [
+        "table", "list", "tree", "grid", "chart", "bar", "timeline", "flow", "graph",
+        "heatmap", "treemap", "gauge", "sparkline", "axis", "mark", "legend",
+        "card", "panel", "header", "toolbar", "tabs", "menu", "dialog", "toast",
+        "notice", "empty", "placeholder", "divider", "tooltip",
+        "badge", "chip", "avatar", "status", "icon", "kbd", "link", "button", "field",
+        "text", "number", "money", "date", "duration", "count", "progress",
+        "log", "thread", "diff", "code", "formula", "markdown", "calendar"
+      ]
+    },
+    "does": {
+      "what": "How a person interacts with it.",
+      "values": [
+        "view", "click", "select", "multi-select", "toggle", "edit", "type", "pick",
+        "drag", "reorder", "resize", "scroll", "collapse", "expand", "reveal", "hover",
+        "zoom", "pan", "navigate", "filter", "search", "sort", "submit", "dismiss",
+        "upload", "animate", "hotkey", "bulk", "truncate", "layout"
+      ]
+    },
+    "data": {
+      "what": "The shape of the data it is fed.",
+      "values": [
+        "scalar", "pair", "range", "boolean", "enum", "text", "markdown", "file",
+        "list", "grouped", "tree", "table", "matrix", "graph",
+        "series", "multi-series", "time-series", "events", "steps", "schedule", "participants"
+      ]
+    },
+    "role": {
+      "what": "Where it sits in a page.",
+      "values": [
+        "page", "shell", "panel", "rail", "header", "toolbar", "section", "container",
+        "row", "cell", "inline", "overlay", "slot", "control"
+      ]
+    }
+  }
+}

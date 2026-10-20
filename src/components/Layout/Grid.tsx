@@ -1,5 +1,6 @@
 // ============================================
 // Grid — Primitive (Depth 1)
+// Tags: shows:grid, does:layout, data:list, role:container
 // Owns CSS (Layout.css). A CSS-grid container: the `columns` override supplies
 // `grid-template-columns` (any track list), `gap`/`align` come from the scale.
 // For genuine 2-D / label-value layouts that a flex Row/Stack can't express.

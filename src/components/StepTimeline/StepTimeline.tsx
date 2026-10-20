@@ -1,5 +1,6 @@
 // ============================================
 // StepTimeline — Composite (Depth 3)
+// Tags: shows:timeline, shows:chart, shows:progress, does:hover, does:view, data:steps, data:events, data:time-series, role:panel
 // Owns zero CSS files and zero inline style={}. Composes ChartFrame (Depth 2,
 // curried at factory time with a stated height) around StackedTimelineChart
 // (Depth 2, curried with a linear crossing, hour ticks and whole-count y

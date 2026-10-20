@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // CashflowScrubChart — Domain Composite (Depth 3).
+// Tags: shows:chart, shows:axis, shows:money, does:zoom, does:drag, does:hover, data:time-series, data:multi-series, role:panel
 // Composes `ScrubChart` (Depth 2) with a baked-in cashflow day-cell renderer
 // (date corner + diverging green/red bar + dollar amount) and a baked-in
 // running-balance line drawing. Zero-config at the call site: consumer just

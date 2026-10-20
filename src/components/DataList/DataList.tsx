@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // DataList — Depth 3 (zero CSS)
+// Tags: shows:table, shows:text, shows:badge, does:view, data:pair, data:table, role:container
 // Composes Cell (curried) + Text (curried) +
 // StatusBadge (Atomic). Semantic data table
 // with DTable, DT, DD, DRow, Badge, Val, etc.

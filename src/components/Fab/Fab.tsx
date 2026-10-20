@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Fab — Composite (Depth 2)
+// Tags: shows:button, shows:icon, does:click, data:scalar, role:overlay
 // Composes Button + Icon (both Depth-1 atomics).
 // Exception: owns a minimal structural CSS file (circle / fixed
 // size / elevation) — the float/circle/size geometry is structural

@@ -3,6 +3,7 @@ import "./ChartCanvas.css";
 
 /**
  * ChartCanvas — Atomic Primitive (Depth 1). Owns `ChartCanvas.css`.
+ * Tags: shows:chart, does:view, data:series, role:container
  *
  * A positioned container wrapping a Chart.js `<canvas>`. The container owns
  * `position: relative` + `width: 100%`; the chart-area height is baked per

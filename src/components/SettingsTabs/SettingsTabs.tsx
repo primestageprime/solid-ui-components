@@ -1,4 +1,5 @@
 // LocalizationSettings and SharingSettings (Depth 2). The bodies of the two generic
+// Tags: shows:tabs, shows:field, shows:panel, does:navigate, does:edit, data:enum, role:page
 // settings tabs every app shows beside Theme. Uncontrolled they run on the stub model in
 // settingsState.ts; give `value` and `onChange` to drive them from the app's own model (the
 // scaffold passes its ~/lib/preferences, so the tab's branch calls an app mutator).

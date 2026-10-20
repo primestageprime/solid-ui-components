@@ -1,5 +1,6 @@
 // ============================================
 // StampedRow — Composite (Depth 2)
+// Tags: shows:text, shows:date, shows:avatar, does:view, data:scalar, role:row
 // Owns zero CSS files and zero inline style={} (STYLE_GUIDE Layout Purity —
 // composes curried Primitives only).
 // One timestamped line: a 16px glyph, a label that takes the width and

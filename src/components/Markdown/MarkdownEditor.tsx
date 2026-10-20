@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // MarkdownEditor — Composed (Depth 2)
+// Tags: shows:markdown, shows:field, does:edit, does:type, data:markdown, role:panel
 // Composes Markdown for preview. 50/50 split: textarea | preview.
 // ============================================
 import { type Component, mergeProps } from "solid-js";

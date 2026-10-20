@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // TimelineBar — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:timeline, shows:bar, does:view, data:schedule, role:slot
 // Lanes are inferred from data in first-encounter order when `lanes` is
 // omitted (otherwise the caller-supplied order wins, top-to-bottom).
 import { type Component, For, Show, createMemo, mergeProps } from "solid-js";

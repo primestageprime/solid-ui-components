@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // Grid — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, does:view, data:series, role:slot
 // Chart slot: Grid — horizontal/vertical reference lines at scale ticks.
 import { type Component, For, Show } from "solid-js";
 import { useChart } from "./context";

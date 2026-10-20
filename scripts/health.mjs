@@ -45,7 +45,7 @@ import { run as runRenderCoverage } from "./render-coverage.mjs";
 import { run as runDocCoverage } from "./doc-coverage.mjs";
 import { run as runPropRubric } from "./prop-rubric.mjs";
 import { buildExportSurface } from "./export-surface.mjs";
-import { buildCatalog } from "./catalog.mjs";
+import { buildCatalog, loadTagVocabulary } from "./catalog.mjs";
 import { length, mapValues } from "./fn.mjs";
 import { classify, planBaselineUpdate } from "./health-ratchet.mjs";
 import { findBareAccessors } from "./bare-accessor.mjs";
@@ -235,6 +235,26 @@ const catalogSummaryGaps = catalogRecords
   .filter((r) => r.summary === null)
   .map((r) => `${r.name} (${r.kind}) ${r.file}:${r.line}`);
 
+// Component tags (2026-10-20): every base component file carries a `Tags:`
+// header line from the closed vocabulary in scripts/tags-vocabulary.json —
+// what `npm run find` ranks on first, so a new component without one is a
+// component the finder cannot reach for. `untaggedComponents` counts base
+// records (primitive / composite / factory — a curried variant inherits its
+// factory's line) whose own file has no line; `unknownTags` counts words a
+// line uses that the vocabulary does not list (add the word to the
+// vocabulary first, then use it). Both baselined at 0.
+const tagVocabulary = loadTagVocabulary(root);
+const untaggedComponents = catalogRecords
+  .filter((r) => r.kind !== "variant" && r.tagsSource !== "own")
+  .map((r) => `${r.name} (${r.kind}) ${r.file}`);
+const unknownTags = [];
+for (const r of catalogRecords) {
+  if (r.tagsSource !== "own" || !r.tags) continue;
+  for (const t of r.tags)
+    if (!tagVocabulary.has(t)) unknownTags.push(`${r.file}: ${t}`);
+}
+const unknownTagsUnique = [...new Set(unknownTags)];
+
 // Bare-accessor table columns (Peter ruling 2026-10-16): every TableColumn
 // goes through a value renderer — a column helper (dateTimeCol, intCol, …) or
 // an explicit `accessor: (row) => <Cell …/>` — never `accessor: "key"`, which
@@ -323,6 +343,8 @@ const detail = {
   missingDepthHeaders: missingDepth,
   componentsWithoutShowcase,
   catalogSummaryGaps,
+  untaggedComponents,
+  unknownTags: unknownTagsUnique,
 };
 
 const metrics = mapValues(length, detail);

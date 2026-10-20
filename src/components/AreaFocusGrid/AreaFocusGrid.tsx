@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // AreaFocusGrid — Primitive (Depth 1). Atomic.
+// Tags: shows:grid, shows:table, shows:number, does:select, does:hover, data:matrix, data:grouped, role:panel
 // Owns CSS (AreaFocusGrid.css), imports no other components.
 //
 // A (area × focus) pivot layout: each area is a header that spans its

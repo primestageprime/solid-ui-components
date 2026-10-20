@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ActionRow — Composed (Depth 2)
+// Tags: shows:button, shows:text, does:click, data:scalar, role:row
 // Owns CSS (ActionRow.css), no component imports.
 // A row with optional leading/trailing slots and a hover-revealed action
 // bar. Actions stay layout-stable via `visibility` toggling.

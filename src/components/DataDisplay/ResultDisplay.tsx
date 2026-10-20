@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ResultDisplay — Atomic Primitive (Depth 1)
+// Tags: shows:number, shows:text, does:view, data:scalar, role:inline
 // Header (label + sublabel) over a value+units row with optional badge
 // slot. Data-driven `valueColor` flows as inline style on the value span
 // — the Primitive owns the styling rule. The `highlightable`/`highlighted`

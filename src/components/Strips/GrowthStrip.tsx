@@ -1,5 +1,6 @@
 // ============================================
 // GrowthStrip — Composite (Depth 2, zero CSS)
+// Tags: shows:field, shows:number, does:edit, does:type, data:schedule, role:row
 // Composes SegmentedInput, CountInput100, CountInput10K, ChipCluster and Text.
 // How a count of units changes each period: none, + units per period, or %
 // per period, with an optional churn % and an optional ceiling. It edits an

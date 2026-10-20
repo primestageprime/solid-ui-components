@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ParticipantNameLabel — Atomic Primitive (Depth 1)
+// Tags: shows:text, shows:avatar, does:view, data:participants, role:inline
 // Owns CSS (ParticipantNameLabel.css). Renders
 // the author-name pill shown above a message
 // group. Typography (weight, size, nowrap) is

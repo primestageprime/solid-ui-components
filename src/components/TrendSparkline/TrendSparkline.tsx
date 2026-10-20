@@ -1,5 +1,6 @@
 // ============================================
 // TrendSparkline — Atomic (Depth 1)
+// Tags: shows:sparkline, shows:number, does:view, data:time-series, role:inline
 // Owns CSS (TrendSparkline.css), no component imports.
 // A tiny VALUE sparkline (data + trend color, no axes): the series scaled
 // into a fixed rect, stroked by trajectory — UP green, DOWN red, FLAT grey.

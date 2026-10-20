@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 /**
  * TreeDiffChart — Composite (Depth 2).
+ * Tags: shows:tree, shows:diff, shows:chart, does:view, does:hover, data:tree, data:pair, role:panel
  *
  * Draws a pre-computed diff of two scenario trees: the baseline root on the
  * left, the comparison root on the right, one band per root entry between

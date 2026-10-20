@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Tabs — Atomic (Depth 1)
+// Tags: shows:tabs, does:navigate, does:select, data:enum, role:header
 // Owns CSS (Tabs.css), no component imports.
 // Tab bar with horizontal or vertical orientation,
 // and underline/boxed/pill variants.

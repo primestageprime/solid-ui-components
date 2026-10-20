@@ -1,5 +1,6 @@
 // ============================================
 // EndLabels — Primitive (Depth 1). SVG mark; composes no library components.
+// Tags: shows:text, shows:mark, does:truncate, data:pair, role:slot
 // Owns SvgMarks.css (the label faces).
 //
 // A LEAD label at the left of the box it is handed and a TRAIL label at its

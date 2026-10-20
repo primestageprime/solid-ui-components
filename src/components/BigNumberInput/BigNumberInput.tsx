@@ -1,5 +1,6 @@
 // ============================================
 // BigNumberInput — Atomic (Depth 1)
+// Tags: shows:number, shows:money, shows:field, does:edit, does:type, data:scalar, role:inline
 // Owns CSS (BigNumberInput.css), no component imports.
 // An editable numeric input rendered at a LARGE font (the
 // size of a `Text variant="value"` headline). Used to edit

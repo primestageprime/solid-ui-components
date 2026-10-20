@@ -1,5 +1,6 @@
 // ============================================
 // MarkedSlider — Atomic Primitive (Depth 1)
+// Tags: shows:field, shows:gauge, shows:number, does:drag, does:edit, data:scalar, data:range, role:control
 // Owns CSS (MarkedSlider.css), imports no other library component. Its only
 // dependency is the headless third-party slider (@kobalte/core/slider), which
 // counts as a Primitive's own DOM the same way Slider, Combobox, Select and

@@ -1,5 +1,6 @@
 // ============================================
 // FormulaCaption — Composite (Depth 2). Composes Text (SteadyMonoMeta,
+// Tags: shows:formula, shows:number, shows:text, does:view, data:scalar, role:inline
 // ReservedMonoMeta); owns no CSS.
 //
 // A one-line caption that shows its work — `× $125 = $1,000` under an hours

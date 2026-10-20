@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ButtonGroup — Layout-exempt Primitive (Depth 1) (arranges child buttons).
+// Tags: shows:button, does:click, data:list, role:toolbar
 // Owns CSS (ButtonGroup.css), no component imports.
 //
 // Layout-purity status: ButtonGroup is `layout`-exempt (its whole job is

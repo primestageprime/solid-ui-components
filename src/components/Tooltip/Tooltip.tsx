@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Tooltip — Atomic (Depth 1)
+// Tags: shows:tooltip, shows:text, does:hover, data:text, role:overlay
 // Owns CSS (Tooltip.css), no component imports.
 // Kobalte-backed hover/focus tooltip with arrow + fade animation.
 // ============================================

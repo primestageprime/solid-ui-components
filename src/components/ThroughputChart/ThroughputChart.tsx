@@ -2,6 +2,7 @@
 // lastReviewedBy: peter.stradinger
 // ============================================
 // ThroughputChart — Composed (Depth 2)
+// Tags: shows:chart, shows:bar, shows:axis, shows:tooltip, does:hover, does:view, data:time-series, data:multi-series, role:panel
 //
 // Two modes, ONE component:
 //

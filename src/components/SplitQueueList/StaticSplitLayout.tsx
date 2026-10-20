@@ -1,4 +1,5 @@
 /* StaticSplitLayout — Composed (Depth 1). Composes Surface (Depth 0).
+ * Tags: shows:list, shows:panel, does:view, data:list, role:container
  * SplitQueueList — STATIC mode.
  *
  * A non-animated "two stacked labeled sections with a seam" layout: a read-only

@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // WeeklyCashflowChart — Composite (Depth 2). Composes CashflowBars + CashflowPopover (each Depth 1).
+// Tags: shows:chart, shows:bar, shows:money, does:hover, does:view, data:time-series, data:multi-series, role:panel
 // CashflowChart — weekly revenue/expense bars with a running-balance ("coffers")
 // line, extracted from a financial-runway app. Container-driven sizing: the chart FILLS
 // the height its layout box allots it (via a ResizeObserver that measures the

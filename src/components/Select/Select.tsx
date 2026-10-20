@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Select — Atomic (Depth 1)
+// Tags: shows:field, shows:menu, does:select, does:multi-select, data:enum, data:list, role:control
 // Owns CSS (Select.css), no library component imports (wraps Kobalte primitive).
 // Imports ICON_PATHS data from Icon Primitive's sibling dir — data import, not a component import.
 // Unified single- and multi-select built on `@kobalte/core/select`.

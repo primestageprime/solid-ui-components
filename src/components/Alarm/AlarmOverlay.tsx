@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // AlarmOverlay — Composite (Depth 2). Composes AlarmBands / AlarmHotZones / AlarmStripeDefs (each Depth 1).
+// Tags: shows:mark, shows:chart, does:view, data:range, data:time-series, role:slot
 import { type Component, For } from "solid-js";
 import { useChart } from "../Chart/context";
 import { AlarmBands } from "./AlarmBands";

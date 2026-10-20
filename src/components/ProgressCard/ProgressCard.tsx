@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ProgressCard — Depth 2
+// Tags: shows:card, shows:progress, shows:status, shows:flow, does:view, data:steps, role:row
 // Owns CSS (ProgressCard.css).
 // Composes Icon (Atomic/Depth 1) via ICON_PATHS
 // in variants (CacheProgressCard).

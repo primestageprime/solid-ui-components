@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // StackedProgressBar — Atomic (Depth 1)
+// Tags: shows:progress, shows:bar, does:view, data:grouped, data:list, role:inline
 // Owns CSS (StackedProgressBar.css), no component imports.
 // Multi-segment progress bar with horizontal/vertical orientation.
 // ============================================

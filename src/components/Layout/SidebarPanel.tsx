@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // SidebarPanel — Primitive (Depth 0)
+// Tags: shows:panel, does:layout, data:scalar, role:rail
 // Owns CSS (Layout.css). Flexible-width sidebar with right-edge delineation
 // and internal scrolling. The non-mock counterpart to DelineatedSidebar
 // (which is pinned at 400px for drafting); SidebarPanel takes a `width` prop

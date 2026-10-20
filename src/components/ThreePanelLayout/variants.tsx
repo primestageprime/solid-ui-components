@@ -1,5 +1,6 @@
 // ============================================
 // ThreePanelLayout Curried Variants — Depth 1 (zero CSS)
+// Tags: shows:panel, shows:log, does:layout, does:scroll, data:scalar, role:shell, role:page
 // The exported way to use a three-panel page. Each variant bakes its aside
 // widths (from tokens.ts) and `height: "100%"` via createThreePanelLayout;
 // a consumer passes only the panels (topBar / leftPanel / centerPanel /

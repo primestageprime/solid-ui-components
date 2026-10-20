@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ChangeRenderer — Pure Composite (Depth 2)
+// Tags: shows:diff, shows:text, does:view, data:pair, role:inline
 // Composes DiffPair (Depth 1) + two ValueRenderer (Depth 1) instances.
 // Owns no CSS — all layout coordination lives in DiffPair.
 //

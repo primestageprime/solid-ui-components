@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // LinkPivotGrid — Composed (Depth 2). Curried variant that renders PivotGrid (Depth 1).
+// Tags: shows:grid, shows:table, shows:link, does:navigate, does:click, data:matrix, role:panel
 import type { JSX } from "solid-js";
 import { PivotGrid, type PivotGridProps } from "./PivotGrid";
 

@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // CompletionTimeline — Composed (Depth 2)
+// Tags: shows:chart, shows:bar, shows:timeline, does:hover, does:view, data:time-series, data:events, role:panel
 // Composes Chart + Grid + axes + BarSeries (per-bucket counts) + LineSeries
 // (cumulative) + ChartTooltip from src/components/Chart. Public API
 // preserved from the prior monolithic implementation.

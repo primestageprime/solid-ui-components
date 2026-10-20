@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // CountChip — Composed (Depth 2)
+// Tags: shows:chip, shows:count, shows:status, does:view, does:animate, data:list, role:inline
 // Composes DigitRoller so the count ROLLS odometer-style on every change
 // (numeric counts roll by default — Peter, 2026-07-14). Owns CountChip.css
 // as a deliberate Depth-2 exception: the pill chrome is intrinsic styling

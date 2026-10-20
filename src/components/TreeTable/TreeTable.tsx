@@ -1,5 +1,6 @@
 // ============================================
 // TreeTable — Composite (Depth 2)
+// Tags: shows:table, shows:tree, does:expand, does:collapse, does:sort, data:tree, data:table, role:panel
 // No CSS. Composes BaseTable, IndentRail, ClusterRow, DisclosureButton,
 // ReservedDisclosureButton, Icon, SmallCheckbox and Tooltip.
 //

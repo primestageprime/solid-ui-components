@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 /**
  * SwimlaneChart — Atomic Primitive (Depth 1).
+ * Tags: shows:flow, shows:graph, shows:card, does:click, does:pan, does:zoom, data:steps, data:graph, role:panel
  *
  * Owns its own CSS (`SwimlaneChart.css`) and consumes shared SVG render
  * utilities from `src/internal/dag-svg` — a utility module, not a

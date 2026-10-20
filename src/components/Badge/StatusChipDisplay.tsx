@@ -1,5 +1,6 @@
 // ============================================
 // StatusChipDisplay — Atomic Primitive (Depth 1)
+// Tags: shows:chip, shows:status, does:view, data:enum, role:inline
 // Owns no CSS of its own: it wears StatusChip.css. No component imports.
 // Placement: src/components/Badge/, the READ-ONLY sibling of StatusChip.
 // The same fixed-width pill as StatusChip, with nothing to press: no edit

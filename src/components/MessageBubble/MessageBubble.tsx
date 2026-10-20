@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // MessageBubble — Atomic Primitive (Depth 1)
+// Tags: shows:thread, shows:text, shows:avatar, does:view, data:text, data:participants, role:row
 // Owns CSS (MessageBubble.css). Renders a single
 // chat bubble with optional line clamping + a
 // (more…) toggle when the text overflows.

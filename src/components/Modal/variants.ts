@@ -1,5 +1,6 @@
 // ============================================
 // Modal Curried Variants — Depth 1/2 (zero CSS)
+// Tags: shows:dialog, shows:button, does:dismiss, does:submit, data:scalar, role:overlay
 // Visual config (corners/variant/size, and the destructive confirm tone)
 // is baked; open/onClose/onConfirm/title/children stay runtime.
 // ============================================

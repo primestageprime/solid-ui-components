@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ParticipantTimeLabel — Atomic Primitive (Depth 1)
+// Tags: shows:date, shows:duration, shows:text, does:view, data:scalar, role:inline
 // Owns CSS (ParticipantTimeLabel.css). Renders
 // the relative-time caption shown beside a
 // participant name in a message-group header.

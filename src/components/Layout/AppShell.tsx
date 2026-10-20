@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // AppShell + AppHeader + AppMain — Primitive layout (Depth 0)
+// Tags: shows:panel, does:layout, does:scroll, data:scalar, role:shell
 // Owns CSS (Layout.css). Vertical column root that fills the viewport height,
 // with a non-shrinking header on top and a flexing main below. The standard
 // "full-page app" frame. Use AppShell as the root, AppHeader as the top bar,

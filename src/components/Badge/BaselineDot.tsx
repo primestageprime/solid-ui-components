@@ -1,5 +1,6 @@
 // ============================================
 // BaselineDot — Atomic (Depth 1)
+// Tags: shows:badge, shows:icon, does:view, data:boolean, role:inline
 // Owns CSS (BaselineDot.css), no component imports.
 // A tiny solid dot that marks a "baseline" selection — e.g. the scenario the
 // chart draws as its blue running-balance line. Colour matches --sui-primary

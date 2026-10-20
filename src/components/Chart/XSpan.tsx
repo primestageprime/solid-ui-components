@@ -1,5 +1,6 @@
 // ============================================
 // XSpan — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, does:view, data:range, role:slot
 //
 // A SHADED STRETCH of the x axis, across the full plot height: a window with
 // no data, a period out of scope, a span under review. It sits under every

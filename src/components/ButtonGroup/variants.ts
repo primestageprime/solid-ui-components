@@ -1,5 +1,6 @@
 // ============================================
 // ButtonGroup Curried Variants — Depth 1 (zero CSS)
+// Tags: shows:button, does:click, data:list, role:toolbar
 // Layout config (orientation / gap / bordered / tone) is baked; children stay runtime.
 // ============================================
 import { createButtonGroup } from "./ButtonGroup";

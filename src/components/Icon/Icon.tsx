@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Icon — Atomic (Depth 1)
+// Tags: shows:icon, does:view, data:enum, role:inline
 // Owns CSS (Icon.css), no component imports.
 // SVG icon set with outline/solid variants, 5 sizes.
 // ============================================

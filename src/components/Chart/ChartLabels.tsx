@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-09-11
 // lastReviewedBy: adlai.arnold
 // ChartLabels — Structural (Depth 1). SVG chart slot; composes no library
+// Tags: shows:text, shows:mark, does:view, data:list, role:slot
 // components.
 // ============================================
 // The `Chart` ADAPTER for the label-ladder mark, per

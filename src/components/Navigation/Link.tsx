@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Link — Atomic (Depth 1)
+// Tags: shows:link, shows:text, does:navigate, data:scalar, role:inline
 // Owns CSS (Link.css), no component imports.
 // Minimal anchor wrapper with accent color.
 // ============================================

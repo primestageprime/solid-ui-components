@@ -1,5 +1,6 @@
 // ============================================
 // FilterableTable — Composite (Depth 2). Zero CSS.
+// Tags: shows:table, shows:field, does:filter, does:search, does:sort, data:table, role:panel
 // DEPRECATED (2026-09-28, phase 2 of add/deprecate/delete) — replacement is
 // `FieldTable` + `TableQuickFilter`, composed directly at the call site.
 // TableQuickFilter composed with BaseTable: the historical convenience wrapper.

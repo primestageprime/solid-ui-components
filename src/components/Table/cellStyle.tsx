@@ -1,7 +1,9 @@
 /* Table cell renderers — shared infrastructure.
  *
  * The base CellRendererProps type, style options, and the two styling HOCs
- * (withCellStyle, withValueColor) shared by every cell renderer module. */
+ * (withCellStyle, withValueColor) shared by every cell renderer module.
+ * Tags: shows:text, does:view, data:scalar, role:cell
+  */
 import type { Component, JSX } from "solid-js";
 
 // ============================================

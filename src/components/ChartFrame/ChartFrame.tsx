@@ -1,5 +1,6 @@
 // ============================================
 // ChartFrame — Composite (Depth 2)
+// Tags: shows:chart, shows:header, shows:button, does:collapse, does:toggle, does:zoom, data:time-series, role:panel
 // Owns zero CSS. Composes FullscreenBox + Layout (Stack/Row/Box variants) +
 // Text (TextTitle, VerticalAxisTitle) + ButtonGroup + IconOnlyButton + Icon +
 // ModeSplitButton (the y-axis strategy split).

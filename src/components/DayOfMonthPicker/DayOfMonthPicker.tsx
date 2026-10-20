@@ -1,5 +1,6 @@
 // ============================================
 // DayOfMonthPicker — Atomic (Depth 1)
+// Tags: shows:field, shows:date, does:pick, does:multi-select, data:enum, role:control
 // Owns CSS (DayOfMonthPicker.css), no component imports.
 // Compact calendar-style grid for picking a day of the
 // month (1..max). Uniform square-ish cells in a 7-column

@@ -1,5 +1,6 @@
 // ============================================
 // GlyphBadge — Primitive (Depth 1). SVG mark; composes no library components.
+// Tags: shows:badge, shows:mark, shows:icon, does:view, data:scalar, role:slot
 // Owns SvgMarks.css (glyph face and stroke).
 //
 // A filled disc centred in the box it is handed, carrying ONE glyph: a short

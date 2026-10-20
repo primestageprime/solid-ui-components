@@ -1,5 +1,6 @@
 // ============================================
 // ResponsiveMoney — Atomic (Depth 1)
+// Tags: shows:money, shows:number, does:truncate, does:view, data:scalar, role:inline
 // Owns CSS (ResponsiveMoney.css). Composes Text (visible figure + hidden
 // measurement twin), no other component imports.
 // Renders the widest dollar rendering of a cents value that still fits its

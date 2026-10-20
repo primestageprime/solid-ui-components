@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // DailyDateAxis — Composed (Depth 2). Curried variant that renders DateAxis (Depth 1).
+// Tags: shows:axis, shows:date, shows:heatmap, does:select, does:drag, data:time-series, role:control
 import { type Component, type JSX, createMemo } from "solid-js";
 import { DateAxis } from "./DateAxis";
 import { dailyCells, isSameCalendarDay, type Cell } from "./cells";

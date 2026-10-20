@@ -1,5 +1,6 @@
 // ============================================
 // FilterBar — Composed (Depth 1). Owns FilterBar.css; composes no library
+// Tags: shows:toolbar, shows:field, shows:chip, does:filter, does:multi-select, data:grouped, data:enum, role:toolbar
 // components. Promoted from the matchmaking workshop bench (spec:
 // docs/superpowers/specs/2026-07-28-progressive-filter-bar-design.md).
 //

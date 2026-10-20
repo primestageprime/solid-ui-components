@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // SegmentedControl — Atomic (Depth 1)
+// Tags: shows:button, shows:tabs, does:select, does:toggle, data:enum, role:control
 // Owns CSS (SegmentedControl.css), no component imports.
 // Generic single-select segmented control with grouped (divider-separated)
 // states, per-state color, and radio-group keyboard semantics.

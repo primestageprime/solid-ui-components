@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ThemedNumberInput — Atomic (Depth 1)
+// Tags: shows:field, shows:number, does:type, does:edit, data:scalar, role:control
 // Owns CSS (ThemedNumberInput.css), no library component imports (wraps Kobalte primitive).
 // Imports ICON_PATHS data from Icon Primitive's sibling dir — data import, not a component import.
 // Kobalte-backed (@kobalte/core/number-field).

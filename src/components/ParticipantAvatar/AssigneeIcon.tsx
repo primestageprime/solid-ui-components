@@ -1,5 +1,6 @@
 // ============================================
 // AssigneeIcon — Atomic Primitive (Depth 1)
+// Tags: shows:avatar, shows:icon, does:view, data:participants, role:inline
 // Owns CSS (AssigneeIcon.css), no component imports.
 // Placement: lives in src/components/ParticipantAvatar/ as a sibling of the
 // filled avatar (a separate primitive, NOT a createParticipantAvatar variant —

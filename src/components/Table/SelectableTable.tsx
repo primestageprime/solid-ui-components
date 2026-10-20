@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // SelectableTable — Depth 2 (zero CSS)
+// Tags: shows:table, does:multi-select, does:bulk, does:sort, data:table, role:panel
 // Composes Button (Atomic/Depth 1).
 // Table + checkbox selection + action bar.
 // NOTE: CSS removed — inherits Table.css via

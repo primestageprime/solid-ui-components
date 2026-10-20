@@ -1,5 +1,6 @@
 // ============================================
 // UserMenu — Composite (Depth 2)
+// Tags: shows:menu, shows:avatar, shows:button, does:click, does:navigate, data:participants, role:header
 // Owns zero CSS files and zero inline style={}. Composes RightPopoverMenu
 // (Atomic Primitive), SmAvatar (ParticipantAvatar variant), TightStack and
 // TextSublabel.

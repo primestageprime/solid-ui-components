@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-10-01
 // ============================================
 // Magnitude-sized number inputs — curried variants (Depth 1, zero CSS)
+// Tags: shows:field, shows:money, shows:number, does:type, does:edit, data:scalar, role:control
 // Composes ThemedNumberInput and CurrencyInput; owns no CSS.
 //
 // A number field that states how big its value can get is sized to that value

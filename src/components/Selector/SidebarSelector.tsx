@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // SidebarSelector — Atomic (Depth 1)
+// Tags: shows:list, shows:card, does:select, does:click, data:list, role:rail
 // Owns CSS (SidebarSelector.css), no component imports.
 // Sidebar card list + selection content area.
 // ============================================

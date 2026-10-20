@@ -142,9 +142,7 @@ export const precedingCommentOf = (src, name) => {
       // and only stripping the leading marker left a stray `*/` on the end
       // of every such comment's text (visible once this text is promoted
       // into `summary`, not just kept in `notes`).
-      out.unshift(
-        t.replace(/^\/?\*+\/?\s?/, "").replace(/\s*\*+\/\s*$/, ""),
-      );
+      out.unshift(t.replace(/^\/?\*+\/?\s?/, "").replace(/\s*\*+\/\s*$/, ""));
       continue;
     }
     break;
@@ -202,7 +200,8 @@ export const componentsMdBulletsFor = (doc, name) => {
 export const resolveBaseBullet = (doc, name, baseFamily) => {
   const occurrences = componentsMdBulletsFor(doc, name);
   if (length(occurrences) === 0) return { bullet: null, ambiguous: false };
-  if (length(occurrences) === 1) return { bullet: occurrences[0].bullet, ambiguous: false };
+  if (length(occurrences) === 1)
+    return { bullet: occurrences[0].bullet, ambiguous: false };
 
   // A section heading occasionally carries a parenthetical qualifier
   // (`AnimatedSwimlaneChart (public `SwimlaneChart`)`) — strip it before
@@ -210,10 +209,14 @@ export const resolveBaseBullet = (doc, name, baseFamily) => {
   const sectionMatches = (section) =>
     section != null &&
     baseFamily != null &&
-    section.replace(/\s*\(.*\)\s*$/, "").trim().toLowerCase() === baseFamily.toLowerCase();
+    section
+      .replace(/\s*\(.*\)\s*$/, "")
+      .trim()
+      .toLowerCase() === baseFamily.toLowerCase();
 
   const familyHits = occurrences.filter((o) => sectionMatches(o.section));
-  if (length(familyHits) === 1) return { bullet: familyHits[0].bullet, ambiguous: false };
+  if (length(familyHits) === 1)
+    return { bullet: familyHits[0].bullet, ambiguous: false };
 
   return { bullet: null, ambiguous: true };
 };
@@ -440,8 +443,14 @@ export const parseTopLevelProps = (argsText) => {
     if (!t) continue;
     const colonIdx = t.indexOf(":");
     if (colonIdx === -1) continue; // spread/shorthand — no describable value
-    const key = t.slice(0, colonIdx).trim().replace(/^["'`]|["'`]$/g, "");
-    const value = t.slice(colonIdx + 1).trim().replace(/,$/, "");
+    const key = t
+      .slice(0, colonIdx)
+      .trim()
+      .replace(/^["'`]|["'`]$/g, "");
+    const value = t
+      .slice(colonIdx + 1)
+      .trim()
+      .replace(/,$/, "");
     if (key) props.push({ key, value });
   }
   return props;
@@ -449,7 +458,9 @@ export const parseTopLevelProps = (argsText) => {
 
 const truncateValue = (v, max = 60) => {
   const collapsed = v.replace(/\s+/g, " ").trim();
-  return length(collapsed) > max ? `${collapsed.slice(0, max - 1)}…` : collapsed;
+  return length(collapsed) > max
+    ? `${collapsed.slice(0, max - 1)}…`
+    : collapsed;
 };
 
 /** A one-sentence summary for a curried VARIANT with no COMPONENTS.md bullet
@@ -472,7 +483,11 @@ export const synthesizeVariantSummary = (baseName, argsText, parentSummary) => {
 /** A one-sentence summary for the FACTORY itself (`createGrid`), which has no
  *  baked values of its own — only the list of prop NAMES it lets a curried
  *  variant bake (`overridesList`, from the base's `<Base>Overrides` type). */
-export const synthesizeFactorySummary = (baseName, overridesList, parentSummary) => {
+export const synthesizeFactorySummary = (
+  baseName,
+  overridesList,
+  parentSummary,
+) => {
   const clause =
     overridesList && length(overridesList) > 0
       ? `Factory behind \`${baseName}\`'s curried variants; bakes \`${overridesList.join("`, `")}\`.`
@@ -553,9 +568,15 @@ export function buildCatalog({
 
   const records = exportable.map((e) => {
     const fileSrc = src(e.file);
-    const variant = e.kind === "component" ? variantAssignmentOf(fileSrc, e.name) : null;
+    const variant =
+      e.kind === "component" ? variantAssignmentOf(fileSrc, e.name) : null;
 
-    const kind = e.kind === "factory" ? "factory" : variant ? "variant" : depthKindOf(e, fileSrc);
+    const kind =
+      e.kind === "factory"
+        ? "factory"
+        : variant
+          ? "variant"
+          : depthKindOf(e, fileSrc);
 
     // Depth: own file's header, or — for a variant — the factory's base file.
     let depthSource = fileSrc;
@@ -564,6 +585,30 @@ export function buildCatalog({
       if (ff) depthSource = src(ff);
     }
     const { depth } = parseDeclaredDepth(depthSource);
+
+    // Tags: own file's `Tags:` line; a variant without one inherits its
+    // factory's base file (same rule as depth); anything still untagged
+    // inherits the first tagged file in its family directory (a `variants.ts`
+    // alias beside a tagged base). `tagsSource` says which, so the health
+    // metric can count only the base files that genuinely lack a line.
+    let tags = parseTags(fileSrc);
+    let tagsSource = tags ? "own" : null;
+    if (!tags && variant) {
+      const ff = factoryFile.get(variant.factory);
+      if (ff) {
+        tags = parseTags(src(ff));
+        tagsSource = tags ? "factory" : null;
+      }
+    }
+    if (!tags && e.dir) {
+      const sibling = surface.exports.find(
+        (o) => o.dir === e.dir && o.file !== e.file && parseTags(src(o.file)),
+      );
+      if (sibling) {
+        tags = parseTags(src(sibling.file));
+        tagsSource = "family";
+      }
+    }
 
     // Overrides/DataProps: keyed on the factory suffix (`Button` for
     // `createButton`) whether that suffix comes from a curried variant's
@@ -610,7 +655,11 @@ export function buildCatalog({
       // ambiguous. See `resolveBaseBullet` for why: a base name with bullets
       // in two unrelated sections previously resolved by name alone, so the
       // WRONG family's bullet could get inherited.
-      const { bullet: baseBullet, ambiguous } = resolveBaseBullet(componentsMd, baseName, e.dir);
+      const { bullet: baseBullet, ambiguous } = resolveBaseBullet(
+        componentsMd,
+        baseName,
+        e.dir,
+      );
       const parentSummary = baseBullet ? firstSentenceOf(baseBullet) : null;
       summary =
         kind === "variant"
@@ -625,20 +674,24 @@ export function buildCatalog({
       depth: depth ?? null,
       kind,
       family: e.dir ?? null,
-      variantOf: variant ? { factory: variant.factory, overrides: variant.argsText } : null,
+      tags: tags ?? null, // `facet:value` words from the `Tags:` header line
+      tagsSource, // "own" | "factory" | "family" | null
+      variantOf: variant
+        ? { factory: variant.factory, overrides: variant.argsText }
+        : null,
       overrides,
       dataProps,
       summary,
       summarySource, // "components-md" | "jsdoc" | "synthesized" | "alias" | null
       preferFirst: length(preferFirstList) > 0 ? preferFirstList : null, // names this
-        // record's own bullet points UP at via "reach for `X` ... first/instead"
-        // (see PREFER_CLAUSE_RE above) — used by rankCatalog to rank the
-        // pointed-to composite above this record when both match a query.
+      // record's own bullet points UP at via "reach for `X` ... first/instead"
+      // (see PREFER_CLAUSE_RE above) — used by rankCatalog to rank the
+      // pointed-to composite above this record when both match a query.
       notToBeConfusedWith: bullet ? notToBeConfusedWithOf(bullet) : null,
       useFor: bullet ? useForOf(bullet) : null,
       notes, // JSDoc immediately preceding the export — searched by `find`
-             // alongside summary/useFor, so a variant with no COMPONENTS.md
-             // entry (e.g. NoShrinkScrollBox) is still discoverable.
+      // alongside summary/useFor, so a variant with no COMPONENTS.md
+      // entry (e.g. NoShrinkScrollBox) is still discoverable.
       showcase: showcaseFor(e.dir, e.name),
       since: sinceOf(changelogSrc, sections, e.name),
       file: e.file,
@@ -694,15 +747,52 @@ const depthKindOf = (_e, fileSrc) => {
   return depth !== null && depth > 1 ? "composite" : "primitive";
 };
 
+// ── tags: the `Tags:` header line ───────────────────────────────────────────
+// Every base component file carries one `Tags: shows:table, does:sort, …`
+// line in its leading comment block, beside the depth header. The words
+// come from the closed vocabulary in `scripts/tags-vocabulary.json` (four
+// facets: shows / does / data / role); `scripts/health.mjs` ratchets both
+// `untaggedComponents` (a base record whose file has no line) and
+// `unknownTags` (a word not in the vocabulary). `scripts/find.mjs` ranks on
+// these first and on prose second, so a need phrased nothing like the
+// COMPONENTS.md bullet still lands on the component.
+export const TAG_LINE_RE =
+  /^\s*(?:\/\/|\/\*+|\*)\s*Tags:\s*(.+?)\s*(?:\*\/)?\s*$/m;
+
+/** `["shows:table", "does:sort", …]` from the file's `Tags:` line, or null
+ *  when the file has none. Anywhere in the file, not only the leading block:
+ *  two Primitives (ChartCanvas, ScrollRegion) open with their imports and
+ *  carry the header below them. */
+export const parseTags = (src) => {
+  const m = TAG_LINE_RE.exec(src);
+  if (!m) return null;
+  const tags = m[1]
+    .split(/[,\s]+/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+  return length(tags) > 0 ? [...new Set(tags)] : null;
+};
+
+/** The vocabulary file as a flat Set of `facet:value` strings. */
+export const loadTagVocabulary = (repoRoot = root) => {
+  const v = JSON.parse(
+    readFileSync(join(repoRoot, "scripts", "tags-vocabulary.json"), "utf8"),
+  );
+  const out = new Set();
+  for (const [facet, { values }] of Object.entries(v.facets))
+    for (const value of values) out.add(`${facet}:${value}`);
+  return out;
+};
+
 // ── find: rank records against a plain-text query ───────────────────────────
 
 const FIELD_WEIGHTS = {
   useFor: 5,
   notToBeConfusedWith: 4,
   notes: 4, // the JSDoc fallback carries as much signal as `useFor` for a
-            // variant with no COMPONENTS.md entry (e.g. NoShrinkScrollBox) —
-            // weighting it below `summary` would penalize exactly the
-            // undocumented-gap records this field exists to keep findable.
+  // variant with no COMPONENTS.md entry (e.g. NoShrinkScrollBox) —
+  // weighting it below `summary` would penalize exactly the
+  // undocumented-gap records this field exists to keep findable.
   summary: 3,
   name: 3,
 };
@@ -768,8 +858,27 @@ export function scoreRecord(record, queryTokens) {
 // discriminate (`a` alone matched enough records to bury `NoShrinkScrollBox`
 // off the bottom of the acceptance query's top 10 before this was added).
 const STOPWORDS = new Set([
-  "a", "an", "the", "of", "in", "on", "to", "for", "with", "is", "are",
-  "be", "and", "or", "its", "it", "that", "this", "as", "at", "by",
+  "a",
+  "an",
+  "the",
+  "of",
+  "in",
+  "on",
+  "to",
+  "for",
+  "with",
+  "is",
+  "are",
+  "be",
+  "and",
+  "or",
+  "its",
+  "it",
+  "that",
+  "this",
+  "as",
+  "at",
+  "by",
 ]);
 
 // A `preferFirst` edge is a STRONGER signal than the depth boost: when a
@@ -837,7 +946,9 @@ if (isMain) {
   if (findFlag !== -1) {
     const query = argv.slice(findFlag + 1).join(" ");
     if (!existsSync(CATALOG_PATH)) {
-      console.error("catalog.json does not exist — run `npm run catalog` first.");
+      console.error(
+        "catalog.json does not exist — run `npm run catalog` first.",
+      );
       process.exit(1);
     }
     const records = JSON.parse(readFileSync(CATALOG_PATH, "utf8"));
@@ -847,7 +958,8 @@ if (isMain) {
     } else {
       console.log(`Top matches for "${query}":\n`);
       for (const { record, score } of ranked) {
-        const line = record.useFor ?? record.summary ?? record.notes ?? "(no description)";
+        const line =
+          record.useFor ?? record.summary ?? record.notes ?? "(no description)";
         console.log(
           `  ${String(score).padStart(3)}  ${record.name.padEnd(28)} ` +
             `${(record.kind ?? "?").padEnd(10)} depth=${record.depth ?? "?"}  ` +

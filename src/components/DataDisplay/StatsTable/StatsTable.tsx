@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // StatsTable — Atomic (Depth 1)
+// Tags: shows:table, shows:number, does:view, data:table, role:panel
 // Owns CSS (StatsTable.css), no component imports.
 // Simple stats table with typed columns and row classes.
 // ============================================

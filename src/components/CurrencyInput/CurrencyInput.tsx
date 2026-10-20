@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-06-22
 // ============================================
 // CurrencyInput — Curried variant of ThemedNumberInput (Depth 1)
+// Tags: shows:field, shows:money, does:type, does:edit, data:scalar, role:control
 // Owns CSS (CurrencyInput.css); composes the ThemedNumberInput Primitive plus
 // the shared fieldWidth util (a data/util import, not a component import).
 //

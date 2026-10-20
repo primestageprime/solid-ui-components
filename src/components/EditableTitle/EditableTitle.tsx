@@ -1,5 +1,6 @@
 // ============================================
 // EditableTitle — Atomic Primitive (Depth 1)
+// Tags: shows:text, shows:field, does:edit, does:type, data:text, role:header
 // Owns CSS (EditableTitle.css), no component imports.
 //
 // A title that is inert text by default, or (with `onChange`) a hover-underlined

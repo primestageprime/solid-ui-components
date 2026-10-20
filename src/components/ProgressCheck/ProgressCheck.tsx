@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ProgressCheck — Atomic (Depth 1)
+// Tags: shows:progress, shows:icon, shows:status, does:view, data:scalar, role:inline
 // Owns CSS (ProgressCheck.css), imports Icon types.
 // Three-state progress indicator: empty, partial, complete.
 // ============================================

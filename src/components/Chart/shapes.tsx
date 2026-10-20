@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // Glyph convention: anchor = geometric center, size = max(width, height).
 // Custom paths sit inside `viewBox` and are uniformly scaled to `size`.
+// Tags: shows:mark, shows:icon, does:view, data:scalar, role:slot
 import { type Component, Show } from "solid-js";
 
 export type Shape =

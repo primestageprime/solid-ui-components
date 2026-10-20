@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Dropdown — Atomic (Depth 1)
+// Tags: shows:field, shows:menu, does:select, does:edit, data:enum, data:list, role:control
 // Owns CSS (Dropdown.css). Composes no other Primitive; `ShapeGlyph` is a
 // descriptor→SVG render helper (no state, no CSS of its own), which
 // CONTEXT.md's Primitive rule exempts — the rule is about composition, not

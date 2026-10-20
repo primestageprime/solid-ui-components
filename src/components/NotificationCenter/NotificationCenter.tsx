@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // NotificationCenter — Composed (Depth 3, overlay control)
+// Tags: shows:menu, shows:badge, shows:count, shows:list, does:click, does:dismiss, does:navigate, data:list, data:events, role:header
 // Owns NotificationCenter.css for overlay chrome ONLY — the static positioning
 // of the trigger + its corner overlays (the same carve-out PopoverMenu/Dropdown
 // take), plus the trigger's open/hover skin and the row's intrinsic decoration

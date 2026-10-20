@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // Toast — Atomic (Depth 1)
+// Tags: shows:toast, shows:notice, does:dismiss, does:animate, data:list, role:overlay
 // Owns CSS (Toast.css). Kobalte-backed toast built on `@kobalte/core/toast`.
 // Composes Layout variants for the plain-div internal rows it owns (content
 // row / text grow-box / actions wrap-row) per the Layout Purity commandment;

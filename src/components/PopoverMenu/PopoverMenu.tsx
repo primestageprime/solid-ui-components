@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // PopoverMenu — Atomic Primitive (Depth 1)
+// Tags: shows:menu, shows:button, does:click, does:dismiss, data:list, role:overlay
 // Owns CSS (PopoverMenu.css), no component imports beyond external libs.
 // Only data/type imports from sibling Primitives (ICON_PATHS, IconName).
 // Trigger button with positioned action menu.

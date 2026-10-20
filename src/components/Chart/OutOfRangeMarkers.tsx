@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // OutOfRangeMarkers — Structural (Depth 1). SVG chart slot; composes no library components.
+// Tags: shows:mark, does:view, data:series, role:slot
 //
 // A y domain that does not cover the data clips it. This slot marks the one
 // value the reader cannot see at each clipped edge — the global PEAK past the

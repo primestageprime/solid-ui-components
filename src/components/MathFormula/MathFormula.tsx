@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // MathFormula + FormulaProvider — Atomic (Depth 1)
+// Tags: shows:formula, shows:table, does:hover, does:view, data:list, role:section
 // Owns CSS (MathFormula.css), no component imports.
 // KaTeX renderer with interactive variable highlighting.
 // ============================================

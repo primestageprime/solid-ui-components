@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // ThreePanelLayout — Atomic (Depth 1)
+// Tags: shows:panel, does:layout, does:scroll, data:scalar, role:shell, role:page
 // Owns CSS (ThreePanelLayout.css), no component imports.
 // Top-bar + three-column (left / center / right) layout scaffold
 // for alarm-lab / analysis-style pages.

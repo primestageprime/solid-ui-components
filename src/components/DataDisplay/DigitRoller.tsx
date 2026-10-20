@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // DigitRoller — Atomic (Depth 1)
+// Tags: shows:number, does:animate, data:scalar, role:inline
 // Owns CSS (DigitRoller.css), no component imports.
 // Animated digit-by-digit value transition.
 // ============================================

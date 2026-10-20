@@ -1,5 +1,6 @@
 // ============================================
 // ThreeSlotRow — Composite (Depth 2)
+// Tags: shows:text, shows:status, does:view, does:layout, data:scalar, role:row
 // Owns zero CSS files and zero inline style={} (STYLE_GUIDE Layout Purity —
 // composes curried Primitives only). Composes a Grid (Layout Primitive) curried
 // at factory time, GrowCenterRow and EndClusterRow (Layout variants).

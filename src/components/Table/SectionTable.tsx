@@ -1,5 +1,6 @@
 // ============================================
 // SectionTable — Depth 2 (zero CSS: composes TableSectionHeader + BaseTable)
+// Tags: shows:table, shows:header, shows:count, does:sort, does:view, data:table, role:section
 // ============================================
 // A table BOUND to its own section header (title + record count) as one unit.
 // The header and table share a single stretch container, so the header spans the

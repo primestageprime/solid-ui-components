@@ -2,6 +2,7 @@
 // lastReviewedBy: frontend
 // ============================================
 // CheckboxField — Composite (Depth 2)
+// Tags: shows:field, shows:text, does:toggle, data:boolean, role:row
 // Owns CSS (CheckboxField.css), composes Checkbox.
 // A form-field row: the Checkbox control on the left, a clickable
 // label + optional hint text stacked on the right. This is the

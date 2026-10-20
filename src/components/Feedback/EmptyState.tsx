@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // EmptyState — Depth 2 (zero CSS)
+// Tags: shows:empty, shows:icon, shows:text, does:view, data:text, role:container
 // Composes Layout (curried) + Text (curried).
 // Centered placeholder with icon, message, size variants.
 // ============================================

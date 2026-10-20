@@ -2,6 +2,7 @@
 // lastReviewedBy: adlai.arnold
 // ============================================
 // BottomSheet — Atomic (Depth 1)
+// Tags: shows:dialog, shows:menu, does:dismiss, does:reveal, data:list, role:overlay
 // Owns CSS (BottomSheet.css), no component imports.
 //
 // A sheet that slides up from the BOTTOM of its *parent container*.

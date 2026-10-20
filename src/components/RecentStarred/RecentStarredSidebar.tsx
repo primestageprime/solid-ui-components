@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // RecentStarredSidebar — Composed (Depth 1). Composes only Layout variants (Depth 0).
+// Tags: shows:list, shows:link, does:select, does:toggle, data:list, role:rail
 import { type Component, For, Show, type JSX } from "solid-js";
 import { BaselineSpreadRow, NarrowStack } from "../Layout/variants";
 import type { RecentStarredItem, RecentStarredStore } from "./store";

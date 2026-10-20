@@ -1,6 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // AnimatedSwimlaneChart — Composite (Depth 2). Composes SwimlaneAnimatedLane (Depth 1).
+// Tags: shows:flow, shows:graph, shows:card, does:animate, does:click, does:pan, does:zoom, data:steps, data:graph, role:panel
 // src/components/AnimatedSwimlaneChart/AnimatedSwimlaneChart.tsx
 import {
   createEffect,
