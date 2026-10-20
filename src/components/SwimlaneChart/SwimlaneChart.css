@@ -34,7 +34,9 @@
      SVG attribute transitions work in modern browsers. */
   transition:
     x 0.55s ease-out,
-    y 0.55s ease-out;
+    y 0.55s ease-out,
+    width 0.55s ease-out,
+    height 0.55s ease-out;
   /* foreignObject clips to its width/height by default, so a leaving
      node's compress-and-slide animation would be cut off at the box
      edge. Let the inner div spill out so the full shrink + translation
@@ -139,4 +141,21 @@
 .sui-swimlane-container {
   width: 100%;
   height: 100%;
+}
+
+/* Edge labels: DAGEdge.label at the path midpoint; the twin path is the measuring copy, never drawn. */
+.sui-swimlane__edge-twin {
+  fill: none;
+  stroke: none;
+  pointer-events: none;
+}
+
+.sui-swimlane__edge-label {
+  font-size: 12px;
+  fill: var(--sui-text-secondary);
+  paint-order: stroke;
+  stroke: var(--sui-bg-primary);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
 }

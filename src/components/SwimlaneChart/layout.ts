@@ -30,6 +30,12 @@ export type SwimlaneOptions<T> = {
    * AND the horizontal positioning both shift together.
    */
   centerCol?: number;
+  /**
+   * How nodes order within a column: `barycentric` (default) sweeps to reduce
+   * edge crossings; `input` keeps the caller's node order, for a stack whose
+   * order IS the data (the done steps of a flow, 2026-10-20).
+   */
+  rowOrder?: "barycentric" | "input";
 };
 
 export type SwimlaneSummary = {
@@ -278,9 +284,11 @@ export function computeSwimlaneLayout<T>(
       rank.set(id, i);
     }
   };
-  for (let sweep = 0; sweep < SWEEPS; sweep++) {
-    const order = sweep % 2 === 0 ? [...orderedCols].reverse() : orderedCols;
-    for (const col of order) sortCol(col);
+  if (opts.rowOrder !== "input") {
+    for (let sweep = 0; sweep < SWEEPS; sweep++) {
+      const order = sweep % 2 === 0 ? [...orderedCols].reverse() : orderedCols;
+      for (const col of order) sortCol(col);
+    }
   }
 
   // 10.5 Vertical fit: cap each column to `maxRows` real nodes. The overflow

@@ -140,6 +140,12 @@
   min-width: 0;
 }
 
+/* Equal-share children: a toolbar of two buttons splits evenly. */
+.row--equal > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 /* Box */
 .box--grow {
   flex-grow: 1;

@@ -15,6 +15,9 @@ export type ListView<S extends string = string> = {
   search: string;
   sort: S;
   collapsed: string[];
+  /** Ids that stay LAST in their group, in this order, whatever the sort: items the user just created
+   *  (Peter, 2026-10-20: "New tasks always at the bottom of todo"). Cleared by a re-sort. */
+  pinnedLast?: string[];
 };
 
 /** What the domain supplies: which group an item is in, the group order, the text search looks in, and the sort keys. */
@@ -85,7 +88,8 @@ export const nextInCycle = <K extends string>(
 export const toggled = <K extends string>(list: readonly K[], id: K): K[] =>
   list.includes(id) ? filter((x) => x !== id, list) : [...list, id];
 
-/** Every group in `spec.groupOrder` (empty ones too), each holding the live items that match the search, sorted by the view's sort key. */
+/** Every group in `spec.groupOrder` (empty ones too), each holding the live items that match the search, sorted by the
+ *  view's sort key; items in `view.pinnedLast` come after the sorted ones, in pin order. */
 export function groupedList<
   T extends EntityBase,
   G extends string,
@@ -100,11 +104,19 @@ export function groupedList<
     (e: T) => q === "" || spec.textOf(e).toLowerCase().includes(q),
     live(items),
   );
+  const pinned = view.pinnedLast ?? [];
   return map((id: G) => {
-    const inGroup = sortWith(
-      spec.sorters[view.sort],
-      filter((e: T) => spec.groupOf(e) === id, shown),
-    );
+    const members = filter((e: T) => spec.groupOf(e) === id, shown);
+    const inGroup = [
+      ...sortWith(
+        spec.sorters[view.sort],
+        filter((e: T) => !pinned.includes(e.id), members),
+      ),
+      ...sortWith(
+        (a: T, b: T) => pinned.indexOf(a.id) - pinned.indexOf(b.id),
+        filter((e: T) => pinned.includes(e.id), members),
+      ),
+    ];
     return {
       id,
       title: spec.groupTitle?.(id) ?? id,

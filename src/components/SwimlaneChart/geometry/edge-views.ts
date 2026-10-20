@@ -6,6 +6,7 @@
 import {
   bezierAvoidingObstacles,
   orthogonalAvoidingObstacles,
+  stackedFlowPath,
   type ObstacleRect,
 } from "../../../internal/dag-svg";
 import type {
@@ -31,6 +32,8 @@ export interface EdgeViewsInput {
   centerCol: number;
   /** Orthogonal (right-angle) routing when true; bezier otherwise. */
   isOrthogonal: boolean;
+  /** `stacked` wins over `isOrthogonal`: straight same-column edges, curved cross-column ones (no obstacle avoidance). */
+  stacked?: boolean;
   /** Side badges for collapsed columns (left/right of center). */
   badges: SideBadges;
   /** Per-edge port y-overrides for orthogonal fan-out, keyed "source|target". */
@@ -52,6 +55,7 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
     edges,
     centerCol: centerColVal,
     isOrthogonal,
+    stacked = false,
     badges,
     ports,
     badgeRadius: BADGE_RADIUS,
@@ -70,6 +74,7 @@ export function computeEdgeViews(input: EdgeViewsInput): EdgeView[] {
     obstacles: ObstacleRect[],
     edgeKey: string,
   ): string => {
+    if (stacked) return stackedFlowPath(from, to);
     if (isOrthogonal) {
       const p = ports.get(edgeKey);
       return orthogonalAvoidingObstacles(from, to, obstacles, {

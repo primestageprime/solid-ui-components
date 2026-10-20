@@ -1,0 +1,31 @@
+/* HatchedProgressBar — a thin track, a solid done share and a hatched active share. */
+.sui-hatched-bar {
+  position: relative;
+  height: var(--sui-hatched-bar-h, 8px);
+  border: 1px solid var(--sui-border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.sui-hatched-bar__done,
+.sui-hatched-bar__active {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+
+.sui-hatched-bar__done {
+  left: 0;
+  background: var(--sui-accent);
+}
+
+/* Diagonal hatching in the accent colour, so "in progress" reads at a glance beside the solid done share. */
+.sui-hatched-bar__active {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--sui-accent) 0 2px,
+    transparent 2px 5px
+  );
+  opacity: 0.85;
+}

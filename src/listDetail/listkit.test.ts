@@ -57,6 +57,18 @@ describe("listkit", () => {
     ).toEqual([0, 0]);
   });
 
+  it("keeps pinnedLast ids after the sorted items, in pin order", () => {
+    expect(
+      groupedList(rows, spec, view({ sort: "name", pinnedLast: ["1"] }))[0].items.map((r) => r.name),
+    ).toEqual(["fig", "pear"]);
+    expect(
+      groupedList(rows, spec, view({ sort: "rank", pinnedLast: ["3", "1"] }))[0].items.map((r) => r.id),
+    ).toEqual(["3", "1"]);
+    expect(
+      groupedList(rows, spec, view({ sort: "rank", pinnedLast: ["3"] }))[0].items.map((r) => r.id),
+    ).toEqual(["1", "3"]);
+  });
+
   it("sorts by the view's key", () => {
     expect(
       groupedList(rows, spec, view({ sort: "name" }))[0].items.map(

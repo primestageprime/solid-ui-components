@@ -149,6 +149,19 @@ describe("ConfiguredCard", () => {
     ));
     expect(queryByText("Planned")).toBeNull();
   });
+
+  it("a row card draws the marker icon and the foot line", () => {
+    const { container, getByText } = render(() => (
+      <ConfiguredCard
+        item={SEED[0]}
+        config={defineCard<Trip>({ layout: "row", title: (t) => t.title, marker: () => "warning", markerLabel: () => "Needs attention", foot: { left: () => "2026-01-01", right: () => "27h" } })}
+      />
+    ));
+    expect(container.querySelector(".sui-configured-card__aside .sui-icon, .sui-configured-card__aside svg, .sui-configured-card__aside span")).toBeTruthy();
+    expect(getByText("2026-01-01")).toBeTruthy();
+    expect(getByText("27h")).toBeTruthy();
+    expect(container.querySelector('[aria-label="Needs attention"]')).toBeTruthy();
+  });
 });
 
 describe("ConfiguredDetail", () => {
@@ -183,6 +196,32 @@ describe("ConfiguredDetail", () => {
     const spy = vi.spyOn(kit.actions, "primary");
     fireEvent.click(getByText(/omplete leg/));
     expect(spy).toHaveBeenCalled();
+  });
+
+  it("subtitle, summary and the toolbar placement with extra actions", () => {
+    const kit = makeKit();
+    const extra = vi.fn();
+    const { getByText, container } = render(() => (
+      <ConfiguredDetail
+        kit={kit}
+        config={defineDetail<Trip>({
+          emptyLabel: "Pick a trip",
+          titleField: "title",
+          subtitle: () => "Jan 1 to Jan 3",
+          summary: () => ({ text: "All legs planned", icon: "check", variant: "success" }),
+          action: { hotkey: "c", label: "Go", placement: "toolbar" },
+          actions: [{ hotkey: "g f", label: "Skip", onTrigger: extra }],
+          sections: [],
+        })}
+      />
+    ));
+    expect(getByText("Jan 1 to Jan 3")).toBeTruthy();
+    expect(getByText("All legs planned")).toBeTruthy();
+    expect(container.querySelector(".sui-configured-detail__summary--success")).toBeTruthy();
+    const bar = container.querySelector(".sui-configured-detail__toolbar")!;
+    expect(bar.querySelectorAll("button").length).toBe(2);
+    fireEvent.click(getByText(/kip/));
+    expect(extra).toHaveBeenCalledWith(kit.live()[0]);
   });
 });
 

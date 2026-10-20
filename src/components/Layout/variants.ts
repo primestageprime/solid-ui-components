@@ -162,6 +162,10 @@ export const IconClusterRow: Component<RowDataProps> = createRow({
 // flex default cross-axis). For a row of equal-height columns/cards where a
 // taller cell makes its neighbours grow to match (e.g. a swimlane of cards).
 export const StretchRow: Component<RowDataProps> = createRow({ gap: "sm" });
+// EqualRow — a flush row whose children each take an EQUAL share of the width
+// (no gap, flex: 1 1 0): a toolbar of two buttons that reads as one tight bar
+// (the tasklist sketch's "Oldest | Create", 2026-10-20).
+export const EqualRow: Component<RowDataProps> = createRow({ equal: true, align: "stretch" });
 // TopSpreadRow — a spread row pinned to the TOP (align:start) rather than
 // centered: a title on the left and a badge on the right that must sit at the
 // first text line even when the title wraps to two lines. The align:start
@@ -961,6 +965,15 @@ export const LooseCardGrid: Component<GridDataProps> = createGrid({
 export const WideCardGrid: Component<GridDataProps> = createGrid({
   columns: "repeat(auto-fit, minmax(420px, 1fr))",
   gap: "xs",
+});
+
+// TwoUpGrid — WideCardGrid for LARGE tiles: cells at least 560px, so a wide
+// centre panel holds two charts side by side and a narrower one stacks them
+// (`min(100%, …)` keeps a phone from overflowing). The two-column chart page
+// of the databrowser sketch (2026-10-20).
+export const TwoUpGrid: Component<GridDataProps> = createGrid({
+  columns: "repeat(auto-fit, minmax(min(100%, 560px), 1fr))",
+  gap: "sm",
 });
 
 // ChipGrid — a tight responsive grid of small equal cells (≥ 150px), for rows

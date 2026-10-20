@@ -113,6 +113,36 @@ describe("defineListDetail with a task entity", () => {
     expect(k.state.view.selectedId).toBeNull();
   });
 
+  it("a created entity stays last in its group whatever the sort, until the next re-sort", () => {
+    const k = tasks();
+    k.actions.setSort("title");
+    k.actions.create();
+    const id = k.state.view.selectedId as string;
+    k.actions.update(id, { title: "aardvark" });
+    expect(k.grouped()[0].items.map((t) => t.id)).toEqual(["b", "a", id]);
+    expect(k.state.view.pinnedLast).toEqual([id]);
+    k.actions.cycleSort();
+    k.actions.setSort("title");
+    expect(k.state.view.pinnedLast).toEqual([]);
+    expect(k.grouped()[0].items.map((t) => t.id)).toEqual([id, "b", "a"]);
+  });
+
+  it("a group that a mutation empties folds: update, the primary verb and remove", () => {
+    const k = tasks({ primary: (t, kk) => kk.actions.update(t.id, { status: "done" }) });
+    k.actions.update("c", { status: "todo" });   // done is now empty
+    expect(k.state.view.collapsed).toEqual(["done"]);
+    k.actions.toggleGroup("done");               // the user unfolds it
+    k.actions.update("c", { status: "done" });   // nothing emptied: stays open
+    expect(k.state.view.collapsed).toEqual([]);
+    k.actions.select("a"); k.actions.primary();
+    k.actions.select("b"); k.actions.primary();  // todo is now empty
+    expect(k.state.view.collapsed).toEqual(["todo"]);
+    k.actions.update("a", { status: "todo" });
+    k.actions.toggleGroup("todo");
+    k.actions.select("a"); k.actions.remove();   // the last todo deleted
+    expect(k.state.view.collapsed).toEqual(["todo"]);
+  });
+
   it("create unfolds its group so the new entity is never hidden", () => {
     const k = tasks();
     k.actions.toggleGroup("todo");

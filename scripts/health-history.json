@@ -8676,5 +8676,362 @@
         }
       }
     }
+  },
+  {
+    "at": "2026-10-20T20:29:46.398Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 38,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 2,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T20:31:03.696Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 67,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 68,
+          "reason": "GroupedBucketQueue bridges per-node nesting depth as a --gbq-depth custom property (cssvar category, manifested in scripts/style-rubric.json) for indentation CSS can't express statically"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T21:34:01.178Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 8,
+      "collectionMethodCalls": 32,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 90,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 1,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 69,
+          "reason": "HatchedProgressBar draws its done and active shares as measured width/left, as StackedProgressBar does (manifested as proportion+measured)"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T21:35:21.831Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 90,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 1,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 69,
+          "reason": "HatchedProgressBar draws its done and active shares as measured width/left, as StackedProgressBar does (manifested as proportion+measured)"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T21:48:20.137Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 88,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 89,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 69,
+          "reason": "HatchedProgressBar draws its done and active shares as measured width/left, as StackedProgressBar does (manifested as proportion+measured)"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T22:00:42.240Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 70,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 33,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 88,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 88,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 69,
+          "reason": "HatchedProgressBar draws its done and active shares as measured width/left, as StackedProgressBar does (manifested as proportion+measured)"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-10-20T22:01:21.514Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 70,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 88,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 69,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 17,
+      "undocumentedExports": 88,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 67,
+          "to": 69,
+          "reason": "HatchedProgressBar draws its done and active shares as measured width/left, as StackedProgressBar does (manifested as proportion+measured)"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
   }
 ]

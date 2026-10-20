@@ -48,6 +48,9 @@ export interface EditableTitleProps {
   title: string;
   /** Called when the user renames the title. When absent the title is inert. */
   onChange?: (title: string) => void;
+  /** Called with the draft on every keystroke while editing, so a sibling view (a list row) can show
+   *  the name live before Enter commits it. Optional; `onChange` still fires on commit. */
+  onDraft?: (draft: string) => void;
   /** Which gesture opens the editor. Default `"singleClick"` (unchanged
    *  behavior). See {@link EditTrigger}. */
   editTrigger?: EditTrigger;
@@ -152,7 +155,10 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
               value={props.title}
               size={1}
               ref={(el) => queueMicrotask(() => { el.focus(); el.select(); })}
-              onInput={(e) => setDraft(e.currentTarget.value)}
+              onInput={(e) => {
+                setDraft(e.currentTarget.value);
+                props.onDraft?.(e.currentTarget.value);
+              }}
               onBlur={(e) => {
                 if (!cancelled) commit(e.currentTarget.value);
                 cancelled = false;

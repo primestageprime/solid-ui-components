@@ -2,3 +2,5 @@ export { RemovableItemCard } from "./RemovableItemCard";
 export type { RemovableItemCardProps } from "./RemovableItemCard";
 export { StatusCard, createStatusCard } from "./StatusCard";
 export type { StatusCardProps } from "./StatusCard";
+export { RowCard } from "./RowCard";
+export type { RowCardProps } from "./RowCard";

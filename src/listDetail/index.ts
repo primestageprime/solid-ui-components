@@ -44,11 +44,17 @@ export type {
   ChildrenPatch,
   FocusPatch,
 } from "./children";
-export { defineCard, defineDetail, defineSide, tableSection } from "./views";
+export { defineCard, defineDetail, defineSide, flowSection, tableSection } from "./views";
 export type {
   CardConfig,
+  CardLayout,
+  DetailAction,
   DetailConfig,
+  DetailSummary,
   DetailSection,
+  FlowNodeSpec,
+  FlowSection,
+  Progress,
   SideConfig,
   StatusMap,
   StatusVariant,

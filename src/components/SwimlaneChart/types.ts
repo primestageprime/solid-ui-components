@@ -69,9 +69,26 @@ export type SwimlaneChartProps<T> = {
    * routing with 3-segment Z paths (5-segment U over obstacles), hard
    * 90° corners, cardinal-direction arrowheads, and per-edge ports so
    * parallel connections fan instead of stacking. `"bezier"` keeps the
-   * smooth-curve variant for callers who prefer it.
+   * smooth-curve variant for callers who prefer it. `"stacked"` (2026-10-20)
+   * draws a same-column edge straight from the bottom of one node to the
+   * top of the next and a cross-column edge as a smooth curve between the
+   * inner sides: a stack of done steps feeding the current one.
    */
-  routingStyle?: "bezier" | "orthogonal";
+  routingStyle?: "bezier" | "orthogonal" | "stacked";
+  /**
+   * When false, `columnGap` is used verbatim. The default fit spaces every
+   * column by the WIDEST node plus an arrow, which a chart with one wide
+   * centre card and narrow side cards cannot afford; the caller then sizes
+   * the gap from its own node widths. Default true.
+   */
+  fitColumns?: boolean;
+  /** Row order within a column: `barycentric` (default, fewer crossings) or `input` (the caller's node order). */
+  rowOrder?: "barycentric" | "input";
+  /**
+   * Draw `DAGEdge.label` at each edge's midpoint (to the right of a vertical
+   * edge, above any other). Default true; labels were ignored before 2026-10-20.
+   */
+  edgeLabels?: boolean;
 };
 
 /** Props that are visual/layout overrides — locked at variant-definition time.
@@ -85,7 +102,10 @@ export type SwimlaneChartOverrides =
   | "arrows"
   | "interactive"
   | "centerCol"
-  | "responsiveCollapse";
+  | "responsiveCollapse"
+  | "fitColumns"
+  | "edgeLabels"
+  | "rowOrder";
 
 /** Props that remain available to consumers of a curried SwimlaneChart variant. */
 export type SwimlaneChartDataProps<T> = Omit<

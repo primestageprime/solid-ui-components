@@ -1,10 +1,10 @@
-// Layout variants — every curried arrangement, rendered with placeholder
+// Layout variants â every curried arrangement, rendered with placeholder
 // children so the ARRANGEMENT is the only thing on screen.
 //
 // The library's rule is that a call site never writes flex/grid/gap CSS: it
 // names the arrangement it wants. That only works if the names are legible, and
 // a name is legible once you have seen what it does. This gallery is that
-// reference — one frame per variant, each holding the same neutral children.
+// reference â one frame per variant, each holding the same neutral children.
 import { type Component, type JSX, For } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import {
@@ -57,6 +57,7 @@ import {
   CardGrid,
   LooseCardGrid,
   WideCardGrid,
+  TwoUpGrid,
   ChipGrid,
   LabelValueGrid,
   FillPaneRailGrid,
@@ -86,12 +87,12 @@ type Slot = Component<{ children?: JSX.Element; class?: string }>;
 
 interface VariantSpec {
   name: string;
-  /** What the arrangement is FOR — the sentence that makes the name usable. */
+  /** What the arrangement is FOR â the sentence that makes the name usable. */
   note: string;
   Variant: Slot;
   /** Children shape. Defaults to three fit-width chips. */
   kind?: "chips" | "blocks" | "tall" | "wide" | "pairs" | "paneRail" | "anchored";
-  /** Demo inside a definite-height frame — only the clip/scroll families need
+  /** Demo inside a definite-height frame â only the clip/scroll families need
    *  one, and a plain stack looks broken in it. */
   bounded?: boolean;
 }
@@ -99,7 +100,7 @@ interface VariantSpec {
 const ROWS: VariantSpec[] = [
   {
     name: "StretchRow",
-    note: "children stretch to equal height — a swimlane of cards",
+    note: "children stretch to equal height â a swimlane of cards",
     Variant: StretchRow,
     kind: "blocks",
   },
@@ -110,7 +111,7 @@ const ROWS: VariantSpec[] = [
   },
   {
     name: "BaselineClusterRow",
-    note: "a cluster sharing one text baseline — value + units",
+    note: "a cluster sharing one text baseline â value + units",
     Variant: BaselineClusterRow,
   },
   {
@@ -120,7 +121,7 @@ const ROWS: VariantSpec[] = [
   },
   {
     name: "LooseWrapRow",
-    note: "WrapRow at the sm (8px) step — align left UNSET so tiles sharing a line stretch to equal height",
+    note: "WrapRow at the sm (8px) step â align left UNSET so tiles sharing a line stretch to equal height",
     Variant: LooseWrapRow,
   },
   {
@@ -135,12 +136,12 @@ const ROWS: VariantSpec[] = [
   },
   {
     name: "GrowCenterRow",
-    note: "grows and centres its content — a meta cell",
+    note: "grows and centres its content â a meta cell",
     Variant: GrowCenterRow,
   },
   {
     name: "GrowWrapRow",
-    note: "grows, wraps — assignee chips that overflow to a second line",
+    note: "grows, wraps â assignee chips that overflow to a second line",
     Variant: GrowWrapRow,
   },
   {
@@ -150,7 +151,7 @@ const ROWS: VariantSpec[] = [
   },
   {
     name: "TightNoShrinkClusterRow",
-    note: "the same at an xs gap — a dense meta cell",
+    note: "the same at an xs gap â a dense meta cell",
     Variant: TightNoShrinkClusterRow,
   },
   {
@@ -169,7 +170,7 @@ const ROWS: VariantSpec[] = [
 const COLUMNS: VariantSpec[] = [
   {
     name: "CenteredColumn",
-    note: "children centred on the cross axis — a stat cell",
+    note: "children centred on the cross axis â a stat cell",
     Variant: CenteredColumn,
   },
   {
@@ -209,7 +210,7 @@ const COLUMNS: VariantSpec[] = [
   },
   {
     name: "WrapItemStack",
-    note: "one item in a WrapRow at its NATURAL width — shrinks so an inner fit table scrolls, capped at the row; deliberately not flex:1, which would equalise wrap items",
+    note: "one item in a WrapRow at its NATURAL width â shrinks so an inner fit table scrolls, capped at the row; deliberately not flex:1, which would equalise wrap items",
     Variant: WrapItemStack,
   },
   {
@@ -242,7 +243,7 @@ const COLUMNS: VariantSpec[] = [
   },
   {
     name: "ViewportColumn",
-    note: "fills a parent of DEFINITE height (height:100%) — the bridge from a CSS-sized block frame into Layout; FillColumn's flex:1 does nothing in a block parent",
+    note: "fills a parent of DEFINITE height (height:100%) â the bridge from a CSS-sized block frame into Layout; FillColumn's flex:1 does nothing in a block parent",
     Variant: ViewportColumn,
     kind: "tall",
     bounded: true,
@@ -252,34 +253,34 @@ const COLUMNS: VariantSpec[] = [
 const BOXES: VariantSpec[] = [
   {
     name: "AnchorBox",
-    note: "the CONTAINING BLOCK for an absolutely-positioned affordance (position:relative), no size of its own — the corner chip below is a TopRightOverlayBox",
+    note: "the CONTAINING BLOCK for an absolutely-positioned affordance (position:relative), no size of its own â the corner chip below is a TopRightOverlayBox",
     Variant: AnchorBox,
     kind: "anchored",
   },
   {
     name: "AnchorFillBox",
-    note: "AnchorBox that FILLS a parent of definite height (height:100%; min-height:0) — a chartHeight=\"fill\" chart under a corner control measures the cell rather than 0px",
+    note: "AnchorBox that FILLS a parent of definite height (height:100%; min-height:0) â a chartHeight=\"fill\" chart under a corner control measures the cell rather than 0px",
     Variant: AnchorFillBox,
     kind: "anchored",
     bounded: true,
   },
   {
     name: "GrowCenterColumn",
-    note: "fills the height its parent column has left and CENTRES its child — the sibling of GrowFillBox for an instrument that keeps its own aspect and would otherwise pin to the top",
+    note: "fills the height its parent column has left and CENTRES its child â the sibling of GrowFillBox for an instrument that keeps its own aspect and would otherwise pin to the top",
     Variant: GrowCenterColumn,
     kind: "tall",
     bounded: true,
   },
   {
     name: "FillWrapRow",
-    note: "a wrapping row that fills its parent COLUMN's height and stretches its cells — a flex row in a flex column otherwise sits at content height and leaves the rest empty",
+    note: "a wrapping row that fills its parent COLUMN's height and stretches its cells â a flex row in a flex column otherwise sits at content height and leaves the rest empty",
     Variant: FillWrapRow,
     kind: "tall",
     bounded: true,
   },
   {
     name: "MajorPaneBox",
-    note: "60% of its row beside a companion filling the other 40% — DEFINITE, because a max-content box whose child measures itself to decide its content oscillates",
+    note: "60% of its row beside a companion filling the other 40% â DEFINITE, because a max-content box whose child measures itself to decide its content oscillates",
     Variant: MajorPaneBox,
   },
   {
@@ -298,7 +299,7 @@ const BOXES: VariantSpec[] = [
   },
   {
     name: "FixedHeightBox",
-    note: "height STATED at the app chart height (200px), not left to a parent fill/flex context — a card that must match a sibling chart's height exactly",
+    note: "height STATED at the app chart height (200px), not left to a parent fill/flex context â a card that must match a sibling chart's height exactly",
     Variant: FixedHeightBox,
     kind: "tall",
     bounded: true,
@@ -319,7 +320,7 @@ const BOXES: VariantSpec[] = [
   },
   {
     name: "ScrollXBox",
-    note: "scrolls horizontally only — a wide table or timeline",
+    note: "scrolls horizontally only â a wide table or timeline",
     Variant: ScrollXBox,
     kind: "wide",
     bounded: true,
@@ -350,25 +351,31 @@ const BOXES: VariantSpec[] = [
 const GRIDS: VariantSpec[] = [
   {
     name: "CardGrid",
-    note: "dashboard tiles ≥280px, as many columns as fit",
+    note: "dashboard tiles â¥280px, as many columns as fit",
     Variant: CardGrid,
     kind: "blocks",
   },
   {
     name: "LooseCardGrid",
-    note: "the same at the sm (8px) gutter — for a KPI strip needing more air",
+    note: "the same at the sm (8px) gutter â for a KPI strip needing more air",
     Variant: LooseCardGrid,
     kind: "blocks",
   },
   {
     name: "WideCardGrid",
-    note: "the same for wide cards (≥420px)",
+    note: "the same for wide cards (â¥420px)",
     Variant: WideCardGrid,
     kind: "wide",
   },
   {
+    name: "TwoUpGrid",
+    note: "large tiles (≥560px) — two charts side by side on a wide panel, stacked on a narrow one",
+    Variant: TwoUpGrid,
+    kind: "wide",
+  },
+  {
     name: "ChipGrid",
-    note: "many small equal cells (≥150px) — a filter bar",
+    note: "many small equal cells (â¥150px) â a filter bar",
     Variant: ChipGrid,
     kind: "chips",
   },
@@ -380,7 +387,7 @@ const GRIDS: VariantSpec[] = [
   },
   {
     name: "FillPaneRailGrid",
-    note: "a fluid pane beside a rail held to a STATED width (RateGauge's own natural 292px) — resize the window and the rail does not move; minmax(0,…) on both axes is what lets the cells shrink instead of overflowing, and a grid cannot wrap the rail underneath",
+    note: "a fluid pane beside a rail held to a STATED width (RateGauge's own natural 292px) â resize the window and the rail does not move; minmax(0,â¦) on both axes is what lets the cells shrink instead of overflowing, and a grid cannot wrap the rail underneath",
     Variant: FillPaneRailGrid,
     kind: "paneRail",
     bounded: true,
@@ -412,8 +419,8 @@ const CHILDREN: Record<NonNullable<VariantSpec["kind"]>, () => JSX.Element> = {
   // would land in an implicit row and demonstrate the opposite of the point.
   paneRail: () => (
     <>
-      <FillPlaceholder label="pane — whatever is left over" />
-      <FillPlaceholder label="rail — a stated width, at every viewport" />
+      <FillPlaceholder label="pane â whatever is left over" />
+      <FillPlaceholder label="rail â a stated width, at every viewport" />
     </>
   ),
   // The overlay is the second child ON PURPOSE: it must be inside the anchor
@@ -421,7 +428,7 @@ const CHILDREN: Record<NonNullable<VariantSpec["kind"]>, () => JSX.Element> = {
   // over.
   anchored: () => (
     <>
-      <FillPlaceholder label="anchor — the overlay's containing block" />
+      <FillPlaceholder label="anchor â the overlay's containing block" />
       <TopRightOverlayBox>
         <FitPlaceholder label="top-right" />
       </TopRightOverlayBox>
@@ -463,17 +470,17 @@ const Group: Component<{ title: string; specs: VariantSpec[] }> = (props) => (
 
 export const LayoutVariantsShowcase: Component = () => (
   <div class="component-section component-section--full">
-    <h2>Layout Variants — Primitive (Depth 0)</h2>
+    <h2>Layout Variants â Primitive (Depth 0)</h2>
     <p class="text-meta">
       Every curried arrangement, holding neutral placeholder children so the
       only thing on screen is the arrangement itself. A call site never writes
-      flex/grid/gap CSS — it names one of these. Frames are sized by the
+      flex/grid/gap CSS â it names one of these. Frames are sized by the
       gallery, not by the variants.
     </p>
 
     <Group title="Rows" specs={ROWS} />
     <Group title="Columns" specs={COLUMNS} />
-    <Group title="Boxes — clipping and scrolling" specs={BOXES} />
+    <Group title="Boxes â clipping and scrolling" specs={BOXES} />
     <Group title="Grids" specs={GRIDS} />
 
     <ContentStack>

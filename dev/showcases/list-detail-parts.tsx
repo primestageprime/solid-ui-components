@@ -2,15 +2,58 @@ import { createSignal, type Component } from "solid-js";
 import {
   ConfiguredCard,
   ConfiguredLog,
+  EqualRow,
   GroupedSelector,
+  HatchedProgressBar,
+  HotkeyButton,
   LocalizationSettings,
   LogLineList,
+  ConfiguredDetail,
+  RowCard,
   SectionTable,
   SharingSettings,
   TextBody,
   type SelectorGroup,
 } from "../../src";
-import { defineCard, defineChildren, defineSide } from "../../src/unstable";
+import { defineCard, defineChildren, defineDetail, defineSide, flowSection } from "../../src/unstable";
+
+/** A sequence as a sketch draws it: three done steps, the active one, the next; the detail draws it as a flow. */
+type Step = { id: string; label: string; size: "done" | "active" | "next"; description?: string; estimate?: string; actual?: string; gap?: string };
+type Job = { id: string; title: string; steps: Step[]; focus?: string };
+const JOB: Job = {
+  id: "job",
+  title: "Write release notes",
+  steps: [
+    { id: "n1", label: "Gather", size: "done", gap: "18 min" },
+    { id: "n2", label: "Group by area", size: "done", gap: "1h 2 min" },
+    { id: "n3", label: "Draft", size: "done", gap: "3 min" },
+    { id: "n4", label: "Review wording", size: "active", description: "Read the draft aloud, cut what nobody would miss, and check every link opens.", estimate: "12 min", actual: "3:02" },
+    { id: "n5", label: "Publish", size: "next", estimate: "2 min" },
+  ],
+  focus: "n4",
+};
+const JOB_DETAIL = defineDetail<Job>({
+  emptyLabel: "Pick a job",
+  titleField: "title",
+  titleSize: "lg",
+  chip: () => "Anna",
+  action: { hotkey: "d", label: "Done", icon: "check", placement: "activeNode" },
+  sections: [
+    flowSection<Job, Step>({
+      rowsOf: (j) => j.steps,
+      nodeOf: (st) => ({
+        label: st.label,
+        size: st.size,
+        description: st.description,
+        estimate: st.estimate,
+        actual: st.actual,
+        progress: st.size === "done" ? { done: 1, total: 1 } : st.size === "active" ? { done: 0, active: 0.25, total: 1 } : undefined,
+      }),
+      edgeLabelOf: (prev) => prev.gap,
+      selectedOf: (j) => j.focus,
+    }),
+  ],
+});
 
 type Bird = { id: string; name: string };
 const GROUPS: SelectorGroup<Bird, "pond" | "wood">[] = [
@@ -57,6 +100,70 @@ export const ListDetailPartsShowcase: Component = () => {
           onSelect={setSelected}
           onToggleGroup={(id) => setCollapsed((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]))}
           renderItem={(b) => <TextBody>{b.name}</TextBody>}
+        />
+      </div>
+
+      <h2>GroupedSelector, flush</h2>
+      <p class="text-meta">
+        <code>variant="flush"</code>: compact group rows (title, boxed count), hairlines, no +/- glyph, an accent
+        bar on the selected row and its group. The items here are <code>RowCard</code>s with a{" "}
+        <code>HatchedProgressBar</code> (solid done, hatched active).
+      </p>
+      <div class="example-group">
+        <GroupedSelector
+          variant="flush"
+          groups={GROUPS.map((g) => ({ ...g, collapsed: collapsed().includes(g.id) }))}
+          selectedId={selected()}
+          onSelect={setSelected}
+          onToggleGroup={(id) => setCollapsed((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]))}
+          renderItem={(b, ctx) => (
+            <RowCard
+              name={b.name}
+              aside={ctx.group.title}
+              bar={<HatchedProgressBar done={b.id === "a" ? 2 : 1} active={1} total={4} label={b.name} />}
+            />
+          )}
+        />
+      </div>
+
+      <h2>EqualRow and Button casing</h2>
+      <p class="text-meta">
+        Two buttons split a toolbar evenly (<code>EqualRow</code>); <code>casing="normal"</code> keeps the label as
+        written under a theme that sets caps.
+      </p>
+      <div class="example-group">
+        <EqualRow>
+          <HotkeyButton hotkey="s" icon="arrows-up-down" armed={false} casing="normal">Oldest</HotkeyButton>
+          <HotkeyButton hotkey="n" armed={false} casing="normal">Create</HotkeyButton>
+        </EqualRow>
+      </div>
+
+      <h2>ConfiguredDetail with a flow section</h2>
+      <p class="text-meta">
+        <code>flowSection()</code> draws the selected item's steps on a <code>SwimlaneChart</code> (stacked routing,
+        edge labels, fixed column gap): done steps stacked left, the active step large at the centre with the
+        description, estimate / actual, bar and the primary action (<code>action.placement: "activeNode"</code>),
+        the next step right. A step changing column animates (the chart keys nodes by id).
+      </p>
+      <div class="example-group">
+        <ConfiguredDetail
+          kit={{ live: () => [JOB], state: { view: { selectedId: "job" } }, ui: { editing: () => false }, actions: { update: () => {}, primary: () => {} } }}
+          config={JOB_DETAIL}
+        />
+      </div>
+
+      <h2>LogLineList, plain</h2>
+      <p class="text-meta">
+        <code>variant="plain"</code>: heading only, no column headers, time left and wrapped text right, airy rows;{" "}
+        <code>timeFormat="minutes"</code> drops the seconds.
+      </p>
+      <div class="example-group">
+        <LogLineList
+          variant="plain"
+          rows={LINES}
+          timeOf={(l) => l.at.slice(0, 5)}
+          textOf={(l) => l.text}
+          title="Logs"
         />
       </div>
 

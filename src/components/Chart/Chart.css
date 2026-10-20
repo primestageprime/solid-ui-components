@@ -480,3 +480,10 @@
   stroke-width: 3px;
   stroke-linejoin: round;
 }
+
+/* `titleAlign="start"`: the title reads as a tile heading, flush left over the plot. */
+.sui-chart__title--start {
+  text-align: left;
+  font-weight: 600;
+  padding: 0 0 4px;
+}

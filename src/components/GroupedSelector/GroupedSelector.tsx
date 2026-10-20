@@ -3,13 +3,21 @@
 // shown, collapsed or empty), items drawn by a render prop, the selected item marked and kept in
 // view as j and k walk it. Pass `kit` and everything is wired; the explicit props serve a list
 // that is not a kit's. No app nouns: the group titles come from the kit's `groups.title`.
+//
+// `variant="flush"` (2026-10-20, the tasklist sketch): the groups are compact flush rows — the
+// title left, a boxed count right, one hairline between rows, no +/- glyph (the header row
+// itself toggles) — and the selected item carries an accent bar that the group header shares.
+// The default variant (CollapsibleSection headers, padded items) is unchanged.
 import { createEffect, For, type JSX, Show } from "solid-js";
-import { map, sum } from "../../fn";
+import { map, some, sum } from "../../fn";
 import { CountChip } from "../Badge/CountChip";
 import { ScrollColumn } from "../Layout";
 import { CollapsibleSection } from "../Section";
 import { HintText } from "../Text";
 import "./GroupedSelector.css";
+
+/** How the rail is drawn: `default` (sectioned, padded) or `flush` (compact rows, hairlines, accent bar). */
+export type GroupedSelectorVariant = "default" | "flush";
 
 /** What a selector needs of an item. */
 export type GroupedItem = { id: string };
@@ -50,6 +58,8 @@ export interface GroupedSelectorProps<T extends GroupedItem, G extends string> {
   groupEmptyLabel?: string;
   /** Shown in place of the rail when no group has any item (a search that matches nothing). */
   emptyLabel?: string;
+  /** `flush` draws compact group rows with hairlines and an accent bar on the selection. Default `default`. */
+  variant?: GroupedSelectorVariant;
 }
 
 export function GroupedSelector<T extends GroupedItem, G extends string>(
@@ -75,20 +85,19 @@ export function GroupedSelector<T extends GroupedItem, G extends string>(
   });
 
   return (
-    <ScrollColumn>
-      <div ref={root} class="sui-grouped-selector" role="listbox">
+    <ScrollColumn class={props.variant === "flush" ? "sui-grouped-selector__scroll sui-grouped-selector__scroll--flush" : "sui-grouped-selector__scroll"}>
+      <div
+        ref={root}
+        class={props.variant === "flush" ? "sui-grouped-selector sui-grouped-selector--flush" : "sui-grouped-selector"}
+        role="listbox"
+      >
         <Show
           when={total() > 0 || !props.emptyLabel}
           fallback={<HintText>{props.emptyLabel}</HintText>}
         >
           <For each={groups()}>
-            {(group) => (
-              <CollapsibleSection
-                title={group.title}
-                collapsed={group.collapsed}
-                onToggleCollapse={() => toggle(group.id)}
-                headerAction={<CountChip count={group.count} label="" aria-label={`${group.count} in ${group.title}`} />}
-              >
+            {(group) => {
+              const items = (
                 <Show
                   when={group.items.length > 0}
                   fallback={<HintText>{props.groupEmptyLabel ?? "Nothing here"}</HintText>}
@@ -117,8 +126,41 @@ export function GroupedSelector<T extends GroupedItem, G extends string>(
                     )}
                   </For>
                 </Show>
-              </CollapsibleSection>
-            )}
+              );
+              const holdsSelection = () => some((i: T) => i.id === selectedId(), group.items);
+              return (
+                <Show
+                  when={props.variant === "flush"}
+                  fallback={
+                    <CollapsibleSection
+                      title={group.title}
+                      collapsed={group.collapsed}
+                      onToggleCollapse={() => toggle(group.id)}
+                      headerAction={<CountChip count={group.count} label="" aria-label={`${group.count} in ${group.title}`} />}
+                    >
+                      {items}
+                    </CollapsibleSection>
+                  }
+                >
+                  <section
+                    class="sui-grouped-selector__group"
+                    data-group-id={group.id}
+                    data-holds-selection={holdsSelection() ? "true" : undefined}
+                  >
+                    <button
+                      type="button"
+                      class="sui-grouped-selector__header"
+                      aria-expanded={!group.collapsed}
+                      onClick={() => toggle(group.id)}
+                    >
+                      <span class="sui-grouped-selector__title">{group.title}</span>
+                      <CountChip count={group.count} label="" aria-label={`${group.count} in ${group.title}`} />
+                    </button>
+                    <Show when={!group.collapsed}>{items}</Show>
+                  </section>
+                </Show>
+              );
+            }}
           </For>
         </Show>
       </div>

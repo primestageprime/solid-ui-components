@@ -38,4 +38,14 @@ describe("CountChip grouped", () => {
     const bare = render(() => <CountChip count={2594} label="" />);
     expect(bare.container.querySelector(".sui-count-chip__count")!.textContent).toBe("2594");
   });
+
+  it("icon draws a leading glyph; without it nothing changes", () => {
+    cleanup();
+    const plain = render(() => <CountChip count={7} label="" />);
+    expect(plain.container.querySelector(".sui-count-chip__icon")).toBeNull();
+    cleanup();
+    const withIcon = render(() => <CountChip count={7} label="" icon="warning" />);
+    expect(withIcon.container.querySelector(".sui-count-chip__icon")).toBeTruthy();
+    expect(withIcon.container.querySelector(".sui-count-chip__count")!.textContent).toBe("7");
+  });
 });

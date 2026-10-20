@@ -22,7 +22,22 @@
   letter-spacing: 0.04em;
 }
 
+/* A bare chip (empty label) is a box with the count centred in it: no label span, so no gap to pull the number left. */
+.sui-count-chip--bare {
+  align-items: center;
+  justify-content: center;
+  min-width: 2em;
+  padding: 2px 6px;
+  box-sizing: border-box;
+}
+
 .sui-count-chip--active {
   background: var(--sui-bg-elevated);
   color: var(--sui-text-primary, inherit);
+}
+
+/* The optional leading glyph sits on the count's centre line, not the baseline. */
+.sui-count-chip__icon {
+  align-self: center;
+  display: inline-flex;
 }
