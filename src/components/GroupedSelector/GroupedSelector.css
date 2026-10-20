@@ -1,5 +1,6 @@
 /* GroupedSelector — visual marks only (no box-model geometry; layout comes from the Layout family). */
 .sui-grouped-selector__item {
+  padding: 6px 10px;
   cursor: pointer;
   border-radius: 4px;
   outline: none;
