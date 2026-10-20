@@ -17,3 +17,18 @@ Every arm scored once on the 44 quoted held-out needs (`scripts/find-bench-real.
 Cascade (Haiku rates each of ranker v2's top-15 in order; stop at the first ≥ t): t=0.5 hit 22, stopped on 30, 5.6 read on average; t=0.7 hit 18 / 20 / 9.0; t=0.9 hit 8 / 8 / 12.1.
 
 Union recall (any arm's top-k): ranker v2 ∪ MiniLM reaches 44/44 at k=20 with zero tokens; index+Haiku ∪ ranker v2 ∪ MiniLM 43 at 10, 44 at 20; index+Haiku ∪ exhaustive-Haiku 43 at 3.
+
+## Recall-first pipeline (the final claim), fresh held-out set `scripts/find-bench-fresh.json` (20 needs from the mark03–15, databrowser/baseline and sketch-ref gaps.json; frozen at d2844916 before scoring)
+
+| arm | @1 | @3 | @5 | @10 | @20 |
+|---|---|---|---|---|---|
+| legacy | 1 | 1 | 3 | 3 | 5 |
+| BM25 | 10 | 10 | 10 | 11 | 13 |
+| MiniLM | 13 | 13 | 15 | 15 | 18 |
+| ranker v2 | 12 | 14 | 15 | 16 | 17 |
+| union (ranker v2 ∪ BM25 ∪ MiniLM, k=20, ~45 candidates) | | | | | 19 |
+| union + Sonnet reader | 17 | 19 | | | |
+| exhaustive COMPONENTS.md + Sonnet | 17 | 20 | | | |
+| **pipeline: union + Sonnet reader, exhaustive fallback under 0.5 confidence (9 of 20 fall back)** | **17** | **20** | | | |
+
+The one need the union missed ("InlineRenameHotkey: autoEdit only opens on mount, so an edit verb cannot open the editor on the selected task") names no component shape at all; the reader rated it 0.3 and the fallback found EditableTitle. On the first 44-need set the same pipeline is 36 / 44 with 24 of 44 falling back; 44/44 at 3.

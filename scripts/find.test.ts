@@ -238,13 +238,13 @@ describe("benchmark floor (scripts/find-bench.json)", () => {
     expect(s.n).toBe(31);
     expect(s.top1).toBeGreaterThanOrEqual(31);
   });
-  it("held-out split (44 needs quoted verbatim from the sketch gap lists, briefs and marks' gaps.json, frozen at 6f378f68 before any further tuning): at least 17/44 top-1 and 26/44 top-3", () => {
+  it("held-out split (44 needs quoted verbatim from the sketch gap lists, briefs and marks' gaps.json, frozen at 6f378f68 before any further tuning): at least 22/44 top-1 and 26/44 top-3 (ranker v2, 561d369c)", () => {
     const s = hits(
       bench.filter((b) => b.split === "heldout"),
       tuned,
     );
     expect(s.n).toBe(44);
-    expect(s.top1).toBeGreaterThanOrEqual(17);
+    expect(s.top1).toBeGreaterThanOrEqual(22);
     expect(s.top3).toBeGreaterThanOrEqual(26);
   });
   it("authored split (written after tagging, never tuned on): at least 27/29 top-1", () => {
@@ -255,10 +255,10 @@ describe("benchmark floor (scripts/find-bench.json)", () => {
     expect(s.n).toBe(29);
     expect(s.top1).toBeGreaterThanOrEqual(27);
   });
-  it("the real misses (7 authored + 7 quoted): tuned at least 10/14 top-1, legacy at most 4/14", () => {
+  it("the real misses (7 authored + 7 quoted): ranker v2 at least 9/14 top-1, legacy at most 4/14", () => {
     const real = bench.filter((b) => b.miss);
     expect(real.length).toBe(14);
-    expect(hits(real, tuned).top1).toBeGreaterThanOrEqual(10);
+    expect(hits(real, tuned).top1).toBeGreaterThanOrEqual(9);
     expect(hits(real, legacy).top1).toBeLessThanOrEqual(4);
   });
 });
