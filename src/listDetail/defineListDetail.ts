@@ -101,6 +101,8 @@ export type ListDetailView<S extends string, XV> = {
   search: string;
   sort: S;
   collapsed: string[];
+  /** Created items, kept last in their group until the next re-sort. */
+  pinnedLast: string[];
 } & XV;
 export type ListDetailState<T, S extends string, C extends string, XD, XV> = {
   data: ListDetailData<T, C, XD>;
@@ -132,6 +134,7 @@ export function defineListDetail<
       search: string;
       sort: S;
       collapsed: string[];
+      pinnedLast: string[];
       [key: string]: unknown;
     };
   };
@@ -169,6 +172,7 @@ export function defineListDetail<
         search: "",
         sort: config.sorts.default,
         collapsed: [],
+        pinnedLast: [],
         selectedId: null,
       },
     } as unknown as State;
@@ -234,10 +238,12 @@ export function defineListDetail<
     prev(): void {
       actions.select(neighbourId(ids(), inner.view.selectedId, -1));
     },
-    /** Add an entity from `blank()`, select it at once (the `new` verb) and open it for edit; search and its group's collapse never hide it. */
+    /** Add an entity from `blank()`, select it at once (the `new` verb) and open it for edit; search and its group's collapse never hide it.
+     *  It stays LAST in its group, whatever the sort, until the next re-sort. */
     create(): void {
       const e = config.entity.blank();
       setList((l) => [...l, e]);
+      setInner("view", "pinnedLast", (p) => [...p, e.id]);
       setInner("view", "search", "");
       setInner("view", "collapsed", (c) =>
         filter((g) => g !== config.groups.of(e), c),
@@ -252,6 +258,7 @@ export function defineListDetail<
       if (id === null) return;
       const to = neighbourAfterRemove(ids(), id);
       patchEntity(id, { deleted: true } as Partial<T>);
+      setInner("view", "pinnedLast", (p) => filter((x) => x !== id, p));
       actions.record({ op: "remove", id });
       actions.select(to);
     },
@@ -347,8 +354,10 @@ export function defineListDetail<
     setSearchFocused(on: boolean): void {
       setSearchFocused(on);
     },
+    /** Re-sorting releases the created items pinned last in their groups. */
     setSort(sort: S): void {
       setInner("view", "sort", sort);
+      setInner("view", "pinnedLast", []);
       actions.commit();
     },
     /** The `sort` verb: through the sort order, round again. */

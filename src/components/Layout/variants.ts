@@ -967,6 +967,15 @@ export const WideCardGrid: Component<GridDataProps> = createGrid({
   gap: "xs",
 });
 
+// TwoUpGrid — WideCardGrid for LARGE tiles: cells at least 560px, so a wide
+// centre panel holds two charts side by side and a narrower one stacks them
+// (`min(100%, …)` keeps a phone from overflowing). The two-column chart page
+// of the databrowser sketch (2026-10-20).
+export const TwoUpGrid: Component<GridDataProps> = createGrid({
+  columns: "repeat(auto-fit, minmax(min(100%, 560px), 1fr))",
+  gap: "sm",
+});
+
 // ChipGrid — a tight responsive grid of small equal cells (≥ 150px), for rows
 // of chips / compact controls (filter bars, header meta) that pack many-across
 // on a wide screen and collapse toward one-per-row on a phone.
