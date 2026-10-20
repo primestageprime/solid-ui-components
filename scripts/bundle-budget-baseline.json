@@ -1,5 +1,5 @@
 {
-  "oneButtonKb": 16,
+  "oneButtonKb": 17,
   "typicalAppKb": 34,
   "mathKb": 266,
   "dagKb": 120,
@@ -20,6 +20,11 @@
       "from": 1,
       "to": 2,
       "reason": "Button onAction/once/action imports createSubmitAction (spinner + double-click guard), so every Button bundle carries it"
+    },
+    "oneButtonKb": {
+      "from": 16,
+      "to": 17,
+      "reason": "Button casing prop (sketch-fidelity fefef3e4, diddit #4160): +~20 B of code crossed the 16 KB rounding step (16405 B)"
     }
   }
 }
