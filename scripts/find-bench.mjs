@@ -36,14 +36,17 @@ const records = loadRecords();
 const vocab = loadTagVocabulary(root);
 const lexicon = loadLexicon();
 
+const lexiconV1 = loadLexicon(join(root, "scripts", "find-lexicon-v1.json"));
+const names = (out) => out.results.map((r) => r.name);
 const rankers = {
   legacy: (need) => rankCatalog(records, need, 5).map((r) => r.record.name),
   tagged: (need) =>
-    find(need, { records, vocab, lexicon: {}, top: 5 }).results.map(
-      (r) => r.name,
+    names(find(need, { records, vocab, lexicon: {}, top: 5, v2: false })),
+  "ranker-v1": (need) =>
+    names(
+      find(need, { records, vocab, lexicon: lexiconV1, top: 5, v2: false }),
     ),
-  tuned: (need) =>
-    find(need, { records, vocab, lexicon, top: 5 }).results.map((r) => r.name),
+  "ranker-v2": (need) => names(find(need, { records, vocab, lexicon, top: 5 })),
 };
 
 export const score = (items, ranker) => {
@@ -90,8 +93,8 @@ if (argv.includes("--json")) {
   if (argv.includes("--misses")) {
     const show = argv.includes("--reveal-heldout") ? splits : ["tuning"];
     for (const split of show) {
-      console.log(`\n${split} misses (tuned ranker):`);
-      for (const m of out[split].tuned.misses)
+      console.log(`\n${split} misses (ranker-v2):`);
+      for (const m of out[split]["ranker-v2"].misses)
         console.log(
           `  - "${m.need}"\n      expect ${m.expect.join("|")}\n      got    ${m.got.join(", ")}`,
         );

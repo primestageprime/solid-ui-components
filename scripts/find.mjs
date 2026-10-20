@@ -135,6 +135,36 @@ export const stem = (w) => {
     .replace(/s$/, "");
 };
 
+/** Ranker v2's pre-read of a need (diddit #4161 round 2). The quoted held-out
+ *  set (sketch gap lists, briefs, gaps.json) reads differently from an
+ *  authored sentence: it says what the thing is NOT ("not a table", "no status
+ *  pill", "instead of the chip"), it quotes UI strings ("Filter tasks",
+ *  "▽ Oldest") whose words are app nouns, and a gaps.json title is a coined
+ *  PascalCase name (`TaskStepsTable`) whose words are the need. So:
+ *   1. quoted strings go;
+ *   2. a negated clause goes, from the negation to the next comma, semicolon,
+ *      period or closing bracket: "not a X", "no X", "never X", "without X",
+ *      "instead of X", "rather than X";
+ *   3. PascalCase / camelCase splits into words.
+ *  Pure; `scoreRecord` never sees the original. */
+export const stripNegations = (text) =>
+  text
+    .replace(/["“”][^"“”]*["“”]/g, " ")
+    .replace(
+      /\b(?:not|no|never|without|instead of|rather than|nor)\b[^,;.()\]]*/gi,
+      " ",
+    )
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+export const splitCamel = (text) =>
+  text
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2");
+
+export const readNeed = (text, { v2 = true } = {}) =>
+  v2 ? splitCamel(stripNegations(text)) : text;
+
 export const tokenize = (text) =>
   text
     .toLowerCase()
@@ -167,8 +197,10 @@ const byValue = (vocab) => {
  *     scores double. Builders lead with the thing, then say where it sits.
  *  A need that names no interaction is a display need: `does:view` is
  *  implied, so an editor does not outrank a renderer on a "show me X" need. */
-export function inferTags(query, { vocab, lexicon = {} }) {
-  const tokens = tokenize(query);
+const HEAD_EXCLUDE = new Set(["shows:panel", "shows:text"]);
+
+export function inferTags(query, { vocab, lexicon = {}, v2 = true }) {
+  const tokens = tokenize(readNeed(query, { v2 }));
   const stems = tokens.map(stem);
   let stemText = ` ${stems.join(" ")} `;
   const found = new Map(); // tag -> { why: Set, at: number }
@@ -202,7 +234,11 @@ export function inferTags(query, { vocab, lexicon = {} }) {
   const tags = [...found.entries()]
     .map(([tag, { why, at }]) => ({ tag, why: [...why], at }))
     .sort((a, b) => a.at - b.at);
-  const head = tags.find((t) => t.tag.startsWith("shows:"));
+  // "panel" and "text" are too generic to be the thing a need is about
+  // ("a panel lists the log lines" is about the log, not the panel).
+  const head = tags.find(
+    (t) => t.tag.startsWith("shows:") && !HEAD_EXCLUDE.has(t.tag),
+  );
   if (head) head.head = true;
   if (!tags.some((t) => t.tag.startsWith("does:")) && length(tags) > 0)
     tags.push({
@@ -404,9 +440,9 @@ export function partsOf(record, records, readSrc) {
 
 export function find(
   query,
-  { records, vocab, lexicon, top = 5, readSrc, W = WEIGHTS },
+  { records, vocab, lexicon, top = 5, readSrc, W = WEIGHTS, v2 = true },
 ) {
-  const need = inferTags(query, { vocab, lexicon });
+  const need = inferTags(query, { vocab, lexicon, v2 });
   const ranked = rank(records, need, { top, W });
   return {
     query,
@@ -439,6 +475,7 @@ if (isMain) {
   const argv = process.argv.slice(2);
   const json = argv.includes("--json");
   const noLexicon = argv.includes("--no-lexicon");
+  const v1 = argv.includes("--v1"); // ranker v1: no negation/quote stripping, the v1 lexicon
   const topIdx = argv.indexOf("--top");
   const top = topIdx !== -1 ? Number(argv[topIdx + 1]) : 5;
   const query = argv
@@ -459,7 +496,12 @@ if (isMain) {
   const out = find(query, {
     records: loadRecords(),
     vocab: loadTagVocabulary(root),
-    lexicon: noLexicon ? {} : loadLexicon(),
+    lexicon: noLexicon
+      ? {}
+      : v1
+        ? loadLexicon(join(root, "scripts", "find-lexicon-v1.json"))
+        : loadLexicon(),
+    v2: !v1,
     top,
     readSrc: (f) => readFileSync(join(root, f), "utf8"),
   });
@@ -467,6 +509,8 @@ if (isMain) {
     console.log(JSON.stringify(out, null, 2));
   } else {
     console.log(`Need: "${out.query}"`);
+    if (!v1 && readNeed(out.query) !== out.query)
+      console.log(`Read after stripping: "${readNeed(out.query)}"`);
     console.log(
       `Read as: ${out.inferred.map((t) => `${t.tag}${t.head ? " [head]" : ""} (${t.why.join("/")})`).join(", ") || "(no tags inferred — prose only)"}\n`,
     );
