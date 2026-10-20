@@ -1,14 +1,14 @@
-// listDetail — LocalizationSettings and SharingSettings (Depth 2). The bodies of the two generic
+// LocalizationSettings and SharingSettings (Depth 2). The bodies of the two generic
 // settings tabs every app shows beside Theme. Uncontrolled they run on the stub model in
 // settingsState.ts; give `value` and `onChange` to drive them from the app's own model (the
 // scaffold passes its ~/lib/preferences, so the tab's branch calls an app mutator).
 // The app keeps its tab branch (`=== "localization"`) and renders the component inside it.
 import type { Component } from "solid-js";
-import { map } from "../fn";
-import { TightStack } from "../components/Layout";
-import { SegmentedControl } from "../components/SegmentedControl";
-import { TextLabel } from "../components/Text";
-import { Toggle } from "../components/Toggle";
+import { map } from "../../fn";
+import { TightStack } from "../Layout";
+import { SegmentedControl } from "../SegmentedControl";
+import { TextLabel } from "../Text";
+import { Toggle } from "../Toggle";
 import {
   LOCALES,
   VISIBILITIES,
@@ -30,6 +30,7 @@ export interface LocalizationSettingsProps {
   onChange?: (patch: Partial<LocalizationState>) => void;
 }
 
+/** The Localization settings tab body: a locale choice and a 12-hour toggle, on the persisted stub model or the caller's `value` + `onChange`. */
 export const LocalizationSettings: Component<LocalizationSettingsProps> = (props) => {
   const value = (): LocalizationState => props.value ?? localizationState();
   const change = (patch: Partial<LocalizationState>): void =>
@@ -58,6 +59,7 @@ export interface SharingSettingsProps {
   onChange?: (patch: Partial<SharingState>) => void;
 }
 
+/** The Sharing settings tab body: who can open it and an allow-edit toggle, on the persisted stub model or the caller's `value` + `onChange`. */
 export const SharingSettings: Component<SharingSettingsProps> = (props) => {
   const value = (): SharingState => props.value ?? sharingState();
   const change = (patch: Partial<SharingState>): void =>

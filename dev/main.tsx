@@ -138,6 +138,7 @@ import { SignedAreaChartShowcase } from "./showcases/signed-area-chart";
 import { TargetBarChartShowcase } from "./showcases/target-bar-chart";
 import { CompletionTimelineShowcase } from "./showcases/completion-timeline";
 import { LevelsTimelineShowcase } from "./showcases/levels-timeline";
+import { ListDetailPartsShowcase } from "./showcases/list-detail-parts";
 import { ThreePanelLayoutShowcase } from "./showcases/three-panel-layout";
 import { ToastShowcase } from "./showcases/toast";
 import { TooltipShowcase } from "./showcases/tooltip";
@@ -949,6 +950,12 @@ const items: Item[] = [
     label: "RecentStarred",
     component: RecentStarredShowcase,
     tags: ["depth:1", "list", "navigation", "container"],
+  },
+  {
+    id: "list-detail-parts",
+    label: "GroupedSelector, LogLineList",
+    component: ListDetailPartsShowcase,
+    tags: ["depth:2", "list", "navigation", "table"],
   },
   {
     id: "three-panel-layout",

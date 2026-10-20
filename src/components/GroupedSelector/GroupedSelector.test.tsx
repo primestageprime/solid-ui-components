@@ -1,7 +1,7 @@
 import { fireEvent, render } from "@solidjs/testing-library";
 import { beforeEach, describe, expect, it } from "vitest";
 import { GroupedSelector } from "./GroupedSelector";
-import { defineListDetail, newId } from "./index";
+import { defineListDetail, newId } from "../../listDetail";
 
 // An invented entity: the selector names none of its fields.
 type Bird = { id: string; name: string; zone: "pond" | "wood"; deleted?: boolean };

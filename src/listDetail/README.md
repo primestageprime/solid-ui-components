@@ -35,7 +35,9 @@ export const dump = () => JSON.stringify({ ...kit.dumpObject(), chrome: { ...(ki
 
 ## Components that render the kit (gen12)
 
+These are root exports (SSR-safe), not `/unstable`: `/unstable` stays JSX-free so a store that imports the kit loads under Node.
+
 - `GroupedSelector` — `<GroupedSelector kit={kit} renderItem={(item, { selected }) => <Card .../>} emptyLabel="..." />` draws `kit.grouped()` as a rail: group header (title from `groups.title`, count chip, collapse through `actions.toggleGroup`), items by `renderItem`, the selected item marked (`aria-selected`, accent bar) and scrolled into view as `j`/`k` move it, click or Enter selects. A `Group` is `{ id, title, count, collapsed, items }`.
 - `LogLineList` — `<LogLineList rows timeOf={(r) => r.at} textOf={(r) => r.msg} title? emptyLabel? wrap? />`: a fixed time column and a truncating (or wrapping) text column for a narrow panel, empty state, optional `selectedId`/`onSelect`.
-- `LocalizationSettings`, `SharingSettings` — the bodies of the two generic settings tabs (stub models persisted in SUI; read `localizationState()` / `sharingState()` in your `dump()`).
-- Layout: `ListDetailLogThreePanel` (root export): the three-panel with a right panel wide enough for a time + text table. `BaseTable`/`SectionTable` take `selectedId` + `onSelect` (+ `rowId`) for a selected row, distinct from hover `highlighted`.
+- `LocalizationSettings`, `SharingSettings` — the bodies of the two generic settings tabs (stub models persisted in SUI; read `localizationState()` / `sharingState()` in your `dump()`; or pass `value` + `onChange`).
+- Layout: `ListDetailLogThreePanel`: the three-panel with a right panel wide enough for a time + text table. `BaseTable`/`SectionTable` take `selectedId` + `onSelect` (+ `rowId`) for a selected row, distinct from hover `highlighted`.

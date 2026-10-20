@@ -1,10 +1,10 @@
-// listDetail — LogLineList (Depth 2, composes BaseTable / SectionTable). Time + text rows for a
+// LogLineList (Depth 2, composes BaseTable / SectionTable). Time + text rows for a
 // narrow panel: a fixed time column, a text column that takes the rest and truncates with an
 // ellipsis (or wraps), an empty state, and an optional selected row. No app nouns: the caller
 // says which field is the time and which the text.
-import { BaseTable } from "../components/Table/BaseTable";
-import { SectionTable } from "../components/Table/SectionTable";
-import type { TableColumn, TableRow } from "../components/Table/types";
+import { BaseTable } from "../Table/BaseTable";
+import { SectionTable } from "../Table/SectionTable";
+import type { TableColumn, TableRow } from "../Table/types";
 
 export interface LogLineListProps<T extends TableRow> {
   rows: T[];

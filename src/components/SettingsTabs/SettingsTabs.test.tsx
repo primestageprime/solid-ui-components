@@ -1,6 +1,6 @@
 import { fireEvent, render } from "@solidjs/testing-library";
 import { beforeEach, describe, expect, it } from "vitest";
-import { LocalizationSettings, SharingSettings } from "./settingsTabs";
+import { LocalizationSettings, SharingSettings } from "./SettingsTabs";
 import { localizationState, setLocalization, setSharing, sharingState } from "./settingsState";
 
 beforeEach(() => {

@@ -1,20 +1,31 @@
-// listDetail — GroupedSelector (Depth 2, composes Section + CountChip + ScrollColumn). Renders a
+// GroupedSelector (Depth 2, composes Section + CountChip + ScrollColumn). Renders a
 // kit's grouped() list as a rail: one collapsible group per entry (title and count chip always
 // shown, collapsed or empty), items drawn by a render prop, the selected item marked and kept in
 // view as j and k walk it. Pass `kit` and everything is wired; the explicit props serve a list
 // that is not a kit's. No app nouns: the group titles come from the kit's `groups.title`.
 import { createEffect, For, type JSX, Show } from "solid-js";
-import { map, sum } from "../fn";
-import { CountChip } from "../components/Badge/CountChip";
-import { ScrollColumn } from "../components/Layout";
-import { CollapsibleSection } from "../components/Section";
-import { HintText } from "../components/Text";
-import type { EntityBase, Group } from "./listkit";
-import "./listDetail.css";
+import { map, sum } from "../../fn";
+import { CountChip } from "../Badge/CountChip";
+import { ScrollColumn } from "../Layout";
+import { CollapsibleSection } from "../Section";
+import { HintText } from "../Text";
+import "./GroupedSelector.css";
+
+/** What a selector needs of an item. */
+export type GroupedItem = { id: string };
+
+/** One group as `defineListDetail`'s `kit.grouped()` returns it (any list with this shape works). */
+export type SelectorGroup<T extends GroupedItem, G extends string = string> = {
+  id: G;
+  title: string;
+  count: number;
+  collapsed: boolean;
+  items: T[];
+};
 
 /** The slice of a defineListDetail kit the selector reads and drives. */
-export type GroupedSelectorKit<T extends EntityBase, G extends string> = {
-  grouped: () => Group<T, G>[];
+export type GroupedSelectorKit<T extends GroupedItem, G extends string> = {
+  grouped: () => SelectorGroup<T, G>[];
   state: { view: { selectedId: string | null } };
   actions: {
     select: (id: string | null) => void;
@@ -22,11 +33,11 @@ export type GroupedSelectorKit<T extends EntityBase, G extends string> = {
   };
 };
 
-export interface GroupedSelectorProps<T extends EntityBase, G extends string> {
+export interface GroupedSelectorProps<T extends GroupedItem, G extends string> {
   /** A defineListDetail kit: supplies groups, selection and collapse. */
   kit?: GroupedSelectorKit<T, G>;
   /** Groups to draw (default `kit.grouped()`). */
-  groups?: Group<T, G>[];
+  groups?: SelectorGroup<T, G>[];
   /** The selected item id (default `kit.state.view.selectedId`). */
   selectedId?: string | null;
   /** Called with an item id on click or Enter (default `kit.actions.select`). */
@@ -34,17 +45,17 @@ export interface GroupedSelectorProps<T extends EntityBase, G extends string> {
   /** Called with a group id when its header is toggled (default `kit.actions.toggleGroup`). */
   onToggleGroup?: (id: G) => void;
   /** Draws one item, usually a card; `selected` is true for the selected one. */
-  renderItem: (item: T, ctx: { selected: boolean; group: Group<T, G> }) => JSX.Element;
+  renderItem: (item: T, ctx: { selected: boolean; group: SelectorGroup<T, G> }) => JSX.Element;
   /** Shown inside an expanded group with no items. Default "Nothing here". */
   groupEmptyLabel?: string;
   /** Shown in place of the rail when no group has any item (a search that matches nothing). */
   emptyLabel?: string;
 }
 
-export function GroupedSelector<T extends EntityBase, G extends string>(
+export function GroupedSelector<T extends GroupedItem, G extends string>(
   props: GroupedSelectorProps<T, G>,
 ) {
-  const groups = (): Group<T, G>[] => props.groups ?? props.kit?.grouped() ?? [];
+  const groups = (): SelectorGroup<T, G>[] => props.groups ?? props.kit?.grouped() ?? [];
   const kitView = () => props.kit?.state.view;
   const selectedId = (): string | null =>
     props.selectedId !== undefined ? props.selectedId : (kitView()?.selectedId ?? null);

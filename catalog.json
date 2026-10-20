@@ -9219,6 +9219,25 @@
     "line": 305
   },
   {
+    "name": "GroupedSelector",
+    "depth": null,
+    "kind": "primitive",
+    "family": "GroupedSelector",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composed (Depth 2, owns `GroupedSelector.css`: selection marks only).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "any grouped, collapsible, selectable rail.",
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/GroupedSelector/GroupedSelector.tsx",
+    "line": 55
+  },
+  {
     "name": "GrowBox",
     "depth": 0,
     "kind": "variant",
@@ -9994,7 +10013,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 316
+    "line": 319
   },
   {
     "name": "HUDTabs",
@@ -11211,7 +11230,7 @@
     "useFor": null,
     "notes": "List-and-detail page whose right panel is a time + text log: 320 left, right 28vw clamped 320..440 with its padding dropped (`rightPanelFlush`, so a table's row lines run edge to edge) and stacked asides uncapped at phone widths. The list-detail standard's one layout (canon/standards/list-detail/v2).",
     "showcase": "#/three-panel-layout",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/ThreePanelLayout/variants.tsx",
     "line": 71
   },
@@ -11281,6 +11300,44 @@
     "since": "v0.15.0",
     "file": "src/components/LiveHeartbeatTrace/LiveHeartbeatTrace.tsx",
     "line": 46
+  },
+  {
+    "name": "LocalizationSettings",
+    "depth": null,
+    "kind": "primitive",
+    "family": "SettingsTabs",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "The Localization settings tab body: a locale choice and a 12-hour toggle, on the persisted stub model or the caller's `value` + `onChange`.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The Localization settings tab body: a locale choice and a 12-hour toggle, on the persisted stub model or the caller's `value` + `onChange`.",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/SettingsTabs/SettingsTabs.tsx",
+    "line": 34
+  },
+  {
+    "name": "LogLineList",
+    "depth": null,
+    "kind": "primitive",
+    "family": "LogLineList",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composed (Depth 2, zero CSS: composes BaseTable / SectionTable).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/LogLineList/LogLineList.tsx",
+    "line": 35
   },
   {
     "name": "LongTextCell",
@@ -14818,6 +14875,25 @@
     "since": "0.102.0",
     "file": "src/components/Chart/shapes.tsx",
     "line": 101
+  },
+  {
+    "name": "SharingSettings",
+    "depth": null,
+    "kind": "primitive",
+    "family": "SettingsTabs",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "The Sharing settings tab body: who can open it and an allow-edit toggle, on the persisted stub model or the caller's `value` + `onChange`.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The Sharing settings tab body: who can open it and an allow-edit toggle, on the persisted stub model or the caller's `value` + `onChange`.",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/SettingsTabs/SettingsTabs.tsx",
+    "line": 63
   },
   {
     "name": "Sidebar",

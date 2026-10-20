@@ -1,4 +1,4 @@
-// listDetail — settingsState (Depth 0, headless). The stub models behind the generic Localization
+// settingsState (Depth 0, headless). The stub models behind the generic Localization
 // and Sharing settings tabs: small persisted signals the app can read in its dump(). They live in
 // SUI so no app has to invent a locale or a share model; replace them with a real backend model by
 // ignoring the setters and passing your own values to the tab components.
