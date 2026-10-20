@@ -27,6 +27,7 @@ import { fileURLToPath } from "node:url";
 import { componentsMdBulletFor, loadTagVocabulary } from "./catalog.mjs";
 import { find, loadLexicon, loadRecords } from "./find.mjs";
 import { buildBm25 } from "./find-bm25.mjs";
+import { createEmbedRanker } from "./find-embed.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -52,6 +53,15 @@ export function candidateSet(
   );
 }
 
+/** `candidateSet` with the in-repo MiniLM ranker (scripts/find-embed.mjs)
+ *  supplying the third list; null ranker = the two text retrievers only. */
+export async function candidateSetLive(need, ctx, { k = 20 } = {}) {
+  const embedCands = ctx.embedRanker
+    ? (await ctx.embedRanker.rank(need, k)).map((r) => `${r.record.name} `)
+    : null;
+  return candidateSet(need, { ...ctx, embedCands, k });
+}
+
 export const entryFor = (record, componentsMd) => {
   const bullet = componentsMdBulletFor(componentsMd, record.name);
   const text = bullet ?? record.useFor ?? record.summary ?? record.notes ?? "";
@@ -74,6 +84,11 @@ if (isMain) {
   const componentsMd = readFileSync(join(root, "COMPONENTS.md"), "utf8");
   const k = Number(opt("--k", 20));
   const benchPath = opt("--bench", null);
+  const embedRanker = argv.includes("--no-embed")
+    ? null
+    : await createEmbedRanker(records);
+  if (!embedRanker && !argv.includes("--no-embed"))
+    console.error("(embeddings unavailable: two retrievers only)");
   if (benchPath) {
     const needs = JSON.parse(readFileSync(benchPath, "utf8")).needs;
     const emb = opt("--embed-cands", null)

@@ -7358,6 +7358,7 @@
     "family": "ScrollRegion",
     "tags": [
       "shows:panel",
+      "shows:list",
       "does:scroll",
       "data:scalar",
       "role:container"
@@ -7821,6 +7822,7 @@
       "shows:card",
       "shows:status",
       "shows:text",
+      "shows:progress",
       "does:click",
       "does:view",
       "data:scalar",
@@ -11112,6 +11114,8 @@
       "shows:card",
       "shows:status",
       "shows:text",
+      "shows:date",
+      "shows:progress",
       "does:select",
       "does:click",
       "data:scalar",
@@ -11125,7 +11129,7 @@
     "summarySource": "components-md",
     "preferFirst": null,
     "notToBeConfusedWith": null,
-    "useFor": "vessel-call pickers, triage queues, report selectors — any list/sidebar card keyed by a domain identifier.",
+    "useFor": "vessel-call pickers, triage queues, report selectors — any list/sidebar card or full-width list row keyed by a domain identifier: a title line with a status or an icon on the right, then an owner or date on the left and a duration, count or progress bar on the right.",
     "notes": null,
     "showcase": "#/entity-card",
     "since": "0.121.0",
@@ -12869,6 +12873,7 @@
     "family": "GroupedSelector",
     "tags": [
       "shows:list",
+      "shows:header",
       "shows:count",
       "does:select",
       "does:collapse",
@@ -12883,7 +12888,7 @@
     "summarySource": "components-md",
     "preferFirst": null,
     "notToBeConfusedWith": null,
-    "useFor": "any grouped, collapsible, selectable rail.",
+    "useFor": "any grouped, collapsible, selectable rail — a sidebar whose group headers are compact rows with the group name on the left and a boxed count on the right, the rows under them indented, the selected row marked with an accent bar, each group collapsible and an emptied group collapsed.",
     "notes": null,
     "showcase": null,
     "since": "0.230.0",
@@ -19745,6 +19750,7 @@
     "family": "ScrollRegion",
     "tags": [
       "shows:panel",
+      "shows:list",
       "does:scroll",
       "data:scalar",
       "role:container"
@@ -19761,7 +19767,7 @@
     "summarySource": "components-md",
     "preferFirst": null,
     "notToBeConfusedWith": null,
-    "useFor": "any scrollable list/panel where a \"more below/above\" cue is wanted and a hard edge should read as the end.",
+    "useFor": "any scrollable list/panel that must fill its pane's full height and scroll inside it — a sidebar list with its own scrollbar — where a \"more below/above\" cue is wanted and a hard edge should read as the end.",
     "notes": null,
     "showcase": "#/scroll-region",
     "since": "0.64.0",
@@ -19775,6 +19781,7 @@
     "family": "ScrollRegion",
     "tags": [
       "shows:panel",
+      "shows:list",
       "does:scroll",
       "data:scalar",
       "role:container"
@@ -19808,6 +19815,7 @@
     "family": "ScrollRegion",
     "tags": [
       "shows:panel",
+      "shows:list",
       "does:scroll",
       "data:scalar",
       "role:container"
@@ -22289,6 +22297,7 @@
       "shows:card",
       "shows:status",
       "shows:text",
+      "shows:progress",
       "does:click",
       "does:view",
       "data:scalar",
@@ -22304,7 +22313,7 @@
       "NotificationRow"
     ],
     "notToBeConfusedWith": null,
-    "useFor": "the largest existing status-card component — reach for `NotificationRow` first if the card is one of several in a feed/list, and `StatusCard` directly for a single standalone card.",
+    "useFor": "the largest existing status-card component — a card or full-width list row showing a name, a status, a detail line and a meta strip of owner, time and progress; reach for `NotificationRow` first if the card is one of several in a feed/list, and `StatusCard` directly for a single standalone card.",
     "notes": null,
     "showcase": "#/status-card",
     "since": "0.84.0",

@@ -156,7 +156,7 @@ createRangeAmountGroup (2) field money number ~edit ~type =range @section — At
 createRangeDialog (1) dialog field ~edit ~submit =range @overlay — a slider's range (a dial's min/max click), any [min, max] a reader sets by hand.
 createRateGauge (2) gauge number progress ~view =scalar @inline — Bake the wording into a named variant. variants: RateDial
 createRow (0) panel ~layout =list @container — Flex-row container. variants: ActionWrapRow, BarLineRow, BaselineClusterRow, BaselineSpreadRow, BaselineWrapRow, CenteredWrapRow +27
-createScrollRegion (1) panel ~scroll =scalar @container — Factory: freeze defaults (e.g. variants: ScrollRegionLg, ScrollRegionMd
+createScrollRegion (1) panel list ~scroll =scalar @container — Factory: freeze defaults (e.g. variants: ScrollRegionLg, ScrollRegionMd
 createScrubChart (2) chart axis ~zoom ~drag ~hover ~toggle =time-series =multi-series @panel — Factory that returns a curried ScrubChart with the sizing knobs baked in.
 createSection (1) panel header text ~collapse ~view =scalar @section — Collapsible section with title, subtitle, corner decorations, and header action  variants: BorderedSection, CollapsibleSection, DecoratedSection, HUDSection
 createSegmentBar (1) bar progress mark ~view =list @slot — a rounded bar cut into fractional segments ({ from, to, fill }, 0–1 of the box),
@@ -171,7 +171,7 @@ createStack (0) panel ~layout =list @container — Flex-column container. varian
 createStackedTimelineChart (2) chart bar timeline ~hover ~view =time-series =multi-series =events @panel — Curry the crossing, the inset and the tick text once per screen.
 createStampedRow (2) text date avatar ~view =scalar @row — Factory behind StampedRow's curried variants; variants: PinnedStampedRow, StampedRow
 createStatusBadge (1) badge status ~view =enum @inline — Colored status pill with 5 compliance-themed variants. variants: CompliantBadge, DoingBadge, InfoBadge, PendingBadge, SmStatusBadge, TodoBadge +2
-createStatusCard (1) card status text ~click ~view =scalar @row — Curried StatusCard — bind common defaults (e.g.
+createStatusCard (1) card status text progress ~click ~view =scalar @row — Curried StatusCard — bind common defaults (e.g.
 createStatusFlowChart (2) flow chart count ~view ~hover =steps =grouped @panel — Curried-variant factory for StatusFlowChart (per ADR-0001).
 createStatusLight (1) status icon ~view =enum @inline — Atomic. variants: MdStatusLight, SmallStatusLight
 createStepTimeline (3) timeline chart progress ~hover ~view =steps =events =time-series @panel — Composite (Depth 3), src/components/StepTimeline/. variants: StepTimeline
@@ -234,7 +234,7 @@ DurationCell (1) number money duration ~view =scalar @cell — the largest table
 EditableTitle (1) text field ~edit ~type =text @header — Atomic Primitive (Depth 1).
 EllipsisText (2) text ~truncate ~hover =text @cell — the underlying primitive behind every truncating table cell (IdCell, StringCell,
 EndLabels (1) text mark ~truncate =pair @slot — a lead label at the box's left and a trail at its right, dropping the trail and 
-EntityCard (2) card status text ~select ~click =scalar @row — vessel-call pickers, triage queues, report selectors — any list/sidebar card key
+EntityCard (2) card status text date progress ~select ~click =scalar @row — vessel-call pickers, triage queues, report selectors — any list/sidebar card or 
 EpisodeCard (1) list card ~select ~click =list @rail — a worked example of a renderCard implementation — copy its shape for a real Side
 EpisodeSelection (1) list card ~select ~click =list @rail — a worked example of a renderSelection implementation, alongside EpisodeCard — re
 ExtractionBoard (4) list progress status card ~view ~animate =grouped =steps @page — a live ETL extraction / ingestion dashboard where a data store advances tables t
@@ -261,7 +261,7 @@ Grid (1) mark ~view =series @slot — horizontal/vertical reference gridlines un
 GroupBracket (0) mark divider ~view =grouped @cell — a per-row grouping gutter in dense lists/tables where contiguous runs of a group
 GroupedBucketQueue (2) tree list count ~select ~collapse ~filter =grouped =tree @rail — a filter/config sidebar grouped by more than one facet at once (Direction → Cate
 GroupedMutationSliders (3) field number diff ~drag ~edit =grouped =list @panel — a before/after editor where each named thing carries THREE OR MORE bounded quant
-GroupedSelector (2) list count ~select ~collapse =grouped @rail — any grouped, collapsible, selectable rail.
+GroupedSelector (2) list header count ~select ~collapse =grouped @rail — any grouped, collapsible, selectable rail — a sidebar whose group headers are co
 HatchPattern (1) mark ~view =scalar @slot — waiting / blocked / tentative stretches.
 HeartbeatSparkline (1) sparkline progress ~view =time-series @inline — any "% of budget over time" sparkline (rate-limit headroom, queue depth, heartbe
 Heatmap (1) heatmap grid ~hover ~view =matrix @panel — data completeness grids, coverage matrices.
@@ -359,7 +359,7 @@ RightPopoverMenu (1) menu button ~click ~dismiss =list @overlay — header actio
 RingChart (1) gauge chart progress ~view =grouped =scalar @inline — completion gauges, category-breakdown donuts, any "N of total" ring indicator.
 ScenarioDot (1) badge icon ~view =enum @inline — a scenario chip/list row where scenarios are told apart by colour alone.
 ScenarioGlyph (1) badge icon ~view =enum @inline — a scenario chip/list row where scenarios must be distinguishable without relying
-ScrollRegion (1) panel ~scroll =scalar @container — any scrollable list/panel where a "more below/above" cue is wanted and a hard ed
+ScrollRegion (1) panel list ~scroll =scalar @container — any scrollable list/panel that must fill its pane's full height and scroll insid
 ScrubChart (2) chart axis ~zoom ~drag ~hover ~toggle =time-series =multi-series @panel — linked chart + axis pairings where the chart needs to show the big picture while
 ScrubChartBand (1) mark ~view =range =series @slot — Draws a deviation band inside a ScrubChart render callback: one filled <polygon>
 ScrubChartCrosshair (1) mark ~hover =multi-series @slot — Draws a hover crosshair inside a ScrubChart render callback: a vertical guide at
@@ -401,7 +401,7 @@ StackedTimelineChart (2) chart bar timeline ~hover ~view =time-series =multi-ser
 StarToggle (1) button icon ~toggle =boolean @inline — a 5-point star <button> that fills when the item is starred;
 StaticSplitLayout (1) list panel ~view =list @container — the framing around a read-only list of recent items over a composed bottom block
 StatsTable (1) table number ~view =table @panel — quick statistical summary tables.
-StatusCard (2) card status text ~click ~view =scalar @row — the largest existing status-card component — reach for NotificationRow first if 
+StatusCard (2) card status text progress ~click ~view =scalar @row — the largest existing status-card component — a card or full-width list row showi
 StatusCell (1) status chip field ~view ~toggle =enum =boolean @cell — the largest table that already models a status column — reach for FieldTable (fi
 StatusChip (1) chip status ~select ~edit =enum @inline — Atomic Primitive (Depth 1).
 StatusChipDisplay (1) chip status ~view =enum @inline — a card or list row that shows a status and leaves changing it to the detail view
