@@ -238,7 +238,7 @@ describe("benchmark floor (scripts/find-bench.json)", () => {
     expect(s.n).toBe(31);
     expect(s.top1).toBeGreaterThanOrEqual(31);
   });
-  it("held-out split (44 needs quoted verbatim from the sketch gap lists, briefs and marks' gaps.json, frozen at 6f378f68 before any further tuning): at least 22/44 top-1 and 26/44 top-3 (ranker v2, 561d369c)", () => {
+  it("held-out split (44 needs quoted verbatim from the sketch gap lists, briefs and marks' gaps.json, frozen at 6f378f68 before any further tuning): at least 22/44 top-1 and 26/44 top-3 (ranker v2, 561d369c; retired as an honest score after the doc fixes of 133c5c92)", () => {
     const s = hits(
       bench.filter((b) => b.split === "heldout"),
       tuned,
@@ -255,10 +255,29 @@ describe("benchmark floor (scripts/find-bench.json)", () => {
     expect(s.n).toBe(29);
     expect(s.top1).toBeGreaterThanOrEqual(27);
   });
-  it("the real misses (7 authored + 7 quoted): ranker v2 at least 9/14 top-1, legacy at most 4/14", () => {
+  it("the real misses (7 authored + 7 quoted): ranker v2 at least 10/14 top-1, legacy at most 5/14 (5 once FramedCashflowScrubChart counted as a drag-zoom answer)", () => {
     const real = bench.filter((b) => b.miss);
     expect(real.length).toBe(14);
-    expect(hits(real, tuned).top1).toBeGreaterThanOrEqual(9);
-    expect(hits(real, legacy).top1).toBeLessThanOrEqual(4);
+    expect(hits(real, tuned).top1).toBeGreaterThanOrEqual(10);
+    expect(hits(real, legacy).top1).toBeLessThanOrEqual(5);
+  });
+});
+
+describe("promoted cases (scripts/find-regress.json, scripts/find-promote.mjs)", () => {
+  const records = loadRecords();
+  const regress = JSON.parse(
+    readFileSync(join(root, "scripts", "find-regress.json"), "utf8"),
+  ).cases as {
+    need: string;
+    expect: string[];
+  }[];
+  it("every promoted need stays in the fast path's top 3", () => {
+    const lost = regress.filter(
+      (c) =>
+        !find(c.need, { records, vocab, lexicon, top: 3 }).results.some((r) =>
+          c.expect.includes(r.name),
+        ),
+    );
+    expect(lost.map((c) => c.need)).toEqual([]);
   });
 });

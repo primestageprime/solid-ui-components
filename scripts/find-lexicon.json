@@ -260,10 +260,6 @@
   "column": [
     "shows:table"
   ],
-  "rows": [
-    "shows:table",
-    "data:table"
-  ],
   "expandable": [
     "does:expand",
     "shows:tree",
@@ -869,5 +865,58 @@
     "shows:table",
     "data:table",
     "data:steps"
+  ],
+  "entries": [
+    "shows:log",
+    "shows:date"
+  ],
+  "diagram": [
+    "shows:graph",
+    "shows:flow"
+  ],
+  "scrollbar": [
+    "does:scroll",
+    "shows:panel"
+  ],
+  "selector": [
+    "shows:field",
+    "does:pick",
+    "does:select"
+  ],
+  "vertical line": [
+    "shows:mark",
+    "does:hover"
+  ],
+  "help": [
+    "shows:dialog",
+    "shows:kbd"
+  ],
+  "key cap": [
+    "shows:kbd"
+  ],
+  "collapsed away": [
+    "does:collapse",
+    "role:rail"
+  ],
+  "log panel": [
+    "shows:log",
+    "role:panel",
+    "shows:date"
+  ],
+  "log entry": [
+    "shows:log",
+    "shows:date"
+  ],
+  "log entries": [
+    "shows:log",
+    "shows:date"
+  ],
+  "toolbar row": [
+    "shows:toolbar",
+    "role:toolbar",
+    "shows:button"
+  ],
+  "ruled": [
+    "shows:divider"
   ]
 }

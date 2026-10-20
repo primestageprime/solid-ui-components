@@ -32,3 +32,7 @@ Union recall (any arm's top-k): ranker v2 ∪ MiniLM reaches 44/44 at k=20 with 
 | **pipeline: union + Sonnet reader, exhaustive fallback under 0.5 confidence (9 of 20 fall back)** | **17** | **20** | | | |
 
 The one need the union missed ("InlineRenameHotkey: autoEdit only opens on mount, so an edit verb cannot open the editor on the selected task") names no component shape at all; the reader rated it 0.3 and the fallback found EditableTitle. On the first 44-need set the same pipeline is 36 / 44 with 24 of 44 falling back; 44/44 at 3.
+
+## Retired (2026-10-20, round 3)
+
+The doc fixes of 133c5c92 (GroupedSelector, StatusCard, EntityCard, ScrollRegion) and the promotion run on the first set's 24 fallbacks retire both `find-bench-real.json` and `find-bench-fresh.json` as honest scores. They stay as regression sets (`npm run find:bench`); a future claim needs a new frozen set from unused sources. One label was widened: `FramedCashflowScrubChart` (a curried `CashflowScrubChart`) now counts for "Dragging a range zooms all visible charts".

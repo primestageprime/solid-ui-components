@@ -1,0 +1,104 @@
+{
+  "$comment": "Promoted cases (scripts/find-promote.mjs): a need the slow path answered, now pinned in the fast path's top 3 by scripts/find.test.ts. Never a held-out need.",
+  "cases": [
+    {
+      "need": "Group headers: compact flush rows (name left, boxed count right), thin dividers, no tall banded headers, no gaps between groups, no visible +/- button.",
+      "expect": [
+        "GroupedSelector"
+      ],
+      "source": "personae/ui-builder/tasklist/sketch/gaps.md:22 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "Cards: full-width list rows, not boxed cards. Line 1: title (ellipsis) + owner on the right. Line 2: progress bar (solid = done, hatched = in progress). No status pill, no \"n/m steps\", no time.",
+      "expect": [
+        "EntityCard"
+      ],
+      "source": "personae/ui-builder/tasklist/sketch/gaps.md:24 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "\"Logs\" heading only: no line count, no TIME / MESSAGE column headers.",
+      "expect": [
+        "LogLineList"
+      ],
+      "source": "personae/ui-builder/tasklist/sketch/gaps.md:44 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "Entries: time left, message right, wrapping across lines; airy rows, no table grid.",
+      "expect": [
+        "LogLineList"
+      ],
+      "source": "personae/ui-builder/tasklist/sketch/gaps.md:46 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "Counts centred in their boxes.",
+      "expect": [
+        "CountChip"
+      ],
+      "source": "personae/ui-builder/tasklist/sketch/gaps.md:58 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "Right side, before the user: the time range / current time (\"2026-10-01 12:00\") and a count chip with an icon (\"7\", timeframes with incidents).",
+      "expect": [
+        "CountChip"
+      ],
+      "source": "personae/ui-builder/databrowser/sketch/gaps.md:16 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "A group emptied by review collapses.",
+      "expect": [
+        "BucketQueue"
+      ],
+      "source": "personae/ui-builder/databrowser/sketch/gaps.md:29 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "A time range selector is shown (eg. 2026-10-01 08:13 PDT - 2026-10-03 18:21) - if it is zoomed, the exact time range is shown (eg. 2026-10-01 13:13 to 14:32). If zoomed there is an x on the time range that restores the last timeframe selected.",
+      "expect": [
+        "DateRangePicker"
+      ],
+      "source": "personae/ui-builder/briefs/databrowser.md:48 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "open settings (Theme, Localization, Sharing tabs)",
+      "expect": [
+        "LocalizationSettings"
+      ],
+      "source": "personae/ui-builder/briefs/tasklist-v2.md:56 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "StepProgressBar: done number, total number",
+      "expect": [
+        "SlotFillBar"
+      ],
+      "source": "personae/ui-builder/tasklist/v3-g13r2/gaps.json:3 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "TaskCard: title left, status right, owner bottom-left, time bottom-right, selected boolean",
+      "expect": [
+        "StatusCard"
+      ],
+      "source": "personae/ui-builder/tasklist/v3-g04/gaps.json:3 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    }
+  ]
+}

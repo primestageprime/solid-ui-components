@@ -149,7 +149,11 @@ export const stem = (w) => {
  *  Pure; `scoreRecord` never sees the original. */
 export const stripNegations = (text) =>
   text
-    .replace(/["“”][^"“”]*["“”]/g, " ")
+    // a quoted UI string of two or more words is app text ("Filter tasks",
+    // "▽ Oldest"); a single quoted word is usually the thing itself ("Logs")
+    .replace(/["“”]([^"“”]*)["“”]/g, (m, inner) =>
+      inner.trim().split(/\s+/).length >= 2 ? " " : ` ${inner} `,
+    )
     .replace(
       /\b(?:not|no|never|without|instead of|rather than|nor)\b[^,;.()\]]*/gi,
       " ",
@@ -380,6 +384,8 @@ export function rank(records, need, { top = 5, W = WEIGHTS } = {}) {
   const best = Math.max(0, ...scored.map((r) => r.score));
   const band = best * W.tieBand;
   const matched = new Set(scored.map((r) => r.record.name));
+  // families with a plain (unpenalised) record inside the band: their
+  // curried/factory kin do not get depth priority over that plain record.
   const prefers = (a, b) =>
     Array.isArray(a.record.preferFirst) &&
     a.record.preferFirst.includes(b.record.name) &&
