@@ -58,6 +58,7 @@ form shown and a direct form that appends the array (`map(fn, array) => U[]`,
 | `every(pred)` | `(readonly T[]) => boolean` | + direct `every(pred, arr)`; short-circuits on the first mismatch; `true` on empty (vacuous truth) |
 | `prop(key)` | `(obj) => obj[key]` | + direct `prop(key, obj)`; function-first property access. Direct form is `T[K]`-typed; a curried `prop(key)` passed as an argument loses its value type — see caveat below |
 | `pluck(key)` | `(readonly T[]) => T[key][]` | + direct `pluck(key, arr)`; the `xs.map(x => x.key)` shape in one step |
+| `weekStart(date, firstDay = 1)` | `(Date \| number \| string, number?) => Date` | unary, direct only; first instant of the local calendar week (Monday start; `firstDay` 0 = Sunday); for "this week vs earlier" grouping |
 | `sortBy(keyFn)` | `(readonly T[]) => T[]` | + direct `sortBy(keyFn, arr)`; ascending, **stable**, **copies** (non-mutating). Direct form infers the key-fn param from the array |
 | `sum(xs)` | `(readonly number[]) => number` | unary; `sum([]) === 0` |
 | `mean(xs)` | `(readonly number[]) => number` | unary; `NaN` on empty (guard on `.length`) |

@@ -25,6 +25,7 @@ export type {
   EntityBase,
   Group,
   Layer,
+  ListItem,
   ListSpec,
   ListView,
 } from "./listkit";

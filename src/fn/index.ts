@@ -26,3 +26,4 @@ export { length } from "./length";
 export { lengthOf } from "./lengthOf";
 export { join } from "./join";
 export { groupBy } from "./groupBy";
+export { weekStart } from "./weekStart";

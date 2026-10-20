@@ -7,6 +7,9 @@ import { sortWith } from "../fn/sortWith";
 
 export type EntityBase = { id: string; deleted?: boolean };
 
+/** `EntityBase` plus the one field every list item shows: `type Task = ListItem & { done: boolean }`. */
+export type ListItem = EntityBase & { title: string };
+
 /** The view state every list persists: the search text, the active sort key and the collapsed group ids. */
 export type ListView<S extends string = string> = {
   search: string;

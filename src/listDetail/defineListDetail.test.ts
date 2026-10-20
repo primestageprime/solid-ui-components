@@ -281,3 +281,45 @@ describe("group titles", () => {
     expect(k.grouped().map((g) => g.title)).toEqual(["TODO", "DONE"]);
   });
 });
+
+describe("kit-owned undo snapshots", () => {
+  type Stepped = { id: string; title: string; steps: string[]; deleted?: boolean };
+  const stepped = (primary: (t: Stepped, kit: { actions: { update: (id: string, p: Partial<Stepped>) => void; record: (e: { op: string; id: string; prev?: unknown }) => void } }) => void) =>
+    defineListDetail({
+      storageKey: "kit-stepped",
+      collection: "items",
+      entity: { blank: (): Stepped => ({ id: newId(), title: "", steps: [] }), textOf: (t) => t.title },
+      groups: { order: ["all"] as const, of: () => "all" as const },
+      sorts: { order: ["added"] as const, default: "added", by: { added: () => 0 } },
+      seed: [{ id: "a", title: "one", steps: ["x", "y"] }] satisfies Stepped[],
+      primary,
+    });
+
+  it("a primary verb that records nothing is snapshotted and undone whole", () => {
+    const k = stepped((t, kit) => kit.actions.update(t.id, { steps: [...t.steps, "z"], title: "changed" }));
+    k.actions.primary();
+    expect(k.state.data.items[0].steps).toEqual(["x", "y", "z"]);
+    k.actions.undo();
+    expect(k.state.data.items[0].steps).toEqual(["x", "y"]);
+    expect(k.state.data.items[0].title).toBe("one");
+  });
+
+  it("a verb that mutates the live array in place cannot corrupt the snapshot", () => {
+    const k = stepped((t, kit) => { t.steps.push("z"); kit.actions.update(t.id, { title: "changed" }); });
+    k.actions.primary();
+    k.actions.undo();
+    expect(k.state.data.items[0].steps).toEqual(["x", "y"]);
+  });
+
+  it("record deep-copies prev, so a live array passed as prev is not aliased", () => {
+    const k = stepped((t, kit) => {
+      kit.actions.record({ op: "own", id: t.id, prev: t.steps });
+      kit.actions.update(t.id, { steps: [] });
+    });
+    k.actions.primary();
+    const entry = k.state.data.history[0];
+    k.actions.update("a", { steps: ["q"] });
+    expect(entry.prev).toEqual(["x", "y"]);
+    expect(entry.op).toBe("own");
+  });
+});

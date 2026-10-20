@@ -30,8 +30,18 @@ import {
   type ListDetailRow,
 } from "./verbs";
 
-/** One reversible step. `create` and `remove` are built in; add an `op` of your own with a matching `undoers[op]`. */
+/** One reversible step. `create`, `remove` and `primary` are built in; add an `op` of your own with a matching `undoers[op]`. `record` stores a deep copy, so `prev` may be any value read off a live entity (an array, an object) without aliasing it. */
 export type UndoEntry = { op: string; id: string; prev?: unknown };
+
+/** A deep copy that detaches from a Solid store proxy (structuredClone, else a JSON round trip for values it cannot clone). */
+const detach = <V>(value: V): V => {
+  const raw = unwrap(value);
+  try {
+    return structuredClone(raw);
+  } catch {
+    return JSON.parse(JSON.stringify(raw)) as V;
+  }
+};
 
 export type ListDetailConfig<
   T extends EntityBase,
@@ -196,6 +206,9 @@ export function defineListDetail<
       patch as never,
     );
   const ids = (): string[] => visibleIds(list(), spec, state.view);
+  /** Put a snapshot back whole: the entity with `id` becomes the copy. */
+  const restore = (id: string, snapshot: T): void =>
+    setList((l) => map((e) => (e.id === id ? detach(snapshot) : e), l));
 
   const persist = (): void => {
     if (typeof localStorage === "undefined") return;
@@ -244,9 +257,10 @@ export function defineListDetail<
       patchEntity(id, patch);
       actions.commit();
     },
-    /** Push an undo step; domain actions call it with their own `op`. */
+    /** Push an undo step; domain actions call it with their own `op`. The entry is deep-copied, so it never aliases the live store. */
     record(entry: UndoEntry): void {
-      setInner("data", "history", (h) => [...h, entry]);
+      const copy = detach(entry);
+      setInner("data", "history", (h) => [...h, copy]);
     },
     /** Reverse the last step: create, remove, or an op registered in `config.undoers`. */
     undo(): void {
@@ -261,7 +275,8 @@ export function defineListDetail<
       } else if (last.op === "remove") {
         patchEntity(last.id, { deleted: false } as Partial<T>);
         setInner("view", "selectedId", last.id);
-      } else config.undoers?.[last.op]?.(last, kit);
+      } else if (config.undoers?.[last.op]) config.undoers[last.op](last, kit);
+      else if (last.op === "primary" && last.prev !== undefined) restore(last.id, last.prev as T);
       actions.commit();
     },
     startEdit(): void {
@@ -306,10 +321,15 @@ export function defineListDetail<
       const e = selectedEntity();
       if (e) config.open?.(e, kit);
     },
-    /** The `complete` verb (c): run the configured primary action on the selected entity. */
+    /** The `complete` verb (c): run the configured primary action on the selected entity. The kit snapshots the entity first; when the verb records no step of its own, the kit records one (op `primary`) that undo restores whole, so a domain verb never aliases or hand-rolls an undo. */
     primary(): void {
       const e = selectedEntity();
-      if (e) config.primary?.(e, kit);
+      if (!e || !config.primary) return;
+      const before = detach(e);
+      const steps = inner.data.history.length;
+      config.primary(e, kit);
+      if (inner.data.history.length === steps) actions.record({ op: "primary", id: e.id, prev: before });
+      actions.commit();
     },
     setSearch(search: string): void {
       setInner("view", "search", search);
