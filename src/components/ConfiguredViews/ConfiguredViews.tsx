@@ -3,7 +3,7 @@
 // listDetail/views.ts) and a defineListDetail kit: the card in the rail, the centre panel for the selected
 // item, and the right-hand log. The app writes the config; the structure is here. No app nouns.
 import { For, type JSX, Show } from "solid-js";
-import { find, findIndex, map } from "../../fn";
+import { filter, find, findIndex, map } from "../../fn";
 import { editKey } from "../../listDetail/focus";
 import type { ListItem } from "../../listDetail/listkit";
 import type {
@@ -190,6 +190,7 @@ const StepFlowChart = createSwimlaneChart<FlowNode>({
   centerCol: 0,
   columnGap: FLOW_COLUMN_GAP,
   rowGap: FLOW_ROW_GAP,
+  rowOrder: "input",
   nodeSize: (n: DAGNode<FlowNode>) => (n.data.size === "active" ? FLOW_ACTIVE_SIZE : FLOW_SIDE_SIZE),
   interactive: false,
   arrows: true,
@@ -197,7 +198,7 @@ const StepFlowChart = createSwimlaneChart<FlowNode>({
 
 /** The chart's height: the tallest column (a stack of small cards, or the active card) plus padding. */
 export const flowHeightOf = (nodes: FlowNode[]): number => {
-  const count = (size: FlowNodeSpec["size"]) => nodes.filter((n) => n.size === size).length;
+  const count = (size: FlowNodeSpec["size"]) => filter((n: FlowNode) => n.size === size, nodes).length;
   const rows = Math.max(count("done"), count("next"), 1);
   const stack = (rows - 1) * FLOW_ROW_GAP + FLOW_SIDE_SIZE[1];
   return Math.max(stack, FLOW_ACTIVE_SIZE[1]) + 2 * FLOW_V_PAD;

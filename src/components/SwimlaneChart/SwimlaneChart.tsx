@@ -21,11 +21,11 @@ import {
   type JSX,
 } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
-import type { DAGNode } from "../DagChart/types";
+import type { DAGEdge, DAGNode } from "../DagChart/types";
 import { createPanZoom } from "../DagChart/pan-zoom";
 import { DagArrowMarker, DagSvgEdge } from "../../internal/dag-svg";
 import { computeSwimlaneLayout } from "./layout";
-import { map, filter, pluck } from "../../fn";
+import { map, filter, find, pluck } from "../../fn";
 import {
   computeBoundaryBadges,
   computeEdgeViews,
@@ -46,6 +46,7 @@ import {
   type SwimlaneBottomBadge,
 } from "./types";
 import { SwimlaneBoundaryBadges, SwimlaneBottomBadges } from "./badges";
+import { SwimlaneEdgeLabels } from "./edge-labels";
 import { SwimlaneNodes, SwimlaneLeavingNodes } from "./nodes";
 import {
   widestNodeWidth,
@@ -104,6 +105,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
   const effectiveColumnGap = createMemo(() => {
     const cw = containerWidth();
     const userDefault = props.columnGap ?? 260;
+    if (props.fitColumns === false) return userDefault;
     if (cw === 0) return userDefault;
     return fitColumnGap(effectiveMaxDepth(), cw, widestNode(), userDefault);
   });
@@ -129,6 +131,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
         rowGap: props.rowGap ?? 80,
         centerCol: props.centerCol ?? 0,
         maxRows: effectiveMaxRows(),
+        rowOrder: props.rowOrder,
       });
     } catch (err) {
       console.error("[SwimlaneChart] layout failed:", err);
@@ -260,6 +263,7 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
       edges: layout().edges,
       centerCol: props.centerCol ?? 0,
       isOrthogonal: (props.routingStyle ?? "orthogonal") === "orthogonal",
+      stacked: props.routingStyle === "stacked",
       badges: sideBadgePositions(),
       ports: portAssignments(),
       badgeRadius: BADGE_RADIUS,
@@ -386,6 +390,12 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
     );
   });
 
+  /** The data label of an edge by its "source|target" key. */
+  const edgeLabelOf = (key: string): string | undefined => {
+    const e = find((x: DAGEdge) => `${x.source}|${x.target}` === key, props.edges);
+    return e?.label === "" ? undefined : e?.label;
+  };
+
   const handleNodeClick = (nodeId: string) => {
     props.onNodeClick?.(nodeId);
   };
@@ -458,6 +468,12 @@ export function SwimlaneChart<T>(props: SwimlaneChartProps<T>) {
           <SwimlaneLeavingNodes
             leaving={leavingItems()}
             renderNode={props.renderNode}
+          />
+          {/* Edge labels (DAGEdge.label) at each path's midpoint, over the nodes so a label beside a stack stays readable. */}
+          <SwimlaneEdgeLabels
+            edges={edgesStore}
+            labelOf={edgeLabelOf}
+            enabled={props.edgeLabels !== false}
           />
         </g>
       </svg>

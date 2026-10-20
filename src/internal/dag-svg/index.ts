@@ -16,6 +16,7 @@ export {
   orthogonalStepPath,
   bezierThroughChannelPath,
   bezierAvoidingObstacles,
+  stackedFlowPath,
 } from "./edge-routing";
 export type { EdgeRect, ObstacleRect } from "./edge-routing";
 export { orthogonalAvoidingObstacles } from "./orthogonal-routing";

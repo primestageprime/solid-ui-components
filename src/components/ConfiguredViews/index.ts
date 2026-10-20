@@ -2,10 +2,14 @@ export {
   ConfiguredCard,
   ConfiguredDetail,
   ConfiguredLog,
+  flowColumnOf,
+  flowEdgesOf,
+  flowHeightOf,
   flowNodesOf,
   whenLabel,
 } from "./ConfiguredViews";
 export type {
+  FlowNode,
   ConfiguredCardProps,
   ConfiguredDetailProps,
   ConfiguredKit,

@@ -1,7 +1,7 @@
 {
   "bareHexCss": 0,
   "bareHexTsx": 0,
-  "inlineStyleSrc": 69,
+  "inlineStyleSrc": 70,
   "inlineStyleShowcases": 16,
   "dotChains": 7,
   "collectionMethodCalls": 31,
@@ -17,9 +17,9 @@
   "catalogSummaryGaps": 0,
   "_raises": {
     "inlineStyleSrc": {
-      "from": 67,
-      "to": 69,
-      "reason": "HatchedProgressBar draws its done and active shares as measured width/left, as StackedProgressBar does (manifested as proportion+measured)"
+      "from": 69,
+      "to": 70,
+      "reason": "ConfiguredViews sizes the flow chart container from its node count (measured height), manifested as measured"
     },
     "collectionMethodCalls": {
       "from": 30,

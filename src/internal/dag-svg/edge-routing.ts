@@ -166,6 +166,28 @@ export function bezierThroughChannelPath(from: EdgeRect, to: EdgeRect): string {
 }
 
 /**
+ * SVG path `d` for a STACKED flow (2026-10-20, the tasklist sketch): a same-column edge
+ * runs straight from the bottom of `from` to the top of `to` (a stack of done steps with
+ * a labelled arrow between each pair); a cross-column edge is a smooth cubic from the
+ * inner side of `from` to the inner side of `to`, the controls halfway across the
+ * channel, so it reads as a curved connector rather than a bowed detour.
+ */
+export function stackedFlowPath(from: EdgeRect, to: EdgeRect): string {
+  const dx = to.x - from.x;
+  if (Math.abs(dx) < 1) {
+    const down = to.y >= from.y;
+    const fromY = down ? from.y + from.height / 2 : from.y - from.height / 2;
+    const toY = down ? to.y - to.height / 2 : to.y + to.height / 2;
+    return `M ${from.x} ${fromY} L ${to.x} ${toY}`;
+  }
+  const goingRight = dx > 0;
+  const fromAnchorX = goingRight ? from.x + from.width / 2 : from.x - from.width / 2;
+  const toAnchorX = goingRight ? to.x - to.width / 2 : to.x + to.width / 2;
+  const channelX = (fromAnchorX + toAnchorX) / 2;
+  return `M ${fromAnchorX} ${from.y} C ${channelX} ${from.y}, ${channelX} ${to.y}, ${toAnchorX} ${to.y}`;
+}
+
+/**
  * SVG path `d` string for an orthogonal step edge from `from` to `to`.
  * - Endpoints anchor to the node rect edges, not centers.
  * - Different-column edges route through a vertical channel midway between

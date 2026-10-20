@@ -1810,7 +1810,7 @@
     "showcase": "#/chart",
     "since": "v0.16.0",
     "file": "src/components/Chart/Chart.tsx",
-    "line": 110
+    "line": 112
   },
   {
     "name": "ChartCanvasLg",
@@ -2108,7 +2108,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 973
+    "line": 982
   },
   {
     "name": "ChipLabel",
@@ -2880,7 +2880,7 @@
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
-    "line": 65
+    "line": 68
   },
   {
     "name": "ConfiguredDetail",
@@ -2899,7 +2899,7 @@
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
-    "line": 175
+    "line": 299
   },
   {
     "name": "ConfiguredLog",
@@ -2918,7 +2918,7 @@
     "showcase": null,
     "since": "0.230.0",
     "file": "src/components/ConfiguredViews/ConfiguredViews.tsx",
-    "line": 253
+    "line": 407
   },
   {
     "name": "ConfirmationModal",
@@ -3210,7 +3210,7 @@
     "showcase": null,
     "since": "v0.18.0",
     "file": "src/components/Badge/CountChip.tsx",
-    "line": 32
+    "line": 35
   },
   {
     "name": "CountInput100",
@@ -7690,7 +7690,7 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/EditableTitle/EditableTitle.tsx",
-    "line": 73
+    "line": 76
   },
   {
     "name": "EllipsisText",
@@ -7892,7 +7892,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 983
+    "line": 992
   },
   {
     "name": "EndLabels",
@@ -10117,7 +10117,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 321
+    "line": 320
   },
   {
     "name": "HUDTabs",
@@ -14942,25 +14942,6 @@
     "line": 10
   },
   {
-    "name": "SequenceFlow",
-    "depth": 2,
-    "kind": "composite",
-    "family": "SequenceFlow",
-    "variantOf": null,
-    "overrides": null,
-    "dataProps": null,
-    "summary": "Composed (Depth 2, owns `SequenceFlow.css`).",
-    "summarySource": "components-md",
-    "preferFirst": null,
-    "notToBeConfusedWith": null,
-    "useFor": null,
-    "notes": null,
-    "showcase": null,
-    "since": null,
-    "file": "src/components/SequenceFlow/SequenceFlow.tsx",
-    "line": 109
-  },
-  {
     "name": "ServiceHealthDot",
     "depth": 2,
     "kind": "composite",
@@ -16784,7 +16765,7 @@
     "showcase": "#/swimlane-chart",
     "since": "0.203.0",
     "file": "src/components/SwimlaneChart/SwimlaneChart.tsx",
-    "line": 67
+    "line": 68
   },
   {
     "name": "TabbedSidePanel",
@@ -18076,6 +18057,32 @@
     "since": "v0.16.0",
     "file": "src/components/Toggle/variants.ts",
     "line": 4
+  },
+  {
+    "name": "TwoUpGrid",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Layout",
+    "variantOf": {
+      "factory": "createGrid",
+      "overrides": "{\n  columns: \"repeat(auto-fit, minmax(min(100%, 560px), 1fr))\",\n  gap: \"sm\",\n}"
+    },
+    "overrides": [
+      "columns",
+      "gap",
+      "align"
+    ],
+    "dataProps": "GridDataProps",
+    "summary": "TwoUpGrid — WideCardGrid for LARGE tiles: cells at least 560px, so a wide centre panel holds two charts side by side and a narrower one stacks them (`min(100%, …)` keeps a phone from overflowing).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "TwoUpGrid — WideCardGrid for LARGE tiles: cells at least 560px, so a wide centre panel holds two charts side by side and a narrower one stacks them (`min(100%, …)` keeps a phone from overflowing). The two-column chart page of the databrowser sketch (2026-10-20).",
+    "showcase": null,
+    "since": null,
+    "file": "src/components/Layout/variants.ts",
+    "line": 974
   },
   {
     "name": "UnderlineTabs",
