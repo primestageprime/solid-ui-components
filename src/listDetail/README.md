@@ -15,7 +15,9 @@ export const kit = defineListDetail({
   seed: SEED,
   undoers: { myOp: (entry, kit) => kit.actions.update(entry.id, { ... }) },
   extra: { data: { ... }, view: { ... } },  // app-owned persisted fields
-  modalOpen: () => modal() !== null,        // Escape closes a dialog first
+  modalOpen: () => modal() !== null,        // Escape closes an app dialog first (+ closeModal)
+  open: (item, kit) => ...,                 // Enter row
+  primary: (item, kit) => ...,              // c row
 });
 export const { state, actions } = kit;
 export const dump = () => JSON.stringify({ ...kit.dumpObject(), chrome: { ...(kit.dumpObject().chrome as object), modal: modal() } });
@@ -24,7 +26,7 @@ export const dump = () => JSON.stringify({ ...kit.dumpObject(), chrome: { ...(ki
 - **Returns**: `state`, `setState`, `actions`, `ui` (`editing`, `searchFocused`), `grouped()`, `visibleIds()`,
   `live()`, `verbs` (ten standard HOTKEYS rows), `handlers`, `install()`, `dumpObject()`, `dump()`.
 - **Stays in the app**: entity fields, groups and sorts, seed, domain ops (record an `op` and register its `undoers`),
-  rendering, Enter/complete rows, the modal signal.
+  rendering, the modal signal. Enter (`open`) and `c` (`primary`) rows appear when the config supplies those functions; `?` and `,` rows are always served, with `ui.helpOpen` / `ui.settingsOpen` flags (in the dump's `chrome`) that Escape closes first.
 - **Canon**: name is `define*` because canon C11 rejects `create*` factories imported from SUI. C04b parses a *literal*
   `handlers: { ... }` in the `useHotkeys` call, so a canon app writes the handler block out (`kit.handlers` serves tests
   and non-canon apps; the test suite proves every verb row reaches a real action). Call `kit.install()` once at boot.

@@ -24,6 +24,8 @@ import {
 } from "./listkit";
 import {
   LIST_DETAIL_ACTION_OF,
+  LIST_DETAIL_CONFIGURED_ROWS,
+  LIST_DETAIL_MODAL_ROWS,
   LIST_DETAIL_VERBS,
   type ListDetailRow,
 } from "./verbs";
@@ -61,8 +63,14 @@ export type ListDetailConfig<
   undoers?: Record<string, (entry: UndoEntry, kit: ListDetail<T, G, S, C, XD, XV>) => void>;
   /** App-owned fields persisted alongside the kit's own. */
   extra?: { data?: XD; view?: XV };
-  /** True while a dialog is open, so Escape closes it before anything else. */
+  /** True while an app dialog (beyond the kit's help and settings) is open, so Escape closes it before anything else. */
   modalOpen?: () => boolean;
+  /** Closes the app's dialog; Escape calls it while `modalOpen()` is true. */
+  closeModal?: () => void;
+  /** The `open` verb (Enter): what opening the selected entity does. Without it the row is not emitted. */
+  open?: (item: T, kit: ListDetail<T, G, S, C, XD, XV>) => void;
+  /** The `complete` verb (c): the entity's primary domain action. Without it the row is not emitted. */
+  primary?: (item: T, kit: ListDetail<T, G, S, C, XD, XV>) => void;
   /** Id of the search field `focusSearch` moves the keyboard into. Default "search-field". */
   searchId?: string;
 };
@@ -120,6 +128,12 @@ export function defineListDetail<
   };
   const [editing, setEditing] = createSignal(false);
   const [searchFocused, setSearchFocused] = createSignal(false);
+  const [helpOpen, setHelpOpen] = createSignal(false);
+  const [settingsOpen, setSettingsOpen] = createSignal(false);
+  const anyModalOpen = (): boolean =>
+    helpOpen() || settingsOpen() || (config.modalOpen?.() ?? false);
+  const selectedEntity = (): T | undefined =>
+    find((x) => x.id === inner.view.selectedId, list());
 
   const initial = (): State => {
     const s = {
@@ -250,12 +264,43 @@ export function defineListDetail<
     /** Escape: close a dialog (the app's), else leave edit, else clear the selection. */
     unwind(): void {
       const layer = unwindLayer({
-        modalOpen: config.modalOpen?.() ?? false,
+        modalOpen: anyModalOpen(),
         editing: editing(),
         selectedId: inner.view.selectedId,
       });
-      if (layer === LAYER.field) actions.endEdit();
+      if (layer === LAYER.dialog) actions.closeModals();
+      else if (layer === LAYER.field) actions.endEdit();
       else if (layer === LAYER.selected) actions.select(null);
+    },
+    /** The `help` verb (?): open the key-cap overlay. */
+    openHelp(): void {
+      setHelpOpen(true);
+    },
+    closeHelp(): void {
+      setHelpOpen(false);
+    },
+    /** The `settings` verb (,): open the settings modal. */
+    openSettings(): void {
+      setSettingsOpen(true);
+    },
+    closeSettings(): void {
+      setSettingsOpen(false);
+    },
+    /** Close the kit's dialogs and the app's (through `config.closeModal`). */
+    closeModals(): void {
+      setHelpOpen(false);
+      setSettingsOpen(false);
+      if (config.modalOpen?.()) config.closeModal?.();
+    },
+    /** The `open` verb (Enter): run the configured open on the selected entity. */
+    open(): void {
+      const e = selectedEntity();
+      if (e) config.open?.(e, kit);
+    },
+    /** The `complete` verb (c): run the configured primary action on the selected entity. */
+    primary(): void {
+      const e = selectedEntity();
+      if (e) config.primary?.(e, kit);
     },
     setSearch(search: string): void {
       setInner("view", "search", search);
@@ -282,12 +327,12 @@ export function defineListDetail<
     },
     /** The `collapse` verb: fold or unfold the group of the selected entity (the first group when nothing is selected). */
     collapseSelected(): void {
-      const e = find((x) => x.id === inner.view.selectedId, list());
+      const e = selectedEntity();
       actions.toggleGroup(e ? config.groups.of(e) : spec.groupOrder[0]);
     },
   };
 
-  /** The ten standard handlers, keyed by hotkey action. Canon C04b reads a literal `handlers:` block, so a canon app writes these out; the kit's copy serves tests and non-canon apps. */
+  /** The standard handlers (the ten base verbs, help, settings, and open and complete when configured), keyed by hotkey action. Canon C04b reads a literal `handlers:` block, so a canon app writes these out; the kit's copy serves tests and non-canon apps. */
   const handlers: Record<string, () => void> = Object.fromEntries(
     map(
       ([action, name]) => [
@@ -303,13 +348,21 @@ export function defineListDetail<
     setState,
     actions,
     /** The edit flag and search focus, as signals the app's ui may re-export. */
-    ui: { editing, searchFocused },
+    ui: { editing, searchFocused, helpOpen, settingsOpen, modalOpen: anyModalOpen },
     /** The live entities, grouped, filtered and sorted for the current view. */
     grouped: (): Group<T, G>[] => groupedList(list(), spec, inner.view),
     visibleIds: ids,
     live: (): T[] => live(list()),
     spec,
-    verbs: LIST_DETAIL_VERBS as readonly ListDetailRow[],
+    /** The hotkey rows this kit serves: ten base verbs, help and settings, plus open (Enter) and complete (c) when configured. */
+    verbs: [
+      ...LIST_DETAIL_VERBS,
+      ...LIST_DETAIL_MODAL_ROWS,
+      ...filter(
+        (r) => (r.action === "open" ? !!config.open : !!config.primary),
+        LIST_DETAIL_CONFIGURED_ROWS,
+      ),
+    ] as readonly ListDetailRow[],
     handlers,
     /** Install search-focus tracking and Escape-leaves-a-field; call once at boot. Returns the remover. */
     install(): () => void {
@@ -323,7 +376,12 @@ export function defineListDetail<
     dumpObject(): Record<string, unknown> {
       return {
         ...unwrap(inner),
-        chrome: { editing: editing(), searchFocused: searchFocused() },
+        chrome: {
+          editing: editing(),
+          searchFocused: searchFocused(),
+          helpOpen: helpOpen(),
+          settingsOpen: settingsOpen(),
+        },
       };
     },
     dump(): string {

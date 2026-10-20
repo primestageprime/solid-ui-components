@@ -5,7 +5,8 @@ import { defineListDetail, newId, LIST_DETAIL_ACTION_OF, LIST_DETAIL_VERBS } fro
 type Task = { id: string; title: string; status: "todo" | "done"; deleted?: boolean };
 type Contact = { id: string; name: string; org: "work" | "home" | "club"; age: number; deleted?: boolean };
 
-const tasks = (extra: { modalOpen?: () => boolean } = {}) =>
+type Hook = (t: Task, kit: { actions: { update: (id: string, p: Partial<Task>) => void } }) => void;
+const tasks = (extra: { modalOpen?: () => boolean; closeModal?: () => void; open?: Hook; primary?: Hook } = {}) =>
   defineListDetail({
     storageKey: "kit-tasks",
     collection: "tasks",
@@ -159,7 +160,7 @@ describe("defineListDetail with a second, unrelated entity (contacts)", () => {
     expect(d.data.note).toBe("hi");
     expect(d.data.people).toHaveLength(4);
     expect(Object.keys(d).sort()).toEqual(["chrome", "data", "view"]);
-    expect(d.chrome).toEqual({ editing: false, searchFocused: false });
+    expect(d.chrome).toEqual({ editing: false, searchFocused: false, helpOpen: false, settingsOpen: false });
   });
 
   it("collapse, search and delete with the three-group order", () => {
@@ -193,7 +194,7 @@ describe("verbs", () => {
       expect(typeof (k.actions as Record<string, unknown>)[name]).toBe("function");
       expect(typeof k.handlers[row.action]).toBe("function");
     }
-    expect(k.verbs.map((v) => v.keys)).toEqual(["j", "k", "n", "e", "x", "u", "/", "s", "-", "Escape"]);
+    expect(k.verbs.map((v) => v.keys)).toEqual(["j", "k", "n", "e", "x", "u", "/", "s", "-", "Escape", "?", ","]);
   });
 
   it("each handler changes something observable in the dump", () => {
@@ -228,5 +229,40 @@ describe("verbs", () => {
     expect(JSON.parse(k.dump()).chrome.searchFocused).toBe(true);
     input.remove();
     stop();
+  });
+
+  it("help and settings open dialogs shown in the dump; Escape closes them before anything else", () => {
+    const k = tasks();
+    k.actions.select("a");
+    k.handlers.help();
+    expect(JSON.parse(k.dump()).chrome.helpOpen).toBe(true);
+    k.handlers.settings();
+    expect(JSON.parse(k.dump()).chrome.settingsOpen).toBe(true);
+    k.handlers.unwind();
+    const c = JSON.parse(k.dump());
+    expect([c.chrome.helpOpen, c.chrome.settingsOpen, c.view.selectedId]).toEqual([false, false, "a"]);
+    k.handlers.unwind();
+    expect(JSON.parse(k.dump()).view.selectedId).toBe(null);
+  });
+
+  it("closeModal is called for an app dialog; open and complete rows exist only when configured", () => {
+    let app = true;
+    const opened: string[] = [];
+    const k = tasks({
+      modalOpen: () => app,
+      closeModal: () => { app = false; },
+      open: (t) => { opened.push(t.id); },
+      primary: (t, kit) => kit.actions.update(t.id, { status: "done" }),
+    });
+    k.actions.select("a");
+    k.handlers.unwind();
+    expect(app).toBe(false);
+    expect(k.verbs.map((v) => v.keys).slice(-4)).toEqual(["?", ",", "Enter", "c"]);
+    k.handlers.open();
+    expect(opened).toEqual(["a"]);
+    const before = k.dump();
+    k.handlers.complete();
+    expect(k.dump()).not.toBe(before);
+    expect(k.state.data.tasks.find((t) => t.id === "a")?.status).toBe("done");
   });
 });

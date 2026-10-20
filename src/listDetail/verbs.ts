@@ -3,7 +3,8 @@
 // app spreads them into its own HOTKEYS table and writes the literal handler block itself.
 export type ListDetailScope = "global" | "list" | "detail" | "modal";
 export type ListDetailVerb =
-  | "next" | "prev" | "new" | "edit" | "delete" | "undo" | "search" | "sort" | "collapse" | "close";
+  | "next" | "prev" | "new" | "edit" | "delete" | "undo" | "search" | "sort" | "collapse" | "close"
+  | "help" | "settings" | "open" | "complete";
 
 export type ListDetailRow = {
   action: string;
@@ -25,6 +26,18 @@ export const LIST_DETAIL_VERBS = [
   { action: "unwind", verb: "close", keys: "Escape", scope: "global" },
 ] as const satisfies ReadonlyArray<ListDetailRow>;
 
+/** `?` and `,`: always served, since the kit owns the two dialog flags. */
+export const LIST_DETAIL_MODAL_ROWS = [
+  { action: "help", verb: "help", keys: "?", scope: "global" },
+  { action: "settings", verb: "settings", keys: ",", scope: "global" },
+] as const satisfies ReadonlyArray<ListDetailRow>;
+
+/** `Enter` and `c`: served only when the config supplies the matching `open` / `primary`. */
+export const LIST_DETAIL_CONFIGURED_ROWS = [
+  { action: "open", verb: "open", keys: "Enter", scope: "detail" },
+  { action: "complete", verb: "complete", keys: "c", scope: "detail" },
+] as const satisfies ReadonlyArray<ListDetailRow>;
+
 /** Hotkey action name -> store action name (they differ only where the verb and the action do). */
 export const LIST_DETAIL_ACTION_OF: Record<string, string> = {
   next: "next",
@@ -37,4 +50,8 @@ export const LIST_DETAIL_ACTION_OF: Record<string, string> = {
   sort: "cycleSort",
   collapse: "collapseSelected",
   unwind: "unwind",
+  help: "openHelp",
+  settings: "openSettings",
+  open: "open",
+  complete: "primary",
 };

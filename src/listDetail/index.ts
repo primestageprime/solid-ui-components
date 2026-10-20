@@ -32,6 +32,8 @@ export { editKey, focusById, isTyping, watchFocus } from "./focus";
 export type { WatchFocusOptions } from "./focus";
 export {
   LIST_DETAIL_ACTION_OF,
+  LIST_DETAIL_CONFIGURED_ROWS,
+  LIST_DETAIL_MODAL_ROWS,
   LIST_DETAIL_VERBS,
 } from "./verbs";
 export type { ListDetailRow, ListDetailScope, ListDetailVerb } from "./verbs";
