@@ -59,10 +59,10 @@
   box-shadow: inset var(--sui-grouped-bar) 0 0 var(--sui-accent);
 }
 
-/* Rows sit 4px in from their group header (Peter, 2026-10-20: "cards within the sections should be slightly indented"). */
+/* Rows sit 6px in from their group header, clearing the 4px accent bar (Peter, 2026-10-20: "cards within the sections should be slightly indented", then "6px of indent (to account for the blue bar)"). */
 .sui-grouped-selector--flush .sui-grouped-selector__item {
   padding: var(--sui-dense-row-pad-y, 4px) var(--sui-dense-row-pad-x, 12px) var(--sui-dense-row-pad-y, 4px)
-    calc(var(--sui-dense-row-pad-x, 12px) + var(--sui-grouped-indent, 4px));
+    calc(var(--sui-dense-row-pad-x, 12px) + var(--sui-grouped-indent, 6px));
   border-radius: 0;
   border-bottom: 1px solid var(--sui-border);
 }
