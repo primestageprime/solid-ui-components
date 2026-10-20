@@ -38,7 +38,7 @@ CellRow (0) table text ~view =table @cell — rows in CellTable.
 CellTable (0) table text ~view =table @cell — wrapping Cell-based rows.
 CensusView (3) table heatmap count ~view ~select =matrix =table @page — Composite (Depth 3).
 ChangeRenderer (2) diff text ~view =pair @inline — single-field diffs, alarm before/after displays, config change rows.
-Chart (1) chart ~click ~hover =series =time-series @container — click-to-add-a-date on a time chart, or click-to-select a value on a numeric one
+Chart (1) chart scatter ~click ~hover =series =time-series @container — click-to-add-a-date on a time chart, or click-to-select a value on a numeric one
 ChartHeader (2) header count text ~view =scalar @header — the header line above any chart (counts, windows, units).
 ChartLabels (1) text mark ~view =list @slot — Draws the label ladder as a Chart slot child: one <text> per item placeLabels fo
 ChartTooltip (1) tooltip ~hover =scalar @slot — a hover readout anchored to the nearest datum — but reach for ThroughputChart, C
@@ -99,7 +99,7 @@ createDayOfMonthPicker (1) field date ~pick ~multi-select =enum @control — Ato
 createDayOfWeekPicker (1) field date ~pick ~multi-select =enum @control — Atomic (Depth 1).
 createDiffPair (1) diff ~view =pair @row — createDiffPair — Factory for Curried Variants. variants: BoldArrowDiffPair, FlowDiffPair
 createDirtyComboBox (2) field menu status ~select ~edit =enum @control — Curry the control's words once — the vocabulary belongs to the SCREEN (scenarios variants: ScenarioComboBox
-createDistributionSparkline (1) sparkline number ~view =list @inline — Bake the encoding (band, marks, capacity) into a named variant. variants: P95Sparkline
+createDistributionSparkline (1) sparkline histogram number ~view =list @inline — Bake the encoding (band, marks, capacity) into a named variant. variants: P95Sparkline
 createDivider (1) divider ~view =scalar @inline — Content separator line (own component directory). variants: DashedDivider, Divider, VerticalDivider
 createDragRangeSelect (1) mark ~drag ~zoom ~select =range @slot — Renders the translucent band for a drag-to-select gesture, as a Structural Primi variants: CommitOnReleaseDragRangeSelect, EagerDragRangeSelect
 createDropdown (1) field menu ~select ~edit =enum =list @control — Atomic (Depth 1). variants: CompactDropdown, InlineSubtleDropdown
@@ -219,7 +219,7 @@ DHeader (1) table text badge ~view =pair =table @container — wrapping DH cells
 DiffPair (1) diff ~view =pair @row — any labeled before/after pair display where the two sides need a shared layout +
 DigitRoller (1) number ~animate =scalar @inline — any animated numeric display;
 DismissibleNoticeBanner (2) notice button ~dismiss =text @header — a top-of-app or top-of-settings notice nudging users toward linking a detected s
-DistributionSparkline (1) sparkline number ~view =list @inline — a dashboard tile, table column or definition list where the reader needs to know
+DistributionSparkline (1) sparkline histogram number ~view =list @inline — a dashboard tile, table column or definition list where the reader needs to know
 DnDHierarchySortBar (1) chip toolbar ~drag ~reorder =list @toolbar — tag-hierarchy nest-order controls, dimension ordering in pivot/aggregation UIs.
 Dot (0) status icon ~view =enum @inline — Atomic (Depth 0).
 DragRangeSelect (1) mark ~drag ~zoom ~select =range @slot — click-and-drag range selection on a plot (zoom-to-selection, filter-by-drag) — c

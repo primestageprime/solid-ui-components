@@ -99,6 +99,24 @@
       "source": "personae/ui-builder/tasklist/v3-g04/gaps.json:3 (slow path: exhaustive Sonnet / union reader, 2026-10-20)",
       "promotedBy": "fast",
       "on": "2026-10-20"
+    },
+    {
+      "need": "a scatter plot of points with a fitted regression trend line",
+      "expect": [
+        "Chart"
+      ],
+      "source": "scripts/find-outcomes-bench.json (held-out half; vocabulary word shows:scatter tagged on Chart, diddit #4163)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
+    },
+    {
+      "need": "a histogram of values bucketed into bins",
+      "expect": [
+        "DistributionSparkline"
+      ],
+      "source": "scripts/find-outcomes-bench.json (held-out half; vocabulary word shows:histogram tagged on DistributionSparkline, diddit #4163)",
+      "promotedBy": "fast",
+      "on": "2026-10-20"
     }
   ]
 }

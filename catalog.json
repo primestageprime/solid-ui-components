@@ -2456,6 +2456,7 @@
     "family": "Chart",
     "tags": [
       "shows:chart",
+      "shows:scatter",
       "does:click",
       "does:hover",
       "data:series",
@@ -5663,6 +5664,7 @@
     "family": "DistributionSparkline",
     "tags": [
       "shows:sparkline",
+      "shows:histogram",
       "shows:number",
       "does:view",
       "data:list",
@@ -10217,6 +10219,7 @@
     "family": "DistributionSparkline",
     "tags": [
       "shows:sparkline",
+      "shows:histogram",
       "shows:number",
       "does:view",
       "data:list",
@@ -17493,6 +17496,7 @@
     "family": "DistributionSparkline",
     "tags": [
       "shows:sparkline",
+      "shows:histogram",
       "shows:number",
       "does:view",
       "data:list",

@@ -1,7 +1,7 @@
 // lastReviewedAt: 2026-05-28
 // lastReviewedBy: adlai.arnold
 // Chart — Structural (Depth 1). SVG chart root; composes no library
-// Tags: shows:chart, does:click, does:hover, data:series, data:time-series, role:container
+// Tags: shows:chart, shows:scatter, does:click, does:hover, data:series, data:time-series, role:container
 // components (slots arrive as caller children). Owns the single pointer
 // listener on its <svg> (so per-slot listeners would clobber dispatch);
 // slots read scales + pointer state via context.
