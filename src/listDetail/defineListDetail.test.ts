@@ -113,6 +113,20 @@ describe("defineListDetail with a task entity", () => {
     expect(k.state.view.selectedId).toBeNull();
   });
 
+  it("a created entity stays last in its group whatever the sort, until the next re-sort", () => {
+    const k = tasks();
+    k.actions.setSort("title");
+    k.actions.create();
+    const id = k.state.view.selectedId as string;
+    k.actions.update(id, { title: "aardvark" });
+    expect(k.grouped()[0].items.map((t) => t.id)).toEqual(["b", "a", id]);
+    expect(k.state.view.pinnedLast).toEqual([id]);
+    k.actions.cycleSort();
+    k.actions.setSort("title");
+    expect(k.state.view.pinnedLast).toEqual([]);
+    expect(k.grouped()[0].items.map((t) => t.id)).toEqual([id, "b", "a"]);
+  });
+
   it("create unfolds its group so the new entity is never hidden", () => {
     const k = tasks();
     k.actions.toggleGroup("todo");

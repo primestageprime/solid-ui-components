@@ -112,8 +112,9 @@ export function groupedList<
         spec.sorters[view.sort],
         filter((e: T) => !pinned.includes(e.id), members),
       ),
-      ...filter((e: T) => pinned.includes(e.id), members).sort(
-        (a, b) => pinned.indexOf(a.id) - pinned.indexOf(b.id),
+      ...sortWith(
+        (a: T, b: T) => pinned.indexOf(a.id) - pinned.indexOf(b.id),
+        filter((e: T) => pinned.includes(e.id), members),
       ),
     ];
     return {
