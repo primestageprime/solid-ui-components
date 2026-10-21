@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- **Enter submits a dialog's form** (owner, thorcasting 2026-10-21: "hitting enter in every form should [submit that form]"). `Modal` takes an optional `onSubmit`; with it, body + footer are one `<form>`. Enter in a one-line field commits the field (fires `change`, so a `ThemedNumberInput` / `CurrencyInput` clamps first) and runs `onSubmit`; a footer button with `type="submit"` runs it on click. A typeless button (Cancel) never submits, a disabled submit button stops Enter, and Enter keeps its own meaning in a textarea, an open `Combobox` list and on a `Select` trigger. Without `onSubmit`, nothing changes. The rules are exported as `submitOnEnter` / `submitHandler` (plus `isSubmitEnter`, `explicitSubmitterOf`) for a plain `<form>`.
+- **`ConfirmationModal` confirms on Enter** — it now passes `onConfirm` as the Modal's `onSubmit` and its Confirm button is `type="submit"`. New `confirmDisabled` prop grays out Confirm and stops Enter.
+
+### Migration (consumers)
+
+- To adopt: add `onSubmit={save}` to the `Modal`, give the primary footer button `type="submit"`, and REMOVE its `onClick` (keep `disabled`). Delete any app-side Enter keydown handler.
+
+
 ## 0.232.0 — 2026-10-21
 
 ### Added

@@ -1976,10 +1976,20 @@ Where the constituents live (design decision — prefer siblings of existing fam
     ```
 
 ## Modal
-- **Modal** — Portal-based modal with overlay, escape-to-close, and footer slot. Key props: `open`, `onClose`, `title`, `subtitle`, `corners` (`CornerStyle`), `variant` (`ColorVariant`), `size` (`sm`|`md`|`lg`|`xl`|`fullscreen`), `height` (`auto` default | `fixed-60` — constant 60vh whatever the content, body scrolls inside; use when tabbed content would otherwise resize the modal), `showClose`, `footer`. Use for: dialog windows.
+- **Modal** — Portal-based modal with overlay, escape-to-close, and footer slot. Key props: `open`, `onClose`, `title`, `subtitle`, `corners` (`CornerStyle`), `variant` (`ColorVariant`), `size` (`sm`|`md`|`lg`|`xl`|`fullscreen`), `height` (`auto` default | `fixed-60` — constant 60vh whatever the content, body scrolls inside; use when tabbed content would otherwise resize the modal), `showClose`, `footer`, `onSubmit`. Use for: dialog windows.
+  - **Enter submits (`onSubmit`).** Given `onSubmit`, the body and footer are one `<form>`. Enter in a one-line field (text, number, `CurrencyInput`, date, a closed `Combobox`) fires `change` on the field first, so a number field clamps and commits, then runs `onSubmit`. A click on a footer button with `type="submit"` runs it too. Give the primary action `type="submit"` and `disabled` when it cannot run, and NO `onClick` (a click would run the work twice). A button with no `type` (Cancel) never submits. A disabled submit button stops Enter. Enter keeps its own meaning in a textarea (newline), an open `Combobox` list (picks the option), and on a button such as a `Select` trigger. Without `onSubmit` the modal has no form, as before. The rules live in `submitOnEnter` / `submitHandler` (exported from the hooks), so a plain `<form onKeyDown={submitOnEnter} onSubmit={submitHandler(save)}>` gets the same behaviour.
+    ```tsx
+    <Modal open={open()} onClose={close} title="Add a service" onSubmit={add}
+      footer={<EndWrapRow>
+        <GhostButton onClick={close}>Cancel</GhostButton>
+        <PrimaryButton type="submit" disabled={!canAdd()}>Add</PrimaryButton>
+      </EndWrapRow>}>
+      <ThemedInput label="Name" … />
+    </Modal>
+    ```
 
 ## ConfirmationModal
-- **ConfirmationModal** — Confirmation dialog with Cancel/Confirm footer built on Modal. Key props: `open`, `onClose`, `onConfirm`, `title`, `subtitle`, `description`, `size`, `corners`, `variant`, `confirmLabel`, `loadingLabel`, `cancelLabel`, `loading`, `confirmVariant` (`primary`|`danger`). Use for: destructive action confirmations, submit confirmations.
+- **ConfirmationModal** — Confirmation dialog with Cancel/Confirm footer built on Modal. Key props: `open`, `onClose`, `onConfirm`, `title`, `subtitle`, `description`, `size`, `corners`, `variant`, `confirmLabel`, `loadingLabel`, `cancelLabel`, `loading`, `confirmDisabled` (grays out Confirm; Enter then does nothing), `confirmVariant` (`primary`|`danger`). The dialog is a form (Modal `onSubmit`), so Enter in a body field runs `onConfirm`. Use for: destructive action confirmations, submit confirmations.
 
 ## BottomSheet
 - **BottomSheet** — Atomic (Depth 1). Owns `BottomSheet.css`, no component imports (raw `div`s + a raw `<button>` grabber + `<Show>`). A controlled sheet that slides up from the bottom of its *parent container* — distinct from `Modal`, which is a viewport portal with a fixed overlay. **Bounding contract:** both the scrim and the sheet panel are `position: absolute`, so they are clipped to the nearest `position: relative` ancestor (the caller's container). The sheet caps at `max-height: 60%` of that container and slides in via `transform: translateY`; it can never escape the box or cover a sibling region above it. Dismiss paths: grabber tap, or a *direct* click on the scrim (a click on the sheet body is ignored). Key props: `open` (boolean — controlled), `onClose` (`() => void`), `children?` (`JSX.Element` — sheet body), `label?` (`string` — `aria-label` for the dialog region). The parent must set `position: relative` to bound the sheet. Use for: container-scoped action sheets, in-pane detail drawers, mobile-style option pickers within a bounded app region.

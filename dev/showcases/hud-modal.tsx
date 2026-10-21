@@ -2,6 +2,7 @@ import { type Component, createSignal } from "solid-js";
 import { Modal } from "../../src/components/Modal";
 import { Button } from "../../src/components/Button/Button";
 import { TextBody } from "../../src/components/Text";
+import { ThemedInput } from "../../src/components/Inputs/ThemedInput";
 
 interface Depth2Props {
   onNavigate?: (id: string) => void;
@@ -29,17 +30,14 @@ export const ModalShowcase: Component<Depth2Props> = (props) => {
             open={open()}
             onClose={() => setOpen(false)}
             title="Confirm Action"
-            subtitle="Review before proceeding"
+            subtitle="Review before proceeding — Enter confirms"
+            onSubmit={() => setOpen(false)}
             footer={
               <div class="hud-modal-demo__footer">
                 <Button size="sm" onClick={() => setOpen(false)}>
                   Cancel
                 </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setOpen(false)}
-                >
+                <Button variant="primary" size="sm" type="submit">
                   Confirm
                 </Button>
               </div>
@@ -48,6 +46,7 @@ export const ModalShowcase: Component<Depth2Props> = (props) => {
             <TextBody>
               Are you sure you want to proceed with this action?
             </TextBody>
+            <ThemedInput label="Note" placeholder="Type, then press Enter" />
           </Modal>
         </div>
         <div class="depth2-atoms">
