@@ -269,9 +269,14 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
   /** The header font, read once the column is in the page. */
   const [font, setFont] = createSignal<string | null>(null);
   let column: HTMLElement | undefined;
+  // Read the font from this column's name once it is painted, else from any
+  // dial name (they share one font). Read at mount alone, the name was not
+  // found, the font stayed null and no name was ever shortened.
   onMount(() => {
-    const el = column?.querySelector("[data-dial-name]");
-    if (el) setFont(getComputedStyle(el).font);
+    requestAnimationFrame(() => {
+      const el = column?.querySelector("[data-dial-name]") ?? document.querySelector("[data-dial-name]");
+      if (el) setFont(getComputedStyle(el).font);
+    });
   });
   /** The name shortened to fit the 88px column (fitName.ts). */
   const shown = (): string => {
