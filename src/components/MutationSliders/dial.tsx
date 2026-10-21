@@ -112,8 +112,33 @@ export interface MutationDialProps {
   keyStep: number;
   /** Whether the name reads as selected. */
   selected: boolean;
-  /** The name was clicked. */
-  onSelect: () => void;
+  /**
+   * The name was clicked. Omitted, the name is plain text, not a toggle — a
+   * role group's aggregate dial never joins the selection.
+   */
+  onSelect?: () => void;
+  /**
+   * A control beside the name — a role group's disclosure chevron. Omitted,
+   * the name stands alone, as it always did.
+   */
+  headerAction?: JSX.Element;
+  /**
+   * A muted line UNDER the name: a group's spread ("avg · $40K–$60K") or a
+   * group-of-one's person. `""` holds the line empty, so every dial in a
+   * grouped row is the same height; omitted, there is no line at all.
+   */
+  note?: string;
+  /**
+   * The footer is a lone Reset, with no Delete: a collapsed role group's
+   * footer. Needs `onReset`.
+   */
+  resetOnly?: boolean;
+  /**
+   * Whether Reset has anything to undo, when the dial's own two amounts
+   * cannot say — a group whose mean is back on its old mean can still hold
+   * members that moved. Omitted, the dial decides from its own amounts.
+   */
+  changed?: boolean;
   /** The dial's box was measured — every dial in a row shares one height. */
   onMeasure: (height: number) => void;
   /** An intermediate value. Already settled onto range + grid. */
@@ -216,31 +241,71 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
   const split = (): { reset: () => void; remove: () => void } | null => {
     const reset = props.onReset;
     const remove = props.onRemove;
-    return reset && remove && !dial().removed ? { reset, remove } : null;
+    return reset && remove && !dial().removed && !props.resetOnly
+      ? { reset, remove }
+      : null;
   };
+  /** The lone Reset of a collapsed group, or `null`. */
+  const loneReset = (): (() => void) | null =>
+    props.resetOnly && props.onReset && !dial().removed ? props.onReset : null;
   /** Whether there is anything for Reset to undo. */
   const changed = (): boolean =>
-    dial().isNew || dial().clampedOld !== dial().clampedValue;
+    props.changed ??
+    (dial().isNew || dial().clampedOld !== dial().clampedValue);
+
+  /**
+   * The name: a toggle when the row lets this dial join the selection, plain
+   * text when it does not (a group's aggregate dial).
+   */
+  const name = (): JSX.Element => (
+    <Show
+      when={props.onSelect}
+      fallback={<NowrapLabel>{props.entity.label}</NowrapLabel>}
+    >
+      {(onSelect) => (
+        <PressableLabelButton
+          active={props.selected}
+          aria-pressed={props.selected}
+          data-struck={dial().removed ? "" : undefined}
+          onClick={() => onSelect()()}
+        >
+          <NowrapLabel>{props.entity.label}</NowrapLabel>
+        </PressableLabelButton>
+      )}
+    </Show>
+  );
+
+  /** A collapsed group's footer: Reset alone, disabled with nothing to undo. */
+  const lone = (reset: () => void): JSX.Element => (
+    <GlyphSlotGhostButton
+      aria-label={`Reset ${props.entity.label}`}
+      title="Reset"
+      disabled={!changed()}
+      onClick={() => reset()}
+    >
+      <Icon name="refresh" size="sm" />
+    </GlyphSlotGhostButton>
+  );
 
   /** ONE slot, three states — the footer every row had before the split. */
   const single = (): JSX.Element => (
-      <Show
-        when={footer()}
-        fallback={
-          <ReservedGlyphSlotButton disabled aria-hidden="true">
-            {REMOVE_MARK}
-          </ReservedGlyphSlotButton>
-        }
-      >
-        {(slot) => (
-          <GlyphSlotGhostButton
-            aria-label={slot().label}
-            onClick={() => slot().act()}
-          >
-            {slot().glyph}
-          </GlyphSlotGhostButton>
-        )}
-      </Show>
+    <Show
+      when={footer()}
+      fallback={
+        <ReservedGlyphSlotButton disabled aria-hidden="true">
+          {REMOVE_MARK}
+        </ReservedGlyphSlotButton>
+      }
+    >
+      {(slot) => (
+        <GlyphSlotGhostButton
+          aria-label={slot().label}
+          onClick={() => slot().act()}
+        >
+          {slot().glyph}
+        </GlyphSlotGhostButton>
+      )}
+    </Show>
   );
 
   return (
@@ -262,14 +327,21 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           says "Adlai, pressed" instead of leaving the state to the colour.
           `data-struck` is the removal, which the strike says a second time for
           anyone who cannot see the colour. */}
-      <PressableLabelButton
-        active={props.selected}
-        aria-pressed={props.selected}
-        data-struck={dial().removed ? "" : undefined}
-        onClick={() => props.onSelect()}
-      >
-        <NowrapLabel>{props.entity.label}</NowrapLabel>
-      </PressableLabelButton>
+      <Show when={props.headerAction} fallback={name()}>
+        {(action) => (
+          <TightClusterRow>
+            {name()}
+            {action()}
+          </TightClusterRow>
+        )}
+      </Show>
+      <Show when={props.note !== undefined}>
+        <Dynamic
+          component={props.note === "" ? ReservedMonoMeta : SteadyMonoMeta}
+        >
+          {props.note || NBSP}
+        </Dynamic>
+      </Show>
       {/* The LINK slot, directly UNDER the name, and only for a row that
           links. Under rather than above so the tab order is name → link →
           thumb: focusing the name reveals the link and the next Tab lands on
@@ -369,7 +441,14 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           widens the column and breaks the row's paging arithmetic (DIAL_SLOT). Reset is DISABLED when there is nothing to reset
           rather than hidden, so Delete never slides under the pointer. The
           confirm on Delete is the consumer's: this only reports the intent. */}
-      <Show when={split()} fallback={single()}>
+      <Show
+        when={split()}
+        fallback={
+          <Show when={loneReset()} fallback={single()}>
+            {(reset) => lone(reset())}
+          </Show>
+        }
+      >
         {(pair) => (
           <TightClusterRow>
             <GlyphSlotGhostButton

@@ -125,6 +125,7 @@ import {
   Index,
   type JSX,
   Show,
+  batch,
   createMemo,
   createSignal,
   mergeProps,
@@ -159,6 +160,15 @@ import {
 import type { ReadoutMode } from "./readouts";
 import { type MoveContext, resolveMove, resolveReset } from "./moves";
 import { settleTyped } from "./typed";
+import { GroupDial } from "./groupDial";
+import {
+  type RowSlot,
+  type SliderGroup,
+  groupRow,
+  resetGroup,
+  shiftGroup,
+  unionRange,
+} from "./groups";
 import { type ItemRun, itemLayout, itemRuns } from "./items";
 import {
   DIAL_SLOT,
@@ -172,6 +182,7 @@ import {
 } from "./rows";
 
 export type { MutationSliderLabels } from "./labels";
+export type { SliderGroup as MutationSliderGroup } from "./groups";
 export type { ReadoutMode as MutationSlidersReadout } from "./readouts";
 
 export interface MutationSlidersProps {
@@ -351,6 +362,32 @@ export interface MutationSlidersProps {
    * the consumer curries the frame it wants.
    */
   itemFrame?: Component<{ children?: JSX.Element }>;
+  /**
+   * ROLE GROUPS (owner, thorcasting payroll builder, 2026-10-21): entities
+   * read as one role — "Roofer × 3" — instead of by name. Omitted, the row is
+   * exactly what it always was; an entity in no group is drawn as today.
+   *
+   * A group of two or more is COLLAPSED by default to ONE dial (groups.ts):
+   * its value is the members' mean, its range the union of their ranges, its
+   * prior arrow the mean of their old amounts. A move on it is a SHIFT: every
+   * present member moves by the same delta through `onChange`, clamped into
+   * its own range — one call per member per tick, in one `batch`, so the
+   * consumer needs no fan-out code. Its Reset moves every changed member
+   * back to its old amount (as a per-dial Reset does); it has no Delete. The
+   * chevron beside the header shows each member's own dial beside it.
+   *
+   * A group of ONE shows that member's own dial, with the group label as the
+   * header and the member's name under it. The group dial never joins the
+   * selection; its members' own dials do, as before.
+   */
+  groups?: readonly SliderGroup[];
+  /**
+   * Which groups are OPEN, by group id. Controlled when supplied; omitted,
+   * the row keeps it and every group starts collapsed.
+   */
+  expandedGroups?: ReadonlySet<string>;
+  /** A group's chevron was pressed: `open` is the state it asks for. */
+  onExpandedChange?: (groupId: string, open: boolean) => void;
 }
 
 /**
@@ -366,6 +403,9 @@ export interface MutationSlidersProps {
  * Everything else — the entities, the domain, the selection and every
  * callback — is DATA, and stays at the call site.
  */
+/** A role group's aggregate slot (groups.ts). */
+type GroupSlot = Extract<RowSlot, { kind: "group" }>;
+
 export type MutationSlidersOverrides = Pick<
   MutationSlidersProps,
   | "format"
@@ -427,6 +467,23 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   const [ownSelection, setOwnSelection] = createSignal<readonly string[]>([]);
   const selection = (): readonly string[] => props.selected ?? ownSelection();
   const isSelected = (id: string): boolean => selection().includes(id);
+
+  /** Open role groups, when the caller does not hold them. CONTROLLED wins. */
+  const [ownExpanded, setOwnExpanded] = createSignal<ReadonlySet<string>>(
+    new Set<string>(),
+  );
+  const isOpen = (groupId: string): boolean =>
+    (props.expandedGroups ?? ownExpanded()).has(groupId);
+  const toggleGroup = (groupId: string): void => {
+    const open = !isOpen(groupId);
+    if (props.expandedGroups === undefined) {
+      const next = new Set(ownExpanded());
+      if (open) next.add(groupId);
+      else next.delete(groupId);
+      setOwnExpanded(next);
+    }
+    props.onExpandedChange?.(groupId, open);
+  };
 
   /** The height to DRAW at: the container's, floored, or the fixed default. */
   const dialHeight = (): number => dialHeightFor(measuredDialHeight());
@@ -491,16 +548,36 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
    */
   const guttered = (): boolean => props.readout === "beside";
 
+  /**
+   * What the row DRAWS, in reading order (groups.ts): each entity in no group
+   * as itself, and each role group as its aggregate dial — plus its members'
+   * own dials when open. Without `groups` this is one plain slot per entity.
+   * Every row fact below (paging, items, the window label) reads `shown`;
+   * the track `domain` and the selection still read the real entities.
+   */
+  const slots = createMemo((): readonly RowSlot[] =>
+    groupRow(props.entities, props.groups ?? [], isOpen, props.snap),
+  );
+  const shown = createMemo((): readonly Entity[] =>
+    map((slot: RowSlot) => slot.entity, slots()),
+  );
+  const slotById = createMemo(
+    (): ReadonlyMap<string, RowSlot> =>
+      new Map(map((slot: RowSlot) => [slot.entity.id, slot] as const, slots())),
+  );
+  /** Whether the row has role groups — every dial then holds a note line. */
+  const grouped = (): boolean => (props.groups?.length ?? 0) > 0;
+
   /** Whether any dial names an ITEM — the row then groups and pages by item. */
   const itemized = (): boolean =>
-    some((entity: Entity) => entity.item !== undefined, props.entities);
+    some((entity: Entity) => entity.item !== undefined, shown());
   /** The row's item runs (items.ts), over every entity, in reading order. */
   const runs = createMemo((): readonly ItemRun[] =>
-    itemRuns(map((entity: Entity) => entity.item, props.entities)),
+    itemRuns(map((entity: Entity) => entity.item, shown())),
   );
 
   const layout = createMemo((): RowLayout => {
-    const count = props.entities.length;
+    const count = shown().length;
     if (width() <= 0) {
       return { start: 0, end: count, capacity: count, paging: false };
     }
@@ -552,23 +629,23 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
     }
     const { capacity } = layout();
     setOffset((current) =>
-      clamp(current + delta, 0, Math.max(props.entities.length - capacity, 0)),
+      clamp(current + delta, 0, Math.max(shown().length - capacity, 0)),
     );
   };
 
   // The window is derived, so it CANNOT disagree with the arrows' disabled
   // state: both read the same memo.
   const atStart = (): boolean => layout().start === 0;
-  const atEnd = (): boolean => layout().end >= props.entities.length;
+  const atEnd = (): boolean => layout().end >= shown().length;
 
-  const visible = createMemo(() =>
-    props.entities.slice(layout().start, layout().end),
-  );
+  const visible = createMemo(() => {
+    const all = shown();
+    return all.slice(layout().start, layout().end);
+  });
   /** The runs inside the visible window, each as its entities. */
   const visibleRuns = createMemo((): readonly (readonly Entity[])[] =>
     map(
-      (run: ItemRun) =>
-        map((index: number) => props.entities[index], run.indices),
+      (run: ItemRun) => map((index: number) => shown()[index], run.indices),
       filter(
         (run: ItemRun) =>
           run.indices[0] >= layout().start && run.indices[0] < layout().end,
@@ -663,8 +740,86 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
     move(entity, plan.target, true);
   };
 
+  /** Emit a role group's member moves as ONE batch. */
+  const emitGroup = (
+    moved: readonly { id: string; value: number }[],
+    how: Emission,
+  ): void => batch(() => emitAll(moved, how));
+
+  /** A role group's SHIFT to `value` (groups.ts, `shiftGroup`). */
+  const shiftTo = (slot: GroupSlot, value: number, how: Emission): void => {
+    const from = slot.entity.value;
+    if (from !== null) emitGroup(shiftGroup(slot.members, from, value), how);
+  };
+
+  /** A figure typed under a group dial: settled, then shifted to. */
+  const typeGroup = (slot: GroupSlot, text: string): void => {
+    const precision = props.precision;
+    if (precision === undefined) return;
+    const [min, max] = unionRange(slot.members);
+    const next = settleTyped(text, { min, max, precision });
+    if (next === null || next === slot.entity.value) return;
+    shiftTo(slot, next, "both");
+  };
+
+  /** A collapsed role group's one dial (groupDial.tsx). */
+  const renderGroupDial = (slot: () => GroupSlot): JSX.Element => (
+    <GroupDial
+      entity={slot().entity}
+      members={slot().members}
+      groupLabel={slot().group.label}
+      open={isOpen(slot().group.id)}
+      onToggle={() => toggleGroup(slot().group.id)}
+      onShift={(value, how) => shiftTo(slot(), value, how)}
+      // Each present member where it stands: a zero shift.
+      onSettle={() => emitGroup(shiftGroup(slot().members, 0, 0), "commit")}
+      onReset={
+        props.onReset
+          ? () => emitGroup(resetGroup(slot().members), "both")
+          : undefined
+      }
+      onType={
+        props.precision === undefined
+          ? undefined
+          : (text) => typeGroup(slot(), text)
+      }
+      domain={domain()}
+      height={dialHeight()}
+      format={format}
+      labels={labels()}
+      readout={props.readout}
+      snap={props.snap}
+      dragStep={step()}
+      keyStep={keyStep()}
+      onMeasure={measureDial}
+    />
+  );
+
+  /**
+   * The line under a name in a grouped row: a group of one's person, and an
+   * empty line everywhere else, so every dial in the row is the same height.
+   */
+  const noteOf = (id: string): string | undefined => {
+    if (!grouped()) return undefined;
+    const slot = slotById().get(id);
+    return slot?.kind === "member" && slot.solo ? slot.name : "";
+  };
+
   /** One dial of the row. `Index` keys by position — see the render below. */
-  const renderDial = (entity: () => Entity): JSX.Element => (
+  const renderDial = (entity: () => Entity): JSX.Element => {
+    const groupSlot = (): GroupSlot | undefined => {
+      const slot = slotById().get(entity().id);
+      return slot?.kind === "group" ? slot : undefined;
+    };
+    return (
+      <Show when={groupSlot()} fallback={renderEntityDial(entity)}>
+        {(slot) => renderGroupDial(slot)}
+      </Show>
+    );
+  };
+
+  /** One entity's own dial. */
+  const renderEntityDial = (entity: () => Entity): JSX.Element => (
     <MutationDial
       entity={entity()}
       domain={domain()}
@@ -704,6 +859,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
           : undefined
       }
       linked={props.grouping === "link" && isSelected(entity().id)}
+      note={noteOf(entity().id)}
     />
   );
 
@@ -715,11 +871,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
       // it a screen-reader user paging the row hears five dials change names
       // and nothing telling them where in the seven they now are.
       role="group"
-      aria-label={windowLabel(
-        layout().start,
-        layout().end,
-        props.entities.length,
-      )}
+      aria-label={windowLabel(layout().start, layout().end, shown().length)}
     >
       {/* The chevrons exist only when the row pages. A permanently-present
           pair, greyed out on a row that fits, would be two controls promising
@@ -753,7 +905,11 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
         <Index each={visibleRuns()}>
           {(run) => (
             <Show
-              when={run().length > 1 && props.itemFrame}
+              when={
+                (run().length > 1 ||
+                  slotById().get(run()[0]?.id ?? "")?.kind !== "plain") &&
+                props.itemFrame
+              }
               fallback={<Index each={run()}>{renderDial}</Index>}
             >
               {(Frame) => (

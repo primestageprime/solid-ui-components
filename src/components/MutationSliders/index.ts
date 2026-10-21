@@ -29,6 +29,7 @@ export type {
   MutationSlidersDataProps,
   MutationSliderLabels,
   MutationSlidersReadout,
+  MutationSliderGroup,
 } from "./MutationSliders";
 export {
   CompactCurrencyMutationSliders,
