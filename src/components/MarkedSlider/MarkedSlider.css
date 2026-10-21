@@ -248,16 +248,3 @@
 .sui-marked-slider__reserved {
   visibility: hidden;
 }
-
-/* ── Side-label fit ──────────────────────────────────────────────────────
-   labelFit.ts picks the largest step that keeps a side label inside the 88px
-   column, and flips its anchor when no step fits beside the arrow. A class per
-   step because a presentation attribute loses to the 11px rules above. */
-.sui-marked-slider__fs-11 { font-size: 11px; }
-.sui-marked-slider__fs-10 { font-size: 10px; }
-.sui-marked-slider__fs-9 { font-size: 9px; }
-.sui-marked-slider__fs-8 { font-size: 8px; }
-.sui-marked-slider__fs-7 { font-size: 7px; }
-.sui-marked-slider__fs-6 { font-size: 6px; }
-.sui-marked-slider__anchor-end { text-anchor: end; }
-.sui-marked-slider__anchor-start { text-anchor: start; }
