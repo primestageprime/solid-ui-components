@@ -4,8 +4,12 @@
 
 ### Added
 
-- **Enter submits a dialog's form** (owner, thorcasting 2026-10-21: "hitting enter in every form should [submit that form]"). `Modal` takes an optional `onSubmit`; with it, body + footer are one `<form>`. Enter in a one-line field commits the field (fires `change`, so a `ThemedNumberInput` / `CurrencyInput` clamps first) and runs `onSubmit`; a footer button with `type="submit"` runs it on click. A typeless button (Cancel) never submits, a disabled submit button stops Enter, and Enter keeps its own meaning in a textarea, an open `Combobox` list and on a `Select` trigger. Without `onSubmit`, nothing changes. The rules are exported as `submitOnEnter` / `submitHandler` (plus `isSubmitEnter`, `explicitSubmitterOf`) for a plain `<form>`.
+- **Enter submits a dialog's form** (owner, thorcasting 2026-10-21: "hitting enter in every form should [submit that form]"). `Modal` takes an optional `onSubmit`; with it, body + footer are one `<form>`. Enter in a one-line field commits the field (fires `change`, so a `ThemedNumberInput` / `CurrencyInput` clamps first) and runs `onSubmit`; a footer button with `type="submit"` runs it on click. Cancel (now `type="button"`, below) never submits, a disabled submit button stops Enter, and Enter keeps its own meaning in a textarea, an open `Combobox` list and on a `Select` trigger. Without `onSubmit`, nothing changes. The rules are exported as `submitOnEnter` / `submitHandler` (plus `isSubmitEnter`, `explicitSubmitterOf`) for a plain `<form>`.
 - **`ConfirmationModal` confirms on Enter** — it now passes `onConfirm` as the Modal's `onSubmit` and its Confirm button is `type="submit"`. New `confirmDisabled` prop grays out Confirm and stops Enter.
+
+### Changed
+
+- **Every SUI button renders `type="button"` by default** (owner, 2026-10-21). `Button` and every variant built on it (`PrimaryButton`, the ghost / glyph / icon buttons, toggles) now take an explicit `type?: "button" | "submit" | "reset"` and pass it through; omitted, it is `"button"`. Every other raw `<button>` in SUI already said `type="button"`; `scripts/button-type.test.ts` now fails on any typeless `<button>` under `src/`. **Behaviour change:** a SUI button inside a consumer's own `<form>` no longer submits it unless it has `type="submit"`. `submitHandler` no longer filters out typeless submitters, because none remain.
 
 ### Migration (consumers)
 

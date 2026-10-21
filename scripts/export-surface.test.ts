@@ -146,6 +146,7 @@ describe("export surface — props", () => {
       "onAction",
       "once",
       "tone",
+      "type",
     ]);
     expect(button.inherited).toBeGreaterThan(400);
     for (const prop of button.props ?? [])
@@ -176,6 +177,7 @@ describe("export surface — props", () => {
       "onAction",
       "once",
       "tone",
+      "type",
     ]);
   });
 

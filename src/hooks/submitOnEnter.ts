@@ -10,12 +10,11 @@
 //     <PrimaryButton type="submit" disabled={!canSave()}>Save</PrimaryButton>
 //   </form>
 //
-// WHY NOT THE BROWSER'S OWN IMPLICIT SUBMIT. The browser clicks the form's
-// FIRST submit button. A SUI `Button` has no `type`, and a typeless button is
-// a submit button, so in a Cancel-then-Save footer the browser clicks Cancel.
-// `submitOnEnter` takes the key itself and submits with the first button that
-// says `type="submit"` out loud. `submitHandler` ignores a submit that a
-// typeless button sent, so a Cancel click never runs the save.
+// EVERY SUI BUTTON IS `type="button"` UNLESS IT SAYS OTHERWISE (2026-10-21),
+// so the one `type="submit"` button is the form's only submitter, and a Cancel
+// click never submits. `submitOnEnter` still takes the key itself, for one
+// reason: it commits the field value (below) BEFORE the submit, and then
+// submits with that `type="submit"` button.
 //
 // ENTER KEEPS ITS OWN MEANING where it has one. The key passes through when:
 // - a handler before this one called `preventDefault` (a Combobox picking an
@@ -62,8 +61,8 @@ export function isSubmitEnter(event: KeyboardEvent): boolean {
 }
 
 /**
- * The button Enter submits with: the first button in the form that says
- * `type="submit"` out loud. Undefined when the form has none.
+ * The button Enter submits with: the form's first `type="submit"` button.
+ * Undefined when the form has none.
  */
 export function explicitSubmitterOf(
   form: HTMLFormElement,
@@ -84,8 +83,8 @@ export function submitOnEnter(event: KeyboardEvent): void {
   const input = event.target as HTMLInputElement;
   const form = input.form;
   if (!form) return;
-  // Stop the browser's own implicit submit, which would click the first
-  // typeless button (a Cancel).
+  // Stop the browser's own implicit submit: this handler submits once, after
+  // the value is committed.
   event.preventDefault();
   input.dispatchEvent(new Event("change", { bubbles: true }));
   const submitter = explicitSubmitterOf(form);
@@ -95,16 +94,14 @@ export function submitOnEnter(event: KeyboardEvent): void {
 
 /**
  * A `submit` handler for a `<form>`: stops the page load and runs `onSubmit`.
- * A submit sent by a button with no `type` (a Cancel or a stepper in the
- * form) is ignored, because only `type="submit"` means "submit".
+ * Only a `type="submit"` button can send a submit, because every SUI button
+ * defaults to `type="button"`.
  */
 export function submitHandler(
   onSubmit: () => void,
 ): (event: SubmitEvent) => void {
   return (event) => {
     event.preventDefault();
-    const submitter = event.submitter;
-    if (submitter && submitter.getAttribute("type") !== "submit") return;
     onSubmit();
   };
 }

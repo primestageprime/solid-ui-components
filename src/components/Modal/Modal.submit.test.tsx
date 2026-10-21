@@ -24,7 +24,7 @@ import { Modal } from "./Modal";
 // Owner rule (thorcasting, 2026-10-21): Enter in every form submits that
 // form, and SUI does it. These tests drive real SUI fields inside a Modal
 // with `onSubmit`, in the shape of the thorcasting "Add a service" dialog:
-// Cancel (no type) first, then the primary action as `type="submit"`.
+// Cancel (`type="button"` by default) first, then the primary action as `type="submit"`.
 
 let sizer: FakeSizer;
 beforeAll(() => {
@@ -128,9 +128,11 @@ describe("Modal onSubmit — Enter submits the form", () => {
     expect(d.onSubmit).toHaveBeenCalledTimes(1);
   });
 
-  it("a click on Cancel (no type) never submits", () => {
+  it("a click on Cancel (type=button by default) never submits", () => {
     const d = mountDialog();
-    fireEvent.click(q<HTMLButtonElement>(".sui-modal__footer button"));
+    const cancel = q<HTMLButtonElement>(".sui-modal__footer button");
+    expect(cancel.getAttribute("type")).toBe("button");
+    fireEvent.click(cancel);
     expect(d.onClose).toHaveBeenCalledTimes(1);
     expect(d.onSubmit).not.toHaveBeenCalled();
   });
@@ -140,7 +142,7 @@ describe("Modal onSubmit — Enter submits the form", () => {
     const passed = fireEvent.keyDown(d.nameInput, { key: "Enter" });
     expect(d.onSubmit).not.toHaveBeenCalled();
     expect(d.onClose).not.toHaveBeenCalled();
-    // The key is still taken, so the browser cannot click Cancel instead.
+    // The key is still taken, so the browser does not submit on its own.
     expect(passed).toBe(false);
   });
 
