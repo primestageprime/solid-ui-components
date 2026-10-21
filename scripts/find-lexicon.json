@@ -1,5 +1,5 @@
 {
-  "$comment": "Builder phrasings \u2192 tags from scripts/tags-vocabulary.json, read by scripts/find.mjs (phrases match on word stems, longest phrase first; a vocabulary word in the need already maps to itself, so only synonyms belong here). Tuned against the tuning split of scripts/find-bench.json only; never add a phrase just to make a held-out need pass. Generic words only: no app nouns.",
+  "$comment": "Builder phrasings → tags from scripts/tags-vocabulary.json, read by scripts/find.mjs (phrases match on word stems, longest phrase first; a vocabulary word in the need already maps to itself, so only synonyms belong here). Tuned against the tuning split of scripts/find-bench.json only; never add a phrase just to make a held-out need pass. Generic words only: no app nouns.",
   "actions bar": [
     "shows:toolbar",
     "does:bulk",
@@ -121,7 +121,8 @@
     "data:grouped"
   ],
   "groups": [
-    "data:grouped"
+    "data:grouped",
+    "shows:list"
   ],
   "collapsible": [
     "does:collapse"
@@ -257,9 +258,6 @@
     "data:table"
   ],
   "column": [
-    "shows:table"
-  ],
-  "rows": [
     "shows:table"
   ],
   "expandable": [
@@ -569,8 +567,8 @@
     "does:click"
   ],
   "title": [
-    "shows:header",
-    "shows:text"
+    "shows:text",
+    "role:header"
   ],
   "switch": [
     "does:toggle",
@@ -773,5 +771,152 @@
   "field value": [
     "shows:text",
     "data:scalar"
+  ],
+  "editable title": [
+    "shows:text",
+    "does:edit",
+    "does:type",
+    "role:header"
+  ],
+  "title is editable": [
+    "shows:text",
+    "does:edit",
+    "does:type",
+    "role:header"
+  ],
+  "detail area": [
+    "role:shell",
+    "role:page",
+    "shows:panel",
+    "does:layout"
+  ],
+  "header, a sidebar": [
+    "role:shell",
+    "role:page",
+    "shows:panel",
+    "does:layout"
+  ],
+  "sidebar with": [
+    "role:rail",
+    "role:shell",
+    "does:layout"
+  ],
+  "when one is empty": [
+    "data:grouped"
+  ],
+  "when empty": [
+    "data:grouped"
+  ],
+  "always shown": [
+    "does:view"
+  ],
+  "log lines": [
+    "shows:log",
+    "data:events",
+    "shows:date",
+    "role:panel"
+  ],
+  "with times": [
+    "shows:date"
+  ],
+  "times": [
+    "shows:date"
+  ],
+  "selectable": [
+    "does:select",
+    "does:multi-select"
+  ],
+  "selected row": [
+    "does:select",
+    "shows:table"
+  ],
+  "selected-row": [
+    "does:select",
+    "shows:table"
+  ],
+  "lights a row": [
+    "does:select",
+    "shows:table"
+  ],
+  "started": [
+    "shows:date"
+  ],
+  "completed": [
+    "shows:date",
+    "shows:status"
+  ],
+  "navigation": [
+    "shows:tabs",
+    "does:navigate",
+    "role:header"
+  ],
+  "second screen": [
+    "role:page"
+  ],
+  "stub": [
+    "shows:placeholder",
+    "shows:empty"
+  ],
+  "panel lists": [
+    "shows:list",
+    "role:panel"
+  ],
+  "steps are a table": [
+    "shows:table",
+    "data:table",
+    "data:steps"
+  ],
+  "entries": [
+    "shows:log",
+    "shows:date"
+  ],
+  "diagram": [
+    "shows:graph",
+    "shows:flow"
+  ],
+  "scrollbar": [
+    "does:scroll",
+    "shows:panel"
+  ],
+  "selector": [
+    "shows:field",
+    "does:pick",
+    "does:select"
+  ],
+  "vertical line": [
+    "shows:mark",
+    "does:hover"
+  ],
+  "help": [
+    "shows:dialog",
+    "shows:kbd"
+  ],
+  "key cap": [
+    "shows:kbd"
+  ],
+  "collapsed away": [
+    "does:collapse",
+    "role:rail"
+  ],
+  "log panel": [
+    "shows:log",
+    "role:panel",
+    "shows:date"
+  ],
+  "log entry": [
+    "shows:log",
+    "shows:date"
+  ],
+  "log entries": [
+    "shows:log",
+    "shows:date"
+  ],
+  "toolbar row": [
+    "shows:toolbar",
+    "role:toolbar",
+    "shows:button"
+  ],
+  "ruled": [
+    "shows:divider"
   ]
 }

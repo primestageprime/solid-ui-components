@@ -10,7 +10,8 @@
         "notice", "empty", "placeholder", "divider", "tooltip",
         "badge", "chip", "avatar", "status", "icon", "kbd", "link", "button", "field",
         "text", "number", "money", "date", "duration", "count", "progress",
-        "log", "thread", "diff", "code", "formula", "markdown", "calendar"
+        "log", "thread", "diff", "code", "formula", "markdown", "calendar",
+        "scatter", "histogram"
       ]
     },
     "does": {

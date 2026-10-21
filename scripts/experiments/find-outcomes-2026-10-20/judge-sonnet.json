@@ -1,0 +1,101 @@
+[
+  {
+    "id": 1,
+    "outcome": "cousin",
+    "pick": "ActionList",
+    "confidence": 0.6,
+    "why": "ActionList is a sortable editable list with status tones and a multi-select actions bar, but the entry does not mention filtering, a card slot per row, assignees or tags."
+  },
+  {
+    "id": 2,
+    "outcome": "exact",
+    "pick": "GroupedSelector",
+    "confidence": 0.9,
+    "why": "GroupedSelector is a rail of collapsible groups with a boxed count on each header and selectable rows."
+  },
+  {
+    "id": 3,
+    "outcome": "exact",
+    "pick": "LinearFlowSwimlaneChart",
+    "confidence": 0.7,
+    "why": "It is built for the current step in a sequential workflow, driven by data updates (animated), with steps either side of DOING."
+  },
+  {
+    "id": 7,
+    "outcome": "exact",
+    "pick": "NotificationCenter",
+    "confidence": 0.8,
+    "why": "A bell trigger with a count badge opening an inbox panel of notification rows with action buttons."
+  },
+  {
+    "id": 9,
+    "outcome": "exact",
+    "pick": "DagChart",
+    "confidence": 0.9,
+    "why": "SVG DAG with dagre-computed automatic layout of nodes and edges."
+  },
+  {
+    "id": 10,
+    "outcome": "exact",
+    "pick": "PivotTreemap",
+    "confidence": 0.85,
+    "why": "Pivots tagged rows on two string-tag dimensions into a Treemap with a SlotFillBar per bucket."
+  },
+  {
+    "id": 11,
+    "outcome": "exact",
+    "pick": "Heatmap",
+    "confidence": 0.95,
+    "why": "Its entry describes a grid of status-coloured full/partial/missing cells with row and column labels."
+  },
+  {
+    "id": 13,
+    "outcome": "exact",
+    "pick": "RingChart",
+    "confidence": 0.95,
+    "why": "Radial donut gauge for N of total completion gauges."
+  },
+  {
+    "id": 15,
+    "outcome": "cousin",
+    "pick": "createStatusFlowChart",
+    "confidence": 0.6,
+    "why": "StatusFlowChart maps node status to columns and supports parentId, but the documentation shown does not state that a parent summarizes once all its children complete.",
+    "note": "second call after the factory entry fix (family bullet)"
+  },
+  {
+    "id": 22,
+    "outcome": "exact",
+    "pick": "FluidListDetailThreePanel",
+    "confidence": 0.8,
+    "why": "Fluid left list, centre detail and right context panels, with asides stacking at phone widths."
+  },
+  {
+    "id": 27,
+    "outcome": "cousin",
+    "pick": "WeekCalendar",
+    "confidence": 0.85,
+    "why": "WeekCalendar is a weekly time grid, not a month grid with events per day cell."
+  },
+  {
+    "id": 39,
+    "outcome": "cousin",
+    "pick": "Sidebar",
+    "confidence": 0.6,
+    "why": "Sidebar has a draggable resize edge but is a side column, not a split pane between two panels."
+  },
+  {
+    "id": 41,
+    "outcome": "cousin",
+    "pick": "DateRangePicker",
+    "confidence": 0.55,
+    "why": "DateRangePicker has private time inputs but is a range picker with presets, not a single date-and-time-of-day picker; DatePicker is date-only."
+  },
+  {
+    "id": 42,
+    "outcome": "cousin",
+    "pick": "RingChart",
+    "confidence": 0.85,
+    "why": "RingChart is a donut gauge but has no avatar in the centre."
+  }
+]

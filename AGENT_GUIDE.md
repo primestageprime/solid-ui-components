@@ -225,6 +225,29 @@ gate ratchets `untaggedComponents` and `unknownTags` at 0: a new component
 must carry a `Tags:` line, and a new word goes into the vocabulary first.
 `npm run find:legacy` is the old prose-only ranker, kept for comparison.
 
+`npm run find:outcome -- "<need>"` (`scripts/find-outcome.mjs`) turns a find
+into one of three outcomes, each with its own action, zero tokens: **exact**
+(the biggest component that covers the need; found on the fast path and
+returned at once), **cousin** (the whole union candidate set — ranker v2 ∪
+BM25 ∪ MiniLM — is walked to the end, then the nearest shape stands in as the
+placeholder and a gap record says what is missing), **none** (a `GapBox`
+stands in; the gap record names the missing component). `--gaps
+<app>/gaps.json` appends cousin and none records with a `next` step; `--json`
+gives the contract `{outcome, pick, alternatives, confidence, gap?}`.
+`scripts/find-outcomes-bench.json` (23 exact / 19 cousin / 17 none, frozen
+before the classifier existed) is scored by `npm run find:outcomes-bench`
+(confusion matrix + pick correctness; thresholds tuned on its odd half only),
+and `scripts/find.test.ts` pins the floors. The output also carries the build
+`phase` (exact 1, cousin 2, none 3) and the Question to post at the start of
+phase 1 ("Is <nearest> good enough, or build <gap>?"); `planPhase` reads the
+answers in `gaps.json` before a phase starts ("good enough" skips, "build" or
+no answer builds). An exact with a thin lead over another family, or low
+shape coverage, is flagged `readerWanted`: `--reader-batch <file>` writes the
+need and its candidates' entries for a Sonnet reader and `--judge <file>`
+merges the reader's call (the bench takes the same flags; the reader took
+cousin → exact from 4 to 0 at ~975 tokens for 14 of 59 lookups; see
+`scripts/experiments/find-outcomes-2026-10-20/`).
+
 **(a) Name the existing component or variant that covers it** — by name — and
 use it. Search on the *state model* rather than the name you imagined (the
 `sui-gap-analysis` route does exactly this); a component you could not find is

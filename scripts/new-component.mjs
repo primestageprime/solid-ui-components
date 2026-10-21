@@ -30,6 +30,11 @@
 // before anything is written) when ANY target already exists, and is
 // idempotent to re-run after a refusal for exactly that reason.
 // ============================================
+// Duplicate guard (diddit #4161, Peter: a finder that "never fails to find a
+// component that already exists"): before anything is scaffolded, print the
+// likely existing equivalents of <Name> so the builder names one or writes
+// the push-back justification. Advisory for now (additive): it never refuses.
+import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import {
   root,
@@ -45,6 +50,14 @@ import {
 
 const argv = process.argv.slice(2);
 const name = argv.find((a) => !a.startsWith("--"));
+
+try {
+  const report = execFileSync(process.execPath, [new URL("./dup-guard.mjs", import.meta.url).pathname, name, "--k", "5"], { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] });
+  process.stdout.write(report);
+} catch (e) {
+  // exit 2 = a likely equivalent exists; the report is still worth reading
+  if (e.stdout) process.stdout.write(`${e.stdout}\n  (dup-guard: a likely existing equivalent — name it or write the push-back justification before continuing)\n\n`);
+}
 const depthArg = argv.find((a) => a.startsWith("--depth"));
 const isPrimitive = argv.includes("--primitive");
 const depthValue = depthArg?.includes("=")

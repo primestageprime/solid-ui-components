@@ -4,7 +4,7 @@
     { "need": "the current step in a workflow, animated, with the steps before and after it", "expect": ["SwimlaneChart", "AnimatedSwimlaneChart", "LinearFlowSwimlaneChart"], "split": "tuning", "miss": true },
     { "need": "a sidebar grouped by state with counts per group, collapsible groups, one item selectable", "expect": ["GroupedSelector", "BucketQueue", "GroupedBucketQueue"], "split": "tuning", "miss": true },
     { "need": "a log list: timestamped lines, newest at the bottom, scrolling", "expect": ["LogLineList"], "split": "authored", "miss": true },
-    { "need": "two time-series charts stacked with a synced hover guide and drag to zoom", "expect": ["ScrubChart", "CashflowScrubChart", "FramedCashflowScrubChart"], "split": "tuning", "miss": true },
+    { "need": "two time-series charts stacked with a synced hover guide and drag to zoom", "expect": ["ScrubChart", "CashflowScrubChart"], "split": "tuning", "miss": true },
     { "need": "an owner chip: small avatar with initials beside the name", "expect": ["Assignees", "MdAssigneeChips", "MdAvatar", "SmAvatar", "AssigneeIcon"], "split": "authored", "miss": true },
     { "need": "a review actions bar: approve, reject, request changes buttons with hotkeys over the selected rows", "expect": ["ActionList", "BulkActionBar", "HotkeyButton"], "split": "tuning", "miss": true },
     { "need": "a list-detail shell: list on the left, detail in the centre, log rail on the right", "expect": ["ListDetailThreePanel", "ListDetailLogThreePanel", "ThreePanelLayout"], "split": "authored", "miss": true },

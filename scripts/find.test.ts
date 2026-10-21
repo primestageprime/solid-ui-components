@@ -238,13 +238,13 @@ describe("benchmark floor (scripts/find-bench.json)", () => {
     expect(s.n).toBe(31);
     expect(s.top1).toBeGreaterThanOrEqual(31);
   });
-  it("held-out split (44 needs quoted verbatim from the sketch gap lists, briefs and marks' gaps.json, frozen at 6f378f68 before any further tuning): at least 17/44 top-1 and 26/44 top-3", () => {
+  it("held-out split (44 needs quoted verbatim from the sketch gap lists, briefs and marks' gaps.json, frozen at 6f378f68 before any further tuning): at least 22/44 top-1 and 26/44 top-3 (ranker v2, 561d369c; retired as an honest score after the doc fixes of 133c5c92)", () => {
     const s = hits(
       bench.filter((b) => b.split === "heldout"),
       tuned,
     );
     expect(s.n).toBe(44);
-    expect(s.top1).toBeGreaterThanOrEqual(17);
+    expect(s.top1).toBeGreaterThanOrEqual(22);
     expect(s.top3).toBeGreaterThanOrEqual(26);
   });
   it("authored split (written after tagging, never tuned on): at least 27/29 top-1", () => {
@@ -255,10 +255,252 @@ describe("benchmark floor (scripts/find-bench.json)", () => {
     expect(s.n).toBe(29);
     expect(s.top1).toBeGreaterThanOrEqual(27);
   });
-  it("the real misses (7 authored + 7 quoted): tuned at least 10/14 top-1, legacy at most 4/14", () => {
+  it("the real misses (7 authored + 7 quoted): ranker v2 at least 10/14 top-1, legacy at most 5/14 (the drag-zoom label is strict again: FramedCashflowScrubChart does not count, diddit #4163)", () => {
     const real = bench.filter((b) => b.miss);
     expect(real.length).toBe(14);
     expect(hits(real, tuned).top1).toBeGreaterThanOrEqual(10);
-    expect(hits(real, legacy).top1).toBeLessThanOrEqual(4);
+    expect(hits(real, legacy).top1).toBeLessThanOrEqual(5);
+  });
+});
+
+describe("promoted cases (scripts/find-regress.json, scripts/find-promote.mjs)", () => {
+  const records = loadRecords();
+  const regress = JSON.parse(
+    readFileSync(join(root, "scripts", "find-regress.json"), "utf8"),
+  ).cases as {
+    need: string;
+    expect: string[];
+  }[];
+  it("every promoted need stays in the fast path's top 3", () => {
+    const lost = regress.filter(
+      (c) =>
+        !find(c.need, { records, vocab, lexicon, top: 3 }).results.some((r) =>
+          c.expect.includes(r.name),
+        ),
+    );
+    expect(lost.map((c) => c.need)).toEqual([]);
+  });
+});
+
+describe("three outcomes (scripts/find-outcome.mjs over scripts/find-outcomes-bench.json, frozen at f5f5cfbf)", () => {
+  // Floors from diddit #4163 (2026-10-20), two text retrievers only (no MiniLM, so
+  // the test needs no model). Peter's targets: no exact/cousin confusion that
+  // hides an existing component, and no "exact" for a cousin that is really
+  // none. Lowering a floor is a regression; the four cousin → exact and two
+  // cousin → none (needs with no vocabulary word) are the known misses.
+  it("outcome accuracy ≥ 50/59; no exact ever read as cousin or none; no none ever read as exact; exact pick ≥ 21/23; none ≥ 13/17; cousin → exact ≤ 3", async () => {
+    const { classify, loadContext } = await import("./find-outcome.mjs");
+    const { scoreOutcomes } = await import("./find-outcomes-bench.mjs");
+    const bench = JSON.parse(
+      readFileSync(join(root, "scripts", "find-outcomes-bench.json"), "utf8"),
+    ).needs as { need: string; outcome: string; expect?: string[] }[];
+    const ctx = await loadContext({ embed: false });
+    const results = [];
+    for (const it of bench) results.push(await classify(it.need, ctx));
+    const s = scoreOutcomes(
+      bench,
+      results,
+      (n: string) => ctx.byName.get(n)?.family ?? n,
+    );
+    expect(s.n).toBe(59);
+    expect(s.outcomeAccuracy).toBeGreaterThanOrEqual(50);
+    expect(s.matrix.exact.cousin + s.matrix.exact.none).toBe(0);
+    expect(s.matrix.none.exact).toBe(0);
+    expect(s.matrix.cousin.exact).toBeLessThanOrEqual(3);
+    expect(s.picks.exact.right).toBeGreaterThanOrEqual(21);
+    expect(s.picks.none.right).toBeGreaterThanOrEqual(13);
+    // every result carries the contract
+    for (const r of results) {
+      expect(["exact", "cousin", "none"]).toContain(r.outcome);
+      if (r.outcome !== "exact")
+        expect(r.gap).toMatchObject({
+          name: expect.any(String),
+          description: expect.any(String),
+          nearest: expect.any(String),
+        });
+      if (r.outcome === "none") expect(r.placeholder).toBe("GapBox");
+      // an exact usually short-circuits on the fast path; the union walk may still find one
+      expect(["fast", "union"]).toContain(r.path);
+    }
+  }, 60_000);
+});
+
+describe("build phases and ask-early (diddit #4163 Decisions #4523, #4524)", () => {
+  const gap = (title: string, outcome: "cousin" | "none", extra = {}) => ({
+    title,
+    outcome,
+    phase: outcome === "cousin" ? 2 : 3,
+    nearest: outcome === "cousin" ? "ScrubChart" : "none",
+    need: `a ${title}`,
+    status: "open",
+    askedAt: "2026-10-20T10:00:00Z",
+    answer: null,
+    answeredAt: null,
+    ...extra,
+  });
+  it("an outcome maps to its phase: exact 1, cousin 2, none 3", async () => {
+    const { PHASE } = await import("./find-outcome.mjs");
+    expect(PHASE).toEqual({ exact: 1, cousin: 2, none: 3 });
+  });
+  it("'good enough' skips the item and marks it accepted; 'build' and no answer both build", async () => {
+    const { planPhase, withAnswer } = await import("./find-outcome.mjs");
+    const gaps = [
+      withAnswer(
+        gap("CandlestickChart", "cousin"),
+        "good enough",
+        "2026-10-20T10:09:00Z",
+      ),
+      withAnswer(gap("GanttChart", "cousin"), "build", "2026-10-20T10:12:00Z"),
+      gap("PieChart", "cousin"), // unanswered after the timeout
+      gap("MapPins", "none"), // phase 3: not this phase's business
+    ];
+    const p2 = planPhase(gaps, 2);
+    expect(p2.skipped.map((g) => g.title)).toEqual(["CandlestickChart"]);
+    expect(p2.build.map((g) => [g.title, g.decision])).toEqual([
+      ["GanttChart", "answered: build"],
+      ["PieChart", "no answer: build"],
+    ]);
+    expect(p2.gaps.find((g) => g.title === "CandlestickChart")?.status).toBe(
+      "accepted",
+    );
+    expect(p2.gaps.find((g) => g.title === "MapPins")?.status).toBe("open");
+    const p3 = planPhase(p2.gaps, 3);
+    expect(p3.build.map((g) => g.title)).toEqual(["MapPins"]);
+  });
+  it("the Question names the nearest and the gap, and a gaps.json entry carries the ask fields", async () => {
+    const { askText, appendGap } = await import("./find-outcome.mjs");
+    expect(askText(gap("CandlestickChart", "cousin"))).toBe(
+      'Is ScrubChart good enough for "a CandlestickChart", or should I build CandlestickChart?',
+    );
+    const { mkdtempSync, readFileSync: rf } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const path = join(mkdtempSync(join(tmpdir(), "sui-gaps-")), "gaps.json");
+    const res = {
+      outcome: "cousin",
+      phase: 2,
+      placeholder: "ScrubChart",
+      gap: {
+        name: "CandlestickChart",
+        description: "a candlestick chart",
+        nearest: "ScrubChart",
+        missing: ["candlestick"],
+      },
+    };
+    appendGap(path, res as never);
+    let list = JSON.parse(rf(path, "utf8"));
+    expect(list[0]).toMatchObject({
+      title: "CandlestickChart",
+      phase: 2,
+      status: "open",
+      askedAt: null,
+      answer: null,
+      answeredAt: null,
+    });
+    // the builder answers in place; a re-run of find keeps the answer
+    list[0] = {
+      ...list[0],
+      askedAt: "t0",
+      answer: "good enough",
+      answeredAt: "t1",
+    };
+    const { writeFileSync: wf } = await import("node:fs");
+    wf(path, JSON.stringify(list));
+    appendGap(path, res as never);
+    list = JSON.parse(rf(path, "utf8"));
+    expect(list[0]).toMatchObject({
+      askedAt: "t0",
+      answer: "good enough",
+      answeredAt: "t1",
+    });
+  });
+});
+
+describe("the reader on the exact/cousin boundary (readerGate / applyJudge)", () => {
+  const c = (name: string, fit: number, tagCov: number) => ({
+    name,
+    fit,
+    tagCov,
+    wordCov: 1,
+    depth: 2,
+    unexplained: [],
+    defining: [],
+  });
+  const byName = new Map([
+    ["WeekCalendar", { family: "WeekCalendar" }],
+    ["createWeekCalendar", { family: "WeekCalendar" }],
+    ["DayOfMonthPicker", { family: "DayOfMonthPicker" }],
+  ]);
+  it("gates an exact with a thin lead over another family or a low shape coverage; kin do not count as rivals", async () => {
+    const { readerGate } = await import("./find-outcome.mjs");
+    const exact = (pick: unknown, alternatives: unknown[]) => ({
+      outcome: "exact",
+      pick,
+      alternatives,
+      need: { text: "" },
+    });
+    expect(
+      readerGate(
+        exact(c("WeekCalendar", 0.9, 0.7), [c("DayOfMonthPicker", 0.85, 0.5)]),
+        { byName },
+      ),
+    ).toBe(true);
+    expect(
+      readerGate(
+        exact(c("WeekCalendar", 0.9, 0.7), [
+          c("createWeekCalendar", 0.89, 0.7),
+          c("DayOfMonthPicker", 0.5, 0.5),
+        ]),
+        { byName },
+      ),
+    ).toBe(false);
+    expect(readerGate(exact(c("WeekCalendar", 0.9, 0.4), []), { byName })).toBe(
+      true,
+    );
+    expect(
+      readerGate(
+        {
+          outcome: "cousin",
+          pick: c("WeekCalendar", 0.9, 0.4),
+          alternatives: [],
+        },
+        { byName },
+      ),
+    ).toBe(false);
+  });
+  it("a reader's cousin turns the exact into a phase-2 cousin with the pick as placeholder and a gap record", async () => {
+    const { applyJudge } = await import("./find-outcome.mjs");
+    const res = {
+      outcome: "exact",
+      phase: 1,
+      pick: c("WeekCalendar", 0.9, 0.7),
+      alternatives: [c("DayOfMonthPicker", 0.85, 0.5)],
+      need: {
+        text: "a month-grid calendar with the events of each day in its cell",
+        unexplained: ["month"],
+      },
+    };
+    const out = applyJudge(res as never, {
+      outcome: "cousin",
+      pick: "WeekCalendar",
+      confidence: 0.85,
+      why: "weekly, not a month grid",
+    });
+    expect(out.outcome).toBe("cousin");
+    expect(out.phase).toBe(2);
+    expect(out.placeholder).toBe("WeekCalendar");
+    expect(out.gap).toMatchObject({
+      nearest: "WeekCalendar",
+      name: expect.any(String),
+    });
+    expect(out.reader).toMatchObject({ outcome: "cousin", zeroToken: "exact" });
+    // an exact judgment keeps the result; a none makes a GapBox
+    expect(
+      applyJudge(res as never, { outcome: "exact", pick: "WeekCalendar" })
+        .outcome,
+    ).toBe("exact");
+    expect(
+      applyJudge(res as never, { outcome: "none", pick: "WeekCalendar" })
+        .placeholder,
+    ).toBe("GapBox");
   });
 });

@@ -106,6 +106,8 @@
     "find": "node scripts/find.mjs",
     "find:legacy": "node scripts/catalog.mjs --find",
     "find:bench": "node scripts/find-bench.mjs",
+    "find:outcome": "node scripts/find-outcome.mjs",
+    "find:outcomes-bench": "node scripts/find-outcomes-bench.mjs",
     "report:exports": "node scripts/export-usage-report.mjs",
     "usage-manifest": "node scripts/usage-manifest.mjs",
     "new:component": "node scripts/new-component.mjs",
@@ -146,6 +148,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.2",
+    "@huggingface/transformers": "^4.3.1",
     "@solidjs/testing-library": "^0.8.10",
     "@types/d3-scale": "^4.0.8",
     "@types/node": "^26.1.0",

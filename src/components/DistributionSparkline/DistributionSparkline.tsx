@@ -1,6 +1,6 @@
 // ============================================
 // DistributionSparkline — Atomic (Depth 1)
-// Tags: shows:sparkline, shows:number, does:view, data:list, role:inline
+// Tags: shows:sparkline, shows:histogram, shows:number, does:view, data:list, role:inline
 // Owns CSS (DistributionSparkline.css), no component imports.
 //
 // A sparkline that says what the series DID as well as where it went. Where

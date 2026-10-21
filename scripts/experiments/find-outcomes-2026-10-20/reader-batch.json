@@ -1,0 +1,492 @@
+[
+  {
+    "id": 1,
+    "need": "a sortable, filterable task list with a slot for a card on each row: status, assignees, tags and inline rename per row, batch actions over the selection",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "ActionList"
+    },
+    "candidates": [
+      {
+        "name": "ActionList",
+        "depth": 3,
+        "entry": "Composite (Depth 3). Owns a thin `ActionList.css` (wrapper column + the multi-select actions bar only — a deliberate exception like BulkActionBar/Fab, since the bar is a list-level element with no home in SortableList or ActionListItem); composes `SortableList` (`rowChrome=\"bare\"`, `gap={1}`) + `ActionListItem`. A data-driven list of editable rows (todo queues, filter results, work items). Curried via `createActionList` with a single presentational override `statusTones` (the status→row-tone map), following the `createButton`/`createPanel` Overrides/DataProps split; the exported **`ActionList`** variant bakes the default tones (`{ DONE: \"dim\", DOING: \"highlight\" }`, neutral fallback) so app "
+      },
+      {
+        "name": "MutableList",
+        "depth": 3,
+        "entry": "Composite (Depth 3). Owns `MutableList.css`. A `SortableList` specialized into editable, deletable cards: it composes `<SortableList>` (inheriting the grip, placeholder gap, and live drag-reflow from the headless `createDnDReorder` hook) and supplies a `renderItem` card built from `ClusterRow`/`ContentStack`/`ActionSlot` Layout variants — an inline-editable name button on the left (click → bare `<input>`; Enter commits, Escape reverts, blur commits) and a hover-revealed `IconOnlyButton` × delete on the right. During editing it toggles the enclosing `.sui-sortable-list__row`'s native `draggable` off (interactive zones also carry `draggable={false}`) so the input keeps its caret/selection. Gen"
+      },
+      {
+        "name": "ExtractionBoard",
+        "depth": 4,
+        "entry": "Composite (Depth 2) swimlane board for an ETL extraction view. One swimlane per configured category; columns left → right are `Summary │ Done │ Doing │ Todo │ +N` lozenge. The client supplies CONFIG (baked once) and a REACTIVE `tables` array; the board DERIVES the whole view as pure functions over `tables` (there is NO simulation inside). Props: `config` (`ExtractionBoardConfig`) and `tables` (`BoardTable[]`, pass `tables()` from a signal/store). `ExtractionBoardConfig` = `{ categories: { id, label, description? }[]` (order = default swimlane order + tiebreaker once lanes sort by status)`, dataTypes: { id, label, icon }[]` (the per-card \"icon over count\" stats + the summary aggregate; a card"
+      },
+      {
+        "name": "ListItem",
+        "depth": 1,
+        "entry": "List item with status indicators and interactive states. Key props: `status` (`active`|`inactive`|`warning`|`error`|`success`), `icon`, `secondary`, `interactive`, `selected`. Use for: items within List. | Styled list with status dots, icons, dividers. Key props: `variant` (`default`|`status`|`menu`), `dividers`, `compact`, `scroll` (fills its flex parent and scrolls internally on overflow: `flex: 1; min-height: 0; overflow-y: auto`). Note: `numbered` variant has been removed. Use for: status lists, menus, settings lists. Has `createList` factory for curried variants."
+      },
+      {
+        "name": "Assignees",
+        "depth": 1,
+        "entry": "Default (small) assignee chips. | Atomic (Depth 1). Renders a filled accent-colored pill per id, applying a caller-supplied `resolveName` to display each label; renders nothing when `ids` is empty. The wrapping chip row is composed from the `ChipCluster` Layout variant; this component owns only the intrinsic pill styling. Props: `ids` (`string[]`), `resolveName` (`(id: string) => string`), `size` (`\"sm\"`|`\"md\"`, default `\"sm\"` — sm is 9px/min-height 12px, md is 10px/min-height 14px), `class`. Exported type `AssigneeChipsDataProps` (`Omit` of `size`). The base `AssigneeChips` is intentionally not exported from the barrel — use the `createAssigneeChips(defaults)` factory (bakes `size` as `AssigneeChipsOverrides`, returns `Comp"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "need": "a sidebar grouped by state with a boxed count on each group header, the rows under it selectable and each group collapsible",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "BucketQueue"
+    },
+    "candidates": [
+      {
+        "name": "BucketQueue",
+        "depth": 1,
+        "entry": "Layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE § Layout Purity). Owns `BucketQueue.css`: the weighted water-fill sizes each bucket in JS, which no CSS rule can express. The library's single queue component — supersedes `SplitQueueList` (see `docs/adr/0004-one-queue-component-and-the-motion-seam.md`). N always-present buckets stacked as one full-height bar, bucketing a **flat `items` list** through its lifecycle as a **progression** (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). **Every bucket is shown at all times with its count.** Generic over `T`; the consumer owns the data and row content — `buckets: Bucket[]` (top → bottom, each `{ key, lab"
+      },
+      {
+        "name": "CompactBucketQueue",
+        "depth": 1,
+        "entry": "BucketQueue for a narrow side pane: 11px headers, 20px rows (2px x 8px padding, 16px line), 12px text and a 4px gap between buckets. | Layout-tagged Primitive (EXEMPT-AS-LAYOUT, STYLE_GUIDE § Layout Purity). Owns `BucketQueue.css`: the weighted water-fill sizes each bucket in JS, which no CSS rule can express. The library's single queue component — supersedes `SplitQueueList` (see `docs/adr/0004-one-queue-component-and-the-motion-seam.md`). N always-present buckets stacked as one full-height bar, bucketing a **flat `items` list** through its lifecycle as a **progression** (e.g. terminal-happy on top, terminal-unhappy in the middle, transient at the bottom). **Every bucket is shown at all times with its count.** Generic over `T`; the consumer owns the data and row content — `buckets: Bucket[]` (top → bottom, each `{ key, lab"
+      },
+      {
+        "name": "GroupedSelector",
+        "depth": 2,
+        "entry": "Composed (Depth 2, owns `GroupedSelector.css`: selection marks only). Renders a list-detail kit's `grouped()` as a rail: one `CollapsibleSection` per group with the group's `title` and a `CountChip` (shown while collapsed or empty), items drawn by `renderItem(item, { selected, group })`, the selected item marked (`aria-selected`, accent bar) and scrolled into view as j and k move it; click or Enter selects. Pass `kit={kit}` (selection and collapse wired to the kit) or `groups` + `selectedId` + `onSelect` + `onToggleGroup`. Use for: any grouped, collapsible, selectable rail — a sidebar whose group headers are compact rows with the group name on the left and a boxed count on the right, the row"
+      },
+      {
+        "name": "GroupedBucketQueue",
+        "depth": 2,
+        "entry": "Composite (Depth 2), composes `BucketQueue`'s row semantics. Where `BucketQueue` has one flat level of always-present buckets, `GroupedBucketQueue` nests a `groups: GroupNode[]` tree of **any depth** — Direction → Category → Type is the motivating shape, but nothing assumes exactly three levels. A `GroupNode` is either a **branch** (`children: GroupNode[]`, a pure header) or a **leaf** (`bucketKey: string`, where `items` land via `bucketOf`); every node shows a header with a **rolled-up count** (a branch's count is the sum of its descendants') and is **collapsible** by default (a leaf's `count?: number` replaces its loaded count on the header chip, grouped in the runtime locale (\"2,594\" in e"
+      },
+      {
+        "name": "EntityCard",
+        "depth": 2,
+        "entry": "Composite (Depth 2, owns CSS). The unified sidebar/list card: SUI owns the fixed 3-column grid, selection affordance (3px left border + accent wash), and hover-revealed remove control; the CLIENT fills each named REGION with its own domain content. A region-slot card (contrast `SlotCard`, whose slots are TYPED and SUI-rendered) — because a region can hold arbitrary domain content, EntityCard carries no value renderers of its own; it is pure layout. Layout: `identifier` (top-left, required) · `status` (top-right) over an optional `detail` line, over a bottom row of `timing` (left) · `progress` (center) · `counts` (right); unused rows collapse. Key props: `identifier` (required), `status?`, `d"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "need": "the current step in a workflow, animated, with the steps before and after it",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "createWorkflowProgressCard"
+    },
+    "candidates": [
+      {
+        "name": "createWorkflowProgressCard",
+        "depth": null,
+        "entry": "Factory that derives step statuses from `currentStep` + `status`. Returns a component with props: `title`, `subtitle`, `currentStep`, `status` (`fetching`|`caching`|`completed`|`error`), `message`. Use for: automated workflow progress tracking. | Step-based progress indicator with icons and connectors. Key props: `title`, `subtitle`, `steps` (array of `ProgressStep` with `id`, `label`, `status`, `icon`), `message`. Use for: multi-step workflow status display."
+      },
+      {
+        "name": "SwimlaneChart",
+        "depth": 1,
+        "entry": "Atomic Primitive (Depth 1). Owns `SwimlaneChart.css`; consumes shared SVG render helpers (`DagArrowMarker`, `DagSvgNode`, `DagSvgEdge`, `bezierThroughChannelPath`) from `src/internal/dag-svg/` plus type/data imports from `../DagChart` (`createPanZoom`, `DAGNode`, `DAGEdge`, `NodeRenderState`) — utility-module/data imports, not component imports, per the Primitive rule. SVG horizontal swimlane chart that places nodes on signed-integer columns (negative = left of center, 0 = center, positive = right). Key props: `nodes` (`DAGNode<T>[]`), `edges` (`DAGEdge[]`), `swimlaneFor` (returns the column for each node), `renderNode` (receives `node` and `NodeRenderState`; `{ kind: \"collapsed\", collapsedC | A `AnimatedSwimlaneChart` variant with no overrides (the default)."
+      },
+      {
+        "name": "LinearFlowSwimlaneChart",
+        "depth": 2,
+        "entry": "Curried variant of SwimlaneChart pre-configured for \"current step in a sequential workflow\" displays. Locks `maxDepth=3`, `responsiveCollapse=true`, `centerCol=0`, `nodeSize=[160, 56]`, `interactive=false`. Consumer passes only `nodes`, `edges`, `swimlaneFor` (signed distance from DOING), and `renderNode`. Use for: linear flow / pipeline animations where the chart drives itself off data updates rather than user pan/zoom. | Atomic Primitive (Depth 1). Owns `SwimlaneChart.css`; consumes shared SVG render helpers (`DagArrowMarker`, `DagSvgNode`, `DagSvgEdge`, `bezierThroughChannelPath`) from `src/internal/dag-svg/` plus type/data imports from `../DagChart` (`createPanZoom`, `DAGNode`, `DAGEdge`, `NodeRenderState`) — utility-module/data imports, not component imports, per the Primitive rule. SVG horizontal swimlane chart that places nodes on signed-integer columns (negative = left of center,"
+      },
+      {
+        "name": "ProgressCard",
+        "depth": 1,
+        "entry": "Step-based progress indicator with icons and connectors. Key props: `title`, `subtitle`, `steps` (array of `ProgressStep` with `id`, `label`, `status`, `icon`), `message`. Use for: multi-step workflow status display."
+      },
+      {
+        "name": "CacheProgressCard",
+        "depth": null,
+        "entry": "Pre-built 5-step cache workflow progress card (Minutes, Hours, Stats, Coverage, Calcs). Use for: data caching pipeline status. | Step-based progress indicator with icons and connectors. Key props: `title`, `subtitle`, `steps` (array of `ProgressStep` with `id`, `label`, `status`, `icon`), `message`. Use for: multi-step workflow status display."
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "need": "a notification bell in the app header opening an inbox of items, each with a follow-through action",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "NotificationCenter"
+    },
+    "candidates": [
+      {
+        "name": "NotificationCenter",
+        "depth": 3,
+        "entry": "Composed (Depth 3). A bell trigger with a count badge that opens an **inbox panel** of notifications. Owns a minimal `NotificationCenter.css` for overlay chrome only — the trigger's skin and corner anchoring, plus the row's intrinsic decoration (tone well, unread dot, hover wash) — a deliberate structural exception, the same one `Fab` takes (positioning geometry no atomic variant expresses). All content composes `Icon` (bell + tone glyph + spinner), `CountBadge`, `TagPill` (header count lozenge), `Divider`, `InboxPopoverSurface` (panel), the `FillColumn`/`ScrollColumn`/`SpreadRow`/`WrapRow`/`TopClusterRow`/`GrowTightStack` layout variants, `TextTitle`, `TextSublabel`, `MutedBody`, `TextButto"
+      },
+      {
+        "name": "ChartHeader",
+        "depth": 2,
+        "entry": "Composed (Depth 2). The standard chart title strip: mono accent title on the left, muted mono meta readout on the right, spread across the chart's top edge (Row + curried Text; owns zero CSS). Data-only call site. Key props: `title` (JSX.Element), `meta` (JSX.Element, optional). Use for: the header line above any chart (counts, windows, units)."
+      },
+      {
+        "name": "TableSectionHeader",
+        "depth": 2,
+        "entry": "Composable header for a table/section: title on the left, a record count (or custom `meta`) pushed to the right on the same baseline. Key props: `title`, `count?`, `total?` (when `> count`, the count reads \"N of TOTAL records\" — reflects an external filter without owning filter UI), `countNoun?` (default \"record\"), `meta?` (custom right-side node, replaces the count). Composes Layout + Text only. Use directly for a section header, or via `SectionTable` to bind it to a table."
+      },
+      {
+        "name": "CountBadge",
+        "depth": 2,
+        "entry": "Composed (Depth 2). A tiny numeric pill for overlaying a trigger's corner. Composes `DigitRoller`, so the number **rolls** when it changes. Owns `CountBadge.css` (a deliberate Depth-2 exception — the corner-pill chrome is intrinsic styling no atomic variant expresses, same rationale as `CountChip`). Single non-danger tone (#2 Rule — one visual per component). Accepts standard `<span>` attributes via spread. **The roll requires the instance to survive count changes** — give it a stable position/key at the call site, never remount it. Key props: `count` (number). Exported type: `CountBadgeProps`. Use for: unread counts on a bell/inbox trigger, any corner-anchored numeric badge. Note: `Notifica | Backwards-compatible wrapper around StatusBadge. Key props: `variant` (`default`|`high`|`success`|`warning`|`error`). Use for: inline badges within data lists."
+      },
+      {
+        "name": "AppHeader",
+        "depth": 0,
+        "entry": "Default page-top header (md padding)."
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "need": "a dependency graph of tasks drawn as a DAG with automatic layout",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "DagChart"
+    },
+    "candidates": [
+      {
+        "name": "DagChart",
+        "depth": 1,
+        "entry": "SVG directed acyclic graph with dagre-computed layout. Key props: `nodes` (array of `DagNode` with `id`, `label`, `status` (`ColorVariant`), optional `metadata`, optional `sublabel`, optional `avatar`), `edges` (array of `DagEdge` with `source`/`target`), `onNodeClick`, `direction` (`TB`|`LR`), `height`. Nodes render as rounded rects colored by status. When `avatar` is provided, a circular 20px image renders left-aligned inside the node and the label shifts right. When `sublabel` is provided, muted smaller text renders below the label. Edges are directed paths with arrowheads. SVG auto-sizes viewBox to fit all content. Uses `--sui-*` CSS variables. Exported types: `DagNode`, `DagEdge`, `DagC"
+      },
+      {
+        "name": "SwimlaneChart",
+        "depth": 1,
+        "entry": "Atomic Primitive (Depth 1). Owns `SwimlaneChart.css`; consumes shared SVG render helpers (`DagArrowMarker`, `DagSvgNode`, `DagSvgEdge`, `bezierThroughChannelPath`) from `src/internal/dag-svg/` plus type/data imports from `../DagChart` (`createPanZoom`, `DAGNode`, `DAGEdge`, `NodeRenderState`) — utility-module/data imports, not component imports, per the Primitive rule. SVG horizontal swimlane chart that places nodes on signed-integer columns (negative = left of center, 0 = center, positive = right). Key props: `nodes` (`DAGNode<T>[]`), `edges` (`DAGEdge[]`), `swimlaneFor` (returns the column for each node), `renderNode` (receives `node` and `NodeRenderState`; `{ kind: \"collapsed\", collapsedC | A `AnimatedSwimlaneChart` variant with no overrides (the default)."
+      },
+      {
+        "name": "SwimlaneChartStatic",
+        "depth": 1,
+        "entry": "Public re-export of the base `SwimlaneChart` Primitive above (`export { SwimlaneChart as SwimlaneChartStatic }` in `src/index.ts`), under a distinct name so it doesn't collide with the animated `SwimlaneChart` public default. **NOT deprecated** — checked 2026-09-28 against a proposed deprecation and found to have real consumers: `StatusFlowChart` (`src/components/StatusFlowChart/StatusFlowChart.tsx`) imports the static `SwimlaneChart` directly for synchronous DOM, and `src/index.ts`'s own header comment states external consumers (dside-ui's `MonitorSwimlane`) depend on this exact name compiling unchanged. Use for: an internal/external caller that needs the static (non-animated) swimlane layo | Atomic Primitive (Depth 1). Owns `SwimlaneChart.css`; consumes shared SVG render helpers (`DagArrowMarker`, `DagSvgNode`, `DagSvgEdge`, `bezierThroughChannelPath`) from `src/internal/dag-svg/` plus"
+      },
+      {
+        "name": "AnimatedSwimlaneChart",
+        "depth": 2,
+        "entry": "A `AnimatedSwimlaneChart` variant with no overrides (the default)."
+      },
+      {
+        "name": "LinearFlowSwimlaneChart",
+        "depth": 2,
+        "entry": "Curried variant of SwimlaneChart pre-configured for \"current step in a sequential workflow\" displays. Locks `maxDepth=3`, `responsiveCollapse=true`, `centerCol=0`, `nodeSize=[160, 56]`, `interactive=false`. Consumer passes only `nodes`, `edges`, `swimlaneFor` (signed distance from DOING), and `renderNode`. Use for: linear flow / pipeline animations where the chart drives itself off data updates rather than user pan/zoom. | Atomic Primitive (Depth 1). Owns `SwimlaneChart.css`; consumes shared SVG render helpers (`DagArrowMarker`, `DagSvgNode`, `DagSvgEdge`, `bezierThroughChannelPath`) from `src/internal/dag-svg/` plus type/data imports from `../DagChart` (`createPanZoom`, `DAGNode`, `DAGEdge`, `NodeRenderState`) — utility-module/data imports, not component imports, per the Primitive rule. SVG horizontal swimlane chart that places nodes on signed-integer columns (negative = left of center,"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "need": "a treemap of tagged rows pivoted on two tag axes, with a progress affordance per tile",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "PivotTreemap"
+    },
+    "candidates": [
+      {
+        "name": "PivotTreemap",
+        "depth": 2,
+        "entry": "Pure Composite (Depth 2). Composes `Treemap` + `SlotFillBar` + the `PivotPills` sub-Primitive (also exported from this module) + the compact `ChipLabel` / `EllipsizedChipLabel` / `CountText` (Text) + `TightSpreadRow` (Layout) Curried Variants. Owns zero CSS and zero inline `style={}` — typography for keys/counts lives in the Text variants, the leaf row layout lives in the Layout variant, and the outer cell grid + sidebar shells live in the Treemap Primitive. Pivot of a flat `rows: T[]` collection bucketed by two string-tagged dimensions (`outer` and `inner`) — the `Treemap` Primitive lays out the outer columns × inner leaves, this Composite supplies the bucket data, the per-bucket SlotFillBa"
+      },
+      {
+        "name": "ProductGrid",
+        "depth": 2,
+        "entry": "Pure Composite (Depth 2). Composes `AreaFocusGrid` + `ProductGridCard` + `FocusLabelBand` + `StackedProgressBar`. Owns zero CSS and zero inline `style={}` apart from the consumer pass-through on the root `AreaFocusGrid` — visual treatment lives in those Primitives' own CSS files. (Area × focus) pivot grid where every item lives in one area, attaches to a focus within that area, and sits either above the line (a solution, work tracked through `todo → doing → done`) or below the line (a need, auto-met when every solution it references in `solvedBy` is fully done). The layout (area headers spanning sub-columns; major/minor separators; cell stacks anchored toward the label band) is supplied by `"
+      },
+      {
+        "name": "HeatPivotGrid",
+        "depth": 2,
+        "entry": "Composed (Depth 2, `src/components/PivotGrid/HeatPivotGrid.tsx`). Curried variant of `PivotGrid` with `getCellHeat` type-enforced as required. Consolidation queued alongside `LinkPivotGrid` (see `PivotGrid` bullet above). Use for: magnitude-heat pivots (no current consumer — verify need before building against it, per the SUI-start-minimal rule). | Atomic (Depth 1, `src/components/PivotGrid/PivotGrid.tsx`). See the full generic reference above. **Consolidation queued (2026-09-28, Peter's ruling)**: `HeatPivotGrid` and `LinkPivotGrid` are same-signature wrappers differing by one required prop, and are slated to fold into one `createPivotGrid` factory with two curried variants — see `docs/adherence/pivot-grid-consolidation-2026-09-28.md`. No source change in this pass. Use for: the base grid when neither cell-href nor heat-coloring is baked at the call site — reach for `HeatPivotGrid`/`Lin"
+      },
+      {
+        "name": "Treemap",
+        "depth": 1,
+        "entry": "Atomic Primitive (Depth 1). Owns `Treemap.css`. Generic outer-column × inner-leaf treemap layout: caller hands in `cells` (each with a `weight` and `children`, each child also with a `weight`) plus render callbacks for the outer header, optional outer toolbar (e.g. a SlotFillBar summary), and inner-cell content. Predicate-based selection (`isOuterSelected`, `isInnerSelected`) so the parent owns the source of truth — the Primitive only paints the selection ring and forwards click events with `stopPropagation` already handled. Optional trailing `sidebar` pseudo-column for an \"untagged\" or escape-hatch bucket. Key data props: `cells` (`readonly TreemapCellData[]`), `renderOuterHeader`, `renderO"
+      },
+      {
+        "name": "DRow",
+        "depth": 1,
+        "entry": "Data table row. Key props: `border`, `highlight`. Use for: rows inside DTable."
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "need": "a coverage grid of status-coloured cells (full, partial, missing) with row and column labels",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "Heatmap"
+    },
+    "candidates": [
+      {
+        "name": "Heatmap",
+        "depth": 1,
+        "entry": "Grid of status-colored cells (full/partial/missing/empty) with row and column labels. Key props: `rows` (array of `HeatmapRow`), `columnLabels`, `variant` (`default`|`compact`|`sparkline`), `showLegend`, `showTooltips`, `onCellClick`. Use for: data completeness grids, coverage matrices."
+      },
+      {
+        "name": "ValueMatrix",
+        "depth": 2,
+        "entry": "Composite (Depth 2). Composes `BaseTable`; owns `ValueMatrix.css`. A row-axis × column-axis grid of COMPUTED values — not a row table: every cell is `value(row, col)` evaluated across two axes (CE levels × power sources, price points × salary counts). Treatment follows the 2026-07-17 ruling: the consumer configures functions, never CSS — `tone?: (value, row, col) => Tone` maps to theme color classes, `selected?: (row, col) => boolean` marks the chosen scenario (weight + soft halo). Generic over `<R, C>`. Key data props: `rows` (`R[]`), `cols` (`C[]`), `rowLabel` / `colLabel` (axis value → `string | JSX.Element` — widened so a column header or row axis label can carry JSX, e.g. `NumberWithUni"
+      },
+      {
+        "name": "AreaFocusGrid",
+        "depth": 1,
+        "entry": "Atomic Primitive (Depth 1). Owns `AreaFocusGrid.css`. (Area × focus) pivot layout: each area is a header that spans its focus sub-columns; each sub-column carries an above-the-line cell stack on top, a focus-label band in the middle, and a below-the-line cell stack at the bottom. Major horizontals divide the rows; major verticals (3px, `--sui-border-bright`) divide adjacent areas; minor verticals (1px, `--sui-border`) divide adjacent focuses within an area. Empty areas drop out of the grid. Content is supplied via render callbacks so the layout is reusable. Key data props: `areas` (`AreaFocusGridArea[]` — each `{ id, label, focuses: { id, label }[] }`), `renderAreaHeader`, `renderFocusLabel`"
+      },
+      {
+        "name": "createValueMatrix",
+        "depth": null,
+        "entry": "Curry a domain matrix (e.g. | Composite (Depth 2). Composes `BaseTable`; owns `ValueMatrix.css`. A row-axis × column-axis grid of COMPUTED values — not a row table: every cell is `value(row, col)` evaluated across two axes (CE levels × power sources, price points × salary counts). Treatment follows the 2026-07-17 ruling: the consumer configures functions, never CSS — `tone?: (value, row, col) => Tone` maps to theme color classes, `selected?: (row, col) => boolean` marks the chosen scenario (weight + soft halo). Generic over `<R, C>`. Key data props: `rows` (`R[]`), `cols` (`C[]`), `rowLabel` / `colLabel` (axis value → `string | JSX.Element` — widened so a column header or row axis label can carry JSX, e.g. `NumberWithUni"
+      },
+      {
+        "name": "PivotGrid",
+        "depth": 1,
+        "entry": "Atomic (Depth 1, `src/components/PivotGrid/PivotGrid.tsx`). See the full generic reference above. **Consolidation queued (2026-09-28, Peter's ruling)**: `HeatPivotGrid` and `LinkPivotGrid` are same-signature wrappers differing by one required prop, and are slated to fold into one `createPivotGrid` factory with two curried variants — see `docs/adherence/pivot-grid-consolidation-2026-09-28.md`. No source change in this pass. Use for: the base grid when neither cell-href nor heat-coloring is baked at the call site — reach for `HeatPivotGrid`/`LinkPivotGrid` when one of those is always-on."
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "need": "a donut ring showing N of total as a completion gauge",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "RingChart"
+    },
+    "candidates": [
+      {
+        "name": "RingChart",
+        "depth": 1,
+        "entry": "Atomic (Depth 0). Radial donut gauge: stacked arc segments over a background track ring, with a bold auto-fitting center label and optional sublabel. Pure SVG — no library dependencies. Segment order is clockwise from the top (rotated -90deg). The center label font-size is auto-fitted to the ring diameter and the label's character count. Key props: `segments` (`{ value: number; color: string; animate?: boolean }[]` — animate adds a 2s pulse on the arc), `total` (denominator for all segments), `label` (bold center text, e.g. `\"62%\"`), `sublabel?` (secondary text below label), `size?` (diameter in px, default 100). Use for: completion gauges, category-breakdown donuts, any \"N of total\" ring in"
+      },
+      {
+        "name": "RateGauge",
+        "depth": 2,
+        "entry": "Composite (Depth 2). A right-facing half ring — a \"D\" open to the left — that answers one question: is this value above or below its reference, and by how much? The upper half is the positive zone, the lower half the negative one, and **they split at the angle of ZERO, always the horizontal** (derived via the domain, so an asymmetric domain still splits at its real zero, not at a hardcoded midline). Whichever half the needle is not in dims, so the live half reads as lit. Three marks: a dashed grey needle at the reference, a solid needle in the active tone at the value with a cap arc concentric with the ring, and a curly brace outside the ring spanning the angular difference — plus the faint "
+      },
+      {
+        "name": "RateDial",
+        "depth": 2,
+        "entry": "Plain numbers against zero: the dial with no units and no domain nouns. | Composite (Depth 2). A right-facing half ring — a \"D\" open to the left — that answers one question: is this value above or below its reference, and by how much? The upper half is the positive zone, the lower half the negative one, and **they split at the angle of ZERO, always the horizontal** (derived via the domain, so an asymmetric domain still splits at its real zero, not at a hardcoded midline). Whichever half the needle is not in dims, so the live half reads as lit. Three marks: a dashed grey needle at the reference, a solid needle in the active tone at the value with a cap arc concentric with the ring, and a curly brace outside the ring spanning the angular difference — plus the faint "
+      },
+      {
+        "name": "createRateGauge",
+        "depth": 2,
+        "entry": "Bake the wording into a named variant. | Composite (Depth 2). A right-facing half ring — a \"D\" open to the left — that answers one question: is this value above or below its reference, and by how much? The upper half is the positive zone, the lower half the negative one, and **they split at the angle of ZERO, always the horizontal** (derived via the domain, so an asymmetric domain still splits at its real zero, not at a hardcoded midline). Whichever half the needle is not in dims, so the live half reads as lit. Three marks: a dashed grey needle at the reference, a solid needle in the active tone at the value with a cap arc concentric with the ring, and a curly brace outside the ring spanning the angular difference — plus the faint "
+      },
+      {
+        "name": "StepTimeline",
+        "depth": 3,
+        "entry": "Composite (Depth 3), `src/components/StepTimeline/`. Owns no CSS and draws no chart of its own: a collapsible `ChartFrame` (curried at a stated height) around a `StackedTimelineChart` curried with `curve: \"linear\"`, hour tick text and whole-count y labels. A cumulative count over a day — steps done in a task — as ONE band that rises square at each completion, with one numbered flag per event (a start, a completion) above the plot, each dropping a rule through it; the flags, their numbering, their rules and their selection are LevelsTimeline's mutation contract through `Chart/MutationFlags`. The frame's header carries the title and the collapse chevron; collapsed, only the header stays. **The"
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "need": "a kanban-style status flow where columns are statuses and a parent summarizes once all its children complete",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "createStatusFlowChart"
+    },
+    "candidates": [
+      {
+        "name": "createStatusFlowChart",
+        "depth": 2,
+        "entry": "Curried-variant factory for StatusFlowChart (per ADR-0001). | Composite (Depth 2). Status-driven flow chart built on top of SwimlaneChart. Caller passes nodes with `status` (no positional hints in the data); the chart computes columns by mapping each node's status to a configured column, computes the visible column count from container width via breakpoints, and lays out symmetric around `centerStatus`. **The base is NOT exported — curry it with `createStatusFlowChart`, which is the only entry point.** Key data props (all the curried variant accepts): `nodes` (`StatusFlowNode[]` with `id`, `title`, `subtitle?`, `status`, `parentId?`, `dependsOn?`), `onNodeClick?`. Override props (baked at definition time): `columns` (`StatusFlowColumn[]` — each column "
+      },
+      {
+        "name": "withCellStyle",
+        "depth": 2,
+        "entry": "Factory to create a styled version of any cell renderer."
+      },
+      {
+        "name": "SortableFieldTable",
+        "depth": 2,
+        "entry": "Curried sortable variant (ruled 2026-07-18): the table is sortable or it isn't — pick the variant, never configure columns."
+      },
+      {
+        "name": "FieldTable",
+        "depth": 2,
+        "entry": "Composite (Depth 2). The consumer surface of the fields-as-functions system — see \"Table fields (fields-as-functions)\" above for the full field-type reference. Use for: **every standard data table** — this is the largest, most-configured table component in SUI; reach for raw `BaseTable` only when `fields` genuinely can't model what's needed (grouped headers, `spanRow`, `getRowClass`)."
+      },
+      {
+        "name": "ValueMatrix",
+        "depth": 2,
+        "entry": "Composite (Depth 2). Composes `BaseTable`; owns `ValueMatrix.css`. A row-axis × column-axis grid of COMPUTED values — not a row table: every cell is `value(row, col)` evaluated across two axes (CE levels × power sources, price points × salary counts). Treatment follows the 2026-07-17 ruling: the consumer configures functions, never CSS — `tone?: (value, row, col) => Tone` maps to theme color classes, `selected?: (row, col) => boolean` marks the chosen scenario (weight + soft halo). Generic over `<R, C>`. Key data props: `rows` (`R[]`), `cols` (`C[]`), `rowLabel` / `colLabel` (axis value → `string | JSX.Element` — widened so a column header or row axis label can carry JSX, e.g. `NumberWithUni"
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "need": "a three-panel page: a left rail, a centre pane and a right aside, stacking on a phone",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "FluidListDetailThreePanel"
+    },
+    "candidates": [
+      {
+        "name": "FluidListDetailThreePanel",
+        "depth": 1,
+        "entry": "Fluid list-and-detail page: left list 22vw clamped 240..360, right context 15vw clamped 180..260, and stacked asides uncapped (no 200px max-height, no internal scroll) at phone widths. | **@deprecated at the root** (phase 2 of add/deprecate/delete; removed in phase 3): internal primitive, use the variants above or `createThreePanelLayout` for an app-level variant. Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `\"100%\"` — any valid CSS length, e.g. `\"100vh\"` or `\"calc(100vh - var(--app-header-height, 64px))\"`; upstream inten"
+      },
+      {
+        "name": "ThreePanelLayout",
+        "depth": 1,
+        "entry": "**@deprecated at the root** (phase 2 of add/deprecate/delete; removed in phase 3): internal primitive, use the variants above or `createThreePanelLayout` for an app-level variant. Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `\"100%\"` — any valid CSS length, e.g. `\"100vh\"` or `\"calc(100vh - var(--app-header-height, 64px))\"`; upstream inten"
+      },
+      {
+        "name": "ListDetailThreePanel",
+        "depth": 1,
+        "entry": "List-and-detail page with a wide left column: 320 left, right 240 (`rightWidth=\"narrow\"`, the default) or a wide log column (`rightWidth=\"wide\"`: `clamp(320px, 28vw, 440px)`, right panel flush, stacked asides uncapped). | **@deprecated at the root** (phase 2 of add/deprecate/delete; removed in phase 3): internal primitive, use the variants above or `createThreePanelLayout` for an app-level variant. Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `\"100%\"` — any valid CSS length, e.g. `\"100vh\"` or `\"calc(100vh - var(--app-header-height, 64"
+      },
+      {
+        "name": "ListDetailLogThreePanel",
+        "depth": 1,
+        "entry": "@deprecated Use `<ListDetailThreePanel rightWidth=\"wide\" />`: width is configuration on the one list-and-detail variant, not a content-named variant. | **@deprecated at the root** (phase 2 of add/deprecate/delete; removed in phase 3): internal primitive, use the variants above or `createThreePanelLayout` for an app-level variant. Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `\"100%\"` — any valid CSS length, e.g. `\"100vh\"` or `\"calc(100vh - var(--app-header-height, 64px))\"`; upstream inten"
+      },
+      {
+        "name": "InspectorThreePanel",
+        "depth": 1,
+        "entry": "Page with a wide right inspector: 220 left rail, 320 right. | **@deprecated at the root** (phase 2 of add/deprecate/delete; removed in phase 3): internal primitive, use the variants above or `createThreePanelLayout` for an app-level variant. Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `\"100%\"` — any valid CSS length, e.g. `\"100vh\"` or `\"calc(100vh - var(--app-header-height, 64px))\"`; upstream inten"
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "need": "a month-grid calendar with the events of each day in its cell",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "WeekCalendar"
+    },
+    "candidates": [
+      {
+        "name": "WeekCalendar",
+        "depth": 2,
+        "entry": "Composite (Depth 2). Pure weekly time-grid layout primitive: a left time gutter with hourly marks plus one column per day, each holding absolute-positioned block slots. Owns its CSS, imports no other components, and delegates block content entirely to a caller-supplied `renderBlock` callback. Times follow the dside convention where bare hours 1–8 are treated as PM (parsed via the exported `parseWeekCalendarTime`). Key props: `days` (string[], column identities), `startHour`/`endHour` (numbers; `endHour` may be fractional like 16.5), `blocks` (`WeekCalendarBlock[]`, each `{ day; startAt: \"H\"|\"H:MM\"; durationInHrs; key? }`), `renderBlock` ((block) => JSX.Element), `pxPerHour` (default 60), `da"
+      },
+      {
+        "name": "StackedTimelineChart",
+        "depth": 2,
+        "entry": "Composite (Depth 2). Stacked bands over time that **fill their box**, with an optional captioned horizontal rule, one numbered vertical rule per event, a hover readout and a pick. Composes `Chart` + `Grid` + `XAxis` / `YAxis` + `StackedAreaSeries` + `ReferenceLine` + `ChartTooltip` inside a `GrowFillBox`; owns no CSS. **It measures its own box** — `Chart` takes pixels and has no fill — the documented way: first size synchronously from `getBoundingClientRect` in `onMount`, then `observeSize`; a zero reading is never stored, so an unmeasured chart draws at `STACKED_TIMELINE_FALLBACK_SIZE` (640×220) rather than blank. **The pick is NOT snapped**: `onPick(at: Date)` reports the raw date and the "
+      },
+      {
+        "name": "StepTimeline",
+        "depth": 3,
+        "entry": "Composite (Depth 3), `src/components/StepTimeline/`. Owns no CSS and draws no chart of its own: a collapsible `ChartFrame` (curried at a stated height) around a `StackedTimelineChart` curried with `curve: \"linear\"`, hour tick text and whole-count y labels. A cumulative count over a day — steps done in a task — as ONE band that rises square at each completion, with one numbered flag per event (a start, a completion) above the plot, each dropping a rule through it; the flags, their numbering, their rules and their selection are LevelsTimeline's mutation contract through `Chart/MutationFlags`. The frame's header carries the title and the collapse chevron; collapsed, only the header stays. **The"
+      },
+      {
+        "name": "createWeekCalendar",
+        "depth": 2,
+        "entry": "Composite (Depth 2). Factory behind `WeekCalendar`'s curried variants. | Composite (Depth 2). Pure weekly time-grid layout primitive: a left time gutter with hourly marks plus one column per day, each holding absolute-positioned block slots. Owns its CSS, imports no other components, and delegates block content entirely to a caller-supplied `renderBlock` callback. Times follow the dside convention where bare hours 1–8 are treated as PM (parsed via the exported `parseWeekCalendarTime`). Key props: `days` (string[], column identities), `startHour`/`endHour` (numbers; `endHour` may be fractional like 16.5), `blocks` (`WeekCalendarBlock[]`, each `{ day; startAt: \"H\"|\"H:MM\"; durationInHrs; key? }`), `renderBlock` ((block) => JSX.Element), `pxPerHour` (default 60), `da"
+      },
+      {
+        "name": "CompletionTimeline",
+        "depth": 2,
+        "entry": "Composite (Depth 2). Buckets a stream of completion events into 30-minute slots across a trailing time window and renders them via the `Chart` primitive family (`Chart` + `Grid` + `XAxis`/`YAxis` + `BarSeries` + `ChartTooltip`): bars show per-bucket counts, a header shows the accent-colored title and total completions in window, and hovering a bar reveals its start time, count, and running cumulative total (events before the window seed the cumulative baseline). Fixed 800×260 chart with ~6 evenly-spaced hour ticks. Key props: `completions` (`CompletionEvent[]`, each `{ tableName: string; completedAt: number /* epoch ms */; rowCount: number }`); `windowHours` (number, default 8). Exported typ"
+      }
+    ]
+  },
+  {
+    "id": 39,
+    "need": "a split pane with a draggable divider between two panels",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "StaticSplitLayout"
+    },
+    "candidates": [
+      {
+        "name": "StaticSplitLayout",
+        "depth": 1,
+        "entry": "Composed (Depth 1, `src/components/SplitQueueList/StaticSplitLayout.tsx`, composes `Surface`). The standalone, non-animated sibling of `SplitQueueList` — same chrome (labeled top section + seam + bottom block), no queue/animation/selection/keyboard. Props: `items?`, `renderItem?`, `bottomContent?`, `label` (default `\"Resolved\"`), `emptyLabel` (default `\"Nothing yet\"`), `capRows` (default 3), `rowHeight` (default 40), `height?`, `class?`. Use for: the framing around a read-only list of recent items over a composed bottom block — the largest matching component for this shape; reach for the deprecated `SplitQueueList` `static` flag only for an existing call site, never a new one. | **DEPRECATED, removed in the next major.** A compile shim over `BucketQueue` (see below), kept for one release so existing call sites keep working. It is **not pixel-identical** — the merged component draws its o"
+      },
+      {
+        "name": "SplitThreePanel",
+        "depth": 1,
+        "entry": "Split page with a half-screen-class left pane: 560 left, 240 right. | **@deprecated at the root** (phase 2 of add/deprecate/delete; removed in phase 3): internal primitive, use the variants above or `createThreePanelLayout` for an app-level variant. Atomic (Depth 1). Top-bar + three-column (left / center / right) page scaffold, intended for alarm-lab / analysis-style routes where a primary work area is flanked by a narrow asset picker on the left and a narrow context pane on the right. Owns `ThreePanelLayout.css`; imports zero other library components. Key props: `centerPanel` (required), `topBar?`, `leftPanel?`, `rightPanel?`, `height?` (default `\"100%\"` — any valid CSS length, e.g. `\"100vh\"` or `\"calc(100vh - var(--app-header-height, 64px))\"`; upstream inten"
+      },
+      {
+        "name": "Sidebar",
+        "depth": 1,
+        "entry": "Layout (Depth 1, `src/components/Layout/Sidebar.tsx`). Resizable, width-persisting side column; composes `Stack`. Fixed-but-draggable vertical column: bakes width/flex-shrink/full-height-stretch/internal-scroll so call sites never specify them. Drag the inner edge to resize (clamped `[200, 720]`px); the chosen width persists in `localStorage` keyed by the required `id` prop, surviving reloads per-machine. Key props: `id` (required, storage key), `handle?` (`\"left\"|\"right\"`, default `\"right\"`), `gap?` (`\"xs\"|\"sm\"`). Use for: the resizable side column of a two-pane app layout — the largest, most-configured sidebar primitive; reach for plain `SidebarPanel` only when the width must NOT be user-r"
+      },
+      {
+        "name": "PaneRow",
+        "depth": 0,
+        "entry": "Flex row that fills its parent — `fill; flex:1; min-height:0`."
+      },
+      {
+        "name": "ScrubChartBand",
+        "depth": 1,
+        "entry": "Draws a deviation band inside a `ScrubChart` render callback: one filled `<polygon>` per run `buildDeviationBand` returns, split at every crossing between `series` and `reference`. | Composite (Depth 2). Composes `DateAxis` (Atomic) + a user-supplied chart slot. Renders the chart at **linear** scale (every cell the same pixel pitch — `width / cells.length`) and draws a translucent **window** rect over the slice of cells currently visible in the DateAxis viewport. Classic overview + detail: the chart is the minimap, the axis is the zoomed-in detail view. Generic over `C extends Cell`; consumers attach payload to each cell and read it back inside `renderChart`. Scrubbing supports axis-cell click and drag-on-chart; linear pitch means each pointer move maps directly to one cell — no anchored layout, no tween. The axis auto-scrolls to keep the selected cell centred, so the wi"
+      }
+    ]
+  },
+  {
+    "id": 41,
+    "need": "a date and time picker that also takes a time of day",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "DateRangePicker"
+    },
+    "candidates": [
+      {
+        "name": "DateRangePicker",
+        "depth": 1,
+        "entry": "Atomic Primitive (Depth 1). Owns `DateRangePicker.css`; wraps `@kobalte/core/popover` (matches the Combobox/Select/Tooltip/Toast/ThemedNumberInput Kobalte-wrapping pattern — see CONTEXT.md). Preset chips render as native `<button class=\"sui-drp__preset-btn\">` styled by the Primitive's own CSS — no library component imports. Internal `CalendarGrid`, `CalendarHeader`, `PresetButtons`, `TimeInputs` live as private files under the component directory and are NOT re-exported (zero-config call site). Date math is vanilla `Date` + `Intl.DateTimeFormat` — no Luxon / date-fns dependency; locale-aware month and short-date formatting comes from the browser's built-in i18n. Key props: `value` (`Accessor"
+      },
+      {
+        "name": "DayOfMonthPicker",
+        "depth": 1,
+        "entry": "Atomic (Depth 1). Compact calendar-style ARIA grid (`role=\"grid\"` / `role=\"gridcell\"`) for picking a day of the month, composed from the Layout `Grid` primitive as `repeat(7, var(--dom-cell-size, 3.5rem))` with `gap=\"xs\"`; the selected cell gets the accent treatment. Key props: `value` (`number | \"last\" | null`), `onChange` (`(day: number) => void`, required), `max` (number, default 31 — capped to 28 in lastOfMonth mode), `lastOfMonth` (boolean — replaces the 29/30/31 slots with one wide \"Last of month\" cell that avoids the short-month scheduling trap), `onSelectLast` (`() => void`, fired when that cell is clicked and shown selected when `value === \"last\"`). Cell size is frozen at the `--dom"
+      },
+      {
+        "name": "DayOfWeekPicker",
+        "depth": 1,
+        "entry": "Atomic (Depth 1). A 7-cell single-select ARIA grid row for Sun..Sat, sibling of DayOfMonthPicker and sharing its `--dom-cell-size` sizing so the two read as a family; composed from the Layout `Grid` primitive as `repeat(7, var(--dom-cell-size, 3.5rem))` with `gap=\"xs\"`. Cells are labeled `Sun Mon Tue Wed Thu Fri Sat`; the selected cell gets the accent treatment. Key props: `value` (`number | null`, 0=Sun..6=Sat), `onChange` (`(day: number) => void`, required, receives the 0..6 index). Cell size is frozen at the shared `--dom-cell-size` CSS fallback (`3.5rem`) — no runtime prop. Spreads remaining `JSX.HTMLAttributes<HTMLDivElement>` (minus `onChange`). Exports type `DayOfWeekPickerProps` and "
+      },
+      {
+        "name": "CompactDayOfMonthPicker",
+        "depth": 1,
+        "entry": "Curried variant of `DayOfMonthPicker` (Depth 1): the 1..28 grid in 2rem cells (the default 3.5rem cells are 392px wide), baked from the picker's own `--dom-cell-size`. Use for: a day picker inside a popover or a phone column. | Atomic (Depth 1). Compact calendar-style ARIA grid (`role=\"grid\"` / `role=\"gridcell\"`) for picking a day of the month, composed from the Layout `Grid` primitive as `repeat(7, var(--dom-cell-size, 3.5rem))` with `gap=\"xs\"`; the selected cell gets the accent treatment. Key props: `value` (`number | \"last\" | null`), `onChange` (`(day: number) => void`, required), `max` (number, default 31 — capped to 28 in lastOfMonth mode), `lastOfMonth` (boolean — replaces the 29/30/31 slots with one wide \"Last of month\" cell that avoids the short-month scheduling trap), `onSelectLast` (`() => void`, fired when that cell is clicked and shown selected when `value === \"last\"`). Cell "
+      },
+      {
+        "name": "DatePicker",
+        "depth": 1,
+        "entry": "Atomic (Depth 1, `src/components/DatePicker/DatePicker.tsx`). A themed date control that always displays ISO `YYYY-MM-DD` at a fixed width regardless of browser/OS locale — a native `<input type=\"date\">` is stretched invisibly over the component's own ISO text display, so clicking opens the native calendar and keyboard entry still works while the visible text stays locale-independent. Key props: `label?` (a caption above the control, tied to the native input), `value` (ISO string or `\"\"`), `onChange` (`(iso: string) => void`). Factory: `createDatePicker`. Use for: a single-date field where `DateRangePicker` (below) is too much — reach for `DateRangePicker` when the caller needs a range, pres"
+      }
+    ]
+  },
+  {
+    "id": 42,
+    "need": "a progress ring around an avatar showing how much of the day is used",
+    "zeroToken": {
+      "outcome": "exact",
+      "pick": "RateGauge"
+    },
+    "candidates": [
+      {
+        "name": "RateGauge",
+        "depth": 2,
+        "entry": "Composite (Depth 2). A right-facing half ring — a \"D\" open to the left — that answers one question: is this value above or below its reference, and by how much? The upper half is the positive zone, the lower half the negative one, and **they split at the angle of ZERO, always the horizontal** (derived via the domain, so an asymmetric domain still splits at its real zero, not at a hardcoded midline). Whichever half the needle is not in dims, so the live half reads as lit. Three marks: a dashed grey needle at the reference, a solid needle in the active tone at the value with a cap arc concentric with the ring, and a curly brace outside the ring spanning the angular difference — plus the faint "
+      },
+      {
+        "name": "createRateGauge",
+        "depth": 2,
+        "entry": "Bake the wording into a named variant. | Composite (Depth 2). A right-facing half ring — a \"D\" open to the left — that answers one question: is this value above or below its reference, and by how much? The upper half is the positive zone, the lower half the negative one, and **they split at the angle of ZERO, always the horizontal** (derived via the domain, so an asymmetric domain still splits at its real zero, not at a hardcoded midline). Whichever half the needle is not in dims, so the live half reads as lit. Three marks: a dashed grey needle at the reference, a solid needle in the active tone at the value with a cap arc concentric with the ring, and a curly brace outside the ring spanning the angular difference — plus the faint "
+      },
+      {
+        "name": "StepTimeline",
+        "depth": 3,
+        "entry": "Composite (Depth 3), `src/components/StepTimeline/`. Owns no CSS and draws no chart of its own: a collapsible `ChartFrame` (curried at a stated height) around a `StackedTimelineChart` curried with `curve: \"linear\"`, hour tick text and whole-count y labels. A cumulative count over a day — steps done in a task — as ONE band that rises square at each completion, with one numbered flag per event (a start, a completion) above the plot, each dropping a rule through it; the flags, their numbering, their rules and their selection are LevelsTimeline's mutation contract through `Chart/MutationFlags`. The frame's header carries the title and the collapse chevron; collapsed, only the header stays. **The"
+      },
+      {
+        "name": "RingChart",
+        "depth": 1,
+        "entry": "Atomic (Depth 0). Radial donut gauge: stacked arc segments over a background track ring, with a bold auto-fitting center label and optional sublabel. Pure SVG — no library dependencies. Segment order is clockwise from the top (rotated -90deg). The center label font-size is auto-fitted to the ring diameter and the label's character count. Key props: `segments` (`{ value: number; color: string; animate?: boolean }[]` — animate adds a 2s pulse on the arc), `total` (denominator for all segments), `label` (bold center text, e.g. `\"62%\"`), `sublabel?` (secondary text below label), `size?` (diameter in px, default 100). Use for: completion gauges, category-breakdown donuts, any \"N of total\" ring in"
+      },
+      {
+        "name": "ProgressFlags",
+        "depth": 3,
+        "entry": "Composite (Depth 3, zero CSS). One topic's progress as a step timeline with a flag per step. Over wall-clock time, two step lines: the dashed ESTIMATE steps through every step at its estimated duration from the first receipt; the solid ACTUAL steps at each real step completion and jumps to the whole estimate at the milestone. The y axis is cumulative planned minutes earned. The area between the lines is coloured by verdict against a tolerance (a share of the minutes planned so far, never under 5m): accent within it, accent/danger mix when ahead, danger when behind. One flag per step sits in the annotation lane along the top with a thin drop line to its point: filled grey for a done step, acc"
+      }
+    ]
+  }
+]

@@ -1,0 +1,360 @@
+{
+  "$comment": "Three-outcome benchmark for `find` (diddit #4163, Peter 2026-10-20: exact = short-circuit on the biggest component that covers the need; cousin = keep searching, then the nearest as a placeholder plus a gap record; none = a GapBox placeholder plus a gap record). Needs are posited around components we KNOW satisfy each case. `expect` is the component(s) that count as the right pick (exact: the biggest covering component first; cousin: the nearest existing export). `gap` is the name a cousin / none record should carry. Frozen in its own commit before any classifier code exists; the labels are never edited to make a case pass.",
+  "needs": [
+    {
+      "outcome": "exact",
+      "need": "a sortable, filterable task list with a slot for a card on each row: status, assignees, tags and inline rename per row, batch actions over the selection",
+      "expect": ["ActionList", "FilterableTable", "SelectableTable"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a sidebar grouped by state with a boxed count on each group header, the rows under it selectable and each group collapsible",
+      "expect": ["GroupedSelector", "GroupedBucketQueue"]
+    },
+    {
+      "outcome": "exact",
+      "need": "the current step in a workflow, animated, with the steps before and after it",
+      "expect": [
+        "SwimlaneChart",
+        "AnimatedSwimlaneChart",
+        "LinearFlowSwimlaneChart"
+      ]
+    },
+    {
+      "outcome": "exact",
+      "need": "a table with expandable sub-rows: a parent row opens the smaller rows it is made of, sharing the parent's columns",
+      "expect": ["TreeTable"]
+    },
+    {
+      "outcome": "exact",
+      "need": "the top bar of a full-page app with a few top-level views and an account menu on the right",
+      "expect": ["AppBar"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a threaded conversation: participants with avatars and timestamps, replies nested under the message they answer",
+      "expect": ["ConversationTree"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a notification bell in the app header opening an inbox of items, each with a follow-through action",
+      "expect": ["NotificationCenter"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a week calendar with time blocks laid out per day",
+      "expect": ["WeekCalendar"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a dependency graph of tasks drawn as a DAG with automatic layout",
+      "expect": ["DagChart"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a treemap of tagged rows pivoted on two tag axes, with a progress affordance per tile",
+      "expect": ["PivotTreemap", "Treemap"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a coverage grid of status-coloured cells (full, partial, missing) with row and column labels",
+      "expect": ["Heatmap", "HeatmapMulti"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a dashed drop zone where a file is dragged in to upload it",
+      "expect": ["FileDropZone"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a donut ring showing N of total as a completion gauge",
+      "expect": ["RingChart"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a chart linked to a draggable axis ribbon: the chart shows the big picture while the axis is the zoomed-in detail",
+      "expect": ["ScrubChart", "CashflowScrubChart", "FramedCashflowScrubChart"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a kanban-style status flow where columns are statuses and a parent summarizes once all its children complete",
+      "expect": ["createStatusFlowChart"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a sprint burndown chart with planned versus actual bars and a trend line",
+      "expect": ["BurndownChart"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a side detail panel whose tab strip is the open/close affordance",
+      "expect": ["TabbedSidePanel"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a log list: timestamped lines, newest at the bottom, scrolling",
+      "expect": ["LogLineList", "ConfiguredLog"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a confirmation dialog with cancel and confirm buttons in its footer",
+      "expect": ["ConfirmationModal", "Modal"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a LaTeX formula whose variables highlight when hovered",
+      "expect": ["MathFormula"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a user/account menu in the app header with the signed-in name and a sign-out item",
+      "expect": ["UserMenu", "AppBar"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a three-panel page: a left rail, a centre pane and a right aside, stacking on a phone",
+      "expect": ["ThreePanelLayout"]
+    },
+    {
+      "outcome": "exact",
+      "need": "a matrix of a value at every combination of two knobs, cells coloured by a threshold",
+      "expect": ["ValueMatrix"]
+    },
+
+    {
+      "outcome": "cousin",
+      "need": "a candlestick chart: OHLC candles over time along a date axis, zoomable",
+      "expect": [
+        "CandlestickRenderer",
+        "ScrubChart",
+        "Chart",
+        "CashflowScrubChart"
+      ],
+      "gap": "CandlestickChart"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a Gantt chart: tasks as bars across dates with dependency arrows between bars",
+      "expect": [
+        "StackedTimelineChart",
+        "SwimlaneChart",
+        "TimelineBar",
+        "SpanLanes",
+        "DagChart",
+        "CompletionTimeline"
+      ],
+      "gap": "GanttChart"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a pie chart with labelled slices and a legend",
+      "expect": ["RingChart", "Legend"],
+      "gap": "PieChart"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a month-grid calendar with the events of each day in its cell",
+      "expect": ["WeekCalendar", "DayOfMonthPicker"],
+      "gap": "MonthCalendar"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a scatter plot of points with a fitted regression trend line",
+      "expect": ["Chart", "PointSeries", "LineSeries"],
+      "gap": "ScatterChart"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a kanban board where cards are dragged between status columns",
+      "expect": ["createStatusFlowChart", "BuilderBoard"],
+      "gap": "KanbanBoard"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a rich text editor with a bold / italic / bullet-list toolbar",
+      "expect": ["ThemedTextarea", "FillTextArea", "Markdown"],
+      "gap": "RichTextEditor"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a spreadsheet grid of editable cells with formulas that recompute",
+      "expect": ["BaseTable", "ValueMatrix", "PivotGrid", "FieldTable"],
+      "gap": "SpreadsheetGrid"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a wizard stepper: numbered steps across the top with next and back buttons",
+      "expect": ["ProgressCard", "StepTimeline", "createWorkflowProgressCard"],
+      "gap": "WizardStepper"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a radar (spider) chart of scores on several axes",
+      "expect": ["Chart", "RingChart"],
+      "gap": "RadarChart"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a file tree explorer: folders expand, files open on click",
+      "expect": ["TreeTable", "NestedList", "IndentRail"],
+      "gap": "FileTree"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a colour picker with a hue slider and a swatch preview",
+      "expect": ["Slider", "MarkedSlider", "SliderField"],
+      "gap": "ColorPicker"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a command palette: a search box listing the matching commands with their hotkeys",
+      "expect": [
+        "SearchInput",
+        "QuickFilter",
+        "Combobox",
+        "PopoverMenu",
+        "HotkeyButton"
+      ],
+      "gap": "CommandPalette"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a tag input that turns typed words into removable chips",
+      "expect": [
+        "Combobox",
+        "MdAssigneeChips",
+        "createAssigneeChips",
+        "TagPill",
+        "ChipCluster",
+        "MultiSelectFilter"
+      ],
+      "gap": "TagInput"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a sankey diagram of volume flowing between stages",
+      "expect": ["DagChart", "createStatusFlowChart", "SwimlaneChart"],
+      "gap": "SankeyChart"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a split pane with a draggable divider between two panels",
+      "expect": ["ResizableContainer", "ThreePanelLayout", "StaticSplitLayout"],
+      "gap": "SplitPane"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a histogram of values bucketed into bins",
+      "expect": [
+        "DistributionSparkline",
+        "BarSeries",
+        "Chart",
+        "TargetBarChart"
+      ],
+      "gap": "Histogram"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a date and time picker that also takes a time of day",
+      "expect": ["DatePicker", "DateRangePicker", "IntervalInput"],
+      "gap": "DateTimePicker"
+    },
+    {
+      "outcome": "cousin",
+      "need": "a progress ring around an avatar showing how much of the day is used",
+      "expect": [
+        "RingChart",
+        "MdAvatar",
+        "createParticipantAvatar",
+        "AssigneeIcon"
+      ],
+      "gap": "AvatarProgressRing"
+    },
+
+    {
+      "outcome": "none",
+      "need": "a map with pins at geographic coordinates that pans and zooms",
+      "gap": "MapView"
+    },
+    {
+      "outcome": "none",
+      "need": "a video player with a scrub bar, play/pause and a volume control",
+      "gap": "VideoPlayer"
+    },
+    {
+      "outcome": "none",
+      "need": "a QR code rendered from a string",
+      "gap": "QrCode"
+    },
+    {
+      "outcome": "none",
+      "need": "a signature pad the user draws on with a finger or mouse",
+      "gap": "SignaturePad"
+    },
+    {
+      "outcome": "none",
+      "need": "a 3D model viewer that rotates a mesh with the mouse",
+      "gap": "ModelViewer"
+    },
+    {
+      "outcome": "none",
+      "need": "a terminal emulator with a blinking cursor that runs a shell session",
+      "gap": "TerminalEmulator"
+    },
+    {
+      "outcome": "none",
+      "need": "a PDF viewer with page thumbnails down the side",
+      "gap": "PdfViewer"
+    },
+    {
+      "outcome": "none",
+      "need": "an audio waveform with a playhead that follows playback",
+      "gap": "AudioWaveform"
+    },
+    {
+      "outcome": "none",
+      "need": "a webcam capture that takes a photo and shows the preview",
+      "gap": "CameraCapture"
+    },
+    {
+      "outcome": "none",
+      "need": "a CAPTCHA challenge the user must solve before submitting",
+      "gap": "Captcha"
+    },
+    {
+      "outcome": "none",
+      "need": "an image cropper with a draggable crop rectangle over the photo",
+      "gap": "ImageCropper"
+    },
+    {
+      "outcome": "none",
+      "need": "a chess board with draggable pieces",
+      "gap": "ChessBoard"
+    },
+    {
+      "outcome": "none",
+      "need": "a microphone button that records speech and shows a live transcript",
+      "gap": "SpeechInput"
+    },
+    {
+      "outcome": "none",
+      "need": "a star rating input of one to five stars",
+      "gap": "StarRating"
+    },
+    {
+      "outcome": "none",
+      "need": "an analog clock face showing the time in a chosen time zone",
+      "gap": "AnalogClock"
+    },
+    {
+      "outcome": "none",
+      "need": "a seat map of a cabin with selectable seats",
+      "gap": "SeatMap"
+    },
+    {
+      "outcome": "none",
+      "need": "a confetti burst animation on success",
+      "gap": "ConfettiBurst"
+    }
+  ]
+}
