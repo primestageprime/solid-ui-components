@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.232.0 — 2026-10-21
+
 ### Added
 
 - **Three-outcome find** (`npm run find:outcome "<need>"`, `scripts/find-outcome.mjs`) — a need phrased like a brief resolves to **exact** (a component to use as-is, short-circuited on the fast path), **cousin** (the nearest shape as a placeholder, from a walk of the whole candidate union) or **none** (a GapBox). Zero tokens by default; `--reader-batch` / `--judge` put a model reader on the exact/cousin boundary only when the margin or shape coverage is low (`readerGate`, `applyJudge`; ~975 tokens per gated call). Floors pinned in `find.test.ts` (50/59 on the frozen 23 exact / 19 cousin / 17 none benchmark, no exact hidden, no none as exact, cousin→exact ≤ 3); `npm run find:outcomes-bench` prints the confusion matrix and pick correctness. Gap names come from the words as written (GanttChart, SignaturePad, MapPins).
