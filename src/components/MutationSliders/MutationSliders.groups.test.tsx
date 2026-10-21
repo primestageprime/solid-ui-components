@@ -12,7 +12,13 @@ import {
   it,
   vi,
 } from "vitest";
-import { type FakeSizer, installFakeSizer } from "../../test-utils";
+import {
+  type FakeSizer,
+  installFakeSizer,
+  installPointerCapture,
+  installRects,
+  rectOf,
+} from "../../test-utils";
 import type { Entity } from "../MarkedSlider/geometry";
 import type { MutationSliderGroup } from "./index";
 import { MutationSliders } from "./MutationSliders";
@@ -188,5 +194,37 @@ describe("MutationSliders role groups", () => {
     ));
     expect(sliderNames(container)).toEqual(["Owner", "Ana", "Bo", "Cy", "Fay"]);
     expect(queryByText(/avg ·/)).toBeNull();
+  });
+
+  // Owner report, thorcasting 2026-10-21: after a drag on "Roofer × 3" the
+  // members moved but the group dial and its sub-line looked stale. The row
+  // reads the group's mean and spread from the CURRENT entities.
+  it("the group dial and its sub-line follow the members after a pointer drag", () => {
+    const restoreRects = installRects((el) =>
+      el.classList?.contains("sui-marked-slider__track")
+        ? rectOf({ left: 0, top: 0, width: 22, height: 200 })
+        : null,
+    );
+    const { container, getByLabelText, queryByText, value } = mount();
+    const dial = getByLabelText("Roofer × 3");
+    const track = dial
+      .closest(".sui-marked-slider")
+      ?.querySelector(".sui-marked-slider__track") as HTMLElement;
+    expect(track).toBeTruthy();
+    const capture = installPointerCapture(track);
+    fireEvent.pointerDown(track, { clientY: 900, pointerId: 1, button: 0 });
+    fireEvent.pointerUp(track, { clientY: 900, pointerId: 1 });
+    capture.restore();
+    restoreRects();
+    const members = [value("ana"), value("bo"), value("cy")] as number[];
+    const mean = members.reduce((a, b) => a + b, 0) / members.length;
+    expect(
+      Number(getByLabelText("Roofer × 3").getAttribute("aria-valuenow")),
+    ).toBe(Math.round(mean / 5_000) * 5_000);
+    const lo = Math.min(...members);
+    const hi = Math.max(...members);
+    if (lo === hi) expect(queryByText(/avg ·/)).toBeNull();
+    else expect(queryByText(`avg · ${lo}–${hi}`)).toBeTruthy();
+    expect(container).toBeTruthy();
   });
 });
