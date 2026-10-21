@@ -41,7 +41,13 @@
 // move its peers instead of itself, and that decision cannot be made here
 // without this component knowing the row.
 // ============================================
-import { type Component, type JSX, Show, createSignal } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  createSignal,
+  onMount,
+} from "solid-js";
 import { Dynamic } from "solid-js/web";
 import {
   GlyphSlotGhostButton,
@@ -64,6 +70,7 @@ import {
   EllipsisMonoValue,
   ReservedEllipsisMonoMeta,
 } from "../Text";
+import { fitName, measurerFor } from "./fitName";
 import type { ResolvedLabels } from "./labels";
 import { type DialReadouts, type ReadoutMode, readoutsOf } from "./readouts";
 
@@ -259,12 +266,28 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
    * The name: a toggle when the row lets this dial join the selection, plain
    * text when it does not (a group's aggregate dial).
    */
+  /** The header font, read once the column is in the page. */
+  const [font, setFont] = createSignal<string | null>(null);
+  let column: HTMLElement | undefined;
+  onMount(() => {
+    const el = column?.querySelector("[data-dial-name]");
+    if (el) setFont(getComputedStyle(el).font);
+  });
+  /** The name shortened to fit the 88px column (fitName.ts). */
+  const shown = (): string => {
+    const f = font();
+    const measure = f === null ? null : measurerFor(f);
+    // Room: the column, less the chevron beside a group name and the button's padding.
+    const room = 88 - 6 - (props.headerAction ? 28 : 0) - (props.onSelect ? 12 : 0);
+    return measure === null ? props.entity.label : fitName(props.entity.label, room, measure);
+  };
+
   const name = (): JSX.Element => (
     <Show
       when={props.onSelect}
       fallback={
-        <EllipsisLabel title={props.entity.label}>
-          {props.entity.label}
+        <EllipsisLabel data-dial-name="" title={props.entity.label}>
+          {shown()}
         </EllipsisLabel>
       }
     >
@@ -275,8 +298,8 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           data-struck={dial().removed ? "" : undefined}
           onClick={() => onSelect()()}
         >
-          <EllipsisLabel title={props.entity.label}>
-            {props.entity.label}
+          <EllipsisLabel data-dial-name="" title={props.entity.label}>
+            {shown()}
           </EllipsisLabel>
         </PressableLabelButton>
       )}
@@ -318,6 +341,7 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
 
   return (
     <FixedDialColumn
+      ref={(el: HTMLElement) => (column = el)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocusIn={() => setFocused(true)}

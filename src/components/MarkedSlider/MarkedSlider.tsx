@@ -56,12 +56,11 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
+import { deltaFit, priorFit } from "./labelFit";
 import { observeSize } from "../../internal/dom/observeSize";
 import {
   BAND_HALF,
   CHANGE_HALF,
-  DELTA_X,
-  PRIOR_LABEL_X,
   type DialGeometry,
   type Domain,
   TRACK_X,
@@ -123,7 +122,11 @@ const Marks: Component<{
   priorLabel: string | null;
   /** The drawn height in px — the viewBox is 1:1 with it. */
   height: number;
-}> = (props) => (
+}> = (props) => {
+  /** Where each side label sits and how big it is, so it stays in the column. */
+  const deltaPlace = () => deltaFit(deltaLines(props.deltaLabel));
+  const priorPlace = () => priorFit(props.priorLabel ?? "");
+  return (
   <svg
     class="sui-marked-slider__marks"
     // The viewBox grows with the BOX rather than the box stretching a fixed
@@ -183,8 +186,10 @@ const Marks: Component<{
       classList={{
         [`sui-marked-slider__delta--${props.dial.changeTone}`]: true,
         "sui-marked-slider__reserved": props.deltaLabel === null,
+        [`sui-marked-slider__fs-${deltaPlace().size}`]: true,
+        "sui-marked-slider__anchor-end": deltaPlace().anchor === "end",
       }}
-      x={DELTA_X}
+      x={deltaPlace().x}
       y={props.dial.deltaY ?? 0}
     >
       {/* A label with a newline is drawn as LINES, centred as a block on the
@@ -199,7 +204,7 @@ const Marks: Component<{
         <Index each={deltaLines(props.deltaLabel)}>
           {(line, index) => (
             <tspan
-              x={DELTA_X}
+              x={deltaPlace().x}
               dy={
                 index === 0
                   ? `${(-(deltaLines(props.deltaLabel).length - 1) * LINE_EM) / 2}em`
@@ -219,14 +224,19 @@ const Marks: Component<{
     <Show when={props.priorLabel !== null && props.dial.oldY !== null}>
       <text
         class="sui-marked-slider__prior-label"
-        x={PRIOR_LABEL_X}
+        classList={{
+          [`sui-marked-slider__fs-${priorPlace().size}`]: true,
+          "sui-marked-slider__anchor-start": priorPlace().anchor === "start",
+        }}
+        x={priorPlace().x}
         y={props.dial.oldY ?? 0}
       >
         {props.priorLabel}
       </text>
     </Show>
   </svg>
-);
+  );
+};
 
 export interface MarkedSliderProps {
   /** The `[min, max]` the TRACK runs — the whole scale, in caller units. */
