@@ -14,7 +14,7 @@
 //                            `ReservedEllipsisMonoMeta`
 //   • the footer slot      → `GlyphSlotGhostButton` / `ReservedGlyphSlotButton`
 //                            + `Icon`
-//   • the column           → `FixedDialColumn` (stated width: no text widens it)
+//   • the column           → `DialStack` (stated width: no text widens it)
 //
 // Lowercase filename ON PURPOSE, the same disposition as geometry.ts and
 // BandRail/bands.tsx: `isEntryPath` in scripts/render-coverage.mjs matches any
@@ -55,7 +55,7 @@ import {
   ReservedGlyphSlotButton,
 } from "../Button";
 import { Icon } from "../Icon";
-import { FixedDialColumn, TightClusterRow } from "../Layout";
+import { DialStack, TightClusterRow } from "../Layout";
 import { MarkedSlider } from "../MarkedSlider";
 import { SliderField } from "../Slider";
 import {
@@ -355,7 +355,7 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
   );
 
   return (
-    <FixedDialColumn
+    <DialStack
       ref={(el: HTMLElement) => (column = el)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -527,6 +527,6 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           </TightClusterRow>
         )}
       </Show>
-    </FixedDialColumn>
+    </DialStack>
   );
 };

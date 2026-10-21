@@ -100,14 +100,13 @@ export const TightCenteredColumn: Component<StackDataProps> = createStack({
   gap: "xs",
 });
 
-// FixedDialColumn — a centered xs-gap column whose WIDTH IS STATED (the dial's
-// own canvas width), never fitted to its text. A dial column's name, readouts
-// and note change as the data does ("roofer x 4" against "roofer x 3", "$9K"
-// against "$119.6K"); a content-sized column would thicken with them. Text
-// inside should ellipsize (Text `Ellipsis*` variants), not widen it. `flex: none`
-// keeps a flex parent from squeezing it too. `DIAL_VIEW_WIDTH` is a data import,
-// not a component import — see `FixedHeightBox`.
-export const FixedDialColumn: Component<StackDataProps> = createStack({
+// DialStack — a centered xs-gap stack as wide as the dial's canvas
+// (`DIAL_VIEW_WIDTH`), never sized by its text: a name, readout or note that
+// changes with the data ("roofer x 4", "$119.6K") must not thicken it. Text
+// inside should ellipsize (Text `Ellipsis*` variants). `flex: none` keeps a flex
+// parent from squeezing it. `DIAL_VIEW_WIDTH` is a data import, not a component
+// import — see `FixedHeightBox`.
+export const DialStack: Component<StackDataProps> = createStack({
   align: "center",
   gap: "xs",
   style: {
