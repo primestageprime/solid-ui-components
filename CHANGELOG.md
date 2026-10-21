@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- **Three-outcome find** (`npm run find:outcome "<need>"`, `scripts/find-outcome.mjs`) — a need phrased like a brief resolves to **exact** (a component to use as-is, short-circuited on the fast path), **cousin** (the nearest shape as a placeholder, from a walk of the whole candidate union) or **none** (a GapBox). Zero tokens by default; `--reader-batch` / `--judge` put a model reader on the exact/cousin boundary only when the margin or shape coverage is low (`readerGate`, `applyJudge`; ~975 tokens per gated call). Floors pinned in `find.test.ts` (50/59 on the frozen 23 exact / 19 cousin / 17 none benchmark, no exact hidden, no none as exact, cousin→exact ≤ 3); `npm run find:outcomes-bench` prints the confusion matrix and pick correctness. Gap names come from the words as written (GanttChart, SignaturePad, MapPins).
+- **Build phases and ask-early fields on `gaps.json`** — exact 1, cousin 2, none 3; `askedAt`, `answer`, `answeredAt`, `status`; `planPhase` skips an accepted cousin and builds on `build` or no answer; `askText` writes the Question.
+- **`find-recall`** — the union candidate set of ranker v2 + BM25 + MiniLM (`@huggingface/transformers` devDependency, vectors cached under `node_modules/.cache`), with full doc entries for a reader; held-out set `find-bench-fresh.json` frozen before any doc fix (20/20 at 3 with the exhaustive fallback).
+- **Promotion loop** (`scripts/find-promote.mjs`, skill `.claude/skills/sui-find-promote`) — lexicon phrases and vocabulary words (`shows:scatter` on `Chart`, `shows:histogram` on `DistributionSparkline`) promoted from misses and pinned in `find-regress.json` by the tests.
+- **Ranker v2** — strips quoted strings and negated clauses, splits PascalCase, skips panel/text as head; a curried variant or factory inherits its base's `preferFirst` edge, so `ScrubChart` ranks before `CashflowScrubChart` for a non-cashflow chart; `CandlestickRenderer` is a mark, not a chart.
+- **`catalog-index.md`** — one line per component (name, depth, tags, first sentence, variants) under 15k tokens, for a model to read whole.
+- **Dup guard** — `npm run new:component` prints a likely-existing-equivalent check on the new component's name and description before scaffolding.
+- **Doc and tag fixes** for `GroupedSelector`, `StatusCard`, `EntityCard`, `ScrollRegion`, `DistributionSparkline`; `AGENT_GUIDE` documents the three outcomes and their benchmark; `experiments/` holds the search comparison A-F and the recall-first and reader scoring runs.
+
 ## 0.231.0 — 2026-10-20
 
 ### Added
