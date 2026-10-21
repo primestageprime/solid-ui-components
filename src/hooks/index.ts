@@ -118,3 +118,6 @@ export {
   submitHandler,
   submitOnEnter,
 } from "./submitOnEnter";
+// An opened form puts focus in its first field, and gives it back to the
+// opener on close: what `Modal` and `BottomSheet` do on open.
+export { focusOnOpen, initialFocusTarget } from "./initialFocus";

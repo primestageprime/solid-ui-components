@@ -13,6 +13,12 @@
 }
 
 /* Modal container */
+/* The dialog takes focus only when it holds nothing focusable
+   (hooks/initialFocus); it draws no ring for that. */
+.sui-modal:focus {
+  outline: none;
+}
+
 .sui-modal {
   position: relative;
   max-height: 90vh;

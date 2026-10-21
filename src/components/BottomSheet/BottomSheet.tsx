@@ -14,6 +14,7 @@
 // Controlled: open state is managed externally via `open` + `onClose`.
 // ============================================
 import { type Component, type JSX, Show } from "solid-js";
+import { focusOnOpen } from "../../hooks/initialFocus";
 import "./BottomSheet.css";
 
 export interface BottomSheetProps {
@@ -67,7 +68,11 @@ export const BottomSheet: Component<BottomSheetProps> = (props) => {
 
         {/* Sheet body — scrollable if content overflows */}
         <Show when={props.open}>
-          <div class="sui-bottom-sheet__body">{props.children}</div>
+          {/* On open, focus goes to the body's first field, and back to the
+              opener on close (hooks/initialFocus). */}
+          <div class="sui-bottom-sheet__body" ref={focusOnOpen}>
+            {props.children}
+          </div>
         </Show>
       </div>
     </div>
