@@ -258,4 +258,25 @@ describe("MutationSliders role groups", () => {
     capture.restore();
     restoreRects();
   });
+  // Owner, 2026-10-21: "each slider should be inside a card".
+  it("every top-level column is its own card; an open group's members share it after a divider", () => {
+    const { container, getByLabelText } = mount();
+    const cards = () =>
+      Array.from(container.querySelectorAll(".surface")).map((card) => ({
+        sliders: Array.from(card.querySelectorAll('[role="slider"]')).map(
+          (el) => el.getAttribute("aria-label"),
+        ),
+        dividers: card.querySelectorAll(".sui-divider--vertical").length,
+      }));
+    expect(cards()).toEqual([
+      { sliders: ["Owner"], dividers: 0 },
+      { sliders: ["Roofer × 3"], dividers: 0 },
+      { sliders: ["Foreman"], dividers: 0 },
+    ]);
+    fireEvent.click(getByLabelText("Show each Roofer"));
+    expect(cards()[1]).toEqual({
+      sliders: ["Roofer × 3", "Ana", "Bo", "Cy"],
+      dividers: 1,
+    });
+  });
 });

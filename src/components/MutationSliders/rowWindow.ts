@@ -9,6 +9,7 @@ import type { Entity } from "../MarkedSlider/geometry";
 import { type ItemRun, itemLayout, itemRuns } from "./items";
 import type { MutationSlidersProps } from "./props";
 import {
+  CARD_OVERHEAD,
   DIAL_SLOT,
   GUTTERED_DIAL_SLOT,
   GUTTER_GAP,
@@ -63,6 +64,8 @@ export const createRowWindow = (
    * the matching slot. Every other row is exactly the 8px row it was.
    */
   const guttered = (): boolean => props.readout === "beside";
+  /** A row with role groups draws every top-level column as a card. */
+  const carded = (): boolean => (props.groups?.length ?? 0) > 0;
 
   /** Whether any dial names an ITEM — the row then groups and pages by item. */
   const itemized = (): boolean =>
@@ -85,8 +88,9 @@ export const createRowWindow = (
         runs(),
         offset(),
         props.onAdd !== undefined,
-        guttered() ? GUTTERED_DIAL_SLOT : DIAL_SLOT,
-        guttered() ? GUTTER_GAP : ROW_GAP,
+        (guttered() ? GUTTERED_DIAL_SLOT : DIAL_SLOT) +
+          (carded() ? CARD_OVERHEAD : 0),
+        carded() || guttered() ? GUTTER_GAP : ROW_GAP,
       );
       return {
         start: out.start,

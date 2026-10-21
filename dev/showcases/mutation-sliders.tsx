@@ -266,7 +266,7 @@ export const MutationSlidersShowcase: Component = () => {
       </div>
 
       <div class="example-group">
-        <h3>Role groups — Roofer × 3 moves as one (a SHIFT); the chevron shows each person</h3>
+        <h3>Role groups — each column a card; Roofer × 3 moves as one (a SHIFT, from where the drag began); the chevron shows each person beside a divider</h3>
         <CardSurface>
           <CompactCurrencyMutationSliders
             entities={crew()}

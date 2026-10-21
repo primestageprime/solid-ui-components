@@ -125,11 +125,14 @@ import { type Component, Index, type JSX, Show, mergeProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { SmallGhostButton } from "../Button";
 import { Icon } from "../Icon";
+import { VerticalDivider } from "../Divider";
 import {
   CenteredStack,
   FillStretchRow,
   GutteredFillStretchRow,
 } from "../Layout";
+import { CardSurface } from "../Surface";
+import type { Entity } from "../MarkedSlider/geometry";
 import { createDialRenderer } from "./dialRenderers";
 import { createEmitters } from "./emit";
 import { type ResolvedLabels, resolveLabels } from "./labels";
@@ -190,11 +193,39 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
     emitGroup: emitters.emitGroup,
   });
   const { layout, guttered, itemized, visible, visibleRuns, page } = win;
-  const { slotById } = roles;
+  const { slotById, grouped } = roles;
+
+  /**
+   * CARDS (owner, 2026-10-21: "each slider should be inside a card"). In a row
+   * with role groups, every top-level column — a role group, a one-person
+   * role, a person in no group — is its own `CardSurface`, and the cards stand
+   * apart at the gutter gap. An open group's member dials sit in the same
+   * card, after a `VerticalDivider` beside the group dial.
+   */
+  const card = (run: () => readonly Entity[]): JSX.Element => {
+    const opened = (): boolean =>
+      run().length > 1 && slotById().get(run()[0]?.id ?? "")?.kind === "group";
+    return (
+      <CardSurface>
+        <FillStretchRow>
+          <Show
+            when={opened()}
+            fallback={<Index each={run()}>{renderDial}</Index>}
+          >
+            {renderDial(() => run()[0] as Entity)}
+            <VerticalDivider />
+            <Index each={run().slice(1)}>{renderDial}</Index>
+          </Show>
+        </FillStretchRow>
+      </CardSurface>
+    );
+  };
 
   return (
     <Dynamic
-      component={guttered() ? GutteredFillStretchRow : FillStretchRow}
+      component={
+        guttered() || grouped() ? GutteredFillStretchRow : FillStretchRow
+      }
       ref={win.measure}
       // A group rather than a bare div, so the window is ANNOUNCED. Without
       // it a screen-reader user paging the row hears five dials change names
@@ -233,25 +264,27 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
             pitch — and the paging — is the same as unframed dials. */}
         <Index each={visibleRuns()}>
           {(run) => (
-            <Show
-              when={
-                (run().length > 1 ||
-                  slotById().get(run()[0]?.id ?? "")?.kind !== "plain") &&
-                props.itemFrame
-              }
-              fallback={<Index each={run()}>{renderDial}</Index>}
-            >
-              {(Frame) => (
-                <Dynamic component={Frame()}>
-                  <Dynamic
-                    component={
-                      guttered() ? GutteredFillStretchRow : FillStretchRow
-                    }
-                  >
-                    <Index each={run()}>{renderDial}</Index>
+            <Show when={!grouped()} fallback={card(run)}>
+              <Show
+                when={
+                  (run().length > 1 ||
+                    slotById().get(run()[0]?.id ?? "")?.kind !== "plain") &&
+                  props.itemFrame
+                }
+                fallback={<Index each={run()}>{renderDial}</Index>}
+              >
+                {(Frame) => (
+                  <Dynamic component={Frame()}>
+                    <Dynamic
+                      component={
+                        guttered() ? GutteredFillStretchRow : FillStretchRow
+                      }
+                    >
+                      <Index each={run()}>{renderDial}</Index>
+                    </Dynamic>
                   </Dynamic>
-                </Dynamic>
-              )}
+                )}
+              </Show>
             </Show>
           )}
         </Index>
