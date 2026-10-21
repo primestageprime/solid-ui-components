@@ -51,6 +51,7 @@ import {
   type JSX,
   Index,
   Show,
+  createMemo,
   mergeProps,
   onCleanup,
   onMount,
@@ -334,6 +335,16 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
       height(),
     );
 
+  /**
+   * Whether the entity is removed, as a MEMO that changes only when that
+   * answer changes. Kobalte's thumb registers itself in an effect that reads
+   * the root's `disabled`. Read straight off `dial()`, that effect tracked the
+   * VALUE, so every tick of a drag unregistered the thumb and registered it
+   * again — and a release that landed in between found no thumb to focus
+   * (`thumbs()[activeThumb].ref()` on undefined, owner 2026-10-21).
+   */
+  const removed = createMemo(() => props.value === null);
+
   const drag = (): number => props.dragStep ?? dragStep(props.domain);
   const key = (): number => props.keyStep ?? niceStep(props.domain);
 
@@ -442,8 +453,8 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
       minValue={props.domain[0]}
       maxValue={props.domain[1]}
       step={drag()}
-      disabled={dial().removed}
-      data-removed={dial().removed ? "" : undefined}
+      disabled={removed()}
+      data-removed={removed() ? "" : undefined}
       getValueLabel={() => props.valueText ?? String(dial().clampedValue ?? "")}
     >
       <Marks

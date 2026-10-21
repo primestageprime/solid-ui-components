@@ -255,6 +255,10 @@ describe("MutationSliders role groups", () => {
     expect(members()).toEqual([50_000, 60_000, 78_000]);
     fireEvent.pointerUp(track, { clientY: 135, pointerId: 1 });
     expect(members()).toEqual([50_000, 60_000, 78_000]);
+    // The dragged dial is the SAME thumb from pointer-down to release: the
+    // row never remounts it, so Kobalte still holds it when the drag ends.
+    expect(getByLabelText("Roofer × 3")).toBe(dial);
+    expect(dial.isConnected).toBe(true);
     capture.restore();
     restoreRects();
   });
