@@ -41,6 +41,13 @@ export interface SliderGroup {
 /** The item key every dial of a group carries — and the aggregate's id. */
 export const groupKey = (groupId: string): string => `group:${groupId}`;
 
+/** The members as they stood when a drag of the group dial began. */
+export interface GroupDragStart {
+  readonly members: readonly Entity[];
+  /** The group dial's value then. */
+  readonly from: number;
+}
+
 /** What one place in the row draws. */
 export type RowSlot =
   /** An entity in no group: drawn exactly as before groups existed. */
@@ -146,6 +153,52 @@ export function shiftGroup(
           ],
     members,
   );
+}
+
+/**
+ * A DRAG of the group dial, measured from the members as they stood when the
+ * pointer went down (`start`, at the group mean `from`). Owner report,
+ * 2026-10-21: a drag to the floor left [30K, 33K, 30K] from
+ * [59.8K, 65K, 54.6K], because each tick shifted from the CURRENT mean, and
+ * the members already stopped at the floor pulled that mean down.
+ *
+ * Every present member moves by ONE delta from its start amount, clamped into
+ * its own range, so the gaps hold wherever no member is at an edge. The
+ * delta is scaled so the ENDS of the dial mean the ends of the band: the
+ * dial's floor puts every member on its floor, its ceiling puts every member
+ * on its ceiling, and `from` puts every member back where it started. A plain
+ * `to − from` cannot do that, because the dial stops at the band floor while
+ * the member furthest above its floor still has further to go.
+ *
+ * The delta is rounded onto `step`, the row's grid.
+ */
+export function dragGroup(
+  start: readonly Entity[],
+  from: number,
+  to: number,
+  step?: number,
+): readonly { readonly id: string; readonly value: number }[] {
+  const [lo, hi] = unionRange(start);
+  const present = filter((member: Entity) => member.value !== null, start);
+  const down = Math.max(
+    0,
+    ...map((member: Entity) => (member.value ?? 0) - member.range[0], present),
+  );
+  const up = Math.max(
+    0,
+    ...map((member: Entity) => member.range[1] - (member.value ?? 0), present),
+  );
+  const scaled =
+    to < from
+      ? from > lo
+        ? ((to - from) / (from - lo)) * down
+        : -down
+      : to > from
+        ? hi > from
+          ? ((to - from) / (hi - from)) * up
+          : up
+        : 0;
+  return shiftGroup(start, 0, toStep(scaled, step));
 }
 
 /**

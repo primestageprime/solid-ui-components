@@ -227,4 +227,35 @@ describe("MutationSliders role groups", () => {
     else expect(queryByText(`avg · ${lo}–${hi}`)).toBeTruthy();
     expect(container).toBeTruthy();
   });
+  // Owner report, 2026-10-21: a drag to the floor ended the members at
+  // [30K, 33K, 30K] from [59.8K, 65K, 54.6K], because every tick shifted from
+  // the CURRENT mean. A drag now places each member from where it stood when
+  // the pointer went down (groups.ts, `dragGroup`).
+  it("a drag to the floor puts every member on it, and back up restores the gaps", () => {
+    const restoreRects = installRects((el) =>
+      el.classList?.contains("sui-marked-slider__track")
+        ? rectOf({ left: 0, top: 0, width: 22, height: 200 })
+        : null,
+    );
+    const { getByLabelText, value } = mount();
+    const dial = getByLabelText("Roofer × 3");
+    const track = dial
+      .closest(".sui-marked-slider")
+      ?.querySelector(".sui-marked-slider__track") as HTMLElement;
+    const capture = installPointerCapture(track);
+    const members = () => [value("ana"), value("bo"), value("cy")];
+    // The track is 200px over a 0–200K domain: y = 135 is the group's 65K.
+    fireEvent.pointerDown(track, { clientY: 135, pointerId: 1, button: 0 });
+    expect(members()).toEqual([50_000, 60_000, 78_000]);
+    fireEvent.pointerMove(track, { clientY: 160, pointerId: 1 });
+    fireEvent.pointerMove(track, { clientY: 200, pointerId: 1 });
+    expect(members()).toEqual([30_000, 30_000, 30_000]);
+    expect(dial.getAttribute("aria-valuenow")).toBe("30000");
+    fireEvent.pointerMove(track, { clientY: 135, pointerId: 1 });
+    expect(members()).toEqual([50_000, 60_000, 78_000]);
+    fireEvent.pointerUp(track, { clientY: 135, pointerId: 1 });
+    expect(members()).toEqual([50_000, 60_000, 78_000]);
+    capture.restore();
+    restoreRects();
+  });
 });

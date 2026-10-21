@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Entity } from "../MarkedSlider/geometry";
 import {
   type SliderGroup,
+  dragGroup,
   groupEntity,
   groupRow,
   resetGroup,
@@ -71,6 +72,36 @@ describe("shiftGroup", () => {
     expect(
       shiftGroup([roofer("ana", 50_000, 50_000), roofer("bo", null, 1)], 0, 1),
     ).toEqual([{ id: "ana", value: 50_001 }]);
+  });
+});
+
+describe("dragGroup", () => {
+  const values = (moves: readonly { value: number }[]) =>
+    moves.map((move) => move.value);
+
+  it("the dial floor puts every member on its floor", () => {
+    expect(values(dragGroup(ROOFERS, 65_000, 30_000))).toEqual([
+      30_000, 30_000, 30_000,
+    ]);
+  });
+
+  it("the dial ceiling puts every member on its ceiling", () => {
+    expect(values(dragGroup(ROOFERS, 65_000, 80_000))).toEqual([
+      80_000, 80_000, 80_000,
+    ]);
+  });
+
+  it("back at the start, every member is where it started", () => {
+    expect(values(dragGroup(ROOFERS, 65_000, 65_000))).toEqual([
+      50_000, 60_000, 78_000,
+    ]);
+  });
+
+  it("between, one delta for all, rounded onto the grid", () => {
+    // 65K → 50K is 15/35 of the way down; the furthest member has 48K to go.
+    expect(values(dragGroup(ROOFERS, 65_000, 50_000, 1_000))).toEqual([
+      30_000, 39_000, 57_000,
+    ]);
   });
 });
 

@@ -20,13 +20,25 @@
 // new mean can differ from that value when a member stopped at its band
 // edge — so a commit at the value the last move reached only SETTLES the
 // members where they are, and never shifts them a second time.
+//
+// A DRAG IS MEASURED FROM ITS START (groups.ts, `dragGroup`). The pointer
+// going down takes a snapshot of the members; every move of that drag places
+// each member from its snapshot, never from where the last move left it, so a
+// member stopped at the floor cannot drag the others' starting point down.
+// A key step has no snapshot and shifts from the members as they stand.
+//
+// KOBALTE ECHOES each pointer move: after `onChange(target)` it calls
+// `onChange` again with the slider's current value — the group mean this row
+// just recomputed. A move to the value the dial already shows is that echo,
+// and it moves nothing; read as a target it would pull the members back
+// toward the mean on every tick.
 // ============================================
 import type { Component, JSX } from "solid-js";
 import { DisclosureButton } from "../Button";
 import { Icon } from "../Icon";
 import type { Domain, Entity } from "../MarkedSlider/geometry";
 import { MutationDial } from "./dial";
-import { newCount, resetGroup, spreadOf } from "./groups";
+import { type GroupDragStart, newCount, resetGroup, spreadOf } from "./groups";
 import type { ResolvedLabels } from "./labels";
 import type { ReadoutMode } from "./readouts";
 
@@ -41,8 +53,15 @@ export interface GroupDialProps {
   open: boolean;
   /** The chevron was pressed. */
   onToggle: () => void;
-  /** Shift every member so the group's mean moves to `value`. */
-  onShift: (value: number, how: "change" | "both") => void;
+  /**
+   * Shift every member so the group's mean moves to `value` — from `start`
+   * during a drag, from the members as they stand for a key step.
+   */
+  onShift: (
+    value: number,
+    how: "change" | "both",
+    start?: GroupDragStart,
+  ) => void;
   /** Commit every member where it stands (`onChangeEnd` only). */
   onSettle: () => void;
   /** Put every changed member back on its old amount. Omitted, no Reset. */
@@ -63,6 +82,8 @@ export interface GroupDialProps {
 export const GroupDial: Component<GroupDialProps> = (props) => {
   /** The value the last move reached — see ONE GESTURE, ONE SHIFT above. */
   let reached: number | null = null;
+  /** The members when the pointer went down; `null` outside a drag. */
+  let start: GroupDragStart | null = null;
 
   const fresh = (): number => newCount(props.members);
 
@@ -112,14 +133,21 @@ export const GroupDial: Component<GroupDialProps> = (props) => {
       headerAction={chevron()}
       note={note()}
       onMeasure={props.onMeasure}
+      onDragStart={() => {
+        const from = props.entity.value;
+        start = from === null ? null : { members: props.members, from };
+      }}
       onMove={(value) => {
+        if (value === props.entity.value) return;
         reached = value;
-        props.onShift(value, "change");
+        props.onShift(value, "change", start ?? undefined);
       }}
       onCommit={(value) => {
-        if (reached === value) props.onSettle();
-        else props.onShift(value, "both");
+        if (reached === value || value === props.entity.value) {
+          props.onSettle();
+        } else props.onShift(value, "both", start ?? undefined);
         reached = null;
+        start = null;
       }}
       onType={props.onType}
       onReset={props.onReset}

@@ -5,7 +5,14 @@ import { createMemo, createSignal } from "solid-js";
 import { map } from "../../fn";
 import type { Entity } from "../MarkedSlider/geometry";
 import type { Emission, Emitters } from "./emit";
-import { type RowSlot, groupRow, shiftGroup, unionRange } from "./groups";
+import {
+  type GroupDragStart,
+  type RowSlot,
+  dragGroup,
+  groupRow,
+  shiftGroup,
+  unionRange,
+} from "./groups";
 import type { MutationSlidersProps } from "./props";
 import { settleTyped } from "./typed";
 
@@ -20,8 +27,17 @@ export interface RoleGroups {
   readonly slotById: () => ReadonlyMap<string, RowSlot>;
   /** Whether the row has role groups — every dial then holds a note line. */
   readonly grouped: () => boolean;
-  /** A role group's SHIFT to `value` (groups.ts, `shiftGroup`). */
-  readonly shiftTo: (slot: GroupSlot, value: number, how: Emission) => void;
+  /**
+   * A role group's SHIFT to `value`: from the current members for a key step
+   * (groups.ts, `shiftGroup`), or from the drag's `start` for a drag
+   * (`dragGroup`).
+   */
+  readonly shiftTo: (
+    slot: GroupSlot,
+    value: number,
+    how: Emission,
+    start?: GroupDragStart,
+  ) => void;
   /** A figure typed under a group dial: settled, then shifted to. */
   readonly typeGroup: (slot: GroupSlot, text: string) => void;
 }
@@ -66,7 +82,16 @@ export const createRoleGroups = (
   );
   const grouped = (): boolean => (props.groups?.length ?? 0) > 0;
 
-  const shiftTo = (slot: GroupSlot, value: number, how: Emission): void => {
+  const shiftTo = (
+    slot: GroupSlot,
+    value: number,
+    how: Emission,
+    start?: GroupDragStart,
+  ): void => {
+    if (start) {
+      emitGroup(dragGroup(start.members, start.from, value, props.snap), how);
+      return;
+    }
     const from = slot.entity.value;
     if (from !== null) emitGroup(shiftGroup(slot.members, from, value), how);
   };

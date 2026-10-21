@@ -141,6 +141,8 @@ export interface MutationDialProps {
   changed?: boolean;
   /** The dial's box was measured — every dial in a row shares one height. */
   onMeasure: (height: number) => void;
+  /** A pointer went down on the dial: a drag starts (MarkedSlider). */
+  onDragStart?: () => void;
   /** An intermediate value. Already settled onto range + grid. */
   onMove: (value: number) => void;
   /** A COMMITTED value — a released pointer, or one arrow key. */
@@ -398,6 +400,7 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
         priorLabel={readouts().priorLabel}
         active={props.selected}
         onMeasure={props.onMeasure}
+        onDragStart={() => props.onDragStart?.()}
         onChange={(value) => props.onMove(value)}
         onChangeEnd={(value) => props.onCommit(value)}
       />

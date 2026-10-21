@@ -201,7 +201,7 @@ const Marks: Component<{
               x={DELTA_X}
               dy={
                 index === 0
-                  ? `${-(deltaLines(props.deltaLabel).length - 1) * LINE_EM / 2}em`
+                  ? `${(-(deltaLines(props.deltaLabel).length - 1) * LINE_EM) / 2}em`
                   : `${LINE_EM}em`
               }
             >
@@ -273,6 +273,12 @@ export interface MarkedSliderProps {
   onChangeEnd?: (value: number) => void;
   /** The box was measured. Fires on mount and on every resize. */
   onMeasure?: (height: number) => void;
+  /**
+   * A pointer went down on the slider: a DRAG starts, and its first
+   * `onChange` follows. A key step never calls it, so a caller can tell the
+   * two gestures apart.
+   */
+  onDragStart?: () => void;
   class?: string;
 }
 
@@ -398,6 +404,12 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
     };
     el.addEventListener("keydown", onKeyDown, true);
     onCleanup(() => el.removeEventListener("keydown", onKeyDown, true));
+
+    // CAPTURE, so it fires before Kobalte's own pointerdown sends the first
+    // value of the drag.
+    const onPointerDown = (): void => props.onDragStart?.();
+    el.addEventListener("pointerdown", onPointerDown, true);
+    onCleanup(() => el.removeEventListener("pointerdown", onPointerDown, true));
   };
 
   /**

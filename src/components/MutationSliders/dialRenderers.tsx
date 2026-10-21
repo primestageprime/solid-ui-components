@@ -48,7 +48,7 @@ export const createDialRenderer = ({
       groupLabel={slot().group.label}
       open={isOpen(slot().group.id)}
       onToggle={() => toggleGroup(slot().group.id)}
-      onShift={(value, how) => shiftTo(slot(), value, how)}
+      onShift={(value, how, start) => shiftTo(slot(), value, how, start)}
       // Each present member where it stands: a zero shift.
       onSettle={() => emitGroup(shiftGroup(slot().members, 0, 0), "commit")}
       onReset={
