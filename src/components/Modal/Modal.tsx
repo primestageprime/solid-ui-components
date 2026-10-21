@@ -5,6 +5,8 @@
 // Tags: shows:dialog, does:dismiss, does:submit, data:scalar, role:overlay
 // Owns CSS (Modal.css), no component imports.
 // Portal-based modal with overlay, escape key, size variants.
+// With `onSubmit`, body + footer are a <form>: Enter in a one-line field and
+// a `type="submit"` footer button both run it (see hooks/submitOnEnter).
 // ============================================
 import {
   type Component,
@@ -16,6 +18,7 @@ import {
 } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { ColorVariant, CornerStyle } from "../../types";
+import { submitHandler, submitOnEnter } from "../../hooks/submitOnEnter";
 import "./Modal.css";
 
 export interface ModalProps {
@@ -44,6 +47,16 @@ export interface ModalProps {
   header?: JSX.Element;
   /** Footer content */
   footer?: JSX.Element;
+  /**
+   * Makes the body and footer ONE FORM. Enter in a one-line field runs this,
+   * and so does a click on a footer button with `type="submit"`. Give the
+   * primary action `type="submit"` (and `disabled` when it cannot run) and
+   * NO `onClick`, or a click runs the work twice. A button without a `type`
+   * (Cancel) never submits. A disabled submit button means Enter does
+   * nothing. Enter keeps its own meaning in a textarea and in an open
+   * Combobox or Select. Without this prop the modal has no form, as before.
+   */
+  onSubmit?: () => void;
 }
 
 export const Modal: Component<ModalProps> = (props) => {
@@ -73,6 +86,15 @@ export const Modal: Component<ModalProps> = (props) => {
     if (props.height) classList.push(`sui-modal--height-${props.height}`);
     return classList.join(" ");
   };
+
+  const content = () => (
+    <>
+      <div class="sui-modal__body">{props.children}</div>
+      <Show when={props.footer}>
+        <div class="sui-modal__footer">{props.footer}</div>
+      </Show>
+    </>
+  );
 
   const handleOverlayClick = (e: MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -119,10 +141,15 @@ export const Modal: Component<ModalProps> = (props) => {
               </div>
             </Show>
 
-            <div class="sui-modal__body">{props.children}</div>
-
-            <Show when={props.footer}>
-              <div class="sui-modal__footer">{props.footer}</div>
+            <Show when={props.onSubmit} fallback={content()}>
+              <form
+                class="sui-modal__form"
+                noValidate
+                onKeyDown={submitOnEnter}
+                onSubmit={submitHandler(() => props.onSubmit?.())}
+              >
+                {content()}
+              </form>
             </Show>
           </div>
         </div>

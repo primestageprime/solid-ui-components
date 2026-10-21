@@ -20,6 +20,12 @@
   flex-direction: column;
 }
 
+/* The form that `onSubmit` adds around body + footer adds no box, so the
+   body still scrolls inside the modal's flex column. */
+.sui-modal__form {
+  display: contents;
+}
+
 /* Modal sizes */
 .sui-modal--sm {
   width: 360px;

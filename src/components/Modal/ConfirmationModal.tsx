@@ -22,7 +22,7 @@ export interface ConfirmationModalProps {
   open: boolean;
   /** Called when the modal is closed (via overlay, escape, or cancel) */
   onClose: () => void;
-  /** Called when the confirm button is clicked */
+  /** Called when the confirm button is clicked, or on Enter in a body field */
   onConfirm: () => void;
   /** Modal title */
   title: string;
@@ -44,6 +44,8 @@ export interface ConfirmationModalProps {
   cancelLabel?: string;
   /** Whether a confirm action is in progress */
   loading?: boolean;
+  /** Grays out the confirm button; Enter in a body field then does nothing. */
+  confirmDisabled?: boolean;
   /** Confirm button variant (default: "primary") */
   confirmVariant?: "primary" | "danger";
   /** Body content (e.g. a table of records to review) */
@@ -65,6 +67,7 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
     "loadingLabel",
     "cancelLabel",
     "loading",
+    "confirmDisabled",
     "confirmVariant",
     "children",
   ]);
@@ -83,6 +86,7 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
       size={local.size ?? "lg"}
       corners={local.corners ?? "clip"}
       variant={local.variant ?? "primary"}
+      onSubmit={local.onConfirm}
       footer={
         <>
           {/* Modal's own .sui-modal__footer already lays out a right-aligned
@@ -93,7 +97,8 @@ export const ConfirmationModal: Component<ConfirmationModalProps> = (props) => {
           <Button
             variant={local.confirmVariant ?? "primary"}
             size="sm"
-            onClick={local.onConfirm}
+            type="submit"
+            disabled={local.confirmDisabled}
             loading={local.loading}
           >
             {confirmText()}

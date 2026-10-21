@@ -110,3 +110,11 @@ export type {
   SubmitActionOptions,
   SubmitWork,
 } from "./createSubmitAction";
+// Enter in a one-line field submits its form: the keydown and submit handlers
+// behind `Modal`'s `onSubmit`, for a plain `<form>` too.
+export {
+  explicitSubmitterOf,
+  isSubmitEnter,
+  submitHandler,
+  submitOnEnter,
+} from "./submitOnEnter";
