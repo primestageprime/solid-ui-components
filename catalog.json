@@ -1556,7 +1556,7 @@
     "showcase": "#/bottom-sheet",
     "since": "0.41.0",
     "file": "src/components/BottomSheet/BottomSheet.tsx",
-    "line": 34
+    "line": 35
   },
   {
     "name": "BoxedTabs",
@@ -5014,7 +5014,7 @@
     "showcase": "#/button",
     "since": "0.142.0",
     "file": "src/components/Button/Button.tsx",
-    "line": 131
+    "line": 144
   },
   {
     "name": "createButtonGroup",
@@ -6785,7 +6785,7 @@
     "showcase": null,
     "since": "0.85.1",
     "file": "src/components/Modal/Modal.tsx",
-    "line": 167
+    "line": 175
   },
   {
     "name": "createMonthOfYearPicker",
@@ -6851,7 +6851,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/MutationSliders.tsx",
-    "line": 812
+    "line": 968
   },
   {
     "name": "createMutationToolbar",
@@ -16741,7 +16741,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/MutationSliders.tsx",
-    "line": 398
+    "line": 438
   },
   {
     "name": "MutationToolbar",

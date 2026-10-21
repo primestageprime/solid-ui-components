@@ -19,6 +19,7 @@ import {
   NumberMutationSliders,
   createMutationSliders,
   type MutationEntity,
+  type MutationSliderGroup,
 } from "../../src/components/MutationSliders";
 import { GhostButton } from "../../src/components/Button";
 import { CardSurface, FillCardSurface } from "../../src/components/Surface";
@@ -105,6 +106,22 @@ const PAY: readonly MutationEntity[] = [
   { id: "p4", label: "Di", old: null, value: 80_000, range: [70_000, 130_000] },
 ];
 
+/** The payroll builder by ROLE (owner, 2026-10-21): three roles, six people. */
+const CREW_BAND: readonly [number, number] = [30_000, 80_000];
+const CREW: readonly MutationEntity[] = [
+  { id: "r1", label: "Ana", old: 52_000, value: 52_000, range: CREW_BAND },
+  { id: "r2", label: "Bo", old: 58_000, value: 61_000, range: CREW_BAND },
+  { id: "r3", label: "Cy", old: 76_000, value: 78_000, range: CREW_BAND },
+  { id: "f1", label: "Fay", old: 90_000, value: 95_000, range: [75_000, 120_000] },
+  { id: "o1", label: "Gus", old: 48_000, value: 48_000, range: [40_000, 65_000] },
+  { id: "o2", label: "Hal", old: null, value: 45_000, range: [40_000, 65_000] },
+];
+const ROLES: readonly MutationSliderGroup[] = [
+  { id: "roofer", label: "Roofer", memberIds: ["r1", "r2", "r3"] },
+  { id: "foreman", label: "Foreman", memberIds: ["f1"] },
+  { id: "office", label: "Office manager", memberIds: ["o1", "o2"] },
+];
+
 export const MutationSlidersShowcase: Component = () => {
   const [rows, setRows] = createSignal<readonly MutationEntity[]>(SIX);
   const [added, setAdded] = createSignal(0);
@@ -114,6 +131,7 @@ export const MutationSlidersShowcase: Component = () => {
   const [budget, setBudget] = createSignal<readonly MutationEntity[]>(SIX);
   const [pay, setPay] = createSignal<readonly MutationEntity[]>(PAY);
   const [linked, setLinked] = createSignal<readonly string[]>([]);
+  const [crew, setCrew] = createSignal<readonly MutationEntity[]>(CREW);
 
   const setValue = (id: string, value: number): void => {
     setRows((current) => withValue(current, id, value));
@@ -243,6 +261,29 @@ export const MutationSlidersShowcase: Component = () => {
             }
             selected={linked()}
             onSelectionChange={setLinked}
+          />
+        </CardSurface>
+      </div>
+
+      <div class="example-group">
+        <h3>Role groups — Roofer × 3 moves as one (a SHIFT); the chevron shows each person</h3>
+        <CardSurface>
+          <CompactCurrencyMutationSliders
+            entities={crew()}
+            groups={ROLES}
+            onChange={(id, value) =>
+              setCrew((current) => withValue(current, id, value))
+            }
+            onRemove={(id) => setCrew((current) => withValue(current, id, null))}
+            onReset={(id) =>
+              setCrew((current) =>
+                withValue(
+                  current,
+                  id,
+                  find((e: MutationEntity) => e.id === id, CREW)?.value ?? null,
+                ),
+              )
+            }
           />
         </CardSurface>
       </div>
