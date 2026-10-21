@@ -93,6 +93,39 @@ const sliderNames = (container: HTMLElement) =>
   );
 
 describe("MutationSliders role groups", () => {
+  it("every dial column has one stated width, whatever its text says", () => {
+    const widths = (entities: readonly Entity[]) => {
+      const { container } = render(() => (
+        <MutationSliders
+          entities={entities}
+          domain={[0, 200_000]}
+          onChange={() => {}}
+          format={(v) => `$${(v / 1000).toFixed(1)}K`}
+        />
+      ));
+      const columns = Array.from(
+        container.querySelectorAll<HTMLElement>('[role="slider"]'),
+      ).map((el) => el.closest<HTMLElement>(".stack"));
+      const out = columns.map((c) => c?.style.width);
+      cleanup();
+      return out;
+    };
+    const short = widths([
+      { id: "a", label: "Ana", old: 9_000, value: 9_000, range: [0, 200_000] },
+    ]);
+    const long = widths([
+      {
+        id: "a",
+        label: "Roofer × 4 with a very long name",
+        old: 46_600,
+        value: 119_600,
+        range: [0, 200_000],
+      },
+    ]);
+    expect(short[0]).toBe("88px");
+    expect(long).toEqual(short);
+  });
+
   it("collapses a group to one dial, labelled with its count", () => {
     const { container } = mount();
     expect(sliderNames(container)).toEqual(["Owner", "Roofer × 3", "Foreman"]);

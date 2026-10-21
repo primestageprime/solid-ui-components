@@ -9,12 +9,12 @@
 //
 //   • the dial itself      → `MarkedSlider` (Depth 1, owns MarkedSlider.css,
 //                            owns the Kobalte root and the SVG overlay)
-//   • the name toggle      → `PressableLabelButton` + `NowrapLabel`
-//   • the two readouts     → `SteadyMonoValue`, `SteadyMonoMeta` /
-//                            `ReservedMonoMeta`
+//   • the name toggle      → `PressableLabelButton` + `EllipsisLabel`
+//   • the two readouts     → `EllipsisMonoValue`, `EllipsisMonoMeta` /
+//                            `ReservedEllipsisMonoMeta`
 //   • the footer slot      → `GlyphSlotGhostButton` / `ReservedGlyphSlotButton`
 //                            + `Icon`
-//   • the column           → `TightCenteredColumn`
+//   • the column           → `FixedDialColumn` (stated width: no text widens it)
 //
 // Lowercase filename ON PURPOSE, the same disposition as geometry.ts and
 // BandRail/bands.tsx: `isEntryPath` in scripts/render-coverage.mjs matches any
@@ -49,7 +49,7 @@ import {
   ReservedGlyphSlotButton,
 } from "../Button";
 import { Icon } from "../Icon";
-import { TightCenteredColumn, TightClusterRow } from "../Layout";
+import { FixedDialColumn, TightClusterRow } from "../Layout";
 import { MarkedSlider } from "../MarkedSlider";
 import { SliderField } from "../Slider";
 import {
@@ -59,10 +59,10 @@ import {
   dialGeometry,
 } from "../MarkedSlider/geometry";
 import {
-  NowrapLabel,
-  ReservedMonoMeta,
-  SteadyMonoMeta,
-  SteadyMonoValue,
+  EllipsisLabel,
+  EllipsisMonoMeta,
+  EllipsisMonoValue,
+  ReservedEllipsisMonoMeta,
 } from "../Text";
 import type { ResolvedLabels } from "./labels";
 import { type DialReadouts, type ReadoutMode, readoutsOf } from "./readouts";
@@ -262,7 +262,11 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
   const name = (): JSX.Element => (
     <Show
       when={props.onSelect}
-      fallback={<NowrapLabel>{props.entity.label}</NowrapLabel>}
+      fallback={
+        <EllipsisLabel title={props.entity.label}>
+          {props.entity.label}
+        </EllipsisLabel>
+      }
     >
       {(onSelect) => (
         <PressableLabelButton
@@ -271,7 +275,9 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           data-struck={dial().removed ? "" : undefined}
           onClick={() => onSelect()()}
         >
-          <NowrapLabel>{props.entity.label}</NowrapLabel>
+          <EllipsisLabel title={props.entity.label}>
+            {props.entity.label}
+          </EllipsisLabel>
         </PressableLabelButton>
       )}
     </Show>
@@ -311,7 +317,7 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
   );
 
   return (
-    <TightCenteredColumn
+    <FixedDialColumn
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocusIn={() => setFocused(true)}
@@ -339,7 +345,10 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
       </Show>
       <Show when={props.note !== undefined}>
         <Dynamic
-          component={props.note === "" ? ReservedMonoMeta : SteadyMonoMeta}
+          component={
+            props.note === "" ? ReservedEllipsisMonoMeta : EllipsisMonoMeta
+          }
+          title={props.note || undefined}
         >
           {props.note || NBSP}
         </Dynamic>
@@ -417,7 +426,11 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           and clamps it (typed.ts). A removed entity has no amount to edit. */}
       <Show
         when={props.onType !== undefined && !dial().removed}
-        fallback={<SteadyMonoValue>{futureReadout()}</SteadyMonoValue>}
+        fallback={
+          <EllipsisMonoValue title={futureReadout()}>
+            {futureReadout()}
+          </EllipsisMonoValue>
+        }
       >
         <SliderField
           label={`${props.entity.label} amount`}
@@ -427,7 +440,10 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
         />
       </Show>
       <Dynamic
-        component={priorReadout() === "" ? ReservedMonoMeta : SteadyMonoMeta}
+        component={
+          priorReadout() === "" ? ReservedEllipsisMonoMeta : EllipsisMonoMeta
+        }
+        title={priorReadout() || undefined}
       >
         {priorReadout() || NBSP}
       </Dynamic>
@@ -472,6 +488,6 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           </TightClusterRow>
         )}
       </Show>
-    </TightCenteredColumn>
+    </FixedDialColumn>
   );
 };
