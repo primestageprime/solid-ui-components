@@ -290,7 +290,11 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
     const measure = f === null ? null : measurerFor(f);
     // Room: the column, less the chevron beside a group name and the button's padding.
     const room = 88 - 6 - (props.headerAction ? 28 : 0) - (props.onSelect ? 12 : 0);
-    return measure === null ? props.entity.label : fitName(props.entity.label, room, measure);
+    if (measure === null) return props.entity.label;
+    // A role label (a group's header, or a group-of-one whose note names the
+    // person) is not a person's name: it shows whole, never "r. × 3" (owner).
+    const isRole = props.headerAction !== undefined || (props.note !== undefined && props.note !== "");
+    return isRole ? props.entity.label : fitName(props.entity.label, room, measure);
   };
 
   const name = (): JSX.Element => (
