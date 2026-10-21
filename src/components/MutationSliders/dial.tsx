@@ -275,7 +275,13 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
   onMount(() => {
     requestAnimationFrame(() => {
       const el = column?.querySelector("[data-dial-name]") ?? document.querySelector("[data-dial-name]");
-      if (el) setFont(getComputedStyle(el).font);
+      // Build the font from its longhands: Chrome answers "" for the `font`
+      // shorthand when a longhand it cannot express is set (tabular figures),
+      // and canvas then measures in its 10px default, so every name "fits".
+      if (el) {
+        const cs = getComputedStyle(el);
+        setFont(`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`);
+      }
     });
   });
   /** The name shortened to fit the 88px column (fitName.ts). */
