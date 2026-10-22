@@ -6835,7 +6835,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/MutationSliders.tsx",
-    "line": 330
+    "line": 334
   },
   {
     "name": "createMutationToolbar",

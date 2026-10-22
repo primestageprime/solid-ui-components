@@ -12,11 +12,18 @@
 /** The width of a string in px, in the header's font. */
 export type Measure = (text: string) => number;
 
+import { filter, find, map } from "../../fn";
+
 const ELLIPSIS = "…";
+
+const nonEmptyWords = (name: string): string[] => {
+  const trimmed = name.trim();
+  return filter((w) => w !== "", trimmed.split(/\s+/));
+};
 
 /** The forms of a name, longest first: full, "D. Whitfield", "Whitfield". */
 export const nameForms = (name: string): readonly string[] => {
-  const words = name.trim().split(/\s+/).filter((w) => w !== "");
+  const words = nonEmptyWords(name);
   if (words.length < 2) return [name.trim()];
   const last = words[words.length - 1];
   return [words.join(" "), `${words[0][0]}. ${last}`, last];
@@ -24,9 +31,11 @@ export const nameForms = (name: string): readonly string[] => {
 
 /** The longest prefix of `text` plus an ellipsis that fits `width`. */
 export const ellipsize = (text: string, width: number, measure: Measure): string => {
-  const cut = Array.from({ length: text.length }, (_, i) => text.length - i)
-    .map((n) => `${text.slice(0, n)}${ELLIPSIS}`)
-    .find((form) => measure(form) <= width);
+  const lengths = Array.from({ length: text.length }, (_, i) => text.length - i);
+  const cut = find(
+    (form: string) => measure(form) <= width,
+    map((n: number) => `${text.slice(0, n)}${ELLIPSIS}`, lengths),
+  );
   return cut ?? ELLIPSIS;
 };
 
@@ -34,7 +43,7 @@ export const ellipsize = (text: string, width: number, measure: Measure): string
 export const fitName = (name: string, width: number, measure: Measure): string => {
   const forms = nameForms(name);
   return (
-    forms.find((form) => measure(form) <= width) ??
+    find((form) => measure(form) <= width, forms) ??
     ellipsize(forms[forms.length - 1], width, measure)
   );
 };

@@ -205,6 +205,10 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   const card = (run: () => readonly Entity[]): JSX.Element => {
     const opened = (): boolean =>
       run().length > 1 && slotById().get(run()[0]?.id ?? "")?.kind === "group";
+    const rest = (): readonly Entity[] => {
+      const [, ...tail] = run();
+      return tail;
+    };
     return (
       <CardSurface>
         <FillStretchRow>
@@ -214,7 +218,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
           >
             {renderDial(() => run()[0] as Entity)}
             <VerticalDivider />
-            <Index each={run().slice(1)}>{renderDial}</Index>
+            <Index each={rest()}>{renderDial}</Index>
           </Show>
         </FillStretchRow>
       </CardSurface>
