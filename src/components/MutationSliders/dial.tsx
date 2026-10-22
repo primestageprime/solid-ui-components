@@ -9,12 +9,12 @@
 //
 //   • the dial itself      → `MarkedSlider` (Depth 1, owns MarkedSlider.css,
 //                            owns the Kobalte root and the SVG overlay)
-//   • the name toggle      → `PressableLabelButton` + `NowrapLabel`
-//   • the two readouts     → `SteadyMonoValue`, `SteadyMonoMeta` /
-//                            `ReservedMonoMeta`
+//   • the name toggle      → `PressableLabelButton` + `EllipsisLabel`
+//   • the two readouts     → `EllipsisMonoValue`, `EllipsisMonoMeta` /
+//                            `ReservedEllipsisMonoMeta`
 //   • the footer slot      → `GlyphSlotGhostButton` / `ReservedGlyphSlotButton`
 //                            + `Icon`
-//   • the column           → `TightCenteredColumn`
+//   • the column           → `DialStack` (stated width: no text widens it)
 //
 // Lowercase filename ON PURPOSE, the same disposition as geometry.ts and
 // BandRail/bands.tsx: `isEntryPath` in scripts/render-coverage.mjs matches any
@@ -41,7 +41,13 @@
 // move its peers instead of itself, and that decision cannot be made here
 // without this component knowing the row.
 // ============================================
-import { type Component, type JSX, Show, createSignal } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  createSignal,
+  onMount,
+} from "solid-js";
 import { Dynamic } from "solid-js/web";
 import {
   GlyphSlotGhostButton,
@@ -49,7 +55,7 @@ import {
   ReservedGlyphSlotButton,
 } from "../Button";
 import { Icon } from "../Icon";
-import { TightCenteredColumn, TightClusterRow } from "../Layout";
+import { DialStack, TightClusterRow } from "../Layout";
 import { MarkedSlider } from "../MarkedSlider";
 import { SliderField } from "../Slider";
 import {
@@ -59,11 +65,12 @@ import {
   dialGeometry,
 } from "../MarkedSlider/geometry";
 import {
-  NowrapLabel,
-  ReservedMonoMeta,
-  SteadyMonoMeta,
-  SteadyMonoValue,
+  EllipsisLabel,
+  EllipsisMonoMeta,
+  EllipsisMonoValue,
+  ReservedEllipsisMonoMeta,
 } from "../Text";
+import { fitName, measurerFor } from "./fitName";
 import type { ResolvedLabels } from "./labels";
 import { type DialReadouts, type ReadoutMode, readoutsOf } from "./readouts";
 
@@ -112,10 +119,37 @@ export interface MutationDialProps {
   keyStep: number;
   /** Whether the name reads as selected. */
   selected: boolean;
-  /** The name was clicked. */
-  onSelect: () => void;
+  /**
+   * The name was clicked. Omitted, the name is plain text, not a toggle — a
+   * role group's aggregate dial never joins the selection.
+   */
+  onSelect?: () => void;
+  /**
+   * A control beside the name — a role group's disclosure chevron. Omitted,
+   * the name stands alone, as it always did.
+   */
+  headerAction?: JSX.Element;
+  /**
+   * A muted line UNDER the name: a group's spread ("avg · $40K–$60K") or a
+   * group-of-one's person. `""` holds the line empty, so every dial in a
+   * grouped row is the same height; omitted, there is no line at all.
+   */
+  note?: string;
+  /**
+   * The footer is a lone Reset, with no Delete: a collapsed role group's
+   * footer. Needs `onReset`.
+   */
+  resetOnly?: boolean;
+  /**
+   * Whether Reset has anything to undo, when the dial's own two amounts
+   * cannot say — a group whose mean is back on its old mean can still hold
+   * members that moved. Omitted, the dial decides from its own amounts.
+   */
+  changed?: boolean;
   /** The dial's box was measured — every dial in a row shares one height. */
   onMeasure: (height: number) => void;
+  /** A pointer went down on the dial: a drag starts (MarkedSlider). */
+  onDragStart?: () => void;
   /** An intermediate value. Already settled onto range + grid. */
   onMove: (value: number) => void;
   /** A COMMITTED value — a released pointer, or one arrow key. */
@@ -216,35 +250,113 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
   const split = (): { reset: () => void; remove: () => void } | null => {
     const reset = props.onReset;
     const remove = props.onRemove;
-    return reset && remove && !dial().removed ? { reset, remove } : null;
+    return reset && remove && !dial().removed && !props.resetOnly
+      ? { reset, remove }
+      : null;
   };
+  /** The lone Reset of a collapsed group, or `null`. */
+  const loneReset = (): (() => void) | null =>
+    props.resetOnly && props.onReset && !dial().removed ? props.onReset : null;
   /** Whether there is anything for Reset to undo. */
   const changed = (): boolean =>
-    dial().isNew || dial().clampedOld !== dial().clampedValue;
+    props.changed ??
+    (dial().isNew || dial().clampedOld !== dial().clampedValue);
+
+  /**
+   * The name: a toggle when the row lets this dial join the selection, plain
+   * text when it does not (a group's aggregate dial).
+   */
+  /** The header font, read once the column is in the page. */
+  const [font, setFont] = createSignal<string | null>(null);
+  let column: HTMLElement | undefined;
+  // Read the font from this column's name once it is painted, else from any
+  // dial name (they share one font). Read at mount alone, the name was not
+  // found, the font stayed null and no name was ever shortened.
+  onMount(() => {
+    requestAnimationFrame(() => {
+      const el = column?.querySelector("[data-dial-name]") ?? document.querySelector("[data-dial-name]");
+      // Build the font from its longhands: Chrome answers "" for the `font`
+      // shorthand when a longhand it cannot express is set (tabular figures),
+      // and canvas then measures in its 10px default, so every name "fits".
+      if (el) {
+        const cs = getComputedStyle(el);
+        setFont(`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`);
+      }
+    });
+  });
+  /** The name shortened to fit the 88px column (fitName.ts). */
+  const shown = (): string => {
+    const f = font();
+    const measure = f === null ? null : measurerFor(f);
+    // Room: the column, less the chevron beside a group name and the button's padding.
+    const room = 88 - 6 - (props.headerAction ? 28 : 0) - (props.onSelect ? 12 : 0);
+    if (measure === null) return props.entity.label;
+    // A role label (a group's header, or a group-of-one whose note names the
+    // person) is not a person's name: it shows whole, never "r. × 3" (owner).
+    const isRole = props.headerAction !== undefined || (props.note !== undefined && props.note !== "");
+    return isRole ? props.entity.label : fitName(props.entity.label, room, measure);
+  };
+
+  const name = (): JSX.Element => (
+    <Show
+      when={props.onSelect}
+      fallback={
+        <EllipsisLabel data-dial-name="" title={props.entity.label}>
+          {shown()}
+        </EllipsisLabel>
+      }
+    >
+      {(onSelect) => (
+        <PressableLabelButton
+          active={props.selected}
+          aria-pressed={props.selected}
+          data-struck={dial().removed ? "" : undefined}
+          onClick={() => onSelect()()}
+        >
+          <EllipsisLabel data-dial-name="" title={props.entity.label}>
+            {shown()}
+          </EllipsisLabel>
+        </PressableLabelButton>
+      )}
+    </Show>
+  );
+
+  /** A collapsed group's footer: Reset alone, disabled with nothing to undo. */
+  const lone = (reset: () => void): JSX.Element => (
+    <GlyphSlotGhostButton
+      aria-label={`Reset ${props.entity.label}`}
+      title="Reset"
+      disabled={!changed()}
+      onClick={() => reset()}
+    >
+      <Icon name="refresh" size="sm" />
+    </GlyphSlotGhostButton>
+  );
 
   /** ONE slot, three states — the footer every row had before the split. */
   const single = (): JSX.Element => (
-      <Show
-        when={footer()}
-        fallback={
-          <ReservedGlyphSlotButton disabled aria-hidden="true">
-            {REMOVE_MARK}
-          </ReservedGlyphSlotButton>
-        }
-      >
-        {(slot) => (
-          <GlyphSlotGhostButton
-            aria-label={slot().label}
-            onClick={() => slot().act()}
-          >
-            {slot().glyph}
-          </GlyphSlotGhostButton>
-        )}
-      </Show>
+    <Show
+      when={footer()}
+      fallback={
+        <ReservedGlyphSlotButton disabled aria-hidden="true">
+          {REMOVE_MARK}
+        </ReservedGlyphSlotButton>
+      }
+    >
+      {(slot) => (
+        <GlyphSlotGhostButton
+          aria-label={slot().label}
+          onClick={() => slot().act()}
+        >
+          {slot().glyph}
+        </GlyphSlotGhostButton>
+      )}
+    </Show>
   );
 
   return (
-    <TightCenteredColumn
+    <DialStack
+      ref={(el: HTMLElement) => (column = el)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocusIn={() => setFocused(true)}
@@ -262,14 +374,24 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           says "Adlai, pressed" instead of leaving the state to the colour.
           `data-struck` is the removal, which the strike says a second time for
           anyone who cannot see the colour. */}
-      <PressableLabelButton
-        active={props.selected}
-        aria-pressed={props.selected}
-        data-struck={dial().removed ? "" : undefined}
-        onClick={() => props.onSelect()}
-      >
-        <NowrapLabel>{props.entity.label}</NowrapLabel>
-      </PressableLabelButton>
+      <Show when={props.headerAction} fallback={name()}>
+        {(action) => (
+          <TightClusterRow>
+            {name()}
+            {action()}
+          </TightClusterRow>
+        )}
+      </Show>
+      <Show when={props.note !== undefined}>
+        <Dynamic
+          component={
+            props.note === "" ? ReservedEllipsisMonoMeta : EllipsisMonoMeta
+          }
+          title={props.note || undefined}
+        >
+          {props.note || NBSP}
+        </Dynamic>
+      </Show>
       {/* The LINK slot, directly UNDER the name, and only for a row that
           links. Under rather than above so the tab order is name → link →
           thumb: focusing the name reveals the link and the next Tab lands on
@@ -326,6 +448,7 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
         priorLabel={readouts().priorLabel}
         active={props.selected}
         onMeasure={props.onMeasure}
+        onDragStart={() => props.onDragStart?.()}
         onChange={(value) => props.onMove(value)}
         onChangeEnd={(value) => props.onCommit(value)}
       />
@@ -342,7 +465,11 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           and clamps it (typed.ts). A removed entity has no amount to edit. */}
       <Show
         when={props.onType !== undefined && !dial().removed}
-        fallback={<SteadyMonoValue>{futureReadout()}</SteadyMonoValue>}
+        fallback={
+          <EllipsisMonoValue title={futureReadout()}>
+            {futureReadout()}
+          </EllipsisMonoValue>
+        }
       >
         <SliderField
           label={`${props.entity.label} amount`}
@@ -352,7 +479,10 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
         />
       </Show>
       <Dynamic
-        component={priorReadout() === "" ? ReservedMonoMeta : SteadyMonoMeta}
+        component={
+          priorReadout() === "" ? ReservedEllipsisMonoMeta : EllipsisMonoMeta
+        }
+        title={priorReadout() || undefined}
       >
         {priorReadout() || NBSP}
       </Dynamic>
@@ -369,7 +499,14 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           widens the column and breaks the row's paging arithmetic (DIAL_SLOT). Reset is DISABLED when there is nothing to reset
           rather than hidden, so Delete never slides under the pointer. The
           confirm on Delete is the consumer's: this only reports the intent. */}
-      <Show when={split()} fallback={single()}>
+      <Show
+        when={split()}
+        fallback={
+          <Show when={loneReset()} fallback={single()}>
+            {(reset) => lone(reset())}
+          </Show>
+        }
+      >
         {(pair) => (
           <TightClusterRow>
             <GlyphSlotGhostButton
@@ -390,6 +527,6 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           </TightClusterRow>
         )}
       </Show>
-    </TightCenteredColumn>
+    </DialStack>
   );
 };

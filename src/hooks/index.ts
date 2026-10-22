@@ -110,3 +110,14 @@ export type {
   SubmitActionOptions,
   SubmitWork,
 } from "./createSubmitAction";
+// Enter in a one-line field submits its form: the keydown and submit handlers
+// behind `Modal`'s `onSubmit`, for a plain `<form>` too.
+export {
+  explicitSubmitterOf,
+  isSubmitEnter,
+  submitHandler,
+  submitOnEnter,
+} from "./submitOnEnter";
+// An opened form puts focus in its first field, and gives it back to the
+// opener on close: what `Modal` and `BottomSheet` do on open.
+export { focusOnOpen, initialFocusTarget } from "./initialFocus";

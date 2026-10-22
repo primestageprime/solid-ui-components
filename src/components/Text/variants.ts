@@ -452,3 +452,53 @@ export const HintText = createText({
   variant: "sublabel",
   style: { "text-align": "center" },
 });
+
+// Fixed-column readouts — for a column whose width is stated by its parent
+// (MutationSliders' dial column). One line, tabular figures, and an ellipsis
+// for anything longer than the column: the text never widens its column.
+// Put the full text in `title`.
+const ELLIPSIS = {
+  "min-width": "0",
+  "max-width": "100%",
+  overflow: "hidden",
+  "white-space": "nowrap",
+  "text-overflow": "ellipsis",
+  "font-variant-numeric": "tabular-nums",
+} as const;
+
+export const EllipsisLabel = createText({
+  variant: "label",
+  as: "span",
+  style: { ...ELLIPSIS, display: "inline-block", "vertical-align": "bottom" },
+});
+
+export const EllipsisMonoValue = createText({
+  variant: "value",
+  style: {
+    ...ELLIPSIS,
+    "font-family": '"JetBrains Mono", "Fira Code", monospace',
+    "line-height": "1.25",
+  },
+});
+
+export const EllipsisMonoMeta = createText({
+  variant: "sublabel",
+  style: {
+    ...ELLIPSIS,
+    "font-size": "11px",
+    "font-family": "var(--sui-font-mono)",
+    "line-height": "1.35",
+  },
+});
+
+/** `EllipsisMonoMeta` that holds its space and says nothing. */
+export const ReservedEllipsisMonoMeta = createText({
+  variant: "sublabel",
+  style: {
+    ...ELLIPSIS,
+    "font-size": "11px",
+    "font-family": "var(--sui-font-mono)",
+    "line-height": "1.35",
+    visibility: "hidden",
+  },
+});

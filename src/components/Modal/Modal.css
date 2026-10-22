@@ -13,11 +13,23 @@
 }
 
 /* Modal container */
+/* The dialog takes focus only when it holds nothing focusable
+   (hooks/initialFocus); it draws no ring for that. */
+.sui-modal:focus {
+  outline: none;
+}
+
 .sui-modal {
   position: relative;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+}
+
+/* The form that `onSubmit` adds around body + footer adds no box, so the
+   body still scrolls inside the modal's flex column. */
+.sui-modal__form {
+  display: contents;
 }
 
 /* Modal sizes */

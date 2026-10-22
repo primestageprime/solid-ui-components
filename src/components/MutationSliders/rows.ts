@@ -46,6 +46,14 @@ export const DIAL_SLOT = VIEW_WIDTH + ROW_GAP;
  * gap: 12 + 5 = 17px of a 24px gap, leaving 7px clear.
  */
 export const GUTTER_GAP = 24;
+
+/**
+ * What a CARD adds per dial in a row with role groups: the card's padding and
+ * border on both sides (2 × 16 + 2) and the wider gap between cards. Charged
+ * per DIAL, not per card, so a card of several dials is over-counted and the
+ * row pages a little early rather than clipping a card.
+ */
+export const CARD_OVERHEAD = 2 * 16 + 2 + (GUTTER_GAP - ROW_GAP);
 /** What one dial costs a guttered row. */
 export const GUTTERED_DIAL_SLOT = VIEW_WIDTH + GUTTER_GAP;
 /** What one chevron button costs, including its gap. */

@@ -17,6 +17,13 @@ import "./Button.css";
 
 export interface ButtonProps
   extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
+  /**
+   * The native button type. Default `"button"`, so a SUI button inside a
+   * `<form>` never submits it by accident. Pass `"submit"` for the button that
+   * submits the form (a Modal with `onSubmit` looks for it), or `"reset"`.
+   * The native type, so a wrapper that forwards its own props still fits.
+   */
+  type?: JSX.ButtonHTMLAttributes<HTMLButtonElement>["type"];
   variant?:
     | "default"
     | "primary"
@@ -78,6 +85,7 @@ export const Button: Component<ButtonProps> = (props) => {
     "once",
     "action",
     "onClick",
+    "type",
   ]);
 
   // The action is fixed at creation, as a Solid component's setup runs once.
@@ -109,7 +117,12 @@ export const Button: Component<ButtonProps> = (props) => {
   };
 
   return (
+    // `type="button"` unless the caller says otherwise: a typeless button is a
+    // SUBMIT button, so inside a consumer's `<form>` every SUI button would
+    // submit it (owner rule, 2026-10-21). Pass `type="submit"` for the one
+    // button that should.
     <button
+      type={local.type ?? "button"}
       class={classes()}
       disabled={disabled()}
       aria-busy={loading() || undefined}

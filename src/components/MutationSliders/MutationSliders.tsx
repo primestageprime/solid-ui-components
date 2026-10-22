@@ -78,9 +78,11 @@
 // `MarkedSlider/geometry.ts`, its DOM and its CSS in the Primitive itself.
 // Everything about the ROW lives in rows.ts, which is pure and prints as a
 // table (rows.test.ts). Every WORD lives in labels.ts. One entity's COLUMN
-// lives in dial.tsx. This file owns exactly what is left, and what is left is
-// the ROW: how many dials fit, which window shows, which names are selected,
-// and what a move means when more than one is pinned.
+// lives in dial.tsx. The ROW is split by concern into sibling modules, and this
+// file composes them and owns the frame: props.ts (types), scale.ts (domain,
+// steps, height), selection.ts, roleGroups.ts, rowWindow.ts (paging),
+// rowMoves.ts (what a move means when more than one is pinned), emit.ts and
+// dialRenderers.tsx.
 //
 // IT ABSORBS ITS CONTAINER, in both directions (Peter, 2026-09-16: "I want the
 // charts to naturally absorb the height and width of their containers"). The
@@ -119,269 +121,41 @@
 // CURRIED. `format`, `labels` and `snap` are the presentational overrides a
 // variant locks; everything else is data and callbacks. See
 // `createMutationSliders` below and `variants.ts`.
-// ============================================
-import {
-  type Component,
-  Index,
-  type JSX,
-  Show,
-  createMemo,
-  createSignal,
-  mergeProps,
-  onCleanup,
-} from "solid-js";
-import { filter, map, some } from "../../fn";
-import { clamp } from "../../internal/math/clamp";
-import { observeSize } from "../../internal/dom/observeSize";
+import { type Component, Index, type JSX, Show, mergeProps } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import { SmallGhostButton } from "../Button";
 import { Icon } from "../Icon";
+import { VerticalDivider } from "../Divider";
 import {
   CenteredStack,
   FillStretchRow,
   GutteredFillStretchRow,
 } from "../Layout";
-import { Dynamic } from "solid-js/web";
-import { MutationDial } from "./dial";
-import {
-  type MutationSliderLabels,
-  type ResolvedLabels,
-  resolveLabels,
-} from "./labels";
-import {
-  type Domain,
-  type Entity,
-  dialHeightFor,
-  dragStep,
-  dialGeometry,
-  niceStep,
-  trackDomainOf,
-} from "../MarkedSlider/geometry";
-import type { ReadoutMode } from "./readouts";
-import { type MoveContext, resolveMove, resolveReset } from "./moves";
-import { settleTyped } from "./typed";
-import { type ItemRun, itemLayout, itemRuns } from "./items";
-import {
-  DIAL_SLOT,
-  GUTTERED_DIAL_SLOT,
-  GUTTER_GAP,
-  ROW_GAP,
-  pinTo,
-  type RowLayout,
-  rowLayout,
-  windowLabel,
-} from "./rows";
+import { CardSurface } from "../Surface";
+import type { Entity } from "../MarkedSlider/geometry";
+import { createDialRenderer } from "./dialRenderers";
+import { createEmitters } from "./emit";
+import { type ResolvedLabels, resolveLabels } from "./labels";
+import type {
+  MutationSlidersDataProps,
+  MutationSlidersOverrides,
+  MutationSlidersProps,
+} from "./props";
+import { createRoleGroups } from "./roleGroups";
+import { createRowMoves } from "./rowMoves";
+import { createRowWindow } from "./rowWindow";
+import { windowLabel } from "./rows";
+import { createRowScale } from "./scale";
+import { createSelection } from "./selection";
 
 export type { MutationSliderLabels } from "./labels";
+export type { SliderGroup as MutationSliderGroup } from "./groups";
 export type { ReadoutMode as MutationSlidersReadout } from "./readouts";
-
-export interface MutationSlidersProps {
-  /** One dial per entity, drawn in the order given — that order is the reading order. */
-  entities: readonly Entity[];
-  /**
-   * The shared `[min, max]` the TRACK runs, in the consumer's own units. Every
-   * dial in the row uses it, which is what makes two dials comparable.
-   *
-   * OPTIONAL. Left out, it is DERIVED from the entities — the lowest range
-   * floor to the highest range ceiling — so the ranges fill the dial's full
-   * height instead of huddling in part of it. That is nearly always what you
-   * want: a caller-chosen domain is usually too generous at one end, and the
-   * entities already state the interesting range.
-   *
-   * Pass one only to hold the track STILL: a scale that must not move as
-   * entities come and go, or two rows that have to be read against each other.
-   */
-  domain?: Domain;
-  /**
-   * Called when a drag or a thumb-moving key changes one entity's future
-   * amount. The value is already clamped into that entity's allowed range —
-   * this never emits a figure the range does not permit.
-   */
-  onChange: (id: string, value: number) => void;
-  /**
-   * Called ONCE when a gesture COMMITS — the pointer is released, or an arrow
-   * key has finished its step. The value is clamped into the range, exactly as
-   * `onChange` is.
-   *
-   * `onChange` fires on every intermediate unit of a drag, which is what a
-   * readout wants and what anything EXPENSIVE does not: a consumer that keys
-   * derived state by the amount would rebuild it hundreds of times across one
-   * drag, at amounts the reader never chose. Take this one for persistence,
-   * derived state, or anything that recomputes.
-   */
-  onChangeEnd?: (id: string, value: number) => void;
-  /**
-   * Round every emitted amount onto a grid of this size — `1000` to land an
-   * amount on whole thousands (Peter, 2026-09-16: "Do have the ... amount snap
-   * to whole $k numbers").
-   *
-   * OPTIONAL, and omitted the drag stays continuous to the finest unit the
-   * domain can express. This is NOT the `step` prop I declined earlier: that
-   * one would have set how far a KEY moves, which is a property of the scale
-   * and is derived. This sets which values EXIST, which is a property of the
-   * consumer's domain — some quantities come in round units even though the
-   * arithmetic does not care.
-   *
-   * The allowed range still wins at the edges: a ceiling that is not a
-   * multiple of `snap` is emitted exactly as it stands rather than rounded
-   * past itself. It also raises the arrow-key step when it is coarser, so the
-   * keyboard cannot land between the rungs a drag is confined to.
-   */
-  snap?: number;
-  /**
-   * The words the dial says on the consumer's behalf — the two footer actions
-   * and the readout for an entity with no prior amount.
-   *
-   * OPTIONAL, defaulting to `"Remove"` / `"Restore"` / `"New"`. This component
-   * knows nothing about what its entities ARE, so it cannot know whether
-   * taking one out is called terminating, cancelling or deleting. Supply the
-   * consumer's own verbs here and the domain vocabulary stays at the call
-   * site, where it belongs.
-   */
-  labels?: MutationSliderLabels;
-  /**
-   * Called when the ⊗ under a dial is pressed. Omitted, no ⊗ is drawn at all
-   * and a removed entity still reads as removed by its struck-through name.
-   */
-  onRemove?: (id: string) => void;
-  /**
-   * Called when the ↺ under a REMOVED entity is pressed. Omitted, no ↺ is
-   * drawn and a removed entity has no way back — which is the right shape for
-   * a consumer whose scenarios are append-only.
-   *
-   * What "restore" MEANS is the consumer's: this component holds no memory of
-   * what the entity was worth before it was removed, and inventing one would
-   * put a second, stale copy of the truth inside the widget. The obvious
-   * reading is `value = old` — put it back on the amount it came in at — and
-   * the range floor for something that never had an `old` at all.
-   */
-  onRestore?: (id: string) => void;
-  /**
-   * Turns each present dial's footer into a split pair, Reset | Delete,
-   * instead of the single ⊗ (Peter, 2026-09-24). Omitted, the footer is
-   * exactly what it always was.
-   *
-   * RESET IS A MOVE, not a setter (Peter, 2026-09-24): a dial with a prior
-   * amount goes back to it through `onChange` / `onChangeEnd`, exactly as a
-   * drag would — so a LINKED group follows it to that level, and any member
-   * that cannot stand there (outside its range, or removed) drops out of the
-   * selection through `onSelectionChange` (links.ts, `resetLinked`). This
-   * callback is called only for a dial with NO prior amount — a new entity —
-   * whose reset means whatever the consumer says it means.
-   *
-   * Neither Reset nor Delete confirms here — a consumer that wants a confirm
-   * on Delete wraps `onRemove` in its own dialog.
-   */
-  onReset?: (id: string) => void;
-  /**
-   * Which entities are SELECTED, by id. Controlled when supplied.
-   *
-   * Omitted, the component keeps the selection itself — a consumer who only
-   * wants the pinning behaviour should not have to hold state to get it. Pass
-   * it when the selection means something ELSEWHERE too: a board that
-   * highlights the same entities on a chart beside the dials needs to be the
-   * one holding the list.
-   */
-  selected?: readonly string[];
-  /**
-   * Called when a name is clicked, with the WHOLE new selection rather than
-   * the id that changed — a caller storing a list should not have to
-   * reimplement the toggle to keep up with it.
-   */
-  onSelectionChange?: (ids: readonly string[]) => void;
-  /** Called by the `+` at the end of the row. Omitted, no `+` is drawn. */
-  onAdd?: () => void;
-  /**
-   * Renders the amount under each dial, and the `aria-valuetext` a screen
-   * reader announces. Default `String`.
-   *
-   * Without it Kobalte reads the value as a percentage of the domain's top,
-   * which is wrong for any domain that does not start at zero — and wrong for
-   * most units in every case.
-   */
-  format?: (value: number) => string;
-  /**
-   * Where each dial prints its figures (readouts.ts). Default `"stacked"`:
-   * the future amount under the dial, `was <prior>` beneath it, the signed
-   * delta beside the change line. `"beside"` puts the OLD amount beside the
-   * prior arrowhead and the difference under the new amount as `+$5K (4%)`
-   * (Peter's payroll board, 2026-09-24).
-   *
-   * Presentational, so a variant locks it — see `CompactCurrencyMutationSliders`.
-   */
-  readout?: ReadoutMode;
-  /**
-   * How the SELECTION groups dials (Peter, 2026-09-24). Either way, two or
-   * more selected dials snap to the highest amount among them and then move
-   * together; the modes differ in how they are reached and how they move:
-   *
-   *   • `"pin"` (default) — the original: click names to select, and a move
-   *     carries every selected dial by the same DELTA, so a group a ceiling
-   *     split keeps its shape.
-   *   • `"link"` — a link button too (under each name, shown on hover or
-   *     focus, and always on a selected dial), and a move sends every selected
-   *     dial to the same AMOUNT, so a group a ceiling split collapses back to
-   *     level on the next move inside it (links.ts, `applyLinkedMove`).
-   *
-   * Presentational/behavioural, so a variant locks it — see
-   * `CompactCurrencyMutationSliders`. The selection itself stays
-   * `selected` / `onSelectionChange` in both modes: one group, two triggers.
-   */
-  grouping?: "pin" | "link";
-  /**
-   * Makes the amount under each dial EDITABLE IN PLACE, rounding what is
-   * typed to this power of ten: `2` → 0.01, `0` → whole units, `-3` → the
-   * thousand (Peter, 2026-09-24). Omitted, the amount is static text.
-   *
-   * No min, max or step of its own: a typed figure lands inside the entity's
-   * own RANGE — the same clamp a drag obeys — and `snap` is already the
-   * step. It is rounded FIRST and clamped second (typed.ts), so rounding can
-   * never carry a figure past the range. A commit moves the dial exactly as
-   * one key press does, so a linked or pinned group follows it.
-   */
-  precision?: number;
-  /**
-   * What an ITEM of several dials is drawn inside — a subtle background
-   * behind one person's two positions (Peter, 2026-09-24). Only runs of two
-   * or more dials sharing an `item` are framed; the frame's children are the
-   * run's dials in a row with the row's own gap, so the pitch — and the
-   * paging arithmetic — is unchanged. Omitted, items still page as whole
-   * units but draw no background.
-   *
-   * A component rather than a colour, so the look stays a variant's business:
-   * the consumer curries the frame it wants.
-   */
-  itemFrame?: Component<{ children?: JSX.Element }>;
-}
-
-/**
- * What a curried variant locks: the PRESENTATIONAL decisions.
- *
- * `format` is here for the same reason it is on `Slider` and `BandRail` — the
- * unit a row reads in is a static style decision of the surface it sits on,
- * not per-instance content. `labels` is the vocabulary, and `snap` is which
- * values the consumer's domain admits at all. All three are properties of the
- * CONSUMER'S WORLD rather than of a given row, which is exactly the set a
- * variant should carry.
- *
- * Everything else — the entities, the domain, the selection and every
- * callback — is DATA, and stays at the call site.
- */
-export type MutationSlidersOverrides = Pick<
+export type {
+  MutationSlidersDataProps,
+  MutationSlidersOverrides,
   MutationSlidersProps,
-  | "format"
-  | "labels"
-  | "snap"
-  | "readout"
-  | "grouping"
-  | "precision"
-  | "itemFrame"
->;
-
-/** What a curried variant exposes: everything except the curried overrides. */
-export type MutationSlidersDataProps = Omit<
-  MutationSlidersProps,
-  keyof MutationSlidersOverrides
->;
+} from "./props";
 
 /**
  * A row of range-banded prior-vs-future dials, one per named entity.
@@ -399,327 +173,69 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
   const format = (value: number): string => (props.format ?? String)(value);
   const labels = (): ResolvedLabels => resolveLabels(props.labels);
 
-  // ── the row, when it does not all fit ──────────────────────────────────
-  // The row measures ITSELF rather than taking a width prop: how much room a
-  // row of dials has is a fact about the page it was dropped into, and a
-  // consumer would have to re-measure and re-pass it on every layout change.
-  //
-  // `0` means NOT MEASURED YET, and an unmeasured row shows EVERYTHING rather
-  // than falling back to the one-dial minimum. The distinction matters well
-  // beyond the first frame: `observeSize` returns a no-op disposer wherever
-  // `ResizeObserver` is undefined — SSR, jsdom, older engines — so a width that
-  // never arrives is a real and permanent state, not a transient one. Reading
-  // it as "one dial" would leave those environments showing a single entity
-  // for ever, which looks like a broken component rather than a narrow one.
-  //
-  // Unknown is not narrow. The minimum-of-one rule is about a container that
-  // was MEASURED and found too small.
-  const [width, setWidth] = createSignal(0);
-  const [offset, setOffset] = createSignal(0);
-  // Every dial in a row is the same height, so ONE signal serves them all —
-  // whichever reports first, and they agree thereafter.
-  const [measuredDialHeight, setMeasuredDialHeight] = createSignal(0);
-  /**
-   * The selection, when the caller does not hold it. CONTROLLED wins: if
-   * `selected` is supplied it is the truth and this is never read, so the two
-   * can never drift apart.
-   */
-  const [ownSelection, setOwnSelection] = createSignal<readonly string[]>([]);
-  const selection = (): readonly string[] => props.selected ?? ownSelection();
-  const isSelected = (id: string): boolean => selection().includes(id);
-
-  /** The height to DRAW at: the container's, floored, or the fixed default. */
-  const dialHeight = (): number => dialHeightFor(measuredDialHeight());
-
-  /**
-   * A zero reading is no information, not a measurement — writing it would
-   * clobber a real size the observer already delivered (under jsdom every rect
-   * is zero).
-   */
-  const measureDial = (height: number): void => {
-    if (height > 0) setMeasuredDialHeight(height);
-  };
-
-  /**
-   * Which of the two callbacks a fan-out speaks through.
-   *
-   *   • `change` — intermediate, so `onChange` only.
-   *   • `commit` — the value already went out through `onChange`, so this says
-   *                only `onChangeEnd`.
-   *   • `both`   — one whole gesture that was never dragged: a group forming,
-   *                or an arrow key.
-   */
-  type Emission = "change" | "commit" | "both";
-
-  /** Emit one change per entity a pin or a group move actually moved. */
-  const emitAll = (
-    moved: readonly { id: string; value: number }[],
-    how: Emission,
-  ): void => {
-    for (const { id, value } of moved) {
-      if (how !== "commit") props.onChange(id, value);
-      if (how !== "change") props.onChangeEnd?.(id, value);
-    }
-  };
-
-  /**
-   * Toggle a name. When the toggle FORMS a group of two or more, every member
-   * snaps to the highest amount among them straight away — that is the moment
-   * the pin means something, and waiting for a drag would leave the reader
-   * looking at a group that says it is pinned and is not.
-   */
-  const toggleSelection = (id: string): void => {
-    const next = isSelected(id)
-      ? filter((other: string) => other !== id, selection())
-      : [...selection(), id];
-    if (props.selected === undefined) setOwnSelection(next);
-    props.onSelectionChange?.(next);
-    if (next.length > 1 && next.includes(id)) {
-      emitAll(pinTo(props.entities, next), "both");
-    }
-  };
-
-  const measure = (el: HTMLDivElement): void => {
-    setWidth(el.clientWidth);
-    onCleanup(observeSize(el, (size) => setWidth(size.width)));
-  };
-
-  /**
-   * The `"beside"` readout's change figure runs right of each bar into the gap,
-   * so that row takes the 24px GUTTER (`GutteredFillStretchRow`) and pages by
-   * the matching slot. Every other row is exactly the 8px row it was.
-   */
-  const guttered = (): boolean => props.readout === "beside";
-
-  /** Whether any dial names an ITEM — the row then groups and pages by item. */
-  const itemized = (): boolean =>
-    some((entity: Entity) => entity.item !== undefined, props.entities);
-  /** The row's item runs (items.ts), over every entity, in reading order. */
-  const runs = createMemo((): readonly ItemRun[] =>
-    itemRuns(map((entity: Entity) => entity.item, props.entities)),
-  );
-
-  const layout = createMemo((): RowLayout => {
-    const count = props.entities.length;
-    if (width() <= 0) {
-      return { start: 0, end: count, capacity: count, paging: false };
-    }
-    if (itemized()) {
-      // BY WHOLE ITEMS: a page never shows one of a person's dials without
-      // the other. `offset` counts RUNS in this mode.
-      const out = itemLayout(
-        width(),
-        runs(),
-        offset(),
-        props.onAdd !== undefined,
-        guttered() ? GUTTERED_DIAL_SLOT : DIAL_SLOT,
-        guttered() ? GUTTER_GAP : ROW_GAP,
-      );
-      return {
-        start: out.start,
-        end: out.end,
-        capacity: out.end - out.start,
-        paging: out.paging,
-      };
-    }
-    return guttered()
-      ? rowLayout(
-          width(),
-          count,
-          offset(),
-          props.onAdd !== undefined,
-          GUTTERED_DIAL_SLOT,
-          GUTTER_GAP,
-        )
-      : rowLayout(width(), count, offset(), props.onAdd !== undefined);
+  // The row's concerns, each in its own module (see the imports). They are
+  // built in dependency order: emitters first, then what speaks through them.
+  const emitters = createEmitters(props);
+  const selection = createSelection(props, emitters);
+  const roles = createRoleGroups(props, emitters);
+  const { shown } = roles;
+  const win = createRowWindow(props, shown);
+  const scale = createRowScale(props);
+  const moves = createRowMoves(props, scale, selection, emitters);
+  const renderDial = createDialRenderer({
+    props,
+    format,
+    labels,
+    scale,
+    selection,
+    roles,
+    moves,
+    emitGroup: emitters.emitGroup,
   });
+  const { layout, guttered, itemized, visible, visibleRuns, page } = win;
+  const { slotById, grouped } = roles;
 
   /**
-   * Page by ONE dial, not by a screenful.
-   *
-   * The row exists to be COMPARED across, and a full-page jump means no two
-   * neighbours either side of a boundary are ever on screen together — the
-   * reader loses exactly the adjacency they were reading. Stepping by one
-   * keeps every pair reachable, at the cost of more presses on a long row.
+   * CARDS (owner, 2026-10-21: "each slider should be inside a card"). In a row
+   * with role groups, every top-level column — a role group, a one-person
+   * role, a person in no group — is its own `CardSurface`, and the cards stand
+   * apart at the gutter gap. An open group's member dials sit in the same
+   * card, after a `VerticalDivider` beside the group dial.
    */
-  const page = (delta: number): void => {
-    if (itemized()) {
-      // One RUN at a time — a whole person, whatever their dial count.
-      setOffset((current) =>
-        clamp(current + delta, 0, Math.max(runs().length - 1, 0)),
-      );
-      return;
-    }
-    const { capacity } = layout();
-    setOffset((current) =>
-      clamp(current + delta, 0, Math.max(props.entities.length - capacity, 0)),
+  const card = (run: () => readonly Entity[]): JSX.Element => {
+    const opened = (): boolean =>
+      run().length > 1 && slotById().get(run()[0]?.id ?? "")?.kind === "group";
+    const rest = (): readonly Entity[] => {
+      const [, ...tail] = run();
+      return tail;
+    };
+    return (
+      <CardSurface>
+        <FillStretchRow>
+          <Show
+            when={opened()}
+            fallback={<Index each={run()}>{renderDial}</Index>}
+          >
+            {renderDial(() => run()[0] as Entity)}
+            <VerticalDivider />
+            <Index each={rest()}>{renderDial}</Index>
+          </Show>
+        </FillStretchRow>
+      </CardSurface>
     );
   };
 
-  // The window is derived, so it CANNOT disagree with the arrows' disabled
-  // state: both read the same memo.
-  const atStart = (): boolean => layout().start === 0;
-  const atEnd = (): boolean => layout().end >= props.entities.length;
-
-  const visible = createMemo(() =>
-    props.entities.slice(layout().start, layout().end),
-  );
-  /** The runs inside the visible window, each as its entities. */
-  const visibleRuns = createMemo((): readonly (readonly Entity[])[] =>
-    map(
-      (run: ItemRun) =>
-        map((index: number) => props.entities[index], run.indices),
-      filter(
-        (run: ItemRun) =>
-          run.indices[0] >= layout().start && run.indices[0] < layout().end,
-        runs(),
-      ),
-    ),
-  );
-
-  /**
-   * The track every dial shares. The caller's if they gave one, otherwise the
-   * span the entities themselves bracket.
-   */
-  const domain = (): Domain => props.domain ?? trackDomainOf(props.entities);
-
-  /**
-   * What a POINTER drag moves by: the finest unit the domain can express, so
-   * the thumb tracks the pointer instead of jumping between rungs. Kobalte's
-   * `step` governs the drag as well as the keyboard, which is why this is not
-   * `niceStep` — see `dragStep` in geometry.ts.
-   */
-  const step = (): number => props.snap ?? dragStep(domain());
-
-  /**
-   * What an ARROW KEY moves by. Ten of these for a page key.
-   *
-   * `snap` raises it when it is coarser: a grid of round units with a finer
-   * key step would let the keyboard land between the rungs a drag is confined
-   * to, so two ways of moving the same thumb would disagree about which values
-   * exist.
-   */
-  const keyStep = (): number => Math.max(niceStep(domain()), props.snap ?? 0);
-
-  /** The row-level facts `resolveMove` and `resolveReset` read. */
-  const moveContext = (): MoveContext => ({
-    entities: props.entities,
-    selection: selection(),
-    grouping: props.grouping,
-  });
-
-  /**
-   * WHAT A MOVE MEANS is decided in moves.ts (`resolveMove`); this only emits
-   * what it returns. An arrow key calls it twice — intermediate, then
-   * committed — which is what makes one key press a whole gesture: it moves
-   * AND it persists.
-   */
-  const move = (entity: Entity, next: number, commit: boolean): void => {
-    const shown = dialGeometry(domain(), entity, dialHeight()).clampedValue;
-    const fanout = resolveMove(moveContext(), entity, shown, next, commit);
-    if (fanout) emitAll(fanout.moved, fanout.how);
-  };
-
-  /**
-   * A typed figure committed under a dial: settled onto the dial's own range
-   * and grid, then moved exactly as one key press moves — intermediate and
-   * committed — so a group fans out and a consumer persists it. Nothing that
-   * parses to nothing, and nothing that does not move, is emitted.
-   */
-  const typeIn = (entity: Entity, text: string): void => {
-    const precision = props.precision;
-    if (precision === undefined) return;
-    const current = dialGeometry(domain(), entity, dialHeight());
-    const next = settleTyped(text, {
-      min: current.range[0],
-      max: current.range[1],
-      precision,
-    });
-    if (next === null || next === current.clampedValue) return;
-    move(entity, next, false);
-    move(entity, next, true);
-  };
-
-  /** A per-dial Reset, as `resolveReset` plans it. */
-  const resetDial = (entity: Entity): void => {
-    const plan = resolveReset(moveContext(), domain(), entity);
-    if (plan.kind === "consumer") {
-      props.onReset?.(entity.id);
-      return;
-    }
-    if (plan.kind === "linked") {
-      emitAll(plan.moved, "both");
-      if (plan.unlink.length > 0) {
-        const next = filter(
-          (id: string) => !some((gone: string) => gone === id, plan.unlink),
-          selection(),
-        );
-        if (props.selected === undefined) setOwnSelection(next);
-        props.onSelectionChange?.(next);
-      }
-      return;
-    }
-    move(entity, plan.target, false);
-    move(entity, plan.target, true);
-  };
-
-  /** One dial of the row. `Index` keys by position — see the render below. */
-  const renderDial = (entity: () => Entity): JSX.Element => (
-    <MutationDial
-      entity={entity()}
-      domain={domain()}
-      // ONE height feeds everything: the viewBox, the track path, AND
-      // every value→y mapping behind the range, the arrows, the change
-      // line and the delta label. Omitting it left those five at the
-      // 260px default while the track and the viewBox were at the
-      // measured height, so the bands and arrows bunched into the top
-      // third of a tall dial and the pointer disagreed with all of them.
-      height={dialHeight()}
-      format={format}
-      labels={labels()}
-      readout={props.readout}
-      snap={props.snap}
-      dragStep={step()}
-      keyStep={keyStep()}
-      selected={isSelected(entity().id)}
-      onSelect={() => toggleSelection(entity().id)}
-      onMeasure={measureDial}
-      onMove={(value) => move(entity(), value, false)}
-      onCommit={(value) => move(entity(), value, true)}
-      onRemove={
-        props.onRemove ? () => props.onRemove?.(entity().id) : undefined
-      }
-      onRestore={
-        props.onRestore ? () => props.onRestore?.(entity().id) : undefined
-      }
-      onType={
-        props.precision === undefined
-          ? undefined
-          : (text) => typeIn(entity(), text)
-      }
-      onReset={props.onReset ? () => resetDial(entity()) : undefined}
-      onLink={
-        props.grouping === "link"
-          ? () => toggleSelection(entity().id)
-          : undefined
-      }
-      linked={props.grouping === "link" && isSelected(entity().id)}
-    />
-  );
-
   return (
     <Dynamic
-      component={guttered() ? GutteredFillStretchRow : FillStretchRow}
-      ref={measure}
+      component={
+        guttered() || grouped() ? GutteredFillStretchRow : FillStretchRow
+      }
+      ref={win.measure}
       // A group rather than a bare div, so the window is ANNOUNCED. Without
       // it a screen-reader user paging the row hears five dials change names
       // and nothing telling them where in the seven they now are.
       role="group"
-      aria-label={windowLabel(
-        layout().start,
-        layout().end,
-        props.entities.length,
-      )}
+      aria-label={windowLabel(layout().start, layout().end, shown().length)}
     >
       {/* The chevrons exist only when the row pages. A permanently-present
           pair, greyed out on a row that fits, would be two controls promising
@@ -731,7 +247,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
         <CenteredStack>
           <SmallGhostButton
             aria-label="Previous dial"
-            disabled={atStart()}
+            disabled={win.atStart()}
             onClick={() => page(-1)}
           >
             <Icon name="chevron-left" size="sm" />
@@ -752,21 +268,27 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
             pitch — and the paging — is the same as unframed dials. */}
         <Index each={visibleRuns()}>
           {(run) => (
-            <Show
-              when={run().length > 1 && props.itemFrame}
-              fallback={<Index each={run()}>{renderDial}</Index>}
-            >
-              {(Frame) => (
-                <Dynamic component={Frame()}>
-                  <Dynamic
-                    component={
-                      guttered() ? GutteredFillStretchRow : FillStretchRow
-                    }
-                  >
-                    <Index each={run()}>{renderDial}</Index>
+            <Show when={!grouped()} fallback={card(run)}>
+              <Show
+                when={
+                  (run().length > 1 ||
+                    slotById().get(run()[0]?.id ?? "")?.kind !== "plain") &&
+                  props.itemFrame
+                }
+                fallback={<Index each={run()}>{renderDial}</Index>}
+              >
+                {(Frame) => (
+                  <Dynamic component={Frame()}>
+                    <Dynamic
+                      component={
+                        guttered() ? GutteredFillStretchRow : FillStretchRow
+                      }
+                    >
+                      <Index each={run()}>{renderDial}</Index>
+                    </Dynamic>
                   </Dynamic>
-                </Dynamic>
-              )}
+                )}
+              </Show>
             </Show>
           )}
         </Index>
@@ -775,7 +297,7 @@ export const MutationSliders: Component<MutationSlidersProps> = (props) => {
         <CenteredStack>
           <SmallGhostButton
             aria-label="Next dial"
-            disabled={atEnd()}
+            disabled={win.atEnd()}
             onClick={() => page(1)}
           >
             <Icon name="chevron-right" size="sm" />

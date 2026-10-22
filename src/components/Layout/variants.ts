@@ -24,6 +24,8 @@ import type { Component } from "solid-js";
 import { DEFAULT_CHART_HEIGHT } from "../ScrubChart/helpers";
 // Same disposition, other axis — see FillPaneRailGrid.
 import { NATURAL_GAUGE_WIDTH } from "../RateGauge/geometry";
+// Same disposition — see FixedDialColumn.
+import { VIEW_WIDTH as DIAL_VIEW_WIDTH } from "../MarkedSlider/geometry";
 
 // Plain flex column, no baked gap — a bare vertical stack whose children space
 // themselves (own margins) or sit flush. For a wrapper that just needs a flex
@@ -96,6 +98,23 @@ export const CenteredColumn: Component<StackDataProps> = createStack({
 export const TightCenteredColumn: Component<StackDataProps> = createStack({
   align: "center",
   gap: "xs",
+});
+
+// DialStack — a centered xs-gap stack as wide as the dial's canvas
+// (`DIAL_VIEW_WIDTH`), never sized by its text: a name, readout or note that
+// changes with the data ("roofer x 4", "$119.6K") must not thicken it. Text
+// inside should ellipsize (Text `Ellipsis*` variants). `flex: none` keeps a flex
+// parent from squeezing it. `DIAL_VIEW_WIDTH` is a data import, not a component
+// import — see `FixedHeightBox`.
+export const DialStack: Component<StackDataProps> = createStack({
+  align: "center",
+  gap: "xs",
+  style: {
+    width: `${DIAL_VIEW_WIDTH}px`,
+    "min-width": `${DIAL_VIEW_WIDTH}px`,
+    "max-width": `${DIAL_VIEW_WIDTH}px`,
+    flex: "none",
+  },
 });
 
 // Empty regions — centered stacks with size-specific padding and min-height

@@ -51,6 +51,7 @@ import {
   type JSX,
   Index,
   Show,
+  createMemo,
   mergeProps,
   onCleanup,
   onMount,
@@ -201,7 +202,7 @@ const Marks: Component<{
               x={DELTA_X}
               dy={
                 index === 0
-                  ? `${-(deltaLines(props.deltaLabel).length - 1) * LINE_EM / 2}em`
+                  ? `${(-(deltaLines(props.deltaLabel).length - 1) * LINE_EM) / 2}em`
                   : `${LINE_EM}em`
               }
             >
@@ -273,6 +274,12 @@ export interface MarkedSliderProps {
   onChangeEnd?: (value: number) => void;
   /** The box was measured. Fires on mount and on every resize. */
   onMeasure?: (height: number) => void;
+  /**
+   * A pointer went down on the slider: a DRAG starts, and its first
+   * `onChange` follows. A key step never calls it, so a caller can tell the
+   * two gestures apart.
+   */
+  onDragStart?: () => void;
   class?: string;
 }
 
@@ -327,6 +334,16 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
       },
       height(),
     );
+
+  /**
+   * Whether the entity is removed, as a MEMO that changes only when that
+   * answer changes. Kobalte's thumb registers itself in an effect that reads
+   * the root's `disabled`. Read straight off `dial()`, that effect tracked the
+   * VALUE, so every tick of a drag unregistered the thumb and registered it
+   * again — and a release that landed in between found no thumb to focus
+   * (`thumbs()[activeThumb].ref()` on undefined, owner 2026-10-21).
+   */
+  const removed = createMemo(() => props.value === null);
 
   const drag = (): number => props.dragStep ?? dragStep(props.domain);
   const key = (): number => props.keyStep ?? niceStep(props.domain);
@@ -398,6 +415,12 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
     };
     el.addEventListener("keydown", onKeyDown, true);
     onCleanup(() => el.removeEventListener("keydown", onKeyDown, true));
+
+    // CAPTURE, so it fires before Kobalte's own pointerdown sends the first
+    // value of the drag.
+    const onPointerDown = (): void => props.onDragStart?.();
+    el.addEventListener("pointerdown", onPointerDown, true);
+    onCleanup(() => el.removeEventListener("pointerdown", onPointerDown, true));
   };
 
   /**
@@ -430,8 +453,8 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
       minValue={props.domain[0]}
       maxValue={props.domain[1]}
       step={drag()}
-      disabled={dial().removed}
-      data-removed={dial().removed ? "" : undefined}
+      disabled={removed()}
+      data-removed={removed() ? "" : undefined}
       getValueLabel={() => props.valueText ?? String(dial().clampedValue ?? "")}
     >
       <Marks

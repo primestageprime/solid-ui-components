@@ -5,6 +5,10 @@
 // Tags: shows:dialog, does:dismiss, does:submit, data:scalar, role:overlay
 // Owns CSS (Modal.css), no component imports.
 // Portal-based modal with overlay, escape key, size variants.
+// With `onSubmit`, body + footer are a <form>: Enter in a one-line field and
+// a `type="submit"` footer button both run it (see hooks/submitOnEnter).
+// On open, focus goes to the first field (or a `data-autofocus` one, or the
+// submit button), and back to the opener on close (see hooks/initialFocus).
 // ============================================
 import {
   type Component,
@@ -16,6 +20,8 @@ import {
 } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { ColorVariant, CornerStyle } from "../../types";
+import { focusOnOpen } from "../../hooks/initialFocus";
+import { submitHandler, submitOnEnter } from "../../hooks/submitOnEnter";
 import "./Modal.css";
 
 export interface ModalProps {
@@ -44,6 +50,16 @@ export interface ModalProps {
   header?: JSX.Element;
   /** Footer content */
   footer?: JSX.Element;
+  /**
+   * Makes the body and footer ONE FORM. Enter in a one-line field runs this,
+   * and so does a click on a footer button with `type="submit"`. Give the
+   * primary action `type="submit"` (and `disabled` when it cannot run) and
+   * NO `onClick`, or a click runs the work twice. A SUI button is
+   * `type="button"` by default, so Cancel never submits. A disabled submit button means Enter does
+   * nothing. Enter keeps its own meaning in a textarea and in an open
+   * Combobox or Select. Without this prop the modal has no form, as before.
+   */
+  onSubmit?: () => void;
 }
 
 export const Modal: Component<ModalProps> = (props) => {
@@ -74,6 +90,15 @@ export const Modal: Component<ModalProps> = (props) => {
     return classList.join(" ");
   };
 
+  const content = () => (
+    <>
+      <div class="sui-modal__body">{props.children}</div>
+      <Show when={props.footer}>
+        <div class="sui-modal__footer">{props.footer}</div>
+      </Show>
+    </>
+  );
+
   const handleOverlayClick = (e: MouseEvent) => {
     if (e.target === e.currentTarget) {
       props.onClose();
@@ -86,7 +111,12 @@ export const Modal: Component<ModalProps> = (props) => {
         {/* biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop click-to-dismiss; Escape key handles keyboard dismissal (see createEffect above) */}
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: overlay backdrop click-to-dismiss; Escape key handles keyboard dismissal (see createEffect above) */}
         <div class="sui-modal-overlay" onClick={handleOverlayClick}>
-          <div class={modalClasses()} role="dialog" aria-modal="true">
+          <div
+            class={modalClasses()}
+            role="dialog"
+            aria-modal="true"
+            ref={focusOnOpen}
+          >
             <Show
               when={props.header || props.title || props.showClose !== false}
             >
@@ -119,10 +149,15 @@ export const Modal: Component<ModalProps> = (props) => {
               </div>
             </Show>
 
-            <div class="sui-modal__body">{props.children}</div>
-
-            <Show when={props.footer}>
-              <div class="sui-modal__footer">{props.footer}</div>
+            <Show when={props.onSubmit} fallback={content()}>
+              <form
+                class="sui-modal__form"
+                noValidate
+                onKeyDown={submitOnEnter}
+                onSubmit={submitHandler(() => props.onSubmit?.())}
+              >
+                {content()}
+              </form>
             </Show>
           </div>
         </div>

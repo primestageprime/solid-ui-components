@@ -318,7 +318,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 327
+    "line": 346
   },
   {
     "name": "ActionWrapRow",
@@ -353,7 +353,7 @@
     "showcase": null,
     "since": "0.118.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 271
+    "line": 290
   },
   {
     "name": "AddFab",
@@ -563,7 +563,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 457
+    "line": 476
   },
   {
     "name": "AnchorFillBox",
@@ -595,7 +595,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 473
+    "line": 492
   },
   {
     "name": "AnimatedSwimlaneChart",
@@ -692,7 +692,7 @@
     "showcase": null,
     "since": "v0.18.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 933
+    "line": 952
   },
   {
     "name": "AppMain",
@@ -1107,7 +1107,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 241
+    "line": 260
   },
   {
     "name": "BarSeries",
@@ -1178,7 +1178,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 218
+    "line": 237
   },
   {
     "name": "BaselineDot",
@@ -1240,7 +1240,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 191
+    "line": 210
   },
   {
     "name": "BaselineWrapRow",
@@ -1275,7 +1275,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 297
+    "line": 316
   },
   {
     "name": "BaseTable",
@@ -1556,7 +1556,7 @@
     "showcase": "#/bottom-sheet",
     "since": "0.41.0",
     "file": "src/components/BottomSheet/BottomSheet.tsx",
-    "line": 34
+    "line": 35
   },
   {
     "name": "BoxedTabs",
@@ -1966,7 +1966,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 949
+    "line": 968
   },
   {
     "name": "CardSurface",
@@ -2193,7 +2193,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 89
+    "line": 91
   },
   {
     "name": "CenteredOverflowNav",
@@ -2263,7 +2263,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 80
+    "line": 82
   },
   {
     "name": "CenteredSurface",
@@ -2340,7 +2340,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 181
+    "line": 200
   },
   {
     "name": "ChangeRenderer",
@@ -2846,7 +2846,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 310
+    "line": 329
   },
   {
     "name": "ChipGrid",
@@ -2879,7 +2879,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 982
+    "line": 1001
   },
   {
     "name": "ChipLabel",
@@ -3009,7 +3009,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 384
+    "line": 403
   },
   {
     "name": "ClipColumn",
@@ -3044,7 +3044,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 926
+    "line": 945
   },
   {
     "name": "ClipFillBox",
@@ -3076,7 +3076,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 818
+    "line": 837
   },
   {
     "name": "ClipFillColumn",
@@ -3111,7 +3111,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 792
+    "line": 811
   },
   {
     "name": "ClipFillColumnFlush",
@@ -3146,7 +3146,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 803
+    "line": 822
   },
   {
     "name": "ClusterRow",
@@ -3181,7 +3181,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 142
+    "line": 161
   },
   {
     "name": "CodeBlock",
@@ -3309,7 +3309,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 31
+    "line": 33
   },
   {
     "name": "Combobox",
@@ -3403,7 +3403,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 936
+    "line": 955
   },
   {
     "name": "CompactBucketQueue",
@@ -3497,16 +3497,8 @@
       "factory": "createMutationSliders",
       "overrides": "{\n    format: formatCompactCurrency,\n    readout: \"beside\",\n    snap: 1_000,\n    grouping: \"link\",\n    precision: -3,\n    itemFrame: ItemTintSurface,\n    labels: { remove: \"Delete\" },\n  }"
     },
-    "overrides": [
-      "format",
-      "labels",
-      "snap",
-      "readout",
-      "grouping",
-      "precision",
-      "itemFrame"
-    ],
-    "dataProps": "MutationSlidersDataProps",
+    "overrides": null,
+    "dataProps": null,
     "summary": "CompactCurrencyMutationSliders — a row of money in compact dollars (Peter's payroll board, 2026-09-24): `$125K` under the dial, the old amount beside the prior arrowhead, and the difference as `+$5K (4%)`.",
     "summarySource": "jsdoc",
     "preferFirst": null,
@@ -3683,7 +3675,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 233
+    "line": 252
   },
   {
     "name": "CompactPanel",
@@ -4068,7 +4060,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 487
+    "line": 506
   },
   {
     "name": "ContentAutoGrowChartFrame",
@@ -4175,7 +4167,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 76
+    "line": 78
   },
   {
     "name": "ContentSurface",
@@ -4287,7 +4279,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 51
+    "line": 53
   },
   {
     "name": "ConversationTree",
@@ -5014,7 +5006,7 @@
     "showcase": "#/button",
     "since": "0.142.0",
     "file": "src/components/Button/Button.tsx",
-    "line": 131
+    "line": 144
   },
   {
     "name": "createButtonGroup",
@@ -5461,7 +5453,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Modal/ConfirmationModal.tsx",
-    "line": 126
+    "line": 131
   },
   {
     "name": "createCurrentValueIndicator",
@@ -6721,7 +6713,7 @@
     "showcase": "#/marked-slider",
     "since": "0.172.0",
     "file": "src/components/MarkedSlider/MarkedSlider.tsx",
-    "line": 474
+    "line": 497
   },
   {
     "name": "createMessageBubble",
@@ -6785,7 +6777,7 @@
     "showcase": null,
     "since": "0.85.1",
     "file": "src/components/Modal/Modal.tsx",
-    "line": 140
+    "line": 175
   },
   {
     "name": "createMonthOfYearPicker",
@@ -6832,16 +6824,8 @@
     ],
     "tagsSource": "own",
     "variantOf": null,
-    "overrides": [
-      "format",
-      "labels",
-      "snap",
-      "readout",
-      "grouping",
-      "precision",
-      "itemFrame"
-    ],
-    "dataProps": "MutationSlidersDataProps",
+    "overrides": null,
+    "dataProps": null,
     "summary": "Curry a row: lock the unit, the vocabulary and the grid once, and the call site is left with data and callbacks.",
     "summarySource": "jsdoc",
     "preferFirst": null,
@@ -6851,7 +6835,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/MutationSliders.tsx",
-    "line": 812
+    "line": 334
   },
   {
     "name": "createMutationToolbar",
@@ -9923,7 +9907,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 522
+    "line": 541
   },
   {
     "name": "DenseStatusNote",
@@ -10107,6 +10091,41 @@
     "since": null,
     "file": "src/components/DataList/DataList.tsx",
     "line": 47
+  },
+  {
+    "name": "DialStack",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Layout",
+    "tags": [
+      "shows:panel",
+      "does:layout",
+      "data:list",
+      "role:container"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createStack",
+      "overrides": "{\n  align: \"center\",\n  gap: \"xs\",\n  style: {\n    width: `${DIAL_VIEW_WIDTH}px`,\n    \"min-width\": `${DIAL_VIEW_WIDTH}px`,\n    \"max-width\": `${DIAL_VIEW_WIDTH}px`,\n    flex: \"none\",\n  },\n}"
+    },
+    "overrides": [
+      "gap",
+      "align",
+      "justify",
+      "fill",
+      "sizeMotion"
+    ],
+    "dataProps": "StackDataProps",
+    "summary": "DialStack — a centered xs-gap stack as wide as the dial's canvas (`DIAL_VIEW_WIDTH`), never sized by its text: a name, readout or note that changes with the data (\"roofer x 4\", \"$119.6K\") must not thicken it.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "DialStack — a centered xs-gap stack as wide as the dial's canvas (`DIAL_VIEW_WIDTH`), never sized by its text: a name, readout or note that changes with the data (\"roofer x 4\", \"$119.6K\") must not thicken it. Text inside should ellipsize (Text `Ellipsis*` variants). `flex: none` keeps a flex parent from squeezing it. `DIAL_VIEW_WIDTH` is a data import, not a component import — see `FixedHeightBox`.",
+    "showcase": null,
+    "since": null,
+    "file": "src/components/Layout/variants.ts",
+    "line": 109
   },
   {
     "name": "DiffPair",
@@ -10728,6 +10747,105 @@
     "line": 77
   },
   {
+    "name": "EllipsisLabel",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Text",
+    "tags": [
+      "shows:text",
+      "does:view",
+      "data:text",
+      "role:inline"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createText",
+      "overrides": "{\n  variant: \"label\",\n  as: \"span\",\n  style: { ...ELLIPSIS, display: \"inline-block\", \"vertical-align\": \"bottom\" },\n}"
+    },
+    "overrides": [
+      "variant",
+      "color",
+      "as"
+    ],
+    "dataProps": "TextDataProps",
+    "summary": "Polymorphic text element with variant and color. A `Text` variant with `variant: \"label\"`, `as: \"span\"`, `style: { ...ELLIPSIS, display: \"inline-block\", \"vertical-align\": \"…`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/text",
+    "since": null,
+    "file": "src/components/Text/variants.ts",
+    "line": 469
+  },
+  {
+    "name": "EllipsisMonoMeta",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Text",
+    "tags": [
+      "shows:text",
+      "does:view",
+      "data:text",
+      "role:inline"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createText",
+      "overrides": "{\n  variant: \"sublabel\",\n  style: {\n    ...ELLIPSIS,\n    \"font-size\": \"11px\",\n    \"font-family\": \"var(--sui-font-mono)\",\n    \"line-height\": \"1.35\",\n  },\n}"
+    },
+    "overrides": [
+      "variant",
+      "color",
+      "as"
+    ],
+    "dataProps": "TextDataProps",
+    "summary": "Polymorphic text element with variant and color. A `Text` variant with `variant: \"sublabel\"`, `style: { ...ELLIPSIS, \"font-size\": \"11px\", \"font-family\": \"var(--s…`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/text",
+    "since": null,
+    "file": "src/components/Text/variants.ts",
+    "line": 484
+  },
+  {
+    "name": "EllipsisMonoValue",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Text",
+    "tags": [
+      "shows:text",
+      "does:view",
+      "data:text",
+      "role:inline"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createText",
+      "overrides": "{\n  variant: \"value\",\n  style: {\n    ...ELLIPSIS,\n    \"font-family\": '\"JetBrains Mono\", \"Fira Code\", monospace',\n    \"line-height\": \"1.25\",\n  },\n}"
+    },
+    "overrides": [
+      "variant",
+      "color",
+      "as"
+    ],
+    "dataProps": "TextDataProps",
+    "summary": "Polymorphic text element with variant and color. A `Text` variant with `variant: \"value\"`, `style: { ...ELLIPSIS, \"font-family\": '\"JetBrains Mono\", \"Fira Code…`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/text",
+    "since": null,
+    "file": "src/components/Text/variants.ts",
+    "line": 475
+  },
+  {
     "name": "EllipsisText",
     "depth": null,
     "kind": "primitive",
@@ -10986,7 +11104,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 992
+    "line": 1011
   },
   {
     "name": "EndLabels",
@@ -11116,7 +11234,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 248
+    "line": 267
   },
   {
     "name": "EntityCard",
@@ -11238,7 +11356,7 @@
     "showcase": null,
     "since": "0.231.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 168
+    "line": 187
   },
   {
     "name": "ExtractionBoard",
@@ -11330,7 +11448,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 338
+    "line": 357
   },
   {
     "name": "FadedNowrapSublabel",
@@ -11637,7 +11755,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 551
+    "line": 570
   },
   {
     "name": "FillColumnFlush",
@@ -11672,7 +11790,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 561
+    "line": 580
   },
   {
     "name": "FillFullscreenBox",
@@ -11743,7 +11861,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 439
+    "line": 458
   },
   {
     "name": "FillPlaceholder",
@@ -11807,7 +11925,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 868
+    "line": 887
   },
   {
     "name": "FillTextArea",
@@ -11873,7 +11991,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 846
+    "line": 865
   },
   {
     "name": "FilterableTable",
@@ -11995,7 +12113,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 622
+    "line": 641
   },
   {
     "name": "FlatThreadGroup",
@@ -12098,7 +12216,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 292
+    "line": 311
   },
   {
     "name": "FloatCell",
@@ -12975,7 +13093,7 @@
     "showcase": null,
     "since": "0.61.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 334
+    "line": 353
   },
   {
     "name": "GrowCenterColumn",
@@ -13010,7 +13128,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 895
+    "line": 914
   },
   {
     "name": "GrowCenterRow",
@@ -13045,7 +13163,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 903
+    "line": 922
   },
   {
     "name": "GrowClusterRow",
@@ -13080,7 +13198,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 205
+    "line": 224
   },
   {
     "name": "GrowColumn",
@@ -13115,7 +13233,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 705
+    "line": 724
   },
   {
     "name": "GrowFillBox",
@@ -13147,7 +13265,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 595
+    "line": 614
   },
   {
     "name": "GrowStack",
@@ -13182,7 +13300,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 729
+    "line": 748
   },
   {
     "name": "GrowthStrip",
@@ -13252,7 +13370,7 @@
     "showcase": null,
     "since": "0.115.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 741
+    "line": 760
   },
   {
     "name": "GrowWrapRow",
@@ -13287,7 +13405,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 826
+    "line": 845
   },
   {
     "name": "GutteredFillStretchRow",
@@ -13322,7 +13440,7 @@
     "showcase": null,
     "since": "0.185.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 882
+    "line": 901
   },
   {
     "name": "HalfFillColumn",
@@ -13359,7 +13477,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 639
+    "line": 658
   },
   {
     "name": "HatchedProgressBar",
@@ -14104,7 +14222,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 156
+    "line": 175
   },
   {
     "name": "IconOnlyButton",
@@ -14549,7 +14667,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 941
+    "line": 960
   },
   {
     "name": "InlineChartErrorOverlay",
@@ -15034,7 +15152,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 392
+    "line": 411
   },
   {
     "name": "LargeAmountStrip",
@@ -15505,7 +15623,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 118
+    "line": 137
   },
   {
     "name": "LinearFlowSwimlaneChart",
@@ -15865,7 +15983,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 957
+    "line": 976
   },
   {
     "name": "LooseClusterRow",
@@ -15900,7 +16018,7 @@
     "showcase": null,
     "since": "0.185.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 149
+    "line": 168
   },
   {
     "name": "LooseWrapRow",
@@ -15935,7 +16053,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 288
+    "line": 307
   },
   {
     "name": "MajorPaneBox",
@@ -15967,7 +16085,7 @@
     "showcase": null,
     "since": "0.177.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 658
+    "line": 677
   },
   {
     "name": "ManagedListSection",
@@ -16083,7 +16201,7 @@
     "showcase": "#/marked-slider",
     "since": "0.172.0",
     "file": "src/components/MarkedSlider/MarkedSlider.tsx",
-    "line": 307
+    "line": 314
   },
   {
     "name": "MathFormula",
@@ -16211,7 +16329,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 108
+    "line": 127
   },
   {
     "name": "MdStatusLight",
@@ -16722,16 +16840,8 @@
     ],
     "tagsSource": "own",
     "variantOf": null,
-    "overrides": [
-      "format",
-      "labels",
-      "snap",
-      "readout",
-      "grouping",
-      "precision",
-      "itemFrame"
-    ],
-    "dataProps": "MutationSlidersDataProps",
+    "overrides": null,
+    "dataProps": null,
     "summary": "Composite (Depth 3).",
     "summarySource": "components-md",
     "preferFirst": null,
@@ -16741,7 +16851,7 @@
     "showcase": "#/mutation-sliders",
     "since": "0.171.0",
     "file": "src/components/MutationSliders/MutationSliders.tsx",
-    "line": 398
+    "line": 172
   },
   {
     "name": "MutationToolbar",
@@ -16904,7 +17014,7 @@
     "showcase": null,
     "since": "0.35.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 35
+    "line": 37
   },
   {
     "name": "NavLink",
@@ -17049,7 +17159,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 225
+    "line": 244
   },
   {
     "name": "NoShrinkColumn",
@@ -17084,7 +17194,7 @@
     "showcase": null,
     "since": "0.116.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 714
+    "line": 733
   },
   {
     "name": "NoShrinkScrollBox",
@@ -17116,7 +17226,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 667
+    "line": 686
   },
   {
     "name": "NoteCard",
@@ -17388,16 +17498,8 @@
       "factory": "createMutationSliders",
       "overrides": "{\n    format: (value: number) => value.toLocaleString(),\n  }"
     },
-    "overrides": [
-      "format",
-      "labels",
-      "snap",
-      "readout",
-      "grouping",
-      "precision",
-      "itemFrame"
-    ],
-    "dataProps": "MutationSlidersDataProps",
+    "overrides": null,
+    "dataProps": null,
     "summary": "NumberMutationSliders — the drop-in row for plain quantities.",
     "summarySource": "jsdoc",
     "preferFirst": null,
@@ -17631,7 +17733,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 539
+    "line": 558
   },
   {
     "name": "Page",
@@ -17690,7 +17792,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 507
+    "line": 526
   },
   {
     "name": "PageStack",
@@ -17725,7 +17827,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 72
+    "line": 74
   },
   {
     "name": "PageTitle",
@@ -17826,7 +17928,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 692
+    "line": 711
   },
   {
     "name": "ParticipantNameLabel",
@@ -18138,7 +18240,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 685
+    "line": 704
   },
   {
     "name": "PinnedHeaderBox",
@@ -18170,7 +18272,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 677
+    "line": 696
   },
   {
     "name": "PinnedStampedRow",
@@ -19170,6 +19272,39 @@
     "line": 161
   },
   {
+    "name": "ReservedEllipsisMonoMeta",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Text",
+    "tags": [
+      "shows:text",
+      "does:view",
+      "data:text",
+      "role:inline"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createText",
+      "overrides": "{\n  variant: \"sublabel\",\n  style: {\n    ...ELLIPSIS,\n    \"font-size\": \"11px\",\n    \"font-family\": \"var(--sui-font-mono)\",\n    \"line-height\": \"1.35\",\n    visibility: \"hidden\",\n  },\n}"
+    },
+    "overrides": [
+      "variant",
+      "color",
+      "as"
+    ],
+    "dataProps": "TextDataProps",
+    "summary": "`EllipsisMonoMeta` that holds its space and says nothing.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "`EllipsisMonoMeta` that holds its space and says nothing.",
+    "showcase": "#/text",
+    "since": null,
+    "file": "src/components/Text/variants.ts",
+    "line": 495
+  },
+  {
     "name": "ReservedGlyphSlotButton",
     "depth": 1,
     "kind": "variant",
@@ -19680,7 +19815,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 364
+    "line": 383
   },
   {
     "name": "ScrollColumn",
@@ -19715,7 +19850,7 @@
     "showcase": null,
     "since": "0.78.5",
     "file": "src/components/Layout/variants.ts",
-    "line": 767
+    "line": 786
   },
   {
     "name": "ScrollFillBox",
@@ -19747,7 +19882,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 374
+    "line": 393
   },
   {
     "name": "ScrollFillColumn",
@@ -19782,7 +19917,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 782
+    "line": 801
   },
   {
     "name": "ScrollList",
@@ -19850,7 +19985,7 @@
     "showcase": null,
     "since": "v0.16.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 494
+    "line": 513
   },
   {
     "name": "ScrollRegion",
@@ -19981,7 +20116,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 346
+    "line": 365
   },
   {
     "name": "ScrollYBox",
@@ -20013,7 +20148,7 @@
     "showcase": null,
     "since": "0.103.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 356
+    "line": 375
   },
   {
     "name": "ScrubChart",
@@ -21485,7 +21620,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 65
+    "line": 67
   },
   {
     "name": "SmallTruthIndicator",
@@ -21617,7 +21752,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 102
+    "line": 121
   },
   {
     "name": "SmStatusBadge",
@@ -21744,7 +21879,7 @@
     "showcase": null,
     "since": "0.79.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 42
+    "line": 44
   },
   {
     "name": "SpaciousPanel",
@@ -22010,7 +22145,7 @@
     "showcase": null,
     "since": "0.127.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 130
+    "line": 149
   },
   {
     "name": "SprintSelector",
@@ -22748,7 +22883,7 @@
     "showcase": null,
     "since": "0.172.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 164
+    "line": 183
   },
   {
     "name": "StringCell",
@@ -23387,7 +23522,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 253
+    "line": 272
   },
   {
     "name": "TargetBarChart",
@@ -24019,7 +24154,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 96
+    "line": 98
   },
   {
     "name": "TightClusterRow",
@@ -24054,7 +24189,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 196
+    "line": 215
   },
   {
     "name": "TightNoShrinkClusterRow",
@@ -24089,7 +24224,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 913
+    "line": 932
   },
   {
     "name": "TightSpreadRow",
@@ -24124,7 +24259,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 137
+    "line": 156
   },
   {
     "name": "TightStack",
@@ -24159,7 +24294,7 @@
     "showcase": null,
     "since": "0.52.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 34
+    "line": 36
   },
   {
     "name": "TimelineBar",
@@ -24671,7 +24806,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 210
+    "line": 229
   },
   {
     "name": "TopicTitle",
@@ -24736,7 +24871,7 @@
     "showcase": null,
     "since": "0.179.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 483
+    "line": 502
   },
   {
     "name": "TopSpreadRow",
@@ -24771,7 +24906,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 173
+    "line": 192
   },
   {
     "name": "TreeDiffChart",
@@ -24989,7 +25124,7 @@
     "showcase": null,
     "since": "0.231.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 974
+    "line": 993
   },
   {
     "name": "UnderlineTabs",
@@ -25458,7 +25593,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 578
+    "line": 597
   },
   {
     "name": "ViolationBadge",
@@ -25986,7 +26121,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 965
+    "line": 984
   },
   {
     "name": "WindowStrip",
@@ -26165,7 +26300,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 760
+    "line": 779
   },
   {
     "name": "WrappedClusterRow",
@@ -26200,7 +26335,7 @@
     "showcase": null,
     "since": "0.123.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 320
+    "line": 339
   },
   {
     "name": "WrapRow",
@@ -26235,7 +26370,7 @@
     "showcase": null,
     "since": "0.118.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 258
+    "line": 277
   },
   {
     "name": "XAxis",

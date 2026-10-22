@@ -28,6 +28,38 @@ describe("Button", () => {
   });
 });
 
+describe("Button type", () => {
+  it('renders type="button" by default, so it never submits a form', () => {
+    const { container } = render(() => <Button>Cancel</Button>);
+    expect(container.querySelector("button")?.getAttribute("type")).toBe(
+      "button",
+    );
+  });
+
+  it("passes an explicit type through", () => {
+    const { container } = render(() => <Button type="submit">Save</Button>);
+    expect(container.querySelector("button")?.getAttribute("type")).toBe(
+      "submit",
+    );
+  });
+
+  it("a default button inside a form does not submit it", () => {
+    let submits = 0;
+    const { container } = render(() => (
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          submits += 1;
+        }}
+      >
+        <Button>Cancel</Button>
+      </form>
+    ));
+    fireEvent.click(container.querySelector("button") as HTMLButtonElement);
+    expect(submits).toBe(0);
+  });
+});
+
 describe("Button tone matrix", () => {
   it("emits a tone class for every tone in the matrix", () => {
     const { container } = render(() => (
