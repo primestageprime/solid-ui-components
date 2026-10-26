@@ -79,6 +79,9 @@ const Sidebar: Component<{ view: MpView }> = (props) => {
 	);
 };
 
+/** Keep "$6,000 of $7,000" on one line: no-break spaces. */
+const oneLine = (t: string): string => t.replace(/ /g, "\u00a0");
+
 const PaymentsPane: Component<{ view: MpView }> = (props) => {
 	const buckets = (): Bucket[] =>
 		props.view.pane.map((g) => ({
@@ -106,7 +109,7 @@ const PaymentsPane: Component<{ view: MpView }> = (props) => {
 				<SpreadRow>
 					<MonoMeta>{r.date}</MonoMeta>
 					<MonoMeta>{r.slot}</MonoMeta>
-					<MonoValue>{`${r.amount}${r.of}`}</MonoValue>
+					<MonoMeta>{oneLine(`${r.amount}${r.of}`)}</MonoMeta>
 				</SpreadRow>
 			)}
 		/>

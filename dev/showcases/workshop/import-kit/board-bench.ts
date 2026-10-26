@@ -19,6 +19,9 @@ import { liveBoard } from "./live/board";
 import type { BoardState, BoardVals, MakeBoard } from "./live/board-types";
 import type { MgActions, MpEditState } from "./types";
 
+const sameList = <T>(a: readonly T[], b: readonly T[]): boolean =>
+	a.length === b.length && a.every((v, i) => v === b[i]);
+
 const CLOSED_INPUT = { open: false, text: "", hl: 0, focus: false };
 
 /** The checked state of every row with a check box, by id. */
@@ -131,8 +134,14 @@ export const boardBench = (
 		vals: b.vals,
 		step,
 		goStep,
-		done: () => b.vals().steps.map((s) => s.done),
-		labels: () => b.vals().steps.map((s) => s.label),
+		// Steady arrays: a new array only when a value changes, so the step tabs
+		// are not drawn again under a click.
+		done: createMemo(() => b.vals().steps.map((s) => s.done), undefined, {
+			equals: sameList,
+		}),
+		labels: createMemo(() => b.vals().steps.map((s) => s.label), undefined, {
+			equals: sameList,
+		}),
 		adv: () => b.vals().adv,
 		toggleAdv: () => b.fresh().toggleAdv(),
 		auto: createMemo(() => autoView(b.vals())),

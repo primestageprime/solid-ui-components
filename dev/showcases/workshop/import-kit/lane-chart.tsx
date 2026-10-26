@@ -11,14 +11,48 @@
 // No SUI mark draws this (SlotTrack has one height per track and three states;
 // SpanLanes packs rows with one bar height; TickSeries has one tick length),
 // so this one bench file holds raw SVG inside Chart. The board computes every
-// position (import-kit/adapt.ts reads them); this file only draws.
-import { type Component, createUniqueId, For } from "solid-js";
+// position (import-kit/adapt.ts reads them); this file only draws. The chart
+// fills its panel: it measures the panel width on mount (and on resize) and
+// scales the board's x positions to it, so every month shows.
+import {
+	type Component,
+	createSignal,
+	createUniqueId,
+	For,
+	onCleanup,
+	onMount,
+} from "solid-js";
 import { Chart } from "../../../../src/components/Chart";
 import { HatchPattern } from "../../../../src/components/SvgMarks";
 import type { MpBar, MpChart } from "./types";
 
 const NAME_W = 150;
 const HEAD_H = 20;
+const RIGHT = 8;
+/** Width before the first measurement: the board's own track. */
+const FALLBACK_W = 0;
+
+/** The chart with every x and width times `k`. A payment bar keeps its 3px width. */
+const scaled = (c: MpChart, k: number): MpChart => {
+	const bar = (b: MpBar): MpBar => ({ ...b, x: b.x * k });
+	return {
+		...c,
+		trackW: c.trackW * k,
+		heads: c.heads.map((h) => ({ ...h, x: h.x * k, w: h.w * k })),
+		grid: c.grid.map((g) => ({ ...g, x: g.x * k })),
+		unmatched: {
+			...c.unmatched,
+			boxes: c.unmatched.boxes.map((b) => ({ ...b, x: b.x * k, w: b.w * k })),
+			bars: c.unmatched.bars.map(bar),
+		},
+		lanes: c.lanes.map((l) => ({
+			...l,
+			slots: l.slots.map((sl) => ({ ...sl, x: sl.x * k, w: sl.w * k })),
+			bars: l.bars.map(bar),
+			links: l.links.map((k2) => ({ ...k2, x: k2.x * k, w: k2.w * k })),
+		})),
+	};
+};
 
 const KIND_FILL = {
 	ontime: "var(--sui-success)",
@@ -59,10 +93,31 @@ export interface LaneChartProps {
 
 export const LaneChart: Component<LaneChartProps> = (props) => {
 	const hatchId = createUniqueId();
+	// A class names this chart's box: Chart takes no ref and no id.
+	const boxClass = `lane-chart-${createUniqueId().replace(/[^\w-]/g, "-")}`;
+	// The panel width. The Chart is responsive: its box is 100% of the panel
+	// whatever the svg size. The svg then gets that width, so the viewBox stays
+	// 1:1 with the screen.
+	const [boxW, setBoxW] = createSignal(FALLBACK_W);
+	onMount(() => {
+		const box = document.querySelector(`.${boxClass}`);
+		if (!box) return;
+		setBoxW(box.getBoundingClientRect().width);
+		if (typeof ResizeObserver === "undefined") return;
+		const ro = new ResizeObserver(() => setBoxW(box.getBoundingClientRect().width));
+		ro.observe(box);
+		onCleanup(() => ro.disconnect());
+	});
+	const k = () => {
+		const track = props.chart.trackW;
+		const room = boxW() - NAME_W - RIGHT;
+		return room > 0 && track > 0 ? room / track : 1;
+	};
+	const chart = () => scaled(props.chart, k());
 	const dotsId = createUniqueId();
 	// Lane tops: the Unmatched lane first, then one lane per config.
 	const rows = (): Row[] => {
-		const hs = [props.chart.unmatched.h, ...props.chart.lanes.map((l) => l.h)];
+		const hs = [chart().unmatched.h, ...chart().lanes.map((l) => l.h)];
 		return hs.map((h, i) => ({
 			top: HEAD_H + hs.slice(0, i).reduce((a, v) => a + v, 0),
 			h,
@@ -76,11 +131,13 @@ export const LaneChart: Component<LaneChartProps> = (props) => {
 	const laneRow = (i: number): Row => rows()[i + 1] ?? { top: 0, h: 0 };
 	return (
 		<Chart
-			width={NAME_W + props.chart.trackW + 8}
+			class={boxClass}
+			responsive
+			width={NAME_W + chart().trackW + RIGHT}
 			height={height()}
-			xDomain={[0, props.chart.trackW]}
+			xDomain={[0, chart().trackW]}
 			yDomain={[0, height()]}
-			margin={{ top: 0, right: 8, bottom: 0, left: NAME_W }}
+			margin={{ top: 0, right: RIGHT, bottom: 0, left: NAME_W }}
 		>
 			<defs>
 				<HatchPattern id={hatchId} color="var(--sui-danger)" />
@@ -89,7 +146,7 @@ export const LaneChart: Component<LaneChartProps> = (props) => {
 					<circle cx={2} cy={2} r={0.9} fill="var(--sui-warning)" />
 				</pattern>
 			</defs>
-			<For each={props.chart.heads}>
+			<For each={chart().heads}>
 				{(h) => (
 					<text
 						x={h.x + h.w / 2}
@@ -103,7 +160,7 @@ export const LaneChart: Component<LaneChartProps> = (props) => {
 					</text>
 				)}
 			</For>
-			<For each={props.chart.grid}>
+			<For each={chart().grid}>
 				{(g) => (
 					<line
 						x1={g.x}
@@ -118,7 +175,7 @@ export const LaneChart: Component<LaneChartProps> = (props) => {
 				{(r) => (
 					<line
 						x1={-NAME_W}
-						x2={props.chart.trackW}
+						x2={chart().trackW}
 						y1={r.top}
 						y2={r.top}
 						stroke="var(--sui-border)"
@@ -141,9 +198,9 @@ export const LaneChart: Component<LaneChartProps> = (props) => {
 				font-family="var(--sui-font-mono, monospace)"
 				fill="var(--sui-warning)"
 			>
-				{props.chart.unmatched.total}
+				{chart().unmatched.total}
 			</text>
-			<For each={props.chart.unmatched.boxes}>
+			<For each={chart().unmatched.boxes}>
 				{(b) => (
 					<rect
 						x={b.x}
@@ -157,9 +214,9 @@ export const LaneChart: Component<LaneChartProps> = (props) => {
 					/>
 				)}
 			</For>
-			<Bars row={unRow()} bars={props.chart.unmatched.bars} />
+			<Bars row={unRow()} bars={chart().unmatched.bars} />
 			{/* One lane per config */}
-			<For each={props.chart.lanes}>
+			<For each={chart().lanes}>
 				{(l, i) => (
 					<g>
 						<text
