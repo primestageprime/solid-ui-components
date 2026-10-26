@@ -22,6 +22,32 @@ const key = (el: EventTarget, k: string, init: KeyboardEventInit = {}) => {
 };
 
 describe("createHotkeyScope", () => {
+  it("by default a held key repeats: every auto-repeat runs the handler", () => {
+    const handlers = { new: vi.fn() };
+    const stop = createHotkeyScope({ table: TABLE, handlers, scopes: () => ["global"] });
+    key(document.body, "n");
+    key(document.body, "n", { repeat: true });
+    key(document.body, "n", { repeat: true });
+    expect(handlers.new).toHaveBeenCalledTimes(3);
+    stop();
+  });
+
+  it("once: a held key's auto-repeats run nothing but stay cancelled", () => {
+    const handlers = { new: vi.fn() };
+    const stop = createHotkeyScope({ table: TABLE, handlers, scopes: () => ["global"], once: true });
+    key(document.body, "n");
+    const repeats = Array.from({ length: 8 }, () => key(document.body, "n", { repeat: true }));
+    expect(handlers.new).toHaveBeenCalledTimes(1);
+    expect(repeats.every((e) => e.defaultPrevented)).toBe(true);
+    stop();
+  });
+
+  it("once: a repeat of a key no entry binds stays the browser's", () => {
+    const stop = createHotkeyScope({ table: TABLE, handlers: { new: vi.fn() }, scopes: () => ["global"], once: true });
+    expect(key(document.body, "z", { repeat: true }).defaultPrevented).toBe(false);
+    stop();
+  });
+
   it("fires the handler and cancels the key", () => {
     const handlers = { new: vi.fn() };
     const stop = createHotkeyScope({ table: TABLE, handlers, scopes: () => ["global"] });

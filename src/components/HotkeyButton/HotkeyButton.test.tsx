@@ -70,6 +70,32 @@ describe("HotkeyButton", () => {
     expect(onTrigger).not.toHaveBeenCalled();
   });
 
+  it("by default a held key repeats: every auto-repeat fires", () => {
+    const onTrigger = vi.fn();
+    render(() => (
+      <HotkeyButton hotkey="i" onTrigger={onTrigger}>
+        Ignore
+      </HotkeyButton>
+    ));
+    fireEvent.keyDown(window, { key: "i" });
+    fireEvent.keyDown(window, { key: "i", repeat: true });
+    expect(onTrigger).toHaveBeenCalledTimes(2);
+  });
+
+  it("once: a held key's auto-repeats do nothing", () => {
+    const onTrigger = vi.fn();
+    render(() => (
+      <HotkeyButton once hotkey="i" onTrigger={onTrigger}>
+        Ignore
+      </HotkeyButton>
+    ));
+    fireEvent.keyDown(window, { key: "i" });
+    const repeats = Array.from({ length: 8 }, () => fireEvent.keyDown(window, { key: "i", repeat: true }));
+    expect(onTrigger).toHaveBeenCalledOnce();
+    // A repeat is still swallowed, so the browser does not act on the held key.
+    expect(repeats.every((notCancelled) => !notCancelled)).toBe(true);
+  });
+
   it("does not bind the window listener when armed is false", () => {
     const onTrigger = vi.fn();
     render(() => (

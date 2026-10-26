@@ -35,6 +35,12 @@ export interface HotkeyScopeOptions<S extends string = HotkeyScope> {
   scopes: () => ReadonlyArray<S>;
   /** How long to wait for the second key of a chord. Default 1500. */
   chordWindowMs?: number;
+  /**
+   * True: a held key fires once. The auto-repeats (`KeyboardEvent.repeat`) of a
+   * key that would run a handler run nothing but are still cancelled, so the
+   * browser does not act on them. Default false: a held key repeats.
+   */
+  once?: boolean;
   /** Where to listen. Default: the window. */
   target?: Pick<Window, "addEventListener" | "removeEventListener">;
 }
@@ -71,6 +77,7 @@ export function createHotkeyScope<S extends string = HotkeyScope>(
     // A handled modal key must not reach other window listeners (a list clearing
     // its selection on Escape).
     if (outcome.stopPropagation) ke.stopPropagation();
+    if (opts.once && ke.repeat) return;
     opts.handlers[outcome.entry.action]?.();
   };
 

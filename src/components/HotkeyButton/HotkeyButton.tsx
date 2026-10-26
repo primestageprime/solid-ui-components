@@ -39,6 +39,12 @@ export interface HotkeyButtonProps extends Omit<ButtonProps, "children"> {
    * wires the key themselves).
    */
   armed?: boolean;
+  /**
+   * When true, a held key fires once: its auto-repeats (`KeyboardEvent.repeat`)
+   * do not call onTrigger, but are still cancelled (`preventDefault`) so the
+   * browser does not act on them. Default false: a held key repeats.
+   */
+  once?: boolean;
   /** Plain-text label; the first case-insensitive `hotkey` char is emphasized. */
   children: string;
 }
@@ -89,6 +95,7 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
     "icon",
     "onTrigger",
     "armed",
+    "once",
     "children",
     "class",
     "disabled",
@@ -121,6 +128,9 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
     if (!local.armed || local.disabled) return;
     if (!hotkeyFires(e, local.hotkey ?? "")) return;
     e.preventDefault();
+    // `once`: swallow a held key's auto-repeat (the first press was swallowed
+    // too) but fire nothing.
+    if (local.once && e.repeat) return;
     fire(e);
   };
 

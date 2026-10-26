@@ -262,7 +262,7 @@ export const ManualGroupCard: Component<{
 				<WrapRow>
 					<For each={props.row.quick.slice(0, 9)}>
 						{(g, i) => (
-							<HotkeyButton
+							<HotkeyButton once
 								size="sm"
 								hotkey={String(i() + 1)}
 								onTrigger={() => put(g)}
@@ -287,7 +287,7 @@ export const ManualGroupCard: Component<{
 					}
 				/>
 				<ClusterRow>
-					<HotkeyButton
+					<HotkeyButton once
 						hotkey="g"
 						variant="primary"
 						disabled={!name()}
@@ -295,10 +295,10 @@ export const ManualGroupCard: Component<{
 					>
 						Group
 					</HotkeyButton>
-					<HotkeyButton hotkey="i" onTrigger={() => props.onIgnore(props.row.id)}>
+					<HotkeyButton once hotkey="i" onTrigger={() => props.onIgnore(props.row.id)}>
 						Ignore
 					</HotkeyButton>
-					<HotkeyButton
+					<HotkeyButton once
 						hotkey="u"
 						variant="ghost"
 						disabled={!props.canUndo}

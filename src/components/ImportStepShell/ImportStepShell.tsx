@@ -58,6 +58,7 @@ export const ImportStepShell: Component<ImportStepShellProps> = (props) => {
 			back: () => go(props.step - 1),
 		},
 		scopes: () => (props.paused ? [] : ["global"]),
+		once: true,
 	});
 	const tabs = () =>
 		map(
