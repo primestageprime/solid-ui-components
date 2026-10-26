@@ -61,3 +61,4 @@ export * from "./components/ImportProposalsTree";
 export * from "./components/ImportChangedTable";
 export * from "./components/ImportHaltedTables";
 export * from "./components/LaneChart";
+export * from "./components/ManualProjection";
