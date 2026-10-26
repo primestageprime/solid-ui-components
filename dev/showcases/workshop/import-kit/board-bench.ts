@@ -9,12 +9,12 @@ import {
 	changedView,
 	haltedView,
 	mgView,
-	mpView,
 	proposalsView,
 	proposalToggles,
 	rowToggles,
 	tierRows,
 } from "./adapt";
+import { mpView } from "./adapt-manual";
 import { liveBoard } from "./live/board";
 import type { BoardState, BoardVals, MakeBoard } from "./live/board-types";
 import type { MgActions, MpEditState } from "./types";
