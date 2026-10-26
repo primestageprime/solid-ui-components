@@ -39,7 +39,7 @@ import {
 	TextTitle,
 } from "../../../../src/components/Text";
 import { ThreePanelLayout } from "../../../../src/components/ThreePanelLayout";
-import { LaneChart } from "./lane-chart";
+import { BoardLaneChart } from "./lane-chart";
 import { EditConfigModal, OneOffConfirm } from "./manual-dialogs";
 import type { MpCfg, MpPaneRow, MpSideItem, MpView } from "./types";
 
@@ -177,7 +177,7 @@ const Center: Component<{ view: MpView }> = (props) => {
 			</TightStack>
 			<Show when={props.view.hasGroup}>
 				<Legend items={LEGEND} />
-				<LaneChart chart={props.view.chart} />
+				<BoardLaneChart chart={props.view.chart} />
 				<SectionTitle>NEW CONFIG SUGGESTIONS</SectionTitle>
 				<Show
 					when={props.view.sugs.length > 0}

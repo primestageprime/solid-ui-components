@@ -1,0 +1,73 @@
+/* LaneChart — the marks LaneMarks draws. Token colours only. A late slot
+   part and a missing slot take their fill from a pattern attribute, so no
+   rule here sets their fill. */
+.sui-lane-chart__head {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--sui-text-muted);
+}
+.sui-lane-chart__head--fresh {
+  fill: var(--sui-accent);
+}
+.sui-lane-chart__grid {
+  stroke: var(--sui-border);
+}
+.sui-lane-chart__grid--strong {
+  stroke: var(--sui-border-bright);
+}
+.sui-lane-chart__rule {
+  stroke: var(--sui-border);
+}
+.sui-lane-chart__name {
+  font-size: 13px;
+  fill: var(--sui-text-secondary);
+}
+.sui-lane-chart__sub {
+  font-size: 11px;
+  font-family: var(--sui-font-mono, monospace);
+  fill: var(--sui-text-muted);
+}
+.sui-lane-chart__sub--warn {
+  fill: var(--sui-warning);
+}
+.sui-lane-chart__box {
+  fill: none;
+  stroke: var(--sui-warning);
+  stroke-dasharray: 3 3;
+}
+.sui-lane-chart__slot {
+  stroke: var(--sui-warning);
+  stroke-opacity: 0.6;
+}
+.sui-lane-chart__slot--open {
+  fill: none;
+}
+.sui-lane-chart__slot--missing {
+  stroke: var(--sui-danger);
+}
+.sui-lane-chart__part--ontime {
+  fill: var(--sui-success);
+  fill-opacity: 0.3;
+}
+.sui-lane-chart__dots-ground {
+  fill: var(--sui-warning);
+  opacity: 0.08;
+}
+.sui-lane-chart__dots-dot {
+  fill: var(--sui-warning);
+}
+.sui-lane-chart__link {
+  stroke: var(--sui-warning);
+  stroke-dasharray: 3 3;
+}
+.sui-lane-chart__bar--ontime {
+  fill: var(--sui-success);
+}
+.sui-lane-chart__bar--late,
+.sui-lane-chart__bar--unmatched {
+  fill: var(--sui-warning);
+}
+.sui-lane-chart__hot {
+  stroke: var(--sui-accent);
+  stroke-width: 1.5;
+}
