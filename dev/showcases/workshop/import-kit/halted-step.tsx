@@ -1,20 +1,19 @@
 // HaltedStep — incremental step 5, Halted. The halts: projections whose
 // silence passed the threshold (a check ends them). The missed payments: a
 // check keeps them as arrears.
+// BaseTable, not FieldTable: FieldTable caps its width at the sum of its column
+// maxima, so the two tables would not both fill the pane.
 import type { Component } from "solid-js";
 import { SmallCheckbox } from "../../../../src/components/Checkbox";
 import { MutedEmptyState } from "../../../../src/components/Feedback";
+import { InlineText } from "../../../../src/components/InlineText";
 import { ContentStack } from "../../../../src/components/Layout";
+import { BaseTable } from "../../../../src/components/Table";
+import type { TableColumn } from "../../../../src/components/Table/types";
 import {
-	col,
-	FieldTable,
-	intCol,
-	textCol,
-} from "../../../../src/components/Table/fields";
-import {
+	MonoValue,
 	MutedBody,
 	SectionTitle,
-	TextBody,
 } from "../../../../src/components/Text";
 import type { HaltedData, HaltRow, MissedRow } from "./types";
 
@@ -30,98 +29,91 @@ export interface HaltedStepProps {
 const checkCol = <T extends { id: string; name: string }>(
 	checked: () => ReadonlySet<string>,
 	onCheck: (id: string) => void,
-) =>
-	col<T>(
-		"check",
-		"",
-		(r) => (
-			<SmallCheckbox
-				aria-label={`Check ${r.name}`}
-				checked={checked().has(r.id)}
-				onCheckedChange={() => onCheck(r.id)}
-			/>
-		),
-		"selection",
-	);
+): TableColumn<T> => ({
+	id: "check",
+	header: "",
+	accessor: (r) => (
+		<SmallCheckbox
+			aria-label={`Check ${r.name}`}
+			checked={checked().has(r.id)}
+			onCheckedChange={() => onCheck(r.id)}
+		/>
+	),
+});
+
+const text = <T,>(id: keyof T & string, header: string): TableColumn<T> => ({
+	id,
+	header,
+	accessor: (r) => String(r[id]),
+});
 
 export const HaltedStep: Component<HaltedStepProps> = (props) => {
 	const checked = () => props.checked;
-	const halts = [
+	const halts = (): TableColumn<HaltRow>[] => [
 		checkCol<HaltRow>(checked, props.onCheck),
-		col<HaltRow>(
-			"name",
-			"Group",
-			(r) => <TextBody>{r.name}</TextBody>,
-			"name20",
-		),
-		textCol<HaltRow>("proj"),
-		textCol<HaltRow>("last"),
-		intCol<HaltRow>((r) => days(r.gap), {
+		text<HaltRow>("name", "Group"),
+		text<HaltRow>("proj", "Projection"),
+		text<HaltRow>("last", "Last payment"),
+		{
 			id: "gap",
 			header: "Usual gap",
-			suffix: "days",
-		}),
-		intCol<HaltRow>((r) => days(r.threshold), {
+			align: "right",
+			accessor: (r) => <MonoValue>{r.gap}</MonoValue>,
+		},
+		{
 			id: "threshold",
 			header: "Threshold",
-			suffix: "days",
-		}),
-		intCol<HaltRow>((r) => days(r.silence), {
+			align: "right",
+			accessor: (r) => <MonoValue>{r.threshold}</MonoValue>,
+		},
+		{
 			id: "silence",
 			header: "Silence",
-			suffix: "days",
-			tone: (v, r) => (v > days(r.threshold) ? "danger" : "default"),
-		}),
-		col<HaltRow>(
-			"goes",
-			"Result",
-			(r) => (
-				<TextBody>{checked().has(r.id) ? r.goes : "keep expecting"}</TextBody>
+			align: "right",
+			accessor: (r) => (
+				<InlineText
+					tone={days(r.silence) > days(r.threshold) ? "danger" : "default"}
+				>
+					{r.silence}
+				</InlineText>
 			),
-			"text15",
-		),
+		},
+		{
+			id: "goes",
+			header: "Result",
+			accessor: (r) => (checked().has(r.id) ? r.goes : "keep expecting"),
+		},
 	];
-	const missed = [
+	const missed = (): TableColumn<MissedRow>[] => [
 		checkCol<MissedRow>(checked, props.onCheck),
-		col<MissedRow>(
-			"name",
-			"Group",
-			(r) => <TextBody>{r.name}</TextBody>,
-			"name20",
-		),
-		textCol<MissedRow>("proj"),
-		textCol<MissedRow>("missed"),
-		textCol<MissedRow>("count"),
-		textCol<MissedRow>("unpaid"),
-		textCol<MissedRow>("note"),
-		col<MissedRow>(
-			"goes",
-			"Result",
-			(r) => <TextBody>{checked().has(r.id) ? r.goes : "drop"}</TextBody>,
-			"text15",
-		),
+		text<MissedRow>("name", "Group"),
+		text<MissedRow>("proj", "Projection"),
+		text<MissedRow>("missed", "Missed"),
+		text<MissedRow>("count", "Count"),
+		{
+			id: "unpaid",
+			header: "Unpaid",
+			align: "right",
+			accessor: (r) => <MonoValue>{r.unpaid}</MonoValue>,
+		},
+		text<MissedRow>("note", "Note"),
+		{
+			id: "goes",
+			header: "Result",
+			accessor: (r) => (checked().has(r.id) ? r.goes : "drop"),
+		},
 	];
 	return (
 		<ContentStack>
 			<MutedBody>{props.data.summary}</MutedBody>
 			{props.data.halts.length > 0 ? (
-				<FieldTable
-					data={[...props.data.halts]}
-					fields={halts}
-					registry={{}}
-					maxRows={6}
-				/>
+				<BaseTable compact data={[...props.data.halts]} columns={halts()} />
 			) : (
 				<MutedEmptyState message="No projection went silent past its threshold." />
 			)}
 			<SectionTitle>MISSED · NOT YET HALTED</SectionTitle>
 			{props.data.missed.length > 0 ? (
-				<FieldTable
-					data={[...props.data.missed]}
-					fields={missed}
-					registry={{}}
-					maxRows={8}
-				/>
+				<BaseTable compact data={[...props.data.missed]} columns={missed()} />
 			) : (
 				<MutedEmptyState message="No payment was missed." />
 			)}

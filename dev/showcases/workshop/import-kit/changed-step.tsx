@@ -1,12 +1,15 @@
 // ChangedStep — incremental step 4, Changed. Each row proposes a change to an
 // existing projection: the old terms, the new terms, the evidence badges and
 // the payments. A check applies the change.
+// BaseTable, not FieldTable: FieldTable caps its width at the sum of its column
+// maxima, so it cannot fill the pane the way the Auto group table does.
 import type { Component } from "solid-js";
 import { SmallCheckbox } from "../../../../src/components/Checkbox";
 import { BoldArrowDiffPair } from "../../../../src/components/DiffPair";
 import { MutedEmptyState } from "../../../../src/components/Feedback";
 import { ContentStack, TightStack } from "../../../../src/components/Layout";
-import { col, FieldTable } from "../../../../src/components/Table/fields";
+import { BaseTable } from "../../../../src/components/Table";
+import type { TableColumn } from "../../../../src/components/Table/types";
 import {
 	MutedBody,
 	TextBody,
@@ -23,72 +26,59 @@ export interface ChangedStepProps {
 }
 
 export const ChangedStep: Component<ChangedStepProps> = (props) => {
-	const fields = [
-		col<ChangedRow>(
-			"check",
-			"",
-			(r) => (
+	const columns = (): TableColumn<ChangedRow>[] => [
+		{
+			id: "check",
+			header: "",
+			accessor: (r) => (
 				<SmallCheckbox
 					aria-label={`Apply ${r.name}`}
 					checked={props.checked.has(r.id)}
 					onCheckedChange={() => props.onCheck(r.id)}
 				/>
 			),
-			"selection",
-		),
-		col<ChangedRow>(
-			"name",
-			"Change",
-			(r) => (
+		},
+		{
+			id: "name",
+			header: "Change",
+			accessor: (r) => (
 				<TightStack>
 					<TextBody>{r.name}</TextBody>
 					<TextSublabel>{r.proj}</TextSublabel>
 				</TightStack>
 			),
-			"name30",
-		),
-		col<ChangedRow>(
-			"diff",
-			"Old → new",
-			(r) => (
+		},
+		{
+			id: "diff",
+			header: "Old → new",
+			accessor: (r) => (
 				<BoldArrowDiffPair
 					before={<TextBody>{r.from}</TextBody>}
 					after={<TextBody>{r.to}</TextBody>}
 				/>
 			),
-			"text20",
-		),
-		col<ChangedRow>(
-			"badges",
-			"Evidence",
-			(r) => <BadgeList badges={r.badges} />,
-			"text20",
-		),
-		col<ChangedRow>(
-			"payments",
-			"Payments",
-			(r) => <PaymentsPop count={r.count} list={r.list} />,
-			"text10",
-		),
-		col<ChangedRow>(
-			"goes",
-			"Result",
-			(r) => (
-				<TextBody>{props.checked.has(r.id) ? "apply" : "keep as is"}</TextBody>
-			),
-			"text10",
-		),
+		},
+		{
+			id: "badges",
+			header: "Evidence",
+			accessor: (r) => <BadgeList badges={r.badges} />,
+		},
+		{
+			id: "payments",
+			header: "Payments",
+			accessor: (r) => <PaymentsPop count={r.count} list={r.list} />,
+		},
+		{
+			id: "goes",
+			header: "Result",
+			accessor: (r) => (props.checked.has(r.id) ? "apply" : "keep as is"),
+		},
 	];
 	return (
 		<ContentStack>
 			<MutedBody>{props.data.summary}</MutedBody>
 			{props.data.rows.length > 0 ? (
-				<FieldTable
-					data={[...props.data.rows]}
-					fields={fields}
-					registry={{}}
-					maxRows={8}
-				/>
+				<BaseTable compact data={[...props.data.rows]} columns={columns()} />
 			) : (
 				<MutedEmptyState message="No existing projection needs a change." />
 			)}
