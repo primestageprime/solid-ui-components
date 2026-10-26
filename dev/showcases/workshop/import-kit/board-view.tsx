@@ -8,7 +8,9 @@ import {
 	Match,
 	Switch,
 } from "solid-js";
-import { AutoStep } from "./auto-step";
+import { ImportAutoStep } from "../../../../src/components/ImportAutoStep";
+import { ImportStepShell } from "../../../../src/components/ImportStepShell";
+import { ImportSummaryGrid } from "../../../../src/components/ImportSummaryGrid";
 import type { BoardBench } from "./board-bench";
 import { ChangedStep } from "./changed-step";
 import { HaltedStep } from "./halted-step";
@@ -16,8 +18,6 @@ import { ManualGroupStep } from "./manual-group-step";
 import { ManualStep } from "./manual-step";
 import { ProposalsStep, parentIds, startChecked } from "./proposals-step";
 import { checkedRows, flip } from "./sets";
-import { StepShell } from "./step-shell";
-import { SummaryStep } from "./summary-step";
 
 const ids = (rows: readonly { id: string; checked: boolean }[]) =>
 	new Set(rows.filter((r) => r.checked).map((r) => r.id));
@@ -34,21 +34,21 @@ export const BoardView: Component<{
 	);
 	const stage = () => props.stages[b.step()];
 	return (
-		<StepShell
+		<ImportStepShell
 			steps={b.labels()}
 			step={b.step()}
 			onStep={b.goStep}
 			done={b.done()}
 			paused={b.dialogOpen()}
-			adv={b.adv()}
-			onAdv={(on) => on !== b.adv() && b.toggleAdv()}
+			advanced={b.adv()}
+			onAdvancedChange={(on) => on !== b.adv() && b.toggleAdv()}
 			tools={props.tools}
 		>
 			<Switch>
 				<Match when={stage() === "auto"}>
-					<AutoStep
+					<ImportAutoStep
 						view={b.auto()}
-						adv={b.adv()}
+						advanced={b.adv()}
 						open={open()}
 						onFold={(key) => setOpen(flip(open(), key))}
 						checked={checkedRows(b.auto().tiers)}
@@ -89,9 +89,9 @@ export const BoardView: Component<{
 					<ManualStep view={b.manual()} />
 				</Match>
 				<Match when={stage() === "summary"}>
-					<SummaryStep stats={b.summary()} />
+					<ImportSummaryGrid stats={b.summary()} />
 				</Match>
 			</Switch>
-		</StepShell>
+		</ImportStepShell>
 	);
 };

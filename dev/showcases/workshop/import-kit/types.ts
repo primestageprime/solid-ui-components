@@ -5,63 +5,36 @@
 import type { PaymentLine } from "../../../../src/components/PaymentsPopover";
 import type { ScoreBadgeData } from "../../../../src/components/ScoreBadge";
 
+import type {
+	ImportAutoView,
+	ImportIgnoredLine,
+	ImportTuneBar,
+	ImportUngroupedRow,
+} from "../../../../src/components/ImportAutoStep";
+import type { ImportSummaryStat } from "../../../../src/components/ImportSummaryGrid";
+import type {
+	ImportTier,
+	ImportTierRow,
+} from "../../../../src/components/ImportTierTable";
+
 export type Badge = ScoreBadgeData;
+/** A tier row with the board's start check. */
+export type TierRow = ImportTierRow & { readonly checked: boolean };
+export type Tier = Omit<ImportTier, "rows"> & { readonly rows: readonly TierRow[] };
+export type UngroupedRow = ImportUngroupedRow;
+export type TuneBar = ImportTuneBar;
+export type IgnoredAgain = ImportIgnoredLine;
+export type AutoView = Omit<ImportAutoView, "tiers"> & {
+	readonly tiers: readonly Tier[];
+};
+export type SummaryStat = ImportSummaryStat;
 export type Payment = PaymentLine;
 
-export interface TierRow {
-	readonly id: string;
-	readonly name: string;
-	readonly checked: boolean;
-	readonly badges: readonly Badge[];
-	readonly score: string;
-	readonly lead: string;
-	readonly count: string;
-	readonly total: string;
-	readonly goes: string;
-	readonly list: readonly Payment[];
-}
 
-export interface Tier {
-	readonly key: string;
-	readonly title: string;
-	readonly sub?: string;
-	readonly folds: boolean;
-	readonly rows: readonly TierRow[];
-}
 
-export interface UngroupedRow {
-	readonly id: string;
-	readonly payee: string;
-	readonly date: string;
-	readonly amt: string;
-	readonly score: string;
-	readonly badges: readonly Badge[];
-}
 
-export interface TuneBar {
-	readonly key: string;
-	readonly label: string;
-	readonly min: number;
-	readonly max: number;
-	readonly value: number;
-	readonly text: string;
-}
 
-export interface IgnoredAgain {
-	readonly payee: string;
-	readonly amt: string;
-	readonly badge: string;
-	readonly tip: string;
-}
 
-export interface AutoView {
-	readonly summary: string;
-	readonly scoreHead: string;
-	readonly tiers: readonly Tier[];
-	readonly ungrouped: readonly UngroupedRow[];
-	readonly tune: readonly TuneBar[];
-	readonly ignored?: readonly IgnoredAgain[];
-}
 
 /** One view in the default mode and one in the advanced mode. */
 export interface Modes<T> {
@@ -113,11 +86,6 @@ export interface ProposalsData {
 	readonly haltedTitle: string;
 }
 
-export interface SummaryStat {
-	readonly label: string;
-	readonly value: string;
-	readonly sub: string;
-}
 
 export interface ChangedRow {
 	readonly id: string;

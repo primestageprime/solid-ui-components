@@ -52,3 +52,7 @@ export type { IconName } from "./components/Icon/Icon";
 // ============================================
 export * from "./components/ScoreBadge";
 export * from "./components/PaymentsPopover";
+export * from "./components/ImportStepShell";
+export * from "./components/ImportTierTable";
+export * from "./components/ImportAutoStep";
+export * from "./components/ImportSummaryGrid";

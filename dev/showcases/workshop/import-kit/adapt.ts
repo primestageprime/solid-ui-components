@@ -44,14 +44,14 @@ const tierRow = (r: BTierRow): TierRow => ({
 	lead: r.lead ?? "",
 	count: r.count,
 	total: r.total ?? "",
-	goes: r.goes ?? "",
-	list: (r.list ?? []).map(pay),
+	result: r.goes ?? "",
+	payments: (r.list ?? []).map(pay),
 });
 const leftRow = (p: BLeft, i: number): UngroupedRow => ({
 	id: `left-${i}`,
 	payee: p.payee,
 	date: p.date,
-	amt: p.amt,
+	amount: p.amt,
 	score: p.score ?? "",
 	badges: (p.badges ?? []).map(badge),
 });
@@ -98,7 +98,7 @@ const ignoredAgain = (x: BoardVals): IgnoredAgain[] =>
 		? []
 		: x.ignoredList.map((i) => ({
 				payee: i.payee,
-				amt: i.amt,
+				amount: i.amt,
 				badge: i.badge ?? "",
 				tip: i.tip ?? "",
 			}));
@@ -112,6 +112,7 @@ export const autoView = (x: BoardVals): AutoView => ({
 			title: t.title,
 			sub: t.sub,
 			folds: !!t.folds,
+			warn: t.key === "look",
 			rows: t.rows.map(tierRow),
 		}),
 	),
@@ -122,7 +123,6 @@ export const autoView = (x: BoardVals): AutoView => ({
 		min: Number(t.min),
 		max: Number(t.max),
 		value: Number(t.value),
-		text: t.text,
 	})),
 	ignored: ignoredAgain(x),
 });
