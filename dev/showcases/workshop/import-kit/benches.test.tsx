@@ -7,7 +7,12 @@ import InitialImportBench from "../initial-import";
 
 const next = () => fireEvent.keyDown(window, { key: "ArrowRight" });
 
-describe("Initial Import bench", () => {
+// Each test runs a whole live board through every step. It takes about 1s
+// alone, but more than 5s inside the full suite under coverage (the gate),
+// so the default timeout is too short.
+const SLOW = { timeout: 30_000 };
+
+describe("Initial Import bench", SLOW, () => {
 	it("walks from Auto group to Summary through the one-off confirm", () => {
 		render(() => <InitialImportBench />);
 		expect(screen.getAllByText("Github").length).toBeGreaterThan(0);
@@ -66,7 +71,7 @@ describe("Initial Import bench", () => {
 	});
 });
 
-describe("Incremental Import bench", () => {
+describe("Incremental Import bench", SLOW, () => {
 	it("walks every step, and the advanced switch shows the score column", () => {
 		render(() => <IncrementalImportBench />);
 		expect(
