@@ -48,6 +48,7 @@ const Bars: Component<{
 }> = (props) => (
 	<For each={props.bars}>
 		{(b) => (
+			// biome-ignore lint/a11y/noStaticElementInteractions: hover only mirrors the payments pane, which is the keyboard path; the mark is not a control.
 			<rect
 				class={`sui-lane-chart__bar sui-lane-chart__bar--${b.kind}${hotClass(props.hotKey === b.key)}`}
 				data-key={b.key}
@@ -171,6 +172,7 @@ export const LaneMarks: Component<LaneMarksProps> = (props) => {
 									</rect>
 									<For each={s.parts}>
 										{(p) => (
+											// biome-ignore lint/a11y/noStaticElementInteractions: hover only mirrors the payments pane, which is the keyboard path; the mark is not a control.
 											<rect
 												class={`sui-lane-chart__part sui-lane-chart__part--${p.kind}${hotClass(props.hotKey === p.key)}`}
 												data-key={p.key}
