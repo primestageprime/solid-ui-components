@@ -11,6 +11,20 @@ import type {
 	ImportTuneBar,
 	ImportUngroupedRow,
 } from "../../../../src/components/ImportAutoStep";
+import type { ImportChangedRow } from "../../../../src/components/ImportChangedTable";
+import type {
+	ImportHaltRow,
+	ImportMissedRow,
+} from "../../../../src/components/ImportHaltedTables";
+import type {
+	ManualGroupRef,
+	ManualGroupView,
+} from "../../../../src/components/ImportManualGroupStep";
+import type {
+	ProposalsData as ImportProposalsData,
+	ProposalHaltedGroup,
+	ProposalNode,
+} from "../../../../src/components/ImportProposalsTree";
 import type { ImportSummaryStat } from "../../../../src/components/ImportSummaryGrid";
 import type {
 	ImportTier,
@@ -28,6 +42,38 @@ export type AutoView = Omit<ImportAutoView, "tiers"> & {
 	readonly tiers: readonly Tier[];
 };
 export type SummaryStat = ImportSummaryStat;
+
+export type { ProposalNode };
+/** A halted group with the board's start check. */
+export type HaltedGroup = ProposalHaltedGroup & { readonly checked: boolean };
+export type ProposalsData = Omit<ImportProposalsData, "halted"> & {
+	readonly halted: readonly HaltedGroup[];
+};
+
+export type ChangedRow = ImportChangedRow & {
+	readonly checked: boolean;
+	readonly group: string;
+	readonly kind: string;
+};
+export interface ChangedData {
+	readonly summary: string;
+	readonly rows: readonly ChangedRow[];
+}
+
+export type HaltRow = ImportHaltRow & { readonly checked: boolean };
+export type MissedRow = ImportMissedRow & {
+	readonly checked: boolean;
+	readonly last: string;
+};
+export interface HaltedData {
+	readonly summary: string;
+	readonly halts: readonly HaltRow[];
+	readonly missed: readonly MissedRow[];
+}
+
+export type GroupRef = ManualGroupRef;
+/** The Manual group view, plus the groups the user made in this step. */
+export type MgView = ManualGroupView & { readonly created: readonly string[] };
 export type Payment = PaymentLine;
 
 
@@ -42,137 +88,20 @@ export interface Modes<T> {
 	readonly adv: T;
 }
 
-export interface GroupRef {
-	readonly name: string;
-	readonly count: number;
-}
-
-export type ProposalLevel = "side" | "category" | "group" | "projection";
-
-export interface ProposalNode {
-	readonly id: string;
-	readonly level: ProposalLevel;
-	readonly name: string;
-	readonly kind: string;
-	readonly amount: string;
-	readonly cadence: string;
-	readonly count: string;
-	readonly total: string;
-	readonly halted: boolean;
-	readonly last: string;
-	readonly checkable: boolean;
-	readonly checked: boolean;
-	readonly list: readonly Payment[];
-	readonly children: readonly ProposalNode[];
-}
-
-export interface HaltedGroup {
-	readonly id: string;
-	readonly name: string;
-	readonly checked: boolean;
-	readonly kind: string;
-	readonly amount: string;
-	readonly cadence: string;
-	readonly count: string;
-	readonly total: string;
-	readonly last: string;
-	readonly list: readonly Payment[];
-}
-
-export interface ProposalsData {
-	readonly summary: string;
-	readonly tree: readonly ProposalNode[];
-	readonly halted: readonly HaltedGroup[];
-	readonly haltedTitle: string;
-}
 
 
-export interface ChangedRow {
-	readonly id: string;
-	readonly checked: boolean;
-	readonly name: string;
-	readonly group: string;
-	readonly kind: string;
-	readonly proj: string;
-	readonly from: string;
-	readonly to: string;
-	readonly badges: readonly Badge[];
-	readonly count: string;
-	readonly list: readonly Payment[];
-	readonly goes: string;
-}
 
-export interface ChangedData {
-	readonly summary: string;
-	readonly rows: readonly ChangedRow[];
-}
 
-export interface HaltRow {
-	readonly id: string;
-	readonly checked: boolean;
-	readonly name: string;
-	readonly proj: string;
-	readonly last: string;
-	readonly gap: string;
-	readonly threshold: string;
-	readonly silence: string;
-	readonly goes: string;
-}
 
-export interface MissedRow {
-	readonly id: string;
-	readonly checked: boolean;
-	readonly name: string;
-	readonly proj: string;
-	readonly missed: string;
-	readonly count: string;
-	readonly unpaid: string;
-	readonly last: string;
-	readonly note: string;
-	readonly goes: string;
-}
 
-export interface HaltedData {
-	readonly summary: string;
-	readonly halts: readonly HaltRow[];
-	readonly missed: readonly MissedRow[];
-}
+
+
+
+
 
 // ---------- Manual group (live) ----------
-export interface MgRow {
-	readonly id: string;
-	readonly pos: string;
-	readonly current: boolean;
-	readonly payee: string;
-	readonly date: string;
-	readonly amt: string;
-	readonly badge: string;
-	readonly tip: string;
-	/** The groups the user made in this step, for keys 1–9. */
-	readonly quick: readonly string[];
-	/** The board's suggested groups for this payment (incremental board). */
-	readonly sugs: readonly string[];
-}
 
-export interface MgIgnored {
-	readonly id: string;
-	readonly payee: string;
-	readonly amt: string;
-	readonly badge: string;
-	readonly tip: string;
-	readonly canUnignore: boolean;
-}
 
-export interface MgView {
-	readonly sub: string;
-	/** The payments that wait, in the board's order. */
-	readonly rows: readonly MgRow[];
-	readonly groups: readonly GroupRef[];
-	readonly created: readonly string[];
-	readonly ignored: readonly MgIgnored[];
-	readonly undoLabel: string;
-	readonly canUndo: boolean;
-}
 
 export interface MgActions {
 	readonly pick: (id: string) => void;

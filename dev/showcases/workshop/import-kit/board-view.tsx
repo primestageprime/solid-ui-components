@@ -8,15 +8,19 @@ import {
 	Match,
 	Switch,
 } from "solid-js";
+import { ImportChangedTable } from "../../../../src/components/ImportChangedTable";
+import { ImportHaltedTables } from "../../../../src/components/ImportHaltedTables";
+import { ImportManualGroupStep } from "../../../../src/components/ImportManualGroupStep";
+import {
+	ImportProposalsTree,
+	proposalParentIds as parentIds,
+	proposalStartChecked as startChecked,
+} from "../../../../src/components/ImportProposalsTree";
 import { ImportAutoStep } from "../../../../src/components/ImportAutoStep";
 import { ImportStepShell } from "../../../../src/components/ImportStepShell";
 import { ImportSummaryGrid } from "../../../../src/components/ImportSummaryGrid";
 import type { BoardBench } from "./board-bench";
-import { ChangedStep } from "./changed-step";
-import { HaltedStep } from "./halted-step";
-import { ManualGroupStep } from "./manual-group-step";
 import { ManualStep } from "./manual-step";
-import { ProposalsStep, parentIds, startChecked } from "./proposals-step";
 import { checkedRows, flip } from "./sets";
 
 const ids = (rows: readonly { id: string; checked: boolean }[]) =>
@@ -58,10 +62,17 @@ export const BoardView: Component<{
 					/>
 				</Match>
 				<Match when={stage() === "manual"}>
-					<ManualGroupStep view={b.mg()} act={b.mgAct} />
+					<ImportManualGroupStep
+						view={b.mg()}
+						onPick={b.mgAct.pick}
+						onPlace={b.mgAct.place}
+						onIgnore={b.mgAct.ignore}
+						onUnignore={b.mgAct.unignore}
+						onUndo={b.mgAct.undo}
+					/>
 				</Match>
 				<Match when={stage() === "prop"}>
-					<ProposalsStep
+					<ImportProposalsTree
 						data={b.proposals()}
 						checked={startChecked(b.proposals().tree)}
 						onChecked={b.setProposals}
@@ -72,15 +83,18 @@ export const BoardView: Component<{
 					/>
 				</Match>
 				<Match when={stage() === "changed"}>
-					<ChangedStep
-						data={b.changed()}
+					<ImportChangedTable
+						summary={b.changed().summary}
+						rows={b.changed().rows}
 						checked={ids(b.changed().rows)}
 						onCheck={b.flip}
 					/>
 				</Match>
 				<Match when={stage() === "halted"}>
-					<HaltedStep
-						data={b.halted()}
+					<ImportHaltedTables
+						summary={b.halted().summary}
+						halts={b.halted().halts}
+						missed={b.halted().missed}
 						checked={ids([...b.halted().halts, ...b.halted().missed])}
 						onCheck={b.flip}
 					/>

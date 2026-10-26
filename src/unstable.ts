@@ -56,3 +56,7 @@ export * from "./components/ImportStepShell";
 export * from "./components/ImportTierTable";
 export * from "./components/ImportAutoStep";
 export * from "./components/ImportSummaryGrid";
+export * from "./components/ImportManualGroupStep";
+export * from "./components/ImportProposalsTree";
+export * from "./components/ImportChangedTable";
+export * from "./components/ImportHaltedTables";

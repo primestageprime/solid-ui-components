@@ -140,11 +140,11 @@ export const mgView = (x: BoardVals): MgView => ({
 		current: r.on,
 		payee: r.payee,
 		date: r.date,
-		amt: r.amt,
+		amount: r.amt,
 		badge: r.badge,
 		tip: r.tip,
 		quick: r.quick.map((q) => q.name),
-		sugs: (r.sugs ?? []).map((s) => s.name),
+		suggestions: (r.sugs ?? []).map((s) => s.name),
 	})),
 	groups: [...x.pinned, ...x.others].map((g) => ({
 		name: g.name,
@@ -154,7 +154,7 @@ export const mgView = (x: BoardVals): MgView => ({
 	ignored: x.ignoredList.map((i, n) => ({
 		id: pidOf(i.tipId, n),
 		payee: i.payee,
-		amt: i.amt,
+		amount: i.amt,
 		badge: i.hasBadge ? (i.badge ?? "") : "",
 		tip: i.tip ?? "",
 		canUnignore: !!i.unignore,
@@ -191,7 +191,7 @@ export const proposalsView = (x: BoardVals): ProposalsData => {
 		last: r.last ?? "",
 		checkable: r.toggle != null,
 		checked: !!r.checked,
-		list: (r.list ?? []).map(pay),
+		payments: (r.list ?? []).map(pay),
 		children: [],
 	}));
 	const byId = new Map(nodes.map((n) => [n.id, n]));
@@ -216,7 +216,7 @@ export const proposalsView = (x: BoardVals): ProposalsData => {
 			count: h.count,
 			total: h.total,
 			last: h.last,
-			list: (h.list ?? []).map(pay),
+			payments: (h.list ?? []).map(pay),
 		})),
 		haltedTitle: x.haltedTitle ?? "",
 	};
@@ -229,6 +229,9 @@ export const proposalToggles = (x: BoardVals): Map<string, () => void> =>
 	);
 
 // ---------- Changed and Halted (incremental) ----------
+/** "107 days" → 107. */
+const days = (text: string): number => Number.parseInt(text, 10) || 0;
+
 export const changedView = (x: BoardVals): ChangedData => ({
 	summary: x.chSummary ?? "",
 	rows: (x.chRows ?? []).map((r) => ({
@@ -237,13 +240,12 @@ export const changedView = (x: BoardVals): ChangedData => ({
 		name: r.name,
 		group: r.group,
 		kind: r.kind,
-		proj: r.proj,
+		projection: r.proj,
 		from: r.from,
 		to: r.to,
 		badges: r.badges.map(badge),
 		count: r.count,
-		list: r.list.map(pay),
-		goes: r.goes,
+		payments: r.list.map(pay),
 	})),
 });
 
@@ -253,24 +255,25 @@ export const haltedView = (x: BoardVals): HaltedData => ({
 		id: r.cid,
 		checked: !!r.checked,
 		name: r.name,
-		proj: r.proj,
+		projection: r.proj,
 		last: r.last,
 		gap: r.gap,
 		threshold: r.threshold,
 		silence: r.silence,
-		goes: r.goes,
+		overdue: days(r.silence) > days(r.threshold),
+		result: r.goes,
 	})),
 	missed: (x.miRows ?? []).map((r) => ({
 		id: r.cid,
 		checked: !!r.checked,
 		name: r.name,
-		proj: r.proj,
+		projection: r.proj,
 		missed: r.missed,
 		count: r.count,
 		unpaid: r.unpaid,
 		last: r.last,
 		note: r.note,
-		goes: r.goes,
+		result: r.goes,
 	})),
 });
 
