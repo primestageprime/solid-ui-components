@@ -33,84 +33,109 @@ class Component extends DCLogic {
   }
   // =====================================================================
   // HISTORY · the initial import's dataset (Nov 2025 to Oct 2026), plus two payees for the incremental cases:
-  // Summit Trade Assoc (an annual projection, due again in Dec 2026) and Zelle J. Moreno (ignored in the initial import).
+  // annual fixed expense (an annual projection, due again in Dec 2026) and one-off expense ignored by the user (ignored in the initial import).
   // =====================================================================
   static data() {
     if (Component._data) return Component._data;
     const monthly = (months, day, payee, amts) => months.map((m, i) => ({ d: m + ' ' + day, payee, a: Array.isArray(amts) ? amts[i] : amts }));
     const six = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+    // Payments every step days from day t0 to the end of the history (t 360). amts: one amount, or a list that repeats.
+    const dOfT = (t) => Component.months()[Math.floor((t - 1) / 30)] + ' ' + (((t - 1) % 30) + 1);
+    const every = (t0, step, payee, amts) => Array.from({ length: Math.floor((360 - t0) / step) + 1 }, (_, i) => ({ d: dOfT(t0 + i * step), payee, a: Array.isArray(amts) ? amts[i % amts.length] : amts }));
     // Groups that Auto group proposes. cat and side feed Proposals.
     const LOOKS = [
       { id: 'jobs', name: 'Repair jobs', cat: 'Repair Income', many: true, badges: [{ t: 'QBO: Repair Income', tone: 'qbo', tip: 'All four payments book to the QBO income account Repair Income.' }, { t: 'one-off customers', tone: 'qbo', tip: 'Each customer paid once, so no payee repeats. The income account is what ties them together.' }],
-        pays: [{ d: 'Jul 6', payee: 'Fairbanks', a: 4000 }, { d: 'Aug 20', payee: 'R. Ortiz', a: 6500 }, { d: 'Sep 2', payee: 'Lee Family', a: 3200 }, { d: 'Sep 18', payee: 'Harbor HOA', a: 5100 }] },
-      { id: 'mc', name: 'Intuit Mailchimp', cat: 'Software', many: true, badges: [{ t: 'name variant', tone: 'name', tip: 'Mailchimp and Intuit Mailchimp are close names for one vendor.' }],
-        pays: [{ d: 'May 2', payee: 'Mailchimp', a: -13 }, { d: 'Jun 2', payee: 'Mailchimp', a: -13 }, { d: 'Jul 2', payee: 'Intuit Mailchimp', a: -13 }, { d: 'Aug 2', payee: 'Intuit Mailchimp', a: -13 }, { d: 'Sep 2', payee: 'Intuit Mailchimp', a: -13 }] },
-      { id: 'sqr', name: 'Square · deposits', cat: 'Sales', badges: [{ t: 'same payee', tone: 'plain', tip: 'Every payment is from Square.' }, { t: 'revenue side', tone: 'side', tip: 'Square pays in and also charges fees. Both sides repeat, so each side is its own group.' }],
-        pays: monthly(['Jul', 'Aug', 'Sep', 'Oct'], 1, 'Square', [1210, 1185.5, 1302, 1240]) },
-      { id: 'sqe', name: 'Square · fees', cat: 'Merchant fees', badges: [{ t: 'same payee', tone: 'plain', tip: 'Every payment is to Square.' }, { t: 'expense side', tone: 'side', tip: 'Square pays in and also charges fees. Both sides repeat, so each side is its own group.' }],
-        pays: monthly(['Jul', 'Aug', 'Sep', 'Oct'], 3, 'Square', [-29, -28.4, -31.2, -30]) },
+        pays: [{ d: 'Jul 6', payee: 'one-off revenue small job', a: 4000 }, { d: 'Aug 20', payee: 'one-off revenue large job', a: 6500 }, { d: 'Sep 2', payee: 'one-off revenue small job second customer', a: 3200 }, { d: 'Sep 18', payee: 'one-off revenue large job second customer', a: 5100 }] },
+      { id: 'mc', name: 'monthly fixed expense skips a month', cat: 'Software', many: true, badges: [{ t: 'same payee', tone: 'plain', tip: 'Every payment is from monthly fixed expense skips a month.' }],
+        pays: [{ d: 'May 2', payee: 'monthly fixed expense skips a month', a: -13 }, { d: 'Jun 2', payee: 'monthly fixed expense skips a month', a: -13 }, { d: 'Jul 2', payee: 'monthly fixed expense skips a month', a: -13 }, { d: 'Aug 2', payee: 'monthly fixed expense skips a month', a: -13 }, { d: 'Sep 2', payee: 'monthly fixed expense skips a month', a: -13 }] },
+      { id: 'sqr', name: 'monthly variable revenue + expense · deposits', cat: 'Sales', badges: [{ t: 'same payee', tone: 'plain', tip: 'Every payment is from monthly variable revenue + expense.' }, { t: 'revenue side', tone: 'side', tip: 'monthly variable revenue + expense pays in and also charges fees. Both sides repeat, so each side is its own group.' }],
+        pays: monthly(['Jul', 'Aug', 'Sep', 'Oct'], 1, 'monthly variable revenue + expense', [1210, 1185.5, 1302, 1240]) },
+      { id: 'sqe', name: 'monthly variable revenue + expense · fees', cat: 'Merchant fees', badges: [{ t: 'same payee', tone: 'plain', tip: 'Every payment is to monthly variable revenue + expense.' }, { t: 'expense side', tone: 'side', tip: 'monthly variable revenue + expense pays in and also charges fees. Both sides repeat, so each side is its own group.' }],
+        pays: monthly(['Jul', 'Aug', 'Sep', 'Oct'], 3, 'monthly variable revenue + expense', [-29, -28.4, -31.2, -30]) },
       { id: 'amex', name: 'Card payments', cat: null, many: true, badges: [{ t: 'QBO: card payment', tone: 'card', tip: 'QBO marks all three as a payment to the company’s own Amex card. The payee names differ.' }],
-        pays: [{ d: 'Aug 15', payee: 'Amex card payment', a: -2410 }, { d: 'Sep 15', payee: 'AMEX EPAYMENT', a: -3120 }, { d: 'Oct 15', payee: 'American Express', a: -2980 }] }
+        pays: [{ d: 'Aug 15', payee: 'monthly variable card payment', a: -2410 }, { d: 'Sep 15', payee: 'MONTHLY VARIABLE CARD EPAYMENT', a: -3120 }, { d: 'Oct 15', payee: 'monthly variable card payment express', a: -2980 }] }
     ];
     const PLAINS = [
-      { id: 'rent', name: 'Oak St Properties', cat: 'Rent', pays: monthly(['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'], 1, 'Oak St Properties', -2200).concat(monthly(six, 1, 'Oak St Properties', -2400)) },
-      { id: 'pay', name: 'Gusto · paychecks', cat: 'Payroll', pays: monthly(six, 15, 'Gusto', -7800) },
-      { id: 'nw', name: 'Northwind Co', cat: 'Sales', pays: monthly(six, 5, 'Northwind Co', 10000) },
-      { id: 'ct', name: 'Contoso LLC', cat: 'Sales', pays: monthly(['Jun', 'Aug', 'Sep', 'Oct'], 12, 'Contoso LLC', [4500, 4500, 9000, 4500]) },
-      { id: 'fb', name: 'Fabrikam', cat: 'Sales', pays: monthly(['May', 'Jun', 'Aug'], 20, 'Fabrikam', [3000, 3000, 3000]) },
-      { id: 'geico', name: 'Geico', cat: 'Insurance', pays: monthly(['Mar', 'Apr', 'May', 'Jun'], 5, 'Geico', -142) },
-      { id: 'gym', name: 'Lakeside Gym', cat: 'Benefits', pays: monthly(['Mar', 'Apr', 'May', 'Jun'], 8, 'Lakeside Gym', -95) },
-      { id: 'sf', name: 'State Farm', cat: 'Insurance', pays: monthly(['Jul', 'Aug', 'Sep', 'Oct'], 5, 'State Farm', -128) },
-      { id: 'car', name: 'Toyota Financial', cat: 'Auto', pays: monthly(six, 9, 'Toyota Financial', -389) },
-      { id: 'tr', name: 'Udemy', cat: 'Software', cadence: 'bimonthly', pays: monthly(['Jun', 'Aug', 'Oct'], 22, 'Udemy', -29.99) },
-      { id: 'gh', name: 'Github', cat: 'Software', pays: monthly(six, 3, 'Github', -25) },
-      { id: 'az', name: 'Amazon', cat: 'Office', pays: [{ d: 'Jun 9', payee: 'Amazon', a: -61.3 }, { d: 'Jul 14', payee: 'Amazon', a: -88.15 }, { d: 'Aug 6', payee: 'Amazon', a: -42.99 }, { d: 'Sep 9', payee: 'Amazon', a: -72.4 }] }
+      { id: 'rent', name: 'monthly fixed expense price rose then split payment', cat: 'Rent', pays: monthly(['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'], 1, 'monthly fixed expense price rose then split payment', -2200).concat(monthly(six, 1, 'monthly fixed expense price rose then split payment', -2400)) },
+      // Payroll is a special case (a later "people" tab): salary is a fixed amount every two weeks, hourly varies with the hours.
+      { id: 'pay', name: 'salary paycheck', cat: 'Payroll', desc: 'Salary: the same amount every two weeks.', pays: every(195, 14, 'salary paycheck', -3600),
+        cfgs: [{ key: 'A', name: 'Salary', kind: 'fixed', cadence: 'biweekly', grace: 2, amt: 3600, start: 195 }] },
+      { id: 'hpy', name: 'hourly paycheck', cat: 'Payroll', desc: 'Hourly pay every two weeks: the hours vary, so the amount varies about 15%.', pays: every(188, 14, 'hourly paycheck', [-2400, -2210, -2620, -2350, -2700, -2080, -2460]),
+        cfgs: [{ key: 'A', name: 'Hours', kind: 'variable', cadence: 'biweekly', grace: 3, start: 188, min: 2040, max: 2760 }] },
+      // One payee for each projection kind that no other payee covers. Each pays on schedule.
+      { id: 'wfr', name: 'weekly fixed revenue', cat: 'Subscription Income', desc: 'The same amount every week.', pays: every(183, 7, 'weekly fixed revenue', 450),
+        cfgs: [{ key: 'A', name: 'Weekly', kind: 'fixed', cadence: 'weekly', grace: 2, amt: 450, start: 183 }] },
+      { id: 'wfe', name: 'weekly fixed expense', cat: 'Cleaning', desc: 'The same amount every week.', pays: every(184, 7, 'weekly fixed expense', -120),
+        cfgs: [{ key: 'A', name: 'Weekly', kind: 'fixed', cadence: 'weekly', grace: 2, amt: 120, start: 184 }] },
+      { id: 'wvr', name: 'weekly variable revenue', cat: 'Market Sales', desc: 'A varying amount every week.', pays: every(186, 7, 'weekly variable revenue', [320, 410, 260, 540, 380, 450, 300]),
+        cfgs: [{ key: 'A', name: 'Weekly', kind: 'variable', cadence: 'weekly', grace: 7, start: 186, min: 200, max: 600 }] },
+      { id: 'bfe', name: 'biweekly fixed expense', cat: 'Equipment Lease', desc: 'The same amount every two weeks.', pays: every(190, 14, 'biweekly fixed expense', -300),
+        cfgs: [{ key: 'A', name: 'Every 2 weeks', kind: 'fixed', cadence: 'biweekly', grace: 2, amt: 300, start: 190 }] },
+      { id: 'bvr', name: 'biweekly variable revenue', cat: 'Commission Income', desc: 'A varying amount every two weeks.', pays: every(192, 14, 'biweekly variable revenue', [1050, 880, 1320, 960, 1210, 1140]),
+        cfgs: [{ key: 'A', name: 'Every 2 weeks', kind: 'variable', cadence: 'biweekly', grace: 3, start: 192, min: 800, max: 1400 }] },
+      { id: 'bve', name: 'biweekly variable expense', cat: 'Fuel', desc: 'A varying amount every two weeks.', pays: every(194, 14, 'biweekly variable expense', [-210, -280, -175, -330, -240, -195]),
+        cfgs: [{ key: 'A', name: 'Every 2 weeks', kind: 'variable', cadence: 'biweekly', grace: 3, start: 194, min: 150, max: 350 }] },
+      // Annual payees: one payment in the 12 months, so a predefined config makes the projection.
+      { id: 'avr', name: 'annual variable revenue', cat: 'Grant Income', desc: 'A varying amount once a year, each December.', pays: [{ d: 'Dec 10', payee: 'annual variable revenue', a: 2400 }],
+        cfgs: [{ key: 'A', name: 'Yearly', kind: 'variable', cadence: 'annual', grace: 5, at: 40, min: 1800, max: 3000 }] },
+      { id: 'ave', name: 'annual variable expense', cat: 'Taxes & Fees', desc: 'A varying amount once a year, each January.', pays: [{ d: 'Jan 12', payee: 'annual variable expense', a: -1300 }],
+        cfgs: [{ key: 'A', name: 'Yearly', kind: 'variable', cadence: 'annual', grace: 5, at: 72, min: 1000, max: 1600 }] },
+      { id: 'nw', name: 'monthly fixed revenue pays two slots at once', cat: 'Sales', pays: monthly(six, 5, 'monthly fixed revenue pays two slots at once', 10000) },
+      { id: 'ct', name: 'monthly fixed revenue double payment', cat: 'Sales', pays: monthly(['Jun', 'Aug', 'Sep', 'Oct'], 12, 'monthly fixed revenue double payment', [4500, 4500, 9000, 4500]) },
+      { id: 'fb', name: 'monthly fixed revenue missed', cat: 'Sales', pays: monthly(['May', 'Jun', 'Aug'], 20, 'monthly fixed revenue missed', [3000, 3000, 3000]) },
+      { id: 'geico', name: 'monthly fixed expense insurer stops then resumes', cat: 'Insurance', pays: monthly(['Mar', 'Apr', 'May', 'Jun'], 5, 'monthly fixed expense insurer stops then resumes', -142) },
+      { id: 'gym', name: 'monthly fixed expense halts then resumes same amount', cat: 'Benefits', pays: monthly(['Mar', 'Apr', 'May', 'Jun'], 8, 'monthly fixed expense halts then resumes same amount', -95) },
+      { id: 'sf', name: 'monthly fixed expense insurer starts then price step', cat: 'Insurance', pays: monthly(['Jul', 'Aug', 'Sep', 'Oct'], 5, 'monthly fixed expense insurer starts then price step', -128) },
+      { id: 'car', name: 'monthly fixed expense loan ends', cat: 'Auto', pays: monthly(six, 9, 'monthly fixed expense loan ends', -389) },
+      { id: 'tr', name: 'monthly fixed expense refund', cat: 'Software', pays: monthly(six, 22, 'monthly fixed expense refund', -29.99) },
+      { id: 'gh', name: 'monthly fixed expense paid early', cat: 'Software', pays: monthly(six, 3, 'monthly fixed expense paid early', -25) },
+      { id: 'az', name: 'monthly variable expense', cat: 'Office', pays: [{ d: 'Jun 9', payee: 'monthly variable expense', a: -61.3 }, { d: 'Jul 14', payee: 'monthly variable expense', a: -88.15 }, { d: 'Aug 6', payee: 'monthly variable expense', a: -42.99 }, { d: 'Sep 9', payee: 'monthly variable expense', a: -72.4 }] }
     ];
     // The research datasets: Main's Repair story (StoryDaily) and Peter's seven scenarios, one fictional payee each.
     // sign: +1 inflow (revenue), -1 outflow (expense). cfgs are the configs each dataset defines, already on this
     // timeline (from / start / at / billed months shifted so the dataset ends Oct 2026); Proposals proposes exactly these.
     const SETS = [
-      { id: 'bay', name: 'Bayside Property Mgmt', cat: 'Repair Income', sign: 1, source: 'Repair (ten-month story)', desc: 'Ten months of repair work: a monthly retainer, a fixed fee from April, and variable services and materials.',
+      { id: 'bay', name: 'monthly fixed + variable revenue fee added in April', cat: 'Repair Income', sign: 1, source: 'Repair (ten-month story)', desc: 'Ten months of repair work: a monthly retainer, a fixed fee from April, and variable services and materials.',
         pays: 'Jan 7:10000,Feb 2:4000,Feb 7:7000,Feb 24:3000,Mar 2:3000,Mar 8:6000,Mar 12:4000,May 2:7000,May 7:30000,Aug 2:23000,Aug 7:7500,Sep 2:4000,Sep 7:7500,Oct 2:6000,Oct 7:71000,Oct 20:19000',
         cfgs: [{'key': 'A', 'name': 'Retainer', 'kind': 'fixed', 'cadence': 'monthly', 'grace': 5, 'amt': 10000, 'day': 5, 'from': 3}, {'key': 'B', 'name': 'Fixed', 'kind': 'fixed', 'cadence': 'monthly', 'grace': 5, 'amt': 5000, 'day': 20, 'from': 6}, {'key': 'V', 'name': 'Variable', 'kind': 'variable', 'cadence': 'monthly', 'grace': 5, 'day': 13, 'billed': {'4': 4000, '5': 7000, '7': 10000, '10': 23000, '11': 6500, '12': 7500}, 'min': 4000, 'max': 23000}] },
-      { id: 'mcs', name: 'Maple Court Storage', cat: 'Rent', sign: -1, source: 'Very simple', desc: 'One monthly fixed amount, paid on time every month.',
+      { id: 'mcs', name: 'monthly fixed expense due day moves', cat: 'Rent', sign: -1, source: 'Very simple', desc: 'One monthly fixed amount, paid on time every month.',
         pays: 'May 2:2000,Jun 2:2000,Jul 2:2000,Aug 2:2000,Sep 2:2000,Oct 2:2000',
         cfgs: [{'key': 'A', 'name': 'Rent', 'kind': 'fixed', 'cadence': 'monthly', 'grace': 5, 'amt': 2000, 'day': 1, 'from': 7}] },
-      { id: 'rwl', name: 'Ridgeline Workshop', cat: 'Rent', sign: -1, source: 'Late payments', desc: 'The same monthly fixed amount, but one month comes in after the grace period.',
+      { id: 'rwl', name: 'monthly fixed expense late once', cat: 'Rent', sign: -1, source: 'Late payments', desc: 'The same monthly fixed amount, but one month comes in after the grace period.',
         pays: 'May 2:2000,Jun 2:2000,Jul 2:2000,Aug 16:2000,Sep 2:2000,Oct 2:2000',
         cfgs: [{'key': 'A', 'name': 'Rent', 'kind': 'fixed', 'cadence': 'monthly', 'grace': 5, 'amt': 2000, 'day': 1, 'from': 7}] },
-      { id: 'hal', name: 'Halcyon Staffing', cat: 'Contract Income', sign: 1, source: 'Paychecks', desc: 'A bi-weekly payment that varies within 3%, plus one annual bonus.',
+      { id: 'hal', name: 'biweekly fixed + annual fixed revenue', cat: 'Contract Income', sign: 1, source: 'Paychecks', desc: 'A bi-weekly payment that varies within 3%, plus one annual bonus.',
         pays: 'Nov 5:3100,Nov 19:3060,Dec 3:3145,Dec 17:3090,Jan 1:3170,Jan 15:3075,Jan 29:3120,Feb 13:3050,Feb 27:3135,Mar 11:3100,Mar 25:3080,Apr 9:3160,Apr 23:3110,May 7:3100,May 21:3060,Jun 5:3145,Jun 19:3090,Jul 3:3170,Jul 17:3075,Aug 1:3120,Aug 15:3050,Aug 29:3135,Sep 13:3100,Sep 27:3080,Oct 11:3160,Oct 20:8000,Oct 25:3110',
         cfgs: [{'key': 'A', 'name': 'Paycheck', 'kind': 'fixed', 'cadence': 'biweekly', 'grace': 2, 'amt': 3100, 'tol': 0.03, 'start': 5}, {'key': 'B', 'name': 'Annual bonus', 'kind': 'fixed', 'cadence': 'annual', 'grace': 5, 'amt': 8000, 'at': 350}] },
-      { id: 'bsc', name: 'Brightside Catering', cat: 'Meals', sign: -1, source: 'Lunch budget', desc: 'Weekly lunches, anywhere from $0 to $80, and one holiday party.',
+      { id: 'bsc', name: 'weekly variable + one-off expense', cat: 'Meals', sign: -1, source: 'Lunch budget', desc: 'Weekly lunches, anywhere from $0 to $80, and one holiday party.',
         pays: 'Aug 2:14,Aug 4:22,Aug 6:18,Aug 9:14,Aug 11:22,Aug 16:14,Aug 20:18,Aug 25:22,Aug 27:18,Aug 30:14,Sep 2:22,Sep 4:18,Sep 7:14,Sep 9:22,Sep 14:14,Sep 18:18,Sep 23:22,Sep 25:18,Sep 28:14,Sep 30:22,Oct 2:18,Oct 5:14,Oct 7:22,Oct 12:14,Oct 16:18,Oct 21:22,Oct 23:18,Oct 24:420,Oct 26:14,Oct 28:22,Oct 30:18',
         cfgs: [{'key': 'A', 'name': 'Lunch', 'kind': 'variable', 'cadence': 'weekly', 'grace': 7, 'start': 271, 'min': 0, 'max': 80}, {'key': 'B', 'name': 'Holiday party', 'kind': 'fixed', 'cadence': 'once', 'grace': 1, 'amt': 420, 'at': 354}] },
-      { id: 'pcd', name: 'Pinecrest Dental', cat: 'Service Income', sign: 1, source: 'Reliable customer', desc: 'A monthly fixed retainer plus a monthly variable invoice, both paid on time.',
+      { id: 'pcd', name: 'monthly fixed + variable revenue over range', cat: 'Service Income', sign: 1, source: 'Reliable customer', desc: 'A monthly fixed retainer plus a monthly variable invoice, both paid on time.',
         pays: 'May 6:5000,May 16:1800,Jun 6:5000,Jun 16:2600,Jul 6:5000,Jul 16:1200,Aug 6:5000,Aug 16:3400,Sep 6:5000,Sep 16:2200,Oct 6:5000,Oct 16:2900',
         cfgs: [{'key': 'A', 'name': 'Retainer', 'kind': 'fixed', 'cadence': 'monthly', 'grace': 5, 'amt': 5000, 'day': 5, 'from': 7}, {'key': 'B', 'name': 'Services', 'kind': 'variable', 'cadence': 'monthly', 'grace': 5, 'day': 15, 'billed': {'7': 1800, '8': 2600, '9': 1200, '10': 3400, '11': 2200, '12': 2900}, 'min': 1000, 'max': 4000}] },
-      { id: 'gpl', name: 'Granite Peak Logistics', cat: 'License Income', sign: 1, source: 'Reluctant customer', desc: 'Two monthly licenses and a variable Services charge, paid in lumps; two months unpaid until one lump covers them.',
+      { id: 'gpl', name: 'monthly fixed + variable revenue paid in lumps', cat: 'License Income', sign: 1, source: 'Reluctant customer', desc: 'Two monthly licenses and a variable Services charge, paid in lumps; two months unpaid until one lump covers them.',
         pays: 'Jan 5:18200,Feb 9:18200,Mar 12:24500,Apr 3:18200,Jul 28:70600,Aug 5:13200,Aug 26:5000,Sep 11:25100,Oct 7:18200',
         cfgs: [{'key': 'A', 'name': 'License A', 'kind': 'fixed', 'cadence': 'monthly', 'grace': 5, 'amt': 13200, 'day': 5, 'from': 3}, {'key': 'B', 'name': 'License B', 'kind': 'fixed', 'cadence': 'monthly', 'grace': 5, 'amt': 5000, 'day': 7, 'from': 3}, {'key': 'C', 'name': 'Services', 'kind': 'variable', 'cadence': 'monthly', 'grace': 30, 'day': 1, 'billed': {'5': 6300, '9': 16000, '11': 6900}, 'min': 0, 'max': 16000}] },
-      { id: 'twc', name: 'Tidewater Cafe', cat: 'Retainer Income', sign: 1, source: 'Delinquent customer', desc: 'Paid twice, skipped three months, paid once more, then stopped paying.',
+      { id: 'twc', name: 'monthly fixed revenue skips then stops', cat: 'Retainer Income', sign: 1, source: 'Delinquent customer', desc: 'Paid twice, skipped three months, paid once more, then stopped paying.',
         pays: 'Mar 3:4000,Apr 2:4000,Aug 4:4000',
         cfgs: [{'key': 'A', 'name': 'Retainer', 'kind': 'fixed', 'cadence': 'monthly', 'grace': 5, 'amt': 4000, 'day': 1, 'from': 5}] }
 
     ];
     // An annual projection: the dues are paid each December.
-    PLAINS.push({ id: 'sta', name: 'Summit Trade Assoc', cat: 'Dues', desc: 'Annual membership dues, paid each December.', pays: [{ d: 'Dec 24', payee: 'Summit Trade Assoc', a: -950 }],
+    PLAINS.push({ id: 'sta', name: 'annual fixed expense', cat: 'Dues', desc: 'Annual membership dues, paid each December.', pays: [{ d: 'Dec 24', payee: 'annual fixed expense', a: -950 }],
       cfgs: [{ key: 'A', name: 'Annual dues', kind: 'fixed', cadence: 'annual', grace: 5, amt: 950, at: 54 }] });
     const parse = (s, payee, sign) => s.split(',').map((x) => { const kv = x.split(':'); return { d: kv[0], payee, a: sign * Number(kv[1]) }; });
     SETS.forEach((s) => PLAINS.push({ id: s.id, name: s.name, cat: s.cat, source: s.source, desc: s.desc, cfgs: s.cfgs, pays: parse(s.pays, s.name, s.sign) }));
     // Payments that no heuristic groups.
     const LEFT = [
-      { id: 'gp', d: 'Jul 21', payee: 'Ginos Pizza', a: -32.1, why: 'one', cat: 'Meals' },
-      { id: 'mcu', d: 'Aug 12', payee: 'Mission Curry', a: -41.75, why: 'one', cat: 'Meals' },
-      { id: 'st', d: 'Oct 21', payee: 'Staples', a: -27.1, why: 'one', cat: 'Office' },
-      { id: 'azr', d: 'Jul 28', payee: 'Amazon', a: 48.2, why: 'side', cat: 'Office' },
-      { id: 'eh', d: 'May 18', payee: 'Evergreen Hall', a: -1850, why: 'one', cat: 'Events' },
-      { id: 'jp', d: 'Sep 25', payee: 'J. Patel', a: 2900, why: 'nojob', cat: 'Repair Income' },
+      { id: 'gp', d: 'Jul 21', payee: 'one-off expense grouped by hand', a: -32.1, why: 'one', cat: 'Meals' },
+      { id: 'mcu', d: 'Aug 12', payee: 'one-off expense grouped by hand too', a: -41.75, why: 'one', cat: 'Meals' },
+      { id: 'st', d: 'Oct 21', payee: 'one-off expense lone payment', a: -27.1, why: 'one', cat: 'Office' },
+      { id: 'azr', d: 'Jul 28', payee: 'monthly variable expense', a: 48.2, why: 'side', cat: 'Office' },
+      { id: 'eh', d: 'May 18', payee: 'one-off expense paid again', a: -1850, why: 'one', cat: 'Events' },
+      { id: 'jp', d: 'Sep 25', payee: 'one-off revenue job without QBO marker', a: 2900, why: 'nojob', cat: 'Repair Income' },
       // The user ignored this payment in the initial import: it has no one-off config.
-      { id: 'zm', d: 'Sep 14', payee: 'Zelle J. Moreno', a: -300, why: 'one', cat: 'Owner Draw', ignored: true }
+      { id: 'zm', d: 'Sep 14', payee: 'one-off expense ignored by the user', a: -300, why: 'one', cat: 'Owner Draw', ignored: true }
     ];
     // Every payment gets an id (group id + index) and its day on the axis.
     LOOKS.concat(PLAINS).forEach((g) => { g.pays = g.pays.map((p, i) => Object.assign({ id: g.id + '-' + i, t: Component.tOf(p.d) }, p)); });
@@ -149,7 +174,10 @@ class Component extends DCLogic {
         Object.keys(c.billed).map(Number).sort((a, b) => a - b).forEach((m) => add((m - 1) * MONTH + Math.min(30, c.day), c.billed[m]));
         for (let m = HIST_M + 1; m <= (c.to || LAST_M); m++) if (!c.billed[m]) add((m - 1) * MONTH + Math.min(30, c.day), 0, c.max, 'month');
       }
-      if (c.kind === 'variable' && !c.billed) for (let t = c.start; t <= last; t += 7) add(t, 0, c.max);
+      // A variable config with no billed months: a capped slot each week or two weeks, or once a year.
+      if (c.kind === 'variable' && !c.billed && c.cadence === 'annual') add(c.at, 0, c.max);
+      if (c.kind === 'variable' && !c.billed && c.cadence !== 'annual') for (let t = c.start; t <= last; t += c.cadence === 'biweekly' ? 14 : 7) add(t, 0, c.max);
+      if (c.kind === 'variable' && !c.billed && c.cadence === 'annual') add(c.at + 360, 0, c.max);
     });
     const cfgOf = (s) => configs[s.ci];
     const capped = (s) => s.cap !== undefined;
@@ -242,8 +270,8 @@ class Component extends DCLogic {
   static startCfgs(g) {
     const C = Component, H = C.helpers(), id = g.id, cad = g.cadence || 'monthly';
     if (g.cfgs) return g.cfgs.map((c) => Object.assign({}, c, { key: id + ':' + c.key }));
-    if (g.name === 'Oak St Properties') return [C.cfgFor(id + ':now', 'From May 1', g.pays.filter((p) => H.mOf(p.t) > 6), cad), C.cfgFor(id + ':old', 'Nov – Apr', g.pays.filter((p) => H.mOf(p.t) <= 6), cad, true)];
-    if (g.name === 'Geico' || g.name === 'Lakeside Gym') return [C.cfgFor(id, g.name, g.pays, cad, true)];
+    if (g.name === 'monthly fixed expense price rose then split payment') return [C.cfgFor(id + ':now', 'From May 1', g.pays.filter((p) => H.mOf(p.t) > 6), cad), C.cfgFor(id + ':old', 'Nov – Apr', g.pays.filter((p) => H.mOf(p.t) <= 6), cad, true)];
+    if (g.name === 'monthly fixed expense insurer stops then resumes' || g.name === 'monthly fixed expense halts then resumes same amount') return [C.cfgFor(id, g.name, g.pays, cad, true)];
     if (g.name === 'Repair jobs') {
       const lab = (ps) => { const xs = ps.map((p) => p.a); return 'Jobs $' + Math.min(...xs).toLocaleString('en-US') + ' – $' + Math.max(...xs).toLocaleString('en-US'); };
       const small = g.pays.filter((p) => p.a > 0 && p.a < 5000), large = g.pays.filter((p) => p.a >= 5000);
@@ -308,6 +336,8 @@ class Component extends DCLogic {
           : c.kind === 'fixed' && (c.cadence === 'weekly' || c.cadence === 'biweekly') ? steps(c.start, c.cadence === 'weekly' ? 7 : 14).map((t) => [t, c.amt])
           : c.kind === 'fixed' && c.cadence === 'annual' ? [c.at + 360].filter(inNew).map((t) => [t, c.amt])
           : c.billed ? NEW_M.map((m) => [(m - 1) * 30 + 28, H.median(Object.values(c.billed))])
+          : c.cadence === 'annual' ? [c.at + 360].filter(inNew).map((t) => [t, H.r2((c.min + c.max) / 2)])
+          : c.cadence === 'biweekly' ? steps(c.start, 14).map((t) => [t, H.r2((c.min + c.max) / 2)])
           : steps(c.start, 7).map((t) => [t, H.r2((c.min + c.max) / 4)]);
         ts.forEach((x) => out.push({ id: 'q' + out.length, d: dl(x[0]), t: x[0], payee, a: H.r2(g.sign * x[1]), cat: g.cat, fresh: true, job }));
       });
@@ -319,67 +349,79 @@ class Component extends DCLogic {
     const dl = (t) => ['Nov', 'Dec', 'Jan'][Math.floor((t - 361) / 30)] + ' ' + (((t - 1) % 30) + 1);
     const add = (d, payee, a, cat, x) => out.push(Object.assign({ id: 'n' + out.length, d, t: C.nOf(d), payee, a, cat, fresh: true }, x || {}));
     const m3 = (day, payee, amts, cat) => ['Nov', 'Dec', 'Jan'].forEach((m, i) => add(m + ' ' + day, payee, Array.isArray(amts) ? amts[i] : amts, cat));
+    // A weekly or biweekly series that started on day t0 of the history, continued through the new months.
+    const every = (t0, step, payee, amts, cat) => { for (let t = t0 + Math.ceil((361 - t0) / step) * step, i = 0; t <= 450; t += step, i++) add(dl(t), payee, Array.isArray(amts) ? amts[i % amts.length] : amts, cat); };
     // Clean matches: payee, QBO account, cadence and amount all fit the current projection.
-    m3(12, 'Contoso LLC', [4500, 9000, 4500], 'Sales');
+    m3(12, 'monthly fixed revenue double payment', [4500, 9000, 4500], 'Sales');
     // Two payments for one slot: the Dec rent of $2,400 comes as $1,200 + $1,200 in one window.
-    [['Nov 1', -2400], ['Dec 1', -1200], ['Dec 3', -1200], ['Jan 1', -2400]].forEach((x) => add(x[0], 'Oak St Properties', x[1], 'Rent'));
-    // One payment that pays two slots: Northwind misses Dec, then pays 2 × $10,000 in Jan (the engine pays Dec first).
-    add('Nov 5', 'Northwind Co', 10000, 'Sales'); add('Jan 5', 'Northwind Co', 20000, 'Sales');
+    [['Nov 1', -2400], ['Dec 1', -1200], ['Dec 3', -1200], ['Jan 1', -2400]].forEach((x) => add(x[0], 'monthly fixed expense price rose then split payment', x[1], 'Rent'));
+    // One payment that pays two slots: monthly fixed revenue pays two slots at once misses Dec, then pays 2 × $10,000 in Jan (the engine pays Dec first).
+    add('Nov 5', 'monthly fixed revenue pays two slots at once', 10000, 'Sales'); add('Jan 5', 'monthly fixed revenue pays two slots at once', 20000, 'Sales');
     // Early payment: the Jan bill (due Jan 3) is paid on Dec 27, after the Dec bill.
-    add('Nov 3', 'Github', -25, 'Software'); add('Dec 3', 'Github', -25, 'Software'); add('Dec 27', 'Github', -25, 'Software');
-    // Missed, not yet halted (monthly): Mailchimp skips Dec.
-    add('Nov 2', 'Intuit Mailchimp', -13, 'Software'); add('Jan 2', 'Intuit Mailchimp', -13, 'Software');
-    add('Dec 22', 'Udemy', -29.99, 'Software');
-    add('Nov 12', 'Amazon', -64.1, 'Office'); add('Jan 8', 'Amazon', -51.75, 'Office');
-    m3(1, 'Square', [1225, 1190, 1265], 'Sales');
-    m3(3, 'Square', [-29.5, -28.9, -30.4], 'Merchant fees');
-    // Changed due day: Maple Court now pays on the 15th, not the 1st. Payee and amount still match.
-    m3(15, 'Maple Court Storage', -2000, 'Rent');
-    add('Nov 2', 'Ridgeline Workshop', -2000, 'Rent'); add('Jan 2', 'Ridgeline Workshop', -2000, 'Rent');
+    add('Nov 3', 'monthly fixed expense paid early', -25, 'Software'); add('Dec 3', 'monthly fixed expense paid early', -25, 'Software'); add('Dec 27', 'monthly fixed expense paid early', -25, 'Software');
+    // Missed, not yet halted (monthly): monthly fixed expense skips a month skips Dec.
+    add('Nov 2', 'monthly fixed expense skips a month', -13, 'Software'); add('Jan 2', 'monthly fixed expense skips a month', -13, 'Software');
+    m3(22, 'monthly fixed expense refund', -29.99, 'Software');
+    add('Nov 12', 'monthly variable expense', -64.1, 'Office'); add('Jan 8', 'monthly variable expense', -51.75, 'Office');
+    m3(1, 'monthly variable revenue + expense', [1225, 1190, 1265], 'Sales');
+    m3(3, 'monthly variable revenue + expense', [-29.5, -28.9, -30.4], 'Merchant fees');
+    // Changed due day: monthly fixed expense due day moves now pays on the 15th, not the 1st. Payee and amount still match.
+    m3(15, 'monthly fixed expense due day moves', -2000, 'Rent');
+    add('Nov 2', 'monthly fixed expense late once', -2000, 'Rent'); add('Jan 2', 'monthly fixed expense late once', -2000, 'Rent');
     // Widen the range: the Services amounts scatter, and Jan's $4,300 is just over the $4,000 top.
-    [5000, 2400, 5000, 3100, 5000, 4300].forEach((a, i) => add(['Nov', 'Nov', 'Dec', 'Dec', 'Jan', 'Jan'][i] + ' ' + (i % 2 ? 16 : 6), 'Pinecrest Dental', a, 'Service Income'));
-    [3090, 3150, 3075, 3120, 3105, 3140].forEach((a, i) => add(dl(369 + 14 * i), 'Halcyon Staffing', a, 'Contract Income'));
-    [['Nov 5', 10000], ['Nov 20', 5000], ['Dec 5', 10000], ['Dec 14', 7000], ['Dec 20', 5000], ['Jan 5', 10000], ['Jan 20', 5000]].forEach((x) => add(x[0], 'Bayside Property Mgmt', x[1], 'Repair Income'));
-    // A fuzzy payee: Gusto now books as "Gusto Payroll".
-    m3(15, 'Gusto Payroll', -7800, 'Payroll');
+    [5000, 2400, 5000, 3100, 5000, 4300].forEach((a, i) => add(['Nov', 'Nov', 'Dec', 'Dec', 'Jan', 'Jan'][i] + ' ' + (i % 2 ? 16 : 6), 'monthly fixed + variable revenue over range', a, 'Service Income'));
+    [3090, 3150, 3075, 3120, 3105, 3140].forEach((a, i) => add(dl(369 + 14 * i), 'biweekly fixed + annual fixed revenue', a, 'Contract Income'));
+    [['Nov 5', 10000], ['Nov 20', 5000], ['Dec 5', 10000], ['Dec 14', 7000], ['Dec 20', 5000], ['Jan 5', 10000], ['Jan 20', 5000]].forEach((x) => add(x[0], 'monthly fixed + variable revenue fee added in April', x[1], 'Repair Income'));
+    // Payroll: the salary and the hourly pay continue every two weeks.
+    every(195, 14, 'salary paycheck', -3600, 'Payroll');
+    every(188, 14, 'hourly paycheck', [-2290, -2540, -2180], 'Payroll');
+    // The kinds that only these payees cover: each pays on schedule.
+    every(183, 7, 'weekly fixed revenue', 450, 'Subscription Income');
+    every(184, 7, 'weekly fixed expense', -120, 'Cleaning');
+    every(186, 7, 'weekly variable revenue', [350, 470, 290, 410], 'Market Sales');
+    every(190, 14, 'biweekly fixed expense', -300, 'Equipment Lease');
+    every(192, 14, 'biweekly variable revenue', [990, 1260, 870], 'Commission Income');
+    every(194, 14, 'biweekly variable expense', [-230, -310, -185], 'Fuel');
+    add('Dec 10', 'annual variable revenue', 2650, 'Grant Income');
+    add('Jan 12', 'annual variable expense', -1380, 'Taxes & Fees');
     // Card payments: the QBO card marker groups them, as in the initial import.
-    [['Nov 15', 'AMEX EPAYMENT', -2650], ['Dec 15', 'American Express', -3010], ['Jan 15', 'AMEX EPAYMENT', -2480]].forEach((x) => add(x[0], x[1], x[2], null, { card: true }));
-    // Optional variable: Granite Peak's Services range is $0 to $16,000, so an amount match there adds almost nothing.
-    [['Nov 5', 18200], ['Dec 9', 18200], ['Jan 6', 13200], ['Jan 8', 5000]].forEach((x) => add(x[0], 'Granite Peak Logistics', x[1], 'License Income'));
+    [['Nov 15', 'MONTHLY VARIABLE CARD EPAYMENT', -2650], ['Dec 15', 'monthly variable card payment express', -3010], ['Jan 15', 'MONTHLY VARIABLE CARD EPAYMENT', -2480]].forEach((x) => add(x[0], x[1], x[2], null, { card: true }));
+    // Optional variable: the Services range of monthly fixed + variable revenue paid in lumps is $0 to $16,000, so an amount match there adds almost nothing.
+    [['Nov 5', 18200], ['Dec 9', 18200], ['Jan 6', 13200], ['Jan 8', 5000]].forEach((x) => add(x[0], 'monthly fixed + variable revenue paid in lumps', x[1], 'License Income'));
     // Weekly lunches inside the $0 to $80 range: the cadence and amount are no evidence, the payee is.
-    [362, 369, 376, 383, 390, 397, 404, 411, 418, 425, 432, 439, 446].forEach((t, i) => add(dl(t), 'Brightside Catering', -[14, 22, 18][i % 3], 'Meals'));
+    [362, 369, 376, 383, 390, 397, 404, 411, 418, 425, 432, 439, 446].forEach((t, i) => add(dl(t), 'weekly variable + one-off expense', -[14, 22, 18][i % 3], 'Meals'));
     // A new repair job: a new customer, tied by the QBO job marker; the amount is near both job ranges.
-    add('Dec 9', 'Q. Nguyen', 4800, 'Repair Income', { job: true });
+    add('Dec 9', 'one-off revenue new job customer', 4800, 'Repair Income', { job: true });
     // Price step: payee and cadence match, and every new payment is $168, not $128. Changed proposes a new amount.
-    m3(5, 'State Farm', -168, 'Insurance');
+    m3(5, 'monthly fixed expense insurer starts then price step', -168, 'Insurance');
     // A stopped payee resumes and fits (the engine pays its oldest unpaid slot first).
-    add('Dec 20', 'Fabrikam', 3000, 'Sales');
+    add('Dec 20', 'monthly fixed revenue missed', 3000, 'Sales');
     // A delinquent customer pays once more: the date fits an arrears slot.
-    add('Jan 3', 'Tidewater Cafe', 4000, 'Retainer Income');
+    add('Jan 3', 'monthly fixed revenue skips then stops', 4000, 'Retainer Income');
     // A bank memo with no payee: Rent, $2,000, on the 2nd. It matches two projections equally.
     add('Dec 2', 'ACH RENT 4471', -2000, 'Rent');
-    // A brand-new payee that repeats under two like names: one NEW GROUP and a proposal.
-    add('Nov 10', 'Cascade Plumbing Supply', -640, 'Materials'); add('Dec 10', 'Cascade Plumbing Supply', -640, 'Materials'); add('Jan 10', 'Cascade Plumbing', -640, 'Materials');
-    // NEEDS A LOOK: a name like a known customer's (Contoso LLC), an amount inside its range, on no fixed day. A renamed
-    // account or a new customer? The system leans to Contoso LLC, but not enough to check it with no look. If the user
-    // approves, it fills the rest of Contoso's November ($4,500 + $4,500 = the $9,000 cap).
-    add('Nov 20', 'Contoso Ltd', 4500, 'Sales');
+    // A brand-new payee that repeats: one NEW GROUP and a proposal.
+    add('Nov 10', 'monthly fixed expense new payee', -640, 'Materials'); add('Dec 10', 'monthly fixed expense new payee', -640, 'Materials'); add('Jan 10', 'monthly fixed expense new payee', -640, 'Materials');
+    // A new payee with an amount inside the range of monthly fixed revenue double payment, on no fixed day. Name likeness is
+    // off, so it goes to Manual group. If the user puts it in monthly fixed revenue double payment, it fills the rest of that
+    // group's November ($4,500 + $4,500 = the $9,000 cap).
+    add('Nov 20', 'one-off revenue new payee in a customer range', 4500, 'Sales');
     // A new single payment: no group, no heuristic.
-    add('Dec 18', 'Blue Door Florist', -86.5, 'Gifts');
+    add('Dec 18', 'one-off expense new lone payment', -86.5, 'Gifts');
     // A one-off payee pays again.
-    add('Dec 12', 'Evergreen Hall', -1850, 'Events');
-    // A halted payee resumes at a new amount: Geico stopped in Jun at $142 and now pays $210 on the 5th.
-    m3(5, 'Geico', -210, 'Insurance');
-    // A halted payee resumes at the SAME amount: Lakeside Gym stopped in Jun at $95 and pays $95 again on the 8th.
-    m3(8, 'Lakeside Gym', -95, 'Benefits');
-    // A refund from a known payee: it joins Udemy, fills no slot and does not change the projection.
-    add('Jan 4', 'Udemy', 29.99, 'Software');
+    add('Dec 12', 'one-off expense paid again', -1850, 'Events');
+    // A halted payee resumes at a new amount: monthly fixed expense insurer stops then resumes stopped in Jun at $142 and now pays $210 on the 5th.
+    m3(5, 'monthly fixed expense insurer stops then resumes', -210, 'Insurance');
+    // A halted payee resumes at the SAME amount: monthly fixed expense halts then resumes same amount stopped in Jun at $95 and pays $95 again on the 8th.
+    m3(8, 'monthly fixed expense halts then resumes same amount', -95, 'Benefits');
+    // A refund from a known payee: it joins monthly fixed expense refund, fills no slot and does not change the projection.
+    add('Jan 4', 'monthly fixed expense refund', 29.99, 'Software');
     // A refund from an unknown payee: QBO books it as a credit. A person decides.
-    add('Dec 7', 'Kestrel Supply Co', 58.4, 'Supplies', { credit: true });
+    add('Dec 7', 'one-off revenue refund from unknown payee', 58.4, 'Supplies', { credit: true });
     // A payee that the user ignored in the initial import pays again: it is ignored again.
-    add('Dec 14', 'Zelle J. Moreno', -300, 'Owner Draw');
-    // Toyota Financial pays nothing: the loan ended in Oct. Halted.
-    // Summit Trade Assoc pays nothing: its annual dues (due Dec 24) are missed, but the halt rule does not fire.
+    add('Dec 14', 'one-off expense ignored by the user', -300, 'Owner Draw');
+    // monthly fixed expense loan ends pays nothing: the loan ended in Oct. Halted.
+    // annual fixed expense pays nothing: its annual dues (due Dec 24) are missed, but the halt rule does not fire.
     return out;
   }
 
@@ -429,9 +471,20 @@ class Component extends DCLogic {
       // name variant that keeps the day and the amount merges at the auto bar, and a variant whose day moved needs a
       // look (the Github story: under the auto bar).
       MERGE: 0.08,
+      // HEURISTICS: one switch per heuristic of the scores and the badges. A heuristic that is off leaves no trace:
+      // no level, no weight, no badge, no tip, and no "needs a look". The owner turned name likeness off on
+      // 2026-10-26: a payee compares as the exact name or as another payee.
+      //   nameAlike  the "alike" and "like name" payee levels, and the name-variant merge they feed (OFF)
+      //   qboMarker  the job or card marker level
+      //   early      a payment in the window before its due month, when the slot before it is paid
+      //   slots      one payment that pays 2 or 3 slots of a fixed projection
+      //   part       two or more payments in one window that pay one slot together
+      //   refund     a payment on the other side of a group with its exact payee
+      HEURISTICS: { nameAlike: false, qboMarker: true, early: true, slots: true, part: true, refund: true },
       // The levels of each comparison, best first. The last level of each is "all other" (the disagreement).
       LEVELS: {
         payee: ['exact', 'exactX', 'alike', 'alikeX', 'fuzzy', 'fuzzyX', 'acct', 'other'],
+        // (scoreKit drops the alike and fuzzy levels while HEURISTICS.nameAlike is off.)
         // qbo: 'match' or NULL. A missing marker is NULL. A different marker has no level (2026-10-25): only a job or
         // a card candidate has a marker, and blocking takes such a candidate out for a payment without its marker, so
         // a 'differ' level never counted. 'none' closes the list and is unused.
@@ -514,6 +567,12 @@ class Component extends DCLogic {
     const hits = A.reduce((acc, g) => { const k = acc.left.indexOf(g); return k < 0 ? acc : { n: acc.n + 1, left: acc.left.slice(0, k).concat(acc.left.slice(k + 1)) }; }, { n: 0, left: B }).n;
     return (2 * hits) / (A.length + B.length);
   }
+  // The likeness that the scores and the clusters use: the raw likeness while the nameAlike heuristic is on, else
+  // 1 for the same name and 0 for any other.
+  static nameLike(a, b) {
+    const x = Component.likeness(a, b);
+    return Component.fsModel().HEURISTICS.nameAlike || x >= 1 ? x : 0;
+  }
   // The most frequent value of xs. A tie goes to the smallest value as a string (a stable key, not the order).
   static modeOf(xs) {
     const n = xs.reduce((m, x) => Object.assign(m, { [String(x)]: (m[String(x)] || 0) + 1 }), {});
@@ -553,7 +612,12 @@ class Component extends DCLogic {
   // of one payment's candidates into the posterior. samePayee(p): the payments of this import with p's payee, on
   // p's side (p among them).
   static scoreKit() {
-    const C = Component, H = C.helpers(), FS = C.fsModel();
+    const C = Component, H = C.helpers(), FS0 = C.fsModel(), HS = FS0.HEURISTICS;
+    // The levels of a heuristic that is off are gone: no payment reaches them. Their m and u0 stay in the sums, so
+    // the "all other" level keeps its weight. Moving that mass into "all other" made it weaker and sent a new
+    // one-off payee (Blue Door Florist) to NEEDS A LOOK.
+    const OFF = HS.nameAlike ? [] : ['alike', 'alikeX', 'fuzzy', 'fuzzyX'];
+    const FS = Object.assign({}, FS0, { LEVELS: Object.assign({}, FS0.LEVELS, { payee: FS0.LEVELS.payee.filter((lv) => !OFF.includes(lv)) }) });
     const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
     // FUZZY: the lowest likeness that counts as a like name. ALIKE: the band of a near-same name.
     // NEAR: the near band of an amount range, as a share of the range's edge (10%: a wider band called a big gap
@@ -609,7 +673,7 @@ class Component extends DCLogic {
     const flipSide = (a) => (a === null ? null : / · in$/.test(a) ? a.replace(/ · in$/, ' · out') : a.replace(/ · out$/, ' · in'));
     const prep = (c, pool0) => {
       const mine = new Set(c.payees.map(norm)), pool = pool0.filter((q) => !mine.has(norm(q.payee))), side = pool.filter((q) => Math.sign(q.a) === c.sign);
-      const like = (name) => Math.max(...c.payees.map((x) => C.likeness(name, x)));
+      const like = (name) => Math.max(...c.payees.map((x) => C.nameLike(name, x)));
       const acct = acctOf(c.qkey), mark = markOf(c.qkey), table = tableOf(c);
       // Term frequency of each payee level in the pool (the other payees' payments).
       const pLv = (q) => { const b = payeeLv(like(q.payee)), same = acct !== null && acctOf(q.qkey) === acct; return b ? b + (same ? '' : 'X') : same ? 'acct' : 'other'; };
@@ -623,7 +687,7 @@ class Component extends DCLogic {
     // apply. Its cadence is NULL (a refund keeps no day), its amount is compared with the group's past payments
     // (below), and its account comparison flips the side. cands: every candidate of the import.
     // A $0 payment is never a refund: it has no side.
-    const refundable = (p, c, cands) => p.a !== 0 && c.kind === 'group' && Math.sign(p.a) !== c.sign && c.payees.some((x) => norm(x) === norm(p.payee))
+    const refundable = (p, c, cands) => HS.refund && p.a !== 0 && c.kind === 'group' && Math.sign(p.a) !== c.sign && c.payees.some((x) => norm(x) === norm(p.payee))
       && !cands.some((g) => g.kind === 'group' && g.sign === Math.sign(p.a) && g.payees.some((x) => norm(x) === norm(p.payee)));
     // THE CADENCE LADDER. The bands are ordered: due ≥ near ≥ window ≥ outside. Each band's u counts the pool in that
     // band, so a pool that crowds one band can turn the ladder over (a payment 2 days off then scores over one on
@@ -658,17 +722,17 @@ class Component extends DCLogic {
       const band = payeeLv(like), same = c.acct !== null && pacct === c.acct, lv = band ? band + (same ? '' : 'X') : same ? 'acct' : 'other';
       const kSelf = (lvl) => (c.kP[lvl] || 0) - (self && c.pLv(p) === lvl ? 1 : 0);
       const inBandLike = (x) => (band === 'alike' ? x >= ALIKE && x < 1 : x >= FUZZY && x < ALIKE);
-      const kLike = band && band !== 'exact' ? Math.max(kSelf(lv), pool.filter((q) => norm(q.payee) !== norm(p.payee) && inBandLike(C.likeness(q.payee, p.payee)) && (c.acct !== null && acctOf(q.qkey) === c.acct) === same).length) : kSelf(lv);
+      const kLike = band && band !== 'exact' ? Math.max(kSelf(lv), pool.filter((q) => norm(q.payee) !== norm(p.payee) && inBandLike(C.nameLike(q.payee, p.payee)) && (c.acct !== null && acctOf(q.qkey) === c.acct) === same).length) : kSelf(lv);
       parts.push(level(T, 'payee', lv, kLike, n, { like: r2(like), acct: c.acct, pacct }));
       // QBO DECLARED GROUPING FIELD: the job or the card marker. NULL when one side has none.
       const pm = markOf(p.qkey);
       // A different marker adds no level: blocking already takes the candidate out (see LEVELS.qbo).
-      if (pm && c.mark && pm === c.mark) parts.push(level(T, 'qbo', 'match', c.kQ.match - (self && c.qLv(p) === 'match' ? 1 : 0), n, { qkey: c.qkey, mark: c.mark, pmark: pm }));
+      if (HS.qboMarker && pm && c.mark && pm === c.mark) parts.push(level(T, 'qbo', 'match', c.kQ.match - (self && c.qLv(p) === 'match' ? 1 : 0), n, { qkey: c.qkey, mark: c.mark, pmark: pm }));
       // CADENCE. EARLY: a window entered in the month before its due month counts only when the same payee paid the
       // slot before.
       const early = (w) => w.m !== undefined && H.mOf(p.t) < w.m;
       const prevPaid = (w) => samePayee(p).some((q) => q !== p && c.windows.some((w2) => w2.m === w.m - w.P / 30 && holds(q.t, w2)));
-      const hit = refund ? [] : c.windows.filter((w) => holds(p.t, w) && (!early(w) || prevPaid(w)));
+      const hit = refund ? [] : c.windows.filter((w) => holds(p.t, w) && (!early(w) || (HS.early && prevPaid(w))));
       const timedAll = refund ? [] : c.windows.filter((w) => !w.anyDay && !w.arrears);
       if (hit.length) {
         const cur = hit.filter((w) => !w.arrears), timed = cur.filter((w) => !w.anyDay), onTime = timed.filter((w) => !early(w));
@@ -723,9 +787,9 @@ class Component extends DCLogic {
         const best = rs.filter((x) => x.inside).sort((a, b) => a.k - b.k)[0] || rs.filter((x) => x.near).sort((a, b) => a.f - b.f)[0] || rs.slice().sort((a, b) => a.g - b.g)[0];
         const fixed = c.ranges.filter((r) => r.fixed), dated = c.windows.filter((w) => !w.anyDay);
         // PAYS k SLOTS: the payee's amount is the sum of k (2 or 3) slots of one fixed projection, and k slots are open by its date.
-        const multi = !sameSide || best.inside || like < FUZZY ? null : [2, 3].map((k) => ({ k, r: fixed.find((r) => v >= k * r.lo && v <= k * r.hi) })).find((x) => x.r && dated.filter((w) => w.lo <= p.t).length >= x.k);
+        const multi = !HS.slots || !sameSide || best.inside || like < FUZZY ? null : [2, 3].map((k) => ({ k, r: fixed.find((r) => v >= k * r.lo && v <= k * r.hi) })).find((x) => x.r && dated.filter((w) => w.lo <= p.t).length >= x.k);
         // PART PAYMENT: the same payee's payments in one window sum to one slot of a fixed projection.
-        const part = !sameSide || best.inside || multi || like < FUZZY ? null : c.windows.filter((w) => !w.anyDay && !w.arrears && holds(p.t, w)).map((w) => {
+        const part = !HS.part || !sameSide || best.inside || multi || like < FUZZY ? null : c.windows.filter((w) => !w.anyDay && !w.arrears && holds(p.t, w)).map((w) => {
           const set = samePayee(p).filter((q) => holds(q.t, w)).sort((a, b) => a.t - b.t || a.id.localeCompare(b.id)), tot = Math.abs(H.sum(set));
           const r = set.length >= 2 ? fixed.find((x) => tot >= x.lo && tot <= x.hi) : null;
           return r ? { r, w, i: set.indexOf(p) + 1, of: set.length, tot } : null;
@@ -885,7 +949,7 @@ class Component extends DCLogic {
         if (s.due <= 360) return s.cap !== undefined ? null : { lo: s.due, hi: Infinity, P: 1, arrears: true, name };
         // A window that spans its whole period (a variable month, a capped week) takes any day: the date is no evidence.
         if (s.win === 'month') return { lo: (s.m - 1) * 30 + 1, hi: s.m * 30, P: 30, anyDay: true, name };
-        if (s.cap !== undefined) return { lo: s.due, hi: s.due + 6, P: 7, anyDay: true, name };
+        if (s.cap !== undefined) return { lo: s.due, hi: s.due + 6, P: c.cadence === 'biweekly' ? 14 : c.cadence === 'annual' ? 360 : 7, anyDay: true, name };
         // A monthly window opens 7 days before the due day: a payment in the month before is EARLY.
         if (c.cadence === 'monthly' || c.cadence === 'bimonthly') return { lo: s.due - 7, hi: s.due + grace, P: c.cadence === 'bimonthly' ? 60 : 30, due: s.due, m: s.m, name };
         if (c.cadence === 'weekly' || c.cadence === 'biweekly') return { lo: s.due - 3, hi: s.due + grace, P: c.cadence === 'weekly' ? 7 : 14, due: s.due, name };
@@ -897,9 +961,9 @@ class Component extends DCLogic {
     // Clusters: two or more new payments from payees that no group, one-off or ignored payee knows, not even by a like
     // name. Like-named new payees (likeness at or over FUZZY, same side) join one cluster, named for the most frequent.
     const known = S.groups.flatMap((g) => g.payees).concat(S.oneoffs.map((o) => o.name), S.ignored);
-    const unknown = F.filter((p) => known.every((k) => C.likeness(p.payee, k) < FUZZY));
+    const unknown = F.filter((p) => known.every((k) => C.nameLike(p.payee, k) < FUZZY));
     const bunches = unknown.reduce((bs, p) => {
-      const hit = bs.find((b) => b.some((q) => Math.sign(q.a) === Math.sign(p.a) && C.likeness(q.payee, p.payee) >= FUZZY));
+      const hit = bs.find((b) => b.some((q) => Math.sign(q.a) === Math.sign(p.a) && C.nameLike(q.payee, p.payee) >= FUZZY));
       return hit ? bs.map((b) => (b === hit ? b.concat([p]) : b)) : bs.concat([[p]]);
     }, []);
     // A cluster candidate from a set of its payments: the usual day (two payments or more, every one within 3 days of
@@ -1925,7 +1989,8 @@ class Component extends DCLogic {
     const until = (c) => (c.end ? ', halted after ' + tLabel(c.end - 1) : c.to ? ', until ' + MONTHS[c.to - 1] : '');
     const cfgText = (c) => {
       const g = (c.grace || 1) + '-day grace';
-      if (c.kind === 'variable' && !c.billed) return 'Weekly from ' + tLabel(c.start) + ', up to ' + usd(c.max) + ' a week' + until(c);
+      if (c.kind === 'variable' && !c.billed && c.cadence === 'annual') return 'Yearly around ' + tLabel(c.at) + ', up to ' + usd(c.max) + until(c);
+      if (c.kind === 'variable' && !c.billed) return (c.cadence === 'biweekly' ? 'Every 2 weeks' : 'Weekly') + ' from ' + tLabel(c.start) + ', up to ' + usd(c.max) + (c.cadence === 'biweekly' ? ' each time' : ' a week') + until(c);
       if (c.kind === 'variable') return 'Accrues whatever arrives, billed the ' + ord(c.day) + ', ' + g + until(c);
       if (c.cadence === 'monthly' || c.cadence === 'bimonthly') return (c.cadence === 'monthly' ? 'Monthly' : 'Every 2 months') + ' the ' + ord(c.day) + ', ' + g + (c.from > 1 ? ', from ' + MONTHS[c.from - 1] : '') + until(c);
       if (c.cadence === 'biweekly' || c.cadence === 'weekly') return (c.cadence === 'weekly' ? 'Weekly' : 'Every 2 weeks') + ' from ' + tLabel(c.start) + ', ' + g + (c.tol ? ', ±' + Math.round(c.tol * 100) + '%' : '') + until(c);
@@ -1933,7 +1998,7 @@ class Component extends DCLogic {
       return 'Once, on ' + tLabel(c.at);
     };
     const openEdit = (c) => {
-      const day = c.kind === 'variable' && !c.billed ? dayOf(c.start) : c.cadence === 'monthly' || c.cadence === 'bimonthly' || c.billed ? c.day : dayOf(c.start || c.at);
+      const day = c.kind === 'variable' && !c.billed ? dayOf(c.start || c.at) : c.cadence === 'monthly' || c.cadence === 'bimonthly' || c.billed ? c.day : dayOf(c.start || c.at);
       this.setState({ edit: { group: O.g.name, key: c.key, day: Math.min(30, day), amt: c.amt || 0, grace: c.grace || 1, domOpen: false }, confirmDel: null });
     };
     const mCfgs = O ? O.cfgs.map((c) => {

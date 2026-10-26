@@ -15,16 +15,17 @@ const SLOW = { timeout: 30_000 };
 describe("Initial Import bench", SLOW, () => {
 	it("walks from Auto group to Summary through the one-off confirm", () => {
 		render(() => <InitialImportBench />);
-		expect(screen.getAllByText("Github").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("monthly fixed revenue double payment").length).toBeGreaterThan(0);
 		next();
-		expect(screen.getAllByText("Evergreen Hall").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("one-off expense paid again").length).toBeGreaterThan(0);
 		next();
 		expect(screen.getAllByText("EXPENSES").length).toBeGreaterThan(0);
 		next();
 		// The Manual step: the open group, its chart and its configs.
-		expect(screen.getAllByText("Bayside Property Mgmt").length).toBeGreaterThan(
-			0,
-		);
+		expect(
+			screen.getAllByText("monthly fixed + variable revenue fee added in April")
+				.length,
+		).toBeGreaterThan(0);
 		expect(screen.getByText("NEW CONFIG SUGGESTIONS")).toBeTruthy();
 		expect(screen.getAllByText("Retainer").length).toBeGreaterThan(0);
 		// Next on the Manual step asks about the one-off configs first.
@@ -41,19 +42,19 @@ describe("Initial Import bench", SLOW, () => {
 	it("a Manual group choice reaches the Manual step's groups, and undo takes it back", () => {
 		render(() => <InitialImportBench />);
 		next();
-		expect(screen.getAllByText("Payment 1 of 6").length).toBe(1);
+		expect(screen.getAllByText("Payment 1 of 8").length).toBe(1);
 		fireEvent.keyDown(window, { key: "i" });
-		expect(screen.getAllByText("Payment 1 of 5").length).toBe(1);
+		expect(screen.getAllByText("Payment 1 of 7").length).toBe(1);
 		fireEvent.keyDown(window, { key: "u" });
-		expect(screen.getAllByText("Payment 1 of 6").length).toBe(1);
-		// Group the first payment (Evergreen Hall) into a new group.
+		expect(screen.getAllByText("Payment 1 of 8").length).toBe(1);
+		// Group the first payment (annual variable revenue) into a new group.
 		const input = screen.getByPlaceholderText(
 			"Group name — type to find or make one",
 		);
 		fireEvent.input(input, { target: { value: "Test hall" } });
 		fireEvent.keyDown(input, { key: "Enter" });
 		fireEvent.click(screen.getByRole("button", { name: /^Group/ }));
-		expect(screen.getAllByText("Payment 1 of 5").length).toBe(1);
+		expect(screen.getAllByText("Payment 1 of 7").length).toBe(1);
 		expect(screen.getAllByText("Test hall").length).toBeGreaterThan(0);
 		next();
 		next();
@@ -63,7 +64,7 @@ describe("Initial Import bench", SLOW, () => {
 	it("an Auto group uncheck moves the group's payments to UNGROUPED", () => {
 		render(() => <InitialImportBench />);
 		const before = screen.getAllByRole("row").length;
-		const box = screen.getByLabelText("Check Github");
+		const box = screen.getByLabelText("Check monthly fixed revenue double payment");
 		fireEvent.click(box);
 		expect(screen.getAllByRole("row").length).toBeGreaterThan(before);
 		next();
@@ -75,7 +76,7 @@ describe("Incremental Import bench", SLOW, () => {
 	it("walks every step, and the advanced switch shows the score column", () => {
 		render(() => <IncrementalImportBench />);
 		expect(
-			screen.getAllByText("Cascade Plumbing Supply").length,
+			screen.getAllByText("monthly fixed expense new payee").length,
 		).toBeGreaterThan(0);
 		expect(screen.queryByText("Sure")).toBeNull();
 		fireEvent.click(screen.getByLabelText("Advanced"));
@@ -89,7 +90,7 @@ describe("Incremental Import bench", SLOW, () => {
 				.length,
 		).toBe(1);
 		next();
-		expect(screen.getAllByText("Toyota Financial").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("monthly fixed expense loan ends").length).toBeGreaterThan(0);
 		next();
 		expect(screen.getByText("CONFIGS")).toBeTruthy();
 		fireEvent.click(screen.getByText("Next: Summary"));
@@ -100,7 +101,7 @@ describe("Incremental Import bench", SLOW, () => {
 	it("the quiet month has nothing to look at", () => {
 		render(() => <IncrementalImportBench />);
 		fireEvent.click(screen.getByText("Quiet month (every payment fits)"));
-		expect(screen.queryByText("Cascade Plumbing Supply")).toBeNull();
+		expect(screen.queryByText("monthly fixed expense new payee")).toBeNull();
 		expect(screen.getAllByText("Every payment is in a group.").length).toBe(1);
 	});
 });
