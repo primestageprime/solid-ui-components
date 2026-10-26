@@ -4,6 +4,7 @@
 // prototype board (`boardBench`), opened on its Manual stage, drawn by
 // `ManualStep`. The DATA picker chooses the board and its dataset.
 import { type Component, createSignal, Show } from "solid-js";
+import { GhostButton } from "../../../src/components/Button";
 import { ClusterRow } from "../../../src/components/Layout";
 import { SegmentedControl } from "../../../src/components/SegmentedControl";
 import { MonoMeta, SectionTitle } from "../../../src/components/Text";
@@ -42,7 +43,31 @@ const Board: Component<{ ds: DataKey }> = (props) => {
 					ds: props.ds,
 					stage: "main",
 				});
-	return <ManualStep view={bench.manual()} />;
+	const stages = props.ds === "initial" ? INITIAL_STAGES : INCREMENTAL_STAGES;
+	const main = stages.indexOf("main");
+	// The step keys move the board as in a bench. When it leaves the Manual
+	// stage, this page has nothing else to draw: it says where the board went.
+	return (
+		<Show
+			when={bench.step() === main}
+			fallback={
+				<ClusterRow>
+					<MonoMeta>{`The board moved to ${bench.labels()[bench.step()] ?? ""}.`}</MonoMeta>
+					<GhostButton onClick={() => bench.goStep(main)}>
+						Back to Manual
+					</GhostButton>
+				</ClusterRow>
+			}
+		>
+			<ManualStep
+				view={bench.manual()}
+				keys={{
+					next: () => bench.goStep(main + 1),
+					back: () => bench.goStep(main - 1),
+				}}
+			/>
+		</Show>
+	);
 };
 
 const ManualProjectionBench: Component = () => {

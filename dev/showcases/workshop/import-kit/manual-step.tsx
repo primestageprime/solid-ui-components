@@ -2,6 +2,15 @@
 // ManualProjection pieces and the LaneChart in three panels, and maps the
 // live board view (adapt-manual.ts mpView, whose items carry their own
 // handlers) to their plain props and key callbacks.
+//
+// Keys, as in the prototype's Manual step. With `keys` (the standalone page),
+// → or Enter runs keys.next (the board opens the one-off dialog, or goes on
+// when nothing needs a confirm) and ← runs keys.back. In the import benches
+// ImportStepShell owns those keys, so the bench passes no `keys` and nothing
+// fires twice. In the one-off dialog Enter is Continue, in either place; Esc
+// is the Modal's own. The edit dialog, a field and a combobox keep their keys.
+// A press another handler already took (the shell's Enter that opens the
+// dialog) is not ours: without that rule, that same Enter would also confirm.
 import { type Component, createMemo, Show } from "solid-js";
 import { ContentStack } from "../../../../src/components/Layout";
 import {
@@ -16,6 +25,7 @@ import {
 } from "../../../../src/components/ManualProjection";
 import { DangerConfirmationModal } from "../../../../src/components/Modal";
 import { ThreePanelLayout } from "../../../../src/components/ThreePanelLayout";
+import { useHotkeys } from "../../../../src/hooks";
 import { BoardLaneChart } from "./lane-chart";
 import type { MpView } from "./types";
 
@@ -135,9 +145,71 @@ const Center: Component<{ view: MpView }> = (props) => {
 	);
 };
 
-export const ManualStep: Component<{ view: MpView }> = (props) => {
+/** The step moves a standalone Manual step makes on its own keys. */
+export interface ManualStepKeys {
+	readonly next: () => void;
+	readonly back: () => void;
+}
+
+type KeyScope = "step" | "modal";
+const KEYS = [
+	{ action: "next", keys: "Enter", scope: "step" },
+	{ action: "next", keys: "ArrowRight", scope: "step" },
+	{ action: "back", keys: "ArrowLeft", scope: "step" },
+	{ action: "confirm", keys: "Enter", scope: "modal" },
+] as const;
+
+type KeyTarget = Pick<Window, "addEventListener" | "removeEventListener">;
+
+/** The window, minus the presses an earlier handler already took (defaultPrevented). */
+const untakenPresses = (): KeyTarget => {
+	const wrapped = new Map<EventListenerOrEventListenerObject, EventListener>();
+	const wrap = (fn: EventListenerOrEventListenerObject): EventListener => {
+		const w: EventListener = (e) => {
+			if (e.defaultPrevented) return;
+			if (typeof fn === "function") fn(e);
+			else fn.handleEvent(e);
+		};
+		wrapped.set(fn, w);
+		return w;
+	};
+	return {
+		addEventListener: (
+			type: string,
+			fn: EventListenerOrEventListenerObject,
+			opts?: boolean | AddEventListenerOptions,
+		) => window.addEventListener(type, wrap(fn), opts),
+		removeEventListener: (
+			type: string,
+			fn: EventListenerOrEventListenerObject,
+			opts?: boolean | EventListenerOptions,
+		) => window.removeEventListener(type, wrapped.get(fn) ?? fn, opts),
+	} as KeyTarget;
+};
+
+const scopesOf = (
+	finOpen: boolean,
+	editOpen: boolean,
+	stepKeys: boolean,
+): readonly KeyScope[] =>
+	finOpen ? ["modal"] : editOpen || !stepKeys ? [] : ["step"];
+
+export const ManualStep: Component<{ view: MpView; keys?: ManualStepKeys }> = (
+	props,
+) => {
 	const edit = () => props.view.edit;
 	const fin = () => props.view.fin;
+	useHotkeys<KeyScope>({
+		table: KEYS,
+		handlers: {
+			next: () => props.keys?.next(),
+			back: () => props.keys?.back(),
+			confirm: () => fin().go(),
+		},
+		scopes: () => scopesOf(fin().open, edit().open, !!props.keys),
+		once: true,
+		target: untakenPresses(),
+	});
 	return (
 		<>
 			<ThreePanelLayout

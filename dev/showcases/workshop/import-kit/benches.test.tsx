@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from "@solidjs/testing-library";
 import { describe, expect, it } from "vitest";
 import IncrementalImportBench from "../incremental-import";
 import InitialImportBench from "../initial-import";
+import ManualProjectionBench from "../manual-projection";
 
 const next = () => fireEvent.keyDown(window, { key: "ArrowRight" });
 
@@ -113,5 +114,61 @@ describe("Incremental Import bench", SLOW, () => {
 		fireEvent.click(screen.getByText("Quiet month (every payment fits)"));
 		expect(screen.queryByText("monthly fixed expense new payee")).toBeNull();
 		expect(screen.getAllByText("Every payment is in a group.").length).toBe(1);
+	});
+});
+
+const ONE_OFF = "These items will be treated as one-off configs. Is that OK?";
+const key = (k: string) => fireEvent.keyDown(window, { key: k });
+
+describe("Manual step keys", SLOW, () => {
+	it("on its own page: → opens the one-off dialog, Enter continues, ← goes back", () => {
+		render(() => <ManualProjectionBench />);
+		key("ArrowRight");
+		expect(screen.getByText(ONE_OFF)).toBeTruthy();
+		key("Enter");
+		expect(screen.queryByText(ONE_OFF)).toBeNull();
+		expect(screen.getByText("The board moved to Summary.")).toBeTruthy();
+		fireEvent.click(screen.getByText("Back to Manual"));
+		key("ArrowLeft");
+		expect(screen.getByText("The board moved to Proposals.")).toBeTruthy();
+	});
+
+	it("on its own page: Esc closes the dialog, and Enter there opens it", () => {
+		render(() => <ManualProjectionBench />);
+		key("Enter");
+		expect(screen.getByText(ONE_OFF)).toBeTruthy();
+		fireEvent.keyDown(document, { key: "Escape" });
+		expect(screen.queryByText(ONE_OFF)).toBeNull();
+		expect(screen.queryByText(/The board moved/)).toBeNull();
+	});
+
+	it("a field keeps its own keys", () => {
+		render(() => <ManualProjectionBench />);
+		const field = document.createElement("input");
+		document.body.append(field);
+		fireEvent.keyDown(field, { key: "ArrowRight" });
+		fireEvent.keyDown(field, { key: "Enter" });
+		expect(screen.queryByText(ONE_OFF)).toBeNull();
+		field.remove();
+	});
+
+	it("in the bench a key fires once: ← goes back one step, Enter continues the dialog", () => {
+		render(() => <InitialImportBench />);
+		next();
+		next();
+		next();
+		key("ArrowLeft");
+		expect(screen.getAllByText("Proposals").length).toBeGreaterThan(0);
+		expect(screen.queryByText("NEW CONFIG SUGGESTIONS")).toBeNull();
+		expect(
+			screen.queryByPlaceholderText("Group name — type to find or make one"),
+		).toBeNull();
+		next();
+		// Enter opens the dialog through the shell; the same press must not
+		// also confirm it.
+		key("Enter");
+		expect(screen.getByText(ONE_OFF)).toBeTruthy();
+		key("Enter");
+		expect(screen.getByText("One-off configs")).toBeTruthy();
 	});
 });
