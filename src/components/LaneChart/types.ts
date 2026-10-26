@@ -37,6 +37,11 @@ export interface LaneSlot {
 	readonly title: string;
 	/** True draws red hatch: nothing came. */
 	readonly missing: boolean;
+	/**
+	 * True draws a warning outline: the money came late or in a later month
+	 * (catch-up). A missing slot ignores it. Default false.
+	 */
+	readonly late?: boolean;
 	readonly parts: readonly LaneSlotPart[];
 }
 

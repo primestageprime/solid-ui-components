@@ -28,6 +28,10 @@ describe("Initial Import bench", SLOW, () => {
 		).toBeGreaterThan(0);
 		expect(screen.getByText("NEW CONFIG SUGGESTIONS")).toBeTruthy();
 		expect(screen.getAllByText("Retainer").length).toBeGreaterThan(0);
+		// The chart outlines the group's late and catch-up slots.
+		expect(
+			document.querySelectorAll(".sui-lane-chart__slot--late").length,
+		).toBeGreaterThan(0);
 		// Next on the Manual step asks about the one-off configs first.
 		fireEvent.click(screen.getByText("Next: Summary"));
 		expect(

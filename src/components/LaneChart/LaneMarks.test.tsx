@@ -43,4 +43,41 @@ describe("LaneMarks", () => {
 		).toBe("url(#hatch)");
 		expect(container.querySelectorAll(".sui-lane-chart__head")).toHaveLength(2);
 	});
+
+	it("outlines a late slot, keeps an unflagged slot open, and lets missing win", () => {
+		const rows = laneRows(LANE_CHART_DATA);
+		const [open, missing] = LANE_CHART_DATA.lanes[0]!.slots;
+		const data = {
+			...LANE_CHART_DATA,
+			lanes: [
+				{
+					...LANE_CHART_DATA.lanes[0]!,
+					slots: [
+						{ ...open!, late: true },
+						open!,
+						{ ...missing!, late: true },
+					],
+				},
+			],
+		};
+		const { container } = render(() => (
+			<Chart width={600} height={200} xDomain={[0, 400]} yDomain={[0, 200]}>
+				<LaneMarks
+					data={data}
+					rows={rows}
+					height={laneChartHeight(rows)}
+					hatchId="hatch"
+					dotsId="dots"
+				/>
+			</Chart>
+		));
+		const states = [...container.querySelectorAll(".sui-lane-chart__slot")].map(
+			(el) => el.getAttribute("class"),
+		);
+		expect(states).toEqual([
+			"sui-lane-chart__slot sui-lane-chart__slot--late",
+			"sui-lane-chart__slot sui-lane-chart__slot--open",
+			"sui-lane-chart__slot sui-lane-chart__slot--missing",
+		]);
+	});
 });

@@ -59,6 +59,8 @@ const lane = (l: BoardVals["mLanes"][number]): MpLane => ({
 			title: s.title,
 			missing: s.missing,
 			catchup: s.catchup,
+			// The board marks a late or catch-up slot with a yellow border.
+			late: s.style.includes(`border-color: ${YELLOW}`),
 			parts: s.parts.map((p) => {
 				const pg = geometry(p.style);
 				return {

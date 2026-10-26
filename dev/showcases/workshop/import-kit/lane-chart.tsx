@@ -50,6 +50,7 @@ const bind = (c: MpChart): Bound => {
 				height: s.h,
 				title: s.title,
 				missing: s.missing,
+				late: s.late || s.catchup,
 				parts: s.parts.map((p, pi) => {
 					const key = `l${li}s${si}p${pi}`;
 					marks.set(key, p);

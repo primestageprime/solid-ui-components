@@ -21,7 +21,7 @@ import {
 	type LaneRow,
 	laneY,
 } from "./laneGeometry";
-import type { LaneBar, LaneChartData } from "./types";
+import type { LaneBar, LaneChartData, LaneSlot } from "./types";
 
 export interface LaneMarksProps {
 	/** The scaled data. */
@@ -39,6 +39,10 @@ export interface LaneMarksProps {
 }
 
 const hotClass = (on: boolean): string => (on ? " sui-lane-chart__hot" : "");
+
+/** A slot's outline state: missing wins over late; open is the default. */
+const slotState = (s: LaneSlot): "missing" | "late" | "open" =>
+	s.missing ? "missing" : s.late ? "late" : "open";
 
 const Bars: Component<{
 	row: LaneRow;
@@ -160,7 +164,7 @@ export const LaneMarks: Component<LaneMarksProps> = (props) => {
 							{(s) => (
 								<g>
 									<rect
-										class={`sui-lane-chart__slot sui-lane-chart__slot--${s.missing ? "missing" : "open"}`}
+										class={`sui-lane-chart__slot sui-lane-chart__slot--${slotState(s)}`}
 										x={s.x}
 										y={laneY(laneRow(i()), s.bottom, s.height)}
 										width={s.width}

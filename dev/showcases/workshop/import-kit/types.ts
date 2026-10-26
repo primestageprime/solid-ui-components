@@ -147,6 +147,8 @@ export interface MpSlot {
 	readonly title: string;
 	readonly missing: boolean;
 	readonly catchup: boolean;
+	/** The money came late (inside a later window day) or as a catch-up. */
+	readonly late: boolean;
 	readonly parts: readonly {
 		readonly bottom: number;
 		readonly h: number;
