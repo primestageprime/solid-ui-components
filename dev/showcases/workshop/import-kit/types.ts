@@ -1,6 +1,6 @@
-// Fixture types for the import benches. The fixtures come from the
-// thorcasting prototype boards (prototypes/import-canvas/sui-fixtures/dump.js).
-// Every value is display text that the prototype computed.
+// View types for the import benches. import-kit/adapt.ts maps the live
+// prototype board (import-kit/live) to these types. Every text value is display
+// text that the board computed; every function is a board handler.
 
 /** The tone of one evidence badge, as the prototype scores it. */
 export type BadgeTone = "ok" | "weak" | "neg" | "stop" | "plain" | "side";
@@ -79,34 +79,9 @@ export interface Modes<T> {
 	readonly adv: T;
 }
 
-export interface QueuePayment {
-	readonly id: string;
-	readonly payee: string;
-	readonly date: string;
-	readonly amt: string;
-	readonly badge: string;
-	readonly tip: string;
-	readonly sugs: readonly string[];
-}
-
 export interface GroupRef {
 	readonly name: string;
 	readonly count: number;
-}
-
-export interface IgnoredPayment {
-	readonly id: string;
-	readonly payee: string;
-	readonly amt: string;
-	readonly badge: string;
-	readonly tip: string;
-}
-
-export interface ManualGroupData {
-	readonly sub: string;
-	readonly queue: readonly QueuePayment[];
-	readonly groups: readonly GroupRef[];
-	readonly ignored: readonly IgnoredPayment[];
 }
 
 export type ProposalLevel = "side" | "category" | "group" | "projection";
@@ -205,20 +180,187 @@ export interface HaltedData {
 	readonly missed: readonly MissedRow[];
 }
 
-export interface InitialBoard {
-	readonly steps: readonly string[];
-	readonly auto: Modes<AutoView>;
-	readonly manualGroup: ManualGroupData;
-	readonly proposals: ProposalsData;
-	readonly summary: readonly SummaryStat[];
+// ---------- Manual group (live) ----------
+export interface MgRow {
+	readonly id: string;
+	readonly pos: string;
+	readonly current: boolean;
+	readonly payee: string;
+	readonly date: string;
+	readonly amt: string;
+	readonly badge: string;
+	readonly tip: string;
+	/** The groups the user made in this step, for keys 1–9. */
+	readonly quick: readonly string[];
+	/** The board's suggested groups for this payment (incremental board). */
+	readonly sugs: readonly string[];
 }
 
-export interface IncrementalData extends InitialBoard {
-	readonly changed: Modes<ChangedData>;
-	readonly halted: HaltedData;
+export interface MgIgnored {
+	readonly id: string;
+	readonly payee: string;
+	readonly amt: string;
+	readonly badge: string;
+	readonly tip: string;
+	readonly canUnignore: boolean;
 }
 
-export interface IncrementalBoard {
-	readonly full: IncrementalData;
-	readonly quiet: IncrementalData;
+export interface MgView {
+	readonly sub: string;
+	/** The payments that wait, in the board's order. */
+	readonly rows: readonly MgRow[];
+	readonly groups: readonly GroupRef[];
+	readonly created: readonly string[];
+	readonly ignored: readonly MgIgnored[];
+	readonly undoLabel: string;
+	readonly canUndo: boolean;
+}
+
+export interface MgActions {
+	readonly pick: (id: string) => void;
+	readonly place: (id: string, group: string) => void;
+	readonly ignore: (id: string) => void;
+	readonly unignore: (id: string) => void;
+	readonly undo: () => void;
+}
+
+// ---------- Manual (projection) ----------
+type Act = () => void;
+
+export type MpBucket = "review" | "matched" | "other";
+
+export interface MpSideItem {
+	readonly key: string;
+	readonly bucket: MpBucket;
+	readonly name: string;
+	readonly note: string;
+	readonly current: boolean;
+	/** Absent on an OTHER row: those rows only inform. */
+	readonly pick?: Act;
+}
+
+export type MpKind = "ontime" | "late" | "unmatched";
+
+export interface MpBar {
+	readonly x: number;
+	readonly w: number;
+	readonly bottom: number;
+	readonly h: number;
+	readonly kind: MpKind;
+	readonly hot: boolean;
+	readonly enter: Act;
+	readonly leave: Act;
+}
+
+export interface MpSlot {
+	readonly x: number;
+	readonly w: number;
+	readonly bottom: number;
+	readonly h: number;
+	readonly title: string;
+	readonly missing: boolean;
+	readonly catchup: boolean;
+	readonly parts: readonly {
+		readonly bottom: number;
+		readonly h: number;
+		readonly kind: "ontime" | "late";
+		readonly hot: boolean;
+		readonly enter: Act;
+		readonly leave: Act;
+	}[];
+}
+
+export interface MpLane {
+	readonly name: string;
+	readonly sub: string;
+	readonly h: number;
+	readonly slots: readonly MpSlot[];
+	readonly bars: readonly MpBar[];
+	readonly links: readonly { readonly x: number; readonly w: number; readonly bottom: number }[];
+}
+
+export interface MpChart {
+	readonly trackW: number;
+	readonly heads: readonly { readonly x: number; readonly w: number; readonly label: string; readonly fresh: boolean }[];
+	readonly grid: readonly { readonly x: number; readonly strong: boolean }[];
+	readonly unmatched: {
+		readonly h: number;
+		readonly total: string;
+		readonly boxes: readonly { readonly x: number; readonly w: number; readonly bottom: number; readonly h: number }[];
+		readonly bars: readonly MpBar[];
+	};
+	readonly lanes: readonly MpLane[];
+}
+
+export interface MpCfg {
+	readonly name: string;
+	readonly amount: string;
+	readonly sub: string;
+	readonly editLabel: string;
+	readonly delLabel: string;
+	readonly confirming: boolean;
+	readonly confirmText: string;
+	readonly edit: Act;
+	readonly askDelete: Act;
+	readonly cancelDelete: Act;
+	readonly doDelete: Act;
+}
+
+export interface MpPaneRow {
+	readonly key: string;
+	readonly bucket: string;
+	readonly date: string;
+	readonly slot: string;
+	readonly amount: string;
+	readonly of: string;
+	readonly tone: MpKind | "credit";
+	readonly hot: boolean;
+	readonly enter: Act;
+	readonly leave: Act;
+}
+
+export interface MpEditState {
+	/** 1–28, or 30 and up for the last day of the month. */
+	readonly day: number;
+	readonly amt: number;
+	readonly grace: number;
+}
+
+export interface MpView {
+	readonly sections: readonly { readonly key: MpBucket; readonly title: string; readonly count: string; readonly emptyText: string }[];
+	readonly side: readonly MpSideItem[];
+	readonly done: { readonly on: boolean; readonly title: string; readonly text: string; readonly next: string; readonly go: Act };
+	readonly drop: { readonly on: boolean; readonly note: string };
+	readonly title: string;
+	readonly why: string;
+	readonly whyWarn: boolean;
+	readonly sub: string;
+	readonly desc: string;
+	readonly hasGroup: boolean;
+	readonly chart: MpChart;
+	readonly sugs: readonly { readonly title: string; readonly amount: string; readonly sub: string; readonly add: Act }[];
+	readonly cfgs: readonly MpCfg[];
+	readonly pane: readonly { readonly key: string; readonly name: string; readonly desc: string; readonly count: string; readonly total: string; readonly expanded: boolean; readonly toggle: Act }[];
+	readonly paneRows: readonly MpPaneRow[];
+	readonly edit: {
+		readonly open: boolean;
+		readonly title: string;
+		readonly state: MpEditState | null;
+		readonly fixed: boolean;
+		readonly variable: boolean;
+		readonly range: string;
+		readonly pickDay: (day: number) => void;
+		readonly pickLast: Act;
+		readonly setAmt: (v: number) => void;
+		readonly setGrace: (v: number) => void;
+		readonly save: Act;
+		readonly close: Act;
+	};
+	readonly fin: {
+		readonly open: boolean;
+		readonly items: readonly { readonly id: string; readonly payee: string; readonly date: string; readonly amount: string; readonly where: string }[];
+		readonly sub: string;
+		readonly close: Act;
+		readonly go: Act;
+	};
 }
