@@ -24,12 +24,16 @@ import type {
 	UngroupedRow,
 } from "./types";
 
-const badge = (b: BBadge): Badge => ({ t: b.t, tone: b.tone, tip: b.tip });
+const badge = (b: BBadge): Badge => ({
+	label: b.t,
+	tone: b.tone as Badge["tone"],
+	tip: b.tip,
+});
 const pay = (p: BPay): Payment => ({
-	d: p.d,
+	date: p.d,
 	payee: p.payee ?? "",
 	score: p.score ?? "",
-	amt: p.amt,
+	amount: p.amt,
 });
 const tierRow = (r: BTierRow): TierRow => ({
 	id: r.cid,

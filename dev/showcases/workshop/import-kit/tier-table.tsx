@@ -16,8 +16,8 @@ import {
 	TextBody,
 	TextSublabel,
 } from "../../../../src/components/Text";
-import { PaymentsPop } from "./payments-pop";
-import { BadgeList } from "./score-badge";
+import { PaymentsPopover } from "../../../../src/components/PaymentsPopover";
+import { ScoreBadgeList as BadgeList } from "../../../../src/components/ScoreBadge";
 import type { Tier, TierRow } from "./types";
 
 type Item =
@@ -137,7 +137,7 @@ export const TierTable: Component<TierTableProps> = (props) => {
 			header: "Payments",
 			accessor: (item) => {
 				const row = rowOf(item);
-				return row ? <PaymentsPop count={row.count} list={row.list} /> : "";
+				return row ? <PaymentsPopover count={row.count} payments={row.list} /> : "";
 			},
 		},
 		{

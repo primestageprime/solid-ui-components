@@ -35,7 +35,7 @@ import {
 	TextBody,
 	TextValue,
 } from "../../../../src/components/Text";
-import { ScoreBadge } from "./score-badge";
+import { ScoreBadge } from "../../../../src/components/ScoreBadge";
 import type { MgActions, MgRow, MgView } from "./types";
 
 interface RailItem {
@@ -176,7 +176,7 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 										<MonoMeta>{p().date}</MonoMeta>
 										<Show when={p().badge}>
 											<ScoreBadge
-												badge={{ t: p().badge, tone: "plain", tip: p().tip }}
+												badge={{ label: p().badge, tone: "plain", tip: p().tip }}
 											/>
 										</Show>
 									</ClusterRow>
@@ -243,7 +243,7 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 									<MonoMeta>{i.amt}</MonoMeta>
 									<Show when={i.badge}>
 										<ScoreBadge
-											badge={{ t: i.badge, tone: "plain", tip: i.tip }}
+											badge={{ label: i.badge, tone: "plain", tip: i.tip }}
 										/>
 									</Show>
 									<Show when={i.canUnignore}>

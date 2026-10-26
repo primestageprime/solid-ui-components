@@ -17,7 +17,10 @@ import {
 	SectionTitle,
 	TextBody,
 } from "../../../../src/components/Text";
-import { BadgeList, ScoreBadge } from "./score-badge";
+import {
+	ScoreBadgeList as BadgeList,
+	ScoreBadge,
+} from "../../../../src/components/ScoreBadge";
 import { TierTable } from "./tier-table";
 import type { AutoView, IgnoredAgain, TuneBar, UngroupedRow } from "./types";
 
@@ -83,7 +86,7 @@ const IgnoredAgainList: Component<{ items: readonly IgnoredAgain[] }> = (
 					<TextBody>{i.payee}</TextBody>
 					<MonoValue>{i.amt}</MonoValue>
 					<Show when={i.badge}>
-						<ScoreBadge badge={{ t: i.badge, tone: "plain", tip: i.tip }} />
+						<ScoreBadge badge={{ label: i.badge, tone: "plain", tip: i.tip }} />
 					</Show>
 				</ClusterRow>
 			)}

@@ -2,21 +2,11 @@
 // prototype board (import-kit/live) to these types. Every text value is display
 // text that the board computed; every function is a board handler.
 
-/** The tone of one evidence badge, as the prototype scores it. */
-export type BadgeTone = "ok" | "weak" | "neg" | "stop" | "plain" | "side";
+import type { PaymentLine } from "../../../../src/components/PaymentsPopover";
+import type { ScoreBadgeData } from "../../../../src/components/ScoreBadge";
 
-export interface Badge {
-	readonly t: string;
-	readonly tone: BadgeTone | string;
-	readonly tip: string;
-}
-
-export interface Payment {
-	readonly d: string;
-	readonly payee: string;
-	readonly score: string;
-	readonly amt: string;
-}
+export type Badge = ScoreBadgeData;
+export type Payment = PaymentLine;
 
 export interface TierRow {
 	readonly id: string;

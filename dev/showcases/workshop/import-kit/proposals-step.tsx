@@ -11,7 +11,7 @@ import { BaseTable } from "../../../../src/components/Table";
 import type { TableColumn } from "../../../../src/components/Table/types";
 import { MonoValue, MutedBody } from "../../../../src/components/Text";
 import { TreeTable } from "../../../../src/components/TreeTable";
-import { PaymentsPop } from "./payments-pop";
+import { PaymentsPopover } from "../../../../src/components/PaymentsPopover";
 import type { HaltedGroup, ProposalNode, ProposalsData } from "./types";
 
 const walk = (nodes: readonly ProposalNode[]): ProposalNode[] =>
@@ -68,7 +68,7 @@ const columns: TableColumn<ProposalNode>[] = [
 		header: "Payments",
 		accessor: (n) =>
 			n.list.length > 0 ? (
-				<PaymentsPop count={n.count} list={n.list} />
+				<PaymentsPopover count={n.count} payments={n.list} />
 			) : (
 				n.count
 			),
@@ -112,7 +112,7 @@ const haltedColumns = (
 	{
 		id: "count",
 		header: "Payments",
-		accessor: (h) => <PaymentsPop count={h.count} list={h.list} />,
+		accessor: (h) => <PaymentsPopover count={h.count} payments={h.list} />,
 	},
 	{
 		id: "total",

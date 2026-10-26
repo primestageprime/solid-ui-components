@@ -15,8 +15,8 @@ import {
 	TextBody,
 	TextSublabel,
 } from "../../../../src/components/Text";
-import { PaymentsPop } from "./payments-pop";
-import { BadgeList } from "./score-badge";
+import { PaymentsPopover } from "../../../../src/components/PaymentsPopover";
+import { ScoreBadgeList as BadgeList } from "../../../../src/components/ScoreBadge";
 import type { ChangedData, ChangedRow } from "./types";
 
 export interface ChangedStepProps {
@@ -66,7 +66,7 @@ export const ChangedStep: Component<ChangedStepProps> = (props) => {
 		{
 			id: "payments",
 			header: "Payments",
-			accessor: (r) => <PaymentsPop count={r.count} list={r.list} />,
+			accessor: (r) => <PaymentsPopover count={r.count} payments={r.list} />,
 		},
 		{
 			id: "goes",
