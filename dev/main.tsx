@@ -221,6 +221,24 @@ import { VarianceStripChartShowcase } from "./showcases/variance-strip-chart";
 import { VarianceStripShowcase } from "./showcases/variance-strip";
 import { BalanceReviewChartShowcase } from "./showcases/balance-review-chart";
 import { ChannelChartShowcase } from "./showcases/channel-chart";
+import {
+  ImportAutoStepShowcase,
+  ImportStepShellShowcase,
+  ImportSummaryGridShowcase,
+  ImportTierTableShowcase,
+  PaymentsPopoverShowcase,
+  ScoreBadgeShowcase,
+} from "./showcases/import-kit/steps";
+import {
+  ImportChangedTableShowcase,
+  ImportHaltedTablesShowcase,
+  ImportManualGroupStepShowcase,
+  ImportProposalsTreeShowcase,
+} from "./showcases/import-kit/review";
+import {
+  LaneChartShowcase,
+  ManualProjectionShowcase,
+} from "./showcases/import-kit/manual";
 import { FullscreenBoxShowcase } from "./showcases/fullscreen-box";
 
 type ShowcaseProps = {
@@ -1369,6 +1387,79 @@ const items: Item[] = [
     label: "StepTimeline",
     component: StepTimelineShowcase,
     tags: ["depth:3"],
+  },
+  // Import kit — UNSTABLE (/unstable only), promoted 2026-10-26 on the owner's word, pending Peter's review.
+  {
+    id: "score-badge",
+    label: "ScoreBadge (unstable)",
+    component: ScoreBadgeShowcase,
+    tags: ["depth:2", "feedback", "unstable"],
+  },
+  {
+    id: "payments-popover",
+    label: "PaymentsPopover (unstable)",
+    component: PaymentsPopoverShowcase,
+    tags: ["depth:2", "data", "unstable"],
+  },
+  {
+    id: "import-step-shell",
+    label: "ImportStepShell (unstable)",
+    component: ImportStepShellShowcase,
+    tags: ["depth:2", "navigation", "unstable"],
+  },
+  {
+    id: "import-tier-table",
+    label: "ImportTierTable (unstable)",
+    component: ImportTierTableShowcase,
+    tags: ["depth:3", "table", "unstable"],
+  },
+  {
+    id: "import-auto-step",
+    label: "ImportAutoStep (unstable)",
+    component: ImportAutoStepShowcase,
+    tags: ["depth:4", "table", "unstable"],
+  },
+  {
+    id: "import-summary-grid",
+    label: "ImportSummaryGrid (unstable)",
+    component: ImportSummaryGridShowcase,
+    tags: ["depth:2", "data", "unstable"],
+  },
+  {
+    id: "import-manual-group-step",
+    label: "ImportManualGroupStep (unstable)",
+    component: ImportManualGroupStepShowcase,
+    tags: ["depth:3", "form", "unstable"],
+  },
+  {
+    id: "import-proposals-tree",
+    label: "ImportProposalsTree (unstable)",
+    component: ImportProposalsTreeShowcase,
+    tags: ["depth:3", "table", "unstable"],
+  },
+  {
+    id: "import-changed-table",
+    label: "ImportChangedTable (unstable)",
+    component: ImportChangedTableShowcase,
+    tags: ["depth:3", "table", "unstable"],
+  },
+  {
+    id: "import-halted-tables",
+    label: "ImportHaltedTables (unstable)",
+    component: ImportHaltedTablesShowcase,
+    tags: ["depth:2", "table", "unstable"],
+  },
+  {
+    id: "lane-chart",
+    label: "LaneChart (unstable)",
+    component: LaneChartShowcase,
+    tags: ["depth:2", "chart", "unstable"],
+  },
+  {
+    id: "manual-projection",
+    label: "ManualProjection (unstable)",
+    component: ManualProjectionShowcase,
+    tags: ["depth:2", "container", "unstable"],
   },
   // Generated component entries (npm run new:component) — appended above this line.
   {
