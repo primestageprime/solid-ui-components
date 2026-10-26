@@ -117,7 +117,7 @@ const ONE_OFF_COLUMNS: TableColumn<ManualOneOffItem>[] = [
 	{
 		id: "date",
 		header: "Date",
-		accessor: (f) => <MonoValue>{f.date}</MonoValue>,
+		accessor: (f) => <MonoMeta>{f.date}</MonoMeta>,
 	},
 	{
 		id: "amount",
