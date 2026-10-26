@@ -1,6 +1,8 @@
 // ManualGroupStep — step 2, Manual group. The rail lists the payments that
 // wait, the groups, and the ignored payments. The card shows the current
-// payment with its quick picks (keys 1–9), Group (g), Ignore (i) and Undo (u).
+// payment with its quick picks (keys 1–9: the groups made in this step, as
+// on the board), Group (g), Ignore (i) and Undo (u). The board holds the
+// state (assign, created, history); this step only calls its handlers.
 import { type Component, createMemo, createSignal, For, Show } from "solid-js";
 import {
 	type Bucket,
@@ -33,21 +35,8 @@ import {
 	TextBody,
 	TextValue,
 } from "../../../../src/components/Text";
-import {
-	allQueued,
-	assign,
-	groupsWithCounts,
-	ignore,
-	ignoredNow,
-	type MgState,
-	pending,
-	quickPicks,
-	undo,
-	undoLabel,
-	unignore,
-} from "./manual-group-model";
 import { ScoreBadge } from "./score-badge";
-import type { ManualGroupData, QueuePayment } from "./types";
+import type { MgActions, MgRow, MgView } from "./types";
 
 interface RailItem {
 	readonly key: string;
@@ -74,9 +63,8 @@ const BUCKETS: Bucket[] = [
 ];
 
 export interface ManualGroupStepProps {
-	readonly data: ManualGroupData;
-	readonly state: MgState;
-	readonly onState: (s: MgState) => void;
+	readonly view: MgView;
+	readonly act: MgActions;
 }
 
 const Legend: Component = () => (
@@ -101,28 +89,15 @@ const Legend: Component = () => (
 );
 
 export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
-	const all = createMemo(() =>
-		allQueued(props.data.queue, props.data.ignored, props.state),
-	);
-	const left = createMemo(() => pending(all(), props.state));
-	const groups = createMemo(() =>
-		groupsWithCounts(props.data.groups, props.state),
-	);
-	const ignored = createMemo(() =>
-		ignoredNow(all(), props.data.ignored, props.state),
-	);
-	const [picked, setPicked] = createSignal<string | null>(null);
+	const left = () => props.view.rows;
 	const [name, setName] = createSignal<ComboboxOption | null>(null);
 	const current = createMemo(
-		(): QueuePayment | undefined =>
-			left().find((p) => p.id === picked()) ?? left()[0],
+		(): MgRow | undefined => left().find((p) => p.current) ?? left()[0],
 	);
-	const picks = createMemo(() => quickPicks(current(), groups()));
-
 	const options = createMemo((): ComboboxOption[] =>
-		groups().map((g, i) => ({
+		props.view.groups.map((g) => ({
 			value: g.name,
-			label: `${i + 1}. ${g.name} · ${g.count}`,
+			label: `${g.name} · ${g.count}`,
 		})),
 	);
 	const railItems = createMemo((): RailItem[] => [
@@ -132,13 +107,13 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 			label: p.payee,
 			meta: p.amt,
 		})),
-		...groups().map((g, i) => ({
+		...props.view.groups.map((g) => ({
 			key: `g:${g.name}`,
 			bucket: "groups" as const,
-			label: `${i + 1}. ${g.name}`,
+			label: g.name,
 			meta: String(g.count),
 		})),
-		...ignored().map((p) => ({
+		...props.view.ignored.map((p) => ({
 			key: `i:${p.id}`,
 			bucket: "ignored" as const,
 			label: p.payee,
@@ -148,13 +123,13 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 
 	const put = (group: string) => {
 		const p = current();
-		if (!p) return;
-		props.onState(assign(props.state, p.id, group, props.data.groups));
+		if (!p || !group) return;
+		props.act.place(p.id, group);
 		setName(null);
 	};
 	const skip = () => {
 		const p = current();
-		if (p) props.onState(ignore(props.state, p.id));
+		if (p) props.act.ignore(p.id);
 	};
 
 	return (
@@ -167,7 +142,7 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 					keyOf={(item) => item.key}
 					selectedKey={current()?.id}
 					onSelect={(key) =>
-						key && left().some((p) => p.id === key) && setPicked(key)
+						key && left().some((p) => p.id === key) && props.act.pick(key)
 					}
 					height={440}
 					renderItem={(item) => (
@@ -180,7 +155,7 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 			</NarrowStack>
 			<GrowBox>
 				<ContentStack>
-					<MutedBody>{props.data.sub}</MutedBody>
+					<MutedBody>{props.view.sub}</MutedBody>
 					<Show
 						when={current()}
 						fallback={
@@ -190,7 +165,7 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 						{(p) => (
 							<ContentSurface>
 								<TightStack>
-									<MonoMeta>{`Payment ${all().indexOf(p()) + 1} of ${all().length}`}</MonoMeta>
+									<MonoMeta>{p().pos}</MonoMeta>
 									<SectionTitle>{p().payee}</SectionTitle>
 									<ClusterRow>
 										<TextValue
@@ -206,7 +181,7 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 										</Show>
 									</ClusterRow>
 									<WrapRow>
-										<For each={picks()}>
+										<For each={p().quick.slice(0, 9)}>
 											{(g, i) => (
 												<HotkeyButton
 													size="sm"
@@ -215,6 +190,11 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 												>
 													{g}
 												</HotkeyButton>
+											)}
+										</For>
+										<For each={p().sugs}>
+											{(g) => (
+												<SmallButton onClick={() => put(g)}>{`Put in ${g}`}</SmallButton>
 											)}
 										</For>
 									</WrapRow>
@@ -242,21 +222,21 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 										<HotkeyButton
 											hotkey="u"
 											variant="ghost"
-											disabled={props.state.history.length === 0}
-											onTrigger={() => props.onState(undo(props.state))}
+											disabled={!props.view.canUndo}
+											onTrigger={() => props.act.undo()}
 										>
 											Undo
 										</HotkeyButton>
-										<MonoMeta>{undoLabel(all(), props.state)}</MonoMeta>
+										<MonoMeta>{props.view.undoLabel}</MonoMeta>
 									</ClusterRow>
 								</TightStack>
 							</ContentSurface>
 						)}
 					</Show>
 					<Legend />
-					<Show when={ignored().length > 0}>
+					<Show when={props.view.ignored.length > 0}>
 						<SectionTitle>IGNORED</SectionTitle>
-						<For each={ignored()}>
+						<For each={props.view.ignored}>
 							{(i) => (
 								<ClusterRow>
 									<TextBody>{i.payee}</TextBody>
@@ -266,22 +246,14 @@ export const ManualGroupStep: Component<ManualGroupStepProps> = (props) => {
 											badge={{ t: i.badge, tone: "plain", tip: i.tip }}
 										/>
 									</Show>
-									<SmallGhostButton
-										onClick={() => props.onState(unignore(props.state, i.id))}
-									>
-										Un-ignore
-									</SmallGhostButton>
+									<Show when={i.canUnignore}>
+										<SmallGhostButton onClick={() => props.act.unignore(i.id)}>
+											Un-ignore
+										</SmallGhostButton>
+									</Show>
 								</ClusterRow>
 							)}
 						</For>
-					</Show>
-					<Show when={props.state.created.length > 0}>
-						<ClusterRow>
-							<MutedBody>New groups:</MutedBody>
-							<For each={props.state.created}>
-								{(g) => <SmallButton onClick={() => put(g)}>{g}</SmallButton>}
-							</For>
-						</ClusterRow>
 					</Show>
 				</ContentStack>
 			</GrowBox>

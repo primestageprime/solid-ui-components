@@ -1,7 +1,7 @@
 // AutoStep — step 1, Auto group. The tier table, the ungrouped payments, and
-// (advanced view only) the tuning bars. The fixture is static, so the bars move
-// but change nothing.
-import { type Component, createSignal, For, Show } from "solid-js";
+// (advanced view only) the tuning bars. A bar sets the board's `thr`, so the
+// board groups the payments again.
+import { type Component, For, Show } from "solid-js";
 import { SmallGhostButton } from "../../../../src/components/Button";
 import {
 	ClusterRow,
@@ -21,36 +21,30 @@ import { BadgeList, ScoreBadge } from "./score-badge";
 import { TierTable } from "./tier-table";
 import type { AutoView, IgnoredAgain, TuneBar, UngroupedRow } from "./types";
 
-const TuneBars: Component<{ bars: readonly TuneBar[] }> = (props) => {
-	const start = (): Record<string, number> =>
-		Object.fromEntries(props.bars.map((b) => [b.key, b.value]));
-	const [values, setValues] = createSignal<Record<string, number>>(start());
-	return (
-		<ContentStack>
-			<ClusterRow>
-				<SectionTitle>Tuning</SectionTitle>
-				<SmallGhostButton onClick={() => setValues(start())}>
-					Reset
-				</SmallGhostButton>
-			</ClusterRow>
-			<MutedBody>
-				Display only: the fixture is static, so a bar changes nothing.
-			</MutedBody>
-			<For each={props.bars}>
-				{(bar) => (
-					<Slider
-						label={bar.label}
-						min={bar.min}
-						max={bar.max}
-						value={values()[bar.key] ?? bar.value}
-						onChange={(v) => setValues({ ...values(), [bar.key]: v })}
-						format={(v) => `${v}%`}
-					/>
-				)}
-			</For>
-		</ContentStack>
-	);
-};
+const TuneBars: Component<{
+	bars: readonly TuneBar[];
+	onTune: (key: string, v: number) => void;
+	onReset: () => void;
+}> = (props) => (
+	<ContentStack>
+		<ClusterRow>
+			<SectionTitle>Tuning</SectionTitle>
+			<SmallGhostButton onClick={props.onReset}>Reset</SmallGhostButton>
+		</ClusterRow>
+		<For each={props.bars}>
+			{(bar) => (
+				<Slider
+					label={bar.label}
+					min={bar.min}
+					max={bar.max}
+					value={bar.value}
+					onChange={(v) => props.onTune(bar.key, v)}
+					format={(v) => `${v}%`}
+				/>
+			)}
+		</For>
+	</ContentStack>
+);
 
 const ungroupedColumns = (scoreHead: string): TableColumn<UngroupedRow>[] => [
 	{ id: "payee", header: "Payee", accessor: (r) => r.payee },
@@ -104,13 +98,19 @@ export interface AutoStepProps {
 	readonly onFold: (key: string) => void;
 	readonly checked: ReadonlySet<string>;
 	readonly onCheck: (id: string, on: boolean) => void;
+	readonly onTune: (key: string, v: number) => void;
+	readonly onTuneReset: () => void;
 }
 
 export const AutoStep: Component<AutoStepProps> = (props) => (
 	<ContentStack>
 		<MutedBody>{props.view.summary}</MutedBody>
 		<Show when={props.adv && props.view.tune.length > 0}>
-			<TuneBars bars={props.view.tune} />
+			<TuneBars
+				bars={props.view.tune}
+				onTune={props.onTune}
+				onReset={props.onTuneReset}
+			/>
 		</Show>
 		<TierTable
 			tiers={props.view.tiers}

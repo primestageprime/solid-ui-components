@@ -1,7 +1,7 @@
 // StepShell — the frame of an import board: the step bar, the Advanced
 // switch, the step body, and Back / Next. Enter and → go to the next step,
-// ← goes back. A step before the current one shows "✓" as its hint (Tabs
-// has no done state).
+// ← goes back. A done step shows "✓" as its hint (Tabs has no done state);
+// the board says which steps are done. While a dialog is open the keys pause.
 import { type Component, type JSX, Show } from "solid-js";
 import { GhostButton, PrimaryButton } from "../../../../src/components/Button";
 import { ContentStack, SpreadRow } from "../../../../src/components/Layout";
@@ -21,6 +21,10 @@ export interface StepShellProps {
 	readonly onStep: (i: number) => void;
 	readonly adv: boolean;
 	readonly onAdv: (on: boolean) => void;
+	/** The board's done state per step (the Manual step: only when its review is done). */
+	readonly done: readonly boolean[];
+	/** True while a dialog is open: Enter and the arrows belong to the dialog. */
+	readonly paused?: boolean;
 	/** Extra controls on the right of the step bar (the DATA picker). */
 	readonly tools?: JSX.Element;
 	readonly children: JSX.Element;
@@ -35,13 +39,13 @@ export const StepShell: Component<StepShellProps> = (props) => {
 			next: () => go(props.step + 1),
 			back: () => go(props.step - 1),
 		},
-		scopes: () => ["global"],
+		scopes: () => (props.paused ? [] : ["global"]),
 	});
 	const tabs = () =>
 		props.steps.map((label, i) => ({
 			id: String(i),
 			label,
-			hint: i < props.step ? "✓" : String(i + 1),
+			hint: props.done[i] ? "✓" : String(i + 1),
 		}));
 	return (
 		<ContentStack>

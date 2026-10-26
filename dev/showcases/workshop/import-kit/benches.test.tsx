@@ -1,61 +1,101 @@
-// Smoke test: each import bench renders every step from its fixture.
+// Smoke test: each import bench runs its live board through every step, and
+// the bench actions change what later steps show.
 import { fireEvent, render, screen } from "@solidjs/testing-library";
 import { describe, expect, it } from "vitest";
-import InitialImportBench from "../initial-import";
 import IncrementalImportBench from "../incremental-import";
+import InitialImportBench from "../initial-import";
 
 const next = () => fireEvent.keyDown(window, { key: "ArrowRight" });
 
 describe("Initial Import bench", () => {
-  it("walks from Auto group to Summary", () => {
-    render(() => <InitialImportBench />);
-    expect(screen.getAllByText("Github").length).toBeGreaterThan(0);
-    next();
-    expect(screen.getAllByText("Evergreen Hall").length).toBeGreaterThan(0);
-    next();
-    expect(screen.getAllByText("EXPENSES").length).toBeGreaterThan(0);
-    next();
-    expect(screen.getByText("Manual projection — placeholder (Peter's bench)")).toBeTruthy();
-    next();
-    expect(screen.getByText("One-off configs")).toBeTruthy();
-  });
+	it("walks from Auto group to Summary through the one-off confirm", () => {
+		render(() => <InitialImportBench />);
+		expect(screen.getAllByText("Github").length).toBeGreaterThan(0);
+		next();
+		expect(screen.getAllByText("Evergreen Hall").length).toBeGreaterThan(0);
+		next();
+		expect(screen.getAllByText("EXPENSES").length).toBeGreaterThan(0);
+		next();
+		// The Manual step: the open group, its chart and its configs.
+		expect(screen.getAllByText("Bayside Property Mgmt").length).toBeGreaterThan(
+			0,
+		);
+		expect(screen.getByText("NEW CONFIG SUGGESTIONS")).toBeTruthy();
+		expect(screen.getAllByText("Retainer").length).toBeGreaterThan(0);
+		// Next on the Manual step asks about the one-off configs first.
+		fireEvent.click(screen.getByText("Next: Summary"));
+		expect(
+			screen.getByText(
+				"These items will be treated as one-off configs. Is that OK?",
+			),
+		).toBeTruthy();
+		fireEvent.click(screen.getByText("Continue"));
+		expect(screen.getByText("One-off configs")).toBeTruthy();
+	});
 
-  it("assigns the current payment with a quick-pick key and undoes it", () => {
-    render(() => <InitialImportBench />);
-    next();
-    expect(screen.getAllByText("Payment 1 of 6").length).toBe(1);
-    fireEvent.keyDown(window, { key: "1" });
-    expect(screen.queryByText("Payment 1 of 6")).toBeNull();
-    expect(screen.getAllByText("Payment 2 of 6").length).toBe(1);
-    fireEvent.keyDown(window, { key: "u" });
-    expect(screen.getAllByText("Payment 1 of 6").length).toBe(1);
-  });
+	it("a Manual group choice reaches the Manual step's groups, and undo takes it back", () => {
+		render(() => <InitialImportBench />);
+		next();
+		expect(screen.getAllByText("Payment 1 of 6").length).toBe(1);
+		fireEvent.keyDown(window, { key: "i" });
+		expect(screen.getAllByText("Payment 1 of 5").length).toBe(1);
+		fireEvent.keyDown(window, { key: "u" });
+		expect(screen.getAllByText("Payment 1 of 6").length).toBe(1);
+		// Group the first payment (Evergreen Hall) into a new group.
+		const input = screen.getByPlaceholderText(
+			"Group name — type to find or make one",
+		);
+		fireEvent.input(input, { target: { value: "Test hall" } });
+		fireEvent.keyDown(input, { key: "Enter" });
+		fireEvent.click(screen.getByRole("button", { name: /^Group/ }));
+		expect(screen.getAllByText("Payment 1 of 5").length).toBe(1);
+		expect(screen.getAllByText("Test hall").length).toBeGreaterThan(0);
+		next();
+		next();
+		expect(screen.getAllByText("Test hall").length).toBeGreaterThan(0);
+	});
+
+	it("an Auto group uncheck moves the group's payments to UNGROUPED", () => {
+		render(() => <InitialImportBench />);
+		const before = screen.getAllByRole("row").length;
+		const box = screen.getByLabelText("Check Github");
+		fireEvent.click(box);
+		expect(screen.getAllByRole("row").length).toBeGreaterThan(before);
+		next();
+		expect(screen.getAllByText("Payment 1 of 12").length).toBe(1);
+	});
 });
 
 describe("Incremental Import bench", () => {
-  it("walks every step, and the advanced switch shows the score column", () => {
-    render(() => <IncrementalImportBench />);
-    expect(screen.getAllByText("Cascade Plumbing Supply").length).toBeGreaterThan(0);
-    expect(screen.queryByText("Sure")).toBeNull();
-    fireEvent.click(screen.getByLabelText("Advanced"));
-    expect(screen.getAllByText("Sure").length).toBeGreaterThan(0);
-    next();
-    expect(screen.getAllByText("ACH RENT 4471").length).toBeGreaterThan(0);
-    next();
-    next();
-    expect(screen.getAllByText("Started again at a new amount? Resume at $210").length).toBe(1);
-    next();
-    expect(screen.getAllByText("Toyota Financial").length).toBeGreaterThan(0);
-    next();
-    expect(screen.getByText("Manual projection — placeholder (Peter's bench)")).toBeTruthy();
-    next();
-    expect(screen.getByText("Added to existing groups")).toBeTruthy();
-  });
+	it("walks every step, and the advanced switch shows the score column", () => {
+		render(() => <IncrementalImportBench />);
+		expect(
+			screen.getAllByText("Cascade Plumbing Supply").length,
+		).toBeGreaterThan(0);
+		expect(screen.queryByText("Sure")).toBeNull();
+		fireEvent.click(screen.getByLabelText("Advanced"));
+		expect(screen.getAllByText("Sure").length).toBeGreaterThan(0);
+		next();
+		expect(screen.getAllByText("ACH RENT 4471").length).toBeGreaterThan(0);
+		next();
+		next();
+		expect(
+			screen.getAllByText("Started again at a new amount? Resume at $210")
+				.length,
+		).toBe(1);
+		next();
+		expect(screen.getAllByText("Toyota Financial").length).toBeGreaterThan(0);
+		next();
+		expect(screen.getByText("CONFIGS")).toBeTruthy();
+		fireEvent.click(screen.getByText("Next: Summary"));
+		fireEvent.click(screen.getByText("Continue"));
+		expect(screen.getByText("Added to existing groups")).toBeTruthy();
+	});
 
-  it("the quiet month has nothing to look at", () => {
-    render(() => <IncrementalImportBench />);
-    fireEvent.click(screen.getByText("Quiet month (every payment fits)"));
-    expect(screen.queryByText("Cascade Plumbing Supply")).toBeNull();
-    expect(screen.getAllByText("Every payment is in a group.").length).toBe(1);
-  });
+	it("the quiet month has nothing to look at", () => {
+		render(() => <IncrementalImportBench />);
+		fireEvent.click(screen.getByText("Quiet month (every payment fits)"));
+		expect(screen.queryByText("Cascade Plumbing Supply")).toBeNull();
+		expect(screen.getAllByText("Every payment is in a group.").length).toBe(1);
+	});
 });
