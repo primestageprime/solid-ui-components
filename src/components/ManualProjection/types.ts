@@ -45,6 +45,11 @@ export interface ManualPaneRow {
 	readonly amount: string;
 	/** Text after the amount, e.g. " of $7,000". */
 	readonly of: string;
+	/**
+	 * The amount's ink by meaning, e.g. success for on time, warning for late
+	 * or unmatched. Default "default".
+	 */
+	readonly tone?: Tone;
 }
 
 /** A new config the consumer suggests. */

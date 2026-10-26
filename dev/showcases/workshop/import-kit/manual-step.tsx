@@ -21,6 +21,17 @@ import type { MpView } from "./types";
 
 const TONE = { review: "warning", matched: "default", other: "muted" } as const;
 
+// A pane amount's ink by meaning, as the prototype colours it: green on time,
+// yellow late, orange unmatched. SUI has no orange token, so unmatched shares
+// the chart's warning ink (its unmatched bars use it too). The prototype pane
+// never shows a credit row; it keeps the default ink.
+const AMOUNT_TONE = {
+	ontime: "success",
+	late: "warning",
+	unmatched: "warning",
+	credit: "default",
+} as const;
+
 const Rail: Component<{ view: MpView }> = (props) => (
 	<ManualProjectionRail
 		sections={props.view.sections.map((s) => ({
@@ -59,6 +70,7 @@ const Pane: Component<{ view: MpView }> = (props) => (
 			slot: r.slot,
 			amount: r.amount,
 			of: r.of,
+			tone: AMOUNT_TONE[r.tone],
 		}))}
 		hotKey={props.view.paneRows.find((r) => r.hot)?.key}
 		onHover={(key) => {

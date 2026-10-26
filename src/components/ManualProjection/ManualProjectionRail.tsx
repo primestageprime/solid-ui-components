@@ -96,7 +96,7 @@ export const ManualPaymentsPane: Component<ManualPaymentsPaneProps> = (
 			<SpreadRow>
 				<MonoMeta>{r.date}</MonoMeta>
 				<MonoMeta>{r.slot}</MonoMeta>
-				<MonoMeta>{oneLine(`${r.amount}${r.of}`)}</MonoMeta>
+				<MonoMeta tone={r.tone}>{oneLine(`${r.amount}${r.of}`)}</MonoMeta>
 			</SpreadRow>
 		)}
 	/>

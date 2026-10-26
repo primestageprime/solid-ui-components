@@ -47,6 +47,26 @@ describe("ManualPaymentsPane", () => {
 		expect(screen.getByText("Retainer · 1 · $7,000")).toBeTruthy();
 		expect(screen.getByText("Jan 3")).toBeTruthy();
 	});
+
+	it("inks each amount by its tone, and keeps the default ink without one", () => {
+		render(() => (
+			<ManualPaymentsPane
+				groups={[
+					{ key: "g", name: "Retainer", desc: "", count: "2", total: "$9,000", expanded: true, warn: false },
+				]}
+				rows={[
+					{ key: "r1", group: "g", date: "Jan 3", slot: "Jan", amount: "$6,000", of: "", tone: "success" },
+					{ key: "r2", group: "g", date: "Feb 9", slot: "Feb · late", amount: "$3,000", of: "", tone: "warning" },
+					{ key: "r3", group: "g", date: "Mar 3", slot: "Mar", amount: "$1,000", of: "" },
+				]}
+				onHover={() => {}}
+			/>
+		));
+		const cls = (t: string) => screen.getByText(t).getAttribute("class") ?? "";
+		expect(cls("$6,000")).toContain("sui-text-tone--success");
+		expect(cls("$3,000")).toContain("sui-text-tone--warning");
+		expect(cls("$1,000")).not.toContain("sui-text-tone--");
+	});
 });
 
 describe("Manual center pieces", () => {
