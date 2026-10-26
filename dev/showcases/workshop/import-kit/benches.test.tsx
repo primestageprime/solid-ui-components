@@ -97,6 +97,12 @@ describe("Incremental Import bench", SLOW, () => {
 		expect(screen.getAllByText("monthly fixed expense loan ends").length).toBeGreaterThan(0);
 		next();
 		expect(screen.getByText("CONFIGS")).toBeTruthy();
+		// Every group is reviewed: the rail's TO REVIEW head shows the tick in
+		// success ink.
+		expect(screen.getAllByText("TO REVIEW ✓").length).toBeGreaterThan(0);
+		expect(
+			document.querySelectorAll(".bucket-queue__count--success"),
+		).toHaveLength(1);
 		fireEvent.click(screen.getByText("Next: Summary"));
 		fireEvent.click(screen.getByText("Continue"));
 		expect(screen.getByText("Added to existing groups")).toBeTruthy();

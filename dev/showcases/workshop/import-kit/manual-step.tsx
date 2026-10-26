@@ -37,7 +37,9 @@ const Rail: Component<{ view: MpView }> = (props) => (
 		sections={props.view.sections.map((s) => ({
 			key: s.key,
 			title: s.title,
-			tone: TONE[s.key],
+			// Every group reviewed: the board titles the section "TO REVIEW ✓",
+			// and the tick reads in success ink, as the prototype draws it.
+			tone: s.key === "review" && props.view.done.on ? "success" : TONE[s.key],
 			emptyText: s.emptyText,
 		}))}
 		items={props.view.side.map((i) => ({
