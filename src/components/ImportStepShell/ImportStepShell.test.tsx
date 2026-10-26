@@ -3,7 +3,7 @@ import { createSignal } from "solid-js";
 import { describe, expect, it } from "vitest";
 import { ImportStepShell } from "./ImportStepShell";
 
-const mount = (paused = false) => {
+const mount = (paused = false, withEnd = false) => {
 	const [step, setStep] = createSignal(0);
 	render(() => (
 		<ImportStepShell
@@ -14,6 +14,7 @@ const mount = (paused = false) => {
 			advanced={false}
 			onAdvancedChange={() => {}}
 			paused={paused}
+			lastStepEnd={withEnd ? <button type="button">Save</button> : undefined}
 		>
 			<p>{`body ${step()}`}</p>
 		</ImportStepShell>
@@ -27,6 +28,15 @@ describe("ImportStepShell", () => {
 		fireEvent.keyDown(window, { key: "ArrowRight" });
 		expect(screen.getByText("body 1")).toBeTruthy();
 		fireEvent.click(screen.getByText("Next: Summary"));
+		expect(screen.getByText("Start again")).toBeTruthy();
+	});
+
+	it("shows lastStepEnd beside Start again on the last step only", () => {
+		mount(false, true);
+		fireEvent.keyDown(window, { key: "ArrowRight" });
+		expect(screen.queryByText("Save")).toBeNull();
+		fireEvent.keyDown(window, { key: "ArrowRight" });
+		expect(screen.getByText("Save")).toBeTruthy();
 		expect(screen.getByText("Start again")).toBeTruthy();
 	});
 

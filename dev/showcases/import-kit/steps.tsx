@@ -2,6 +2,7 @@
 // hover, the step shell, the tier table, the Auto step and the summary grid.
 // Promoted 2026-10-26 on the owner's word, pending Peter's review.
 import { type Component, createSignal } from "solid-js";
+import { GhostButton } from "../../../src/components/Button";
 import { ImportAutoStep } from "../../../src/components/ImportAutoStep";
 import { ImportStepShell } from "../../../src/components/ImportStepShell";
 import { ImportSummaryGrid } from "../../../src/components/ImportSummaryGrid";
@@ -63,7 +64,7 @@ export const ImportStepShellShowcase: Component = () => {
 			<h2>ImportStepShell (unstable)</h2>
 			<p class="text-meta">
 				The frame of a multi-step import. Enter and → go on, ← goes back. A
-				done step shows a tick.
+				done step shows a tick. The last step shows a Save beside Start again.
 			</p>
 			<div class="example-group">
 				<ImportStepShell
@@ -73,6 +74,7 @@ export const ImportStepShellShowcase: Component = () => {
 					done={[true, false, false]}
 					advanced={advanced()}
 					onAdvancedChange={setAdvanced}
+					lastStepEnd={<GhostButton>Save</GhostButton>}
 				>
 					<MutedBody>{`The body of step ${step() + 1}: ${STEPS[step()]}${advanced() ? " (advanced)" : ""}.`}</MutedBody>
 				</ImportStepShell>

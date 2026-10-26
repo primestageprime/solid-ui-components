@@ -7,7 +7,8 @@
 // step body, and Back / Next. Enter and → go to the next step, ← goes back.
 // A done step shows "✓" as its tab hint (Tabs has no done state); the caller
 // says which steps are done. While `paused` is true (a dialog is open) the
-// keys do nothing. On the last step Next becomes "Start again".
+// keys do nothing. On the last step Next becomes "Start again", and
+// `lastStepEnd` (a Save button, for example) shows beside it.
 //
 // No CSS. Composes Tabs, LeftTruthToggle, GhostButton, PrimaryButton,
 // ContentStack and SpreadRow.
@@ -41,6 +42,8 @@ export interface ImportStepShellProps {
 	readonly paused?: boolean;
 	/** Extra controls to the left of the Advanced switch. */
 	readonly tools?: JSX.Element;
+	/** Shown beside "Start again" on the last step only. */
+	readonly lastStepEnd?: JSX.Element;
 	/** The open step's body. */
 	readonly children: JSX.Element;
 }
@@ -93,7 +96,10 @@ export const ImportStepShell: Component<ImportStepShellProps> = (props) => {
 				<Show
 					when={props.step < last()}
 					fallback={
-						<PrimaryButton onClick={() => go(0)}>Start again</PrimaryButton>
+						<SpreadRow>
+							{props.lastStepEnd}
+							<PrimaryButton onClick={() => go(0)}>Start again</PrimaryButton>
+						</SpreadRow>
 					}
 				>
 					<PrimaryButton
