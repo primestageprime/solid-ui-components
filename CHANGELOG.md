@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.234.0 — 2026-10-27
+
 ### Added
 
 - **Import kit under `/unstable`** (owner, thorcasting 2026-10-26; promoted on the owner's word, pending Peter's review). The display pieces of thorcasting's import screens, from the import benches: `ScoreBadge` / `ScoreBadgeList` / `TooltipLines`, `PaymentsPopover`, `ImportStepShell`, `ImportTierTable`, `ImportAutoStep`, `ImportSummaryGrid`, `ImportManualGroupStep` (with `ManualGroupQueue`, `ManualGroupCard`, `ManualGroupLegend`), `ImportProposalsTree` (with `proposalLeafIds`, `proposalParentIds`, `proposalStartChecked`), `ImportChangedTable`, `ImportHaltedTables`, `LaneChart` (with `LaneMarks`, `LaneDotsPattern` and the pure `laneGeometry` helpers), and the Manual (projection) pieces `ManualProjectionRail`, `ManualPaymentsPane`, `ManualProjectionHeader`, `ManualChartLegend`, `ManualSuggestionCards`, `ManualConfigCards`, `ManualEditConfigModal`, `ManualOneOffConfirm`. Plain display props and key callbacks only. Exported from `@primestageprime/solid-ui-components/unstable` only, NOT from the root: they can change in any release. Showcases: the "(unstable)" entries in the gallery.
