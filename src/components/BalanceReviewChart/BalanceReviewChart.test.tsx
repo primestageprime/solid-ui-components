@@ -117,4 +117,43 @@ describe("BalanceReviewChart", () => {
     ));
     expect(same.container.querySelector(".sui-chart__gap-bracket")).toBeNull();
   });
+
+  it("draws the forecast band as one filled range in the forecast line's colour", () => {
+    const band = [3, 4, 5].map((d) => ({ date: day(d), min: 101_000, max: 107_000 }));
+    const { container } = render(() => (
+      <BalanceReviewChart
+        actual={ACTUAL}
+        forecast={FORECAST}
+        forecastBand={band}
+        colors={{ forecast: "teal" }}
+        xDomain={[day(1), day(5)]}
+        valueFormat={fmt}
+        size={SIZE}
+      />
+    ));
+    const areas = container.querySelectorAll(".sui-balance-review__forecast-band");
+    expect(areas.length).toBe(1);
+    expect(areas[0]!.getAttribute("fill")).toBe("teal");
+    expect(areas[0]!.getAttribute("d")).toMatch(/Z$/);
+  });
+
+  it("draws no band without one, or with an empty one", () => {
+    const without = render(() => (
+      <BalanceReviewChart actual={ACTUAL} forecast={FORECAST} xDomain={[day(1), day(5)]} valueFormat={fmt} size={SIZE} />
+    ));
+    expect(without.container.querySelector(".sui-balance-review__forecast-band")).toBeNull();
+    const empty = render(() => (
+      <BalanceReviewChart actual={ACTUAL} forecast={FORECAST} forecastBand={[]} xDomain={[day(1), day(5)]} valueFormat={fmt} size={SIZE} />
+    ));
+    expect(empty.container.querySelector(".sui-balance-review__forecast-band")).toBeNull();
+  });
+
+  it("fits the band inside the y axis", () => {
+    const band = [3, 4, 5].map((d) => ({ date: day(d), min: 104_000, max: 300_000 }));
+    const { container } = render(() => (
+      <BalanceReviewChart actual={ACTUAL} forecast={FORECAST} forecastBand={band} floor={0} xDomain={[day(1), day(5)]} valueFormat={fmt} size={SIZE} />
+    ));
+    const ticks = [...container.querySelectorAll(".sui-chart__axis-label")].map((t) => Number((t.textContent ?? "").replace(/[$k]/g, "")));
+    expect(Math.max(...ticks.filter((t) => !Number.isNaN(t)))).toBeGreaterThanOrEqual(200);
+  });
 });
