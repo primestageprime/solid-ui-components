@@ -3,14 +3,16 @@
 // ============================================
 // BalanceReviewChart — Composite (Depth 2)
 // Tags: shows:chart, shows:bar, does:hover, does:view, data:time-series, data:multi-series, role:panel
-// Composes Chart + Grid + XAxis + YAxis + LineSeries x2 + PointSeries x2 +
+// Composes Chart + Grid + XAxis + YAxis + AreaSeries + LineSeries x2 + PointSeries x2 +
 // ReferenceLine x2 + GapBracket + ChartLabels + Crosshair + ChartTooltip from
 // the Chart family, and VarianceStrip. Draws no SVG and owns no CSS.
 //
 // THE MONTH AS IT HAPPENED, AGAINST THE FORECAST MADE WHEN IT BEGAN. The
 // actual balance runs across the window as one solid line. The forecast
 // frozen at the start of the month runs dashed from the day it was made. The
-// cash floor is the chart's bottom, as on every cashflow chart. The largest
+// cash floor is the chart's bottom, as on every cashflow chart. When the
+// forecast carried a range, `forecastBand` draws it as one filled range
+// around the dashed line, in that line's colour. The largest
 // variance days carry a dot and a caption, placed by the label ladder so
 // they never collide, and never cross a line. In the right gutter a bracket
 // spans the two lines' ends with `endLabels.gap` as its caption: how far the
@@ -33,6 +35,7 @@ import {
   ChartTooltip,
   Crosshair,
   GapBracket,
+  AreaSeries,
   Grid,
   LineSeries,
   gapMidpoint,
@@ -56,6 +59,14 @@ export interface BalanceReviewDay {
   readonly kind: VarianceKind;
 }
 
+/** One day of the forecast's range: the balance at each end. Either end may
+ *  be the higher one; the band fills between them. */
+export interface BalanceReviewBandPoint {
+  readonly date: Date;
+  readonly min: number;
+  readonly max: number;
+}
+
 /** A dot on the actual line with a caption: an event day, or a marker such
  *  as "a month ago". */
 export interface BalanceReviewMark {
@@ -68,6 +79,9 @@ export interface BalanceReviewChartProps {
   readonly actual: readonly BalanceReviewPoint[];
   /** The frozen forecast. Omitted or empty, no dashed line, no strip. */
   readonly forecast?: readonly BalanceReviewPoint[];
+  /** The frozen forecast's range, drawn as a filled band around the dashed
+   *  line in its colour. Omitted or empty, no band. */
+  readonly forecastBand?: readonly BalanceReviewBandPoint[];
   /** The day the forecast was made: a vertical rule with `labels.forecastMade`. */
   readonly forecastMadeOn?: Date | null;
   /** The cash floor: the chart's bottom and a dotted rule. Null, no floor. */
@@ -123,9 +137,15 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
   const height = () => props.size?.height ?? PLOT_HEIGHT + stripBand();
   const margin = () => ({ ...MARGIN, bottom: MARGIN.bottom + stripBand() });
   const forecast = () => props.forecast ?? [];
-  /** The floor is the bottom; the top leaves headroom over the highest line. */
+  const band = () => props.forecastBand ?? [];
+  /** The floor is the bottom; the top leaves headroom over the highest line
+   *  or band edge. */
   const yDomain = createMemo<[number, number]>(() => {
-    const values = map((p: BalanceReviewPoint) => p.value, [...props.actual, ...forecast()]);
+    const values = [
+      ...map((p: BalanceReviewPoint) => p.value, [...props.actual, ...forecast()]),
+      ...map((b: BalanceReviewBandPoint) => b.min, band()),
+      ...map((b: BalanceReviewBandPoint) => b.max, band()),
+    ];
     const floor = props.floor ?? null;
     const lo = Math.min(floor ?? Number.POSITIVE_INFINITY, ...(values.length ? values : [0]));
     const hi = Math.max(...(values.length ? values : [1]), lo + 1);
@@ -203,6 +223,17 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
         {(d) => (
           <ReferenceLine orientation="vertical" value={d()} strokeDasharray="3 3" label={props.labels?.forecastMade} />
         )}
+      </Show>
+      <Show when={band().length > 0}>
+        <AreaSeries
+          data={band()}
+          x={x}
+          y={(b) => b.max}
+          lower={(b) => b.min}
+          fill={forecastColor()}
+          fillOpacity={0.14}
+          class="sui-balance-review__forecast-band"
+        />
       </Show>
       <Show when={forecast().length > 0}>
         <LineSeries data={forecast()} x={x} y={(p) => p.value} stroke={forecastColor()} strokeWidth={1.5} strokeDasharray="5 4" />
