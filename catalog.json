@@ -6393,7 +6393,7 @@
     "showcase": null,
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 176
+    "line": 186
   },
   {
     "name": "createHourlyWageAmountStrip",
@@ -13886,7 +13886,7 @@
     "showcase": null,
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 85
+    "line": 91
   },
   {
     "name": "HourlyWageAmountStrip",
