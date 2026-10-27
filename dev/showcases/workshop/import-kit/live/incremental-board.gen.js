@@ -399,7 +399,7 @@ class Component extends DCLogic {
     // A delinquent customer pays once more: the date fits an arrears slot.
     add('Jan 3', 'monthly fixed revenue skips then stops', 4000, 'Retainer Income');
     // A bank memo with no payee: Rent, $2,000, on the 2nd. It matches two projections equally.
-    add('Dec 2', 'ACH RENT 4471', -2000, 'Rent');
+    add('Dec 2', 'monthly fixed expense unknown payee matches three groups', -2000, 'Rent');
     // A brand-new payee that repeats: one NEW GROUP and a proposal.
     add('Nov 10', 'monthly fixed expense new payee', -640, 'Materials'); add('Dec 10', 'monthly fixed expense new payee', -640, 'Materials'); add('Jan 10', 'monthly fixed expense new payee', -640, 'Materials');
     // A new payee with an amount inside the range of monthly fixed revenue double payment, on no fixed day. Name likeness is
@@ -568,10 +568,12 @@ class Component extends DCLogic {
     return (2 * hits) / (A.length + B.length);
   }
   // The likeness that the scores and the clusters use: the raw likeness while the nameAlike heuristic is on, else
-  // 1 for the same name and 0 for any other.
+  // 1 for the same name and 0 for any other. The switch is read once: the scores call this for every pair of names.
   static nameLike(a, b) {
-    const x = Component.likeness(a, b);
-    return Component.fsModel().HEURISTICS.nameAlike || x >= 1 ? x : 0;
+    const on = (Component.nameAlikeOn ??= Component.fsModel().HEURISTICS.nameAlike);
+    if (on) return Component.likeness(a, b);
+    const n = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    return n(a) === n(b) ? 1 : 0;
   }
   // The most frequent value of xs. A tie goes to the smallest value as a string (a stable key, not the order).
   static modeOf(xs) {

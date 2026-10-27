@@ -824,10 +824,12 @@ class Component extends DCLogic {
     return (2 * hits) / (A.length + B.length);
   }
   // The likeness that the scores and the clusters use: the raw likeness while the nameAlike heuristic is on, else
-  // 1 for the same name and 0 for any other.
+  // 1 for the same name and 0 for any other. The switch is read once: the scores call this for every pair of names.
   static nameLike(a, b) {
-    const x = Component.likeness(a, b);
-    return Component.fsModel().HEURISTICS.nameAlike || x >= 1 ? x : 0;
+    const on = (Component.nameAlikeOn ??= Component.fsModel().HEURISTICS.nameAlike);
+    if (on) return Component.likeness(a, b);
+    const n = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    return n(a) === n(b) ? 1 : 0;
   }
   // The most frequent value of xs. A tie goes to the smallest value as a string (a stable key, not the order).
   static modeOf(xs) {

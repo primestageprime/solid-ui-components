@@ -87,7 +87,7 @@ describe("Incremental Import bench", SLOW, () => {
 		fireEvent.click(screen.getByLabelText("Advanced"));
 		expect(screen.getAllByText("Sure").length).toBeGreaterThan(0);
 		next();
-		expect(screen.getAllByText("ACH RENT 4471").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("monthly fixed expense unknown payee matches three groups").length).toBeGreaterThan(0);
 		next();
 		next();
 		expect(
