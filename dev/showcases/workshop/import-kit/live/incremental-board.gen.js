@@ -980,13 +980,20 @@ class Component extends DCLogic {
         windows: regular ? [{ lo: med - 3, hi: med + 3, P: 30, phase: true, due: med, name: 'monthly around the ' + med + 'th' }] : [],
         ranges: [C.spreadRange('c', 'the usual amounts of ' + name + '’s other ' + xs.length + (xs.length === 1 ? ' payment' : ' payments'), xs)] };
     };
-    const clusters = bunches.filter((ps) => ps.length >= 2).map((ps) => { const c = clusterOf(ps, ps); return Object.assign(c, { ps, payees: [c.name] }); });
+    const named = bunches.filter((ps) => ps.length >= 2).map((ps) => { const c = clusterOf(ps, ps); return Object.assign(c, { ps, payees: [c.name] }); });
+    // ONE ID PER CLUSTER (owner, 2026-10-26). A name with one bunch keeps 'c:<name>', so earlier ids stay. A name with
+    // more bunches (a payee with $0 payments has a bunch for the $0 payments) adds the sign word: ':in', ':out' or
+    // ':zero'. The leave-one-out swap below finds a payment's own cluster by its id, so two clusters with one id tie
+    // every payment of the payee. The last guard: an id that still repeats adds its place among its copies.
+    const signWord = (ps) => ({ 1: 'in', '-1': 'out' })[Math.sign(ps[0].a)] || 'zero';
+    const worded = named.map((c) => (named.filter((x) => x.id === c.id).length === 1 ? c.id : c.id + ':' + signWord(c.ps)));
+    const clusters = named.map((c, i) => { const n = worded.slice(0, i).filter((x) => x === worded[i]).length; return Object.assign(c, { id: n ? worded[i] + ':' + (n + 1) : worded[i] }); });
     const oneCands = S.oneoffs.map((o) => Object.assign({}, o, { windows: [], ranges: [{ key: 'o', name: 'the one-off', exact: H.r2(Math.abs(o.p.a)), lo: H.r2(Math.abs(o.p.a) * 0.97), hi: H.r2(Math.abs(o.p.a) * 1.03) }] }));
     // Per candidate: the pool of other payees' payments, and the weights that do not depend on the payment.
     const cands = groupCands.concat(clusters.map((c) => Object.assign({}, c)), oneCands).map((c) => K.prep(c, S.pool));
     // LEAVE ONE OUT (owner, 2026-10-24): a member of a new cluster is scored against the cluster without itself. The
     // range and the usual day come from the cluster's OTHER payments, so a payment does not match its own amount.
-    const looOf = Object.assign({}, ...clusters.flatMap((c) => c.ps.map((p) => ({ [p.id]: K.prep(clusterOf(c.ps.filter((q) => q !== p), c.ps), S.pool) }))));
+    const looOf = Object.assign({}, ...clusters.flatMap((c) => c.ps.map((p) => ({ [p.id]: K.prep(Object.assign(clusterOf(c.ps.filter((q) => q !== p), c.ps), { id: c.id }), S.pool) }))));
     const samePayee = (p) => F.filter((q) => norm(q.payee) === norm(p.payee) && Math.sign(q.a) === Math.sign(p.a));
     const byPid = Object.assign({}, ...F.map((p) => {
       // A REFUND candidate (kit.refundable) is scored with the refund comparisons; it gets no shortcut.
