@@ -964,10 +964,18 @@ class Component extends DCLogic {
     // name. Like-named new payees (likeness at or over FUZZY, same side) join one cluster, named for the most frequent.
     const known = S.groups.flatMap((g) => g.payees).concat(S.oneoffs.map((o) => o.name), S.ignored);
     const unknown = F.filter((p) => known.every((k) => C.nameLike(p.payee, k) < FUZZY));
-    const bunches = unknown.reduce((bs, p) => {
-      const hit = bs.find((b) => b.some((q) => Math.sign(q.a) === Math.sign(p.a) && C.nameLike(q.payee, p.payee) >= FUZZY));
+    // A $0 PAYMENT JOINS THE PAYEE'S NONZERO BUNCH (owner, 2026-10-27): a group of $0 payments forecasts nothing. The
+    // nonzero payments bunch first, by side. Then a $0 payment joins the largest like-named bunch on either side. A $0
+    // payment with no like-named nonzero bunch bunches with the like-named $0 payments.
+    const like = (b, p) => b.some((q) => C.nameLike(q.payee, p.payee) >= FUZZY);
+    const sided = unknown.filter((p) => p.a !== 0).reduce((bs, p) => {
+      const hit = bs.find((b) => Math.sign(b[0].a) === Math.sign(p.a) && like(b, p));
       return hit ? bs.map((b) => (b === hit ? b.concat([p]) : b)) : bs.concat([[p]]);
     }, []);
+    const bunches = unknown.filter((p) => p.a === 0).reduce((bs, p) => {
+      const hit = bs.filter((b) => like(b, p)).sort((x, y) => (Math.sign(y[0].a) !== 0) - (Math.sign(x[0].a) !== 0) || y.length - x.length)[0];
+      return hit ? bs.map((b) => (b === hit ? b.concat([p]) : b)) : bs.concat([[p]]);
+    }, sided);
     // A cluster candidate from a set of its payments: the usual day (two payments or more, every one within 3 days of
     // the median day, one per month) and the amount range (3% out from the lowest and the highest amount).
     // The side, the qkey and the category come from the majority of ALL the cluster's payments (C.majorityOf), not
@@ -982,10 +990,10 @@ class Component extends DCLogic {
     };
     const named = bunches.filter((ps) => ps.length >= 2).map((ps) => { const c = clusterOf(ps, ps); return Object.assign(c, { ps, payees: [c.name] }); });
     // ONE ID PER CLUSTER (owner, 2026-10-26). A name with one bunch keeps 'c:<name>', so earlier ids stay. A name with
-    // more bunches (a payee with $0 payments has a bunch for the $0 payments) adds the sign word: ':in', ':out' or
-    // ':zero'. The leave-one-out swap below finds a payment's own cluster by its id, so two clusters with one id tie
+    // more bunches (a payee that pays in and out) adds the sign word of its first nonzero payment: ':in', ':out', or
+    // ':zero' for a bunch of $0 payments only. The leave-one-out swap below finds a payment's own cluster by its id, so two clusters with one id tie
     // every payment of the payee. The last guard: an id that still repeats adds its place among its copies.
-    const signWord = (ps) => ({ 1: 'in', '-1': 'out' })[Math.sign(ps[0].a)] || 'zero';
+    const signWord = (ps) => ({ 1: 'in', '-1': 'out' })[Math.sign((ps.find((p) => p.a !== 0) || ps[0]).a)] || 'zero';
     const worded = named.map((c) => (named.filter((x) => x.id === c.id).length === 1 ? c.id : c.id + ':' + signWord(c.ps)));
     const clusters = named.map((c, i) => { const n = worded.slice(0, i).filter((x) => x === worded[i]).length; return Object.assign(c, { id: n ? worded[i] + ':' + (n + 1) : worded[i] }); });
     const oneCands = S.oneoffs.map((o) => Object.assign({}, o, { windows: [], ranges: [{ key: 'o', name: 'the one-off', exact: H.r2(Math.abs(o.p.a)), lo: H.r2(Math.abs(o.p.a) * 0.97), hi: H.r2(Math.abs(o.p.a) * 1.03) }] }));
