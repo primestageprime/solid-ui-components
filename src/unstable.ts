@@ -43,3 +43,22 @@ export * from "./listDetail";
 // The icon vocabulary a view config names (`defineCard`/`defineDetail` action `icon`), so a config file
 // imports its types from this one path. Also on the root via `./components/Icon`.
 export type { IconName } from "./components/Icon/Icon";
+
+// ============================================
+// import kit — the display pieces of thorcasting's import screens, promoted
+// 2026-10-26 from the import benches (dev/showcases/workshop/import-kit) on
+// the owner's word, pending Peter's review. Plain props only: the consumer
+// maps its own board values into them. See COMPONENTS.md § "Unstable exports".
+// ============================================
+export * from "./components/ScoreBadge";
+export * from "./components/PaymentsPopover";
+export * from "./components/ImportStepShell";
+export * from "./components/ImportTierTable";
+export * from "./components/ImportAutoStep";
+export * from "./components/ImportSummaryGrid";
+export * from "./components/ImportManualGroupStep";
+export * from "./components/ImportProposalsTree";
+export * from "./components/ImportChangedTable";
+export * from "./components/ImportHaltedTables";
+export * from "./components/LaneChart";
+export * from "./components/ManualProjection";

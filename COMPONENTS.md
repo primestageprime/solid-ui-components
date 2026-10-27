@@ -45,6 +45,7 @@ Current contents:
 | Export | From | Why it's here instead of the root |
 |---|---|---|
 | `channelModel`, `formatChannelTable` (+ their types) | `ChannelChart`'s geometry core | Kept internal by design (PR #194) — a consumer composes the chart, not the geometry. `/unstable` is for the consumer that genuinely needs the geometry itself. |
+| Import kit: `ScoreBadge`, `ScoreBadgeList`, `TooltipLines`, `PaymentsPopover`, `ImportStepShell`, `ImportTierTable`, `ImportAutoStep`, `ImportSummaryGrid`, `ImportManualGroupStep` (+ `ManualGroupQueue`, `ManualGroupCard`, `ManualGroupLegend`), `ImportProposalsTree` (+ `proposal*` helpers), `ImportChangedTable`, `ImportHaltedTables`, `LaneChart` (+ `LaneMarks`, `LaneDotsPattern`, `laneGeometry` helpers), `ManualProjectionRail`, `ManualPaymentsPane`, `ManualProjectionHeader`, `ManualChartLegend`, `ManualSuggestionCards`, `ManualConfigCards`, `ManualEditConfigModal`, `ManualOneOffConfirm` (+ their display types) | `src/components/<Name>/`, from the import benches | Promoted 2026-10-26 on the owner's word, pending Peter's review, for thorcasting's import screens. Their props are display text and key callbacks with no curried variants yet, so they stay out of the semver surface until Peter reviews the API. |
 
 ## Theming
 

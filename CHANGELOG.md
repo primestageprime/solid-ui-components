@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- **Import kit under `/unstable`** (owner, thorcasting 2026-10-26; promoted on the owner's word, pending Peter's review). The display pieces of thorcasting's import screens, from the import benches: `ScoreBadge` / `ScoreBadgeList` / `TooltipLines`, `PaymentsPopover`, `ImportStepShell`, `ImportTierTable`, `ImportAutoStep`, `ImportSummaryGrid`, `ImportManualGroupStep` (with `ManualGroupQueue`, `ManualGroupCard`, `ManualGroupLegend`), `ImportProposalsTree` (with `proposalLeafIds`, `proposalParentIds`, `proposalStartChecked`), `ImportChangedTable`, `ImportHaltedTables`, `LaneChart` (with `LaneMarks`, `LaneDotsPattern` and the pure `laneGeometry` helpers), and the Manual (projection) pieces `ManualProjectionRail`, `ManualPaymentsPane`, `ManualProjectionHeader`, `ManualChartLegend`, `ManualSuggestionCards`, `ManualConfigCards`, `ManualEditConfigModal`, `ManualOneOffConfirm`. Plain display props and key callbacks only. Exported from `@primestageprime/solid-ui-components/unstable` only, NOT from the root: they can change in any release. Showcases: the "(unstable)" entries in the gallery.
+
+### Added
+
+- **`once` on `HotkeyButton`, `useHotkeys` and `createHotkeyScope`** (opt-in; thorcasting import review 2026-10-26: a held `i` added one ignore per auto-repeat, 8 repeats gave 8 ignores). With `once`, a held key fires once: its auto-repeats (`KeyboardEvent.repeat`) run nothing but are still cancelled (`preventDefault`), so the browser does not act on them; a repeat of an unbound key stays the browser's. **No default change:** without `once` a held key repeats as before. `dispatchHotkey`, `HotkeyEntry`, `HotkeyPress` and `hotkeyFires` are unchanged, and there is no new outcome kind. The import kit (`ImportStepShell`, `ImportManualGroupStep`) sets `once`.
+
 ## 0.233.0 — 2026-10-22
 
 ### Added
