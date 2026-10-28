@@ -22,6 +22,25 @@ describe("Chart", () => {
     expect(container.querySelector("svg")).toBeTruthy();
   });
 
+  it("fill: marks the root and the svg, and keeps the stated size until a measurement lands", () => {
+    const { container } = render(() => (
+      <Chart
+        width={200}
+        height={100}
+        xDomain={[0, 10]}
+        yDomain={[0, 100]}
+        fill
+        responsive
+      />
+    ));
+    const root = container.querySelector(".sui-chart")!;
+    expect(root.classList.contains("sui-chart--fill")).toBe(true);
+    expect(root.classList.contains("sui-chart--responsive")).toBe(false);
+    const svg = container.querySelector("svg")!;
+    expect(svg.classList.contains("sui-chart__svg--fill")).toBe(true);
+    expect(svg.getAttribute("viewBox")).toBe("0 0 200 100");
+  });
+
   it("renders with a Date xDomain (time scale)", () => {
     const t0 = new Date(2026, 0, 1);
     const t1 = new Date(2026, 0, 2);

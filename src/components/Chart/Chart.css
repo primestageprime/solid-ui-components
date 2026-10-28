@@ -28,6 +28,20 @@
   height: auto;
 }
 
+/* Fill: the root takes its parent's box and the SVG takes the root's. The
+   viewBox is the measured size, one unit per px, so nothing scales. */
+.sui-chart--fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.sui-chart__svg--fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 /* Overlay — sibling of <svg> inside .sui-chart. Hosts portal-rendered
    HTML overlays (e.g. ChartTooltip) since HTML inside <svg><g> has no
    layout box. position: absolute makes this element the positioning
