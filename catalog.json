@@ -356,6 +356,37 @@
     "line": 290
   },
   {
+    "name": "ActualForecastChart",
+    "depth": 4,
+    "kind": "variant",
+    "family": "ActualForecastChart",
+    "tags": [
+      "shows:chart",
+      "does:hover",
+      "does:view",
+      "data:time-series",
+      "data:multi-series",
+      "role:panel"
+    ],
+    "tagsSource": "own",
+    "variantOf": {
+      "factory": "createActualForecastChart",
+      "overrides": ""
+    },
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 4), zero CSS.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a cash chart with \"now\" in the middle, actuals behind it and the forecast ahead of it.",
+    "notes": "The chart with its English words.",
+    "showcase": "#/actual-forecast-chart",
+    "since": "Unreleased",
+    "file": "src/components/ActualForecastChart/ActualForecastChart.tsx",
+    "line": 102
+  },
+  {
     "name": "AddFab",
     "depth": 2,
     "kind": "variant",
@@ -4518,6 +4549,34 @@
     "since": "0.26.0",
     "file": "src/components/ActionRow/ActionRow.tsx",
     "line": 106
+  },
+  {
+    "name": "createActualForecastChart",
+    "depth": 4,
+    "kind": "factory",
+    "family": "ActualForecastChart",
+    "tags": [
+      "shows:chart",
+      "does:hover",
+      "does:view",
+      "data:time-series",
+      "data:multi-series",
+      "role:panel"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Fix the words once, then pass data at every call site.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Fix the words once, then pass data at every call site. const BriefingCashChart = createActualForecastChart({ labels: { forecast: \"Baseline\", openingBalance: \"Starting balance\" }, });",
+    "showcase": "#/actual-forecast-chart",
+    "since": "Unreleased",
+    "file": "src/components/ActualForecastChart/ActualForecastChart.tsx",
+    "line": 51
   },
   {
     "name": "createAlertBox",
@@ -14131,7 +14190,7 @@
     "showcase": "#/hud-section",
     "since": "0.52.0",
     "file": "src/index.ts",
-    "line": 320
+    "line": 321
   },
   {
     "name": "HUDTabs",
