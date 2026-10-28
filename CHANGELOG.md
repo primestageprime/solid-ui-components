@@ -6,6 +6,16 @@
 
 - **`ActualForecastChart`** (Depth 4; Peter, 2026-10-27, for thorcasting's briefing). One `FramedCashflowScrubChart` that holds the past and the future of a balance: solid actuals up to an anchor cell, a labelled anchor rule with a dot, the forecast DASHED after it with its range cone, and flat rules for the opening balance and the cash floor with captions in the right gutter. Data props: `cells`, `anchorIndex`, `range?`, `openingBalanceCents?`, `floorCents?`, the y-axis props it forwards, `renderHoverTooltip?`. Words are an Override: `createActualForecastChart({ labels })`. `CashflowScrubChart.css` gains the `--hidden`, `--actual`, `--projected`, `--range-edge`, `--opening`, `--floor` line modifiers and the `__band--range` fill the composite uses. Sits inside a `ChartFrame`. Showcase: "ActualForecastChart"; reference composition: the `workshop:cash-hindcast-chart` bench.
 
+## 0.235.0 — 2026-10-28
+
+### Added
+
+- **`forecastBand` on `BalanceReviewChart`** (#300). An optional list of the min and max balance per day. The chart fills that range around the dashed forecast line in the line's colour, and the y axis fits the band. Omitted or empty, no band.
+
+### Fixed
+
+- **Right-gutter labels sit at the ends of their lines** (owner, thorcasting 2026-10-27: "the labels should line up with the ends of the charted lines"). Each label's centre is now the y where its line ends. Only labels that would touch move: they form one stack, one minimum gap apart, in the order of their line ends and centred on the mean of those ends, inside the plot band. Before, a greedy packer moved a colliding label down, then up, so at the plot bottom a label could sit above a neighbour whose line ended higher, and a cluster slid away from its lines. A stated `"right"` label and an `"auto"` label that fell to the gutter now spread as one set; the fallen label spills first when the gutter is full. `packGutterRows` (internal) is replaced by `spreadGutterRows`. Applies to every chart that uses the label ladder's right zone, for example `CashflowScrubChart`.
+
 ## 0.234.0 — 2026-10-27
 
 ### Added

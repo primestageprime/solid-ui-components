@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   gutterBox,
-  packGutterRows,
+  spreadGutterRows,
   parkedY,
   type GutterLabel,
   type GutterMetrics,
@@ -46,47 +46,78 @@ describe("gutterBox", () => {
   });
 });
 
-describe("packGutterRows", () => {
+describe("spreadGutterRows", () => {
+  const ys = (labels: readonly GutterLabel[]) =>
+    spreadGutterRows(labels, PLOT, METRICS).rows.map((row) => row.y);
+
   it("packs nothing when given nothing", () => {
-    expect(packGutterRows([], PLOT, METRICS)).toEqual({
+    expect(spreadGutterRows([], PLOT, METRICS)).toEqual({
       rows: [],
       spilled: [],
     });
   });
 
-  it("leaves a lone label on its own parked row", () => {
-    const { rows } = packGutterRows([at(50)], PLOT, METRICS);
+  it("leaves a lone label on its own line-end y, in lane 1", () => {
+    const { rows } = spreadGutterRows([at(50)], PLOT, METRICS);
     expect(rows.map((row) => [row.y, row.lane])).toEqual([[50, 1]]);
   });
 
-  it("moves a colliding label to the next row below", () => {
-    const { rows, spilled } = packGutterRows([at(50), at(53)], PLOT, METRICS);
-    expect(rows.map((row) => row.y)).toEqual([50, 66]);
-    expect(spilled).toEqual([]);
+  it("puts every label at its own line-end y when no two collide", () => {
+    expect(ys([at(10), at(30), at(50), at(70), at(90)])).toEqual([
+      10, 30, 50, 70, 90,
+    ]);
   });
 
-  it("walks the labels top to bottom, whatever order they arrive in", () => {
-    const forward = packGutterRows([at(20), at(60)], PLOT, METRICS);
-    const reversed = packGutterRows([at(60), at(20)], PLOT, METRICS);
-    expect(reversed.rows).toEqual(forward.rows);
+  it("spreads two labels at one y evenly about that y", () => {
+    expect(ys([at(50), at(50)])).toEqual([43.5, 56.5]);
   });
 
-  it("spills a label when one row is all the gutter allows", () => {
-    const oneRow: GutterMetrics = { ...METRICS, maxRows: 1 };
-    const { rows, spilled } = packGutterRows([at(50), at(53)], PLOT, oneRow);
-    expect(rows).toHaveLength(1);
-    expect(spilled).toEqual([at(53)]);
+  it("moves colliding labels apart by the minimum gap only", () => {
+    // 50 and 53 collide. They centre on their mean, 51.5, one pitch apart.
+    expect(ys([at(50), at(53)])).toEqual([45, 58]);
   });
 
-  it("takes the row above when the clamp blocks every row below", () => {
-    const { rows } = packGutterRows(
-      [at(PLOT.bottom), at(PLOT.bottom)],
+  it("keeps the labels in the order of their line-end ys at the plot bottom", () => {
+    // The greedy packer put the second bottom label ABOVE the label for 90.
+    const { rows } = spreadGutterRows(
+      [at(100), at(90), at(99)],
       PLOT,
       METRICS,
     );
-    expect(rows.map((row) => [row.y, row.lane])).toEqual([
-      [94.5, 1],
-      [81.5, 2],
-    ]);
+    expect(rows.map((row) => row.label.endY)).toEqual([90, 99, 100]);
+    expect(rows.map((row) => row.y)).toEqual([68.5, 81.5, 94.5]);
+  });
+
+  it("merges a chain of collisions into one evenly spaced stack", () => {
+    expect(ys([at(50), at(60), at(70)])).toEqual([47, 60, 73]);
+  });
+
+  it("does not move a label that clears the stack", () => {
+    expect(ys([at(30), at(30), at(80)])).toEqual([23.5, 36.5, 80]);
+  });
+
+  it("answers the same rows whatever order the labels arrive in", () => {
+    const forward = spreadGutterRows([at(20), at(25), at(60)], PLOT, METRICS);
+    const reversed = spreadGutterRows([at(60), at(25), at(20)], PLOT, METRICS);
+    expect(reversed.rows).toEqual(forward.rows);
+  });
+
+  it("spills the LAST label in input order when the lane cap is reached", () => {
+    const oneRow: GutterMetrics = { ...METRICS, maxRows: 1 };
+    const first = { ...at(50), width: 20 };
+    const second = { ...at(50), width: 30 };
+    const { rows, spilled } = spreadGutterRows([first, second], PLOT, oneRow);
+    expect(rows.map((row) => [row.label, row.y])).toEqual([[first, 50]]);
+    expect(spilled).toEqual([second]);
+  });
+
+  it("spills what the plot band cannot hold, never drawing outside it", () => {
+    // 63px holds five 11px rows on a 13px pitch.
+    const short: PlotRect = { left: 0, top: 0, right: 200, bottom: 63 };
+    const wide: GutterMetrics = { ...METRICS, maxRows: 10 };
+    const labels = [0, 1, 2, 3, 4, 5].map((i) => ({ ...at(30), width: i }));
+    const { rows, spilled } = spreadGutterRows(labels, short, wide);
+    expect(rows.map((row) => row.y)).toEqual([5.5, 18.5, 31.5, 44.5, 57.5]);
+    expect(spilled).toEqual([labels[5]]);
   });
 });

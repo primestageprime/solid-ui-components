@@ -4,4 +4,5 @@ export type {
   BalanceReviewPoint,
   BalanceReviewDay,
   BalanceReviewMark,
+  BalanceReviewBandPoint,
 } from "./BalanceReviewChart";

@@ -1074,7 +1074,7 @@
     "showcase": "#/balance-review-chart",
     "since": "0.216.0",
     "file": "src/components/BalanceReviewChart/BalanceReviewChart.tsx",
-    "line": 117
+    "line": 131
   },
   {
     "name": "BandRail",
