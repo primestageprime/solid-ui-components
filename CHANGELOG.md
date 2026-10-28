@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.237.0 — 2026-10-28
+
 ### Added
 
 - **`fill` on `Chart`.** The primitive measures its container and draws at that size, one SVG unit per px, so text and strokes keep their natural size in a `ChartFrame`. `width` and `height` stand in until the first measurement. Wins over `responsive`.
