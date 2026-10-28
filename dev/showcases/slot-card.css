@@ -13,3 +13,11 @@
 .slot-strip-w380 {
   width: 380px;
 }
+
+/* A 300px sidebar rail with the Sidebar's side padding, so each card lands at
+   ~272px — the width the vessel-call sidebar gives it. */
+.slot-sidebar-w300 {
+  width: 300px;
+  padding: 0 14px;
+  box-sizing: border-box;
+}

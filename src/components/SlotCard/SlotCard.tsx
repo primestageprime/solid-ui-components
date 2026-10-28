@@ -29,20 +29,23 @@ import {
   TightClusterRow,
   StretchRow,
   ClusterRow,
+  TightCenteredColumn,
 } from "../Layout/variants";
 import {
   TextBody,
   TextSublabel,
   CaptionLabel,
   DangerSublabel,
+  CountText,
 } from "../Text/variants";
+import { SmallTruthIndicator } from "../TruthIndicator/variants";
 import { SmallGhostButton } from "../Button/variants";
 import { Icon } from "../Icon/Icon";
 import { NumberWithUnits } from "../DataDisplay/NumberWithUnits";
 import { Dot } from "../Dot/Dot";
 import { SmStatusBadge } from "../Badge/variants";
 import { EllipsisText } from "../DataDisplay/EllipsisText";
-import { pipe, flatMap, filter, length } from "../../fn";
+import { pipe, flatMap, filter, length, findIndex } from "../../fn";
 import "./SlotCard.css";
 
 /** Flattening a row's groups needs a name for the identity step. */
@@ -66,6 +69,11 @@ export interface SlotValues {
   /** A group of labeled indicator dots (e.g. per-metric compliance). `neutral`
    *  is the muted no-data tone. */
   dots?: Array<{ label: string; tone: AccentTone | "neutral" }>;
+  /** A group of labeled pass/fail marks (e.g. NOx / ROG compliance): each a
+   *  10px label stacked over ✓ (`true`), the false glyph (`false`) or a muted
+   *  – (`null`, no data). The glyph carries the meaning, so it reads without
+   *  colour — contrast `dots`, which is colour only. */
+  marks?: Array<{ label: string; ok: boolean | null }>;
   text?: string;
   value?: { value: number | string; units?: string };
   label?: string;
@@ -139,6 +147,23 @@ const SLOT_RENDERERS: { [K in SlotName]: (v: NonNullable<SlotValues[K]>) => JSX.
       </For>
     </StretchRow>
   ),
+  marks: (v) => (
+    <ClusterRow>
+      <For each={v}>
+        {(m) => (
+          <TightCenteredColumn>
+            <CountText>{m.label}</CountText>
+            <Show
+              when={m.ok !== null}
+              fallback={<span class="sui-slot-card__mark-none" role="img" aria-label={`${m.label}: no data`}>–</span>}
+            >
+              <SmallTruthIndicator value={m.ok === true} label={`${m.label}: ${m.ok ? "pass" : "fail"}`} />
+            </Show>
+          </TightCenteredColumn>
+        )}
+      </For>
+    </ClusterRow>
+  ),
   text: (v) => <TextBody>{v}</TextBody>,
   value: (v) => <NumberWithUnits value={v.value} units={v.units ?? ""} />,
   label: (v) => <CaptionLabel>{v}</CaptionLabel>,
@@ -161,7 +186,7 @@ const DEFAULT_PRIO: Record<SlotName, 1 | 2 | 3> = {
   // `error` never drops — a failure reason is the whole point of the card it
   // appears on.
   name: 1, range: 1, label: 1, text: 1, error: 1,
-  status: 2, count: 2, dots: 2, value: 2, icon: 2,
+  status: 2, count: 2, dots: 2, marks: 2, value: 2, icon: 2,
   string: 3, date: 3, duration: 3, relTime: 3,
 };
 
@@ -179,6 +204,10 @@ interface SlotCardConfig {
   accent?: boolean;
   corner?: boolean;
   removable?: boolean;
+  /** Join the present slots of a multi-slot group with a muted `·` (e.g.
+   *  "2026-10-01 · 17.0h"), so the client passes each value separately rather
+   *  than pre-joining a string. The separator sheds with the slot after it. */
+  dotSeparated?: boolean;
   /** Template offers a trailing action button (SUI picks the button; the
    *  client supplies label + handler). */
   action?: boolean;
@@ -233,11 +262,22 @@ function createSlotCard(config: SlotCardConfig) {
                   <div class={gi() === 0 ? "sui-slot-card__lead" : "sui-slot-card__trail"}>
                     <TightClusterRow>
                       <For each={group}>
-                        {(spec) => {
+                        {(spec, si) => {
                           const slot = specName(spec);
                           const val = props.values[slot];
+                          // A separator only between two present slots: this
+                          // slot is present, so it needs one exactly when the
+                          // group's first present slot comes before it.
+                          const sep = () =>
+                            config.dotSeparated === true &&
+                            findIndex(hasValue, group) < si();
                           return (
                             <Show when={val !== undefined}>
+                              <Show when={sep()}>
+                                <span data-prio={specPrio(spec)} aria-hidden="true">
+                                  <TextSublabel>·</TextSublabel>
+                                </span>
+                              </Show>
                               <span data-prio={specPrio(spec)} class={slot === "name" ? "sui-slot-card__name" : undefined}>
                                 {(SLOT_RENDERERS[slot] as (x: unknown) => JSX.Element)(val)}
                               </span>
@@ -381,6 +421,23 @@ export const TitleDotsMeta = createSlotCard({
       [{ slot: "duration", prio: 2 }],
     ],
   ],
+});
+// TitleAssetMarks — the vessel-call sidebar card (Peter's 2-row sketch, fits a
+// 300px Sidebar). Row 1: name (icon + ellipsised title) with the short asset
+// right-aligned. Row 2: date · duration, with labeled pass/fail marks on the
+// right. The asset is the first to shed; row 2 holds (prio 2) in a narrow rail.
+export const TitleAssetMarks = createSlotCard({
+  rows: [
+    [["name"], ["string"]],
+    [
+      [
+        { slot: "date", prio: 2 },
+        { slot: "duration", prio: 2 },
+      ],
+      ["marks"],
+    ],
+  ],
+  dotSeparated: true,
 });
 // TitleMetaCount — name, then a meta line with a leading string (e.g. date ·
 // duration) and a trailing count (e.g. a violation tally). The count drops

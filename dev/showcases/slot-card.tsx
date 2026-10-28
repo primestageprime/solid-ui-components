@@ -27,6 +27,7 @@ import {
   TitleProgress,
   TitleAssetProgress,
   TitleDotsMeta,
+  TitleAssetMarks,
   TitleMetaCount,
   PickCard,
   StatTile,
@@ -76,6 +77,8 @@ const TEMPLATES: TemplateSpec[] = [
     values: { name: { text: "Aframax Horizon", icon: "⛴" }, string: "xbox1-1", status: { tone: "warning", label: "queued" }, text: "Waiting for a worker", relTime: "Requested 5m ago" } },
   { name: "TitleDotsMeta", Card: TitleDotsMeta, signature: "[name·1][dots·2] / [string·2][date·2][duration·2]", props: {},
     values: { name: { text: "Pacific Trader", icon: "⛴" }, dots: [{ label: "NOx", tone: "danger" }, { label: "ROG", tone: "success" }], string: "xbox5-1", date: "2025-12-01", duration: "24.0h" } },
+  { name: "TitleAssetMarks", Card: TitleAssetMarks, signature: "[name·1][string·3] / [date·2 · duration·2][marks·2]", props: { active: true, onSelect: noop },
+    values: { name: { text: "Eukor Morning Christina", icon: "⛴" }, string: "3-1", date: "2026-10-01", duration: "17.0h", marks: [{ label: "NOx", ok: true }, { label: "ROG", ok: false }] } },
   { name: "TitleMetaCount", Card: TitleMetaCount, signature: "[name·1] / [string·3][count·2]", props: {},
     values: { name: { text: "Themis Leader", icon: "⛴" }, string: "2025-12-01 · 24.0h", count: { n: 7, glyph: "⚠" } } },
   { name: "PickCard", Card: PickCard, signature: "[cornerBadge] [text·1] [remove]", props: { corner: "1", onRemove: noop, onSelect: noop },
@@ -134,6 +137,37 @@ const MaxWidthDemo: Component = () => (
   </ContentStack>
 );
 
+// The vessel-call sidebar (Peter's 2-row sketch, jtf-ui /vessel-calls): a 300px
+// rail of TitleAssetMarks cards with real call names. The longest,
+// "Eukor Morning Christina", must show in full.
+const SIDEBAR_CALLS: SlotValues[] = [
+  { name: { text: "Eukor Morning Christina", icon: "⛴" }, string: "3-1", date: "2026-10-01", duration: "17.0h",
+    marks: [{ label: "NOx", ok: true }, { label: "ROG", ok: true }] },
+  { name: { text: "MSC Bellissima", icon: "⛴" }, string: "2-2", date: "2026-09-28", duration: "31.5h",
+    marks: [{ label: "NOx", ok: false }, { label: "ROG", ok: true }] },
+  { name: { text: "Themis Leader", icon: "⛴" }, string: "8-1", date: "2026-09-27", duration: "9.2h",
+    marks: [{ label: "NOx", ok: true }, { label: "ROG", ok: null }] },
+  { name: { text: "Pacific Trader", icon: "⛴" }, string: "5-1", date: "2026-09-25", duration: "22.0h",
+    marks: [{ label: "NOx", ok: null }, { label: "ROG", ok: null }] },
+];
+
+const VesselCallSidebarDemo: Component = () => (
+  <ContentStack>
+    <SubsectionTitle>TitleAssetMarks — vessel-call sidebar at 300px</SubsectionTitle>
+    <TextSublabel>
+      ✓ pass · circle-slash fail · – no data. The glyph carries the meaning
+      without colour.
+    </TextSublabel>
+    <div class="slot-sidebar-w300">
+      <TightStack>
+        <For each={SIDEBAR_CALLS}>
+          {(values, i) => <TitleAssetMarks values={values} active={i() === 0} onSelect={noop} />}
+        </For>
+      </TightStack>
+    </div>
+  </ContentStack>
+);
+
 export const SlotCardShowcase: Component = () => (
   <div class="component-section component-section--full">
     <h2>SlotCard — Composite (Depth 2, owns CSS)</h2>
@@ -148,6 +182,7 @@ export const SlotCardShowcase: Component = () => (
       ellipsises rather than dropping.
     </TextBody>
     <PageStack>
+      <VesselCallSidebarDemo />
       <MaxWidthDemo />
       <For each={TEMPLATES}>{(spec) => <ResponsiveStrip spec={spec} />}</For>
     </PageStack>

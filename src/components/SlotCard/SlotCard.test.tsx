@@ -3,6 +3,7 @@ import { render } from "@solidjs/testing-library";
 import {
   TitleStatus,
   TitleDotsMeta,
+  TitleAssetMarks,
   DenseStatusRow,
   DenseStatusNote,
   TitleAssetProgress,
@@ -143,5 +144,54 @@ describe("SlotCard", () => {
     (getByText("Cancel") as HTMLElement).click();
     expect(cancelled).toBe(1);
     expect(selected).toBe(0);
+  });
+  describe("TitleAssetMarks", () => {
+    const values: SlotValues = {
+      name: { text: "Eukor Morning Christina", icon: "⛴" },
+      string: "3-1",
+      date: "2026-10-01",
+      duration: "17.0h",
+      marks: [
+        { label: "NOx", ok: true },
+        { label: "ROG", ok: false },
+        { label: "THC", ok: null },
+      ],
+    };
+
+    it("puts name + asset on row 1 and date · duration + marks on row 2", () => {
+      const { container } = render(() => <TitleAssetMarks values={values} />);
+      const leads = container.querySelectorAll(".sui-slot-card__lead");
+      const trails = container.querySelectorAll(".sui-slot-card__trail");
+      expect(leads.length).toBe(2);
+      expect(leads[0].textContent).toContain("Eukor Morning Christina");
+      expect(trails[0].textContent).toBe("3-1");
+      expect(leads[1].textContent).toBe("2026-10-01·17.0h");
+      expect(trails[1].textContent).toContain("NOx");
+    });
+
+    it("renders each mark as a label over a tri-state glyph that reads without colour", () => {
+      const { getByLabelText, getByText } = render(() => <TitleAssetMarks values={values} />);
+      expect(getByText("NOx")).toBeTruthy();
+      expect(getByLabelText("NOx: pass").classList.contains("sui-truth--true")).toBe(true);
+      expect(getByLabelText("ROG: fail").classList.contains("sui-truth--false")).toBe(true);
+      expect(getByLabelText("THC: no data").textContent).toBe("–");
+    });
+
+    it("omits the separator when only one of date / duration is present", () => {
+      const { container } = render(() => (
+        <TitleAssetMarks values={{ name: { text: "Themis Leader" }, duration: "17.0h" }} />
+      ));
+      const leads = container.querySelectorAll(".sui-slot-card__lead");
+      expect(leads[1].textContent).toBe("17.0h");
+    });
+
+    it("sheds the asset before row 2 in a narrow rail", () => {
+      const { container } = render(() => <TitleAssetMarks values={values} />);
+      const asset = container.querySelectorAll(".sui-slot-card__trail [data-prio]")[0];
+      expect(asset.getAttribute("data-prio")).toBe("3");
+      const row2 = container.querySelectorAll(".sui-slot-card__lead")[1];
+      const prios = Array.from(row2.querySelectorAll("[data-prio]"), (el) => el.getAttribute("data-prio"));
+      expect(new Set(prios)).toEqual(new Set(["2"]));
+    });
   });
 });
