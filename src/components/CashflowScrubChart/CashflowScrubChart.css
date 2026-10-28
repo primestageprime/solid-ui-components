@@ -224,7 +224,6 @@
   opacity: 0.85;
 }
 
-
 /* The CHOSEN instance: a ring circling its dot (the whiteboard's circle). */
 .sui-cashflow-scrub-chart__marker-ring {
   fill: none;
@@ -399,4 +398,66 @@
   .sui-cashflow-scrub-chart__rule-line {
   opacity: 1;
   stroke-width: 2;
+}
+
+/* ── ActualForecastChart marks ────────────────────────────────────────
+   The classes `ActualForecastChart` (Depth 4, zero CSS) hands this chart
+   for its series. Single-class rules, so a consumer's own class on the
+   same line ties on specificity and wins by sheet order, as above. The
+   dash patterns are the exception: a series class reaches the line AND
+   its hover dot, so `stroke-dasharray` is scoped to the polyline, or the
+   dot draws as a broken ring. */
+.sui-cashflow-scrub-chart__line--hidden {
+  stroke: none;
+  fill: none;
+}
+.sui-cashflow-scrub-chart__line--actual {
+  stroke: var(
+    --sui-cashflow-line-stroke,
+    var(--sui-accent, rgba(0, 168, 204, 1))
+  );
+  stroke-width: 2;
+}
+.sui-cashflow-scrub-chart__line--projected {
+  stroke: var(
+    --sui-cashflow-line-stroke,
+    var(--sui-accent, rgba(0, 168, 204, 1))
+  );
+  stroke-width: 2;
+}
+polyline.sui-cashflow-scrub-chart__line--projected {
+  stroke-dasharray: 6 4;
+}
+.sui-cashflow-scrub-chart__line--range-edge {
+  stroke: var(
+    --sui-cashflow-line-stroke,
+    var(--sui-accent, rgba(0, 168, 204, 1))
+  );
+  stroke-width: 1;
+  stroke-opacity: 0.6;
+}
+.sui-cashflow-scrub-chart__band--range {
+  fill: var(
+    --sui-cashflow-line-stroke,
+    var(--sui-accent, rgba(0, 168, 204, 1))
+  );
+  fill-opacity: 0.14;
+}
+.sui-cashflow-scrub-chart__line--opening {
+  stroke: color-mix(
+    in srgb,
+    var(--sui-cashflow-positive, rgba(0, 200, 120, 0.85)) 55%,
+    var(--sui-text-muted, #94a3b8)
+  );
+  stroke-width: 1;
+}
+polyline.sui-cashflow-scrub-chart__line--opening {
+  stroke-dasharray: 4 3;
+}
+.sui-cashflow-scrub-chart__line--floor {
+  stroke: var(--sui-cashflow-negative, rgba(230, 70, 70, 0.85));
+  stroke-width: 1;
+}
+polyline.sui-cashflow-scrub-chart__line--floor {
+  stroke-dasharray: 4 3;
 }

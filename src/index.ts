@@ -287,6 +287,7 @@ export * from "./components/CashflowChart";
 export * from "./components/DnDHierarchySortBar";
 export * from "./components/ScrubChart";
 export * from "./components/CashflowScrubChart";
+export * from "./components/ActualForecastChart";
 export * from "./components/WorkProgressCard";
 export * from "./components/SplitQueueList";
 export * from "./components/BucketQueue";
