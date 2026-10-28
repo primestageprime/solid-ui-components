@@ -1,28 +1,24 @@
 // ============================================
 // gutterPacking — Depth 0, pure. Which row each right-gutter label draws in.
 //
-// The right rung stacks colliding labels one text row apart. It used to pick
-// the row with the shared `laneOf` pass and then test the drawn box, and the
-// two disagreed: `laneOf` measures every span at the label's own parked y,
-// while the draw step hangs row n one pitch lower. A label that `laneOf` called
-// clear could therefore collide once drawn, and the rung threw it away with a
-// free row still under it.
+// Each right-gutter label names the END of a line, so its centre sits at the
+// y where that line ends. Only when two boxes would touch do the labels move,
+// and then by the least distance: they form a stack one minimum gap apart,
+// centred on the mean of their own ys, kept in the order of those ys and kept
+// inside the plot band.
 //
-// This packer removes the disagreement. It walks the rows the draw step really
-// uses, box by box, so the row it returns is the row the caller draws. A label
-// only spills when every row in the ladder is taken.
-//
-// The ladder, per label: its own parked row first, then each row below it, then
-// each row above it. The rows above matter at the plot's bottom edge, where the
-// clamp folds every row below back onto the parked row. Without them a label
-// that ends at the edge loses its text to a neighbour that ends there too.
+// The packer this replaced (owner bug, 2026-10-27) took each label's own row,
+// else the next row DOWN, else a row UP. At the plot's bottom edge that put a
+// later label above an earlier one, so "Starting balance" floated over "Cash
+// floor" while its line ended at the bottom, and a whole cluster slid down
+// away from its lines.
 //
 // Structural on purpose, like `laneOf`: the caller keeps its own label type and
 // gets it back with a row. No DOM, no scale, no measurement — same inputs give
 // the same output.
 // ============================================
-import { find, map, some, sortBy } from "../../fn";
-import { boxesTouch, type Box, type PlotRect } from "./labelBoxes";
+import { filter, flatMap, map, mean, sortBy } from "../../fn";
+import type { Box, PlotRect } from "./labelBoxes";
 
 /** The least the packer needs to know about a label. */
 export interface GutterLabel {
@@ -91,99 +87,171 @@ export const gutterBox = (
   return { x0, x1: x0 + label.width, y0: y - half, y1: y + half };
 };
 
-/**
- * The row offsets the packer tries, in order: the parked row, then each row
- * below it, then each row above it. Down before up, so an ordinary stack still
- * reads top to bottom.
- */
-const rowSteps = (maxRows: number): readonly number[] =>
-  map(
-    (index: number) => (index < maxRows ? index : maxRows - 1 - index),
-    [...Array(Math.max(2 * maxRows - 1, 0)).keys()],
-  );
-
-/** One candidate row: where it draws, and the box it covers there. */
-interface RowCandidate {
-  readonly y: number;
-  readonly lane: number;
-  readonly box: Box;
+/** One label with its input position, which decides who spills first. */
+interface Ranked<Label> {
+  readonly label: Label;
+  readonly rank: number;
+  readonly park: number;
 }
 
-/** The candidate row `step` pitches from the label's parked row. */
-const rowCandidate = (
-  label: GutterLabel,
-  park: number,
-  step: number,
+/** Labels that collided, laid one minimum gap apart from `start`. */
+interface Stack<Label> {
+  readonly members: readonly Ranked<Label>[];
+  /** Offset of each member's centre from the first member's centre. */
+  readonly offsets: readonly number[];
+  /** Pixel y of the first member's centre. */
+  readonly start: number;
+}
+
+/** The least centre-to-centre distance that keeps two boxes clear. */
+const minGap = (a: GutterLabel, b: GutterLabel, metrics: GutterMetrics) =>
+  (a.height + b.height) / 2 + metrics.rowGap;
+
+const lastOf = <T>(items: readonly T[]): T => items[items.length - 1];
+
+/**
+ * The start that puts the stack's centres as near their parked ys as the plot
+ * band allows: the mean wish (least total move), clamped into the band. A
+ * stack taller than the band starts at the top, and its overflow spills.
+ */
+const placedStack = <Label extends GutterLabel>(
+  members: readonly Ranked<Label>[],
+  offsets: readonly number[],
   plot: PlotRect,
-  metrics: GutterMetrics,
-): RowCandidate => {
-  const y = parkedY(park + step * metrics.rowPitch, label.height, plot);
-  return {
-    y,
-    lane: Math.abs(step) + 1,
-    box: gutterBox(label, y, plot, metrics.gutterGap),
-  };
+): Stack<Label> => {
+  const wish =
+    mean(map((m: (typeof members)[number], i: number) => m.park - offsets[i], members));
+  const lo = plot.top + members[0].label.height / 2;
+  const hi = plot.bottom - lastOf(members).label.height / 2 - lastOf(offsets);
+  return { members, offsets, start: Math.max(lo, Math.min(hi, wish)) };
 };
 
-/** The first row in the ladder whose box clears every box already drawn. */
-const firstFreeRow = (
-  label: GutterLabel,
+/** Two stacks as one, the second laid one minimum gap under the first. */
+const joined = <Label extends GutterLabel>(
+  upper: Stack<Label>,
+  lower: Stack<Label>,
   plot: PlotRect,
   metrics: GutterMetrics,
-  taken: readonly Box[],
-): RowCandidate | undefined => {
-  const park = parkedY(label.endY, label.height, plot);
-  return find(
-    (row: RowCandidate) =>
-      !some((other: Box) => boxesTouch(row.box, other, metrics.rowGap), taken),
-    map(
-      (step: number) => rowCandidate(label, park, step, plot, metrics),
-      rowSteps(metrics.maxRows),
-    ),
+): Stack<Label> => {
+  const shift =
+    lastOf(upper.offsets) +
+    minGap(lastOf(upper.members).label, lower.members[0].label, metrics);
+  return placedStack(
+    [...upper.members, ...lower.members],
+    [...upper.offsets, ...map((o: number) => o + shift, lower.offsets)],
+    plot,
   );
 };
 
+/** Whether `lower` starts closer under `upper` than the minimum gap. */
+const stacksCollide = <Label extends GutterLabel>(
+  upper: Stack<Label>,
+  lower: Stack<Label>,
+  metrics: GutterMetrics,
+): boolean =>
+  lower.start - (upper.start + lastOf(upper.offsets)) <
+  minGap(lastOf(upper.members).label, lower.members[0].label, metrics);
+
+/** Push one stack onto the top-down list, merging upward while it collides. */
+const pushStack = <Label extends GutterLabel>(
+  stacks: readonly Stack<Label>[],
+  next: Stack<Label>,
+  plot: PlotRect,
+  metrics: GutterMetrics,
+): readonly Stack<Label>[] => {
+  const upper = stacks[stacks.length - 1];
+  return upper !== undefined && stacksCollide(upper, next, metrics)
+    ? pushStack(stacks.slice(0, -1), joined(upper, next, plot, metrics), plot, metrics)
+    : [...stacks, next];
+};
+
+/** One row per label: each at its parked y, colliding labels spread apart. */
+const spreadRows = <Label extends GutterLabel>(
+  ranked: readonly Ranked<Label>[],
+  plot: PlotRect,
+  metrics: GutterMetrics,
+): readonly (GutterRow<Label> & { readonly rank: number; readonly fits: boolean })[] =>
+  flatMap(
+    (stack: Stack<Label>) =>
+      map((m: Ranked<Label>, i: number) => {
+        const y = stack.start + stack.offsets[i];
+        const half = m.label.height / 2;
+        const moved = Math.abs(y - m.park) / metrics.rowPitch;
+        const lane = Math.ceil(moved - MOVE_TOLERANCE) + 1;
+        return {
+          label: m.label,
+          y,
+          lane,
+          rank: m.rank,
+          fits:
+            lane <= metrics.maxRows &&
+            y - half >= plot.top - MOVE_TOLERANCE &&
+            y + half <= plot.bottom + MOVE_TOLERANCE,
+        };
+      }, stack.members),
+    ranked.reduce<readonly Stack<Label>[]>(
+      (stacks, m) =>
+        pushStack(stacks, placedStack([m], [0], plot), plot, metrics),
+      [],
+    ),
+  );
+
+/** Below a thousandth of a pixel, a move is rounding, not a move. */
+const MOVE_TOLERANCE = 1e-6;
+
 /**
- * Give every label the first row in its ladder that no earlier label took.
+ * Give every gutter label a row at the y where its line ends.
  *
- * The walk runs top to bottom, so a label's row depends only on the labels
- * above it. The result is stable under input reorder for distinct parked y.
- * Ties resolve by input order.
+ * A label sits at its own parked y (`parkedY` of its `endY`) unless its box
+ * would touch a neighbour's. Labels that would touch form a STACK: one
+ * minimum gap apart (half of each height plus `rowGap`), in the order of
+ * their parked ys, and centred on the mean of those ys, so the total move is
+ * the least possible. A stack never leaves the plot band; at an edge it
+ * slides inward and can merge with the next stack. Order by y always holds,
+ * so a label never sits on the wrong side of a neighbour's line.
  *
- * The loop is kept as a loop, like `laneOf`: each label reads the boxes the
- * earlier labels drew, so a combinator form would only hide the same carried
- * state. The arrays are local, so the function stays pure.
+ * A label spills when its row would sit more than `maxRows - 1` pitches
+ * from its own y, or outside the band. The LAST label in input order among
+ * those that do not fit spills first, then the rest spread again. So a
+ * caller lists the labels it most wants kept first.
  *
- * @param labels  The gutter labels, in any order.
+ * @param labels  The gutter labels, most important first.
  * @param plot    The plot rectangle in pixel space.
  * @param metrics The gutter's pixel vocabulary.
- * @param drawn   Boxes an earlier pack already drew in this gutter. A caller
- *                that packs in two ranks (explicit captions first, then the
- *                captions that fell down the ladder) hands the first rank's
- *                boxes to the second, so the second takes only what is left.
- * @returns The filled rows, top to bottom, and the labels that found no row.
+ * @returns The filled rows, top to bottom, and the labels that found no row,
+ *          in the order they spilled.
  */
-export const packGutterRows = <Label extends GutterLabel>(
+export const spreadGutterRows = <Label extends GutterLabel>(
   labels: readonly Label[],
   plot: PlotRect,
   metrics: GutterMetrics,
-  drawn: readonly Box[] = [],
 ): GutterPacking<Label> => {
-  const rows: GutterRow<Label>[] = [];
-  const taken: Box[] = [...drawn];
-  const spilled: Label[] = [];
-  const topDown = sortBy(
-    (label: Label) => parkedY(label.endY, label.height, plot),
-    labels,
+  // By the RAW end y: two ends past one edge clamp to one parked y, and the
+  // clamp keeps their order, so the row order still follows the lines.
+  const ranked = sortBy(
+    (m: Ranked<Label>) => m.label.endY,
+    map(
+      (label: Label, rank: number) => ({
+        label,
+        rank,
+        park: parkedY(label.endY, label.height, plot),
+      }),
+      labels,
+    ),
   );
-  for (const label of topDown) {
-    const row = firstFreeRow(label, plot, metrics, taken);
-    if (row === undefined) {
-      spilled.push(label);
-      continue;
-    }
-    taken.push(row.box);
-    rows.push({ label, y: row.y, lane: row.lane });
+  const rows = spreadRows(ranked, plot, metrics);
+  const misfits = filter((row) => !row.fits, rows);
+  if (misfits.length === 0) {
+    return {
+      rows: map(({ label, y, lane }) => ({ label, y, lane }), rows),
+      spilled: [],
+    };
   }
-  return { rows, spilled };
+  const drop = sortBy((m: (typeof misfits)[number]) => -m.rank, misfits)[0].label;
+  const rest = spreadGutterRows(
+    filter((label: Label) => label !== drop, labels),
+    plot,
+    metrics,
+  );
+  return { rows: rest.rows, spilled: [drop, ...rest.spilled] };
 };
