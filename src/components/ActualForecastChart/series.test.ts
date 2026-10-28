@@ -58,13 +58,13 @@ describe("actualForecastSeries", () => {
     expect(s.actual.class).toBe(ACTUAL_FORECAST_CLASS.actual);
   });
 
-  it("draws the range cone only after the anchor, filled from max to min", () => {
+  it("draws the range cone from the anchor on, filled from max to min", () => {
     const s = byId();
     expect(cells.map((c, i) => s["range-min"].balanceCents(c, i))).toEqual([
       null,
       null,
       null,
-      null,
+      3900,
       4900,
       5900,
       6900,
@@ -73,7 +73,7 @@ describe("actualForecastSeries", () => {
       null,
       null,
       null,
-      null,
+      4100,
       5100,
       6100,
       7100,
@@ -96,11 +96,24 @@ describe("actualForecastSeries", () => {
       null,
       null,
       null,
-      null,
+      2,
       2,
       null,
       2,
     ]);
+  });
+
+  it("narrows the cone to the anchor dot when the range is null there", () => {
+    const s = byId(ANCHOR, {
+      range: (_c: CashflowCell, i: number) =>
+        i === ANCHOR ? null : { minCents: 1, maxCents: 2 },
+    });
+    expect(s["range-min"].balanceCents(cells[ANCHOR], ANCHOR)).toBe(4000);
+    expect(s["range-max"].balanceCents(cells[ANCHOR], ANCHOR)).toBe(4000);
+    expect(s["range-max"].fill?.baseline?.(cells[ANCHOR], ANCHOR)).toBe(4000);
+    expect(s["range-max"].balanceCents(cells[ANCHOR - 1], ANCHOR - 1)).toBe(
+      null,
+    );
   });
 
   it("omits the cone and the rules that are not stated", () => {

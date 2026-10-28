@@ -9,6 +9,7 @@
 // primary line is hidden, and two overlay series draw its halves: the actual
 // half returns `null` after the anchor, the forecast half returns `null`
 // before it. Both include the anchor cell, so the lines meet at the dot.
+// The cone also starts at the anchor cell, so it narrows to the dot.
 // ============================================
 
 import type {
@@ -19,6 +20,7 @@ import type {
 import type {
   ActualForecastChartLabels,
   ActualForecastChartProps,
+  ActualForecastRange,
 } from "./types";
 
 /** The classes the chart's stylesheet defines for each mark. */
@@ -55,9 +57,17 @@ export const actualForecastSeries = (
   input: ActualForecastSeriesInput,
 ): CashflowBalanceSeries[] => {
   const { anchorIndex, range, labels } = input;
-  const afterAnchor = (i: number): boolean => i > anchorIndex;
-  const rangeAt = (cell: CashflowCell, i: number) =>
-    afterAnchor(i) && range ? range(cell, i) : null;
+  // The cone starts AT the anchor. A `null` range there is the balance
+  // itself, a zero-width point, so the cone narrows to the dot.
+  const rangeAt = (
+    cell: CashflowCell,
+    i: number,
+  ): ActualForecastRange | null => {
+    if (!range || i < anchorIndex) return null;
+    const r = range(cell, i);
+    if (r || i !== anchorIndex) return r;
+    return { minCents: cell.balanceCents, maxCents: cell.balanceCents };
+  };
   const lo = (cell: CashflowCell, i: number): number | null =>
     rangeAt(cell, i)?.minCents ?? null;
   const hi = (cell: CashflowCell, i: number): number | null =>

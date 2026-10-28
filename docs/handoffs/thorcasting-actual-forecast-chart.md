@@ -52,14 +52,18 @@ gridlines and the y-axis modes are the chart's own. `chartHeight` defaults to
 
 ## 3. The model
 
-Pure, in SUI: `actualForecastSeries` and `anchorMarker`
+Pure and package-internal, in SUI: `actualForecastSeries` and `anchorMarker`
 (`src/components/ActualForecastChart/series.ts`, tests beside it). The rules:
 
 - `cells` is ONE run of days. Cells `0..anchorIndex` are actuals. Cells after
   `anchorIndex` are the forecast.
 - The actual half returns `null` after the anchor; the forecast half returns
   `null` before it. Both include the anchor cell, so the lines meet at the dot.
-- `range` is read only after the anchor. `null` at a cell breaks the cone there.
+- `range` is read from the anchor on. `null` at the anchor is the balance
+  itself, so the cone narrows to the dot. `null` after it breaks the cone
+  there.
+- `today` defaults to the anchor cell's start. Pass it only when the axis
+  must mark another day.
 - The flat rules exist only when their cents are stated.
 - Paint order: rules, cone, then the two halves on top (`layer: "over"`).
 

@@ -48,7 +48,7 @@ export interface ActualForecastChartOverrides {
  * `cells` is ONE run of days. The cells up to and including `anchorIndex`
  * hold the balance as it happened; the cells after it hold the forecast.
  * The chart draws the first part solid and the second part dashed, and the
- * range cone exists only after the anchor.
+ * range cone starts at the anchor.
  */
 export interface ActualForecastChartProps {
   /** Every day of the window, actuals first, then the forecast. */
@@ -56,8 +56,10 @@ export interface ActualForecastChartProps {
   /** Index of the LAST actual cell. The anchor rule stands on it, and the
    *  two line halves meet there. */
   anchorIndex: number;
-  /** The forecast's range at a cell after the anchor, or `null` for none at
-   *  that cell. Not read at or before the anchor. Omit for no cone. */
+  /** The forecast's range at the anchor cell and after it, or `null` for
+   *  none at that cell. At the anchor, `null` means the balance itself, so
+   *  the cone narrows to the dot. Not read before the anchor. Omit for no
+   *  cone. */
   range?: (cell: CashflowCell, index: number) => ActualForecastRange | null;
   /** A flat rule across the plot at the opening balance, in cents. Omit for
    *  none. */
@@ -65,7 +67,8 @@ export interface ActualForecastChartProps {
   /** A flat rule across the plot at the cash floor, in cents. Omit for
    *  none. */
   floorCents?: number;
-  /** Date the inner axis marks as today. */
+  /** Date the inner axis marks as today. Defaults to the anchor cell's
+   *  start, so the axis mark and the anchor rule state one fact. */
   today?: Date;
   /** Forwarded to `CashflowScrubChart` unchanged. */
   chartHeight?: CashflowScrubChartProps["chartHeight"];

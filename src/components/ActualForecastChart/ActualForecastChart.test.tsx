@@ -42,9 +42,8 @@ describe("ActualForecastChart", () => {
     expect(lines(container, "opening").length).toBe(1);
     expect(lines(container, "floor").length).toBe(1);
     expect(
-      container.querySelectorAll(
-        ".sui-cashflow-scrub-chart__band--range",
-      ).length,
+      container.querySelectorAll(".sui-cashflow-scrub-chart__band--range")
+        .length,
     ).toBeGreaterThan(0);
   });
 

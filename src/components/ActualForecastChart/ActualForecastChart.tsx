@@ -77,7 +77,7 @@ export const createActualForecastChart = (
       <FramedCashflowScrubChart
         cells={props.cells}
         scrub={false}
-        today={props.today}
+        today={props.today ?? props.cells[props.anchorIndex]?.start}
         chartHeight={props.chartHeight}
         lineClass={ACTUAL_FORECAST_CLASS.hiddenPrimary}
         balanceSeries={series()}
