@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.235.0 — 2026-10-28
+
 ### Added
 
 - **`forecastBand` on `BalanceReviewChart`** (#300). An optional list of the min and max balance per day. The chart fills that range around the dashed forecast line in the line's colour, and the y axis fits the band. Omitted or empty, no band.
