@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.236.0 — 2026-10-28
+
 ### Added
 
 - **`ActualForecastChart`** (Depth 4; Peter, 2026-10-27, for thorcasting's briefing). One `FramedCashflowScrubChart` that holds the past and the future of a balance: solid actuals up to an anchor cell, a labelled anchor rule with a dot, the forecast DASHED after it with its range cone, and flat rules for the opening balance and the cash floor with captions in the right gutter. Data props: `cells`, `anchorIndex`, `range?`, `openingBalanceCents?`, `floorCents?`, the y-axis props it forwards, `renderHoverTooltip?`. Words are an Override: `createActualForecastChart({ labels })`. `CashflowScrubChart.css` gains the `--hidden`, `--actual`, `--projected`, `--range-edge`, `--opening`, `--floor` line modifiers and the `__band--range` fill the composite uses. Sits inside a `ChartFrame`. Showcase: "ActualForecastChart"; reference composition: the `workshop:cash-hindcast-chart` bench.

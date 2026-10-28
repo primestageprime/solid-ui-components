@@ -382,7 +382,7 @@
     "useFor": "a cash chart with \"now\" in the middle, actuals behind it and the forecast ahead of it.",
     "notes": "The chart with its English words.",
     "showcase": "#/actual-forecast-chart",
-    "since": "Unreleased",
+    "since": "0.236.0",
     "file": "src/components/ActualForecastChart/ActualForecastChart.tsx",
     "line": 102
   },
@@ -4574,7 +4574,7 @@
     "useFor": null,
     "notes": "Fix the words once, then pass data at every call site. const BriefingCashChart = createActualForecastChart({ labels: { forecast: \"Baseline\", openingBalance: \"Starting balance\" }, });",
     "showcase": "#/actual-forecast-chart",
-    "since": "Unreleased",
+    "since": "0.236.0",
     "file": "src/components/ActualForecastChart/ActualForecastChart.tsx",
     "line": 51
   },
