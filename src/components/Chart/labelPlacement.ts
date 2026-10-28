@@ -35,7 +35,7 @@
 // below zone stacks along X and calls `laneOf` from internal/geometry: it shares
 // its outermost lane past the cap, which permits an overlap this spec forbids,
 // so the rung filters the survivors and sends the rest down the ladder. The
-// right zone stacks along Y and calls `packGutterRows`, which tests the box each
+// right zone stacks along Y and calls `spreadGutterRows`, which tests the box each
 // row really draws and therefore needs no filter behind it.
 // ============================================
 import { map, some } from "../../fn";
@@ -48,8 +48,7 @@ import {
   type Polyline,
 } from "./labelBoxes";
 import {
-  gutterBox,
-  packGutterRows,
+  spreadGutterRows,
   type GutterMetrics,
   type GutterRow,
 } from "./gutterPacking";
@@ -98,7 +97,7 @@ export const RIGHT_MAX_LANES = 4;
  *  text that ScrubChartAxes hangs at `plotBottom + 6`. */
 export const BELOW_ZONE_TOP_GAP = 18;
 
-/** The gutter's pixel vocabulary, as `packGutterRows` reads it. */
+/** The gutter's pixel vocabulary, as `spreadGutterRows` reads it. */
 const GUTTER_METRICS: GutterMetrics = {
   rowPitch: LABEL_ROW_HEIGHT + LABEL_ROW_GAP,
   rowGap: LABEL_ROW_GAP,
@@ -380,16 +379,15 @@ const splitLaneOverflow = (
  * away. Stacking sideways instead would need a gutter twice as wide as the one
  * `reserveLabelSpace` bought.
  *
- * `packGutterRows` walks the rows the draw step really uses, so the row it
- * returns needs no second box test. A label leaves this rung for one reason
- * only: every row in the gutter is already taken.
+ * `spreadGutterRows` puts each label's centre at its line's end y and moves
+ * labels only to keep their boxes apart, by the least distance and in the
+ * order of their ends. A label leaves this rung for one reason only: its row
+ * would sit too far from its line, or outside the plot band.
  *
- * TWO RANKS. A label that STATED "right" packs first: it names a line's end,
- * and the reader looks for it at that end. A label that fell here from the
- * body rung packs second, around what the first rank drew. The packer walks
- * each rank top-down by y, so without the ranks a fallen caption whose point
- * sits a few pixels above a line's end took the end's own row and pushed the
- * end caption down the gutter.
+ * TWO RANKS, ONE SPREAD. A label that STATED "right" and a label that fell
+ * here from the body rung both name a line's end, so both sit at that end.
+ * The rank decides only who spills first: the fallen labels go before the
+ * stated ones.
  */
 const runRightRung = (
   labels: readonly LabelCandidate[],
@@ -407,13 +405,9 @@ const runRightRung = (
     else if (label.placement === "right") stated.push(label);
     else fallen.push(label);
   }
-  const first = packGutterRows(stated, plot, GUTTER_METRICS);
-  const drawn = map(
-    (row: GutterRow<LabelCandidate>) =>
-      gutterBox(row.label, row.y, plot, LABEL_GUTTER_GAP),
-    first.rows,
-  );
-  const second = packGutterRows(fallen, plot, GUTTER_METRICS, drawn);
+  // ONE spread over both ranks: every label here names a line's end, so each
+  // one sits at that end's y. The rank decides only who spills first.
+  const packed = spreadGutterRows([...stated, ...fallen], plot, GUTTER_METRICS);
   const placed = map(
     (row: GutterRow<LabelCandidate>) => ({
       kind: "placed" as const,
@@ -424,9 +418,9 @@ const runRightRung = (
       anchor: "start" as const,
       lane: row.lane,
     }),
-    [...first.rows, ...second.rows],
+    packed.rows,
   );
-  return { placed, deferred: [...deferred, ...first.spilled, ...second.spilled] };
+  return { placed, deferred: [...deferred, ...packed.spilled] };
 };
 
 /**

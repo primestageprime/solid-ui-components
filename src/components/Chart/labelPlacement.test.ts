@@ -202,7 +202,7 @@ describe("placeLabels — the right rung", () => {
     belowRows: 0,
   };
 
-  it("gives two right-zone labels at the same y separate lanes", () => {
+  it("spreads two right-zone labels at one y evenly about that y", () => {
     const results = placeLabels(
       [
         label("a", { placement: "right", endY: 50 }),
@@ -214,12 +214,9 @@ describe("placeLabels — the right rung", () => {
     );
     const a = byId(results, "a");
     const b = byId(results, "b");
-    expect(a.kind === "placed" && a.lane).toBe(1);
-    expect(b.kind === "placed" && b.lane).toBe(2);
-    expect(a.kind === "placed" && a.y).toBe(50);
-    expect(b.kind === "placed" && b.y).toBe(
-      50 + LABEL_ROW_HEIGHT + LABEL_ROW_GAP,
-    );
+    const half = (LABEL_ROW_HEIGHT + LABEL_ROW_GAP) / 2;
+    expect(a.kind === "placed" && a.y).toBe(50 - half);
+    expect(b.kind === "placed" && b.y).toBe(50 + half);
   });
 
   it("keeps two right-zone labels a row apart in lane 1 when their ys clear", () => {
@@ -298,10 +295,9 @@ describe("placeLabels — the gutter packer", () => {
     return hit;
   };
 
-  it("moves a colliding label to the next free row instead of dropping it", () => {
-    // The lane pass measured every span at the lane-1 y, so the third label
-    // won a lane the draw step then refused. All three now pack against the
-    // rows they are really drawn in.
+  it("spreads colliding labels by the least move instead of dropping one", () => {
+    // 140, 150 and 153 collide in a chain. They form one stack, one pitch
+    // apart, in the order of their ends, centred on the mean of the ends.
     const results = placeLabels(
       [rightLabel("a", 140), rightLabel("b", 150), rightLabel("c", 153)],
       TALL,
@@ -313,9 +309,10 @@ describe("placeLabels — the gutter packer", () => {
       zoneOf(results, "b"),
       zoneOf(results, "c"),
     ]).toEqual(["right", "right", "right"]);
-    expect(placedOf(results, "a").y).toBe(140);
-    expect(placedOf(results, "b").y).toBe(150 + ROW_PITCH);
-    expect(placedOf(results, "c").y).toBe(153 + 2 * ROW_PITCH);
+    const [a, b, c] = ["a", "b", "c"].map((id) => placedOf(results, id).y);
+    expect(b - a).toBeCloseTo(ROW_PITCH);
+    expect(c - b).toBeCloseTo(ROW_PITCH);
+    expect((a + b + c) / 3).toBeCloseTo((140 + 150 + 153) / 3);
   });
 
   it("keeps every packed row clear of the row before it", () => {
@@ -332,9 +329,9 @@ describe("placeLabels — the gutter packer", () => {
     expect(ys[2] - ys[1]).toBeGreaterThanOrEqual(ROW_PITCH);
   });
 
-  it("takes the row above when the plot's bottom edge blocks the rows below", () => {
-    // Both labels park on the same clamped row, and every row below it clamps
-    // back onto that same row, so the second label goes up instead.
+  it("stacks upward from the plot's bottom edge when both lines end there", () => {
+    // Both labels park on the same clamped row. The stack slides up into the
+    // band; equal ends keep their input order, top to bottom.
     const results = placeLabels(
       [rightLabel("a", PLOT.bottom), rightLabel("b", PLOT.bottom)],
       PLOT,
@@ -342,8 +339,8 @@ describe("placeLabels — the gutter packer", () => {
       space,
     );
     const parked = PLOT.bottom - ROW / 2;
-    expect(placedOf(results, "a").y).toBe(parked);
-    expect(placedOf(results, "b").y).toBe(parked - ROW_PITCH);
+    expect(placedOf(results, "a").y).toBe(parked - ROW_PITCH);
+    expect(placedOf(results, "b").y).toBe(parked);
   });
 
   it("drops a label only when every row in the gutter is taken", () => {
@@ -734,13 +731,14 @@ describe("the showcase's Labelled lines example", () => {
   });
 });
 
-describe("placeLabels — the right rung packs in two ranks", () => {
-  // A stated "right" caption names a line's end. A caption that fell from the
-  // body rung must not take that end's row, even when its own point sits a
-  // few pixels above the end.
+describe("placeLabels — the right rung spreads both ranks as one", () => {
+  // A stated "right" caption and a caption that fell from the body rung both
+  // name a line's end (owner, 2026-10-27: "the labels should line up with the
+  // ends of the charted lines"). Neither one owns a row; when they collide
+  // they spread by the least move, in the order of their ends.
   const space: ReservedSpace = { rightGutter: NARROW + LABEL_GUTTER_GAP, belowRows: 0 };
 
-  it("keeps a stated caption on its own row when a fallen caption parks above it", () => {
+  it("spreads a fallen caption and a stated one evenly, the higher end on top", () => {
     const fallen = label("fallen", { placement: "auto", x: 50, y: 48, endY: 48 });
     const stated = label("stated", { placement: "right", x: 190, y: 50, endY: 50 });
     // The rule at 48 crosses the fallen caption's body box on both sides.
@@ -749,9 +747,8 @@ describe("placeLabels — the right rung packs in two ranks", () => {
     const f = byId(results, "fallen") as PlacedLabel;
     expect(s.zone).toBe("right");
     expect(f.zone).toBe("right");
-    expect(s.y).toBe(50);
-    expect(f.y).not.toBe(50);
-    expect(Math.abs(f.y - s.y)).toBeGreaterThanOrEqual(LABEL_ROW_HEIGHT + LABEL_ROW_GAP);
+    expect(s.y - f.y).toBe(LABEL_ROW_HEIGHT + LABEL_ROW_GAP);
+    expect((s.y + f.y) / 2).toBe(49);
   });
 
   it("gives a fallen caption its own row when the stated one leaves it free", () => {
