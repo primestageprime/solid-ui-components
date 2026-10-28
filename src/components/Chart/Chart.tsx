@@ -12,8 +12,11 @@ import {
   createMemo,
   createSignal,
   createUniqueId,
+  onCleanup,
+  onMount,
   splitProps,
 } from "solid-js";
+import { observeSize } from "../../internal/dom/observeSize";
 import { insetSpan } from "../../internal/geometry/insetSpan";
 import { safeSetPointerCapture } from "../../internal/pointer/safeSetPointerCapture";
 import {
@@ -68,6 +71,15 @@ export interface ChartProps {
    * for the caller to measure the container. Default false (fixed pixel size).
    */
   responsive?: boolean;
+  /**
+   * Measure the container and draw at its size, one SVG unit per px, so text
+   * and strokes keep their natural size at every box. `width`/`height` stand
+   * in until the first measurement lands. The parent must have a definite
+   * height (a `ChartFrame` body, a sized box); the root is `height: 100%` of
+   * it, so the measurement cannot feed back. Wins over `responsive`.
+   * Default false.
+   */
+  fill?: boolean;
   /** Where the title sits: `center` (default) or `start`, flush left over the plot like a tile heading. Additive. */
   titleAlign?: "center" | "start";
   class?: string;
@@ -137,6 +149,7 @@ export const Chart: Component<ChartProps> = (props) => {
     "title",
     "titleAlign",
     "responsive",
+    "fill",
     "class",
     "style",
     "children",
@@ -155,8 +168,22 @@ export const Chart: Component<ChartProps> = (props) => {
     ...DEFAULT_MARGIN,
     ...(local.margin ?? {}),
   }));
-  const width = createMemo(() => local.width);
-  const height = createMemo(() => local.height);
+  // Fill: the measured box replaces the stated size once it lands. A zero
+  // measurement (display: none, first frame) keeps the stated size, so the
+  // scales never divide by nothing.
+  let rootEl: HTMLDivElement | undefined;
+  const [box, setBox] = createSignal<{ width: number; height: number } | null>(
+    null,
+  );
+  onMount(() => {
+    if (!local.fill || !rootEl) return;
+    onCleanup(
+      observeSize(rootEl, (s) => setBox({ width: s.width, height: s.height })),
+    );
+  });
+  const fillBox = () => (local.fill ? box() : null);
+  const width = createMemo(() => fillBox()?.width || local.width);
+  const height = createMemo(() => fillBox()?.height || local.height);
   const innerWidth = createMemo(
     () => insetSpan(width(), margin().left, margin().right).size,
   );
@@ -369,11 +396,16 @@ export const Chart: Component<ChartProps> = (props) => {
   return (
     <ChartContext.Provider value={ctx}>
       <div
-        class={`sui-chart${local.responsive ? " sui-chart--responsive" : ""}${local.class ? ` ${local.class}` : ""}`}
+        ref={rootEl}
+        class={`sui-chart${local.fill ? " sui-chart--fill" : local.responsive ? " sui-chart--responsive" : ""}${local.class ? ` ${local.class}` : ""}`}
         style={local.style as JSX.CSSProperties}
       >
         <Show when={local.title}>
-          <div class={`sui-chart__title${local.titleAlign === "start" ? " sui-chart__title--start" : ""}`}>{local.title}</div>
+          <div
+            class={`sui-chart__title${local.titleAlign === "start" ? " sui-chart__title--start" : ""}`}
+          >
+            {local.title}
+          </div>
         </Show>
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: a picked x on a
             continuous plot has no keyboard analogue at this altitude — there
@@ -386,7 +418,7 @@ export const Chart: Component<ChartProps> = (props) => {
             whose pick IS the only route owes its readers such a control. */}
         <svg
           ref={svgEl}
-          class={`sui-chart__svg${local.responsive ? " sui-chart__svg--responsive" : ""}`}
+          class={`sui-chart__svg${local.fill ? " sui-chart__svg--fill" : local.responsive ? " sui-chart__svg--responsive" : ""}`}
           width={width()}
           height={height()}
           viewBox={`0 0 ${width()} ${height()}`}

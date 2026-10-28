@@ -2783,6 +2783,10 @@ th:has(.tf-th-center) .hud-table__header-content {
 .balance-review-chart-demo {
   padding: 16px;
 }
+/* The framed example: a definite height for `size="fill"` to take. */
+.balance-review-chart-demo__frame {
+  height: 360px;
+}
 
 /* VarianceStrip showcase demo frame — scaffolded by npm run new:component. */
 .variance-strip-demo {

@@ -2,6 +2,7 @@
 // when it began, with the variance strip under it.
 import { type Component } from "solid-js";
 import { BalanceReviewChart } from "../../src/components/BalanceReviewChart";
+import { ChartFrame } from "../../src/components/ChartFrame";
 import { Legend } from "../../src/components/Legend";
 import { SectionTitle, MutedBody } from "../../src/components/Text";
 import { BALANCE, DAYS, FORECAST, MARKS, fmt } from "./balance-review-data";
@@ -43,11 +44,41 @@ export const BalanceReviewChartShowcase: Component = () => (
         />
         <Legend
           items={[
-            { label: "actual balance", color: "var(--sui-text-primary)", line: true },
-            { label: "forecast made Sep 1", color: "var(--sui-text-secondary)", line: { dash: "5 4" } },
-            { label: "cash floor", color: "var(--sui-danger)", line: { dash: "2 4" } },
+            { label: "actual balance", color: "var(--sui-cashflow-line-stroke, var(--sui-accent))", line: true },
+            { label: "forecast made Sep 1", color: "var(--sui-text-muted)", line: { dash: "6 4" } },
+            { label: "cash floor", color: "var(--sui-cashflow-negative)", line: { dash: "4 3" } },
           ]}
         />
+      </div>
+    </div>
+    <div class="example-group">
+      <SectionTitle>In a ChartFrame, filling it</SectionTitle>
+      <MutedBody>
+        <code>size="fill"</code> takes the frame's box, as the Cash Flow charts do, with the
+        same accent, grid and gutter captions. The box is 360px high here.
+      </MutedBody>
+      <div class="balance-review-chart-demo balance-review-chart-demo__frame">
+        <ChartFrame title="Cash Flow" yTitle="Balance ($)">
+          <BalanceReviewChart
+            actual={BALANCE}
+            forecast={FORECAST}
+            forecastMadeOn={FORECAST[0].date}
+            floor={0}
+            variance={DAYS}
+            marks={MARKS}
+            endLabels={{
+              actual: `${fmt(BALANCE[BALANCE.length - 1].value)} today`,
+              forecast: `${fmt(FORECAST[FORECAST.length - 1].value)} forecast`,
+              gap: `${fmt(BALANCE[BALANCE.length - 1].value - FORECAST[FORECAST.length - 1].value)} vs forecast`,
+            }}
+            xDomain={[BALANCE[0].date, BALANCE[BALANCE.length - 1].date]}
+            valueFormat={fmt}
+            dateFormat={short}
+            labels={{ floor: "floor", forecastMade: "forecast made", strip: "variance against the forecast, by day" }}
+            strip={{ minExtent: 5_000 }}
+            size="fill"
+          />
+        </ChartFrame>
       </div>
     </div>
     <div class="example-group">

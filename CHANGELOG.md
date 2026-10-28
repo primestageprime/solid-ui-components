@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- **`fill` on `Chart`.** The primitive measures its container and draws at that size, one SVG unit per px, so text and strokes keep their natural size in a `ChartFrame`. `width` and `height` stand in until the first measurement. Wins over `responsive`.
+- **`size="fill"` on `BalanceReviewChart`**, forwarded to `Chart`, so the review chart takes a `ChartFrame`'s box as the Cash Flow charts do.
+
+### Changed
+
+- **`BalanceReviewChart` draws the Cash Flow look by default** (owner, 2026-10-28: "the same style as the other cash flow charts (but still a hindcast)"). The balance runs in `--sui-cashflow-line-stroke` (the accent), 2px; the frozen forecast runs in `--sui-text-muted`, dashed `6 4`; the floor runs in `--sui-cashflow-negative`, dashed `4 3`, 1px. A caller's `colors` still wins. The drawing logic, the strip, the marks and the bracket are unchanged.
+
 ## 0.236.0 — 2026-10-28
 
 ### Added
