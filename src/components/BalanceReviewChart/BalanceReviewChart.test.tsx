@@ -21,8 +21,28 @@ describe("BalanceReviewChart", () => {
     ));
     const lines = container.querySelectorAll(".sui-chart__line");
     expect(lines.length).toBe(2);
-    expect(lines[0]!.getAttribute("stroke-dasharray")).toBe("5 4");
+    expect(lines[0]!.getAttribute("stroke-dasharray")).toBe("6 4");
     expect(lines[1]!.getAttribute("stroke-dasharray")).toBeNull();
+  });
+
+  it("draws the Cash Flow look by default: the balance in the accent token, the floor in the negative token", () => {
+    const { container } = render(() => (
+      <BalanceReviewChart actual={ACTUAL} forecast={FORECAST} floor={0} xDomain={[day(1), day(5)]} valueFormat={fmt} size={SIZE} />
+    ));
+    const lines = container.querySelectorAll(".sui-chart__line");
+    expect(lines[1]!.getAttribute("stroke")).toContain("--sui-cashflow-line-stroke");
+    expect(lines[0]!.getAttribute("stroke")).toContain("--sui-text-muted");
+    const floor = container.querySelector(".sui-chart__ref line");
+    expect(floor?.getAttribute("stroke")).toContain("--sui-cashflow-negative");
+  });
+
+  it("takes the box it sits in with size=\"fill\"", () => {
+    const { container } = render(() => (
+      <BalanceReviewChart actual={ACTUAL} xDomain={[day(1), day(5)]} valueFormat={fmt} size="fill" />
+    ));
+    expect(container.querySelector(".sui-chart--fill")).not.toBeNull();
+    expect(container.querySelector(".sui-chart--responsive")).toBeNull();
+    expect(container.querySelector(".sui-chart__svg--fill")).not.toBeNull();
   });
 
   it("puts the floor at the chart's bottom and draws its rule and caption", () => {

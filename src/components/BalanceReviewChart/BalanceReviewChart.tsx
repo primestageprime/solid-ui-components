@@ -26,6 +26,13 @@
 //
 // The caller states every word: formats, captions and the names of the two
 // lines, so the chart carries no vocabulary of its own.
+//
+// THE CASH FLOW LOOK (owner, 2026-10-28: "the same style as the other cash
+// flow charts (but still a hindcast)"). The balance runs in the accent, as
+// on `CashflowScrubChart`; the frozen forecast runs muted and dashed "6 4";
+// the floor runs in the negative token, dashed "4 3". The same tokens that
+// `CashflowScrubChart.css` reads, so the two families match on every theme.
+// `size="fill"` takes a `ChartFrame`'s box, as `ActualForecastChart` does.
 // ============================================
 import { type Component, type JSX, Show, createMemo } from "solid-js";
 import { filter, find, map } from "../../fn";
@@ -106,13 +113,21 @@ export interface BalanceReviewChartProps {
   readonly tooltip?: (actual: BalanceReviewPoint, forecast: BalanceReviewPoint | null, day: BalanceReviewDay | null) => JSX.Element;
   /** The strip's height and the gap above it. Defaults 64 and 22. */
   readonly strip?: { readonly height?: number; readonly gap?: number; readonly minExtent?: number };
-  readonly size?: { readonly width: number; readonly height: number };
-  /** The lines' strokes. Defaults: the primary text colour, and the secondary. */
+  /** A fixed size in px, or `"fill"` to take the box it sits in (a
+   *  `ChartFrame` body, a sized box). Omitted, the chart keeps its aspect
+   *  ratio across its container's width. */
+  readonly size?: { readonly width: number; readonly height: number } | "fill";
+  /** The lines' strokes. Defaults: the Cash Flow look, the accent for the
+   *  balance, muted for the forecast, the negative token for the floor. */
   readonly colors?: { readonly actual?: string; readonly forecast?: string; readonly floor?: string };
 }
 
 const WIDTH = 880;
 const PLOT_HEIGHT = 300;
+/** The Cash Flow look: the tokens `CashflowScrubChart.css` reads. */
+const ACCENT = "var(--sui-cashflow-line-stroke, var(--sui-accent, rgba(0, 168, 204, 1)))";
+const MUTED = "var(--sui-text-muted, #94a3b8)";
+const NEGATIVE = "var(--sui-cashflow-negative, rgba(230, 70, 70, 0.85))";
 const MARGIN = { top: 18, right: 170, bottom: 34, left: 56 };
 const DAY_MS = 86_400_000;
 const HEADROOM = 1.12;
@@ -133,8 +148,10 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
   const stripHeight = () => props.strip?.height ?? 64;
   const stripGap = () => props.strip?.gap ?? 22;
   const stripBand = () => (hasStrip() ? stripGap() + stripHeight() : 0);
-  const width = () => props.size?.width ?? WIDTH;
-  const height = () => props.size?.height ?? PLOT_HEIGHT + stripBand();
+  const fixed = () => (typeof props.size === "object" ? props.size : null);
+  const filling = () => props.size === "fill";
+  const width = () => fixed()?.width ?? WIDTH;
+  const height = () => fixed()?.height ?? PLOT_HEIGHT + stripBand();
   const margin = () => ({ ...MARGIN, bottom: MARGIN.bottom + stripBand() });
   const forecast = () => props.forecast ?? [];
   const band = () => props.forecastBand ?? [];
@@ -152,9 +169,9 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
     return [lo, lo + (hi - lo) * HEADROOM];
   });
   const x = (p: { readonly date: Date }) => p.date.getTime();
-  const actualColor = () => props.colors?.actual ?? "var(--sui-text-primary)";
-  const forecastColor = () => props.colors?.forecast ?? "var(--sui-text-secondary)";
-  const floorColor = () => props.colors?.floor ?? "var(--sui-danger)";
+  const actualColor = () => props.colors?.actual ?? ACCENT;
+  const forecastColor = () => props.colors?.forecast ?? MUTED;
+  const floorColor = () => props.colors?.floor ?? NEGATIVE;
   const lastActual = () => props.actual[props.actual.length - 1] ?? null;
   const lastForecast = () => forecast()[forecast().length - 1] ?? null;
   /** The bracket needs both ends, a caption, and a gap to span. */
@@ -198,6 +215,7 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
       yDomain={yDomain()}
       margin={margin()}
       responsive={props.size === undefined}
+      fill={filling()}
     >
       <Grid horizontal tickCount={4} />
       <YAxis hideLine tickCount={4} tickFormat={props.valueFormat} />
@@ -213,8 +231,8 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
           value={props.floor as number}
           color={floorColor()}
           labelColor={floorColor()}
-          strokeDasharray="2 4"
-          strokeWidth={1.5}
+          strokeDasharray="4 3"
+          strokeWidth={1}
           opacity={1}
           label={props.labels?.floor}
         />
@@ -236,9 +254,9 @@ export const BalanceReviewChart: Component<BalanceReviewChartProps> = (props) =>
         />
       </Show>
       <Show when={forecast().length > 0}>
-        <LineSeries data={forecast()} x={x} y={(p) => p.value} stroke={forecastColor()} strokeWidth={1.5} strokeDasharray="5 4" />
+        <LineSeries data={forecast()} x={x} y={(p) => p.value} stroke={forecastColor()} strokeWidth={1.5} strokeDasharray="6 4" />
       </Show>
-      <LineSeries data={props.actual} x={x} y={(p) => p.value} stroke={actualColor()} strokeWidth={2.25} />
+      <LineSeries data={props.actual} x={x} y={(p) => p.value} stroke={actualColor()} strokeWidth={2} />
       <PointSeries data={props.marks ?? []} x={x} y={(m) => m.value} radius={4} fill={actualColor()} />
       <Show when={gap()}>
         {(g) => <GapBracket from={g().from} to={g().to} offset={BRACKET_OFFSET} tick={BRACKET_TICK} stroke={actualColor()} strokeWidth={1.5} />}
