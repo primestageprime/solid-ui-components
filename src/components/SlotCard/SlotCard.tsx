@@ -154,7 +154,7 @@ const SLOT_RENDERERS: { [K in SlotName]: (v: NonNullable<SlotValues[K]>) => JSX.
           <TightCenteredColumn>
             <CountText>{m.label}</CountText>
             <Show
-              when={m.ok !== null}
+              when={m.ok != null}
               fallback={<span class="sui-slot-card__mark-none" role="img" aria-label={`${m.label}: no data`}>–</span>}
             >
               <SmallTruthIndicator value={m.ok === true} label={`${m.label}: ${m.ok ? "pass" : "fail"}`} />

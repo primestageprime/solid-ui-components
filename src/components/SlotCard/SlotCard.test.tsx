@@ -177,6 +177,15 @@ describe("SlotCard", () => {
       expect(getByLabelText("THC: no data").textContent).toBe("–");
     });
 
+    it("treats an undefined ok as no data, never as a fail", () => {
+      const { getByLabelText } = render(() => (
+        <TitleAssetMarks
+          values={{ name: { text: "Themis Leader" }, marks: [{ label: "NOx", ok: undefined as never }] }}
+        />
+      ));
+      expect(getByLabelText("NOx: no data").textContent).toBe("–");
+    });
+
     it("omits the separator when only one of date / duration is present", () => {
       const { container } = render(() => (
         <TitleAssetMarks values={{ name: { text: "Themis Leader" }, duration: "17.0h" }} />
