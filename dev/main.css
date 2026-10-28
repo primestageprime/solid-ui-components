@@ -2905,3 +2905,14 @@ th:has(.tf-th-center) .hud-table__header-content {
 .status-card-demo__drawing {
   display: block;
 }
+
+/* ActualForecastChart showcase */
+.actual-forecast-chart-demo__tip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+.actual-forecast-chart-demo__tip-title {
+  font-weight: 600;
+}
