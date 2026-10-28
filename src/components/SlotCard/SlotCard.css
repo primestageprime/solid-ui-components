@@ -144,6 +144,16 @@
   display: block;
 }
 
+/* A `marks` entry with no data — a muted dash on the same 12px line as the
+   SmallTruthIndicator glyph beside it, so a row of marks stays level. */
+.sui-slot-card__mark-none {
+  display: block;
+  height: 12px;
+  line-height: 12px;
+  font-size: 12px;
+  color: var(--sui-text-muted, #667);
+}
+
 /* Breakpoints on the card's own width. Cards start at a 200px floor, so the
    priority-1-only state is only reached via the max-width cap, not by shrinking.
    Below 260px drop priority-3 slots; below 180px (never hit at the 200px floor)

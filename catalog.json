@@ -2977,7 +2977,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 349
+    "line": 389
   },
   {
     "name": "ClampedText",
@@ -10000,7 +10000,7 @@
     "showcase": "#/slot-card",
     "since": "0.116.0",
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 345
+    "line": 385
   },
   {
     "name": "DenseStatusRow",
@@ -10034,7 +10034,7 @@
     "showcase": "#/slot-card",
     "since": "0.116.0",
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 337
+    "line": 377
   },
   {
     "name": "DenseTimelineBar",
@@ -14376,7 +14376,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 350
+    "line": 390
   },
   {
     "name": "InboxPopoverSurface",
@@ -18174,7 +18174,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 393
+    "line": 450
   },
   {
     "name": "PillTabs",
@@ -19097,7 +19097,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 336
+    "line": 376
   },
   {
     "name": "RateDial",
@@ -21172,7 +21172,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 352
+    "line": 392
   },
   {
     "name": "Slider",
@@ -22589,7 +22589,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 395
+    "line": 452
   },
   {
     "name": "StatusCard",
@@ -24416,7 +24416,41 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 358
+    "line": 398
+  },
+  {
+    "name": "TitleAssetMarks",
+    "depth": null,
+    "kind": "variant",
+    "family": "SlotCard",
+    "tags": [
+      "shows:card",
+      "shows:status",
+      "shows:text",
+      "shows:date",
+      "does:select",
+      "does:click",
+      "does:truncate",
+      "data:scalar",
+      "role:row"
+    ],
+    "tagsSource": "own",
+    "variantOf": {
+      "factory": "createSlotCard",
+      "overrides": "{\n  rows: [\n    [[\"name\"], [\"string\"]],\n    [\n      [\n        { slot: \"date\", prio: 2 },\n        { slot: \"duration\", prio: 2 },\n      ],\n      [\"marks\"],\n    ],\n  ],\n  dotSeparated: true,\n}"
+    },
+    "overrides": null,
+    "dataProps": null,
+    "summary": "TitleAssetMarks — the vessel-call sidebar card (Peter's 2-row sketch, fits a 300px Sidebar).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "TitleAssetMarks — the vessel-call sidebar card (Peter's 2-row sketch, fits a 300px Sidebar). Row 1: name (icon + ellipsised title) with the short asset right-aligned. Row 2: date · duration, with labeled pass/fail marks on the right. The asset is the first to shed; row 2 holds (prio 2) in a narrow rail.",
+    "showcase": "#/slot-card",
+    "since": null,
+    "file": "src/components/SlotCard/SlotCard.tsx",
+    "line": 429
   },
   {
     "name": "TitleAssetProgress",
@@ -24450,7 +24484,7 @@
     "showcase": "#/slot-card",
     "since": "0.116.0",
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 366
+    "line": 406
   },
   {
     "name": "TitleCount",
@@ -24484,7 +24518,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 335
+    "line": 375
   },
   {
     "name": "TitleDotsMeta",
@@ -24518,7 +24552,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 375
+    "line": 415
   },
   {
     "name": "TitledTimeRangeHeader",
@@ -24581,7 +24615,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 355
+    "line": 395
   },
   {
     "name": "TitleMetaCount",
@@ -24615,7 +24649,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 388
+    "line": 445
   },
   {
     "name": "TitleProgress",
@@ -24649,7 +24683,7 @@
     "showcase": "#/slot-card",
     "since": "0.116.0",
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 359
+    "line": 399
   },
   {
     "name": "TitleStatus",
@@ -24683,7 +24717,7 @@
     "showcase": "#/slot-card",
     "since": null,
     "file": "src/components/SlotCard/SlotCard.tsx",
-    "line": 334
+    "line": 374
   },
   {
     "name": "ToastList",

@@ -14,6 +14,7 @@ export {
   TitleProgress,
   TitleAssetProgress,
   TitleDotsMeta,
+  TitleAssetMarks,
   TitleMetaCount,
   // Overlay + tile
   PickCard,
