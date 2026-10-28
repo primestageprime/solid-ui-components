@@ -17,7 +17,7 @@
 // gets it back with a row. No DOM, no scale, no measurement — same inputs give
 // the same output.
 // ============================================
-import { filter, flatMap, map, sortBy } from "../../fn";
+import { filter, flatMap, map, mean, sortBy } from "../../fn";
 import type { Box, PlotRect } from "./labelBoxes";
 
 /** The least the packer needs to know about a label. */
@@ -120,8 +120,7 @@ const placedStack = <Label extends GutterLabel>(
   plot: PlotRect,
 ): Stack<Label> => {
   const wish =
-    members.reduce((total, m, i) => total + m.park - offsets[i], 0) /
-    members.length;
+    mean(map((m: (typeof members)[number], i: number) => m.park - offsets[i], members));
   const lo = plot.top + members[0].label.height / 2;
   const hi = plot.bottom - lastOf(members).label.height / 2 - lastOf(offsets);
   return { members, offsets, start: Math.max(lo, Math.min(hi, wish)) };
@@ -248,7 +247,7 @@ export const spreadGutterRows = <Label extends GutterLabel>(
       spilled: [],
     };
   }
-  const drop = misfits.reduce((a, b) => (b.rank > a.rank ? b : a)).label;
+  const drop = sortBy((m: (typeof misfits)[number]) => -m.rank, misfits)[0].label;
   const rest = spreadGutterRows(
     filter((label: Label) => label !== drop, labels),
     plot,
