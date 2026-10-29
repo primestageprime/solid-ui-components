@@ -141,6 +141,12 @@ export interface LevelsTimelineProps {
    */
   flagsPassNeighbours?: boolean;
   /**
+   * Called once when a flag's drag ENDS: on release, and when the pointer
+   * leaves the chart (the drag ends there; the flag stays where it was last
+   * reported). A consumer that previews a drag commits on this.
+   */
+  onMoveMutationEnd?: () => void;
+  /**
    * Formatter for a level's value in the hover readout. The chart never
    * invents a format — without this the raw number is shown, which is honest
    * but rarely what a consumer wants.
@@ -469,6 +475,12 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
   const onFlagPointerMove = (event: PointerEvent): void => {
     if (press === undefined || press.pointerId !== event.pointerId) return;
+    // LEAVING THE CHART ENDS THE DRAG. Pointer capture keeps the moves coming
+    // after the pointer leaves, so the box is checked here.
+    if (press.moved && outsideChart(event)) {
+      onFlagPointerEnd(event);
+      return;
+    }
     const x = pointerX(event);
     if (x === undefined) return;
     if (!press.moved) {
@@ -497,8 +509,21 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
     move(id, at);
   };
 
+  const outsideChart = (event: PointerEvent): boolean => {
+    const box = host?.getBoundingClientRect();
+    // A box with no size (not laid out) cannot say where the chart is.
+    if (box === undefined || (box.width === 0 && box.height === 0)) return false;
+    return (
+      event.clientX < box.left ||
+      event.clientX > box.right ||
+      event.clientY < box.top ||
+      event.clientY > box.bottom
+    );
+  };
+
   const onFlagPointerEnd = (event: PointerEvent): void => {
     if (press === undefined || press.pointerId !== event.pointerId) return;
+    const wasDrag = press.moved;
     if (press.moved) {
       // The click a drag's pointerup produces arrives in this same task. Clear
       // the flag on the NEXT one, so a click the browser sends elsewhere (or
@@ -508,9 +533,10 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         swallowClick = false;
       }, 0);
     }
-    (event.currentTarget as Element).releasePointerCapture?.(event.pointerId);
+    (event.currentTarget as Element | null)?.releasePointerCapture?.(event.pointerId);
     press = undefined;
     setDraggingId(undefined);
+    if (wasDrag) props.onMoveMutationEnd?.();
   };
 
   const onFlagClick = (flag: Flag): void => {
@@ -993,6 +1019,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
               onPointerMove={onFlagPointerMove}
               onPointerUp={onFlagPointerEnd}
               onPointerCancel={onFlagPointerEnd}
+              onLostPointerCapture={onFlagPointerEnd}
             >
               <rect
                 class="sui-levels-timeline__flag-box"

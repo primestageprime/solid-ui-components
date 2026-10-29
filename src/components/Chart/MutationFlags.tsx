@@ -42,6 +42,9 @@ export interface MutationFlagsProps {
 	onMoveMutation?: (id: string, at: TimeValue) => void;
 	/** Let a dragged flag cross its neighbours: clamp to the domain only. */
 	passNeighbours?: boolean;
+	/** Called once when a drag ends: on release, or when the pointer leaves
+	 *  the chart (the drag ends there). */
+	onMoveMutationEnd?: () => void;
 }
 
 interface PlacedFlag {
@@ -153,6 +156,19 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 			press.moved = true;
 			setDraggingId(press.id);
 		}
+		// LEAVING THE CHART ENDS THE DRAG (pointer capture keeps the moves coming).
+		const svg = (event.currentTarget as SVGElement | null)?.ownerSVGElement;
+		const box = svg?.getBoundingClientRect();
+		if (
+			press.moved &&
+			box !== undefined &&
+			// A box with no size (not laid out) cannot say where the chart is.
+			(box.width > 0 || box.height > 0) &&
+			(event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)
+		) {
+			onPointerEnd(event);
+			return;
+		}
 		const id = pressedId();
 		if (id === undefined) return;
 		const raw = ctx.xScale().invert(x - press.grab);
@@ -161,15 +177,17 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 
 	const onPointerEnd = (event: PointerEvent): void => {
 		if (press === undefined || press.pointerId !== event.pointerId) return;
+		const wasDrag = press.moved;
 		if (press.moved) {
 			swallowClick = true;
 			setTimeout(() => {
 				swallowClick = false;
 			}, 0);
 		}
-		(event.currentTarget as Element).releasePointerCapture?.(event.pointerId);
+		(event.currentTarget as Element | null)?.releasePointerCapture?.(event.pointerId);
 		press = undefined;
 		setDraggingId(undefined);
+		if (wasDrag) props.onMoveMutationEnd?.();
 	};
 
 	const onClick = (event: MouseEvent, flag: PlacedFlag): void => {
@@ -235,6 +253,7 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 						onPointerMove={onPointerMove}
 						onPointerUp={onPointerEnd}
 						onPointerCancel={onPointerEnd}
+						onLostPointerCapture={onPointerEnd}
 					>
 						<line
 							class="sui-chart__mutation-rule"
