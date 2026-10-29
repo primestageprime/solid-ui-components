@@ -2910,7 +2910,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 1001
+    "line": 1011
   },
   {
     "name": "ChipLabel",
@@ -11163,7 +11163,7 @@
     "showcase": null,
     "since": "0.225.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 1011
+    "line": 1021
   },
   {
     "name": "EndLabels",
@@ -16078,6 +16078,39 @@
     "since": "0.185.0",
     "file": "src/components/Layout/variants.ts",
     "line": 168
+  },
+  {
+    "name": "LooseFillCardGrid",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Layout",
+    "tags": [
+      "shows:grid",
+      "does:layout",
+      "data:list",
+      "role:container"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createGrid",
+      "overrides": "{\n  columns: \"repeat(auto-fill, minmax(280px, 1fr))\",\n  gap: \"sm\",\n}"
+    },
+    "overrides": [
+      "columns",
+      "gap",
+      "align"
+    ],
+    "dataProps": "GridDataProps",
+    "summary": "LooseFillCardGrid — LooseCardGrid with `auto-fill` tracks instead of `auto-fit`.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "LooseFillCardGrid — LooseCardGrid with `auto-fill` tracks instead of `auto-fit`. The empty tracks stay, so one or two cards keep a single column's width instead of stretching across the row; a full row looks the same as LooseCardGrid. For card lists that sit above or below another card grid and should line up with its columns (the Manual step's configs and suggestions).",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Layout/variants.ts",
+    "line": 986
   },
   {
     "name": "LooseWrapRow",
@@ -25217,7 +25250,7 @@
     "showcase": null,
     "since": "0.231.0",
     "file": "src/components/Layout/variants.ts",
-    "line": 993
+    "line": 1003
   },
   {
     "name": "UnderlineTabs",
@@ -26214,7 +26247,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Layout/variants.ts",
-    "line": 984
+    "line": 994
   },
   {
     "name": "WindowStrip",

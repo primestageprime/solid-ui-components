@@ -15,9 +15,15 @@ export type {
 	ManualEditConfigModalProps,
 	ManualOneOffConfirmProps,
 } from "./ManualProjectionDialogs";
-export { ManualPaymentsPane, ManualProjectionRail } from "./ManualProjectionRail";
+export {
+	ManualPaymentsPane,
+	ManualProjectionCardRail,
+	ManualProjectionRail,
+	ManualRailCard,
+} from "./ManualProjectionRail";
 export type {
 	ManualPaymentsPaneProps,
+	ManualProjectionCardRailProps,
 	ManualProjectionRailProps,
 } from "./ManualProjectionRail";
 export type {
@@ -26,6 +32,7 @@ export type {
 	ManualOneOffItem,
 	ManualPaneGroup,
 	ManualPaneRow,
+	ManualRailCardItem,
 	ManualRailItem,
 	ManualRailSection,
 	ManualSuggestion,

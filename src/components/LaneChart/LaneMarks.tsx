@@ -6,19 +6,23 @@
 //
 // The marks of a LaneChart, drawn inside a `Chart` whose left margin is the
 // name column: the month heads, the grid, a rule over each lane, the lane
-// names, the Unmatched lane's month boxes, each config lane's slots (one
+// names, the Unmatched lane's month boxes (the lane is left out while it is
+// empty, see `showsUnmatched`), each config lane's slots (one
 // layer per payment), catch-up links and payment bars. The data comes in
 // already scaled (see `scaleLanes`). Colours come from LaneChart.css; the
 // late layers and the missing slots fill from the two pattern ids the
 // caller defines. A hover on a bar or a layer calls `onHover` with its key,
 // and with null on leave. The mark whose key is `hotKey` gets an accent edge.
 // ============================================
-import { type Component, For } from "solid-js";
+import { type Component, For, Show } from "solid-js";
 import "./LaneChart.css";
 import {
 	LANE_HEAD_HEIGHT,
+	LANE_LINE_HEIGHT,
+	LANE_NAME_TOP,
 	LANE_NAME_WIDTH,
 	type LaneRow,
+	laneNameLines,
 	laneY,
 } from "./laneGeometry";
 import type { LaneBar, LaneChartData, LaneSlot } from "./types";
@@ -26,7 +30,7 @@ import type { LaneBar, LaneChartData, LaneSlot } from "./types";
 export interface LaneMarksProps {
 	/** The scaled data. */
 	readonly data: LaneChartData;
-	/** The Unmatched row first, then one row per lane. */
+	/** The Unmatched row first (0 high while it is empty), then one row per lane. */
 	readonly rows: readonly LaneRow[];
 	/** The chart height in px. */
 	readonly height: number;
@@ -72,24 +76,37 @@ const LaneLabel: Component<{
 	name: string;
 	sub: string;
 	warn?: boolean;
-}> = (props) => (
-	<>
-		<text
-			class="sui-lane-chart__name"
-			x={-LANE_NAME_WIDTH + 4}
-			y={props.row.top + 16}
-		>
-			{props.name}
-		</text>
-		<text
-			class={`sui-lane-chart__sub${props.warn ? " sui-lane-chart__sub--warn" : ""}`}
-			x={-LANE_NAME_WIDTH + 4}
-			y={props.row.top + 32}
-		>
-			{props.sub}
-		</text>
-	</>
-);
+}> = (props) => {
+	// SVG text does not wrap: one tspan per line of the name, the sub under the last.
+	const lines = () => laneNameLines(props.name);
+	return (
+		<>
+			<text
+				class="sui-lane-chart__name"
+				x={-LANE_NAME_WIDTH + 4}
+				y={props.row.top + LANE_NAME_TOP}
+			>
+				<For each={lines()}>
+					{(line, i) => (
+						<tspan
+							x={-LANE_NAME_WIDTH + 4}
+							dy={i() === 0 ? 0 : LANE_LINE_HEIGHT}
+						>
+							{line}
+						</tspan>
+					)}
+				</For>
+			</text>
+			<text
+				class={`sui-lane-chart__sub${props.warn ? " sui-lane-chart__sub--warn" : ""}`}
+				x={-LANE_NAME_WIDTH + 4}
+				y={props.row.top + LANE_NAME_TOP + lines().length * LANE_LINE_HEIGHT}
+			>
+				{props.sub}
+			</text>
+		</>
+	);
+};
 
 export const LaneMarks: Component<LaneMarksProps> = (props) => {
 	const unRow = (): LaneRow =>
@@ -123,39 +140,43 @@ export const LaneMarks: Component<LaneMarksProps> = (props) => {
 			</For>
 			<For each={props.rows}>
 				{(r) => (
-					<line
-						class="sui-lane-chart__rule"
-						x1={-LANE_NAME_WIDTH}
-						x2={props.data.trackWidth}
-						y1={r.top}
-						y2={r.top}
-					/>
+					<Show when={r.height > 0}>
+						<line
+							class="sui-lane-chart__rule"
+							x1={-LANE_NAME_WIDTH}
+							x2={props.data.trackWidth}
+							y1={r.top}
+							y2={r.top}
+						/>
+					</Show>
 				)}
 			</For>
-			<LaneLabel
-				row={unRow()}
-				name="Unmatched"
-				sub={props.data.unmatched.total}
-				warn
-			/>
-			<For each={props.data.unmatched.boxes}>
-				{(b) => (
-					<rect
-						class="sui-lane-chart__box"
-						x={b.x}
-						y={laneY(unRow(), b.bottom, b.height)}
-						width={b.width}
-						height={b.height}
-						rx={4}
-					/>
-				)}
-			</For>
-			<Bars
-				row={unRow()}
-				bars={props.data.unmatched.bars}
-				hotKey={props.hotKey}
-				onHover={props.onHover}
-			/>
+			<Show when={unRow().height > 0}>
+				<LaneLabel
+					row={unRow()}
+					name="Unmatched"
+					sub={props.data.unmatched.total}
+					warn
+				/>
+				<For each={props.data.unmatched.boxes}>
+					{(b) => (
+						<rect
+							class="sui-lane-chart__box"
+							x={b.x}
+							y={laneY(unRow(), b.bottom, b.height)}
+							width={b.width}
+							height={b.height}
+							rx={4}
+						/>
+					)}
+				</For>
+				<Bars
+					row={unRow()}
+					bars={props.data.unmatched.bars}
+					hotKey={props.hotKey}
+					onHover={props.onHover}
+				/>
+			</Show>
 			<For each={props.data.lanes}>
 				{(l, i) => (
 					<g>

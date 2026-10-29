@@ -80,4 +80,54 @@ describe("LaneMarks", () => {
 			"sui-lane-chart__slot sui-lane-chart__slot--missing",
 		]);
 	});
+
+	it("draws no Unmatched label or rule while the lane is empty", () => {
+		const empty = {
+			...LANE_CHART_DATA,
+			unmatched: { height: 40, total: "$0", boxes: [], bars: [] },
+		};
+		const rows = laneRows(empty);
+		const { container } = render(() => (
+			<Chart width={600} height={200} xDomain={[0, 400]} yDomain={[0, 200]}>
+				<LaneMarks
+					data={empty}
+					rows={rows}
+					height={laneChartHeight(rows)}
+					hatchId="hatch"
+					dotsId="dots"
+				/>
+			</Chart>
+		));
+		const names = [...container.querySelectorAll(".sui-lane-chart__name")].map((n) => n.textContent);
+		expect(names).toEqual(["Rent"]);
+		expect(container.querySelectorAll(".sui-lane-chart__rule")).toHaveLength(1);
+	});
+
+	it("draws a long lane name as one tspan per line, the sub under the last", () => {
+		const long = {
+			...LANE_CHART_DATA,
+			lanes: [
+				{ ...LANE_CHART_DATA.lanes[0]!, name: "Cleaning Supplies - Costco Business" },
+			],
+		};
+		const rows = laneRows(long);
+		const { container } = render(() => (
+			<Chart width={600} height={200} xDomain={[0, 400]} yDomain={[0, 200]}>
+				<LaneMarks
+					data={long}
+					rows={rows}
+					height={laneChartHeight(rows)}
+					hatchId="hatch"
+					dotsId="dots"
+				/>
+			</Chart>
+		));
+		const name = [...container.querySelectorAll(".sui-lane-chart__name")].at(-1)!;
+		expect([...name.querySelectorAll("tspan")].map((t) => t.textContent)).toEqual([
+			"Cleaning Supplies -",
+			"Costco Business",
+		]);
+		const sub = [...container.querySelectorAll(".sui-lane-chart__sub")].at(-1)!;
+		expect(Number(sub.getAttribute("y"))).toBe(rows[1]!.top + 16 + 2 * 16);
+	});
 });

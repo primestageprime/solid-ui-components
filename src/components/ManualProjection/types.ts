@@ -21,6 +21,17 @@ export interface ManualRailItem {
 	readonly pickable: boolean;
 }
 
+/** One group in the card rail (approved 2026-10-28): the name on top, the
+ *  count bottom left, the total bottom right. */
+export interface ManualRailCardItem extends ManualRailItem {
+	/** e.g. "52 payments". */
+	readonly count: string;
+	/** The group's total, money-formatted, e.g. "-$146,900". */
+	readonly total: string;
+	/** A TO REVIEW group's unmatched amount, e.g. "$1,200 unmatched"; drawn in warning ink. */
+	readonly unmatched?: string;
+}
+
 /** One config group in the payments pane. */
 export interface ManualPaneGroup {
 	readonly key: string;
@@ -40,8 +51,11 @@ export interface ManualPaneRow {
 	readonly key: string;
 	/** The key of its pane group. */
 	readonly group: string;
+	/** The payment's day, "YYYY-MM-DD"; drawn by DateCell in UTC. */
 	readonly date: string;
-	readonly slot: string;
+	/** @deprecated Not drawn since 2026-10-28 (Peter: "Don't show when they're
+	 *  due"). Kept so existing consumers still type-check; remove once none set it. */
+	readonly slot?: string;
 	readonly amount: string;
 	/** Text after the amount, e.g. " of $7,000". */
 	readonly of: string;

@@ -5,13 +5,19 @@ export { LaneDotsPattern, LaneMarks } from "./LaneMarks";
 export type { LaneMarksProps } from "./LaneMarks";
 export {
 	LANE_HEAD_HEIGHT,
+	LANE_LINE_HEIGHT,
+	LANE_NAME_CHARS,
+	LANE_NAME_TOP,
 	LANE_NAME_WIDTH,
 	LANE_RIGHT,
 	laneChartHeight,
+	laneLabelHeight,
+	laneNameLines,
 	laneRows,
 	laneScale,
 	laneY,
 	scaleLanes,
+	showsUnmatched,
 } from "./laneGeometry";
 export type { LaneRow } from "./laneGeometry";
 export type {

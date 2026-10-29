@@ -11,10 +11,12 @@ import {
 	ManualEditConfigModal,
 	ManualOneOffConfirm,
 	ManualPaymentsPane,
+	ManualProjectionCardRail,
 	ManualProjectionHeader,
 	ManualProjectionRail,
 	ManualSuggestionCards,
 } from "../../../src/components/ManualProjection";
+import { ThreePanelLayout } from "../../../src/components/ThreePanelLayout";
 import { SmallButton } from "../../../src/components/Button";
 import { MutedBody } from "../../../src/components/Text";
 
@@ -106,9 +108,9 @@ export const ManualProjectionShowcase: Component = () => {
 						{ key: "UNMATCHED", name: "Unmatched", desc: "None", count: "1", total: "$120", expanded: true, warn: true },
 					]}
 					rows={[
-						{ key: "r1", group: "rent", date: "Jan 1", slot: "Jan", amount: "$2,000", of: "" },
-						{ key: "r2", group: "rent", date: "Feb 3", slot: "Feb", amount: "$2,000", of: "" },
-						{ key: "u1", group: "UNMATCHED", date: "Feb 9", slot: "", amount: "$120", of: "" },
+						{ key: "r1", group: "rent", date: "2026-01-01", amount: "$2,000", of: "" },
+						{ key: "r2", group: "rent", date: "2026-02-03", amount: "$2,000", of: "" },
+						{ key: "u1", group: "UNMATCHED", date: "2026-02-09", amount: "$120", of: "" },
 					]}
 					hotKey={hot() ?? undefined}
 					onHover={setHot}
@@ -137,6 +139,67 @@ export const ManualProjectionShowcase: Component = () => {
 				onClose={() => setConfirming(false)}
 				onConfirm={() => setConfirming(false)}
 			/>
+		</div>
+	);
+};
+
+// The rail's group card (approved by Peter 2026-10-28). Tom's
+// Cleaning rows from the thorcasting stubs (set1: names, counts, yearly
+// totals); Costco as the one TO REVIEW group with an unmatched amount, and the
+// paycheck selected. The rail sits in the app's 240px left panel, today's rail
+// beside it.
+const CARD_SECTIONS = [
+	{ key: "review", title: "TO REVIEW", tone: "warning", emptyText: "None" },
+	{ key: "matched", title: "MATCHED", tone: "default", emptyText: "None" },
+	{ key: "other", title: "OTHER", tone: "muted", emptyText: "None" },
+] as const;
+
+const CARD_ITEMS = [
+	{ key: "costco", section: "review", name: "Cleaning Supplies - Costco Business", note: "$1,150 unmatched", pickable: true, count: "12 payments", total: "-$13,800", unmatched: "$1,150 unmatched" },
+	{ key: "paycheck", section: "matched", name: "Tom's Paycheck - BiWeekly", note: "26 payments", pickable: true, count: "26 payments", total: "-$146,900" },
+	{ key: "hartley", section: "matched", name: "Hartley Dental - Office Cleaning", note: "52 payments", pickable: true, count: "52 payments", total: "$45,760" },
+	{ key: "maple", section: "matched", name: "Maple Court Apartments - Common Areas", note: "52 payments", pickable: true, count: "52 payments", total: "$49,920" },
+	{ key: "riverside", section: "matched", name: "Riverside Law Office - Janitorial", note: "52 payments", pickable: true, count: "52 payments", total: "$37,440" },
+	{ key: "greenway", section: "matched", name: "Greenway Coworking - Studio Reset", note: "52 payments", pickable: true, count: "52 payments", total: "$33,280" },
+	{ key: "insurance", section: "matched", name: "Business Insurance - Next Insurance", note: "12 payments", pickable: true, count: "12 payments", total: "-$5,400" },
+] as const;
+
+export const ManualRailCardShowcase: Component = () => {
+	const [group, setGroup] = createSignal("paycheck");
+	return (
+		<div class="component-section">
+			<h2>ManualProjectionCardRail (unstable)</h2>
+			<p class="text-meta">
+				Each group as a card: the name on top, one line, with "…" and the
+				full name in a tooltip when it is cut; the payment count bottom
+				left; the total bottom right. A TO REVIEW group adds its
+				unmatched amount in warning ink. Left: the card rail. Centre: the
+				rail as it is today. Click a pickable card to select it.
+			</p>
+			<div class="example-group">
+				<ThreePanelLayout
+					height="640px"
+					leftPanelWidth="240px"
+					rightPanelWidth="240px"
+					leftPanel={
+						<ManualProjectionCardRail
+							sections={[...CARD_SECTIONS]}
+							items={[...CARD_ITEMS]}
+							currentKey={group()}
+							onPick={setGroup}
+						/>
+					}
+					centerPanel={<MutedBody>{`Selected: ${group()}`}</MutedBody>}
+					rightPanel={
+						<ManualProjectionRail
+							sections={[...CARD_SECTIONS]}
+							items={[...CARD_ITEMS]}
+							currentKey={group()}
+							onPick={setGroup}
+						/>
+					}
+				/>
+			</div>
 		</div>
 	);
 };

@@ -1,6 +1,6 @@
 // LaneChart geometry — pure. Scales the track to the panel and stacks the
 // lanes under the month heads.
-import { map, sum } from "../../fn";
+import { filter, flatMap, map, sum } from "../../fn";
 import type {
 	Lane,
 	LaneBar,
@@ -10,6 +10,7 @@ import type {
 	LaneLink,
 	LaneMonthHead,
 	LaneSlot,
+	LaneUnmatched,
 } from "./types";
 
 /** The width of the lane name column, in px. */
@@ -61,9 +62,60 @@ export const scaleLanes = (c: LaneChartData, k: number): LaneChartData => {
 	};
 };
 
-/** The rows: the Unmatched lane first, then one per config lane. */
+/** The characters of a lane name that fit one line of the name column: 13px
+ *  text, about 7px a character, 4px padding each side. */
+export const LANE_NAME_CHARS = Math.floor((LANE_NAME_WIDTH - 8) / 7);
+/** The baseline of a lane's first name line below the row top, in px. */
+export const LANE_NAME_TOP = 16;
+/** The step between two lines of the lane label, in px. */
+export const LANE_LINE_HEIGHT = 16;
+/** The room under the subline, in px. */
+const LANE_LABEL_PAD = 8;
+
+/** A word cut into pieces of at most `max` characters. */
+const wordPieces = (w: string, max: number): string[] =>
+	w.length <= max ? [w] : [w.slice(0, max), ...wordPieces(w.slice(max), max)];
+
+/** A lane name broken into lines of at most `max` characters, at spaces. A
+ *  word longer than a line is cut into pieces of `max`. */
+export const laneNameLines = (
+	name: string,
+	max: number = LANE_NAME_CHARS,
+): string[] => {
+	const words = flatMap(
+		(w: string) => wordPieces(w, max),
+		filter((w: string) => w.length > 0, name.split(/\s+/)),
+	);
+	const lines: string[] = [];
+	for (const w of words) {
+		const last = lines[lines.length - 1];
+		if (last !== undefined && last.length + 1 + w.length <= max)
+			lines[lines.length - 1] = `${last} ${w}`;
+		else lines.push(w);
+	}
+	return lines;
+};
+
+/** The height a label of `lines` name lines and one subline needs, in px. */
+export const laneLabelHeight = (lines: number): number =>
+	LANE_NAME_TOP + Math.max(1, lines) * LANE_LINE_HEIGHT + LANE_LABEL_PAD;
+
+/** Whether the Unmatched lane draws: only while it holds a payment. An empty
+ *  one ($0, everything matched) takes no row, so the config lanes move up. */
+export const showsUnmatched = (u: LaneUnmatched): boolean =>
+	u.bars.length > 0 || u.boxes.length > 0;
+
+/** The rows: the Unmatched lane first (0 high when it does not draw), then one per config
+ *  lane, each at least as tall as its wrapped label. */
 export const laneRows = (c: LaneChartData): LaneRow[] => {
-	const heights = [c.unmatched.height, ...map((l: Lane) => l.height, c.lanes)];
+	const heights = [
+		showsUnmatched(c.unmatched) ? c.unmatched.height : 0,
+		...map(
+			(l: Lane) =>
+				Math.max(l.height, laneLabelHeight(laneNameLines(l.name).length)),
+			c.lanes,
+		),
+	];
 	return map(
 		(height: number, i: number): LaneRow => ({
 			top: LANE_HEAD_HEIGHT + sum(heights.slice(0, i)),

@@ -6,6 +6,7 @@ import {
 	ManualEditConfigModal,
 	ManualOneOffConfirm,
 	ManualPaymentsPane,
+	ManualProjectionCardRail,
 	ManualProjectionHeader,
 	ManualProjectionRail,
 	ManualSuggestionCards,
@@ -33,6 +34,33 @@ describe("ManualProjectionRail", () => {
 	});
 });
 
+describe("ManualProjectionCardRail", () => {
+	it("shows the name, the count and the total, the unmatched amount on a review card, and picks", () => {
+		const seen: string[] = [];
+		render(() => (
+			<ManualProjectionCardRail
+				sections={[
+					{ key: "review", title: "TO REVIEW", tone: "warning", emptyText: "None" },
+					{ key: "matched", title: "MATCHED", tone: "default", emptyText: "None" },
+				]}
+				items={[
+					{ key: "a", section: "review", name: "Hartley Dental - Office Cleaning", note: "", pickable: true, count: "52 payments", total: "$45,760", unmatched: "$880 unmatched" },
+					{ key: "b", section: "matched", name: "Tom's Paycheck - BiWeekly", note: "", pickable: true, count: "26 payments", total: "-$146,900" },
+				]}
+				currentKey="b"
+				onPick={(k) => seen.push(k)}
+			/>
+		));
+		for (const t of ["Hartley Dental - Office Cleaning", "52 payments", "$45,760", "$880 unmatched", "26 payments", "-$146,900"])
+			expect(screen.getByText(t)).toBeTruthy();
+		// One line: the name is an EllipsisText, never a wrapping body.
+		expect(screen.getByText("Hartley Dental - Office Cleaning").closest(".sui-ellipsis-text")).not.toBeNull();
+		expect(screen.getByText("$880 unmatched").getAttribute("style") ?? "").toMatch(/--sui-warning/);
+		fireEvent.click(screen.getByText("Hartley Dental - Office Cleaning"));
+		expect(seen).toEqual(["a"]);
+	});
+});
+
 describe("ManualPaymentsPane", () => {
 	it("lists the payments under their config group", () => {
 		render(() => (
@@ -40,12 +68,15 @@ describe("ManualPaymentsPane", () => {
 				groups={[
 					{ key: "g", name: "Retainer", desc: "", count: "1", total: "$7,000", expanded: true, warn: false },
 				]}
-				rows={[{ key: "r1", group: "g", date: "Jan 3", slot: "Jan", amount: "$6,000", of: " of $7,000" }]}
+				rows={[{ key: "r1", group: "g", date: "2026-01-03", slot: "due 2026-01-01", amount: "$6,000", of: " of $7,000" }]}
 				onHover={() => {}}
 			/>
 		));
 		expect(screen.getByText("Retainer · 1 · $7,000")).toBeTruthy();
-		expect(screen.getByText("Jan 3")).toBeTruthy();
+		// The date and the amount only: never the due date.
+		expect(screen.getByText("2026-01-03").className).toBe("sui-value-date");
+		expect(screen.getByText((_, el) => el?.textContent === "$6,000\u00a0of\u00a0$7,000" && el.children.length === 0)).toBeTruthy();
+		expect(screen.queryByText(/due/)).toBeNull();
 	});
 
 	it("inks each amount by its tone, and keeps the default ink without one", () => {
@@ -55,9 +86,9 @@ describe("ManualPaymentsPane", () => {
 					{ key: "g", name: "Retainer", desc: "", count: "2", total: "$9,000", expanded: true, warn: false },
 				]}
 				rows={[
-					{ key: "r1", group: "g", date: "Jan 3", slot: "Jan", amount: "$6,000", of: "", tone: "success" },
-					{ key: "r2", group: "g", date: "Feb 9", slot: "Feb · late", amount: "$3,000", of: "", tone: "warning" },
-					{ key: "r3", group: "g", date: "Mar 3", slot: "Mar", amount: "$1,000", of: "" },
+					{ key: "r1", group: "g", date: "2026-01-03", amount: "$6,000", of: "", tone: "success" },
+					{ key: "r2", group: "g", date: "2026-02-09", amount: "$3,000", of: "", tone: "warning" },
+					{ key: "r3", group: "g", date: "2026-03-03", amount: "$1,000", of: "" },
 				]}
 				onHover={() => {}}
 			/>

@@ -79,7 +79,6 @@ const Pane: Component<{ view: MpView }> = (props) => (
 			key: r.key,
 			group: r.bucket,
 			date: r.date,
-			slot: r.slot,
 			amount: r.amount,
 			of: r.of,
 			tone: AMOUNT_TONE[r.tone],

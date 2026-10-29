@@ -19,6 +19,7 @@ import {
   LooseWrapRow,
   CardGrid,
   LooseCardGrid,
+  LooseFillCardGrid,
   WrappedClusterRow,
   FixedHeightBox,
   FillPaneRailGrid,
@@ -130,6 +131,13 @@ describe("Layout curried variants", () => {
     expect(tracks(loose.container.firstElementChild!)).toBe(
       tracks(base.container.firstElementChild!),
     );
+  });
+
+  it("LooseFillCardGrid keeps empty tracks (auto-fill), so a lone card stays one column wide", () => {
+    const fill = render(() => <LooseFillCardGrid>x</LooseFillCardGrid>);
+    const el = fill.container.firstElementChild!;
+    expect(el.className).toMatch(/grid--gap-sm/);
+    expect(el.getAttribute("style") ?? "").toMatch(/repeat\(auto-fill, minmax\(280px, 1fr\)\)/);
   });
 
   it("DelineatedSidebar produces a stack with min-width 400", () => {

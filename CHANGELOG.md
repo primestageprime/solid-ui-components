@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Added
+
+- **`ManualProjectionCardRail` and `ManualRailCard`** (unstable; Peter, 2026-10-28: "The left one is better. Though use the ellipses string displayer"). The Manual rail with each group as a card: the name on one line (`EllipsisText`, the full name in its tooltip when cut), the review note in warning ink, then the payment count at the left and the total at the right. Type `ManualRailCardItem` = `ManualRailItem` + `count`, `total`, optional `unmatched`. Showcase: "ManualProjectionCardRail".
+- **`LooseFillCardGrid`**: `LooseCardGrid` with `auto-fill` tracks, so one or two cards keep a single column's width instead of stretching across the row. `ManualConfigCards` and `ManualSuggestionCards` use it.
+- **`showsUnmatched`, `laneNameLines`, `laneLabelHeight`** and `LANE_NAME_CHARS` / `LANE_NAME_TOP` / `LANE_LINE_HEIGHT` from the LaneChart geometry (pure).
+
+### Changed
+
+- **`LaneChart` leaves out an empty Unmatched lane** (no bars, no boxes: $0): no label, no rule, no height, so the config lanes start under the month heads. `LaneChartData` is unchanged.
+- **`LaneChart` wraps a long lane name** inside the 150px name column, one `tspan` per line with the sub under the last; the row grows to fit instead of the name running over the bars.
+- **`ManualPaymentsPane` rows are the date and the amount** (Peter, 2026-10-28: "Don't show when they're due"): `DateCell` (YYYY-MM-DD, UTC) at the left, the amount right-aligned. `ManualPaneRow.slot` is optional and deprecated; it is no longer drawn, and `date` should be a `YYYY-MM-DD` value.
+
 ## 0.237.0 — 2026-10-28
 
 ### Added

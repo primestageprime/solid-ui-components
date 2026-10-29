@@ -12,7 +12,7 @@
 // and an empty state.
 //
 // No CSS. Composes SuccessAlert, WarningAlert, SmStatusBadge, Legend,
-// CompactSurface, LooseCardGrid, IconOnlyButton, Icon, SmallButton,
+// CompactSurface, LooseFillCardGrid, IconOnlyButton, Icon, SmallButton,
 // SmallOutlinedButton, MutedEmptyState, Layout variants and Text variants.
 // ============================================
 import { type Component, For, Show } from "solid-js";
@@ -23,7 +23,7 @@ import { Icon } from "../Icon";
 import {
 	ClusterRow,
 	ContentStack,
-	LooseCardGrid,
+	LooseFillCardGrid,
 	SpreadRow,
 	TightStack,
 } from "../Layout";
@@ -111,7 +111,7 @@ export const ManualSuggestionCards: Component<{
 				<MutedEmptyState message="Every payment in this group is matched. Nothing to suggest." />
 			}
 		>
-			<LooseCardGrid>
+			<LooseFillCardGrid>
 				<For each={props.items}>
 					{(s) => (
 						<CompactSurface>
@@ -126,7 +126,7 @@ export const ManualSuggestionCards: Component<{
 						</CompactSurface>
 					)}
 				</For>
-			</LooseCardGrid>
+			</LooseFillCardGrid>
 		</Show>
 	</ContentStack>
 );
@@ -177,13 +177,13 @@ export const ManualConfigCards: Component<{
 				<MutedEmptyState message="No configs yet. Add one from the suggestions." />
 			}
 		>
-			<LooseCardGrid>
+			<LooseFillCardGrid>
 				<For each={props.items}>
 					{(c) => (
 						<ConfigCard cfg={c} onEdit={props.onEdit} onDelete={props.onDelete} />
 					)}
 				</For>
-			</LooseCardGrid>
+			</LooseFillCardGrid>
 		</Show>
 	</ContentStack>
 );

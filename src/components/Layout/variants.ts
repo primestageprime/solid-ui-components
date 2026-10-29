@@ -978,6 +978,16 @@ export const LooseCardGrid: Component<GridDataProps> = createGrid({
   gap: "sm",
 });
 
+// LooseFillCardGrid — LooseCardGrid with `auto-fill` tracks instead of
+// `auto-fit`. The empty tracks stay, so one or two cards keep a single column's
+// width instead of stretching across the row; a full row looks the same as
+// LooseCardGrid. For card lists that sit above or below another card grid and
+// should line up with its columns (the Manual step's configs and suggestions).
+export const LooseFillCardGrid: Component<GridDataProps> = createGrid({
+  columns: "repeat(auto-fill, minmax(280px, 1fr))",
+  gap: "sm",
+});
+
 // WideCardGrid — same responsive auto-fit behavior as CardGrid but with a wider
 // minimum tile (≥ 420px), for tiles that host a chart or table and need room
 // before they wrap.

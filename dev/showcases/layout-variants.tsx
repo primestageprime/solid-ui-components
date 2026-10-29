@@ -56,6 +56,7 @@ import {
   // grids
   CardGrid,
   LooseCardGrid,
+  LooseFillCardGrid,
   WideCardGrid,
   TwoUpGrid,
   ChipGrid,
@@ -359,6 +360,12 @@ const GRIDS: VariantSpec[] = [
     name: "LooseCardGrid",
     note: "the same at the sm (8px) gutter â for a KPI strip needing more air",
     Variant: LooseCardGrid,
+    kind: "blocks",
+  },
+  {
+    name: "LooseFillCardGrid",
+    note: "the same with auto-fill tracks: one or two cards keep a single column's width",
+    Variant: LooseFillCardGrid,
     kind: "blocks",
   },
   {

@@ -239,6 +239,7 @@ import {
 import {
   LaneChartShowcase,
   ManualProjectionShowcase,
+  ManualRailCardShowcase,
 } from "./showcases/import-kit/manual";
 import { FullscreenBoxShowcase } from "./showcases/fullscreen-box";
 
@@ -1466,6 +1467,12 @@ const items: Item[] = [
     id: "manual-projection",
     label: "ManualProjection (unstable)",
     component: ManualProjectionShowcase,
+    tags: ["depth:2", "container", "unstable"],
+  },
+  {
+    id: "manual-rail-card",
+    label: "ManualProjectionCardRail (unstable)",
+    component: ManualRailCardShowcase,
     tags: ["depth:2", "container", "unstable"],
   },
   // Generated component entries (npm run new:component) — appended above this line.
