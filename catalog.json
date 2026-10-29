@@ -6652,7 +6652,7 @@
     "showcase": "#/levels-timeline",
     "since": "0.171.0",
     "file": "src/components/LevelsTimeline/LevelsTimeline.tsx",
-    "line": 1082
+    "line": 1145
   },
   {
     "name": "createList",
@@ -7805,7 +7805,7 @@
     "showcase": "#/stacked-timeline-chart",
     "since": "0.174.0",
     "file": "src/components/StackedTimelineChart/StackedTimelineChart.tsx",
-    "line": 494
+    "line": 504
   },
   {
     "name": "createStampedRow",
@@ -15616,7 +15616,7 @@
     "showcase": "#/levels-timeline",
     "since": "0.171.0",
     "file": "src/components/LevelsTimeline/LevelsTimeline.tsx",
-    "line": 224
+    "line": 240
   },
   {
     "name": "LgAvatar",
@@ -22402,7 +22402,7 @@
     "showcase": "#/stacked-timeline-chart",
     "since": "0.174.0",
     "file": "src/components/StackedTimelineChart/StackedTimelineChart.tsx",
-    "line": 275
+    "line": 283
   },
   {
     "name": "StampedRow",
