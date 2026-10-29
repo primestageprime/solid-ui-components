@@ -177,8 +177,10 @@ export interface LevelsTimelineProps {
 const EMPTY_TRANSFERS: readonly Transfer[] = [];
 
 /**
- * The graphic's NAME, and it has to stay short: browsers paint an SVG
- * `<title>` as a native tooltip. Anything longer belongs in `<desc>`.
+ * The graphic's NAME, for assistive technology. It is an `aria-label`, NOT a
+ * `<title>`: browsers paint an SVG `<title>` as a native tooltip, and a
+ * "Levels timeline" box over the chart on every hover told the reader nothing
+ * (Adlai, 2026-10-29: "remove the levels timeline hover text").
  */
 const SVG_TITLE = "Levels timeline";
 
@@ -722,24 +724,19 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       data-selected-mutation={props.selectedMutationId}
       data-dragging-mutation={draggingId()}
     >
-      {/* The <title> is the graphic's NAME and must stay short: a browser
-          paints it as a NATIVE tooltip on hover, and the whole announcement
-          was appearing as a paragraph-long OS tooltip over the chart. The
-          announcement lives in <desc> instead — the SVG element for exactly
-          this, read by assistive technology and never painted.
+      {/* The graphic's NAME is an aria-label, not a <title>: a browser paints
+          a <title> as a NATIVE tooltip on every hover. The announcement lives
+          in <desc> — read by assistive technology and never painted.
 
           Neither goes on a wrapper with role="img", which would make the
           canvas presentational and take the flags — real buttons when
-          selection is wired — out of the accessibility tree with it.
-
-          NOTE: <title> must be the FIRST child of <svg>. A JSX comment here
-          counts as a child and biome's noSvgWithoutTitle stops seeing it,
-          which is why this comment sits outside the element. */}
+          selection is wired — out of the accessibility tree with it. */}
+      {/* biome-ignore lint/a11y/noSvgWithoutTitle: named by aria-label; a <title> paints a native tooltip over the chart (owner, 2026-10-29). */}
       <svg
         class="sui-levels-timeline__canvas"
         viewBox={`0 0 ${frame().viewWidth} ${frame().viewHeight}`}
+        aria-label={SVG_TITLE}
       >
-        <title>{SVG_TITLE}</title>
         <desc>{description()}</desc>
         {/* One opacity gradient per OPEN-ended flow — nothing else needs one
             now that the chart is a single colour. The ids are per-INSTANCE

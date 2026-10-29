@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- **`LevelsTimeline` paints no "Levels timeline" tooltip.** The canvas is named by `aria-label` instead of an SVG `<title>`, which browsers show as a native tooltip on every hover.
+
 ### Added
 
 - **`flagsPassNeighbours`** on `LevelsTimeline` and `StackedTimelineChart` (and `passNeighbours` on `MutationFlags`): a dragged flag may cross its neighbours and land on a neighbour's day; the drag and the arrow keys clamp to the domain only. The consumer owns the order, so the flags renumber on its next render. Default `false` keeps the neighbour clamp. `clampMutationTime` and `dragTimeAt` take it as a trailing `passNeighbours` argument.

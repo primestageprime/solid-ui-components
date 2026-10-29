@@ -74,6 +74,13 @@ const renderRails = () =>
   ));
 
 describe("LevelsTimeline — rails", () => {
+  it("names the canvas by aria-label and paints no native tooltip (no <title>)", () => {
+    const { container } = renderRails();
+    const svg = container.querySelector("svg.sui-levels-timeline__canvas");
+    expect(svg?.getAttribute("aria-label")).toBe("Levels timeline");
+    expect(svg?.querySelector(":scope > title")).toBeNull();
+  });
+
   it("announces what each level holds and what moved where", () => {
     const { container } = renderRails();
     const label = container.querySelector("desc")?.textContent ?? "";
