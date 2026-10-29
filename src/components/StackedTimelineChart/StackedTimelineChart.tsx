@@ -162,8 +162,8 @@ export interface StackedTimelineChartProps {
 	 * only, and the consumer owns the order. Default false.
 	 */
 	flagsPassNeighbours?: boolean;
-	/** Called once when a flag's drag ends: on release, or when the pointer
-	 *  leaves the chart. */
+	/** Called once when a flag's drag ends: on release, on a cancel or a lost
+	 *  pointer capture, or on Escape. Leaving the chart does not end it. */
 	onMoveMutationEnd?: () => void;
 	/**
 	 * Snaps `onPick`'s date (e.g. `pickDay`). Omitted, `onPick` reports the raw
