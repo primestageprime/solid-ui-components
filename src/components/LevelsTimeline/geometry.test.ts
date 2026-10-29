@@ -2417,6 +2417,18 @@ describe("dragging a flag — the neighbour clamp", () => {
     ).toBe("2027-01-31");
   });
 
+  it("clamps to the flag's own dragRange, inside the domain", () => {
+    const ranged: readonly Mutation[] = [
+      { id: "a", at: utc("2026-09-01"), label: "a", dragRange: [utc("2026-08-20"), utc("2026-11-10")] },
+      { id: "b", at: utc("2026-10-15"), label: "b" },
+    ];
+    expect(isoDayOf(clampMutationTime(ranged, "a", day("2026-12-25"), DRAG_DOMAIN, true))).toBe("2026-11-10");
+    expect(isoDayOf(clampMutationTime(ranged, "a", day("2026-08-02"), DRAG_DOMAIN, true))).toBe("2026-08-20");
+    expect(isoDayOf(clampMutationTime(ranged, "a", day("2026-10-20"), DRAG_DOMAIN, true))).toBe("2026-10-20");
+    // Without passNeighbours the neighbour clamp still applies on top.
+    expect(isoDayOf(clampMutationTime(ranged, "a", day("2026-10-20"), DRAG_DOMAIN))).toBe("2026-10-14");
+  });
+
   it("with passNeighbours, a squeezed pin still moves", () => {
     const squeezed: readonly Mutation[] = [
       { id: "x", at: utc("2026-10-01"), label: "x" },

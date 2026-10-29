@@ -85,6 +85,14 @@ export interface Mutation {
    * them the tooltip is the date alone.
    */
   readonly details?: readonly string[];
+  /**
+   * Where a drag may take THIS flag: `[earliest, latest]`, either end
+   * open (`undefined`). The drag and the arrow keys clamp to it as well as to
+   * the domain, so a consumer can keep the flag out of a state its own rules
+   * refuse — e.g. past the next change of the same entity. With
+   * `flagsPassNeighbours`, this is the only bound besides the domain.
+   */
+  readonly dragRange?: readonly [TimeValue | undefined, TimeValue | undefined];
 }
 
 export interface Point {
@@ -2166,7 +2174,9 @@ export const clampMutationTime = (
   const found = findIndex((mutation: Mutation) => mutation.id === id, ordered);
   // Passing neighbours is clamping as if the mutation had none.
   const index = passNeighbours ? -1 : found;
-  const current = found < 0 ? undefined : timeOf(ordered[found].at);
+  const self = found < 0 ? undefined : ordered[found];
+  const current = self === undefined ? undefined : timeOf(self.at);
+  const [rangeLow, rangeHigh] = self?.dragRange ?? [undefined, undefined];
   const previous = ordered[index - 1];
   const next = ordered[index + 1];
   const lows = [
@@ -2174,10 +2184,12 @@ export const clampMutationTime = (
       ? [timeOf(previous.at) + DAY_MS]
       : []),
     ...(domain === undefined ? [] : [timeOf(domain[0])]),
+    ...(rangeLow === undefined ? [] : [timeOf(rangeLow)]),
   ];
   const highs = [
     ...(index >= 0 && next !== undefined ? [timeOf(next.at) - DAY_MS] : []),
     ...(domain === undefined ? [] : [timeOf(domain[1])]),
+    ...(rangeHigh === undefined ? [] : [timeOf(rangeHigh)]),
   ];
   const low = lows.length === 0 ? Number.NEGATIVE_INFINITY : Math.max(...lows);
   const high =
