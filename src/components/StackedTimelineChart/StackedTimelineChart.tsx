@@ -158,6 +158,11 @@ export interface StackedTimelineChartProps {
 	 */
 	onMoveMutation?: (id: string, at: TimeValue) => void;
 	/**
+	 * Let a dragged flag CROSS its neighbours: the drag clamps to `xDomain`
+	 * only, and the consumer owns the order. Default false.
+	 */
+	flagsPassNeighbours?: boolean;
+	/**
 	 * Snaps `onPick`'s date (e.g. `pickDay`). Omitted, `onPick` reports the raw
 	 * date as before.
 	 */
@@ -439,6 +444,7 @@ export const StackedTimelineChart: Component<StackedTimelineChartProps> = (
 						selectedMutationId={props.selectedMutationId}
 						onSelectMutation={props.onSelectMutation}
 						onMoveMutation={props.onMoveMutation}
+						passNeighbours={props.flagsPassNeighbours}
 					/>
 				</Show>
 				{/* The ghost goes AFTER the real rules, so a hovered month that

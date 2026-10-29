@@ -40,6 +40,8 @@ export interface MutationFlagsProps {
 	selectedMutationId?: string;
 	onSelectMutation?: (id: string) => void;
 	onMoveMutation?: (id: string, at: TimeValue) => void;
+	/** Let a dragged flag cross its neighbours: clamp to the domain only. */
+	passNeighbours?: boolean;
 }
 
 interface PlacedFlag {
@@ -154,7 +156,7 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 		const id = pressedId();
 		if (id === undefined) return;
 		const raw = ctx.xScale().invert(x - press.grab);
-		report(id, clampMutationTime(props.mutations, id, raw, domain()));
+		report(id, clampMutationTime(props.mutations, id, raw, domain(), props.passNeighbours === true));
 	};
 
 	const onPointerEnd = (event: PointerEvent): void => {
@@ -186,7 +188,13 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 			const step = event.key === "ArrowLeft" ? -DAY_MS : DAY_MS;
 			report(
 				flag.id,
-				clampMutationTime(props.mutations, flag.id, flag.at + step, domain()),
+				clampMutationTime(
+					props.mutations,
+					flag.id,
+					flag.at + step,
+					domain(),
+					props.passNeighbours === true,
+				),
 			);
 			return;
 		}

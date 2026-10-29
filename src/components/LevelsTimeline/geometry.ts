@@ -2150,16 +2150,23 @@ export const snapToDay = (time: number): number =>
  * empty — neighbours on consecutive days — the mutation stays where it is
  * rather than being forced onto a neighbour. An unknown id is returned as
  * the snapped time, unclamped by neighbours.
+ *
+ * `passNeighbours`: clamp to the domain only, so the mutation may cross its
+ * neighbours (and land on a neighbour's day). The consumer then owns the
+ * order; the flags renumber on its next render.
  */
 export const clampMutationTime = (
   mutations: readonly Mutation[],
   id: string,
   time: number,
   domain?: TimeDomain,
+  passNeighbours = false,
 ): number => {
   const ordered = inTimeOrder(mutations);
-  const index = findIndex((mutation: Mutation) => mutation.id === id, ordered);
-  const current = index < 0 ? undefined : timeOf(ordered[index].at);
+  const found = findIndex((mutation: Mutation) => mutation.id === id, ordered);
+  // Passing neighbours is clamping as if the mutation had none.
+  const index = passNeighbours ? -1 : found;
+  const current = found < 0 ? undefined : timeOf(ordered[found].at);
   const previous = ordered[index - 1];
   const next = ordered[index + 1];
   const lows = [
@@ -2186,8 +2193,9 @@ export const dragTimeAt = (
   x: number,
   domain: TimeDomain,
   frame: Frame = DEFAULT_FRAME,
+  passNeighbours = false,
 ): number =>
-  clampMutationTime(mutations, id, timeAtX(domain, x, frame), domain);
+  clampMutationTime(mutations, id, timeAtX(domain, x, frame), domain, passNeighbours);
 
 /**
  * Where a flag's hover tooltip hangs: just under its box, so it never covers

@@ -2405,6 +2405,28 @@ describe("dragging a flag — the neighbour clamp", () => {
     ).toBe("2027-01-31");
   });
 
+  it("with passNeighbours, crosses its neighbours and stops only at the domain", () => {
+    expect(
+      isoDayOf(clampMutationTime(PINS, "a", day("2026-11-20"), DRAG_DOMAIN, true)),
+    ).toBe("2026-11-20");
+    expect(
+      isoDayOf(clampMutationTime(PINS, "b", day("2026-09-01"), DRAG_DOMAIN, true)),
+    ).toBe("2026-09-01");
+    expect(
+      isoDayOf(clampMutationTime(PINS, "a", day("2028-01-01"), DRAG_DOMAIN, true)),
+    ).toBe("2027-01-31");
+  });
+
+  it("with passNeighbours, a squeezed pin still moves", () => {
+    const squeezed: readonly Mutation[] = [
+      { id: "x", at: utc("2026-10-01"), label: "x" },
+      { id: "y", at: utc("2026-10-02"), label: "y" },
+    ];
+    expect(
+      isoDayOf(clampMutationTime(squeezed, "y", day("2026-09-20"), DRAG_DOMAIN, true)),
+    ).toBe("2026-09-20");
+  });
+
   it("snaps to the nearest UTC day", () => {
     const noonish = day("2026-10-01") + 13 * 3_600_000;
     expect(isoDayOf(snapToDay(noonish))).toBe("2026-10-02");

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`flagsPassNeighbours`** on `LevelsTimeline` and `StackedTimelineChart` (and `passNeighbours` on `MutationFlags`): a dragged flag may cross its neighbours and land on a neighbour's day; the drag and the arrow keys clamp to the domain only. The consumer owns the order, so the flags renumber on its next render. Default `false` keeps the neighbour clamp. `clampMutationTime` and `dragTimeAt` take it as a trailing `passNeighbours` argument.
+
 ## 0.238.0 — 2026-10-29
 
 ### Added

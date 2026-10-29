@@ -135,6 +135,12 @@ export interface LevelsTimelineProps {
    */
   onMoveMutation?: (id: string, at: TimeValue) => void;
   /**
+   * Let a dragged flag CROSS its neighbours (and land on a neighbour's day):
+   * the drag clamps to the domain only. The consumer owns the order, so the
+   * flags renumber on its next render. Default false: the neighbour clamp.
+   */
+  flagsPassNeighbours?: boolean;
+  /**
    * Formatter for a level's value in the hover readout. The chart never
    * invents a format — without this the raw number is shown, which is honest
    * but rarely what a consumer wants.
@@ -479,7 +485,14 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       press.id = id;
       setDraggingId(id);
     }
-    const at = dragTimeAt(props.mutations, id, x - press.grab, props.domain, frame());
+    const at = dragTimeAt(
+      props.mutations,
+      id,
+      x - press.grab,
+      props.domain,
+      frame(),
+      props.flagsPassNeighbours === true,
+    );
     press.lastAt = at;
     move(id, at);
   };
@@ -666,6 +679,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           flag.id,
           flag.at + step,
           props.domain,
+          props.flagsPassNeighbours === true,
         ),
       );
       return;
