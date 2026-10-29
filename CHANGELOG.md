@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.238.0 — 2026-10-29
+
 ### Added
 
 - **`ManualProjectionCardRail` and `ManualRailCard`** (unstable; Peter, 2026-10-28: "The left one is better. Though use the ellipses string displayer"). The Manual rail with each group as a card: the name on one line (`EllipsisText`, the full name in its tooltip when cut), the review note in warning ink, then the payment count at the left and the total at the right. Type `ManualRailCardItem` = `ManualRailItem` + `count`, `total`, optional `unmatched`. Showcase: "ManualProjectionCardRail".
