@@ -757,7 +757,6 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           Neither goes on a wrapper with role="img", which would make the
           canvas presentational and take the flags — real buttons when
           selection is wired — out of the accessibility tree with it. */}
-      {/* biome-ignore lint/a11y/noSvgWithoutTitle: named by aria-label; a <title> paints a native tooltip over the chart (owner, 2026-10-29). */}
       <svg
         class="sui-levels-timeline__canvas"
         viewBox={`0 0 ${frame().viewWidth} ${frame().viewHeight}`}
