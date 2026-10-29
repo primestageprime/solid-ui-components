@@ -85,6 +85,14 @@ export interface Mutation {
    * them the tooltip is the date alone.
    */
   readonly details?: readonly string[];
+  /**
+   * Where a drag may take THIS flag: `[earliest, latest]`, either end
+   * open (`undefined`). The drag and the arrow keys clamp to it as well as to
+   * the domain, so a consumer can keep the flag out of a state its own rules
+   * refuse — e.g. past the next change of the same entity. With
+   * `flagsPassNeighbours`, this is the only bound besides the domain.
+   */
+  readonly dragRange?: readonly [TimeValue | undefined, TimeValue | undefined];
 }
 
 export interface Point {
@@ -699,6 +707,9 @@ const placeFlag = (
 export interface CountPoint {
   readonly at: TimeValue;
   readonly count: number;
+  /** WHO holds the level from this point on (optional). The hover readout
+   *  lists them, cut short, in place of the bare count. */
+  readonly names?: readonly string[];
 }
 
 /** One level: a band in the stack, thickening and thinning over time. */
@@ -2150,16 +2161,25 @@ export const snapToDay = (time: number): number =>
  * empty — neighbours on consecutive days — the mutation stays where it is
  * rather than being forced onto a neighbour. An unknown id is returned as
  * the snapped time, unclamped by neighbours.
+ *
+ * `passNeighbours`: clamp to the domain only, so the mutation may cross its
+ * neighbours (and land on a neighbour's day). The consumer then owns the
+ * order; the flags renumber on its next render.
  */
 export const clampMutationTime = (
   mutations: readonly Mutation[],
   id: string,
   time: number,
   domain?: TimeDomain,
+  passNeighbours = false,
 ): number => {
   const ordered = inTimeOrder(mutations);
-  const index = findIndex((mutation: Mutation) => mutation.id === id, ordered);
-  const current = index < 0 ? undefined : timeOf(ordered[index].at);
+  const found = findIndex((mutation: Mutation) => mutation.id === id, ordered);
+  // Passing neighbours is clamping as if the mutation had none.
+  const index = passNeighbours ? -1 : found;
+  const self = found < 0 ? undefined : ordered[found];
+  const current = self === undefined ? undefined : timeOf(self.at);
+  const [rangeLow, rangeHigh] = self?.dragRange ?? [undefined, undefined];
   const previous = ordered[index - 1];
   const next = ordered[index + 1];
   const lows = [
@@ -2167,10 +2187,12 @@ export const clampMutationTime = (
       ? [timeOf(previous.at) + DAY_MS]
       : []),
     ...(domain === undefined ? [] : [timeOf(domain[0])]),
+    ...(rangeLow === undefined ? [] : [timeOf(rangeLow)]),
   ];
   const highs = [
     ...(index >= 0 && next !== undefined ? [timeOf(next.at) - DAY_MS] : []),
     ...(domain === undefined ? [] : [timeOf(domain[1])]),
+    ...(rangeHigh === undefined ? [] : [timeOf(rangeHigh)]),
   ];
   const low = lows.length === 0 ? Number.NEGATIVE_INFINITY : Math.max(...lows);
   const high =
@@ -2186,8 +2208,9 @@ export const dragTimeAt = (
   x: number,
   domain: TimeDomain,
   frame: Frame = DEFAULT_FRAME,
+  passNeighbours = false,
 ): number =>
-  clampMutationTime(mutations, id, timeAtX(domain, x, frame), domain);
+  clampMutationTime(mutations, id, timeAtX(domain, x, frame), domain, passNeighbours);
 
 /**
  * Where a flag's hover tooltip hangs: just under its box, so it never covers
@@ -2203,7 +2226,29 @@ export interface LevelRow {
   readonly label: string;
   readonly value: number;
   readonly count: number;
+  /** Who holds the level at that moment, when the consumer named them. */
+  readonly names?: readonly string[];
 }
+
+/** The longest names cell the readout draws before it cuts with "…". */
+export const READOUT_NAMES_MAX = 28;
+
+/** A readout row's right-hand cell: the names, cut to fit, else the count. */
+export const readoutCellOf = (row: LevelRow, max = READOUT_NAMES_MAX): string => {
+  if (row.names === undefined || row.names.length === 0) return String(row.count);
+  const all = row.names.join(", ");
+  return all.length <= max ? all : `${all.slice(0, max - 1).trimEnd()}…`;
+};
+
+/** The names a level's latest point at or before `time` states. */
+const namesAt = (level: Level, time: number): readonly string[] | undefined => {
+  let current: readonly string[] | undefined;
+  for (const point of sortBy((one: CountPoint) => timeOf(one.at), level.points)) {
+    if (timeOf(point.at) > time) break;
+    current = point.names;
+  }
+  return current;
+};
 
 /**
  * What every level held at one moment, highest value first, empties omitted.
@@ -2224,6 +2269,7 @@ export const levelsAt = (
       label: level.label,
       value: level.value,
       count: countAt(level, time),
+      ...(namesAt(level, time) === undefined ? {} : { names: namesAt(level, time) }),
     }),
     sortBy((level: Level) => -level.value, levels),
   );

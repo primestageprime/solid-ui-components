@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed
+
+- **`LevelsTimeline` paints no "Levels timeline" tooltip.** The canvas is named by `aria-label` instead of an SVG `<title>`, which browsers show as a native tooltip on every hover.
+
+### Added
+
+- **`flagsPassNeighbours`** on `LevelsTimeline` and `StackedTimelineChart` (and `passNeighbours` on `MutationFlags`): a dragged flag may cross its neighbours and land on a neighbour's day; the drag and the arrow keys clamp to the domain only. The consumer owns the order, so the flags renumber on its next render. Default `false` keeps the neighbour clamp. `clampMutationTime` and `dragTimeAt` take it as a trailing `passNeighbours` argument.
+- **`CountPoint.names`** (`LevelsTimeline`): who holds the level from that point on. The hover readout lists them (cut to `READOUT_NAMES_MAX` with "…") in place of the bare count. `readoutCellOf` is the pure rule.
+- **`onMoveMutationEnd`** on `LevelsTimeline` and `StackedTimelineChart` (and `MutationFlags`): called once when a flag's drag ends: on release, on `pointercancel` or `lostpointercapture`, or on Escape. A drag holds while the button is down, inside the chart or out of it (the time clamps to the domain). **Escape cancels a drag:** the flag is reported back at the day the press found it, then the drag ends. A mouse move with no button down counts as a missed release and ends the drag too.
+- **`Mutation.dragRange`**: an optional `[earliest, latest]` (either end open) a drag and the arrow keys clamp THIS flag to, inside the domain. Lets a consumer keep a flag out of a state its rules refuse, such as past the next change of the same entity.
+
 ## 0.238.0 — 2026-10-29
 
 ### Added

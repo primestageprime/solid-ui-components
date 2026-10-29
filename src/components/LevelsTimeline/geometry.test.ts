@@ -105,6 +105,7 @@ import {
   FLAG_MAX_DIGITS,
   FLAG_PAD_X,
   clampMutationTime,
+  readoutCellOf,
   datedAxisTicks,
   dragTimeAt,
   isoDayOf,
@@ -2405,6 +2406,40 @@ describe("dragging a flag — the neighbour clamp", () => {
     ).toBe("2027-01-31");
   });
 
+  it("with passNeighbours, crosses its neighbours and stops only at the domain", () => {
+    expect(
+      isoDayOf(clampMutationTime(PINS, "a", day("2026-11-20"), DRAG_DOMAIN, true)),
+    ).toBe("2026-11-20");
+    expect(
+      isoDayOf(clampMutationTime(PINS, "b", day("2026-09-01"), DRAG_DOMAIN, true)),
+    ).toBe("2026-09-01");
+    expect(
+      isoDayOf(clampMutationTime(PINS, "a", day("2028-01-01"), DRAG_DOMAIN, true)),
+    ).toBe("2027-01-31");
+  });
+
+  it("clamps to the flag's own dragRange, inside the domain", () => {
+    const ranged: readonly Mutation[] = [
+      { id: "a", at: utc("2026-09-01"), label: "a", dragRange: [utc("2026-08-20"), utc("2026-11-10")] },
+      { id: "b", at: utc("2026-10-15"), label: "b" },
+    ];
+    expect(isoDayOf(clampMutationTime(ranged, "a", day("2026-12-25"), DRAG_DOMAIN, true))).toBe("2026-11-10");
+    expect(isoDayOf(clampMutationTime(ranged, "a", day("2026-08-02"), DRAG_DOMAIN, true))).toBe("2026-08-20");
+    expect(isoDayOf(clampMutationTime(ranged, "a", day("2026-10-20"), DRAG_DOMAIN, true))).toBe("2026-10-20");
+    // Without passNeighbours the neighbour clamp still applies on top.
+    expect(isoDayOf(clampMutationTime(ranged, "a", day("2026-10-20"), DRAG_DOMAIN))).toBe("2026-10-14");
+  });
+
+  it("with passNeighbours, a squeezed pin still moves", () => {
+    const squeezed: readonly Mutation[] = [
+      { id: "x", at: utc("2026-10-01"), label: "x" },
+      { id: "y", at: utc("2026-10-02"), label: "y" },
+    ];
+    expect(
+      isoDayOf(clampMutationTime(squeezed, "y", day("2026-09-20"), DRAG_DOMAIN, true)),
+    ).toBe("2026-09-20");
+  });
+
   it("snaps to the nearest UTC day", () => {
     const noonish = day("2026-10-01") + 13 * 3_600_000;
     expect(isoDayOf(snapToDay(noonish))).toBe("2026-10-02");
@@ -2506,4 +2541,12 @@ describe("levelsValueFit — what a held value axis tracks", () => {
     expect(levelsValueFit(levels)).toEqual({ min: 80_000, max: 110_000 });
     expect(levelsValueFit([])).toBeNull();
   });
+});
+
+describe("readoutCellOf", () => {
+  const row = { levelId: "l", label: "l", value: 1, count: 2 } as const;
+  it("is the count without names", () => expect(readoutCellOf(row)).toBe("2"));
+  it("lists the names", () => expect(readoutCellOf({ ...row, names: ["Peter", "guy"] })).toBe("Peter, guy"));
+  it("cuts a long list with an ellipsis", () =>
+    expect(readoutCellOf({ ...row, names: ["Peter D Strading", "Michael A Arnold"] }, 20)).toBe("Peter D Strading, M…"));
 });

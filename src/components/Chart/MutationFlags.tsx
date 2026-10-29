@@ -10,7 +10,7 @@
 // a flag's id mid-drag keeps the drag). Styles live in Chart.css.
 //
 // Internal: composed by StackedTimelineChart, not exported from the barrel.
-import { type Component, Index, createMemo, createSignal } from "solid-js";
+import { type Component, Index, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { filter, findIndex, join, map } from "../../fn";
 
 const classNames = (names: readonly string[]): string =>
@@ -40,6 +40,11 @@ export interface MutationFlagsProps {
 	selectedMutationId?: string;
 	onSelectMutation?: (id: string) => void;
 	onMoveMutation?: (id: string, at: TimeValue) => void;
+	/** Let a dragged flag cross its neighbours: clamp to the domain only. */
+	passNeighbours?: boolean;
+	/** Called once when a drag ends: on release, on a cancel or a lost
+	 *  pointer capture, or on Escape. Leaving the chart does not end it. */
+	onMoveMutationEnd?: () => void;
 }
 
 interface PlacedFlag {
@@ -93,6 +98,10 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 				readonly startX: number;
 				readonly grab: number;
 				readonly svgLeft: number;
+				/** Where the flag stood at the press: Escape puts it back there. */
+				readonly startAt: number;
+				/** The flag holding the pointer capture. */
+				readonly target: Element;
 				moved: boolean;
 		  }
 		| undefined;
@@ -138,6 +147,8 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 			startX: x,
 			grab: x - flag.x,
 			svgLeft,
+			startAt: flag.at,
+			target: event.currentTarget as Element,
 			moved: false,
 		};
 		swallowClick = false;
@@ -151,24 +162,59 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 			press.moved = true;
 			setDraggingId(press.id);
 		}
+		// THE DRAG HOLDS WHILE THE BUTTON IS DOWN, inside the chart or out of
+		// it: pointer capture keeps the moves coming, and the time clamps to the
+		// domain. Only a release, a cancel, a lost capture or Escape ends it.
+		// A MOVE WITH NO BUTTON DOWN IS A MISSED RELEASE: the drag ends here.
+		if (event.buttons === 0 && event.pointerType === "mouse") {
+			endPress();
+			return;
+		}
 		const id = pressedId();
 		if (id === undefined) return;
 		const raw = ctx.xScale().invert(x - press.grab);
-		report(id, clampMutationTime(props.mutations, id, raw, domain()));
+		report(id, clampMutationTime(props.mutations, id, raw, domain(), props.passNeighbours === true));
 	};
 
 	const onPointerEnd = (event: PointerEvent): void => {
 		if (press === undefined || press.pointerId !== event.pointerId) return;
+		endPress();
+	};
+
+	/** End the press: release the capture, and tell the consumer a drag ended. */
+	const endPress = (): void => {
+		if (press === undefined) return;
+		const { moved: wasDrag, target, pointerId } = press;
 		if (press.moved) {
 			swallowClick = true;
 			setTimeout(() => {
 				swallowClick = false;
 			}, 0);
 		}
-		(event.currentTarget as Element).releasePointerCapture?.(event.pointerId);
+		// Cleared FIRST: the release fires `lostpointercapture`, which lands here
+		// again and must find nothing to end.
 		press = undefined;
+		if (target.hasPointerCapture?.(pointerId)) target.releasePointerCapture(pointerId);
 		setDraggingId(undefined);
+		if (wasDrag) props.onMoveMutationEnd?.();
 	};
+
+	// ESCAPE CANCELS A DRAG: the flag goes back to where the press found it,
+	// and the drag ends.
+	const onDragKeyDown = (event: KeyboardEvent): void => {
+		if (event.key !== "Escape" || press === undefined || !press.moved) return;
+		event.preventDefault();
+		event.stopPropagation();
+		const id = pressedId();
+		// Straight to the consumer, past `report`'s dedupe: whatever the props
+		// show, the consumer last heard `lastAt`, so it must hear the start.
+		if (id !== undefined && press.lastAt !== undefined && press.lastAt !== press.startAt) {
+			props.onMoveMutation?.(id, press.startAt);
+		}
+		endPress();
+	};
+	onMount(() => document.addEventListener("keydown", onDragKeyDown, true));
+	onCleanup(() => document.removeEventListener("keydown", onDragKeyDown, true));
 
 	const onClick = (event: MouseEvent, flag: PlacedFlag): void => {
 		// A flag click is not a pick on the plot underneath.
@@ -186,7 +232,13 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 			const step = event.key === "ArrowLeft" ? -DAY_MS : DAY_MS;
 			report(
 				flag.id,
-				clampMutationTime(props.mutations, flag.id, flag.at + step, domain()),
+				clampMutationTime(
+					props.mutations,
+					flag.id,
+					flag.at + step,
+					domain(),
+					props.passNeighbours === true,
+				),
 			);
 			return;
 		}
@@ -227,6 +279,7 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 						onPointerMove={onPointerMove}
 						onPointerUp={onPointerEnd}
 						onPointerCancel={onPointerEnd}
+						onLostPointerCapture={onPointerEnd}
 					>
 						<line
 							class="sui-chart__mutation-rule"

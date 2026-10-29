@@ -701,3 +701,95 @@ describe("StackedTimelineChart drag keeps a re-keyed flag (G22)", () => {
 		expect(moves[1]).toBeLessThan(moves[2]);
 	});
 });
+
+describe("StackedTimelineChart drag holds until release, and Escape cancels it", () => {
+	it("keeps moving outside the chart, and ends once on release", () => {
+		const restore = installRects((el) =>
+			el.tagName.toLowerCase() === "svg" || el.tagName.toLowerCase() === "div"
+				? rectOf({ left: 0, top: 0, width: 800, height: 300 })
+				: null,
+		);
+		const moves: number[] = [];
+		let ends = 0;
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				mutations={[{ id: "a", at: Date.UTC(2025, 5, 2), label: "Raise" }]}
+				onMoveMutation={(_id, at) => moves.push(Number(at))}
+				onMoveMutationEnd={() => {
+					ends += 1;
+				}}
+			/>
+		));
+		const flag = container.querySelector<SVGGElement>(".sui-chart__mutation")!;
+		const x0 = Number(flag.querySelector("line")!.getAttribute("x1"));
+		const left = 36;
+		fireEvent.pointerDown(flag, { pointerId: 1, button: 0, clientX: x0 + left, clientY: 100 });
+		fireEvent.pointerMove(flag, { pointerId: 1, clientX: x0 + left + 30, clientY: 100 });
+		expect(moves.length).toBe(1);
+		fireEvent.pointerMove(flag, { pointerId: 1, clientX: x0 + left + 60, clientY: 500 });
+		expect(ends).toBe(0);
+		expect(moves.length).toBe(2);
+		fireEvent.pointerUp(flag, { pointerId: 1, clientX: x0 + left + 60, clientY: 500 });
+		fireEvent.pointerMove(flag, { pointerId: 1, clientX: x0 + left + 90, clientY: 100 });
+		restore();
+		expect(ends).toBe(1);
+		expect(moves.length).toBe(2);
+	});
+
+	// Owner, 2026-10-29: "if I let go of mouse and I'm outside the drag area, it SHOULD end dragging state".
+	it("a mouse move with no button down is a missed release: the drag ends", () => {
+		const moves: number[] = [];
+		let ends = 0;
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				mutations={[{ id: "a", at: Date.UTC(2025, 5, 2), label: "Raise" }]}
+				onMoveMutation={(_id, t) => moves.push(Number(t))}
+				onMoveMutationEnd={() => {
+					ends += 1;
+				}}
+			/>
+		));
+		const flag = container.querySelector<SVGGElement>(".sui-chart__mutation")!;
+		const x0 = Number(flag.querySelector("line")!.getAttribute("x1"));
+		fireEvent.pointerDown(flag, { pointerId: 1, button: 0, pointerType: "mouse", clientX: x0, clientY: 100 });
+		fireEvent.pointerMove(flag, { pointerId: 1, buttons: 1, pointerType: "mouse", clientX: x0 + 30, clientY: 100 });
+		expect(moves.length).toBe(1);
+		fireEvent.pointerMove(flag, { pointerId: 1, buttons: 0, pointerType: "mouse", clientX: x0 + 60, clientY: 900 });
+		expect(ends).toBe(1);
+		expect(moves.length).toBe(1);
+	});
+
+	it("Escape reports the flag back at its start, then ends the drag", () => {
+		const at = Date.UTC(2025, 5, 2);
+		const moves: number[] = [];
+		let ends = 0;
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				mutations={[{ id: "a", at, label: "Raise" }]}
+				onMoveMutation={(_id, t) => moves.push(Number(t))}
+				onMoveMutationEnd={() => {
+					ends += 1;
+				}}
+			/>
+		));
+		const flag = container.querySelector<SVGGElement>(".sui-chart__mutation")!;
+		const x0 = Number(flag.querySelector("line")!.getAttribute("x1"));
+		fireEvent.pointerDown(flag, { pointerId: 1, button: 0, clientX: x0, clientY: 100 });
+		fireEvent.pointerMove(flag, { pointerId: 1, clientX: x0 + 30, clientY: 100 });
+		fireEvent.keyDown(document, { key: "Escape" });
+		expect(moves.at(-1)).toBe(at);
+		expect(ends).toBe(1);
+		fireEvent.pointerMove(flag, { pointerId: 1, clientX: x0 + 60, clientY: 100 });
+		expect(ends).toBe(1);
+		expect(moves.at(-1)).toBe(at);
+	});
+});

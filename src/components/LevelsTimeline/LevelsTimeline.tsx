@@ -78,6 +78,7 @@ import {
   type Transfer,
   clampMutationTime,
   dragTimeAt,
+  readoutCellOf,
   rekeyPressedMutation,
   type PickStrategy,
   hoverAt,
@@ -135,6 +136,19 @@ export interface LevelsTimelineProps {
    */
   onMoveMutation?: (id: string, at: TimeValue) => void;
   /**
+   * Let a dragged flag CROSS its neighbours (and land on a neighbour's day):
+   * the drag clamps to the domain only. The consumer owns the order, so the
+   * flags renumber on its next render. Default false: the neighbour clamp.
+   */
+  flagsPassNeighbours?: boolean;
+  /**
+   * Called once when a flag's drag ENDS: on release, on a cancel or a lost
+   * pointer capture, or on Escape (the flag is first reported back at its
+   * start). Leaving the chart does not end a drag while the button is down.
+   * A consumer that previews a drag commits on this.
+   */
+  onMoveMutationEnd?: () => void;
+  /**
    * Formatter for a level's value in the hover readout. The chart never
    * invents a format — without this the raw number is shown, which is honest
    * but rarely what a consumer wants.
@@ -165,8 +179,10 @@ export interface LevelsTimelineProps {
 const EMPTY_TRANSFERS: readonly Transfer[] = [];
 
 /**
- * The graphic's NAME, and it has to stay short: browsers paint an SVG
- * `<title>` as a native tooltip. Anything longer belongs in `<desc>`.
+ * The graphic's NAME, for assistive technology. It is an `aria-label`, NOT a
+ * `<title>`: browsers paint an SVG `<title>` as a native tooltip, and a
+ * "Levels timeline" box over the chart on every hover told the reader nothing
+ * (Adlai, 2026-10-29: "remove the levels timeline hover text").
  */
 const SVG_TITLE = "Levels timeline";
 
@@ -432,6 +448,10 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         readonly pointerId: number;
         readonly startX: number;
         readonly grab: number;
+        /** Where the flag stood at the press: Escape puts it back there. */
+        readonly startAt: number;
+        /** The flag holding the pointer capture. */
+        readonly target: Element;
         moved: boolean;
       }
     | undefined;
@@ -456,6 +476,8 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       pointerId: event.pointerId,
       startX: x,
       grab: x - flag.x,
+      startAt: flag.at,
+      target: event.currentTarget as Element,
       moved: false,
     };
     swallowClick = false;
@@ -463,6 +485,16 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
 
   const onFlagPointerMove = (event: PointerEvent): void => {
     if (press === undefined || press.pointerId !== event.pointerId) return;
+    // THE DRAG HOLDS WHILE THE BUTTON IS DOWN (owner, 2026-10-29), inside the
+    // chart or out of it: pointer capture keeps the moves coming, and the time
+    // clamps to the domain. Only a release, a cancel, a lost capture or Escape
+    // ends it.
+    // A MOVE WITH NO BUTTON DOWN IS A MISSED RELEASE (the button came up
+    // somewhere no `pointerup` reached): the drag ends here.
+    if (event.buttons === 0 && event.pointerType === "mouse") {
+      endPress();
+      return;
+    }
     const x = pointerX(event);
     if (x === undefined) return;
     if (!press.moved) {
@@ -479,13 +511,27 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       press.id = id;
       setDraggingId(id);
     }
-    const at = dragTimeAt(props.mutations, id, x - press.grab, props.domain, frame());
+    const at = dragTimeAt(
+      props.mutations,
+      id,
+      x - press.grab,
+      props.domain,
+      frame(),
+      props.flagsPassNeighbours === true,
+    );
     press.lastAt = at;
     move(id, at);
   };
 
   const onFlagPointerEnd = (event: PointerEvent): void => {
     if (press === undefined || press.pointerId !== event.pointerId) return;
+    endPress();
+  };
+
+  /** End the press: release the capture, and tell the consumer a drag ended. */
+  const endPress = (): void => {
+    if (press === undefined) return;
+    const { moved: wasDrag, target, pointerId } = press;
     if (press.moved) {
       // The click a drag's pointerup produces arrives in this same task. Clear
       // the flag on the NEXT one, so a click the browser sends elsewhere (or
@@ -495,10 +541,31 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
         swallowClick = false;
       }, 0);
     }
-    (event.currentTarget as Element).releasePointerCapture?.(event.pointerId);
+    // Cleared FIRST: the release fires `lostpointercapture`, which lands here
+    // again and must find nothing to end.
     press = undefined;
+    if (target.hasPointerCapture?.(pointerId)) target.releasePointerCapture(pointerId);
     setDraggingId(undefined);
+    if (wasDrag) props.onMoveMutationEnd?.();
   };
+
+  // ESCAPE CANCELS A DRAG: the flag goes back to where the press found it, and
+  // the drag ends. A consumer that previews sees a move back to the start, so
+  // it has nothing to commit.
+  const onDragKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== "Escape" || press === undefined || !press.moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const id = rekeyPressedMutation(props.mutations, press);
+    // Straight to the consumer, past `move`'s dedupe: whatever the props show,
+    // the consumer last heard `lastAt`, so it must hear the start.
+    if (id !== undefined && press.lastAt !== undefined && press.lastAt !== press.startAt) {
+      props.onMoveMutation?.(id, press.startAt);
+    }
+    endPress();
+  };
+  onMount(() => document.addEventListener("keydown", onDragKeyDown, true));
+  onCleanup(() => document.removeEventListener("keydown", onDragKeyDown, true));
 
   const onFlagClick = (flag: Flag): void => {
     if (swallowClick) {
@@ -666,6 +733,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
           flag.id,
           flag.at + step,
           props.domain,
+          props.flagsPassNeighbours === true,
         ),
       );
       return;
@@ -682,24 +750,18 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       data-selected-mutation={props.selectedMutationId}
       data-dragging-mutation={draggingId()}
     >
-      {/* The <title> is the graphic's NAME and must stay short: a browser
-          paints it as a NATIVE tooltip on hover, and the whole announcement
-          was appearing as a paragraph-long OS tooltip over the chart. The
-          announcement lives in <desc> instead — the SVG element for exactly
-          this, read by assistive technology and never painted.
+      {/* The graphic's NAME is an aria-label, not a <title>: a browser paints
+          a <title> as a NATIVE tooltip on every hover. The announcement lives
+          in <desc> — read by assistive technology and never painted.
 
           Neither goes on a wrapper with role="img", which would make the
           canvas presentational and take the flags — real buttons when
-          selection is wired — out of the accessibility tree with it.
-
-          NOTE: <title> must be the FIRST child of <svg>. A JSX comment here
-          counts as a child and biome's noSvgWithoutTitle stops seeing it,
-          which is why this comment sits outside the element. */}
+          selection is wired — out of the accessibility tree with it. */}
       <svg
         class="sui-levels-timeline__canvas"
         viewBox={`0 0 ${frame().viewWidth} ${frame().viewHeight}`}
+        aria-label={SVG_TITLE}
       >
-        <title>{SVG_TITLE}</title>
         <desc>{description()}</desc>
         {/* One opacity gradient per OPEN-ended flow — nothing else needs one
             now that the chart is a single colour. The ids are per-INSTANCE
@@ -939,7 +1001,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                             PANEL_HEADER_HEIGHT + index() * PANEL_ROW_HEIGHT + 7
                           }
                         >
-                          {row.count}
+                          {readoutCellOf(row)}
                         </text>
                       </>
                     )}
@@ -979,6 +1041,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
               onPointerMove={onFlagPointerMove}
               onPointerUp={onFlagPointerEnd}
               onPointerCancel={onFlagPointerEnd}
+              onLostPointerCapture={onFlagPointerEnd}
             >
               <rect
                 class="sui-levels-timeline__flag-box"

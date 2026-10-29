@@ -74,6 +74,13 @@ const renderRails = () =>
   ));
 
 describe("LevelsTimeline — rails", () => {
+  it("names the canvas by aria-label and paints no native tooltip (no <title>)", () => {
+    const { container } = renderRails();
+    const svg = container.querySelector("svg.sui-levels-timeline__canvas");
+    expect(svg?.getAttribute("aria-label")).toBe("Levels timeline");
+    expect(svg?.querySelector(":scope > title")).toBeNull();
+  });
+
   it("announces what each level holds and what moved where", () => {
     const { container } = renderRails();
     const label = container.querySelector("desc")?.textContent ?? "";
@@ -1578,6 +1585,28 @@ describe("LevelsTimeline — numbered, hoverable, draggable flags", () => {
     expect(onSelect).not.toHaveBeenCalled();
     // Still numbered 1: the clamp keeps time order.
     expect(numbersOf(container)).toEqual(["1", "2", "3"]);
+  });
+
+  // Owner, 2026-10-29: the drag holds while the button is down, in the chart or
+  // out of it; Escape puts the flag back and ends the drag.
+  it("holds a drag outside the chart, and Escape puts the flag back", () => {
+    const { container, moves } = renderDraggable();
+    withSvgBox(() => {
+      const flag = flagOf(container, "a");
+      const x = Number(container.querySelector('[data-mutation-id="a"] text')?.getAttribute("x"));
+      fireEvent.pointerDown(flag, { button: 0, pointerId: 1, clientX: x });
+      fireEvent.pointerMove(flag, { pointerId: 1, clientX: x - 40, clientY: 5_000 });
+      expect(
+        container.querySelector(".sui-levels-timeline")?.getAttribute("data-dragging-mutation"),
+      ).toBe("a");
+      fireEvent.keyDown(document, { key: "Escape" });
+      expect(
+        container.querySelector(".sui-levels-timeline")?.getAttribute("data-dragging-mutation"),
+      ).toBeNull();
+      fireEvent.pointerMove(flag, { pointerId: 1, clientX: x - 80 });
+    });
+    expect(moves).toHaveLength(2);
+    expect(moves[1]).toBe("a@2025-09-01");
   });
 
   it("treats a press that barely moves as a click, which selects", () => {
