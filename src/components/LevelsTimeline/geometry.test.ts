@@ -105,6 +105,7 @@ import {
   FLAG_MAX_DIGITS,
   FLAG_PAD_X,
   clampMutationTime,
+  readoutCellOf,
   datedAxisTicks,
   dragTimeAt,
   isoDayOf,
@@ -2540,4 +2541,12 @@ describe("levelsValueFit — what a held value axis tracks", () => {
     expect(levelsValueFit(levels)).toEqual({ min: 80_000, max: 110_000 });
     expect(levelsValueFit([])).toBeNull();
   });
+});
+
+describe("readoutCellOf", () => {
+  const row = { levelId: "l", label: "l", value: 1, count: 2 } as const;
+  it("is the count without names", () => expect(readoutCellOf(row)).toBe("2"));
+  it("lists the names", () => expect(readoutCellOf({ ...row, names: ["Peter", "guy"] })).toBe("Peter, guy"));
+  it("cuts a long list with an ellipsis", () =>
+    expect(readoutCellOf({ ...row, names: ["Peter D Strading", "Michael A Arnold"] }, 20)).toBe("Peter D Strading, M…"));
 });

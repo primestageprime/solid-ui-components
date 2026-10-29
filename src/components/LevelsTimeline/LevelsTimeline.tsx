@@ -78,6 +78,7 @@ import {
   type Transfer,
   clampMutationTime,
   dragTimeAt,
+  readoutCellOf,
   rekeyPressedMutation,
   type PickStrategy,
   hoverAt,
@@ -976,7 +977,7 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
                             PANEL_HEADER_HEIGHT + index() * PANEL_ROW_HEIGHT + 7
                           }
                         >
-                          {row.count}
+                          {readoutCellOf(row)}
                         </text>
                       </>
                     )}

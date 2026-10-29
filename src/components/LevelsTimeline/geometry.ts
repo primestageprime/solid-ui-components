@@ -707,6 +707,9 @@ const placeFlag = (
 export interface CountPoint {
   readonly at: TimeValue;
   readonly count: number;
+  /** WHO holds the level from this point on (optional). The hover readout
+   *  lists them, cut short, in place of the bare count. */
+  readonly names?: readonly string[];
 }
 
 /** One level: a band in the stack, thickening and thinning over time. */
@@ -2223,7 +2226,29 @@ export interface LevelRow {
   readonly label: string;
   readonly value: number;
   readonly count: number;
+  /** Who holds the level at that moment, when the consumer named them. */
+  readonly names?: readonly string[];
 }
+
+/** The longest names cell the readout draws before it cuts with "…". */
+export const READOUT_NAMES_MAX = 28;
+
+/** A readout row's right-hand cell: the names, cut to fit, else the count. */
+export const readoutCellOf = (row: LevelRow, max = READOUT_NAMES_MAX): string => {
+  if (row.names === undefined || row.names.length === 0) return String(row.count);
+  const all = row.names.join(", ");
+  return all.length <= max ? all : `${all.slice(0, max - 1).trimEnd()}…`;
+};
+
+/** The names a level's latest point at or before `time` states. */
+const namesAt = (level: Level, time: number): readonly string[] | undefined => {
+  let current: readonly string[] | undefined;
+  for (const point of sortBy((one: CountPoint) => timeOf(one.at), level.points)) {
+    if (timeOf(point.at) > time) break;
+    current = point.names;
+  }
+  return current;
+};
 
 /**
  * What every level held at one moment, highest value first, empties omitted.
@@ -2244,6 +2269,7 @@ export const levelsAt = (
       label: level.label,
       value: level.value,
       count: countAt(level, time),
+      ...(namesAt(level, time) === undefined ? {} : { names: namesAt(level, time) }),
     }),
     sortBy((level: Level) => -level.value, levels),
   );
