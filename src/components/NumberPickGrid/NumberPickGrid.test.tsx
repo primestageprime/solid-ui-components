@@ -49,4 +49,14 @@ describe("NumberPickGrid", () => {
       container.querySelector(".sui-number-pick-grid--cols-5"),
     ).not.toBeNull();
   });
+  it("muteBelow greys earlier cells, keeps them pickable and labels them", () => {
+    const onPick = vi.fn();
+    const { getAllByRole } = render(() => <NumberPickGrid from={1} to={6} value={4} muteBelow={3} onPick={onPick} />);
+    const cells = getAllByRole("button");
+    expect(cells[0].className).toContain("--muted");
+    expect(cells[2].className).not.toContain("--muted");
+    expect(cells[1].getAttribute("aria-label")).toBe("2, before your furthest point");
+    fireEvent.click(cells[0]);
+    expect(onPick).toHaveBeenCalledWith(1);
+  });
 });

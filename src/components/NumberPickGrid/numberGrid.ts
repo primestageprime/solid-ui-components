@@ -8,6 +8,8 @@ export interface NumberGridMarks {
   value?: number;
   /** A number to call out without picking it (e.g. the last saved one): dashed outline. */
   marker?: number;
+  /** Numbers below this render muted (still pickable). */
+  muteBelow?: number;
   /** End of the highlighted run: the run is value+1 … target, tinted, and target gets a heavy outline. */
   target?: number;
 }
@@ -18,6 +20,8 @@ export interface NumberGridCell {
   marked: boolean;
   /** Inside value+1 … target (or from … target when nothing is picked). */
   inRun: boolean;
+  /** Below `muteBelow`. */
+  muted: boolean;
   isTarget: boolean;
 }
 
@@ -35,6 +39,7 @@ export function numberGridCells(
       picked: n === marks.value,
       marked: n === marks.marker,
       inRun: marks.target !== undefined && n >= start && n <= marks.target,
+      muted: marks.muteBelow !== undefined && n < marks.muteBelow,
       isTarget: n === marks.target,
     });
   }

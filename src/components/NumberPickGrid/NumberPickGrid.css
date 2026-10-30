@@ -34,6 +34,13 @@
   outline-offset: 1px;
 }
 
+/* Below `muteBelow`: still pickable, visibly behind the reader. Declared
+   before --run / --target / --picked so those win where they overlap. */
+.sui-number-pick-grid__cell--muted {
+  color: var(--sui-text-muted);
+  background: var(--sui-bg-secondary);
+}
+
 .sui-number-pick-grid__cell--run {
   background: rgba(var(--sui-accent-rgb), 0.14);
   border-color: var(--sui-accent);

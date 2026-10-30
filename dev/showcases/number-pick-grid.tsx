@@ -23,6 +23,7 @@ export const NumberPickGridShowcase: Component = () => {
             value={value()}
             target={14}
             marker={saved}
+            muteBelow={saved}
             onPick={setValue}
             label="Tap the last chapter you finished"
             cellLabel={(n) =>

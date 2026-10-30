@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`NumberPickGrid` `muteBelow`** — numbers below it render muted (grey), stay pickable, and get ", before your furthest point" in their label. Additive: omit it and nothing changes.
+
 ## 0.247.0 — 2026-10-30
 
 ### Added

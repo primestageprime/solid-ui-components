@@ -31,6 +31,12 @@ export interface NumberPickGridProps {
   readonly target?: number;
   /** One more number to call out, dashed, without picking it. */
   readonly marker?: number;
+  /**
+   * Numbers below this one render muted (grey) but stay pickable, and their
+   * label gains ", before your furthest point": e.g. chapters below a
+   * reader's high-water mark. Omit for no muting.
+   */
+  readonly muteBelow?: number;
   readonly onPick?: (n: number) => void;
   /** Accessible name of the group. Default "Pick a number". */
   readonly label?: string;
@@ -52,6 +58,7 @@ export const NumberPickGrid: Component<
       value: props.value,
       target: props.target,
       marker: props.marker,
+      muteBelow: props.muteBelow,
     });
   const [focusIndex, setFocusIndex] = createSignal<number | null>(null);
   const tabIndexOf = () => {
@@ -71,8 +78,8 @@ export const NumberPickGrid: Component<
     e.preventDefault();
     focusCell(next);
   };
-  const describe = (n: number, isTarget: boolean) =>
-    props.cellLabel?.(n) ?? `${n}${isTarget ? ", end of run" : ""}`;
+  const describe = (n: number, isTarget: boolean, muted: boolean) =>
+    `${props.cellLabel?.(n) ?? `${n}${isTarget ? ", end of run" : ""}`}${muted ? ", before your furthest point" : ""}`;
   return (
     // biome-ignore lint/a11y/useSemanticElements: a fieldset would add a legend and form semantics to a grid of picks; a labelled group is the WAI-ARIA shape here
     <div
@@ -91,10 +98,11 @@ export const NumberPickGrid: Component<
               "sui-number-pick-grid__cell--marked": c.marked,
               "sui-number-pick-grid__cell--run": c.inRun,
               "sui-number-pick-grid__cell--target": c.isTarget,
+              "sui-number-pick-grid__cell--muted": c.muted,
             }}
             tabindex={i() === tabIndexOf() ? 0 : -1}
             aria-pressed={c.picked}
-            aria-label={describe(c.n, c.isTarget)}
+            aria-label={describe(c.n, c.isTarget, c.muted)}
             onClick={() => {
               setFocusIndex(i());
               props.onPick?.(c.n);

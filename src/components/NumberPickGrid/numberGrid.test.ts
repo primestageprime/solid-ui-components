@@ -33,3 +33,10 @@ describe("gridMove", () => {
     expect(gridMove(0, "Enter", 25, 10)).toBeNull();
   });
 });
+
+describe("numberGridCells muteBelow", () => {
+  it("mutes numbers below the threshold and nothing when omitted", () => {
+    expect(numberGridCells(1, 5, { muteBelow: 3 }).filter((c) => c.muted).map((c) => c.n)).toEqual([1, 2]);
+    expect(numberGridCells(1, 5).some((c) => c.muted)).toBe(false);
+  });
+});
