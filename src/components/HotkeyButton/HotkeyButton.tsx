@@ -236,7 +236,7 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
   });
 
   const classes = () =>
-    ["sui-hotkey-btn", local.class].filter(Boolean).join(" ");
+    local.class ? `sui-hotkey-btn ${local.class}` : "sui-hotkey-btn";
 
   const button = (
     <Button

@@ -56,6 +56,11 @@
   animation: sui-btn-reason-show 250ms ease-out;
 }
 
+/* Hidden until ButtonReason has measured and placed it. */
+.sui-btn-reason__content:not([data-placed]) {
+  visibility: hidden;
+}
+
 @keyframes sui-btn-reason-show {
   from {
     opacity: 0;

@@ -38,7 +38,16 @@ import { SmallTruthIndicator, LargeTruthIndicator } from "../../src/components/T
 import { MdStatusLight } from "../../src/components/StatusLight";
 import { TruthToggle } from "../../src/components/Toggle";
 import { Kbd } from "../../src/components/Kbd";
-import { HotkeyButton } from "../../src/components/HotkeyButton";
+import {
+  HotkeyButton,
+  HotkeyDangerButton,
+  HotkeyDefaultButton,
+  HotkeyGhostButton,
+  HotkeyPrimaryButton,
+  HotkeySecondaryButton,
+  HotkeySmallButton,
+  HotkeySmallPrimaryButton,
+} from "../../src/components/HotkeyButton";
 import { CodeBlock } from "../../src/components/CodeBlock";
 import { InlineText } from "../../src/components/InlineText";
 import { ParticipantNameLabel } from "../../src/components/ParticipantNameLabel";
@@ -278,6 +287,15 @@ export const VariantCoverageShowcase: Component = () => {
           <HotkeyButton hotkey="s" onTrigger={noop}>
             HotkeyButton
           </HotkeyButton>
+          <HotkeyPrimaryButton hotkeys={["1"]} onClick={noop}>HotkeyPrimaryButton</HotkeyPrimaryButton>
+          <HotkeySecondaryButton hotkeys={["2"]} onClick={noop}>HotkeySecondaryButton</HotkeySecondaryButton>
+          <HotkeyDefaultButton hotkeys={["3"]} onClick={noop}>HotkeyDefaultButton</HotkeyDefaultButton>
+          <HotkeyDangerButton hotkeys={["4"]} onClick={noop}>HotkeyDangerButton</HotkeyDangerButton>
+          <HotkeyGhostButton hotkeys={["5"]} onClick={noop}>HotkeyGhostButton</HotkeyGhostButton>
+          <HotkeySmallPrimaryButton hotkeys={["6"]} onClick={noop}>HotkeySmallPrimaryButton</HotkeySmallPrimaryButton>
+          <HotkeySmallButton hotkeys={["7"]} disabled disabledReason="Finish the step first">
+            HotkeySmallButton
+          </HotkeySmallButton>
           <InlineText color="var(--sui-accent)">InlineText</InlineText>
         </ClusterRow>
         <CodeBlock>{"const AddFab = createFab({ icon: \"plus\" });"}</CodeBlock>

@@ -1,6 +1,11 @@
 // ============================================
-// ButtonReason — the `disabledReason` popover of a SUI Button.
-// Owns no CSS file of its own (styles in Button.css). No component imports.
+// ButtonReason — Atomic (Depth 1)
+// Tags: shows:tooltip, shows:text, does:hover, data:text, role:overlay
+// The `disabledReason` popover of a HotkeyButton. No CSS file of its own
+// (styles in HotkeyButton.css). No component imports. Internal: not exported.
+//
+// The box is placed by writing `top` / `left` on it from `measure`, as a
+// positioning library does, not by an inline `style` prop.
 //
 // WHY NOT `Tooltip`: Tooltip is Kobalte, and every SUI button would then ship
 // Kobalte and floating-ui to every consumer (ADR 0005, bundle budget
@@ -12,7 +17,6 @@
 import {
 	type Component,
 	createEffect,
-	createSignal,
 	createUniqueId,
 	type JSX,
 	onCleanup,
@@ -34,34 +38,25 @@ interface ButtonReasonProps {
 	children: JSX.Element;
 }
 
-interface Place {
-	top: number;
-	left: number;
-}
 
 export const ButtonReason: Component<ButtonReasonProps> = (props) => {
 	const id = createUniqueId();
 	let trigger: HTMLSpanElement | undefined;
 	let box: HTMLDivElement | undefined;
-	const [place, setPlace] = createSignal<Place | null>(null);
 
 	const measure = () => {
-		if (!trigger) return;
+		if (!trigger || !box) return;
 		const t = trigger.getBoundingClientRect();
-		const width = box?.offsetWidth ?? 0;
+		const width = box.offsetWidth;
 		const centred = t.left + t.width / 2 - width / 2;
 		const max = window.innerWidth - width - EDGE;
-		setPlace({
-			top: t.bottom + GUTTER,
-			left: Math.max(EDGE, Math.min(centred, max)),
-		});
+		box.style.top = `${t.bottom + GUTTER}px`;
+		box.style.left = `${Math.max(EDGE, Math.min(centred, max))}px`;
+		box.dataset.placed = "";
 	};
 
 	createEffect(() => {
-		if (!props.open) {
-			setPlace(null);
-			return;
-		}
+		if (!props.open) return;
 		// Measure once the box has its width, then on every scroll and resize
 		// while it is open, as the span can move under a fixed box.
 		queueMicrotask(measure);
@@ -89,11 +84,6 @@ export const ButtonReason: Component<ButtonReasonProps> = (props) => {
 						id={id}
 						role="tooltip"
 						class="sui-btn-reason__content"
-						style={{
-							top: `${place()?.top ?? 0}px`,
-							left: `${place()?.left ?? 0}px`,
-							visibility: place() ? "visible" : "hidden",
-						}}
 					>
 						{props.reason}
 					</div>
