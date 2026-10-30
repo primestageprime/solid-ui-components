@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.239.0 — 2026-10-30
+
 ### Changed
 
 - **`LevelsTimeline` paints no "Levels timeline" tooltip.** The canvas is named by `aria-label` instead of an SVG `<title>`, which browsers show as a native tooltip on every hover.
