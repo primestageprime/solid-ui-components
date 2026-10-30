@@ -6934,6 +6934,36 @@
     "line": 175
   },
   {
+    "name": "createMonthDayGrid",
+    "depth": 1,
+    "kind": "factory",
+    "family": "MonthDayGrid",
+    "tags": [
+      "shows:calendar",
+      "shows:grid",
+      "shows:count",
+      "does:multi-select",
+      "does:toggle",
+      "does:hotkey",
+      "data:schedule",
+      "role:control"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "MonthDayGridDataProps",
+    "summary": "Primitive (Depth 1, owns `MonthDayGrid.css`). Factory behind `MonthDayGrid`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/month-day-grid",
+    "since": null,
+    "file": "src/components/MonthDayGrid/MonthDayGrid.tsx",
+    "line": 189
+  },
+  {
     "name": "createMonthOfYearPicker",
     "depth": 1,
     "kind": "factory",
@@ -16903,6 +16933,39 @@
     "line": 84
   },
   {
+    "name": "MondayMonthDayGrid",
+    "depth": 1,
+    "kind": "variant",
+    "family": "MonthDayGrid",
+    "tags": [
+      "shows:calendar",
+      "shows:grid",
+      "shows:count",
+      "does:multi-select",
+      "does:toggle",
+      "does:hotkey",
+      "data:schedule",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createMonthDayGrid",
+      "overrides": "{ weekStart: 1 }"
+    },
+    "overrides": null,
+    "dataProps": "MonthDayGridDataProps",
+    "summary": "The same month with Monday as the first column.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "The same month with Monday as the first column.",
+    "showcase": "#/month-day-grid",
+    "since": "Unreleased",
+    "file": "src/components/MonthDayGrid/variants.ts",
+    "line": 12
+  },
+  {
     "name": "MoneyCell",
     "depth": 1,
     "kind": "primitive",
@@ -17030,6 +17093,41 @@
     "since": null,
     "file": "src/components/Text/variants.ts",
     "line": 151
+  },
+  {
+    "name": "MonthDayGrid",
+    "depth": 1,
+    "kind": "variant",
+    "family": "MonthDayGrid",
+    "tags": [
+      "shows:calendar",
+      "shows:grid",
+      "shows:count",
+      "does:multi-select",
+      "does:toggle",
+      "does:hotkey",
+      "data:schedule",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createMonthDayGrid",
+      "overrides": "{ weekStart: 0 }"
+    },
+    "overrides": null,
+    "dataProps": "MonthDayGridDataProps",
+    "summary": "Primitive (Depth 1, owns `MonthDayGrid.css`).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": [
+      "Not `DayOfMonthPicker` (a single day NUMBER, no weekdays) and not `DatePicker` / `DateRangePicker` (one date or one range)."
+    ],
+    "useFor": "a host opening candidate meeting days and members picking the ones they can make; stack three for a season.",
+    "notes": "One weekday-aligned month (Sunday first), multi-select days with counts.",
+    "showcase": "#/month-day-grid",
+    "since": "Unreleased",
+    "file": "src/components/MonthDayGrid/variants.ts",
+    "line": 8
   },
   {
     "name": "MonthlyOrAnnualCadenceStrip",

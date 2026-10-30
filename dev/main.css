@@ -2956,3 +2956,9 @@ th:has(.tf-th-center) .hud-table__header-content {
   padding: 16px;
   max-width: 480px;
 }
+
+/* MonthDayGrid showcase demo frame — scaffolded by npm run new:component. */
+.month-day-grid-demo {
+  padding: 16px;
+  max-width: 390px;
+}

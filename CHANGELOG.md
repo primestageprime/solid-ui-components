@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`MonthDayGrid`** (+ `MondayMonthDayGrid`) — one weekday-aligned month of 44px days with multi-select, a count badge per day, tone washes, disabled and past days, and a roving-tabindex keyboard. Pure `monthLayout`, `dayMove`, `daysInMonth`, `firstWeekday`, `weekdayLabels`, `addDays`.
+
 ## 0.243.0 — 2026-10-30
 
 ### Added

@@ -1,0 +1,84 @@
+/* MonthDayGrid — seven equal columns of 44px day buttons. Rows are
+   `display: contents` so the header and every week share one grid. Every
+   paint is a theme token. */
+.sui-month-day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(44px, 1fr));
+  gap: 2px;
+}
+.sui-month-day-grid__row {
+  display: contents;
+}
+.sui-month-day-grid__head {
+  text-align: center;
+  font-family: var(--sui-font-family);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sui-text-secondary);
+  padding: 2px 0;
+}
+.sui-month-day-grid__slot {
+  min-width: 0;
+}
+.sui-month-day-grid__day {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--sui-radius-sm);
+  background: transparent;
+  color: var(--sui-text-primary);
+  font-family: var(--sui-font-family);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.sui-month-day-grid__day:hover {
+  border-color: var(--sui-accent);
+}
+.sui-month-day-grid__day:focus-visible {
+  outline: 2px solid var(--sui-accent);
+  outline-offset: 1px;
+}
+.sui-month-day-grid__day--accent {
+  background: rgba(var(--sui-accent-rgb), 0.12);
+  border-color: rgba(var(--sui-accent-rgb), 0.35);
+}
+.sui-month-day-grid__day--muted {
+  background: var(--sui-bg-tertiary);
+}
+.sui-month-day-grid__day--selected {
+  background: var(--sui-accent);
+  border-color: var(--sui-accent);
+  color: var(--sui-on-accent);
+  font-weight: 700;
+}
+.sui-month-day-grid__day--disabled {
+  color: var(--sui-text-muted);
+  opacity: 0.45;
+  cursor: default;
+}
+.sui-month-day-grid__day--disabled:hover {
+  border-color: transparent;
+}
+.sui-month-day-grid__count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  box-sizing: border-box;
+  border-radius: 7px;
+  background: var(--sui-text-secondary);
+  color: var(--sui-bg-elevated);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}
+.sui-month-day-grid__day--selected .sui-month-day-grid__count {
+  background: var(--sui-on-accent);
+  color: var(--sui-accent);
+}
