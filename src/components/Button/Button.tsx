@@ -171,9 +171,11 @@ export const Button: Component<ButtonProps> = (props) => {
   const [reasonByKey, setReasonByKey] = createSignal(false);
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
   let reasonTimer: ReturnType<typeof setTimeout> | undefined;
+  let pressFrame: number | undefined;
   onCleanup(() => {
     clearTimeout(flashTimer);
     clearTimeout(reasonTimer);
+    if (pressFrame !== undefined) cancelAnimationFrame(pressFrame);
   });
   const onHotkey = () => {
     if (loading() || spent()) return;
@@ -184,10 +186,22 @@ export const Button: Component<ButtonProps> = (props) => {
       reasonTimer = setTimeout(() => setReasonByKey(false), DISABLED_REASON_MS);
       return;
     }
+    // PAINT FIRST, THEN CLICK (owner, 2026-10-30: "I don't see the flash on
+    // keypress"). The click can hold the main thread past the flash (an import
+    // step re-renders its tab), so a flash set in the same task never paints.
+    // The pressed state paints on the second frame, then the click runs, then
+    // the flash holds for HOTKEY_FLASH_MS, as a mouse press paints `:active`
+    // before its click. A press while one is pending does nothing.
+    if (pressFrame !== undefined) return;
     setFlashing(true);
     clearTimeout(flashTimer);
-    flashTimer = setTimeout(() => setFlashing(false), HOTKEY_FLASH_MS);
-    el?.click();
+    pressFrame = requestAnimationFrame(() => {
+      pressFrame = requestAnimationFrame(() => {
+        pressFrame = undefined;
+        if (el?.isConnected) el.click();
+        flashTimer = setTimeout(() => setFlashing(false), HOTKEY_FLASH_MS);
+      });
+    });
   };
   useHotkey({
     keys: () => local.hotkeys,

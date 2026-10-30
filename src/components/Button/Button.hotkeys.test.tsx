@@ -14,7 +14,7 @@ const button = () =>
 	document.querySelector("button.sui-btn") as HTMLButtonElement;
 
 describe("Button hotkeys (#53325)", () => {
-	it("a key press clicks once and flashes the pressed state for ~150 ms", () => {
+	it("a key press paints the pressed state first, then clicks once, then holds the flash ~150 ms", () => {
 		vi.useFakeTimers();
 		const onClick = vi.fn();
 		render(() => (
@@ -23,10 +23,16 @@ describe("Button hotkeys (#53325)", () => {
 			</Button>
 		));
 		fireEvent.keyDown(document.body, { key: "Enter" });
+		expect(button().hasAttribute("data-hotkey-flash")).toBe(true);
+		expect(onClick).not.toHaveBeenCalled();
+		// A second press while the first is pending does nothing.
+		fireEvent.keyDown(document.body, { key: "Enter" });
+		vi.advanceTimersByTime(40);
 		expect(onClick).toHaveBeenCalledTimes(1);
 		expect(button().hasAttribute("data-hotkey-flash")).toBe(true);
 		vi.advanceTimersByTime(HOTKEY_FLASH_MS);
 		expect(button().hasAttribute("data-hotkey-flash")).toBe(false);
+		expect(onClick).toHaveBeenCalledTimes(1);
 	});
 
 	it("shows the hint aria-hidden after the label, and names the key in aria-keyshortcuts", () => {
@@ -90,10 +96,10 @@ describe("Button hotkeys (#53325)", () => {
 			</Button>
 		));
 		fireEvent.keyDown(document.body, { key: "Enter" });
-		await new Promise((r) => setTimeout(r, 40));
+		await new Promise((r) => setTimeout(r, 100));
 		expect(work).toHaveBeenCalledTimes(1);
 		fireEvent.keyDown(document.body, { key: "Enter" });
-		await new Promise((r) => setTimeout(r, 40));
+		await new Promise((r) => setTimeout(r, 100));
 		expect(work).toHaveBeenCalledTimes(1);
 		expect(document.body.textContent).not.toContain("never shown");
 		settle();
@@ -131,6 +137,7 @@ describe("Button hotkeys (#53325)", () => {
 	});
 
 	it("the hotkey follows its prop without a remount", () => {
+		vi.useFakeTimers();
 		const onClick = vi.fn();
 		const [keys, setKeys] = createSignal<readonly string[] | undefined>(
 			undefined,
@@ -142,13 +149,16 @@ describe("Button hotkeys (#53325)", () => {
 		));
 		const first = button();
 		fireEvent.keyDown(document.body, { key: "Enter" });
+		vi.advanceTimersByTime(40);
 		setKeys(["Enter"]);
 		fireEvent.keyDown(document.body, { key: "Enter" });
+		vi.advanceTimersByTime(40);
 		expect(onClick).toHaveBeenCalledTimes(1);
 		expect(button()).toBe(first);
 	});
 
 	it("inside an open Modal the modal's button holds the key, not the page's", () => {
+		vi.useFakeTimers();
 		const page = vi.fn();
 		const dialog = vi.fn();
 		render(() => (
@@ -164,6 +174,7 @@ describe("Button hotkeys (#53325)", () => {
 			</>
 		));
 		fireEvent.keyDown(document.body, { key: "Enter" });
+		vi.advanceTimersByTime(40);
 		expect(dialog).toHaveBeenCalledTimes(1);
 		expect(page).not.toHaveBeenCalled();
 	});
