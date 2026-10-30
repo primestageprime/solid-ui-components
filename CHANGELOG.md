@@ -6,6 +6,10 @@
 
 - **`NumberPickGrid` `muteBelow`** — numbers below it render muted (grey), stay pickable, and get ", before your furthest point" in their label. Additive: omit it and nothing changes.
 
+### Fixed
+
+- **A flag drag no longer adds an event.** When a dragged flag snaps or clamps away from the pointer, the release lands on the plot, and the browser sends the click to the `<svg>`. `Chart.onPick` then reported a pick. `MutationFlags` now drops the one click after a drag in a capture-phase `document` listener, wherever that click lands.
+
 ## 0.247.0 — 2026-10-30
 
 ### Added
