@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.249.0 — 2026-10-30
+
 ### Added
 
 - **`MonthDayGrid` `hideWeeksBefore`** (ISO day) — a week renders only if at least one of its days is on or after that date, so a calendar shows only weeks with days still to come. Pure `visibleWeeks(weeks, from?)`. Additive: omit it and every week shows.
