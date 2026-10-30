@@ -3,11 +3,42 @@
 // ============================================
 // Button — Atomic (Depth 1)
 // Tags: shows:button, shows:icon, does:click, does:submit, data:scalar, role:control
-// Owns CSS (Button.css), no component imports.
+// Owns CSS (Button.css). Composes Tooltip only for `disabledReason`.
 // Multi-variant button with loading spinner.
 // Updated: absorbs HUDButton's active prop.
+//
+// HOTKEYS (#53325): `hotkeys={["Enter"]}` claims the keys in the hotkey
+// registry (hooks/hotkeys). A press runs the button's own click path, the
+// same as a mouse click, and the button shows its pressed state for about
+// 150 ms (`data-hotkey-flash`, styled as `:active`). The label shows the
+// hint after the text (`↵`, `Esc`, `⌘Z` / `Ctrl+Z`, an underlined letter),
+// `aria-hidden`, and the button carries `aria-keyshortcuts`.
+// - DISABLED with a `disabledReason`: the key does not fire; the reason
+//   opens for about 1.5 s. The button owns that tooltip: a span trigger
+//   around the button, with a controlled `open`.
+// - PENDING (`loading`, or a submit action not yet settled) and SPENT
+//   (`once`): the key does not fire and nothing shows. Both still show as
+//   the DOM `disabled` attribute, as before.
+// Inside a Modal the claim lives in the Modal's layer (rank "modal").
 // ============================================
-import { type Component, type JSX, splitProps, mergeProps } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  Show,
+  createSignal,
+  mergeProps,
+  onCleanup,
+  splitProps,
+} from "solid-js";
+import type { HotkeyRank } from "../../hooks/hotkeyDispatch";
+import {
+  ariaKeyShortcut,
+  isLetterKey,
+  isMacPlatform,
+  keyGlyph,
+} from "../../hooks/hotkeys/hotkeyKeys";
+import { useHotkey } from "../../hooks/hotkeys/useHotkey";
+import { Tooltip } from "../Tooltip/Tooltip";
 import {
   createSubmitAction,
   type SubmitAction,
@@ -75,7 +106,28 @@ export interface ButtonProps
   /** Label casing: `theme` (default; the hud theme sets small caps) or `normal`, the label as written
    *  (a sketch's "Oldest", "Create"). Additive: no theme changes. */
   casing?: "theme" | "normal";
+  /**
+   * Keys that press this button: `["Enter"]`, `["Mod+z"]` (⌘ on macOS, Ctrl
+   * elsewhere), `["i", "g t"]`. The first one shows as the hint. See the
+   * header and hooks/hotkeys.
+   */
+  hotkeys?: readonly string[];
+  /** Who wins a key claimed twice: modal > step > page. Default "page" ("modal" inside a Modal). */
+  hotkeyRank?: HotkeyRank;
+  /**
+   * Why the button is disabled. Shows on hover while `disabled`, and for
+   * about 1.5 s when its hotkey is pressed. Decides AT CREATION whether the
+   * button has its tooltip wrapper: pass the prop (even as `undefined`) on
+   * every render of a button whose reason comes and goes, so the button is
+   * never remounted.
+   */
+  disabledReason?: string;
 }
+
+/** How long a hotkey press shows the pressed state. */
+export const HOTKEY_FLASH_MS = 150;
+/** How long a hotkey press on a disabled button shows its reason. */
+export const DISABLED_REASON_MS = 1500;
 
 export const Button: Component<ButtonProps> = (props) => {
   const [local, others] = splitProps(props, [
@@ -93,7 +145,12 @@ export const Button: Component<ButtonProps> = (props) => {
     "action",
     "onClick",
     "type",
+    "hotkeys",
+    "hotkeyRank",
+    "disabledReason",
+    "ref",
   ]);
+  const hasReasonSlot = "disabledReason" in props;
 
   // The action is fixed at creation, as a Solid component's setup runs once.
   const action: SubmitAction | undefined =
@@ -101,9 +158,54 @@ export const Button: Component<ButtonProps> = (props) => {
     (local.onAction
       ? createSubmitAction(() => local.onAction?.(), { once: local.once })
       : undefined);
+  // PENDING and SPENT are apart from the caller's `disabled` for the hotkey
+  // rule; the DOM `disabled` attribute folds all three, as before.
   const loading = () => (local.loading ?? false) || (action?.pending() ?? false);
-  const disabled = () =>
-    (local.disabled ?? false) || loading() || (action?.spent() ?? false);
+  const spent = () => action?.spent() ?? false;
+  const disabled = () => (local.disabled ?? false) || loading() || spent();
+
+  let el: HTMLButtonElement | undefined;
+  const [flashing, setFlashing] = createSignal(false);
+  const [hovered, setHovered] = createSignal(false);
+  const [reasonByKey, setReasonByKey] = createSignal(false);
+  let flashTimer: ReturnType<typeof setTimeout> | undefined;
+  let reasonTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => {
+    clearTimeout(flashTimer);
+    clearTimeout(reasonTimer);
+  });
+  const onHotkey = () => {
+    if (loading() || spent()) return;
+    if (local.disabled) {
+      if (!local.disabledReason) return;
+      setReasonByKey(true);
+      clearTimeout(reasonTimer);
+      reasonTimer = setTimeout(() => setReasonByKey(false), DISABLED_REASON_MS);
+      return;
+    }
+    setFlashing(true);
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => setFlashing(false), HOTKEY_FLASH_MS);
+    el?.click();
+  };
+  useHotkey({
+    keys: () => local.hotkeys,
+    rank: () => local.hotkeyRank,
+    run: onHotkey,
+    element: () => el,
+  });
+  const mac = isMacPlatform();
+  const hint = () => local.hotkeys?.[0];
+  const shortcuts = () =>
+    (local.hotkeys ?? [])
+      .map((k) => ariaKeyShortcut(k, mac))
+      .filter((k): k is string => k !== null)
+      .join(" ") || undefined;
+  const setRef = (node: HTMLButtonElement) => {
+    el = node;
+    const forward = local.ref as unknown;
+    if (typeof forward === "function") (forward as (n: HTMLButtonElement) => void)(node);
+  };
   const onClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (e) => {
     const handler = local.onClick;
     if (typeof handler === "function") handler(e);
@@ -123,7 +225,7 @@ export const Button: Component<ButtonProps> = (props) => {
     return classList.join(" ");
   };
 
-  return (
+  const button = (
     // `type="button"` unless the caller says otherwise: a typeless button is a
     // SUBMIT button, so inside a consumer's `<form>` every SUI button would
     // submit it (owner rule, 2026-10-21). Pass `type="submit"` for the one
@@ -133,12 +235,43 @@ export const Button: Component<ButtonProps> = (props) => {
       class={classes()}
       disabled={disabled()}
       aria-busy={loading() || undefined}
+      aria-keyshortcuts={shortcuts()}
+      data-hotkey-flash={flashing() ? "" : undefined}
       onClick={onClick}
+      ref={setRef}
       {...others}
     >
       {loading() && <span class="sui-btn__spinner" />}
       <span class="sui-btn__content">{local.children}</span>
+      <Show when={hint()}>
+        {(k) => (
+          <span
+            class="sui-btn__hotkey"
+            classList={{ "sui-btn__hotkey--letter": isLetterKey(k()) }}
+            aria-hidden="true"
+          >
+            {keyGlyph(k(), mac)}
+          </span>
+        )}
+      </Show>
     </button>
+  );
+
+  if (!hasReasonSlot) return button;
+  const reasonOpen = () =>
+    !!local.disabledReason &&
+    (local.disabled ?? false) &&
+    (hovered() || reasonByKey());
+  return (
+    <Tooltip
+      triggerAs="span"
+      class="sui-btn-reason"
+      open={reasonOpen()}
+      onOpenChange={setHovered}
+      content={() => local.disabledReason ?? ""}
+    >
+      {button}
+    </Tooltip>
   );
 };
 
