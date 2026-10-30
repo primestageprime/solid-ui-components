@@ -15915,7 +15915,7 @@
     "useFor": null,
     "notes": "Large (36px) — for participant lists / detail headers.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.246.0",
     "file": "src/components/ParticipantAvatar/variants.ts",
     "line": 18
   },
@@ -16684,7 +16684,7 @@
     "useFor": null,
     "notes": "Medium (24px) — the default for inline conversation rows.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.246.0",
     "file": "src/components/ParticipantAvatar/variants.ts",
     "line": 14
   },
@@ -22272,7 +22272,7 @@
     "useFor": null,
     "notes": "Small (20px) — for tight indicator rows / chip-style references.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.246.0",
     "file": "src/components/ParticipantAvatar/variants.ts",
     "line": 10
   },
