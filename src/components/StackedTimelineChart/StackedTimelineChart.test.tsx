@@ -765,6 +765,35 @@ describe("StackedTimelineChart drag holds until release, and Escape cancels it",
 		expect(moves.length).toBe(1);
 	});
 
+	// Owner, 2026-10-30: a drag "seems to have created another event". When the
+	// release lands off the flag (the flag snaps or clamps away from the
+	// pointer), the browser sends the click to the plot, not to the flag.
+	it("the click that ends a drag OFF the flag is not a pick on the plot", async () => {
+		const onPick = vi.fn();
+		const { container } = render(() => (
+			<StackedTimelineChart
+				series={SERIES}
+				xDomain={[START, END]}
+				yDomain={[0, 80]}
+				mutations={[{ id: "a", at: Date.UTC(2025, 5, 2), label: "Raise" }]}
+				onMoveMutation={() => {}}
+				onPick={onPick}
+			/>
+		));
+		const svg = container.querySelector("svg")!;
+		const flag = container.querySelector<SVGGElement>(".sui-chart__mutation")!;
+		const x0 = Number(flag.querySelector("line")!.getAttribute("x1"));
+		fireEvent.pointerDown(flag, { pointerId: 1, button: 0, clientX: x0, clientY: 100 });
+		fireEvent.pointerMove(flag, { pointerId: 1, clientX: x0 + 30, clientY: 100 });
+		fireEvent.pointerUp(flag, { pointerId: 1, clientX: x0 + 30, clientY: 100 });
+		fireEvent.click(svg, { clientX: x0 + 30, clientY: 100 });
+		expect(onPick).not.toHaveBeenCalled();
+		// The swallow lasts for that one click only: a later click picks.
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		fireEvent.click(svg, { clientX: 400, clientY: 150 });
+		expect(onPick).toHaveBeenCalledOnce();
+	});
+
 	it("Escape reports the flag back at its start, then ends the drag", () => {
 		const at = Date.UTC(2025, 5, 2);
 		const moves: number[] = [];
