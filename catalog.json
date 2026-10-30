@@ -7139,7 +7139,7 @@
     "showcase": "#/pace-projection-chart",
     "since": null,
     "file": "src/components/PaceProjectionChart/PaceProjectionChart.tsx",
-    "line": 242
+    "line": 309
   },
   {
     "name": "createPairedMutationSliders",

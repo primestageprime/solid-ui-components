@@ -36,7 +36,12 @@ import {
 } from "../Chart";
 import { NarrowStack } from "../Layout";
 import { GlyphBadge } from "../SvgMarks";
-import { type PacePoint, projectionEnd } from "./paceProjection";
+import { measureLabelWidth } from "../ScrubChart/helpers";
+import {
+  type PacePoint,
+  projectionEnd,
+  stackLabelRows,
+} from "./paceProjection";
 
 export interface PaceSeries {
   readonly id: string;
@@ -67,8 +72,22 @@ export interface PaceProjectionChartProps {
   readonly today?: number;
   /** Labelled x ticks (e.g. meeting dates); omit for none. */
   readonly xTicks?: readonly PaceTick[];
-  /** Right edge of the window. Defaults to the furthest of today, any point, and the plan. */
+  /** Right edge of the window. Defaults to the furthest of today, any point, the plan and any marker. */
   readonly xMax?: number;
+  /**
+   * Labelled vertical rules at x (same units as the points, e.g. a meeting's
+   * club day), each with an optional dot at y: "Meeting · Nov 24" beside the
+   * today rule shows who will finish by then. Captions that would overlap
+   * stack into rows.
+   */
+  readonly markers?: readonly PaceMarker[];
+}
+
+export interface PaceMarker {
+  readonly x: number;
+  readonly label: string;
+  /** Draw a dot on the rule at this y (e.g. the plan's chapter at that day). */
+  readonly y?: number;
 }
 
 const WIDTH = 340;
@@ -79,16 +98,51 @@ const MUTED = "var(--sui-text-secondary)";
 const ACCENT = "var(--sui-accent)";
 const ON_DISC = "var(--sui-on-accent)";
 const GROUND = "var(--sui-bg-elevated)";
+/** Marker captions: first baseline inside the plot top, then one row per overlap. */
+const CAPTION_TOP = 8;
+const CAPTION_ROW = 11;
 
 /** Plot-local marks that need the chart's scales: plan diamonds and initials discs. */
 const PaceMarks: Component<{
   diamonds: readonly PacePoint[];
   discs: readonly { at: PacePoint; color: string; initials: string }[];
+  markers: readonly PaceMarker[];
 }> = (props) => {
   const ctx = useChart();
   const px = (p: PacePoint) => ({ x: ctx.xScale()(p.x), y: ctx.yScale()(p.y) });
+  const captionRows = () =>
+    stackLabelRows(
+      map(
+        (m: PaceMarker) => ({
+          x: ctx.xScale()(m.x),
+          width: measureLabelWidth(m.label),
+        }),
+        props.markers,
+      ),
+    );
   return (
     <g>
+      <For each={props.markers}>
+        {(m, i) => (
+          <>
+            <Show when={m.y !== undefined}>
+              <ShapeGlyph
+                cx={ctx.xScale()(m.x)}
+                cy={ctx.yScale()(m.y as number)}
+                descriptor={{ shape: "circle", color: MUTED, size: 7 }}
+              />
+            </Show>
+            <text
+              class="sui-chart__ref-label"
+              x={ctx.xScale()(m.x)}
+              y={CAPTION_TOP + (captionRows()[i()] ?? 0) * CAPTION_ROW}
+              text-anchor="middle"
+            >
+              {m.label}
+            </text>
+          </>
+        )}
+      </For>
       <For each={props.diamonds}>
         {(p) => (
           <ShapeGlyph
@@ -126,6 +180,7 @@ export const PaceProjectionChart: Component<PaceProjectionChartProps> = (
       props.xMax ?? 0,
       props.today ?? 0,
       ...map((p: PacePoint) => p.x, props.plan ?? []),
+      ...map((m: PaceMarker) => m.x, props.markers ?? []),
       ...(props.xMax === undefined
         ? map(
             (p: PacePoint) => p.x,
@@ -180,6 +235,17 @@ export const PaceProjectionChart: Component<PaceProjectionChartProps> = (
             opacity={1}
           />
         </Show>
+        <For each={props.markers ?? []}>
+          {(m) => (
+            <ReferenceLine
+              orientation="vertical"
+              value={m.x}
+              color={MUTED}
+              strokeDasharray="4 3"
+              opacity={0.9}
+            />
+          )}
+        </For>
         <Show when={(props.plan?.length ?? 0) > 1}>
           <LineSeries
             data={props.plan ?? []}
@@ -214,6 +280,7 @@ export const PaceProjectionChart: Component<PaceProjectionChartProps> = (
           )}
         </For>
         <PaceMarks
+          markers={props.markers ?? []}
           diamonds={props.plan ?? []}
           discs={map(
             (p: ReturnType<typeof projections>[number]) => ({

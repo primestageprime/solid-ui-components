@@ -87,6 +87,10 @@ export const PaceProjectionChartShowcase: Component = () => {
               { x: 42, label: "Dec 2" },
             ]}
             xMax={56}
+            markers={[
+              { x: today(), label: "Today" },
+              { x: 28, label: "Meeting · Nov 18", y: 21 },
+            ]}
           />
           <Slider
             label="Today"

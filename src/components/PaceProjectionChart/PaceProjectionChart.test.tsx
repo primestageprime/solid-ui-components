@@ -56,4 +56,30 @@ describe("PaceProjectionChart", () => {
     const { container } = render(() => <Chart series={[]} total={10} />);
     expect(container.querySelector("svg")).not.toBeNull();
   });
+  it("draws a labelled rule per marker, a dot when y is given, and stacks colliding captions", () => {
+    const { container } = render(() => (
+      <PaceProjectionChart
+        series={series}
+        total={20}
+        today={10}
+        markers={[
+          { x: 10, label: "Today" },
+          { x: 11, label: "Meeting · Nov 24", y: 8 },
+        ]}
+      />
+    ));
+    const captions = [
+      ...container.querySelectorAll("text.sui-chart__ref-label"),
+    ];
+    expect(captions.map((t) => t.textContent)).toEqual([
+      "Today",
+      "Meeting · Nov 24",
+    ]);
+    expect(captions[0].getAttribute("y")).not.toBe(
+      captions[1].getAttribute("y"),
+    );
+    expect(
+      container.querySelectorAll(".sui-chart__ref").length,
+    ).toBeGreaterThanOrEqual(3);
+  });
 });

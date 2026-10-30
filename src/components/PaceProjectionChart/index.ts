@@ -3,7 +3,12 @@ export { createPaceProjectionChart } from "./PaceProjectionChart";
 export type {
   PaceProjectionChartDataProps,
   PaceSeries,
+  PaceMarker,
   PaceTick,
 } from "./PaceProjectionChart";
-export { projectionEnd, type PacePoint } from "./paceProjection";
+export {
+  projectionEnd,
+  stackLabelRows,
+  type PacePoint,
+} from "./paceProjection";
 export * from "./variants";

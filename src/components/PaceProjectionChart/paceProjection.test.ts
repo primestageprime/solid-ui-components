@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { projectionEnd } from "./paceProjection";
+import { projectionEnd, stackLabelRows } from "./paceProjection";
 
 describe("projectionEnd", () => {
   const pts = [
@@ -17,5 +17,23 @@ describe("projectionEnd", () => {
     expect(projectionEnd([], 30, 15, 40)).toBeNull();
     expect(projectionEnd([{ x: 5, y: 15 }], 30, 15, 40)).toBeNull();
     expect(projectionEnd(pts, 8, 15, 40)).toBeNull();
+  });
+});
+
+describe("stackLabelRows", () => {
+  it("keeps apart captions on one row and stacks overlapping ones", () => {
+    expect(
+      stackLabelRows([
+        { x: 10, width: 10 },
+        { x: 100, width: 10 },
+      ]),
+    ).toEqual([0, 0]);
+    expect(
+      stackLabelRows([
+        { x: 100, width: 60 },
+        { x: 80, width: 40 },
+      ]),
+    ).toEqual([1, 0]);
+    expect(stackLabelRows([])).toEqual([]);
   });
 });
