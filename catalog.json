@@ -6547,7 +6547,7 @@
     "showcase": null,
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 186
+    "line": 314
   },
   {
     "name": "createHourlyWageAmountStrip",
@@ -6931,7 +6931,7 @@
     "showcase": null,
     "since": "0.85.1",
     "file": "src/components/Modal/Modal.tsx",
-    "line": 175
+    "line": 192
   },
   {
     "name": "createMonthDayGrid",
@@ -14210,12 +14210,264 @@
       "ActionList"
     ],
     "notToBeConfusedWith": null,
-    "useFor": "the exact `[c]laim`-style affordance already reused by `ActionList`'s multi-select actions bar — reach for `ActionList` first if the surrounding list already exists; use `HotkeyButton` directly for a standalone keyboard-driven action.",
+    "useFor": "a button a key presses (Next ↵, Save ↵, Undo ⌘Z); the `[c]laim`-style affordance of `ActionList`'s actions bar — reach for `ActionList` first if the surrounding list already exists.",
     "notes": null,
     "showcase": null,
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 91
+    "line": 135
+  },
+  {
+    "name": "HotkeyDangerButton",
+    "depth": 2,
+    "kind": "variant",
+    "family": "HotkeyButton",
+    "tags": [
+      "shows:button",
+      "shows:kbd",
+      "does:hotkey",
+      "does:click",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createHotkeyButton",
+      "overrides": "{ variant: \"danger\" }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "HotkeyButtonDataProps",
+    "summary": "Composite (Depth 2, `src/components/HotkeyButton/HotkeyButton.tsx`). A `HotkeyButton` variant with `variant: \"danger\"`.",
+    "summarySource": "synthesized",
+    "preferFirst": [
+      "ActionList"
+    ],
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/HotkeyButton/variants.ts",
+    "line": 22
+  },
+  {
+    "name": "HotkeyDefaultButton",
+    "depth": 2,
+    "kind": "variant",
+    "family": "HotkeyButton",
+    "tags": [
+      "shows:button",
+      "shows:kbd",
+      "does:hotkey",
+      "does:click",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createHotkeyButton",
+      "overrides": "{ variant: \"default\" }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "HotkeyButtonDataProps",
+    "summary": "Composite (Depth 2, `src/components/HotkeyButton/HotkeyButton.tsx`). A `HotkeyButton` variant with `variant: \"default\"`.",
+    "summarySource": "synthesized",
+    "preferFirst": [
+      "ActionList"
+    ],
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/HotkeyButton/variants.ts",
+    "line": 13
+  },
+  {
+    "name": "HotkeyGhostButton",
+    "depth": 2,
+    "kind": "variant",
+    "family": "HotkeyButton",
+    "tags": [
+      "shows:button",
+      "shows:kbd",
+      "does:hotkey",
+      "does:click",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createHotkeyButton",
+      "overrides": "{ variant: \"ghost\" }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "HotkeyButtonDataProps",
+    "summary": "Composite (Depth 2, `src/components/HotkeyButton/HotkeyButton.tsx`). A `HotkeyButton` variant with `variant: \"ghost\"`.",
+    "summarySource": "synthesized",
+    "preferFirst": [
+      "ActionList"
+    ],
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/HotkeyButton/variants.ts",
+    "line": 25
+  },
+  {
+    "name": "HotkeyPrimaryButton",
+    "depth": 2,
+    "kind": "variant",
+    "family": "HotkeyButton",
+    "tags": [
+      "shows:button",
+      "shows:kbd",
+      "does:hotkey",
+      "does:click",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createHotkeyButton",
+      "overrides": "{ variant: \"primary\" }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "HotkeyButtonDataProps",
+    "summary": "Composite (Depth 2, `src/components/HotkeyButton/HotkeyButton.tsx`). A `HotkeyButton` variant with `variant: \"primary\"`.",
+    "summarySource": "synthesized",
+    "preferFirst": [
+      "ActionList"
+    ],
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/HotkeyButton/variants.ts",
+    "line": 16
+  },
+  {
+    "name": "HotkeySecondaryButton",
+    "depth": 2,
+    "kind": "variant",
+    "family": "HotkeyButton",
+    "tags": [
+      "shows:button",
+      "shows:kbd",
+      "does:hotkey",
+      "does:click",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createHotkeyButton",
+      "overrides": "{ variant: \"secondary\" }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "HotkeyButtonDataProps",
+    "summary": "Composite (Depth 2, `src/components/HotkeyButton/HotkeyButton.tsx`). A `HotkeyButton` variant with `variant: \"secondary\"`.",
+    "summarySource": "synthesized",
+    "preferFirst": [
+      "ActionList"
+    ],
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/HotkeyButton/variants.ts",
+    "line": 19
+  },
+  {
+    "name": "HotkeySmallButton",
+    "depth": 2,
+    "kind": "variant",
+    "family": "HotkeyButton",
+    "tags": [
+      "shows:button",
+      "shows:kbd",
+      "does:hotkey",
+      "does:click",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createHotkeyButton",
+      "overrides": "{ size: \"sm\" }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "HotkeyButtonDataProps",
+    "summary": "Composite (Depth 2, `src/components/HotkeyButton/HotkeyButton.tsx`). A `HotkeyButton` variant with `size: \"sm\"`.",
+    "summarySource": "synthesized",
+    "preferFirst": [
+      "ActionList"
+    ],
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/HotkeyButton/variants.ts",
+    "line": 31
+  },
+  {
+    "name": "HotkeySmallPrimaryButton",
+    "depth": 2,
+    "kind": "variant",
+    "family": "HotkeyButton",
+    "tags": [
+      "shows:button",
+      "shows:kbd",
+      "does:hotkey",
+      "does:click",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createHotkeyButton",
+      "overrides": "{ variant: \"primary\", size: \"sm\" }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "HotkeyButtonDataProps",
+    "summary": "Composite (Depth 2, `src/components/HotkeyButton/HotkeyButton.tsx`). A `HotkeyButton` variant with `variant: \"primary\"`, `size: \"sm\"`.",
+    "summarySource": "synthesized",
+    "preferFirst": [
+      "ActionList"
+    ],
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/HotkeyButton/variants.ts",
+    "line": 28
   },
   {
     "name": "HourlyWageAmountStrip",
@@ -21032,7 +21284,7 @@
     "useFor": null,
     "notes": "Secondary button — neutral/supporting action",
     "showcase": "#/button",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Button/variants.ts",
     "line": 27
   },

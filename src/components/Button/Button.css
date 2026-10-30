@@ -138,3 +138,10 @@
 .sui-btn.sui-btn--plain-label[data-struck] {
   text-decoration: line-through;
 }
+
+/* Pressed: a mouse press (`:active`) and a hotkey press (`data-hotkey-flash`,
+   ~150ms, set by HotkeyButton) look the same. */
+.sui-btn:active:not(:disabled),
+.sui-btn[data-hotkey-flash] {
+  filter: brightness(0.85);
+}

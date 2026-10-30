@@ -97,11 +97,40 @@ export type {
   ChordState,
   DispatchInput,
   HotkeyEntry,
+  HotkeyRank,
   HotkeyOutcome,
   HotkeyScope,
   TracePress,
   TraceRow,
 } from "./hotkeyDispatch";
+// The ONE hotkey registry (#53325): every Button `hotkeys`, every `useHotkey`,
+// every Modal's Escape and every `createHotkeyScope` table is a claim on one
+// capture-phase window listener, on `globalThis`. Modal layers, ranks
+// (modal > step > page), DOM order for ties, and the key guard.
+export {
+  HotkeyLayerContext,
+  useHotkey,
+  useHotkeyLayer,
+} from "./hotkeys/useHotkey";
+export type { UseHotkeyOptions } from "./hotkeys/useHotkey";
+export {
+  activeHotkeyLayer,
+  allocateHotkeyLayer,
+  openHotkeyLayer,
+  registerHotkey,
+} from "./hotkeys/hotkeyRegistry";
+export type { HotkeyClaim } from "./hotkeys/hotkeyRegistry";
+export { hotkeyGuard } from "./hotkeys/hotkeyGuard";
+export type { HotkeyGuard } from "./hotkeys/hotkeyGuard";
+export {
+  ariaKeyShortcut,
+  isMacPlatform,
+  isReservedKey,
+  keyGlyph,
+  parseKey,
+  stepMatches,
+} from "./hotkeys/hotkeyKeys";
+export type { KeyMatchMode, KeyStep } from "./hotkeys/hotkeyKeys";
 // A click that sends work once: pending (spinner + disabled) while the work
 // runs, and optionally spent after it. Button's `action` prop reads it.
 export { createSubmitAction, nextPaint } from "./createSubmitAction";
