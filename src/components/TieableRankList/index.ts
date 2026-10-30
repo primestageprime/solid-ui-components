@@ -5,6 +5,8 @@ export type {
   TieableRankListOverrides,
 } from "./TieableRankList";
 export {
+  fromTiers,
+  moveTier,
   moveBy,
   ranksOf,
   retie,

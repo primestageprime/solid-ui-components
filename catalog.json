@@ -3709,6 +3709,36 @@
     "line": 18
   },
   {
+    "name": "CompactLabelTable",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Table",
+    "tags": [
+      "shows:table",
+      "does:sort",
+      "does:scroll",
+      "data:table",
+      "role:panel"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createBaseTable",
+      "overrides": "{\n  compact: true,\n  stickyHeader: true,\n  maxHeight: \"300px\",\n  firstColumn: \"label\",\n}"
+    },
+    "overrides": null,
+    "dataProps": null,
+    "summary": "curried `BaseTable` (`createBaseTable({ compact, stickyHeader, maxHeight: \"300px\", firstColumn: \"label\" })`): `CompactTable` for a table whose first column is a NAME, so the first column keeps the body font instead of the monospace row-index look.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Compact table whose first column is a NAME (a member, a product): same as CompactTable, but the first column keeps the body font instead of the monospace row-index look.",
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Table/variants.ts",
+    "line": 17
+  },
+  {
     "name": "CompactLineRow",
     "depth": 0,
     "kind": "variant",
@@ -3878,7 +3908,7 @@
     "useFor": null,
     "notes": "Compact scrollable table — dense rows, sticky header, scroll container",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Table/variants.ts",
     "line": 8
   },
@@ -4887,7 +4917,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/BaseTable.tsx",
-    "line": 482
+    "line": 484
   },
   {
     "name": "createBatchBar",
@@ -8463,6 +8493,7 @@
     "family": "TieableRankList",
     "tags": [
       "shows:list",
+      "shows:card",
       "shows:button",
       "does:drag",
       "does:reorder",
@@ -8485,7 +8516,7 @@
     "showcase": "#/tieable-rank-list",
     "since": null,
     "file": "src/components/TieableRankList/TieableRankList.tsx",
-    "line": 138
+    "line": 193
   },
   {
     "name": "createTimelineBar",
@@ -9508,7 +9539,7 @@
     "showcase": null,
     "since": "0.151.3",
     "file": "src/components/Table/variants.ts",
-    "line": 24
+    "line": 34
   },
   {
     "name": "DataTableContainer",
@@ -23236,7 +23267,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/variants.ts",
-    "line": 18
+    "line": 28
   },
   {
     "name": "StillCashflowScrubChart",
@@ -23368,7 +23399,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Table/variants.ts",
-    "line": 15
+    "line": 25
   },
   {
     "name": "SubsectionTitle",
@@ -24556,6 +24587,7 @@
     "family": "TieableRankList",
     "tags": [
       "shows:list",
+      "shows:card",
       "shows:button",
       "does:drag",
       "does:reorder",

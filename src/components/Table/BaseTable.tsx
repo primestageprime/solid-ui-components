@@ -108,6 +108,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     "striped",
     "hoverable",
     "compact",
+    "firstColumn",
     "fixedLayout",
     "fit",
     "flush",
@@ -201,6 +202,7 @@ export function BaseTable<T extends TableRow>(props: BaseTableProps<T>) {
     if (local.striped) classList.push("hud-table--striped");
     if (local.hoverable) classList.push("hud-table--hoverable");
     if (local.compact) classList.push("hud-table--compact");
+    if (local.firstColumn === "label") classList.push("hud-table--label-first");
     if (local.fixedLayout) classList.push("hud-table--fixed");
     if (local.fit) classList.push("hud-table--fit");
     if (local.flush) classList.push("hud-table--flush");

@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  fromTiers,
   moveBy,
+  moveTier,
   ranksOf,
   retie,
   splitAll,
@@ -58,6 +60,20 @@ describe("tie groups", () => {
     expect(moveBy(order, [false, false, false], 0, -1)).toEqual({
       order,
       ties: [false, false, false],
+    });
+  });
+  it("fromTiers rebuilds order + ties; moveTier swaps whole tiers and keeps them tied", () => {
+    expect(fromTiers([["a", "b"], ["c"], ["d"]])).toEqual({
+      order,
+      ties: [true, false, false],
+    });
+    expect(moveTier(order, [true, false, false], 1, -1)).toEqual({
+      order: ["c", "a", "b", "d"],
+      ties: [false, true, false],
+    });
+    expect(moveTier(order, [true, false, false], 0, -1)).toEqual({
+      order,
+      ties: [true, false, false],
     });
   });
 });

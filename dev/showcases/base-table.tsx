@@ -2,6 +2,7 @@ import { type Component, For, createSignal } from "solid-js";
 import { BaseTable } from "../../src/components/Table";
 import {
   CompactTable,
+  CompactLabelTable,
   StripedTable,
   StickyTable,
   DataTable,
@@ -374,6 +375,12 @@ export const BaseTableShowcase: Component = () => {
               <CompactTable data={sampleData} columns={columns} />
               <div class="text-meta">
                 CompactTable — compact, stickyHeader, maxHeight: "300px"
+              </div>
+            </div>
+            <div>
+              <CompactLabelTable data={sampleData} columns={columns} />
+              <div class="text-meta">
+                CompactLabelTable — CompactTable whose first column is a name, so it keeps the body font
               </div>
             </div>
             <div>

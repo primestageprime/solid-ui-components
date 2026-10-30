@@ -49,6 +49,13 @@ export interface BaseTableProps<T>
   hoverable?: boolean;
   compact?: boolean;
   /**
+   * How the first column reads. `"index"` (default) styles it as a row index:
+   * small, muted, monospace. `"label"` keeps the body font and colour, for a
+   * table whose first column is a NAME (a member, a product), not a counter.
+   * Presentational: curry it (`CompactLabelTable`), don't pass it at a call site.
+   */
+  firstColumn?: "index" | "label";
+  /**
    * Use CSS `table-layout: fixed` — column widths are honored exactly, columns
    * with a `width` stay put, and the one unwidthed column (mark it `ellipsis`)
    * absorbs the remaining space and truncates. Without this, a `nowrap` cell can

@@ -94,3 +94,40 @@ export function moveBy(
   [next[index], next[target]] = [next[target], next[index]];
   return { order: next, ties: retie(order, ties, next) };
 }
+
+/** Order + ties from tiers: tied inside each tier, untied between tiers. */
+export function fromTiers(tiers: readonly (readonly string[])[]): {
+  order: string[];
+  ties: boolean[];
+} {
+  const order: string[] = [];
+  const ties: boolean[] = [];
+  for (const tier of tiers) {
+    for (const [i, id] of tier.entries()) {
+      if (order.length > 0) ties.push(i > 0);
+      order.push(id);
+    }
+  }
+  return { order, ties };
+}
+
+/** Move the whole tier at `tierIndex` one tier up (-1) or down (+1); its items stay tied. */
+export function moveTier(
+  order: readonly string[],
+  ties: TieFlags,
+  tierIndex: number,
+  delta: -1 | 1,
+): { order: string[]; ties: boolean[] } {
+  const tiers = toTiers(order, ties);
+  const target = tierIndex + delta;
+  if (
+    tierIndex < 0 ||
+    tierIndex >= tiers.length ||
+    target < 0 ||
+    target >= tiers.length
+  ) {
+    return { order: [...order], ties: [...ties] };
+  }
+  [tiers[tierIndex], tiers[target]] = [tiers[target], tiers[tierIndex]];
+  return fromTiers(tiers);
+}

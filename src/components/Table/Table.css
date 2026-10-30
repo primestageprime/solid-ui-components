@@ -188,6 +188,14 @@
   font-size: 11px;
 }
 
+/* firstColumn: "label" — the first column is a name, not a row index: keep
+   the row's body typography. Compound selector outranks :first-child above. */
+.hud-table--label-first .hud-table__cell:first-child {
+  color: var(--sui-text-primary);
+  font-family: var(--sui-font-family);
+  font-size: 13px;
+}
+
 /* Tail-collapse summary cell (BaseTableProps.spanRow): centered, prose
    typography. The compound selector matches the :first-child specificity so a
    full-row takeover (span from the first column) still overrides the row-index

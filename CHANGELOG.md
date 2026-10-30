@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- **`CompactLabelTable`** — `CompactTable` whose first column keeps the body font (it holds a name, not a row index); backed by a new `BaseTableProps.firstColumn: "index" | "label"` (default `"index"`, so nothing else changes).
+- **`fromTiers`, `moveTier`** — pure tier ops beside the existing tie helpers.
+
+### Changed
+
+- **`TieableRankList`** — tied items now JOIN into one card: one surface and one rank per tier, a divider with ≠ between tied items, and = in the gap between cards. Dragging a card moves the whole tier, and Alt+Arrow on a tier's rank moves the tier. To pull one item out of a tier, untie it first. The props are unchanged.
+
 ## 0.241.0 — 2026-10-30
 
 ### Fixed

@@ -28,11 +28,15 @@ const Harness = (p: { onChange?: (o: string[], t: boolean[]) => void }) => {
 };
 
 describe("TieableRankList", () => {
-  it("shows shared ranks for tied rows, a tie toggle per gap, and the action slot", () => {
-    const { getByLabelText, getAllByRole } = render(() => <Harness />);
-    expect(getByLabelText(/^Rank 1: A/).textContent).toBe("1");
-    expect(getByLabelText(/^Rank 1: B/).textContent).toBe("1");
+  it("joins a tie tier into one card with one rank, a ≠ divider inside, = in the gap", () => {
+    const { getByLabelText, getAllByRole, container } = render(() => (
+      <Harness />
+    ));
+    expect(getByLabelText(/^Rank 1: A = B/).textContent).toBe("1");
     expect(getByLabelText(/^Rank 2: C/).textContent).toBe("2");
+    const rows = container.querySelectorAll('[role="listitem"]');
+    expect(rows).toHaveLength(2);
+    expect(rows[0].querySelectorAll('[data-testid="row"]')).toHaveLength(2);
     const toggles = getAllByRole("button").filter((b) =>
       b.hasAttribute("aria-pressed"),
     );
@@ -43,29 +47,31 @@ describe("TieableRankList", () => {
     expect(getByLabelText("Veto c")).toBeTruthy();
   });
 
-  it("a tie toggle reports the flipped gap", () => {
+  it("= joins two cards; ≠ splits a tier", () => {
     const onChange = vi.fn();
     const { getByLabelText } = render(() => <Harness onChange={onChange} />);
     fireEvent.click(getByLabelText("Tie B with C"));
     expect(onChange).toHaveBeenLastCalledWith(["a", "b", "c"], [true, true]);
+    fireEvent.click(getByLabelText("Untie A from B"));
+    expect(onChange).toHaveBeenLastCalledWith(["a", "b", "c"], [false, true]);
   });
 
-  it("Alt+ArrowDown on a rank moves the row and re-ties", () => {
+  it("Alt+ArrowDown on a tier's rank moves the whole tier, still tied", () => {
     const onChange = vi.fn();
     const { getByLabelText, getAllByTestId } = render(() => (
       <Harness onChange={onChange} />
     ));
-    fireEvent.keyDown(getByLabelText(/^Rank 1: B/), {
+    fireEvent.keyDown(getByLabelText(/^Rank 1: A = B/), {
       key: "ArrowDown",
       altKey: true,
     });
-    expect(onChange).toHaveBeenLastCalledWith(["a", "c", "b"], [false, false]);
+    expect(onChange).toHaveBeenLastCalledWith(["c", "a", "b"], [false, true]);
     expect(getAllByTestId("row").map((r) => r.textContent)).toEqual([
-      "a",
       "c",
+      "a",
       "b",
     ]);
-    fireEvent.keyDown(getByLabelText(/: A\./), { key: "ArrowDown" });
+    fireEvent.keyDown(getByLabelText(/^Rank 1: C/), { key: "ArrowDown" });
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 

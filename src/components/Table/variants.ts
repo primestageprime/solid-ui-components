@@ -11,6 +11,16 @@ export const CompactTable = createBaseTable({
   maxHeight: "300px",
 });
 
+// Compact table whose first column is a NAME (a member, a product): same as
+// CompactTable, but the first column keeps the body font instead of the
+// monospace row-index look.
+export const CompactLabelTable = createBaseTable({
+  compact: true,
+  stickyHeader: true,
+  maxHeight: "300px",
+  firstColumn: "label",
+});
+
 // Striped interactive table — alternating rows with hover highlight
 export const StripedTable = createBaseTable({ striped: true, hoverable: true });
 
