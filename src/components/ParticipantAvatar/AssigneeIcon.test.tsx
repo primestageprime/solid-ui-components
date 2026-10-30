@@ -10,7 +10,9 @@ describe("AssigneeIcon", () => {
   });
 
   it("person kind renders the silhouette (default)", () => {
-    const { container } = render(() => <AssigneeIcon initials="P" kind="person" />);
+    const { container } = render(() => (
+      <AssigneeIcon initials="P" kind="person" />
+    ));
     const svg = container.querySelector("svg")!;
     expect(svg.getAttribute("aria-label")).toMatch(/person/);
     // Person icon has no antenna dots.
@@ -31,8 +33,12 @@ describe("AssigneeIcon", () => {
   });
 
   it("title carries the full name on hover; initials stay the ambient display", () => {
-    const { container } = render(() => <AssigneeIcon initials="Pe" title="Peter Stradinger" />);
-    expect(container.firstElementChild!.getAttribute("title")).toBe("Peter Stradinger");
+    const { container } = render(() => (
+      <AssigneeIcon initials="Pe" title="Peter Stradinger" />
+    ));
+    expect(container.firstElementChild!.getAttribute("title")).toBe(
+      "Peter Stradinger",
+    );
     expect(container.querySelector("text")?.textContent).toBe("Pe");
   });
 

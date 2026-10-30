@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`ParticipantAvatar`** (`SmAvatar` / `MdAvatar` / `LgAvatar`) — `referrerPolicy` is forwarded to the `<img>` (Google profile photos need `"no-referrer"`). A failed image load now falls back to the initials disc on its own, and the new `onImageError` callback fires; a new `imageSrc` is retried. Additive: with neither prop set, a working image renders exactly as before.
+
 ## 0.245.0 — 2026-10-30
 
 ### Fixed

@@ -12,7 +12,10 @@ import {
   type Component,
   type JSX,
   Show,
+  createEffect,
+  createSignal,
   mergeProps,
+  on,
   splitProps,
 } from "solid-js";
 import "./ParticipantAvatar.css";
@@ -32,6 +35,18 @@ export interface ParticipantAvatarProps
   size?: ParticipantAvatarSize;
   /** Alt text for the image — defaults to empty (decorative). */
   alt?: string;
+  /**
+   * `referrerpolicy` for the image. Hosts that refuse hotlinked requests
+   * carrying a Referer (Google profile photos on lh3.googleusercontent.com)
+   * need `"no-referrer"`. Omit and the browser default applies, as before.
+   */
+  referrerPolicy?: JSX.ImgHTMLAttributes<HTMLImageElement>["referrerpolicy"];
+  /**
+   * Fires when the image fails to load. Either way the avatar falls back to
+   * the initials disc on its own; this is for logging or swapping the URL.
+   * A new `imageSrc` gets a fresh try.
+   */
+  onImageError?: (event: Event) => void;
 }
 
 const clsx = (...parts: (string | false | undefined)[]): string =>
@@ -48,9 +63,22 @@ export const ParticipantAvatar: Component<ParticipantAvatarProps> = (props) => {
     "color",
     "size",
     "alt",
+    "referrerPolicy",
+    "onImageError",
     "class",
     "style",
   ]);
+
+  // A broken image falls back to the initials disc. The flag resets whenever
+  // the URL changes, so a corrected `imageSrc` is tried again.
+  const [failed, setFailed] = createSignal(false);
+  createEffect(
+    on(
+      () => local.imageSrc,
+      () => setFailed(false),
+      { defer: true },
+    ),
+  );
 
   const sizeClass = () => `sui-participant-avatar--${local.size ?? "md"}`;
 
@@ -77,7 +105,7 @@ export const ParticipantAvatar: Component<ParticipantAvatarProps> = (props) => {
 
   return (
     <Show
-      when={local.imageSrc}
+      when={local.imageSrc && !failed()}
       fallback={
         <span
           class={initialsClass()}
@@ -99,6 +127,11 @@ export const ParticipantAvatar: Component<ParticipantAvatarProps> = (props) => {
         }
         src={local.imageSrc!}
         alt={local.alt ?? ""}
+        referrerpolicy={local.referrerPolicy}
+        onError={(e) => {
+          setFailed(true);
+          local.onImageError?.(e);
+        }}
       />
     </Show>
   );

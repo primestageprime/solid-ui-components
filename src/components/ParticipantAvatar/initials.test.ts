@@ -8,7 +8,11 @@ const of = (names: string[], name: string): string =>
 
 describe("deriveInitials", () => {
   it("uses just the first initial when nothing collides", () => {
-    const m = deriveInitials(["Peter Stradinger", "Ada Lovelace", "Grace Hopper"]);
+    const m = deriveInitials([
+      "Peter Stradinger",
+      "Ada Lovelace",
+      "Grace Hopper",
+    ]);
     expect(m.get("Peter Stradinger")).toBe("P");
     expect(m.get("Ada Lovelace")).toBe("A");
     expect(m.get("Grace Hopper")).toBe("G");
@@ -110,7 +114,12 @@ describe("deriveInitials", () => {
   });
 
   it("is order-independent — same set, same result", () => {
-    const roster = ["Peter Stradinger", "Peter Falk", "Paula Falk", "Ada Lovelace"];
+    const roster = [
+      "Peter Stradinger",
+      "Peter Falk",
+      "Paula Falk",
+      "Ada Lovelace",
+    ];
     const forward = deriveInitials(roster);
     const reversed = deriveInitials([...roster].reverse());
     for (const name of roster) {

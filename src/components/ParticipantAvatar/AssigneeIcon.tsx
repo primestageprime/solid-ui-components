@@ -51,7 +51,10 @@ export interface AssigneeIconProps {
 }
 
 export type AssigneeIconOverrides = Pick<AssigneeIconProps, "size">;
-export type AssigneeIconDataProps = Omit<AssigneeIconProps, keyof AssigneeIconOverrides>;
+export type AssigneeIconDataProps = Omit<
+  AssigneeIconProps,
+  keyof AssigneeIconOverrides
+>;
 
 export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
   const chars = () => props.initials.slice(0, 2);
@@ -59,7 +62,10 @@ export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
   // default 25×23 box. Inline so it wins over the stylesheet default.
   const svgStyle = (): JSX.CSSProperties | undefined =>
     props.size
-      ? { width: `${Math.round((props.size * 25) / 23)}px`, height: `${props.size}px` }
+      ? {
+          width: `${Math.round((props.size * 25) / 23)}px`,
+          height: `${props.size}px`,
+        }
       : undefined;
   return (
     <span
@@ -79,7 +85,9 @@ export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
           >
             <circle cx="14" cy="10" r="8.75" />
             <path d="M5 25 v-0.5 a9 4.5 0 0 1 18 0 v0.5 z" />
-            <text x="14" y="13">{chars()}</text>
+            <text x="14" y="13">
+              {chars()}
+            </text>
           </svg>
         }
       >
@@ -94,7 +102,9 @@ export const AssigneeIcon: Component<AssigneeIconProps> = (props) => {
           <line x1="19" y1="10" x2="21" y2="4" />
           <circle class="dot" cx="21.3" cy="3" r="1.6" />
           <rect x="4" y="10" width="20" height="14" rx="2" />
-          <text x="14" y="20.5">{chars()}</text>
+          <text x="14" y="20.5">
+            {chars()}
+          </text>
         </svg>
       </Show>
     </span>

@@ -900,7 +900,7 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/ParticipantAvatar/AssigneeIcon.tsx",
-    "line": 56
+    "line": 59
   },
   {
     "name": "Assignees",
@@ -4861,7 +4861,7 @@
     "showcase": null,
     "since": "0.99.0",
     "file": "src/components/ParticipantAvatar/AssigneeIcon.tsx",
-    "line": 108
+    "line": 118
   },
   {
     "name": "createBandRail",
@@ -7262,7 +7262,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/ParticipantAvatar/ParticipantAvatar.tsx",
-    "line": 116
+    "line": 149
   },
   {
     "name": "createParticipantNameLabel",
@@ -15915,7 +15915,7 @@
     "useFor": null,
     "notes": "Large (36px) — for participant lists / detail headers.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/ParticipantAvatar/variants.ts",
     "line": 18
   },
@@ -16684,7 +16684,7 @@
     "useFor": null,
     "notes": "Medium (24px) — the default for inline conversation rows.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/ParticipantAvatar/variants.ts",
     "line": 14
   },
@@ -22272,7 +22272,7 @@
     "useFor": null,
     "notes": "Small (20px) — for tight indicator rows / chip-style references.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/ParticipantAvatar/variants.ts",
     "line": 10
   },

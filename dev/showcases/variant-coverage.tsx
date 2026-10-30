@@ -223,6 +223,7 @@ export const VariantCoverageShowcase: Component = () => {
           <SmAvatar initials="PS" color="var(--sui-accent)" />
           <MdAvatar initials="AK" color="var(--sui-success)" />
           <LgAvatar initials="MB" color="var(--sui-warning)" />
+          <LgAvatar initials="IE" color="var(--sui-danger)" imageSrc="https://invalid.test/broken.png" referrerPolicy="no-referrer" />
           <ParticipantNameLabel color="var(--sui-accent)">Peter</ParticipantNameLabel>
           <ParticipantTimeLabel>08:14</ParticipantTimeLabel>
         </ClusterRow>
