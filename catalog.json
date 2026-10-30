@@ -5160,7 +5160,7 @@
     "showcase": "#/button",
     "since": "0.142.0",
     "file": "src/components/Button/Button.tsx",
-    "line": 151
+    "line": 302
   },
   {
     "name": "createButtonGroup",
@@ -6547,7 +6547,7 @@
     "showcase": null,
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 186
+    "line": 170
   },
   {
     "name": "createHourlyWageAmountStrip",
@@ -6931,7 +6931,7 @@
     "showcase": null,
     "since": "0.85.1",
     "file": "src/components/Modal/Modal.tsx",
-    "line": 175
+    "line": 192
   },
   {
     "name": "createMonthDayGrid",
@@ -14215,7 +14215,7 @@
     "showcase": null,
     "since": "0.78.3",
     "file": "src/components/HotkeyButton/HotkeyButton.tsx",
-    "line": 91
+    "line": 77
   },
   {
     "name": "HourlyWageAmountStrip",
@@ -21032,7 +21032,7 @@
     "useFor": null,
     "notes": "Secondary button — neutral/supporting action",
     "showcase": "#/button",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Button/variants.ts",
     "line": 27
   },
@@ -22108,7 +22108,7 @@
     "useFor": null,
     "notes": "Small primary button — compact primary action",
     "showcase": "#/button",
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Button/variants.ts",
     "line": 62
   },
