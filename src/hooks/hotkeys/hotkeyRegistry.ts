@@ -30,7 +30,12 @@ import {
 	type HotkeyRank,
 	IDLE_CHORD,
 } from "../hotkeyDispatch";
+import { filter, flatMap, join, map, some } from "../../fn";
+import { sortWith } from "../../fn/sortWith";
 import { isReservedKey, type KeyMatchMode } from "./hotkeyKeys";
+
+type Claimed = readonly [number, HotkeyClaim];
+type Placed = readonly [number, Element];
 
 /** One claim on one or more keys. */
 export interface HotkeyClaim {
@@ -98,32 +103,29 @@ const inLayer = (claim: HotkeyClaim, top: number): boolean =>
 
 /** DOM order first, then the claims with no element by id. */
 const tieOrder = (
-	claims: ReadonlyArray<[number, HotkeyClaim]>,
+	claims: ReadonlyArray<Claimed>,
 ): Map<number, number> => {
-	const placed = claims
-		.map(([id, c]) => [id, c.element?.() ?? null] as const)
-		.filter((p): p is readonly [number, Element] => p[1] !== null)
-		.sort(([, a], [, b]) =>
+	const located = map(([id, c]: Claimed) => [id, c.element?.() ?? null] as const, claims);
+	const placed = sortWith(
+		([, a]: Placed, [, b]: Placed) =>
 			a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
-		);
-	const rest = claims.filter(([id]) => !placed.some(([p]) => p === id));
-	return new Map(
-		[...placed.map(([id]) => id), ...rest.map(([id]) => id)].map((id, i) => [
-			id,
-			i,
-		]),
+		filter((p): p is Placed => p[1] !== null, located),
 	);
+	const rest = filter(([id]: Claimed) => !some(([p]: Placed) => p === id, placed), claims);
+	const ids = [...map(([id]: Placed) => id, placed), ...map(([id]: Claimed) => id, rest)];
+	return new Map(map((id: number, i): [number, number] => [id, i], ids));
 };
 
 /** The table `dispatchHotkey` reads: one entry per key of every live claim. */
 const liveTable = (state: RegistryState): HotkeyEntry<"claim">[] => {
 	const top = topLayer(state);
-	const live = [...state.claims].filter(
-		([, c]) => inLayer(c, top) && (c.enabled?.() ?? true),
+	const live = filter(
+		([, c]: Claimed) => inLayer(c, top) && (c.enabled?.() ?? true),
+		[...state.claims],
 	);
 	const order = tieOrder(live);
-	return live.flatMap(([id, c]) =>
-		c.keys.map((keys) => ({
+	return flatMap(([id, c]: Claimed) =>
+		map((keys: string): HotkeyEntry<"claim"> => ({
 			action: String(id),
 			keys,
 			scope: "claim" as const,
@@ -133,7 +135,8 @@ const liveTable = (state: RegistryState): HotkeyEntry<"claim">[] => {
 			repeats: c.repeats ?? false,
 			inFields: c.inFields ?? false,
 			chordWindowMs: c.chordWindowMs,
-		})),
+		}), c.keys),
+		live,
 	);
 };
 
@@ -178,7 +181,7 @@ const createState = (): RegistryState => {
 			if (outcome.rivals.length > 0) {
 				warnOnce(
 					state,
-					`tie:${outcome.entry.keys}:${[outcome.entry.action, ...outcome.rivals].sort().join(",")}`,
+					`tie:${outcome.entry.keys}:${join(",", sortWith((a: string, b: string) => a.localeCompare(b), [outcome.entry.action, ...outcome.rivals]))}`,
 					`[sui hotkeys] "${outcome.entry.keys}" is claimed ${outcome.rivals.length + 1} times on rank "${outcome.entry.rank}"; the first in DOM order wins. Give one claim a higher rank.`,
 				);
 			}
@@ -229,13 +232,13 @@ const sync = (state: RegistryState): void => {
 export function registerHotkey(claim: HotkeyClaim): () => void {
 	if (typeof window === "undefined") return () => {};
 	const state = registry();
-	const reserved = claim.keys.filter(isReservedKey);
+	const reserved = filter(isReservedKey, claim.keys);
 	if (reserved.length > 0 && isDev()) {
 		console.error(
-			`[sui hotkeys] ${reserved.join(", ")}: the browser keeps this chord; it is not registered.`,
+			`[sui hotkeys] ${join(", ", reserved)}: the browser keeps this chord; it is not registered.`,
 		);
 	}
-	const keys = claim.keys.filter((k) => !isReservedKey(k));
+	const keys = filter((k: string) => !isReservedKey(k), claim.keys);
 	if (keys.length === 0) return () => {};
 	const id = state.nextId++;
 	state.claims.set(id, { ...claim, keys });
@@ -255,9 +258,10 @@ export function allocateHotkeyLayer(): number {
 /** Open a layer on top of the others. Returns the function that closes it. */
 export function openHotkeyLayer(layer: number): () => void {
 	const state = registry();
-	state.layers = [...state.layers.filter((l) => l !== layer), layer];
+	const without = (): number[] => filter((l: number) => l !== layer, state.layers);
+	state.layers = [...without(), layer];
 	return () => {
-		state.layers = state.layers.filter((l) => l !== layer);
+		state.layers = without();
 	};
 }
 

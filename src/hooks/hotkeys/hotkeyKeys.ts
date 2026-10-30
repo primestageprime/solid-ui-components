@@ -16,7 +16,12 @@
 // The "exact" mode is the old `dispatchHotkey` rule, kept for its tables:
 // `e.key` equals the key string, case and all, with no ⌘ / Ctrl / Alt held.
 // ============================================
+import { filter, join, map, some } from "../../fn";
 import type { HotkeyPress } from "./hotkeyGuard";
+
+/** The parts that are there, joined: `["Mod", false, "z"]` → "Mod+z". */
+const joinPresent = (sep: string, parts: ReadonlyArray<string | false>): string =>
+	join(sep, filter(Boolean, parts));
 
 export interface KeyStep {
 	/** The key: one printable character ("z", "?") or a named key ("Enter"). */
@@ -56,24 +61,20 @@ export function parseStep(step: string): KeyStep {
 	const body = plusKey ? step.slice(0, -2) : step;
 	const parts = body === "+" ? ["+"] : body.split("+");
 	const key = plusKey ? "+" : (parts[parts.length - 1] ?? "");
-	const mods = (plusKey ? parts : parts.slice(0, -1)).filter((p) => p !== "");
-	return mods.reduce<KeyStep>(
-		(acc, m) => {
-			const flag = MODIFIERS[m.toLowerCase()];
-			return flag ? { ...acc, [flag]: true } : acc;
-		},
-		{ key, ...NO_MODS },
-	);
+	const mods = plusKey ? parts : parts.slice(0, -1);
+	const flags = map((m) => MODIFIERS[m.toLowerCase()], mods);
+	return {
+		key,
+		...NO_MODS,
+		...Object.fromEntries(map((f) => [f, true], filter(Boolean, flags))),
+	};
 }
 
 /** A whole key: "g t" → two steps. A lone " " is the Space key. */
 export const parseKey = (keys: string): KeyStep[] =>
 	keys === " "
 		? [parseStep(" ")]
-		: keys
-				.split(" ")
-				.filter((s) => s !== "")
-				.map(parseStep);
+		: map(parseStep, filter((s) => s !== "", keys.split(" ")));
 
 const hasMods = (s: KeyStep): boolean =>
 	s.mod || s.meta || s.ctrl || s.alt || s.shift;
@@ -92,16 +93,14 @@ export function pressChar(press: Pick<HotkeyPress, "key" | "code">): string {
 
 /** The text a step is known by in a chord prefix ("g", "Mod+k"). */
 export const stepName = (s: KeyStep): string =>
-	[
+	joinPresent("+", [
 		s.mod && "Mod",
 		s.meta && "Meta",
 		s.ctrl && "Ctrl",
 		s.alt && "Alt",
 		s.shift && "Shift",
 		s.key,
-	]
-		.filter(Boolean)
-		.join("+");
+	]);
 
 /** Whether one press is this step. `mac` decides what `Mod` is. */
 export function stepMatches(
@@ -150,11 +149,12 @@ export function isMacPlatform(): boolean {
 const RESERVED = new Set(["w", "t", "n", "q"]);
 
 export const isReservedKey = (keys: string): boolean =>
-	parseKey(keys).some(
-		(s) =>
+	some(
+		(s: KeyStep) =>
 			(s.mod || s.meta || s.ctrl) &&
 			!s.alt &&
 			RESERVED.has(s.key.toLowerCase()),
+		parseKey(keys),
 	);
 
 const NAMED_GLYPHS: Readonly<Record<string, string>> = {
@@ -177,28 +177,29 @@ const glyphOfKey = (key: string): string =>
 export function stepGlyph(s: KeyStep, mac: boolean): string {
 	const key = glyphOfKey(s.key);
 	if (mac) {
-		const mods = [
-			(s.ctrl && "⌃") || "",
-			(s.alt && "⌥") || "",
-			(s.shift && "⇧") || "",
-			((s.mod || s.meta) && "⌘") || "",
-		].join("");
-		return `${mods}${key}`;
+		return joinPresent("", [
+			s.ctrl && "⌃",
+			s.alt && "⌥",
+			s.shift && "⇧",
+			(s.mod || s.meta) && "⌘",
+			key,
+		]);
 	}
-	const mods = [
+	return joinPresent("+", [
 		(s.mod || s.ctrl) && "Ctrl",
 		s.meta && "Meta",
 		s.alt && "Alt",
 		s.shift && "Shift",
-	].filter(Boolean);
-	return [...mods, key].join("+");
+		key,
+	]);
 }
 
 /** The hint for a whole key: "↵", "⌘Z", "G T". */
 export const keyGlyph = (keys: string, mac: boolean): string =>
-	parseKey(keys)
-		.map((s) => stepGlyph(s, mac))
-		.join(" ");
+	join(
+		" ",
+		map((s) => stepGlyph(s, mac), parseKey(keys)),
+	);
 
 /** True when the key is one bare letter or digit: the hint is an underlined letter. */
 export const isLetterKey = (keys: string): boolean => {
@@ -217,13 +218,11 @@ export function ariaKeyShortcut(keys: string, mac: boolean): string | null {
 	const s = steps[0];
 	const key =
 		ARIA_KEY[s.key] ?? (isPrintable(s.key) ? s.key.toUpperCase() : s.key);
-	return [
+	return joinPresent("+", [
 		(s.meta || (s.mod && mac)) && "Meta",
 		(s.ctrl || (s.mod && !mac)) && "Control",
 		s.alt && "Alt",
 		s.shift && "Shift",
 		key,
-	]
-		.filter(Boolean)
-		.join("+");
+	]);
 }

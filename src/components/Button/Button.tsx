@@ -39,6 +39,7 @@ import {
 } from "../../hooks/hotkeys/hotkeyKeys";
 import { useHotkey } from "../../hooks/hotkeys/useHotkey";
 import { Tooltip } from "../Tooltip/Tooltip";
+import { filter, join, map } from "../../fn";
 import {
   createSubmitAction,
   type SubmitAction,
@@ -197,10 +198,13 @@ export const Button: Component<ButtonProps> = (props) => {
   const mac = isMacPlatform();
   const hint = () => local.hotkeys?.[0];
   const shortcuts = () =>
-    (local.hotkeys ?? [])
-      .map((k) => ariaKeyShortcut(k, mac))
-      .filter((k): k is string => k !== null)
-      .join(" ") || undefined;
+    join(
+      " ",
+      filter(
+        (k): k is string => k !== null,
+        map((k: string) => ariaKeyShortcut(k, mac), local.hotkeys ?? []),
+      ),
+    ) || undefined;
   const setRef = (node: HTMLButtonElement) => {
     el = node;
     const forward = local.ref as unknown;

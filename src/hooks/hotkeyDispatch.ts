@@ -49,6 +49,7 @@ import {
   type KeyStep,
 } from "./hotkeys/hotkeyKeys";
 import { filter, map } from "../fn";
+import { sortWith } from "../fn/sortWith";
 
 /** The scopes the canon names. A table may use its own strings instead. */
 export type HotkeyScope = "global" | "list" | "detail" | "modal";
@@ -172,26 +173,34 @@ export function dispatchHotkey<S extends string = HotkeyScope>(
   if (guard === "owns-key") return { kind: "ignored", state };
   const inField = guard === "editable";
 
-  const active: Parsed<S>[] = activeEntries(table, scopes, modal)
-    .map((entry, index) => ({
+  const parsed = map(
+    (entry: HotkeyEntry<S>, index): Parsed<S> => ({
       entry,
       steps: parseKey(entry.keys),
       weight: RANK_WEIGHT[entry.rank ?? "page"],
       order: entry.order ?? index,
-    }))
-    .filter((p) => handled(p.entry.action) && (!inField || p.entry.inFields));
+    }),
+    activeEntries(table, scopes, modal),
+  );
+  const active = filter(
+    (p: Parsed<S>) => handled(p.entry.action) && (!inField || !!p.entry.inFields),
+    parsed,
+  );
   if (inField && active.length === 0) return { kind: "ignored", state };
 
   const matches = (step: KeyStep | undefined, p: Parsed<S>): boolean =>
     step !== undefined && stepMatches(step, press, mac, p.entry.match ?? "exact");
 
   const fire = (hits: Parsed<S>[]): HotkeyOutcome<S> | null => {
-    const [best, ...rest] = [...hits].sort(byPriority);
+    const [best, ...rest] = sortWith(byPriority, hits);
     if (!best) return null;
     if (press.repeat && !best.entry.repeats) {
       return { kind: "repeat", entry: best.entry, state: IDLE_CHORD };
     }
-    const rivals = rest.filter((r) => r.weight === best.weight).map((r) => r.entry.action);
+    const rivals = map(
+      (r: Parsed<S>) => r.entry.action,
+      filter((r: Parsed<S>) => r.weight === best.weight, rest),
+    );
     return {
       kind: "fire",
       entry: best.entry,
@@ -205,21 +214,25 @@ export function dispatchHotkey<S extends string = HotkeyScope>(
   const pending = state.prefix !== null && now <= state.expiresAt ? state.prefix : null;
   if (pending !== null) {
     const hit = fire(
-      active.filter(
-        (p) => p.steps.length === 2 && stepName(p.steps[0]) === pending && matches(p.steps[1], p),
+      filter(
+        (p: Parsed<S>) =>
+          p.steps.length === 2 && stepName(p.steps[0]) === pending && matches(p.steps[1], p),
+        active,
       ),
     );
     if (hit) return hit;
   }
 
   // Rule 5: a single key.
-  const single = fire(active.filter((p) => p.steps.length === 1 && matches(p.steps[0], p)));
+  const single = fire(
+    filter((p: Parsed<S>) => p.steps.length === 1 && matches(p.steps[0], p), active),
+  );
   if (single) return single;
 
   // Rule 6: the first key of a chord.
-  const starts = active.filter((p) => p.steps.length === 2 && matches(p.steps[0], p));
+  const starts = filter((p: Parsed<S>) => p.steps.length === 2 && matches(p.steps[0], p), active);
   if (starts.length > 0) {
-    const first = [...starts].sort(byPriority)[0];
+    const first = sortWith(byPriority, starts)[0];
     const prefix = stepName(first.steps[0]);
     const wait = first.entry.chordWindowMs ?? windowMs;
     return { kind: "chord", prefix, state: { prefix, expiresAt: now + wait } };

@@ -27,6 +27,7 @@ import {
   type HotkeyScope,
 } from "./hotkeyDispatch";
 import { registerHotkey } from "./hotkeys/hotkeyRegistry";
+import { map } from "../fn";
 
 export interface HotkeyScopeOptions<S extends string = HotkeyScope> {
   /** Every binding: action, keys, scope. */
@@ -56,7 +57,7 @@ function listenOn<S extends string>(
   const onKey = (e: Event) => {
     const ke = e as KeyboardEvent;
     const outcome = dispatchHotkey<S>({
-      table: opts.table.map((entry) => ({ repeats: true, ...entry })),
+      table: map((entry: HotkeyEntry<S>) => ({ repeats: true, ...entry }), opts.table),
       scopes: opts.scopes(),
       press: {
         key: ke.key,
@@ -100,7 +101,7 @@ export function createHotkeyScope<S extends string = HotkeyScope>(
 ): () => void {
   if (opts.target) return listenOn(opts, opts.target);
   const modal = "modal" as S;
-  const offs = opts.table.map((entry) =>
+  const offs = map((entry: HotkeyEntry<S>) =>
     registerHotkey({
       keys: [entry.keys],
       match: "exact",
@@ -113,7 +114,7 @@ export function createHotkeyScope<S extends string = HotkeyScope>(
         typeof opts.handlers[entry.action] === "function" &&
         activeEntries(opts.table, opts.scopes(), modal).includes(entry),
       run: () => opts.handlers[entry.action]?.(),
-    }),
+    }), opts.table,
   );
   return () => {
     for (const off of offs) off();
