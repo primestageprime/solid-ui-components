@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`PairwiseMatrix`** — fits phone widths. Columns are headed by a number key (an `<abbr>` with the full name), rows read "n name" clipped to 6 characters (full name in a title), and the table scrolls inside its own `ScrollXBox`. Five candidates fit a 390px card, and the page never scrolls sideways (it measured 425px before).
+
 ## 0.244.0 — 2026-10-30
 
 ### Added

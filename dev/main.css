@@ -2948,7 +2948,8 @@ th:has(.tf-th-center) .hud-table__header-content {
 /* PairwiseMatrix showcase demo frame — scaffolded by npm run new:component. */
 .pairwise-matrix-demo {
   padding: 16px;
-  max-width: 480px;
+  max-width: 390px;
+  box-sizing: border-box;
 }
 
 /* TieableRankList showcase demo frame — scaffolded by npm run new:component. */

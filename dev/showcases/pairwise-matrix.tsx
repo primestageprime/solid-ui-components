@@ -8,13 +8,13 @@ import {
 } from "../../src/components/PairwiseMatrix";
 import { SectionTitle, MutedBody } from "../../src/components/Text";
 
-const BOOKS = ["Piranesi", "Circe", "Klara", "Babel"];
+const BOOKS = ["Piranesi", "Circe", "Klara and the Sun", "Babel", "Middlemarch"];
 const BALLOTS = [
-  [["Piranesi"], ["Circe", "Klara"], ["Babel"]],
-  [["Circe"], ["Piranesi"], ["Babel"], ["Klara"]],
-  [["Piranesi", "Babel"], ["Klara"]],
-  [["Klara"], ["Piranesi"], ["Circe"]],
-  [["Piranesi"], ["Babel"], ["Circe"], ["Klara"]],
+  [["Piranesi"], ["Circe", "Klara and the Sun"], ["Babel"], ["Middlemarch"]],
+  [["Circe"], ["Middlemarch"], ["Piranesi"], ["Babel"], ["Klara and the Sun"]],
+  [["Piranesi", "Babel"], ["Klara and the Sun"]],
+  [["Klara and the Sun"], ["Piranesi"], ["Circe"]],
+  [["Middlemarch"], ["Piranesi"], ["Babel"], ["Circe"], ["Klara and the Sun"]],
 ];
 
 export const PairwiseMatrixShowcase: Component = () => (
@@ -30,7 +30,7 @@ export const PairwiseMatrixShowcase: Component = () => (
         <PairwiseMatrix
           candidates={BOOKS}
           pairwise={pairwiseMatrix(BOOKS, BALLOTS)}
-          label={(b) => b.slice(0, 6)}
+         
         />
       </div>
     </div>

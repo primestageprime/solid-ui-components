@@ -7201,7 +7201,7 @@
     "showcase": "#/pairwise-matrix",
     "since": null,
     "file": "src/components/PairwiseMatrix/PairwiseMatrix.tsx",
-    "line": 66
+    "line": 87
   },
   {
     "name": "createPanel",

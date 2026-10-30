@@ -43,4 +43,30 @@ describe("PairwiseMatrix", () => {
     ));
     expect(container.textContent).toContain("row beats col");
   });
+  it("heads columns with a number key and rows with 'n · name', inside its own horizontal scroll box", () => {
+    const { container } = render(() => (
+      <PairwiseMatrix
+        candidates={["x", "y", "z"]}
+        pairwise={pairwise}
+        label={(id) => `Book ${id}`}
+      />
+    ));
+    const abbrs = [...container.querySelectorAll("abbr")];
+    expect(abbrs.map((a) => a.textContent)).toEqual(["1", "2", "3"]);
+    expect(abbrs[1].getAttribute("title")).toBe("Book y");
+    expect(container.textContent).toContain("2 Book y");
+    const { container: long } = render(() => (
+      <PairwiseMatrix
+        candidates={["x"]}
+        pairwise={pairwise}
+        label={() => "Klara and the Sun"}
+      />
+    ));
+    expect(long.querySelector('span[title="Klara and the Sun"]')?.textContent).toBe(
+      "1 Klara…",
+    );
+    expect((container.firstElementChild as HTMLElement).style.overflowX).toBe(
+      "auto",
+    );
+  });
 });

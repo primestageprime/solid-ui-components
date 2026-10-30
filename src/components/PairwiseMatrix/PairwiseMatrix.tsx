@@ -4,7 +4,9 @@
 // Composes `ValueMatrix` (Depth 2). Owns zero CSS and zero inline style: the
 // win/loss treatment is ValueMatrix's tone vocabulary.
 //
-// A HEAD-TO-HEAD TABLE: every candidate against every other. The cell at
+// A HEAD-TO-HEAD TABLE: every candidate against every other. Rows carry
+// "n name" (clipped), columns only the number key n (an <abbr> titled with the name),
+// and the table scrolls inside its own ScrollXBox, so it fits a phone. The cell at
 // (row a, column b) reads "a–b", how many preferred a over b against how many
 // preferred b over a, toned success where the row candidate wins that pair and
 // muted where it loses. The diagonal is blank. Reading across a row shows one
@@ -16,6 +18,8 @@
 // ============================================
 import { type Component, mergeProps } from "solid-js";
 import type { Tone } from "../../types";
+import { findIndex } from "../../fn";
+import { ScrollXBox } from "../Layout";
 import { ValueMatrix } from "../ValueMatrix";
 import { type PairwiseTally, pairwiseOutcome } from "./pairwise";
 
@@ -33,6 +37,12 @@ export interface PairwiseMatrixOverrides {
   readonly cornerLabel?: string;
 }
 
+/** Row names are clipped to this many characters (full name in the title) so
+ *  the label column leaves room for five number-keyed columns inside a card at 390px. */
+const ROW_NAME_MAX = 6;
+const clip = (s: string) =>
+  s.length > ROW_NAME_MAX ? `${s.substring(0, ROW_NAME_MAX).trimEnd()}…` : s;
+
 const TONE = {
   win: "success",
   loss: "muted",
@@ -43,20 +53,31 @@ export const PairwiseMatrix: Component<
   PairwiseMatrixProps & PairwiseMatrixOverrides
 > = (props) => {
   const name = (id: string) => props.label?.(id) ?? id;
+  const key = (id: string) =>
+    findIndex((c: string) => c === id, props.candidates) + 1;
   return (
-    <ValueMatrix<string, string>
-      rows={[...props.candidates]}
-      cols={[...props.candidates]}
-      rowLabel={name}
-      colLabel={name}
-      rowAxisLabel={props.cornerLabel ?? "vs"}
-      value={(a, b) => (a === b ? null : (props.pairwise[a]?.[b] ?? 0))}
-      format={(v, a, b) => `${v}–${props.pairwise[b]?.[a] ?? 0}`}
-      tone={(_v, a, b) => {
-        const o = pairwiseOutcome(props.pairwise, a, b);
-        return o === null ? "default" : TONE[o];
-      }}
-    />
+    // PHONE WIDTH: columns are headed by a number key (row "1 Pirane…" is
+    // column 1), so five candidates fit 390px; and the table sits in its own
+    // horizontal scroll box, so even long names never push the page sideways.
+    <ScrollXBox>
+      <ValueMatrix<string, string>
+        rows={[...props.candidates]}
+        cols={[...props.candidates]}
+        rowLabel={(id) => (
+          <span title={name(id)}>
+            {key(id)} {clip(name(id))}
+          </span>
+        )}
+        colLabel={(id) => <abbr title={name(id)}>{key(id)}</abbr>}
+        rowAxisLabel={props.cornerLabel ?? "vs"}
+        value={(a, b) => (a === b ? null : (props.pairwise[a]?.[b] ?? 0))}
+        format={(v, a, b) => `${v}–${props.pairwise[b]?.[a] ?? 0}`}
+        tone={(_v, a, b) => {
+          const o = pairwiseOutcome(props.pairwise, a, b);
+          return o === null ? "default" : TONE[o];
+        }}
+      />
+    </ScrollXBox>
   );
 };
 
