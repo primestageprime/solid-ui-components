@@ -1620,7 +1620,7 @@
     "useFor": "3–5 top-level sections of a mobile-first app.",
     "notes": "The phone's primary nav: icon-over-label tabs pinned under the page.",
     "showcase": "#/bottom-tab-bar",
-    "since": "Unreleased",
+    "since": "0.240.0",
     "file": "src/components/BottomTabBar/variants.ts",
     "line": 8
   },
@@ -16187,7 +16187,7 @@
     "useFor": null,
     "notes": "A locked row standing in for content the viewer may not see yet.",
     "showcase": "#/redacted-row",
-    "since": "Unreleased",
+    "since": "0.240.0",
     "file": "src/components/RedactedRow/variants.ts",
     "line": 8
   },
@@ -17870,7 +17870,7 @@
     "useFor": "\"tap the last chapter you finished\", episode / lesson / step pickers. (Through/up-to rules that turn a meeting into a `target` stay in the consumer.)",
     "notes": "Numbered cells in rows of ten: pick one, see the run to the next stop.",
     "showcase": "#/number-pick-grid",
-    "since": "Unreleased",
+    "since": "0.240.0",
     "file": "src/components/NumberPickGrid/variants.ts",
     "line": 11
   },
@@ -18092,7 +18092,7 @@
     "useFor": "reading-club progress, course completion, any cohort-toward-a-total view. The finish x is the consumer's arithmetic (pace, deadlines).",
     "notes": "Several series racing to one total, each with its projected finish, the plan and today.",
     "showcase": "#/pace-projection-chart",
-    "since": "Unreleased",
+    "since": "0.240.0",
     "file": "src/components/PaceProjectionChart/variants.ts",
     "line": 11
   },
@@ -18319,7 +18319,7 @@
     "useFor": "ranked-choice / Condorcet results, round-robin records. (`ValueMatrix.format` now also receives `(row, col)`, which is what lets a cell print its mirror; additive.)",
     "notes": "Every candidate against every other, \"wins–losses\" per pair, toned by who won.",
     "showcase": "#/pairwise-matrix",
-    "since": "Unreleased",
+    "since": "0.240.0",
     "file": "src/components/PairwiseMatrix/variants.ts",
     "line": 11
   },
@@ -24579,7 +24579,7 @@
     "useFor": "ranked ballots with ties, preference sorting.",
     "notes": "Drag-to-rank list where neighbours can be tied (= / ≠), with an optional per-row action.",
     "showcase": "#/tieable-rank-list",
-    "since": "Unreleased",
+    "since": "0.240.0",
     "file": "src/components/TieableRankList/variants.ts",
     "line": 7
   },

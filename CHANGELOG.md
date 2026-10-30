@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.240.0 — 2026-10-30
+
 ### Added
 
 - **`BottomTabBar`** — Primitive (Depth 1): the phone's icon-over-label primary nav of plain links; `items` + `active`.
