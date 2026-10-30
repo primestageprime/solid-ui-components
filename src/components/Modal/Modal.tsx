@@ -5,6 +5,7 @@
 // Tags: shows:dialog, does:dismiss, does:submit, data:scalar, role:overlay
 // Owns CSS (Modal.css), no component imports.
 // Portal-based modal with overlay, escape key, size variants.
+// While open it is a hotkey LAYER: only its own keys fire (hooks/hotkeys).
 // With `onSubmit`, body + footer are a <form>: Enter in a one-line field and
 // a `type="submit"` footer button both run it (see hooks/submitOnEnter).
 // On open, focus goes to the first field (or a `data-autofocus` one, or the
@@ -22,6 +23,12 @@ import { Portal } from "solid-js/web";
 import type { ColorVariant, CornerStyle } from "../../types";
 import { focusOnOpen } from "../../hooks/initialFocus";
 import { submitHandler, submitOnEnter } from "../../hooks/submitOnEnter";
+import {
+  allocateHotkeyLayer,
+  openHotkeyLayer,
+  registerHotkey,
+} from "../../hooks/hotkeys/hotkeyRegistry";
+import { HotkeyLayerContext } from "../../hooks/hotkeys/useHotkey";
 import "./Modal.css";
 
 export interface ModalProps {
@@ -63,19 +70,27 @@ export interface ModalProps {
 }
 
 export const Modal: Component<ModalProps> = (props) => {
-  // Handle escape key to close modal
+  // THE HOTKEY LAYER (#53325). While open, the modal is the top layer of the
+  // hotkey registry: only its claims fire, and page keys are blocked. Every
+  // SUI button inside reads this layer through `HotkeyLayerContext`. Escape
+  // is the layer's own claim, so one Escape closes one modal (the top one),
+  // even from a field in the modal.
+  const layer = allocateHotkeyLayer();
   createEffect(() => {
     if (props.open) {
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          props.onClose();
-        }
-      };
-      document.addEventListener("keydown", handleEscape);
+      const closeLayer = openHotkeyLayer(layer);
+      const offEscape = registerHotkey({
+        keys: ["Escape"],
+        rank: "modal",
+        layer,
+        inFields: true,
+        run: () => props.onClose(),
+      });
       document.body.style.overflow = "hidden";
 
       onCleanup(() => {
-        document.removeEventListener("keydown", handleEscape);
+        offEscape();
+        closeLayer();
         document.body.style.overflow = "";
       });
     }
@@ -108,6 +123,7 @@ export const Modal: Component<ModalProps> = (props) => {
   return (
     <Show when={props.open}>
       <Portal>
+        <HotkeyLayerContext.Provider value={layer}>
         {/* biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop click-to-dismiss; Escape key handles keyboard dismissal (see createEffect above) */}
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: overlay backdrop click-to-dismiss; Escape key handles keyboard dismissal (see createEffect above) */}
         <div class="sui-modal-overlay" onClick={handleOverlayClick}>
@@ -161,6 +177,7 @@ export const Modal: Component<ModalProps> = (props) => {
             </Show>
           </div>
         </div>
+        </HotkeyLayerContext.Provider>
       </Portal>
     </Show>
   );
