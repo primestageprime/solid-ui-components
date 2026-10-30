@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.247.0 — 2026-10-30
+
 ### Added
 
 - **`SmallQuietButton`** / Button `variant: "quiet"` — muted, faint-outlined at rest, full contrast on hover and focus-visible, slightly stronger on touch screens.

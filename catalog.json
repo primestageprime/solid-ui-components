@@ -22142,7 +22142,7 @@
     "useFor": null,
     "notes": "Small quiet button — a secondary affordance that stays out of the way until hovered or focused (TieableRankList's = tie / ≠ untie).",
     "showcase": "#/button",
-    "since": "Unreleased",
+    "since": "0.247.0",
     "file": "src/components/Button/variants.ts",
     "line": 93
   },
