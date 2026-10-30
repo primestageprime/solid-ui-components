@@ -3,8 +3,10 @@
 // Tags: shows:button, shows:kbd, does:hotkey, does:click, data:scalar, role:control
 // Built on Button. Renders a text label with its hotkey character
 // emphasized (bold + underline) so the keyboard affordance is obvious,
-// and — when `armed` — binds a window-level keydown listener that fires
-// the action when that key is pressed.
+// and — when `armed` — claims that key in the hotkey registry
+// (hooks/hotkeys), so pressing it fires the action. A thin wrapper since
+// #53325: the claim respects Modal layers, and a focused text field keeps
+// the key.
 //
 //   <HotkeyButton hotkey="d" onTrigger={markDone}>Mark Done</HotkeyButton>
 //
@@ -16,12 +18,11 @@ import {
   type JSX,
   splitProps,
   mergeProps,
-  onCleanup,
-  onMount,
   createMemo,
 } from "solid-js";
 import { Button, type ButtonProps } from "../Button/Button";
 import { Icon, type IconName } from "../Icon";
+import { useHotkey } from "../../hooks/hotkeys/useHotkey";
 import {
   isEditableTarget,
   type HotkeyPress,
@@ -109,18 +110,15 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
     local.onTrigger?.(e);
   };
 
-  const onKeyDown = (e: KeyboardEvent) => {
-    if (!local.armed || local.disabled) return;
-    if (!hotkeyFires(e, local.hotkey ?? "")) return;
-    e.preventDefault();
-    // `once`: swallow a held key's auto-repeat (the first press was swallowed
-    // too) but fire nothing.
-    if (local.once && e.repeat) return;
-    fire(e);
-  };
-
-  onMount(() => window.addEventListener("keydown", onKeyDown));
-  onCleanup(() => window.removeEventListener("keydown", onKeyDown));
+  // The registry claim. `once`: a held key's auto-repeats are swallowed but
+  // fire nothing (read at creation). ⌘ / Ctrl / Alt never fire it; Shift and
+  // case do not matter (the registry's `hotkeyFires` rule).
+  useHotkey({
+    keys: () => (local.armed && local.hotkey ? [local.hotkey] : []),
+    enabled: () => !local.disabled,
+    repeats: !local.once,
+    run: fire,
+  });
 
   const classes = () => {
     const list = ["sui-hotkey-btn"];
@@ -133,6 +131,7 @@ export const HotkeyButton: Component<HotkeyButtonProps> = (props) => {
       {...others}
       class={classes()}
       disabled={local.disabled}
+      aria-keyshortcuts={local.armed && local.hotkey ? local.hotkey.toUpperCase() : undefined}
       onClick={fire as JSX.EventHandler<HTMLButtonElement, MouseEvent>}
     >
       {local.icon && (
