@@ -43,6 +43,15 @@ export const InfoSurface = createSurface({
   bg: "rgba(var(--sui-accent-rgb), 0.05)",
   borderColor: "rgba(var(--sui-accent-rgb), 0.3)",
 });
+/** TierSurface — a GROUP of items that count as one (a tie tier in
+ *  TieableRankList): an accent wash and an accent border, so the joined group
+ *  reads as one unit and never as the panel it sits in. */
+export const TierSurface = createSurface({
+  padding: "sm",
+  radius: "md",
+  bg: "rgba(var(--sui-accent-rgb), 0.08)",
+  borderColor: "rgba(var(--sui-accent-rgb), 0.6)",
+});
 export const WarningSurface = createSurface({
   padding: "md",
   radius: "md",

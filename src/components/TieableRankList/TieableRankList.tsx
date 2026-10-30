@@ -1,10 +1,12 @@
 // ============================================
 // TieableRankList — Composite (Depth 3)
 // Tags: shows:list, shows:card, shows:button, does:drag, does:reorder, does:toggle, does:hotkey, data:list, data:grouped, role:container
-// Composes `SortableList` (Depth 2, bare chrome) + `CompactSurface` +
-// `LabeledDivider` + `ClusterRow` / `CenteredWrapRow` / `GrowBox` /
-// `TightStack` (Layout) + `SmallPrimaryButton` / `SmallGhostButton`. Owns zero
-// CSS and zero inline style.
+// Composes `SortableList` (Depth 2, "framed" chrome: grip always visible) +
+// `TierSurface` (a tied group: accent wash + accent border) / `CompactSurface`
+// (a card of one) + `LabeledDivider` + `TopClusterRow` / `ClusterRow` /
+// `CenteredWrapRow` / `GrowBox` / `TightStack` (Layout) + `SmallPrimaryButton`
+// (rank, pinned top-left) / `SmallGhostButton` (≠ untie) /
+// `SmallOutlinedButton` (= tie). Owns zero CSS and zero inline style.
 //
 // A RANKING THAT ALLOWS "THESE ARE EQUAL TO ME". Items in one tier JOIN into
 // one card (Peter, 2026-10-29: "when you set something equal, they should
@@ -23,11 +25,22 @@
 // follows. The = and ≠ controls are ordinary buttons with `aria-pressed`.
 // ============================================
 import { type JSX, For, Show, mergeProps } from "solid-js";
-import { SmallGhostButton, SmallPrimaryButton } from "../Button";
+import { Dynamic } from "solid-js/web";
+import {
+  SmallGhostButton,
+  SmallOutlinedButton,
+  SmallPrimaryButton,
+} from "../Button";
 import { LabeledDivider } from "../LabeledDivider";
-import { CenteredWrapRow, ClusterRow, GrowBox, TightStack } from "../Layout";
+import {
+  CenteredWrapRow,
+  ClusterRow,
+  GrowBox,
+  TightStack,
+  TopClusterRow,
+} from "../Layout";
 import { SortableList } from "../SortableList";
-import { CompactSurface } from "../Surface";
+import { CompactSurface, TierSurface } from "../Surface";
 import { join, map } from "../../fn";
 import { indexOfId } from "./indexOfId";
 import {
@@ -105,7 +118,7 @@ export function TieableRankList<T>(
     <TightStack ref={root}>
       <SortableList
         label={props.label ?? "Ranking"}
-        rowChrome="bare"
+        rowChrome="framed"
         items={tiers()}
         getId={tierKey}
         onReorder={(keys) => {
@@ -119,8 +132,10 @@ export function TieableRankList<T>(
           const nextTier = () => tiers()[t() + 1];
           return (
             <TightStack>
-              <CompactSurface>
-                <ClusterRow>
+              <Dynamic
+                component={tier.length > 1 ? TierSurface : CompactSurface}
+              >
+                <TopClusterRow>
                   <SmallPrimaryButton
                     data-rank-id={tier[0]}
                     aria-label={`Rank ${t() + 1}: ${tierName(tier)}. Alt+Up or Alt+Down moves it.`}
@@ -143,7 +158,7 @@ export function TieableRankList<T>(
                                     aria-label={`Untie ${name(tier[i() - 1])} from ${name(id)}`}
                                     onClick={() => toggleAt(tier[i() - 1])}
                                   >
-                                    ≠
+                                    ≠ untie
                                   </SmallGhostButton>
                                 }
                               />
@@ -161,18 +176,18 @@ export function TieableRankList<T>(
                       </For>
                     </TightStack>
                   </GrowBox>
-                </ClusterRow>
-              </CompactSurface>
+                </TopClusterRow>
+              </Dynamic>
               <Show when={nextTier()}>
                 {(nt) => (
                   <CenteredWrapRow>
-                    <SmallGhostButton
+                    <SmallOutlinedButton
                       aria-pressed={false}
                       aria-label={`Tie ${name(tier[tier.length - 1])} with ${name(nt()[0])}`}
                       onClick={() => toggleAt(tier[tier.length - 1])}
                     >
-                      =
-                    </SmallGhostButton>
+                      = tie
+                    </SmallOutlinedButton>
                   </CenteredWrapRow>
                 )}
               </Show>

@@ -37,7 +37,7 @@
    the ListItem workshop bench's SortableList overrides. The placeholder keeps
    its dashed chrome (it is excluded below), so the drop gap still reads. */
 .sui-sortable-list--bare
-  .sui-sortable-list__row:not(.sui-sortable-list__placeholder) {
+.sui-sortable-list__row:not(.sui-sortable-list__placeholder) {
   padding: 0;
   border-color: transparent;
   background: transparent;
@@ -50,6 +50,18 @@
   .sui-sortable-list__row:hover
   .sui-sortable-list__grip {
   opacity: 0.45;
+}
+
+/* "framed" row chrome — "bare", but the grip stays visible (no hover on a
+   phone) and a little larger, so the row reads as draggable at rest. */
+.sui-sortable-list--framed .sui-sortable-list__grip {
+  opacity: 0.6;
+  font-size: 16px;
+}
+.sui-sortable-list--framed
+  .sui-sortable-list__row:hover
+  .sui-sortable-list__grip {
+  opacity: 0.85;
 }
 
 /* Row chrome — the 1px border, the md radius, the padding box-model and the

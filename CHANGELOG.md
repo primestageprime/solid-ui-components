@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- **`TierSurface`** — accent-washed, accent-bordered surface for a group of items that count as one.
+- **`SortableList` `rowChrome="framed"`** — bare chrome with the grip always visible (no hover on touch).
+
+### Changed
+
+- **`TieableRankList`** — a tied group is now unmistakable. It uses `TierSurface` (accent wash + accent border), and an untied book stays a plain card. The rank badge is pinned top-left, the drag grip is always visible, and the tie controls now read "= tie" (outlined, in the gap between cards) and "≠ untie" (on the divider inside a group).
+
 ## 0.242.0 — 2026-10-30
 
 ### Added

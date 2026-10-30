@@ -2371,7 +2371,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 140
+    "line": 149
   },
   {
     "name": "CenteredWrapRow",
@@ -3541,7 +3541,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 78
+    "line": 87
   },
   {
     "name": "CompactCurrencyMutationSliders",
@@ -4305,7 +4305,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 131
+    "line": 140
   },
   {
     "name": "ContinuousMarkedSlider",
@@ -8516,7 +8516,7 @@
     "showcase": "#/tieable-rank-list",
     "since": null,
     "file": "src/components/TieableRankList/TieableRankList.tsx",
-    "line": 193
+    "line": 208
   },
   {
     "name": "createTimelineBar",
@@ -9353,7 +9353,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 58
+    "line": 67
   },
   {
     "name": "DangerTitle",
@@ -12715,7 +12715,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 119
+    "line": 128
   },
   {
     "name": "FormulaCaption",
@@ -14658,7 +14658,7 @@
     "showcase": "#/surface",
     "since": "0.118.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 171
+    "line": 180
   },
   {
     "name": "IndentedGhostRow",
@@ -15302,7 +15302,7 @@
     "showcase": "#/surface",
     "since": "0.185.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 70
+    "line": 79
   },
   {
     "name": "Kbd",
@@ -17630,7 +17630,7 @@
     "showcase": "#/surface",
     "since": "0.129.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 88
+    "line": 97
   },
   {
     "name": "NoteText",
@@ -17705,7 +17705,7 @@
     "showcase": "#/surface",
     "since": "0.112.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 185
+    "line": 194
   },
   {
     "name": "NotificationCenter",
@@ -19040,7 +19040,7 @@
     "showcase": "#/surface",
     "since": "0.113.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 150
+    "line": 159
   },
   {
     "name": "PopoverTooltip",
@@ -22303,7 +22303,7 @@
     "showcase": "#/sortable-list",
     "since": "0.79.0",
     "file": "src/components/SortableList/SortableList.tsx",
-    "line": 69
+    "line": 72
   },
   {
     "name": "SpacedStack",
@@ -22503,7 +22503,7 @@
     "showcase": "#/surface",
     "since": "0.216.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 196
+    "line": 205
   },
   {
     "name": "SplitQueueList",
@@ -22676,7 +22676,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 108
+    "line": 117
   },
   {
     "name": "StackedAreaSeries",
@@ -23635,7 +23635,7 @@
     "showcase": "#/surface",
     "since": null,
     "file": "src/components/Surface/variants.ts",
-    "line": 52
+    "line": 61
   },
   {
     "name": "SuccessTag",
@@ -24614,6 +24614,48 @@
     "since": "0.240.0",
     "file": "src/components/TieableRankList/variants.ts",
     "line": 7
+  },
+  {
+    "name": "TierSurface",
+    "depth": 0,
+    "kind": "variant",
+    "family": "Surface",
+    "tags": [
+      "shows:panel",
+      "does:view",
+      "does:layout",
+      "data:scalar",
+      "role:container"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createSurface",
+      "overrides": "{\n  padding: \"sm\",\n  radius: \"md\",\n  bg: \"rgba(var(--sui-accent-rgb), 0.08)\",\n  borderColor: \"rgba(var(--sui-accent-rgb), 0.6)\",\n}"
+    },
+    "overrides": [
+      "padding",
+      "radius",
+      "bg",
+      "borderColor",
+      "interactive",
+      "shadow",
+      "direction",
+      "align",
+      "gap",
+      "minWidth",
+      "maxWidth"
+    ],
+    "dataProps": "SurfaceDataProps",
+    "summary": "curried `Surface` (padding sm, radius md, accent wash `rgba(var(--sui-accent-rgb), 0.08)`, accent border at 0.6): a GROUP of items that count as one, e.g.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "TierSurface — a GROUP of items that count as one (a tie tier in TieableRankList): an accent wash and an accent border, so the joined group reads as one unit and never as the panel it sits in.",
+    "showcase": "#/surface",
+    "since": "Unreleased",
+    "file": "src/components/Surface/variants.ts",
+    "line": 49
   },
   {
     "name": "TightCenteredColumn",
@@ -26482,7 +26524,7 @@
     "showcase": "#/surface",
     "since": "0.127.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 46
+    "line": 55
   },
   {
     "name": "WarningTitle",
@@ -26616,7 +26658,7 @@
     "showcase": "#/surface",
     "since": "0.129.0",
     "file": "src/components/Surface/variants.ts",
-    "line": 98
+    "line": 107
   },
   {
     "name": "WideCardGrid",

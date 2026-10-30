@@ -58,8 +58,11 @@ export interface SortableListProps<T> {
    * the original behaviour. "bare" strips that chrome (no border, transparent
    * bg, zero padding) and hides the grip until the row is hovered, so a
    * self-styled row content (e.g. ActionListItem) IS the row's only surface.
+   * "framed" is "bare" with the grip ALWAYS visible: for row content that
+   * draws its own card (TieableRankList's tiers) on touch screens, where there
+   * is no hover to reveal a grip.
    */
-  rowChrome?: "surface" | "bare";
+  rowChrome?: "surface" | "bare" | "framed";
   /** Vertical gap between rows, in px. Default 8. */
   gap?: number;
 }
@@ -68,7 +71,7 @@ export interface SortableListProps<T> {
 
 export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
   const label = () => props.label ?? "Sortable list";
-  const bare = () => props.rowChrome === "bare";
+  const bare = () => props.rowChrome === "bare" || props.rowChrome === "framed";
 
   // axis "y": a vertical column, so the before/after hit-test compares the
   // cursor's Y against each row's vertical midpoint (above / below).
@@ -95,7 +98,10 @@ export function SortableList<T>(props: SortableListProps<T>): JSX.Element {
     // swapping would break the drag layout.
     <NarrowStack
       class="sui-sortable-list"
-      classList={{ "sui-sortable-list--bare": bare() }}
+      classList={{
+        "sui-sortable-list--bare": bare(),
+        "sui-sortable-list--framed": props.rowChrome === "framed",
+      }}
       role="list"
       aria-label={label()}
       style={{ "--sui-sortable-gap": `${props.gap ?? 8}px` }}
