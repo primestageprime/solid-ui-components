@@ -22,6 +22,10 @@ import {
 } from "solid-js";
 import { Button, type ButtonProps } from "../Button/Button";
 import { Icon, type IconName } from "../Icon";
+import {
+  isEditableTarget,
+  type HotkeyPress,
+} from "../../hooks/hotkeys/hotkeyGuard";
 import "./HotkeyButton.css";
 
 export interface HotkeyButtonProps extends Omit<ButtonProps, "children"> {
@@ -49,28 +53,9 @@ export interface HotkeyButtonProps extends Omit<ButtonProps, "children"> {
   children: string;
 }
 
-/** True when the event target is a text-editing surface (input / textarea /
- *  select / contentEditable). Exported so other keyboard-shortcut owners (e.g.
- *  ActionList's Escape-clears-selection) can defer to an active inline editor. */
-export function isEditableTarget(el: EventTarget | null): boolean {
-  if (!el || !(el instanceof HTMLElement)) return false;
-  const tag = el.tagName;
-  return (
-    tag === "INPUT" ||
-    tag === "TEXTAREA" ||
-    tag === "SELECT" ||
-    (el.isContentEditable ?? false)
-  );
-}
-
-/** The parts of a keydown the hotkey guard reads. */
-export interface HotkeyPress {
-  readonly key: string;
-  readonly metaKey: boolean;
-  readonly ctrlKey: boolean;
-  readonly altKey: boolean;
-  readonly target: EventTarget | null;
-}
+// The guard moved to hooks/hotkeys/hotkeyGuard (#53325); re-exported here,
+// where callers have always imported it.
+export { isEditableTarget, type HotkeyPress };
 
 /**
  * Whether a key press should fire `hotkey` — the guard, pure, so it prints as

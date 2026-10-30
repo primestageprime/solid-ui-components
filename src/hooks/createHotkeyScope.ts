@@ -56,7 +56,8 @@ export function createHotkeyScope<S extends string = HotkeyScope>(
   const onKey = (e: Event) => {
     const ke = e as KeyboardEvent;
     const outcome = dispatchHotkey<S>({
-      table: opts.table,
+      // A held key repeats here unless `once` says otherwise (below).
+      table: opts.table.map((entry) => ({ repeats: true, ...entry })),
       scopes: opts.scopes(),
       press: {
         key: ke.key,
@@ -76,7 +77,7 @@ export function createHotkeyScope<S extends string = HotkeyScope>(
     if (outcome.kind === "chord") return;
     // A handled modal key must not reach other window listeners (a list clearing
     // its selection on Escape).
-    if (outcome.stopPropagation) ke.stopPropagation();
+    if (outcome.kind === "fire" && outcome.stopPropagation) ke.stopPropagation();
     if (opts.once && ke.repeat) return;
     opts.handlers[outcome.entry.action]?.();
   };
