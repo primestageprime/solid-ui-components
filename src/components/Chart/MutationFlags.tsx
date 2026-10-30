@@ -216,13 +216,24 @@ export const MutationFlags: Component<MutationFlagsProps> = (props) => {
 	onMount(() => document.addEventListener("keydown", onDragKeyDown, true));
 	onCleanup(() => document.removeEventListener("keydown", onDragKeyDown, true));
 
+	// THE CLICK THAT ENDS A DRAG IS NOT A PICK. The browser sends that click to
+	// the nearest ancestor of the press target and the release target. When the
+	// flag snaps or clamps away from the pointer, the release lands on the plot,
+	// so the click goes to the <svg> and `Chart.onPick` adds an event there. A
+	// listener on the flag never sees that click; this one, in the capture
+	// phase on the document, sees every click first.
+	const onDocumentClick = (event: MouseEvent): void => {
+		if (!swallowClick) return;
+		swallowClick = false;
+		event.stopPropagation();
+		event.preventDefault();
+	};
+	onMount(() => document.addEventListener("click", onDocumentClick, true));
+	onCleanup(() => document.removeEventListener("click", onDocumentClick, true));
+
 	const onClick = (event: MouseEvent, flag: PlacedFlag): void => {
 		// A flag click is not a pick on the plot underneath.
 		event.stopPropagation();
-		if (swallowClick) {
-			swallowClick = false;
-			return;
-		}
 		props.onSelectMutation?.(flag.id);
 	};
 
