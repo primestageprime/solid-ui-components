@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.250.0 — 2026-10-30
+
 ### Added
 
 - **`PaceProjectionChart` `markers`** — labelled dashed vertical rules at x, each with an optional dot at y, e.g. a "Meeting · Nov 24" line beside today. Colliding captions stack into rows. `x` is numeric, in the same units as the points. Pure `stackLabelRows`; type `PaceMarker`. Additive.
