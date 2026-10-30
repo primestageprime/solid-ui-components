@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- **`SmallQuietButton`** / Button `variant: "quiet"` — muted, faint-outlined at rest, full contrast on hover and focus-visible, slightly stronger on touch screens.
+
+### Changed
+
+- **`TieableRankList`** — the rank badge is vertically centred against the tier's content, and the = tie / ≠ untie toggles are `SmallQuietButton`s, so they recede until hovered or focused (Peter's bookclub feedback; bookclub is the only consumer).
+
 ## 0.246.0 — 2026-10-30
 
 ### Added

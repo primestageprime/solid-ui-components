@@ -88,6 +88,13 @@ export const SmallOutlinedButton: Component<ButtonDataProps> = createButton({
   size: "sm",
 });
 
+// Small quiet button — a secondary affordance that stays out of the way until
+// hovered or focused (TieableRankList's = tie / ≠ untie).
+export const SmallQuietButton: Component<ButtonDataProps> = createButton({
+  variant: "quiet",
+  size: "sm",
+});
+
 // Small warning button — compact amber caution action (not destructive)
 export const SmallWarningButton: Component<ButtonDataProps> = createButton({
   variant: "warning",

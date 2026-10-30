@@ -349,6 +349,35 @@ body {
   border-color: transparent;
 }
 
+/* quiet — a secondary affordance that must not compete with the content
+   around it (TieableRankList's = tie / ≠ untie). Muted and faint at rest; full
+   contrast on hover or keyboard focus; a touch screen has no hover, so it
+   rests a step stronger there. */
+.sui-btn--quiet {
+  background: transparent;
+  border: 1px dashed var(--sui-border);
+  color: var(--sui-text-muted);
+  opacity: 0.6;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.sui-btn--quiet:hover:not(:disabled),
+.sui-btn--quiet:focus-visible {
+  background: transparent;
+  border-color: var(--sui-accent);
+  color: var(--sui-text-primary);
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .sui-btn--quiet {
+    opacity: 0.8;
+  }
+}
+
 .sui-btn--secondary {
   background: #6c757d;
   border-color: #6c757d;

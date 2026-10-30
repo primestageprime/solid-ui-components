@@ -5160,7 +5160,7 @@
     "showcase": "#/button",
     "since": "0.142.0",
     "file": "src/components/Button/Button.tsx",
-    "line": 144
+    "line": 151
   },
   {
     "name": "createButtonGroup",
@@ -8546,7 +8546,7 @@
     "showcase": "#/tieable-rank-list",
     "since": null,
     "file": "src/components/TieableRankList/TieableRankList.tsx",
-    "line": 208
+    "line": 198
   },
   {
     "name": "createTimelineBar",
@@ -10542,7 +10542,7 @@
     "showcase": "#/button",
     "since": "0.219.0",
     "file": "src/components/Button/variants.ts",
-    "line": 144
+    "line": 151
   },
   {
     "name": "DismissibleNoticeBanner",
@@ -13240,7 +13240,7 @@
     "showcase": "#/button",
     "since": "0.172.0",
     "file": "src/components/Button/variants.ts",
-    "line": 119
+    "line": 126
   },
   {
     "name": "Grid",
@@ -15616,7 +15616,7 @@
     "showcase": "#/button",
     "since": null,
     "file": "src/components/Button/variants.ts",
-    "line": 98
+    "line": 105
   },
   {
     "name": "LargePrimaryConfirmationModal",
@@ -19199,7 +19199,7 @@
     "showcase": "#/button",
     "since": "0.172.0",
     "file": "src/components/Button/variants.ts",
-    "line": 109
+    "line": 116
   },
   {
     "name": "PrimaryButton",
@@ -19826,7 +19826,7 @@
     "showcase": "#/button",
     "since": "0.219.0",
     "file": "src/components/Button/variants.ts",
-    "line": 161
+    "line": 168
   },
   {
     "name": "ReservedEllipsisMonoMeta",
@@ -19893,7 +19893,7 @@
     "showcase": "#/button",
     "since": "0.172.0",
     "file": "src/components/Button/variants.ts",
-    "line": 131
+    "line": 138
   },
   {
     "name": "ReservedMonoMeta",
@@ -22113,6 +22113,40 @@
     "line": 62
   },
   {
+    "name": "SmallQuietButton",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Button",
+    "tags": [
+      "shows:button",
+      "shows:icon",
+      "does:click",
+      "does:submit",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createButton",
+      "overrides": "{\n  variant: \"quiet\",\n  size: \"sm\",\n}"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "ButtonDataProps",
+    "summary": "curried `Button` (`variant: \"quiet\"`, `size: \"sm\"`): a secondary affordance that must not compete with the content around it.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Small quiet button — a secondary affordance that stays out of the way until hovered or focused (TieableRankList's = tie / ≠ untie).",
+    "showcase": "#/button",
+    "since": "Unreleased",
+    "file": "src/components/Button/variants.ts",
+    "line": 93
+  },
+  {
     "name": "SmallStatusLight",
     "depth": 1,
     "kind": "variant",
@@ -22243,7 +22277,7 @@
     "showcase": "#/button",
     "since": "0.61.5",
     "file": "src/components/Button/variants.ts",
-    "line": 92
+    "line": 99
   },
   {
     "name": "SmAvatar",

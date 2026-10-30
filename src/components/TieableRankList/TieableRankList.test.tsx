@@ -88,4 +88,16 @@ describe("TieableRankList", () => {
     ));
     expect(getAllByTestId("r")).toHaveLength(1);
   });
+  it("renders the tie toggles as quiet buttons and centres the rank against the content", () => {
+    const { getByLabelText } = render(() => <Harness />);
+    expect(getByLabelText("Tie B with C").className).toContain(
+      "sui-btn--quiet",
+    );
+    expect(getByLabelText("Untie A from B").className).toContain(
+      "sui-btn--quiet",
+    );
+    const rankRow = getByLabelText(/^Rank 1: A = B/)
+      .parentElement as HTMLElement;
+    expect(rankRow.className).toContain("row--align-center");
+  });
 });

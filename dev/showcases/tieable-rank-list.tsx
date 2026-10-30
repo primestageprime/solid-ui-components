@@ -8,7 +8,7 @@ import {
   tieAll,
   toTiers,
 } from "../../src/components/TieableRankList";
-import { SmallButton, SmallGhostButton } from "../../src/components/Button";
+import { SmallButton, SmallGhostButton, SmallQuietButton } from "../../src/components/Button";
 import { SpreadRow, TightStack } from "../../src/components/Layout";
 import { SectionTitle, MutedBody, TextBody } from "../../src/components/Text";
 
@@ -36,6 +36,7 @@ export const TieableRankListShowcase: Component = () => {
           <TightStack>
             <SpreadRow>
               <MutedBody>{tiers().length} tiers</MutedBody>
+              <SmallQuietButton onClick={() => setVetoed(null)}>clear veto</SmallQuietButton>
               <Show
                 when={tiers().length > 1}
                 fallback={

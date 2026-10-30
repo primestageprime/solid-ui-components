@@ -3,10 +3,10 @@
 // Tags: shows:list, shows:card, shows:button, does:drag, does:reorder, does:toggle, does:hotkey, data:list, data:grouped, role:container
 // Composes `SortableList` (Depth 2, "framed" chrome: grip always visible) +
 // `TierSurface` (a tied group: accent wash + accent border) / `CompactSurface`
-// (a card of one) + `LabeledDivider` + `TopClusterRow` / `ClusterRow` /
+// (a card of one) + `LabeledDivider` + `ClusterRow` /
 // `CenteredWrapRow` / `GrowBox` / `TightStack` (Layout) + `SmallPrimaryButton`
-// (rank, pinned top-left) / `SmallGhostButton` (≠ untie) /
-// `SmallOutlinedButton` (= tie). Owns zero CSS and zero inline style.
+// (rank, centred against the tier's content) / `SmallQuietButton`
+// (= tie and ≠ untie: muted at rest, full contrast on hover / focus). Owns zero CSS and zero inline style.
 //
 // A RANKING THAT ALLOWS "THESE ARE EQUAL TO ME". Items in one tier JOIN into
 // one card (Peter, 2026-10-29: "when you set something equal, they should
@@ -26,19 +26,9 @@
 // ============================================
 import { type JSX, For, Show, mergeProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import {
-  SmallGhostButton,
-  SmallOutlinedButton,
-  SmallPrimaryButton,
-} from "../Button";
+import { SmallPrimaryButton, SmallQuietButton } from "../Button";
 import { LabeledDivider } from "../LabeledDivider";
-import {
-  CenteredWrapRow,
-  ClusterRow,
-  GrowBox,
-  TightStack,
-  TopClusterRow,
-} from "../Layout";
+import { CenteredWrapRow, ClusterRow, GrowBox, TightStack } from "../Layout";
 import { SortableList } from "../SortableList";
 import { CompactSurface, TierSurface } from "../Surface";
 import { join, map } from "../../fn";
@@ -135,7 +125,7 @@ export function TieableRankList<T>(
               <Dynamic
                 component={tier.length > 1 ? TierSurface : CompactSurface}
               >
-                <TopClusterRow>
+                <ClusterRow>
                   <SmallPrimaryButton
                     data-rank-id={tier[0]}
                     aria-label={`Rank ${t() + 1}: ${tierName(tier)}. Alt+Up or Alt+Down moves it.`}
@@ -153,13 +143,13 @@ export function TieableRankList<T>(
                               <LabeledDivider
                                 aria-label={`${name(tier[i() - 1])} tied with ${name(id)}`}
                                 label={
-                                  <SmallGhostButton
+                                  <SmallQuietButton
                                     aria-pressed={true}
                                     aria-label={`Untie ${name(tier[i() - 1])} from ${name(id)}`}
                                     onClick={() => toggleAt(tier[i() - 1])}
                                   >
                                     ≠ untie
-                                  </SmallGhostButton>
+                                  </SmallQuietButton>
                                 }
                               />
                             </Show>
@@ -176,18 +166,18 @@ export function TieableRankList<T>(
                       </For>
                     </TightStack>
                   </GrowBox>
-                </TopClusterRow>
+                </ClusterRow>
               </Dynamic>
               <Show when={nextTier()}>
                 {(nt) => (
                   <CenteredWrapRow>
-                    <SmallOutlinedButton
+                    <SmallQuietButton
                       aria-pressed={false}
                       aria-label={`Tie ${name(tier[tier.length - 1])} with ${name(nt()[0])}`}
                       onClick={() => toggleAt(tier[tier.length - 1])}
                     >
                       = tie
-                    </SmallOutlinedButton>
+                    </SmallQuietButton>
                   </CenteredWrapRow>
                 )}
               </Show>

@@ -36,6 +36,13 @@ export interface ButtonProps
     | "icon-only"
     | "pill"
     /**
+     * A SECONDARY AFFORDANCE THAT SHOULD NOT COMPETE: muted text and a faint
+     * dashed outline at rest, full contrast on hover and focus-visible, and a
+     * little stronger (still subtle) on touch screens, where there is no hover.
+     * For in-between controls like TieableRankList's = tie / ≠ untie.
+     */
+    | "quiet"
+    /**
      * A TOGGLEABLE LABEL: the button stripped back to its own text, with no
      * box, no padding and no colour of its own, taking the accent when
      * `active`. For a name that is also the select control — see
