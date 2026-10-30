@@ -79,4 +79,14 @@ describe("MonthDayGrid", () => {
     const { container } = render(() => <MondayMonthDayGrid month="2026-11" />);
     expect(heads(container)[0].getAttribute("title")).toBe("Monday");
   });
+  it("hideWeeksBefore drops weeks that end before the date, and arrows stop at the first visible week", () => {
+    const { container } = render(() => <MonthDayGrid month="2026-11" hideWeeksBefore="2026-11-12" />);
+    expect(container.querySelector('[data-day="2026-11-07"]')).toBeNull();
+    expect(container.querySelector('[data-day="2026-11-08"]')).not.toBeNull();
+    expect(container.querySelectorAll("[data-day]")).toHaveLength(23);
+    const tenth = container.querySelector('[data-day="2026-11-10"]') as HTMLElement;
+    tenth.focus();
+    fireEvent.keyDown(tenth, { key: "ArrowUp" });
+    expect(document.activeElement).toBe(tenth);
+  });
 });

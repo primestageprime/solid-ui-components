@@ -71,7 +71,7 @@ export const MonthDayGridShowcase: Component = () => {
         <SectionTitle>MonthDayGrid</SectionTitle>
         <MutedBody>
           One month, weekday-aligned, any number of days picked. Past days
-          (before {TODAY}) and days the host has not opened are disabled. Arrows
+          (before {TODAY}) and days the host has not opened are disabled, and weeks that ended before today are hidden. Arrows
           move, Enter/Space toggle.
         </MutedBody>
         <div class="month-day-grid-demo">
@@ -92,6 +92,7 @@ export const MonthDayGridShowcase: Component = () => {
                     month={m}
                     days={days()}
                     minDate={TODAY}
+                    hideWeeksBefore={TODAY}
                     onDayClick={(iso) =>
                       mode() === "host"
                         ? setOpen(toggle(open(), iso))

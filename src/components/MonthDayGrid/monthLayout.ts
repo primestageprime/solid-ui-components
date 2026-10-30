@@ -103,3 +103,18 @@ export function dayMove(
       return null;
   }
 }
+
+/**
+ * Keep only the weeks with at least one day on or after `from` (ISO day).
+ * `from` undefined keeps every week.
+ */
+export function visibleWeeks(weeks: readonly MonthWeek[], from?: string): MonthWeek[] {
+  if (from === undefined) return [...weeks];
+  const out: MonthWeek[] = [];
+  for (const w of weeks) {
+    let keep = false;
+    for (const d of w) if (d !== null && d >= from) keep = true;
+    if (keep) out.push(w);
+  }
+  return out;
+}

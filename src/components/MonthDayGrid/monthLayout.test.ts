@@ -1,12 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  addDays,
-  dayMove,
-  daysInMonth,
-  firstWeekday,
-  monthLayout,
-  weekdayLabels,
-} from "./monthLayout";
+import { addDays, dayMove, daysInMonth, firstWeekday, monthLayout, visibleWeeks, weekdayLabels } from "./monthLayout";
 
 describe("monthLayout", () => {
   it("aligns November 2026 (starts on a Sunday) to Sunday-first weeks", () => {
@@ -47,5 +40,15 @@ describe("dayMove", () => {
     expect(dayMove("2026-11-04", "Home", "2026-11")).toBe("2026-11-01");
     expect(dayMove("2026-11-04", "End", "2026-11")).toBe("2026-11-07");
     expect(dayMove("2026-11-04", "Enter", "2026-11")).toBeNull();
+  });
+});
+
+describe("visibleWeeks", () => {
+  it("keeps weeks with any day on or after the date; undefined keeps all", () => {
+    const w = monthLayout("2026-11", 0);
+    expect(visibleWeeks(w, "2026-11-12")).toHaveLength(4);
+    expect(visibleWeeks(w, "2026-11-12")[0][0]).toBe("2026-11-08");
+    expect(visibleWeeks(w, "2026-12-01")).toEqual([]);
+    expect(visibleWeeks(w)).toHaveLength(5);
   });
 });

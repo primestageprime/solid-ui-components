@@ -11,6 +11,7 @@ export {
   daysInMonth,
   firstWeekday,
   monthLayout,
+  visibleWeeks,
   weekdayLabels,
 } from "./monthLayout";
 export type { MonthWeek } from "./monthLayout";

@@ -28,6 +28,7 @@ import {
   type MonthWeek,
   dayMove,
   monthLayout,
+  visibleWeeks,
   weekdayLabels,
 } from "./monthLayout";
 import "./MonthDayGrid.css";
@@ -49,6 +50,12 @@ export interface MonthDayGridProps {
   readonly days?: Readonly<Record<string, MonthDayState>>;
   /** Days before this ISO day are disabled (e.g. today). */
   readonly minDate?: string;
+  /**
+   * Hide whole weeks that end before this ISO day: a week renders only if at
+   * least one of its days is on or after it (e.g. today, so a calendar shows
+   * only weeks with days still to come). Omit to show every week.
+   */
+  readonly hideWeeksBefore?: string;
   readonly onDayClick?: (iso: string) => void;
   /** Accessible name; defaults to the month's name, e.g. "November 2026". */
   readonly label?: string;
@@ -76,7 +83,8 @@ export const MonthDayGrid: Component<
   MonthDayGridProps & MonthDayGridOverrides
 > = (props) => {
   const ws = () => props.weekStart ?? 0;
-  const weeks = (): MonthWeek[] => monthLayout(props.month, ws());
+  const weeks = (): MonthWeek[] =>
+    visibleWeeks(monthLayout(props.month, ws()), props.hideWeeksBefore);
   const state = (iso: string): MonthDayState => props.days?.[iso] ?? {};
   const enabled = (iso: string) =>
     state(iso).enabled !== false && !(props.minDate && iso < props.minDate);
@@ -92,8 +100,11 @@ export const MonthDayGrid: Component<
   };
   let root: HTMLDivElement | undefined;
   const focusDay = (iso: string) => {
+    // A day in a hidden week has no button: focus stays where it was.
+    const el = root?.querySelector<HTMLButtonElement>(`[data-day="${iso}"]`);
+    if (!el) return;
     setFocused(iso);
-    root?.querySelector<HTMLButtonElement>(`[data-day="${iso}"]`)?.focus();
+    el.focus();
   };
   const activate = (iso: string) => {
     setFocused(iso);
