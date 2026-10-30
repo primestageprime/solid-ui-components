@@ -2,8 +2,8 @@ import { cleanup, fireEvent, render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Modal } from "../Modal/Modal";
-import { Button, DISABLED_REASON_MS, HOTKEY_FLASH_MS } from "./Button";
-import { PrimaryButton, SecondaryButton } from "./variants";
+import { HotkeyButton, DISABLED_REASON_MS, HOTKEY_FLASH_MS } from "./HotkeyButton";
+import { HotkeyPrimaryButton, HotkeySecondaryButton } from "./variants";
 
 afterEach(() => {
 	cleanup();
@@ -13,14 +13,14 @@ afterEach(() => {
 const button = () =>
 	document.querySelector("button.sui-btn") as HTMLButtonElement;
 
-describe("Button hotkeys (#53325)", () => {
+describe("HotkeyButton hotkeys (#53325)", () => {
 	it("a key press paints the pressed state first, then clicks once, then holds the flash ~150 ms", () => {
 		vi.useFakeTimers();
 		const onClick = vi.fn();
 		render(() => (
-			<Button hotkeys={["Enter"]} onClick={onClick}>
+			<HotkeyButton hotkeys={["Enter"]} onClick={onClick}>
 				Next
-			</Button>
+			</HotkeyButton>
 		));
 		fireEvent.keyDown(document.body, { key: "Enter" });
 		expect(button().hasAttribute("data-hotkey-flash")).toBe(true);
@@ -36,20 +36,21 @@ describe("Button hotkeys (#53325)", () => {
 	});
 
 	it("shows the hint aria-hidden after the label, and names the key in aria-keyshortcuts", () => {
-		render(() => <PrimaryButton hotkeys={["Mod+z", "u"]}>Undo</PrimaryButton>);
+		render(() => <HotkeyPrimaryButton hotkeys={["Mod+z", "u"]}>Undo</HotkeyPrimaryButton>);
 		const hint = button().querySelector(".sui-btn__hotkey") as HTMLElement;
 		expect(hint.getAttribute("aria-hidden")).toBe("true");
 		expect(hint.textContent).toMatch(/^(⌘Z|Ctrl\+Z)$/);
 		expect(button().getAttribute("aria-keyshortcuts")).toMatch(
 			/^(Meta|Control)\+Z U$/,
 		);
-		expect(button().querySelector(".sui-btn__content")?.textContent).toBe(
+		expect(button().querySelector(".sui-btn__content")?.firstChild?.textContent).toBe(
 			"Undo",
 		);
+		expect(button().querySelector(".sui-btn__content")?.lastElementChild).toBe(hint);
 	});
 
 	it("a one-letter key shows as an underlined letter", () => {
-		render(() => <SecondaryButton hotkeys={["i"]}>Ignore</SecondaryButton>);
+		render(() => <HotkeySecondaryButton hotkeys={["i"]}>Ignore</HotkeySecondaryButton>);
 		expect(
 			button().querySelector(".sui-btn__hotkey--letter")?.textContent,
 		).toBe("I");
@@ -59,14 +60,14 @@ describe("Button hotkeys (#53325)", () => {
 		vi.useFakeTimers();
 		const onClick = vi.fn();
 		render(() => (
-			<PrimaryButton
+			<HotkeyPrimaryButton
 				hotkeys={["Enter"]}
 				disabled
 				disabledReason="Finish Manual first"
 				onClick={onClick}
 			>
 				Next
-			</PrimaryButton>
+			</HotkeyPrimaryButton>
 		));
 		expect(document.body.textContent).not.toContain("Finish Manual first");
 		fireEvent.keyDown(document.body, { key: "Enter" });
@@ -79,9 +80,9 @@ describe("Button hotkeys (#53325)", () => {
 
 	it("the reason slot wraps the button in a span trigger; the DOM disabled is unchanged", () => {
 		render(() => (
-			<PrimaryButton disabled disabledReason={undefined}>
+			<HotkeyPrimaryButton disabled disabledReason={undefined}>
 				Save
-			</PrimaryButton>
+			</HotkeyPrimaryButton>
 		));
 		expect(button().parentElement?.tagName).toBe("SPAN");
 		expect(button().disabled).toBe(true);
@@ -91,9 +92,9 @@ describe("Button hotkeys (#53325)", () => {
 		let settle: () => void = () => {};
 		const work = vi.fn(() => new Promise<void>((r) => (settle = r)));
 		render(() => (
-			<Button hotkeys={["Enter"]} onAction={work} disabledReason="never shown">
+			<HotkeyButton hotkeys={["Enter"]} onAction={work} disabledReason="never shown">
 				Save
-			</Button>
+			</HotkeyButton>
 		));
 		fireEvent.keyDown(document.body, { key: "Enter" });
 		await new Promise((r) => setTimeout(r, 100));
@@ -108,9 +109,9 @@ describe("Button hotkeys (#53325)", () => {
 	it("a loading button does not fire", () => {
 		const onClick = vi.fn();
 		render(() => (
-			<Button hotkeys={["Enter"]} loading onClick={onClick}>
+			<HotkeyButton hotkeys={["Enter"]} loading onClick={onClick}>
 				Save
-			</Button>
+			</HotkeyButton>
 		));
 		fireEvent.keyDown(document.body, { key: "Enter" });
 		expect(onClick).not.toHaveBeenCalled();
@@ -119,9 +120,9 @@ describe("Button hotkeys (#53325)", () => {
 	it("a focused button whose own key is the hotkey does not fire twice", () => {
 		const onClick = vi.fn();
 		render(() => (
-			<Button hotkeys={["Enter"]} onClick={onClick}>
+			<HotkeyButton hotkeys={["Enter"]} onClick={onClick}>
 				Next
-			</Button>
+			</HotkeyButton>
 		));
 		button().focus();
 		const e = new KeyboardEvent("keydown", {
@@ -143,9 +144,9 @@ describe("Button hotkeys (#53325)", () => {
 			undefined,
 		);
 		render(() => (
-			<Button hotkeys={keys()} onClick={onClick}>
+			<HotkeyButton hotkeys={keys()} onClick={onClick}>
 				Next
-			</Button>
+			</HotkeyButton>
 		));
 		const first = button();
 		fireEvent.keyDown(document.body, { key: "Enter" });
@@ -163,13 +164,13 @@ describe("Button hotkeys (#53325)", () => {
 		const dialog = vi.fn();
 		render(() => (
 			<>
-				<Button hotkeys={["Enter"]} onClick={page}>
+				<HotkeyButton hotkeys={["Enter"]} onClick={page}>
 					Next
-				</Button>
+				</HotkeyButton>
 				<Modal open onClose={() => {}} title="T">
-					<Button hotkeys={["Enter"]} onClick={dialog}>
+					<HotkeyButton hotkeys={["Enter"]} onClick={dialog}>
 						Confirm
-					</Button>
+					</HotkeyButton>
 				</Modal>
 			</>
 		));
@@ -181,7 +182,7 @@ describe("Button hotkeys (#53325)", () => {
 
 	it("forwards a caller's ref", () => {
 		let got: HTMLButtonElement | undefined;
-		render(() => <Button ref={(el) => (got = el)}>X</Button>);
+		render(() => <HotkeyButton ref={(el: HTMLButtonElement) => (got = el)}>X</HotkeyButton>);
 		expect(got).toBe(button());
 	});
 });
