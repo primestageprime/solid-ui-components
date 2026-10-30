@@ -31,8 +31,11 @@ export interface ValueMatrixProps<R, C> {
   /** The matrix: value at (row, col); null renders BLANK (ruled 2026-07-18:
    *  empty markers distract from real data). */
   value: (row: R, col: C) => number | null;
-  /** Value formatter, e.g. formatGPerKwh. Defaults to String(value). */
-  format?: (value: number) => string;
+  /** Value formatter, e.g. formatGPerKwh. Defaults to String(value). It also
+   *  receives the cell's coordinates, so a cell can print more than its own
+   *  value (a head-to-head "3–1" reads the mirror cell); a one-argument
+   *  formatter ignores them. */
+  format?: (value: number, row: R, col: C) => string;
   /** Configure-time treatment: tone of a cell from its value + coordinates. */
   tone?: (value: number | null, row: R, col: C) => Tone;
   /** The emphasized cell(s), e.g. the chosen scenario. */
@@ -70,7 +73,7 @@ export function ValueMatrix<R, C>(props: ValueMatrixProps<R, C>): JSX.Element {
                   props.selected?.(row, col) ?? false,
               }}
             >
-              {value == null ? "" : (props.format ?? String)(value)}
+              {value == null ? "" : props.format ? props.format(value, row, col) : String(value)}
             </span>
           );
         },

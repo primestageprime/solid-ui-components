@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added
+
+- **`BottomTabBar`** — Primitive (Depth 1): the phone's icon-over-label primary nav of plain links; `items` + `active`.
+- **`NumberPickGrid`** — Primitive (Depth 1): numbered cells in rows of ten with a picked value, a tinted run to a `target`, a dashed `marker`; roving-tabindex keyboard. Pure `numberGridCells`, `gridMove`.
+- **`PaceProjectionChart`** — Composite (Depth 2): N cumulative series toward one total with dashed projections, initials discs at projected finish, a plan line with diamond waypoints and a today rule. Pure `projectionEnd`.
+- **`PairwiseMatrix`** — Composite (Depth 3) over `ValueMatrix`: head-to-head "a–b" table toned by winner. Pure `pairwiseMatrix`, `pairwiseOutcome`.
+- **`TieableRankList`** — Composite (Depth 3) over `SortableList`: drag-to-rank with = / ≠ ties between neighbours, N-way ties, an action slot, Alt+Arrow keyboard moves. Pure `toTiers`, `ranksOf`, `toggleTie`, `tieAll`, `splitAll`, `retie`, `moveBy`.
+- **`LockedRow`** (base `RedactedRow`) — a hatched, padlocked row for content the viewer may not see yet.
+- **`getPersistedTheme(fallback?)`** — optional fallback theme (default `"hud"`), so an app with a house theme can boot it without a picker.
+
+### Changed
+
+- **`ValueMatrix`** — `format` now also receives the cell's `(row, col)`; existing one-argument formatters are unaffected.
+
 ## 0.239.0 — 2026-10-30
 
 ### Changed

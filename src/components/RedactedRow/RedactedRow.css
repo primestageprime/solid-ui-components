@@ -1,0 +1,17 @@
+/* RedactedRow — the hatched well only. Alignment comes from the composed
+   ClusterRow (layout purity); the stripes are two theme tokens so every
+   theme, light or dark, draws its own. */
+.sui-redacted-row {
+  min-height: 40px;
+  /* Grow into the row beside an avatar; stretch across a column. */
+  flex-grow: 1;
+  min-width: 0;
+  padding: 0 12px;
+  border-radius: var(--sui-radius-sm);
+  color: var(--sui-text-secondary);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--sui-bg-tertiary) 0 8px,
+    var(--sui-bg-secondary) 8px 16px
+  );
+}

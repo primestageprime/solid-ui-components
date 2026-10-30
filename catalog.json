@@ -1590,6 +1590,41 @@
     "line": 35
   },
   {
+    "name": "BottomTabBar",
+    "depth": 1,
+    "kind": "variant",
+    "family": "BottomTabBar",
+    "tags": [
+      "shows:tabs",
+      "shows:icon",
+      "shows:link",
+      "does:navigate",
+      "data:list",
+      "role:rail"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createBottomTabBar",
+      "overrides": ""
+    },
+    "overrides": [
+      "label"
+    ],
+    "dataProps": "BottomTabBarDataProps",
+    "summary": "Primitive (Depth 1, owns `BottomTabBar.css`).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": [
+      "Not `OverflowNav` (horizontal text nav that folds) and not `Tabs` (switch panels in place)."
+    ],
+    "useFor": "3–5 top-level sections of a mobile-first app.",
+    "notes": "The phone's primary nav: icon-over-label tabs pinned under the page.",
+    "showcase": "#/bottom-tab-bar",
+    "since": "Unreleased",
+    "file": "src/components/BottomTabBar/variants.ts",
+    "line": 8
+  },
+  {
     "name": "BoxedTabs",
     "depth": 1,
     "kind": "variant",
@@ -4917,6 +4952,36 @@
     "line": 220
   },
   {
+    "name": "createBottomTabBar",
+    "depth": 1,
+    "kind": "factory",
+    "family": "BottomTabBar",
+    "tags": [
+      "shows:tabs",
+      "shows:icon",
+      "shows:link",
+      "does:navigate",
+      "data:list",
+      "role:rail"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": [
+      "label"
+    ],
+    "dataProps": "BottomTabBarDataProps",
+    "summary": "Primitive (Depth 1, owns `BottomTabBar.css`). Factory behind `BottomTabBar`'s curried variants; bakes `label`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/bottom-tab-bar",
+    "since": null,
+    "file": "src/components/BottomTabBar/BottomTabBar.tsx",
+    "line": 73
+  },
+  {
     "name": "createBox",
     "depth": 0,
     "kind": "factory",
@@ -6928,6 +6993,35 @@
     "line": 206
   },
   {
+    "name": "createNumberPickGrid",
+    "depth": 1,
+    "kind": "factory",
+    "family": "NumberPickGrid",
+    "tags": [
+      "shows:grid",
+      "shows:number",
+      "does:pick",
+      "does:select",
+      "does:hotkey",
+      "data:range",
+      "role:control"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "NumberPickGridDataProps",
+    "summary": "Primitive (Depth 1, owns `NumberPickGrid.css`). Factory behind `NumberPickGrid`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/number-pick-grid",
+    "since": null,
+    "file": "src/components/NumberPickGrid/NumberPickGrid.tsx",
+    "line": 115
+  },
+  {
     "name": "createOverflowNav",
     "depth": 2,
     "kind": "factory",
@@ -6958,6 +7052,34 @@
     "since": null,
     "file": "src/components/OverflowNav/OverflowNav.tsx",
     "line": 360
+  },
+  {
+    "name": "createPaceProjectionChart",
+    "depth": 2,
+    "kind": "factory",
+    "family": "PaceProjectionChart",
+    "tags": [
+      "shows:chart",
+      "shows:avatar",
+      "does:view",
+      "data:multi-series",
+      "data:time-series",
+      "role:panel"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "PaceProjectionChartDataProps",
+    "summary": "Composite (Depth 2, zero CSS). Factory behind `PaceProjectionChart`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/pace-projection-chart",
+    "since": null,
+    "file": "src/components/PaceProjectionChart/PaceProjectionChart.tsx",
+    "line": 242
   },
   {
     "name": "createPairedMutationSliders",
@@ -6991,6 +7113,35 @@
     "since": "0.172.0",
     "file": "src/components/PairedMutationSliders/PairedMutationSliders.tsx",
     "line": 551
+  },
+  {
+    "name": "createPairwiseMatrix",
+    "depth": 3,
+    "kind": "factory",
+    "family": "PairwiseMatrix",
+    "tags": [
+      "shows:grid",
+      "shows:table",
+      "shows:number",
+      "shows:status",
+      "does:view",
+      "data:matrix",
+      "role:panel"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "PairwiseMatrixDataProps",
+    "summary": "Composite (Depth 3, zero CSS). Factory behind `PairwiseMatrix`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/pairwise-matrix",
+    "since": null,
+    "file": "src/components/PairwiseMatrix/PairwiseMatrix.tsx",
+    "line": 66
   },
   {
     "name": "createPanel",
@@ -7371,6 +7522,33 @@
     "since": "0.171.0",
     "file": "src/components/RateGauge/RateGauge.tsx",
     "line": 433
+  },
+  {
+    "name": "createRedactedRow",
+    "depth": null,
+    "kind": "factory",
+    "family": "RedactedRow",
+    "tags": [
+      "shows:placeholder",
+      "shows:status",
+      "does:view",
+      "data:scalar",
+      "role:row"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "RedactedRowDataProps",
+    "summary": "Composite (Depth 2, owns `RedactedRow.css` for the hatched well only). Factory behind `RedactedRow`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/redacted-row",
+    "since": null,
+    "file": "src/components/RedactedRow/RedactedRow.tsx",
+    "line": 41
   },
   {
     "name": "createRow",
@@ -8279,6 +8457,37 @@
     "line": 428
   },
   {
+    "name": "createTieableRankList",
+    "depth": 3,
+    "kind": "factory",
+    "family": "TieableRankList",
+    "tags": [
+      "shows:list",
+      "shows:button",
+      "does:drag",
+      "does:reorder",
+      "does:toggle",
+      "does:hotkey",
+      "data:list",
+      "data:grouped",
+      "role:container"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": "TieableRankListDataProps",
+    "summary": "Composite (Depth 3, zero CSS). Factory behind `TieableRankList`'s curried variants.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/tieable-rank-list",
+    "since": null,
+    "file": "src/components/TieableRankList/TieableRankList.tsx",
+    "line": 138
+  },
+  {
     "name": "createTimelineBar",
     "depth": 1,
     "kind": "factory",
@@ -8455,7 +8664,7 @@
     "showcase": "#/value-matrix",
     "since": "0.106.0",
     "file": "src/components/ValueMatrix/ValueMatrix.tsx",
-    "line": 105
+    "line": 108
   },
   {
     "name": "createWeekCalendar",
@@ -15953,6 +16162,36 @@
     "line": 35
   },
   {
+    "name": "LockedRow",
+    "depth": null,
+    "kind": "variant",
+    "family": "RedactedRow",
+    "tags": [
+      "shows:placeholder",
+      "shows:status",
+      "does:view",
+      "data:scalar",
+      "role:row"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createRedactedRow",
+      "overrides": ""
+    },
+    "overrides": null,
+    "dataProps": "RedactedRowDataProps",
+    "summary": "A locked row standing in for content the viewer may not see yet.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "A locked row standing in for content the viewer may not see yet.",
+    "showcase": "#/redacted-row",
+    "since": "Unreleased",
+    "file": "src/components/RedactedRow/variants.ts",
+    "line": 8
+  },
+  {
     "name": "LogLineList",
     "depth": null,
     "kind": "primitive",
@@ -17604,6 +17843,38 @@
     "line": 41
   },
   {
+    "name": "NumberPickGrid",
+    "depth": 1,
+    "kind": "variant",
+    "family": "NumberPickGrid",
+    "tags": [
+      "shows:grid",
+      "shows:number",
+      "does:pick",
+      "does:select",
+      "does:hotkey",
+      "data:range",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createNumberPickGrid",
+      "overrides": "{ columns: 10 }"
+    },
+    "overrides": null,
+    "dataProps": "NumberPickGridDataProps",
+    "summary": "Primitive (Depth 1, owns `NumberPickGrid.css`).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "\"tap the last chapter you finished\", episode / lesson / step pickers. (Through/up-to rules that turn a meeting into a `target` stay in the consumer.)",
+    "notes": "Numbered cells in rows of ten: pick one, see the run to the next stop.",
+    "showcase": "#/number-pick-grid",
+    "since": "Unreleased",
+    "file": "src/components/NumberPickGrid/variants.ts",
+    "line": 11
+  },
+  {
     "name": "NumberWithUnits",
     "depth": 1,
     "kind": "primitive",
@@ -17791,6 +18062,39 @@
     "since": "0.117.0",
     "file": "src/components/DistributionSparkline/variants.ts",
     "line": 19
+  },
+  {
+    "name": "PaceProjectionChart",
+    "depth": 2,
+    "kind": "variant",
+    "family": "PaceProjectionChart",
+    "tags": [
+      "shows:chart",
+      "shows:avatar",
+      "does:view",
+      "data:multi-series",
+      "data:time-series",
+      "role:panel"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createPaceProjectionChart",
+      "overrides": ""
+    },
+    "overrides": null,
+    "dataProps": "PaceProjectionChartDataProps",
+    "summary": "Composite (Depth 2, zero CSS).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": [
+      "Not `ActualForecastChart` (one balance with a cone) and not `TargetBarChart` (bars per period)."
+    ],
+    "useFor": "reading-club progress, course completion, any cohort-toward-a-total view. The finish x is the consumer's arithmetic (pace, deadlines).",
+    "notes": "Several series racing to one total, each with its projected finish, the plan and today.",
+    "showcase": "#/pace-projection-chart",
+    "since": "Unreleased",
+    "file": "src/components/PaceProjectionChart/variants.ts",
+    "line": 11
   },
   {
     "name": "PaddedStack",
@@ -17986,6 +18290,38 @@
     "since": "0.172.0",
     "file": "src/components/PairedMutationSliders/PairedMutationSliders.tsx",
     "line": 244
+  },
+  {
+    "name": "PairwiseMatrix",
+    "depth": 3,
+    "kind": "variant",
+    "family": "PairwiseMatrix",
+    "tags": [
+      "shows:grid",
+      "shows:table",
+      "shows:number",
+      "shows:status",
+      "does:view",
+      "data:matrix",
+      "role:panel"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createPairwiseMatrix",
+      "overrides": ""
+    },
+    "overrides": null,
+    "dataProps": "PairwiseMatrixDataProps",
+    "summary": "Composite (Depth 3, zero CSS).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "ranked-choice / Condorcet results, round-robin records. (`ValueMatrix.format` now also receives `(row, col)`, which is what lets a cell print its mirror; additive.)",
+    "notes": "Every candidate against every other, \"wins–losses\" per pair, toned by who won.",
+    "showcase": "#/pairwise-matrix",
+    "since": "Unreleased",
+    "file": "src/components/PairwiseMatrix/variants.ts",
+    "line": 11
   },
   {
     "name": "PaneRow",
@@ -24214,6 +24550,40 @@
     "line": 28
   },
   {
+    "name": "TieableRankList",
+    "depth": 3,
+    "kind": "variant",
+    "family": "TieableRankList",
+    "tags": [
+      "shows:list",
+      "shows:button",
+      "does:drag",
+      "does:reorder",
+      "does:toggle",
+      "does:hotkey",
+      "data:list",
+      "data:grouped",
+      "role:container"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createTieableRankList",
+      "overrides": ""
+    },
+    "overrides": null,
+    "dataProps": "TieableRankListDataProps",
+    "summary": "Composite (Depth 3, zero CSS).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "ranked ballots with ties, preference sorting.",
+    "notes": "Drag-to-rank list where neighbours can be tied (= / ≠), with an optional per-row action.",
+    "showcase": "#/tieable-rank-list",
+    "since": "Unreleased",
+    "file": "src/components/TieableRankList/variants.ts",
+    "line": 7
+  },
+  {
     "name": "TightCenteredColumn",
     "depth": 0,
     "kind": "variant",
@@ -25502,7 +25872,7 @@
     "showcase": "#/value-matrix",
     "since": "0.106.0",
     "file": "src/components/ValueMatrix/ValueMatrix.tsx",
-    "line": 42
+    "line": 45
   },
   {
     "name": "ValueRenderer",

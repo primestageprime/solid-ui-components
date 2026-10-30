@@ -13,6 +13,10 @@ describe("theme loader (public API)", () => {
     expect(getPersistedTheme()).toBe("hud");
   });
 
+  it("getPersistedTheme returns the caller's fallback when nothing valid is stored", () => {
+    expect(getPersistedTheme("bronze")).toBe("bronze");
+  });
+
   it("persistTheme is a no-op without localStorage", () => {
     expect(() => persistTheme("bronze")).not.toThrow();
   });

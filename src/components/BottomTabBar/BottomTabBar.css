@@ -1,0 +1,56 @@
+/* BottomTabBar — equal columns of thumb-sized tabs under the page. The bar
+   pads its bottom by the device's safe-area inset so the home indicator on a
+   notched phone never sits on a label. */
+.sui-bottom-tab-bar {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  border-top: 1px solid var(--sui-border);
+  background: var(--sui-bg-elevated);
+  padding: 4px 0 max(8px, env(safe-area-inset-bottom));
+}
+
+.sui-bottom-tab-bar__tab {
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: var(--sui-font-family);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sui-text-secondary);
+  text-decoration: none;
+  border-radius: var(--sui-radius-sm);
+}
+
+.sui-bottom-tab-bar__tab:hover {
+  color: var(--sui-text-primary);
+}
+
+.sui-bottom-tab-bar__tab:focus-visible {
+  outline: 2px solid var(--sui-accent);
+  outline-offset: -2px;
+}
+
+.sui-bottom-tab-bar__tab[aria-current="page"] {
+  color: var(--sui-accent);
+}
+
+.sui-bottom-tab-bar__icon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sui-bottom-tab-bar__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}

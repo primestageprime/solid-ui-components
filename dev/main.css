@@ -2920,3 +2920,39 @@ th:has(.tf-th-center) .hud-table__header-content {
 .actual-forecast-chart-demo__tip-title {
   font-weight: 600;
 }
+
+/* RedactedRow showcase demo frame — scaffolded by npm run new:component. */
+.redacted-row-demo {
+  padding: 16px;
+  max-width: 480px;
+}
+
+/* BottomTabBar showcase demo frame — scaffolded by npm run new:component. */
+.bottom-tab-bar-demo {
+  padding: 16px;
+  max-width: 480px;
+}
+
+/* NumberPickGrid showcase demo frame — scaffolded by npm run new:component. */
+.number-pick-grid-demo {
+  padding: 16px;
+  max-width: 480px;
+}
+
+/* PaceProjectionChart showcase demo frame — scaffolded by npm run new:component. */
+.pace-projection-chart-demo {
+  padding: 16px;
+  max-width: 480px;
+}
+
+/* PairwiseMatrix showcase demo frame — scaffolded by npm run new:component. */
+.pairwise-matrix-demo {
+  padding: 16px;
+  max-width: 480px;
+}
+
+/* TieableRankList showcase demo frame — scaffolded by npm run new:component. */
+.tieable-rank-list-demo {
+  padding: 16px;
+  max-width: 480px;
+}

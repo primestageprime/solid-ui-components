@@ -27,14 +27,20 @@ const upsertStyleTag = (id: string, css: string): void => {
 const isThemeId = (v: unknown): v is ThemeId =>
   typeof v === "string" && v in THEMES;
 
-/** Reads the persisted theme from localStorage, or returns the default. */
-export const getPersistedTheme = (): ThemeId => {
+/**
+ * Reads the persisted theme from localStorage, or returns `fallback` when
+ * nothing valid is stored. The fallback defaults to "hud"; an app with its
+ * own house theme passes it — `getPersistedTheme("bronze")` — because this
+ * never returns undefined, so `getPersistedTheme() ?? mine` can never reach
+ * `mine`.
+ */
+export const getPersistedTheme = (fallback: ThemeId = DEFAULT_THEME): ThemeId => {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return isThemeId(stored) ? stored : DEFAULT_THEME;
+    return isThemeId(stored) ? stored : fallback;
   } catch {
     // No window, private-mode, or sandboxed iframe — fall back.
-    return DEFAULT_THEME;
+    return fallback;
   }
 };
 

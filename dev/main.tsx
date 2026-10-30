@@ -209,6 +209,12 @@ import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
+import { TieableRankListShowcase } from "./showcases/tieable-rank-list";
+import { PairwiseMatrixShowcase } from "./showcases/pairwise-matrix";
+import { PaceProjectionChartShowcase } from "./showcases/pace-projection-chart";
+import { NumberPickGridShowcase } from "./showcases/number-pick-grid";
+import { BottomTabBarShowcase } from "./showcases/bottom-tab-bar";
+import { RedactedRowShowcase } from "./showcases/redacted-row";
 import { SearchInputShowcase } from "./showcases/search-input";
 import { ClampedTextShowcase } from "./showcases/clamped-text";
 import { StampedRowShowcase } from "./showcases/stamped-row";
@@ -1474,6 +1480,42 @@ const items: Item[] = [
     label: "ManualProjectionCardRail (unstable)",
     component: ManualRailCardShowcase,
     tags: ["depth:2", "container", "unstable"],
+  },
+  {
+    id: "redacted-row",
+    label: "RedactedRow",
+    component: RedactedRowShowcase,
+    tags: ["depth:1"],
+  },
+  {
+    id: "bottom-tab-bar",
+    label: "BottomTabBar",
+    component: BottomTabBarShowcase,
+    tags: ["depth:1"],
+  },
+  {
+    id: "number-pick-grid",
+    label: "NumberPickGrid",
+    component: NumberPickGridShowcase,
+    tags: ["depth:1"],
+  },
+  {
+    id: "pace-projection-chart",
+    label: "PaceProjectionChart",
+    component: PaceProjectionChartShowcase,
+    tags: ["depth:3"],
+  },
+  {
+    id: "pairwise-matrix",
+    label: "PairwiseMatrix",
+    component: PairwiseMatrixShowcase,
+    tags: ["depth:3"],
+  },
+  {
+    id: "tieable-rank-list",
+    label: "TieableRankList",
+    component: TieableRankListShowcase,
+    tags: ["depth:3"],
   },
   // Generated component entries (npm run new:component) — appended above this line.
   {

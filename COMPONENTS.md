@@ -2789,3 +2789,50 @@ The renderers family is a set of small, composable components for displaying fie
     ```
 
 - **EqualRow** — a flush row whose children each take an equal share of the width (`Row.equal`); two buttons as one toolbar.
+
+
+## Phone, ranking and progress pieces (bookclub, 2026-10-29)
+
+- **RedactedRow** — Composite (Depth 2, owns `RedactedRow.css` for the hatched well only). Composes `ClusterRow` + `Icon` (lock) + `TextSublabel`. A row standing in for content the viewer **may not see yet** (a question hidden until the meeting, a note locked until you reach its chapter): it holds its place so counts and order stay honest. Not `Placeholder`, which is a build-time skeleton for the developer; this is a runtime state the end user sees. Renders `role="note"`. Key props: `label` (string, why it is withheld). Factory: `createRedactedRow()` (no overrides today). Curried variant: **`LockedRow`**. Exported type: `RedactedRowDataProps`. Use for: spoiler-gated or not-yet-revealed list rows.
+
+    ```tsx
+    import { LockedRow } from "solid-ui-components";
+    <LockedRow label="Hidden until the meeting" />
+    ```
+
+- **BottomTabBar** — Primitive (Depth 1, owns `BottomTabBar.css`). The phone's primary nav: equal columns of 48px icon-over-label tabs under the page, the current one in the accent, bottom padding grows to the safe-area inset. Every tab is a plain `<a href>` (no router import; solid-router delegates the click). Icons are DATA: an SVG path in a 24×24 viewBox drawn as a 1.8px stroke, so a module-scope items array carries no JSX. Not `OverflowNav` (horizontal text nav that folds) and not `Tabs` (switch panels in place). Key props: `items` (`BottomTab[]`: `href`, `label`, `icon?`), `active?` (href of the current tab; the caller owns the routing rule). Factory: `createBottomTabBar({ label? })` bakes the landmark name (default "Sections"). Curried variant: **`BottomTabBar`**. Exported types: `BottomTab`, `BottomTabBarDataProps`, `BottomTabBarOverrides`. Use for: 3–5 top-level sections of a mobile-first app.
+
+    ```tsx
+    import { BottomTabBar } from "solid-ui-components";
+    <BottomTabBar items={[{ href: "/", label: "Home", icon: "M3 11l9-7 9 7" }]} active={location.pathname} />
+    ```
+
+- **NumberPickGrid** — Primitive (Depth 1, owns `NumberPickGrid.css`). Pick one number from a run and see the run to the next stop: numbered square cells `from`…`to` in rows of ten. `value` is filled (aria-pressed); `target` ends a tinted run (`value+1`…`target`) and gets a heavy outline; `marker` adds a dashed outline (e.g. the last saved number) without picking it. **Keyboard:** one tab stop (roving tabindex on the picked cell), arrows move a cell / a row, Home/End jump, Enter/Space pick — focus movement never picks, because a pick usually saves. Key props: `from`, `to`, `value?`, `target?`, `marker?`, `onPick?` (`(n) => void`), `label?` (group name), `cellLabel?` (`(n) => string`). Factory: `createNumberPickGrid({ columns?: 10 | 5 })`. Curried variant: **`NumberPickGrid`** (10 columns). Pure helpers: `numberGridCells(from, to, marks)` → `NumberGridCell[]` and `gridMove(index, key, count, columns)`. Exported types: `NumberPickGridDataProps`, `NumberPickGridOverrides`, `NumberGridCell`, `NumberGridMarks`. Use for: "tap the last chapter you finished", episode / lesson / step pickers. (Through/up-to rules that turn a meeting into a `target` stay in the consumer.)
+
+    ```tsx
+    import { NumberPickGrid } from "solid-ui-components";
+    <NumberPickGrid from={1} to={32} value={chapter()} target={14} onPick={setChapter} label="Last chapter you finished" />
+    ```
+
+- **PaceProjectionChart** — Composite (Depth 2, zero CSS). Composes `Chart` + `Grid` + `XAxis` + `YAxis` + `LineSeries` + vertical `ReferenceLine` + `ShapeGlyph` + `GlyphBadge`, inside a `NarrowStack` that carries `role="img"` and a summary `aria-label`. Several people racing to one `total`: solid line per series, a dashed projection from each last point to its `finishX` (cut at the window edge) with an initials disc where it ends, a dotted plan line with diamond waypoints, and an accent rule at `today`. Not `ActualForecastChart` (one balance with a cone) and not `TargetBarChart` (bars per period). Key props: `series` (`PaceSeries[]`: `id`, `label`, `color`, `initials`, `points` `{x,y}[]`, `finishX?`), `total`, `plan?`, `today?`, `xTicks?` (`PaceTick[]`: `x`, `label`), `xMax?`. Series colours are data; everything else is a token. Factory: `createPaceProjectionChart()`. Curried variant: **`PaceProjectionChart`**. Pure helper: `projectionEnd(points, finishX, total, xMax)` → `PacePoint | null`. Exported types: `PaceProjectionChartDataProps`, `PaceSeries`, `PaceTick`, `PacePoint`. Use for: reading-club progress, course completion, any cohort-toward-a-total view. The finish x is the consumer's arithmetic (pace, deadlines).
+
+    ```tsx
+    import { PaceProjectionChart } from "solid-ui-components";
+    <PaceProjectionChart series={members()} total={32} plan={plan()} today={day()} xTicks={meetings()} />
+    ```
+
+- **PairwiseMatrix** — Composite (Depth 3, zero CSS). Composes `ValueMatrix`. A head-to-head table: cell (row a, column b) reads "a–b" (preferred a over b – preferred b over a), toned `success` where the row wins the pair and `muted` where it loses; diagonal blank. A row of all wins is the Condorcet winner. Key props: `candidates` (ids, display order), `pairwise` (`PairwiseTally`: `pairwise[a][b]`), `label?` (short column name per id). Factory: `createPairwiseMatrix({ cornerLabel? })` (default "vs"). Curried variant: **`PairwiseMatrix`**. Pure helpers: `pairwiseMatrix(candidates, ballots)` builds the tally from tiered ballots (`TieredBallot`; unlisted candidates rank last, ties count for neither) and `pairwiseOutcome(p, a, b)` → `PairwiseOutcome` (`"win"|"loss"|"tie"`) or null. Exported types: `PairwiseMatrixDataProps`, `PairwiseMatrixOverrides`, `PairwiseTally`, `TieredBallot`, `PairwiseOutcome`. Use for: ranked-choice / Condorcet results, round-robin records. (`ValueMatrix.format` now also receives `(row, col)`, which is what lets a cell print its mirror; additive.)
+
+    ```tsx
+    import { PairwiseMatrix, pairwiseMatrix } from "solid-ui-components";
+    <PairwiseMatrix candidates={books} pairwise={pairwiseMatrix(books, ballots)} label={(id) => short(id)} />
+    ```
+
+- **TieableRankList** — Composite (Depth 3, zero CSS). Composes `SortableList` + `ClusterRow` / `CenteredWrapRow` / `GrowBox` / `TightStack` + `SmallPrimaryButton` (the rank) + `SmallGhostButton` (the tie toggle). A ranking that allows "these are equal to me": drag rows into order, toggle = / ≠ between any two neighbours, and a run of ties is an N-way tie sharing one rank; each row can end with a caller action (a veto). **Model:** `order` + `ties` (one flag per gap). On a drag the ties are re-derived by `retie` — neighbours stay tied only if they shared a tier before, so a tie travels with its items and an item dropped between two tied items splits them. **Keyboard / touch fallback:** each rank is a button; Alt+ArrowUp / Alt+ArrowDown moves the row and focus follows. Key props: `items`, `getId`, `ties`, `onChange` (`(order, ties) => void`, fired by drag, keyboard move and tie toggle), `renderItem`, `renderAction?`, `itemLabel?`, `label?`. Factory: `createTieableRankList()` (generic). Curried variant: **`TieableRankList`**. Pure helpers: `toTiers`, `ranksOf` (dense), `toggleTie`, `tieAll`, `splitAll`, `retie`, `moveBy`. Exported types: `TieableRankListDataProps`, `TieableRankListOverrides`, `TieFlags`. Use for: ranked ballots with ties, preference sorting.
+
+    ```tsx
+    import { TieableRankList, tieAll } from "solid-ui-components";
+    <TieableRankList items={order()} getId={(id) => id} ties={ties()} onChange={(o, t) => save(o, t)} renderItem={(id) => <TextBody>{title(id)}</TextBody>} />
+    ```
+
+- **getPersistedTheme(fallback?)** — the theme loader now takes an optional fallback (default `"hud"`), returned when nothing valid is stored: `getPersistedTheme("bronze")`. It never returns undefined, so `getPersistedTheme() ?? mine` never reaches `mine`.
