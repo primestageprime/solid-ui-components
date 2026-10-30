@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.242.0 — 2026-10-30
+
 ### Added
 
 - **`CompactLabelTable`** — `CompactTable` whose first column keeps the body font (it holds a name, not a row index); backed by a new `BaseTableProps.firstColumn: "index" | "label"` (default `"index"`, so nothing else changes).

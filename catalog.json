@@ -3734,7 +3734,7 @@
     "useFor": null,
     "notes": "Compact table whose first column is a NAME (a member, a product): same as CompactTable, but the first column keeps the body font instead of the monospace row-index look.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.242.0",
     "file": "src/components/Table/variants.ts",
     "line": 17
   },
@@ -3908,7 +3908,7 @@
     "useFor": null,
     "notes": "Compact scrollable table — dense rows, sticky header, scroll container",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.242.0",
     "file": "src/components/Table/variants.ts",
     "line": 8
   },
