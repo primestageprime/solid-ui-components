@@ -17,7 +17,7 @@
 // tied only if they were in the same tier before, so a tie travels with its
 // items and an item dropped between two tied items splits them.
 //
-// KEYBOARD (and the fallback where native drag is unreliable): each rank is a
+// KEYBOARD: each rank is a
 // button; Alt+ArrowUp / Alt+ArrowDown on it moves that row one place, and
 // focus follows the row. The tie toggles are ordinary buttons with
 // `aria-pressed`.

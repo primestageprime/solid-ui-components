@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`SegmentedControl`** — the selected segment's label uses `--sui-on-accent` instead of `--sui-bg-deep`. On light themes the old colour nearly vanished (stax: 1.5:1 on lime; bronze 3.3:1). Dark themes are unchanged, because they define `--sui-on-accent` as `--sui-bg-deep`.
+
 ## 0.240.0 — 2026-10-30
 
 ### Added

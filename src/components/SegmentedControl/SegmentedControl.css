@@ -84,14 +84,18 @@
 /* Selected — default accent */
 .sui-segmented__seg--selected {
   background: var(--sui-accent);
-  color: var(--sui-bg-deep, #001018);
+  /* The label on an accent FILL is the theme's --sui-on-accent (see
+     _baseline.css .sui-btn--primary). --sui-bg-deep only works on dark themes:
+     on stax it put #e6ecea on lime at 1.5:1, a label nobody could read. Dark
+     themes define --sui-on-accent as --sui-bg-deep, so they are unchanged. */
+  color: var(--sui-on-accent, var(--sui-bg-deep, #001018));
 }
 
 /* Selected — color modifiers (primary maps to accent) */
 /* primary is an explicit alias for the default accent fill */
 .sui-segmented__seg--selected.sui-segmented__seg--primary {
   background: var(--sui-accent);
-  color: var(--sui-bg-deep, #001018);
+  color: var(--sui-on-accent, var(--sui-bg-deep, #001018));
 }
 .sui-segmented__seg--selected.sui-segmented__seg--danger {
   background: var(--sui-danger);
