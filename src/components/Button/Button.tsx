@@ -3,7 +3,7 @@
 // ============================================
 // Button — Atomic (Depth 1)
 // Tags: shows:button, shows:icon, does:click, does:submit, data:scalar, role:control
-// Owns CSS (Button.css). Composes Tooltip only for `disabledReason`.
+// Owns CSS (Button.css). Composes ButtonReason (no Kobalte) for `disabledReason`.
 // Multi-variant button with loading spinner.
 // Updated: absorbs HUDButton's active prop.
 //
@@ -14,8 +14,9 @@
 // hint after the text (`↵`, `Esc`, `⌘Z` / `Ctrl+Z`, an underlined letter),
 // `aria-hidden`, and the button carries `aria-keyshortcuts`.
 // - DISABLED with a `disabledReason`: the key does not fire; the reason
-//   opens for about 1.5 s. The button owns that tooltip: a span trigger
-//   around the button, with a controlled `open`.
+//   opens for about 1.5 s. The button owns that popover (`ButtonReason`): a
+//   span around the button takes the hover, and the text portals to the body.
+//   It is not `Tooltip`, so a button ships no Kobalte (bundle budget).
 // - PENDING (`loading`, or a submit action not yet settled) and SPENT
 //   (`once`): the key does not fire and nothing shows. Both still show as
 //   the DOM `disabled` attribute, as before.
@@ -38,7 +39,7 @@ import {
   keyGlyph,
 } from "../../hooks/hotkeys/hotkeyKeys";
 import { useHotkey } from "../../hooks/hotkeys/useHotkey";
-import { Tooltip } from "../Tooltip/Tooltip";
+import { ButtonReason } from "./ButtonReason";
 import { filter, join, map } from "../../fn";
 import {
   createSubmitAction,
@@ -281,15 +282,13 @@ export const Button: Component<ButtonProps> = (props) => {
     (local.disabled ?? false) &&
     (hovered() || reasonByKey());
   return (
-    <Tooltip
-      triggerAs="span"
-      class="sui-btn-reason"
+    <ButtonReason
       open={reasonOpen()}
-      onOpenChange={setHovered}
-      content={() => local.disabledReason ?? ""}
+      onHover={setHovered}
+      reason={local.disabledReason ?? ""}
     >
       {button}
-    </Tooltip>
+    </ButtonReason>
   );
 };
 
