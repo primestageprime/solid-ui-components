@@ -70,6 +70,17 @@ type Root = typeof sui;
 // ── components and factories that must resolve from the root ────────────
 // Each entry fails to compile if the name is missing or is not callable.
 const _rootFunctions = [
+  // The hotkey registry (#53325) — Part 2 (thorcasting-ui Import) imports these
+  sui.useHotkey,
+  sui.useHotkeyLayer,
+  sui.registerHotkey,
+  sui.openHotkeyLayer,
+  sui.allocateHotkeyLayer,
+  sui.hotkeyGuard,
+  sui.keyGlyph,
+  sui.isEditableTarget,
+  sui.createHotkeyScope,
+  sui.HotkeyButton,
   // DateAxis family (explicit re-export list in src/index.ts)
   sui.DateAxis,
   sui.DailyDateAxis,
