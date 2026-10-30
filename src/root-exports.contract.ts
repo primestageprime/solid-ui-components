@@ -81,6 +81,10 @@ const _rootFunctions = [
   sui.isEditableTarget,
   sui.createHotkeyScope,
   sui.HotkeyButton,
+  sui.HotkeyPrimaryButton,
+  sui.HotkeySecondaryButton,
+  sui.HotkeyDefaultButton,
+  sui.HotkeySmallPrimaryButton,
   // DateAxis family (explicit re-export list in src/index.ts)
   sui.DateAxis,
   sui.DailyDateAxis,
