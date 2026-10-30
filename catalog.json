@@ -16961,7 +16961,7 @@
     "useFor": null,
     "notes": "The same month with Monday as the first column.",
     "showcase": "#/month-day-grid",
-    "since": "Unreleased",
+    "since": "0.244.0",
     "file": "src/components/MonthDayGrid/variants.ts",
     "line": 12
   },
@@ -17125,7 +17125,7 @@
     "useFor": "a host opening candidate meeting days and members picking the ones they can make; stack three for a season.",
     "notes": "One weekday-aligned month (Sunday first), multi-select days with counts.",
     "showcase": "#/month-day-grid",
-    "since": "Unreleased",
+    "since": "0.244.0",
     "file": "src/components/MonthDayGrid/variants.ts",
     "line": 8
   },
