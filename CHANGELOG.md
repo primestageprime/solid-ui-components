@@ -22,6 +22,8 @@
 
 ### Added
 
+- **`StepChain` / `PayChain`** — a name, a muted tag and a chain of steps that folds by measured width: one line, then name above chain, then first two steps · "N more" · last, with the full chain in a popover on hover, focus or tap (Escape closes). `PayChain` takes `{ name, cadence, steps: { amount_cents, months?, weeks? }[], ends? }`, drops zero-length $0 gaps, merges equal neighbours, writes whole dollars with `/mo` or `/biwk` and `mo` / `wk` spans. Pure `foldChain`, `cleanSteps`, `toChainSteps`. Additive.
+- **`PopoverTooltip` `contentClass`** — an extra class on the floating content, for a body that needs its own width. Additive.
 - **`PaceProjectionChart` `markers`** — labelled dashed vertical rules at x, each with an optional dot at y, e.g. a "Meeting · Nov 24" line beside today. Colliding captions stack into rows. `x` is numeric, in the same units as the points. Pure `stackLabelRows`; type `PaceMarker`. Additive.
 
 ## 0.249.0 — 2026-10-30

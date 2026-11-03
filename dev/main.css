@@ -2963,3 +2963,9 @@ th:has(.tf-th-center) .hud-table__header-content {
   padding: 16px;
   max-width: 390px;
 }
+
+/* PayChain showcase: fixed-width columns that force each fold case. */
+.pay-chain-demo { box-sizing: border-box; padding: 8px 0; }
+.pay-chain-demo--wide { width: 640px; max-width: 100%; }
+.pay-chain-demo--medium { width: 420px; max-width: 100%; }
+.pay-chain-demo--narrow { width: 300px; max-width: 100%; }

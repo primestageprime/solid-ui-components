@@ -210,6 +210,7 @@ import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
 import { MonthDayGridShowcase } from "./showcases/month-day-grid";
+import { PayChainShowcase } from "./showcases/pay-chain";
 import { TieableRankListShowcase } from "./showcases/tieable-rank-list";
 import { PairwiseMatrixShowcase } from "./showcases/pairwise-matrix";
 import { PaceProjectionChartShowcase } from "./showcases/pace-projection-chart";
@@ -1523,6 +1524,12 @@ const items: Item[] = [
     label: "MonthDayGrid",
     component: MonthDayGridShowcase,
     tags: ["depth:1"],
+  },
+  {
+    id: "pay-chain",
+    label: "PayChain / StepChain",
+    component: PayChainShowcase,
+    tags: ["depth:2"],
   },
   // Generated component entries (npm run new:component) — appended above this line.
   {

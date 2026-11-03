@@ -1475,6 +1475,25 @@ Depth-1 SVG marks on the **box contract**: each draws inside a `{ x, y, width, h
     />
     ```
 
+## StepChain
+- **StepChain** — Composite (Depth 2, owns `StepChain.css`). A name, a muted tag and a chain of steps, `amount →span amount →span amount →`, laid out by **measured width** (a hidden probe measures the parts once; `observeSize` tracks the container, so resize re-folds without a loop warning). **1** the name and whole chain fit: one line. **2** they do not fit together: name and tag on line one, the whole chain on line two. **3** the chain overflows a line of its own: first two steps, an ellipsis with "N more" stacked above it in the duration slot, then the last step (N = steps − 3, so the fold needs 4+ steps; a shorter overflowing chain stays on two lines and clips, it never wraps mid-step). Hover, focus or tap the ellipsis for a **popover** of the full chain wrapped to the width it needs (max 92vw) under a caption "name · tag · N steps"; Escape closes. Built on `PopoverTooltip` (now with an additive `contentClass` prop). Mono type and colours come from `--sui-*` tokens, so light and dark follow the theme. Key props: `name`, `tag?`, `steps: { label, span? }[]` (span sits over the arrow after the step; absent = blank slot), `ends?` (a stopped chain ends in muted "done", an open one in a bare arrow). Exported directly: it has no design-config props. Pure and exported: `foldChain(measure)` → `{ mode: "one" | "two" | "fold", shown, omitted }`, `fullChainWidth`, `foldedChainWidth`, `MIN_FOLD_STEPS`. Use for: any labelled sequence that must stay on one or two lines in a narrow slot (ramp schedules, plan phases).
+- **PayChain** — Composite (Depth 2, zero CSS). `StepChain` curried for pay; the call site is data only: `name`, `cadence` (`"monthly"`, `"biweekly"` or any string), `steps: { amount_cents, months?, weeks? }[]`, `ends?`. It drops zero-length `$0` gap steps, merges equal consecutive amounts (durations add), writes whole dollars, puts `/mo` or `/biwk` on the first amount only, and writes spans in the cadence's unit (`mo` for monthly, `wk` for bi-weekly). No factory: nothing is left to freeze. Pure and exported: `cleanSteps(steps, cadence?)`, `toChainSteps(steps, cadence)`, `dollars(cents)`, `unitOf`, `cadenceTag`, `cadenceSuffix`. Exported types: `PayChainProps`, `PayStep`, `PayCadence`. Use for: a salary or fee schedule in one narrow row.
+  - Example:
+    ```tsx
+    import { PayChain } from "solid-ui-components";
+
+    <PayChain
+      name="Sara Lincoln"
+      cadence="monthly"
+      steps={[
+        { amount_cents: 625_000, months: 6 },
+        { amount_cents: 3_750_000, months: 1 },
+        { amount_cents: 1_666_700 },
+      ]}
+    />
+    // Sara Lincoln monthly  $6,250/mo →6mo $37,500 →1mo $16,667 →
+    ```
+
 ## Strips
 - **LabelStrip / AmountStrip / CadenceStrip / WindowStrip** — four Composites (Depth 2, zero CSS) that larger forms piece together instead of hand-placing smaller fields. Each edits an **engine-neutral value** (integer cents, ISO `YYYY-MM-DD` dates, no wire vocabulary) so any app maps it to its own shape, and the rules live in **pure exported functions** the strips use. Curried variants: `LabelStrip`; `AmountStrip` (to $999,999, whole dollars), `SmallAmountStrip` (to $9,999, cents), `LargeAmountStrip` (to $1B, thousands), `SeatsAmountStrip`, `HoursAmountStrip`; `CadenceStrip` (all eight shapes), `RecurringCadenceStrip` (all but once), `MonthlyOrAnnualCadenceStrip`, `PayCadenceStrip` (bi-weekly, semi-monthly, monthly); `WindowStrip`, `StartWindowStrip`, `EndWindowStrip`. Factories: `createLabelStrip({ label })`, `createAmountStrip({ magnitude, precision, unit })`, `createCadenceStrip({ allowed })`, `createWindowStrip({ mode })`. Data props: `value` and `onChange(value)` (plus `periodsPerYear` on an amount, whose per-year derivation divides by it).
   - **AmountStrip** edits `AmountValue`: `{ kind: "single", cents, per: "payment" | "year" }` (a per-year amount shows its derived payment), `{ kind: "range", min, typical, max }` (three money fields; `setAmountRangeField` keeps `min ≤ typical ≤ max`, the edited field pushing the others), `{ kind: "units", units, unitPrice, perPeriod }` (units × price, units added each period). It composes the magnitude-sized `CurrencyInput…` / `CountInput…` variants and wraps horizontally.

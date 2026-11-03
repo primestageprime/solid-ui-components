@@ -358,6 +358,8 @@ export * from "./components/PaceProjectionChart";
 export * from "./components/PairwiseMatrix";
 export * from "./components/TieableRankList";
 export * from "./components/MonthDayGrid";
+export * from "./components/StepChain";
+export * from "./components/PayChain";
 
 // Choreography — compose + sequence animation effects across components
 // (collapse/expand/fadeIn/fadeOut/slideDown/rollUp/glowIn/settleIn, step/

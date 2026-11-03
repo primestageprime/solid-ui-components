@@ -67,6 +67,8 @@ export interface PopoverTooltipProps
    * focusable — give such content its own `aria-label`.
    */
   triggerAs?: ValidComponent;
+  /** Extra class on the floating content, for a caller whose body needs its own width (the content is otherwise capped at 600px). Additive. */
+  contentClass?: string;
   /** Milliseconds of pointer-leave grace before a hover-open closes. Default 100 — long enough to move the pointer from trigger to content. */
   closeDelay?: number;
 }
@@ -88,6 +90,7 @@ export const PopoverTooltip: Component<PopoverTooltipProps> = (props) => {
     "class",
     "triggerAs",
     "closeDelay",
+    "contentClass",
   ]);
 
   const triggerClass = () =>
@@ -182,7 +185,11 @@ export const PopoverTooltip: Component<PopoverTooltipProps> = (props) => {
       </KobaltePopover.Trigger>
       <KobaltePopover.Portal>
         <KobaltePopover.Content
-          class="sui-popover-tooltip__content"
+          class={pipe(
+            ["sui-popover-tooltip__content", local.contentClass],
+            filter(Boolean),
+            join(" "),
+          )}
           onPointerEnter={onContentPointerEnter}
           onPointerLeave={onContentPointerLeave}
         >
