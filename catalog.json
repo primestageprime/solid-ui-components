@@ -18852,7 +18852,7 @@
     "useFor": "a salary or fee schedule in one narrow row.",
     "notes": null,
     "showcase": "#/pay-chain",
-    "since": "Unreleased",
+    "since": "0.252.0",
     "file": "src/components/PayChain/PayChain.tsx",
     "line": 22
   },
@@ -23613,7 +23613,7 @@
     "useFor": "any labelled sequence that must stay on one or two lines in a narrow slot (ramp schedules, plan phases).",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.252.0",
     "file": "src/components/StepChain/StepChain.tsx",
     "line": 69
   },

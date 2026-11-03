@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.252.0 — 2026-11-03
+
 ### Added
 
 - **`StepChain` / `PayChain`** — a name, a muted tag and a chain of steps that folds by measured width: one line, then name above chain, then first two steps · "N more" · last, with the full chain in a popover on hover, focus or tap (Escape closes). `PayChain` takes `{ name, cadence, steps: { amount_cents, months?, weeks? }[], ends? }`, drops zero-length $0 gaps, merges equal neighbours, writes whole dollars with `/mo` or `/biwk` and `mo` / `wk` spans. Pure `foldChain`, `cleanSteps`, `toChainSteps`. Additive.
