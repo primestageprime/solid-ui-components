@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- **Form controls are one height and one text size (BREAKING visual, every consumer).** New tokens `--sui-control-height` (43px) and `--sui-control-font-size` (0.875rem) in `global.css`. `Select`'s trigger (was a fixed 32px, inherited font), `DatePicker` (was 32px), `SegmentedControl` md and `SegmentedInput` (they share `.sui-segmented`; was 35px, 13px text) and `PopoverField` (was a 2rem minimum) now read them, so they sit level with `ThemedInput` and `ThemedNumberInput`/`CurrencyInput` md (43px, 14px). `SegmentedControl size="xs"` keeps its own height. Rows that paired these with a 32px control get taller: `SearchInput`/`SearchField` (32px) beside a `Select`, `Dropdown` (32px), `MutationToolbar`'s as-of chips, `SettingsTabs`, `CadenceStrip`/`WindowStrip` date fields, `IntervalInput`'s unit Select. Peter, thorcasting 4354: "Change the default everywhere".
+
 ### Added
 
 - **`StepChain` / `PayChain`** — a name, a muted tag and a chain of steps that folds by measured width: one line, then name above chain, then first two steps · "N more" · last, with the full chain in a popover on hover, focus or tap (Escape closes). `PayChain` takes `{ name, cadence, steps: { amount_cents, months?, weeks? }[], ends? }`, drops zero-length $0 gaps, merges equal neighbours, writes whole dollars with `/mo` or `/biwk` and `mo` / `wk` spans. Pure `foldChain`, `cleanSteps`, `toChainSteps`. Additive.

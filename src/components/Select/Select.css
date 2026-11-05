@@ -24,13 +24,18 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  height: 32px;
+  /* The form control height and text size (`--sui-control-*`, global.css):
+     level with the default inputs. Was a fixed 32px with the inherited font
+     (16px in most apps), so a Select stood shorter and its text larger than
+     the inputs beside it (thorcasting 4354). */
+  height: var(--sui-control-height, 43px);
   padding: 0 10px;
   background: var(--sui-bg-elevated);
   border: 1px solid var(--sui-border, rgba(var(--sui-accent-rgb), 0.3));
   border-radius: var(--sui-radius-sm, 0);
   color: inherit;
   font: inherit;
+  font-size: var(--sui-control-font-size, 0.875rem);
   text-align: left;
   cursor: pointer;
   transition:

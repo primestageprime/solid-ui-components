@@ -7,6 +7,9 @@
    the display echoes the committed ISO value).
    ============================================ */
 .sui-date-picker {
+  /* The form control height (`--sui-control-height`, global.css), level with
+     the default inputs and Select. Was 32px (8px padding + a 14px line). */
+  height: var(--sui-control-height, 43px);
   /* FIXED width: 10 ISO characters + icon + padding. Never flexes to fill. */
   box-sizing: border-box;
   position: relative;

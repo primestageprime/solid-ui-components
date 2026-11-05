@@ -98,6 +98,15 @@
   --sui-space-5: 20px;
   --sui-space-6: 24px;
 
+  /* Form controls (thorcasting 4354, Peter: "Make the dropdown and the inputs
+     the same height"; "Change the default everywhere"). One height and one
+     text size for every default-size control in a form row: ThemedInput,
+     ThemedNumberInput / CurrencyInput md (1px border + 12px padding + 17px
+     line + 12px padding + 1px border), Select, DatePicker and SegmentedControl
+     md. A control that must line up with these reads the tokens. */
+  --sui-control-height: 43px;
+  --sui-control-font-size: 0.875rem;
+
   /* Typography */
   --sui-font-family:
     system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

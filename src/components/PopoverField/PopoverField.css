@@ -6,13 +6,17 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 2rem;
+  /* The form control height and text size (`--sui-control-*`, global.css),
+     level with Select and the default inputs (thorcasting 4354). Was a 2rem
+     minimum with the inherited font. */
+  height: var(--sui-control-height, 43px);
   padding: 4px 10px;
   border: 1px solid var(--sui-border, hsl(240 5% 84%));
   border-radius: var(--sui-radius-sm, 6px);
   background: transparent;
   color: var(--sui-text-primary);
   font: inherit;
+  font-size: var(--sui-control-font-size, 0.875rem);
   cursor: pointer;
 }
 

@@ -22,6 +22,10 @@
   overflow: hidden;
   user-select: none;
   background: transparent;
+  /* md is a form control: the form control height (`--sui-control-height`,
+     global.css), level with the inputs and Select in a form row. Was 35px
+     (8px padding + a 13px line + 8px + the 1px borders). `xs` sets its own. */
+  height: var(--sui-control-height, 43px);
 }
 
 .sui-segmented__seg {
@@ -33,7 +37,7 @@
   background: transparent;
   color: var(--sui-text-muted);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--sui-control-font-size, 0.875rem);
   line-height: 1;
   padding: 8px 16px;
   cursor: pointer;
@@ -259,6 +263,10 @@
 /* `size="xs"` — chart furniture. A segment the height of an axis label row:
    10px type on a 3px pad, so a three-way switch fits the origin corner of a
    chart (ScrubChart's y-axis mode switch) without taking a row of its own. */
+.sui-segmented--xs {
+  /* Chart furniture, not a form control: its height is its content. */
+  height: auto;
+}
 .sui-segmented--xs .sui-segmented__seg {
   font-size: 10px;
   padding: 3px 6px;
