@@ -5,6 +5,7 @@
 ### Changed
 
 - **Form controls are one height and one text size (BREAKING visual, every consumer).** New tokens `--sui-control-height` (43px) and `--sui-control-font-size` (0.875rem) in `global.css`. `Select`'s trigger (was a fixed 32px, inherited font), `DatePicker` (was 32px), `SegmentedControl` md and `SegmentedInput` (they share `.sui-segmented`; was 35px, 13px text) and `PopoverField` (was a 2rem minimum) now read them, so they sit level with `ThemedInput` and `ThemedNumberInput`/`CurrencyInput` md (43px, 14px). `SegmentedControl size="xs"` keeps its own height. Rows that paired these with a 32px control get taller: `SearchInput`/`SearchField` (32px) beside a `Select`, `Dropdown` (32px), `MutationToolbar`'s as-of chips, `SettingsTabs`, `CadenceStrip`/`WindowStrip` date fields, `IntervalInput`'s unit Select. Peter, thorcasting 4354: "Change the default everywhere".
+- **`Dropdown` md (framed) and `SearchInput`/`SearchField` join the form control height and text size** (thorcasting 4357). The framed md trigger (was about 30px, 13px text) and the search field (was 32px) read `--sui-control-height` and `--sui-control-font-size`, so a filter bar pairing a search or a dropdown with a `Select` stays level. The subtle trigger (inline text, e.g. a header switcher) and `sm` (`CompactDropdown`, `InlineSubtleDropdown`) keep their sizes. `PinnedFillColumn`'s pinned search header gets taller.
 
 ### Added
 

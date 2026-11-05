@@ -28,9 +28,23 @@
   cursor: default;
 }
 
+/* md is a form control: the form control height and text size
+   (`--sui-control-*`, global.css), level with Select and the default inputs
+   (thorcasting 4357, Peter's "change the default everywhere"). Was 6px + a
+   13px line + 6px + borders, about 30px. `sm` and the subtle inline trigger
+   keep their compact sizes. */
 .sui-dropdown--md .sui-dropdown__trigger {
   padding: 6px 12px;
   font-size: 13px;
+}
+/* The subtle trigger reads as inline text (a header's company switcher), so
+   it keeps its text size and height; only the framed md trigger is a form
+   control. */
+.sui-dropdown--md:not(.sui-dropdown--subtle) .sui-dropdown__trigger {
+  box-sizing: border-box;
+  height: var(--sui-control-height, 43px);
+  padding: 0 12px;
+  font-size: var(--sui-control-font-size, 0.875rem);
 }
 
 .sui-dropdown--sm .sui-dropdown__trigger {
