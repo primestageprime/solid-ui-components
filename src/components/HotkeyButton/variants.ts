@@ -25,6 +25,9 @@ export const HotkeyDangerButton: Component<HotkeyButtonDataProps> =
 export const HotkeyGhostButton: Component<HotkeyButtonDataProps> =
   createHotkeyButton({ variant: "ghost" });
 
+export const HotkeyQuietDangerButton: Component<HotkeyButtonDataProps> =
+  createHotkeyButton({ variant: "quiet-danger" });
+
 export const HotkeySmallPrimaryButton: Component<HotkeyButtonDataProps> =
   createHotkeyButton({ variant: "primary", size: "sm" });
 

@@ -95,6 +95,18 @@ export const SmallQuietButton: Component<ButtonDataProps> = createButton({
   size: "sm",
 });
 
+// Quiet danger button — Delete that stays muted until hovered or focused, then
+// turns red (the config-form guideline). Same box as DangerButton.
+export const QuietDangerButton: Component<ButtonDataProps> = createButton({
+  variant: "quiet-danger",
+});
+
+// Small quiet danger button — compact twin of QuietDangerButton
+export const SmallQuietDangerButton: Component<ButtonDataProps> = createButton({
+  variant: "quiet-danger",
+  size: "sm",
+});
+
 // Small warning button — compact amber caution action (not destructive)
 export const SmallWarningButton: Component<ButtonDataProps> = createButton({
   variant: "warning",

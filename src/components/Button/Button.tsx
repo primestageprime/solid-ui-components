@@ -43,6 +43,15 @@ export interface ButtonProps
      */
     | "quiet"
     /**
+     * A QUIET DESTRUCTIVE ACTION (Delete on a form): no box and muted text at
+     * rest, so it never competes with Save; red text and a faint red wash on
+     * hover and keyboard focus, so the danger shows when the pointer or key
+     * is already on it. Shape and label carry the meaning, not colour alone
+     * (the label says Delete). On a touch screen, which has no hover, it rests
+     * a step stronger.
+     */
+    | "quiet-danger"
+    /**
      * A TOGGLEABLE LABEL: the button stripped back to its own text, with no
      * box, no padding and no colour of its own, taking the accent when
      * `active`. For a name that is also the select control — see

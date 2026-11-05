@@ -211,6 +211,9 @@ import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 // Generated components (npm run new:component) — appended below, do not reorder.
 import { MonthDayGridShowcase } from "./showcases/month-day-grid";
 import { PayChainShowcase } from "./showcases/pay-chain";
+import { ConfigGlyphsShowcase } from "./showcases/config-glyphs";
+import { PopoverFieldShowcase } from "./showcases/popover-field";
+import { ShortcutHelpShowcase } from "./showcases/shortcut-help";
 import { TieableRankListShowcase } from "./showcases/tieable-rank-list";
 import { PairwiseMatrixShowcase } from "./showcases/pairwise-matrix";
 import { PaceProjectionChartShowcase } from "./showcases/pace-projection-chart";
@@ -1529,6 +1532,24 @@ const items: Item[] = [
     id: "pay-chain",
     label: "PayChain / StepChain",
     component: PayChainShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "config-glyphs",
+    label: "DirectionGlyph / CadenceGlyph / AmountShapeGlyph",
+    component: ConfigGlyphsShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "popover-field",
+    label: "PopoverField / DayOfMonthField",
+    component: PopoverFieldShowcase,
+    tags: ["depth:2"],
+  },
+  {
+    id: "shortcut-help",
+    label: "ShortcutHelp",
+    component: ShortcutHelpShowcase,
     tags: ["depth:2"],
   },
   // Generated component entries (npm run new:component) — appended above this line.

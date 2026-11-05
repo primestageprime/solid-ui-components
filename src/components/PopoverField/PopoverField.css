@@ -1,0 +1,54 @@
+/* ============================================
+   PopoverField — Structural
+   A compact field button that opens a picker popover. Tokens only.
+   ============================================ */
+.sui-popover-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 2rem;
+  padding: 4px 10px;
+  border: 1px solid var(--sui-border, hsl(240 5% 84%));
+  border-radius: var(--sui-radius-sm, 6px);
+  background: transparent;
+  color: var(--sui-text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sui-popover-field:hover:not(:disabled) {
+  border-color: var(--sui-accent);
+}
+
+.sui-popover-field:focus-visible {
+  outline: 2px solid var(--sui-border-focus, hsl(200 98% 39%));
+  outline-offset: 2px;
+}
+
+.sui-popover-field[data-expanded] {
+  border-color: var(--sui-accent);
+}
+
+.sui-popover-field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sui-popover-field__caret {
+  color: var(--sui-text-muted);
+  flex: none;
+}
+
+.sui-popover-field__content {
+  /* Above Modal's 1000, below Toast's 9999, like Tooltip and PopoverTooltip. */
+  z-index: 1100;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  border: 1px solid var(--sui-border, hsl(240 5% 84%));
+  border-radius: var(--sui-radius-sm, 6px);
+  background: var(--sui-bg-secondary, hsl(214, 55%, 20%));
+  color: var(--sui-text-primary, white);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+}

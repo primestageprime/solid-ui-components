@@ -378,6 +378,34 @@ body {
   }
 }
 
+/* quiet-danger — a destructive action that stays out of the way until the
+   pointer or keyboard is on it: no border and muted text at rest, red text and
+   a faint red wash on hover and focus-visible. Touch has no hover, so it rests
+   a step stronger there. */
+.sui-btn--quiet-danger {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--sui-text-muted);
+  transition:
+    color 0.12s ease,
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.sui-btn--quiet-danger:hover:not(:disabled),
+.sui-btn--quiet-danger:focus-visible {
+  background: rgba(var(--sui-danger-rgb), 0.1);
+  border-color: transparent;
+  color: var(--sui-danger);
+}
+
+@media (hover: none) {
+  .sui-btn--quiet-danger {
+    color: var(--sui-danger);
+    opacity: 0.8;
+  }
+}
+
 .sui-btn--secondary {
   background: #6c757d;
   border-color: #6c757d;

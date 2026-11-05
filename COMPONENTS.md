@@ -1494,6 +1494,39 @@ Depth-1 SVG marks on the **box contract**: each draws inside a `{ x, y, width, h
     // Sara Lincoln monthly  $6,250/mo →6mo $37,500 →1mo $16,667 →
     ```
 
+## Config-form glyphs, fields and shortcut help
+- **DirectionGlyph** — Composite (Depth 2, own `Glyphs.css`). A red down arrow for an expense, a green up arrow for revenue, with a tooltip and `aria-label` built in. One of the three icons after a config form's name (direction, cadence, amount shape); they share an internal frame (a 1.25em svg in `currentColor`, as large as the font around it), have no design props, and are exported directly. Prop: `direction` (`"expense" | "revenue"`). Shape carries the meaning, colour only backs it up. Use for: the header row of a config form.
+  - Example:
+    ```tsx
+    import { DirectionGlyph, CadenceGlyph, AmountShapeGlyph } from "solid-ui-components";
+
+    <strong>Senior engineer salary</strong>
+    <DirectionGlyph direction="expense" />
+    <CadenceGlyph cadence="biweekly" />
+    <AmountShapeGlyph shape="fixed" />
+    ```
+- **CadenceGlyph** — Composite (Depth 2, own `Glyphs.css`). A calendar whose pattern shows the rhythm: weekly is five vertical lines, fortnightly two rows of five with only the second filled, monthly one lit day; yearly, every N months and once are a letter or digit on the calendar (Y, N, 1). Tooltip and `aria-label` built in ("Every two weeks"). Props: `cadence` (`"weekly" | "biweekly" | "monthly" | "annual" | "every-n" | "once"`), `n?` (months, with `every-n`). Pure `cadenceLabel(cadence, n?)`. Use for: the header row of a config form.
+- **AmountShapeGlyph** — Composite (Depth 2, own `Glyphs.css`). A metronome for a fixed amount (the same every time) and three error bars for a variable one (a range). Tooltip and `aria-label` built in. Prop: `shape` (`"fixed" | "variable"`). Use for: the header row of a config form.
+- **PopoverField** — Atomic (Depth 1, owns `PopoverField.css`, Kobalte Popover). A compact field that reads as its value and opens a picker in a popover anchored under it. Opens on click or Enter, never on hover (use `PopoverTooltip` for hover and tap help). Closes on Escape, on an outside click and when the picker calls `close`; focus returns to the field. Key props: `label` (accessible name, read as "label: value"), `value` (the text shown while closed), `children` (the picker, or a function `(close) => picker`), `disabled?`. Use for: any field whose editor is a small picker (day of month, a colour, a month).
+- **DayOfMonthField** — Composite (Depth 2, zero CSS). `PopoverField` with `CompactDayOfMonthPicker` (1 to 28 plus "Last of month"): reads "5th" or "Last day", closes on pick. Props: `value` (`number | "last"`), `onChange` (`(day: number | "last") => void`), `label?` (default "Day of month"). Pure `dayOfMonthText(day)`. Use for: the one "when" control of a monthly config form.
+  - Example:
+    ```tsx
+    import { DayOfMonthField } from "solid-ui-components";
+
+    <DayOfMonthField value={day()} onChange={setDay} />
+    ```
+- **ShortcutHelp** — Composite (Depth 2, owns `ShortcutHelp.css` for the fixed corner and the scrim). A `?` button at the bottom right of the screen (desktop only: a hover pointer and 768px or wider) that opens a translucent overlay of the active shortcuts. The `?` key opens it too; `?`, Escape or a click outside closes it. While open it is the top hotkey layer, so page keys do not fire behind it. Props: `shortcuts` (`{ keys, label, group? }[]`; `keys` is the hotkey registry's spelling, "d", "Enter", "Mod+s", "g t"; rows of one `group` sit together in order of first use). Pure `groupShortcuts`. Use for: any screen whose actions have hotkeys. Mount it once per screen.
+  - Example:
+    ```tsx
+    import { ShortcutHelp } from "solid-ui-components";
+
+    <ShortcutHelp shortcuts={[
+      { keys: "s", label: "Save", group: "Actions" },
+      { keys: "d", label: "Delete", group: "Actions" },
+    ]} />
+    ```
+- **QuietDangerButton / SmallQuietDangerButton / HotkeyQuietDangerButton** — curried `Button` (`variant: "quiet-danger"`; the small twin adds `size: "sm"`; the hotkey twin is a `HotkeyButton`). A destructive action that must not compete with Save: no border and muted text at rest, red text and a faint red wash on hover and focus-visible; on a touch screen, which has no hover, it rests red at 80%. The label says what it does (Delete), so colour is not the only signal. Same box as `DangerButton`, which stays the loud filled-outline choice. Use for: Delete in the corner of an edit form (`<HotkeyQuietDangerButton hotkey="d" onTrigger={remove}>Delete</HotkeyQuietDangerButton>`).
+
 ## Strips
 - **LabelStrip / AmountStrip / CadenceStrip / WindowStrip** — four Composites (Depth 2, zero CSS) that larger forms piece together instead of hand-placing smaller fields. Each edits an **engine-neutral value** (integer cents, ISO `YYYY-MM-DD` dates, no wire vocabulary) so any app maps it to its own shape, and the rules live in **pure exported functions** the strips use. Curried variants: `LabelStrip`; `AmountStrip` (to $999,999, whole dollars), `SmallAmountStrip` (to $9,999, cents), `LargeAmountStrip` (to $1B, thousands), `SeatsAmountStrip`, `HoursAmountStrip`; `CadenceStrip` (all eight shapes), `RecurringCadenceStrip` (all but once), `MonthlyOrAnnualCadenceStrip`, `PayCadenceStrip` (bi-weekly, semi-monthly, monthly); `WindowStrip`, `StartWindowStrip`, `EndWindowStrip`. Factories: `createLabelStrip({ label })`, `createAmountStrip({ magnitude, precision, unit })`, `createCadenceStrip({ allowed })`, `createWindowStrip({ mode })`. Data props: `value` and `onChange(value)` (plus `periodsPerYear` on an amount, whose per-year derivation divides by it).
   - **AmountStrip** edits `AmountValue`: `{ kind: "single", cents, per: "payment" | "year" }` (a per-year amount shows its derived payment), `{ kind: "range", min, typical, max }` (three money fields; `setAmountRangeField` keeps `min ≤ typical ≤ max`, the edited field pushing the others), `{ kind: "units", units, unitPrice, perPeriod }` (units × price, units added each period). It composes the magnitude-sized `CurrencyInput…` / `CountInput…` variants and wraps horizontally.

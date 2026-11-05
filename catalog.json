@@ -528,6 +528,32 @@
     "line": 45
   },
   {
+    "name": "AmountShapeGlyph",
+    "depth": 2,
+    "kind": "composite",
+    "family": "Glyphs",
+    "tags": [
+      "shows:icon",
+      "does:hover",
+      "data:enum",
+      "role:inline"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2, own `Glyphs.css`).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "the header row of a config form.",
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Glyphs/AmountShapeGlyph.tsx",
+    "line": 17
+  },
+  {
     "name": "AmountStrip",
     "depth": null,
     "kind": "variant",
@@ -1906,6 +1932,33 @@
     "since": null,
     "file": "src/components/ProgressCard/variants.ts",
     "line": 12
+  },
+  {
+    "name": "CadenceGlyph",
+    "depth": 2,
+    "kind": "composite",
+    "family": "Glyphs",
+    "tags": [
+      "shows:icon",
+      "shows:calendar",
+      "does:hover",
+      "data:enum",
+      "role:inline"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2, own `Glyphs.css`).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "the header row of a config form.",
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Glyphs/CadenceGlyph.tsx",
+    "line": 53
   },
   {
     "name": "CadenceStrip",
@@ -5160,7 +5213,7 @@
     "showcase": "#/button",
     "since": "0.142.0",
     "file": "src/components/Button/Button.tsx",
-    "line": 151
+    "line": 160
   },
   {
     "name": "createButtonGroup",
@@ -10009,6 +10062,33 @@
     "line": 24
   },
   {
+    "name": "DayOfMonthField",
+    "depth": 2,
+    "kind": "composite",
+    "family": "PopoverField",
+    "tags": [
+      "shows:field",
+      "shows:date",
+      "does:pick",
+      "data:enum",
+      "role:control"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2, zero CSS).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "the one \"when\" control of a monthly config form.",
+    "notes": null,
+    "showcase": "#/popover-field",
+    "since": "Unreleased",
+    "file": "src/components/PopoverField/DayOfMonthField.tsx",
+    "line": 40
+  },
+  {
     "name": "DayOfMonthPicker",
     "depth": 1,
     "kind": "primitive",
@@ -10511,6 +10591,32 @@
     "line": 126
   },
   {
+    "name": "DirectionGlyph",
+    "depth": 2,
+    "kind": "composite",
+    "family": "Glyphs",
+    "tags": [
+      "shows:icon",
+      "does:hover",
+      "data:enum",
+      "role:inline"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2, own `Glyphs.css`).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "the header row of a config form.",
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/Glyphs/DirectionGlyph.tsx",
+    "line": 17
+  },
+  {
     "name": "DisclosureButton",
     "depth": 1,
     "kind": "variant",
@@ -10542,7 +10648,7 @@
     "showcase": "#/button",
     "since": "0.219.0",
     "file": "src/components/Button/variants.ts",
-    "line": 151
+    "line": 163
   },
   {
     "name": "DismissibleNoticeBanner",
@@ -13240,7 +13346,7 @@
     "showcase": "#/button",
     "since": "0.172.0",
     "file": "src/components/Button/variants.ts",
-    "line": 126
+    "line": 138
   },
   {
     "name": "Grid",
@@ -14362,6 +14468,42 @@
     "line": 16
   },
   {
+    "name": "HotkeyQuietDangerButton",
+    "depth": 2,
+    "kind": "variant",
+    "family": "HotkeyButton",
+    "tags": [
+      "shows:button",
+      "shows:kbd",
+      "does:hotkey",
+      "does:click",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createHotkeyButton",
+      "overrides": "{ variant: \"quiet-danger\" }"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "HotkeyButtonDataProps",
+    "summary": "Composite (Depth 2, `src/components/HotkeyButton/HotkeyButton.tsx`). A `HotkeyButton` variant with `variant: \"quiet-danger\"`.",
+    "summarySource": "synthesized",
+    "preferFirst": [
+      "ActionList"
+    ],
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": null,
+    "since": "Unreleased",
+    "file": "src/components/HotkeyButton/variants.ts",
+    "line": 28
+  },
+  {
     "name": "HotkeySecondaryButton",
     "depth": 2,
     "kind": "variant",
@@ -14431,7 +14573,7 @@
     "showcase": null,
     "since": "0.251.0",
     "file": "src/components/HotkeyButton/variants.ts",
-    "line": 31
+    "line": 34
   },
   {
     "name": "HotkeySmallPrimaryButton",
@@ -14467,7 +14609,7 @@
     "showcase": null,
     "since": "0.251.0",
     "file": "src/components/HotkeyButton/variants.ts",
-    "line": 28
+    "line": 31
   },
   {
     "name": "HourlyWageAmountStrip",
@@ -15868,7 +16010,7 @@
     "showcase": "#/button",
     "since": null,
     "file": "src/components/Button/variants.ts",
-    "line": 105
+    "line": 117
   },
   {
     "name": "LargePrimaryConfirmationModal",
@@ -19351,6 +19493,33 @@
     "line": 223
   },
   {
+    "name": "PopoverField",
+    "depth": 1,
+    "kind": "primitive",
+    "family": "PopoverField",
+    "tags": [
+      "shows:field",
+      "does:click",
+      "does:dismiss",
+      "does:pick",
+      "role:overlay"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Atomic (Depth 1, owns `PopoverField.css`, Kobalte Popover).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "any field whose editor is a small picker (day of month, a colour, a month).",
+    "notes": null,
+    "showcase": "#/popover-field",
+    "since": "Unreleased",
+    "file": "src/components/PopoverField/PopoverField.tsx",
+    "line": 28
+  },
+  {
     "name": "PopoverMenu",
     "depth": 1,
     "kind": "primitive",
@@ -19479,7 +19648,7 @@
     "showcase": "#/button",
     "since": "0.172.0",
     "file": "src/components/Button/variants.ts",
-    "line": 116
+    "line": 128
   },
   {
     "name": "PrimaryButton",
@@ -19815,6 +19984,40 @@
     "line": 54
   },
   {
+    "name": "QuietDangerButton",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Button",
+    "tags": [
+      "shows:button",
+      "shows:icon",
+      "does:click",
+      "does:submit",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createButton",
+      "overrides": "{\n  variant: \"quiet-danger\",\n}"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "ButtonDataProps",
+    "summary": "Quiet danger button — Delete that stays muted until hovered or focused, then turns red (the config-form guideline).",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Quiet danger button — Delete that stays muted until hovered or focused, then turns red (the config-form guideline). Same box as DangerButton.",
+    "showcase": "#/button",
+    "since": "Unreleased",
+    "file": "src/components/Button/variants.ts",
+    "line": 100
+  },
+  {
     "name": "RangeAmountGroup",
     "depth": 2,
     "kind": "composite",
@@ -20106,7 +20309,7 @@
     "showcase": "#/button",
     "since": "0.219.0",
     "file": "src/components/Button/variants.ts",
-    "line": 168
+    "line": 180
   },
   {
     "name": "ReservedEllipsisMonoMeta",
@@ -20173,7 +20376,7 @@
     "showcase": "#/button",
     "since": "0.172.0",
     "file": "src/components/Button/variants.ts",
-    "line": 138
+    "line": 150
   },
   {
     "name": "ReservedMonoMeta",
@@ -21707,6 +21910,32 @@
     "line": 64
   },
   {
+    "name": "ShortcutHelp",
+    "depth": 2,
+    "kind": "composite",
+    "family": "ShortcutHelp",
+    "tags": [
+      "shows:list",
+      "does:hotkey",
+      "does:dismiss",
+      "role:overlay"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2, owns `ShortcutHelp.css` for the fixed corner and the scrim).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "any screen whose actions have hotkeys. Mount it once per screen.",
+    "notes": null,
+    "showcase": "#/shortcut-help",
+    "since": "Unreleased",
+    "file": "src/components/ShortcutHelp/ShortcutHelp.tsx",
+    "line": 66
+  },
+  {
     "name": "Sidebar",
     "depth": 1,
     "kind": "primitive",
@@ -22427,6 +22656,40 @@
     "line": 93
   },
   {
+    "name": "SmallQuietDangerButton",
+    "depth": 1,
+    "kind": "variant",
+    "family": "Button",
+    "tags": [
+      "shows:button",
+      "shows:icon",
+      "does:click",
+      "does:submit",
+      "data:scalar",
+      "role:control"
+    ],
+    "tagsSource": "factory",
+    "variantOf": {
+      "factory": "createButton",
+      "overrides": "{\n  variant: \"quiet-danger\",\n  size: \"sm\",\n}"
+    },
+    "overrides": [
+      "variant",
+      "size"
+    ],
+    "dataProps": "ButtonDataProps",
+    "summary": "Small quiet danger button — compact twin of QuietDangerButton",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Small quiet danger button — compact twin of QuietDangerButton",
+    "showcase": "#/button",
+    "since": "Unreleased",
+    "file": "src/components/Button/variants.ts",
+    "line": 105
+  },
+  {
     "name": "SmallStatusLight",
     "depth": 1,
     "kind": "variant",
@@ -22557,7 +22820,7 @@
     "showcase": "#/button",
     "since": "0.61.5",
     "file": "src/components/Button/variants.ts",
-    "line": 99
+    "line": 111
   },
   {
     "name": "SmAvatar",

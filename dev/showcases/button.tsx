@@ -15,6 +15,8 @@ import {
   SmallOutlinedButton,
   SmallWarningButton,
   SmallDangerButton,
+  QuietDangerButton,
+  SmallQuietDangerButton,
 } from "../../src/components/Button";
 import { Stack } from "../../src/components/Layout/Stack";
 import {
@@ -124,6 +126,14 @@ export const ButtonShowcase: Component = () => {
             <strong>danger</strong> — destructive or irreversible actions
             (delete, remove, revoke). Red. Reserve it so red always means "this
             can't be undone".
+          </GuidanceRow>
+
+          <GuidanceRow button={<QuietDangerButton>Delete</QuietDangerButton>}>
+            <strong>quiet-danger</strong> — a destructive action that must not
+            compete with Save: no border and muted text at rest, red on hover
+            and focus. Delete in the corner of an edit form. The hotkey twin is
+            <code> HotkeyQuietDangerButton</code> (D for Delete); there is a
+            <code> SmallQuietDangerButton</code> for dense headers.
           </GuidanceRow>
 
           <GuidanceRow button={<WarningButton>Override</WarningButton>}>

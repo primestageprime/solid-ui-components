@@ -2852,6 +2852,8 @@ th:has(.tf-th-center) .hud-table__header-content {
 .hotkey-scope-demo {
   max-width: 420px;
   padding: 16px;
+}
+
 /* ThreeSlotRow showcase demo frame — a bordered strip so the three tracks read. */
 .three-slot-row-demo {
   padding: 8px 12px;
@@ -2969,3 +2971,15 @@ th:has(.tf-th-center) .hud-table__header-content {
 .pay-chain-demo--wide { width: 640px; max-width: 100%; }
 .pay-chain-demo--medium { width: 420px; max-width: 100%; }
 .pay-chain-demo--narrow { width: 300px; max-width: 100%; }
+
+/* Config glyphs showcase. */
+.config-glyphs-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; }
+.config-glyphs-row--header { gap: 10px; }
+.example-group.config-glyphs-row--large { font-size: 48px; gap: 24px; }
+
+/* PopoverField showcase. */
+.popover-field-demo { display: flex; align-items: center; gap: 16px; padding: 8px 0; }
+.popover-field-demo__choices { display: flex; gap: 6px; }
+
+/* ShortcutHelp showcase. */
+.shortcut-help-demo { display: flex; align-items: center; gap: 12px; padding: 8px 0; }

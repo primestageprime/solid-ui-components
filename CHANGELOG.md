@@ -6,6 +6,14 @@
 
 - **`StepChain` / `PayChain`** — a name, a muted tag and a chain of steps that folds by measured width: one line, then name above chain, then first two steps · "N more" · last, with the full chain in a popover on hover, focus or tap (Escape closes). `PayChain` takes `{ name, cadence, steps: { amount_cents, months?, weeks? }[], ends? }`, drops zero-length $0 gaps, merges equal neighbours, writes whole dollars with `/mo` or `/biwk` and `mo` / `wk` spans. Pure `foldChain`, `cleanSteps`, `toChainSteps`. Additive.
 - **`PopoverTooltip` `contentClass`** — an extra class on the floating content, for a body that needs its own width. Additive.
+- **`DirectionGlyph`, `CadenceGlyph`, `AmountShapeGlyph`** — the three icons after a config form's name: a red down or green up arrow, a calendar whose pattern shows the rhythm (weekly, biweekly, monthly, or Y, N, 1), and a metronome or error bars. Each has its tooltip and `aria-label` built in. Pure `cadenceLabel`. Additive.
+- **`PopoverField` and `DayOfMonthField`** — a compact field that reads as its value and opens a picker in a popover under it (click or Enter, never hover; Escape, outside click or the picker's `close` closes it). `DayOfMonthField` is the day grid 1 to 28 plus Last day as a field reading "5th". Pure `dayOfMonthText`. Additive.
+- **`ShortcutHelp`** — a desktop-only `?` button at the bottom right that opens a translucent overlay of the active shortcuts (`{ keys, label, group? }[]`); the `?` key opens it, `?` or Escape closes it, and it is the top hotkey layer while open. Pure `groupShortcuts`. Additive.
+- **`Button` `variant: "quiet-danger"`** with `QuietDangerButton`, `SmallQuietDangerButton` and `HotkeyQuietDangerButton` — Delete that has no border and muted text until hovered or focused, then turns red. No existing variant changes. Additive.
+
+### Fixed
+
+- **Dev showcase CSS**: `dev/main.css` was missing a closing brace after `.hotkey-scope-demo`, which nested every later demo rule under it, so those demo frames (PayChain, ChannelChart and others) only applied inside the hotkey demo. Dev only; nothing shipped changes.
 
 ## 0.251.0 — 2026-10-30
 
