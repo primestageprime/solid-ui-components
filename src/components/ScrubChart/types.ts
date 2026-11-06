@@ -25,6 +25,7 @@
 import type { JSX } from "solid-js";
 import type { Cell, DateAxisCellContext } from "../DateAxis";
 import type { IconName } from "../Icon";
+import type { PlotLock } from "../Chart/plotLock";
 import type {
   ScrubChartYFitBound,
   ScrubChartYFitPin,
@@ -545,6 +546,13 @@ export interface ScrubChartProps<C extends Cell> {
    *  right-zone labels) — the caller states the width it needs. Default 0,
    *  so no existing chart's plot narrows until a caller asks for the room. */
   rightGutter?: number;
+  /** Join a `createPlotLock()` so this chart's plot box, day→x rule and x ticks
+   *  agree with every other chart holding the same lock (thorcasting #4395).
+   *  The chart still reports its OWN natural insets (y-label column and
+   *  `rightGutter`) and draws with the lock's answer, so a lock can only widen
+   *  an inset, never narrow it below what this chart needs. Optional: with no
+   *  lock the chart draws exactly as before. */
+  plotLock?: PlotLock;
   /** Fires with the frame's measured width in px whenever it changes (after
    *  the first real measurement). For a caller whose `rightGutter` depends on
    *  the room there is — `CashflowScrubChart` caps its right-zone labels at a

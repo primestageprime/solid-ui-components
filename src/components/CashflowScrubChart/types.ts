@@ -27,6 +27,7 @@
 import type { JSX } from "solid-js";
 import type { Cell } from "../DateAxis";
 import type { LabelZone } from "../Chart/labelPlacement";
+import type { PlotLock } from "../Chart/plotLock";
 import type {
   ScrubChartHighlight,
   ScrubChartMarker,
@@ -247,6 +248,13 @@ export interface CashflowScrubChartProps {
    * (console / configure / calibrate) render just the series.
    */
   scrub?: boolean;
+  /**
+   * Join a `createPlotLock()` shared with other time charts stacked on the
+   * same page (LevelsTimeline), forwarded to the inner ScrubChart. The chart
+   * reports its own y-label and legend insets and draws with the lock's, and
+   * publishes its x ticks for the others. Optional (thorcasting #4395).
+   */
+  plotLock?: PlotLock;
   /**
    * Shaded bands over day ranges, forwarded to the inner ScrubChart. Drawn
    * beneath the balance line and every overlay series — "this stretch of the

@@ -954,6 +954,7 @@ export const CashflowScrubChart: Component<CashflowScrubChartProps> = (
       }
       cellWidth={cellWidth()}
       rightGutter={reservedSpace().rightGutter}
+      plotLock={props.plotLock}
       onChartWidthChange={setFrameWidth}
       xAxisExtraHeight={belowExtraHeight(reservedSpace().belowRows)}
       // `yDomain` stays the FALLBACK. ScrubChart takes the fitted domain

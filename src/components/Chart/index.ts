@@ -156,3 +156,17 @@ export type {
 export * from "./CurrentValueIndicator.variants";
 export { ValueHandle } from "./ValueHandle";
 export type { ValueHandleProps, ValueHandleMeta } from "./ValueHandle";
+export {
+  createPlotLock,
+  lockedInsets,
+  dayCellX,
+  dayCellEnds,
+  dayCount,
+} from "./plotLock";
+export type {
+  PlotLock,
+  PlotLockMember,
+  PlotLockReport,
+  PlotInsets,
+  PlotTick,
+} from "./plotLock";

@@ -101,6 +101,10 @@ import {
 import "./ScrubChart.css";
 import { map, filter } from "../../fn";
 
+/** UTC-midnight ms of the day a cell starts on (the plot lock's date key). */
+const utcDay = (d: Date): number =>
+  Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+
 export type {
   ScrubChartClip,
   ScrubChartContext,
@@ -498,8 +502,30 @@ export const ScrubChart = <C extends Cell>(
 
   // Horizontal plot region — depends on the auto-sized y-axis column and
   // the caller-reserved right gutter (0 unless `rightGutter` is set).
-  const hSpan = () =>
-    insetSpan(chartWidth(), yAxisWidth(), props.rightGutter ?? 0);
+  //
+  // With a `plotLock` the chart reports these as its NATURAL insets and draws
+  // with the lock's answer (never narrower than natural). The natural pair is
+  // computed here without the lock, so the answer can't feed back into it.
+  const naturalInsets = () => ({
+    left: yAxisWidth(),
+    right: props.rightGutter ?? 0,
+  });
+  const lockMember = props.plotLock?.join();
+  if (lockMember) onCleanup(() => lockMember.leave());
+  const hSpan = () => {
+    const locked = lockMember?.insets();
+    return locked
+      ? insetSpan(chartWidth(), locked.left, locked.right)
+      : insetSpan(chartWidth(), yAxisWidth(), props.rightGutter ?? 0);
+  };
+  if (lockMember)
+    createEffect(() => {
+      lockMember.report({
+        natural: naturalInsets(),
+        origin: frameEl?.getBoundingClientRect().left ?? 0,
+        width: chartWidth(),
+      });
+    });
   const plotLeft = () => hSpan().start;
   const plotRight = () => hSpan().end;
   const plotWidth = () => hSpan().size;
@@ -526,7 +552,7 @@ export const ScrubChart = <C extends Cell>(
     return out;
   };
 
-  const xTicks = createMemo<{ x: number; label: string }[]>(() => {
+  const xTicks = createMemo<{ x: number; label: string; at: number }[]>(() => {
     const cadProp = props.xTickCadence ?? "none";
     if (cadProp === "none" || props.cells.length === 0) return [];
     const maxTicks = props.xMaxTicks ?? DEFAULT_X_MAX_TICKS;
@@ -556,10 +582,18 @@ export const ScrubChart = <C extends Cell>(
       (i) => ({
         x: indexToX(i),
         label: fmt(props.cells[i], chosen),
+        at: utcDay(props.cells[i].start),
       }),
       indices,
     );
   });
+  // The lock's first publisher owns the ticks the other members draw.
+  if (lockMember)
+    createEffect(() => {
+      const ticks = xTicks();
+      if (ticks.length > 0)
+        lockMember.publishTicks(map((t) => ({ at: t.at, label: t.label }), ticks));
+    });
 
   // Recenter request — scroll the axis so the requested cell is centered.
   // Runs whenever the centerOn OBJECT changes (fresh object per request).
