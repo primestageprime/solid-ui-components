@@ -11,10 +11,17 @@
 // unbounded field with step=1. All other `NumberFieldRootProps` (e.g.
 // `disabled`, `required`, `format`, `formatOptions`, `changeOnWheel`) are
 // forwarded via spread.
+//
+// Arrows: ↑/↓ and ▲▼ move one `step`; Shift+↑/↓, shift-click ▲▼ and
+// PageUp/PageDown move 10×. Kobalte snaps each move to the grid of the step
+// it moves by. `stepFor(value, direction)` replaces the static step with one
+// read from the current value (the money variants' scale-aware step).
 // ============================================
 import {
   NumberField as KobalteNumberField,
+  type NumberFieldContextValue as KobalteNumberFieldContext,
   type NumberFieldRootProps as KobalteNumberFieldRootProps,
+  useNumberFieldContext,
 } from "@kobalte/core/number-field";
 import {
   type Accessor,
@@ -71,6 +78,14 @@ interface ThemedNumberInputOwnProps {
   /** Increment/decrement step (default `1`) — forwarded as kobalte's `step`. */
   step?: number;
   /**
+   * The arrow step for the CURRENT value, moving in `direction` (`1` up,
+   * `-1` down). When set it replaces `step` for ↑/↓, ▲▼, PageUp/PageDown and
+   * the wheel; `step` still sizes the field, so a changing step never
+   * reflows it. Typed text is never snapped, whatever the step. The money
+   * variants pass `moneyStepFor` (CurrencyInput's `CurrencyInputByScale`).
+   */
+  stepFor?: (value: number, direction: 1 | -1) => number;
+  /**
    * Field size (default `"md"`). `"sm"` is the toolbar size — a 29px-tall
    * field that lines up with `Button size="sm"` and `Dropdown size="sm"` in a
    * dense row. The default 43px field is the tallest control in the family, so
@@ -95,6 +110,18 @@ export type ThemedNumberInputProps = ThemedNumberInputOwnProps &
   >;
 
 const DEFAULT_STEP = 1;
+/** Shift+↑/↓ and shift-click ▲▼ move this many steps (PageUp/PageDown too). */
+const SHIFT_MULTIPLIER = 10;
+
+/** Hands kobalte's field context to the component that renders it. Kobalte's
+ *  spin button ignores every Shift-modified key, so Shift+↑/↓ has to vary the
+ *  value through the context itself. */
+const CaptureFieldContext: Component<{
+  capture: (context: KobalteNumberFieldContext) => void;
+}> = (props) => {
+  props.capture(useNumberFieldContext());
+  return null;
+};
 
 /** rem of non-text chrome inside the field: stepper column (~2.5rem) + the
  *  input's left/right padding (12px * 2 = 1.5rem). Same as CurrencyInput's. */
@@ -136,6 +163,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     "max",
     "maxValue",
     "step",
+    "stepFor",
     "size",
   ]);
 
@@ -266,9 +294,69 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     if (input.selectionStart === input.selectionEnd) input.select();
   };
 
+  // The arrow step. Kobalte reads `step` once per vary, after our own native
+  // listeners have run (its handlers are delegated to the document), so the
+  // listeners below record which way the user is moving and whether Shift is
+  // held, and kobalte's read sees both. A `stepFor` caller gets the CURRENT
+  // value and that direction; everyone else gets the static `step`.
+  let fieldContext: KobalteNumberFieldContext | undefined;
+  const [direction, setDirection] = createSignal<1 | -1>(1);
+  const [multiplier, setMultiplier] = createSignal(1);
+  const baseArrowStep = (dir: 1 | -1): number => {
+    if (!local.stepFor) return step();
+    const current = fieldContext?.rawValue();
+    return local.stepFor(
+      current === undefined || Number.isNaN(current) ? 0 : current,
+      dir,
+    );
+  };
+  const arrowStep = (): number => baseArrowStep(direction()) * multiplier();
+  const isLocked = (): boolean => {
+    const root = rest as KobalteNumberFieldRootProps;
+    return Boolean(root.readOnly || root.disabled);
+  };
+
+  const ARROW_DIRECTION: Record<string, 1 | -1> = {
+    ArrowUp: 1,
+    ArrowDown: -1,
+    PageUp: 1,
+    PageDown: -1,
+  };
+  /** Shift+↑/↓ = ten steps. Kobalte drops every Shift-modified key, so this
+   *  varies the value itself and keeps the key from reaching kobalte. */
+  const stepOnArrowKey = (event: KeyboardEvent): void => {
+    const dir = ARROW_DIRECTION[event.key];
+    if (dir === undefined) return;
+    setMultiplier(1);
+    setDirection(dir);
+    const shiftArrow =
+      event.shiftKey &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey &&
+      (event.key === "ArrowUp" || event.key === "ArrowDown");
+    if (!shiftArrow || isLocked() || !fieldContext) return;
+    event.preventDefault();
+    event.stopPropagation();
+    fieldContext.varyValue(dir * baseArrowStep(dir) * SHIFT_MULTIPLIER);
+  };
+  const stepOnWheel = (event: WheelEvent): void => {
+    setMultiplier(1);
+    setDirection(event.deltaY < 0 ? 1 : -1);
+  };
+  /** ▲▼ — kobalte calls this before it varies, so a shift-click is 10×. */
+  const triggerClick =
+    (dir: 1 | -1) =>
+    (event: MouseEvent): void => {
+      setDirection(dir);
+      setMultiplier(event.shiftKey ? SHIFT_MULTIPLIER : 1);
+    };
+
   /** Ref callback — attaches the caret guard, the focus hold and
    *  select-on-focus for the life of the input. */
   const wireInput = (input: HTMLInputElement): void => {
+    input.addEventListener("keydown", stepOnArrowKey, true);
+    input.addEventListener("wheel", stepOnWheel, true);
     input.addEventListener("keydown", suppressUnboundedJump, true);
     input.addEventListener("mousedown", armClickFocus);
     input.addEventListener("focus", holdOnFocus);
@@ -276,6 +364,8 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
     input.addEventListener("focus", selectAllOnFocus);
     input.addEventListener("mouseup", keepFocusSelection);
     onCleanup(() => {
+      input.removeEventListener("keydown", stepOnArrowKey, true);
+      input.removeEventListener("wheel", stepOnWheel, true);
       input.removeEventListener("keydown", suppressUnboundedJump, true);
       input.removeEventListener("mousedown", armClickFocus);
       input.removeEventListener("focus", holdOnFocus);
@@ -331,7 +421,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       onRawValueChange={handleRawValueChange}
       minValue={local.min}
       maxValue={max()}
-      step={step()}
+      step={arrowStep()}
       validationState={isInvalid() ? "invalid" : "valid"}
     >
       <Show when={local.label}>
@@ -339,6 +429,11 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
           {local.label}
         </KobalteNumberField.Label>
       </Show>
+      <CaptureFieldContext
+        capture={(context) => {
+          fieldContext = context;
+        }}
+      />
       <KobalteNumberField.HiddenInput />
       <div class="sui-number-input__group">
         <KobalteNumberField.Input
@@ -348,6 +443,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
         <div class="sui-number-input__triggers">
           <KobalteNumberField.IncrementTrigger
             aria-label="Increment"
+            onClick={triggerClick(1)}
             class="sui-number-input__trigger sui-number-input__trigger--increment"
           >
             <svg
@@ -360,6 +456,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
           </KobalteNumberField.IncrementTrigger>
           <KobalteNumberField.DecrementTrigger
             aria-label="Decrement"
+            onClick={triggerClick(-1)}
             class="sui-number-input__trigger sui-number-input__trigger--decrement"
           >
             <svg
