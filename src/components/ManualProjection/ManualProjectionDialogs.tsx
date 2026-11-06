@@ -9,20 +9,28 @@
 // days. Enter saves. `ManualOneOffConfirm` asks before the step ends: the
 // listed payments become one-off configs.
 //
-// No CSS. Composes Modal, LargePrimaryConfirmationModal, DayOfMonthPicker,
-// CurrencyInput, ThemedNumberInput, BaseTable, GhostButton, PrimaryButton,
-// ContentStack, TightStack and Text variants.
+// The edit modal is laid out like a Configure kind form (thorcasting #4372,
+// Peter's screenshot 2026-11-06: the full day grid filled the dialog and
+// squeezed Amount and Grace to a sliver). One wrapping row of compact
+// controls, each under its sublabel: the day is a `DayOfMonthField` (reads
+// "5th", opens the grid in a popover), the amount a `CurrencyInputByScale`
+// (arrows at the scale of the money, #4376), the grace days a fitted
+// `ThemedNumberInput`. Same props as before.
+//
+// No CSS. Composes Modal, LargePrimaryConfirmationModal, DayOfMonthField,
+// CurrencyInputByScale, ThemedNumberInput, BaseTable, GhostButton,
+// PrimaryButton, LooseWrapRow, TightStack and Text variants.
 // ============================================
-import type { Component } from "solid-js";
+import type { Component, JSX } from "solid-js";
 import { Show } from "solid-js";
 import { GhostButton, PrimaryButton } from "../Button";
-import { CurrencyInput } from "../CurrencyInput";
-import { DayOfMonthPicker } from "../DayOfMonthPicker";
-import { ContentStack, TightStack } from "../Layout";
+import { CurrencyInputByScale } from "../CurrencyInput";
+import { DayOfMonthField } from "../PopoverField";
+import { LooseWrapRow, TightStack } from "../Layout";
 import { LargePrimaryConfirmationModal, Modal } from "../Modal";
 import { BaseTable } from "../Table";
 import type { TableColumn } from "../Table/types";
-import { MonoMeta, MonoValue, MutedBody, TextBody } from "../Text";
+import { MonoMeta, MonoValue, MutedBody, TextBody, TextSublabel } from "../Text";
 import { ThemedNumberInput } from "../ThemedNumberInput";
 import type { ManualOneOffItem } from "./types";
 
@@ -49,6 +57,17 @@ export interface ManualEditConfigModalProps {
 	readonly onClose: () => void;
 }
 
+/** One labelled field of the edit modal: its sublabel over the control. */
+const EditField: Component<{
+	readonly label: string;
+	readonly children: JSX.Element;
+}> = (props) => (
+	<TightStack>
+		<TextSublabel>{props.label}</TextSublabel>
+		{props.children}
+	</TightStack>
+);
+
 export const ManualEditConfigModal: Component<ManualEditConfigModalProps> = (
 	props,
 ) => (
@@ -64,42 +83,42 @@ export const ManualEditConfigModal: Component<ManualEditConfigModalProps> = (
 			</>
 		}
 	>
-		<ContentStack>
-			<TightStack>
-				<MonoMeta>Day of month</MonoMeta>
-				<DayOfMonthPicker
+		<LooseWrapRow>
+			<EditField label="Day of month">
+				<DayOfMonthField
+					label="Day of month"
 					value={props.day >= MANUAL_LAST_DAY ? "last" : props.day}
-					onChange={props.onPickDay}
-					lastOfMonth
-					onSelectLast={props.onPickLast}
+					onChange={(d) =>
+						d === "last" ? props.onPickLast() : props.onPickDay(d)
+					}
 				/>
-			</TightStack>
-			<Show when={props.variable}>
-				<TightStack>
-					<MonoMeta>Range</MonoMeta>
-					<MonoValue>{props.range}</MonoValue>
-				</TightStack>
-			</Show>
+			</EditField>
 			<Show when={props.fixed}>
-				<CurrencyInput
-					name="amount"
-					label="Amount"
-					step={100}
-					maxValue={1_000_000}
-					value={() => props.amount}
-					onChange={(v) => props.onAmount(v ?? 0)}
-				/>
+				<EditField label="Amount">
+					<CurrencyInputByScale
+						name="amount"
+						maxValue={1_000_000}
+						value={() => props.amount}
+						onChange={(v) => props.onAmount(v ?? 0)}
+					/>
+				</EditField>
 			</Show>
-			<ThemedNumberInput
-				name="grace"
-				label="Grace period (days)"
-				min={0}
-				max={30}
-				maxValue={30}
-				value={() => props.grace}
-				onChange={(v) => props.onGrace(v ?? 0)}
-			/>
-		</ContentStack>
+			<Show when={props.variable}>
+				<EditField label="Range">
+					<MonoValue>{props.range}</MonoValue>
+				</EditField>
+			</Show>
+			<EditField label="Grace period (days)">
+				<ThemedNumberInput
+					name="grace"
+					min={0}
+					max={30}
+					maxValue={30}
+					value={() => props.grace}
+					onChange={(v) => props.onGrace(v ?? 0)}
+				/>
+			</EditField>
+		</LooseWrapRow>
 	</Modal>
 );
 

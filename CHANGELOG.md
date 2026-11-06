@@ -11,6 +11,7 @@
 ### Changed
 
 - **`ThemedNumberInput` (and every field built on it): Shift+↑/↓ and shift-click ▲▼ move 10 steps**, snapped to the 10× grid like PageUp/PageDown. Before, kobalte dropped Shift-modified keys, so Shift+↑/↓ did nothing.
+- **`ManualEditConfigModal` (unstable) takes Configure's compact one-row layout** (thorcasting 4372). The full 1–28 day grid is now a `DayOfMonthField` that reads "28th" and opens the grid in a popover, the amount is a `CurrencyInputByScale` (was `CurrencyInput` step $100), and each field sits under a sublabel in one wrapping row, so Amount and Grace period are no longer squeezed. Same props; thorcasting's app-side `ManualEditConfigDialog` can go back to this modal and be deleted.
 
 ## 0.253.0 — 2026-11-06
 

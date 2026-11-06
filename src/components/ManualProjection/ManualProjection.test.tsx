@@ -208,3 +208,71 @@ describe("Manual dialogs", () => {
 		expect(seen).toEqual(["save"]);
 	});
 });
+
+describe("ManualEditConfigModal — the compact one-row layout (#4372)", () => {
+	const base = {
+		open: true,
+		title: "Edit Maple Court Apartments - Common Areas",
+		day: 28,
+		amount: 960,
+		grace: 5,
+		fixed: true,
+		variable: false,
+		range: "",
+		onPickDay: () => {},
+		onPickLast: () => {},
+		onAmount: (_v: number) => {},
+		onGrace: () => {},
+		onSave: () => {},
+		onClose: () => {},
+	};
+	const dayButtons = () =>
+		[...document.querySelectorAll("button")].filter((b) => /^\d+$/.test(b.textContent ?? ""));
+
+	it("shows the day as one field reading the day, not a 28-button grid", () => {
+		render(() => <ManualEditConfigModal {...base} />);
+		expect(screen.getByText("28th")).toBeTruthy();
+		expect(dayButtons()).toHaveLength(0);
+	});
+
+	it("reads Last day for 30 and up", () => {
+		render(() => <ManualEditConfigModal {...base} day={31} />);
+		expect(screen.getByText("Last day")).toBeTruthy();
+	});
+
+	it("labels each field once, above it, all in one wrapping row", () => {
+		render(() => <ManualEditConfigModal {...base} />);
+		const day = screen.getAllByText("Day of month").find((el) => el.classList.contains("text--sublabel"));
+		const amount = screen.getByText("Amount");
+		const grace = screen.getByText("Grace period (days)");
+		for (const label of [day, amount, grace]) expect(label?.className).toMatch(/text--sublabel/);
+		const row = amount.parentElement?.parentElement;
+		expect(row?.contains(grace)).toBe(true);
+		expect(row?.contains(day as HTMLElement)).toBe(true);
+		expect(screen.getAllByDisplayValue("5").length).toBeGreaterThan(0);
+	});
+
+	it("hides the amount on a variable config and shows its range", () => {
+		render(() => <ManualEditConfigModal {...base} fixed={false} variable range="$80 – $140" />);
+		expect(screen.queryByText("Amount")).toBeNull();
+		expect(screen.getByText("$80 – $140")).toBeTruthy();
+	});
+
+	it("the amount's arrows step at the money's scale, never a cent", () => {
+		const seen: number[] = [];
+		render(() => <ManualEditConfigModal {...base} onAmount={(v) => seen.push(v)} />);
+		const amount = document.querySelector('input[name="amount"]')?.closest(".sui-number-input")
+			?.querySelector(".sui-number-input__input") as HTMLInputElement;
+		fireEvent.keyDown(amount, { key: "ArrowUp" });
+		expect(seen.at(-1)).toBe(961);
+	});
+
+	it("Cancel closes without saving", () => {
+		const seen: string[] = [];
+		render(() => (
+			<ManualEditConfigModal {...base} onClose={() => seen.push("close")} onSave={() => seen.push("save")} />
+		));
+		fireEvent.click(screen.getByText("Cancel"));
+		expect(seen).toEqual(["close"]);
+	});
+});
