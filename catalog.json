@@ -9095,7 +9095,7 @@
     "useFor": null,
     "notes": "Money whose arrows move $100 (Shift $1,000).",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.254.0",
     "file": "src/components/CurrencyInput/stepped.tsx",
     "line": 41
   },
@@ -9123,7 +9123,7 @@
     "useFor": null,
     "notes": "Money whose arrows move $1 (Shift $10).",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.254.0",
     "file": "src/components/CurrencyInput/stepped.tsx",
     "line": 37
   },
@@ -9151,7 +9151,7 @@
     "useFor": null,
     "notes": "Money whose arrows move at the scale of the amount (see `stepForAmount`).",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.254.0",
     "file": "src/components/CurrencyInput/stepped.tsx",
     "line": 55
   },
@@ -9179,7 +9179,7 @@
     "useFor": null,
     "notes": "Money whose arrows move $10 (Shift $100).",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.254.0",
     "file": "src/components/CurrencyInput/stepped.tsx",
     "line": 39
   },
@@ -9207,7 +9207,7 @@
     "useFor": null,
     "notes": "Money whose arrows move $1,000 (Shift $10,000).",
     "showcase": "#/currency-input",
-    "since": "Unreleased",
+    "since": "0.254.0",
     "file": "src/components/CurrencyInput/stepped.tsx",
     "line": 43
   },
