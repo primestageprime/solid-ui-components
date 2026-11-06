@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.253.0 — 2026-11-06
+
 ### Added
 
 - **`DirectionGlyph`, `CadenceGlyph`, `AmountShapeGlyph`** — the three icons after a config form's name: a red down or green up arrow, a calendar whose pattern shows the rhythm (weekly, biweekly, monthly, or Y, N, 1), and a metronome or error bars. Each has its tooltip and `aria-label` built in. Pure `cadenceLabel`. Additive.

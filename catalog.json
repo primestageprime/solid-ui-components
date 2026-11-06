@@ -549,7 +549,7 @@
     "useFor": "the header row of a config form.",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.253.0",
     "file": "src/components/Glyphs/AmountShapeGlyph.tsx",
     "line": 17
   },
@@ -1956,7 +1956,7 @@
     "useFor": "the header row of a config form.",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.253.0",
     "file": "src/components/Glyphs/CadenceGlyph.tsx",
     "line": 53
   },
@@ -10084,7 +10084,7 @@
     "useFor": "the one \"when\" control of a monthly config form.",
     "notes": null,
     "showcase": "#/popover-field",
-    "since": "Unreleased",
+    "since": "0.253.0",
     "file": "src/components/PopoverField/DayOfMonthField.tsx",
     "line": 40
   },
@@ -10612,7 +10612,7 @@
     "useFor": "the header row of a config form.",
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.253.0",
     "file": "src/components/Glyphs/DirectionGlyph.tsx",
     "line": 17
   },
@@ -14499,7 +14499,7 @@
     "useFor": null,
     "notes": null,
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.253.0",
     "file": "src/components/HotkeyButton/variants.ts",
     "line": 28
   },
@@ -19515,7 +19515,7 @@
     "useFor": "any field whose editor is a small picker (day of month, a colour, a month).",
     "notes": null,
     "showcase": "#/popover-field",
-    "since": "Unreleased",
+    "since": "0.253.0",
     "file": "src/components/PopoverField/PopoverField.tsx",
     "line": 28
   },
@@ -20013,7 +20013,7 @@
     "useFor": null,
     "notes": "Quiet danger button — Delete that stays muted until hovered or focused, then turns red (the config-form guideline). Same box as DangerButton.",
     "showcase": "#/button",
-    "since": "Unreleased",
+    "since": "0.253.0",
     "file": "src/components/Button/variants.ts",
     "line": 100
   },
@@ -21931,7 +21931,7 @@
     "useFor": "any screen whose actions have hotkeys. Mount it once per screen.",
     "notes": null,
     "showcase": "#/shortcut-help",
-    "since": "Unreleased",
+    "since": "0.253.0",
     "file": "src/components/ShortcutHelp/ShortcutHelp.tsx",
     "line": 66
   },
@@ -22685,7 +22685,7 @@
     "useFor": null,
     "notes": "Small quiet danger button — compact twin of QuietDangerButton",
     "showcase": "#/button",
-    "since": "Unreleased",
+    "since": "0.253.0",
     "file": "src/components/Button/variants.ts",
     "line": 105
   },
