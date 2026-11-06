@@ -358,6 +358,14 @@ export interface Frame {
   readonly compact: boolean;
   /** Label every Nth axis tick. 1 in full chrome. */
   readonly labelEvery: number;
+  /**
+   * Where the domain's two END DAYS sit when they are not the plot's edges:
+   * a plot lock's day-cell rule (`dayCellEnds`, thorcasting #4395). Kept ON
+   * the frame so every reader of the frame — the x scale, its inverse, the
+   * hover, a pick and a drag — maps a date by the same rule. Absent, the
+   * domain runs edge to edge as it always has.
+   */
+  readonly domainEnds?: { readonly x0: number; readonly x1: number };
 }
 
 /**
@@ -491,18 +499,12 @@ export const timeOf = (at: TimeValue): number =>
 export const xScaleFor = (
   domain: TimeDomain,
   frame: Frame = DEFAULT_FRAME,
-  /**
-   * Where the domain's two END DAYS sit, when they are not the plot's edges:
-   * the day-cell rule's first and last cell centres (`dayCellEnds`, plot lock).
-   * Omitted, the domain runs edge to edge exactly as it always has.
-   */
-  ends?: { readonly x0: number; readonly x1: number },
 ): ((at: TimeValue) => number) => {
   const start = timeOf(domain[0]);
   const end = timeOf(domain[1]);
   const span = end - start;
-  const x0 = ends?.x0 ?? frame.plotLeft;
-  const x1 = ends?.x1 ?? frame.plotRight;
+  const x0 = frame.domainEnds?.x0 ?? frame.plotLeft;
+  const x1 = frame.domainEnds?.x1 ?? frame.plotRight;
   if (span <= 0) return () => x0;
   return (at: TimeValue): number => {
     const fraction = (timeOf(at) - start) / span;
@@ -1809,23 +1811,24 @@ export const levelsRailGeometry = (input: {
     right: (ownFrame.viewWidth - ownFrame.plotRight) / unitsPerPx,
   };
   const lock = input.locked;
+  const lockedLeft = lock === undefined ? 0 : lock.left * unitsPerPx;
+  const lockedRight =
+    lock === undefined ? 0 : ownFrame.viewWidth - lock.right * unitsPerPx;
   const frame: Frame =
     lock === undefined
       ? ownFrame
       : {
           ...ownFrame,
-          plotLeft: lock.left * unitsPerPx,
-          plotRight: ownFrame.viewWidth - lock.right * unitsPerPx,
+          plotLeft: lockedLeft,
+          plotRight: lockedRight,
+          domainEnds: dayCellEnds(
+            timeOf(input.domain[0]),
+            timeOf(input.domain[1]),
+            lockedLeft,
+            lockedRight,
+          ),
         };
-  const first = timeOf(input.domain[0]);
-  const last = timeOf(input.domain[1]);
-  const xScale = xScaleFor(
-    input.domain,
-    frame,
-    lock === undefined
-      ? undefined
-      : dayCellEnds(first, last, frame.plotLeft, frame.plotRight),
-  );
+  const xScale = xScaleFor(input.domain, frame);
   const yScale = yScaleFor(yDomain, frame);
   const peak = peakTotal(input.levels);
   const perCount = perCountWidth(input.levels, yScale, peak, frame);
@@ -2411,11 +2414,9 @@ export const timeAtX = (
   const end = timeOf(domain[1]);
   const span = end - start;
   if (span <= 0) return start;
-  const fraction = clamp(
-    (x - frame.plotLeft) / (frame.plotRight - frame.plotLeft),
-    0,
-    1,
-  );
+  const x0 = frame.domainEnds?.x0 ?? frame.plotLeft;
+  const x1 = frame.domainEnds?.x1 ?? frame.plotRight;
+  const fraction = clamp((x - x0) / (x1 - x0), 0, 1);
   return start + fraction * span;
 };
 

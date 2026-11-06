@@ -2,7 +2,7 @@
 // ScrubChart draws it at (the day-cell rule), and the axis is the lead chart's.
 import { describe, expect, it } from "vitest";
 import { dayCellX, dayCount } from "../Chart/plotLock";
-import { levelsRailGeometry, timeOf } from "./geometry";
+import { hoverAt, levelsRailGeometry, pickDay, timeAtX, timeOf } from "./geometry";
 import type { Level, Mutation, TimeDomain, Transfer } from "./geometry";
 
 const utc = (iso: string): Date => new Date(`${iso}T00:00:00.000Z`);
@@ -105,6 +105,19 @@ describe("LevelsTimeline geometry under a plot lock", () => {
     const shared = locked.ticks.find((t) => t.at === Date.UTC(2027, 0, 29));
     expect(shared?.event).toBe(true);
     expect(shared?.showLabel).toBe(true);
+  });
+
+  it("reads a pointer back by the same rule it draws by (pick, hover, drag)", () => {
+    // A click on a day's drawn x must report THAT day, and the crosshair must
+    // sit on it — the inverse reads the frame's day-cell ends too.
+    for (const iso of ["2026-11-06", "2027-01-29", "2027-04-06", "2027-11-05"]) {
+      const at = Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10));
+      const x = dayCellX(at, first, days, locked.frame.plotLeft, locked.frame.plotRight);
+      expect(Math.abs(timeAtX(DOMAIN, x, locked.frame) - at)).toBeLessThan(60_000);
+      const hover = hoverAt(LEVELS, DOMAIN, x, locked.frame, pickDay);
+      expect(hover.at).toBe(at);
+      expect(Math.abs(hover.x - x)).toBeLessThan(0.5);
+    }
   });
 
   it("without a lock the dated axis is unchanged", () => {
