@@ -103,7 +103,9 @@ export const ShortcutHelp: Component<ShortcutHelpProps> = (props) => {
       </SmallGhostButton>
       <Show when={open()}>
         <Portal>
+          {/* biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useKeyWithClickEvents: the scrim is a pointer-only dismiss target; the keyboard closes the panel through the Escape/? hotkey layer above. */}
           <div class="sui-shortcut-help__scrim" onClick={() => setOpen(false)}>
+            {/* biome-ignore lint/a11y/useKeyWithClickEvents: stops a click inside the dialog from reaching the scrim; there is no keyboard equivalent to handle. */}
             <div
               class="sui-shortcut-help__panel"
               role="dialog"
