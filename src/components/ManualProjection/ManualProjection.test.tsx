@@ -79,6 +79,22 @@ describe("ManualPaymentsPane", () => {
 		expect(screen.queryByText(/due/)).toBeNull();
 	});
 
+	it("formats each row's date by dateFormat, and stays ISO without it", () => {
+		const groups = [
+			{ key: "g", name: "Retainer", desc: "", count: "1", total: "$7,000", expanded: true, warn: false },
+		];
+		const rows = [{ key: "r1", group: "g", date: "2026-01-03", amount: "$6,000", of: "" }];
+		const { unmount } = render(() => (
+			<ManualPaymentsPane groups={groups} rows={rows} dateFormat="MM/DD/YYYY" onHover={() => {}} />
+		));
+		expect(screen.getByText("01/03/2026").className).toBe("sui-value-date");
+		unmount();
+		render(() => (
+			<ManualPaymentsPane groups={groups} rows={rows} dateFormat="medium" onHover={() => {}} />
+		));
+		expect(screen.getByText("Jan 3, 2026")).toBeTruthy();
+	});
+
 	it("inks each amount by its tone, and keeps the default ink without one", () => {
 		render(() => (
 			<ManualPaymentsPane

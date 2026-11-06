@@ -6,7 +6,8 @@
 // The two side lists of the Manual (projection) step. `ManualProjectionRail`
 // lists the groups by section (to review, matched, other); a click on a
 // pickable group calls `onPick`. `ManualPaymentsPane` lists the open group's
-// payments by config, each row its date (DateCell, YYYY-MM-DD) and its
+// payments by config, each row its date (DateCell, YYYY-MM-DD unless
+// `dateFormat` says otherwise) and its
 // amount, right-aligned; never its due date (Peter, 2026-10-28). The hovered
 // row is `hotKey`, and a focus change calls `onHover` with the row key or null.
 //
@@ -23,7 +24,7 @@ import { find, map } from "../../fn";
 import { type Bucket, BucketQueue } from "../BucketQueue";
 import { EllipsisText } from "../DataDisplay";
 import { SpreadRow, TightStack } from "../Layout";
-import { DateCell } from "../Table";
+import { DateCell, type DateCellProps } from "../Table";
 import { MonoMeta, TextBody, WarningBody } from "../Text";
 import type {
 	ManualPaneGroup,
@@ -139,6 +140,12 @@ export interface ManualPaymentsPaneProps {
 	/** The key of the hovered row. */
 	readonly hotKey?: string;
 	readonly onHover: (key: string | null) => void;
+	/**
+	 * How each row's date reads — `DateCell`'s `format` (a preset such as
+	 * `"medium"`, or a pattern such as `"MM/DD/YYYY"`). Unset, ISO
+	 * `YYYY-MM-DD`, as before. Dates are formatted in UTC either way.
+	 */
+	readonly dateFormat?: DateCellProps["format"];
 }
 
 export const ManualPaymentsPane: Component<ManualPaymentsPaneProps> = (
@@ -163,7 +170,7 @@ export const ManualPaymentsPane: Component<ManualPaymentsPaneProps> = (
 		onFocusChange={(key) => props.onHover(key ?? null)}
 		renderItem={(r) => (
 			<SpreadRow>
-				<DateCell value={r.date} timeZone="UTC" />
+				<DateCell value={r.date} format={props.dateFormat} timeZone="UTC" />
 				<MonoMeta tone={r.tone}>{oneLine(`${r.amount}${r.of}`)}</MonoMeta>
 			</SpreadRow>
 		)}
