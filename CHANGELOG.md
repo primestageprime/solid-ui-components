@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- **Money arrows step at the scale of the money** (thorcasting 4376). `CurrencyInputByOnes`, `CurrencyInputByTens`, `CurrencyInputByHundreds`, `CurrencyInputByThousands` and `CurrencyInputByScale` (step from the current value, or from `scaleOf`). Pure `stepForAmount(cents)` (two significant figures from $1,000 up, $1 floor), `moneyStepFor(dollars, direction)`, `MONEY_SHIFT_MULTIPLIER`. The arrows never make a one-cent edit, even with a caller's `step={0.01}`; typing cents still works. Additive.
+- **`ThemedNumberInput` `stepFor?(value, direction)`**, an arrow step read from the current value; `step` still sizes the field. Additive.
+
+### Changed
+
+- **`ThemedNumberInput` (and every field built on it): Shift+↑/↓ and shift-click ▲▼ move 10 steps**, snapped to the 10× grid like PageUp/PageDown. Before, kobalte dropped Shift-modified keys, so Shift+↑/↓ did nothing.
+
 ## 0.253.0 — 2026-11-06
 
 ### Added

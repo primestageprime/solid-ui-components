@@ -7,7 +7,14 @@ import {
   CurrencyInput10K,
   CurrencyInput1B,
   CurrencyInput1M,
+  CurrencyInputByHundreds,
+  CurrencyInputByOnes,
+  CurrencyInputByScale,
+  CurrencyInputByTens,
+  CurrencyInputByThousands,
+  MONEY_SHIFT_MULTIPLIER,
   currencyWidthRem,
+  stepForAmount,
 } from "../../src/components/CurrencyInput";
 import { MoneyCell } from "../../src/components/Table/CellRenderers";
 import { Stack } from "../../src/components/Layout/Stack";
@@ -17,6 +24,11 @@ export const CurrencyInputShowcase: Component = () => {
   const [amount, setAmount] = createSignal<number | undefined>(1234.56);
   const [big, setBig] = createSignal<number | undefined>(9_876_543_210.99);
   const [capped, setCapped] = createSignal<number | undefined>(500);
+  const [scaled, setScaled] = createSignal<number | undefined>(25_000);
+  const [small, setSmall] = createSignal<number | undefined>(450);
+  const STEP_ROWS = [450, 4_250, 25_000, 450_000, 2_500_000];
+  const usd = (dollars: number): string =>
+    `$${dollars.toLocaleString("en-US")}`;
 
   return (
     <div class="component-section">
@@ -95,6 +107,43 @@ export const CurrencyInputShowcase: Component = () => {
           <CurrencyInput100M name="m100m" label="Up to $99,999,999" value={() => 8_000_000} />
           <CurrencyInput1B name="m1b" label="Up to $1,000,000,000" value={() => 1_000_000_000} />
         </Stack>
+      </div>
+
+      <div class="example-group">
+        <h3>Arrow step at the scale of the money</h3>
+        <div class="text-meta demo-caption-gap">
+          ↑/↓ and ▲▼ move by whole dollars or more, never a stray cent; Shift
+          (key or click) moves to the next 10× line. Typing cents still works.
+          <code>CurrencyInputByScale</code> reads the step from the current
+          value (<code>stepForAmount</code>), symmetric at each boundary, or
+          from <code>scaleOf</code>.
+        </div>
+        <Stack gap="xs">
+          <CurrencyInputByScale name="s25k" label="ByScale — $25,000 steps $1,000" value={scaled} onChange={setScaled} />
+          <CurrencyInputByScale name="s450" label="ByScale — $450 steps $1" value={small} onChange={setSmall} />
+          <CurrencyInputByScale name="scap" label="ByScale scaleOf={40_000} — always $1,000" scaleOf={40_000} value={() => 300} />
+          <CurrencyInputByOnes name="b1" label="ByOnes — $1" value={() => 450} />
+          <CurrencyInputByTens name="b10" label="ByTens — $10" value={() => 450} />
+          <CurrencyInputByHundreds name="b100" label="ByHundreds — $100" value={() => 4_250} />
+          <CurrencyInputByThousands name="b1k" label="ByThousands — $1,000" value={() => 25_000} />
+        </Stack>
+        <table class="text-meta">
+          <thead>
+            <tr><th>amount</th><th>step</th><th>Shift</th></tr>
+          </thead>
+          <tbody>
+            {STEP_ROWS.map((d) => {
+              const step = stepForAmount(d * 100) / 100;
+              return (
+                <tr>
+                  <td>{usd(d)}</td>
+                  <td>{usd(step)}</td>
+                  <td>{usd(step * MONEY_SHIFT_MULTIPLIER)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       <div class="example-group">
