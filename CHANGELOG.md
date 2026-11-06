@@ -2,23 +2,28 @@
 
 ## Unreleased
 
-### Changed
-
-- **Form controls are one height and one text size (BREAKING visual, every consumer).** New tokens `--sui-control-height` (43px) and `--sui-control-font-size` (0.875rem) in `global.css`. `Select`'s trigger (was a fixed 32px, inherited font), `DatePicker` (was 32px), `SegmentedControl` md and `SegmentedInput` (they share `.sui-segmented`; was 35px, 13px text) and `PopoverField` (was a 2rem minimum) now read them, so they sit level with `ThemedInput` and `ThemedNumberInput`/`CurrencyInput` md (43px, 14px). `SegmentedControl size="xs"` keeps its own height. Rows that paired these with a 32px control get taller: `SearchInput`/`SearchField` (32px) beside a `Select`, `Dropdown` (32px), `MutationToolbar`'s as-of chips, `SettingsTabs`, `CadenceStrip`/`WindowStrip` date fields, `IntervalInput`'s unit Select. Peter, thorcasting 4354: "Change the default everywhere".
-- **`Dropdown` md (framed) and `SearchInput`/`SearchField` join the form control height and text size** (thorcasting 4357). The framed md trigger (was about 30px, 13px text) and the search field (was 32px) read `--sui-control-height` and `--sui-control-font-size`, so a filter bar pairing a search or a dropdown with a `Select` stays level. The subtle trigger (inline text, e.g. a header switcher) and `sm` (`CompactDropdown`, `InlineSubtleDropdown`) keep their sizes. `PinnedFillColumn`'s pinned search header gets taller.
-
 ### Added
 
-- **`StepChain` / `PayChain`** — a name, a muted tag and a chain of steps that folds by measured width: one line, then name above chain, then first two steps · "N more" · last, with the full chain in a popover on hover, focus or tap (Escape closes). `PayChain` takes `{ name, cadence, steps: { amount_cents, months?, weeks? }[], ends? }`, drops zero-length $0 gaps, merges equal neighbours, writes whole dollars with `/mo` or `/biwk` and `mo` / `wk` spans. Pure `foldChain`, `cleanSteps`, `toChainSteps`. Additive.
-- **`PopoverTooltip` `contentClass`** — an extra class on the floating content, for a body that needs its own width. Additive.
 - **`DirectionGlyph`, `CadenceGlyph`, `AmountShapeGlyph`** — the three icons after a config form's name: a red down or green up arrow, a calendar whose pattern shows the rhythm (weekly, biweekly, monthly, or Y, N, 1), and a metronome or error bars. Each has its tooltip and `aria-label` built in. Pure `cadenceLabel`. Additive.
 - **`PopoverField` and `DayOfMonthField`** — a compact field that reads as its value and opens a picker in a popover under it (click or Enter, never hover; Escape, outside click or the picker's `close` closes it). `DayOfMonthField` is the day grid 1 to 28 plus Last day as a field reading "5th". Pure `dayOfMonthText`. Additive.
 - **`ShortcutHelp`** — a desktop-only `?` button at the bottom right that opens a translucent overlay of the active shortcuts (`{ keys, label, group? }[]`); the `?` key opens it, `?` or Escape closes it, and it is the top hotkey layer while open. Pure `groupShortcuts`. Additive.
 - **`Button` `variant: "quiet-danger"`** with `QuietDangerButton`, `SmallQuietDangerButton` and `HotkeyQuietDangerButton` — Delete that has no border and muted text until hovered or focused, then turns red. No existing variant changes. Additive.
 
+### Changed
+
+- **Form controls are one height and one text size (BREAKING visual, every consumer).** New tokens `--sui-control-height` (43px) and `--sui-control-font-size` (0.875rem) in `global.css`. `Select`'s trigger (was a fixed 32px, inherited font), `DatePicker` (was 32px), `SegmentedControl` md and `SegmentedInput` (they share `.sui-segmented`; was 35px, 13px text) and `PopoverField` (was a 2rem minimum) now read them, so they sit level with `ThemedInput` and `ThemedNumberInput`/`CurrencyInput` md (43px, 14px). `SegmentedControl size="xs"` keeps its own height. Rows that paired these with a 32px control get taller: `SearchInput`/`SearchField` (32px) beside a `Select`, `Dropdown` (32px), `MutationToolbar`'s as-of chips, `SettingsTabs`, `CadenceStrip`/`WindowStrip` date fields, `IntervalInput`'s unit Select. Peter, thorcasting 4354: "Change the default everywhere".
+- **`Dropdown` md (framed) and `SearchInput`/`SearchField` join the form control height and text size** (thorcasting 4357). The framed md trigger (was about 30px, 13px text) and the search field (was 32px) read `--sui-control-height` and `--sui-control-font-size`, so a filter bar pairing a search or a dropdown with a `Select` stays level. The subtle trigger (inline text, e.g. a header switcher) and `sm` (`CompactDropdown`, `InlineSubtleDropdown`) keep their sizes. `PinnedFillColumn`'s pinned search header gets taller.
+
 ### Fixed
 
 - **Dev showcase CSS**: `dev/main.css` was missing a closing brace after `.hotkey-scope-demo`, which nested every later demo rule under it, so those demo frames (PayChain, ChannelChart and others) only applied inside the hotkey demo. Dev only; nothing shipped changes.
+
+## 0.252.0 — 2026-11-03
+
+### Added
+
+- **`StepChain` / `PayChain`** — a name, a muted tag and a chain of steps that folds by measured width: one line, then name above chain, then first two steps · "N more" · last, with the full chain in a popover on hover, focus or tap (Escape closes). `PayChain` takes `{ name, cadence, steps: { amount_cents, months?, weeks? }[], ends? }`, drops zero-length $0 gaps, merges equal neighbours, writes whole dollars with `/mo` or `/biwk` and `mo` / `wk` spans. Pure `foldChain`, `cleanSteps`, `toChainSteps`. Additive.
+- **`PopoverTooltip` `contentClass`** — an extra class on the floating content, for a body that needs its own width. Additive.
 
 ## 0.251.0 — 2026-10-30
 
