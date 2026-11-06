@@ -51,6 +51,7 @@
 import { clamp } from "../../internal/math/clamp";
 import { hCurve } from "../../internal/geometry/hCurve";
 import { linearScale } from "../Chart/scales";
+import { dayCellEnds } from "../Chart/plotLock";
 import { monthlyCells } from "../DateAxis/cells";
 import { filter, find, findIndex, join, map, sortBy, sum } from "../../fn";
 
@@ -490,17 +491,22 @@ export const timeOf = (at: TimeValue): number =>
 export const xScaleFor = (
   domain: TimeDomain,
   frame: Frame = DEFAULT_FRAME,
+  /**
+   * Where the domain's two END DAYS sit, when they are not the plot's edges:
+   * the day-cell rule's first and last cell centres (`dayCellEnds`, plot lock).
+   * Omitted, the domain runs edge to edge exactly as it always has.
+   */
+  ends?: { readonly x0: number; readonly x1: number },
 ): ((at: TimeValue) => number) => {
   const start = timeOf(domain[0]);
   const end = timeOf(domain[1]);
   const span = end - start;
-  if (span <= 0) return () => frame.plotLeft;
+  const x0 = ends?.x0 ?? frame.plotLeft;
+  const x1 = ends?.x1 ?? frame.plotRight;
+  if (span <= 0) return () => x0;
   return (at: TimeValue): number => {
     const fraction = (timeOf(at) - start) / span;
-    return (
-      frame.plotLeft +
-      clamp(fraction, 0, 1) * (frame.plotRight - frame.plotLeft)
-    );
+    return x0 + clamp(fraction, 0, 1) * (x1 - x0);
   };
 };
 
@@ -817,6 +823,25 @@ export interface LevelsRailGeometry {
   readonly ticks: readonly AxisTick[];
   /** The value axis' ticks, in the left gutter. */
   readonly yTicks: readonly ValueTick[];
+  /**
+   * The insets this chart needs on its OWN, in CSS px: the value-axis gutter on
+   * the left and the plain edge on the right, computed before any plot lock
+   * widened them. What a plot lock member reports (thorcasting #4395).
+   */
+  readonly naturalInsets: { readonly left: number; readonly right: number };
+}
+
+/**
+ * What a plot lock hands the geometry (thorcasting #4395), in CSS px: the
+ * insets to draw the plot with, and the ticks the lead chart publishes. With a
+ * lock the domain's days are CELLS (a day at its cell's centre), the same rule
+ * ScrubChart draws by, so a date sits at the same x on both charts.
+ */
+export interface LockedPlot {
+  readonly left: number;
+  readonly right: number;
+  /** The lead chart's x ticks (ms at UTC midnight + label), if any yet. */
+  readonly ticks?: readonly { readonly at: number; readonly label: string }[];
 }
 
 /** How much of the plot's height the bands fill at the busiest moment. */
@@ -1748,6 +1773,8 @@ export const levelsRailGeometry = (input: {
    * gives the hover readout.
    */
   readonly formatValue?: (value: number) => string;
+  /** A plot lock's answer: its insets, day-cell x rule, and shared ticks. */
+  readonly locked?: LockedPlot;
 }): LevelsRailGeometry => {
   // The gutter has to be known before the frame, because it IS the frame's
   // left edge — so the range and its labels are decided first, against a
@@ -1767,11 +1794,38 @@ export const levelsRailGeometry = (input: {
       ),
     ),
   );
-  const frame =
+  const ownFrame =
     input.box === undefined
       ? frameFor(input.viewHeight ?? VIEW_HEIGHT, VIEW_WIDTH, gutter)
       : frameForBox(input.box, gutter);
-  const xScale = xScaleFor(input.domain, frame);
+  // One viewBox unit is one CSS px unless a short box scaled the whole drawing
+  // up together; a lock speaks px, so its insets are scaled into units here.
+  const unitsPerPx =
+    input.box !== undefined && input.box.width > 0
+      ? ownFrame.viewWidth / input.box.width
+      : 1;
+  const naturalInsets = {
+    left: ownFrame.plotLeft / unitsPerPx,
+    right: (ownFrame.viewWidth - ownFrame.plotRight) / unitsPerPx,
+  };
+  const lock = input.locked;
+  const frame: Frame =
+    lock === undefined
+      ? ownFrame
+      : {
+          ...ownFrame,
+          plotLeft: lock.left * unitsPerPx,
+          plotRight: ownFrame.viewWidth - lock.right * unitsPerPx,
+        };
+  const first = timeOf(input.domain[0]);
+  const last = timeOf(input.domain[1]);
+  const xScale = xScaleFor(
+    input.domain,
+    frame,
+    lock === undefined
+      ? undefined
+      : dayCellEnds(first, last, frame.plotLeft, frame.plotRight),
+  );
   const yScale = yScaleFor(yDomain, frame);
   const peak = peakTotal(input.levels);
   const perCount = perCountWidth(input.levels, yScale, peak, frame);
@@ -1823,8 +1877,18 @@ export const levelsRailGeometry = (input: {
       xScale,
     ),
     flags: flagPositions(input.mutations, xScale, frame),
-    ticks: datedAxisTicks(input.domain, input.mutations, xScale, frame),
+    ticks:
+      lock?.ticks === undefined
+        ? datedAxisTicks(input.domain, input.mutations, xScale, frame)
+        : lockedAxisTicks(
+            input.domain,
+            input.mutations,
+            lock.ticks,
+            xScale,
+            frame,
+          ),
     yTicks: valueTickMarks(yDomain, yScale, frame, format),
+    naturalInsets,
   };
 };
 
@@ -2131,6 +2195,67 @@ export const datedAxisTicks = (
       labelAnchor: span?.anchor ?? "middle",
     };
   }, candidates);
+};
+
+/**
+ * THE LOCKED AXIS (thorcasting #4395): under a plot lock the lead chart's
+ * cadence ticks and labels are THE axis, so both charts say the same thing at
+ * the same places. This chart keeps what it owns — a long tick at every flag
+ * date — but draws it bare; the flag's tooltip and its change chip give the
+ * exact date, and labelling flag dates on both charts would crowd the lead's
+ * axis. A flag that lands on a lead tick takes that tick's label and stays long.
+ *
+ * Ticks outside the domain are dropped: a tick there would claim a date this
+ * chart does not draw.
+ */
+export const lockedAxisTicks = (
+  domain: TimeDomain,
+  mutations: readonly Mutation[],
+  lead: readonly { readonly at: number; readonly label: string }[],
+  xScale: (at: TimeValue) => number,
+  frame: Frame = DEFAULT_FRAME,
+): readonly AxisTick[] => {
+  const start = timeOf(domain[0]);
+  const end = timeOf(domain[1]);
+  const inDomain = (time: number): boolean => time >= start && time <= end;
+  const eventTimes = new Set(
+    filter(
+      inDomain,
+      map((mutation: Mutation) => timeOf(mutation.at), mutations),
+    ),
+  );
+  const leadAt = new Map(
+    map(
+      (one: { readonly at: number; readonly label: string }) =>
+        [one.at, one.label] as const,
+      filter((one: { readonly at: number }) => inDomain(one.at), lead),
+    ),
+  );
+  const times = sortBy(
+    (time: number) => time,
+    [...new Set([...eventTimes, ...leadAt.keys()])],
+  );
+  return map((at: number) => {
+    const x = xScale(at);
+    const label = leadAt.get(at);
+    const event = eventTimes.has(at);
+    return {
+      key: String(at),
+      at,
+      x,
+      label: label ?? "",
+      showLabel: label !== undefined,
+      event,
+      tickLength: event ? EVENT_TICK_LENGTH : AXIS_TICK_LENGTH,
+      labelX: x,
+      labelY: frame.axisLabelY,
+      labelAnchor: labelPlacement(
+        x,
+        axisLabelWidth(label ?? ""),
+        frame.viewWidth,
+      ).anchor,
+    };
+  }, times);
 };
 
 // ── dragging a flag ──────────────────────────────────────────────────────────

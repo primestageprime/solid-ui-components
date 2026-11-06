@@ -89,6 +89,7 @@ import {
   timeOf,
 } from "./geometry";
 import { placeTooltipX } from "../Chart/tooltipPlacement";
+import type { PlotLock } from "../Chart/plotLock";
 import { find, join, map, sortBy } from "../../fn";
 import { observeSize } from "../../internal/dom/observeSize";
 import "./LevelsTimeline.css";
@@ -117,6 +118,15 @@ export interface LevelsTimelineProps {
    * clamps to the edge rather than widening it.
    */
   valueDomain?: readonly [number, number];
+  /**
+   * Join a `createPlotLock()` shared with the time chart stacked above or below
+   * (thorcasting #4395). The chart reports its own value-axis gutter and edge
+   * as natural insets, draws its plot at the lock's, maps each day of the
+   * domain to its day-cell centre (the rule ScrubChart draws by) and draws the
+   * lead chart's cadence ticks and labels. A flag date keeps a long bare tick.
+   * Read once at mount. Omitted, the axis is the dated one and nothing moves.
+   */
+  plotLock?: PlotLock;
   /** Which mutation is lit. Its flag and rule take the accent; the rest mute. */
   selectedMutationId?: string;
   /** Provided => the flags become buttons. Omitted => the chart is a readout. */
@@ -295,6 +305,8 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
     onCleanup(stop);
   });
 
+  const lockMember = props.plotLock?.join();
+  if (lockMember) onCleanup(() => lockMember.leave());
   const geometry = createMemo(() =>
     levelsRailGeometry({
       levels: props.levels,
@@ -306,8 +318,29 @@ export const LevelsTimeline: Component<LevelsTimelineProps> = (props) => {
       // The axis labels and the hover readout share one formatter, so the
       // gutter is sized in the same units the reader is shown.
       formatValue: props.formatValue,
+      // The lock answers once any member (this one included) has reported.
+      locked: (() => {
+        const insets = lockMember?.insets();
+        return insets === undefined
+          ? undefined
+          : { ...insets, ticks: props.plotLock?.ticks() };
+      })(),
     }),
   );
+  // Report the NATURAL insets (computed before the lock widened them), so the
+  // answer can never feed back into the report; `report` ignores a repeat.
+  if (lockMember)
+    createEffect(() => {
+      const natural = geometry().naturalInsets;
+      const measured = box();
+      // Unmeasured: no box to place, so say nothing rather than a width of 0.
+      if (measured === undefined) return;
+      lockMember.report({
+        natural,
+        origin: host?.getBoundingClientRect().left ?? 0,
+        width: measured.width,
+      });
+    });
   const frame = () => geometry().frame;
 
   const interactive = () => props.onSelectMutation !== undefined;
