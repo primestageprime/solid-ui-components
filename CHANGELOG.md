@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- **`RateGauge`: a dimmed caution (warning) band is brighter** (thorcasting 4389/4398). Its unlit fill goes from 0.14 to 0.4 alpha, so the yellow section reads whatever the needle shows. The success and danger dim bands stay at 0.14; the lit fills are unchanged.
+
 ### Added
 
 - **`createPlotLock()` — stacked time charts share one time axis** (thorcasting 4395). Peter: "the markers in the middle chart don't line up with the date/times in the cashflow chart". Hand one lock to every chart in a stack. Each chart reports its own natural insets (y-label gutter, legend gutter) and its box on the page. All of them draw their plot over the one page span that fits every member (`lockedInsets`). Every date maps to x by one day-cell rule, a day at its cell's centre (`dayCellX`, `dayCellEnds`, `dayCount`). The lead chart's x ticks are published for the others to draw. Additive.

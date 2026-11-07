@@ -56,8 +56,11 @@
   fill: rgba(var(--sui-warning-rgb), 0.85);
 }
 
+/* Yellow is the lowest-contrast tone on a light surface: at the 0.14 the other
+   dim bands use, a caution band the needle is not in all but vanished (thorcasting
+   4389/4398), so it is dimmed less. */
 .sui-rate-gauge__band--warning.sui-rate-gauge__band--dim {
-  fill: rgba(var(--sui-warning-rgb), 0.14);
+  fill: rgba(var(--sui-warning-rgb), 0.4);
 }
 
 .sui-rate-gauge__band--danger.sui-rate-gauge__band--lit {
