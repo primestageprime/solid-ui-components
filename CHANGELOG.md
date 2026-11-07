@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+- **`createPlotLock()` — stacked time charts share one time axis** (thorcasting 4395). Peter: "the markers in the middle chart don't line up with the date/times in the cashflow chart". Hand one lock to every chart in a stack. Each chart reports its own natural insets (y-label gutter, legend gutter) and its box on the page. All of them draw their plot over the one page span that fits every member (`lockedInsets`). Every date maps to x by one day-cell rule, a day at its cell's centre (`dayCellX`, `dayCellEnds`, `dayCount`). The lead chart's x ticks are published for the others to draw. Additive.
+- **`plotLock?` on `ScrubChart`, `CashflowScrubChart` (and its curried variants, `FramedCashflowScrubChart`) and `LevelsTimeline`.** ScrubChart reports and applies the insets and publishes its ticks. LevelsTimeline applies the insets, maps its domain by the day-cell rule (the click, the hover and a drag read back by the same rule), and draws the lead's ticks and labels. Its flag dates stay long ticks, without labels. With no lock, nothing changes. Additive.
+- **`Frame.domainEnds?`** (LevelsTimeline geometry): where the domain's end days sit when they are not the plot's edges; `xScaleFor` and `timeAtX` read it. **`LevelsRailGeometry.naturalInsets`**, **`lockedAxisTicks`**, **`LockedPlot`**. Additive.
+
 ## 0.254.0 — 2026-11-06
 
 ### Added
