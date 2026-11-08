@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.255.0 — 2026-11-08
+
 ### Changed
 
 - **`RateGauge`: a dimmed caution (warning) band is brighter** (thorcasting 4389/4398). Its unlit fill goes from 0.14 to 0.4 alpha, so the yellow section reads whatever the needle shows. The success and danger dim bands stay at 0.14; the lit fills are unchanged.
