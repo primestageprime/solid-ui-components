@@ -5312,7 +5312,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 1004
+    "line": 1005
   },
   {
     "name": "createCell",
@@ -6800,7 +6800,7 @@
     "showcase": "#/levels-timeline",
     "since": "0.171.0",
     "file": "src/components/LevelsTimeline/LevelsTimeline.tsx",
-    "line": 1145
+    "line": 1178
   },
   {
     "name": "createList",
@@ -7755,7 +7755,7 @@
     "showcase": "#/scrub-chart",
     "since": "0.44.0",
     "file": "src/components/ScrubChart/ScrubChart.tsx",
-    "line": 1118
+    "line": 1152
   },
   {
     "name": "createSection",
@@ -13152,7 +13152,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.186.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 1038
+    "line": 1039
   },
   {
     "name": "FullscreenBox",
@@ -16420,7 +16420,7 @@
     "showcase": "#/levels-timeline",
     "since": "0.171.0",
     "file": "src/components/LevelsTimeline/LevelsTimeline.tsx",
-    "line": 240
+    "line": 250
   },
   {
     "name": "LgAvatar",
@@ -21361,7 +21361,7 @@
     "showcase": "#/scrub-chart",
     "since": "0.44.0",
     "file": "src/components/ScrubChart/ScrubChart.tsx",
-    "line": 123
+    "line": 127
   },
   {
     "name": "ScrubChartBand",
@@ -24151,7 +24151,7 @@
     "showcase": "#/cashflow-scrub-chart",
     "since": "0.179.0",
     "file": "src/components/CashflowScrubChart/CashflowScrubChart.tsx",
-    "line": 1026
+    "line": 1027
   },
   {
     "name": "StretchRow",
