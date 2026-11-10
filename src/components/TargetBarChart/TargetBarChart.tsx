@@ -73,6 +73,7 @@ import {
   slotOffset,
   tallestOf,
   targetBarAxis,
+  targetBarAxisTo,
 } from "./targetBarGeometry";
 
 export interface TargetBarChartProps {
@@ -91,6 +92,16 @@ export interface TargetBarChartProps {
    * only when the reader asks). Omitted, the axis fits the bars.
    */
   readonly yMax?: number;
+  /**
+   * The EXACT top of the plot: the y axis ends at this value, unpadded and
+   * unrounded, and its ticks are the round steps at or under it
+   * (`targetBarAxisTo`). For a caller whose own rule states the top — "the
+   * tallest bar sits at 80% of the axis" — where `yMax`'s round top a little
+   * above would move the bar off its mark. Wins over `yMax` and over the
+   * bars; a bar taller than it leaves the plot, so holding bars under it is
+   * the caller's rule. Omitted, the axis is `yMax`'s or the bars'.
+   */
+  readonly yTop?: number;
   /**
    * A grip moved: the pointer's value for that series' projection in that
    * period, unclamped and unsnapped — snapping and any floor are the
@@ -176,7 +187,11 @@ export const TargetBarChart: Component<TargetBarChartProps> = (props) => {
   const missA = `tb-miss-a-${uid}`;
   const missB = `tb-miss-b-${uid}`;
 
-  const liveAxis = createMemo(() => targetBarAxis(props.yMax ?? tallestOf(props.series)));
+  const liveAxis = createMemo(() =>
+    props.yTop !== undefined
+      ? targetBarAxisTo(props.yTop)
+      : targetBarAxis(props.yMax ?? tallestOf(props.series)),
+  );
   const [frozen, setFrozen] = createSignal<ReturnType<typeof targetBarAxis> | null>(null);
   const axis = () => frozen() ?? liveAxis();
   const dragging = () => frozen() !== null;

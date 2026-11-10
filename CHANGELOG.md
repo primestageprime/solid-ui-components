@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`TargetBarChart`: `yTop`, an exact top for the plot** (thorcasting 4455). The y axis ends at the stated value, unpadded and unrounded, with ticks on the round steps at or under it (`targetBarAxisTo`: a whole top gets whole steps, so 10 reads 0 / 5 / 10). For a caller whose own rule states the top, such as "the tallest bar sits at 80% of the axis". It wins over `yMax`, which stays a held ceiling rounded a little above. Additive: a chart that passes no `yTop` draws as before.
+
 ## 0.255.0 — 2026-11-08
 
 ### Changed

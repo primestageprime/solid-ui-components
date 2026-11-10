@@ -24855,7 +24855,7 @@
     "showcase": "#/target-bar-chart",
     "since": "0.213.0",
     "file": "src/components/TargetBarChart/TargetBarChart.tsx",
-    "line": 158
+    "line": 169
   },
   {
     "name": "TextBody",

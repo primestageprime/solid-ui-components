@@ -68,6 +68,42 @@ describe("TargetBarChart", () => {
     for (const ref of refs) expect(ids.has(ref)).toBe(true);
   });
 
+  // THE PLOT, READ OFF THE DOM. The `$0` tick sits at the plot's foot, and a
+  // tick's group is translated by its y in the plot, so the foot's y IS the
+  // plot's height. A grip's column runs from its bar's lid to the foot, so a
+  // column's height over the plot's is where that bar stands on the axis.
+  const axisOf = (over: { yTop?: number; yMax?: number }) => {
+    const { container } = render(() => (
+      <TargetBarChart
+        series={SERIES}
+        periods={[0, 1]}
+        periodLabel={(p) => ["Jan", "Feb"][p] ?? ""}
+        now={0.5}
+        valueFormat={(v) => `$${v}`}
+        {...over}
+      />
+    ));
+    const ticks = Array.from(container.querySelectorAll("text.sui-chart__axis-label"), (t) => t.textContent ?? "").filter(
+      (t) => t.startsWith("$"),
+    );
+    const foot = Array.from(container.querySelectorAll("text.sui-chart__axis-label")).find((t) => t.textContent === "$0");
+    const plotHeight = Number(/translate\(0, ([\d.]+)\)/.exec(foot?.parentElement?.getAttribute("transform") ?? "")?.[1]);
+    // The first column is Exterior's January bar: projected 6000, the tallest.
+    const tallest = Number(container.querySelector("rect.sui-chart__value-handle-column")?.getAttribute("height"));
+    return { ticks, standsAt: tallest / plotHeight };
+  };
+
+  it("ends the plot exactly at `yTop`: a bar at 80% of it draws at 80% of the plot", () => {
+    const { ticks, standsAt } = axisOf({ yTop: 7500 });
+    expect(standsAt).toBeCloseTo(6000 / 7500, 6);
+    expect(ticks).toEqual(["$0", "$2000", "$4000", "$6000"]);
+  });
+
+  it("`yTop` wins over `yMax`, whose top is a round one a little above", () => {
+    expect(axisOf({ yMax: 7500 }).standsAt).toBeCloseTo(6000 / 10000, 6);
+    expect(axisOf({ yMax: 7500, yTop: 7500 }).standsAt).toBeCloseTo(6000 / 7500, 6);
+  });
+
   it("omits the NOW rule when NOW is outside the periods", () => {
     const { container } = mount(40);
     expect(container.textContent).not.toContain("now");

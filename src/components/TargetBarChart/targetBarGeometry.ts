@@ -146,6 +146,42 @@ export const targetBarAxis = (
   };
 };
 
+/**
+ * The y axis for a top the CALLER states: the plot ends exactly at `top`,
+ * with no padding and no rounding (thorcasting's counts chart, 2026-11-10:
+ * the engine states the top so the tallest bar sits at 80% of it, and a round
+ * top a little above would move the bar off that mark).
+ *
+ * The ticks are the multiples of a round step (about four of them) that fit
+ * at or under the top, so the top itself is ticked only when it is one of
+ * them. A WHOLE top gets a whole step: a count axis that ends at 10 reads
+ * 0 / 5 / 10, never 2.5 / 7.5. A non-positive top gets the unit axis, as
+ * `targetBarAxis` gives an empty chart.
+ *
+ *   | top | ticks            |
+ *   |-----|------------------|
+ *   | 10  | 0, 5, 10         |
+ *   | 5   | 0, 2, 4          |
+ *   | 4   | 0, 1, 2, 3, 4    |
+ *   | 2   | 0, 1, 2          |
+ *   | 1.5 | 0, 0.5, 1, 1.5   |
+ */
+export const targetBarAxisTo = (
+  top: number,
+): { readonly top: number; readonly ticks: readonly number[] } => {
+  if (!(top > 0)) return { top: 1, ticks: [0, 1] };
+  const raw = top / 4;
+  const step = niceStep(Number.isInteger(top) ? Math.ceil(raw) : raw);
+  // The epsilon keeps a top that IS a multiple (1.5 over a 0.5 step) ticked
+  // when the division lands a hair under the whole number, and the `min`
+  // keeps that tick's own float error (3 x 0.1) from landing past the top.
+  const count = Math.floor(top / step + 1e-9);
+  return {
+    top,
+    ticks: Array.from({ length: count + 1 }, (_v, k) => Math.min(k * step, top)),
+  };
+};
+
 /** The breakdown's closing line: how the bar stands against its projection. */
 export type TargetBarStanding = "above" | "missing" | "remaining" | "on";
 
