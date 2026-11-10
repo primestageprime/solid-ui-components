@@ -7917,6 +7917,42 @@
     "line": 357
   },
   {
+    "name": "createSlotStackChart",
+    "depth": 2,
+    "kind": "factory",
+    "family": "SlotStackChart",
+    "tags": [
+      "shows:chart",
+      "shows:bar",
+      "does:view",
+      "does:hover",
+      "data:time-series",
+      "data:multi-series",
+      "data:grouped",
+      "role:panel"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": [
+      "words",
+      "nowLabel",
+      "columnWidth",
+      "slotGap",
+      "margin"
+    ],
+    "dataProps": "SlotStackChartDataProps",
+    "summary": "Curry a screen's words, column width, slot gap and inset once.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "Curry a screen's words, column width, slot gap and inset once. The words are the screen's own nouns, which a library cannot guess, so there is no shipped variant: the consumer curries its own, or uses the base as it is.",
+    "showcase": "#/slot-stack-chart",
+    "since": "Unreleased",
+    "file": "src/components/SlotStackChart/SlotStackChart.tsx",
+    "line": 218
+  },
+  {
     "name": "createSpanBadge",
     "depth": 2,
     "kind": "factory",
@@ -22437,6 +22473,69 @@
     "since": "v0.20.0",
     "file": "src/components/SlotFillBar/SlotFillBar.tsx",
     "line": 69
+  },
+  {
+    "name": "SlotStackChart",
+    "depth": 2,
+    "kind": "composite",
+    "family": "SlotStackChart",
+    "tags": [
+      "shows:chart",
+      "shows:bar",
+      "does:view",
+      "does:hover",
+      "data:time-series",
+      "data:multi-series",
+      "data:grouped",
+      "role:panel"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": [
+      "words",
+      "nowLabel",
+      "columnWidth",
+      "slotGap",
+      "margin"
+    ],
+    "dataProps": "SlotStackChartDataProps",
+    "summary": "Composite (Depth 2).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "money or work against an expectation per bucket, where each category must show whether it fell short, landed or ran over, in place. Not for a plain stack (`StackedTimelineChart` with `columns`) or side-by-side bars a reader drags (`TargetBarChart`).",
+    "notes": null,
+    "showcase": "#/slot-stack-chart",
+    "since": "Unreleased",
+    "file": "src/components/SlotStackChart/SlotStackChart.tsx",
+    "line": 120
+  },
+  {
+    "name": "SlotStackLegend",
+    "depth": 2,
+    "kind": "composite",
+    "family": "SlotStackChart",
+    "tags": [
+      "shows:legend",
+      "shows:mark",
+      "does:view",
+      "data:list",
+      "role:inline"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "Composite (Depth 2), zero CSS.",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/slot-stack-chart",
+    "since": "Unreleased",
+    "file": "src/components/SlotStackChart/SlotStackLegend.tsx",
+    "line": 124
   },
   {
     "name": "SlotTrack",

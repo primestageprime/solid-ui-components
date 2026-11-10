@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- **`SlotStackChart` — a stacked column whose segments fill or overflow an expected container** (thorcasting 4454). Peter, on the stacked-dollars mockup: "it should appear that the amount is 'filling up' the dashed container. Making the borders solid as it goes" and "it should appear as if the striped area 'overflows' the bar. Do not have separation between the solid bar at the bottom and the striped area". Each series' segment is a slot the size of its expectation: solid from the bottom, dashed where still empty (no line where the fill ends), striped with a heavy outer border above it (no line at the join). The caller states `expected`, `filled`, `unfilled` and `overflow` per slot (and, optionally, `filledByClass` / `overflowByClass`); the chart only lays out. Read-only by construction: no grip, no handler, nothing focusable; an SVG title per part. `createSlotStackChart({ words?, nowLabel?, columnWidth?, slotGap?, margin? })` curries a screen's words; `SlotStackLegend` / `slotStackLegendItems` draw the marks with the chart's own mark; `slotStackRows(series)` is the headless table. Types `SlotStackSeries`, `SlotStackSlot`, `SlotStackClasses`, `SlotStackWords`. Additive.
+
 ## 0.255.0 — 2026-11-08
 
 ### Changed

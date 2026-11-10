@@ -363,6 +363,7 @@ export * from "./components/PayChain";
 export * from "./components/Glyphs";
 export * from "./components/PopoverField";
 export * from "./components/ShortcutHelp";
+export * from "./components/SlotStackChart";
 
 // Choreography — compose + sequence animation effects across components
 // (collapse/expand/fadeIn/fadeOut/slideDown/rollUp/glowIn/settleIn, step/

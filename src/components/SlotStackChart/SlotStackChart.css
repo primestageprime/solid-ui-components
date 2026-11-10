@@ -1,0 +1,32 @@
+/* SlotStackMarks — the slot's parts. Colour is data (a series token on the
+   mark); what each part IS lives here, so no caller can repaint a dashed
+   container solid or put a line where a fill ends. Nothing here is
+   interactive: no cursor, no focus ring, no transition. */
+.sui-slot-stack__fill {
+  stroke: none;
+}
+
+/* What is still empty paints nothing, but still answers the pointer, so the
+   hover text reaches the whole container and not only its dashes. */
+.sui-slot-stack__unfilled {
+  fill: transparent;
+  stroke: none;
+}
+
+.sui-slot-stack__solid,
+.sui-slot-stack__dashed,
+.sui-slot-stack__heavy {
+  fill: none;
+  pointer-events: none;
+  stroke-linejoin: round;
+}
+
+.sui-slot-stack__dashed {
+  stroke-dasharray: 4 3;
+}
+
+/* The overflow's border is the page's ink, never the series colour: it has
+   to read against its own stripes. */
+.sui-slot-stack__heavy {
+  stroke: var(--sui-text-primary);
+}

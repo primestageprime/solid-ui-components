@@ -2909,3 +2909,21 @@ The renderers family is a set of small, composable components for displaying fie
     import { MonthDayGrid } from "solid-ui-components";
     <MonthDayGrid month="2026-11" days={days()} minDate={today()} onDayClick={toggleDay} />
     ```
+
+## SlotStackChart
+- **SlotStackChart** — Composite (Depth 2). A stacked column per period whose segments **fill or overflow an expected container**. Each series' segment is a SLOT the size of what was expected, and slots stack in series order: **solid** = what fills it, from the bottom, with a solid border; **dashed** = what is still empty (sides and top only, no line where the fill ends, so the amount reads as filling the container; an empty container is all dashed and open at the bottom); **striped with a heavy border** = what came on top, leaving the container with no line at the join and the heavy border on its outer edge only. The CALLER splits every figure and the chart only lays out: a slot is `{ period, expected, filled, unfilled, overflow }` and is as tall as `filled + unfilled + overflow`; `expected` is used for the hover text and the table only. Optional `filledByClass` / `overflowByClass` (`{ invoiced, confirmed, planned }`) draw status sub-fills: solid, translucent, lighter, with the overflow's stripes softening the same way. **Read-only by construction**: no grip, no handler, nothing focusable, and no prop that adds one; each part answers the pointer with an SVG title ("Cabinets · Mar: $12k not yet filled ($30k expected)"). Fills its box the way `StackedTimelineChart` does (measured host; a short box gets a tighter inset, a 2px heavy border and at most four y labels; a narrow one thins the period labels past six). Key props: `series` (`SlotStackSeries[]`, bottom first; a series' place is its `--sui-series-<n>` colour), `periods`, `periodLabel`, `valueFormat`, `yMax?` (a held ceiling from `createAxisWaterMarks`; omitted, the axis fits the tallest column), `now?` (a NOW rule, in period units). Curried with `createSlotStackChart({ words?, nowLabel?, columnWidth?, slotGap?, margin? })`: `words` puts a screen's own nouns in the hover text ("arrived", "still expected"); the base `SlotStackChart` is exported too and usable as it stands. Composes `Chart` + `Grid` + `XAxis` + `YAxis` + `ReferenceLine` and its own Depth-1 mark `SlotStackMarks` (internal; owns `SlotStackChart.css`, paints with `HatchPattern`). Pure geometry in `slotStackGeometry.ts` (`placeSlots`, `layoutSlots`: whole-pixel boxes and the three border paths); `slotStackRows(series)` is the headless table, one row per slot. Use for: money or work against an expectation per bucket, where each category must show whether it fell short, landed or ran over, in place. Not for a plain stack (`StackedTimelineChart` with `columns`) or side-by-side bars a reader drags (`TargetBarChart`).
+  - Example:
+    ```tsx
+    import { createSlotStackChart, SlotStackLegend, type SlotStackSeries } from "solid-ui-components";
+
+    const DollarStack = createSlotStackChart({ words: { filled: "arrived", unfilled: "still expected" } });
+
+    const series: SlotStackSeries[] = [
+      { id: "remodels", label: "Remodels", slots: [{ period: 0, expected: 40, filled: 40, unfilled: 0, overflow: 15 }] },
+      { id: "cabinets", label: "Cabinets", slots: [{ period: 0, expected: 30, filled: 18, unfilled: 12, overflow: 0 }] },
+    ];
+
+    <SlotStackLegend series={series} words={{ filled: "arrived", unfilled: "still expected" }} />
+    <DollarStack series={series} periods={[0]} periodLabel={() => "Mar"} valueFormat={(v) => `$${v}k`} />
+    ```
+- **SlotStackLegend** — Composite (Depth 2), zero CSS. The marks of a `SlotStackChart` as a `Legend`: the series in their colours, then Solid, Dashed and "Striped, heavy border", each swatch drawn by the chart's own mark so the legend cannot drift from the picture. Key props: `series` (anything with a `label`, in the chart's order), `words?` (the chart's words), `statuses?` (also explain Translucent and Lighter). `slotStackLegendItems(props)` returns the same `LegendItem[]` for a screen that keeps its own `Legend` (a collapsible one, say); call it inside a component.

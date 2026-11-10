@@ -2983,3 +2983,28 @@ th:has(.tf-th-center) .hud-table__header-content {
 
 /* ShortcutHelp showcase. */
 .shortcut-help-demo { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+
+/* SlotStackChart showcase. The chart fills its box, so each demo frame is a
+   box of a definite size: a flex column the measured host stretches in. */
+.slot-stack-chart-demo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.slot-stack-chart-demo--single { width: 200px; height: 220px; }
+.slot-stack-chart-demo--wide { width: 420px; max-width: 100%; height: 240px; }
+.slot-stack-chart-demo--run { height: 300px; max-width: 640px; }
+.slot-stack-chart-demo--small { width: 300px; height: 130px; }
+.slot-stack-chart-demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+.slot-stack-chart-demo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 420px;
+}
+.slot-stack-chart-demo-card:has(.slot-stack-chart-demo--single) { max-width: 200px; }

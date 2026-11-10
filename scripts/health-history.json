@@ -10628,5 +10628,170 @@
         }
       }
     }
+  },
+  {
+    "at": "2026-11-10T23:10:57.293Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 70,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 15,
+      "undocumentedExports": 83,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "untaggedComponents": 1,
+      "unknownTags": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 70,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 15,
+      "undocumentedExports": 83,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "untaggedComponents": 0,
+      "unknownTags": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 69,
+          "to": 70,
+          "reason": "ConfiguredViews sizes the flow chart container from its node count (measured height), manifested as measured"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-11-10T23:21:52.111Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 70,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 11,
+      "componentsNeverRendered": 16,
+      "undocumentedExports": 83,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "untaggedComponents": 0,
+      "unknownTags": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 70,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 15,
+      "undocumentedExports": 83,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "untaggedComponents": 0,
+      "unknownTags": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 69,
+          "to": 70,
+          "reason": "ConfiguredViews sizes the flow chart container from its node count (measured height), manifested as measured"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
+  },
+  {
+    "at": "2026-11-10T23:23:10.552Z",
+    "metrics": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 70,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 15,
+      "undocumentedExports": 83,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "untaggedComponents": 0,
+      "unknownTags": 0
+    },
+    "baseline": {
+      "bareHexCss": 0,
+      "bareHexTsx": 0,
+      "inlineStyleSrc": 70,
+      "inlineStyleShowcases": 16,
+      "dotChains": 7,
+      "collectionMethodCalls": 31,
+      "bareAccessorColumns": 0,
+      "styleRubricViolations": 0,
+      "showcaseStyleRubricViolations": 0,
+      "cssTypedProps": 10,
+      "componentsNeverRendered": 15,
+      "undocumentedExports": 83,
+      "brokenDocImports": 0,
+      "missingDepthHeaders": 0,
+      "componentsWithoutShowcase": 0,
+      "catalogSummaryGaps": 0,
+      "untaggedComponents": 0,
+      "unknownTags": 0,
+      "_raises": {
+        "inlineStyleSrc": {
+          "from": 69,
+          "to": 70,
+          "reason": "ConfiguredViews sizes the flow chart container from its node count (measured height), manifested as measured"
+        },
+        "collectionMethodCalls": {
+          "from": 30,
+          "to": 31,
+          "reason": "TreeTable flattenTree sorts siblings with a comparator ([...roots].sort(compare)): nulls last in both directions and localeCompare for strings, the same rule as BaseTable's own counted sort. fn has only key-based sortBy, and adding a comparator helper to the public fn namespace needs its own approval."
+        }
+      }
+    }
   }
 ]
