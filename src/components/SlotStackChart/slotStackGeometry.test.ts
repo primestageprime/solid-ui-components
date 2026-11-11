@@ -8,6 +8,7 @@ import {
   layoutSlots,
   placeSlots,
   slotPartTitle,
+  slotStackAxisTo,
   slotStackChrome,
   slotStackRows,
   slotStackTallest,
@@ -262,6 +263,37 @@ describe("slotPartTitle", () => {
     expect(slotPartTitle(cabinets, "filled", 8, "confirmed", label, money, words)).toBe(
       "Cabinets · Mar: $8k arrived, signed ($30k expected)",
     );
+  });
+});
+
+describe("slotStackAxisTo: an exact top", () => {
+  it("ends the axis exactly at the top, ticking the round steps that fit under it", () => {
+    const rows = [26000, 680000, 10, 24, 5, 4, 1.5, 30000].map((top) => {
+      const axis = slotStackAxisTo(top);
+      return [top, axis.top, axis.ticks];
+    });
+    expect(rows).toEqual([
+      [26000, 26000, [0, 10000, 20000]],
+      [680000, 680000, [0, 200000, 400000, 600000]],
+      [10, 10, [0, 5, 10]],
+      [24, 24, [0, 10, 20]],
+      [5, 5, [0, 2, 4]],
+      [4, 4, [0, 1, 2, 3, 4]],
+      [1.5, 1.5, [0, 0.5, 1, 1.5]],
+      [30000, 30000, [0, 10000, 20000, 30000]],
+    ]);
+  });
+
+  it("gives an empty or negative top the unit axis", () => {
+    expect(slotStackAxisTo(0)).toEqual({ top: 1, ticks: [0, 1] });
+    expect(slotStackAxisTo(-5)).toEqual({ top: 1, ticks: [0, 1] });
+  });
+
+  it("keeps the grid on the labels' own steps when the top is not a multiple", () => {
+    // 26,000 over 10,000s: three grid steps (the last a part one), not two.
+    const chrome = slotStackChrome({ width: 560, height: 300 }, slotStackAxisTo(26000), 6);
+    expect([chrome.yTicks, chrome.gridSteps]).toEqual([[0, 10000, 20000], 3]);
+    expect(slotStackChrome({ width: 560, height: 300 }, slotStackAxisTo(30000), 6).gridSteps).toBe(3);
   });
 });
 
