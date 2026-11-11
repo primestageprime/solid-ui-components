@@ -116,6 +116,27 @@ describe("targetBarAxisTo", () => {
     expect(ticksOf(14000)).toEqual([0, 5000, 10000]);
   });
 
+  // thorcasting's counts axis (2026-11-10): never under 10, and from a
+  // tallest bar of 8 up, the bar and a fifth more. So the tops are 10, 11,
+  // 12, 14, 24 ...: whole, and mostly not a round step.
+  it("ticks whole counts under a top that is no round step, and leaves that top unticked", () => {
+    const ticksOf = (top: number): readonly number[] => targetBarAxisTo(top).ticks;
+    expect(map(ticksOf, [10, 11, 12, 14])).toEqual([
+      [0, 5, 10],
+      [0, 5, 10],
+      [0, 5, 10],
+      [0, 5, 10],
+    ]);
+    expect(map(ticksOf, [16, 18, 24, 36, 60, 120])).toEqual([
+      [0, 5, 10, 15],
+      [0, 5, 10, 15],
+      [0, 10, 20],
+      [0, 10, 20, 30],
+      [0, 20, 40, 60],
+      [0, 50, 100],
+    ]);
+  });
+
   it("never ticks past the top", () => {
     for (const top of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 25, 99, 0.3]) {
       const { ticks } = targetBarAxisTo(top);
