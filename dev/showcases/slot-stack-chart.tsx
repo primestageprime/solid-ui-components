@@ -40,12 +40,13 @@ const WORDS = {
 const DollarStack = createSlotStackChart({ words: WORDS, nowLabel: "today" });
 
 /** The caller's split: what fills the expectation, what is left, what is over. */
+const round1 = (v: number): number => Math.round(v * 10) / 10;
 const split = (period: number, expected: number, actual: number): SlotStackSlot => ({
   period,
   expected,
   filled: Math.min(expected, actual),
-  unfilled: Math.max(0, expected - actual),
-  overflow: Math.max(0, actual - expected),
+  unfilled: round1(Math.max(0, expected - actual)),
+  overflow: round1(Math.max(0, actual - expected)),
 });
 
 const seriesOf = (
@@ -127,6 +128,35 @@ const SHORTER_TOTAL: readonly SlotStackSlot[] = [
   { period: 2, expected: 14, filled: 12, unfilled: 2, overflow: 0 },
 ];
 
+/* The label stress run (the mockup's): tiny parts beside large ones on a
+   short panel. Jul runs $1.2k over a $60k column, Aug is $1.5k short of
+   $60k, Sep holds three slivers (a $1.2k overflow, a $3k fill under a $9k
+   gap, a $2k type on top), Oct is on target, and Nov is expected only, with
+   a $1.5k type, and is the last column. */
+const STRESS_MONTHS = ["Jul", "Aug", "Sep", "Oct", "Nov"];
+const STRESS_PERIODS = [0, 1, 2, 3, 4];
+const stressLabel = (period: number): string => STRESS_MONTHS[period] ?? "";
+/* Oct is on target, so it calls nothing out and leaves the gap before the
+   last column free: Nov's callouts can flip into it. */
+const STRESS_ROWS: readonly (readonly (readonly [number, number])[])[] = [
+  [[60, 61.2], [0, 0], [0, 0]],
+  [[60, 58.5], [0, 0], [0, 0]],
+  [[40, 41.2], [12, 3], [2, 2]],
+  [[50, 50], [0, 0], [0, 0]],
+  [[30, 0], [6, 0], [1.5, 0]],
+];
+/** The stress run's own curry: half-width columns, so a gap holds a figure. */
+const StressStack = createSlotStackChart({ words: WORDS, columnWidth: 0.5 });
+const STRESS = seriesOf(STRESS_ROWS);
+const STRESS_TOTALS: readonly SlotStackSlot[] = map(
+  (row: readonly (readonly [number, number])[], period: number) => {
+    const expected = round1(row.reduce((sum, [e]) => sum + e, 0));
+    const actual = round1(row.reduce((sum, [, a]) => sum + a, 0));
+    return split(period, expected, actual);
+  },
+  STRESS_ROWS,
+);
+
 /* Status sub-fills: the filled and overflow parts, by status. */
 const STATUSES: readonly SlotStackSeries[] = [
   {
@@ -204,6 +234,41 @@ export const SlotStackChartShowcase: Component = () => (
             The column expects $14k and holds $12k, so it stands 14 tall. Its
             two types stand 8 and 9: hovered, the bar grows to 17.
           </MutedBody>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-group">
+      <SectionTitle>Amounts on the hovered column</SectionTitle>
+      <MutedBody>
+        Hover a month above: every drawn part of that column carries its
+        amount, and nothing is labelled at rest. An amount nests inside its
+        part when the part is at least 15px tall and wide enough; otherwise it
+        sits beside the column on a leader line. A plus is overflow, a minus is
+        what a part-filled container still lacks. The charts below force
+        labels="always" so the placements can be read without a pointer;
+        "always" wants room beside each column, so it suits a wide chart.
+      </MutedBody>
+      <CaptionLabel>Stress, two values: a $1.2k overflow on $60k (Jul), $1.5k short of $60k (Aug), expected only at the right edge (Nov)</CaptionLabel>
+      <div class="slot-stack-chart-demo slot-stack-chart-demo--stress">
+        <StressStack series={STRESS} totals={STRESS_TOTALS} labels="always" expand="never" periods={STRESS_PERIODS} periodLabel={stressLabel} valueFormat={money} />
+      </div>
+      <CaptionLabel>Stress, by type: three thin slivers in one column (Sep), and the last column's callouts flipped to the left (Nov)</CaptionLabel>
+      <div class="slot-stack-chart-demo slot-stack-chart-demo--stress">
+        <StressStack series={STRESS} totals={STRESS_TOTALS} labels="always" expand="always" periods={STRESS_PERIODS} periodLabel={stressLabel} valueFormat={money} />
+      </div>
+      <div class="slot-stack-chart-demo-row">
+        <div class="slot-stack-chart-demo-card">
+          <CaptionLabel>A small panel (300 x 130), on hover (the default): hover a month. No gap holds a figure here, so the amounts lie over the neighbours, on chips, and the hovered column stays in view</CaptionLabel>
+          <div class="slot-stack-chart-demo slot-stack-chart-demo--small">
+            <DollarStack series={RUN} totals={RUN_TOTALS} periods={PERIODS} periodLabel={label} valueFormat={money} />
+          </div>
+        </div>
+        <div class="slot-stack-chart-demo-card">
+          <CaptionLabel>labels="never": the breakdown without amounts</CaptionLabel>
+          <div class="slot-stack-chart-demo slot-stack-chart-demo--small">
+            <DollarStack series={RUN} totals={RUN_TOTALS} labels="never" periods={PERIODS} periodLabel={label} valueFormat={money} />
+          </div>
         </div>
       </div>
     </div>

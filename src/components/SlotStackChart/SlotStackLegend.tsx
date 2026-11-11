@@ -89,6 +89,8 @@ const MarkSwatch: Component<{
       gap={0}
       paintOfSeries={() => props.paint}
       title={SILENT}
+      labels="never"
+      labelFormat={SILENT}
     />
   </Chart>
 );

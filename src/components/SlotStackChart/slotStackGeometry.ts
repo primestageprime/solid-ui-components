@@ -383,8 +383,20 @@ export const layoutSlots = (
     const width = Math.max(1, right - left);
     const bottom = Math.round(ys(one.base));
     const rawTop = Math.min(bottom - 1, Math.round(ys(one.top)));
+    /* The gap comes off the slot's TOP part, and never all of it: a 2px
+       overflow sliver under a 2px gap would vanish, and with it the one mark
+       that says the slot ran over. Such a slot keeps its top and gives up
+       its gap instead. */
+    const topPartFloor =
+      slot.overflow > 0
+        ? Math.round(ys(one.expectedTop))
+        : slot.unfilled > 0
+          ? Math.round(ys(one.fillTop))
+          : bottom;
     const top =
-      one.last || bottom - rawTop <= options.gap + 1
+      one.last ||
+      bottom - rawTop <= options.gap + 1 ||
+      topPartFloor - rawTop <= options.gap
         ? rawTop
         : rawTop + options.gap;
     const expectedTop =

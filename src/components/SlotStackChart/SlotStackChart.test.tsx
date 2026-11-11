@@ -119,7 +119,7 @@ describe("SlotStackChart", () => {
       const svg = container.querySelector("svg") as SVGSVGElement;
       const atRest = tallest(container);
       const axisText = (): string[] =>
-        [...container.querySelectorAll("svg text")].map((t) => t.textContent ?? "");
+        [...container.querySelectorAll("svg text:not(.sui-slot-stack__label)")].map((t) => t.textContent ?? "");
       const ticksAtRest = axisText();
       expect(ticksAtRest).toContain("$150k");
       fireEvent.pointerMove(svg, overMarch);
@@ -274,6 +274,83 @@ describe("SlotStackLegend", () => {
     const custom = render(() => <SlotStackLegend series={SERIES} totalPaint="ink-total" />).container;
     expect(solidOf(custom)).toBe("ink-total");
     expect(custom.querySelector(".sui-slot-stack__dashed")?.getAttribute("stroke")).toBe("ink-total");
+  });
+});
+
+describe("amount labels: only for the column under the pointer", () => {
+  const TOTALS = [slot(0, 90, 90, 0, 3), slot(1, 65, 0, 65, 0)];
+  const mountLabels = (labels?: "hover" | "always" | "never", labelFormat?: (v: number) => string) =>
+    render(() => {
+      const Chart = createSlotStackChart({ labelFormat });
+      return (
+        <Chart
+          series={SERIES}
+          totals={TOTALS}
+          labels={labels}
+          periods={[0, 1]}
+          periodLabel={(p) => MONTHS[p] ?? ""}
+          valueFormat={(v) => `$${v}k`}
+        />
+      );
+    });
+  const texts = (container: HTMLElement): string[] =>
+    [...container.querySelectorAll(".sui-slot-stack__label")].map((t) => t.textContent ?? "");
+  /* The 640 x 220 fallback: plot x 52..628, two 288px periods. */
+  const overMarch = { clientX: 52 + 144, clientY: 100 };
+  const overApril = { clientX: 52 + 432, clientY: 100 };
+
+  it("labels nothing at rest", () => {
+    expect(texts(mountLabels().container)).toEqual([]);
+  });
+
+  it("labels the hovered column's breakdown, signed, and nothing else; leaving clears it", () => {
+    const { container } = mountLabels();
+    const svg = container.querySelector("svg") as SVGSVGElement;
+    fireEvent.pointerMove(svg, overMarch);
+    // March by type. Nested, top part first: decks, Cabinets, the Remodels
+    // overflow and fill. Then the callout: the Cabinets gap is 14px tall here.
+    expect(texts(container)).toEqual(["$20k", "$18k", "+$15k", "$40k", "−$12k"]);
+    expect(container.querySelector('.sui-slot-stack__label[data-kind="callout"]')?.textContent).toBe("−$12k");
+    expect(count(container, ".sui-slot-stack__leader")).toBe(1);
+    fireEvent.pointerMove(svg, overApril);
+    // April's two empty containers state their expectation plainly.
+    expect(texts(container)).toEqual(["$30k", "$35k"]);
+    fireEvent.pointerLeave(svg);
+    expect(texts(container)).toEqual([]);
+  });
+
+  it("gives each figure the ink of what it sits on", () => {
+    const { container } = mountLabels();
+    fireEvent.pointerMove(container.querySelector("svg") as SVGSVGElement, overMarch);
+    const tones = [...container.querySelectorAll(".sui-slot-stack__label")].map((t) =>
+      (t.getAttribute("class") ?? "").replace("sui-slot-stack__label sui-slot-stack__label--", ""),
+    );
+    expect(tones).toEqual(["on-solid", "on-solid", "on-stripes", "on-solid", "callout"]);
+    // The overflow's figure sits on a chip.
+    expect(count(container, ".sui-slot-stack__chip")).toBe(1);
+  });
+
+  it("'always' labels every column at rest (the totals); 'never' labels none even when hovered", () => {
+    // March: $90k nests, its $3k sliver of overflow takes a callout. April nests.
+    expect(texts(mountLabels("always").container)).toEqual(["$90k", "+$3k", "$65k"]);
+    const never = mountLabels("never").container;
+    fireEvent.pointerMove(never.querySelector("svg") as SVGSVGElement, overMarch);
+    expect(texts(never)).toEqual([]);
+    // The breakdown still shows: labels and expansion are separate switches.
+    expect(count(never, '.sui-slot-stack__slot[data-slot="series"]')).toBe(3);
+  });
+
+  it("formats with labelFormat when curried, valueFormat otherwise", () => {
+    const { container } = mountLabels("always", (v) => `${v} thousand`);
+    expect(texts(container)).toEqual(["90 thousand", "+3 thousand", "65 thousand"]);
+  });
+
+  it("labels are not focusable and sit in a group the pointer passes through", () => {
+    const { container } = mountLabels("always");
+    expect(count(container, "[tabindex], [role='button'], button, input, a")).toBe(0);
+    const labels = container.querySelectorAll(".sui-slot-stack__label");
+    expect(labels.length).toBe(3);
+    for (const label of labels) expect(label.closest(".sui-slot-stack__labels")).not.toBeNull();
   });
 });
 

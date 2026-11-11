@@ -38,6 +38,12 @@ import {
   layoutSlots,
   visibleSlots,
 } from "./slotStackGeometry";
+import {
+  type SlotStackLabels,
+  labelledPeriods,
+  placeSlotLabels,
+} from "./slotStackLabels";
+import { filter } from "../../fn";
 import "./SlotStackChart.css";
 
 export interface SlotStackMarksProps {
@@ -75,6 +81,13 @@ export interface SlotStackMarksProps {
    * alike. Default `SLOT_STACK_TOTAL_PAINT`, the theme's accent blue.
    */
   readonly totalPaint?: string;
+  /**
+   * Which columns carry the amount of each drawn part: "hover" (default,
+   * the column under the pointer), "always" or "never".
+   */
+  readonly labels?: SlotStackLabels;
+  /** A part's amount as label text; the sign is added by the placement. */
+  readonly labelFormat: (value: number) => string;
 }
 
 /** The container outline's stroke width, in px. */
@@ -134,6 +147,25 @@ export const SlotStackMarks: Component<SlotStackMarksProps> = (props) => {
       { band: props.band, gap: props.gap, thin: THIN },
     ),
   );
+
+  /* The amounts, for the columns that carry them: by default the one under
+     the pointer, the same one that expands. Placed by the pure
+     `placeSlotLabels` from the boxes just laid out. */
+  const labels = createMemo(() => {
+    const labelled = labelledPeriods(props.labels ?? "hover", hovered());
+    const all = boxes();
+    const mine = filter((box) => labelled(box.placed.slot.period), all);
+    if (mine.length === 0) return [];
+    return placeSlotLabels(mine, all, {
+      plot: {
+        x: ctx.xScale().range[0],
+        y: 0,
+        width: ctx.innerWidth(),
+        height: ctx.innerHeight(),
+      },
+      format: props.labelFormat,
+    });
+  });
 
   return (
     <g class="sui-slot-stack" clip-path={ctx.clip.plotPathUrl()}>
@@ -217,6 +249,43 @@ export const SlotStackMarks: Component<SlotStackMarksProps> = (props) => {
           );
         }}
       </For>
+      {/* The amounts go last, over every slot. The group takes no pointer
+          events (CSS), so a label never steals the hover it is shown by. */}
+      <g class="sui-slot-stack__labels">
+        <For each={labels()}>
+          {(label) => (
+            <>
+              <Show when={label.leader}>
+                {(points) => (
+                  <polyline class="sui-slot-stack__leader" points={points()} />
+                )}
+              </Show>
+              <Show when={label.chip}>
+                {(chip) => (
+                  <rect
+                    class="sui-slot-stack__chip"
+                    x={chip().x}
+                    y={chip().y}
+                    width={chip().width}
+                    height={chip().height}
+                    rx={3}
+                  />
+                )}
+              </Show>
+              <text
+                class={`sui-slot-stack__label sui-slot-stack__label--${label.tone}`}
+                data-kind={label.kind}
+                data-side={label.side ?? undefined}
+                x={label.x}
+                y={label.y}
+                text-anchor={label.anchor}
+              >
+                {label.text}
+              </text>
+            </>
+          )}
+        </For>
+      </g>
     </g>
   );
 };

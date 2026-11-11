@@ -18,6 +18,7 @@ export { SlotStackLegend, slotStackLegendItems } from "./SlotStackLegend";
 export { SLOT_STACK_TOTAL_PAINT } from "./SlotStackMarks";
 export type { SlotStackLegendProps } from "./SlotStackLegend";
 export { SLOT_STACK_WORDS, slotStackRows } from "./slotStackGeometry";
+export type { SlotStackLabels } from "./slotStackLabels";
 export type {
   SlotStackClasses,
   SlotStackExpand,

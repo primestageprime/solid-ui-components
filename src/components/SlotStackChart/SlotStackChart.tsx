@@ -73,6 +73,7 @@ import {
   slotStackChrome,
   slotStackTallest,
 } from "./slotStackGeometry";
+import type { SlotStackLabels } from "./slotStackLabels";
 
 export interface SlotStackChartProps {
   /**
@@ -137,6 +138,20 @@ export interface SlotStackChartProps {
    * Presentational — curried.
    */
   readonly totalPaint?: string;
+  /**
+   * Which columns carry the AMOUNT of each drawn part: "hover" (the default:
+   * the column under the pointer, together with its breakdown; at rest
+   * nothing is labelled), "always", or "never". An amount nests inside its
+   * part when the part can hold it, and otherwise sits beside the column on
+   * a leader line. Data, not a curried look: a screen may flip it.
+   */
+  readonly labels?: SlotStackLabels;
+  /**
+   * A part's amount as label text. Default: `valueFormat`. The plus (over)
+   * and minus (still unfilled) are added by the chart. Presentational —
+   * curried.
+   */
+  readonly labelFormat?: (value: number) => string;
 }
 
 /** What an unmeasured chart draws at: a plausible panel, never zero. */
@@ -216,6 +231,8 @@ export const SlotStackChart: Component<SlotStackChartProps> = (props) => {
           periods={props.periods}
           totalLabel={words().total}
           totalPaint={props.totalPaint}
+          labels={props.labels}
+          labelFormat={props.labelFormat ?? props.valueFormat}
           title={(placed, part, value, status) =>
             slotPartTitle(
               placed,
@@ -245,7 +262,13 @@ export const SlotStackChart: Component<SlotStackChartProps> = (props) => {
 /** Props that are presentational — locked at curry time. */
 export type SlotStackChartOverrides = Pick<
   SlotStackChartProps,
-  "words" | "nowLabel" | "columnWidth" | "slotGap" | "margin" | "totalPaint"
+  | "words"
+  | "nowLabel"
+  | "columnWidth"
+  | "slotGap"
+  | "margin"
+  | "totalPaint"
+  | "labelFormat"
 >;
 
 /** Props left to the call site: data only. There are no callbacks. */

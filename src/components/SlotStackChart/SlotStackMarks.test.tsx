@@ -20,7 +20,15 @@ const SERIES: readonly SlotStackSeries[] = [
 
 /* A 200 x 200 plot with no inset: period 0 spans the width, 1 value = 2px. */
 const NO_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
-const BASE = { paintId: "t", periods: [0], totalLabel: "Total", band: 0.5, gap: 2, title: () => "part" };
+const BASE = {
+  paintId: "t",
+  periods: [0],
+  totalLabel: "Total",
+  band: 0.5,
+  gap: 2,
+  title: () => "part",
+  labelFormat: (v: number) => `$${v}k`,
+};
 
 describe("SlotStackMarks", () => {
   it("draws the layout it is handed by the chart's scales, in whole pixels", () => {

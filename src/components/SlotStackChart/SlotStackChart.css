@@ -25,3 +25,45 @@
 .sui-slot-stack__dashed {
   stroke-dasharray: 4 3;
 }
+
+/* The amounts. They are shown BY the hover, so they must never take it:
+   the whole group is transparent to the pointer. Tabular figures, so a
+   column of callouts lines up. */
+.sui-slot-stack__labels {
+  pointer-events: none;
+}
+
+.sui-slot-stack__label {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  fill: var(--sui-text-primary);
+}
+
+/* On a solid fill the figure takes the GROUND's colour: dark on a bright
+   fill in a dark theme, light on a saturated fill in a light one. */
+.sui-slot-stack__label--on-solid {
+  fill: var(--sui-chart-surface, var(--sui-bg-primary));
+}
+
+/* Beside the column a figure may cross a grid line: a ground halo keeps it
+   whole (the rule `.sui-chart__ref-label` follows). */
+.sui-slot-stack__label--callout {
+  paint-order: stroke fill;
+  stroke: var(--sui-chart-surface, var(--sui-bg-primary));
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* Over stripes, and for a callout stacked above its column, the figure sits
+   on a chip of ground. */
+.sui-slot-stack__chip {
+  fill: var(--sui-chart-surface, var(--sui-bg-primary));
+  fill-opacity: 0.85;
+}
+
+.sui-slot-stack__leader {
+  fill: none;
+  stroke: var(--sui-text-secondary);
+  stroke-width: 1;
+}
