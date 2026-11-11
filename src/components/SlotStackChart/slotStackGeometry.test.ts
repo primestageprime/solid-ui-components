@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest";
 import {
   type SlotStackSeries,
   type SlotStackSlot,
+  SLOT_STACK_TOTAL_INDEX,
   SLOT_STACK_WORDS,
+  hoveredPeriod,
   layoutSlots,
   placeSlots,
   slotPartTitle,
   slotStackChrome,
   slotStackRows,
   slotStackTallest,
+  visibleSlots,
 } from "./slotStackGeometry";
 
 const slot = (
@@ -36,7 +39,7 @@ const MARCH: readonly SlotStackSeries[] = [
 /* 1 data unit = 100px across, 1 value = 2px up from y 300. */
 const xs = (v: number): number => 100 + v * 100;
 const ys = (v: number): number => 300 - v * 2;
-const OPTIONS = { band: 0.6, gap: 2, thin: 1.5, heavy: 3 };
+const OPTIONS = { band: 0.6, gap: 2, thin: 1.5 };
 const boxes = (series: readonly SlotStackSeries[]) =>
   layoutSlots(placeSlots(series), xs, ys, OPTIONS);
 
@@ -87,13 +90,12 @@ describe("layoutSlots", () => {
     expect([decks.bottom, decks.top]).toEqual([130, 90]);
   });
 
-  it("an empty container is a dashed outline, open at the bottom", () => {
+  it("an empty container is a dashed outline all the way round", () => {
     const [empty] = boxes([one("a", slot(0, 40, 0, 40, 0))]);
     expect(empty.fills).toEqual([]);
     expect(empty.solid).toBeNull();
-    expect(empty.heavy).toBeNull();
-    // Up the left side from the floor, across the top, down the right: no Z.
-    expect(empty.dashed).toBe("M70.75 300V220.75H129.25V300");
+    // Nothing fills it, so there is no fill to open onto: it closes (Z).
+    expect(empty.dashed).toBe("M70.75 220.75V299.25H129.25V220.75Z");
   });
 
   it("a part-filled container: solid sides and floor, dashed sides and top, no line where the fill ends", () => {
@@ -103,17 +105,15 @@ describe("layoutSlots", () => {
     ]);
     expect(part.solid).toBe("M70.75 244V299.25H129.25V244");
     expect(part.dashed).toBe("M70.75 244V220.75H129.25V244");
-    expect(part.heavy).toBeNull();
   });
 
   it("a full container closes its solid border and draws no dash", () => {
     const [full] = boxes([one("a", slot(0, 40, 40, 0, 0))]);
     expect(full.solid).toBe("M70.75 220.75V299.25H129.25V220.75Z");
     expect(full.dashed).toBeNull();
-    expect(full.heavy).toBeNull();
   });
 
-  it("overflow continues the container: no line at the join, heavy on its top and sides", () => {
+  it("overflow continues the container: no line at the join and no border of its own", () => {
     const [over] = boxes([one("a", slot(0, 40, 40, 0, 12))]);
     expect(over.fills).toEqual([
       { part: "filled", status: null, paint: "solid", value: 40, y: 220, height: 80 },
@@ -121,15 +121,18 @@ describe("layoutSlots", () => {
     ]);
     // The fill's border stays open at the top, where the stripes begin.
     expect(over.solid).toBe("M70.75 220V299.25H129.25V220");
-    expect(over.heavy).toBe("M71.5 220V197.5H128.5V220");
     expect(over.dashed).toBeNull();
+    // The box states two border paths and no third: nothing outlines stripes.
+    expect(Object.keys(over).filter((k) => !["placed", "fills"].includes(k)).sort()).toEqual(
+      ["bottom", "dashed", "expectedTop", "fillTop", "solid", "top", "width", "x"],
+    );
   });
 
-  it("money with no expectation is all overflow, heavy from the floor", () => {
+  it("money with no expectation is all overflow: stripes from the floor, no path at all", () => {
     const [late] = boxes([one("a", slot(0, 0, 0, 0, 46))]);
-    expect(late.fills.map((f) => f.paint)).toEqual(["hatch"]);
+    expect(late.fills.map((f) => [f.paint, f.y, f.height])).toEqual([["hatch", 208, 92]]);
     expect(late.solid).toBeNull();
-    expect(late.heavy).toBe("M71.5 300V209.5H128.5V300");
+    expect(late.dashed).toBeNull();
   });
 
   it("splits a part by status, bottom-up, and paints what the split leaves as the plain part", () => {
@@ -168,6 +171,74 @@ describe("layoutSlots", () => {
   });
 });
 
+describe("visibleSlots: a column is its total, or its series", () => {
+  /* Two months. March is the mixed column: per type it stacks to 105, while
+     its own two values (expected 90, actual 93) stand 93 tall. April is
+     expectation only. */
+  const SERIES: readonly SlotStackSeries[] = [
+    one("Remodels", slot(0, 40, 40, 0, 15), slot(1, 35, 0, 35, 0)),
+    one("Cabinets", slot(0, 30, 18, 12, 0), slot(1, 30, 0, 30, 0)),
+    one("Deck Builds", slot(0, 20, 20, 0, 0)),
+  ];
+  const TOTALS = [slot(0, 90, 90, 0, 3), slot(1, 65, 0, 65, 0)];
+  const shown = (...args: Parameters<typeof visibleSlots>) =>
+    visibleSlots(...args).map((p) => [p.seriesLabel, p.seriesIndex, p.slot.period, p.base, p.top]);
+
+  it("at rest every column is ONE slot: its own expected and actual, with no series", () => {
+    expect(shown(SERIES, TOTALS, "hover", null, "Total")).toEqual([
+      ["Total", SLOT_STACK_TOTAL_INDEX, 0, 0, 93],
+      ["Total", SLOT_STACK_TOTAL_INDEX, 1, 0, 65],
+    ]);
+  });
+
+  it("the hovered column, and only it, is its per-series slots; its height is not held", () => {
+    expect(shown(SERIES, TOTALS, "hover", 0, "Total")).toEqual([
+      ["Remodels", 0, 0, 0, 55],
+      ["Cabinets", 1, 0, 55, 85],
+      ["Deck Builds", 2, 0, 85, 105],
+      ["Total", SLOT_STACK_TOTAL_INDEX, 1, 0, 65],
+    ]);
+  });
+
+  it("expand 'never' ignores the pointer; 'always' ignores the totals", () => {
+    expect(shown(SERIES, TOTALS, "never", 0, "Total")).toEqual(shown(SERIES, TOTALS, "hover", null, "Total"));
+    expect(visibleSlots(SERIES, TOTALS, "always", null, "Total")).toEqual(placeSlots(SERIES));
+  });
+
+  it("with no totals there is one state: every column is its series, whatever expand says", () => {
+    for (const expand of ["hover", "never", "always"] as const)
+      expect(visibleSlots(SERIES, undefined, expand, null, "Total")).toEqual(placeSlots(SERIES));
+  });
+
+  it("the axis holds the taller of the two states, so only the bar moves", () => {
+    expect(slotStackTallest(SERIES)).toBe(105);
+    expect(slotStackTallest(SERIES, TOTALS)).toBe(105);
+    expect(slotStackTallest(SERIES, [slot(0, 90, 90, 0, 40)])).toBe(130);
+  });
+
+  it("the table states both: the series' slots, then each column's total", () => {
+    expect(slotStackRows(SERIES, TOTALS).map((r) => [r.series, r.period, r.top])).toEqual([
+      ["Remodels", 0, 55],
+      ["Remodels", 1, 35],
+      ["Cabinets", 0, 85],
+      ["Cabinets", 1, 65],
+      ["Deck Builds", 0, 105],
+      ["Total", 0, 93],
+      ["Total", 1, 65],
+    ]);
+  });
+});
+
+describe("hoveredPeriod", () => {
+  it("is the period whose band holds the pointer, or none", () => {
+    expect(hoveredPeriod(null, [0, 1, 2])).toBeNull();
+    expect(hoveredPeriod(0.49, [0, 1, 2])).toBe(0);
+    expect(hoveredPeriod(0.51, [0, 1, 2])).toBe(1);
+    expect(hoveredPeriod(-0.4, [0, 1, 2])).toBe(0);
+    expect(hoveredPeriod(3.2, [0, 1, 2])).toBeNull();
+  });
+});
+
 describe("slotPartTitle", () => {
   const [, cabinets] = placeSlots(MARCH);
   const [remodels] = placeSlots(MARCH);
@@ -197,16 +268,16 @@ describe("slotPartTitle", () => {
 describe("slotStackChrome", () => {
   const axis = { top: 120, ticks: [0, 40, 80, 120] };
 
-  it("a full-size box keeps the axis's ticks, every label and the 3px border", () => {
+  it("a full-size box keeps the axis's ticks and every label", () => {
     const chrome = slotStackChrome({ width: 560, height: 300 }, axis, 12);
-    expect([chrome.short, chrome.narrow, chrome.xLabelStep, chrome.heavy]).toEqual([false, false, 1, 3]);
+    expect([chrome.short, chrome.narrow, chrome.xLabelStep]).toEqual([false, false, 1]);
     expect(chrome.yTicks).toEqual([0, 40, 80, 120]);
   });
 
-  it("a small panel keeps four y labels, with a tighter inset and a 2px border", () => {
+  it("a small panel keeps four y labels, with a tighter inset", () => {
     const chrome = slotStackChrome({ width: 300, height: 130 }, axis, 6);
     expect(chrome.yTicks).toEqual([0, 40, 80, 120]);
-    expect([chrome.xLabelStep, chrome.heavy, chrome.margin.left]).toEqual([1, 2, 44]);
+    expect([chrome.xLabelStep, chrome.margin.left]).toEqual([1, 44]);
   });
 
   it("a small panel with more than four y labels keeps every other one, on the grid's own steps", () => {

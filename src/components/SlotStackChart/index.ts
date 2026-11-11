@@ -19,6 +19,7 @@ export type { SlotStackLegendProps } from "./SlotStackLegend";
 export { SLOT_STACK_WORDS, slotStackRows } from "./slotStackGeometry";
 export type {
   SlotStackClasses,
+  SlotStackExpand,
   SlotStackSeries,
   SlotStackSlot,
   SlotStackWords,

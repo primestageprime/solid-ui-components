@@ -7950,7 +7950,7 @@
     "showcase": "#/slot-stack-chart",
     "since": "Unreleased",
     "file": "src/components/SlotStackChart/SlotStackChart.tsx",
-    "line": 218
+    "line": 253
   },
   {
     "name": "createSpanBadge",
@@ -22508,7 +22508,7 @@
     "showcase": "#/slot-stack-chart",
     "since": "Unreleased",
     "file": "src/components/SlotStackChart/SlotStackChart.tsx",
-    "line": 120
+    "line": 150
   },
   {
     "name": "SlotStackLegend",
@@ -22535,7 +22535,7 @@
     "showcase": "#/slot-stack-chart",
     "since": "Unreleased",
     "file": "src/components/SlotStackChart/SlotStackLegend.tsx",
-    "line": 124
+    "line": 125
   },
   {
     "name": "SlotTrack",

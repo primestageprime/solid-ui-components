@@ -74,9 +74,10 @@ const MarkSwatch: Component<{ readonly slot: SlotStackSlot }> = (props) => (
     <SlotStackMarks
       series={[{ id: "mark", label: "", slots: [props.slot] }]}
       paintId={`slot-stack-legend-${createUniqueId()}`}
+      periods={[0]}
+      totalLabel=""
       band={0.7}
       gap={0}
-      heavy={2}
       paintOfSeries={() => NEUTRAL}
       title={SILENT}
     />
@@ -111,7 +112,7 @@ export const slotStackLegendItems = (
     ),
     markItem("Solid", words.filled, SAMPLES.filled),
     markItem("Dashed", words.unfilled, SAMPLES.unfilled),
-    markItem("Striped, heavy border", words.overflow, SAMPLES.overflow),
+    markItem("Striped", words.overflow, SAMPLES.overflow),
     ...(props.statuses === true
       ? [
           markItem("Translucent", words.confirmed, SAMPLES.confirmed),

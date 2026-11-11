@@ -16,21 +16,33 @@
 //   dashed        what is still empty: sides and top, no line where the
 //                 fill ends, so the amount reads as FILLING the container
 //   striped       what came on top: it OVERFLOWS the container with no line
-//                 at the join, and a heavy border on its outer edge only
+//                 at the join and no border of its own
+//
+// TWO STATES PER COLUMN (Peter, 2026-11-10: "let's simplify. By default show
+// just the two values. (expected and actual)... When hovering with a mouse,
+// show the breakdown by type. Show the B approach. That will mean that the
+// bar will shift around on hover, but I want to see if that's ok."). Given
+// `totals`, a column at rest is ONE neutral slot, its own expected and
+// actual, and the hovered column is its per-series slots. The column's
+// height may change between the two and is not held or animated; the y axis
+// covers both states, so only the bar moves. `expand` forces either state
+// ("always" / "never") so a screen can change its mind without a release.
 //
 // THE CALLER SPLITS, THE CHART LAYS OUT. Every slot arrives as `expected`,
 // `filled`, `unfilled` and `overflow` (and, optionally, the filled and
 // overflow parts by status). The chart derives no part from another; a slot
 // is as tall as `filled + unfilled + overflow`.
 //
-// READ-ONLY BY CONSTRUCTION: no grip, no handler, nothing focusable, and no
-// prop that could add one. A part answers the pointer with its hover text.
+// READ-ONLY BY CONSTRUCTION: no grip, nothing focusable, and no prop that
+// could add one. Hover is the only interaction, and it is read from the
+// Chart root's own pointer signal: this component adds no listener. A part
+// answers the pointer with its hover text.
 //
 // MEASUREMENT, the StackedTimelineChart way: the first size comes
 // synchronously from `getBoundingClientRect` in `onMount`, `observeSize`
 // keeps it current, a zero reading is never stored (jsdom, hidden tabs), and
 // the box decides the chrome (`slotStackChrome`): a short panel gets a
-// tighter inset, a thinner heavy border and at most four y labels.
+// tighter inset and at most four y labels.
 //
 // The geometry is `slotStackGeometry.ts`; `slotStackRows` prints it.
 // ============================================
@@ -52,7 +64,9 @@ import { thinTicks } from "../StackedTimelineChart/layout";
 import { targetBarAxis } from "../TargetBarChart/targetBarGeometry";
 import { SlotStackMarks } from "./SlotStackMarks";
 import {
+  type SlotStackExpand,
   type SlotStackSeries,
+  type SlotStackSlot,
   type SlotStackWords,
   SLOT_STACK_WORDS,
   slotPartTitle,
@@ -66,6 +80,22 @@ export interface SlotStackChartProps {
    * its colour (`--sui-series-<n>`), the same rule the other stacks follow.
    */
   readonly series: readonly SlotStackSeries[];
+  /**
+   * Each column's OWN slot: its expected and actual as two values, netted by
+   * the caller (one over and one under may cancel here, which is why the
+   * chart cannot add the series up itself). One per period. Given, a column
+   * at rest draws this one slot in neutral ink and shows its series only
+   * when expanded. Omitted, every column is always its series.
+   */
+  readonly totals?: readonly SlotStackSlot[];
+  /**
+   * When a column shows its per-series slots instead of its total:
+   * "hover" (the default) for the column under the pointer, "always", or
+   * "never". Without `totals` there is nothing to collapse to, so every
+   * column is its series whatever this says. Data, not a curried look: a
+   * screen may flip it at run time.
+   */
+  readonly expand?: SlotStackExpand;
   /** The periods on the x axis, ascending (month indices, say). */
   readonly periods: readonly number[];
   /** A period's name: the x tick and the hover text. */
@@ -138,7 +168,9 @@ export const SlotStackChart: Component<SlotStackChartProps> = (props) => {
     (): SlotStackWords => ({ ...SLOT_STACK_WORDS, ...props.words }),
   );
   const axis = createMemo(() =>
-    targetBarAxis(props.yMax ?? slotStackTallest(props.series)),
+    targetBarAxis(
+      props.yMax ?? slotStackTallest(props.series, props.totals),
+    ),
   );
   const chrome = createMemo(() =>
     slotStackChrome(box(), axis(), props.periods.length, props.margin),
@@ -171,7 +203,10 @@ export const SlotStackChart: Component<SlotStackChartProps> = (props) => {
           paintId={paintId}
           band={props.columnWidth ?? 0.62}
           gap={props.slotGap ?? 2}
-          heavy={chrome().heavy}
+          totals={props.totals}
+          expand={props.expand}
+          periods={props.periods}
+          totalLabel={words().total}
           title={(placed, part, value, status) =>
             slotPartTitle(
               placed,

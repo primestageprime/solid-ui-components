@@ -8,15 +8,26 @@
 //
 //   filled     solid, from the slot's bottom; its border is solid
 //   unfilled   the rest of the container: a dashed outline on the sides and
-//              the top, and NO line where the fill ends
+//              the top, and NO line where the fill ends (an empty container
+//              is dashed all the way round)
 //   overflow   hatched, straight out of the container with NO line at the
-//              join, and a heavy border on its top and sides only
+//              join and NO border of its own (Peter: "I don't want the white
+//              outline if there's overflow")
 //
 // The caller states every part. Nothing here derives one from another: a
 // slot is as tall as `filled + unfilled + overflow`, drawn in that order.
 // `expected` is carried for the hover text and the table only.
 //
-// Two stages, both pure:
+// TWO STATES PER COLUMN (Peter, 2026-11-10: "By default show just the two
+// values. (expected and actual)... When hovering with a mouse, show the
+// breakdown by type"). Given `totals`, a column at rest is ONE neutral slot,
+// the column's own expected and actual; the hovered column is its per-series
+// slots. The two may differ in height and nothing holds it steady. Which
+// columns are expanded is the whole of `visibleSlots`, so the rule is one
+// function to change.
+//
+// Three stages, all pure:
+//   visibleSlots which slots a column shows: its total, or its series
 //   placeSlots   where each slot sits in its column, in DATA units
 //   layoutSlots  the same slots as whole-pixel boxes, fills and border paths
 // ============================================
@@ -132,10 +143,85 @@ export const placeSlots = (
   );
 };
 
-/** The tallest column: what the y axis has to hold. */
+/** When a column shows its per-series slots instead of its total. */
+export type SlotStackExpand = "hover" | "always" | "never";
+
+/** The place a column's TOTAL slot reports as its series: no series at all. */
+export const SLOT_STACK_TOTAL_INDEX = -1;
+
+const inPeriods = (
+  series: readonly SlotStackSeries[],
+  keep: (period: number) => boolean,
+): readonly SlotStackSeries[] =>
+  map(
+    (one: SlotStackSeries) => ({
+      ...one,
+      slots: filter((slot: SlotStackSlot) => keep(slot.period), one.slots),
+    }),
+    series,
+  );
+
+/**
+ * The period under the pointer: the one whose column band holds `hoverX`
+ * (a period is one data unit wide, centred on its number), or null.
+ */
+export const hoveredPeriod = (
+  hoverX: number | null,
+  periods: readonly number[],
+): number | null => {
+  if (hoverX === null) return null;
+  const period = Math.round(hoverX) + 0; // + 0: never report -0
+  return periods.includes(period) ? period : null;
+};
+
+/**
+ * What each column shows, placed. THE WHOLE STATE RULE:
+ *
+ *   no `totals`        every column is its per-series slots
+ *   expand "always"    the same, whatever `totals` holds
+ *   expand "never"     every column is its one total slot
+ *   expand "hover"     the hovered column is its series; the rest are totals
+ *
+ * A total slot reports `SLOT_STACK_TOTAL_INDEX` as its series, which is what
+ * paints it neutral, and `totalLabel` as its name.
+ */
+export const visibleSlots = (
+  series: readonly SlotStackSeries[],
+  totals: readonly SlotStackSlot[] | undefined,
+  expand: SlotStackExpand,
+  hovered: number | null,
+  totalLabel: string,
+): readonly PlacedSlot[] => {
+  if (totals === undefined || expand === "always") return placeSlots(series);
+  const expanded = (period: number): boolean =>
+    expand === "hover" && period === hovered;
+  const total: SlotStackSeries = {
+    id: "total",
+    label: totalLabel,
+    slots: filter((slot: SlotStackSlot) => !expanded(slot.period), totals),
+  };
+  return [
+    ...placeSlots(inPeriods(series, expanded)),
+    ...map(
+      (one: PlacedSlot) => ({ ...one, seriesIndex: SLOT_STACK_TOTAL_INDEX }),
+      placeSlots([total]),
+    ),
+  ];
+};
+
+/**
+ * The tallest column in EITHER state: what the y axis has to hold, so the
+ * axis stays put while a hovered column changes height.
+ */
 export const slotStackTallest = (
   series: readonly SlotStackSeries[],
-): number => Math.max(0, ...map((p: PlacedSlot) => p.top, placeSlots(series)));
+  totals: readonly SlotStackSlot[] = [],
+): number =>
+  Math.max(
+    0,
+    ...map((p: PlacedSlot) => p.top, placeSlots(series)),
+    ...map(slotHeight, totals),
+  );
 
 /** What paints a fill: the part it belongs to, and its status. */
 export type SlotFillPaint =
@@ -173,8 +259,6 @@ export interface SlotBox {
   readonly solid: string | null;
   /** The unfilled part's dashed outline, or null when the container is full. */
   readonly dashed: string | null;
-  /** The overflow's heavy border, or null when nothing overflows. */
-  readonly heavy: string | null;
 }
 
 export interface SlotLayoutOptions {
@@ -184,8 +268,6 @@ export interface SlotLayoutOptions {
   readonly gap: number;
   /** The container outline's stroke width, in px. */
   readonly thin: number;
-  /** The overflow border's stroke width, in px. */
-  readonly heavy: number;
 }
 
 const PAINT: Record<
@@ -280,9 +362,11 @@ const fillsOf = (
  *
  *   solid   sides and bottom of the fill; the top too once the container is
  *           full and nothing overflows
- *   dashed  sides and top of what is unfilled, never the bottom: the fill
- *           (or the slot's floor) is where it opens
- *   heavy   sides and top of the overflow, never the join
+ *   dashed  sides and top of what is unfilled, open where the fill ends; a
+ *           container with nothing in it has no fill to open onto, so it is
+ *           closed all the way round
+ *
+ * The overflow has no border at all: its stripes are the whole mark.
  */
 export const layoutSlots = (
   placed: readonly PlacedSlot[],
@@ -312,7 +396,6 @@ export const layoutSlots = (
         ? within(Math.round(ys(one.fillTop)), expectedTop, bottom)
         : expectedTop;
     const t = options.thin / 2;
-    const h = options.heavy / 2;
     const full = slot.unfilled <= 0 && slot.overflow <= 0;
     return {
       placed: one,
@@ -350,11 +433,9 @@ export const layoutSlots = (
           : null,
       dashed:
         slot.unfilled > 0 && fillTop > expectedTop
-          ? `M${left + t} ${fillTop}V${expectedTop + t}H${right - t}V${fillTop}`
-          : null,
-      heavy:
-        slot.overflow > 0 && expectedTop > top
-          ? `M${left + h} ${expectedTop}V${top + h}H${right - h}V${expectedTop}`
+          ? fillTop >= bottom
+            ? `M${left + t} ${expectedTop + t}V${bottom - t}H${right - t}V${expectedTop + t}Z`
+            : `M${left + t} ${fillTop}V${expectedTop + t}H${right - t}V${fillTop}`
           : null,
     };
   }, placed);
@@ -369,9 +450,12 @@ export interface SlotStackWords {
   readonly invoiced: string;
   readonly confirmed: string;
   readonly planned: string;
+  /** What a column's own slot is called, where a series' name would go. */
+  readonly total: string;
 }
 
 export const SLOT_STACK_WORDS: SlotStackWords = {
+  total: "Total",
   expected: "expected",
   filled: "filled",
   unfilled: "not yet filled",
@@ -401,9 +485,14 @@ export const slotPartTitle = (
   return `${who}: ${valueFormat(value)} ${what}${of}`;
 };
 
-/** Headless observation: one row per slot, the numbers the chart draws. */
+/**
+ * Headless observation: one row per slot, the numbers the chart draws. The
+ * per-series slots come first; given `totals`, each column's own slot
+ * follows as series "Total" (both states, whichever is on screen).
+ */
 export const slotStackRows = (
   series: readonly SlotStackSeries[],
+  totals: readonly SlotStackSlot[] = [],
 ): readonly Record<string, string | number>[] =>
   map(
     (p: PlacedSlot) => ({
@@ -416,7 +505,12 @@ export const slotStackRows = (
       base: p.base,
       top: p.top,
     }),
-    placeSlots(series),
+    [
+      ...placeSlots(series),
+      ...placeSlots([
+        { id: "total", label: SLOT_STACK_WORDS.total, slots: totals },
+      ]),
+    ],
   );
 
 /** Chart's inset at full size: room for a money tick on the left. */
@@ -441,15 +535,12 @@ export interface SlotStackChrome {
   /** Keep every Nth period label (1 = all). */
   readonly xLabelStep: number;
   readonly margin: Margin;
-  /** The overflow border's width: thinner where the columns are small. */
-  readonly heavy: number;
 }
 
 /**
  * What a box of this size can afford, on StackedTimelineChart's thresholds:
- * a SHORT box gets a tighter inset, a 2px heavy border and at most four y
- * labels; a NARROW one keeps every other period label once there are more
- * than six.
+ * a SHORT box gets a tighter inset and at most four y labels; a NARROW one
+ * keeps every other period label once there are more than six.
  */
 export const slotStackChrome = (
   box: { readonly width: number; readonly height: number },
@@ -469,6 +560,5 @@ export const slotStackChrome = (
     gridSteps: Math.max(1, axis.ticks.length - 1),
     xLabelStep: narrow && periods > 6 ? 2 : 1,
     margin: { ...(short ? SHORT_MARGIN : FULL_MARGIN), ...callerMargin },
-    heavy: short || narrow ? 2 : 3,
   };
 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render } from "@solidjs/testing-library";
+import { fireEvent, render } from "@solidjs/testing-library";
 import {
   type SlotStackSeries,
   type SlotStackSlot,
@@ -41,7 +41,7 @@ const count = (container: HTMLElement, selector: string): number =>
   container.querySelectorAll(selector).length;
 
 describe("SlotStackChart", () => {
-  it("draws each slot's parts: fills, dashed containers and heavy overflow borders", () => {
+  it("draws each slot's parts: fills, dashed containers and a borderless overflow", () => {
     const { container } = mount();
     // Three solid fills in March, one hatched overflow.
     expect(count(container, '.sui-slot-stack__fill[data-part="filled"]')).toBe(3);
@@ -49,10 +49,98 @@ describe("SlotStackChart", () => {
     // Cabinets in March, and both April containers, are still dashed.
     expect(count(container, ".sui-slot-stack__dashed")).toBe(3);
     expect(count(container, ".sui-slot-stack__unfilled")).toBe(3);
-    // Only Remodels overflows.
-    expect(count(container, ".sui-slot-stack__heavy")).toBe(1);
-    // A fill's border is solid; the two empty April containers have none.
+    // Remodels overflows, and nothing outlines it: the only paths are the
+    // three solid fill borders and the three dashed containers.
     expect(count(container, ".sui-slot-stack__solid")).toBe(3);
+    expect(count(container, ".sui-slot-stack path")).toBe(6);
+  });
+
+  describe("two states: the column's two values at rest, its series under the pointer", () => {
+    /* March nets to expected 90 / actual 93; April is expectation only. */
+    const TOTALS = [slot(0, 90, 90, 0, 3), slot(1, 65, 0, 65, 0)];
+    const mountTwo = (expand?: "hover" | "always" | "never") =>
+      render(() => (
+        <SlotStackChart
+          series={SERIES}
+          totals={TOTALS}
+          expand={expand}
+          periods={[0, 1]}
+          periodLabel={(p) => MONTHS[p] ?? ""}
+          valueFormat={(v) => `$${v}k`}
+        />
+      ));
+    const slots = (container: HTMLElement): string[] =>
+      [...container.querySelectorAll(".sui-slot-stack__slot")].map((s) => s.getAttribute("data-slot") ?? "");
+    /* jsdom lays nothing out, so the chart draws at its 640 x 220 fallback:
+       the plot runs from x 52 to 628, and each of the two periods is 288px. */
+    const overMarch = { clientX: 52 + 144, clientY: 100 };
+    const overApril = { clientX: 52 + 432, clientY: 100 };
+    const tallest = (container: HTMLElement): number =>
+      Math.min(
+        ...[...container.querySelectorAll(".sui-slot-stack__fill, .sui-slot-stack__unfilled")].map((r) =>
+          Number(r.getAttribute("y")),
+        ),
+      );
+
+    it("at rest draws ONE neutral slot per column", () => {
+      const { container } = mountTwo();
+      expect(slots(container)).toEqual(["total", "total"]);
+      const fills = [...container.querySelectorAll(".sui-slot-stack__fill")];
+      expect(fills.map((f) => f.getAttribute("data-part"))).toEqual(["filled", "overflow"]);
+      expect(fills[0].getAttribute("fill")).toBe("var(--sui-text-secondary)");
+      const texts = [...container.querySelectorAll(".sui-slot-stack title")].map((t) => t.textContent);
+      expect(texts).toEqual([
+        "Total · Mar: $90k filled ($90k expected)",
+        "Total · Mar: $3k above expected",
+        "Total · Apr: $65k not yet filled ($65k expected)",
+      ]);
+    });
+
+    it("breaks the hovered column, and only it, into its series; leaving restores it", () => {
+      const { container } = mountTwo();
+      const svg = container.querySelector("svg") as SVGSVGElement;
+      fireEvent.pointerMove(svg, overMarch);
+      expect(slots(container)).toEqual(["series", "series", "series", "total"]);
+      expect(
+        [...container.querySelectorAll('.sui-slot-stack__fill[data-part="filled"]')].map((f) => f.getAttribute("fill")),
+      ).toEqual([
+        "var(--sui-series-1, currentColor)",
+        "var(--sui-series-2, currentColor)",
+        "var(--sui-series-3, currentColor)",
+      ]);
+      fireEvent.pointerMove(svg, overApril);
+      expect(slots(container)).toEqual(["series", "series", "total"]);
+      fireEvent.pointerLeave(svg);
+      expect(slots(container)).toEqual(["total", "total"]);
+    });
+
+    it("does not hold the column's height: March stands taller as series (105) than as two values (93)", () => {
+      const { container } = mountTwo();
+      const svg = container.querySelector("svg") as SVGSVGElement;
+      const atRest = tallest(container);
+      const axisText = (): string[] =>
+        [...container.querySelectorAll("svg text")].map((t) => t.textContent ?? "");
+      const ticksAtRest = axisText();
+      expect(ticksAtRest).toContain("$150k");
+      fireEvent.pointerMove(svg, overMarch);
+      expect(tallest(container)).toBeLessThan(atRest);
+      // The y axis is fitted to the taller state, so its labels do not move.
+      expect(axisText()).toEqual(ticksAtRest);
+    });
+
+    it("expand 'always' and 'never' ignore the pointer", () => {
+      const always = mountTwo("always").container;
+      expect(slots(always)).toEqual(["series", "series", "series", "series", "series"]);
+      const never = mountTwo("never").container;
+      fireEvent.pointerMove(never.querySelector("svg") as SVGSVGElement, overMarch);
+      expect(slots(never)).toEqual(["total", "total"]);
+    });
+
+    it("hovering adds nothing focusable and no control", () => {
+      const { container } = mountTwo();
+      fireEvent.pointerMove(container.querySelector("svg") as SVGSVGElement, overMarch);
+      expect(count(container, "[tabindex], [role='button'], [role='slider'], button, input, a")).toBe(0);
+    });
   });
 
   it("paints the overflow with the series' own hatch and the fill with its colour", () => {
@@ -128,7 +216,7 @@ describe("SlotStackChart", () => {
   it("draws an empty chart for no data", () => {
     const { container } = mount([]);
     expect(count(container, "svg")).toBe(1);
-    expect(count(container, ".sui-slot-stack rect")).toBe(0);
+    expect(count(container, ".sui-slot-stack__slot")).toBe(0);
   });
 
   it("createSlotStackChart curries a screen's words", () => {
@@ -161,12 +249,13 @@ describe("SlotStackLegend", () => {
       "Deck Builds",
       "Solid = filled",
       "Dashed = not yet filled",
-      "Striped, heavy border = above expected",
+      "Striped = above expected",
     ])
       expect(container.textContent).toContain(label);
     expect(container.textContent).not.toContain("Translucent");
     expect(count(container, ".sui-slot-stack__dashed")).toBe(1);
-    expect(count(container, ".sui-slot-stack__heavy")).toBe(1);
+    expect(count(container, '.sui-slot-stack__fill[data-part="overflow"]')).toBe(1);
+    expect(container.textContent).not.toContain("heavy");
     expect(count(container, "[tabindex], button")).toBe(0);
   });
 

@@ -4,12 +4,20 @@
 // Owns CSS (SlotStackChart.css). Composes HatchPattern (SvgMarks, Depth 1).
 //
 // Draws every slot of a slot stack inside the chart's plot: the fills, the
-// transparent rest of each container, and the three border paths. The
+// transparent rest of each container, and the two border paths (solid round
+// the fill, dashed round what is unfilled; the overflow has no border). The
 // geometry is `layoutSlots` (./slotStackGeometry.ts), recomputed from the
 // chart's scales, so the marks follow a chart that measures its own box.
 //
-// READ-ONLY BY CONSTRUCTION: no handler, no role, no tabindex, no grip. A
-// part answers the pointer with an SVG <title> and nothing else.
+// TWO STATES. Given `totals`, a column at rest is one NEUTRAL slot (its own
+// expected and actual) and the column under the pointer is its per-series
+// slots in the series colours. Which is which is `visibleSlots`; this file
+// only feeds it the chart's own `hoverX`. Nothing holds the height steady
+// between the two, and nothing animates it.
+//
+// READ-ONLY BY CONSTRUCTION: no handler, no role, no tabindex, no grip. The
+// hover is read from the Chart root's pointer signal, so this mark adds no
+// listener of its own; a part answers the pointer with an SVG <title>.
 // ============================================
 import { type Component, For, Index, Show, createMemo } from "solid-js";
 import { useChart } from "../Chart/context";
@@ -19,16 +27,32 @@ import {
   type PlacedSlot,
   type SlotFill,
   type SlotFillPaint,
+  type SlotStackExpand,
   type SlotStackSeries,
+  type SlotStackSlot,
   type SlotStackStatus,
+  SLOT_STACK_TOTAL_INDEX,
+  hoveredPeriod,
   layoutSlots,
-  placeSlots,
+  visibleSlots,
 } from "./slotStackGeometry";
 import "./SlotStackChart.css";
 
 export interface SlotStackMarksProps {
   /** The stack, BOTTOM FIRST. A series' place is its colour. */
   readonly series: readonly SlotStackSeries[];
+  /**
+   * Each column's own slot (its expected and actual, netted by the caller).
+   * Given, a column at rest draws this one slot in neutral and only an
+   * expanded column draws its series. Omitted, every column is its series.
+   */
+  readonly totals?: readonly SlotStackSlot[];
+  /** When a column shows its series. Default "hover". Needs `totals`. */
+  readonly expand?: SlotStackExpand;
+  /** The chart's periods: the columns the pointer can be over. */
+  readonly periods: readonly number[];
+  /** What a column's own slot is called in its hover text. */
+  readonly totalLabel: string;
   /** Unique per chart: the hatch patterns' ids are built on it. */
   readonly paintId: string;
   /** A part's hover text. */
@@ -42,8 +66,6 @@ export interface SlotStackMarksProps {
   readonly band: number;
   /** Pixels of ground between two slots of a column. */
   readonly gap: number;
-  /** The overflow border's stroke width, in px. */
-  readonly heavy: number;
   /** A series' paint by its place. Default: the theme's series tokens. */
   readonly paintOfSeries?: (seriesIndex: number) => string;
 }
@@ -51,7 +73,10 @@ export interface SlotStackMarksProps {
 /** The container outline's stroke width, in px. */
 const THIN = 1.5;
 
-/* The textures, in the series colour. The stripes are the mockup's: a 2.4px
+/** A column's own slot belongs to no series: it is drawn in neutral ink. */
+const NEUTRAL = "var(--sui-text-secondary)";
+
+/* The textures, in the slot's colour. The stripes are the mockup's: a 2.4px
    stripe on a 6px tile, over a ground of the same colour. */
 const STRIPES = { stripe: 2.4, gap: 3.6 };
 const TEXTURES: readonly {
@@ -68,41 +93,62 @@ const TEXTURES: readonly {
 export const SlotStackMarks: Component<SlotStackMarksProps> = (props) => {
   const ctx = useChart();
   const colorOf = (i: number): string =>
-    (props.paintOfSeries ?? seriesPaint)(i);
+    i === SLOT_STACK_TOTAL_INDEX
+      ? NEUTRAL
+      : (props.paintOfSeries ?? seriesPaint)(i);
   const patternId = (paint: SlotFillPaint, i: number): string =>
-    `${props.paintId}-${paint}-${i}`;
+    `${props.paintId}-${paint}-${i === SLOT_STACK_TOTAL_INDEX ? "total" : i}`;
   const paintOf = (fill: SlotFill, i: number): string =>
     fill.paint === "solid" ? colorOf(i) : `url(#${patternId(fill.paint, i)})`;
+
+  /* The one piece of state, and it is the Chart root's: where the pointer is.
+     A memo, so moving WITHIN a column re-places nothing. */
+  const hovered = createMemo(() => hoveredPeriod(ctx.hoverX(), props.periods));
 
   /* A memo over the scales, never a read inside a row: `For` keeps a row's
      nodes, so a scale read there runs once and the marks would stay laid out
      for the chart's first (fallback) size. */
   const boxes = createMemo(() =>
-    layoutSlots(placeSlots(props.series), ctx.xScale(), ctx.yScale(), {
-      band: props.band,
-      gap: props.gap,
-      thin: THIN,
-      heavy: props.heavy,
-    }),
+    layoutSlots(
+      visibleSlots(
+        props.series,
+        props.totals,
+        props.expand ?? "hover",
+        hovered(),
+        props.totalLabel,
+      ),
+      ctx.xScale(),
+      ctx.yScale(),
+      { band: props.band, gap: props.gap, thin: THIN },
+    ),
   );
 
   return (
     <g class="sui-slot-stack" clip-path={ctx.clip.plotPathUrl()}>
-      <Index each={props.series}>
-        {(_series, i) => (
-          <For each={TEXTURES}>
-            {(texture) => (
-              <texture.Pattern id={patternId(texture.paint, i)} color={colorOf(i)} />
-            )}
-          </For>
+      <For each={TEXTURES}>
+        {(texture) => (
+          <>
+            <texture.Pattern
+              id={patternId(texture.paint, SLOT_STACK_TOTAL_INDEX)}
+              color={NEUTRAL}
+            />
+            <Index each={props.series}>
+              {(_series, i) => (
+                <texture.Pattern id={patternId(texture.paint, i)} color={colorOf(i)} />
+              )}
+            </Index>
+          </>
         )}
-      </Index>
+      </For>
       <For each={boxes()}>
         {(box) => {
           const i = box.placed.seriesIndex;
           const slot = box.placed.slot;
           return (
-            <>
+            <g
+              class="sui-slot-stack__slot"
+              data-slot={i === SLOT_STACK_TOTAL_INDEX ? "total" : "series"}
+            >
               <For each={box.fills}>
                 {(fill) => (
                   <rect
@@ -155,16 +201,7 @@ export const SlotStackMarks: Component<SlotStackMarksProps> = (props) => {
                   />
                 )}
               </Show>
-              <Show when={box.heavy}>
-                {(d) => (
-                  <path
-                    class="sui-slot-stack__heavy"
-                    d={d()}
-                    stroke-width={props.heavy}
-                  />
-                )}
-              </Show>
-            </>
+            </g>
           );
         }}
       </For>

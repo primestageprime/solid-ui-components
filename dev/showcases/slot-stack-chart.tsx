@@ -1,4 +1,10 @@
-// SlotStackChart showcase — the stacked-dollars mockup, scenario by scenario
+// SlotStackChart showcase. FIRST the two states (Peter, 2026-11-10: "By
+// default show just the two values. (expected and actual)... When hovering
+// with a mouse, show the breakdown by type"): a six-month run that draws one
+// neutral container per month and breaks the hovered month into its types,
+// beside the same run forced collapsed and forced expanded.
+//
+// Then the stacked-dollars mockup, scenario by scenario
 // (thorcasting #4451, treatment B): one slot at a time (empty container,
 // full, part-filled, overflow), three series mixed in one column, a job whose
 // money lands late, a six-period run at full size and at a small panel's
@@ -59,10 +65,10 @@ const seriesOf = (
 
 /* One slot at a time: Remodels in March, $40k expected. */
 const ONE = [
-  { title: "1. Expected only", note: "An empty container: all dashed, open at the bottom.", actual: 0 },
+  { title: "1. Expected only", note: "An empty container: dashed all the way round.", actual: 0 },
   { title: "2. On target", note: "Full: the border is solid all the way round.", actual: 40 },
   { title: "3. Under", note: "Filling up: solid as far as the money, dashed above, no line between.", actual: 28 },
-  { title: "4. Over", note: "Overflowing: the stripes leave the container with no line at the join.", actual: 52 },
+  { title: "4. Over", note: "Overflowing: the stripes leave the container with no line at the join and no border.", actual: 52 },
 ];
 const oneSlot = (actual: number): readonly SlotStackSeries[] => [
   { id: "Remodels", label: "Remodels", slots: [split(2, 40, actual)] },
@@ -82,15 +88,30 @@ const LATE: readonly SlotStackSeries[] = [
 ];
 
 /* 7. Six months, expected / actual in $ thousands, per type. */
-const RUN = seriesOf([
+const RUN_ROWS: readonly (readonly (readonly [number, number])[])[] = [
   [[30, 30], [20, 20], [10, 10]],
   [[40, 28], [20, 20], [10, 14]],
   [[40, 55], [30, 18], [20, 20]],
   [[35, 35], [30, 38], [15, 15]],
   [[50, 20], [25, 10], [20, 0]],
   [[40, 0], [20, 0], [25, 0]],
-]);
+];
+const RUN = seriesOf(RUN_ROWS);
 const PERIODS = [0, 1, 2, 3, 4, 5];
+
+/* Each month's OWN two values, netted by the caller: the month's expected
+   total against its actual total. March nets to $3k over although one type
+   is $15k over and another $12k under, which is why the chart is handed
+   these and never adds the types up itself. */
+const RUN_TOTALS: readonly SlotStackSlot[] = map(
+  (row: readonly (readonly [number, number])[], period: number) =>
+    split(
+      period,
+      row.reduce((sum, [expected]) => sum + expected, 0),
+      row.reduce((sum, [, actual]) => sum + actual, 0),
+    ),
+  RUN_ROWS,
+);
 
 /* Status sub-fills: the filled and overflow parts, by status. */
 const STATUSES: readonly SlotStackSeries[] = [
@@ -122,6 +143,47 @@ const label = (period: number): string => MONTHS[period] ?? "";
 
 export const SlotStackChartShowcase: Component = () => (
   <div class="component-section component-section--full">
+    <div class="example-group">
+      <SectionTitle>Two values by default, the breakdown on hover</SectionTitle>
+      <MutedBody>
+        Each month is one neutral container: what was expected, and the money
+        filling it or overflowing it. Move the pointer over a month and that
+        month alone breaks into its types. Its height is not held: March
+        stands at $93k as two values and $105k as types.
+      </MutedBody>
+      <SlotStackLegend series={RUN} words={WORDS} />
+      <div class="slot-stack-chart-demo slot-stack-chart-demo--run">
+        <DollarStack
+          series={RUN}
+          totals={RUN_TOTALS}
+          periods={PERIODS}
+          periodLabel={label}
+          valueFormat={money}
+          now={3.5}
+        />
+      </div>
+      <div class="slot-stack-chart-demo-row">
+        <div class="slot-stack-chart-demo-card">
+          <CaptionLabel>At a small panel's size, on hover</CaptionLabel>
+          <div class="slot-stack-chart-demo slot-stack-chart-demo--small">
+            <DollarStack series={RUN} totals={RUN_TOTALS} periods={PERIODS} periodLabel={label} valueFormat={money} />
+          </div>
+        </div>
+        <div class="slot-stack-chart-demo-card">
+          <CaptionLabel>expand="never": always the two values</CaptionLabel>
+          <div class="slot-stack-chart-demo slot-stack-chart-demo--small">
+            <DollarStack series={RUN} totals={RUN_TOTALS} expand="never" periods={PERIODS} periodLabel={label} valueFormat={money} />
+          </div>
+        </div>
+        <div class="slot-stack-chart-demo-card">
+          <CaptionLabel>expand="always": always the types</CaptionLabel>
+          <div class="slot-stack-chart-demo slot-stack-chart-demo--small">
+            <DollarStack series={RUN} totals={RUN_TOTALS} expand="always" periods={PERIODS} periodLabel={label} valueFormat={money} />
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="example-group">
       <SectionTitle>One slot at a time</SectionTitle>
       <MutedBody>
@@ -170,7 +232,7 @@ export const SlotStackChartShowcase: Component = () => (
             <DollarStack series={LATE} periods={[2, 3, 4, 5]} periodLabel={label} valueFormat={money} />
           </div>
           <MutedBody>
-            May is an empty dashed container; June is all overflow, heavy from
+            May is an empty dashed container; June is all overflow, striped from
             the floor, because nothing was expected there.
           </MutedBody>
         </div>
@@ -178,12 +240,12 @@ export const SlotStackChartShowcase: Component = () => (
     </div>
 
     <div class="example-group">
-      <SectionTitle>7. A six-period run</SectionTitle>
+      <SectionTitle>7. A six-period run, always by type (no totals given)</SectionTitle>
       <SlotStackLegend series={RUN} words={WORDS} />
       <div class="slot-stack-chart-demo slot-stack-chart-demo--run">
         <DollarStack series={RUN} periods={PERIODS} periodLabel={label} valueFormat={money} now={3.5} />
       </div>
-      <CaptionLabel>At a small panel's size (300 x 130): a tighter inset and a 2px heavy border.</CaptionLabel>
+      <CaptionLabel>At a small panel's size (300 x 130): a tighter inset.</CaptionLabel>
       <div class="slot-stack-chart-demo slot-stack-chart-demo--small">
         <DollarStack series={RUN} periods={PERIODS} periodLabel={label} valueFormat={money} now={3.5} />
       </div>
