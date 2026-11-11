@@ -215,7 +215,7 @@ describe("placeSlotLabels, stress: a 130px plot with narrow columns", () => {
     expect(tops.slice(1).every((y, i) => y - tops[i] >= 13)).toBe(true);
     // The column's own parts stay in view: no figure or chip covers them.
     const column = boxesOf(RUN).filter((b) => b.placed.slot.period === 2)[0];
-    for (const l of labels) expect(l.chip && l.chip.x).toBeGreaterThanOrEqual(column.x + column.width);
+    for (const l of labels) expect(l.chip?.x).toBeGreaterThanOrEqual(column.x + column.width);
     expect(sound(labels, boxesOf(RUN), plot)).toEqual([]);
   });
 
