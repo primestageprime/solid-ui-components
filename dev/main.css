@@ -2995,6 +2995,8 @@ th:has(.tf-th-center) .hud-table__header-content {
 .slot-stack-chart-demo--wide { width: 420px; max-width: 100%; height: 240px; }
 .slot-stack-chart-demo--run { height: 300px; max-width: 640px; }
 .slot-stack-chart-demo--small { width: 300px; height: 130px; }
+/* The mockup's own frame, for a side-by-side with it. */
+.slot-stack-chart-demo--mock { width: 680px; max-width: 100%; height: 270px; }
 /* The label stress run: a 130px plot (156px box less its insets), wide. */
 .slot-stack-chart-demo--stress { width: 680px; max-width: 100%; height: 156px; }
 .slot-stack-chart-demo-row {

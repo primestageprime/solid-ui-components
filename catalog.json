@@ -7952,7 +7952,7 @@
     "showcase": "#/slot-stack-chart",
     "since": "Unreleased",
     "file": "src/components/SlotStackChart/SlotStackChart.tsx",
-    "line": 285
+    "line": 292
   },
   {
     "name": "createSpanBadge",

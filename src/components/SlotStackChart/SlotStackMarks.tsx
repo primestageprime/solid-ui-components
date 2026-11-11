@@ -43,7 +43,7 @@ import {
   labelledPeriods,
   placeSlotLabels,
 } from "./slotStackLabels";
-import { filter } from "../../fn";
+import { filter, find } from "../../fn";
 import "./SlotStackChart.css";
 
 export interface SlotStackMarksProps {
@@ -88,6 +88,11 @@ export interface SlotStackMarksProps {
   readonly labels?: SlotStackLabels;
   /** A part's amount as label text; the sign is added by the placement. */
   readonly labelFormat: (value: number) => string;
+  /**
+   * The line above a labelled column, from that column's own `totals` slot
+   * ("$79k of $65k"). Omitted, or with no `totals`, no line is drawn.
+   */
+  readonly capText?: (total: SlotStackSlot) => string;
 }
 
 /** The container outline's stroke width, in px. */
@@ -164,6 +169,15 @@ export const SlotStackMarks: Component<SlotStackMarksProps> = (props) => {
         height: ctx.innerHeight(),
       },
       format: props.labelFormat,
+      cap: (period) => {
+        const total = find(
+          (slot: SlotStackSlot) => slot.period === period,
+          props.totals ?? [],
+        );
+        return total === undefined || props.capText === undefined
+          ? null
+          : props.capText(total);
+      },
     });
   });
 

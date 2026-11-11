@@ -55,8 +55,19 @@
   stroke-linejoin: round;
 }
 
-/* Over stripes, and for a callout stacked above its column, the figure sits
-   on a chip of ground. */
+/* The line above the column ("$79k of $65k"): quieter than the amounts, and
+   haloed like a callout, since it crosses grid lines and the NOW rule. */
+.sui-slot-stack__label--cap {
+  font-weight: 500;
+  fill: var(--sui-text-secondary);
+  paint-order: stroke fill;
+  stroke: var(--sui-chart-surface, var(--sui-bg-primary));
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* Over stripes, and for a figure that lies over another column, the figure
+   sits on a chip of ground. */
 .sui-slot-stack__chip {
   fill: var(--sui-chart-surface, var(--sui-bg-primary));
   fill-opacity: 0.85;

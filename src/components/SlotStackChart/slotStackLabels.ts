@@ -39,12 +39,17 @@
 // the width of 11px tabular figures, rounded up.
 // ============================================
 import { filter, flatMap, map, sortBy } from "../../fn";
-import type { SlotBox } from "./slotStackGeometry";
+import type { SlotBox, SlotStackSlot } from "./slotStackGeometry";
 
 /** Which columns carry their amounts. */
 export type SlotStackLabels = "hover" | "always" | "never";
 
-export type SlotLabelTone = "on-solid" | "on-stripes" | "on-open" | "callout";
+export type SlotLabelTone =
+  | "on-solid"
+  | "on-stripes"
+  | "on-open"
+  | "callout"
+  | "cap";
 
 /** A pixel box. */
 export interface LabelRect {
@@ -59,9 +64,10 @@ export interface SlotLabel {
   /** Stable per part: series, period, part and status. */
   readonly key: string;
   readonly period: number;
-  readonly part: "filled" | "unfilled" | "overflow";
+  /** The part the amount belongs to; "column" for the line above a column. */
+  readonly part: "filled" | "unfilled" | "overflow" | "column";
   readonly text: string;
-  readonly kind: "nested" | "callout";
+  readonly kind: "nested" | "callout" | "cap";
   /** Which side of its column a callout sits on; null for a nested label. */
   readonly side: "right" | "left" | null;
   /**
@@ -89,7 +95,16 @@ export interface SlotLabelOptions {
   readonly format: (value: number) => string;
   /** Width of one character of the label font, in px. Default 6.5. */
   readonly charWidth?: number;
+  /**
+   * The LINE ABOVE a labelled column ("$79k of $65k"), or null for none.
+   * It is the caller's sentence about the column's own two values; this file
+   * only seats it.
+   */
+  readonly cap?: (period: number) => string | null;
 }
+
+/** The line above a column keeps this far from the column's top. */
+const CAP_GAP = 4;
 
 /** A nested label needs a part at least this tall. */
 export const SLOT_LABEL_MIN_HEIGHT = 15;
@@ -110,6 +125,23 @@ const MINUS = "−";
  * Which periods are labelled: the hovered one, all of them, or none. The
  * same pointer that expands a column labels it.
  */
+/**
+ * The line above a column, from the column's OWN slot as the caller states
+ * it: "<arrived> of <expected>", where arrived is the slot's filled plus its
+ * overflow (the two parts that are money in hand), or "<expected-only word>
+ * <expected>" when nothing has arrived. Never a sum over the series.
+ */
+export const slotCapText = (
+  total: SlotStackSlot,
+  format: (value: number) => string,
+  words: { readonly of: string; readonly expectedOnly: string },
+): string => {
+  const arrived = total.filled + total.overflow;
+  return arrived > 0
+    ? `${format(arrived)} ${words.of} ${format(total.expected)}`
+    : `${words.expectedOnly} ${format(total.expected)}`;
+};
+
 export const labelledPeriods = (
   labels: SlotStackLabels,
   hovered: number | null,
@@ -253,8 +285,56 @@ export const placeSlotLabels = (
       };
     }, filter(nests, parts));
 
-    const loose = filter((p: Part) => !nests(p), parts);
-    if (loose.length === 0) return nested;
+    /* The line above the column: centred, a few px over the column's top,
+       held inside the plot sideways. Where the column reaches too near the
+       plot's top for a line above it, the line sits just inside the top, on
+       a chip (it then lies over the column's own top). Callouts are kept
+       below it (see `ceiling`). */
+    const capText = options.cap?.(period) ?? null;
+    const caps: SlotLabel[] = [];
+    if (capText !== null) {
+      const width = widthOf(capText);
+      const columnTop = Math.min(...map((b: SlotBox) => b.top, column));
+      const above = columnTop - CAP_GAP - SLOT_LABEL_LINE;
+      const fits = above >= plot.y;
+      const y = fits ? above : plot.y;
+      const x = Math.min(
+        Math.max(centre, plot.x + width / 2 + SLOT_LABEL_PAD),
+        plotRight - width / 2 - SLOT_LABEL_PAD,
+      );
+      const box = { x: x - width / 2, y, width, height: SLOT_LABEL_LINE };
+      caps.push({
+        key: `${period}-cap`,
+        period,
+        part: "column",
+        text: capText,
+        kind: "cap",
+        side: null,
+        over: !fits,
+        tone: "cap",
+        x,
+        y: y + SLOT_LABEL_LINE / 2 + BASELINE,
+        anchor: "middle",
+        box,
+        chip: fits
+          ? null
+          : { x: box.x - SLOT_LABEL_PAD, y, width: width + 2 * SLOT_LABEL_PAD, height: SLOT_LABEL_LINE },
+        leader: null,
+      });
+    }
+    const capBox = caps.length > 0 ? caps[0].box : null;
+
+    /* A nested figure the line would lie over gives way to it: it becomes a
+       callout instead. Only possible when the line sits inside the top. */
+    const clear = (p: Part): boolean =>
+      capBox === null ||
+      p.y + p.height / 2 - SLOT_LABEL_LINE / 2 >= capBox.y + capBox.height;
+    const seated = filter((l: SlotLabel) => {
+      const centreY = l.box.y;
+      return capBox === null || centreY >= capBox.y + capBox.height;
+    }, nested);
+    const loose = filter((p: Part) => !nests(p) || !clear(p), parts);
+    if (loose.length === 0) return [...caps, ...seated];
 
     /* The room each side: up to the nearest other column, or the plot edge. */
     const others = filter((b: SlotBox) => b.placed.slot.period !== period, all);
@@ -278,9 +358,17 @@ export const placeSlotLabels = (
           ? "right"
           : "left";
 
+    /* Callouts start under the line above the column wherever the two could
+       meet: the line is centred on the column and may be wider than it. */
+    const textFrom = side === "right" ? right + CALLOUT_REACH : left - CALLOUT_REACH - widest;
+    const meets =
+      capBox !== null &&
+      textFrom < capBox.x + capBox.width + SLOT_LABEL_PAD &&
+      capBox.x - SLOT_LABEL_PAD < textFrom + widest;
+    const ceiling = meets && capBox !== null ? capBox.y + capBox.height : plot.y;
     const centres = spreadCentres(
       map((p: Part) => p.y + p.height / 2, loose),
-      plot.y,
+      ceiling,
       plotBottom,
     );
     const dir = side === "right" ? 1 : -1;
@@ -319,7 +407,7 @@ export const placeSlotLabels = (
         leader: `${edge + dir},${from} ${edge + dir * 5},${at} ${edge + dir * 8},${at}`,
       };
     }, loose);
-    return [...nested, ...callouts];
+    return [...caps, ...seated, ...callouts];
   };
 
   return flatMap((period: number): SlotLabel[] => {

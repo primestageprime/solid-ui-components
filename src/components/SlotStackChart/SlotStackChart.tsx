@@ -73,7 +73,7 @@ import {
   slotStackChrome,
   slotStackTallest,
 } from "./slotStackGeometry";
-import type { SlotStackLabels } from "./slotStackLabels";
+import { type SlotStackLabels, slotCapText } from "./slotStackLabels";
 
 export interface SlotStackChartProps {
   /**
@@ -233,6 +233,13 @@ export const SlotStackChart: Component<SlotStackChartProps> = (props) => {
           totalPaint={props.totalPaint}
           labels={props.labels}
           labelFormat={props.labelFormat ?? props.valueFormat}
+          capText={(total) =>
+            slotCapText(
+              total,
+              props.labelFormat ?? props.valueFormat,
+              words(),
+            )
+          }
           title={(placed, part, value, status) =>
             slotPartTitle(
               placed,

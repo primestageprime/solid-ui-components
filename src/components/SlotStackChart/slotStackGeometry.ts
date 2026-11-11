@@ -464,10 +464,16 @@ export interface SlotStackWords {
   readonly planned: string;
   /** What a column's own slot is called, where a series' name would go. */
   readonly total: string;
+  /** Joins the line above a column: "$79k of $65k". */
+  readonly of: string;
+  /** Leads that line when nothing has arrived: "exp $75k". */
+  readonly expectedOnly: string;
 }
 
 export const SLOT_STACK_WORDS: SlotStackWords = {
   total: "Total",
+  of: "of",
+  expectedOnly: "exp",
   expected: "expected",
   filled: "filled",
   unfilled: "not yet filled",

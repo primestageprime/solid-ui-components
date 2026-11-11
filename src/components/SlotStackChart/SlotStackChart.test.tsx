@@ -293,8 +293,13 @@ describe("amount labels: only for the column under the pointer", () => {
         />
       );
     });
+  /** The amounts on the parts; the line above the column is `caps`. */
   const texts = (container: HTMLElement): string[] =>
-    [...container.querySelectorAll(".sui-slot-stack__label")].map((t) => t.textContent ?? "");
+    [...container.querySelectorAll(".sui-slot-stack__label:not(.sui-slot-stack__label--cap)")].map(
+      (t) => t.textContent ?? "",
+    );
+  const caps = (container: HTMLElement): string[] =>
+    [...container.querySelectorAll(".sui-slot-stack__label--cap")].map((t) => t.textContent ?? "");
   /* The 640 x 220 fallback: plot x 52..628, two 288px periods. */
   const overMarch = { clientX: 52 + 144, clientY: 100 };
   const overApril = { clientX: 52 + 432, clientY: 100 };
@@ -319,10 +324,49 @@ describe("amount labels: only for the column under the pointer", () => {
     expect(texts(container)).toEqual([]);
   });
 
+  it("draws one line above the hovered column: arrived of expected, from the column's own totals", () => {
+    const { container } = mountLabels();
+    const svg = container.querySelector("svg") as SVGSVGElement;
+    expect(caps(container)).toEqual([]);
+    fireEvent.pointerMove(svg, overMarch);
+    // The totals say $90k filled + $3k over of $90k expected. The types
+    // would sum to $93k of $90k too, but nothing here adds them.
+    expect(caps(container)).toEqual(["$93k of $90k"]);
+    fireEvent.pointerMove(svg, overApril);
+    expect(caps(container)).toEqual(["exp $65k"]);
+    fireEvent.pointerLeave(svg);
+    expect(caps(container)).toEqual([]);
+  });
+
+  it("draws no line above a column without totals, and writes it in the curried words", () => {
+    const bare = render(() => (
+      <SlotStackChart
+        series={SERIES}
+        labels="always"
+        periods={[0, 1]}
+        periodLabel={(p) => MONTHS[p] ?? ""}
+        valueFormat={(v) => `$${v}k`}
+      />
+    ));
+    expect(caps(bare.container)).toEqual([]);
+    const Worded = createSlotStackChart({ words: { of: "against", expectedOnly: "due" } });
+    const worded = render(() => (
+      <Worded
+        series={SERIES}
+        totals={TOTALS}
+        labels="always"
+        periods={[0, 1]}
+        periodLabel={(p) => MONTHS[p] ?? ""}
+        valueFormat={(v) => `$${v}k`}
+      />
+    ));
+    expect(caps(worded.container)).toEqual(["$93k against $90k", "due $65k"]);
+  });
+
   it("gives each figure the ink of what it sits on", () => {
     const { container } = mountLabels();
     fireEvent.pointerMove(container.querySelector("svg") as SVGSVGElement, overMarch);
-    const tones = [...container.querySelectorAll(".sui-slot-stack__label")].map((t) =>
+    const tones = [...container.querySelectorAll(".sui-slot-stack__label:not(.sui-slot-stack__label--cap)")].map((t) =>
       (t.getAttribute("class") ?? "").replace("sui-slot-stack__label sui-slot-stack__label--", ""),
     );
     expect(tones).toEqual(["on-solid", "on-solid", "on-stripes", "on-solid", "callout"]);
@@ -349,7 +393,7 @@ describe("amount labels: only for the column under the pointer", () => {
     const { container } = mountLabels("always");
     expect(count(container, "[tabindex], [role='button'], button, input, a")).toBe(0);
     const labels = container.querySelectorAll(".sui-slot-stack__label");
-    expect(labels.length).toBe(3);
+    expect(labels.length).toBe(5);
     for (const label of labels) expect(label.closest(".sui-slot-stack__labels")).not.toBeNull();
   });
 });

@@ -11,6 +11,7 @@ import {
   type SlotLabel,
   labelledPeriods,
   placeSlotLabels,
+  slotCapText,
   spreadCentres,
 } from "./slotStackLabels";
 
@@ -32,10 +33,14 @@ const stage = (width: number, height: number, periods: number, top: number, band
   const ys = (v: number): number => plot.y + height - (v / top) * height;
   const boxesOf = (series: readonly SlotStackSeries[]): readonly SlotBox[] =>
     layoutSlots(placeSlots(series), xs, ys, { band, gap: 2, thin: 1.5 });
-  const labelsOf = (series: readonly SlotStackSeries[], only?: number): readonly SlotLabel[] => {
+  const labelsOf = (
+    series: readonly SlotStackSeries[],
+    only?: number,
+    cap?: (period: number) => string | null,
+  ): readonly SlotLabel[] => {
     const all = boxesOf(series);
     const labelled = only === undefined ? all : all.filter((b) => b.placed.slot.period === only);
-    return placeSlotLabels(labelled, all, { plot, format: money });
+    return placeSlotLabels(labelled, all, { plot, format: money, cap });
   };
   return { plot, boxesOf, labelsOf };
 };
@@ -228,6 +233,89 @@ describe("placeSlotLabels, stress: a 130px plot with narrow columns", () => {
     const labels = labelsOf(RUN, 3);
     expect(brief(labels)).toEqual([["$35k", "callout", "right", "callout"]]);
     expect(sound(labels, boxesOf(RUN), plot)).toEqual([]);
+  });
+});
+
+describe("the line above the column", () => {
+  it("says arrived of expected from the column's own slot, or the expectation alone", () => {
+    const words = { of: "of", expectedOnly: "exp" };
+    // $65k expected, all of it in and $14k more: $79k arrived.
+    expect(slotCapText(slot(0, 65, 65, 0, 14), money, words)).toBe("$79k of $65k");
+    expect(slotCapText(slot(0, 60, 48, 12, 0), money, words)).toBe("$48k of $60k");
+    expect(slotCapText(slot(0, 75, 0, 75, 0), money, words)).toBe("exp $75k");
+    expect(slotCapText(slot(0, 0, 0, 0, 46), money, { of: "against", expectedOnly: "due" })).toBe(
+      "$46k against $0k",
+    );
+  });
+
+  /* 600 x 200 plot, six 100px periods, 44px columns, 1k = 2px. */
+  const { plot, boxesOf, labelsOf } = stage(600, 200, 6, 100);
+  const capOf = () => "$79k of $65k";
+
+  it("sits centred, just above the column's top, and is wider than the column", () => {
+    // Mockup v6, March hovered: three types, two of them over.
+    const series = [
+      one("r", slot(2, 30, 30, 0, 8)),
+      one("c", slot(2, 20, 20, 0, 6)),
+      one("d", slot(2, 15, 15, 0, 0)),
+    ];
+    const labels = labelsOf(series, 2, capOf);
+    const cap = labels[0];
+    expect([cap.kind, cap.text, cap.anchor, cap.x, cap.over, cap.chip]).toEqual([
+      "cap",
+      "$79k of $65k",
+      "middle",
+      300,
+      false,
+      null,
+    ]);
+    // The column tops out at 79k (y 62): the line's box ends 4px above it.
+    expect(cap.box.y + cap.box.height).toBe(58);
+    expect(cap.box.width).toBeGreaterThan(44);
+    // The mockup's picture: three nested fills, two overflow callouts.
+    expect(brief(labels.slice(1))).toEqual([
+      ["$15k", "nested", null, "on-solid"],
+      ["$20k", "nested", null, "on-solid"],
+      ["$30k", "nested", null, "on-solid"],
+      ["+$6k", "callout", "right", "callout"],
+      ["+$8k", "callout", "right", "callout"],
+    ]);
+    expect(sound(labels, boxesOf(series), plot)).toEqual([]);
+  });
+
+  it("keeps callouts under it where the two would meet", () => {
+    // A sliver of overflow at the very top: its callout wants the line's row.
+    const series = [one("a", slot(2, 60, 60, 0, 1.2))];
+    const labels = labelsOf(series, 2, () => "$61.2k of $60k");
+    const [cap, , callout] = labels;
+    expect([cap.kind, callout.kind, callout.text]).toEqual(["cap", "callout", "+$1.2k"]);
+    expect(callout.box.y).toBeGreaterThanOrEqual(cap.box.y + cap.box.height);
+    expect(sound(labels, boxesOf(series), plot)).toEqual([]);
+  });
+
+  it("with no room above the column, sits just inside the plot's top, on a chip, and nothing shares its row", () => {
+    // The column reaches 98k of a 100k axis: 4px of headroom.
+    const series = [one("a", slot(2, 98, 98, 0, 0))];
+    const labels = labelsOf(series, 2, () => "$98k of $98k");
+    const cap = labels[0];
+    expect([cap.kind, cap.over, cap.box.y, cap.chip !== null]).toEqual(["cap", true, plot.y, true]);
+    expect(brief(labels.slice(1))).toEqual([["$98k", "nested", null, "on-solid"]]);
+    expect(sound(labels, boxesOf(series), plot)).toEqual([]);
+  });
+
+  it("stays inside the plot sideways at the first and last columns", () => {
+    for (const period of [0, 5]) {
+      const series = [one("a", slot(period, 60, 60, 0, 14))];
+      const labels = labelsOf(series, period, () => "$74.5k of $60.5k");
+      expect(labels[0].kind).toBe("cap");
+      expect(sound(labels, boxesOf(series), plot)).toEqual([]);
+    }
+  });
+
+  it("draws no line when the caller states none", () => {
+    const series = [one("a", slot(2, 60, 60, 0, 0))];
+    expect(labelsOf(series, 2, () => null).map((l) => l.kind)).toEqual(["nested"]);
+    expect(labelsOf(series, 2).map((l) => l.kind)).toEqual(["nested"]);
   });
 });
 

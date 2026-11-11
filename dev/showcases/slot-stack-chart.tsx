@@ -157,6 +157,30 @@ const STRESS_TOTALS: readonly SlotStackSlot[] = map(
   STRESS_ROWS,
 );
 
+/* The mockup's own run (thorcasting #4451, v6 "Simplest view"), for a
+   side-by-side: expected / actual per type, and each month's own two values
+   as the mockup states them. Hovering March must read "$79k of $65k" above
+   the column, $30k / $20k / $15k nested, and +$8k / +$6k called out. */
+const V6_ROWS: readonly (readonly (readonly [number, number])[])[] = [
+  [[30, 22], [20, 20], [10, 6]],
+  [[18, 18], [20, 20], [10, 10]],
+  [[30, 38], [20, 26], [15, 15]],
+  [[42, 57], [30, 18], [20, 20]],
+  [[35, 0], [25, 0], [15, 0]],
+  [[40, 0], [20, 0], [25, 0]],
+];
+const V6 = seriesOf(V6_ROWS);
+const V6_TOTALS: readonly SlotStackSlot[] = [
+  split(0, 60, 48),
+  split(1, 48, 48),
+  split(2, 65, 79),
+  split(3, 92, 95),
+  split(4, 75, 0),
+  split(5, 85, 0),
+];
+/** The mockup's proportions: a bar 47% of its band. */
+const V6Stack = createSlotStackChart({ words: WORDS, nowLabel: "today", columnWidth: 0.47 });
+
 /* Status sub-fills: the filled and overflow parts, by status. */
 const STATUSES: readonly SlotStackSeries[] = [
   {
@@ -242,13 +266,18 @@ export const SlotStackChartShowcase: Component = () => (
       <SectionTitle>Amounts on the hovered column</SectionTitle>
       <MutedBody>
         Hover a month above: every drawn part of that column carries its
-        amount, and nothing is labelled at rest. An amount nests inside its
+        amount, one line above the column reads arrived of expected, and
+        nothing is labelled at rest. An amount nests inside its
         part when the part is at least 15px tall and wide enough; otherwise it
         sits beside the column on a leader line. A plus is overflow, a minus is
         what a part-filled container still lacks. The charts below force
         labels="always" so the placements can be read without a pointer;
         "always" wants room beside each column, so it suits a wide chart.
       </MutedBody>
+      <CaptionLabel>The mockup's run (v6), on hover: hover March for "$79k of $65k" above the column, three nested amounts and two callouts; April grows from $95k to $107k</CaptionLabel>
+      <div class="slot-stack-chart-demo slot-stack-chart-demo--mock">
+        <V6Stack series={V6} totals={V6_TOTALS} periods={PERIODS} periodLabel={label} valueFormat={money} yMax={111} now={3.5} />
+      </div>
       <CaptionLabel>Stress, two values: a $1.2k overflow on $60k (Jul), $1.5k short of $60k (Aug), expected only at the right edge (Nov)</CaptionLabel>
       <div class="slot-stack-chart-demo slot-stack-chart-demo--stress">
         <StressStack series={STRESS} totals={STRESS_TOTALS} labels="always" expand="never" periods={STRESS_PERIODS} periodLabel={stressLabel} valueFormat={money} />
