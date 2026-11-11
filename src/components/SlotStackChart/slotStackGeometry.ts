@@ -575,8 +575,61 @@ export const slotStackChrome = (
       short && axis.ticks.length > SHORT_Y_TICKS
         ? filter((_tick: number, i: number) => i % 2 === 0, axis.ticks)
         : axis.ticks,
-    gridSteps: Math.max(1, axis.ticks.length - 1),
+    /* One line per axis STEP up to the top. Under an exact top that is not a
+       multiple of the step (26,000 over 10,000s) the last step is a part
+       one, so the count rounds up: asking the scale for 3 lines over 26,000
+       gives the 10,000s the labels sit on. */
+    gridSteps:
+      axis.ticks.length > 1
+        ? Math.max(1, Math.ceil(axis.top / (axis.ticks[1] - axis.ticks[0]) - 1e-9))
+        : 1,
     xLabelStep: narrow && periods > 6 ? 2 : 1,
     margin: { ...(short ? SHORT_MARGIN : FULL_MARGIN), ...callerMargin },
+  };
+};
+
+/** 1, 2, 2.5 or 5 times a power of ten: the smallest such step >= `raw`. */
+const niceStep = (raw: number): number => {
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const unit =
+    filter((m: number) => m * power >= raw, [1, 2, 2.5, 5, 10])[0] ?? 10;
+  return unit * power;
+};
+
+/**
+ * The y axis for an EXACT top: the plot ends at `top`, with nothing added
+ * and nothing rounded. This is what a caller holding its own ceiling wants
+ * (`yTop`): `yMax` goes through `targetBarAxis`, which pads 8% and rounds up
+ * to a step, so a held $26,000 came out as $30,000.
+ *
+ * The ticks are the multiples of a round step (about four of them) that fit
+ * at or under the top, so the top itself is ticked only when it is one of
+ * them. A WHOLE top gets a whole step. A non-positive top gets the unit
+ * axis.
+ *
+ *   | top     | ticks                              |
+ *   |---------|------------------------------------|
+ *   | 26000   | 0, 10000, 20000                    |
+ *   | 680000  | 0, 200000, 400000, 600000          |
+ *   | 10      | 0, 5, 10                           |
+ *   | 24      | 0, 10, 20                          |
+ *
+ * THE SAME RULE as TargetBarChart's `targetBarAxisTo` (thorcasting #4455,
+ * branch feat/target-bar-ytop-4455), copied here because that branch is not
+ * on main yet. Once both are, this becomes a re-export of that one function.
+ */
+export const slotStackAxisTo = (
+  top: number,
+): { readonly top: number; readonly ticks: readonly number[] } => {
+  if (!(top > 0)) return { top: 1, ticks: [0, 1] };
+  const raw = top / 4;
+  const step = niceStep(Number.isInteger(top) ? Math.ceil(raw) : raw);
+  // The epsilon keeps a top that IS a multiple (1.5 over a 0.5 step) ticked
+  // when the division lands a hair under the whole number, and the `min`
+  // keeps that tick's own float error (3 x 0.1) from landing past the top.
+  const count = Math.floor(top / step + 1e-9);
+  return {
+    top,
+    ticks: Array.from({ length: count + 1 }, (_v, k) => Math.min(k * step, top)),
   };
 };

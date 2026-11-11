@@ -70,6 +70,7 @@ import {
   type SlotStackWords,
   SLOT_STACK_WORDS,
   slotPartTitle,
+  slotStackAxisTo,
   slotStackChrome,
   slotStackTallest,
 } from "./slotStackGeometry";
@@ -108,6 +109,15 @@ export interface SlotStackChartProps {
    * only when the reader asks). Omitted, the axis fits the tallest column.
    */
   readonly yMax?: number;
+  /**
+   * An EXACT top for the plot: the y axis ends at this value, with no
+   * padding and no rounding, and it wins over `yMax`. For a caller that
+   * holds its own ceiling and wants the chart to draw to it precisely (a
+   * held $26,000 stays $26,000; under `yMax` it reads $30,000). The ticks
+   * are the round steps that fit under it (TargetBarChart's `yTop` rule).
+   * A column taller than `yTop` is clipped at the plot's edge.
+   */
+  readonly yTop?: number;
   /** A NOW rule, in period units (fractional inside a period). Omit for none. */
   readonly now?: number;
   /** The NOW rule's caption. Default "now". Presentational — curried. */
@@ -191,9 +201,11 @@ export const SlotStackChart: Component<SlotStackChartProps> = (props) => {
     (): SlotStackWords => ({ ...SLOT_STACK_WORDS, ...props.words }),
   );
   const axis = createMemo(() =>
-    targetBarAxis(
-      props.yMax ?? slotStackTallest(props.series, props.totals),
-    ),
+    props.yTop !== undefined
+      ? slotStackAxisTo(props.yTop)
+      : targetBarAxis(
+          props.yMax ?? slotStackTallest(props.series, props.totals),
+        ),
   );
   const chrome = createMemo(() =>
     slotStackChrome(box(), axis(), props.periods.length, props.margin),

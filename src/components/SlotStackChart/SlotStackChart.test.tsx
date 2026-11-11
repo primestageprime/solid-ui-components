@@ -398,6 +398,42 @@ describe("amount labels: only for the column under the pointer", () => {
   });
 });
 
+describe("yTop: an exact top for the plot", () => {
+  const mountTop = (tops: { yTop?: number; yMax?: number }) =>
+    render(() => (
+      <SlotStackChart
+        series={[{ id: "r", label: "Remodels", slots: [slot(0, 26000, 26000, 0, 0)] }]}
+        periods={[0]}
+        periodLabel={() => "Mar"}
+        valueFormat={(v) => `$${v}`}
+        {...tops}
+      />
+    ));
+  const axisText = (container: HTMLElement): string[] =>
+    [...container.querySelectorAll("svg text")].map((t) => t.textContent ?? "").filter((t) => t.startsWith("$"));
+  /** The filled rect's top edge, in plot pixels: 0 is the plot's top. */
+  const fillTop = (container: HTMLElement): number =>
+    Number(container.querySelector(".sui-slot-stack__fill")?.getAttribute("y"));
+
+  it("ends the plot's domain exactly at yTop: a column as tall as yTop reaches the plot's top edge", () => {
+    const { container } = mountTop({ yTop: 26000 });
+    expect(fillTop(container)).toBe(0);
+    expect(axisText(container)).toEqual(["$0", "$10000", "$20000"]);
+  });
+
+  it("without it, yMax pads and rounds: the same column stops short of the top", () => {
+    const { container } = mountTop({ yMax: 26000 });
+    expect(axisText(container)).toEqual(["$0", "$10000", "$20000", "$30000"]);
+    expect(fillTop(container)).toBeGreaterThan(0);
+  });
+
+  it("wins over yMax", () => {
+    const { container } = mountTop({ yTop: 26000, yMax: 90000 });
+    expect(fillTop(container)).toBe(0);
+    expect(axisText(container)).toEqual(["$0", "$10000", "$20000"]);
+  });
+});
+
 describe("createSlotStackChart", () => {
   it("curries the column's paint", () => {
     const Green = createSlotStackChart({ totalPaint: "ink-total" });
