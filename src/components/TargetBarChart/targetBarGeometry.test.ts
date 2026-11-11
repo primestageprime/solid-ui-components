@@ -13,6 +13,7 @@ import {
   stackTotal,
   tallestOf,
   targetBarAxis,
+  targetBarAxisTo,
   targetBarRows,
 } from "./targetBarGeometry";
 
@@ -92,6 +93,64 @@ describe("tallestOf / targetBarAxis", () => {
 
   it("gives an empty chart a unit axis, never a zero span", () => {
     expect(targetBarAxis(0).top).toBeGreaterThan(0);
+  });
+});
+
+describe("targetBarAxisTo", () => {
+  it("ends the axis exactly at the stated top: no padding, no rounding", () => {
+    expect(map((top: number) => targetBarAxisTo(top).top, [10, 5, 4, 2, 7, 1.5, 14000])).toEqual([
+      10, 5, 4, 2, 7, 1.5, 14000,
+    ]);
+    // What the fitted axis does with the same figures, for contrast.
+    expect(map((top: number) => targetBarAxis(top).top, [10, 5, 4, 2])).toEqual([15, 6, 6, 3]);
+  });
+
+  it("ticks the round steps at or under the top, whole steps for a whole top", () => {
+    const ticksOf = (top: number): readonly number[] => targetBarAxisTo(top).ticks;
+    expect(ticksOf(10)).toEqual([0, 5, 10]);
+    expect(ticksOf(5)).toEqual([0, 2, 4]);
+    expect(ticksOf(4)).toEqual([0, 1, 2, 3, 4]);
+    expect(ticksOf(2)).toEqual([0, 1, 2]);
+    expect(ticksOf(7)).toEqual([0, 2, 4, 6]);
+    expect(ticksOf(1.5)).toEqual([0, 0.5, 1, 1.5]);
+    expect(ticksOf(14000)).toEqual([0, 5000, 10000]);
+  });
+
+  // thorcasting's counts axis (2026-11-10): never under 10, and from a
+  // tallest bar of 8 up, the bar and a fifth more. So the tops are 10, 11,
+  // 12, 14, 24 ...: whole, and mostly not a round step.
+  it("ticks whole counts under a top that is no round step, and leaves that top unticked", () => {
+    const ticksOf = (top: number): readonly number[] => targetBarAxisTo(top).ticks;
+    expect(map(ticksOf, [10, 11, 12, 14])).toEqual([
+      [0, 5, 10],
+      [0, 5, 10],
+      [0, 5, 10],
+      [0, 5, 10],
+    ]);
+    expect(map(ticksOf, [16, 18, 24, 36, 60, 120])).toEqual([
+      [0, 5, 10, 15],
+      [0, 5, 10, 15],
+      [0, 10, 20],
+      [0, 10, 20, 30],
+      [0, 20, 40, 60],
+      [0, 50, 100],
+    ]);
+  });
+
+  it("never ticks past the top", () => {
+    for (const top of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 25, 99, 0.3]) {
+      const { ticks } = targetBarAxisTo(top);
+      expect(Math.max(...ticks)).toBeLessThanOrEqual(top);
+      expect(ticks.length).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("gives a non-positive top the unit axis, never a zero span", () => {
+    expect(map(targetBarAxisTo, [0, -3, Number.NaN])).toEqual([
+      { top: 1, ticks: [0, 1] },
+      { top: 1, ticks: [0, 1] },
+      { top: 1, ticks: [0, 1] },
+    ]);
   });
 });
 
