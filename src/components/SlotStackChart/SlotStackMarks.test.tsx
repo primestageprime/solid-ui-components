@@ -73,7 +73,25 @@ describe("SlotStackMarks", () => {
     expect(container.querySelector(".sui-slot-stack__dashed")?.getAttribute("stroke")).toBe("ink-0");
   });
 
-  it("with totals, draws the column's one slot in neutral ink, never a series colour", () => {
+  it("paints the column's one slot in the caller's totalPaint: fill, dashes and stripes", () => {
+    const { container } = render(() => (
+      <Chart width={200} height={200} xDomain={[-0.5, 0.5]} yDomain={[0, 100]} margin={NO_MARGIN}>
+        <SlotStackMarks
+          series={SERIES}
+          totals={[{ period: 0, expected: 60, filled: 48, unfilled: 12, overflow: 5 }]}
+          expand="never"
+          totalPaint="ink-total"
+          {...BASE}
+        />
+      </Chart>
+    ));
+    const fills = [...container.querySelectorAll(".sui-slot-stack__fill")].map((r) => r.getAttribute("fill"));
+    expect(fills).toEqual(["ink-total", "url(#t-hatch-total)"]);
+    expect(container.querySelector('pattern[id="t-hatch-total"] rect')?.getAttribute("fill")).toBe("ink-total");
+    expect(container.querySelector(".sui-slot-stack__dashed")?.getAttribute("stroke")).toBe("ink-total");
+  });
+
+  it("with totals, draws the column's one slot in the default blue, never a series colour", () => {
     const { container } = render(() => (
       <Chart width={200} height={200} xDomain={[-0.5, 0.5]} yDomain={[0, 100]} margin={NO_MARGIN}>
         <SlotStackMarks
@@ -87,10 +105,10 @@ describe("SlotStackMarks", () => {
     const slots = [...container.querySelectorAll(".sui-slot-stack__slot")];
     expect(slots.map((s) => s.getAttribute("data-slot"))).toEqual(["total"]);
     expect(container.querySelector(".sui-slot-stack__fill")?.getAttribute("fill")).toBe(
-      "var(--sui-text-secondary)",
+      "var(--sui-accent)",
     );
     expect(container.querySelector(".sui-slot-stack__dashed")?.getAttribute("stroke")).toBe(
-      "var(--sui-text-secondary)",
+      "var(--sui-accent)",
     );
   });
 

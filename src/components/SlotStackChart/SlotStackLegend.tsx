@@ -3,10 +3,10 @@
 // means, as `Legend` items.
 // Tags: shows:legend, shows:mark, does:view, data:list, role:inline
 // Composes Legend (Depth 1) and, per swatch, a tiny Chart drawing the real
-// SlotStackMarks in a neutral ink. Owns no CSS.
+// SlotStackMarks in the column's own paint. Owns no CSS.
 //
 // The series come first, each in the colour its slots are drawn in; the
-// marks follow in neutral, drawn by the chart's own mark so the legend can
+// marks follow in the default blue (`totalPaint`), drawn by the chart's own mark so the legend can
 // never drift from the picture. `slotStackLegendItems` hands the same items
 // to a screen that keeps its own `Legend` (a collapsible one, say).
 // ============================================
@@ -15,7 +15,7 @@ import { map } from "../../fn";
 import { Chart } from "../Chart";
 import { seriesPaint } from "../Chart/StackedAreaSeries";
 import { Legend, type LegendItem } from "../Legend";
-import { SlotStackMarks } from "./SlotStackMarks";
+import { SLOT_STACK_TOTAL_PAINT, SlotStackMarks } from "./SlotStackMarks";
 import {
   type SlotStackSlot,
   type SlotStackWords,
@@ -32,9 +32,15 @@ export interface SlotStackLegendProps {
    * for a chart whose slots state no `filledByClass` / `overflowByClass`.
    */
   readonly statuses?: boolean;
+  /**
+   * What the marks are drawn in. Default: the paint of the chart's own
+   * column slot (`SLOT_STACK_TOTAL_PAINT`, the accent blue), so the legend's
+   * solid, dashed and striped marks look like the columns at rest. Pass the
+   * chart's `totalPaint` when it sets one.
+   */
+  readonly totalPaint?: string;
 }
 
-const NEUTRAL = "var(--sui-text-secondary)";
 const SWATCH = { width: 22, height: 14 } as const;
 const NO_MARGIN = { top: 1, right: 1, bottom: 1, left: 1 };
 const SILENT = (): string => "";
@@ -62,8 +68,11 @@ const SAMPLES = {
   planned: sample(0.9, 0, 0, { invoiced: 0, confirmed: 0, planned: 0.9 }),
 } as const;
 
-/** One slot drawn by the chart's own mark, in neutral ink. Decorative. */
-const MarkSwatch: Component<{ readonly slot: SlotStackSlot }> = (props) => (
+/** One slot drawn by the chart's own mark, in the column's paint. Decorative. */
+const MarkSwatch: Component<{
+  readonly slot: SlotStackSlot;
+  readonly paint: string;
+}> = (props) => (
   <Chart
     width={SWATCH.width}
     height={SWATCH.height}
@@ -78,7 +87,7 @@ const MarkSwatch: Component<{ readonly slot: SlotStackSlot }> = (props) => (
       totalLabel=""
       band={0.7}
       gap={0}
-      paintOfSeries={() => NEUTRAL}
+      paintOfSeries={() => props.paint}
       title={SILENT}
     />
   </Chart>
@@ -88,9 +97,10 @@ const markItem = (
   look: string,
   meaning: string,
   slot: SlotStackSlot,
+  paint: string,
 ): LegendItem => ({
   label: `${look} = ${meaning}`,
-  swatch: (<MarkSwatch slot={slot} />) as JSX.Element,
+  swatch: (<MarkSwatch slot={slot} paint={paint} />) as JSX.Element,
 });
 
 /**
@@ -102,6 +112,7 @@ export const slotStackLegendItems = (
   props: SlotStackLegendProps,
 ): LegendItem[] => {
   const words: SlotStackWords = { ...SLOT_STACK_WORDS, ...props.words };
+  const paint = props.totalPaint ?? SLOT_STACK_TOTAL_PAINT;
   return [
     ...map(
       (one: { readonly label: string }, i: number): LegendItem => ({
@@ -110,13 +121,13 @@ export const slotStackLegendItems = (
       }),
       props.series,
     ),
-    markItem("Solid", words.filled, SAMPLES.filled),
-    markItem("Dashed", words.unfilled, SAMPLES.unfilled),
-    markItem("Striped", words.overflow, SAMPLES.overflow),
+    markItem("Solid", words.filled, SAMPLES.filled, paint),
+    markItem("Dashed", words.unfilled, SAMPLES.unfilled, paint),
+    markItem("Striped", words.overflow, SAMPLES.overflow, paint),
     ...(props.statuses === true
       ? [
-          markItem("Translucent", words.confirmed, SAMPLES.confirmed),
-          markItem("Lighter", words.planned, SAMPLES.planned),
+          markItem("Translucent", words.confirmed, SAMPLES.confirmed, paint),
+          markItem("Lighter", words.planned, SAMPLES.planned, paint),
         ]
       : []),
   ];

@@ -7938,7 +7938,8 @@
       "nowLabel",
       "columnWidth",
       "slotGap",
-      "margin"
+      "margin",
+      "totalPaint"
     ],
     "dataProps": "SlotStackChartDataProps",
     "summary": "Curry a screen's words, column width, slot gap and inset once.",
@@ -7950,7 +7951,7 @@
     "showcase": "#/slot-stack-chart",
     "since": "Unreleased",
     "file": "src/components/SlotStackChart/SlotStackChart.tsx",
-    "line": 253
+    "line": 262
   },
   {
     "name": "createSpanBadge",
@@ -22496,7 +22497,8 @@
       "nowLabel",
       "columnWidth",
       "slotGap",
-      "margin"
+      "margin",
+      "totalPaint"
     ],
     "dataProps": "SlotStackChartDataProps",
     "summary": "Composite (Depth 2).",
@@ -22508,7 +22510,7 @@
     "showcase": "#/slot-stack-chart",
     "since": "Unreleased",
     "file": "src/components/SlotStackChart/SlotStackChart.tsx",
-    "line": 150
+    "line": 158
   },
   {
     "name": "SlotStackLegend",
@@ -22535,7 +22537,7 @@
     "showcase": "#/slot-stack-chart",
     "since": "Unreleased",
     "file": "src/components/SlotStackChart/SlotStackLegend.tsx",
-    "line": 125
+    "line": 136
   },
   {
     "name": "SlotTrack",

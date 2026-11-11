@@ -9,8 +9,10 @@
 // geometry is `layoutSlots` (./slotStackGeometry.ts), recomputed from the
 // chart's scales, so the marks follow a chart that measures its own box.
 //
-// TWO STATES. Given `totals`, a column at rest is one NEUTRAL slot (its own
-// expected and actual) and the column under the pointer is its per-series
+// TWO STATES. Given `totals`, a column at rest is ONE slot (its own expected
+// and actual) in the chart's default blue, `--sui-accent` (Peter: "instead
+// of white, use the normal blue default color for the dollars chart"), or
+// in `totalPaint`; the column under the pointer is its per-series
 // slots in the series colours. Which is which is `visibleSlots`; this file
 // only feeds it the chart's own `hoverX`. Nothing holds the height steady
 // between the two, and nothing animates it.
@@ -68,13 +70,22 @@ export interface SlotStackMarksProps {
   readonly gap: number;
   /** A series' paint by its place. Default: the theme's series tokens. */
   readonly paintOfSeries?: (seriesIndex: number) => string;
+  /**
+   * What a column's own slot is painted with: fill, dashes and stripes
+   * alike. Default `SLOT_STACK_TOTAL_PAINT`, the theme's accent blue.
+   */
+  readonly totalPaint?: string;
 }
 
 /** The container outline's stroke width, in px. */
 const THIN = 1.5;
 
-/** A column's own slot belongs to no series: it is drawn in neutral ink. */
-const NEUTRAL = "var(--sui-text-secondary)";
+/**
+ * A column's own slot belongs to no series, so it takes no series colour:
+ * it is drawn in the chart's default blue (Peter, 2026-11-10: "instead of
+ * white, use the normal blue default color for the dollars chart").
+ */
+export const SLOT_STACK_TOTAL_PAINT = "var(--sui-accent)";
 
 /* The textures, in the slot's colour. The stripes are the mockup's: a 2.4px
    stripe on a 6px tile, over a ground of the same colour. */
@@ -92,9 +103,10 @@ const TEXTURES: readonly {
 
 export const SlotStackMarks: Component<SlotStackMarksProps> = (props) => {
   const ctx = useChart();
+  const totalPaint = (): string => props.totalPaint ?? SLOT_STACK_TOTAL_PAINT;
   const colorOf = (i: number): string =>
     i === SLOT_STACK_TOTAL_INDEX
-      ? NEUTRAL
+      ? totalPaint()
       : (props.paintOfSeries ?? seriesPaint)(i);
   const patternId = (paint: SlotFillPaint, i: number): string =>
     `${props.paintId}-${paint}-${i === SLOT_STACK_TOTAL_INDEX ? "total" : i}`;
@@ -130,7 +142,7 @@ export const SlotStackMarks: Component<SlotStackMarksProps> = (props) => {
           <>
             <texture.Pattern
               id={patternId(texture.paint, SLOT_STACK_TOTAL_INDEX)}
-              color={NEUTRAL}
+              color={totalPaint()}
             />
             <Index each={props.series}>
               {(_series, i) => (

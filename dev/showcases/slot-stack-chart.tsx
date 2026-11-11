@@ -1,7 +1,8 @@
 // SlotStackChart showcase. FIRST the two states (Peter, 2026-11-10: "By
 // default show just the two values. (expected and actual)... When hovering
 // with a mouse, show the breakdown by type"): a six-month run that draws one
-// neutral container per month and breaks the hovered month into its types,
+// container per month, in the default blue, and breaks the hovered month
+// into its types (one card shows a column shorter than its breakdown),
 // beside the same run forced collapsed and forced expanded.
 //
 // Then the stacked-dollars mockup, scenario by scenario
@@ -113,6 +114,19 @@ const RUN_TOTALS: readonly SlotStackSlot[] = map(
   RUN_ROWS,
 );
 
+/* A column SHORTER than its own breakdown: the month expects $14k and holds
+   $12k (a 14-tall container, 12 full), while its types stand 8 (Remodels:
+   $3k of $8k) and 9 (Cabinets: $6k full, $3k over), 17 in all. The same
+   $12k and $14k either way; only the netting differs, and it is the
+   caller's. */
+const SHORTER: readonly SlotStackSeries[] = [
+  { id: "Remodels", label: "Remodels", slots: [{ period: 2, expected: 8, filled: 3, unfilled: 5, overflow: 0 }] },
+  { id: "Cabinets", label: "Cabinets", slots: [{ period: 2, expected: 6, filled: 6, unfilled: 0, overflow: 3 }] },
+];
+const SHORTER_TOTAL: readonly SlotStackSlot[] = [
+  { period: 2, expected: 14, filled: 12, unfilled: 2, overflow: 0 },
+];
+
 /* Status sub-fills: the filled and overflow parts, by status. */
 const STATUSES: readonly SlotStackSeries[] = [
   {
@@ -146,10 +160,10 @@ export const SlotStackChartShowcase: Component = () => (
     <div class="example-group">
       <SectionTitle>Two values by default, the breakdown on hover</SectionTitle>
       <MutedBody>
-        Each month is one neutral container: what was expected, and the money
-        filling it or overflowing it. Move the pointer over a month and that
-        month alone breaks into its types. Its height is not held: March
-        stands at $93k as two values and $105k as types.
+        Each month is one container in the chart's default blue: what was
+        expected, and the money filling it or overflowing it. Move the pointer
+        over a month and that month alone breaks into its types. Its height is
+        not held: March stands at $93k as two values and $105k as types.
       </MutedBody>
       <SlotStackLegend series={RUN} words={WORDS} />
       <div class="slot-stack-chart-demo slot-stack-chart-demo--run">
@@ -180,6 +194,16 @@ export const SlotStackChartShowcase: Component = () => (
           <div class="slot-stack-chart-demo slot-stack-chart-demo--small">
             <DollarStack series={RUN} totals={RUN_TOTALS} expand="always" periods={PERIODS} periodLabel={label} valueFormat={money} />
           </div>
+        </div>
+        <div class="slot-stack-chart-demo-card">
+          <CaptionLabel>A column shorter than its hovered slots</CaptionLabel>
+          <div class="slot-stack-chart-demo slot-stack-chart-demo--single">
+            <DollarStack series={SHORTER} totals={SHORTER_TOTAL} periods={[2]} periodLabel={label} valueFormat={money} yMax={17} />
+          </div>
+          <MutedBody>
+            The column expects $14k and holds $12k, so it stands 14 tall. Its
+            two types stand 8 and 9: hovered, the bar grows to 17.
+          </MutedBody>
         </div>
       </div>
     </div>

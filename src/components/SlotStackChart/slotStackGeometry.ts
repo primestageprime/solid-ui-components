@@ -20,7 +20,7 @@
 //
 // TWO STATES PER COLUMN (Peter, 2026-11-10: "By default show just the two
 // values. (expected and actual)... When hovering with a mouse, show the
-// breakdown by type"). Given `totals`, a column at rest is ONE neutral slot,
+// breakdown by type"). Given `totals`, a column at rest is ONE slot (default blue),
 // the column's own expected and actual; the hovered column is its per-series
 // slots. The two may differ in height and nothing holds it steady. Which
 // columns are expanded is the whole of `visibleSlots`, so the rule is one
@@ -183,7 +183,7 @@ export const hoveredPeriod = (
  *   expand "hover"     the hovered column is its series; the rest are totals
  *
  * A total slot reports `SLOT_STACK_TOTAL_INDEX` as its series, which is what
- * paints it neutral, and `totalLabel` as its name.
+ * paints it in the column's own paint, and `totalLabel` as its name.
  */
 export const visibleSlots = (
   series: readonly SlotStackSeries[],

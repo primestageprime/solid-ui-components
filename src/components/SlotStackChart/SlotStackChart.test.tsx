@@ -82,12 +82,12 @@ describe("SlotStackChart", () => {
         ),
       );
 
-    it("at rest draws ONE neutral slot per column", () => {
+    it("at rest draws ONE slot per column, in the default blue", () => {
       const { container } = mountTwo();
       expect(slots(container)).toEqual(["total", "total"]);
       const fills = [...container.querySelectorAll(".sui-slot-stack__fill")];
       expect(fills.map((f) => f.getAttribute("data-part"))).toEqual(["filled", "overflow"]);
-      expect(fills[0].getAttribute("fill")).toBe("var(--sui-text-secondary)");
+      expect(fills[0].getAttribute("fill")).toBe("var(--sui-accent)");
       const texts = [...container.querySelectorAll(".sui-slot-stack title")].map((t) => t.textContent);
       expect(texts).toEqual([
         "Total · Mar: $90k filled ($90k expected)",
@@ -265,5 +265,30 @@ describe("SlotStackLegend", () => {
     ));
     expect(container.textContent).toContain("Translucent = signed");
     expect(container.textContent).toContain("Lighter = planned");
+  });
+
+  it("draws its marks in the column's paint: the default blue, or the chart's totalPaint", () => {
+    const solidOf = (container: HTMLElement) =>
+      container.querySelector(".sui-slot-stack__fill")?.getAttribute("fill");
+    expect(solidOf(render(() => <SlotStackLegend series={SERIES} />).container)).toBe("var(--sui-accent)");
+    const custom = render(() => <SlotStackLegend series={SERIES} totalPaint="ink-total" />).container;
+    expect(solidOf(custom)).toBe("ink-total");
+    expect(custom.querySelector(".sui-slot-stack__dashed")?.getAttribute("stroke")).toBe("ink-total");
+  });
+});
+
+describe("createSlotStackChart", () => {
+  it("curries the column's paint", () => {
+    const Green = createSlotStackChart({ totalPaint: "ink-total" });
+    const { container } = render(() => (
+      <Green
+        series={SERIES}
+        totals={[slot(0, 90, 90, 0, 3)]}
+        periods={[0]}
+        periodLabel={() => "Mar"}
+        valueFormat={(v) => `$${v}k`}
+      />
+    ));
+    expect(container.querySelector(".sui-slot-stack__fill")?.getAttribute("fill")).toBe("ink-total");
   });
 });

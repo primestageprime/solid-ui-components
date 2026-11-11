@@ -22,7 +22,7 @@
 // just the two values. (expected and actual)... When hovering with a mouse,
 // show the breakdown by type. Show the B approach. That will mean that the
 // bar will shift around on hover, but I want to see if that's ok."). Given
-// `totals`, a column at rest is ONE neutral slot, its own expected and
+// `totals`, a column at rest is ONE slot in the default blue, its own expected and
 // actual, and the hovered column is its per-series slots. The column's
 // height may change between the two and is not held or animated; the y axis
 // covers both states, so only the bar moves. `expand` forces either state
@@ -84,7 +84,7 @@ export interface SlotStackChartProps {
    * Each column's OWN slot: its expected and actual as two values, netted by
    * the caller (one over and one under may cancel here, which is why the
    * chart cannot add the series up itself). One per period. Given, a column
-   * at rest draws this one slot in neutral ink and shows its series only
+   * at rest draws this one slot in `totalPaint` and shows its series only
    * when expanded. Omitted, every column is always its series.
    */
   readonly totals?: readonly SlotStackSlot[];
@@ -129,6 +129,14 @@ export interface SlotStackChartProps {
   readonly slotGap?: number;
   /** Plot inset. Presentational — curried. */
   readonly margin?: Partial<Margin>;
+  /**
+   * What a column's own slot (`totals`) is painted with: fill, dashes and
+   * stripes alike. Default `var(--sui-accent)`, the chart's normal blue
+   * (Peter: "instead of white, use the normal blue default color for the
+   * dollars chart"). Hand the same value to `SlotStackLegend`.
+   * Presentational — curried.
+   */
+  readonly totalPaint?: string;
 }
 
 /** What an unmeasured chart draws at: a plausible panel, never zero. */
@@ -207,6 +215,7 @@ export const SlotStackChart: Component<SlotStackChartProps> = (props) => {
           expand={props.expand}
           periods={props.periods}
           totalLabel={words().total}
+          totalPaint={props.totalPaint}
           title={(placed, part, value, status) =>
             slotPartTitle(
               placed,
@@ -236,7 +245,7 @@ export const SlotStackChart: Component<SlotStackChartProps> = (props) => {
 /** Props that are presentational — locked at curry time. */
 export type SlotStackChartOverrides = Pick<
   SlotStackChartProps,
-  "words" | "nowLabel" | "columnWidth" | "slotGap" | "margin"
+  "words" | "nowLabel" | "columnWidth" | "slotGap" | "margin" | "totalPaint"
 >;
 
 /** Props left to the call site: data only. There are no callbacks. */
