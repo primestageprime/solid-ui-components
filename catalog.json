@@ -7952,7 +7952,7 @@
     "showcase": "#/slot-stack-chart",
     "since": "Unreleased",
     "file": "src/components/SlotStackChart/SlotStackChart.tsx",
-    "line": 304
+    "line": 319
   },
   {
     "name": "createSpanBadge",
@@ -22512,7 +22512,7 @@
     "showcase": "#/slot-stack-chart",
     "since": "Unreleased",
     "file": "src/components/SlotStackChart/SlotStackChart.tsx",
-    "line": 183
+    "line": 197
   },
   {
     "name": "SlotStackLegend",
