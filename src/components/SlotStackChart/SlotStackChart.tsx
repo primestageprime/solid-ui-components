@@ -74,7 +74,11 @@ import {
   slotStackChrome,
   slotStackTallest,
 } from "./slotStackGeometry";
-import { type SlotStackLabels, slotCapText } from "./slotStackLabels";
+import {
+  type SlotStackLabelParts,
+  type SlotStackLabels,
+  slotCapText,
+} from "./slotStackLabels";
 
 export interface SlotStackChartProps {
   /**
@@ -156,6 +160,16 @@ export interface SlotStackChartProps {
    * a leader line. Data, not a curried look: a screen may flip it.
    */
   readonly labels?: SlotStackLabels;
+  /**
+   * Which PARTS of a labelled column carry a figure. "all" (the default):
+   * the filled part, the unfilled part and the overflow, the last two with
+   * their sign. "present": only the amounts that are there, the filled part
+   * and the overflow, each as a plain amount with no sign; the unfilled part
+   * keeps its dashed outline and carries no figure. The line above the
+   * column is the same either way. Data, not a curried look: a screen may
+   * flip it.
+   */
+  readonly labelParts?: SlotStackLabelParts;
   /**
    * A part's amount as label text. Default: `valueFormat`. The plus (over)
    * and minus (still unfilled) are added by the chart. Presentational —
@@ -244,6 +258,7 @@ export const SlotStackChart: Component<SlotStackChartProps> = (props) => {
           totalLabel={words().total}
           totalPaint={props.totalPaint}
           labels={props.labels}
+          labelParts={props.labelParts}
           labelFormat={props.labelFormat ?? props.valueFormat}
           capText={(total) =>
             slotCapText(

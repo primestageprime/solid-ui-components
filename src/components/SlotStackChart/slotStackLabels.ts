@@ -35,6 +35,13 @@
 // A plus marks overflow. A minus marks what is still unfilled in a container
 // that holds something; an EMPTY container states its expectation plainly.
 //
+// WHICH PARTS carry a figure is the caller's too (`parts`). "all" (the
+// default) is the rule above. "present" labels only the money that is there:
+// the filled part and the overflow, each as a plain amount with no sign; the
+// unfilled part keeps its dashed outline and carries no figure. Peter,
+// 2026-11-11: "it's confusing to see + and - numbers. just show the values
+// that are there, not the shortfalls for now".
+//
 // Text is never measured (no DOM): its width is `text.length * charWidth`,
 // the width of 11px tabular figures, rounded up.
 // ============================================
@@ -43,6 +50,13 @@ import type { SlotBox, SlotStackSlot } from "./slotStackGeometry";
 
 /** Which columns carry their amounts. */
 export type SlotStackLabels = "hover" | "always" | "never";
+
+/**
+ * Which parts of a labelled column carry a figure: "all" (filled, unfilled
+ * and overflow, the last two signed) or "present" (filled and overflow only,
+ * unsigned: the amounts that are there).
+ */
+export type SlotStackLabelParts = "all" | "present";
 
 export type SlotLabelTone =
   | "on-solid"
@@ -101,6 +115,8 @@ export interface SlotLabelOptions {
    * only seats it.
    */
   readonly cap?: (period: number) => string | null;
+  /** Which parts carry a figure. Default "all". */
+  readonly parts?: SlotStackLabelParts;
 }
 
 /** The line above a column keeps this far from the column's top. */
@@ -163,15 +179,20 @@ interface Part {
 }
 
 /** Every drawn part of a slot, top first, with its amount as text. */
-const partsOf = (box: SlotBox, format: (value: number) => string): Part[] => {
+const partsOf = (
+  box: SlotBox,
+  format: (value: number) => string,
+  which: SlotStackLabelParts,
+): Part[] => {
   const { placed } = box;
+  const signed = which === "all";
   const id = `${placed.seriesId}-${placed.slot.period}`;
   const fills = map(
     (fill): Part => ({
       key: `${id}-${fill.part}-${fill.status ?? "plain"}`,
       box,
       part: fill.part,
-      text: `${fill.part === "overflow" ? "+" : ""}${format(fill.value)}`,
+      text: `${signed && fill.part === "overflow" ? "+" : ""}${format(fill.value)}`,
       y: fill.y,
       height: fill.height,
       tone:
@@ -184,7 +205,7 @@ const partsOf = (box: SlotBox, format: (value: number) => string): Part[] => {
     box.fills,
   );
   const unfilled: Part[] =
-    box.dashed === null
+    box.dashed === null || !signed
       ? []
       : [
           {
@@ -254,7 +275,10 @@ export const placeSlotLabels = (
     const centre = left + column[0].width / 2;
     const parts = sortBy(
       (p: Part) => p.y,
-      flatMap((b: SlotBox) => partsOf(b, options.format), column),
+      flatMap(
+        (b: SlotBox) => partsOf(b, options.format, options.parts ?? "all"),
+        column,
+      ),
     );
     const nests = (p: Part): boolean =>
       p.height >= SLOT_LABEL_MIN_HEIGHT &&

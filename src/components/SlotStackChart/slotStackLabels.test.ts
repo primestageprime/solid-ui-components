@@ -236,6 +236,56 @@ describe("placeSlotLabels, stress: a 130px plot with narrow columns", () => {
   });
 });
 
+describe("placeSlotLabels, parts 'present': only the amounts that are there, unsigned", () => {
+  /* 600 x 200 plot, six 100px periods, 44px columns, 1k = 2px. */
+  const { plot, boxesOf } = stage(600, 200, 6, 100);
+  const present = (series: readonly SlotStackSeries[], cap?: (period: number) => string | null) => {
+    const all = boxesOf(series);
+    return placeSlotLabels(all, all, { plot, format: money, cap, parts: "present" });
+  };
+  const all = (series: readonly SlotStackSeries[]) => {
+    const boxes = boxesOf(series);
+    return placeSlotLabels(boxes, boxes, { plot, format: money, parts: "all" });
+  };
+  /* One column with all three parts: a filled-and-over type beside a
+     part-filled one. */
+  const MIXED = [one("a", slot(0, 30, 30, 0, 14)), one("b", slot(0, 60, 30, 30, 0))];
+
+  it("labels the filled part and the overflow as plain amounts; the unfilled part carries no figure", () => {
+    const labels = present(MIXED);
+    expect(labels.map((l) => [l.text, l.part]).sort()).toEqual([
+      ["$14k", "overflow"],
+      ["$30k", "filled"],
+      ["$30k", "filled"],
+    ]);
+    expect(labels.some((l) => /[+−-]/.test(l.text))).toBe(false);
+    expect(sound(labels, boxesOf(MIXED), plot)).toEqual([]);
+  });
+
+  it("'all', and the option left out, still sign the overflow and the unfilled part", () => {
+    const texts = (labels: readonly SlotLabel[]) => labels.map((l) => l.text).sort();
+    const boxes = boxesOf(MIXED);
+    expect(texts(all(MIXED))).toEqual(["$30k", "$30k", "+$14k", "−$30k"].sort());
+    expect(texts(placeSlotLabels(boxes, boxes, { plot, format: money }))).toEqual(texts(all(MIXED)));
+  });
+
+  it("an empty container carries no figure at all", () => {
+    expect(present([one("a", slot(0, 75, 0, 75, 0))])).toEqual([]);
+  });
+
+  it("a thin overflow's callout follows the same rule: no plus", () => {
+    // 1.2k is 2.4px tall: a callout.
+    const labels = present([one("a", slot(0, 60, 60, 0, 1.2))]);
+    expect(brief(labels)).toContainEqual(["$1.2k", "callout", "right", "callout"]);
+    expect(labels.map((l) => l.text)).not.toContain("+$1.2k");
+  });
+
+  it("leaves the line above the column as the caller states it", () => {
+    const labels = present(MIXED, () => "$74k of $90k");
+    expect(labels.filter((l) => l.kind === "cap").map((l) => l.text)).toEqual(["$74k of $90k"]);
+  });
+});
+
 describe("the line above the column", () => {
   it("says arrived of expected from the column's own slot, or the expectation alone", () => {
     const words = { of: "of", expectedOnly: "exp" };

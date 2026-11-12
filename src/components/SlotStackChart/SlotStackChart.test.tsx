@@ -279,7 +279,11 @@ describe("SlotStackLegend", () => {
 
 describe("amount labels: only for the column under the pointer", () => {
   const TOTALS = [slot(0, 90, 90, 0, 3), slot(1, 65, 0, 65, 0)];
-  const mountLabels = (labels?: "hover" | "always" | "never", labelFormat?: (v: number) => string) =>
+  const mountLabels = (
+    labels?: "hover" | "always" | "never",
+    labelFormat?: (v: number) => string,
+    labelParts?: "all" | "present",
+  ) =>
     render(() => {
       const Chart = createSlotStackChart({ labelFormat });
       return (
@@ -287,6 +291,7 @@ describe("amount labels: only for the column under the pointer", () => {
           series={SERIES}
           totals={TOTALS}
           labels={labels}
+          labelParts={labelParts}
           periods={[0, 1]}
           periodLabel={(p) => MONTHS[p] ?? ""}
           valueFormat={(v) => `$${v}k`}
@@ -320,6 +325,25 @@ describe("amount labels: only for the column under the pointer", () => {
     fireEvent.pointerMove(svg, overApril);
     // April's two empty containers state their expectation plainly.
     expect(texts(container)).toEqual(["$30k", "$35k"]);
+    fireEvent.pointerLeave(svg);
+    expect(texts(container)).toEqual([]);
+  });
+
+  it("labelParts 'present': the hovered column's filled and overflow amounts, unsigned; unfilled parts none; at rest none", () => {
+    const { container } = mountLabels(undefined, undefined, "present");
+    const svg = container.querySelector("svg") as SVGSVGElement;
+    expect(texts(container)).toEqual([]);
+    fireEvent.pointerMove(svg, overMarch);
+    // The same column as above, less the Cabinets gap's figure and the plus.
+    expect(texts(container)).toEqual(["$20k", "$18k", "$15k", "$40k"]);
+    // The gap itself is still drawn: only its figure goes.
+    expect(count(container, ".sui-slot-stack__leader")).toBe(0);
+    expect(count(container, ".sui-slot-stack__dashed")).toBeGreaterThan(0);
+    // The line above the column is unchanged.
+    expect(caps(container)).toEqual(["$93k of $90k"]);
+    fireEvent.pointerMove(svg, overApril);
+    // April's two containers are empty: nothing is there, so no figures.
+    expect(texts(container)).toEqual([]);
     fireEvent.pointerLeave(svg);
     expect(texts(container)).toEqual([]);
   });

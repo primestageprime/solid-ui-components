@@ -39,6 +39,7 @@ import {
   visibleSlots,
 } from "./slotStackGeometry";
 import {
+  type SlotStackLabelParts,
   type SlotStackLabels,
   labelledPeriods,
   placeSlotLabels,
@@ -86,6 +87,11 @@ export interface SlotStackMarksProps {
    * the column under the pointer), "always" or "never".
    */
   readonly labels?: SlotStackLabels;
+  /**
+   * Which parts of a labelled column carry a figure: "all" (default) or
+   * "present" (filled and overflow only, unsigned).
+   */
+  readonly labelParts?: SlotStackLabelParts;
   /** A part's amount as label text; the sign is added by the placement. */
   readonly labelFormat: (value: number) => string;
   /**
@@ -169,6 +175,7 @@ export const SlotStackMarks: Component<SlotStackMarksProps> = (props) => {
         height: ctx.innerHeight(),
       },
       format: props.labelFormat,
+      parts: props.labelParts,
       cap: (period) => {
         const total = find(
           (slot: SlotStackSlot) => slot.period === period,
