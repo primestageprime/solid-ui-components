@@ -11,6 +11,8 @@
 //   node scripts/gate.mjs --fast             # every stage but the two isolated builds
 //   node scripts/gate.mjs --pre-push      # used by githooks/pre-push: lint + typecheck + AFFECTED tests + catalog
 //                                         # freshness + usage-manifest (warn-only)
+//                                         # with --push-refs-stdin (the hook passes it): a push that updates
+//                                         # main is BLOCKED unless workmode holds a quality receipt for the commit
 //   node scripts/gate.mjs --no-lock       # skip the machine-wide lock (see below)
 //
 // WHY THIS EXISTS
@@ -122,16 +124,24 @@ import {
   mkdtempSync,
   mkdirSync,
   readdirSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   existsSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { acquireGateLock } from "./gate-lock.mjs";
 import { planTests } from "./affected-tests.mjs";
-import { PROFILES, ledgerCalls, planStages, resolveProfile } from "./gate-stages.mjs";
+import {
+  PROFILES,
+  ledgerCalls,
+  mainPushCommits,
+  planStages,
+  receiptStages,
+  resolveProfile,
+} from "./gate-stages.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -380,12 +390,20 @@ function runCommands(stage, cwd) {
 // tool missing, slow or broken never fails the gate and never weakens it —
 // with no answer the profile is quality. `GATE_WORKMODE_BIN` points at another
 // binary (tests use a stub).
-const WORKMODE_BIN = process.env.GATE_WORKMODE_BIN || "workmode";
+// Resolved from GATE_WORKMODE_BIN, else PATH, else ~/.local/bin/workmode (a
+// git hook's PATH often lacks ~/.local/bin).
+const WORKMODE_CANDIDATES = process.env.GATE_WORKMODE_BIN
+  ? [process.env.GATE_WORKMODE_BIN]
+  : ["workmode", join(homedir(), ".local", "bin", "workmode")];
 
-function workmode(args) {
-  const r = spawnSync(WORKMODE_BIN, args, { cwd: root, encoding: "utf8", timeout: 10_000 });
-  if (r.error) return { ok: false, why: r.error.code === "ENOENT" ? "workmode is not on PATH" : r.error.message };
-  if (r.status !== 0) return { ok: false, why: `exit ${r.status}${r.stderr ? `: ${r.stderr.trim().split("\n")[0]}` : ""}` };
+function workmode(args, opts = {}) {
+  let r;
+  for (const bin of WORKMODE_CANDIDATES) {
+    r = spawnSync(bin, args, { cwd: root, encoding: "utf8", timeout: 10_000, ...opts });
+    if (r.error?.code !== "ENOENT") break;
+  }
+  if (r.error) return { ok: false, why: r.error.code === "ENOENT" ? "workmode was not found" : r.error.message };
+  if (r.status !== 0) return { ok: false, status: r.status, why: `exit ${r.status}${r.stderr ? `: ${r.stderr.trim().split("\n")[0]}` : ""}` };
   return { ok: true, stdout: r.stdout ?? "" };
 }
 
@@ -465,10 +483,53 @@ const printRemedy = (stage) => {
   for (const line of stage.remedy) console.error(`  ${line}`);
 };
 
+// ── push tier only: a push that updates main needs a QUALITY receipt ─────
+//
+// See gate-stages.mjs ("a push that updates main needs a QUALITY receipt").
+// githooks/pre-push passes `--push-refs-stdin`, and git's list of pushed refs
+// arrives on stdin. For each commit headed for main/master, workmode must
+// confirm a clean pass receipt for every blocking stage at that exact commit.
+// FAILS CLOSED: workmode missing, timing out or erroring blocks the push.
+// Runs first: it is instant, and nothing else matters if it refuses.
+function mainPushGuard() {
+  if (process.stdin.isTTY) return { state: "skipped", note: "no pushed refs on stdin (run by hand)" };
+  let stdinText = "";
+  try {
+    stdinText = readFileSync(0, "utf8");
+  } catch {
+    /* no stdin at all: nothing is being pushed through this run */
+  }
+  const commits = mainPushCommits(stdinText);
+  if (commits.length === 0) return { state: "skipped", note: "this push does not update main" };
+  const stages = receiptStages().join(",");
+  for (const { sha, remoteRef } of commits) {
+    console.log(`\n▶ main-receipt — ${remoteRef} ← ${sha.slice(0, 8)}: needs a quality receipt for ${stages}`);
+    const r = workmode(["passed", "--for-main-push", "--stages", stages, "--commit", sha], {
+      stdio: ["ignore", "inherit", "inherit"],
+    });
+    if (!r.ok) {
+      console.error(
+        r.status === 1
+          ? `\n  A push to main always needs the full set (Peter, 2026-11-12). On a clean tree at ${sha.slice(0, 8)}:\n\n    npm run gate -- --profile quality\n\n  then push again.`
+          : `\n  Could not ask workmode (${r.why}) — blocking, because a push to main is never allowed on an unanswered check.`,
+      );
+      return { state: "FAILED", note: `${sha.slice(0, 8)} → ${remoteRef}: ${r.status === 1 ? "no quality receipt at this commit" : `workmode unavailable (${r.why})`}` };
+    }
+    console.log(`✓ main-receipt — ${sha.slice(0, 8)} has a quality receipt`);
+  }
+  return { state: "passed", note: commits.map((c) => `${c.sha.slice(0, 8)} → ${c.remoteRef}`).join(", ") };
+}
+
 // One row per stage in gate-stages.mjs — run or not — so the summary names
 // everything "gate passed" does and does not cover.
 const results = [];
 let overall = 0;
+if (prePush && argv.includes("--push-refs-stdin")) {
+  const guard = mainPushGuard();
+  // mode "guard": listed in the summary, never settled or deferred.
+  results.push({ stage: { name: "main-receipt" }, mode: "guard", ...guard });
+  if (guard.state === "FAILED") overall = 1;
+}
 for (const { stage, action, mode, why, deferred } of plan) {
   if (action === "skip") {
     results.push({ stage, mode, state: deferred ? "deferred" : "skipped", note: why });
@@ -562,7 +623,7 @@ for (const line of ledgerNotes) console.log(`  ${line}`);
 
 if (overall !== 0) {
   console.log("\n✗ gate FAILED");
-} else if (ran === results.length && narrowed === 0) {
+} else if (!prePush && ran === results.length && narrowed === 0) {
   console.log("\n✓ gate passed — QUALITY: every stage ran in full; the pre-push hook and CI run nothing else");
 } else if (profile === "speed") {
   console.log(

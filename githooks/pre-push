@@ -22,23 +22,20 @@
 #
 # Versioned in githooks/; wired via `git config core.hooksPath githooks`,
 # which the npm "prepare" script sets automatically on install.
-# ┌─ RESERVED: main must have had QUALITY (not enabled — Peter's call, ───────┐
-# │  thorcasting #4473)                                                        │
-# │                                                                            │
-# │ This hook cannot run the builds itself (8 min outlives GitHub's SSH idle   │
-# │ timeout), so a push to refs/heads/main would be checked against the        │
-# │ workmode ledger's pass receipts instead:                                   │
-# │                                                                            │
-# │   workmode passed --stages test,lint,typecheck,health,catalog,build,\      │
-# │     bundle-budget --commit <sha being pushed>                              │
-# │                                                                            │
-# │ When this is switched on it goes in as a STAGE in scripts/gate-stages.mjs  │
-# │ (push tier only, reading the pushed refs this hook gets on stdin), not as  │
-# │ a command here: scripts/gate-stages.test.ts fails on any command in this   │
-# │ file other than the gate call below.                                       │
-# └────────────────────────────────────────────────────────────────────────────┘
+# A PUSH THAT UPDATES MAIN NEEDS A QUALITY RECEIPT (Peter, 2026-11-12,
+# thorcasting #4473: "Pushing to main always runs the full set."). This hook
+# cannot run the builds itself (8 min outlives GitHub's SSH idle timeout), so
+# `--push-refs-stdin` hands git's list of pushed refs to gate.mjs, which asks
+# the workmode ledger for a clean pass receipt of every blocking stage at the
+# exact commit headed for main/master, and blocks without one (fails closed
+# if workmode cannot answer). To get the receipt:
+#
+#   npm run gate -- --profile quality     # clean tree, on the commit you push
+#
+# Other branches are not checked. The check itself is in scripts/gate.mjs
+# (mainPushGuard), not here.
 echo "pre-push: SUI gate (scripts/gate.mjs --pre-push — lint, typecheck, AFFECTED tests, catalog freshness, usage-manifest warning; the full suite, health and builds run at the PR gate)…"
-if ! node scripts/gate.mjs --pre-push; then
+if ! node scripts/gate.mjs --pre-push --push-refs-stdin; then
   {
     echo ""
     echo "══════════════════════════════════════════════════════════════"
@@ -48,6 +45,9 @@ if ! node scripts/gate.mjs --pre-push; then
     echo " + catalog freshness (stale catalog.json: npm run catalog, commit it)."
     echo " The full suite, coverage, health ratchet and builds run at the PR"
     echo " gate (CI), so a green push is not a green PR."
+    echo ""
+    echo " A push that updates main also needs a quality receipt for the exact"
+    echo " commit: run 'npm run gate -- --profile quality' on a clean tree first."
     echo ""
     echo "   see which tests a push runs:  node scripts/affected-tests.mjs"
     echo "   run just the failing step:    npm run gate -- --only <step>"

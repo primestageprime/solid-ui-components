@@ -618,8 +618,13 @@ later one `--stage` at a time. Plain `npm run gate` takes its profile from
 `workmode --json` (speed while Peter is engaged, quality when he asks or goes
 idle) and is quality whenever workmode cannot say. The summary's first and last
 lines name the profile; **report "gate passed" with the profile and the
-deferred list, never bare**. A push to main needs a quality pass. `--pre-push`
-never reads workmode and refuses `--profile`. It is
+deferred list, never bare**. **A push that updates main is blocked without a quality receipt**
+(Peter, 2026-11-12: "Pushing to main always runs the full set."): the hook asks
+`workmode passed --for-main-push` for a clean pass of every blocking stage at
+the exact commit being pushed, and fails closed. So before pushing main, run
+`npm run gate -- --profile quality` on a clean tree at that commit (a merge
+commit is a new commit and needs its own run). Other branches are not checked.
+`--pre-push` never takes its stage set from workmode and refuses `--profile`. It is
 also what `githooks/pre-push` runs, but narrower — see *Gate tiers* below.
 **Never pipe
 a gate** into `head` or `echo` regardless — the exit status is the gate, and a

@@ -17,7 +17,15 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { STAGES, commandLine, ledgerCalls, planStages, resolveProfile } from "./gate-stages.mjs";
+import {
+  STAGES,
+  commandLine,
+  ledgerCalls,
+  mainPushCommits,
+  planStages,
+  receiptStages,
+  resolveProfile,
+} from "./gate-stages.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel: string) => readFileSync(join(root, rel), "utf8");
@@ -90,15 +98,17 @@ describe("the pre-push hook holds no check of its own", () => {
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith("#"));
 
-  it("calls gate.mjs --pre-push", () => {
-    expect(code.some((l) => l.includes("node scripts/gate.mjs --pre-push"))).toBe(true);
+  it("calls gate.mjs --pre-push and hands it the pushed refs", () => {
+    expect(code.some((l) => l.includes("node scripts/gate.mjs --pre-push --push-refs-stdin"))).toBe(
+      true,
+    );
   });
 
   it("invokes nothing else (echo text aside)", () => {
     const invocations = code
       .filter((l) => !l.startsWith("echo "))
       .filter((l) => /\b(npm|npx|node|vitest|tsc|biome)\b/.test(l));
-    expect(invocations).toEqual(["if ! node scripts/gate.mjs --pre-push; then"]);
+    expect(invocations).toEqual(["if ! node scripts/gate.mjs --pre-push --push-refs-stdin; then"]);
   });
 });
 
@@ -240,5 +250,35 @@ describe("ledgerCalls", () => {
   it("a warned stage is not settled", () => {
     const r = rows(planStages({})).map((x) => (x.stage.name === "usage-manifest" ? { ...x, state: "warned" } : x));
     expect(ledgerCalls(r, { profile: "quality", passed: true }).settle).not.toContain("usage-manifest");
+  });
+});
+
+describe("a push to main needs a quality receipt", () => {
+  const sha = "1b6e6666aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const zero = "0".repeat(40);
+
+  it("asks for every stage that can block, and no warn-only stage", () => {
+    expect(receiptStages()).toEqual(["test", "lint", "typecheck", "health", "catalog", "build", "bundle-budget"]);
+  });
+
+  it("picks out the commits headed for main or master, whatever the local branch is called", () => {
+    const stdin = [
+      `refs/heads/feat/x ${sha} refs/heads/feat/x ${zero}`,
+      `refs/heads/feat/x ${sha} refs/heads/main ${zero}`,
+      `HEAD ${sha} refs/heads/master ${zero}`,
+      "",
+    ].join("\n");
+    expect(mainPushCommits(stdin)).toEqual([
+      { localRef: "refs/heads/feat/x", sha, remoteRef: "refs/heads/main" },
+      { localRef: "HEAD", sha, remoteRef: "refs/heads/master" },
+    ]);
+  });
+
+  it("ignores other branches, tags, deletes and empty input", () => {
+    expect(mainPushCommits(`refs/heads/feat/x ${sha} refs/heads/feat/x ${zero}`)).toEqual([]);
+    expect(mainPushCommits(`refs/tags/v1 ${sha} refs/tags/v1 ${zero}`)).toEqual([]);
+    expect(mainPushCommits(`(delete) ${zero} refs/heads/main ${sha}`)).toEqual([]);
+    expect(mainPushCommits("")).toEqual([]);
+    expect(mainPushCommits(null as never)).toEqual([]);
   });
 });

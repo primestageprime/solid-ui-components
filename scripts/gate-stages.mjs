@@ -284,3 +284,39 @@ export function ledgerCalls(results, { profile = null, passed = true } = {}) {
       : [];
   return { settle, defer };
 }
+
+// ── a push that updates main needs a QUALITY receipt ────────────────────
+//
+// Peter, 2026-11-12 (thorcasting #4473, Decision #6595): "Pushing to main
+// always runs the full set." The pre-push hook cannot run the full set itself
+// (the builds outlive GitHub's SSH idle timeout), so the push tier instead
+// asks the workmode ledger whether every blocking stage has a clean pass
+// receipt at the exact commit being pushed:
+//
+//   workmode passed --for-main-push --stages <receiptStages()> --commit <sha>
+//
+// A quality gate run on a clean tree writes those receipts, so the rule in
+// practice is: run `npm run gate -- --profile quality` on the commit, then
+// push it. Other branches are not checked. Any staging exemption lives in
+// workmode's config, never here.
+
+/** The stages a main push needs receipts for: every stage that can block. */
+export const receiptStages = () => STAGES.filter((s) => !s.warnOnly).map((s) => s.name);
+
+const PROTECTED_REFS = new Set(["refs/heads/main", "refs/heads/master"]);
+
+/**
+ * The commits a push would put on main/master, from the pre-push hook's stdin
+ * (`<local ref> <local sha> <remote ref> <remote sha>` per line). Deletes
+ * (local sha all zeros) are skipped. Pure.
+ */
+export function mainPushCommits(stdinText) {
+  const out = [];
+  for (const line of (stdinText ?? "").split("\n")) {
+    const [localRef, localSha, remoteRef] = line.trim().split(/\s+/);
+    if (!remoteRef || !PROTECTED_REFS.has(remoteRef)) continue;
+    if (/^0+$/.test(localSha)) continue;
+    out.push({ localRef, sha: localSha, remoteRef });
+  }
+  return out;
+}
