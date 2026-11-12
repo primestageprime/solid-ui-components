@@ -159,38 +159,128 @@ export const STAGES = [
 /** A stage command as ci.yml writes it: `npm run catalog -- --check`. */
 export const commandLine = (command) => command.join(" ");
 
+// ── profiles — compositions of stages ───────────────────────────────────
+//
+// A profile is a named composition of the stages above (Peter, 2026-11-12,
+// thorcasting #4473: "make sure they're compositional. If I put us in to rush
+// mode ... we need to be able to run the minimal things and defer running
+// tests until later").
+//
+//   quality  every stage, in full. What CI runs. The only profile whose green
+//            means "the pre-push hook will pass and CI's checks will pass".
+//   speed    the minimal set: exactly the push tier (each stage's `prePush`
+//            field — one definition, two names). The stages it leaves out,
+//            and the full test suite it narrowed to affected tests, are
+//            DEFERRED: owed, recorded in the machine-wide `workmode` ledger,
+//            and run later by `workmode cleanup` one stage at a time
+//            (`gate.mjs --stage <name>`).
+//
+// `npm run gate` with no flag takes its profile from `workmode --json`
+// (speed while Peter is engaged, quality when he asks or goes idle), and
+// falls back to quality whenever workmode cannot say. `--pre-push` never
+// reads workmode and is never weakened by a profile.
+export const PROFILES = {
+  quality: "every stage, in full (what CI runs)",
+  speed: "the push tier now; the rest is deferred to the workmode ledger",
+};
+
 /**
- * Which stages a tier runs. Returns one row per stage, in STAGES order —
+ * Which profile a run uses, and why. Pure: `workmode` is the already-parsed
+ * result of `workmode --json` ({ mode, reason }) or null when the tool is
+ * missing, failed or printed something unparsable.
+ *
+ * Returns { profile: "speed" | "quality" | null, source, error? }.
+ * `profile: null` means a legacy tier or explicit stage list is in charge
+ * (`--pre-push`, `--fast`, `--only` / `--stage`) and no profile applies.
+ */
+export function resolveProfile({ flag = null, fast = false, prePush = false, only = null, workmode = null } = {}) {
+  if (flag !== null) {
+    if (!(flag in PROFILES)) {
+      return { profile: null, error: `--profile must be one of: ${Object.keys(PROFILES).join(", ")}` };
+    }
+    if (prePush || fast) {
+      return {
+        profile: null,
+        error: `--profile cannot be combined with ${prePush ? "--pre-push" : "--fast"}: the push tier is fixed and never takes a profile`,
+      };
+    }
+    return { profile: flag, source: "--profile" };
+  }
+  if (prePush || fast || only) return { profile: null, source: "tier flag" };
+  if (workmode && (workmode.mode === "speed" || workmode.mode === "quality")) {
+    return {
+      profile: workmode.mode,
+      source: `workmode: ${workmode.reason ?? "no reason given"}`,
+    };
+  }
+  return { profile: "quality", source: "default (workmode not available)" };
+}
+
+/**
+ * Which stages a run executes. Returns one row per stage, in STAGES order —
  * skipped stages are IN the list, so a summary built from it can never imply a
  * stage ran when it did not.
  *
- *   action: "run" | "skip"
- *   mode:   "affected" when the test stage is narrowed (pre-push), else "full"
- *   why:    for a skip, the reason
+ *   action:   "run" | "skip"
+ *   mode:     "affected" when the test stage is narrowed (push tier / speed
+ *             profile), else "full"
+ *   why:      for a skip, the reason
+ *   deferred: true for a stage the speed profile leaves for later
  *
- * Throws on an unknown `only` name.
+ * `only` (`--only` / `--stage`) wins over everything and runs the named stages
+ * in FULL unless `prePush` is also set. Throws on an unknown name.
  */
-export function planStages({ fast = false, prePush = false, only = null } = {}) {
+export function planStages({ fast = false, prePush = false, only = null, profile = null } = {}) {
   if (only) {
     const known = new Set(STAGES.map((s) => s.name));
     const unknown = only.filter((n) => !known.has(n));
     if (unknown.length > 0) {
-      const err = new Error(`--only names unknown step(s): ${unknown.join(", ")}`);
+      const err = new Error(`unknown stage(s): ${unknown.join(", ")}`);
       err.known = [...known];
       throw err;
     }
   }
+  const speed = !only && !prePush && !fast && profile === "speed";
+  const narrowed = prePush || speed;
   const tier = prePush ? "--pre-push" : fast ? "--fast" : null;
   return STAGES.map((stage) => {
-    const mode = prePush && stage.prePush === "affected" ? "affected" : "full";
+    const mode = narrowed && stage.prePush === "affected" ? "affected" : "full";
     if (only) {
       return only.includes(stage.name)
         ? { stage, action: "run", mode }
-        : { stage, action: "skip", mode, why: "not named by --only" };
+        : { stage, action: "skip", mode, why: "not named by --stage" };
+    }
+    if (speed) {
+      return stage.prePush !== false
+        ? { stage, action: "run", mode }
+        : { stage, action: "skip", mode, deferred: true, why: `speed profile: ${stage.skipWhy ?? "left for later"}` };
     }
     const inTier = prePush ? stage.prePush !== false : fast ? stage.fast : true;
     return inTier
       ? { stage, action: "run", mode }
       : { stage, action: "skip", mode, why: `${tier}: ${stage.skipWhy ?? "not in this tier"}` };
   });
+}
+
+/**
+ * What a finished run owes the workmode ledger. Pure.
+ *
+ *   settle: stages that ran in FULL and passed — a pass receipt for HEAD.
+ *           Never the affected-only test run, never a warned stage.
+ *   defer:  only for a speed-profile run that PASSED: the stages it left out,
+ *           plus any stage it narrowed (the full test suite).
+ *
+ * `results` rows: { stage, state: "passed"|"warned"|"FAILED"|"skipped"|"deferred"|"not run", mode }.
+ */
+export function ledgerCalls(results, { profile = null, passed = true } = {}) {
+  const settle = results
+    .filter((r) => r.state === "passed" && r.mode === "full")
+    .map((r) => r.stage.name);
+  const defer =
+    profile === "speed" && passed
+      ? results
+          .filter((r) => r.state === "deferred" || (r.state === "passed" && r.mode === "affected"))
+          .map((r) => r.stage.name)
+      : [];
+  return { settle, defer };
 }

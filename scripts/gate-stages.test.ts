@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { STAGES, commandLine, planStages } from "./gate-stages.mjs";
+import { STAGES, commandLine, ledgerCalls, planStages, resolveProfile } from "./gate-stages.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel: string) => readFileSync(join(root, rel), "utf8");
@@ -137,6 +137,108 @@ describe("planStages tiers", () => {
 
   it("--only reaches a stage its tier would skip, and rejects unknown names", () => {
     expect(names(planStages({ prePush: true, only: ["health"] }), "run")).toEqual(["health"]);
-    expect(() => planStages({ only: ["nope"] })).toThrow(/unknown step/);
+    expect(() => planStages({ only: ["nope"] })).toThrow(/unknown stage/);
+  });
+});
+
+describe("profiles are compositions of stages", () => {
+  const names = (plan: ReturnType<typeof planStages>, pick: (p: (typeof plan)[number]) => unknown) =>
+    plan.filter(pick).map((p) => p.stage.name);
+
+  it("quality runs every stage in full", () => {
+    const plan = planStages({ profile: "quality" });
+    expect(plan.every((p) => p.action === "run" && p.mode === "full")).toBe(true);
+  });
+
+  it("speed is the push tier exactly, and what it leaves out is deferred", () => {
+    const speed = planStages({ profile: "speed" });
+    const push = planStages({ prePush: true });
+    expect(names(speed, (p) => p.action === "run")).toEqual(names(push, (p) => p.action === "run"));
+    expect(speed.map((p) => p.mode)).toEqual(push.map((p) => p.mode));
+    expect(names(speed, (p) => p.deferred === true)).toEqual(["health", "build", "bundle-budget"]);
+  });
+
+  it("a named stage runs alone and in full, whatever the profile", () => {
+    const plan = planStages({ only: ["test"], profile: "speed" });
+    expect(names(plan, (p) => p.action === "run")).toEqual(["test"]);
+    expect(plan.find((p) => p.stage.name === "test")?.mode).toBe("full");
+    expect(plan.some((p) => p.deferred)).toBe(false);
+  });
+
+  it("the push tier ignores a profile: it is never weakened", () => {
+    expect(planStages({ prePush: true, profile: "speed" })).toEqual(planStages({ prePush: true }));
+  });
+});
+
+describe("resolveProfile", () => {
+  it("an explicit --profile wins over workmode", () => {
+    expect(resolveProfile({ flag: "quality", workmode: { mode: "speed", reason: "x" } })).toEqual({
+      profile: "quality",
+      source: "--profile",
+    });
+  });
+
+  it("no flag: workmode decides, and its reason is carried", () => {
+    expect(resolveProfile({ workmode: { mode: "speed", reason: "Peter active 3 min ago" } })).toEqual({
+      profile: "speed",
+      source: "workmode: Peter active 3 min ago",
+    });
+  });
+
+  it("no flag and no usable workmode answer: quality", () => {
+    expect(resolveProfile({}).profile).toBe("quality");
+    expect(resolveProfile({ workmode: { mode: "turbo" } as never }).profile).toBe("quality");
+  });
+
+  it("refuses a profile on the push tier or with --fast, and unknown profiles", () => {
+    expect(resolveProfile({ flag: "speed", prePush: true }).error).toMatch(/--pre-push/);
+    expect(resolveProfile({ flag: "quality", prePush: true }).error).toMatch(/--pre-push/);
+    expect(resolveProfile({ flag: "speed", fast: true }).error).toMatch(/--fast/);
+    expect(resolveProfile({ flag: "rush" }).error).toMatch(/must be one of/);
+  });
+
+  it("tier flags and --stage never consult workmode", () => {
+    const workmode = { mode: "speed", reason: "x" };
+    expect(resolveProfile({ prePush: true, workmode }).profile).toBeNull();
+    expect(resolveProfile({ fast: true, workmode }).profile).toBeNull();
+    expect(resolveProfile({ only: ["lint"], workmode }).profile).toBeNull();
+  });
+});
+
+describe("ledgerCalls", () => {
+  const rows = (plan: ReturnType<typeof planStages>, failed: string | null = null) =>
+    plan.map((p) => ({
+      stage: p.stage,
+      mode: p.mode,
+      state: p.action === "skip" ? (p.deferred ? "deferred" : "skipped") : p.stage.name === failed ? "FAILED" : "passed",
+    }));
+
+  it("a passing speed run defers the full test suite and every stage it left out", () => {
+    const calls = ledgerCalls(rows(planStages({ profile: "speed" })), { profile: "speed", passed: true });
+    expect(calls.defer).toEqual(["test", "health", "build", "bundle-budget"]);
+    expect(calls.settle).toEqual(["lint", "typecheck", "catalog", "usage-manifest"]);
+  });
+
+  it("a failing speed run defers nothing", () => {
+    const calls = ledgerCalls(rows(planStages({ profile: "speed" }), "lint"), { profile: "speed", passed: false });
+    expect(calls.defer).toEqual([]);
+    expect(calls.settle).not.toContain("lint");
+  });
+
+  it("a quality run settles everything and defers nothing", () => {
+    const calls = ledgerCalls(rows(planStages({ profile: "quality" })), { profile: "quality", passed: true });
+    expect(calls.defer).toEqual([]);
+    expect(calls.settle).toEqual(STAGES.map((s) => s.name));
+  });
+
+  it("the push tier never settles its affected-only test run", () => {
+    const calls = ledgerCalls(rows(planStages({ prePush: true })), { profile: null, passed: true });
+    expect(calls.settle).toEqual(["lint", "typecheck", "catalog", "usage-manifest"]);
+    expect(calls.defer).toEqual([]);
+  });
+
+  it("a warned stage is not settled", () => {
+    const r = rows(planStages({})).map((x) => (x.stage.name === "usage-manifest" ? { ...x, state: "warned" } : x));
+    expect(ledgerCalls(r, { profile: "quality", passed: true }).settle).not.toContain("usage-manifest");
   });
 });

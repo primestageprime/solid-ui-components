@@ -605,7 +605,21 @@ step's name and exit status, stops at the first failure, ends with a summary
 that lists EVERY stage (passed, FAILED, warned, skipped and why), and runs `build` and
 `bundle-budget` inside a detached `git worktree` so the live checkout's Vite
 cache is never touched — safe to run next to Peter's dev server. `npm run gate
--- --fast` skips `build`; `npm run gate -- --only <step>` runs one step. It is
+-- --fast` skips `build`; `npm run gate -- --stage <name>` (alias `--only`) runs
+one stage alone, in full.
+
+**Profiles.** Stages compose into two profiles (`scripts/gate-stages.mjs`
+`PROFILES`): `--profile quality` is every stage in full — the only run whose
+green means "the hook and CI will pass" — and `--profile speed` is the push tier
+(lint, typecheck, affected tests, catalog, usage-manifest warning) with the rest
+**deferred**: the gate records `test`, `health`, `build` and `bundle-budget` as
+owed in the machine-wide `workmode` ledger, and `workmode cleanup` runs them
+later one `--stage` at a time. Plain `npm run gate` takes its profile from
+`workmode --json` (speed while Peter is engaged, quality when he asks or goes
+idle) and is quality whenever workmode cannot say. The summary's first and last
+lines name the profile; **report "gate passed" with the profile and the
+deferred list, never bare**. A push to main needs a quality pass. `--pre-push`
+never reads workmode and refuses `--profile`. It is
 also what `githooks/pre-push` runs, but narrower — see *Gate tiers* below.
 **Never pipe
 a gate** into `head` or `echo` regardless — the exit status is the gate, and a
@@ -617,7 +631,7 @@ without the full suite going unchecked:
 | Tier | Runs | Command |
 |---|---|---|
 | push (`githooks/pre-push`) | lint, typecheck, only the tests that reach your diff, catalog freshness, usage-manifest (warn-only) | `node scripts/gate.mjs --pre-push` |
-| PR (CI, or locally) | full suite with coverage, execution-coverage, lint, typecheck, health ratchet, catalog freshness, build, bundle-budget (locally also the usage-manifest warning) | `npm run gate` |
+| PR (CI, or locally) | full suite with coverage, execution-coverage, lint, typecheck, health ratchet, catalog freshness, build, bundle-budget (locally also the usage-manifest warning) | `npm run gate -- --profile quality` |
 | merge | automatic release | none to run |
 
 `node scripts/affected-tests.mjs` prints the exact test files a push would run

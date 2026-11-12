@@ -22,6 +22,21 @@
 #
 # Versioned in githooks/; wired via `git config core.hooksPath githooks`,
 # which the npm "prepare" script sets automatically on install.
+# ┌─ RESERVED: main must have had QUALITY (not enabled — Peter's call, ───────┐
+# │  thorcasting #4473)                                                        │
+# │                                                                            │
+# │ This hook cannot run the builds itself (8 min outlives GitHub's SSH idle   │
+# │ timeout), so a push to refs/heads/main would be checked against the        │
+# │ workmode ledger's pass receipts instead:                                   │
+# │                                                                            │
+# │   workmode passed --stages test,lint,typecheck,health,catalog,build,\      │
+# │     bundle-budget --commit <sha being pushed>                              │
+# │                                                                            │
+# │ When this is switched on it goes in as a STAGE in scripts/gate-stages.mjs  │
+# │ (push tier only, reading the pushed refs this hook gets on stdin), not as  │
+# │ a command here: scripts/gate-stages.test.ts fails on any command in this   │
+# │ file other than the gate call below.                                       │
+# └────────────────────────────────────────────────────────────────────────────┘
 echo "pre-push: SUI gate (scripts/gate.mjs --pre-push — lint, typecheck, AFFECTED tests, catalog freshness, usage-manifest warning; the full suite, health and builds run at the PR gate)…"
 if ! node scripts/gate.mjs --pre-push; then
   {
@@ -36,7 +51,7 @@ if ! node scripts/gate.mjs --pre-push; then
     echo ""
     echo "   see which tests a push runs:  node scripts/affected-tests.mjs"
     echo "   run just the failing step:    npm run gate -- --only <step>"
-    echo "   run what CI runs (full):      npm run gate"
+    echo "   run what CI runs (full):      npm run gate -- --profile quality"
     echo "   ...without the slow builds:   npm run gate -- --fast"
     echo ""
     echo " Health ratchet no longer runs on push. If CI's health job fails,"

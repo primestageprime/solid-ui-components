@@ -3,9 +3,12 @@
 // gate — exactly what CI runs (.github/workflows/ci.yml), in one command,
 // safe to run next to a live dev server.
 //
-//   node scripts/gate.mjs                 # every job, in ci.yml's order
-//   node scripts/gate.mjs --fast          # same, but skip the two isolated builds
-//   node scripts/gate.mjs --only lint     # one job only (comma-separated ok)
+//   node scripts/gate.mjs                    # the profile `workmode` names (speed or quality);
+//                                            # quality when workmode cannot say
+//   node scripts/gate.mjs --profile quality  # every stage, in ci.yml's order — what CI runs
+//   node scripts/gate.mjs --profile speed    # the push tier now; the rest DEFERRED to the workmode ledger
+//   node scripts/gate.mjs --stage lint       # that stage alone, in full (comma-separated ok; --only is the same flag)
+//   node scripts/gate.mjs --fast             # every stage but the two isolated builds
 //   node scripts/gate.mjs --pre-push      # used by githooks/pre-push: lint + typecheck + AFFECTED tests + catalog
 //                                         # freshness + usage-manifest (warn-only)
 //   node scripts/gate.mjs --no-lock       # skip the machine-wide lock (see below)
@@ -34,6 +37,14 @@
 // in the hook or in CI without being a stage here. A green `npm run gate`
 // therefore means: the pre-push hook will pass and CI's checks will pass.
 // The summary lists EVERY stage, run or skipped.
+//
+// That promise belongs to the QUALITY profile (every stage, in full). Stages
+// are composable: each runs alone (`--stage <name>`), and a profile is a named
+// composition of them (gate-stages.mjs PROFILES). The SPEED profile runs the
+// push tier and hands the rest to the machine-wide `workmode` ledger as owed
+// work, which `workmode cleanup` later runs one `--stage` at a time; its
+// summary says "SPEED profile only" and never claims a CI-equivalent pass.
+// `--pre-push` never reads workmode and refuses `--profile`.
 //
 // WHY EVERY STEP SKIPS `npm ci --ignore-scripts`
 //
@@ -120,7 +131,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { acquireGateLock } from "./gate-lock.mjs";
 import { planTests } from "./affected-tests.mjs";
-import { planStages } from "./gate-stages.mjs";
+import { PROFILES, ledgerCalls, planStages, resolveProfile } from "./gate-stages.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -362,30 +373,80 @@ function runCommands(stage, cwd) {
   return 0;
 }
 
+// ── the workmode ledger (machine-wide; ~/.claude/toolbox/workmode) ──────
+//
+// `workmode` says whether this machine is in speed or quality mode, and keeps
+// the ledger of what speed runs skipped. Every call here is BEST-EFFORT: the
+// tool missing, slow or broken never fails the gate and never weakens it —
+// with no answer the profile is quality. `GATE_WORKMODE_BIN` points at another
+// binary (tests use a stub).
+const WORKMODE_BIN = process.env.GATE_WORKMODE_BIN || "workmode";
+
+function workmode(args) {
+  const r = spawnSync(WORKMODE_BIN, args, { cwd: root, encoding: "utf8", timeout: 10_000 });
+  if (r.error) return { ok: false, why: r.error.code === "ENOENT" ? "workmode is not on PATH" : r.error.message };
+  if (r.status !== 0) return { ok: false, why: `exit ${r.status}${r.stderr ? `: ${r.stderr.trim().split("\n")[0]}` : ""}` };
+  return { ok: true, stdout: r.stdout ?? "" };
+}
+
+function readWorkmode() {
+  const r = workmode(["--json"]);
+  if (!r.ok) return null;
+  try {
+    return JSON.parse(r.stdout);
+  } catch {
+    return null;
+  }
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────
 
 const argv = process.argv.slice(2);
+const flagValue = (name) => {
+  const i = argv.indexOf(name);
+  return i !== -1 ? (argv[i + 1] ?? "") : null;
+};
 const fast = argv.includes("--fast");
 const prePush = argv.includes("--pre-push");
 const noLock = argv.includes("--no-lock");
-const onlyFlagIdx = argv.indexOf("--only");
-const onlyNames = onlyFlagIdx !== -1 ? (argv[onlyFlagIdx + 1] ?? "").split(",").map((s) => s.trim()) : null;
+// `--stage` and `--only` are the same flag: run just the named stages.
+const named = [flagValue("--stage"), flagValue("--only")].filter((v) => v !== null);
+const onlyNames = named.length > 0 ? named.flatMap((v) => v.split(",").map((s) => s.trim())).filter(Boolean) : null;
+const profileFlag = flagValue("--profile");
 
-// The two stages `--pre-push` runs differently (same list, different runner).
-function runnerFor(stage) {
+// The profile: --profile, else (no tier flag, no named stage) whatever
+// `workmode --json` says, else quality. `--pre-push` never reads workmode.
+const wantsWorkmode = profileFlag === null && !fast && !prePush && !onlyNames;
+const resolved = resolveProfile({
+  flag: profileFlag,
+  fast,
+  prePush,
+  only: onlyNames,
+  workmode: wantsWorkmode ? readWorkmode() : null,
+});
+if (resolved.error) {
+  console.error(`✗ ${resolved.error}`);
+  process.exit(2);
+}
+const profile = resolved.profile;
+
+// The stages a narrowed tier runs differently (same list, different runner).
+function runnerFor(stage, mode) {
   if (prePush && stage.name === "health") return healthStepPrePush;
-  if (prePush && stage.name === "test") return testStepAffected;
+  if (mode === "affected" && stage.name === "test") return testStepAffected;
   return (cwd) => runCommands(stage, cwd);
 }
 
 let plan;
 try {
-  plan = planStages({ fast, prePush, only: onlyNames });
+  plan = planStages({ fast, prePush, only: onlyNames, profile });
 } catch (err) {
   console.error(`✗ ${err.message}`);
-  if (err.known) console.error(`  Known steps: ${err.known.join(", ")}`);
+  if (err.known) console.error(`  Known stages: ${err.known.join(", ")}`);
   process.exit(1);
 }
+
+if (profile) console.log(`gate: ${profile} profile — ${PROFILES[profile]} [${resolved.source}]`);
 
 // ── machine-wide lock ────────────────────────────────────────────────────
 //
@@ -408,48 +469,83 @@ const printRemedy = (stage) => {
 // everything "gate passed" does and does not cover.
 const results = [];
 let overall = 0;
-for (const { stage, action, mode, why } of plan) {
+for (const { stage, action, mode, why, deferred } of plan) {
   if (action === "skip") {
-    results.push({ stage, state: "skipped", note: why });
+    results.push({ stage, mode, state: deferred ? "deferred" : "skipped", note: why });
     continue;
   }
   if (overall !== 0) {
-    results.push({ stage, state: "not run", note: "an earlier stage failed" });
+    results.push({ stage, mode, state: "not run", note: "an earlier stage failed" });
     continue;
   }
   lock?.setStep(stage.name);
   console.log(`\n▶ ${stage.name}`);
-  const runner = runnerFor(stage);
+  const runner = runnerFor(stage, mode);
   const status = stage.isolate ? withDetachedWorktree(runner) : runner(root);
   const ok = status === 0;
-  const note = mode === "affected" ? "affected tests only" : "";
+  const affectedNote =
+    profile === "speed" ? "affected tests only; full suite deferred" : "affected tests only";
+  const note = mode === "affected" ? affectedNote : "";
   if (ok) {
     console.log(`✓ ${stage.name} — passed`);
-    results.push({ stage, state: "passed", note });
+    results.push({ stage, mode, state: "passed", note });
   } else if (stage.warnOnly) {
     console.log(`⚠ ${stage.name} — WARNING (exit ${status}), not blocking`);
     printRemedy(stage);
-    results.push({ stage, state: "warned", note: `exit ${status}, warn-only: does not fail the gate` });
+    results.push({ stage, mode, state: "warned", note: `exit ${status}, warn-only: does not fail the gate` });
   } else {
     console.log(`✗ ${stage.name} — FAILED (exit ${status})`);
     printRemedy(stage);
-    results.push({ stage, state: "FAILED", note: `exit ${status}` });
+    results.push({ stage, mode, state: "FAILED", note: `exit ${status}` });
     overall = status;
   }
 }
 
 lock?.release();
 
-const MARK = { passed: "✓", warned: "⚠", FAILED: "✗", skipped: "–", "not run": "–" };
+// ── ledger: pass receipts, and what a speed run owes ─────────────────────
+//
+// settle = "these stages passed in full at HEAD"; defer = "this speed run left
+// these for later" (`workmode cleanup` runs them with `gate.mjs --stage <name>`).
+// A receipt from a dirty tree is marked `--dirty`: it is not valid for a push.
+const ledgerNotes = [];
+let deferFailed = false;
+{
+  const { settle, defer } = ledgerCalls(results, { profile, passed: overall === 0 });
+  if (settle.length > 0) {
+    const status = spawnSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" });
+    const dirty = status.status !== 0 || status.stdout.trim() !== "";
+    const r = workmode(["settle", "--stages", settle.join(","), "--by", "gate", ...(dirty ? ["--dirty"] : [])]);
+    ledgerNotes.push(
+      r.ok
+        ? `workmode: pass receipts for ${settle.join(", ")}${dirty ? " (dirty tree: not valid for a push)" : ""}`
+        : `workmode: no pass receipts written (${r.why})`,
+    );
+  }
+  if (defer.length > 0) {
+    const r = workmode(["defer", "--stages", defer.join(","), "--by", "gate"]);
+    if (r.ok) {
+      ledgerNotes.push(`workmode: DEFERRED ${defer.join(", ")} — owed; \`workmode owed\` lists them, \`workmode cleanup\` runs them`);
+    } else {
+      deferFailed = true;
+      ledgerNotes.push(
+        `✗ workmode: COULD NOT RECORD the deferred stages (${r.why}). NOTHING remembers that ${defer.join(", ")} still have to run — run \`npm run gate -- --profile quality\` yourself before this goes anywhere.`,
+      );
+    }
+  }
+}
+
+const MARK = { passed: "✓", warned: "⚠", FAILED: "✗", skipped: "–", deferred: "…", "not run": "–" };
 const tierLabel = onlyNames
-  ? `--only ${onlyNames.join(",")}${prePush ? " (--pre-push)" : ""}`
+  ? `--stage ${onlyNames.join(",")}${prePush ? " (--pre-push)" : ""}`
   : prePush
     ? "--pre-push (push tier)"
     : fast
       ? "--fast"
-      : "full (what CI runs)";
+      : `${profile} profile [${resolved.source}]`;
 const count = (state) => results.filter((r) => r.state === state).length;
-const ran = results.length - count("skipped") - count("not run");
+const ran = count("passed") + count("warned") + count("FAILED");
+const narrowed = results.filter((r) => r.mode === "affected" && r.state === "passed").length;
 
 console.log(`\n── gate summary — ${tierLabel} ──────────────────────────`);
 for (const { stage, state, note } of results) {
@@ -457,17 +553,24 @@ for (const { stage, state, note } of results) {
 }
 console.log(
   `  ${ran} of ${results.length} stages ran` +
+    (count("deferred") ? `, ${count("deferred")} deferred` : "") +
     (count("skipped") ? `, ${count("skipped")} skipped` : "") +
     (count("not run") ? `, ${count("not run")} not run` : "") +
     (count("warned") ? `, ${count("warned")} warned` : ""),
 );
+for (const line of ledgerNotes) console.log(`  ${line}`);
+
 if (overall !== 0) {
   console.log("\n✗ gate FAILED");
-} else if (ran === results.length) {
-  console.log("\n✓ gate passed — every stage ran; the pre-push hook and CI run nothing else");
+} else if (ran === results.length && narrowed === 0) {
+  console.log("\n✓ gate passed — QUALITY: every stage ran in full; the pre-push hook and CI run nothing else");
+} else if (profile === "speed") {
+  console.log(
+    `\n✓ gate passed — SPEED profile only: ${ran} of ${results.length} stages, tests narrowed to the diff. NOT a CI-equivalent pass; the deferred stages above are ${deferFailed ? "NOT RECORDED ANYWHERE" : "owed in the workmode ledger"}. A push to main needs \`npm run gate -- --profile quality\`.`,
+  );
 } else {
   console.log(
-    `\n✓ gate passed — ${ran} of ${results.length} stages only; the skipped ones above still run at the PR gate (CI / plain \`npm run gate\`)`,
+    `\n✓ gate passed — ${ran} of ${results.length} stages only; the skipped ones above still run at the PR gate (CI / \`npm run gate -- --profile quality\`)`,
   );
 }
 
