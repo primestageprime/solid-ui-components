@@ -6,7 +6,8 @@
 //   node scripts/gate.mjs                 # every job, in ci.yml's order
 //   node scripts/gate.mjs --fast          # same, but skip the two isolated builds
 //   node scripts/gate.mjs --only lint     # one job only (comma-separated ok)
-//   node scripts/gate.mjs --pre-push      # used by githooks/pre-push: lint + typecheck + AFFECTED tests only
+//   node scripts/gate.mjs --pre-push      # used by githooks/pre-push: lint + typecheck + AFFECTED tests + catalog
+//                                         # freshness + usage-manifest (warn-only)
 //   node scripts/gate.mjs --no-lock       # skip the machine-wide lock (see below)
 //
 // WHY THIS EXISTS
@@ -26,10 +27,13 @@
 //   • Piping any of the above into `head` or `less` hides the exit status,
 //     so a red step reads as done.
 //
-// This script is the fix: it derives its step list FROM ci.yml (read the
-// workflow if this drifts — the list below is a transcription, not a
-// reimplementation) runs the same commands CI runs, and isolates the two
-// steps that build.
+// This script is the fix: it runs the same commands CI runs and isolates the
+// two steps that build. The stage list is scripts/gate-stages.mjs — ONE
+// definition, shared with githooks/pre-push (which only calls this script) and
+// checked against ci.yml by scripts/gate-stages.test.ts, so no check can live
+// in the hook or in CI without being a stage here. A green `npm run gate`
+// therefore means: the pre-push hook will pass and CI's checks will pass.
+// The summary lists EVERY stage, run or skipped.
 //
 // WHY EVERY STEP SKIPS `npm ci --ignore-scripts`
 //
@@ -116,6 +120,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { acquireGateLock } from "./gate-lock.mjs";
 import { planTests } from "./affected-tests.mjs";
+import { planStages } from "./gate-stages.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -342,52 +347,20 @@ function testStepAffected(cwd) {
   return run("npx", ["vitest", "run", ...files], { cwd }).status ?? 1;
 }
 
-// ── step list — derived from .github/workflows/ci.yml, same order ───────
+// ── stage list — scripts/gate-stages.mjs is the ONE definition ──────────
+//
+// The list, the tiers and the commands live in gate-stages.mjs (shared with
+// githooks/pre-push, which only calls this script, and checked against ci.yml
+// by scripts/gate-stages.test.ts). Here: how a stage is executed.
 
-const STEPS = [
-  {
-    name: "test",
-    // ci.yml `test` job: npm run test:coverage && npm run execution-coverage
-    run: (cwd) => {
-      const cov = run("npm", ["run", "test:coverage"], { cwd });
-      if (cov.status !== 0) return cov.status ?? 1;
-      return run("npm", ["run", "execution-coverage"], { cwd }).status ?? 1;
-    },
-  },
-  {
-    name: "lint",
-    // ci.yml `lint` job: npm run lint:ci (NOT plain `lint` — see header)
-    run: (cwd) => run("npm", ["run", "lint:ci"], { cwd }).status ?? 1,
-  },
-  {
-    name: "typecheck",
-    // ci.yml `typecheck` job: npx tsc --noEmit && npm run typecheck:dev
-    run: (cwd) => {
-      const src = run("npx", ["tsc", "--noEmit"], { cwd });
-      if (src.status !== 0) return src.status ?? 1;
-      return run("npm", ["run", "typecheck:dev"], { cwd }).status ?? 1;
-    },
-  },
-  {
-    name: "health",
-    // ci.yml `health` job: npm run health — mode swapped by --pre-push, see above.
-    run: null, // filled in below once `prePush` is known
-  },
-  {
-    name: "build",
-    // ci.yml `build` job: npm run build — isolated (see header §"HOW build...").
-    run: (cwd) => run("npm", ["run", "build"], { cwd }).status ?? 1,
-    isolate: true,
-  },
-  {
-    name: "bundle-budget",
-    // ci.yml `bundle-budget` job: npm run bundle-budget — also builds
-    // (scripts/bundle-budget.mjs calls `npm run build` itself), so it is
-    // isolated for the same reason `build` is.
-    run: (cwd) => run("npm", ["run", "bundle-budget"], { cwd }).status ?? 1,
-    isolate: true,
-  },
-];
+// Default runner: the stage's commands in order, stopping at the first failure.
+function runCommands(stage, cwd) {
+  for (const [cmd, ...args] of stage.commands) {
+    const status = run(cmd, args, { cwd }).status ?? 1;
+    if (status !== 0) return status;
+  }
+  return 0;
+}
 
 // ── CLI ──────────────────────────────────────────────────────────────────
 
@@ -398,29 +371,21 @@ const noLock = argv.includes("--no-lock");
 const onlyFlagIdx = argv.indexOf("--only");
 const onlyNames = onlyFlagIdx !== -1 ? (argv[onlyFlagIdx + 1] ?? "").split(",").map((s) => s.trim()) : null;
 
-for (const step of STEPS) {
-  if (step.name === "health") step.run = prePush ? healthStepPrePush : healthStepCi;
-  if (step.name === "test" && prePush) step.run = testStepAffected;
+// The two stages `--pre-push` runs differently (same list, different runner).
+function runnerFor(stage) {
+  if (prePush && stage.name === "health") return healthStepPrePush;
+  if (prePush && stage.name === "test") return testStepAffected;
+  return (cwd) => runCommands(stage, cwd);
 }
 
-if (onlyNames) {
-  const known = new Set(STEPS.map((s) => s.name));
-  const unknown = onlyNames.filter((n) => !known.has(n));
-  if (unknown.length > 0) {
-    console.error(`✗ --only names unknown step(s): ${unknown.join(", ")}`);
-    console.error(`  Known steps: ${[...known].join(", ")}`);
-    process.exit(1);
-  }
+let plan;
+try {
+  plan = planStages({ fast, prePush, only: onlyNames });
+} catch (err) {
+  console.error(`✗ ${err.message}`);
+  if (err.known) console.error(`  Known steps: ${err.known.join(", ")}`);
+  process.exit(1);
 }
-
-const stepsToRun = STEPS.filter((s) => {
-  if (onlyNames) return onlyNames.includes(s.name);
-  if ((fast || prePush) && (s.name === "build" || s.name === "bundle-budget")) return false;
-  // Pre-push drops the ratchet: it needs a full coverage run. CI and plain
-  // `gate` still run it; `--pre-push --only health` still reaches healthStepPrePush.
-  if (prePush && s.name === "health") return false;
-  return true;
-});
 
 // ── machine-wide lock ────────────────────────────────────────────────────
 //
@@ -433,29 +398,77 @@ const lock = noLock ? null : await acquireGateLock(root);
 
 // ── run ──────────────────────────────────────────────────────────────────
 
+const printRemedy = (stage) => {
+  if (!stage.remedy) return;
+  console.error("");
+  for (const line of stage.remedy) console.error(`  ${line}`);
+};
+
+// One row per stage in gate-stages.mjs — run or not — so the summary names
+// everything "gate passed" does and does not cover.
 const results = [];
 let overall = 0;
-for (const step of stepsToRun) {
-  lock?.setStep(step.name);
-  console.log(`\n▶ ${step.name}`);
-  const status = step.isolate ? withDetachedWorktree(step.run) : step.run(root);
+for (const { stage, action, mode, why } of plan) {
+  if (action === "skip") {
+    results.push({ stage, state: "skipped", note: why });
+    continue;
+  }
+  if (overall !== 0) {
+    results.push({ stage, state: "not run", note: "an earlier stage failed" });
+    continue;
+  }
+  lock?.setStep(stage.name);
+  console.log(`\n▶ ${stage.name}`);
+  const runner = runnerFor(stage);
+  const status = stage.isolate ? withDetachedWorktree(runner) : runner(root);
   const ok = status === 0;
-  console.log(`${ok ? "✓" : "✗"} ${step.name} — ${ok ? "passed" : `FAILED (exit ${status})`}`);
-  results.push({ name: step.name, status });
-  if (!ok) {
+  const note = mode === "affected" ? "affected tests only" : "";
+  if (ok) {
+    console.log(`✓ ${stage.name} — passed`);
+    results.push({ stage, state: "passed", note });
+  } else if (stage.warnOnly) {
+    console.log(`⚠ ${stage.name} — WARNING (exit ${status}), not blocking`);
+    printRemedy(stage);
+    results.push({ stage, state: "warned", note: `exit ${status}, warn-only: does not fail the gate` });
+  } else {
+    console.log(`✗ ${stage.name} — FAILED (exit ${status})`);
+    printRemedy(stage);
+    results.push({ stage, state: "FAILED", note: `exit ${status}` });
     overall = status;
-    break;
   }
 }
 
 lock?.release();
 
-console.log("\n── gate summary ──────────────────────────");
-for (const { name, status } of results) {
-  console.log(`  ${status === 0 ? "✓" : "✗"} ${name.padEnd(16)} exit ${status}`);
+const MARK = { passed: "✓", warned: "⚠", FAILED: "✗", skipped: "–", "not run": "–" };
+const tierLabel = onlyNames
+  ? `--only ${onlyNames.join(",")}${prePush ? " (--pre-push)" : ""}`
+  : prePush
+    ? "--pre-push (push tier)"
+    : fast
+      ? "--fast"
+      : "full (what CI runs)";
+const count = (state) => results.filter((r) => r.state === state).length;
+const ran = results.length - count("skipped") - count("not run");
+
+console.log(`\n── gate summary — ${tierLabel} ──────────────────────────`);
+for (const { stage, state, note } of results) {
+  console.log(`  ${MARK[state]} ${stage.name.padEnd(16)} ${state.padEnd(8)}${note ? ` ${note}` : ""}`.trimEnd());
 }
-const skipped = stepsToRun.length < STEPS.length && !onlyNames;
-if (skipped) console.log(prePush ? "  (build, bundle-budget, health skipped — pre-push gates lint, typecheck and AFFECTED tests; the PR gate (CI / npm run gate) runs the full suite, builds and health)" : "  (build + bundle-budget skipped — --fast)");
-console.log(overall === 0 ? "\n✓ gate passed" : "\n✗ gate FAILED");
+console.log(
+  `  ${ran} of ${results.length} stages ran` +
+    (count("skipped") ? `, ${count("skipped")} skipped` : "") +
+    (count("not run") ? `, ${count("not run")} not run` : "") +
+    (count("warned") ? `, ${count("warned")} warned` : ""),
+);
+if (overall !== 0) {
+  console.log("\n✗ gate FAILED");
+} else if (ran === results.length) {
+  console.log("\n✓ gate passed — every stage ran; the pre-push hook and CI run nothing else");
+} else {
+  console.log(
+    `\n✓ gate passed — ${ran} of ${results.length} stages only; the skipped ones above still run at the PR gate (CI / plain \`npm run gate\`)`,
+  );
+}
 
 process.exit(overall);

@@ -1,9 +1,18 @@
 #!/bin/sh
 # SUI gate — gates PUSHES only.
 #
-# Runs `scripts/gate.mjs --pre-push`: CI's lint and typecheck commands, plus
-# only the AFFECTED tests (scripts/affected-tests.mjs), so a push takes
-# minutes, not a full-suite run. The full suite, coverage, health ratchet and
+# Runs `scripts/gate.mjs --pre-push`, and NOTHING else: CI's lint and typecheck
+# commands, only the AFFECTED tests (scripts/affected-tests.mjs), catalog
+# freshness (blocks) and usage-manifest freshness (warns, never blocks), so a
+# push takes minutes, not a full-suite run.
+#
+# This hook holds NO check of its own. Every check is a stage in
+# scripts/gate-stages.mjs — the one list `npm run gate`, this hook and the CI
+# guard test (scripts/gate-stages.test.ts) all read. Until 2026-11-12 the
+# catalog and usage-manifest checks were written out here and were not gate
+# stages, so a green `npm run gate` could still be refused at push (thorcasting
+# #4472). To add a push check, add a stage there with `prePush: true`; a
+# command added to this file fails that test. The full suite, coverage, health ratchet and
 # builds are the PR gate (CI / `npm run gate`) — pre-push and CI differ in
 # BREADTH only, never in the commands they run.
 # See scripts/gate.mjs's header for the rationale, for the machine-wide lock,
@@ -13,14 +22,15 @@
 #
 # Versioned in githooks/; wired via `git config core.hooksPath githooks`,
 # which the npm "prepare" script sets automatically on install.
-echo "pre-push: SUI gate (scripts/gate.mjs --pre-push — lint, typecheck, AFFECTED tests; the full suite, health and builds run at the PR gate)…"
+echo "pre-push: SUI gate (scripts/gate.mjs --pre-push — lint, typecheck, AFFECTED tests, catalog freshness, usage-manifest warning; the full suite, health and builds run at the PR gate)…"
 if ! node scripts/gate.mjs --pre-push; then
   {
     echo ""
     echo "══════════════════════════════════════════════════════════════"
     echo " ✗ PUSH BLOCKED — see the failed step above"
     echo ""
-    echo " Push tier = lint + typecheck + only the tests that reach your diff."
+    echo " Push tier = lint + typecheck + only the tests that reach your diff"
+    echo " + catalog freshness (stale catalog.json: npm run catalog, commit it)."
     echo " The full suite, coverage, health ratchet and builds run at the PR"
     echo " gate (CI), so a green push is not a green PR."
     echo ""
@@ -35,73 +45,4 @@ if ! node scripts/gate.mjs --pre-push; then
     echo "══════════════════════════════════════════════════════════════"
   } >&2
   exit 1
-fi
-
-# Component catalog freshness — CI's health job runs `npm run catalog -- --check`
-# (.github/workflows/ci.yml), but scripts/gate.mjs has no step for it, so a stale
-# catalog.json (COMPONENTS.md, CHANGELOG.md, dev/main.tsx or src/ edited without
-# `npm run catalog`) only failed in CI. Seven red runs on 2026-10-08 were all
-# this. Unlike the usage manifest below, catalog.json is built purely from THIS
-# repo, so it BLOCKS.
-echo "pre-push: catalog freshness (npm run catalog -- --check)…"
-if ! npm run --silent catalog -- --check; then
-  {
-    echo ""
-    echo "══════════════════════════════════════════════════════════════"
-    echo " ✗ PUSH BLOCKED — catalog.json is stale"
-    echo ""
-    echo "   npm run catalog     # regenerate, then commit catalog.json"
-    echo "══════════════════════════════════════════════════════════════"
-  } >&2
-  exit 1
-fi
-
-# Production usage manifest freshness — does docs/usage-manifest.json still
-# match what the SUI-consuming production repos import (scripts/usage-manifest.mjs)?
-#
-# WARNS, never blocks (2026-08-05, dside sui 12565). It blocked until it had
-# refused four consecutive unrelated pushes, all of which went through with
-# --no-verify; a gate that trains you to bypass it is worse than no gate.
-#
-# Two reasons it cannot be a gate in this shape:
-#
-#   1. It compares against consumer WORKING COPIES on whoever's machine is
-#      pushing — unpinned, possibly mid-feature, possibly on another branch.
-#      The last block was five line numbers moving in thorcasting-ui because
-#      somebody added three lines above an import. Nothing about SUI changed.
-#      And the printed remedy ("regenerate and commit") would have committed a
-#      snapshot of another developer's working tree into this repo.
-#
-#   2. It is silent on the change it exists to catch. --check compares the
-#      committed manifest against a fresh consumer scan; deleting a SUI export
-#      changes NEITHER side, because the manifest records consumers' imports
-#      and not SUI's exports. Delete something thorcasting-ui imports and this
-#      check passes. It blocked the noise and permitted the harm.
-#
-# The gate worth having asks a different question — "does any repo that tracks
-# main unpinned import a name this push no longer exports?" — and needs SUI's
-# own export surface, which the tool does not currently compute. Filed on
-# dside sui 12565. Until then the manifest is a REPORT: regenerate it when you
-# want a survey, which is exactly when you are deciding whether an export is
-# safe to remove. Do not trust the committed copy without regenerating.
-echo "pre-push: SUI usage manifest freshness (scripts/usage-manifest.mjs --check)…"
-if ! node scripts/usage-manifest.mjs --check; then
-  {
-    echo ""
-    echo "──────────────────────────────────────────────────────────────"
-    echo " ⚠ docs/usage-manifest.json is stale — NOT blocking this push"
-    echo ""
-    echo " Consumer imports drifted since the manifest was generated"
-    echo " (differences listed above). Usually this is another repo's"
-    echo " working copy moving, and has nothing to do with your change."
-    echo ""
-    echo " Regenerate when you actually need the survey — above all"
-    echo " before deleting or renaming an export:"
-    echo ""
-    echo "   npm run usage-manifest"
-    echo ""
-    echo " This check does NOT verify that your push keeps consumers"
-    echo " compiling. See dside sui 12565."
-    echo "──────────────────────────────────────────────────────────────"
-  } >&2
 fi

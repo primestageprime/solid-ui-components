@@ -595,9 +595,14 @@ no-ops in silence — five times in one day.
 `npm run lint` is warning-tolerant where CI's `lint:ci` is not, and `npm run
 build`/`npm run bundle-budget` in THIS checkout collide with a running `vite
 --port 6006` dev server through the shared `node_modules/.vite` cache and wedge
-it. Run **`npm run gate`** instead: it derives its step list from
-`.github/workflows/ci.yml` (same commands, same order, same flags), prints each
-step's name and exit status, stops at the first failure, and runs `build` and
+it. Run **`npm run gate`** instead: its stage list is `scripts/gate-stages.mjs`, the
+ONE definition of every check (the same commands and flags as
+`.github/workflows/ci.yml`, held to it by `scripts/gate-stages.test.ts`, plus
+the local-only usage-manifest warning). A green full gate means the pre-push
+hook will pass and CI's checks will pass; add a check as a stage there, never
+in the hook or in `ci.yml` alone. It prints each
+step's name and exit status, stops at the first failure, ends with a summary
+that lists EVERY stage (passed, FAILED, warned, skipped and why), and runs `build` and
 `bundle-budget` inside a detached `git worktree` so the live checkout's Vite
 cache is never touched — safe to run next to Peter's dev server. `npm run gate
 -- --fast` skips `build`; `npm run gate -- --only <step>` runs one step. It is
@@ -611,8 +616,8 @@ without the full suite going unchecked:
 
 | Tier | Runs | Command |
 |---|---|---|
-| push (`githooks/pre-push`) | lint, typecheck, and only the tests that reach your diff | `node scripts/gate.mjs --pre-push` |
-| PR (CI, or locally) | full suite with coverage, execution-coverage, lint, typecheck, health ratchet, build, bundle-budget | `npm run gate` |
+| push (`githooks/pre-push`) | lint, typecheck, only the tests that reach your diff, catalog freshness, usage-manifest (warn-only) | `node scripts/gate.mjs --pre-push` |
+| PR (CI, or locally) | full suite with coverage, execution-coverage, lint, typecheck, health ratchet, catalog freshness, build, bundle-budget (locally also the usage-manifest warning) | `npm run gate` |
 | merge | automatic release | none to run |
 
 `node scripts/affected-tests.mjs` prints the exact test files a push would run
