@@ -7950,7 +7950,7 @@
     "useFor": null,
     "notes": "Curry a screen's words, column width, slot gap and inset once. The words are the screen's own nouns, which a library cannot guess, so there is no shipped variant: the consumer curries its own, or uses the base as it is.",
     "showcase": "#/slot-stack-chart",
-    "since": "Unreleased",
+    "since": "0.256.0",
     "file": "src/components/SlotStackChart/SlotStackChart.tsx",
     "line": 319
   },
@@ -22510,7 +22510,7 @@
     "useFor": "money or work against an expectation per bucket, where each category must show whether it fell short, landed or ran over, in place. Not for a plain stack (`StackedTimelineChart` with `columns`) or side-by-side bars a reader drags (`TargetBarChart`).",
     "notes": null,
     "showcase": "#/slot-stack-chart",
-    "since": "Unreleased",
+    "since": "0.256.0",
     "file": "src/components/SlotStackChart/SlotStackChart.tsx",
     "line": 197
   },
@@ -22537,7 +22537,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/slot-stack-chart",
-    "since": "Unreleased",
+    "since": "0.256.0",
     "file": "src/components/SlotStackChart/SlotStackLegend.tsx",
     "line": 138
   },

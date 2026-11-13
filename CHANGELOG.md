@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.256.0 — 2026-11-13
+
 ### Added
 
 - **`SlotStackChart`: `labelParts`, which parts of a labelled column carry a figure** (thorcasting 4467). Peter, on the hovered dollars column: "it's confusing to see + and - numbers. just show the values that are there, not the shortfalls for now". `labelParts?: "all" | "present"`, default `"all"` (unchanged: filled, unfilled and overflow, the last two signed). `"present"` labels only the filled part and the overflow, each as a plain amount with no sign; the unfilled part keeps its dashed outline and carries no figure, nested or callout. The line above the column is the same either way. Type `SlotStackLabelParts`. Additive.
