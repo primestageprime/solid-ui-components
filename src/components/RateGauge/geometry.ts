@@ -1053,7 +1053,26 @@ export interface GaugeInput {
    * `callouts: "corners"`.
    */
   readonly cornerLabels?: CornerLabels;
+  /**
+   * Where the leader drawing sits in a measured box that is wider than it
+   * needs. `start` (the default) keeps the dial's pivot on the left margin,
+   * exactly as it always was; `center` centres the dial plus its label column
+   * (thorcasting #4517: in a full-screen panel the dial sat at the left with
+   * the rest of the box empty). Only the leader layout reads it — the corner
+   * layout's blocks are pinned to the box's right edge — and an unmeasured
+   * gauge has no slack to share, so both draw exactly what they drew before.
+   */
+  readonly align?: CalloutAlign;
+  /**
+   * The words the centring is measured against, when they differ from
+   * `labels`: the WIDEST column the gauge can ever carry, so the dial holds
+   * still while the current words change length. Defaults to `labels`.
+   */
+  readonly alignLabels?: readonly string[];
 }
+
+/** Where a leader drawing sits in a box wider than it needs. */
+export type CalloutAlign = "start" | "center";
 
 /** Everything the component paints. Nothing is decided after this. */
 export interface GaugeGeometry {
@@ -1085,6 +1104,12 @@ export interface GaugeGeometry {
   /** The canvas, cut to this reading's content. */
   readonly viewWidth: number;
   readonly viewBox: string;
+  /**
+   * How far right of the box's left edge the drawing was moved to centre it
+   * (`align: "center"`); 0 otherwise. Every other coordinate here is in the
+   * drawing's own frame — the viewBox origin carries the shift.
+   */
+  readonly offsetX: number;
   /** How much room a label has before it must truncate. */
   readonly labelWidth: number;
   /** Which callout layout was drawn — the input's `callouts`, echoed. */
@@ -1805,6 +1830,23 @@ export const leaderConflicts = (
 };
 
 /**
+ * How far to move a leader drawing right to centre it in its box: half the
+ * width the drawing leaves unused, measured against the widest column it can
+ * carry (`alignLabels`) so the dial does not drift as the words change. Never
+ * negative, and 0 for the default alignment, the corner layout, or no box.
+ */
+const centringOffset = (input: GaugeInput, metrics: Metrics): number => {
+  if (input.align !== "center" || input.box === undefined) return 0;
+  if ((input.callouts ?? "leaders") !== "leaders") return 0;
+  const room = input.box.width - metrics.textX - CANVAS_MARGIN;
+  const column = Math.min(
+    room,
+    Math.max(metrics.labelWidth, wantedColumnWidth(input.alignLabels ?? input.labels ?? [])),
+  );
+  return Math.max(0, (input.box.width - (metrics.textX + column + CANVAS_MARGIN)) / 2);
+};
+
+/**
  * The whole dial for one reading. Call this once per render; the component
  * reads fields off it and paints, deciding nothing.
  */
@@ -1837,6 +1879,7 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
     valueAngle,
     BRACE_CUSP_DEPTH,
   );
+  const offsetX = centringOffset(input, metrics);
   return {
     drawnValue: drawn,
     drawnBaseline: drawnBaseline,
@@ -1889,7 +1932,8 @@ export const gaugeGeometry = (input: GaugeInput): GaugeGeometry => {
     ),
     metrics,
     viewWidth: metrics.viewWidth,
-    viewBox: `0 0 ${metrics.viewWidth} ${metrics.viewHeight}`,
+    viewBox: `${offsetX === 0 ? 0 : -offsetX} 0 ${metrics.viewWidth} ${metrics.viewHeight}`,
+    offsetX,
     labelWidth: metrics.labelWidth,
     callouts:
       calloutMode === "corners"

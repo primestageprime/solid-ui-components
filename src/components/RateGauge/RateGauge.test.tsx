@@ -593,3 +593,44 @@ describe("callouts — the corners gauge", () => {
     expect(texts(container)).toHaveLength(5);
   });
 });
+
+// ── align: "center" through the component (thorcasting #4517) ─────────────
+describe("align: center — the drawing is centred in a wide box and holds still", () => {
+  const perMonth = (value: number): string =>
+    `$${Math.abs(Math.round(value)).toLocaleString("en-US")}/mo`;
+  const signed = (delta: number): string => `${delta < 0 ? "-" : "+"}${perMonth(delta)}`;
+  const wording = { baselineLabel: "Baseline", formatAgainst: perMonth, formatDelta: signed };
+  const Centred = createRateGauge({ ...wording, align: "center" });
+  const Start = createRateGauge(wording);
+  const viewBoxIn = (gauge: () => JSX.Element): string => {
+    const restore = installRects((el) =>
+      el.classList.contains("sui-rate-gauge")
+        ? rectOf({ left: 0, top: 0, width: 1500, height: 600 })
+        : null,
+    );
+    try {
+      const svg = render(gauge).container.querySelector("svg.sui-rate-gauge__canvas");
+      return svg?.getAttribute("viewBox") ?? "";
+    } finally {
+      restore();
+    }
+  };
+  const originOf = (viewBox: string): number => Number(viewBox.split(" ")[0]);
+
+  it("default stays on the left margin; centred moves the origin left", () => {
+    const start = viewBoxIn(() => <Start domain={DOMAIN} baseline={0} value={1200} label="Scenario" />);
+    const centred = viewBoxIn(() => (
+      <Centred domain={DOMAIN} baseline={0} value={1200} label="Scenario" />
+    ));
+    expect(start).toBe("0 0 1500 600");
+    expect(originOf(centred)).toBeLessThan(0);
+  });
+
+  it("the centre does not move when the value (and so the words' length) changes", () => {
+    const small = viewBoxIn(() => <Centred domain={DOMAIN} baseline={0} value={7} label="Scenario" />);
+    const large = viewBoxIn(() => (
+      <Centred domain={DOMAIN} baseline={0} value={-28500} label="Scenario" />
+    ));
+    expect(originOf(small)).toBe(originOf(large));
+  });
+});

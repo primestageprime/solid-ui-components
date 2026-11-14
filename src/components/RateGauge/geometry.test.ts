@@ -1321,3 +1321,68 @@ describe("leader routing — no crossings, no lines on top of each other", () =>
     }
   });
 });
+
+// ── align: "center" (thorcasting #4517, 2026-11-13) ────────────────────────
+// A full-screen panel is far wider than the height-bound leader drawing, which
+// used to sit on the left margin with the rest of the box empty. Centring moves
+// the viewBox origin, so every mark moves together and the drawing itself — the
+// same numbers the default draws — is untouched.
+describe("align: center", () => {
+  const LABELS = ["SCENARIO A", "+$18,000/MO", "BASELINE"];
+  const WIDE = { width: 1500, height: 600 };
+  const read = (over: Partial<Parameters<typeof gaugeGeometry>[0]>) =>
+    gaugeGeometry({
+      domain: DOMAIN,
+      baseline: 5000,
+      value: 23000,
+      labels: LABELS,
+      box: WIDE,
+      ...over,
+    });
+
+  it("the default is byte-identical: offset 0, viewBox from the origin", () => {
+    const start = read({});
+    expect(start.offsetX).toBe(0);
+    expect(start.viewBox).toBe("0 0 1500 600");
+    expect(read({ align: "start" })).toEqual(start);
+  });
+
+  it("centres the dial plus its column, drawing everything else exactly as the default does", () => {
+    const start = read({});
+    const centred = read({ align: "center" });
+    const right = centred.metrics.textX + centred.metrics.labelWidth + 4;
+    expect(round(centred.offsetX)).toBe(round((1500 - right) / 2));
+    expect(centred.offsetX).toBeGreaterThan(0);
+    expect(centred.viewBox).toBe(`${-centred.offsetX} 0 1500 600`);
+    // Left gap (offset plus the margin) equals the right gap.
+    expect(round(centred.offsetX + 4)).toBe(round(1500 - (right + centred.offsetX) + 4));
+    const { offsetX: _a, viewBox: _b, ...restCentred } = centred;
+    const { offsetX: _c, viewBox: _d, ...restStart } = start;
+    expect(restCentred).toEqual(restStart);
+  });
+
+  it("measures against the widest column it is told about, so the dial holds still as the words change", () => {
+    const longest = "$11.0k/mo below breakeven";
+    const short = read({ align: "center", alignLabels: [...LABELS, longest] });
+    const long = read({
+      align: "center",
+      labels: [...LABELS, longest],
+      alignLabels: [...LABELS, longest],
+    });
+    expect(short.offsetX).toBe(long.offsetX);
+    expect(short.offsetX).toBeLessThan(read({ align: "center" }).offsetX);
+  });
+
+  it("is a no-op with no box, in the corner layout, and when the box has no slack", () => {
+    expect(read({ align: "center", box: undefined }).offsetX).toBe(0);
+    expect(read({ align: "center", box: undefined }).viewBox).toBe(read({ box: undefined }).viewBox);
+    const corners = read({
+      align: "center",
+      callouts: "corners",
+      cornerLabels: { value: ["SCENARIO A", "+$18,000/MO"], baseline: ["BASELINE"] },
+    });
+    expect(corners.offsetX).toBe(0);
+    const tight = { width: minLeadersWidth(600, LABELS) - 40, height: 600 };
+    expect(read({ align: "center", box: tight }).offsetX).toBe(0);
+  });
+});

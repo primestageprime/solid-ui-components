@@ -7622,7 +7622,8 @@
       "formatAgainst",
       "formatDelta",
       "callouts",
-      "formatCornerDelta"
+      "formatCornerDelta",
+      "align"
     ],
     "dataProps": "RateGaugeDataProps",
     "summary": "Bake the wording into a named variant.",
@@ -7634,7 +7635,7 @@
     "showcase": "#/rate-gauge",
     "since": "0.171.0",
     "file": "src/components/RateGauge/RateGauge.tsx",
-    "line": 433
+    "line": 465
   },
   {
     "name": "createRedactedRow",
@@ -20281,7 +20282,8 @@
       "formatAgainst",
       "formatDelta",
       "callouts",
-      "formatCornerDelta"
+      "formatCornerDelta",
+      "align"
     ],
     "dataProps": "RateGaugeDataProps",
     "summary": "Plain numbers against zero: the dial with no units and no domain nouns.",
@@ -20315,7 +20317,8 @@
       "formatAgainst",
       "formatDelta",
       "callouts",
-      "formatCornerDelta"
+      "formatCornerDelta",
+      "align"
     ],
     "dataProps": "RateGaugeDataProps",
     "summary": "Composite (Depth 2).",
@@ -20327,7 +20330,7 @@
     "showcase": "#/rate-gauge",
     "since": "0.171.0",
     "file": "src/components/RateGauge/RateGauge.tsx",
-    "line": 239
+    "line": 250
   },
   {
     "name": "RecentStarredSidebar",

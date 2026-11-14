@@ -101,6 +101,34 @@ const MonthlyRateDial = createRateGauge({
   formatDelta: asPayroll,
 });
 
+/** The same wording, centred in a box wider than the drawing (thorcasting #4517). */
+const CentredRateDial = createRateGauge({
+  baselineLabel: "Breakeven",
+  formatAgainst: againstBreakeven,
+  formatDelta: asPayroll,
+  align: "center",
+});
+
+/**
+ * A full-screen-shaped box: far wider than the height-bound leader drawing.
+ * The default sits on the left margin; `align: "center"` centres the dial plus
+ * its column, measured against the widest words it can carry so the dial does
+ * not drift as the value moves.
+ */
+const WideSpecimens: Component = () => (
+  <TightStack>
+    <SubsectionTitle>A wide box (full screen)</SubsectionTitle>
+    <CaptionLabel>align: "start" (default)</CaptionLabel>
+    <div class="rate-gauge-demo--wide">
+      <MonthlyRateDial domain={DOMAIN} baseline={5000} value={23000} label="Scenario A" />
+    </div>
+    <CaptionLabel>align: "center"</CaptionLabel>
+    <div class="rate-gauge-demo--wide">
+      <CentredRateDial domain={DOMAIN} baseline={5000} value={23000} label="Scenario A" />
+    </div>
+  </TightStack>
+);
+
 /**
  * One card, exactly as a consumer would compose it around the gauge.
  *
@@ -287,6 +315,8 @@ export const RateGaugeShowcase: Component = () => (
           <GenericSpecimen />
         </WrapRow>
       </TightStack>
+
+      <WideSpecimens />
     </SpacedStack>
   </div>
 );

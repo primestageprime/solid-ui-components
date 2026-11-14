@@ -46,6 +46,7 @@ import {
   type Band,
   type Box,
   type Callout,
+  type CalloutAlign,
   type CalloutMode,
   type CornerBlock,
   type CornerId,
@@ -134,6 +135,10 @@ export interface RateGaugeCanvasProps {
     id: CornerId,
     geometry: GaugeGeometry,
   ) => readonly RateGaugeCornerLine[];
+  /** `center` centres the leader drawing in a wider box; see `GaugeInput.align`. */
+  align?: CalloutAlign;
+  /** The widest column the centring is measured against; see `GaugeInput.alignLabels`. */
+  alignLabels?: readonly string[];
 }
 
 /**
@@ -208,6 +213,8 @@ export function RateGaugeCanvas(props: RateGaugeCanvasProps): JSX.Element {
       box: box(),
       callouts: props.callouts,
       cornerLabels: props.cornerLabels,
+      align: props.align,
+      alignLabels: props.alignLabels,
     }),
   );
   const tone = () => geometry().tone;

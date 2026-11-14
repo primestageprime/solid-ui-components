@@ -73,6 +73,7 @@
 import { type Component, type JSX, mergeProps } from "solid-js";
 import {
   type Callout,
+  type CalloutAlign,
   type CalloutMode,
   type CornerId,
   type CornerLabels,
@@ -87,7 +88,7 @@ import {
   type RateGaugeLabelSlot,
   type RateGaugeLine,
 } from "./RateGaugeCanvas";
-import { map } from "../../fn";
+import { flatMap, map } from "../../fn";
 import { EllipsizedHudCaption } from "../Text";
 import { Tooltip } from "../Tooltip";
 
@@ -156,6 +157,16 @@ export interface RateGaugeProps {
    * baseline is zero.
    */
   formatCornerDelta?: (delta: number, baseline: number) => string;
+  /**
+   * Where the leader drawing sits in a measured box wider than it needs.
+   * `start` (the default) keeps the dial on the left margin, as it always was;
+   * `center` centres the dial plus its label column. The centre is measured
+   * against the widest words the gauge can carry anywhere on its scale, so the
+   * dial holds still while the value moves. The corner layout ignores it.
+   *
+   * Presentational, so it curries (thorcasting #4517, the full-screen panel).
+   */
+  align?: CalloutAlign;
 }
 
 const DEFAULT_BASELINE_LABEL = "Reference";
@@ -318,6 +329,20 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
     );
   };
 
+  /**
+   * The widest leader column the gauge can carry anywhere on its scale — the
+   * words with the value at either end of the domain, at the baseline (the
+   * collapse) and now — so `align: "center"` measures one column, not the
+   * current words, and the dial does not drift as the value moves.
+   */
+  const alignLabels = (): readonly string[] | undefined =>
+    props.align === "center"
+      ? flatMap(
+          (value: number) => rateGaugeCalloutLabels({ ...props, value }),
+          [props.domain[0], props.domain[1], props.baseline, props.value],
+        )
+      : undefined;
+
   const cornerLines = (id: CornerId, geometry: GaugeGeometry) =>
     cornerLinesOf(geometry.drawnValue, geometry.drawnBaseline)[id];
 
@@ -405,6 +430,8 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
       callouts={props.callouts}
       cornerLabels={cornerLabels()}
       cornerLines={cornerLines}
+      align={props.align}
+      alignLabels={alignLabels()}
     />
   );
 };
@@ -419,7 +446,12 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
  */
 export type RateGaugeOverrides = Pick<
   RateGaugeProps,
-  "baselineLabel" | "formatAgainst" | "formatDelta" | "callouts" | "formatCornerDelta"
+  | "baselineLabel"
+  | "formatAgainst"
+  | "formatDelta"
+  | "callouts"
+  | "formatCornerDelta"
+  | "align"
 >;
 
 /**
