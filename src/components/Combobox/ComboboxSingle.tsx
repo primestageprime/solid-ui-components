@@ -202,7 +202,15 @@ export const renderSingle = (
         )}
       </KobalteCombobox.Control>
       <KobalteCombobox.Portal>
-        <KobalteCombobox.Content class="sui-combobox__content">
+        <KobalteCombobox.Content
+          class="sui-combobox__content"
+          // Keep focus in the input when a row is pressed. Without this the
+          // mousedown blurs the input, Kobalte's onBlur resets its filter, the
+          // list reflows, and the pointer-UP selects whichever row is now
+          // under the pointer (thorcasting #4516: "Create carpenter" picked
+          // Owner). Selection itself is Kobalte's press handling, untouched.
+          onMouseDown={(e: MouseEvent) => e.preventDefault()}
+        >
           <KobalteCombobox.Listbox class="sui-combobox__listbox" />
         </KobalteCombobox.Content>
       </KobalteCombobox.Portal>

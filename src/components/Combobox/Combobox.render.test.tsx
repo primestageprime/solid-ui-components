@@ -449,3 +449,91 @@ describe("Combobox — Enter picks highlighted, creates only via the row", () =>
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+// ── A press on a list row keeps focus in the input (thorcasting #4516) ────
+//
+// In a browser, a mousedown that is not default-prevented moves focus to the
+// pressed element; the input blurs, Kobalte's onBlur resets its filter text,
+// the list reflows to every option, and the pointer-UP (Kobalte selects on
+// press-up from any origin) lands on whatever row is NOW at that position.
+// jsdom does not move focus on mousedown, so `press` models the browser: it
+// blurs the input itself when the mousedown was not prevented, then releases
+// on the row now at the pressed index — exactly the reflow that picked Owner
+// for "Create carpenter".
+describe("Combobox — a press on a list row keeps focus and picks the pressed row", () => {
+  const ROLES: ComboboxOption[] = [
+    { value: "owner", label: "Owner" },
+    { value: "roofer", label: "Roofer" },
+    { value: "pm", label: "Project manager" },
+  ];
+  const items = () =>
+    [...document.body.querySelectorAll('[role="option"]')] as HTMLElement[];
+
+  const press = (c: Element, index: number) => {
+    const row = items()[index]!;
+    fireEvent.pointerDown(row, { pointerId: 1, pointerType: "mouse", button: 0 });
+    const notPrevented = fireEvent.mouseDown(row, { button: 0 });
+    if (notPrevented) input(c).blur();
+    const release = items()[index]!;
+    fireEvent.pointerUp(release, { pointerId: 1, pointerType: "mouse", button: 0 });
+    fireEvent.mouseUp(release, { button: 0 });
+    fireEvent.click(release, { button: 0 });
+    return notPrevented;
+  };
+
+  const open = async (c: Element, text: string) => {
+    fireEvent.click(c.querySelector(".sui-combobox__trigger")!);
+    input(c).focus();
+    fireEvent.input(input(c), { target: { value: text } });
+    await tick();
+  };
+
+  it("single: mousedown on a row is default-prevented, so the input keeps focus", async () => {
+    const [options] = createSignal(ROLES);
+    const [value] = createSignal<ComboboxOption | null>(null);
+    const { container } = render(() => (
+      <Combobox options={options} value={value} onCreate={() => {}} />
+    ));
+    await open(container, "carpenter");
+    expect(press(container, 0)).toBe(false);
+  });
+
+  it("single: pressing the Create row creates, never picks the row that reflows under it", async () => {
+    const [options] = createSignal(ROLES);
+    const [value, setValue] = createSignal<ComboboxOption | null>(null);
+    const onChange = vi.fn((v: ComboboxOption | null) => setValue(v));
+    const onCreate = vi.fn();
+    const { container } = render(() => (
+      <Combobox options={options} value={value} onChange={onChange} onCreate={onCreate} />
+    ));
+    await open(container, "carpenter");
+    expect(items().map((el) => el.textContent)).toEqual(['Create "carpenter"']);
+    press(container, 0);
+    expect(onCreate).toHaveBeenCalledWith("carpenter");
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("single: pressing a filtered row picks that row", async () => {
+    const [options] = createSignal(ROLES);
+    const [value, setValue] = createSignal<ComboboxOption | null>(null);
+    const onChange = vi.fn((v: ComboboxOption | null) => setValue(v));
+    const { container } = render(() => (
+      <Combobox options={options} value={value} onChange={onChange} />
+    ));
+    await open(container, "roof");
+    press(container, 0);
+    expect(onChange).toHaveBeenCalledWith(ROLES[1]);
+  });
+
+  it("multi: mousedown on a row is default-prevented and the pressed row is added", async () => {
+    const [options] = createSignal(ROLES);
+    const [value, setValue] = createSignal<ComboboxOption[]>([]);
+    const onChange = vi.fn((next: ComboboxOption[]) => setValue(next));
+    const { container } = render(() => (
+      <Combobox multiple options={options} value={value} onChange={onChange} />
+    ));
+    await open(container, "roof");
+    expect(press(container, 0)).toBe(false);
+    expect(onChange).toHaveBeenCalledWith([ROLES[1]]);
+  });
+});

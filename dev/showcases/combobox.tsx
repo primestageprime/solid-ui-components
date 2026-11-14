@@ -93,6 +93,23 @@ export const ComboboxShowcase: Component = () => {
     setGroup(created);
   };
 
+  // Click-a-row demo (thorcasting #4516, 2026-11-13): the press must keep
+  // focus in the input so the list does not reflow under the pointer.
+  const [roles, setRoles] = createSignal<ComboboxOption[]>([
+    { value: "owner", label: "Owner" },
+    { value: "roofer", label: "Roofer" },
+    { value: "pm", label: "Project manager" },
+  ]);
+  const [role, setRole] = createSignal<ComboboxOption | null>(null);
+  const addRole = (label: string) => {
+    const created: ComboboxOption = {
+      value: label.toLowerCase().replace(/\s+/g, "-"),
+      label,
+    };
+    setRoles([...roles(), created]);
+    setRole(created);
+  };
+
   // Disabled demo — a pre-selected, read-only combobox.
   const [lockedCountry] = createSignal<ComboboxOption | null>(
     INITIAL_COUNTRIES[0],
@@ -159,6 +176,29 @@ export const ComboboxShowcase: Component = () => {
           </div>
         </NarrowStack>
         <Text variant="sublabel">Selected: {group()?.label ?? "(none)"}</Text>
+      </div>
+
+      <div class="example-group">
+        <h3>Clicking a filtered row (thorcasting #4516, 2026-11-13)</h3>
+        <NarrowStack>
+          <div class="text-meta">
+            Type "carpenter" and CLICK <code>Create "carpenter"</code> (or type
+            "roof" and click Roofer). Before this fix the press blurred the
+            input, the filter reset, the list reflowed to every role, and the
+            release picked Owner. The list content now prevents the mousedown
+            default, so focus stays in the input and the pressed row wins.
+          </div>
+          <div class="demo-maxw-320">
+            <Combobox
+              placeholder="Search or create role…"
+              options={roles}
+              value={role}
+              onChange={setRole}
+              onCreate={addRole}
+            />
+          </div>
+        </NarrowStack>
+        <Text variant="sublabel">Selected: {role()?.label ?? "(none)"}</Text>
       </div>
 
       <div class="example-group">
