@@ -75,6 +75,27 @@
   font-size: 1.25rem;
 }
 
+/* Size `xl` — a card read full screen (thorcasting #4517). Unlike `lg` the
+   label grows too, since a full-screen title at 0.7rem is unreadable from a
+   distance; the padding grows with it so the card keeps its proportions. */
+.sui-metric-card--xl {
+  padding: 1.5rem;
+}
+
+.sui-metric-card--xl .sui-metric-card__label {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.sui-metric-card--xl .sui-metric-card__value {
+  font-size: 4rem;
+  line-height: 1.05;
+}
+
+.sui-metric-card--xl .sui-metric-card__value-units {
+  font-size: 1.75rem;
+}
+
 /* Color variants — tint the value text only. */
 .sui-metric-card--success .sui-metric-card__value {
   color: var(--sui-success);

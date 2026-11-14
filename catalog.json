@@ -17383,7 +17383,7 @@
     "showcase": "#/metric-card",
     "since": "0.123.0",
     "file": "src/components/DataDisplay/MetricCard.tsx",
-    "line": 27
+    "line": 32
   },
   {
     "name": "MetricValueCell",

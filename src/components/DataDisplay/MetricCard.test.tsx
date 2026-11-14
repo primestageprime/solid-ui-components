@@ -53,6 +53,14 @@ describe("MetricCard — size modifier", () => {
     expect(cls).toContain("sui-metric-card--lg");
     expect(cls).toContain("sui-metric-card--danger");
   });
+
+  it("emits the xl modifier, and only that size modifier", () => {
+    const { container } = render(() => (
+      <MetricCard label="Runway" value={14} units="months" size="xl" color="success" />
+    ));
+    const cls = root(container)?.className ?? "";
+    expect(cls).toBe("sui-metric-card sui-metric-card--success sui-metric-card--xl");
+  });
 });
 
 describe("MetricCard — class composition", () => {

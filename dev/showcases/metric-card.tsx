@@ -50,6 +50,12 @@ export const MetricCardShowcase: Component = () => {
         <MetricCard label="Runway" value={14} units="months" size="lg" />
       </Row>
 
+      <h3 class="showcase-heading-gap">Size xl (full screen: label and value)</h3>
+      <Row gap="sm" wrap>
+        <MetricCard label="Runway goal" value={18} units="months" size="xl" />
+        <MetricCard label="Runway" value={14} units="months" size="xl" color="warning" />
+      </Row>
+
       <h3 class="showcase-heading-gap">Dashboard row</h3>
       <Row gap="sm" wrap>
         <MetricCard label="Missing Metrics" value={3} color="warning" />
