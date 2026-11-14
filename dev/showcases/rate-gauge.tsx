@@ -113,7 +113,8 @@ const CentredRateDial = createRateGauge({
  * A full-screen-shaped box: far wider than the height-bound leader drawing.
  * The default sits on the left margin; `align: "center"` centres the dial plus
  * its column, measured against the widest words it can carry so the dial does
- * not drift as the value moves.
+ * not drift as the value moves. `textScale` then draws the words, gaps and
+ * strokes larger, for a full-screen gauge whose dial has grown.
  */
 const WideSpecimens: Component = () => (
   <TightStack>
@@ -125,6 +126,16 @@ const WideSpecimens: Component = () => (
     <CaptionLabel>align: "center"</CaptionLabel>
     <div class="rate-gauge-demo--wide">
       <CentredRateDial domain={DOMAIN} baseline={5000} value={23000} label="Scenario A" />
+    </div>
+    <CaptionLabel>align: "center", textScale=1.6 — words, gaps and strokes 1.6× (both layouts)</CaptionLabel>
+    <div class="rate-gauge-demo--wide">
+      <CentredRateDial
+        domain={DOMAIN}
+        baseline={5000}
+        value={23000}
+        label="Scenario A"
+        textScale={1.6}
+      />
     </div>
   </TightStack>
 );

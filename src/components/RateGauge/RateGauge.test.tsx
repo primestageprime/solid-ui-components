@@ -634,3 +634,65 @@ describe("align: center — the drawing is centred in a wide box and holds still
     expect(originOf(small)).toBe(originOf(large));
   });
 });
+
+// ── textScale (thorcasting #4517, 2026-11-13) ─────────────────────────────
+// Full screen grows the dial, but the words stayed 11px. `textScale` lays the
+// drawing out in a box `textScale` times smaller and lets the svg fill the
+// real one, so words, row pitch, column width, gaps and strokes all scale by
+// the same factor and stay consistent with each other, in both layouts.
+describe("textScale — the annotation scales with the box", () => {
+  const perMonth = (value: number): string =>
+    `$${Math.abs(Math.round(value)).toLocaleString("en-US")}/mo`;
+  const signed = (delta: number): string => `${delta < 0 ? "-" : "+"}${perMonth(delta)}`;
+  const wording = { baselineLabel: "Baseline", formatAgainst: perMonth, formatDelta: signed };
+  const Leaders = createRateGauge(wording);
+  const Corners = createRateGauge({ ...wording, callouts: "corners" });
+  const drawIn = (gauge: () => JSX.Element) => {
+    const restore = installRects((el) =>
+      el.classList.contains("sui-rate-gauge")
+        ? rectOf({ left: 0, top: 0, width: 1500, height: 600 })
+        : null,
+    );
+    try {
+      const svg = render(gauge).container.querySelector("svg.sui-rate-gauge__canvas");
+      return {
+        viewBox: svg?.getAttribute("viewBox") ?? "",
+        text: [...(svg?.querySelectorAll("text") ?? [])].map((t) => t.textContent),
+      };
+    } finally {
+      restore();
+    }
+  };
+
+  it("default (and 1) draws in the box at one unit per pixel", () => {
+    const plain = drawIn(() => <Leaders domain={DOMAIN} baseline={0} value={1200} label="Scenario" />);
+    const one = drawIn(() => (
+      <Leaders domain={DOMAIN} baseline={0} value={1200} label="Scenario" textScale={1} />
+    ));
+    expect(plain.viewBox).toBe("0 0 1500 600");
+    expect(one).toEqual(plain);
+  });
+
+  it("2 lays the leader drawing out in a half-size box, so everything draws twice as large", () => {
+    const scaled = drawIn(() => (
+      <Leaders domain={DOMAIN} baseline={0} value={1200} label="Scenario" textScale={2} />
+    ));
+    const plain = drawIn(() => <Leaders domain={DOMAIN} baseline={0} value={1200} label="Scenario" />);
+    expect(scaled.viewBox).toBe("0 0 750 300");
+    expect(scaled.text).toEqual(plain.text);
+  });
+
+  it("scales the corner layout the same way", () => {
+    const scaled = drawIn(() => (
+      <Corners domain={DOMAIN} baseline={0} value={1200} label="Scenario" textScale={1.5} />
+    ));
+    expect(scaled.viewBox).toBe("0 0 1000 400");
+  });
+
+  it("ignores a scale that is not a positive number", () => {
+    const zero = drawIn(() => (
+      <Leaders domain={DOMAIN} baseline={0} value={1200} label="Scenario" textScale={0} />
+    ));
+    expect(zero.viewBox).toBe("0 0 1500 600");
+  });
+});

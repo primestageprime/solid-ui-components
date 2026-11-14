@@ -167,6 +167,14 @@ export interface RateGaugeProps {
    * Presentational, so it curries (thorcasting #4517, the full-screen panel).
    */
   align?: CalloutAlign;
+  /**
+   * Draw the words, gaps and strokes at this multiple of their default size
+   * (11px text at 1), in both callout layouts — for a gauge drawn full screen,
+   * where the dial grows and fixed-size words would not. The dial still fills
+   * its box. Default 1. DATA, not wording: a layout computes it from the
+   * space it has, so it stays at the call site.
+   */
+  textScale?: number;
 }
 
 const DEFAULT_BASELINE_LABEL = "Reference";
@@ -432,6 +440,7 @@ export const RateGauge: Component<RateGaugeProps> = (props) => {
       cornerLines={cornerLines}
       align={props.align}
       alignLabels={alignLabels()}
+      textScale={props.textScale}
     />
   );
 };

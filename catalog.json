@@ -7635,7 +7635,7 @@
     "showcase": "#/rate-gauge",
     "since": "0.171.0",
     "file": "src/components/RateGauge/RateGauge.tsx",
-    "line": 465
+    "line": 474
   },
   {
     "name": "createRedactedRow",
@@ -20330,7 +20330,7 @@
     "showcase": "#/rate-gauge",
     "since": "0.171.0",
     "file": "src/components/RateGauge/RateGauge.tsx",
-    "line": 250
+    "line": 258
   },
   {
     "name": "RecentStarredSidebar",

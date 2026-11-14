@@ -139,7 +139,22 @@ export interface RateGaugeCanvasProps {
   align?: CalloutAlign;
   /** The widest column the centring is measured against; see `GaugeInput.alignLabels`. */
   alignLabels?: readonly string[];
+  /**
+   * Draw the annotation — words, line pitch, gaps, needle and brace strokes —
+   * at this multiple of its default size, in a measured box. The geometry is
+   * laid out in a box `textScale` times smaller and the svg still fills the
+   * real one, so every length the 11px text sets (column width, row pitch,
+   * label boxes) scales with it and nothing collides. Default 1: unchanged.
+   * An unmeasured gauge already scales with its width and ignores it.
+   */
+  textScale?: number;
 }
+
+/** The box the geometry lays out in: the measured one, shrunk by `textScale`. */
+const scaledBox = (box: Box | undefined, textScale: number | undefined): Box | undefined =>
+  box === undefined || textScale === undefined || textScale === 1 || !(textScale > 0)
+    ? box
+    : { width: box.width / textScale, height: box.height / textScale };
 
 /**
  * A band carries its own tone and whether it is lit. The dimming is the primary
@@ -210,7 +225,7 @@ export function RateGaugeCanvas(props: RateGaugeCanvasProps): JSX.Element {
       value: props.value,
       caution: props.caution,
       labels: props.labels,
-      box: box(),
+      box: scaledBox(box(), props.textScale),
       callouts: props.callouts,
       cornerLabels: props.cornerLabels,
       align: props.align,
