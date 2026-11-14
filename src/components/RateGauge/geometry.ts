@@ -1669,12 +1669,52 @@ export const calloutModeFor = (
   box: Box,
   labels: readonly string[],
   previous?: CalloutMode,
+  options?: CalloutModeOptions,
 ): CalloutMode => {
-  const slack = previous === "leaders" ? CALLOUT_HYSTERESIS : 0;
-  return box.width + slack >= leadersMinWidth(labels) &&
-    box.height + slack >= LEADERS_MIN_HEIGHT
+  const scale = validScale(options?.textScale);
+  const drawn = { width: box.width / scale, height: box.height / scale };
+  const slack = (previous === "leaders" ? CALLOUT_HYSTERESIS : 0) / scale;
+  const held =
+    options?.holdDial !== true || drawn.width + slack >= minLeadersWidth(drawn.height, labels);
+  return held &&
+    drawn.width + slack >= leadersMinWidth(labels) &&
+    drawn.height + slack >= LEADERS_MIN_HEIGHT
     ? "leaders"
     : "corners";
+};
+
+/** The optional fourth argument of `calloutModeFor`. Both default off. */
+export interface CalloutModeOptions {
+  /**
+   * Choose leaders only where the leader dial is HEIGHT-bound with its column
+   * whole (`leadersFitWidth`), so the ring is the same whatever words it
+   * carries — a layout that sizes against worst-case words then gets one dial
+   * size per box. thorcasting approximated this with `width - height / 2`
+   * (#4517), about 70px later than it needs to switch.
+   */
+  readonly holdDial?: boolean;
+  /** The gauge's `textScale`: the breakpoint is read in the box it lays out in. */
+  readonly textScale?: number;
+}
+
+/** A `textScale` the gauge honours, or 1. */
+const validScale = (scale: number | undefined): number =>
+  scale !== undefined && scale > 0 ? scale : 1;
+
+/**
+ * The narrowest box width, in CSS pixels, at which a leader gauge of this
+ * height draws its dial height-bound with its label column whole — past it, a
+ * wider box no longer grows the dial and the words no longer move the ring.
+ * `minLeadersWidth`, scaled for a gauge drawn at `textScale`. Exported so a
+ * layout can choose its gauge from the box alone (thorcasting #4517).
+ */
+export const leadersFitWidth = (
+  height: number,
+  labels: readonly string[],
+  textScale?: number,
+): number => {
+  const scale = validScale(textScale);
+  return scale * minLeadersWidth(height / scale, labels);
 };
 
 /**

@@ -26,7 +26,12 @@ export type { Domain as RateGaugeDomain } from "./geometry";
 // at one breakpoint), so the app measures the panel and asks this. The rest of
 // geometry.ts stays private. Types under qualified names, as above.
 export { calloutModeFor } from "./geometry";
+// The breakpoint's exact width threshold (thorcasting #4517), so a layout can
+// pick by the box alone instead of approximating it. Qualified name, as above.
+export { leadersFitWidth as rateGaugeLeadersFitWidth } from "./geometry";
 export type {
   Box as RateGaugeBox,
+  CalloutAlign as RateGaugeAlign,
   CalloutMode as RateGaugeCalloutMode,
+  CalloutModeOptions as RateGaugeCalloutModeOptions,
 } from "./geometry";

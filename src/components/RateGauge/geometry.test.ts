@@ -50,6 +50,7 @@ import {
   leadersMinWidth,
   LEADERS_MIN_HEIGHT,
   CALLOUT_HYSTERESIS,
+  leadersFitWidth,
 } from "./geometry";
 
 const DOMAIN: readonly [number, number] = [-30000, 30000];
@@ -1384,5 +1385,55 @@ describe("align: center", () => {
     expect(corners.offsetX).toBe(0);
     const tight = { width: minLeadersWidth(600, LABELS) - 40, height: 600 };
     expect(read({ align: "center", box: tight }).offsetX).toBe(0);
+  });
+});
+
+// ── The exact leader threshold, exported (thorcasting #4517, 2026-11-13) ───
+// A layout that sizes against worst-case words wants leaders only where the
+// leader dial is height-bound — then the ring is one size whatever it says.
+// thorcasting approximated that with `width - height / 2`; this is the exact
+// width, and `holdDial` is the same rule inside `calloutModeFor`.
+describe("leadersFitWidth and calloutModeFor's holdDial", () => {
+  const LABELS = ["SCENARIO = BASELINE", "$16,218/mo over breakeven", "$16,218/mo over breakeven"];
+  const H = 600;
+
+  it("is minLeadersWidth at scale 1, and the ring stops growing there", () => {
+    const w = leadersFitWidth(H, LABELS);
+    expect(w).toBe(minLeadersWidth(H, LABELS));
+    const at = gaugeGeometry({ domain: DOMAIN, baseline: 0, value: 1, labels: LABELS, box: { width: Math.ceil(w), height: H } });
+    const wider = gaugeGeometry({ domain: DOMAIN, baseline: 0, value: 1, labels: LABELS, box: { width: w + 400, height: H } });
+    expect(round(at.metrics.ringOuter)).toBe(round(wider.metrics.ringOuter));
+    const narrower = gaugeGeometry({ domain: DOMAIN, baseline: 0, value: 1, labels: LABELS, box: { width: w - 20, height: H } });
+    expect(narrower.metrics.ringOuter).toBeLessThan(wider.metrics.ringOuter);
+  });
+
+  it("scales with textScale: the threshold of the box the gauge lays out in", () => {
+    expect(round(leadersFitWidth(H, LABELS, 2))).toBe(round(2 * minLeadersWidth(H / 2, LABELS)));
+    expect(leadersFitWidth(H, LABELS, 0)).toBe(leadersFitWidth(H, LABELS));
+  });
+
+  it("holdDial picks leaders exactly from the threshold; without it nothing changes", () => {
+    const w = leadersFitWidth(H, LABELS);
+    expect(calloutModeFor({ width: Math.ceil(w), height: H }, LABELS, undefined, { holdDial: true })).toBe("leaders");
+    expect(calloutModeFor({ width: Math.floor(w) - 1, height: H }, LABELS, undefined, { holdDial: true })).toBe("corners");
+    // The default rule allows leaders well below the threshold (a width-bound,
+    // still-natural-size dial); holdDial is what refuses them there.
+    const between = { width: Math.floor(w) - 1, height: H };
+    expect(calloutModeFor(between, LABELS)).toBe("leaders");
+    expect(calloutModeFor(between, LABELS, undefined, {})).toBe(calloutModeFor(between, LABELS));
+  });
+
+  it("holdDial keeps the hysteresis", () => {
+    const w = leadersFitWidth(H, LABELS);
+    const justShort = { width: Math.floor(w) - CALLOUT_HYSTERESIS + 2, height: H };
+    expect(calloutModeFor(justShort, LABELS, undefined, { holdDial: true })).toBe("corners");
+    expect(calloutModeFor(justShort, LABELS, "leaders", { holdDial: true })).toBe("leaders");
+  });
+
+  it("textScale reads the breakpoint in the scaled box", () => {
+    const box = { width: 900, height: 300 };
+    expect(calloutModeFor(box, LABELS, undefined, { textScale: 2 })).toBe(
+      calloutModeFor({ width: 450, height: 150 }, LABELS),
+    );
   });
 });

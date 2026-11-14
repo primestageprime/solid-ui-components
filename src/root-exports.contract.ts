@@ -53,8 +53,10 @@ import type {
   PairedMutationSlidersDataProps,
   PairedMutationSlidersOverrides,
   PairedMutationSlidersProps,
+  RateGaugeAlign,
   RateGaugeBox,
   RateGaugeCalloutMode,
+  RateGaugeCalloutModeOptions,
   TreeDiffBand,
   TreeDiffChartProps,
   TreeDiffChild,
@@ -126,6 +128,7 @@ const _rootFunctions = [
   sui.createChannelChart,
   // RateGauge callout breakpoint
   sui.calloutModeFor,
+  sui.rateGaugeLeadersFitWidth,
   sui.rateGaugeCalloutLabels,
   // TreeDiffChart
   sui.TreeDiffChart,
@@ -198,8 +201,10 @@ type _ContractTypes = [
   PairedMeasure,
   PairedMutationEntity,
   MeasureIndex,
+  RateGaugeAlign,
   RateGaugeBox,
   RateGaugeCalloutMode,
+  RateGaugeCalloutModeOptions,
 ];
 
 // ── private: names that must NOT leak to the package root ───────────────

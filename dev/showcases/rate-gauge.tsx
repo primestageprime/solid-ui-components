@@ -27,6 +27,8 @@ import { createSignal, type Component } from "solid-js";
 import {
   createRateGauge,
   RateDial,
+  rateGaugeCalloutLabels,
+  rateGaugeLeadersFitWidth,
   type RateGaugeDomain,
 } from "../../src/components/RateGauge";
 import { Slider } from "../../src/components/Slider";
@@ -116,9 +118,31 @@ const CentredRateDial = createRateGauge({
  * not drift as the value moves. `textScale` then draws the words, gaps and
  * strokes larger, for a full-screen gauge whose dial has grown.
  */
+const WIDE_HEIGHT = 320;
+
+/** The exact width past which this box's leader dial is height-bound. */
+const wideFitWidth = Math.ceil(
+  rateGaugeLeadersFitWidth(
+    WIDE_HEIGHT,
+    rateGaugeCalloutLabels({
+      domain: DOMAIN,
+      baseline: 5000,
+      value: 23000,
+      label: "Scenario A",
+      baselineLabel: "Breakeven",
+      formatAgainst: againstBreakeven,
+      formatDelta: asPayroll,
+    }),
+  ),
+);
+
 const WideSpecimens: Component = () => (
   <TightStack>
     <SubsectionTitle>A wide box (full screen)</SubsectionTitle>
+    <CaptionLabel>
+      rateGaugeLeadersFitWidth({WIDE_HEIGHT}, labels) = {wideFitWidth}px: past this width the
+      dial is height-bound and the words no longer move the ring
+    </CaptionLabel>
     <CaptionLabel>align: "start" (default)</CaptionLabel>
     <div class="rate-gauge-demo--wide">
       <MonthlyRateDial domain={DOMAIN} baseline={5000} value={23000} label="Scenario A" />
