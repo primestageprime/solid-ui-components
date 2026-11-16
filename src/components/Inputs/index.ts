@@ -1,10 +1,18 @@
 // noAutofill — the attributes every text-like input carries by default, and
 // the `autofill` opt-in for a field that holds the user's own details.
-export { NO_AUTOFILL_ATTRS, noAutofillAttrs, wantsAutofill } from "./noAutofill";
+export {
+  NO_AUTOFILL_ATTRS,
+  NO_AUTOFILL_TEXT_ATTRS,
+  noAutofillAttrs,
+  noAutofillTextAttrs,
+  wantsAutofill,
+} from "./noAutofill";
 export type {
   AutofillChoice,
   AutofillProps,
+  AutofillTextChoice,
   NoAutofillAttrs,
+  NoAutofillTextAttrs,
 } from "./noAutofill";
 export { ThemedInput } from "./ThemedInput";
 export type { ThemedInputProps } from "./ThemedInput";

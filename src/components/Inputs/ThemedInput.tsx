@@ -9,7 +9,7 @@
 import { type Component, type JSX, createUniqueId, splitProps } from "solid-js";
 import { GrowColumn } from "../Layout/variants";
 import "./ThemedInputs.css";
-import { type AutofillProps, noAutofillAttrs } from "./noAutofill";
+import { type AutofillProps, noAutofillTextAttrs } from "./noAutofill";
 
 export interface ThemedInputProps
   extends JSX.InputHTMLAttributes<HTMLInputElement>,
@@ -44,9 +44,10 @@ export const ThemedInput: Component<ThemedInputProps> = (props) => {
         </label>
       )}
       <input
-        {...noAutofillAttrs({
+        {...noAutofillTextAttrs({
           autofill: local.autofill,
           autocomplete: others.autocomplete,
+          type: others.type,
         })}
         id={inputId()}
         class={classes()}

@@ -29,7 +29,7 @@ import {
   onMount,
 } from "solid-js";
 import "./EditableTitle.css";
-import { noAutofillAttrs } from "../Inputs/noAutofill";
+import { noAutofillTextAttrs } from "../Inputs/noAutofill";
 
 /** What gesture opens the inline editor.
  *  - `"singleClick"` (default) — a single click on the title text enters edit;
@@ -153,7 +153,7 @@ export const EditableTitle: Component<EditableTitleProps> = (props) => {
              fitted to the text's true rendered width, not a ch estimate. */
           <span class="sui-editable-title__editor" data-value={draft()}>
             <input
-              {...noAutofillAttrs()}
+              {...noAutofillTextAttrs()}
               class="sui-editable-title__input"
               value={props.title}
               size={1}

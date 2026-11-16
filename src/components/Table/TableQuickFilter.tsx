@@ -17,7 +17,7 @@ import { type Accessor, type JSX, createSignal, createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { FillColumn, NarrowStack, SpreadRow } from "../Layout/variants";
 import { pipe, map, join } from "../../fn";
-import { noAutofillAttrs } from "../Inputs/noAutofill";
+import { noAutofillTextAttrs } from "../Inputs/noAutofill";
 
 /**
  * Normalizes a value for searching:
@@ -98,7 +98,7 @@ export function TableQuickFilter<T extends object>(props: TableQuickFilterProps<
     >
       <SpreadRow class="hud-table-quickfilter__toolbar">
         <input
-          {...noAutofillAttrs()}
+          {...noAutofillTextAttrs()}
           type="text"
           class="hud-table-quickfilter__input"
           placeholder={props.placeholder || "Filter..."}

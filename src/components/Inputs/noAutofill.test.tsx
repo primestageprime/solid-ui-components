@@ -9,7 +9,9 @@ import { render } from "@solidjs/testing-library";
 import { For, type JSX } from "solid-js";
 import {
   NO_AUTOFILL_ATTRS,
+  NO_AUTOFILL_TEXT_ATTRS,
   noAutofillAttrs,
+  noAutofillTextAttrs,
   wantsAutofill,
 } from "./noAutofill";
 import { ThemedInput } from "./ThemedInput";
@@ -141,6 +143,77 @@ describe("every text-like field carries the no-autofill attributes", () => {
     expect(carried(field(render(view), selector))).toEqual({
       ...NO_AUTOFILL_ATTRS,
     });
+  });
+});
+
+/** The keyboard hint a free-text field carries, as rendered. */
+const hint = (el: Element): (string | null)[] => [
+  el.getAttribute("inputmode"),
+  el.getAttribute("enterkeyhint"),
+];
+
+describe("noAutofillTextAttrs", () => {
+  it("adds the keyboard hint for a text input only", () => {
+    expect(noAutofillTextAttrs()).toBe(NO_AUTOFILL_TEXT_ATTRS);
+    expect(noAutofillTextAttrs({ type: "text" })).toBe(NO_AUTOFILL_TEXT_ATTRS);
+    expect(NO_AUTOFILL_TEXT_ATTRS).toEqual({
+      ...NO_AUTOFILL_ATTRS,
+      inputmode: "search",
+      enterkeyhint: "done",
+    });
+    expect(noAutofillTextAttrs({ type: "email" })).toBe(NO_AUTOFILL_ATTRS);
+    expect(noAutofillTextAttrs({ autofill: true })).toEqual({});
+    expect(noAutofillTextAttrs({ autocomplete: "name" })).toEqual({});
+  });
+});
+
+describe("a free-text single-line field carries the keyboard hint", () => {
+  it.each<[string, () => JSX.Element, string]>([
+    ["ThemedInput", () => <ThemedInput label="Name" />, "input"],
+    ["ThemedInput type=text", () => <ThemedInput type="text" />, "input"],
+    ["NameInput", () => <NameInput type="text" />, "input"],
+    [
+      "TableQuickFilter",
+      () => (
+        <TableQuickFilter data={[{ name: "a" }]}>
+          {(rows) => <For each={rows()}>{(row) => <span>{row.name}</span>}</For>}
+        </TableQuickFilter>
+      ),
+      "input",
+    ],
+  ])("%s", (_name, view, selector) => {
+    expect(hint(field(render(view), selector))).toEqual(["search", "done"]);
+  });
+
+  it("a field of another kind keeps its own keyboard", () => {
+    const email = field(render(() => <ThemedInput type="email" />), "input");
+    expect(hint(email)).toEqual([null, null]);
+    expect(carried(email)).toEqual({ ...NO_AUTOFILL_ATTRS });
+    expect(
+      hint(field(render(() => <ThemedTextarea />), "textarea")),
+    ).toEqual([null, null]);
+    expect(
+      hint(
+        field(
+          render(() => <BigNumberInput value={1} onChange={() => {}} />),
+          "input",
+        ),
+      ),
+    ).toEqual(["decimal", null]);
+  });
+
+  it("the caller's own inputmode and enterkeyhint win", () => {
+    const el = field(
+      render(() => <ThemedInput inputmode="numeric" enterkeyhint="next" />),
+      "input",
+    );
+    expect(hint(el)).toEqual(["numeric", "next"]);
+  });
+
+  it("an opted-in field carries no hint", () => {
+    expect(
+      hint(field(render(() => <ThemedInput autofill />), "input")),
+    ).toEqual([null, null]);
   });
 });
 

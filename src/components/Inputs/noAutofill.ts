@@ -19,10 +19,35 @@
 //   data-form-type="other"        Dashlane.
 //   data-protonpass-ignore="true" Proton Pass.
 //
-// What it cannot do: a manager that publishes no opt-out attribute decides
-// from the field's label and name alone, and these attributes do not reach
-// it. That is the user's setting to change ("don't autofill this field / this
-// site"), not something a page can state.
+// A free-text single-line field (a name, a title, a filter) spreads
+// `noAutofillTextAttrs()` instead, which adds:
+//   inputmode="search"            NordPass. It publishes no opt-out
+//   enterkeyhint="done"           attribute and ignores every one above: it
+//                                 offers "Contact Info" on any text input
+//                                 whose label, placeholder, aria-label, name
+//                                 or id reads "Name" (also "Email", "Phone",
+//                                 "First name"). Tried in the browser on
+//                                 2026-11-16 (thorcasting 4530): of the
+//                                 honest attributes only inputmode="search"
+//                                 stopped it, in every one of those cases.
+//                                 It is a keyboard hint, not a role: a
+//                                 desktop reads nothing from it, and a phone
+//                                 keyboard keeps its normal layout with the
+//                                 return key labelled by enterkeyhint.
+//                                 This is OBSERVED behaviour, not a contract:
+//                                 the vendor can change it. type="search",
+//                                 role="combobox" and a held readonly also
+//                                 stopped it and are not used (they change
+//                                 what the field is); autocomplete values
+//                                 "one-time-code" / "new-password" did not.
+// A number field keeps its own inputmode="decimal", and a textarea, a search
+// field and a combobox input were never offered the popup, so those spread
+// the plain set.
+//
+// What it cannot do: any other manager that publishes no opt-out attribute
+// decides from the field's label and name alone. That is the user's setting
+// to change ("don't autofill this field / this site"), not something a page
+// can state.
 //
 // A guard test (noAutofill.guard.test.ts) fails when a component renders a
 // text-like <input> or <textarea> without this helper.
@@ -71,3 +96,36 @@ const NONE: NoAutofillAttrs = Object.freeze({});
  *  attributes so a stated `autocomplete` wins. */
 export const noAutofillAttrs = (choice?: AutofillChoice): NoAutofillAttrs =>
   wantsAutofill(choice) ? NONE : NO_AUTOFILL_ATTRS;
+
+/** The set for a free-text single-line field: the plain set plus the keyboard
+ *  hint that stops the one manager no opt-out attribute reaches (see the
+ *  header). Frozen. */
+export const NO_AUTOFILL_TEXT_ATTRS = Object.freeze({
+  ...NO_AUTOFILL_ATTRS,
+  inputmode: "search",
+  enterkeyhint: "done",
+} as const);
+
+export type NoAutofillTextAttrs = Partial<typeof NO_AUTOFILL_TEXT_ATTRS>;
+
+/** What `noAutofillTextAttrs` reads to decide. */
+export interface AutofillTextChoice extends AutofillChoice {
+  /** The input's `type`. Only a text input (no `type`, or "text") takes the
+   *  keyboard hint; an email, number or password input keeps the keyboard its
+   *  type asks for. */
+  type?: string | undefined;
+}
+
+/** The attributes to spread on a free-text single-line input: the text set,
+ *  the plain set for an input of another `type`, or nothing when the caller
+ *  opted in. Spread it BEFORE the caller's own attributes so a stated
+ *  `autocomplete`, `inputmode` or `enterkeyhint` wins. */
+export const noAutofillTextAttrs = (
+  choice?: AutofillTextChoice,
+): NoAutofillTextAttrs => {
+  if (wantsAutofill(choice)) return NONE;
+  const type = choice?.type;
+  return type == null || type === "" || type === "text"
+    ? NO_AUTOFILL_TEXT_ATTRS
+    : NO_AUTOFILL_ATTRS;
+};

@@ -49,7 +49,7 @@ const fieldsWithoutNoAutofill = (source: string): number[] => {
     const line = source.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
     if (isCommentLine(line)) continue;
     const tag = openingTag(source, at);
-    if (tag.includes("noAutofillAttrs(") || NOT_TEXT.test(tag)) continue;
+    if (/noAutofill(Text)?Attrs\(/.test(tag) || NOT_TEXT.test(tag)) continue;
     lines.push(source.slice(0, at).split("\n").length);
   }
   return lines;
@@ -68,6 +68,7 @@ describe("fieldsWithoutNoAutofill", () => {
       "const e = <KobalteCombobox.Input id={id} />;",
       "const f = <KobalteSlider.Input />;",
       "const g = <KobalteNumberField.HiddenInput />;",
+      "const h = <input {...noAutofillTextAttrs()} value={v} />;",
     ].join("\n");
     expect(fieldsWithoutNoAutofill(source)).toEqual([2, 7, 8]);
   });

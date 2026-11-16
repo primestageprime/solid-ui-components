@@ -18012,7 +18012,7 @@
     "showcase": "#/inputs",
     "since": "0.84.0",
     "file": "src/components/Inputs/NameInput.tsx",
-    "line": 40
+    "line": 42
   },
   {
     "name": "NarrowStack",
