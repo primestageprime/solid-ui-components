@@ -30,6 +30,7 @@ import {
 import { observeSize } from "../../internal/dom/observeSize";
 import { filter as fnFilter, find as fnFind, map as fnMap } from "../../fn";
 import "./FilterBar.css";
+import { noAutofillAttrs } from "../Inputs/noAutofill";
 
 export interface FilterMember {
   value: string;
@@ -502,6 +503,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
                 </Show>
 
                 <input
+                  {...noAutofillAttrs()}
                   class="sui-filter-bar__input"
                   placeholder={`Add ${group().label.toLowerCase()}…`}
                   value={query()}

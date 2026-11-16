@@ -1421,7 +1421,7 @@
     "showcase": null,
     "since": "0.105.0",
     "file": "src/components/BigNumberInput/BigNumberInput.tsx",
-    "line": 117
+    "line": 119
   },
   {
     "name": "BlockPlaceholder",
@@ -5032,7 +5032,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/BigNumberInput/BigNumberInput.tsx",
-    "line": 220
+    "line": 227
   },
   {
     "name": "createBottomTabBar",
@@ -5743,7 +5743,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/DatePicker/DatePicker.tsx",
-    "line": 95
+    "line": 108
   },
   {
     "name": "createDayOfMonthPicker",
@@ -6888,7 +6888,7 @@
     "showcase": null,
     "since": "0.25.0",
     "file": "src/components/Markdown/MarkdownEditor.tsx",
-    "line": 40
+    "line": 42
   },
   {
     "name": "createMarkedSlider",
@@ -10154,7 +10154,7 @@
     "showcase": null,
     "since": "0.68.0",
     "file": "src/components/DatePicker/DatePicker.tsx",
-    "line": 45
+    "line": 47
   },
   {
     "name": "DateRangePicker",
@@ -11358,7 +11358,7 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/EditableTitle/EditableTitle.tsx",
-    "line": 77
+    "line": 78
   },
   {
     "name": "EllipsisLabel",
@@ -12567,7 +12567,7 @@
     "showcase": "#/inputs",
     "since": "0.225.0",
     "file": "src/components/Inputs/FillTextArea.tsx",
-    "line": 24
+    "line": 26
   },
   {
     "name": "FillWrapRow",
@@ -12664,7 +12664,7 @@
     "showcase": "#/filter-bar",
     "since": "0.124.0",
     "file": "src/components/FilterBar/FilterBar.tsx",
-    "line": 104
+    "line": 105
   },
   {
     "name": "FitPlaceholder",
@@ -17134,7 +17134,7 @@
     "showcase": "#/markdown-editor",
     "since": "0.25.0",
     "file": "src/components/Markdown/MarkdownEditor.tsx",
-    "line": 19
+    "line": 20
   },
   {
     "name": "MarkedSlider",
@@ -17854,7 +17854,7 @@
     "showcase": "#/mutable-list",
     "since": "0.79.0",
     "file": "src/components/MutableList/MutableList.tsx",
-    "line": 179
+    "line": 181
   },
   {
     "name": "MutationSliders",
@@ -18012,7 +18012,7 @@
     "showcase": "#/inputs",
     "since": "0.84.0",
     "file": "src/components/Inputs/NameInput.tsx",
-    "line": 39
+    "line": 40
   },
   {
     "name": "NarrowStack",
@@ -21561,7 +21561,7 @@
     "showcase": "#/search-input",
     "since": "0.225.0",
     "file": "src/components/SearchInput/SearchField.tsx",
-    "line": 30
+    "line": 32
   },
   {
     "name": "SearchInput",
@@ -22448,7 +22448,7 @@
     "showcase": "#/slider",
     "since": "0.163.0",
     "file": "src/components/Slider/SliderField.tsx",
-    "line": 145
+    "line": 146
   },
   {
     "name": "SlotFillBar",
@@ -24002,7 +24002,7 @@
     "showcase": null,
     "since": "0.87.0",
     "file": "src/components/Badge/StatusChip.tsx",
-    "line": 55
+    "line": 56
   },
   {
     "name": "StatusChipDisplay",
@@ -24775,7 +24775,7 @@
     "showcase": null,
     "since": "0.107.0",
     "file": "src/components/Table/TableQuickFilter.tsx",
-    "line": 72
+    "line": 73
   },
   {
     "name": "TableSectionHeader",
@@ -25315,12 +25315,12 @@
     "summarySource": "components-md",
     "preferFirst": null,
     "notToBeConfusedWith": null,
-    "useFor": "themed form text inputs.",
+    "useFor": "themed form text inputs. Carries the no-autofill attributes by default (see `noAutofillAttrs` below); for a field that holds the user's own details pass `autofill`, or state an `autocomplete` value such as `\"email\"`.",
     "notes": null,
     "showcase": "#/inputs",
     "since": "v0.7.0",
     "file": "src/components/Inputs/ThemedInput.tsx",
-    "line": 18
+    "line": 20
   },
   {
     "name": "ThemedNumberInput",
@@ -25348,7 +25348,7 @@
     "showcase": "#/themed-number-input",
     "since": "v0.7.0",
     "file": "src/components/ThemedNumberInput/ThemedNumberInput.tsx",
-    "line": 154
+    "line": 155
   },
   {
     "name": "ThemedTextarea",
@@ -25376,7 +25376,7 @@
     "showcase": "#/inputs",
     "since": "v0.7.0",
     "file": "src/components/Inputs/ThemedTextarea.tsx",
-    "line": 18
+    "line": 20
   },
   {
     "name": "ThreePanelLayout",

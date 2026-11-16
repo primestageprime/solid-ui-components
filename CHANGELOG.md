@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- **Every text-like input carries the no-autofill attributes by default** (thorcasting 4530). Peter: "can we work on getting rid of the autofill dialog on our inputs? This should be a standard SUI feature." One helper, `noAutofillAttrs()` (`NO_AUTOFILL_ATTRS`: `autocomplete="off"`, `data-1p-ignore`, `data-op-ignore`, `data-lpignore="true"`, `data-bwignore="true"`, `data-form-type="other"`, `data-protonpass-ignore="true"`), is now spread on every text-like `<input>` / `<textarea>` the library renders: `ThemedInput`, `ThemedTextarea`, `FillTextArea`, `NameInput`, `SearchField` / `SearchInput`, `BigNumberInput`, `ThemedNumberInput` (and what wraps it: `CurrencyInput`, `IntervalInput`, ...), `Combobox` (single and multiple), `DatePicker`, the `DateRangePicker` time inputs, `MarkdownEditor`, `TableQuickFilter`, `FilterBar`, `SliderField`, and the inline editors of `EditableTitle`, `StatusChip` and `MutableList`. **Behaviour change:** a `ThemedInput` (or textarea, search, big-number or date field) that relied on the browser or a password manager filling it must now opt in with the new `autofill` prop, or by stating an `autocomplete` value such as `"email"`; either drops the whole set and the stated `autocomplete` renders as given. No field is renamed. Checkboxes, toggles, file and range inputs are untouched. Exports `noAutofillAttrs`, `NO_AUTOFILL_ATTRS`, `wantsAutofill` and the types `AutofillProps`, `AutofillChoice`, `NoAutofillAttrs`, so an app's own raw field can spread the same set. A guard test fails when a component renders a text-like field without the helper. **Limit:** the attributes are honoured by 1Password (documented), LastPass, Bitwarden, Dashlane and Proton Pass, and `autocomplete="off"` stops browser history dropdowns; a manager that publishes no opt-out attribute decides from the field's label and is not reached by any attribute (`NameInput` already carried most of this set and still drew such a popup).
+
 ## 0.257.0 — 2026-11-16
 
 ### Fixed

@@ -13,16 +13,23 @@
 // to freeze, so it is exported directly, like ThemedTextarea.
 // ============================================
 import { type Component, type JSX, createUniqueId, splitProps } from "solid-js";
+import { type AutofillProps, noAutofillAttrs } from "./noAutofill";
 import { FillColumnFlush } from "../Layout/variants";
 import "./ThemedInputs.css";
 
 export interface FillTextAreaProps
-  extends JSX.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  extends JSX.TextareaHTMLAttributes<HTMLTextAreaElement>,
+    AutofillProps {
   label?: string;
 }
 
 export const FillTextArea: Component<FillTextAreaProps> = (props) => {
-  const [local, others] = splitProps(props, ["label", "class", "id"]);
+  const [local, others] = splitProps(props, [
+    "label",
+    "class",
+    "id",
+    "autofill",
+  ]);
 
   const generatedId = createUniqueId();
   const textareaId = () => local.id ?? generatedId;
@@ -38,7 +45,15 @@ export const FillTextArea: Component<FillTextAreaProps> = (props) => {
           {local.label}
         </label>
       )}
-      <textarea id={textareaId()} class={classes()} {...others} />
+      <textarea
+        {...noAutofillAttrs({
+          autofill: local.autofill,
+          autocomplete: others.autocomplete,
+        })}
+        id={textareaId()}
+        class={classes()}
+        {...others}
+      />
     </FillColumnFlush>
   );
 };

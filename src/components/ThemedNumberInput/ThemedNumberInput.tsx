@@ -42,6 +42,7 @@ import {
   tightNumberWidth,
 } from "../../internal/fieldWidth/fieldWidth";
 import "./ThemedNumberInput.css";
+import { noAutofillAttrs } from "../Inputs/noAutofill";
 
 /** Props owned by `ThemedNumberInput`; everything else is kobalte passthrough. */
 interface ThemedNumberInputOwnProps {
@@ -437,6 +438,7 @@ export const ThemedNumberInput: Component<ThemedNumberInputProps> = (props) => {
       <KobalteNumberField.HiddenInput />
       <div class="sui-number-input__group">
         <KobalteNumberField.Input
+          {...noAutofillAttrs()}
           class="sui-number-input__input"
           ref={wireInput}
         />

@@ -188,8 +188,12 @@ export const FormsAndInputsShowcase: Component = () => {
           item, a scenario, a berth. It layers every anti-autofill defence there
           is (randomised field name, the password-manager opt-out attributes,
           readonly-until-focus) so Chrome's contact popup never covers the form.
-          Reach for ThemedInput instead when the value really is the user's own
-          name or email and autofill is helping.
+          Every other text field in the library (ThemedInput, the textareas,
+          the number, search, combobox and date fields, the inline editors)
+          carries the opt-out attributes by default as well, from the one
+          helper noAutofillAttrs. When the value really is the user's own name
+          or email and autofill is helping, pass ThemedInput the autofill prop
+          (or state an autocomplete value such as "email").
         </TextSublabel>
         <div class="form-demo-frame form-demo-frame--narrow">
           <NarrowStack>

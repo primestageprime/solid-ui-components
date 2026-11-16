@@ -9,14 +9,21 @@
 import { type Component, type JSX, createUniqueId, splitProps } from "solid-js";
 import { GrowColumn } from "../Layout/variants";
 import "./ThemedInputs.css";
+import { type AutofillProps, noAutofillAttrs } from "./noAutofill";
 
 export interface ThemedTextareaProps
-  extends JSX.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  extends JSX.TextareaHTMLAttributes<HTMLTextAreaElement>,
+    AutofillProps {
   label?: string;
 }
 
 export const ThemedTextarea: Component<ThemedTextareaProps> = (props) => {
-  const [local, others] = splitProps(props, ["label", "class", "id"]);
+  const [local, others] = splitProps(props, [
+    "label",
+    "class",
+    "id",
+    "autofill",
+  ]);
 
   const generatedId = createUniqueId();
   const textareaId = () => local.id ?? generatedId;
@@ -36,7 +43,15 @@ export const ThemedTextarea: Component<ThemedTextareaProps> = (props) => {
           {local.label}
         </label>
       )}
-      <textarea id={textareaId()} class={classes()} {...others} />
+      <textarea
+        {...noAutofillAttrs({
+          autofill: local.autofill,
+          autocomplete: others.autocomplete,
+        })}
+        id={textareaId()}
+        class={classes()}
+        {...others}
+      />
     </GrowColumn>
   );
 };

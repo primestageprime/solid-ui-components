@@ -12,9 +12,11 @@
 // ============================================
 import { type Component, type JSX, Show, splitProps } from "solid-js";
 import "./SearchInput.css";
+import { type AutofillProps, noAutofillAttrs } from "../Inputs/noAutofill";
 
 export interface SearchFieldProps
-  extends Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "children"> {
+  extends Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "children">,
+    AutofillProps {
   /** Slot before the text: the search glyph. */
   leading?: JSX.Element;
   /** Slot inside the clear button: the clear glyph. */
@@ -33,6 +35,7 @@ export const SearchField: Component<SearchFieldProps> = (props) => {
     "clearIcon",
     "onClear",
     "class",
+    "autofill",
   ]);
   let input: HTMLInputElement | undefined;
   const frameClass = () =>
@@ -43,6 +46,10 @@ export const SearchField: Component<SearchFieldProps> = (props) => {
         <span class="sui-search-field__leading">{local.leading}</span>
       </Show>
       <input
+        {...noAutofillAttrs({
+          autofill: local.autofill,
+          autocomplete: others.autocomplete,
+        })}
         ref={input}
         type="search"
         class="sui-search-field__input"

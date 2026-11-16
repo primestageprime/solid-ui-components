@@ -29,6 +29,7 @@ import {
   comboboxWithCreateRow,
   isComboboxCreateOption,
 } from "./comboboxCreateRow";
+import { noAutofillAttrs } from "../Inputs/noAutofill";
 
 /** Narrowed local props for single-mode rendering. */
 export type SingleLocal = Pick<
@@ -165,6 +166,7 @@ export const renderSingle = (
         {(state) => (
           <>
             <KobalteCombobox.Input
+              {...noAutofillAttrs()}
               id={local.id}
               class="sui-combobox__input"
               value={inputValue()}

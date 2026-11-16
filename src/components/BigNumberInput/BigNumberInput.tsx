@@ -39,12 +39,14 @@ import {
   splitProps,
 } from "solid-js";
 import "./BigNumberInput.css";
+import { type AutofillProps, noAutofillAttrs } from "../Inputs/noAutofill";
 
 export interface BigNumberInputProps
   extends Omit<
-    JSX.InputHTMLAttributes<HTMLInputElement>,
-    "onChange" | "value" | "type"
-  > {
+      JSX.InputHTMLAttributes<HTMLInputElement>,
+      "onChange" | "value" | "type"
+    >,
+    AutofillProps {
   /** Current numeric value (controlled). */
   value: number;
   /** Called with the parsed raw `number` whenever the input changes. */
@@ -129,6 +131,7 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
     "selectOnFocus",
     "onFocus",
     "onBlur",
+    "autofill",
   ]);
 
   let inputEl: HTMLInputElement | undefined;
@@ -200,6 +203,10 @@ export const BigNumberInput: Component<BigNumberInputProps> = (props) => {
   return (
     <div class={rootClass()}>
       <input
+        {...noAutofillAttrs({
+          autofill: local.autofill,
+          autocomplete: others.autocomplete,
+        })}
         ref={inputEl}
         type="text"
         inputmode="decimal"

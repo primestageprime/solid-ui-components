@@ -28,12 +28,14 @@ import {
 import { GrowColumn } from "../Layout/variants";
 import "../Inputs/ThemedInputs.css";
 import "./DatePicker.css";
+import { type AutofillProps, noAutofillAttrs } from "../Inputs/noAutofill";
 
 export interface DatePickerProps
   extends Omit<
-    JSX.InputHTMLAttributes<HTMLInputElement>,
-    "onChange" | "value" | "type"
-  > {
+      JSX.InputHTMLAttributes<HTMLInputElement>,
+      "onChange" | "value" | "type"
+    >,
+    AutofillProps {
   /** Current date as an ISO YYYY-MM-DD string (or "" for none). */
   value: string;
   /** Called with the ISO YYYY-MM-DD string when the date changes. */
@@ -43,7 +45,14 @@ export interface DatePickerProps
 }
 
 export const DatePicker: Component<DatePickerProps> = (props) => {
-  const [local, others] = splitProps(props, ["value", "onChange", "class", "label", "id"]);
+  const [local, others] = splitProps(props, [
+    "value",
+    "onChange",
+    "class",
+    "label",
+    "id",
+    "autofill",
+  ]);
 
   const rootClass = () =>
     local.class ? `sui-date-picker ${local.class}` : "sui-date-picker";
@@ -70,6 +79,10 @@ export const DatePicker: Component<DatePickerProps> = (props) => {
       {/* The native input — invisible, stretched over the whole control so a
           click anywhere opens the native calendar and typing still works. */}
       <input
+        {...noAutofillAttrs({
+          autofill: local.autofill,
+          autocomplete: others.autocomplete,
+        })}
         type="date"
         class="sui-date-picker__native"
         value={local.value}

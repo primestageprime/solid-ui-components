@@ -8,6 +8,7 @@
 import { type Component, mergeProps } from "solid-js";
 import { Grid } from "../Layout/Grid";
 import { Markdown } from "./Markdown";
+import { noAutofillAttrs } from "../Inputs/noAutofill";
 
 export interface MarkdownEditorProps {
   value: string;
@@ -25,6 +26,7 @@ export const MarkdownEditor: Component<MarkdownEditorProps> = (props) => {
   return (
     <Grid columns="1fr 1fr" gap="md" class={cls()}>
       <textarea
+        {...noAutofillAttrs()}
         class="sui-markdown-editor__textarea"
         rows={props.rows ?? 12}
         value={props.value}

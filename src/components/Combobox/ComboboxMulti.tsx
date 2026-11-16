@@ -50,6 +50,7 @@ import {
   isComboboxCreateOption,
 } from "./comboboxCreateRow";
 import { filter, find, some } from "../../fn";
+import { noAutofillAttrs } from "../Inputs/noAutofill";
 
 /** Narrowed local props for multi-mode rendering. */
 export type MultiLocal = Pick<
@@ -314,6 +315,7 @@ export const renderMulti = (
             </Show>
             <TightClusterRow class="sui-combobox__input-row">
               <KobalteCombobox.Input
+                {...noAutofillAttrs()}
                 id={local.id}
                 class="sui-combobox__input"
                 value={inputValue()}

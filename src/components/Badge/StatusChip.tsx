@@ -28,6 +28,7 @@
 import { type Component, For, Show, createSignal } from "solid-js";
 import { pluck } from "../../fn";
 import "./StatusChip.css";
+import { noAutofillAttrs } from "../Inputs/noAutofill";
 
 export interface StatusChipProps {
   /** Current status text. */
@@ -76,6 +77,7 @@ export const StatusChip: Component<StatusChipProps> = (props) => {
         when={!editing()}
         fallback={
           <input
+            {...noAutofillAttrs()}
             class="sui-status-chip__input"
             value={props.status}
             ref={(el) => queueMicrotask(() => { el.focus(); el.select(); })}

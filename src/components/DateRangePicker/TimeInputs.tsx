@@ -6,6 +6,7 @@
 // ============================================
 import type { Accessor, Component } from "solid-js";
 import { ClusterRow } from "../Layout/variants";
+import { noAutofillAttrs } from "../Inputs/noAutofill";
 
 export interface TimeInputsProps {
   /** `HH:mm` 24-hour time string. */
@@ -18,6 +19,7 @@ export interface TimeInputsProps {
 export const TimeInputs: Component<TimeInputsProps> = (props) => (
   <ClusterRow class="sui-drp__time-inputs">
     <input
+      {...noAutofillAttrs()}
       type="time"
       class="sui-drp__time-input"
       value={props.startTime()}
@@ -25,6 +27,7 @@ export const TimeInputs: Component<TimeInputsProps> = (props) => (
     />
     <span class="sui-drp__time-separator">to</span>
     <input
+      {...noAutofillAttrs()}
       type="time"
       class="sui-drp__time-input"
       value={props.endTime()}

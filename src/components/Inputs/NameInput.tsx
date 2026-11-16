@@ -10,8 +10,8 @@
 // The anti-autofill pattern, layered because no single attribute is reliable:
 //   • autocomplete="off" + a RANDOMIZED name — breaks the browser's heuristic
 //     field-correlation (it keys off name/label).
-//   • data-1p-ignore / data-lpignore / data-form-type="other" — 1Password,
-//     LastPass, Dashlane bow out.
+//   • noAutofillAttrs() (./noAutofill.ts) — the library-wide opt-out set:
+//     1Password, LastPass, Bitwarden, Dashlane, Proton Pass bow out.
 //   • readonly-until-focus — the reliable defeat for Chrome's contact autofill:
 //     Chrome won't autofill a readonly field; we drop readonly the instant the
 //     field is focused (including via autofocus), so typing is unaffected.
@@ -27,6 +27,7 @@ import {
 import { GrowColumn } from "../Layout/variants";
 import "./ThemedInputs.css";
 import { pipe, filter, join } from "../../fn";
+import { noAutofillAttrs } from "./noAutofill";
 
 export interface NameInputProps
   extends Omit<
@@ -60,13 +61,10 @@ export const NameInput: Component<NameInputProps> = (props) => {
         id={inputId()}
         class={classes()}
         name={fieldName}
-        autocomplete="off"
+        {...noAutofillAttrs()}
         autocorrect="off"
         autocapitalize="off"
         spellcheck={false}
-        data-1p-ignore="true"
-        data-lpignore="true"
-        data-form-type="other"
         readonly={readOnly()}
         onFocus={() => setReadOnly(false)}
       />

@@ -52,6 +52,7 @@
 // ============================================
 import { type Component, Show, createSignal } from "solid-js";
 import "./Slider.css";
+import { noAutofillAttrs } from "../Inputs/noAutofill";
 
 /** Props of the editable readout. */
 export interface SliderFieldProps {
@@ -186,6 +187,9 @@ export const SliderField: Component<SliderFieldProps> = (props) => {
           {text()}
         </span>
         <input
+          // A figure, not a form answer: the browser's history dropdown would
+          // change the text behind the field's back.
+          {...noAutofillAttrs()}
           class="sui-slider__value sui-slider__value--editable"
           type="text"
           inputmode="decimal"
@@ -194,9 +198,6 @@ export const SliderField: Component<SliderFieldProps> = (props) => {
           value={text()}
           // A floor, not a measurement. The mirror above sets the width.
           size={1}
-          // A figure, not a form answer: the browser's history dropdown would
-          // change the text behind the field's back.
-          autocomplete="off"
           onFocus={(event) => {
             setState({
               phase: "editing",

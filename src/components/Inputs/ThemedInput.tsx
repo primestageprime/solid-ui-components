@@ -9,14 +9,21 @@
 import { type Component, type JSX, createUniqueId, splitProps } from "solid-js";
 import { GrowColumn } from "../Layout/variants";
 import "./ThemedInputs.css";
+import { type AutofillProps, noAutofillAttrs } from "./noAutofill";
 
 export interface ThemedInputProps
-  extends JSX.InputHTMLAttributes<HTMLInputElement> {
+  extends JSX.InputHTMLAttributes<HTMLInputElement>,
+    AutofillProps {
   label?: string;
 }
 
 export const ThemedInput: Component<ThemedInputProps> = (props) => {
-  const [local, others] = splitProps(props, ["label", "class", "id"]);
+  const [local, others] = splitProps(props, [
+    "label",
+    "class",
+    "id",
+    "autofill",
+  ]);
 
   const generatedId = createUniqueId();
   const inputId = () => local.id ?? generatedId;
@@ -36,7 +43,15 @@ export const ThemedInput: Component<ThemedInputProps> = (props) => {
           {local.label}
         </label>
       )}
-      <input id={inputId()} class={classes()} {...others} />
+      <input
+        {...noAutofillAttrs({
+          autofill: local.autofill,
+          autocomplete: others.autocomplete,
+        })}
+        id={inputId()}
+        class={classes()}
+        {...others}
+      />
     </GrowColumn>
   );
 };

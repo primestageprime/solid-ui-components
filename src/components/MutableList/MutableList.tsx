@@ -37,6 +37,7 @@ import { SortableList } from "../SortableList";
 import { IconOnlyButton } from "../Button";
 import { ActionSlot, ClusterRow, ContentStack } from "../Layout/variants";
 import "./MutableList.css";
+import { noAutofillAttrs } from "../Inputs/noAutofill";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -145,6 +146,7 @@ function MutableListCard(props: CardProps): JSX.Element {
           }
         >
           <input
+            {...noAutofillAttrs()}
             ref={inputRef}
             class="sui-mutable-list__input"
             draggable={false}
