@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.257.0 — 2026-11-16
+
 ### Fixed
 
 - **`Combobox`: pressing a list row keeps focus in the input** (thorcasting 4516). The list did not prevent the mousedown default, so a press blurred the input, the filter reset, the list reflowed to every option, and the pointer-up picked whichever row was now under the pointer (clicking Create "carpenter" picked Owner). The list content now prevents the mousedown default in single and multi mode; the selection itself is unchanged. No new prop: every `Combobox` gets the fix.
