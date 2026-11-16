@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Fixed
+
+- **`Combobox`: pressing a list row keeps focus in the input** (thorcasting 4516). The list did not prevent the mousedown default, so a press blurred the input, the filter reset, the list reflowed to every option, and the pointer-up picked whichever row was now under the pointer (clicking Create "carpenter" picked Owner). The list content now prevents the mousedown default in single and multi mode; the selection itself is unchanged. No new prop: every `Combobox` gets the fix.
+
+### Added
+
+- **`RateGauge`: `align`, the leader drawing centred in a wide box** (thorcasting 4517). The leader layout pins the dial to the left margin, so in a box far wider than the drawing the dial and its flyouts sat at the left with the rest empty. `align?: "start" | "center"`, default `"start"` (unchanged); it curries. With `"center"` in a measured box the dial, leaders, ticks and labels move together to the middle, and the dial holds still as the words change length. The corner layout and an unmeasured gauge ignore it. `GaugeGeometry` gains `offsetX` (0 by default). Type `RateGaugeAlign`. Additive.
+- **`RateGauge`: `textScale`, the words, gaps and strokes drawn larger** (thorcasting 4517). In a full-screen panel the dial grows with the box but its words stay 11px. `textScale?: number`, default 1 (unchanged). In a measured box the words, row pitch, column width, label boxes, gaps and strokes scale by the one factor, in the leader and the corner layouts, and the dial still fills its box. 1, a non-positive value or an unmeasured gauge changes nothing. Additive.
+- **`MetricCard`: `size="xl"`, a card read full screen** (thorcasting 4517). `lg` grows only the value; `xl` grows the label (1rem), the value (4rem), its units and the padding, so the card keeps its proportions. `md` and `lg` are unchanged. Additive.
+- **`rateGaugeLeadersFitWidth`, and `holdDial` / `textScale` on `calloutModeFor`** (thorcasting 4517). `rateGaugeLeadersFitWidth(height, labels, textScale?)` is the narrowest width at which the leader dial is bound by the height with its column whole, for a caller that picks the layout from the box alone. `calloutModeFor(box, labels, previous?, options?)` takes an optional `{ holdDial?, textScale? }`: `holdDial` picks leaders only where the dial is one size whatever it says, hysteresis included; `textScale` reads the breakpoint in the box a scaled gauge lays out in. Omitted, the answer is unchanged. Type `RateGaugeCalloutModeOptions`. Additive.
+
 ## 0.256.0 — 2026-11-13
 
 ### Added
