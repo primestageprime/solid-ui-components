@@ -2,7 +2,6 @@ import defaultCss from "./default.css?raw";
 import hudCss from "./hud.css?raw";
 import bronzeCss from "./bronze.css?raw";
 import bronzeDarkCss from "./bronze-dark.css?raw";
-import staxCss from "./stax.css?raw";
 import colorblindCss from "./colorblind.css?raw";
 
 export interface ThemeEntry {
@@ -31,12 +30,6 @@ export const THEMES = {
     displayName: "Bronze (dark)",
     mode: "dark",
     css: bronzeDarkCss,
-  },
-  stax: {
-    id: "stax",
-    displayName: "STAX",
-    mode: "light",
-    css: staxCss,
   },
   colorblind: {
     id: "colorblind",

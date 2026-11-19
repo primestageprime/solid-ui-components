@@ -90,7 +90,7 @@
   background: var(--sui-accent);
   /* The label on an accent FILL is the theme's --sui-on-accent (see
      _baseline.css .sui-btn--primary). --sui-bg-deep only works on dark themes:
-     on stax it put a pale grey label on lime at 1.5:1, a label nobody could read. Dark
+     on a light theme with a lime accent it put a pale grey label on lime at 1.5:1. Dark
      themes define --sui-on-accent as --sui-bg-deep, so they are unchanged. */
   color: var(--sui-on-accent, var(--sui-bg-deep));
 }

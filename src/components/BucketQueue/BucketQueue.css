@@ -70,7 +70,7 @@
    BucketQueue.tone.test.ts across every theme). The outline is checked
    against the panel at >= 3:1 (non-text contrast) in the same test; a theme
    whose tone cannot clear that overrides the colour in its own stylesheet
-   (stax: accent -> --sui-accent-dim). muted/default stay the neutral chip. */
+   (e.g. accent -> --sui-accent-dim). muted/default stay the neutral chip. */
 .bucket-queue__count--success.sui-count-chip {
   border-color: var(--sui-success);
   background: rgba(var(--sui-success-rgb), 0.08);

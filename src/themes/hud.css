@@ -108,7 +108,7 @@ body {
      The dense defaults Peter ruled on 2026-10-15: flush buckets with one
      shared 1px divider, no gaps between sections or list rows, 28px group
      headers, a 4px selected bar, emphasis from edges rather than spacing.
-     Declared here and in default.css only; bronze, stax and colorblind keep the
+     Declared here and in default.css only; bronze and colorblind keep the
      legacy spacing by declaring none of these. */
   --sui-dense-section-gap: 0px;
   --sui-dense-item-gap: 0px;

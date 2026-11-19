@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.259.0 — 2026-11-19
+
+### Removed
+
+- **The `stax` theme** (diddit #4578). Peter, 2026-11-19: "Remove the STAX theme entirely. It's ok for apps to define a custom theme. But the default themes from SUI should not be company branded". `src/themes/stax.css`, its `THEMES.stax` manifest entry (so `ThemeId` no longer includes `"stax"`) and the `solid-ui-components/themes/stax.css` export are gone. **Breaking for an app that names `stax`:** jtf-ui now ships the same file as its own app theme (`src/themes/stax.css` + `src/themes/appThemes.ts`, painted into `#sui-theme` after `loadBaseline()`); goose-ui drops it from its list. An app that lists every `THEMES` entry (thorcasting-ui) simply stops offering it. No other built-in theme carries company branding.
+
 ## 0.258.0 — 2026-11-16
 
 ### Changed

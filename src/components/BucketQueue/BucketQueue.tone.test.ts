@@ -23,7 +23,7 @@ import { THEMES } from "../../themes/manifest";
 //      panel in several themes already) stays >= 3:1 and loses under 20% of
 //      what it has on the bare panel.
 // A theme that cannot clear (1) with the raw tone overrides the outline colour
-// in its own stylesheet (stax: accent -> --sui-accent-dim), which this test
+// in its own stylesheet (e.g. accent -> --sui-accent-dim), which this test
 // honours by applying the theme's own `.bucket-queue__count--<tone>` rule.
 const here = dirname(fileURLToPath(import.meta.url));
 const themeDir = join(here, "../../themes");

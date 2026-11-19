@@ -85,7 +85,7 @@ Component density (list and bucket spacing, header heights, cell and panel
 padding) is a theme choice since 0.223.0. Every consuming rule is written
 `var(--sui-dense-<x>, <legacy px>)`, so a theme that declares **none** of these
 renders exactly as it did before the group existed. `default.css` and `hud.css`
-declare the dense values below; `bronze*`, `stax` and `colorblind` declare
+declare the dense values below; `bronze*` and `colorblind` declare
 nothing and keep the legacy spacing. Declare a subset to move only part of the
 UI. `BucketQueue`'s water-fill reads the gap, the bucket overlap and the bucket
 borders back out of the live DOM, so these three can change per theme without
