@@ -222,7 +222,7 @@
   transition: box-shadow 120ms ease;
 }
 
-.sui-marked-slider__thumb:hover:not([data-disabled]) {
+.sui-marked-slider:not([data-readonly]) .sui-marked-slider__thumb:hover:not([data-disabled]) {
   box-shadow: 0 0 0 3px rgba(var(--sui-accent-rgb), 0.2);
 }
 
@@ -234,6 +234,15 @@
    ONLY thing this element ever paints. */
 .sui-marked-slider__thumb:focus-visible {
   box-shadow: 0 0 0 3px rgba(var(--sui-accent-rgb), 0.6);
+}
+
+/* A derived value: nothing to grab, so no hand, no grabbing hand and no hover
+   ring (the hover rule above is `:not([data-readonly])`). After the thumb's
+   own rules, so the more specific selector comes last. */
+.sui-marked-slider[data-readonly] .sui-marked-slider__track,
+.sui-marked-slider[data-readonly] .sui-marked-slider__thumb,
+.sui-marked-slider[data-readonly] .sui-marked-slider__thumb:active {
+  cursor: default;
 }
 
 /* ── A mark that holds its space ─────────────────────────────────────────
