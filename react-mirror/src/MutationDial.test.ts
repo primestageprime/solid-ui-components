@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupNote } from "./MutationDial.tsx";
+import { groupNote, metaLine } from "./MutationDial.tsx";
 
 const member = (id: string, value: number, old: number | null) => ({
   id,
@@ -27,5 +27,18 @@ describe("groupNote", () => {
     expect(
       groupNote([member("a", 5, null), member("b", 5, 5)], fmt, "New"),
     ).toContain("1 new");
+  });
+});
+
+describe("metaLine", () => {
+  it("is the readout's own line when there is no footnote", () => {
+    expect(metaLine("was $48K", undefined)).toBe("was $48K");
+    expect(metaLine("", undefined)).toBe("");
+  });
+  it("is the footnote alone when the readout has nothing to say", () => {
+    expect(metaLine("", "×3 = $188K")).toBe("×3 = $188K");
+  });
+  it("joins the two when both speak", () => {
+    expect(metaLine("New", "×1 = $60K")).toBe("New · ×1 = $60K");
   });
 });

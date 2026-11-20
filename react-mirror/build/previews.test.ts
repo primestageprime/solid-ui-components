@@ -41,7 +41,13 @@ describe("design-system previews", () => {
     const errors: unknown[] = [];
     const virtualConsole = new VirtualConsole();
     virtualConsole.on("error", (...args) => errors.push(args));
-    virtualConsole.on("jsdomError", (e) => errors.push(e.message));
+    // jsdom has no canvas. A dial measures its names on one and, finding
+    // none, shows them whole, which is what a browser without canvas gets;
+    // jsdom saying so is the test's environment, not the page's error.
+    virtualConsole.on("jsdomError", (e) => {
+      if (!/^Not implemented: HTMLCanvasElement's getContext\(\)/.test(e.message))
+        errors.push(e.message);
+    });
     const dom = new JSDOM(
       `<!doctype html><html data-theme="hud"><body>${html.replace(/<script>[\s\S]*<\/script>/, "")}</body></html>`,
       { runScripts: "outside-only", virtualConsole, pretendToBeVisual: true },

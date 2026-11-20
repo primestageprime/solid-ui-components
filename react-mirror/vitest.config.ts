@@ -6,6 +6,10 @@ import { suiVitePlugin } from "./build/vitePlugin.ts";
 const here = (path: string): string =>
   fileURLToPath(new URL(path, import.meta.url));
 
+/** A path as a regex prefix: SUI's own src/, wherever the repo is checked out. */
+const under = (path: string): string =>
+  here(path).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // Two JSX worlds in one run. vite-plugin-solid compiles SUI's own sources and
 // the Solid half of the drift test (and nothing else); esbuild compiles the
 // mirror's React JSX. `suiVitePlugin` gives the mirror SUI's own variant
@@ -16,7 +20,9 @@ export default defineConfig({
     solidPlugin({
       hot: false,
       include: [
-        /solid-ui-components\/src\/.*\.[jt]sx$/,
+        // By where SUI's sources ARE, not by the checkout's folder name: a
+        // worktree or a clone under another name is still SUI.
+        new RegExp(`^${under("../src/")}.*\\.[jt]sx$`),
         /react-mirror\/test\/solid\/.*\.tsx$/,
         /node_modules\/.+\.jsx$/,
       ],

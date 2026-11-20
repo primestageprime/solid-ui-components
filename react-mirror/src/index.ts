@@ -13,4 +13,6 @@ export * from "sui:Text/variants";
 export { Icon, InlineMetaIcon } from "./Icon.tsx";
 export { MarkedSlider } from "./MarkedSlider.tsx";
 export { GroupDial, MutationDial } from "./MutationDial.tsx";
+export { CountInput100, ThemedNumberInput } from "./NumberInput.tsx";
 export { SliderField } from "./SliderField.tsx";
+export { WeightedGroupCard } from "./WeightedGroupCard.tsx";

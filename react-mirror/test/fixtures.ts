@@ -67,6 +67,19 @@ const group = {
   onMeasure: noop,
 };
 
+/** Peter's sketch: Carpenters is Gerald x2 and Jen x1. */
+const carpenters = {
+  id: "carpenters",
+  label: "Carpenters",
+  range: [40_000, 90_000],
+  members: [
+    { id: "g", label: "Gerald", count: 2, old: 48_000, value: 64_000 },
+    { id: "j", label: "Jen", count: 1, old: 48_000, value: 60_000 },
+  ],
+};
+
+const thousands = (value: number): string => `$${Math.round(value / 1_000)}K`;
+
 export const BASE_FIXTURES: Readonly<Record<string, readonly Fixture[]>> = {
   MarkedSlider: [
     { name: "a raise", props: { ...slider, prior: 44_000, value: 63_000 } },
@@ -98,9 +111,26 @@ export const BASE_FIXTURES: Readonly<Record<string, readonly Fixture[]>> = {
       props: { ...slider, prior: 44_000, value: 63_000, priorLabel: "$44K" },
     },
     {
+      name: "read-only",
+      props: { ...slider, prior: 44_000, value: 63_000, readOnly: true },
+    },
+    {
       name: "a cut",
       props: { ...slider, prior: 80_000, value: 50_000, deltaLabel: "−$30K" },
     },
+  ],
+  CountInput100: [
+    {
+      name: "a small count field, as a role card's member has",
+      props: {
+        name: "g-count",
+        "aria-label": "Gerald count",
+        size: "sm",
+        min: 1,
+        value: () => 2,
+      },
+    },
+    { name: "empty, default size", props: { name: "n" } },
   ],
   Icon: [
     { name: "plain", props: { name: "plus" } },
@@ -132,6 +162,44 @@ export const BASE_FIXTURES: Readonly<Record<string, readonly Fixture[]>> = {
         suffix: "/hr",
         disabled: true,
         onCommit: noop,
+      },
+    },
+  ],
+  WeightedGroupCard: [
+    {
+      name: "closed",
+      props: { group: carpenters, onChange: noop, format: thousands },
+    },
+    {
+      name: "open",
+      props: {
+        group: carpenters,
+        onChange: noop,
+        format: thousands,
+        defaultOpen: true,
+      },
+    },
+    {
+      name: "open, with a new member and amounts to type",
+      props: {
+        group: {
+          ...carpenters,
+          members: [
+            ...carpenters.members,
+            {
+              id: "m",
+              label: "Maximiliano Fitzgerald",
+              count: 1,
+              old: null,
+              value: 70_000,
+            },
+          ],
+        },
+        onChange: noop,
+        format: thousands,
+        defaultOpen: true,
+        snap: 1_000,
+        precision: -3,
       },
     },
   ],
@@ -173,6 +241,28 @@ export const BASE_FIXTURES: Readonly<Record<string, readonly Fixture[]>> = {
     { name: "with a note", props: { ...dial, note: "2 new" } },
     { name: "with an empty note", props: { ...dial, note: "" } },
     { name: "readouts beside", props: { ...dial, readout: "beside" } },
+    { name: "read-only", props: { ...dial, readOnly: true } },
+    {
+      name: "the name as a command",
+      props: {
+        ...dial,
+        nameAction: { label: "Edit range for Roofer", act: noop },
+      },
+    },
+    { name: "with a subheader", props: { ...dial, subheader: "3" } },
+    {
+      name: "with a footnote beside",
+      props: { ...dial, readout: "beside", footnote: "×3 = $189K" },
+    },
+    {
+      name: "a new member's footnote",
+      props: {
+        ...dial,
+        readout: "beside",
+        entity: { ...roofer, old: null },
+        footnote: "×1 = $63K",
+      },
+    },
   ],
   GroupDial: [
     { name: "closed", props: group },

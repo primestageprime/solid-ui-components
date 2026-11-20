@@ -4,6 +4,7 @@
 import type { Component } from "solid-js";
 import { render } from "solid-js/web";
 import * as buttons from "../../../src/components/Button/variants";
+import { CountInput100 } from "../../../src/components/CurrencyInput/sized";
 import * as dividers from "../../../src/components/Divider/variants";
 import * as layout from "../../../src/components/Layout/variants";
 import { Icon } from "../../../src/components/Icon/Icon";
@@ -14,6 +15,7 @@ import { GroupDial } from "../../../src/components/MutationSliders/groupDial";
 import { SliderField } from "../../../src/components/Slider/SliderField";
 import * as surfaces from "../../../src/components/Surface/variants";
 import * as texts from "../../../src/components/Text/variants";
+import { WeightedGroupCard } from "../../../src/components/WeightedGroupCard/WeightedGroupCard";
 
 type Table = Readonly<Record<string, unknown>>;
 
@@ -27,11 +29,13 @@ export const solidTables: Readonly<Record<string, Table>> = {
 };
 
 export const solidBases: Readonly<Record<string, unknown>> = {
+  CountInput100,
   Icon,
   MarkedSlider,
   SliderField,
   MutationDial,
   GroupDial,
+  WeightedGroupCard,
 };
 
 /** Render `component` with `props` (and text children) into a fresh div. */

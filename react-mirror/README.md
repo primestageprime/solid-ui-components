@@ -16,7 +16,8 @@ Nothing here changes SUI. The mirror reads SUI's sources and never edits them.
 
 - The variant tables: Button, Layout, Surface, Text, Divider, MarkedSlider.
 - The bases SUI exports: `Icon`, `MarkedSlider`, `SliderField`.
-- The role card's two dials, `MutationDial` and `GroupDial` (private to SUI's MutationSliders; named here so a canvas can draw one card).
+- The role card's two dials, `MutationDial` and `GroupDial` (private to SUI's MutationSliders; named here so a canvas can draw one card). A dial's name is shortened to fit its column as SUI does it.
+- `WeightedGroupCard`, the role card with counted members (SUI's model, `weighted.ts`, imported unchanged), and its count field `CountInput100` on `ThemedNumberInput`. The card opens and closes; the range dialog its name opens is not drawn.
 - Tokens for the HUD (default) and Light (Bronze) themes.
 
 The components draw a state. Callbacks only report a press; nothing drags, takes keys or animates.
@@ -24,7 +25,8 @@ The components draw a state. Callbacks only report a press; nothing drags, takes
 ## Not yet
 
 - The full MutationSliders row: paging, selection, linked dials, the scale.
-- A dial's name shortened to fit (SUI measures the font after mount; the CSS ellipsis still applies), and the link button revealed on hover or focus.
+- The link button revealed on hover or focus.
+- `WeightedGroupCard`'s range dialog, and `ThemedNumberInput`'s visible label, error and description.
 - The colourblind and Bronze Dark themes, and the `sui-dense-*` density tokens.
 - Every other SUI component.
 - Keyframes that both `_baseline.css` and `hud.css` define (modal fades, tab pulse) take HUD's version in both themes.

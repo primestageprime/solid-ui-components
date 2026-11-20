@@ -15,7 +15,9 @@ import * as texts from "sui:Text/variants";
 import { Icon } from "../src/Icon.tsx";
 import { MarkedSlider } from "../src/MarkedSlider.tsx";
 import { GroupDial, MutationDial } from "../src/MutationDial.tsx";
+import { CountInput100 } from "../src/NumberInput.tsx";
 import { SliderField } from "../src/SliderField.tsx";
+import { WeightedGroupCard } from "../src/WeightedGroupCard.tsx";
 import { BASE_FIXTURES } from "./fixtures.ts";
 import { shape } from "./normalize.ts";
 
@@ -83,11 +85,13 @@ describe.each(Object.keys(reactTables))("%s variants", (table) => {
 });
 
 const reactBases: Readonly<Record<string, unknown>> = {
+  CountInput100,
   MarkedSlider,
   Icon,
   SliderField,
   MutationDial,
   GroupDial,
+  WeightedGroupCard,
 };
 
 describe.each(Object.keys(BASE_FIXTURES))("%s", (base) => {

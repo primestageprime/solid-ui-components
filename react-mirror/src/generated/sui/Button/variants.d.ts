@@ -26,3 +26,4 @@ export declare const GlyphSlotGhostButton: (props: ButtonDataProps) => ReactElem
 export declare const ReservedGlyphSlotButton: (props: ButtonDataProps) => ReactElement;
 export declare const DisclosureButton: (props: ButtonDataProps) => ReactElement;
 export declare const ReservedDisclosureButton: (props: ButtonDataProps) => ReactElement;
+export declare const FieldHeightGhostButton: (props: ButtonDataProps) => ReactElement;

@@ -34,6 +34,8 @@ export interface MarkedSliderProps {
   readonly label: string;
   readonly valueText?: string;
   readonly active?: boolean;
+  /** Shows a value that cannot be moved (SUI's `readOnly`). */
+  readonly readOnly?: boolean;
   readonly onChange?: (value: number) => void;
   readonly onChangeEnd?: (value: number) => void;
   readonly onMeasure?: (height: number) => void;
@@ -177,6 +179,7 @@ export const MarkedSlider = (props: MarkedSliderProps): ReactElement => {
   const current = dial.clampedValue ?? dial.range[0];
   const disabled = removed ? "" : undefined;
   const locale = readerLocale();
+  const readOnly = props.readOnly ? "" : undefined;
   return (
     // biome-ignore lint/a11y/useSemanticElements: Kobalte's slider root is a div with role=group; the mirror draws the same tree
     <div
@@ -190,6 +193,7 @@ export const MarkedSlider = (props: MarkedSliderProps): ReactElement => {
         props.active && "sui-marked-slider--active",
       )}
       data-removed={disabled}
+      data-readonly={readOnly}
     >
       <Marks
         dial={dial}
@@ -200,6 +204,7 @@ export const MarkedSlider = (props: MarkedSliderProps): ReactElement => {
       <div
         data-disabled={disabled}
         data-orientation="vertical"
+        data-readonly={readOnly}
         className="sui-marked-slider__track"
       >
         {!dial.removed && (
@@ -220,6 +225,8 @@ export const MarkedSlider = (props: MarkedSliderProps): ReactElement => {
             data-orientation="vertical"
             className="sui-marked-slider__thumb"
             aria-valuenow={current}
+            aria-readonly={props.readOnly ? "true" : undefined}
+            data-readonly={readOnly}
           >
             <input
               type="range"
@@ -230,6 +237,9 @@ export const MarkedSlider = (props: MarkedSliderProps): ReactElement => {
               style={VISUALLY_HIDDEN}
               aria-orientation="vertical"
               aria-valuetext={numberText(current, locale)}
+              aria-readonly={props.readOnly ? "true" : undefined}
+              readOnly={props.readOnly}
+              data-readonly={readOnly}
               data-orientation="vertical"
             />
           </span>

@@ -2,10 +2,17 @@
 // (groupDial.tsx), as React markup. SUI keeps them private to MutationSliders;
 // the mirror names them so a canvas can lay out one card. They draw a state:
 // every callback is optional and only reports the press, as SUI's do.
-// Two things are left out: the name is never shortened to fit (SUI measures
-// the font after mount; the CSS ellipsis still applies), and the link button
-// shows only while linked (SUI also reveals it on hover and focus).
-import type { ReactElement, ReactNode } from "react";
+// A person's name is shortened to fit the 88px column as SUI does it
+// (fitName.ts): the font is read from a painted name after mount and measured
+// on a canvas, so a first frame, and a page with no canvas, show it whole.
+// One thing is left out: the link button shows only while linked (SUI also
+// reveals it on hover and focus).
+import {
+  type ReactElement,
+  type ReactNode,
+  useLayoutEffect,
+  useState,
+} from "react";
 import {
   DisclosureButton,
   GlyphSlotGhostButton,
@@ -18,6 +25,7 @@ import {
   type Entity,
   dialGeometry,
 } from "sui:MarkedSlider/geometry";
+import { fitName, measurerFor } from "sui:MutationSliders/fitName";
 import { newCount, resetGroup, spreadOf } from "sui:MutationSliders/groups";
 import {
   DEFAULT_LABELS,
@@ -63,7 +71,40 @@ export interface MutationDialProps {
   readonly onReset?: () => void;
   readonly onLink?: () => void;
   readonly linked?: boolean;
+  /** Shows a value that cannot be moved: the group of a WeightedGroupCard. */
+  readonly readOnly?: boolean;
+  /** The name as a command: `label` is the button's accessible name. */
+  readonly nameAction?: { readonly label: string; readonly act: () => void };
+  /** A control on its own line under the name: a count button or field. */
+  readonly subheader?: ReactNode;
+  /** Its own words after the muted line under the amount: "×3 = $186K". */
+  readonly footnote?: string;
 }
+
+/** The font a painted dial name is drawn in, or `null` before one is painted. */
+const useNameFont = (): string | null => {
+  const [font, setFont] = useState<string | null>(null);
+  useLayoutEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const el = document.querySelector("[data-dial-name]");
+      if (!el?.isConnected) return;
+      const cs = getComputedStyle(el);
+      setFont(
+        `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`,
+      );
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return font;
+};
+
+/** The meta line under the amount, with the footnote after what it says. */
+export const metaLine = (meta: string, footnote: string | undefined): string =>
+  footnote === undefined
+    ? meta
+    : meta === ""
+      ? footnote
+      : `${meta} · ${footnote}`;
 
 /** A meta line; a reserved (hidden, space-holding) line when it has nothing to say. */
 const Meta = (props: { readonly text: string }): ReactElement =>
@@ -101,10 +142,39 @@ export const MutationDial = (props: MutationDialProps): ReactElement => {
   const changed =
     props.changed ?? (dial.isNew || dial.clampedOld !== dial.clampedValue);
 
+  // The name shortened to fit, as SUI's dial does: the column, less the
+  // chevron beside a group name and a button's padding. A role's name (a
+  // group's, or one whose note names the person) shows whole.
+  const font = useNameFont();
+  const measure = font === null ? null : measurerFor(font);
+  const pressable =
+    props.onSelect !== undefined || props.nameAction !== undefined;
+  const room = 88 - 6 - (props.headerAction ? 28 : 0) - (pressable ? 12 : 0);
+  const isRole =
+    props.headerAction !== undefined ||
+    props.nameAction !== undefined ||
+    (props.note !== undefined && props.note !== "");
+  const shown =
+    measure === null || isRole
+      ? entity.label
+      : fitName(entity.label, room, measure);
+
   const nameLabel = (
     <EllipsisLabel data-dial-name="" title={entity.label}>
-      {entity.label}
+      {shown}
     </EllipsisLabel>
+  );
+  const command = props.nameAction ? (
+    <PressableLabelButton
+      aria-label={props.nameAction.label}
+      aria-haspopup="dialog"
+      title={props.nameAction.label}
+      onClick={props.nameAction.act}
+    >
+      {nameLabel}
+    </PressableLabelButton>
+  ) : (
+    nameLabel
   );
   const name = props.onSelect ? (
     <PressableLabelButton
@@ -116,7 +186,7 @@ export const MutationDial = (props: MutationDialProps): ReactElement => {
       {nameLabel}
     </PressableLabelButton>
   ) : (
-    nameLabel
+    command
   );
 
   const footer = dial.removed
@@ -185,6 +255,7 @@ export const MutationDial = (props: MutationDialProps): ReactElement => {
         name
       )}
       {props.note !== undefined && <Meta text={props.note} />}
+      {props.subheader}
       {props.onLink &&
         (props.linked === true ? (
           <GlyphSlotGhostButton
@@ -215,6 +286,7 @@ export const MutationDial = (props: MutationDialProps): ReactElement => {
         deltaLabel={readouts.deltaLabel}
         priorLabel={readouts.priorLabel}
         active={props.selected}
+        readOnly={props.readOnly}
       />
       {props.onType !== undefined && !dial.removed ? (
         <SliderField
@@ -228,7 +300,7 @@ export const MutationDial = (props: MutationDialProps): ReactElement => {
           {readouts.value}
         </EllipsisMonoValue>
       )}
-      <Meta text={readouts.meta} />
+      <Meta text={metaLine(readouts.meta, props.footnote)} />
       {lastSlot()}
     </DialStack>
   );
