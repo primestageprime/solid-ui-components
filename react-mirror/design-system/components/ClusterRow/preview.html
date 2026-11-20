@@ -1,0 +1,16 @@
+<!-- @dsCard group="Layout" height=170 subtitle="Rows and stacks; layout is a named variant too" -->
+<div id="root" style="padding: 16px"></div>
+<script>
+const h = React.createElement;
+const S = window.Sui;
+const k = (n) => `$${Math.round(n / 1000)}K`;
+const range = [40000, 90000];
+const domain = [0, 200000];
+const box = (t) => h(S.CompactSurface, null, h(S.TextLabel, null, t));
+const view = h(S.Column, null,
+  h(S.ClusterRow, null, box("Cluster"), box("Row"), box("Items")),
+  h(S.SpreadRow, null, box("Spread"), box("Row")),
+  h(S.FillStretchRow, null, box("Fill"), box("Stretch"), box("Row")),
+);
+ReactDOM.createRoot(document.getElementById("root")).render(view);
+</script>

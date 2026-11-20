@@ -1,0 +1,70 @@
+<!-- @dsCard height=288 -->
+<div class="cover">
+  <svg viewBox="0 0 960 288" width="960" height="288" aria-hidden="true">
+    <!--
+      blocks: --sui-accent 240x176, --sui-text-primary 184x96, --sui-highlight 120x176, --sui-text-secondary 240x96, --sui-success and --sui-warning 48x48; sides in --sui-space-4 (16px) steps
+      arrangement: one tall accent slab bleeding off the top, satellites stepping right and off the top and bottom edges, signal colours kept small
+      pattern: a plus grid cut from the accent slab in the ground colour, because SUI's HUD is precise, technical and mono on a grid
+      steps and radii: 32px pitch (2 x --sui-space-4), 16px gaps, square corners (--sui-radius-* 0) chamfered by --sui-clip-md (12px), HUD's cut edge
+    -->
+    <polygon class="accent" points="520,0 748,0 760,12 760,176 532,176 520,164" />
+    <polygon class="ink" points="776,0 948,0 960,12 960,96 788,96 776,84" />
+    <polygon class="highlight" points="776,112 884,112 896,124 896,288 788,288 776,276" />
+    <polygon class="quiet" points="520,192 748,192 760,204 760,288 532,288 520,276" />
+    <polygon class="success" points="912,112 948,112 960,124 960,160 924,160 912,148" />
+    <polygon class="warning" points="912,176 948,176 960,188 960,224 924,224 912,212" />
+    <path class="cut" d="M536 24h8M540 20v8" />
+    <path class="cut" d="M536 56h8M540 52v8" />
+    <path class="cut" d="M536 88h8M540 84v8" />
+    <path class="cut" d="M536 120h8M540 116v8" />
+    <path class="cut" d="M536 152h8M540 148v8" />
+    <path class="cut" d="M568 24h8M572 20v8" />
+    <path class="cut" d="M568 56h8M572 52v8" />
+    <path class="cut" d="M568 88h8M572 84v8" />
+    <path class="cut" d="M568 120h8M572 116v8" />
+    <path class="cut" d="M568 152h8M572 148v8" />
+    <path class="cut" d="M600 24h8M604 20v8" />
+    <path class="cut" d="M600 56h8M604 52v8" />
+    <path class="cut" d="M600 88h8M604 84v8" />
+    <path class="cut" d="M600 120h8M604 116v8" />
+    <path class="cut" d="M600 152h8M604 148v8" />
+    <path class="cut" d="M632 24h8M636 20v8" />
+    <path class="cut" d="M632 56h8M636 52v8" />
+    <path class="cut" d="M632 88h8M636 84v8" />
+    <path class="cut" d="M632 120h8M636 116v8" />
+    <path class="cut" d="M632 152h8M636 148v8" />
+    <path class="cut" d="M664 24h8M668 20v8" />
+    <path class="cut" d="M664 56h8M668 52v8" />
+    <path class="cut" d="M664 88h8M668 84v8" />
+    <path class="cut" d="M664 120h8M668 116v8" />
+    <path class="cut" d="M664 152h8M668 148v8" />
+    <path class="cut" d="M696 24h8M700 20v8" />
+    <path class="cut" d="M696 56h8M700 52v8" />
+    <path class="cut" d="M696 88h8M700 84v8" />
+    <path class="cut" d="M696 120h8M700 116v8" />
+    <path class="cut" d="M696 152h8M700 148v8" />
+    <path class="cut" d="M728 24h8M732 20v8" />
+    <path class="cut" d="M728 56h8M732 52v8" />
+    <path class="cut" d="M728 88h8M732 84v8" />
+    <path class="cut" d="M728 120h8M732 116v8" />
+    <path class="cut" d="M728 152h8M732 148v8" />
+  </svg>
+  <div class="words">
+    <h1>SUI</h1>
+    <p>SUI as it is in code, drawn in React for design canvases.</p>
+  </div>
+</div>
+<style>
+  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; background: var(--sui-bg-primary); }
+  .cover svg { position: absolute; inset: 0; }
+  .accent { fill: var(--sui-accent); }
+  .ink { fill: var(--sui-text-primary); }
+  .highlight { fill: var(--sui-highlight); }
+  .quiet { fill: var(--sui-text-secondary); }
+  .success { fill: var(--sui-success); }
+  .warning { fill: var(--sui-warning); }
+  .cut { stroke: var(--sui-bg-primary); stroke-width: 2; fill: none; }
+  .words { position: absolute; left: 40px; bottom: 36px; max-width: 440px; }
+  .words h1 { margin: 0; font-family: var(--sui-font-family); font-weight: 700; font-size: 120px; line-height: 0.92; color: var(--sui-text-primary); }
+  .words p { margin: 8px 0 0; font-family: var(--sui-font-family); font-size: 14px; color: var(--sui-text-muted); }
+</style>

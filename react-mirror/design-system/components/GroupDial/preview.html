@@ -1,0 +1,22 @@
+<!-- @dsCard group="Role card" height=440 subtitle="Several identical units as one dial, with an expander" -->
+<div id="root" style="padding: 16px"></div>
+<script>
+const h = React.createElement;
+const S = window.Sui;
+const k = (n) => `$${Math.round(n / 1000)}K`;
+const range = [40000, 90000];
+const domain = [0, 200000];
+const members = [
+  { id: "r1", label: "Roofer", old: 44000, value: 63000, range },
+  { id: "r2", label: "Roofer", old: 52000, value: 52000, range },
+  { id: "r3", label: "Roofer", old: null, value: 70000, range },
+];
+const group = (open) => h(S.GroupDial, {
+  entity: { id: "g", label: "Roofer × 3", old: 48000, value: 61667, range },
+  members, groupLabel: "Roofer", open,
+  domain, height: 260, format: k, dragStep: 1, keyStep: 1000,
+  onToggle: () => {}, onReset: () => {}, onType: () => {},
+});
+const view = h(S.ClusterRow, null, group(false), group(true));
+ReactDOM.createRoot(document.getElementById("root")).render(view);
+</script>

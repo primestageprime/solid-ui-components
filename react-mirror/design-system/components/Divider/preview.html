@@ -1,0 +1,13 @@
+<!-- @dsCard group="Layout" height=110 subtitle="Separators" -->
+<div id="root" style="padding: 16px"></div>
+<script>
+const h = React.createElement;
+const S = window.Sui;
+const k = (n) => `$${Math.round(n / 1000)}K`;
+const range = [40000, 90000];
+const domain = [0, 200000];
+const view = h(S.Column, null,
+  h(S.TextBody, null, "Above"), h(S.Divider, null), h(S.TextBody, null, "Between"), h(S.DashedDivider, null), h(S.TextBody, null, "Below"),
+);
+ReactDOM.createRoot(document.getElementById("root")).render(view);
+</script>
