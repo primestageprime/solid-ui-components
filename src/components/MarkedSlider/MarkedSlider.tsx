@@ -268,6 +268,13 @@ export interface MarkedSliderProps {
   valueText?: string;
   /** Draws the selected ring. The caller decides what selection means. */
   active?: boolean;
+  /**
+   * The value is DERIVED, not chosen: the thumb shows it, focuses and
+   * announces it, but no drag or key moves it. A group's dial that sits at its
+   * members' weighted mean (WeightedGroupCard, Peter's role-card sketch
+   * 2026-11-20: "the arrow on the three panel isn't editable").
+   */
+  readOnly?: boolean;
   /** Every intermediate value of a drag, and every key step. Clamped. */
   onChange?: (value: number) => void;
   /** Once per COMMITTED gesture — pointer release, or one key step. Clamped. */
@@ -397,7 +404,7 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
       event.stopPropagation();
 
       const current = dial();
-      if (current.removed) return;
+      if (current.removed || props.readOnly) return;
       // Shift+arrow pages, the way it does in Kobalte's own handler.
       const magnitude =
         paging !== 0 || event.shiftKey ? key() * PAGE_MULTIPLE : key();
@@ -454,7 +461,9 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
       maxValue={props.domain[1]}
       step={drag()}
       disabled={removed()}
+      readOnly={props.readOnly}
       data-removed={removed() ? "" : undefined}
+      data-readonly={props.readOnly ? "" : undefined}
       getValueLabel={() => props.valueText ?? String(dial().clampedValue ?? "")}
     >
       <Marks
@@ -468,6 +477,7 @@ export const MarkedSlider: Component<MarkedSliderProps> = (props) => {
           <KobalteSlider.Thumb
             class="sui-marked-slider__thumb"
             aria-label={props.label}
+            aria-readonly={props.readOnly ? "true" : undefined}
             // The allowed RANGE is what a reader can reach, so the range is
             // what the thumb announces — Kobalte would otherwise read out the
             // whole domain, which is the track's extent rather than this
