@@ -1,0 +1,26 @@
+{
+  "name": "@primestageprime/sui-react-mirror",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Thin React 18 mirror of SUI for Claude Design canvases. SUI's own CSS, tokens and variant tables are the source; this folder only renders them.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test/solid",
+    "lint": "biome lint --error-on-warnings .",
+    "format": "biome format .",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "build": "node --experimental-strip-types --no-warnings build/build.ts",
+    "generate": "node --experimental-strip-types --no-warnings build/generate.ts"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/react": "18.3.30",
+    "@types/react-dom": "18.3.7",
+    "esbuild": "0.25.12",
+    "jsdom": "^30.0.1",
+    "postcss": "^8.5.6",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

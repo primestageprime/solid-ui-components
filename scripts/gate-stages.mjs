@@ -109,6 +109,29 @@ export const STAGES = [
     skipWhy: "full build; runs at the PR gate",
   },
   {
+    name: "react-mirror",
+    // The React mirror that builds SUI's Claude design system (react-mirror/
+    // README.md): its own types, lint and tests, the drift test against SUI's
+    // Solid components among them, then its build. Needs `npm ci` run once in
+    // react-mirror/ as well as at the root.
+    ciJob: "react-mirror",
+    commands: [
+      ["npm", "--prefix", "react-mirror", "run", "check"],
+      ["npm", "--prefix", "react-mirror", "run", "build"],
+    ],
+    fast: false,
+    prePush: false,
+    skipWhy: "the React mirror's own suite; runs at the PR gate",
+    remedy: [
+      "react-mirror's checks failed. If its drift test names a variant, SUI's",
+      "markup or a variant table changed and the mirror's base no longer draws",
+      "the same tree: update react-mirror/src to match. First run, or after a",
+      "dependency change:",
+      "",
+      "  npm --prefix react-mirror ci --ignore-scripts",
+    ],
+  },
+  {
     name: "usage-manifest",
     // Local only; CI has no consumer checkouts to scan.
     //

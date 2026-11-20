@@ -1,0 +1,14 @@
+<!-- @dsCard group="Role card" height=110 subtitle="The typed amount under a dial" -->
+<div id="root" style="padding: 16px"></div>
+<script>
+const h = React.createElement;
+const S = window.Sui;
+const k = (n) => `$${Math.round(n / 1000)}K`;
+const range = [40000, 90000];
+const domain = [0, 200000];
+const view = h(S.ClusterRow, null,
+  h(S.SliderField, { label: "Roofer amount", value: "$63K", editValue: "63000", onCommit: () => {} }),
+  h(S.SliderField, { label: "Estimator amount", value: "$58K", editValue: "58000", onCommit: () => {} }),
+);
+ReactDOM.createRoot(document.getElementById("root")).render(view);
+</script>

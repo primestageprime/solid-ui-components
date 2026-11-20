@@ -1,0 +1,18 @@
+<!-- @dsCard group="Surfaces" height=230 subtitle="Cards and toned panels" -->
+<div id="root" style="padding: 16px"></div>
+<script>
+const h = React.createElement;
+const S = window.Sui;
+const k = (n) => `$${Math.round(n / 1000)}K`;
+const range = [40000, 90000];
+const domain = [0, 200000];
+const s = (C, title, body) => h(C, null, h(S.TextTitle, null, title), h(S.TextBody, null, body));
+const view = h(S.CardGrid, null,
+  s(S.CardSurface, "Card", "A role card's frame."),
+  s(S.InfoSurface, "Info", "Neutral context."),
+  s(S.SuccessSurface, "Success", "Within budget."),
+  s(S.WarningSurface, "Warning", "Close to the cap."),
+  s(S.DangerSurface, "Danger", "Over the cap."),
+);
+ReactDOM.createRoot(document.getElementById("root")).render(view);
+</script>

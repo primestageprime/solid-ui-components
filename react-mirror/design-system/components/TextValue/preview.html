@@ -1,0 +1,19 @@
+<!-- @dsCard group="Text" height=250 subtitle="SUI's type scale as Text variants" -->
+<div id="root" style="padding: 16px"></div>
+<script>
+const h = React.createElement;
+const S = window.Sui;
+const k = (n) => `$${Math.round(n / 1000)}K`;
+const range = [40000, 90000];
+const domain = [0, 200000];
+const view = h(S.Column, null,
+  h(S.TextValue, null, "$61,667"),
+  h(S.TextLabel, null, "Roofer × 3"),
+  h(S.TextTitle, null, "Payroll by role"),
+  h(S.TextBody, null, "Body text reads in the secondary ink."),
+  h(S.TextUnits, null, "per year"),
+  h(S.TextSublabel, null, "avg · $44K–$70K · 1 new"),
+  h(S.MonoValue, null, "63000"),
+);
+ReactDOM.createRoot(document.getElementById("root")).render(view);
+</script>

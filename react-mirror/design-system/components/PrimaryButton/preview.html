@@ -1,0 +1,23 @@
+<!-- @dsCard group="Buttons" height=170 subtitle="SUI's button variants" -->
+<div id="root" style="padding: 16px"></div>
+<script>
+const h = React.createElement;
+const S = window.Sui;
+const k = (n) => `$${Math.round(n / 1000)}K`;
+const range = [40000, 90000];
+const domain = [0, 200000];
+const b = (C, text, extra) => h(C, extra || null, text);
+const view = h(S.Column, null,
+  h(S.ClusterRow, null,
+    b(S.PrimaryButton, "Save"), b(S.SecondaryButton, "Compare"), b(S.DefaultButton, "Default"),
+    b(S.OutlinedButton, "Outlined"), b(S.GhostButton, "Ghost"), b(S.DangerButton, "Delete"),
+    b(S.PrimaryButton, "Disabled", { disabled: true }), b(S.PrimaryButton, "Saving", { loading: true }),
+  ),
+  h(S.ClusterRow, null,
+    b(S.SmallPrimaryButton, "Small"), b(S.SmallButton, "Small"), b(S.SmallGhostButton, "Small ghost"),
+    b(S.SmallQuietButton, "Quiet"), b(S.LargePrimaryButton, "Large"),
+    h(S.GlyphSlotGhostButton, { "aria-label": "Reset" }, h(S.Icon, { name: "refresh", size: "sm" })),
+  ),
+);
+ReactDOM.createRoot(document.getElementById("root")).render(view);
+</script>
