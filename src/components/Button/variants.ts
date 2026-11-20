@@ -190,3 +190,17 @@ export const ReservedDisclosureButton: Component<ButtonDataProps> =
       visibility: "hidden",
     },
   });
+
+// Field-height ghost button — a small ghost button whose BOX IS PINNED to the
+// small number field's 29px (ThemedNumberInput `size="sm"`: 1px border + 5px
+// padding + a 17px line + 5px + 1px), so a button and a field stacked in
+// neighbouring columns end on the same pixel row whatever a theme's border or
+// font metrics. Unpinned, `--sm` is 12px of padding plus the theme's border
+// plus a `normal` line box, which is 29px only by coincidence. First use: a
+// role's read-only count above its members' count fields (WeightedGroupCard),
+// where a pixel here moves every track below it.
+export const FieldHeightGhostButton: Component<ButtonDataProps> = createButton({
+  variant: "ghost",
+  size: "sm",
+  style: { height: "29px", "line-height": "1" },
+});

@@ -178,6 +178,28 @@ export interface MutationDialProps {
   onLink?: () => void;
   /** Whether this dial is in the row's link group (of two or more). */
   linked?: boolean;
+  /**
+   * The dial shows a value and cannot be moved: a group whose amount is what
+   * its members come to (WeightedGroupCard). Keys and drags move nothing.
+   */
+  readOnly?: boolean;
+  /**
+   * The name is a COMMAND rather than a toggle: pressing it does `act`, and
+   * `label` is the button's accessible name ("Edit range for Carpenters").
+   * Ignored when `onSelect` is given — one name, one job.
+   */
+  nameAction?: { readonly label: string; readonly act: () => void };
+  /**
+   * A control on its own line under the name (and under `note`): a group's
+   * count button, or a member's count field. Every column in a card passes one
+   * of the same height, so the dials below them start on one line.
+   */
+  subheader?: JSX.Element;
+  /**
+   * A line of its own words in the muted line under the amount: "×3 = $186K".
+   * Joined after anything the readout already says there ("New · ×1 = $60K").
+   */
+  footnote?: string;
 }
 
 /**
@@ -198,7 +220,12 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
   /** The required line: what this entity will be. */
   const futureReadout = (): string => readouts().value;
   /** The muted line beneath it, or `""` when there is nothing to say. */
-  const priorReadout = (): string => readouts().meta;
+  const priorReadout = (): string => {
+    const meta = readouts().meta;
+    const footnote = props.footnote;
+    if (footnote === undefined) return meta;
+    return meta === "" ? footnote : `${meta} · ${footnote}`;
+  };
 
   /**
    * What the one footer slot does right now, or `null` when the consumer has
@@ -278,7 +305,9 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
       // Build the font from its longhands: Chrome answers "" for the `font`
       // shorthand when a longhand it cannot express is set (tabular figures),
       // and canvas then measures in its 10px default, so every name "fits".
-      if (el) {
+      // A column unmounted before its first frame (a card collapsed at once)
+      // has a name that is no longer in the page, and nothing to measure.
+      if (el?.isConnected) {
         const cs = getComputedStyle(el);
         setFont(`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`);
       }
@@ -289,23 +318,41 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
     const f = font();
     const measure = f === null ? null : measurerFor(f);
     // Room: the column, less the chevron beside a group name and the button's padding.
-    const room = 88 - 6 - (props.headerAction ? 28 : 0) - (props.onSelect ? 12 : 0);
+    const pressable = props.onSelect !== undefined || props.nameAction !== undefined;
+    const room = 88 - 6 - (props.headerAction ? 28 : 0) - (pressable ? 12 : 0);
     if (measure === null) return props.entity.label;
     // A role label (a group's header, or a group-of-one whose note names the
     // person) is not a person's name: it shows whole, never "r. × 3" (owner).
-    const isRole = props.headerAction !== undefined || (props.note !== undefined && props.note !== "");
+    const isRole =
+      props.headerAction !== undefined ||
+      props.nameAction !== undefined ||
+      (props.note !== undefined && props.note !== "");
     return isRole ? props.entity.label : fitName(props.entity.label, room, measure);
   };
 
+  const plainName = (): JSX.Element => (
+    <EllipsisLabel data-dial-name="" title={props.entity.label}>
+      {shown()}
+    </EllipsisLabel>
+  );
+  /** The name as a command: the same button, without the toggle's state. */
+  const commandName = (): JSX.Element => (
+    <Show when={props.nameAction} fallback={plainName()}>
+      {(action) => (
+        <PressableLabelButton
+          aria-label={action().label}
+          aria-haspopup="dialog"
+          title={action().label}
+          onClick={() => action().act()}
+        >
+          {plainName()}
+        </PressableLabelButton>
+      )}
+    </Show>
+  );
+
   const name = (): JSX.Element => (
-    <Show
-      when={props.onSelect}
-      fallback={
-        <EllipsisLabel data-dial-name="" title={props.entity.label}>
-          {shown()}
-        </EllipsisLabel>
-      }
-    >
+    <Show when={props.onSelect} fallback={commandName()}>
       {(onSelect) => (
         <PressableLabelButton
           active={props.selected}
@@ -392,6 +439,7 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
           {props.note || NBSP}
         </Dynamic>
       </Show>
+      {props.subheader}
       {/* The LINK slot, directly UNDER the name, and only for a row that
           links. Under rather than above so the tab order is name → link →
           thumb: focusing the name reveals the link and the next Tab lands on
@@ -447,6 +495,7 @@ export const MutationDial: Component<MutationDialProps> = (props) => {
         deltaLabel={readouts().deltaLabel}
         priorLabel={readouts().priorLabel}
         active={props.selected}
+        readOnly={props.readOnly}
         onMeasure={props.onMeasure}
         onDragStart={() => props.onDragStart?.()}
         onChange={(value) => props.onMove(value)}

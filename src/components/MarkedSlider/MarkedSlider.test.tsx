@@ -213,6 +213,32 @@ describe("MarkedSlider", () => {
     expect(onChangeEnd).toHaveBeenCalledWith(55);
   });
 
+  it("is read-only when asked: keys move nothing and the thumb says so", () => {
+    const onChange = vi.fn();
+    const onChangeEnd = vi.fn();
+    const { container } = render(() => (
+      <MarkedSlider
+        domain={DOMAIN}
+        range={RANGE}
+        prior={44}
+        value={50}
+        label="Carpenters"
+        keyStep={5}
+        readOnly
+        onChange={onChange}
+        onChangeEnd={onChangeEnd}
+      />
+    ));
+    const thumb = container.querySelector('[role="slider"]') as HTMLElement;
+    fireEvent.keyDown(thumb, { key: "ArrowUp" });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(onChangeEnd).not.toHaveBeenCalled();
+    expect(thumb.getAttribute("aria-readonly")).toBe("true");
+    expect(
+      container.querySelector(".sui-marked-slider")?.hasAttribute("data-readonly"),
+    ).toBe(true);
+  });
+
   it("never emits past the allowed range, however far the key pushes", () => {
     const onChange = vi.fn();
     const { container } = render(() => (

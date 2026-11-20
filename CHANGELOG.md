@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+
+- **`FieldHeightGhostButton`** — new curried `Button` variant: a small ghost button pinned to the small number field's 29px.
+
+- **`WeightedGroupCard`** (`createWeightedGroupCard`, `CompactCurrencyWeightedGroupCard`) — new composite (Depth 3): a role and its counted members. The role's dial is read-only at the members' count-weighted mean, its count expands the card, its name opens a min/max range dialog, its Reset resets the set and each member's resets only that member. Every dial shares one height and one scale.
+- **`MarkedSlider` `readOnly`** — a dial that shows a value and cannot be moved: keys and drags move nothing, the thumb carries `aria-readonly`, and there is no grab cursor or hover ring.
+
+### Fixed
+
+- **`MutationSliders`** — a dial unmounted before its first frame no longer reads the style of a name that has left the page.
+
 ## 0.259.0 — 2026-11-19
 
 ### Removed
