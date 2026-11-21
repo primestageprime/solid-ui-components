@@ -184,3 +184,77 @@ describe("PopoverMenu triggerLabel", () => {
     expect(container.querySelector(".sui-popover-menu__trigger")!.getAttribute("aria-label")).toBe("Menu");
   });
 });
+
+// The panel is portaled to the end of <body>, so Tab from the trigger never
+// reaches it: the menu has to take focus itself (WAI-ARIA menu button).
+describe("PopoverMenu keyboard and screen-reader access", () => {
+  const THREE = [
+    { id: "a", label: "Alpha" },
+    { id: "b", label: "Beta" },
+    { id: "c", label: "Gamma" },
+  ] as const;
+
+  const items = (): HTMLElement[] =>
+    Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+  const trigger = (container: HTMLElement): HTMLElement =>
+    container.querySelector(".sui-popover-menu__trigger") as HTMLElement;
+  const flush = () => new Promise((r) => requestAnimationFrame(() => r(null)));
+
+  it("announces a menu and whether it is open", () => {
+    const { container } = render(() => (
+      <PopoverMenu trigger="More" items={[...THREE]} onSelect={() => {}} />
+    ));
+    expect(trigger(container).getAttribute("aria-haspopup")).toBe("menu");
+    expect(trigger(container).getAttribute("aria-expanded")).toBe("false");
+    openPanel(container);
+    expect(trigger(container).getAttribute("aria-expanded")).toBe("true");
+    const panel = document.body.querySelector(".sui-popover-menu__panel")!;
+    expect(panel.getAttribute("role")).toBe("menu");
+  });
+
+  it("moves focus to the first item on open", async () => {
+    const { container } = render(() => (
+      <PopoverMenu trigger="More" items={[...THREE]} onSelect={() => {}} />
+    ));
+    openPanel(container);
+    await flush();
+    expect(document.activeElement).toBe(items()[0]);
+  });
+
+  it("walks the items with the arrow keys, wrapping at both ends", async () => {
+    const { container } = render(() => (
+      <PopoverMenu trigger="More" items={[...THREE]} onSelect={() => {}} />
+    ));
+    openPanel(container);
+    await flush();
+    fireEvent.keyDown(items()[0], { key: "ArrowDown" });
+    expect(document.activeElement).toBe(items()[1]);
+    fireEvent.keyDown(items()[1], { key: "ArrowUp" });
+    fireEvent.keyDown(items()[0], { key: "ArrowUp" });
+    expect(document.activeElement).toBe(items()[2]);
+    fireEvent.keyDown(items()[2], { key: "ArrowDown" });
+    expect(document.activeElement).toBe(items()[0]);
+  });
+
+  it("Escape closes and hands focus back to the trigger", async () => {
+    const { container } = render(() => (
+      <PopoverMenu trigger="More" items={[...THREE]} onSelect={() => {}} />
+    ));
+    openPanel(container);
+    await flush();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(items()).toHaveLength(0);
+    expect(document.activeElement).toBe(trigger(container));
+  });
+
+  it("choosing an item hands focus back to the trigger", async () => {
+    const { container } = render(() => (
+      <PopoverMenu trigger="More" items={[...THREE]} onSelect={() => {}} />
+    ));
+    openPanel(container);
+    await flush();
+    fireEvent.keyDown(items()[1], { key: "Enter" });
+    expect(items()).toHaveLength(0);
+    expect(document.activeElement).toBe(trigger(container));
+  });
+});

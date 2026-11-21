@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Changed
+
+- **`Tabs`: a horizontal strip folds the tabs that don't fit into a kebab menu** (thorcasting settings dialog). Peter, 2026-11-21, on the settings tabs running under the dialog's close button: "Make it responsive so that if there isn't enough space, we collapse the overflow into kebab menus. Don't do this specifically for this UI. Have SUI make the tabs responsive so that they always do that." Every horizontal `Tabs` (and `UnderlineTabs`, `BoxedTabs`, `PillTabs`) now measures its room (ResizeObserver, via `observeSize`) and moves the tabs that don't fit into a trailing kebab (`PopoverMenu`, labelled "More tabs"). The active tab always stays in the strip, and nothing is reordered: the strip keeps the leading tabs plus the active one in their own places, and the kebab lists the rest in tab order. The rules are the pure `tabsFold` (`src/components/Tabs/fold.ts`, table and property tested). **Behaviour change:** a horizontal strip now takes the full width it is given (`width: 100%`, `min-width: 0`), since that width is what decides the fold; tabs no longer shrink or wrap. It folds inside a parent that sizes itself from its content too (a plain `Row` beside a title, as in a `Modal` header): every decision is made from the unfolded strip, and the strip, its three nearest boxes and the window are watched for a change of room. Something drawn *over* the strip (an absolutely placed button) is still the caller's to leave room for. **DOM change (horizontal only):** the root keeps the variant classes but is no longer the tablist; the tabs sit in an inner `.sui-tabs__list` with `role="tablist"`, and the kebab sits beside it. Vertical strips are unchanged and never fold. No new prop.
+- **`PopoverMenu`: keyboard and screen-reader access to the items.** The panel is portaled to the end of `<body>`, so Tab from the trigger never reached it. The menu now takes focus on open (first item), walks the items with ArrowUp / ArrowDown (wrapping) and Home / End, and hands focus back to the trigger on Escape or a choice. The trigger carries `aria-haspopup="menu"` and `aria-expanded`; the panel carries `role="menu"`. No new prop.
+
+### Added
+
+- **`Icon`: `more-vertical`**, the kebab (three vertical dots), in the `ui` group.
+
 ## 0.259.0 — 2026-11-19
 
 ### Removed

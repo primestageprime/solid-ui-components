@@ -2120,6 +2120,16 @@
   min-height: 260px;
   border: 1px dashed var(--sui-border);
 }
+.hud-tabs-demo__resizable {
+  resize: horizontal;
+  overflow: hidden;
+  width: 560px;
+  min-width: 120px;
+  max-width: 100%;
+  padding-bottom: 4px;
+  border-right: 1px dashed var(--sui-border);
+}
+
 .hud-tabs-demo__row {
   display: flex;
   min-height: 180px;
