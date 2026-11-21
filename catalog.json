@@ -1680,7 +1680,7 @@
     "useFor": null,
     "notes": "Boxed tab bar.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.260.0",
     "file": "src/components/Tabs/variants.ts",
     "line": 20
   },
@@ -19306,7 +19306,7 @@
     "useFor": null,
     "notes": "Pill-style tab bar.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.260.0",
     "file": "src/components/Tabs/variants.ts",
     "line": 25
   },
@@ -26677,7 +26677,7 @@
     "useFor": null,
     "notes": "Underline-style tab bar.",
     "showcase": null,
-    "since": "Unreleased",
+    "since": "0.260.0",
     "file": "src/components/Tabs/variants.ts",
     "line": 15
   },
