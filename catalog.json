@@ -1680,7 +1680,7 @@
     "useFor": null,
     "notes": "Boxed tab bar.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Tabs/variants.ts",
     "line": 20
   },
@@ -6684,7 +6684,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 593
+    "line": 600
   },
   {
     "name": "createKbd",
@@ -8430,6 +8430,7 @@
     "family": "Tabs",
     "tags": [
       "shows:tabs",
+      "shows:menu",
       "does:navigate",
       "does:select",
       "data:enum",
@@ -8452,7 +8453,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Tabs/Tabs.tsx",
-    "line": 89
+    "line": 304
   },
   {
     "name": "createText",
@@ -15089,7 +15090,7 @@
     "showcase": "#/icon",
     "since": "v0.6.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 552
+    "line": 559
   },
   {
     "name": "IconClusterRow",
@@ -15628,7 +15629,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 601
+    "line": 608
   },
   {
     "name": "InlineSubtleDropdown",
@@ -19305,7 +19306,7 @@
     "useFor": null,
     "notes": "Pill-style tab bar.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Tabs/variants.ts",
     "line": 25
   },
@@ -20791,7 +20792,7 @@
     "showcase": "#/popover-menu",
     "since": "0.225.0",
     "file": "src/components/PopoverMenu/PopoverMenu.tsx",
-    "line": 287
+    "line": 330
   },
   {
     "name": "RingChart",
@@ -26676,7 +26677,7 @@
     "useFor": null,
     "notes": "Underline-style tab bar.",
     "showcase": null,
-    "since": null,
+    "since": "Unreleased",
     "file": "src/components/Tabs/variants.ts",
     "line": 15
   },

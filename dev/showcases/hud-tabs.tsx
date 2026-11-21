@@ -13,6 +13,19 @@ const VerticalBoxedTabs = createTabs({
 
 export const TabsShowcase: Component = () => {
   const [active, setActive] = createSignal("overview");
+  // Eight settings-style tabs: enough to fold in a narrow strip. The active
+  // tab always stays in view; the rest keep their order in the kebab.
+  const [settingsActive, setSettingsActive] = createSignal("team");
+  const settingsTabs = [
+    { id: "forecast", label: "Forecast" },
+    { id: "accounts", label: "Accounts" },
+    { id: "scenarios", label: "Scenarios" },
+    { id: "integrations", label: "Integrations" },
+    { id: "team", label: "Team" },
+    { id: "pages", label: "Pages" },
+    { id: "display", label: "Display" },
+    { id: "admin", label: "Admin" },
+  ];
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "systems", label: "Systems" },
@@ -22,9 +35,10 @@ export const TabsShowcase: Component = () => {
 
   return (
     <div class="component-section">
-      <h2>Tabs — Primitive (Depth 0)</h2>
+      <h2>Tabs — Atomic (Depth 1)</h2>
       <p class="text-meta">
-        Owns CSS (HUD.css), no component imports. Tab bar with variant styles.
+        Owns CSS. Tab bar with variant styles; horizontal strips fold the tabs
+        that don't fit into a kebab menu.
       </p>
       <div class="depth2-layout">
         <div class="depth2-composed">
@@ -36,6 +50,17 @@ export const TabsShowcase: Component = () => {
 
           <h3 class="showcase-heading-gap">Composed — Pill</h3>
           <PillTabs tabs={tabs} activeTab={active()} onTabChange={setActive} />
+
+          <h3 class="showcase-heading-gap">
+            Composed — Responsive (drag the corner to narrow it)
+          </h3>
+          <div class="hud-tabs-demo__resizable">
+            <Tabs
+              tabs={settingsTabs}
+              activeTab={settingsActive()}
+              onTabChange={setSettingsActive}
+            />
+          </div>
 
           <h3 class="showcase-heading-gap">Composed — With Status</h3>
           <Tabs
