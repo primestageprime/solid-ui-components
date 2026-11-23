@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.261.0 — 2026-11-23
+
 ### Added
 
 - **`FixedCard`** — a fixed-size card (320 x 240) for a wrapping row. It never grows: a summary that overflows clips with a fade, and a **More** button opens the rest in a `Modal` (the `detail` slot, or the summary in full when there is no detail). For the Thorcasting divisions and CapEx builders.

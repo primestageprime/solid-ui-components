@@ -12755,7 +12755,7 @@
     "useFor": "a flow of same-size summary cards (divisions, assets) whose extras belong in a dialog. Not for: a card that should grow with its content (use `CardSurface`), or a clamped text line with a popover (use `StatusCard`).",
     "notes": "A 320 x 240 card for a wrapping row: clips its summary, never grows, and opens the rest in a modal from a \"More\" button.",
     "showcase": "#/fixed-card",
-    "since": "Unreleased",
+    "since": "0.261.0",
     "file": "src/components/FixedCard/variants.ts",
     "line": 12
   },
