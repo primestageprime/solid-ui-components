@@ -2930,3 +2930,15 @@ The renderers family is a set of small, composable components for displaying fie
     <DollarStack series={series} totals={totals} periods={[0]} periodLabel={() => "Mar"} valueFormat={(v) => `$${v}k`} />
     ```
 - **SlotStackLegend** — Composite (Depth 2), zero CSS. The marks of a `SlotStackChart` as a `Legend`: the series in their colours, then Solid, Dashed and Striped, each swatch drawn by the chart's own mark so the legend cannot drift from the picture. Key props: `series` (anything with a `label`, in the chart's order), `words?` (the chart's words), `totalPaint?` (what the marks are drawn in; default the same accent blue as the chart's column slot), `statuses?` (also explain Translucent and Lighter). `slotStackLegendItems(props)` returns the same `LegendItem[]` for a screen that keeps its own `Legend` (a collapsible one, say); call it inside a component.
+
+## FixedCard
+- **FixedCard** — Depth 2, owns CSS (the fixed box and the clip fade). A card with ONE size (320 x 240) that sits in a `WrapRow` and never grows or shrinks, so a flow of them stays an even grid whatever each card holds. Peter, 2026-11-23: show more detail than fits "in a modal", never by expanding the card. `children` is the summary, clipped with a bottom fade when it overflows (measured live). A **More** button opens a `Modal` titled `title`: with a `detail` slot it always shows and opens the detail; without one it shows only while the summary is clipped and opens the summary in full; otherwise there is no button. Key props: `title` (modal title, button label), `children`, `detail?`, `active?` (accent border, e.g. the focused card), `onClick?` (More never fires it). Factory `createFixedCard({ size })`; curried variant `FixedCard` (`size: "md"`). Use for: a flow of same-size summary cards (divisions, assets) whose extras belong in a dialog. Not for: a card that should grow with its content (use `CardSurface`), or a clamped text line with a popover (use `StatusCard`).
+    ```tsx
+    <WrapRow>
+      <For each={rows()}>{(r) => (
+        <FixedCard title={r.name} active={focus() === r.id} onClick={() => setFocus(r.id)} detail={<RowDetail row={r} />}>
+          <RowSummary row={r} />
+        </FixedCard>
+      )}</For>
+    </WrapRow>
+    ```
