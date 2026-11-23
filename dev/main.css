@@ -3026,3 +3026,8 @@ th:has(.tf-th-center) .hud-table__header-content {
 /* RateGauge showcase — a full-screen-shaped box (wide, fixed height) for the
    `align: "center"` and `textScale` specimens (thorcasting #4517). */
 .rate-gauge-demo--wide { width: 100%; height: 320px; }
+
+/* FixedCard showcase demo frame — scaffolded by npm run new:component. */
+.fixed-card-demo {
+  padding: 16px;
+}

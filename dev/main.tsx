@@ -209,6 +209,7 @@ import { buildWorkshopItems, type BenchModule } from "./workshop-benches";
 import { GeneratedVariantsShowcase } from "./showcases/generated-variants";
 
 // Generated components (npm run new:component) — appended below, do not reorder.
+import { FixedCardShowcase } from "./showcases/fixed-card";
 import { SlotStackChartShowcase } from "./showcases/slot-stack-chart";
 import { MonthDayGridShowcase } from "./showcases/month-day-grid";
 import { PayChainShowcase } from "./showcases/pay-chain";
@@ -1558,6 +1559,12 @@ const items: Item[] = [
     label: "SlotStackChart",
     component: SlotStackChartShowcase,
     tags: ["depth:2", "chart", "time", "data"],
+  },
+  {
+    id: "fixed-card",
+    label: "FixedCard",
+    component: FixedCardShowcase,
+    tags: ["depth:2", "card", "modal"],
   },
   // Generated component entries (npm run new:component) — appended above this line.
   {
