@@ -60,6 +60,8 @@ export const ICON_GROUPS = {
     "lock",
     "lock-open",
     "link",
+    "sun",
+    "moon",
   ] as const,
   auth: ["log-out", "log-in", "user", "agent"] as const,
   cache: [
@@ -125,6 +127,8 @@ export type IconName =
   | "lock"
   | "lock-open"
   | "link"
+  | "sun"
+  | "moon"
   // Auth
   | "log-out"
   | "log-in"
@@ -444,6 +448,20 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
               <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.3" fill="none"/>`,
       solid: `<path d="M12.54 6.16L14.79 6.31A7 7 0 0 1 14.79 9.69L12.54 9.84A4.9 4.9 0 0 1 11.86 11.02L12.86 13.04A7 7 0 0 1 9.93 14.73L8.68 12.85A4.9 4.9 0 0 1 7.32 12.85L6.07 14.73A7 7 0 0 1 3.14 13.04L4.14 11.02A4.9 4.9 0 0 1 3.46 9.84L1.21 9.69A7 7 0 0 1 1.21 6.31L3.46 6.16A4.9 4.9 0 0 1 4.14 4.98L3.14 2.96A7 7 0 0 1 6.07 1.27L7.32 3.15A4.9 4.9 0 0 1 8.68 3.15L9.93 1.27A7 7 0 0 1 12.86 2.96L11.86 4.98A4.9 4.9 0 0 1 12.54 6.16Z" fill="currentColor"/>
             <circle cx="8" cy="8" r="2.4" fill="var(--sui-bg-primary)"/>`,
+    },
+    // Sun and moon: the two halves of a light/dark switch. The sun is a big
+    // disc with eight short rays held clear of it, so it does not read as
+    // `settings` (a small hub with long rays). The moon is a crescent: a disc
+    // with a smaller disc bitten out of its upper right.
+    sun: {
+      outline: `<circle cx="8" cy="8" r="3.2" stroke="currentColor" stroke-width="1.4" fill="none"/>
+              <path d="M8 1.2v1.4M8 13.4v1.4M1.2 8h1.4M13.4 8h1.4M3.2 3.2l1 1M11.8 11.8l1 1M3.2 12.8l1-1M11.8 4.2l1-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>`,
+      solid: `<circle cx="8" cy="8" r="3.6" fill="currentColor"/>
+            <path d="M8 1.2v1.4M8 13.4v1.4M1.2 8h1.4M13.4 8h1.4M3.2 3.2l1 1M11.8 11.8l1 1M3.2 12.8l1-1M11.8 4.2l1-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>`,
+    },
+    moon: {
+      outline: `<path d="M13.5 9.1A5.8 5.8 0 1 1 6.9 2.5a4.5 4.5 0 0 0 6.6 6.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/>`,
+      solid: `<path d="M13.8 9A6.1 6.1 0 1 1 7 2.2a4.6 4.6 0 0 0 6.8 6.8Z" fill="currentColor"/>`,
     },
     // Up on the left, down on the right: an axis free to move both ways.
     "arrows-up-down": {
