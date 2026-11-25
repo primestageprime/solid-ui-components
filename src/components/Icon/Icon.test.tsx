@@ -302,3 +302,34 @@ describe("Icon flipped", () => {
     expect(el.classList.contains("jtf-icon--turnable")).toBe(false);
   });
 });
+
+// A light/dark switch shows a sun for light and a moon for dark (thorcasting,
+// Peter 2026-11-25). The sun must not read as `settings`, which is a small hub
+// with long rays: the sun is a big disc with short rays clear of it.
+describe("Icon sun and moon glyphs", () => {
+  it.each(["sun", "moon"] as const)("%s is registered with outline + solid", (name) => {
+    expect(ICON_PATHS[name].outline).toMatch(/<(path|circle)/);
+    expect(ICON_PATHS[name].solid).toMatch(/<(path|circle)/);
+  });
+
+  it.each(["sun", "moon"] as const)("%s sits in the ui group", (name) => {
+    expect(ICON_GROUPS.ui).toContain(name);
+  });
+
+  it("draws the sun's disc larger than the settings hub", () => {
+    const r = (svg: string) => Number(/<circle[^>]*\br="([\d.]+)"/.exec(svg)?.[1]);
+    expect(r(ICON_PATHS.sun.outline)).toBeGreaterThan(r(ICON_PATHS.settings.outline));
+  });
+
+  it("renders with the name as aria-label, which a caller can override", () => {
+    const { container } = render(() => (
+      <>
+        <Icon name="moon" />
+        <Icon name="sun" aria-label="Light theme" />
+      </>
+    ));
+    const els = container.querySelectorAll('[role="img"]');
+    expect(els[0]?.getAttribute("aria-label")).toBe("moon");
+    expect(els[1]?.getAttribute("aria-label")).toBe("Light theme");
+  });
+});

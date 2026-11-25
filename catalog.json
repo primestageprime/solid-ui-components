@@ -6714,7 +6714,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 600
+    "line": 618
   },
   {
     "name": "createKbd",
@@ -15153,7 +15153,7 @@
     "showcase": "#/icon",
     "since": "v0.6.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 559
+    "line": 577
   },
   {
     "name": "IconClusterRow",
@@ -15692,7 +15692,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 608
+    "line": 626
   },
   {
     "name": "InlineSubtleDropdown",
