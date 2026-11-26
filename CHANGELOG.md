@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.262.0 — 2026-11-26
+
 ### Added
 
 - **`MutationDial`** is now public (`MutationDialProps`, `MutationDialLabels`, `resolveMutationSliderLabels`, `MUTATION_SLIDER_DEFAULT_LABELS`): one entity's column of `MutationSliders`, for a consumer that composes its own card from dials. SUI exports its components; none stays internal.

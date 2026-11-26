@@ -3665,7 +3665,7 @@
     "useFor": null,
     "notes": "CompactCurrencyWeightedGroupCard — a role card in compact dollars, with the same unit, grid and verbs as Thorcasting's payroll row (`CompactCurrencyMutationSliders`): `$62K` per unit, `×3 = $188K` under it, amounts on whole thousands and typed in place rounded to the thousand, and a member taken out with \"Delete\". @example <CompactCurrencyWeightedGroupCard group={carpenters()} onChange={setCarpenters} />",
     "showcase": "#/weighted-group-card",
-    "since": "Unreleased",
+    "since": "0.262.0",
     "file": "src/components/WeightedGroupCard/variants.ts",
     "line": 18
   },
@@ -8952,7 +8952,7 @@
     "useFor": null,
     "notes": null,
     "showcase": "#/weighted-group-card",
-    "since": "Unreleased",
+    "since": "0.262.0",
     "file": "src/components/WeightedGroupCard/WeightedGroupCard.tsx",
     "line": 291
   },
@@ -12264,7 +12264,7 @@
     "useFor": "a read-only figure that is also a toggle, above or beside count fields (WeightedGroupCard's role count).",
     "notes": "Field-height ghost button — a small ghost button whose BOX IS PINNED to the small number field's 29px (ThemedNumberInput `size=\"sm\"`: 1px border + 5px padding + a 17px line + 5px + 1px), so a button and a field stacked in neighbouring columns end on the same pixel row whatever a theme's border or font metrics. Unpinned, `--sm` is 12px of padding plus the theme's border plus a `normal` line box, which is 29px only by coincidence. First use: a role's read-only count above its members' count fields (WeightedGroupCard), where a pixel here moves every track below it.",
     "showcase": "#/button",
-    "since": "Unreleased",
+    "since": "0.262.0",
     "file": "src/components/Button/variants.ts",
     "line": 202
   },
