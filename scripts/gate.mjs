@@ -128,12 +128,14 @@ import {
   rmSync,
   symlinkSync,
   existsSync,
+  writeFileSync,
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { acquireGateLock } from "./gate-lock.mjs";
 import { planTests } from "./affected-tests.mjs";
+import { covered, passesOf, pushedShas, recordPass } from "./prepush-receipt.mjs";
 import {
   PROFILES,
   ledgerCalls,
@@ -348,6 +350,46 @@ function healthStepPrePush(cwd) {
   return 1;
 }
 
+// ── the `--pre-push` catalog step ───────────────────────────────────────
+//
+// Adlai, 2026-11-26: "regenerate catalog.json before every push, so pushes
+// don't fail on a stale catalog." A stale catalog is mechanical to fix, so the
+// push tier fixes it the way healthStepPrePush fixes an unlocked ceiling:
+// regenerate, commit `catalog.json` alone, and block this push with "push
+// again" — a commit made inside a pre-push hook cannot join the push already in
+// flight (see healthStepPrePush). The catalog stage runs after test, lint and
+// typecheck have passed, so the commit it started from is recorded as passed:
+// the next push, of the catalog-only commit on top, is covered by that receipt
+// (prepush-receipt.mjs) and does not run the tier again. CI still runs the
+// strict `npm run catalog -- --check`.
+function catalogStepPrePush(cwd) {
+  const check = run("npm", ["run", "catalog", "--", "--check"], { cwd });
+  if (check.status === 0) return 0;
+  console.log("\n  catalog.json is stale — regenerating it and committing it alone…");
+  const regen = run("npm", ["run", "catalog"], { cwd });
+  if (regen.status !== 0) return regen.status ?? 1;
+  recordPrePushPass(receipt?.head);
+  const message = [
+    "chore(catalog): regenerate catalog.json",
+    "",
+    "Auto-committed by githooks/pre-push (scripts/gate.mjs --pre-push).",
+  ].join("\n");
+  const commit = spawnSync("git", ["commit", "-q", "-m", message, "--", "catalog.json"], {
+    cwd,
+    stdio: "inherit",
+  });
+  if (commit.status !== 0) {
+    console.error("\n✗ catalog.json regenerated but `git commit` failed — commit it by hand and push again.");
+    return 1;
+  }
+  console.error(
+    "\n✓ catalog.json regenerated and committed.\n" +
+      "✗ This push is still BLOCKED — the commit cannot join a push already in flight.\n" +
+      "  Run `git push` again: that push is covered by this run's pass and skips the tier.",
+  );
+  return 1;
+}
+
 // ── the `--pre-push` test step ──────────────────────────────────────────
 //
 // Push tier = AFFECTED tests only (lint + typecheck + the tests whose import
@@ -451,6 +493,7 @@ const profile = resolved.profile;
 // The stages a narrowed tier runs differently (same list, different runner).
 function runnerFor(stage, mode) {
   if (prePush && stage.name === "health") return healthStepPrePush;
+  if (prePush && stage.name === "catalog") return catalogStepPrePush;
   if (mode === "affected" && stage.name === "test") return testStepAffected;
   return (cwd) => runCommands(stage, cwd);
 }
@@ -491,14 +534,57 @@ const printRemedy = (stage) => {
 // confirm a clean pass receipt for every blocking stage at that exact commit.
 // FAILS CLOSED: workmode missing, timing out or erroring blocks the push.
 // Runs first: it is instant, and nothing else matters if it refuses.
-function mainPushGuard() {
-  if (process.stdin.isTTY) return { state: "skipped", note: "no pushed refs on stdin (run by hand)" };
-  let stdinText = "";
+// git's list of pushed refs, read once: the main guard and the pass receipt both use it.
+let pushedRefsText = null;
+function pushedRefs() {
+  if (pushedRefsText !== null) return pushedRefsText;
+  pushedRefsText = "";
+  if (process.stdin.isTTY) return pushedRefsText;
   try {
-    stdinText = readFileSync(0, "utf8");
+    pushedRefsText = readFileSync(0, "utf8");
   } catch {
     /* no stdin at all: nothing is being pushed through this run */
   }
+  return pushedRefsText;
+}
+
+// The push tier's pass receipt (prepush-receipt.mjs): which commit is checked out, whether the
+// tree is clean, and whether this push is covered by an earlier pass. The file lives in the
+// shared git dir, so every worktree of this clone reads the same passes.
+function prePushReceipt() {
+  const git = (...args) => {
+    const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+    return r.status === 0 ? r.stdout.trim() : null;
+  };
+  const head = git("rev-parse", "HEAD");
+  const parent = git("rev-parse", "--verify", "-q", "HEAD^");
+  const changed = parent ? (git("diff", "--name-only", parent, "HEAD") ?? "").split("\n").filter(Boolean) : [];
+  const clean = git("status", "--porcelain") === "";
+  const file = join(git("rev-parse", "--git-common-dir") ?? join(root, ".git"), "sui-prepush-passes");
+  const fileText = existsSync(file) ? readFileSync(file, "utf8") : "";
+  const passed = passesOf(fileText);
+  const shas = pushedShas(pushedRefs());
+  const isCovered = head !== null && covered({ shas, head, parent, changed, passed, clean });
+  const why =
+    shas.length === 0
+      ? "nothing to push"
+      : passed.has(head ?? "")
+        ? "same commit"
+        : "catalog.json only, on a commit that passed";
+  const catalogOnly = isCovered && shas.length > 0 && !passed.has(head ?? "");
+  return { head, clean, file, covered: isCovered, catalogOnly, why };
+}
+
+/** Record `sha` as having passed the push tier (only from a clean tree). */
+function recordPrePushPass(sha) {
+  if (!receipt?.clean || !sha) return;
+  const text = existsSync(receipt.file) ? readFileSync(receipt.file, "utf8") : "";
+  writeFileSync(receipt.file, recordPass(text, sha));
+}
+
+function mainPushGuard() {
+  if (process.stdin.isTTY) return { state: "skipped", note: "no pushed refs on stdin (run by hand)" };
+  const stdinText = pushedRefs();
   const commits = mainPushCommits(stdinText);
   if (commits.length === 0) return { state: "skipped", note: "this push does not update main" };
   const stages = receiptStages().join(",");
@@ -529,6 +615,16 @@ if (prePush && argv.includes("--push-refs-stdin")) {
   // mode "guard": listed in the summary, never settled or deferred.
   results.push({ stage: { name: "main-receipt" }, mode: "guard", ...guard });
   if (guard.state === "FAILED") overall = 1;
+}
+// A push of a commit that already passed the push tier skips it (prepush-receipt.mjs).
+const receipt = prePush && argv.includes("--push-refs-stdin") ? prePushReceipt() : null;
+// A catalog-only commit is covered only while its catalog is fresh: it may be the hook's own
+// regeneration, or a hand-made catalog.json change that is itself stale.
+const catalogFresh = () => run("npm", ["run", "catalog", "--", "--check"], { cwd: root }).status === 0;
+if (receipt?.covered && overall === 0 && (!receipt.catalogOnly || catalogFresh())) {
+  console.log(`\n✓ pre-push: ${receipt.head.slice(0, 8)} already passed the push tier (${receipt.why}); skipping it.`);
+  lock?.release();
+  process.exit(0);
 }
 for (const { stage, action, mode, why, deferred } of plan) {
   if (action === "skip") {
@@ -621,6 +717,7 @@ console.log(
 );
 for (const line of ledgerNotes) console.log(`  ${line}`);
 
+if (overall === 0) recordPrePushPass(receipt?.head);
 if (overall !== 0) {
   console.log("\n✗ gate FAILED");
 } else if (!prePush && ran === results.length && narrowed === 0) {
