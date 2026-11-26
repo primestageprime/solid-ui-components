@@ -1,6 +1,7 @@
 // ============================================
-// MutationDial — ONE entity's column. Composite (Depth 2), private to
-// MutationSliders.
+// MutationDial — ONE entity's column. Composite (Depth 2), public: MutationSliders
+// draws one per entity, and a consumer composes its own card from it.
+// Tags: shows:field, shows:number, shows:diff, does:drag, does:edit
 //
 // ZERO CSS AND ZERO INTRINSIC ELEMENTS, as of 2026-09-17 (Peter's axiom: no
 // component above Depth 1 contains anything but existing SUI components — no

@@ -14,6 +14,40 @@
   transition: all 0.2s ease;
 }
 
+/* ============================================
+   Horizontal folding strip
+   The strip takes the full width it is given — that width is what decides
+   which tabs fold into the kebab — and may shrink below its content in a
+   flex row. Tabs keep their natural width and never wrap; the ones that
+   don't fit move to the kebab instead.
+   ============================================ */
+.sui-tabs--folding {
+  width: 100%;
+  min-width: 0;
+}
+
+/* `wrap` never shows (the fold keeps the strip to one line), but it makes the
+   list's min-content its widest tab rather than every tab: a parent row that
+   sizes itself from its content (a plain Row in a dialog header) can then
+   shrink, so the strip folds instead of pushing past what sits beside it. */
+.sui-tabs__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: inherit;
+  min-width: 0;
+}
+
+.sui-tabs--folding .sui-tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.sui-tabs__more {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
 /* Default tab style - underline indicator */
 .sui-tabs--default .sui-tab--active::after {
   content: "";

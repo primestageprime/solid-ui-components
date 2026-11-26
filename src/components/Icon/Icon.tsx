@@ -52,6 +52,7 @@ export const ICON_GROUPS = {
   ui: [
     "spinner",
     "menu",
+    "more-vertical",
     "settings",
     "gear",
     "external-link",
@@ -116,6 +117,7 @@ export type IconName =
   // UI
   | "spinner"
   | "menu"
+  | "more-vertical"
   | "settings"
   | "gear"
   | "external-link"
@@ -413,6 +415,11 @@ export const ICON_PATHS: Record<IconName, { outline: string; solid: string }> =
     menu: {
       outline: `<path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>`,
       solid: `<path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>`,
+    },
+    // Kebab — three vertical dots, the "more" overflow trigger.
+    "more-vertical": {
+      outline: `<circle cx="8" cy="3" r="1.4" fill="currentColor"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><circle cx="8" cy="13" r="1.4" fill="currentColor"/>`,
+      solid: `<circle cx="8" cy="3" r="1.7" fill="currentColor"/><circle cx="8" cy="8" r="1.7" fill="currentColor"/><circle cx="8" cy="13" r="1.7" fill="currentColor"/>`,
     },
     settings: {
       outline: `<circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/>

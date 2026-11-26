@@ -162,7 +162,36 @@ export const PopoverMenu = <Id extends string = string>(
   };
 
   const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") close();
+    if (e.key === "Escape") closeToTrigger();
+  };
+
+  // The panel is portaled to the end of <body>, so Tab from the trigger never
+  // reaches it. The menu takes focus itself on open and hands it back to the
+  // trigger when it closes from the keyboard or a choice (WAI-ARIA menu button).
+  const menuItems = (): HTMLElement[] =>
+    panelRef
+      ? Array.from(panelRef.querySelectorAll<HTMLElement>('[role="menuitem"]'))
+      : [];
+
+  /** Focus the item `step` places from the focused one, wrapping at both ends. */
+  const focusStep = (step: number) => {
+    const all = menuItems();
+    if (all.length === 0) return;
+    const at = all.indexOf(document.activeElement as HTMLElement);
+    const next = (at + step + all.length) % all.length;
+    all[at < 0 && step < 0 ? all.length - 1 : next]?.focus();
+  };
+
+  const handleItemNav = (e: KeyboardEvent) => {
+    const steps: Record<string, number> = { ArrowDown: 1, ArrowUp: -1 };
+    if (e.key in steps) {
+      e.preventDefault();
+      focusStep(steps[e.key]);
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      const all = menuItems();
+      all[e.key === "Home" ? 0 : all.length - 1]?.focus();
+    }
   };
 
   // Keep the fixed-positioned panel pinned to the trigger as the page scrolls
@@ -188,6 +217,11 @@ export const PopoverMenu = <Id extends string = string>(
     teardownListeners();
   };
 
+  const closeToTrigger = () => {
+    close();
+    triggerRef?.focus();
+  };
+
   onCleanup(teardownListeners);
 
   const toggle = () => {
@@ -197,6 +231,7 @@ export const PopoverMenu = <Id extends string = string>(
       computePosition();
       setOpen(true);
       setupListeners();
+      requestAnimationFrame(() => menuItems()[0]?.focus());
     }
   };
 
@@ -204,7 +239,7 @@ export const PopoverMenu = <Id extends string = string>(
     try {
       merged.onSelect(id);
     } finally {
-      close();
+      closeToTrigger();
     }
   };
 
@@ -232,6 +267,8 @@ export const PopoverMenu = <Id extends string = string>(
         onClick={toggle}
         ref={triggerRef}
         aria-label={merged.triggerLabel}
+        aria-haspopup="menu"
+        aria-expanded={open()}
       >
         <span class="sui-popover-menu__trigger-content">
           {merged.trigger}
@@ -245,7 +282,13 @@ export const PopoverMenu = <Id extends string = string>(
         {/* Portaled to document.body so no ancestor's overflow can clip it;
             positioned via inline fixed coords measured from the trigger. */}
         <Portal>
-          <ul class="sui-popover-menu__panel" ref={panelRef} style={panelStyle()}>
+          <ul
+            class="sui-popover-menu__panel"
+            ref={panelRef}
+            style={panelStyle()}
+            // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: ARIA menu composite — the <ul> is the menu, its <li>s the menuitems; keyboard handled on the items
+            role="menu"
+          >
             <Show when={merged.header}>
               <li class="sui-popover-menu__header" role="presentation">
                 {merged.header}
@@ -264,7 +307,7 @@ export const PopoverMenu = <Id extends string = string>(
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
                       select(item.id);
-                    }
+                    } else handleItemNav(e);
                   }}
                 >
                   <Show when={item.icon}>
