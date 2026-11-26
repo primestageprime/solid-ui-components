@@ -1,0 +1,20 @@
+<!-- @dsCard group="Role card" height=440 subtitle="One role's dial: old value, new value, allowed range" -->
+<div id="root" style="padding: 16px"></div>
+<script>
+const h = React.createElement;
+const S = window.Sui;
+const k = (n) => `$${Math.round(n / 1000)}K`;
+const range = [40000, 90000];
+const domain = [0, 200000];
+const dial = (entity, extra) => h(S.MutationDial, Object.assign({
+  entity, domain, height: 260, format: k, dragStep: 1, keyStep: 1000,
+  selected: false, onSelect: () => {}, onReset: () => {}, onRemove: () => {},
+}, extra));
+const view = h(S.ClusterRow, null,
+  dial({ id: "a", label: "Roofer", old: 44000, value: 63000, range }),
+  dial({ id: "b", label: "Estimator", old: 71000, value: 58000, range: [50000, 95000] }, { selected: true }),
+  dial({ id: "c", label: "Foreman", old: null, value: 82000, range: [60000, 110000] }),
+  dial({ id: "d", label: "Helper", old: 38000, value: null, range: [30000, 50000] }, { onRestore: () => {} }),
+);
+ReactDOM.createRoot(document.getElementById("root")).render(view);
+</script>

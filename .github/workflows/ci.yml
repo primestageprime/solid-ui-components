@@ -230,3 +230,29 @@ jobs:
       #   npm run bundle-budget -- --update-baseline=<metric> --reason="…"
       # committed alongside the change. See AGENT_GUIDE.md.
       - run: npm run bundle-budget
+
+  # The React mirror of SUI that the Claude design system is built from
+  # (react-mirror/README.md). It installs on top of the root's dependencies
+  # (vitest, typescript, biome, solid-js and Kobalte come from there) and its
+  # drift test renders every variant with SUI's Solid components and with the
+  # mirror, so a change to a variant table or a base's markup that the mirror
+  # does not follow fails here.
+  #
+  # Its checks are the `react-mirror` stage in scripts/gate-stages.mjs.
+  react-mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            react-mirror/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm ci --ignore-scripts
+        working-directory: react-mirror
+      - run: npm --prefix react-mirror run check
+      - run: npm --prefix react-mirror run build

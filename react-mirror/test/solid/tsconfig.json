@@ -1,0 +1,11 @@
+{
+  // The Solid side of the drift test: type-checked against SUI's own config.
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "declarationDir": null,
+    "noEmit": true,
+    "rootDir": "../../.."
+  },
+  "include": ["./**/*", "../../../src/vite-env.d.ts"]
+}

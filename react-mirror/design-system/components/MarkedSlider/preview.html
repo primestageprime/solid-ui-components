@@ -1,0 +1,17 @@
+<!-- @dsCard group="Role card" height=330 subtitle="The vertical track: allowed range, old and new values" -->
+<div id="root" style="padding: 16px"></div>
+<script>
+const h = React.createElement;
+const S = window.Sui;
+const k = (n) => `$${Math.round(n / 1000)}K`;
+const range = [40000, 90000];
+const domain = [0, 200000];
+const slider = (prior, value) => h(S.ContinuousMarkedSlider, {
+  domain, range, prior, value, label: "Roofer", height: 260,
+  valueText: value === null ? "Removed" : k(value),
+  deltaLabel: prior === null || value === null ? null : (value >= prior ? "+" : "−") + k(Math.abs(value - prior)),
+  priorLabel: prior === null ? null : k(prior),
+});
+const view = h(S.ClusterRow, null, slider(44000, 63000), slider(80000, 52000), slider(null, 70000), slider(60000, null));
+ReactDOM.createRoot(document.getElementById("root")).render(view);
+</script>

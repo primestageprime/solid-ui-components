@@ -125,13 +125,13 @@ describe("planStages tiers", () => {
   it("--pre-push: lint, typecheck, affected tests, catalog, usage-manifest", () => {
     const plan = planStages({ prePush: true });
     expect(names(plan, "run")).toEqual(["test", "lint", "typecheck", "catalog", "usage-manifest"]);
-    expect(names(plan, "skip")).toEqual(["health", "build", "bundle-budget"]);
+    expect(names(plan, "skip")).toEqual(["health", "build", "bundle-budget", "react-mirror"]);
     expect(plan.find((p) => p.stage.name === "test")?.mode).toBe("affected");
     for (const p of plan.filter((x) => x.action === "skip")) expect(p.why).toMatch(/^--pre-push: /);
   });
 
-  it("--fast skips only the two builds", () => {
-    expect(names(planStages({ fast: true }), "skip")).toEqual(["build", "bundle-budget"]);
+  it("--fast skips only the two builds and the React mirror", () => {
+    expect(names(planStages({ fast: true }), "skip")).toEqual(["build", "bundle-budget", "react-mirror"]);
   });
 
   it("catalog freshness runs in every tier and blocks", () => {
@@ -165,7 +165,7 @@ describe("profiles are compositions of stages", () => {
     const push = planStages({ prePush: true });
     expect(names(speed, (p) => p.action === "run")).toEqual(names(push, (p) => p.action === "run"));
     expect(speed.map((p) => p.mode)).toEqual(push.map((p) => p.mode));
-    expect(names(speed, (p) => p.deferred === true)).toEqual(["health", "build", "bundle-budget"]);
+    expect(names(speed, (p) => p.deferred === true)).toEqual(["health", "build", "bundle-budget", "react-mirror"]);
   });
 
   it("a named stage runs alone and in full, whatever the profile", () => {
@@ -225,7 +225,7 @@ describe("ledgerCalls", () => {
 
   it("a passing speed run defers the full test suite and every stage it left out", () => {
     const calls = ledgerCalls(rows(planStages({ profile: "speed" })), { profile: "speed", passed: true });
-    expect(calls.defer).toEqual(["test", "health", "build", "bundle-budget"]);
+    expect(calls.defer).toEqual(["test", "health", "build", "bundle-budget", "react-mirror"]);
     expect(calls.settle).toEqual(["lint", "typecheck", "catalog", "usage-manifest"]);
   });
 
@@ -258,7 +258,16 @@ describe("a push to main needs a quality receipt", () => {
   const zero = "0".repeat(40);
 
   it("asks for every stage that can block, and no warn-only stage", () => {
-    expect(receiptStages()).toEqual(["test", "lint", "typecheck", "health", "catalog", "build", "bundle-budget"]);
+    expect(receiptStages()).toEqual([
+      "test",
+      "lint",
+      "typecheck",
+      "health",
+      "catalog",
+      "build",
+      "bundle-budget",
+      "react-mirror",
+    ]);
   });
 
   it("picks out the commits headed for main or master, whatever the local branch is called", () => {

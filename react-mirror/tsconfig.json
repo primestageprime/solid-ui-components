@@ -1,0 +1,27 @@
+{
+  // The React side: the mirror, its build script and the drift test.
+  // SUI's Solid sources are NOT type-checked here (they use Solid's JSX); the
+  // drift test reaches them through the typed `solid-fixture` seam, which
+  // test/solid/tsconfig.json checks against Solid's own types.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    // `sui:<path>`: SUI's Solid-typed modules (variant tables, icon table)
+    // through their generated React declarations; SUI's pure modules
+    // (geometry, readouts, …) as themselves, checked under SUI's own strictness.
+    "paths": {
+      "sui:*": ["./src/generated/sui/*", "../src/components/*"]
+    },
+    "types": ["node"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src/**/*", "build/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist", "test/solid/**"]
+}
