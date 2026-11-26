@@ -2939,3 +2939,15 @@ The renderers family is a set of small, composable components for displaying fie
     ```
 
 - **FieldHeightGhostButton** — curried `Button` variant (`createButton({ variant: "ghost", size: "sm", style: { height: "29px", "line-height": "1" } })`): a small ghost button pinned to the small number field's 29px, so a button and a `size="sm"` field in neighbouring columns end on the same pixel row. Use for: a read-only figure that is also a toggle, above or beside count fields (WeightedGroupCard's role count).
+
+## FixedCard
+- **FixedCard** — Depth 2, owns CSS (the fixed box and the clip fade). A card with ONE size (320 x 240) that sits in a `WrapRow` and never grows or shrinks, so a flow of them stays an even grid whatever each card holds. Peter, 2026-11-23: show more detail than fits "in a modal", never by expanding the card. `children` is the summary, clipped with a bottom fade when it overflows (measured live). A **More** button opens a `Modal` titled `title`: with a `detail` slot it always shows and opens the detail; without one it shows only while the summary is clipped and opens the summary in full; otherwise there is no button. Key props: `title` (modal title, button label), `children`, `detail?`, `active?` (accent border, e.g. the focused card), `onClick?` (More never fires it). Factory `createFixedCard({ size })`; curried variant `FixedCard` (`size: "md"`). Use for: a flow of same-size summary cards (divisions, assets) whose extras belong in a dialog. Not for: a card that should grow with its content (use `CardSurface`), or a clamped text line with a popover (use `StatusCard`).
+    ```tsx
+    <WrapRow>
+      <For each={rows()}>{(r) => (
+        <FixedCard title={r.name} active={focus() === r.id} onClick={() => setFocus(r.id)} detail={<RowDetail row={r} />}>
+          <RowSummary row={r} />
+        </FixedCard>
+      )}</For>
+    </WrapRow>
+    ```

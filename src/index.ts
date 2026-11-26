@@ -365,6 +365,7 @@ export * from "./components/PopoverField";
 export * from "./components/ShortcutHelp";
 export * from "./components/SlotStackChart";
 export * from "./components/WeightedGroupCard";
+export * from "./components/FixedCard";
 
 // Choreography — compose + sequence animation effects across components
 // (collapse/expand/fadeIn/fadeOut/slideDown/rollUp/glowIn/settleIn, step/

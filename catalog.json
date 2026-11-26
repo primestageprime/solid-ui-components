@@ -1680,7 +1680,7 @@
     "useFor": null,
     "notes": "Boxed tab bar.",
     "showcase": null,
-    "since": null,
+    "since": "0.260.0",
     "file": "src/components/Tabs/variants.ts",
     "line": 20
   },
@@ -6169,6 +6169,36 @@
     "line": 175
   },
   {
+    "name": "createFixedCard",
+    "depth": null,
+    "kind": "factory",
+    "family": "FixedCard",
+    "tags": [
+      "shows:card",
+      "shows:dialog",
+      "does:click",
+      "does:view",
+      "data:scalar",
+      "role:container"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": [
+      "size"
+    ],
+    "dataProps": "FixedCardDataProps",
+    "summary": "Depth 2, owns CSS (the fixed box and the clip fade). Factory behind `FixedCard`'s curried variants; bakes `size`.",
+    "summarySource": "synthesized",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": null,
+    "showcase": "#/fixed-card",
+    "since": null,
+    "file": "src/components/FixedCard/FixedCard.tsx",
+    "line": 151
+  },
+  {
     "name": "createFocusLabelBand",
     "depth": 1,
     "kind": "factory",
@@ -6724,7 +6754,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 593
+    "line": 600
   },
   {
     "name": "createKbd",
@@ -8470,6 +8500,7 @@
     "family": "Tabs",
     "tags": [
       "shows:tabs",
+      "shows:menu",
       "does:navigate",
       "does:select",
       "data:enum",
@@ -8492,7 +8523,7 @@
     "showcase": null,
     "since": null,
     "file": "src/components/Tabs/Tabs.tsx",
-    "line": 89
+    "line": 304
   },
   {
     "name": "createText",
@@ -12807,6 +12838,39 @@
     "line": 8
   },
   {
+    "name": "FixedCard",
+    "depth": null,
+    "kind": "variant",
+    "family": "FixedCard",
+    "tags": [
+      "shows:card",
+      "shows:dialog",
+      "does:click",
+      "does:view",
+      "data:scalar",
+      "role:container"
+    ],
+    "tagsSource": "own",
+    "variantOf": {
+      "factory": "createFixedCard",
+      "overrides": "{\n  size: \"md\",\n}"
+    },
+    "overrides": [
+      "size"
+    ],
+    "dataProps": "FixedCardDataProps",
+    "summary": "Depth 2, owns CSS (the fixed box and the clip fade).",
+    "summarySource": "components-md",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": "a flow of same-size summary cards (divisions, assets) whose extras belong in a dialog. Not for: a card that should grow with its content (use `CardSurface`), or a clamped text line with a popover (use `StatusCard`).",
+    "notes": "A 320 x 240 card for a wrapping row: clips its summary, never grows, and opens the rest in a modal from a \"More\" button.",
+    "showcase": "#/fixed-card",
+    "since": "0.261.0",
+    "file": "src/components/FixedCard/variants.ts",
+    "line": 12
+  },
+  {
     "name": "FixedHeightBox",
     "depth": 0,
     "kind": "variant",
@@ -15200,7 +15264,7 @@
     "showcase": "#/icon",
     "since": "v0.6.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 552
+    "line": 559
   },
   {
     "name": "IconClusterRow",
@@ -15739,7 +15803,7 @@
     "showcase": "#/icon",
     "since": "0.104.0",
     "file": "src/components/Icon/Icon.tsx",
-    "line": 601
+    "line": 608
   },
   {
     "name": "InlineSubtleDropdown",
@@ -19416,7 +19480,7 @@
     "useFor": null,
     "notes": "Pill-style tab bar.",
     "showcase": null,
-    "since": null,
+    "since": "0.260.0",
     "file": "src/components/Tabs/variants.ts",
     "line": 25
   },
@@ -20902,7 +20966,7 @@
     "showcase": "#/popover-menu",
     "since": "0.225.0",
     "file": "src/components/PopoverMenu/PopoverMenu.tsx",
-    "line": 287
+    "line": 330
   },
   {
     "name": "RingChart",
@@ -26787,7 +26851,7 @@
     "useFor": null,
     "notes": "Underline-style tab bar.",
     "showcase": null,
-    "since": null,
+    "since": "0.260.0",
     "file": "src/components/Tabs/variants.ts",
     "line": 15
   },

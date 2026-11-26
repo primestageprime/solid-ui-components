@@ -1,0 +1,34 @@
+/* FixedCard — the fixed box and the clip fade. Chrome (border, background,
+   active accent) and the column layout come from the composed Surface; the
+   clipping body is ClipFillBox. */
+
+/* ONE SIZE, NEVER GROWS: a flex item that neither grows nor shrinks, so a
+   wrapping row of these cards keeps every card the same box whatever its
+   content. The size reads custom properties so a theme can retune it. */
+.sui-fixed-card--md {
+  --sui-fixed-card-width: 320px;
+  --sui-fixed-card-height: 240px;
+}
+
+.sui-fixed-card {
+  box-sizing: border-box;
+  width: var(--sui-fixed-card-width);
+  height: var(--sui-fixed-card-height);
+  flex: none;
+  overflow: hidden;
+}
+
+.sui-fixed-card--clickable {
+  cursor: pointer;
+}
+
+/* A clipped summary fades out at the bottom, so the cut reads as "there is
+   more" rather than as a broken line. */
+.sui-fixed-card__body--clipped {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black calc(100% - 24px),
+    transparent
+  );
+  mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent);
+}
