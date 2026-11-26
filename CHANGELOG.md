@@ -4,6 +4,8 @@
 
 ### Added
 
+- **`MutationDial`** is now public (`MutationDialProps`, `MutationDialLabels`, `resolveMutationSliderLabels`, `MUTATION_SLIDER_DEFAULT_LABELS`): one entity's column of `MutationSliders`, for a consumer that composes its own card from dials. SUI exports its components; none stays internal.
+
 - **`FieldHeightGhostButton`** — new curried `Button` variant: a small ghost button pinned to the small number field's 29px.
 
 - **`WeightedGroupCard`** (`createWeightedGroupCard`, `CompactCurrencyWeightedGroupCard`) — new composite (Depth 3): a role and its counted members. The role's dial is read-only at the members' count-weighted mean, its count expands the card, its name opens a min/max range dialog, its Reset resets the set and each member's resets only that member. Every dial shares one height and one scale.

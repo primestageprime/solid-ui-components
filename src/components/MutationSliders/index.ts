@@ -11,11 +11,14 @@
 // component in this library wants and an ambiguous `export *` resolves to
 // nothing at all.
 //
-// `MutationDial` (dial.tsx) and the wording defaults (labels.ts) are private
-// too. The dial is a real seam — one entity's column, plausibly reusable on
-// its own — but no caller has asked for it, and a published component owes a
-// showcase, a catalog entry and a COMPONENTS.md section. Promoting it later is
-// a rename and a showcase; unpublishing it would be a breaking change.
+// `MutationDial` (dial.tsx) is PUBLIC: one entity's column, which a consumer
+// composes into a card of its own (Thorcasting's payroll role cards). SUI is a
+// component library, so its components are exported, never kept internal
+// (Adlai, 2026-11-26). Its `labels` prop takes the RESOLVED words, so the
+// resolver, the defaults and that type ship with it, under qualified names
+// for the same reason as `MutationEntity` below: `ResolvedLabels`,
+// `resolveLabels` and `DEFAULT_LABELS` are words other components want. Its
+// `readout` prop takes `MutationSlidersReadout`, exported above.
 //
 // Clients import `NumberMutationSliders` (or curry their own unit and
 // vocabulary once with `createMutationSliders`); `MutationSliders` itself is
@@ -35,6 +38,13 @@ export {
   CompactCurrencyMutationSliders,
   NumberMutationSliders,
 } from "./variants";
+export { MutationDial } from "./dial";
+export type { MutationDialProps } from "./dial";
+export {
+  DEFAULT_LABELS as MUTATION_SLIDER_DEFAULT_LABELS,
+  resolveLabels as resolveMutationSliderLabels,
+} from "./labels";
+export type { ResolvedLabels as MutationDialLabels } from "./labels";
 // THE CANONICAL NAMES ARE THE PLAIN ONES. `Entity`, `Domain` and `ChangeTone`
 // are what a consumer writing an adapter says, and they reach `src/index.ts`
 // unambiguously: verified by grep that no other component's barrel re-exports

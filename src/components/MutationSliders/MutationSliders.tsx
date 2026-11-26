@@ -2,7 +2,7 @@
 // MutationSliders — Composite (Depth 3)
 // Tags: shows:field, shows:number, shows:diff, does:drag, does:edit, data:list, data:pair, role:panel
 // Composes Layout (CenteredStack, FillStretchRow) + Button (SmallGhostButton)
-// + Icon over the private `MutationDial` (dial.tsx), which is itself a
+// + Icon over the public `MutationDial` (dial.tsx), which is itself a
 // Depth-2 Composite over the `MarkedSlider` Primitive. Depth 3 by the rule —
 // 1 + the highest depth it contains — and it says 3 rather than the 2 it
 // claimed before because the dial is now a real component boundary instead of

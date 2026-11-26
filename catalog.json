@@ -18032,6 +18032,33 @@
     "line": 181
   },
   {
+    "name": "MutationDial",
+    "depth": null,
+    "kind": "primitive",
+    "family": "MutationSliders",
+    "tags": [
+      "shows:field",
+      "shows:number",
+      "shows:diff",
+      "does:drag",
+      "does:edit"
+    ],
+    "tagsSource": "own",
+    "variantOf": null,
+    "overrides": null,
+    "dataProps": null,
+    "summary": "One entity's column: its name, its dial, its two readouts and its one footer slot.",
+    "summarySource": "jsdoc",
+    "preferFirst": null,
+    "notToBeConfusedWith": null,
+    "useFor": null,
+    "notes": "One entity's column: its name, its dial, its two readouts and its one footer slot.",
+    "showcase": "#/mutation-sliders",
+    "since": "0.171.0",
+    "file": "src/components/MutationSliders/dial.tsx",
+    "line": 210
+  },
+  {
     "name": "MutationSliders",
     "depth": 3,
     "kind": "composite",
